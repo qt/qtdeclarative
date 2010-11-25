@@ -1,3 +1,5 @@
+load(qt_module)
+
 TARGET     = QtDeclarative
 QPRO_PWD   = $$PWD
 QT         = core gui script network
@@ -13,7 +15,7 @@ exists("qdeclarative_enable_gcov") {
     LIBS += -lgcov
 }
 
-include(../qbase.pri)
+include($$QT_SOURCE_TREE/src/qbase.pri)
 
 #INCLUDEPATH -= $$QMAKE_INCDIR_QT/$$TARGET
 #DESTDIR=.
@@ -39,5 +41,5 @@ symbian: {
 linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
 
 DEFINES += QT_NO_OPENTYPE
-INCLUDEPATH += ../3rdparty/harfbuzz/src
+INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
 
