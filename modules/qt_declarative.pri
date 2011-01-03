@@ -9,3 +9,6 @@ QT.declarative.private_includes = $$QT_MODULE_INCLUDE_BASE/QtDeclarative/private
 QT.declarative.sources = $$QT_MODULE_BASE/src/declarative
 QT.declarative.libs = $$QT_MODULE_LIB_BASE
 QT.declarative.depends = gui script network
+QT.declarative.DEFINES = QT_DECLARATIVE_LIB
+
+QT_CONFIG += declarative
