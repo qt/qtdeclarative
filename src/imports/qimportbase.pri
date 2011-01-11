@@ -1,4 +1,6 @@
-symbian:include(../plugins/qpluginbase.pri)
+load(qt_module)
+
+symbian:include($$QT_SOURCE_TREE/src/plugins/qpluginbase.pri)
 TEMPLATE = lib
 CONFIG += qt plugin
 
@@ -25,7 +27,7 @@ QMAKE_EXTRA_COMPILERS += copy2build
 TARGET = $$qtLibraryTarget($$TARGET)
 contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols
 
-include(../qt_targets.pri)
+include($$QT_SOURCE_TREE/src/qt_targets.pri)
 
 wince*:LIBS += $$QMAKE_LIBS_GUI
 
