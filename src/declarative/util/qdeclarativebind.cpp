@@ -65,8 +65,9 @@ public:
     bool when : 1;
     bool componentComplete : 1;
     QObject *obj;
-    QString prop;
+    QString propName;
     QDeclarativeNullableValue<QVariant> value;
+    QDeclarativeProperty prop;
 };
 
 
@@ -146,6 +147,8 @@ void QDeclarativeBind::setObject(QObject *obj)
 {
     Q_D(QDeclarativeBind);
     d->obj = obj;
+    if (d->componentComplete)
+        d->prop = QDeclarativeProperty(d->obj, d->propName);
     eval();
 }
 
@@ -157,13 +160,15 @@ void QDeclarativeBind::setObject(QObject *obj)
 QString QDeclarativeBind::property() const
 {
     Q_D(const QDeclarativeBind);
-    return d->prop;
+    return d->propName;
 }
 
 void QDeclarativeBind::setProperty(const QString &p)
 {
     Q_D(QDeclarativeBind);
-    d->prop = p;
+    d->propName = p;
+    if (d->componentComplete)
+        d->prop = QDeclarativeProperty(d->obj, d->propName);
     eval();
 }
 
@@ -187,6 +192,12 @@ void QDeclarativeBind::setValue(const QVariant &v)
     eval();
 }
 
+void QDeclarativeBind::setTarget(const QDeclarativeProperty &p)
+{
+    Q_D(QDeclarativeBind);
+    d->prop = p;
+}
+
 void QDeclarativeBind::classBegin()
 {
     Q_D(QDeclarativeBind);
@@ -197,17 +208,18 @@ void QDeclarativeBind::componentComplete()
 {
     Q_D(QDeclarativeBind);
     d->componentComplete = true;
+    if (!d->prop.isValid())
+        d->prop = QDeclarativeProperty(d->obj, d->propName);
     eval();
 }
 
 void QDeclarativeBind::eval()
 {
     Q_D(QDeclarativeBind);
-    if (!d->obj || d->value.isNull || !d->when || !d->componentComplete)
+    if (!d->prop.isValid() || d->value.isNull || !d->when || !d->componentComplete)
         return;
 
-    QDeclarativeProperty prop(d->obj, d->prop);
-    prop.write(d->value.value);
+    d->prop.write(d->value.value);
 }
 
 QT_END_NAMESPACE

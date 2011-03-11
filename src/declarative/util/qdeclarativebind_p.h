@@ -53,11 +53,12 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeBindPrivate;
-class Q_AUTOTEST_EXPORT QDeclarativeBind : public QObject, public QDeclarativeParserStatus
+class Q_AUTOTEST_EXPORT QDeclarativeBind : public QObject, public QDeclarativePropertyValueSource, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarativeBind)
     Q_INTERFACES(QDeclarativeParserStatus)
+    Q_INTERFACES(QDeclarativePropertyValueSource)
     Q_PROPERTY(QObject *target READ object WRITE setObject)
     Q_PROPERTY(QString property READ property WRITE setProperty)
     Q_PROPERTY(QVariant value READ value WRITE setValue)
@@ -80,6 +81,7 @@ public:
     void setValue(const QVariant &);
 
 protected:
+    virtual void setTarget(const QDeclarativeProperty &);
     virtual void classBegin();
     virtual void componentComplete();
 
