@@ -42,10 +42,13 @@
 #include "private/qdeclarativebind_p.h"
 
 #include "private/qdeclarativenullablevalue_p_p.h"
+#include "private/qdeclarativeproperty_p.h"
+#include "private/qdeclarativebinding_p.h"
 
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarativeproperty.h>
+#include <qdeclarativeinfo.h>
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
@@ -60,14 +63,16 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeBindPrivate : public QObjectPrivate
 {
 public:
-    QDeclarativeBindPrivate() : when(true), componentComplete(true), obj(0) {}
+    QDeclarativeBindPrivate() : componentComplete(true), obj(0), prevBind(0) {}
+    ~QDeclarativeBindPrivate() { if (prevBind) prevBind->destroy(); }
 
-    bool when : 1;
-    bool componentComplete : 1;
+    QDeclarativeNullableValue<bool> when;
+    bool componentComplete;
     QObject *obj;
     QString propName;
     QDeclarativeNullableValue<QVariant> value;
     QDeclarativeProperty prop;
+    QDeclarativeAbstractBinding *prevBind;
 };
 
 
@@ -128,6 +133,9 @@ bool QDeclarativeBind::when() const
 void QDeclarativeBind::setWhen(bool v)
 {
     Q_D(QDeclarativeBind);
+    if (!d->when.isNull && d->when == v)
+        return;
+
     d->when = v;
     eval();
 }
@@ -146,6 +154,10 @@ QObject *QDeclarativeBind::object()
 void QDeclarativeBind::setObject(QObject *obj)
 {
     Q_D(QDeclarativeBind);
+    if (d->obj && d->obj != obj) {
+        qmlInfo(this) << tr("Cannot change the object assigned to a Binding.");
+        return;
+    }
     d->obj = obj;
     if (d->componentComplete)
         d->prop = QDeclarativeProperty(d->obj, d->propName);
@@ -166,6 +178,10 @@ QString QDeclarativeBind::property() const
 void QDeclarativeBind::setProperty(const QString &p)
 {
     Q_D(QDeclarativeBind);
+    if (!d->propName.isEmpty() && d->propName != p) {
+        qmlInfo(this) << tr("Cannot change the property assigned to a Binding.");
+        return;
+    }
     d->propName = p;
     if (d->componentComplete)
         d->prop = QDeclarativeProperty(d->obj, d->propName);
@@ -187,8 +203,7 @@ QVariant QDeclarativeBind::value() const
 void QDeclarativeBind::setValue(const QVariant &v)
 {
     Q_D(QDeclarativeBind);
-    d->value.value = v;
-    d->value.isNull = false;
+    d->value = v;
     eval();
 }
 
@@ -216,8 +231,30 @@ void QDeclarativeBind::componentComplete()
 void QDeclarativeBind::eval()
 {
     Q_D(QDeclarativeBind);
-    if (!d->prop.isValid() || d->value.isNull || !d->when || !d->componentComplete)
+    if (!d->prop.isValid() || d->value.isNull || !d->componentComplete)
         return;
+
+    if (d->when.isValid()) {
+        if (!d->when) {
+            //restore any previous binding
+            if (d->prevBind) {
+                QDeclarativeAbstractBinding *tmp;
+                tmp = QDeclarativePropertyPrivate::setBinding(d->prop, d->prevBind);
+                if (tmp) //should this ever be true?
+                    tmp->destroy();
+                d->prevBind = 0;
+            }
+            return;
+        }
+
+        //save any set binding for restoration
+        QDeclarativeAbstractBinding *tmp;
+        tmp = QDeclarativePropertyPrivate::setBinding(d->prop, 0);
+        if (tmp && d->prevBind)
+            d->prevBind->destroy();
+        else if (!d->prevBind)
+            d->prevBind = tmp;
+    }
 
     d->prop.write(d->value.value);
 }
