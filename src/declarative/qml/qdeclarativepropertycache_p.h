@@ -64,7 +64,6 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
 class QMetaProperty;
-
 class Q_AUTOTEST_EXPORT QDeclarativePropertyCache : public QDeclarativeRefCount, public QDeclarativeCleanup
 {
 public:
@@ -74,6 +73,7 @@ public:
 
     struct Data {
         inline Data(); 
+
         inline bool operator==(const Data &);
 
         enum Flag { 
@@ -115,8 +115,9 @@ public:
         int overrideIndex : 31;
         int revision; 
         int metaObjectOffset;
-
+        QVector<int> paramTypes;
         static Flags flagsForProperty(const QMetaProperty &, QDeclarativeEngine *engine = 0);
+        int enumType(const QMetaObject *meta, const QString &strname);
         void load(const QMetaProperty &, QDeclarativeEngine *engine = 0);
         void load(const QMetaMethod &);
         QString name(QObject *);
