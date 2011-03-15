@@ -672,7 +672,7 @@ struct MetaCallArgument {
     inline void *dataPtr();
 
     inline void initAsType(int type, QDeclarativeEngine *);
-    void fromScriptValue(int type, QDeclarativeEngine *, const QScriptValue &);
+    inline void fromScriptValue(int type, QDeclarativeEngine *, const QScriptValue &);
     inline QScriptDeclarativeClass::Value toValue(QDeclarativeEngine *);
 
 private:
@@ -908,24 +908,9 @@ QDeclarativeObjectMethodScriptClass::callPrecise(QObject *object, const QDeclara
                                                  QScriptContext *ctxt)
 {
     if (data.flags & QDeclarativePropertyCache::Data::HasArguments) {
-
-        QMetaMethod m = object->metaObject()->method(data.coreIndex);
-        QList<QByteArray> argTypeNames = m.parameterTypes();
-        QVarLengthArray<int, 9> argTypes(argTypeNames.count());
-
-        // ### Cache
-        for (int ii = 0; ii < argTypeNames.count(); ++ii) {
-            argTypes[ii] = QMetaType::type(argTypeNames.at(ii));
-            if (argTypes[ii] == QVariant::Invalid) 
-                argTypes[ii] = enumType(object->metaObject(), QString::fromLatin1(argTypeNames.at(ii)));
-            if (argTypes[ii] == QVariant::Invalid) 
-                return Value(ctxt, ctxt->throwError(QString::fromLatin1("Unknown method parameter type: %1").arg(QLatin1String(argTypeNames.at(ii)))));
-        }
-
-        if (argTypes.count() > ctxt->argumentCount())
-            return Value(ctxt, ctxt->throwError(QLatin1String("Insufficient arguments")));
-
-        return callMethod(object, data.coreIndex, data.propType, argTypes.count(), argTypes.data(), ctxt);
+        if (data.paramTypes.size() > ctxt->argumentCount())
+              return Value(ctxt, ctxt->throwError(QLatin1String("Insufficient arguments")));
+        return callMethod(object, data.coreIndex, data.propType, data.paramTypes.size(), data.paramTypes.data(), ctxt);
 
     } else {
 
@@ -936,7 +921,7 @@ QDeclarativeObjectMethodScriptClass::callPrecise(QObject *object, const QDeclara
 
 QDeclarativeObjectMethodScriptClass::Value 
 QDeclarativeObjectMethodScriptClass::callMethod(QObject *object, int index, 
-                                                int returnType, int argCount, int *argTypes, 
+                                                int returnType, int argCount, const int *argTypes, 
                                                 QScriptContext *ctxt)
 {
     if (argCount > 0) {

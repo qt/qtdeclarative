@@ -85,7 +85,7 @@ private:
 
     Value callPrecise(QObject *, const QDeclarativePropertyCache::Data &, QScriptContext *);
     Value callOverloaded(MethodData *, QScriptContext *);
-    Value callMethod(QObject *, int index, int returnType, int argCount, int *argTypes, QScriptContext *ctxt);
+    Value callMethod(QObject *, int index, int returnType, int argCount, const int *argTypes, QScriptContext *ctxt);
 
     int matchScore(const QScriptValue &, int, const QByteArray &);
     QDeclarativePropertyCache::Data *relatedMethod(QObject *, QDeclarativePropertyCache::Data *current, 
