@@ -4,12 +4,17 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_parserstress.cpp
 
-symbian: {
-    importFiles.files = ..\\..\\qscriptjstestsuite\\tests
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
+!isEmpty(QT.script.sources) {
+    symbian: {
+        importFiles.files = $$QT.script.sources\\..\\..\\tests\\auto\\qscriptjstestsuite\\tests
+        importFiles.path = .
+        DEPLOYMENT += importFiles
+        DEFINES += TESTDATADIR=tests
+        DEFINES += SRCDIR=.
+    } else {
+        DEFINES += TESTDATADIR=\\\"$$QT.script.sources/../../tests/auto/qscriptjstestsuite/tests\\\"
+        DEFINES += SRCDIR=\\\"$$PWD\\\"
+    }
 }
 
 CONFIG += parallel_test
