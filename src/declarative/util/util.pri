@@ -69,4 +69,6 @@ contains(QT_CONFIG, xmlpatterns) {
     QT+=xmlpatterns
     SOURCES += $$PWD/qdeclarativexmllistmodel.cpp
     HEADERS += $$PWD/qdeclarativexmllistmodel_p.h
+} else {
+    DEFINES += QT_NO_XMLPATTERNS
 }
