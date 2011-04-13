@@ -82,6 +82,8 @@ public:
     \since 4.7
     \brief The Binding element allows arbitrary property bindings to be created.
 
+    \section1 Binding to an inaccessible property
+
     Sometimes it is necessary to bind to a property of an object that wasn't
     directly instantiated by QML - generally a property of a class exported
     to QML by C++. In these cases, regular property binding doesn't work. Binding
@@ -96,6 +98,44 @@ public:
     \endcode
     Whenever the text in the TextEdit is updated, the C++ property will be
     updated also.
+
+    \section1 "Single-branch" conditional binding
+
+    In some circumstances you may want to control the value of a property
+    only when a certain condition is true (and relinquish control in all
+    other cirumstances). This often isn't possible to accomplish with a direct
+    binding, as you need to supply values for all possible branches.
+
+    \qml
+    // warning: "Unable to assign [undefined] to double value"
+    value: if (mouse.pressed) mouse.mouseX
+    \endqml
+
+    The above example will produce a warning whenever we release the mouse, as the value
+    of the binding is undefined when the mouse isn't pressed. We can use the Binding
+    element to rewrite the above code and avoid the warning.
+
+    \qml
+    Binding on value {
+        when: mouse.pressed
+        value: mouse.mouseX
+    }
+    \endqml
+
+    The Binding element will also restore any previously set direct bindings on
+    the property. In that sense, it functions much like a simplified State.
+
+    \qml
+    // this is equivilant to the above Binding
+    State {
+        name: "pressed"
+        when: mouse.pressed
+        PropertyChanges {
+            target: obj
+            value: mouse.mouseX
+        }
+    }
+    \endqml
 
     If the binding target or binding property is changed, the bound value is
     immediately pushed onto the new target.
@@ -123,6 +163,9 @@ QDeclarativeBind::~QDeclarativeBind()
         value: name; when: list.ListView.isCurrentItem
     }
     \endcode
+
+    When the binding becomes inactive again, any direct bindings that were previously
+    set on the property will be restored.
 */
 bool QDeclarativeBind::when() const
 {

@@ -43,6 +43,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativebind_p.h>
 #include <private/qdeclarativerectangle_p.h>
+#include <private/qsgrectangle_p.h>
 #include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN
@@ -60,6 +61,7 @@ public:
 private slots:
     void binding();
     void whenAfterValue();
+    void restoreBinding();
 
 private:
     QDeclarativeEngine engine;
@@ -109,6 +111,36 @@ void tst_qdeclarativebinding::whenAfterValue()
 
     rect->setProperty("changeColor", true);
     QCOMPARE(rect->color(), QColor("red"));
+
+    delete rect;
+}
+
+void tst_qdeclarativebinding::restoreBinding()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/restoreBinding.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QSGRectangle *myItem = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("myItem"));
+    QVERIFY(myItem != 0);
+
+    myItem->setY(25);
+    QCOMPARE(myItem->x(), qreal(100-25));
+
+    myItem->setY(13);
+    QCOMPARE(myItem->x(), qreal(100-13));
+
+    //Binding takes effect
+    myItem->setY(51);
+    QCOMPARE(myItem->x(), qreal(51));
+
+    myItem->setY(88);
+    QCOMPARE(myItem->x(), qreal(88));
+
+    //original binding restored
+    myItem->setY(49);
+    QCOMPARE(myItem->x(), qreal(100-49));
 
     delete rect;
 }
