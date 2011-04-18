@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG += qt uic
+CONFIG += qt uic declarative_debug
 DESTDIR = ../../bin
 QT += declarative qtquick1 qtquick1-private
 

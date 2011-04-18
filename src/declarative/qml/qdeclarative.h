@@ -550,6 +550,17 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
     return QDeclarativePrivate::qmlregister(QDeclarativePrivate::ModuleApiRegistration, &api);
 }
 
+// Enable debugging before any QDeclarativeEngine is created
+struct Q_DECLARATIVE_EXPORT QDeclarativeDebuggingEnabler
+{
+    QDeclarativeDebuggingEnabler();
+};
+
+// Execute code in constructor before first QDeclarativeEngine is instantiated
+#if defined(QT_DECLARATIVE_DEBUG)
+static QDeclarativeDebuggingEnabler qmlEnableDebuggingHelper;
+#endif
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QObject)

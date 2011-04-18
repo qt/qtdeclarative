@@ -56,7 +56,6 @@
 #include <QtGui/QGraphicsView>
 
 #include <QtDeclarative/qdeclarativecontext.h>
-#include <private/qdeclarativedebughelper_p.h>
 
 // ### This should be private API
 #include <qsgitem.h>
@@ -455,7 +454,6 @@ int main(int argc, char ** argv)
 
     Options options;
 
-    QDeclarativeDebugHelper::enableDebugging();
     QStringList imports;
     for (int i = 1; i < argc; ++i) {
         if (*argv[i] != '-' && QFileInfo(argv[i]).exists())
