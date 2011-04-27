@@ -15,6 +15,6 @@ SOURCES += piechart.cpp \
            chartsplugin.cpp
 
 symbian {
-    include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
+    CONFIG += qt_example
     TARGET.EPOCALLOWDLLDATA = 1
 }

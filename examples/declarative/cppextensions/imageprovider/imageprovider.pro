@@ -19,7 +19,7 @@ ImageProviderCore_sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarati
 INSTALLS = sources ImageProviderCore_sources target
 
 symbian:{
-    include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
+    CONFIG += qt_example
     TARGET.EPOCALLOWDLLDATA = 1
 
     importFiles.files = ImageProviderCore/qmlimageproviderplugin.dll ImageProviderCore/qmldir

@@ -1,9 +1,9 @@
 TARGET = qmldbg_tcp
 QT       += declarative network
 
-include(../../qpluginbase.pri)
+include($$QT_SOURCE_TREE/src/plugins/qpluginbase.pri)
 
-QTDIR_build:DESTDIR  = $$QT_BUILD_TREE/plugins/qmltooling
+DESTDIR = $$QT.declarative.plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"
 
 SOURCES += \

@@ -103,7 +103,7 @@ OTHER_FILES += \
 RESOURCES += \
     spriteparticles.qrc
 
-QTDIR_build:DESTDIR = $$QT_BUILD_TREE/imports/$$TARGETPATH
+DESTDIR = $$QT.declarative.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 
 qmldir.files += $$PWD/qmldir

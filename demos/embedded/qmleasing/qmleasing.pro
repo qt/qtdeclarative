@@ -6,6 +6,6 @@ include($$PWD/deployment.pri)
 
 symbian {
     TARGET.UID3 = 0x$$qmleasing_uid3 # defined in deployment.pri
-    include($$QT_SOURCE_TREE/demos/symbianpkgrules.pri)
+    CONFIG += qt_demo
     TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
 }

@@ -46,11 +46,6 @@
 #include <QDir>
 #include <QFile>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_parserstress : public QObject
 {
     Q_OBJECT
@@ -91,25 +86,23 @@ QStringList tst_parserstress::findJSFiles(const QDir &d)
 
 void tst_parserstress::ecmascript_data()
 {
-#ifdef Q_OS_SYMBIAN    
-    QDir dir("tests");
-#else
-    QDir dir(SRCDIR);
-    dir.cdUp();
-    dir.cdUp();
-    dir.cd("qscriptjstestsuite");
-    dir.cd("tests");
-#endif
+#ifdef TESTDATADIR
+    QDir dir(TESTDATADIR);
     QStringList files = findJSFiles(dir);
 
     QTest::addColumn<QString>("file");
     foreach (const QString &file, files) {
         QTest::newRow(qPrintable(file)) << file;
     }
+#endif
 }
 
 void tst_parserstress::ecmascript()
 {
+#ifndef TESTDATADIR
+    QSKIP("Needs QtScript sources", SkipAll);
+#else
+
     QFETCH(QString, file);
 
     QFile f(file);
@@ -157,6 +150,7 @@ void tst_parserstress::ecmascript()
 
         QVERIFY(!component.isError());
     }
+#endif // ifdef TESTDATADIR
 }
 
 

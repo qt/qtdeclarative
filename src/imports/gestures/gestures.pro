@@ -7,7 +7,7 @@ QT += declarative
 SOURCES += qdeclarativegesturearea.cpp plugin.cpp
 HEADERS += qdeclarativegesturearea_p.h
 
-QTDIR_build:DESTDIR = $$QT_BUILD_TREE/imports/$$TARGETPATH
+DESTDIR = $$QT.declarative.imports/$$TARGETPATH
 target.path = $$[QT_INSTALL_IMPORTS]/$$TARGETPATH
 
 qmldir.files += $$PWD/qmldir

@@ -14,7 +14,7 @@ target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/plugins
 INSTALLS += sources target
 
 symbian:{
-    include($$QT_SOURCE_TREE/examples/symbianpkgrules.pri)
+    CONFIG += qt_example
     TARGET.EPOCALLOWDLLDATA = 1
 
     importFiles.files = QWidgets/qmlqwidgetsplugin.dll QWidgets/qmldir
