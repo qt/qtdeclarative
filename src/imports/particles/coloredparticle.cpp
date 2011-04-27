@@ -466,7 +466,7 @@ void ColoredParticle::prepareNextFrame()
         if(m_node == 0)
             return;
     }
-    uint timeStamp = m_system->systemSync(this);
+    qint64 timeStamp = m_system->systemSync(this);
 
     qreal time = timeStamp / 1000.;
     m_material->timestamp = time;

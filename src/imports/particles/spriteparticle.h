@@ -85,7 +85,6 @@ private:
 
     int m_particle_duration;
     int m_last_particle;
-    QTime m_timestamp;
 
     QList<SpriteState*> m_sprites;
     SpriteEngine* m_spriteEngine;

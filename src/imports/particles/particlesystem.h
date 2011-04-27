@@ -43,7 +43,7 @@
 #define PARTICLESYSTEM_H
 
 #include <QSGItem>
-#include <QTime>
+#include <QElapsedTimer>
 #include <QVector>
 #include <QHash>
 #include <QPointer>
@@ -126,13 +126,13 @@ private slots:
 public://but only really for related class usage. Perhaps we should all be friends?
     void emitParticle(ParticleData* p);
     ParticleData* newDatum(int groupId);
-    uint systemSync(ParticleType* p);
-    QTime m_timestamp;
+    qint64 systemSync(ParticleType* p);
+    QElapsedTimer m_timestamp;
     QVector<ParticleData*> m_data;
     QSet<ParticleData*> m_needsReset;
     QHash<QString, int> m_groupIds;
     QHash<int, GroupData*> m_groupData;//id, size, start
-    uint m_timeInt;
+    qint64 m_timeInt;
     bool m_initialized;
 
     void registerParticleType(ParticleType* p);
@@ -151,7 +151,7 @@ private:
     QList<QPointer<ParticleAffector> > m_affectors;
     QList<QPointer<ParticleType> > m_particles;
     QList<QPointer<ParticleType> > m_syncList;
-    int m_startTime;
+    qint64 m_startTime;
     int m_nextGroupId;
     bool m_overwrite;
 };

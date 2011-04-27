@@ -230,7 +230,7 @@ QSGNode* ModelParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 
 void ModelParticle::prepareNextFrame()
 {
-    uint timeStamp = m_system->systemSync(this);
+    qint64 timeStamp = m_system->systemSync(this);
     qreal curT = timeStamp/1000.0;
     qreal dt = curT - m_lastT;
     m_lastT = curT;

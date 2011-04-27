@@ -252,7 +252,7 @@ void ParticleSystem::emitParticle(ParticleData* pd)
 
 
 
-uint ParticleSystem::systemSync(ParticleType* p)
+qint64 ParticleSystem::systemSync(ParticleType* p)
 {
     if (!m_running)
         return 0;
