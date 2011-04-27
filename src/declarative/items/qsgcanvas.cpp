@@ -1521,6 +1521,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     switch (e->type()) {
     case QEvent::KeyPress:
     case QEvent::KeyRelease:
+        e->accept();
         QSGItemPrivate::get(item)->deliverKeyEvent(static_cast<QKeyEvent *>(e));
         while (!e->isAccepted() && (item = item->parentItem())) {
             e->accept();
@@ -1528,6 +1529,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
         }
         break;
     case QEvent::InputMethod:
+        e->accept();
         QSGItemPrivate::get(item)->deliverInputMethodEvent(static_cast<QInputMethodEvent *>(e));
         while (!e->isAccepted() && (item = item->parentItem())) {
             e->accept();
