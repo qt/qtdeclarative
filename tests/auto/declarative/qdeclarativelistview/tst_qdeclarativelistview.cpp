@@ -434,6 +434,7 @@ void tst_QDeclarativeListView::items()
     QTRY_COMPARE(listview->highlightMoveSpeed(), 1000.0);
 
     delete canvas;
+    delete testObject;
 }
 
 
@@ -471,6 +472,7 @@ void tst_QDeclarativeListView::changed()
     QTRY_COMPARE(number->text(), model.number(1));
 
     delete canvas;
+    delete testObject;
 }
 
 template <class T>
@@ -555,6 +557,7 @@ void tst_QDeclarativeListView::inserted()
 //    QTRY_COMPARE(listview->contentItemHeight(), model.count() * 20.0);
 
     delete canvas;
+    delete testObject;
 }
 
 template <class T>
@@ -712,6 +715,7 @@ void tst_QDeclarativeListView::removed(bool animated)
     QCOMPARE(name->text(), QString("New"));
 
     delete canvas;
+    delete testObject;
 }
 
 template <class T>
@@ -752,6 +756,7 @@ void tst_QDeclarativeListView::clear()
     QVERIFY(listview->currentIndex() == 0);
 
     delete canvas;
+    delete testObject;
 }
 
 
@@ -841,6 +846,7 @@ void tst_QDeclarativeListView::moved()
     }
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::enforceRange()
@@ -951,6 +957,7 @@ void tst_QDeclarativeListView::spacing()
     }
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::sections()
@@ -1288,6 +1295,8 @@ void tst_QDeclarativeListView::noCurrentIndex()
     QCOMPARE(listview->currentIndex(), 2);
     QVERIFY(listview->highlightItem());
     QVERIFY(listview->currentItem());
+
+    delete canvas;
 }
 
 void tst_QDeclarativeListView::itemList()
@@ -1381,6 +1390,7 @@ void tst_QDeclarativeListView::cacheBuffer()
     }
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::positionViewAtIndex()
@@ -1540,6 +1550,7 @@ void tst_QDeclarativeListView::positionViewAtIndex()
     QTRY_COMPARE(listview->contentY(), 510.);
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::resetModel()
@@ -1844,6 +1855,7 @@ void tst_QDeclarativeListView::QTBUG_11105()
     QCOMPARE(itemCount, 5);
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::header()
@@ -2116,6 +2128,7 @@ void tst_QDeclarativeListView::resizeView()
     QCOMPARE(heightRatio.toReal(), 0.25);
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::sizeLessThan1()
@@ -2151,6 +2164,7 @@ void tst_QDeclarativeListView::sizeLessThan1()
     }
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::QTBUG_14821()
@@ -2299,6 +2313,7 @@ void tst_QDeclarativeListView::indexAt()
     QCOMPARE(listview->indexAt(240,20), -1);
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativeListView::incrementalModel()

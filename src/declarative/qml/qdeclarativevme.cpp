@@ -57,8 +57,9 @@
 #include "private/qdeclarativevmemetaobject_p.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecompiledbindings_p.h"
+#include "private/qdeclarativev4bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
+#include "private/qdeclarativeglobalscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
 
 #include <QStack>
@@ -71,6 +72,7 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdatetime.h>
+#include <QtScript/qscriptvalue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -158,7 +160,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
     const QList<int> &intData = comp->intData;
     const QList<float> &floatData = comp->floatData;
     const QList<QDeclarativePropertyCache *> &propertyCaches = comp->propertyCaches;
-    const QList<QDeclarativeParser::Object::ScriptBlock> &scripts = comp->scripts;
+    const QList<QDeclarativeScriptData *> &scripts = comp->scripts;
     const QList<QUrl> &urls = comp->urls;
 
     QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding> bindValues;
@@ -186,7 +188,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 if (instr.init.contextCache != -1) 
                     ctxt->setIdPropertyData(comp->contextCaches.at(instr.init.contextCache));
                 if (instr.init.compiledBinding != -1) 
-                    ctxt->optimizedBindings = new QDeclarativeCompiledBindings(datas.at(instr.init.compiledBinding).constData(), ctxt);
+                    ctxt->optimizedBindings = new QDeclarativeV4Bindings(datas.at(instr.init.compiledBinding).constData(), ctxt);
             }
             break;
 
@@ -406,6 +408,15 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 void *a[] = { (void *)&primitives.at(instr.storeString.value), 0, &status, &flags };
                 QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                       instr.storeString.propertyIndex, a);
+            }
+            break;
+
+        case QDeclarativeInstruction::StoreByteArray:
+            {
+                QObject *target = stack.top();
+                void *a[] = { (void *)&datas.at(instr.storeByteArray.value), 0, &status, &flags };
+                QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                      instr.storeByteArray.propertyIndex, a);
             }
             break;
 
@@ -701,7 +712,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
 
         case QDeclarativeInstruction::StoreImportedScript:
             {
-                ctxt->addImportedScript(scripts.at(instr.storeScript.value));
+                ctxt->importedScripts << run(ctxt, scripts.at(instr.storeScript.value));
             }
             break;
 
@@ -1054,5 +1065,68 @@ QDeclarativeCompiledData::TypeReference::createInstance(QDeclarativeContextData 
     } 
 }
 
+QScriptValue QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
+{
+    if (script->m_loaded)
+        return script->m_value;
+
+    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(parentCtxt->engine);
+    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(parentCtxt->engine);
+
+    bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
+
+    // Create the script context if required
+    QDeclarativeContextData *ctxt = 0;
+    if (!shared) {
+        ctxt = new QDeclarativeContextData;
+        ctxt->isInternal = true;
+        ctxt->url = script->url;
+
+        // For backward compatibility, if there are no imports, we need to use the
+        // imports from the parent context.  See QTBUG-17518.
+        if (!script->importCache->isEmpty()) {
+            ctxt->imports = script->importCache;
+        } else {
+            ctxt->imports = parentCtxt->imports;
+        }
+
+        if (ctxt->imports) {
+            ctxt->imports->addref();
+        }
+
+        ctxt->setParent(parentCtxt, true);
+
+        for (int ii = 0; ii < script->scripts.count(); ++ii)
+            ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
+    }
+
+    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
+    if (shared) {
+        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(script->url.toString())); // XXX toString()?
+    } else {
+        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(ctxt, 0, script->url.toString()));
+    }
+
+    scriptContext->pushScope(enginePriv->globalClass->staticGlobalObject());
+    QScriptValue scope = QScriptDeclarativeClass::newStaticScopeObject(scriptEngine);
+    scriptContext->pushScope(scope);
+
+    scriptEngine->evaluate(script->m_program);
+
+    if (scriptEngine->hasUncaughtException()) {
+        QDeclarativeError error;
+        QDeclarativeExpressionPrivate::exceptionToError(scriptEngine, error);
+        enginePriv->warning(error);
+    }
+
+    scriptEngine->popContext();
+
+    if (shared) {
+        script->m_loaded = true;
+        script->m_value = scope;
+    }
+
+    return scope;
+}
 
 QT_END_NAMESPACE

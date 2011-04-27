@@ -26,6 +26,9 @@ SUBDIRS += \
            qmlvisual \
            moduleqt47
 
+SUBDIRS += \
+           qsgitem \
+
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += \
            qdeclarativeanchors \
@@ -39,7 +42,6 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativedebug \
            qdeclarativedebugclient \
            qdeclarativedebugservice \
-           qdeclarativedom \
            qdeclarativeecmascript \
            qdeclarativeflickable \
            qdeclarativeflipable \
@@ -75,7 +77,25 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativevisualdatamodel \
            qdeclarativeworkerscript \
            qdeclarativexmllistmodel \
-           qpacketprotocol
+           qpacketprotocol \
+           qdeclarativev4 \
+           qsgcanvas \
+           qsgflickable \
+           qsgflipable \
+           qsgfocusscope \
+           qsggridview \
+           qsglistview \
+           qsgloader \
+           qsgmousearea \
+           qsgpathview \
+           qsgpincharea \
+           qsgpositioners \
+           qsgrepeater \
+           qsgtext \
+           qsgtextedit \
+           qsgtextinput \
+           qsgvisualdatamodel
+
 }
 
 # Tests which should run in Pulse

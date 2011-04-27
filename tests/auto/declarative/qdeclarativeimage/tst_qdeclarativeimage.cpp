@@ -224,6 +224,8 @@ void tst_qdeclarativeimage::clearSource()
     QCOMPARE(obj->width(), 0.);
     QCOMPARE(obj->height(), 0.);
     QCOMPARE(obj->progress(), 0.0);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::resized()
@@ -531,6 +533,8 @@ void tst_qdeclarativeimage::tiling_QTBUG_6716()
             }
         }
     }
+
+    delete canvas;
 }
 
 void tst_qdeclarativeimage::noLoading()
@@ -579,6 +583,8 @@ void tst_qdeclarativeimage::noLoading()
     QTRY_COMPARE(sourceSpy.count(), 4);
     QTRY_COMPARE(progressSpy.count(), 2);
     QTRY_COMPARE(statusSpy.count(), 2);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::paintedWidthHeight()
@@ -648,6 +654,8 @@ void tst_qdeclarativeimage::sourceSize_QTBUG_14303()
     QTRY_COMPARE(obj->sourceSize().width(), 200);
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 2);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::sourceSize_QTBUG_16389()

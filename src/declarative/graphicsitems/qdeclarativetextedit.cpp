@@ -273,7 +273,6 @@ void QDeclarativeTextEdit::setText(const QString &text)
     \o TextEdit.AutoText
     \o TextEdit.PlainText
     \o TextEdit.RichText
-    \o TextEdit.StyledText
     \endlist
 
     The default is TextEdit.AutoText.  If the text format is TextEdit.AutoText the text edit
@@ -1110,7 +1109,7 @@ void QDeclarativeTextEdit::setMouseSelectionMode(SelectionMode mode)
 /*!
     \qmlproperty bool TextEdit::readOnly
 
-    Whether the user an interact with the TextEdit item. If this
+    Whether the user can interact with the TextEdit item. If this
     property is set to true the text cannot be edited by user interaction.
 
     By default this property is false.

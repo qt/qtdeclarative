@@ -216,6 +216,8 @@ void tst_qdeclarativetext::text()
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->text(), standard.at(i));
         QVERIFY(textObject->width() > 0);
+
+        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -229,6 +231,8 @@ void tst_qdeclarativetext::text()
         QString expected = richText.at(i);
         QCOMPARE(textObject->text(), expected.replace("\\\"", "\""));
         QVERIFY(textObject->width() > 0);
+
+        delete textObject;
     }
 }
 
@@ -242,6 +246,8 @@ void tst_qdeclarativetext::width()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->width(), 0.);
+
+        delete textObject;
     }
 
     for (int i = 0; i < standard.size(); i++)
@@ -262,6 +268,8 @@ void tst_qdeclarativetext::width()
         QVERIFY(textObject->boundingRect().width() > 0);
         QCOMPARE(textObject->width(), qreal(metricWidth));
         QVERIFY(textObject->textFormat() == QDeclarativeText::AutoText); // setting text doesn't change format
+
+        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -282,6 +290,8 @@ void tst_qdeclarativetext::width()
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->width(), qreal(documentWidth));
         QVERIFY(textObject->textFormat() == QDeclarativeText::AutoText); // setting text doesn't change format
+
+        delete textObject;
     }
 }
 
@@ -298,6 +308,8 @@ void tst_qdeclarativetext::wrap()
         QVERIFY(textObject != 0);
         QVERIFY(textObject->wrapMode() == QDeclarativeText::WordWrap);
         QCOMPARE(textObject->width(), 300.);
+
+        delete textObject;
     }
 
     for (int i = 0; i < standard.size(); i++)
@@ -314,6 +326,8 @@ void tst_qdeclarativetext::wrap()
         int oldHeight = textObject->height();
         textObject->setWidth(100);
         QVERIFY(textObject->height() < oldHeight);
+
+        delete textObject;
     }
 
     for (int i = 0; i < richText.size(); i++)
@@ -330,6 +344,8 @@ void tst_qdeclarativetext::wrap()
         qreal oldHeight = textObject->height();
         textObject->setWidth(100);
         QVERIFY(textObject->height() < oldHeight);
+
+        delete textObject;
     }
 
     // richtext again with a fixed height
@@ -347,6 +363,8 @@ void tst_qdeclarativetext::wrap()
         qreal oldHeight = textObject->implicitHeight();
         textObject->setWidth(100);
         QVERIFY(textObject->implicitHeight() < oldHeight);
+
+        delete textObject;
     }
 }
 
@@ -365,6 +383,8 @@ void tst_qdeclarativetext::elide()
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
+
+            delete textObject;
         }
 
         for (int i = 0; i < standard.size(); i++)
@@ -376,6 +396,8 @@ void tst_qdeclarativetext::elide()
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
+
+            delete textObject;
         }
 
         // richtext - does nothing
@@ -388,6 +410,8 @@ void tst_qdeclarativetext::elide()
 
             QCOMPARE(textObject->elideMode(), m);
             QCOMPARE(textObject->width(), 100.);
+
+            delete textObject;
         }
     }
 
@@ -408,6 +432,8 @@ void tst_qdeclarativetext::textFormat()
 
         QVERIFY(textObject != 0);
         QVERIFY(textObject->textFormat() == QDeclarativeText::RichText);
+
+        delete textObject;
     }
     {
         QDeclarativeComponent textComponent(&engine);
@@ -416,6 +442,8 @@ void tst_qdeclarativetext::textFormat()
 
         QVERIFY(textObject != 0);
         QVERIFY(textObject->textFormat() == QDeclarativeText::PlainText);
+
+        delete textObject;
     }
 }
 
@@ -497,6 +525,8 @@ void tst_qdeclarativetext::horizontalAlignment()
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
+
+            delete textObject;
         }
     }
 
@@ -510,6 +540,8 @@ void tst_qdeclarativetext::horizontalAlignment()
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
 
             QCOMPARE((int)textObject->hAlign(), (int)horizontalAlignmentments.at(j));
+
+            delete textObject;
         }
     }
 
@@ -648,6 +680,8 @@ void tst_qdeclarativetext::verticalAlignment()
 
             QVERIFY(textObject != 0);
             QCOMPARE((int)textObject->vAlign(), (int)verticalAlignmentments.at(j));
+
+            delete textObject;
         }
     }
 
@@ -662,6 +696,8 @@ void tst_qdeclarativetext::verticalAlignment()
 
             QVERIFY(textObject != 0);
             QCOMPARE((int)textObject->vAlign(), (int)verticalAlignmentments.at(j));
+
+            delete textObject;
         }
     }
 
@@ -697,6 +733,8 @@ void tst_qdeclarativetext::font()
         QCOMPARE(textObject->font().pointSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
+
+        delete textObject;
     }
 
     {
@@ -708,6 +746,8 @@ void tst_qdeclarativetext::font()
         QCOMPARE(textObject->font().pixelSize(), 40);
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
+
+        delete textObject;
     }
 
     { 
@@ -718,6 +758,8 @@ void tst_qdeclarativetext::font()
 
         QCOMPARE(textObject->font().bold(), true);
         QCOMPARE(textObject->font().italic(), false);
+
+        delete textObject;
     }
 
     { 
@@ -728,6 +770,8 @@ void tst_qdeclarativetext::font()
 
         QCOMPARE(textObject->font().italic(), true);
         QCOMPARE(textObject->font().bold(), false);
+
+        delete textObject;
     }
 
     { 
@@ -739,6 +783,8 @@ void tst_qdeclarativetext::font()
         QCOMPARE(textObject->font().family(), QString("Helvetica"));
         QCOMPARE(textObject->font().bold(), false);
         QCOMPARE(textObject->font().italic(), false);
+
+        delete textObject;
     }
 
     { 
@@ -748,6 +794,8 @@ void tst_qdeclarativetext::font()
         QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
 
         QCOMPARE(textObject->font().family(), QString(""));
+
+        delete textObject;
     }
 }
 
@@ -763,6 +811,8 @@ void tst_qdeclarativetext::style()
 
         QCOMPARE((int)textObject->style(), (int)styles.at(i));
         QCOMPARE(textObject->styleColor(), QColor("white"));
+
+        delete textObject;
     }
     QString componentStr = "import QtQuick 1.0\nText { text: \"Hello World\" }";
     QDeclarativeComponent textComponent(&engine);
@@ -775,6 +825,8 @@ void tst_qdeclarativetext::style()
 
     QVERIFY(brPre.width() < brPost.width());
     QVERIFY(brPre.height() < brPost.height());
+
+    delete textObject;
 }
 
 void tst_qdeclarativetext::color()
@@ -789,6 +841,8 @@ void tst_qdeclarativetext::color()
 
         QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
         QCOMPARE(textObject->styleColor(), QColor());
+
+        delete textObject;
     }
 
     for (int i = 0; i < colorStrings.size(); i++)
@@ -801,6 +855,8 @@ void tst_qdeclarativetext::color()
         QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(i)));
         // default color to black?
         QCOMPARE(textObject->color(), QColor("black"));
+
+        delete textObject;
     }
     
     for (int i = 0; i < colorStrings.size(); i++)
@@ -814,6 +870,8 @@ void tst_qdeclarativetext::color()
 
             QCOMPARE(textObject->color(), QColor(colorStrings.at(i)));
             QCOMPARE(textObject->styleColor(), QColor(colorStrings.at(j)));
+
+            delete textObject;
         }
     }
     {
@@ -827,6 +885,8 @@ void tst_qdeclarativetext::color()
         QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
 
         QCOMPARE(textObject->color(), testColor);
+
+        delete textObject;
     }
 }
 
@@ -840,6 +900,8 @@ void tst_qdeclarativetext::smooth()
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
             QCOMPARE(textObject->smooth(), true);
+
+            delete textObject;
         }
         {
             QString componentStr = "import QtQuick 1.0\nText { text: \"" + standard.at(i) + "\" }";
@@ -847,6 +909,8 @@ void tst_qdeclarativetext::smooth()
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
             QCOMPARE(textObject->smooth(), false);
+
+            delete textObject;
         }
     }
     for (int i = 0; i < richText.size(); i++)
@@ -857,6 +921,8 @@ void tst_qdeclarativetext::smooth()
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
             QCOMPARE(textObject->smooth(), true);
+
+            delete textObject;
         }
         {
             QString componentStr = "import QtQuick 1.0\nText { text: \"" + richText.at(i) + "\" }";
@@ -864,6 +930,8 @@ void tst_qdeclarativetext::smooth()
             textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
             QDeclarativeText *textObject = qobject_cast<QDeclarativeText*>(textComponent.create());
             QCOMPARE(textObject->smooth(), false);
+
+            delete textObject;
         }
     }
 }
@@ -878,6 +946,8 @@ void tst_qdeclarativetext::weight()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().weight(), (int)QDeclarativeFontValueType::Normal);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { font.weight: \"Bold\"; text: \"Hello world!\" }";
@@ -887,6 +957,8 @@ void tst_qdeclarativetext::weight()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().weight(), (int)QDeclarativeFontValueType::Bold);
+
+        delete textObject;
     }
 }
 
@@ -900,6 +972,8 @@ void tst_qdeclarativetext::underline()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().underline(), false);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { font.underline: true; text: \"Hello world!\" }";
@@ -909,6 +983,8 @@ void tst_qdeclarativetext::underline()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().underline(), true);
+
+        delete textObject;
     }
 }
 
@@ -922,6 +998,8 @@ void tst_qdeclarativetext::overline()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().overline(), false);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { font.overline: true; text: \"Hello world!\" }";
@@ -931,6 +1009,8 @@ void tst_qdeclarativetext::overline()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().overline(), true);
+
+        delete textObject;
     }
 }
 
@@ -944,6 +1024,8 @@ void tst_qdeclarativetext::strikeout()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().strikeOut(), false);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { font.strikeout: true; text: \"Hello world!\" }";
@@ -953,6 +1035,8 @@ void tst_qdeclarativetext::strikeout()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().strikeOut(), true);
+
+        delete textObject;
     }
 }
 
@@ -966,6 +1050,8 @@ void tst_qdeclarativetext::capitalization()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().capitalization(), (int)QDeclarativeFontValueType::MixedCase);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.capitalization: \"AllUppercase\" }";
@@ -975,6 +1061,8 @@ void tst_qdeclarativetext::capitalization()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().capitalization(), (int)QDeclarativeFontValueType::AllUppercase);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.capitalization: \"AllLowercase\" }";
@@ -984,6 +1072,8 @@ void tst_qdeclarativetext::capitalization()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().capitalization(), (int)QDeclarativeFontValueType::AllLowercase);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.capitalization: \"SmallCaps\" }";
@@ -993,6 +1083,8 @@ void tst_qdeclarativetext::capitalization()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().capitalization(), (int)QDeclarativeFontValueType::SmallCaps);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.capitalization: \"Capitalize\" }";
@@ -1002,6 +1094,8 @@ void tst_qdeclarativetext::capitalization()
 
         QVERIFY(textObject != 0);
         QCOMPARE((int)textObject->font().capitalization(), (int)QDeclarativeFontValueType::Capitalize);
+
+        delete textObject;
     }
 }
 
@@ -1015,6 +1109,8 @@ void tst_qdeclarativetext::letterSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().letterSpacing(), 0.0);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.letterSpacing: -2 }";
@@ -1024,6 +1120,8 @@ void tst_qdeclarativetext::letterSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().letterSpacing(), -2.);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.letterSpacing: 3 }";
@@ -1033,6 +1131,8 @@ void tst_qdeclarativetext::letterSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().letterSpacing(), 3.);
+
+        delete textObject;
     }
 }
 
@@ -1046,6 +1146,8 @@ void tst_qdeclarativetext::wordSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().wordSpacing(), 0.0);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.wordSpacing: -50 }";
@@ -1055,6 +1157,8 @@ void tst_qdeclarativetext::wordSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().wordSpacing(), -50.);
+
+        delete textObject;
     }
     {
         QString componentStr = "import QtQuick 1.0\nText { text: \"Hello world!\"; font.wordSpacing: 200 }";
@@ -1064,6 +1168,8 @@ void tst_qdeclarativetext::wordSpacing()
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->font().wordSpacing(), 200.);
+
+        delete textObject;
     }
 }
 
@@ -1132,6 +1238,8 @@ void tst_qdeclarativetext::clickLink()
         }
 
         QCOMPARE(test.link, QLatin1String("http://qt.nokia.com"));
+
+        delete textObject;
     }
 }
 
@@ -1269,6 +1377,8 @@ void tst_qdeclarativetext::implicitSize()
     textObject->resetWidth();
     QVERIFY(textObject->width() == textObject->implicitWidth());
     QVERIFY(textObject->height() == textObject->implicitHeight());
+
+    delete textObject;
 }
 
 void tst_qdeclarativetext::testQtQuick11Attributes()

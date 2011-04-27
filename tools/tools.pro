@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS +=  qmlviewer
+SUBDIRS +=  qmlviewer qmlscene qmlplugindump distfieldgen

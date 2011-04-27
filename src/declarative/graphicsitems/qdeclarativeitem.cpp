@@ -449,6 +449,12 @@ void QDeclarativeItemKeyFilter::componentComplete()
     a chain of items with the same KeyNavigation handler. If multiple items in a row are not enabled
     or visible, they will also be skipped.
 
+    KeyNavigation will implicitly set the other direction to return focus to this item. So if you set
+    \l left to another item, \l right will be set on that item's KeyNavigation to set focus back to this
+    item. However, if that item's KeyNavigation has had right explicitly set then no change will occur.
+    This means that the above example could have been written, with the same behaviour, without specifing
+    KeyNavigation.right or KeyNavigation.down for any of the items.
+
     \sa {Keys}{Keys attached property}
 */
 
@@ -498,6 +504,13 @@ void QDeclarativeKeyNavigationAttached::setLeft(QDeclarativeItem *i)
     if (d->left == i)
         return;
     d->left = i;
+    d->leftSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->rightSet){
+        other->d_func()->right = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->rightChanged();
+    }
     emit leftChanged();
 }
 
@@ -513,6 +526,13 @@ void QDeclarativeKeyNavigationAttached::setRight(QDeclarativeItem *i)
     if (d->right == i)
         return;
     d->right = i;
+    d->rightSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->leftSet){
+        other->d_func()->left = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->leftChanged();
+    }
     emit rightChanged();
 }
 
@@ -528,6 +548,13 @@ void QDeclarativeKeyNavigationAttached::setUp(QDeclarativeItem *i)
     if (d->up == i)
         return;
     d->up = i;
+    d->upSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->downSet){
+        other->d_func()->down = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->downChanged();
+    }
     emit upChanged();
 }
 
@@ -543,6 +570,13 @@ void QDeclarativeKeyNavigationAttached::setDown(QDeclarativeItem *i)
     if (d->down == i)
         return;
     d->down = i;
+    d->downSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->upSet){
+        other->d_func()->up = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->upChanged();
+    }
     emit downChanged();
 }
 
@@ -558,6 +592,13 @@ void QDeclarativeKeyNavigationAttached::setTab(QDeclarativeItem *i)
     if (d->tab == i)
         return;
     d->tab = i;
+    d->tabSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->backtabSet){
+        other->d_func()->backtab = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->backtabChanged();
+    }
     emit tabChanged();
 }
 
@@ -573,6 +614,13 @@ void QDeclarativeKeyNavigationAttached::setBacktab(QDeclarativeItem *i)
     if (d->backtab == i)
         return;
     d->backtab = i;
+    d->backtabSet = true;
+    QDeclarativeKeyNavigationAttached* other =
+            qobject_cast<QDeclarativeKeyNavigationAttached*>(qmlAttachedPropertiesObject<QDeclarativeKeyNavigationAttached>(i));
+    if(other && !other->d_func()->tabSet){
+        other->d_func()->tab = qobject_cast<QDeclarativeItem*>(parent());
+        emit other->tabChanged();
+    }
     emit backtabChanged();
 }
 

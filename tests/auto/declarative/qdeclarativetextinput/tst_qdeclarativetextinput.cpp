@@ -713,6 +713,8 @@ void tst_qdeclarativetextinput::moveCursorSelection()
         QCOMPARE(textinputObject->selectionStart(), selectionStart);
         QCOMPARE(textinputObject->selectionEnd(), selectionEnd);
     }
+
+    delete textinputObject;
 }
 
 void tst_qdeclarativetextinput::moveCursorSelectionSequence_data()
@@ -915,6 +917,8 @@ void tst_qdeclarativetextinput::moveCursorSelectionSequence()
     QCOMPARE(textinputObject->selectedText(), testStr.mid(selection2Start, selection2End - selection2Start));
     QCOMPARE(textinputObject->selectionStart(), selection2Start);
     QCOMPARE(textinputObject->selectionEnd(), selection2End);
+
+    delete textinputObject;
 }
 
 void tst_qdeclarativetextinput::mouseSelection_data()
@@ -1712,6 +1716,8 @@ void tst_qdeclarativetextinput::copyAndPaste() {
         }
         index++;
     }
+
+    delete textInput;
 #endif
 }
 
@@ -1764,6 +1770,8 @@ void tst_qdeclarativetextinput::passwordCharacter()
     textInput->setPasswordCharacter(".");
     // QTBUG-12383 content is updated and redrawn
     QVERIFY(contentsSize != textInput->contentsSize());
+
+    delete textInput;
 }
 
 void tst_qdeclarativetextinput::cursorDelegate()
