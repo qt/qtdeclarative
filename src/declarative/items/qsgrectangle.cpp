@@ -267,8 +267,12 @@ QSGNode *QSGRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *da
     QGradientStops stops;
     if (d->gradient) {
         QList<QSGGradientStop *> qxstops = d->gradient->m_stops;
-        for (int i = 0; i < qxstops.size(); ++i)
-            stops.append(QGradientStop(qxstops.at(i)->position(), qxstops.at(i)->color()));
+        for (int i = 0; i < qxstops.size(); ++i){
+            int j = 0;
+            while (j < stops.size() && stops.at(j).first < qxstops[i]->position())
+                j++;
+            stops.insert(j, QGradientStop(qxstops.at(i)->position(), qxstops.at(i)->color()));
+        }
     }
     rectangle->setGradientStops(stops);
 
