@@ -3,7 +3,7 @@ attribute highp vec2 vTex;
 attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
 attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
 attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector
-attribute highp vec2 vRotation; //x = radians of rotation, y= bool autoRotate
+attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate
 
 uniform highp mat4 matrix;
 uniform highp float timestamp;
@@ -26,8 +26,8 @@ void main() {
         currentSize = 0.;
         pos = vPos;
     }else{
-        highp float rotation = vRotation.x;
-        if(vRotation.y == 1.0){
+        highp float rotation = vRotation.x + vRotation.y * t * vData.y;
+        if(vRotation.z == 1.0){
             highp vec2 curVel = vVec.zw * t * vData.y + vVec.xy;
             rotation += atan(curVel.y, curVel.x);
         }

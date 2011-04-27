@@ -62,11 +62,12 @@ class DeformableParticle : public ParticleType
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged)
+    Q_PROPERTY(qreal rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged)
+    Q_PROPERTY(qreal rotationSpeedVariation READ rotationSpeedVariation WRITE setRotationSpeedVariation NOTIFY rotationSpeedVariationChanged)
     //If true, then will face the direction of motion. Stacks with rotation, e.g. setting rotation
     //to 180 will lead to facing away from the direction of motion
     Q_PROPERTY(bool autoRotation READ autoRotation WRITE autoRotation NOTIFY autoRotationChanged)
 
-    //###Ought to be vectors, not points. Varying Vectors even?
     //###Call i/j? Makes more sense to those with vector calculus experience, and I could even add the cirumflex in QML?
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
     Q_PROPERTY(VaryingVector* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged)
@@ -118,6 +119,16 @@ public:
         return m_rotationVariation;
     }
 
+    qreal rotationSpeed() const
+    {
+        return m_rotationSpeed;
+    }
+
+    qreal rotationSpeedVariation() const
+    {
+        return m_rotationSpeedVariation;
+    }
+
 signals:
 
     void imageChanged();
@@ -130,6 +141,10 @@ signals:
     void yVectorChanged(VaryingVector* arg);
 
     void rotationVariationChanged(qreal arg);
+
+    void rotationSpeedChanged(qreal arg);
+
+    void rotationSpeedVariationChanged(qreal arg);
 
 public slots:
 void setRotation(qreal arg)
@@ -172,6 +187,22 @@ void setRotationVariation(qreal arg)
     }
 }
 
+void setRotationSpeed(qreal arg)
+{
+    if (m_rotationSpeed != arg) {
+        m_rotationSpeed = arg;
+        emit rotationSpeedChanged(arg);
+    }
+}
+
+void setRotationSpeedVariation(qreal arg)
+{
+    if (m_rotationSpeedVariation != arg) {
+        m_rotationSpeedVariation = arg;
+        emit rotationSpeedVariationChanged(arg);
+    }
+}
+
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void reset();
@@ -195,6 +226,8 @@ private:
     VaryingVector* m_xVector;
     VaryingVector* m_yVector;
     qreal m_rotationVariation;
+    qreal m_rotationSpeed;
+    qreal m_rotationSpeedVariation;
 };
 
 QT_END_NAMESPACE

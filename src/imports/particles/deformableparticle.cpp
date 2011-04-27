@@ -176,6 +176,7 @@ struct DeformableParticleVertex {
     float yx;
     float yy;
     float rotation;
+    float rotationSpeed;
     float autoRotate;//Assume that GPUs prefer floats to bools
 };
 
@@ -195,6 +196,8 @@ DeformableParticle::DeformableParticle(QSGItem* parent)
     , m_xVector(0)
     , m_yVector(0)
     , m_rotationVariation(0)
+    , m_rotationSpeed(0)
+    , m_rotationSpeedVariation(0)
 {
     setFlag(ItemHasContents);
 }
@@ -226,13 +229,13 @@ static QSGGeometry::Attribute DeformableParticle_Attributes[] = {
     { 2, 4, GL_FLOAT },             // Data
     { 3, 4, GL_FLOAT },             // Vectors
     { 4, 4, GL_FLOAT },             // DeformationVectors
-    { 5, 2, GL_FLOAT }              // Rotation
+    { 5, 3, GL_FLOAT }              // Rotation
 };
 
 static QSGGeometry::AttributeSet DeformableParticle_AttributeSet =
 {
     6, // Attribute Count
-    (2 + 2 + 4 + 4 + 4 + 2) * sizeof(float),
+    (2 + 2 + 4 + 4 + 4 + 3) * sizeof(float),
     DeformableParticle_Attributes
 };
 
@@ -279,6 +282,7 @@ QSGGeometryNode* DeformableParticle::buildParticleNode()
             vertices[i].yx = 0;
             vertices[i].yy = 1;
             vertices[i].rotation = 0;
+            vertices[i].rotationSpeed = 0;
             vertices[i].autoRotate = 0;
         }
 
@@ -421,6 +425,8 @@ void DeformableParticle::load(ParticleData *d)
     }
     p.v1.rotation = p.v2.rotation = p.v3.rotation = p.v4.rotation =
             (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
+    p.v1.rotationSpeed = p.v2.rotationSpeed = p.v3.rotationSpeed = p.v4.rotationSpeed =
+            (m_rotationSpeed + (m_rotationSpeedVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationSpeedVariation) ) * CONV;
     p.v1.autoRotate = p.v2.autoRotate = p.v3.autoRotate = p.v4.autoRotate = m_autoRotation?1.0:0.0;
 
     vertexCopy(p.v1, d->pv);
