@@ -34,7 +34,7 @@ maemo5 {
 }
 symbian {
     TARGET.UID3 = 0x20021317
-    include($$QT_SOURCE_TREE/demos/symbianpkgrules.pri)
+    CONFIG += qt_demo
     TARGET.EPOCHEAPSIZE = 0x20000 0x4000000
     TARGET.CAPABILITY = NetworkServices ReadUserData
 
