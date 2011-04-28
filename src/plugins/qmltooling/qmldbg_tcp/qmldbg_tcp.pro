@@ -1,3 +1,5 @@
+load(qt_module)
+
 TARGET = qmldbg_tcp
 QT       += declarative network
 
