@@ -137,8 +137,8 @@ void QSGFlickableVisibleArea::updateVisible()
 
 QSGFlickablePrivate::QSGFlickablePrivate()
   : contentItem(new QSGItem)
-    , hData(this, &QSGFlickablePrivate::setRoundedViewportX)
-    , vData(this, &QSGFlickablePrivate::setRoundedViewportY)
+    , hData(this, &QSGFlickablePrivate::setViewportX)
+    , vData(this, &QSGFlickablePrivate::setViewportY)
     , flickingHorizontally(false), flickingVertically(false)
     , hMoved(false), vMoved(false)
     , movingHorizontally(false), movingVertically(false)
@@ -823,14 +823,14 @@ void QSGFlickablePrivate::clearDelayedPress()
     }
 }
 
-void QSGFlickablePrivate::setRoundedViewportX(qreal x)
+void QSGFlickablePrivate::setViewportX(qreal x)
 {
-    contentItem->setX(qRound(x));
+    contentItem->setX(x);
 }
 
-void QSGFlickablePrivate::setRoundedViewportY(qreal y)
+void QSGFlickablePrivate::setViewportY(qreal y)
 {
-    contentItem->setY(qRound(y));
+    contentItem->setY(y);
 }
 
 void QSGFlickable::timerEvent(QTimerEvent *event)

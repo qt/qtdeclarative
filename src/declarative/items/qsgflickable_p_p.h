@@ -128,8 +128,8 @@ public:
     void captureDelayedPress(QGraphicsSceneMouseEvent *event);
     void clearDelayedPress();
 
-    void setRoundedViewportX(qreal x);
-    void setRoundedViewportY(qreal y);
+    void setViewportX(qreal x);
+    void setViewportY(qreal y);
 
     qreal overShootDistance(qreal velocity, qreal size);
 
