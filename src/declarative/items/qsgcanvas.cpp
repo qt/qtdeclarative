@@ -48,6 +48,8 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
+#include <private/qabstractanimation_p.h>
+
 #include <QtGui/qpainter.h>
 #include <QtGui/qgraphicssceneevent.h>
 #include <QtGui/qmatrix4x4.h>
@@ -60,6 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlThreadedRenderer, QML_THREADED_RENDERER)
+DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 
 /*
 Focus behavior
@@ -332,8 +335,8 @@ void QSGCanvasPrivate::renderSceneGraph()
 
 
 #ifdef FRAME_TIMING
-    int pixel;
-    glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+//    int pixel;
+//    glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
     readbackTime = frameTimer.elapsed();
 #endif
 
@@ -477,6 +480,8 @@ QSGCanvasPrivate::~QSGCanvasPrivate()
 
 void QSGCanvasPrivate::init(QSGCanvas *c)
 {
+    QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+
     q_ptr = c;
 
     Q_Q(QSGCanvas);
