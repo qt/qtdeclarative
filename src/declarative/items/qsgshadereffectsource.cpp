@@ -192,7 +192,7 @@ void QSGShaderEffectTexture::grab()
 
     if (!m_renderer) {
         m_renderer = context->createRenderer();
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
@@ -292,6 +292,7 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
 {
     setFlag(ItemHasContents);
     m_texture = new QSGShaderEffectTexture(this);
+    connect(m_texture, SIGNAL(textureChanged()), this, SIGNAL(textureChanged()), Qt::DirectConnection);
 }
 
 QSGShaderEffectSource::~QSGShaderEffectSource()

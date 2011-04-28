@@ -123,9 +123,6 @@ class QSGDynamicTexture : public QSGTexture
     Q_OBJECT
 public:
     virtual bool updateTexture() = 0;
-
-Q_SIGNALS:
-    void textureChanged();
 };
 
 QT_END_NAMESPACE
