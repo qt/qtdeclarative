@@ -531,26 +531,14 @@ static bool fontHasNarrowOutlines(const QRawFont &f)
 
 DEFINE_BOOL_CONFIG_OPTION(disableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-QHash<QString, QSGDistanceFieldGlyphCache *> QSGDistanceFieldGlyphCache::m_caches;
-QHash<QString, QGLContextGroupResource<QSGDistanceFieldGlyphCache::DistanceFieldTextureData> > QSGDistanceFieldGlyphCache::m_textures_data;
-
-static QString fontKey(const QRawFont &font)
-{
-    QString key;
-
-    key = font.familyName();
-    key.remove(QLatin1String(" "));
-    QString italic = font.style() == QFont::StyleItalic ? QLatin1String("i") : QLatin1String("");
-    QString bold = font.weight() > QFont::Normal ? QLatin1String("b") : QLatin1String("");
-    key += bold + italic + QString::number(qreal(font.pixelSize()));
-
-    return key;
-}
+QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *> QSGDistanceFieldGlyphCache::m_caches;
+QHash<QFontEngine *, QGLContextGroupResource<QSGDistanceFieldGlyphCache::DistanceFieldTextureData> > QSGDistanceFieldGlyphCache::m_textures_data;
 
 QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCache::get(const QGLContext *ctx, const QRawFont &font)
 {
-    QString key = QString::number(long(ctx), 16) + fontKey(font);
-    QHash<QString, QSGDistanceFieldGlyphCache *>::iterator atlas = m_caches.find(key);
+    QRawFontPrivate *fontD = QRawFontPrivate::get(font);
+    QPair<const QGLContext *, QFontEngine *> key(ctx, fontD->fontEngine);
+    QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *>::iterator atlas = m_caches.find(key);
     if (atlas == m_caches.end())
         atlas = m_caches.insert(key, new QSGDistanceFieldGlyphCache(ctx, font));
 
@@ -559,7 +547,7 @@ QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCache::get(const QGLContext *ct
 
 QSGDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDistanceFieldGlyphCache::textureData()
 {
-    return m_textures_data[m_distanceFieldKey].value(ctx);
+    return m_textures_data[QRawFontPrivate::get(m_font)->fontEngine].value(ctx);
 }
 
 QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QGLContext *c, const QRawFont &font)
@@ -571,11 +559,6 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QGLContext *c, cons
     Q_ASSERT(font.isValid());
     m_font = font;
 
-    QString basename = m_font.familyName();
-    basename.remove(QLatin1String(" "));
-    QString italic = m_font.style() == QFont::StyleItalic ? QLatin1String("i") : QLatin1String("");
-    QString bold = m_font.weight() > QFont::Normal ? QLatin1String("b") : QLatin1String("");
-    m_distanceFieldKey = basename + bold + italic;
     m_textureData = textureData();
 
     QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
@@ -619,7 +602,8 @@ void QSGDistanceFieldGlyphCache::onContextDestroyed(const QGLContext *context)
     if (context != ctx)
         return;
 
-    QString key = QString::number(long(context), 16) + fontKey(m_font);
+    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
+    QPair<const QGLContext *, QFontEngine *> key(context, fontD->fontEngine);
     m_caches.remove(key);
     deleteLater();
 }
