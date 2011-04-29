@@ -481,7 +481,6 @@ static void convert_to_Format_Alpha(QImage *image)
 
 static bool fontHasNarrowOutlines(const QRawFont &f)
 {
-    return true;
     QRawFont font = f;
     font.setPixelSize(QT_DISTANCEFIELD_DEFAULT_BASEFONTSIZE);
     Q_ASSERT(font.isValid());
