@@ -1268,7 +1268,7 @@ QSGItemPrivate::QSGItemPrivate()
   notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true), 
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
-  inheritMirrorFromParent(false), inheritMirrorFromItem(false),
+  inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
 
   canvas(0), parentItem(0),
 

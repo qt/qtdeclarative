@@ -488,6 +488,7 @@ public:
 void QSGGridViewPrivate::init()
 {
     Q_Q(QSGGridView);
+    QSGItemPrivate::get(contentItem)->childrenDoNotOverlap = true;
     QObject::connect(q, SIGNAL(movementEnded()), q, SLOT(animStopped()));
     q->setFlag(QSGItem::ItemIsFocusScope);
     q->setFlickableDirection(QSGFlickable::VerticalFlick);

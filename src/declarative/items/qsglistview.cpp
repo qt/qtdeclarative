@@ -611,6 +611,7 @@ public:
 void QSGListViewPrivate::init()
 {
     Q_Q(QSGListView);
+    QSGItemPrivate::get(contentItem)->childrenDoNotOverlap = true;
     q->setFlag(QSGItem::ItemIsFocusScope);
     addItemChangeListener(this, Geometry);
     QObject::connect(q, SIGNAL(movementEnded()), q, SLOT(animStopped()));

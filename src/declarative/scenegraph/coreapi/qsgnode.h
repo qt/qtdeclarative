@@ -99,7 +99,7 @@ public:
         // Lower 16 bites reserved for general node
         OwnedByParent               = 0x0001,
         UsePreprocess               = 0x0002,
-        ChildrenDoNotOverloap       = 0x0004,
+        ChildrenDoNotOverlap        = 0x0004,
 
         // Upper 16 bits reserved for node subclasses
 
