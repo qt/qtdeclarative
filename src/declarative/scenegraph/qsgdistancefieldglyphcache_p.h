@@ -112,12 +112,11 @@ private:
     void createTexture(int width, int height);
     void resizeTexture(int width, int height);
 
-    static QHash<QString, QSGDistanceFieldGlyphCache *> m_caches;
+    static QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *> m_caches;
 
     QRawFont m_font;
     QRawFont m_referenceFont;
 
-    QString m_distanceFieldKey;
     int m_glyphCount;
     QHash<glyph_t, Metrics> m_metrics;
     mutable int m_maxTextureSize;
@@ -145,7 +144,7 @@ private:
     };
     DistanceFieldTextureData *textureData();
     DistanceFieldTextureData *m_textureData;
-    static QHash<QString, QGLContextGroupResource<DistanceFieldTextureData> > m_textures_data;
+    static QHash<QFontEngine *, QGLContextGroupResource<DistanceFieldTextureData> > m_textures_data;
 
     const QGLContext *ctx;
     QGLShaderProgram *m_blitProgram;

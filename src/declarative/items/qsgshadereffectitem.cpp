@@ -435,7 +435,7 @@ QSGNode *QSGShaderEffectItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeD
             textures.append(qMakePair(source.name, source.item));
             QSGTextureProvider *t = QSGTextureProvider::from(source.item);
             if (t && t->textureChangedSignal())
-                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()));
+                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
         }
         m_material.setUniforms(values);
         m_material.setTextureProviders(textures);

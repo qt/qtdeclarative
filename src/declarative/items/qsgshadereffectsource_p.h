@@ -99,6 +99,9 @@ public:
 
     void grab();
 
+Q_SIGNALS:
+    void textureChanged();
+
 public Q_SLOTS:
     void markDirtyTexture();
 
@@ -183,7 +186,7 @@ public:
     void setMipmap(bool enabled);
 
     QSGTexture *texture() const;
-    const char *textureChangedSignal() const { return SIGNAL(textureChanged); }
+    const char *textureChangedSignal() const { return SIGNAL(textureChanged()); }
 
     Q_INVOKABLE void grab();
 
@@ -196,6 +199,8 @@ Q_SIGNALS:
     void liveChanged();
     void hideSourceChanged();
     void mipmapChanged();
+
+    void textureChanged();
 
 protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);

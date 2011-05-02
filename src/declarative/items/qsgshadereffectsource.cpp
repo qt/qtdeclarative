@@ -192,7 +192,7 @@ void QSGShaderEffectTexture::grab()
 
     if (!m_renderer) {
         m_renderer = context->createRenderer();
-        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
+        connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
@@ -255,7 +255,8 @@ void QSGShaderEffectTexture::grab()
     const QGLContext *ctx = QGLContext::currentContext();
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    m_renderer->setProjectMatrixToRect(m_rect);
+    QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
+    m_renderer->setProjectMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {
@@ -292,6 +293,7 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
 {
     setFlag(ItemHasContents);
     m_texture = new QSGShaderEffectTexture(this);
+    connect(m_texture, SIGNAL(textureChanged()), this, SIGNAL(textureChanged()), Qt::DirectConnection);
 }
 
 QSGShaderEffectSource::~QSGShaderEffectSource()
@@ -492,12 +494,12 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
     QSGShaderEffectTexture *tex = qobject_cast<QSGShaderEffectTexture *>(m_texture);
 
     tex->setItem(QSGItemPrivate::get(m_sourceItem)->itemNode());
-    QRectF sourceRect = m_sourceRect.isEmpty()
+    QRectF sourceRect = m_sourceRect.isNull()
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
                       : m_sourceRect;
     tex->setRect(sourceRect);
     QSize textureSize = m_textureSize.isEmpty()
-                      ? QSize(qCeil(sourceRect.width()), qCeil(sourceRect.height()))
+                      ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
     tex->setSize(textureSize);
     tex->setLive(m_live);
@@ -517,7 +519,7 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
     node->setTargetRect(QRectF(0, 0, width(), height()));
-    node->setSourceRect(QRectF(0, 1, 1, -1));
+    node->setSourceRect(QRectF(0, 0, 1, 1));
     node->update();
 
     return node;

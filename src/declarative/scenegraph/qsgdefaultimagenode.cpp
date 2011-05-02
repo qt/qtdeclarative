@@ -97,7 +97,6 @@ void QSGDefaultImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)
     markDirty(DirtyMaterial);
 }
 
-
 void QSGDefaultImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrapMode)
 {
     if (m_material.verticalWrapMode() == wrapMode)
