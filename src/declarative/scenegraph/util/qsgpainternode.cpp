@@ -79,19 +79,13 @@ void QSGPainterTexture::bind()
 
         int w = m_dirty_rect.width();
         int h = m_dirty_rect.height();
-        int y = m_image.height() - m_dirty_rect.y() - h;
 
 #ifdef QT_OPENGL_ES
-        for (int i = 0; i < h; ++i) {
-            glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), y + i, w, 1,
-                            GL_RGBA, GL_UNSIGNED_BYTE, subImage.constScanLine(h - 1 - i));
-        }
+        glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
+                        GL_RGBA, GL_UNSIGNED_BYTE, subImage.constBits());
 #else
-        for (int i = 0; i < h; ++i) {
-            glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), y + i, w, 1,
-                            GL_BGRA, GL_UNSIGNED_BYTE, subImage.constScanLine(h - 1 - i));
-        }
-
+        glTexSubImage2D(GL_TEXTURE_2D, 0, m_dirty_rect.x(), m_dirty_rect.y(), w, h,
+                        GL_BGRA, GL_UNSIGNED_BYTE, subImage.constBits());
 #endif
 
         m_dirty_texture = false;
@@ -201,7 +195,7 @@ void QSGPainterNode::updateGeometry()
 {
     QRectF source;
     if (m_actualRenderTarget == QSGPaintedItem::Image)
-        source = QRectF(0, 1, 1, -1);
+        source = QRectF(0, 0, 1, 1);
     else
         source = QRectF(0, 1, qreal(m_size.width()) / m_fboSize.width(), qreal(-m_size.height()) / m_fboSize.height());
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
