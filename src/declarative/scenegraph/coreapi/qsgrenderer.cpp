@@ -243,8 +243,7 @@ void QSGRenderer::renderScene(const Bindable &bindable)
     m_bindable = 0;
 
 #ifdef QSG_RENDERER_TIMING
-    printf("Frame #%d: Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
-           ++frameNumber,
+    printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
            preprocessTime,
            updatePassTime - preprocessTime,
            bindTime - updatePassTime,
