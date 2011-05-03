@@ -244,28 +244,6 @@ void QSGPaintedItem::setContentsScale(qreal)
     // XXX todo
 }
 
-int QSGPaintedItem::pixelCacheSize() const
-{
-    // XXX todo
-    return 0;
-}
-
-void QSGPaintedItem::setPixelCacheSize(int)
-{
-    // XXX todo
-}
-
-bool QSGPaintedItem::smoothCache() const
-{
-    // XXX todo
-    return false;
-}
-
-void QSGPaintedItem::setSmoothCache(bool)
-{
-    // XXX todo
-}
-
 /*!
     \property QSGPaintedItem::fillColor
     \brief The item's background fill color.
