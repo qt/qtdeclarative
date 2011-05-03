@@ -43,7 +43,8 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 ParticleAffector::ParticleAffector(QSGItem *parent) :
-    QSGItem(parent), m_needsReset(false), m_system(0), m_active(true), m_updateIntSet(false)
+    QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
+  , m_updateIntSet(false), m_shape(new ParticleExtruder(this)), m_signal(false)
 {
     connect(this, SIGNAL(systemChanged(ParticleSystem*)),
             this, SLOT(updateOffsets()));
@@ -82,11 +83,16 @@ void ParticleAffector::affectSystem(qreal dt)
         if(!d || (m_onceOff && m_onceOffed.contains(d->systemIndex)))
             continue;
         if(m_groups.isEmpty() || m_groups.contains(d->group)){
-            if(width() == 0 || height() == 0 || QRectF(m_offset.x(), m_offset.y(), width(), height()).contains(d->curX(), d->curY())){
+            //Need to have previous location for affected. if signal || shape might be faster?
+            QPointF curPos = QPointF(d->curX(), d->curY());
+            if(width() == 0 || height() == 0
+                    || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()),curPos)){
                 if(affectParticle(d, dt)){
                     m_system->m_needsReset << d;
                     if(m_onceOff)
                         m_onceOffed << d->systemIndex;
+                    if(m_signal)
+                        emit affected(curPos.x(), curPos.y());
                 }
             }
         }

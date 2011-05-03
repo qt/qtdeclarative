@@ -51,6 +51,7 @@ Rectangle{
         particles: ["goingLeft", "goingRight"]
         image: "content/singlesmile.png"
         rotation: 90
+        rotationSpeed: 90
         autoRotation: true
     }
     DeformableParticle{

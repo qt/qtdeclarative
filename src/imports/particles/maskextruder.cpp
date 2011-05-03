@@ -63,7 +63,8 @@ QPointF MaskExtruder::extrude(const QRectF &r)
 bool MaskExtruder::contains(const QRectF &bounds, const QPointF &point)
 {
     ensureInitialized(bounds);//###Current usage patterns WILL lead to different bounds/r calls. Separate list?
-    return m_mask.contains(QPointF(point.toPoint() - bounds.topLeft().toPoint()));
+    QPoint p = point.toPoint() - bounds.topLeft().toPoint();
+    return m_img.rect().contains(p) && (bool)m_img.pixelIndex(p);
 }
 
 void MaskExtruder::ensureInitialized(const QRectF &r)
@@ -76,14 +77,14 @@ void MaskExtruder::ensureInitialized(const QRectF &r)
     m_mask.clear();
     if(m_source.isEmpty())
         return;
-
-    QImage img(m_source.toLocalFile());
-    img = img.createAlphaMask();
-    img = img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
-    img = img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
+    qDebug() << "Rebuild required";
+    m_img = QImage(m_source.toLocalFile());
+    m_img = m_img.createAlphaMask();
+    m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
+    m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?
     for(int i=0; i<r.width(); i++){
         for(int j=0; j<r.height(); j++){
-            if(img.pixelIndex(i,j))//Direct bit manipulation is presumably more efficient
+            if(m_img.pixelIndex(i,j))//Direct bit manipulation is presumably more efficient
                 m_mask << QPointF(i,j);
         }
     }

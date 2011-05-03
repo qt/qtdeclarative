@@ -43,6 +43,7 @@
 #define MASKEXTRUDER_H
 #include "particleextruder.h"
 #include <QUrl>
+#include <QImage>
 
 QT_BEGIN_HEADER
 
@@ -85,6 +86,7 @@ private:
     void ensureInitialized(const QRectF &r);
     int m_lastWidth;
     int m_lastHeight;
+    QImage m_img;
     QList<QPointF> m_mask;//TODO: More memory efficient datastructures
 };
 
