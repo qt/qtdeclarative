@@ -75,6 +75,9 @@ public:
     bool opaquePainting() const;
     void setOpaquePainting(bool opaque);
 
+    bool antialiasing() const;
+    void setAntialiasing(bool enable);
+
     QSize contentsSize() const;
     void setContentsSize(const QSize &);
     void resetContentsSize();
