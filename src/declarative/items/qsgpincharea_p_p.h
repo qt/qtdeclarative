@@ -1,4 +1,4 @@
-// Commit: 2ec2dc55ddf424f5a7acd0a4729ddd9af2d7c398
+// Commit: f707672eb4c51ea82fbd98e1da16ece61a74c690
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -68,7 +68,8 @@ class QSGPinchAreaPrivate : public QSGItemPrivate
 public:
     QSGPinchAreaPrivate()
       : absorb(true), stealMouse(false), inPinch(false)
-      , pinchRejected(false), pinch(0), pinchStartDist(0), pinchStartScale(1.0)
+      , pinchRejected(false), pinchActivated(false)
+      , pinch(0), pinchStartDist(0), pinchStartScale(1.0)
       , pinchLastScale(1.0), pinchStartRotation(0.0), pinchStartAngle(0.0)
       , pinchLastAngle(0.0), pinchRotation(0.0)
     {
@@ -87,6 +88,7 @@ public:
     bool stealMouse : 1;
     bool inPinch : 1;
     bool pinchRejected : 1;
+    bool pinchActivated : 1;
     QSGPinch *pinch;
     QPointF sceneStartPoint1;
     QPointF sceneStartPoint2;
@@ -104,6 +106,7 @@ public:
     QPointF sceneLastCenter;
     QPointF pinchStartPos;
     QList<QTouchEvent::TouchPoint> touchPoints;
+    int id1;
 };
 
 QT_END_NAMESPACE

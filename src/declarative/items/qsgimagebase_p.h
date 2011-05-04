@@ -1,4 +1,4 @@
-// Commit: ab71df83ba4eb9d749efc0f3a2d4a0fe5486023f
+// Commit: af05f64d3edc860c3cf79c7f0bdf2377faae5f40
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -60,7 +60,7 @@ class Q_AUTOTEST_EXPORT QSGImageBase : public QSGImplicitSizeItem
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
-    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize NOTIFY sourceSizeChanged)
+    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
 
 public:
@@ -81,6 +81,7 @@ public:
 
     virtual void setSourceSize(const QSize&);
     QSize sourceSize() const;
+    void resetSourceSize();
 
     virtual void setMirror(bool mirror);
     bool mirror() const;

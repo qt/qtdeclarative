@@ -1,4 +1,4 @@
-// Commit: cb0a6844705802564c81b581f24a76c5d5adf6d1
+// Commit: 160f1867868cdea916923652b00484ed11f90aaa
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -96,8 +96,18 @@ public:
     struct AxisData {
         AxisData(QSGFlickablePrivate *fp, void (QSGFlickablePrivate::*func)(qreal))
             : move(fp, func), viewSize(-1), smoothVelocity(fp), atEnd(false), atBeginning(true)
-            , fixingUp(false)
+            , fixingUp(false), inOvershoot(false)
         {}
+
+        void reset() {
+            velocityBuffer.clear();
+            dragStartOffset = 0;
+            fixingUp = false;
+            inOvershoot = false;
+        }
+
+        void addVelocitySample(qreal v, qreal maxVelocity);
+        void updateVelocity();
 
         QDeclarativeTimeLineValueProxy<QSGFlickablePrivate> move;
         qreal viewSize;
@@ -108,9 +118,11 @@ public:
         qreal velocity;
         qreal flickTarget;
         QSGFlickablePrivate::Velocity smoothVelocity;
+        QPODVector<qreal,10> velocityBuffer;
         bool atEnd : 1;
         bool atBeginning : 1;
         bool fixingUp : 1;
+        bool inOvershoot : 1;
     };
 
     void flickX(qreal velocity);
@@ -131,7 +143,7 @@ public:
     void setRoundedViewportX(qreal x);
     void setRoundedViewportY(qreal y);
 
-    qreal overShootDistance(qreal velocity, qreal size);
+    qreal overShootDistance(qreal size);
 
     void itemGeometryChanged(QSGItem *, const QRectF &, const QRectF &);
 

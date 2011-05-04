@@ -1,4 +1,4 @@
-// Commit: cc6408ccd5453d1bed9f98b9caa14861cea5742b
+// Commit: fda9cc1d8a0e49817d1c6192c52d18dffcecf327
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -581,6 +581,26 @@ void QSGGridViewPrivate::refill(qreal from, qreal to, bool doBuffer)
             --i;
         modelIndex = visibleItems.at(i)->index + 1;
     }
+
+    if (visibleItems.count() && (fillFrom > rowPos + rowSize()*2
+        || fillTo < rowPosAt(visibleIndex) - rowSize())) {
+        // We've jumped more than a page.  Estimate which items are now
+        // visible and fill from there.
+        int count = (fillFrom - (rowPos + rowSize())) / (rowSize()) * columns;
+        for (int i = 0; i < visibleItems.count(); ++i)
+            releaseItem(visibleItems.at(i));
+        visibleItems.clear();
+        modelIndex += count;
+        if (modelIndex >= model->count())
+            modelIndex = model->count() - 1;
+        else if (modelIndex < 0)
+            modelIndex = 0;
+        modelIndex = modelIndex / columns * columns;
+        visibleIndex = modelIndex;
+        colPos = colPosAt(visibleIndex);
+        rowPos = rowPosAt(visibleIndex);
+    }
+
     int colNum = colPos / colSize();
 
     FxGridItemSG *item = 0;
@@ -1112,6 +1132,7 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
     } else {
         QSGFlickablePrivate::fixup(data, minExtent, maxExtent);
     }
+    data.inOvershoot = false;
     fixupMode = Normal;
 }
 
@@ -1190,7 +1211,7 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             accel = v2 / (2.0f * qAbs(dist));
         } else {
             data.flickTarget = velocity > 0 ? minExtent : maxExtent;
-            overshootDist = overShoot ? overShootDistance(v, vSize) : 0;
+            overshootDist = overShoot ? overShootDistance(vSize) : 0;
         }
         timeline.reset(data.move);
         timeline.accel(data.move, v, accel, maxDistance + overshootDist);
@@ -1869,7 +1890,7 @@ qreal QSGGridView::maxXExtent() const
     qreal extent;
     qreal highlightStart;
     qreal highlightEnd;
-    qreal lastItemPosition;
+    qreal lastItemPosition = 0;
     if (d->isRightToLeftTopToBottom()){
         highlightStart = d->highlightRangeStartValid ? d->highlightRangeEnd : d->size();
         highlightEnd = d->highlightRangeEndValid ? d->highlightRangeStart : d->size();
@@ -1877,6 +1898,7 @@ qreal QSGGridView::maxXExtent() const
     } else {
         highlightStart = d->highlightRangeStart;
         highlightEnd = d->highlightRangeEnd;
+        lastItemPosition = 0;
         if (d->model && d->model->count())
             lastItemPosition = d->rowPosAt(d->model->count()-1);
     }
@@ -2367,11 +2389,9 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
         if (d->currentItem) {
             d->currentItem->index = d->currentIndex;
             d->currentItem->setPosition(d->colPosAt(d->currentIndex), d->rowPosAt(d->currentIndex));
-        } else if (!d->currentIndex || (d->currentIndex < 0 && !d->currentIndexCleared)) {
-            d->updateCurrent(0);
         }
         emit currentIndexChanged();
-    } else if (d->itemCount == 0 && d->currentIndex == -1) {
+    } else if (d->itemCount == 0 && (!d->currentIndex || (d->currentIndex < 0 && !d->currentIndexCleared))) {
         setCurrentIndex(0);
     }
 
@@ -2439,6 +2459,8 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
         d->currentIndex = -1;
         if (d->itemCount)
             d->updateCurrent(qMin(modelIndex, d->itemCount-1));
+        else
+            emit currentIndexChanged();
     }
 
     // update visibleIndex
