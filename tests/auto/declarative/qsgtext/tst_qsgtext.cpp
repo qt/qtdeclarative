@@ -106,8 +106,6 @@ private slots:
     void QTBUG_12291();
     void implicitSize_data();
     void implicitSize();
-    void testQtQuick11Attributes();
-    void testQtQuick11Attributes_data();
 
     void qtbug_14734();
 private:
@@ -1323,12 +1321,10 @@ void tst_qsgtext::lineHeight()
 
     qreal h2 = myText->height();
     myText->setLineHeight(2.0);
-    QEXPECT_FAIL("", "QTBUG-17325", Continue);
     QVERIFY(myText->height() == h2 * 2.0);
 
     myText->setLineHeightMode(QSGText::FixedHeight);
     myText->setLineHeight(10);
-    QEXPECT_FAIL("", "QTBUG-17325", Continue);
     QCOMPARE(myText->height(), myText->lineCount() * 10.0);
 
     delete canvas;
@@ -1361,57 +1357,6 @@ void tst_qsgtext::implicitSize()
     QVERIFY(textObject->height() == textObject->implicitHeight());
 
     delete textObject;
-}
-
-void tst_qsgtext::testQtQuick11Attributes()
-{
-    QFETCH(QString, code);
-    QFETCH(QString, warning);
-    QFETCH(QString, error);
-
-    QDeclarativeEngine engine;
-    QObject *obj;
-
-    QDeclarativeComponent valid(&engine);
-    valid.setData("import QtQuick 2.0; Text { " + code.toUtf8() + " }", QUrl(""));
-    obj = valid.create();
-    QVERIFY(obj);
-    QVERIFY(valid.errorString().isEmpty());
-    delete obj;
-
-    QDeclarativeComponent invalid(&engine);
-    invalid.setData("import QtQuick 1.0; Text { " + code.toUtf8() + " }", QUrl(""));
-    QTest::ignoreMessage(QtWarningMsg, warning.toUtf8());
-    obj = invalid.create();
-    QCOMPARE(invalid.errorString(), error);
-    delete obj;
-}
-
-void tst_qsgtext::testQtQuick11Attributes_data()
-{
-    QTest::addColumn<QString>("code");
-    QTest::addColumn<QString>("warning");
-    QTest::addColumn<QString>("error");
-
-    QTest::newRow("maximumLineCount") << "maximumLineCount: 4"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"Text.maximumLineCount\" is not available in QtQuick 1.0.\n";
-
-    QTest::newRow("lineHeight") << "lineHeight: 2"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"Text.lineHeight\" is not available in QtQuick 1.0.\n";
-
-    QTest::newRow("lineHeightMode") << "lineHeightMode: Text.ProportionalHeight"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"Text.lineHeightMode\" is not available in QtQuick 1.0.\n";
-
-    QTest::newRow("lineCount") << "property int foo: lineCount"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: lineCount"
-        << "";
-
-    QTest::newRow("truncated") << "property bool foo: truncated"
-        << "<Unknown File>:1: ReferenceError: Can't find variable: truncated"
-        << "";
 }
 
 void tst_qsgtext::qtbug_14734()
