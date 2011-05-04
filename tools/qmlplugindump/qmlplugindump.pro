@@ -2,7 +2,7 @@ TEMPLATE = app
 CONFIG += qt uic console
 DESTDIR = ../../bin
 
-QT += declarative
+QT += declarative declarative-private core-private
 
 TARGET = qmlplugindump
 
