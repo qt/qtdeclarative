@@ -289,7 +289,7 @@ void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorStr
 }
 
 QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, const QImage &i)
-    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i)
+    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i), texture(0), context(0)
 {
 }
 
@@ -793,7 +793,7 @@ bool QDeclarativePixmapReply::event(QEvent *event)
         if (data) {
             Event *de = static_cast<Event *>(event);
             data->pixmapStatus = (de->error == NoError) ? QDeclarativePixmap::Ready : QDeclarativePixmap::Error;
-            
+
             if (data->pixmapStatus == QDeclarativePixmap::Ready) {
                 if (de->texture) {
                     data->texture = de->texture;

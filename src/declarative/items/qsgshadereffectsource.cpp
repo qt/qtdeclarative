@@ -65,6 +65,7 @@ QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
+    , m_mipmap(false)
     , m_live(true)
     , m_dirtyTexture(true)
     , m_multisamplingSupportChecked(false)
@@ -95,7 +96,7 @@ bool QSGShaderEffectTexture::hasAlphaChannel() const
 
 bool QSGShaderEffectTexture::hasMipmaps() const
 {
-    return m_mipmapFiltering;
+    return m_mipmap;
 }
 
 
@@ -114,12 +115,12 @@ bool QSGShaderEffectTexture::updateTexture()
     return false;
 }
 
-void QSGShaderEffectTexture::setHasMipmaps(QSGTexture::Filtering filtering)
+void QSGShaderEffectTexture::setHasMipmaps(bool mipmap)
 {
-    if (filtering == m_mipmapFiltering)
+    if (mipmap == m_mipmap)
         return;
-    m_mipmapFiltering = filtering;
-    if (filtering != None && m_fbo && !m_fbo->format().mipmap())
+    m_mipmap = mipmap;
+    if (m_mipmap && m_fbo && !m_fbo->format().mipmap())
         markDirtyTexture();
 }
 
@@ -196,9 +197,8 @@ void QSGShaderEffectTexture::grab()
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
-    bool mipmap = m_mipmapFiltering != None;
     if (!m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format
-        || (!m_fbo->format().mipmap() && mipmap))
+        || (!m_fbo->format().mipmap() && m_mipmap))
     {
         if (!m_multisamplingSupportChecked) {
             QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
@@ -217,7 +217,7 @@ void QSGShaderEffectTexture::grab()
             m_multisampledFbo = new QGLFramebufferObject(m_size, format);
 
             format.setAttachment(QGLFramebufferObject::NoAttachment);
-            format.setMipmap(m_mipmapFiltering);
+            format.setMipmap(m_mipmap);
             format.setSamples(0);
             m_fbo = new QGLFramebufferObject(m_size, format);
 
@@ -226,7 +226,7 @@ void QSGShaderEffectTexture::grab()
             QGLFramebufferObjectFormat format;
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
-            format.setMipmap(m_mipmapFiltering);
+            format.setMipmap(m_mipmap);
             m_fbo = new QGLFramebufferObject(m_size, format);
         }
     }
@@ -267,7 +267,7 @@ void QSGShaderEffectTexture::grab()
         m_renderer->renderScene(BindableFbo(m_fbo));
     }
 
-    if (mipmap) {
+    if (m_mipmap) {
         glBindTexture(GL_TEXTURE_2D, textureId());
         ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
     }
@@ -461,6 +461,8 @@ static void get_wrap_mode(QSGShaderEffectSource::WrapMode mode, QSGTexture::Wrap
         *hWrap = *vWrap = QSGTexture::Repeat;
         break;
     default:
+        // QSGShaderEffectSource::ClampToEdge
+        *hWrap = *vWrap = QSGTexture::ClampToEdge;
         break;
     }
 }
@@ -504,12 +506,12 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
     tex->setSize(textureSize);
     tex->setLive(m_live);
     tex->setFormat(GLenum(m_format));
+    tex->setHasMipmaps(m_mipmap);
 
     QSGTexture::Filtering filtering = QSGItemPrivate::get(this)->smooth
                                             ? QSGTexture::Linear
                                             : QSGTexture::Nearest;
     QSGTexture::Filtering mmFiltering = m_mipmap ? filtering : QSGTexture::None;
-    tex->setHasMipmaps(mmFiltering);
     node->setMipmapFiltering(mmFiltering);
     node->setFiltering(filtering);
 

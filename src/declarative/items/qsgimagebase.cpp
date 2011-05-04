@@ -1,4 +1,4 @@
-// Commit: 462429f5692f810bdd4e04b916db5f9af428d9e4
+// Commit: 051a76c1d65d698f71dc75c89f91ae9021357eae
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -134,6 +134,18 @@ QSize QSGImageBase::sourceSize() const
     return QSize(width != -1 ? width : d->pix.width(), height != -1 ? height : d->pix.height());
 }
 
+void QSGImageBase::resetSourceSize()
+{
+    Q_D(QSGImageBase);
+    if (!d->explicitSourceSize)
+        return;
+    d->explicitSourceSize = false;
+    d->sourcesize = QSize();
+    emit sourceSizeChanged();
+    if (isComponentComplete())
+        load();
+}
+
 bool QSGImageBase::cache() const
 {
     Q_D(const QSGImageBase);
@@ -180,11 +192,9 @@ void QSGImageBase::load()
         d->pix.clear(this);
         d->status = Null;
         d->progress = 0.0;
-        setImplicitWidth(0);
-        setImplicitHeight(0);
+        pixmapChange();
         emit progressChanged(d->progress);
         emit statusChanged(d->status);
-        pixmapChange();
         update();
     } else {
         QDeclarativePixmap::Options options;
@@ -235,8 +245,7 @@ void QSGImageBase::requestFinished()
 
     d->progress = 1.0;
 
-    setImplicitWidth(d->pix.width());
-    setImplicitHeight(d->pix.height());
+    pixmapChange();
 
     if (d->sourcesize.width() != d->pix.width() || d->sourcesize.height() != d->pix.height())
         emit sourceSizeChanged();
@@ -245,7 +254,7 @@ void QSGImageBase::requestFinished()
         emit statusChanged(d->status);
     if (d->progress != oldProgress)
         emit progressChanged(d->progress);
-    pixmapChange();
+
     update();
 }
 
@@ -268,6 +277,9 @@ void QSGImageBase::componentComplete()
 
 void QSGImageBase::pixmapChange()
 {
+    Q_D(QSGImageBase);
+    setImplicitWidth(d->pix.width());
+    setImplicitHeight(d->pix.height());
 }
 
 QT_END_NAMESPACE

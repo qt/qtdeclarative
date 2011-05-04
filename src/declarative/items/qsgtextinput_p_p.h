@@ -1,4 +1,4 @@
-// Commit: 27e4302b7f45f22180693d26747f419177c81e27
+// Commit: 47712d1f330e4b22ce6dd30e7557288ef7f7fca0
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -72,10 +72,11 @@ public:
     QSGTextInputPrivate() : control(new QLineControl(QString())),
                  color((QRgb)0), style(QSGText::Normal),
                  styleColor((QRgb)0), hAlign(QSGTextInput::AlignLeft),
-                 mouseSelectionMode(QSGTextInput::SelectCharacters),
+                 mouseSelectionMode(QSGTextInput::SelectCharacters), inputMethodHints(Qt::ImhNone),
                  hscroll(0), oldScroll(0), oldValidity(false), focused(false), focusOnPress(true),
                  showInputPanelOnFocus(true), clickCausedFocus(false), cursorVisible(false),
-                 autoScroll(true), selectByMouse(false), canPaste(false), hAlignImplicit(true)
+                 autoScroll(true), selectByMouse(false), canPaste(false), hAlignImplicit(true),
+                 selectPressed(false)
     {
 #ifdef Q_OS_SYMBIAN
         if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
@@ -106,6 +107,7 @@ public:
     void mirrorChange();
     int calculateTextWidth();
     bool sendMouseEventToInputContext(QGraphicsSceneMouseEvent *event, QEvent::Type eventType);
+    void updateInputMethodHints();
 
     QLineControl* control;
 
@@ -118,6 +120,7 @@ public:
     QColor  styleColor;
     QSGTextInput::HAlignment hAlign;
     QSGTextInput::SelectionMode mouseSelectionMode;
+    Qt::InputMethodHints inputMethodHints;
     QPointer<QDeclarativeComponent> cursorComponent;
     QPointer<QSGItem> cursorItem;
     QPointF pressPos;
@@ -139,6 +142,7 @@ public:
     bool selectByMouse:1;
     bool canPaste:1;
     bool hAlignImplicit:1;
+    bool selectPressed:1;
 
     static inline QSGTextInputPrivate *get(QSGTextInput *t) {
         return t->d_func();

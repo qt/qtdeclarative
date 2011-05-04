@@ -186,6 +186,7 @@ void ParticleSystem::initializeSystem()
     m_timestamp.start();
     m_initialized = true;
     emit systemInitialized();
+    qDebug() << "System Initialized. Size:" << m_particle_count;
 }
 
 void ParticleSystem::reset()
@@ -210,6 +211,7 @@ void ParticleSystem::reset()
 ParticleData* ParticleSystem::newDatum(int groupId)
 {
     Q_ASSERT(groupId < m_groupData.count());//XXX shouldn't really be an assert
+    Q_ASSERT(m_groupData[groupId]->size);
     int nextIdx = m_groupData[groupId]->start + m_groupData[groupId]->nextIdx++;
     if( m_groupData[groupId]->nextIdx >= m_groupData[groupId]->size)
         m_groupData[groupId]->nextIdx = 0;

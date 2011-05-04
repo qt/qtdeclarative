@@ -254,7 +254,8 @@ public:
     bool isMirrorImplicit:1;
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
-    quint32 dummy:2;
+    bool childrenDoNotOverlap:1;
+    quint32 dummy:1;
 
     QSGCanvas *canvas;
     QSGContext *sceneGraphContext() const { return static_cast<QSGCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
@@ -689,6 +690,7 @@ QSGNode *QSGItemPrivate::childContainerNode()
             opacityNode->appendChildNode(groupNode);
         else
             itemNode()->appendChildNode(groupNode);
+        groupNode->setFlag(QSGNode::ChildrenDoNotOverlap, childrenDoNotOverlap);
 #ifdef QML_RUNTIME_TESTING
         groupNode->description = QLatin1String("group");
 #endif

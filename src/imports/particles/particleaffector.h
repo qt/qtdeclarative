@@ -44,6 +44,7 @@
 
 #include <QObject>
 #include "particlesystem.h"
+#include "particleextruder.h"
 
 QT_BEGIN_HEADER
 
@@ -59,6 +60,8 @@ class ParticleAffector : public QSGItem
     Q_PROPERTY(QStringList particles READ particles WRITE setParticles NOTIFY particlesChanged)
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(bool onceOff READ onceOff WRITE setOnceOff NOTIFY onceOffChanged)
+    Q_PROPERTY(ParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
+    Q_PROPERTY(bool signal READ signal WRITE setSignal NOTIFY signalChanged)
 
 public:
     explicit ParticleAffector(QSGItem *parent = 0);
@@ -84,6 +87,16 @@ public:
         return m_onceOff;
     }
 
+    ParticleExtruder* shape() const
+    {
+        return m_shape;
+    }
+
+    bool signal() const
+    {
+        return m_signal;
+    }
+
 signals:
 
     void systemChanged(ParticleSystem* arg);
@@ -93,6 +106,11 @@ signals:
     void activeChanged(bool arg);
 
     void onceOffChanged(bool arg);
+
+    void shapeChanged(ParticleExtruder* arg);
+
+    void affected(qreal x, qreal y);//###Idx too?
+    void signalChanged(bool arg);
 
 public slots:
 void setSystem(ParticleSystem* arg)
@@ -129,6 +147,22 @@ void setOnceOff(bool arg)
     }
 }
 
+void setShape(ParticleExtruder* arg)
+{
+    if (m_shape != arg) {
+        m_shape = arg;
+        emit shapeChanged(arg);
+    }
+}
+
+void setSignal(bool arg)
+{
+    if (m_signal != arg) {
+        m_signal = arg;
+        emit signalChanged(arg);
+    }
+}
+
 protected:
     friend class ParticleSystem;
     virtual bool affectParticle(ParticleData *d, qreal dt);
@@ -145,6 +179,10 @@ private:
     bool m_updateIntSet;
 
     bool m_onceOff;
+
+    ParticleExtruder* m_shape;
+
+    bool m_signal;
 
 private slots:
     void updateOffsets();

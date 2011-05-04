@@ -1,4 +1,4 @@
-// Commit: 27e4302b7f45f22180693d26747f419177c81e27
+// Commit: 2f173e4945dd8414636c1061acfaf9c2d8b718d8
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -83,7 +83,7 @@ class Q_AUTOTEST_EXPORT QSGTextInput : public QSGImplicitSizePaintedItem
     Q_PROPERTY(QValidator* validator READ validator WRITE setValidator NOTIFY validatorChanged)
 #endif
     Q_PROPERTY(QString inputMask READ inputMask WRITE setInputMask NOTIFY inputMaskChanged)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ imHints WRITE setIMHints)
 
     Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged)
     Q_PROPERTY(EchoMode echoMode READ echoMode WRITE setEchoMode NOTIFY echoModeChanged)
@@ -211,6 +211,9 @@ public:
     bool canPaste() const;
 
     bool isInputMethodComposing() const;
+
+    Qt::InputMethodHints imHints() const;
+    void setIMHints(Qt::InputMethodHints hints);
 
 Q_SIGNALS:
     void textChanged();

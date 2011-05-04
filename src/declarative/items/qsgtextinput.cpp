@@ -1,4 +1,4 @@
-// Commit: b94176e69efc3948696c6774d5a228fc753b5b29
+// Commit: 47712d1f330e4b22ce6dd30e7557288ef7f7fca0
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -442,6 +442,20 @@ bool QSGTextInput::hasAcceptableInput() const
     return d->control->hasAcceptableInput();
 }
 
+void QSGTextInputPrivate::updateInputMethodHints()
+{
+    Q_Q(QSGTextInput);
+    Qt::InputMethodHints hints = inputMethodHints;
+    uint echo = control->echoMode();
+    if (echo == QSGTextInput::Password || echo == QSGTextInput::NoEcho)
+        hints |= Qt::ImhHiddenText;
+    else if (echo == QSGTextInput::PasswordEchoOnEdit)
+        hints &= ~Qt::ImhHiddenText;
+    if (echo != QSGTextInput::Normal)
+        hints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    q->setInputMethodHints(hints);
+}
+
 QSGTextInput::EchoMode QSGTextInput::echoMode() const
 {
     Q_D(const QSGTextInput);
@@ -453,19 +467,25 @@ void QSGTextInput::setEchoMode(QSGTextInput::EchoMode echo)
     Q_D(QSGTextInput);
     if (echoMode() == echo)
         return;
-    Qt::InputMethodHints imHints = inputMethodHints();
-    if (echo == Password || echo == NoEcho)
-        imHints |= Qt::ImhHiddenText;
-    else
-        imHints &= ~Qt::ImhHiddenText;
-    if (echo != Normal)
-        imHints |= (Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
-    else
-        imHints &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
-    setInputMethodHints(imHints);
     d->control->setEchoMode((uint)echo);
+    d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());
+}
+
+Qt::InputMethodHints QSGTextInput::imHints() const
+{
+    Q_D(const QSGTextInput);
+    return d->inputMethodHints;
+}
+
+void QSGTextInput::setIMHints(Qt::InputMethodHints hints)
+{
+    Q_D(QSGTextInput);
+    if (d->inputMethodHints == hints)
+        return;
+    d->inputMethodHints = hints;
+    d->updateInputMethodHints();
 }
 
 QDeclarativeComponent* QSGTextInput::cursorDelegate() const
@@ -485,6 +505,8 @@ void QSGTextInput::setCursorDelegate(QDeclarativeComponent* c)
         //note that the components are owned by something else
         disconnect(d->control, SIGNAL(cursorPositionChanged(int,int)),
                 this, SLOT(moveCursor()));
+        disconnect(d->control, SIGNAL(updateMicroFocus()),
+                this, SLOT(moveCursor()));
         delete d->cursorItem;
     }else{
         d->startCreatingCursor();
@@ -497,7 +519,9 @@ void QSGTextInputPrivate::startCreatingCursor()
 {
     Q_Q(QSGTextInput);
     q->connect(control, SIGNAL(cursorPositionChanged(int,int)),
-            q, SLOT(moveCursor()));
+            q, SLOT(moveCursor()), Qt::UniqueConnection);
+    q->connect(control, SIGNAL(updateMicroFocus()),
+            q, SLOT(moveCursor()), Qt::UniqueConnection);
     if(cursorComponent->isReady()){
         q->createCursor();
     }else if(cursorComponent->isLoading()){
@@ -648,9 +672,10 @@ void QSGTextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
+        d->selectPressed = true;
         d->pressPos = event->pos();
     }
-    bool mark = event->modifiers() & Qt::ShiftModifier;
+    bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->xToPos(event->pos().x());
     d->control->moveCursor(cursor, mark);
     event->setAccepted(true);
@@ -661,7 +686,7 @@ void QSGTextInput::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     Q_D(QSGTextInput);
     if (d->sendMouseEventToInputContext(event, QEvent::MouseMove))
         return;
-    if (d->selectByMouse) {
+    if (d->selectPressed) {
         if (qAbs(int(event->pos().x() - d->pressPos.x())) > QApplication::startDragDistance())
             setKeepMouseGrab(true);
         moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
@@ -676,8 +701,10 @@ void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     Q_D(QSGTextInput);
     if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonRelease))
         return;
-    if (d->selectByMouse)
+    if (d->selectPressed) {
+        d->selectPressed = false;
         setKeepMouseGrab(false);
+    }
     if (!d->showInputPanelOnFocus) { // input panel on click
         if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
             if (canvas() && canvas() == qApp->focusWidget()) {
@@ -731,6 +758,8 @@ bool QSGTextInputPrivate::sendMouseEventToInputContext(
 
 void QSGTextInput::mouseUngrabEvent()
 {
+    Q_D(QSGTextInput);
+    d->selectPressed = false;
     setKeepMouseGrab(false);
 }
 

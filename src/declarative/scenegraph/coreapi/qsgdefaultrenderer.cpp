@@ -386,7 +386,7 @@ void QMLRenderer::buildLists(QSGNode *node)
     static bool reorder = !qApp->arguments().contains(QLatin1String("--no-reorder"));
 #endif
 
-    if (reorder && count > 1 && (node->flags() & QSGNode::ChildrenDoNotOverloap)) {
+    if (reorder && count > 1 && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
         QVarLengthArray<int, 16> beginIndices(count);
         QVarLengthArray<int, 16> endIndices(count);
         int baseCount = m_transparentNodes.size();

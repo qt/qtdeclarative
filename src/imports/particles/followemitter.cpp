@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
 
 FollowEmitter::FollowEmitter(QSGItem *parent) :
     ParticleEmitter(parent)
+  , m_particlesPerParticlePerSecond(0)
   , m_lastTimeStamp(0)
   , m_emitterXVariation(0)
   , m_emitterYVariation(0)
@@ -66,7 +67,7 @@ void FollowEmitter::recalcParticlesPerSecond(){
         return;
     m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size;
     if(!m_followCount){
-        setParticlesPerSecond(1000);//XXX: Fix this horrendous hack, needed so they aren't turned off from start
+        setParticlesPerSecond(1000);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
         setParticlesPerSecond(m_particlesPerParticlePerSecond * m_followCount);
         m_lastEmission.resize(m_followCount);

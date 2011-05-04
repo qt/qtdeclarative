@@ -82,6 +82,7 @@ public:
     void init(QSGBasePositioner::PositionerType at)
     {
         type = at;
+        childrenDoNotOverlap = true;
     }
 
     int spacing;
