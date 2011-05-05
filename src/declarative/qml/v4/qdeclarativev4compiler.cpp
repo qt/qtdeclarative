@@ -404,15 +404,15 @@ void QDeclarativeV4CompilerPrivate::visitUnop(IR::Unop *e)
         break;
 
     case IR::OpIfTrue:
+        convertToBool(e->expr, src);
         if (src != currentReg) {
             i.move_reg_reg(currentReg, src);
             gen(i);
-        } else {
-            // nothing to do
         }
         break;
 
     case IR::OpNot:
+        convertToBool(e->expr, src);
         i.unary_not(currentReg, src);
         gen(i);
         break;

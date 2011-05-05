@@ -72,6 +72,7 @@ private slots:
 
     void unnecessaryReeval();
     void logicalOr();
+    void conditionalExpr();
     void qtscript();
     void qtscript_data();
     void nestedObjectAccess();
@@ -121,6 +122,7 @@ void tst_qdeclarativev4::qtscript_data()
     QTest::newRow("qreal -> int rounding") << "qrealToIntRounding.qml";
     QTest::newRow("exception on fetch") << "fetchException.qml";
     QTest::newRow("logical or") << "logicalOr.qml";
+    QTest::newRow("conditional expressions") << "conditionalExpr.qml";
     QTest::newRow("double bool jump") << "doubleBoolJump.qml";
     QTest::newRow("unary minus") << "unaryMinus.qml";
     QTest::newRow("null qobject") << "nullQObject.qml";
@@ -184,6 +186,22 @@ void tst_qdeclarativev4::logicalOr()
         QVERIFY(ro != 0);
 
         QCOMPARE(ro->result(), 1);
+        delete o;
+    }
+}
+
+void tst_qdeclarativev4::conditionalExpr()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("conditionalExpr.qml"));
+
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        ResultObject *ro = qobject_cast<ResultObject *>(o);
+        QVERIFY(ro != 0);
+
+        QCOMPARE(ro->result(), 0);
         delete o;
     }
 }
