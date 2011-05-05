@@ -61,12 +61,13 @@ QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
     , m_shaderSource(shaderSource)
     , m_renderer(0)
     , m_fbo(0)
-    , m_multisampledFbo(0)
+    , m_secondaryFbo(0)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
     , m_mipmap(false)
     , m_live(true)
+    , m_recursive(false)
     , m_dirtyTexture(true)
     , m_multisamplingSupportChecked(false)
     , m_multisampling(false)
@@ -77,7 +78,7 @@ QSGShaderEffectTexture::~QSGShaderEffectTexture()
 {
     delete m_renderer;
     delete m_fbo;
-    delete m_multisampledFbo;
+    delete m_secondaryFbo;
 #ifdef QSG_DEBUG_FBO_OVERLAY
     delete m_debugOverlay;
 #endif
@@ -86,7 +87,7 @@ QSGShaderEffectTexture::~QSGShaderEffectTexture()
 
 int QSGShaderEffectTexture::textureId() const
 {
-    return m_fbo->texture();
+    return m_fbo ? m_fbo->texture() : 0;
 }
 
 bool QSGShaderEffectTexture::hasAlphaChannel() const
@@ -102,7 +103,11 @@ bool QSGShaderEffectTexture::hasMipmaps() const
 
 void QSGShaderEffectTexture::bind()
 {
-    glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+#ifndef QT_NO_DEBUG
+    if (!m_recursive && m_fbo && ((m_multisampling && m_secondaryFbo->isBound()) || m_fbo->isBound()))
+        qWarning("ShaderEffectSource: \'recursive\' must be set to true when rendering recursively.");
+#endif
+    glBindTexture(GL_TEXTURE_2D, m_fbo ? m_fbo->texture() : 0);
     updateBindOptions();
 }
 
@@ -165,6 +170,11 @@ void QSGShaderEffectTexture::setLive(bool live)
     markDirtyTexture();
 }
 
+void QSGShaderEffectTexture::setRecursive(bool recursive)
+{
+    m_recursive = recursive;
+}
+
 void QSGShaderEffectTexture::markDirtyTexture()
 {
     if (m_live) {
@@ -184,8 +194,8 @@ void QSGShaderEffectTexture::grab()
 
     if (m_size.isEmpty()) {
         delete m_fbo;
-        delete m_multisampledFbo;
-        m_multisampledFbo = m_fbo = 0;
+        delete m_secondaryFbo;
+        m_secondaryFbo = m_fbo = 0;
         return;
     }
 
@@ -197,6 +207,7 @@ void QSGShaderEffectTexture::grab()
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
 
+    bool deleteFboLater = false;
     if (!m_fbo || m_fbo->size() != m_size || m_fbo->format().internalTextureFormat() != m_format
         || (!m_fbo->format().mipmap() && m_mipmap))
     {
@@ -207,28 +218,45 @@ void QSGShaderEffectTexture::grab()
             m_multisamplingSupportChecked = true;
         }
         if (m_multisampling) {
-            delete m_fbo;
-            delete m_multisampledFbo;
+            // Don't delete the FBO right away in case it is used recursively.
+            deleteFboLater = true;
+            delete m_secondaryFbo;
             QGLFramebufferObjectFormat format;
 
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setSamples(8);
-            m_multisampledFbo = new QGLFramebufferObject(m_size, format);
-
-            format.setAttachment(QGLFramebufferObject::NoAttachment);
-            format.setMipmap(m_mipmap);
-            format.setSamples(0);
-            m_fbo = new QGLFramebufferObject(m_size, format);
-
+            m_secondaryFbo = new QGLFramebufferObject(m_size, format);
         } else {
-            delete m_fbo;
             QGLFramebufferObjectFormat format;
             format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setMipmap(m_mipmap);
-            m_fbo = new QGLFramebufferObject(m_size, format);
+            if (m_recursive) {
+                deleteFboLater = true;
+                delete m_secondaryFbo;
+                m_secondaryFbo = new QGLFramebufferObject(m_size, format);
+                glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
+                updateBindOptions(true);
+            } else {
+                delete m_fbo;
+                delete m_secondaryFbo;
+                m_fbo = new QGLFramebufferObject(m_size, format);
+                m_secondaryFbo = 0;
+                glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+                updateBindOptions(true);
+            }
         }
+    }
+
+    if (m_recursive && !m_secondaryFbo) {
+        // m_fbo already created, m_recursive was just set.
+        Q_ASSERT(m_fbo);
+        Q_ASSERT(!m_multisampling);
+
+        m_secondaryFbo = new QGLFramebufferObject(m_size, m_fbo->format());
+        glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
+        updateBindOptions(true);
     }
 
     // Render texture.
@@ -260,11 +288,40 @@ void QSGShaderEffectTexture::grab()
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {
-        m_renderer->renderScene(BindableFbo(m_multisampledFbo));
-        QRect r(0, 0, m_fbo->width(), m_fbo->height());
-        QGLFramebufferObject::blitFramebuffer(m_fbo, r, m_multisampledFbo, r);
+        m_renderer->renderScene(BindableFbo(m_secondaryFbo));
+
+        if (deleteFboLater) {
+            delete m_fbo;
+            QGLFramebufferObjectFormat format;
+            format.setInternalTextureFormat(m_format);
+            format.setAttachment(QGLFramebufferObject::NoAttachment);
+            format.setMipmap(m_mipmap);
+            format.setSamples(0);
+            m_fbo = new QGLFramebufferObject(m_size, format);
+            glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+            updateBindOptions(true);
+        }
+
+        QRect r(QPoint(), m_size);
+        QGLFramebufferObject::blitFramebuffer(m_fbo, r, m_secondaryFbo, r);
     } else {
-        m_renderer->renderScene(BindableFbo(m_fbo));
+        if (m_recursive) {
+            m_renderer->renderScene(BindableFbo(m_secondaryFbo));
+
+            if (deleteFboLater) {
+                delete m_fbo;
+                QGLFramebufferObjectFormat format;
+                format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+                format.setInternalTextureFormat(m_format);
+                format.setMipmap(m_mipmap);
+                m_fbo = new QGLFramebufferObject(m_size, format);
+                glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
+                updateBindOptions(true);
+            }
+            qSwap(m_fbo, m_secondaryFbo);
+        } else {
+            m_renderer->renderScene(BindableFbo(m_fbo));
+        }
     }
 
     if (m_mipmap) {
@@ -278,6 +335,8 @@ void QSGShaderEffectTexture::grab()
     if (qmlFboOverlay())
         root->removeChildNode(m_debugOverlay);
 #endif
+    if (m_recursive)
+        markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
 }
 
 
@@ -290,10 +349,12 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     , m_live(true)
     , m_hideSource(false)
     , m_mipmap(false)
+    , m_recursive(false)
 {
     setFlag(ItemHasContents);
     m_texture = new QSGShaderEffectTexture(this);
     connect(m_texture, SIGNAL(textureChanged()), this, SIGNAL(textureChanged()), Qt::DirectConnection);
+    connect(m_texture, SIGNAL(textureChanged()), this, SLOT(update()));
 }
 
 QSGShaderEffectSource::~QSGShaderEffectSource()
@@ -433,6 +494,19 @@ void QSGShaderEffectSource::setMipmap(bool enabled)
     emit mipmapChanged();
 }
 
+bool QSGShaderEffectSource::recursive() const
+{
+    return m_recursive;
+}
+
+void QSGShaderEffectSource::setRecursive(bool enabled)
+{
+    if (enabled == m_recursive)
+        return;
+    m_recursive = enabled;
+    emit recursiveChanged();
+}
+
 void QSGShaderEffectSource::grab()
 {
     if (!m_sourceItem)
@@ -505,6 +579,7 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
                       : m_textureSize;
     tex->setSize(textureSize);
     tex->setLive(m_live);
+    tex->setRecursive(m_recursive);
     tex->setFormat(GLenum(m_format));
     tex->setHasMipmaps(m_mipmap);
 

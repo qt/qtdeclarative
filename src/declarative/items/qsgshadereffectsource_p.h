@@ -97,6 +97,9 @@ public:
     bool live() const { return bool(m_live); }
     void setLive(bool live);
 
+    bool recursive() const { return bool(m_recursive); }
+    void setRecursive(bool recursive);
+
     void grab();
 
 Q_SIGNALS:
@@ -114,7 +117,7 @@ private:
     QSGItem *m_shaderSource;
     QSGRenderer *m_renderer;
     QGLFramebufferObject *m_fbo;
-    QGLFramebufferObject *m_multisampledFbo;
+    QGLFramebufferObject *m_secondaryFbo;
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
     QSGRectangleNode *m_debugOverlay;
@@ -122,6 +125,7 @@ private:
 
     uint m_mipmap : 1;
     uint m_live : 1;
+    uint m_recursive : 1;
     uint m_dirtyTexture : 1;
     uint m_multisamplingSupportChecked : 1;
     uint m_multisampling : 1;
@@ -138,6 +142,7 @@ class QSGShaderEffectSource : public QSGItem, public QSGTextureProvider
     Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged)
     Q_PROPERTY(bool hideSource READ hideSource WRITE setHideSource NOTIFY hideSourceChanged)
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
+    Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
     Q_INTERFACES(QSGTextureProvider)
     Q_ENUMS(Format WrapMode)
 public:
@@ -181,6 +186,9 @@ public:
     bool mipmap() const;
     void setMipmap(bool enabled);
 
+    bool recursive() const;
+    void setRecursive(bool enabled);
+
     QSGTexture *texture() const;
     const char *textureChangedSignal() const { return SIGNAL(textureChanged()); }
 
@@ -195,6 +203,7 @@ Q_SIGNALS:
     void liveChanged();
     void hideSourceChanged();
     void mipmapChanged();
+    void recursiveChanged();
 
     void textureChanged();
 
@@ -211,6 +220,7 @@ private:
     uint m_live : 1;
     uint m_hideSource : 1;
     uint m_mipmap : 1;
+    uint m_recursive : 1;
 };
 
 QT_END_NAMESPACE
