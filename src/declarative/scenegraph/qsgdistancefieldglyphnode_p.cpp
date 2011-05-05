@@ -60,7 +60,7 @@ protected:
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
-    void updateAlphaRange();
+    virtual void updateAlphaRange();
 
     qreal m_fontScale;
     qreal m_matrixScale;
@@ -506,6 +506,8 @@ protected:
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
+    void updateAlphaRange();
+
 private:
     int m_fontScale_id;
     int m_vecDelta_id;
@@ -616,6 +618,15 @@ void QSGSubPixelDistanceFieldTextMaterialShader::deactivate()
 {
     QSGDistanceFieldTextMaterialShader::deactivate();
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void QSGSubPixelDistanceFieldTextMaterialShader::updateAlphaRange()
+{
+    qreal combinedScale = m_fontScale * m_matrixScale;
+    qreal alphaMin = qMax(0.0, 0.5 - 0.05 / combinedScale);
+    qreal alphaMax = qMin(0.5 + 0.05 / combinedScale, 1.0);
+    m_program.setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
+    m_program.setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
 }
 
 void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
