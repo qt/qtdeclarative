@@ -106,7 +106,7 @@ QSGTextPrivate::QSGTextPrivate()
   imageCacheDirty(true), updateOnComponentComplete(true),
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), naturalWidth(0), doc(0), nodeType(NodeIsNull)
+  layoutTextElided(false), naturalWidth(0), doc(0), layoutThread(0), nodeType(NodeIsNull)
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -377,6 +377,8 @@ QRect QSGTextPrivate::setupTextLayout()
 
     bool elideText = false;
     bool truncate = false;
+
+    layoutThread = QThread::currentThread();
 
     QFontMetrics fm(layout.font());
     elidePos = QPointF();
@@ -1069,6 +1071,10 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     }
 
     QRectF bounds = boundingRect();
+
+    // We need to make sure the layout is done in the current thread
+    if (d->layoutThread != QThread::currentThread())
+        d->updateLayout();
 
     // XXX todo - some styled text can be done by the QSGTextNode
     if (richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
