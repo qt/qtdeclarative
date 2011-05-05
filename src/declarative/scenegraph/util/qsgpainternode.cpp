@@ -45,6 +45,7 @@
 #include <private/qsgcontext_p.h>
 #include <qglframebufferobject.h>
 #include <qglfunctions.h>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -111,6 +112,7 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_extensionsChecked(false)
     , m_multisamplingSupported(false)
     , m_fillColor(Qt::transparent)
+    , m_contentsScale(1.0)
     , m_dirtyGeometry(false)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
@@ -148,12 +150,20 @@ void QSGPainterNode::preprocess()
                                | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     }
 
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(dirtyRect, m_fillColor);
-    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    painter.scale(m_contentsScale, m_contentsScale);
+
+    QRect sclip(qFloor(dirtyRect.x()/m_contentsScale),
+                qFloor(dirtyRect.y()/m_contentsScale),
+                qCeil(dirtyRect.width()/m_contentsScale+dirtyRect.x()/m_contentsScale-qFloor(dirtyRect.x()/m_contentsScale)),
+                qCeil(dirtyRect.height()/m_contentsScale+dirtyRect.y()/m_contentsScale-qFloor(dirtyRect.y()/m_contentsScale)));
 
     if (!m_dirtyRect.isNull())
-        painter.setClipRect(dirtyRect);
+        painter.setClipRect(sclip);
+
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
+    painter.fillRect(sclip, m_fillColor);
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
     m_item->paint(&painter);
     painter.end();
 
@@ -366,6 +376,15 @@ void QSGPainterNode::setFillColor(const QColor &c)
         return;
 
     m_fillColor = c;
+    markDirty(DirtyMaterial);
+}
+
+void QSGPainterNode::setContentsScale(qreal s)
+{
+    if (s == m_contentsScale)
+        return;
+
+    m_contentsScale = s;
     markDirty(DirtyMaterial);
 }
 

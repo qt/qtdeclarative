@@ -45,6 +45,7 @@
 
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,7 +62,7 @@ QT_BEGIN_NAMESPACE
     When a QGLFramebufferObject is used, QPainter paints directly onto the texture.
     Call update() to trigger a repaint.
 
-    Set the \l smooth property to true to enable QPainter to do anti-aliased rendering.
+    To enable QPainter to do anti-aliased rendering, use setAntialiasing().
 
     QSGPaintedItem is meant to make it easier to port old code that is using the
     QPainter API to the QML Scene Graph API and it should be used only for that purpose.
@@ -69,7 +70,7 @@ QT_BEGIN_NAMESPACE
     To write your own painted item, you first create a subclass of QSGPaintedItem, and then
     start by implementing its only pure virtual public function: paint(), which implements
     the actual painting. To get the size of the area painted by the item, use
-    QSGItem::width() and QSGItem::height().
+    contentsBoundingRect().
 */
 
 /*!
@@ -96,6 +97,7 @@ QT_BEGIN_NAMESPACE
 */
 QSGPaintedItemPrivate::QSGPaintedItemPrivate()
     : QSGItemPrivate()
+    , contentsScale(1.0)
     , fillColor(Qt::transparent)
     , renderTarget(QSGPaintedItem::Image)
     , geometryDirty(false)
@@ -145,10 +147,16 @@ void QSGPaintedItem::update(const QRect &rect)
 {
     Q_D(QSGPaintedItem);
     d->contentsDirty = true;
-    if (rect.isNull() && !d->dirtyRect.isNull())
-        d->dirtyRect = boundingRect().toAlignedRect();
+
+    QRect srect(qCeil(rect.x()*d->contentsScale),
+            qCeil(rect.y()*d->contentsScale),
+            qCeil(rect.width()*d->contentsScale),
+            qCeil(rect.height()*d->contentsScale));
+
+    if (srect.isNull() && !d->dirtyRect.isNull())
+        d->dirtyRect = contentsBoundingRect().toAlignedRect();
     else
-        d->dirtyRect |= (boundingRect() & rect).toAlignedRect();
+        d->dirtyRect |= (contentsBoundingRect() & srect).toAlignedRect();
     QSGItem::update();
 }
 
@@ -217,31 +225,89 @@ void QSGPaintedItem::setAntialiasing(bool enable)
     update();
 }
 
+/*!
+    This function returns the outer bounds of the item as a rectangle; all painting must be
+    restricted to inside an item's bounding rect.
+
+    If the contents size has not been set it reflects the size of the item; otherwise
+    it reflects the contents size scaled by the contents scale.
+
+    Use this function to know the area painted by the item.
+
+    \sa QSGItem::width(), QSGItem::height(), contentsSize(), contentsScale()
+*/
+QRectF QSGPaintedItem::contentsBoundingRect() const
+{
+    Q_D(const QSGPaintedItem);
+
+    qreal w = d->width;
+    QSizeF sz = d->contentsSize * d->contentsScale;
+    if (w < sz.width())
+        w = sz.width();
+    qreal h = d->height;
+    if (h < sz.height())
+        h = sz.height();
+
+    return QRectF(0, 0, w, h);
+}
+
+/*!
+    \property QSGPaintedItem::contentsSize
+    \brief The size of the contents
+
+    The contents size is the size of the item in regards to how it is painted
+    using the paint() function.  This is distinct from the size of the
+    item in regards to height() and width().
+*/
 QSize QSGPaintedItem::contentsSize() const
 {
-    // XXX todo
-    return QSize();
+    Q_D(const QSGPaintedItem);
+    return d->contentsSize;
 }
 
-void QSGPaintedItem::setContentsSize(const QSize &)
+void QSGPaintedItem::setContentsSize(const QSize &size)
 {
-    // XXX todo
+    Q_D(QSGPaintedItem);
+
+    if (d->contentsSize == size)
+        return;
+
+    d->contentsSize = size;
+    update();
 }
 
+/*!
+    This convenience function is equivalent to calling setContentsSize(QSize()).
+*/
 void QSGPaintedItem::resetContentsSize()
 {
-    // XXX todo
+    setContentsSize(QSize());
 }
 
+/*!
+    \property QSGPaintedItem::contentsScale
+    \brief The scale of the contents
+
+    All painting happening in paint() is scaled by the contents scale. This is distinct
+    from the scale of the item in regards to scale().
+
+    The default value is 1.
+*/
 qreal QSGPaintedItem::contentsScale() const
 {
-    // XXX todo
-    return 1;
+    Q_D(const QSGPaintedItem);
+    return d->contentsScale;
 }
 
-void QSGPaintedItem::setContentsScale(qreal)
+void QSGPaintedItem::setContentsScale(qreal scale)
 {
-    // XXX todo
+    Q_D(QSGPaintedItem);
+
+    if (d->contentsScale == scale)
+        return;
+
+    d->contentsScale = scale;
+    update();
 }
 
 /*!
@@ -344,12 +410,15 @@ QSGNode *QSGPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (!node)
         node = new QSGPainterNode(this);
 
+    QRectF br = contentsBoundingRect();
+
     node->setPreferredRenderTarget(d->renderTarget);
-    node->setSize(QSize(d->width, d->height));
+    node->setSize(QSize(qRound(br.width()), qRound(br.height())));
     node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);
+    node->setContentsScale(d->contentsScale);
     node->setDirty(d->contentsDirty || d->geometryDirty, d->dirtyRect);
     node->update();
 

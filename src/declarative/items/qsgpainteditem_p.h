@@ -52,6 +52,8 @@ class QSGPaintedItemPrivate : public QSGItemPrivate
 public:
     QSGPaintedItemPrivate();
 
+    QSize contentsSize;
+    qreal contentsScale;
     QColor fillColor;
     QSGPaintedItem::RenderTarget renderTarget;
 

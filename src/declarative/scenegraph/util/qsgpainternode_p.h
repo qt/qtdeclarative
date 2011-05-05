@@ -93,6 +93,9 @@ public:
     void setFillColor(const QColor &c);
     QColor fillColor() const { return m_fillColor; }
 
+    void setContentsScale(qreal s);
+    qreal contentsScale() const { return m_contentsScale; }
+
     void update();
 
     void preprocess();
@@ -127,6 +130,7 @@ private:
     bool m_extensionsChecked;
     bool m_multisamplingSupported;
     QColor m_fillColor;
+    qreal m_contentsScale;
 
     bool m_dirtyGeometry;
     bool m_dirtyRenderTarget;
