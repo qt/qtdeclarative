@@ -1,4 +1,4 @@
-// Commit: 695a39410c8ce186a2ce78cef51093c55fc32643
+// Commit: 051a76c1d65d698f71dc75c89f91ae9021357eae
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -77,12 +77,10 @@ void QSGImagePrivate::setPixmap(const QPixmap &pixmap)
     Q_Q(QSGImage);
     pix.setPixmap(pixmap);
 
-    q->setImplicitWidth(pix.width());
-    q->setImplicitHeight(pix.height());
+    q->pixmapChange();
     status = pix.isNull() ? QSGImageBase::Null : QSGImageBase::Ready;
 
     q->update();
-    q->pixmapChange();
 }
 
 QSGImage::FillMode QSGImage::fillMode() const
@@ -119,8 +117,11 @@ void QSGImage::updatePaintedGeometry()
     Q_D(QSGImage);
 
     if (d->fillMode == PreserveAspectFit) {
-        if (!d->pix.width() || !d->pix.height())
+        if (!d->pix.width() || !d->pix.height()) {
+            setImplicitWidth(0);
+            setImplicitHeight(0);
             return;
+        }
         qreal w = widthValid() ? width() : d->pix.width();
         qreal widthScale = w / qreal(d->pix.width());
         qreal h = heightValid() ? height() : d->pix.height();
@@ -134,9 +135,13 @@ void QSGImage::updatePaintedGeometry()
         }
         if (widthValid() && !heightValid()) {
             setImplicitHeight(d->paintedHeight);
+        } else {
+            setImplicitHeight(d->pix.height());
         }
         if (heightValid() && !widthValid()) {
             setImplicitWidth(d->paintedWidth);
+        } else {
+            setImplicitWidth(d->pix.width());
         }
     } else if (d->fillMode == PreserveAspectCrop) {
         if (!d->pix.width() || !d->pix.height())
@@ -280,7 +285,12 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 void QSGImage::pixmapChange()
 {
     Q_D(QSGImage);
-
+    // PreserveAspectFit calculates the implicit size differently so we
+    // don't call our superclass pixmapChange(), since that would
+    // result in the implicit size being set incorrectly, then updated
+    // in updatePaintedGeometry()
+    if (d->fillMode != PreserveAspectFit)
+        QSGImageBase::pixmapChange();
     updatePaintedGeometry();
     d->pixmapChanged = true;
 }

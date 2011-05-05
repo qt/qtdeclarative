@@ -142,7 +142,7 @@ public:
         BeginObject,              /* begin */
 
         StoreObjectQList,         /* NA */
-        AssignObjectList,         /* NA */
+        AssignObjectList,         /* assignObjectList */
 
         FetchAttached,            /* fetchAttached */
         FetchQList,               /* fetch */
@@ -163,11 +163,9 @@ public:
         //
         Defer                    /* defer */
     };
-    QDeclarativeInstruction()
-        : line(0) {}
+    QDeclarativeInstruction() {}
 
     Type type;
-    unsigned short line;
 
     struct InitInstruction {
         int bindingsSize;
@@ -180,12 +178,14 @@ public:
         int data;
         int bindingBits;
         ushort column;
+        ushort line; 
     };
     struct CreateSimpleInstruction {
         void (*create)(void *);
         int typeSize;
         int type;
         ushort column;
+        ushort line; 
     };
     struct StoreMetaInstruction {
         int data;
@@ -211,9 +211,11 @@ public:
         int value;
         short context;
         short owner;
+        ushort line;
     };
     struct FetchInstruction {
         int property;
+        ushort line;
     };
     struct FetchValueInstruction {
         int property;
@@ -293,31 +295,40 @@ public:
     };
     struct StoreObjectInstruction {
         int propertyIndex;
+        ushort line;
     };
     struct AssignCustomTypeInstruction {
         int propertyIndex;
         int valueIndex;
+        ushort line;
     };
     struct StoreSignalInstruction {
         int signalIndex;
         int value;
         short context;
         int name;
+        ushort line;
     };
     struct AssignSignalObjectInstruction {
         int signal;
+        ushort line; 
     };
     struct CreateComponentInstruction {
         int count;
-        ushort column;
         int endLine;
         int metaObject;
+        ushort column;
+        ushort line;
     };
     struct FetchAttachedInstruction {
         int id;
+        ushort line;
     };
     struct DeferInstruction {
         int deferCount;
+    };
+    struct AssignObjectListInstruction {
+        ushort line;
     };
 
     union {
@@ -356,6 +367,7 @@ public:
         CreateComponentInstruction createComponent;
         FetchAttachedInstruction fetchAttached;
         DeferInstruction defer;
+        AssignObjectListInstruction assignObjectList;
     };
 
     void dump(QDeclarativeCompiledData *);

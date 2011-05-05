@@ -1,4 +1,4 @@
-// Commit: 6980bca15b411f86b9fadb7484a6dd782b9d1403
+// Commit: ec40dd2bb51868bca10dbd0c9116f3224ff2b29b
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -318,6 +318,7 @@ void QSGTextEdit::setVAlign(QSGTextEdit::VAlignment alignment)
     d->vAlign = alignment;
     d->updateDefaultTextOption();
     updateSize();
+    moveCursorDelegate();
     emit verticalAlignmentChanged(d->vAlign);
 }
 
@@ -496,8 +497,6 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
     Q_D(QSGTextEdit);
     if(d->cursorComponent){
         if(d->cursor){
-            disconnect(d->control, SIGNAL(cursorPositionChanged()),
-                    this, SLOT(moveCursorDelegate()));
             d->control->setCursorWidth(-1);
             update(cursorRectangle());
             delete d->cursor;
@@ -523,8 +522,6 @@ void QSGTextEdit::loadCursorDelegate()
         return;
     d->cursor = qobject_cast<QSGItem*>(d->cursorComponent->create(qmlContext(this)));
     if(d->cursor){
-        connect(d->control, SIGNAL(cursorPositionChanged()),
-                this, SLOT(moveCursorDelegate()));
         d->control->setCursorWidth(0);
         update(cursorRectangle());
         QDeclarative_setParent_noEvent(d->cursor, this);
@@ -696,7 +693,7 @@ Qt::TextInteractionFlags QSGTextEdit::textInteractionFlags() const
 QRect QSGTextEdit::cursorRectangle() const
 {
     Q_D(const QSGTextEdit);
-    return d->control->cursorRect().toRect().translated(0,-d->yoff);
+    return d->control->cursorRect().toRect().translated(0,d->yoff);
 }
 
 bool QSGTextEdit::event(QEvent *event)
@@ -985,7 +982,7 @@ void QSGTextEditPrivate::init()
     QObject::connect(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SLOT(updateSelectionMarkers()));
     QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorPositionChanged()));
-    QObject::connect(control, SIGNAL(cursorPositionChanged()), q, SIGNAL(cursorRectangleChanged()));
+    QObject::connect(control, SIGNAL(microFocusChanged()), q, SLOT(moveCursorDelegate()));
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
@@ -1010,16 +1007,17 @@ void QSGTextEdit::q_textChanged()
     d->updateDefaultTextOption();
     updateSize();
     updateTotalLines();
-    updateMicroFocus();
     emit textChanged(d->text);
 }
 
 void QSGTextEdit::moveCursorDelegate()
 {
     Q_D(QSGTextEdit);
+    updateMicroFocus();
+    emit cursorRectangleChanged();
     if(!d->cursor)
         return;
-    QRectF cursorRect = d->control->cursorRect();
+    QRectF cursorRect = cursorRectangle();
     d->cursor->setX(cursorRect.x());
     d->cursor->setY(cursorRect.y());
 }
@@ -1052,7 +1050,6 @@ void QSGTextEdit::updateSelectionMarkers()
         d->lastSelectionEnd = d->control->textCursor().selectionEnd();
         emit selectionEndChanged();
     }
-    updateMicroFocus();
 }
 
 QRectF QSGTextEdit::boundingRect() const

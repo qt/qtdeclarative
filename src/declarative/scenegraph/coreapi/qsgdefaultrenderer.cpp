@@ -48,8 +48,17 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtGui/qapplication.h>
 #include <QtCore/qpair.h>
+#include <QtCore/QElapsedTimer>
 
 //#define FORCE_NO_REORDER
+
+// #define RENDERER_DEBUG
+#ifdef RENDERER_DEBUG
+#define DEBUG_THRESHOLD 0
+QElapsedTimer debugTimer;
+int materialChanges;
+int geometryNodesDrawn;
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -187,6 +196,13 @@ void QMLRenderer::render()
     }
 #endif
 
+#ifdef RENDERER_DEBUG
+    debugTimer.invalidate();
+    debugTimer.start();
+    geometryNodesDrawn = 0;
+    materialChanges = 0;
+#endif
+
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_BLEND);
 
@@ -205,7 +221,15 @@ void QMLRenderer::render()
     glDisable(GL_SCISSOR_TEST);
     glClearColor(m_clear_color.redF(), m_clear_color.greenF(), m_clear_color.blueF(), m_clear_color.alphaF());
 
+#ifdef RENDERER_DEBUG
+    int debugtimeSetup = debugTimer.elapsed();
+#endif
+
     bindable()->clear(clearMode());
+
+#ifdef RENDERER_DEBUG
+    int debugtimeClear = debugTimer.elapsed();
+#endif
 
     QRect r = viewportRect();
     glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
@@ -228,6 +252,11 @@ void QMLRenderer::render()
         m_rebuild_lists = false;
     }
 
+#ifdef RENDERER_DEBUG
+    int debugtimeLists = debugTimer.elapsed();
+#endif
+
+
     if (m_needs_sorting) {
         qSort(m_opaqueNodes.begin(), m_opaqueNodes.end(),
               m_sort_front_to_back
@@ -235,6 +264,10 @@ void QMLRenderer::render()
               : nodeLessThan);
         m_needs_sorting = false;
     }
+
+#ifdef RENDERER_DEBUG
+    int debugtimeSorting = debugTimer.elapsed();
+#endif
 
     m_renderOrderMatrix.setToIdentity();
     m_renderOrderMatrix.scale(1, 1, qreal(1) / m_currentRenderOrder);
@@ -252,6 +285,12 @@ void QMLRenderer::render()
         renderNodes(m_opaqueNodes);
     }
 
+#ifdef RENDERER_DEBUG
+    int debugtimeOpaque = debugTimer.elapsed();
+    int opaqueNodes = geometryNodesDrawn;
+    int opaqueMaterialChanges = materialChanges;
+#endif
+
     glEnable(GL_BLEND);
     glDepthMask(false);
 #ifdef QML_RUNTIME_TESTING
@@ -265,10 +304,33 @@ void QMLRenderer::render()
         renderNodes(m_transparentNodes);
     }
 
+#ifdef RENDERER_DEBUG
+    int debugtimeAlpha = debugTimer.elapsed();
+#endif
+
+
     if (m_currentProgram)
         m_currentProgram->deactivate();
 
     m_projectionMatrix.pop();
+
+#ifdef RENDERER_DEBUG
+    if (debugTimer.elapsed() > DEBUG_THRESHOLD) {
+        printf(" --- Renderer breakdown:\n"
+               "     - setup=%d, clear=%d, building=%d, sorting=%d, opaque=%d, alpha=%d\n"
+               "     - material changes: opaque=%d, alpha=%d, total=%d\n"
+               "     - geometry ndoes: opaque=%d, alpha=%d, total=%d\n",
+               debugtimeSetup,
+               debugtimeClear - debugtimeSetup,
+               debugtimeLists - debugtimeClear,
+               debugtimeSorting - debugtimeLists,
+               debugtimeOpaque - debugtimeSorting,
+               debugtimeAlpha - debugtimeOpaque,
+               opaqueMaterialChanges, materialChanges - opaqueMaterialChanges, materialChanges,
+               opaqueNodes, geometryNodesDrawn - opaqueNodes, geometryNodesDrawn);
+    }
+#endif
+
 }
 
 class Foo : public QPair<int, QSGGeometryNode *>
@@ -426,6 +488,10 @@ void QMLRenderer::renderNodes(const QVector<QSGGeometryNode *> &list)
             m_currentProgram->activate();
             //++programChangeCount;
             updates |= (QSGMaterialShader::RenderState::DirtyMatrix | QSGMaterialShader::RenderState::DirtyOpacity);
+
+#ifdef RENDERER_DEBUG
+            materialChanges++;
+#endif
         }
 
         bool changeRenderOrder = currentRenderOrder != geomNode->renderOrder();
@@ -449,6 +515,10 @@ void QMLRenderer::renderNodes(const QVector<QSGGeometryNode *> &list)
         const QSGGeometry *g = geomNode->geometry();
         bindGeometry(program, g);
         draw(geomNode);
+
+#ifdef RENDERER_DEBUG
+        geometryNodesDrawn++;
+#endif
     }
     //qDebug("Clip: %i, shader program: %i, material: %i times changed while drawing %s items",
     //    clipChangeCount, programChangeCount, materialChangeCount,

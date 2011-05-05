@@ -1,7 +1,7 @@
 load(qt_module)
 
 TARGET = qmldbg_tcp
-QT       += declarative network
+QT       += declarative-private network
 
 include($$QT_SOURCE_TREE/src/plugins/qpluginbase.pri)
 

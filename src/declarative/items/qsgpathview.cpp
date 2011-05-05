@@ -1,4 +1,4 @@
-// Commit: ac704e9f682378a5ec56e3f5c195dcf2f2dfa1ac
+// Commit: 8878e2c53a0c9408d4b468e2dad485743c32f58b
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -1213,6 +1213,8 @@ void QSGPathView::itemsRemoved(int modelIndex, int count)
     } else {
         d->regenerate();
         d->updateCurrent();
+        if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
+            d->snapToCurrent();
     }
     if (changedOffset)
         emit offsetChanged();

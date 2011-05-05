@@ -1,4 +1,4 @@
-// Commit: aeb330e3999ef3d7ae8d94b9330471f2a2a13554
+// Commit: 6e5a642c9484536fc173714f560f739944368cf5
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -119,6 +119,7 @@ public:
     bool truncated:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
+    bool layoutTextElided:1;
 
     QRect layedOutTextRect;
     QSize paintedSize;

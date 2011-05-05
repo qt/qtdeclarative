@@ -57,8 +57,6 @@ class Q_DECLARATIVE_EXPORT QSGPaintedItem : public QSGItem
 
     Q_PROPERTY(QSize contentsSize READ contentsSize WRITE setContentsSize NOTIFY contentsSizeChanged)
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor NOTIFY fillColorChanged)
-    Q_PROPERTY(int pixelCacheSize READ pixelCacheSize WRITE setPixelCacheSize)
-    Q_PROPERTY(bool smoothCache READ smoothCache WRITE setSmoothCache)
     Q_PROPERTY(qreal contentsScale READ contentsScale WRITE setContentsScale NOTIFY contentsScaleChanged)
     Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
 public:
@@ -75,18 +73,15 @@ public:
     bool opaquePainting() const;
     void setOpaquePainting(bool opaque);
 
+    bool antialiasing() const;
+    void setAntialiasing(bool enable);
+
     QSize contentsSize() const;
     void setContentsSize(const QSize &);
     void resetContentsSize();
 
     qreal contentsScale() const;
     void setContentsScale(qreal);
-
-    int pixelCacheSize() const;
-    void setPixelCacheSize(int pixels);
-
-    bool smoothCache() const;
-    void setSmoothCache(bool on);
 
     QColor fillColor() const;
     void setFillColor(const QColor&);

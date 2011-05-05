@@ -82,7 +82,7 @@ public:
     QSize size() const { return m_size; }
     void setSize(const QSize &size);
 
-    void setHasMipmaps(QSGTexture::Filtering filtering);
+    void setHasMipmaps(bool mipmap);
 
     void bind();
 
@@ -120,11 +120,7 @@ private:
     QSGRectangleNode *m_debugOverlay;
 #endif
 
-    uint m_hWrapMode : 1;
-    uint m_vWrapMode : 1;
-    uint m_filtering : 2;
-    uint m_mipmapFiltering : 2;
-
+    uint m_mipmap : 1;
     uint m_live : 1;
     uint m_dirtyTexture : 1;
     uint m_multisamplingSupportChecked : 1;

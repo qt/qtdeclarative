@@ -1,4 +1,4 @@
-// Commit: f0f6deb9a5e8bd078047dd090a3857290c8b4ea4
+// Commit: e1ffbc04131dc6f76fa76821c297d08162e4b1ee
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -179,6 +179,8 @@ QSGMouseAreaPrivate::QSGMouseAreaPrivate()
 : absorb(true), hovered(false), pressed(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false), drag(0)
 {
+    Q_Q(QSGMouseArea);
+    forwardTo = QDeclarativeListProperty<QSGItem>(q, forwardToList);
 }
 
 QSGMouseAreaPrivate::~QSGMouseAreaPrivate()
@@ -200,6 +202,18 @@ void QSGMouseAreaPrivate::saveEvent(QGraphicsSceneMouseEvent *event)
     lastButton = event->button();
     lastButtons = event->buttons();
     lastModifiers = event->modifiers();
+}
+
+void QSGMouseAreaPrivate::forwardEvent(QGraphicsSceneMouseEvent* event)
+{
+    Q_Q(QSGMouseArea);
+    for(int i=0; i < forwardToList.count(); i++){
+        event->setPos(forwardToList[i]->mapFromScene(event->scenePos()));
+        forwardToList[i]->canvas()->sendEvent(forwardToList[i], event);
+        if(event->isAccepted())
+            break;
+    }
+    event->setPos(q->mapFromScene(event->scenePos()));
 }
 
 bool QSGMouseAreaPrivate::isPressAndHoldConnected() 
@@ -382,6 +396,9 @@ void QSGMouseArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
         d->pressAndHoldTimer.start(PressAndHoldDelay, this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(true));
+
+        if(!event->isAccepted() && d->forwardToList.count())
+           d->forwardEvent(event);
     }
 }
 
@@ -459,6 +476,9 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     me.setX(d->lastPos.x());
     me.setY(d->lastPos.y());
     emit positionChanged(&me);
+
+    if(!event->isAccepted() && d->forwardToList.count())
+        d->forwardEvent(event);
 }
 
 void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -479,6 +499,9 @@ void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (c && c->mouseGrabberItem() == this)
             ungrabMouse();
         setKeepMouseGrab(false);
+
+        if(!event->isAccepted() && d->forwardToList.count())
+            d->forwardEvent(event);
     }
     d->doubleClick = false;
 }
@@ -766,6 +789,12 @@ QSGDrag *QSGMouseArea::drag()
     if (!d->drag)
         d->drag = new QSGDrag;
     return d->drag;
+}
+
+QDeclarativeListProperty<QSGItem> QSGMouseArea::forwardTo()
+{
+    Q_D(QSGMouseArea);
+    return d->forwardTo;
 }
 
 QT_END_NAMESPACE

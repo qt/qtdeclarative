@@ -80,11 +80,11 @@ QDeclarativeVME::QDeclarativeVME()
 {
 }
 
-#define VME_EXCEPTION(desc) \
+#define VME_EXCEPTION(desc, line) \
     { \
         QDeclarativeError error; \
         error.setDescription(desc.trimmed()); \
-        error.setLine(instr.line); \
+        error.setLine(line); \
         error.setUrl(comp->url); \
         vmeErrors << error; \
         break; \
@@ -207,7 +207,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                     types.at(instr.create.type).createInstance(ctxt, bindings, &vmeErrors);
 
                 if (!o) {
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(QString::fromLatin1(types.at(instr.create.type).className)));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(QString::fromLatin1(types.at(instr.create.type).className)), instr.create.line);
                 }
 
                 QDeclarativeData *ddata = QDeclarativeData::get(o);
@@ -232,7 +232,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
 
                 ddata->setImplicitDestructible();
                 ddata->outerContext = ctxt;
-                ddata->lineNumber = instr.line;
+                ddata->lineNumber = instr.create.line;
                 ddata->columnNumber = instr.create.column;
 
                 if (instr.create.data != -1) {
@@ -271,7 +271,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                     ddata->propertyCache = ref.typePropertyCache;
                     ddata->propertyCache->addref();
                 }
-                ddata->lineNumber = instr.line;
+                ddata->lineNumber = instr.createSimple.line;
                 ddata->columnNumber = instr.createSimple.column;
 
                 QObjectPrivate::get(o)->declarativeData = ddata;                                                      
@@ -319,8 +319,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
 
                 ddata->setImplicitDestructible();
                 ddata->outerContext = ctxt;
-                ddata->lineNumber = instr.line;
-                ddata->columnNumber = instr.create.column;
+                ddata->lineNumber = instr.createComponent.line;
+                ddata->columnNumber = instr.createComponent.column;
 
                 QDeclarativeComponentPrivate::get(qcomp)->creationContext = ctxt;
 
@@ -657,7 +657,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 QMetaProperty prop = 
                         target->metaObject()->property(instr.assignCustomType.propertyIndex);
                 if (v.isNull() || ((int)prop.type() != data.type && prop.userType() != data.type)) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())), instr.assignCustomType.line);
 
                 void *a[] = { (void *)v.data(), 0, &status, &flags };
                 QMetaObject::metacall(target, QMetaObject::WriteProperty, 
@@ -679,15 +679,15 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
 
                     QMetaMethod method = QDeclarativeMetaType::defaultMethod(assign);
                     if (method.signature() == 0)
-                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())));
+                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())), instr.assignSignalObject.line);
 
                     if (!QMetaObject::checkConnectArgs(prop.method().signature(), method.signature()))
-                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot connect mismatched signal/slot %1 %vs. %2").arg(QString::fromLatin1(method.signature())).arg(QString::fromLatin1(prop.method().signature())));
+                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot connect mismatched signal/slot %1 %vs. %2").arg(QString::fromLatin1(method.signature())).arg(QString::fromLatin1(prop.method().signature())), instr.assignSignalObject.line);
 
                     QDeclarativePropertyPrivate::connect(target, prop.index(), assign, method.methodIndex());
 
                 } else {
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(QString::fromUtf8(pr)));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(QString::fromUtf8(pr)), instr.assignSignalObject.line);
                 }
 
 
@@ -704,7 +704,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
                 QDeclarativeExpression *expr = 
                     new QDeclarativeExpression(ctxt, context, primitives.at(instr.storeSignal.value));
-                expr->setSourceLocation(comp->name, instr.line);
+                expr->setSourceLocation(comp->name, instr.storeSignal.line);
                 static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr))->name = datas.at(instr.storeSignal.name);
                 bs->setExpression(expr);
             }
@@ -758,7 +758,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 if ((stack.count() - instr.assignBinding.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
                     break;
 
-                QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.assignBinding.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+                QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.assignBinding.value).constData(), comp, context, ctxt, comp->name, instr.assignBinding.line, 0);
                 bindValues.append(bind);
                 bind->m_mePtr = &bindValues.values[bindValues.count - 1];
                 bind->setTarget(mp);
@@ -841,7 +841,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 if (iid) 
                     ptr = assign->qt_metacast(iid);
                 if (!ptr) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to list"));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to list"), instr.assignObjectList.line);
 
 
                 list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, ptr);
@@ -884,7 +884,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 } 
 
                 if (!ok) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to interface property"));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to interface property"), instr.storeObject.line);
             }
             break;
             
@@ -895,7 +895,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 QObject *qmlObject = qmlAttachedPropertiesObjectById(instr.fetchAttached.id, target);
 
                 if (!qmlObject)
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create attached object"));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create attached object"), instr.fetchAttached.line);
 
                 stack.push(qmlObject);
             }
@@ -927,7 +927,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                                       instr.fetch.property, a);
 
                 if (!obj)
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.fetch.property).name())));
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.fetch.property).name())), instr.fetch.line);
 
                 stack.push(obj);
             }

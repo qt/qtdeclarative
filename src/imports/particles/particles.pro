@@ -48,6 +48,8 @@ HEADERS += \
     deformableparticle.h \
     pictureaffector.h
 
+QT += core-private gui-private declarative-private
+
 SOURCES += \
     V1/qdeclarativeparticles.cpp \
     spritestate.cpp \

@@ -47,6 +47,11 @@ class MyPaintItem : public QSGPaintedItem
 {
     Q_OBJECT
 public:
+    MyPaintItem() : QSGPaintedItem()
+    {
+        setAntialiasing(true);
+    }
+
     virtual void paint(QPainter *p)
     {
         QRectF rect(0, 0, width(), height());

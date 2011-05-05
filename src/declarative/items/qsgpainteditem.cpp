@@ -186,6 +186,37 @@ void QSGPaintedItem::setOpaquePainting(bool opaque)
     QSGItem::update();
 }
 
+/*!
+    Returns true if antialiased painting is enabled; otherwise, false is returned.
+
+    By default, antialiasing is not enabled.
+
+    \sa setAntialiasing()
+*/
+bool QSGPaintedItem::antialiasing() const
+{
+    Q_D(const QSGPaintedItem);
+    return d->antialiasing;
+}
+
+/*!
+    If \a enable is true, antialiased painting is enabled.
+
+    By default, antialiasing is not enabled.
+
+    \sa antialiasing()
+*/
+void QSGPaintedItem::setAntialiasing(bool enable)
+{
+    Q_D(QSGPaintedItem);
+
+    if (d->antialiasing == enable)
+        return;
+
+    d->antialiasing = enable;
+    update();
+}
+
 QSize QSGPaintedItem::contentsSize() const
 {
     // XXX todo
@@ -209,28 +240,6 @@ qreal QSGPaintedItem::contentsScale() const
 }
 
 void QSGPaintedItem::setContentsScale(qreal)
-{
-    // XXX todo
-}
-
-int QSGPaintedItem::pixelCacheSize() const
-{
-    // XXX todo
-    return 0;
-}
-
-void QSGPaintedItem::setPixelCacheSize(int)
-{
-    // XXX todo
-}
-
-bool QSGPaintedItem::smoothCache() const
-{
-    // XXX todo
-    return false;
-}
-
-void QSGPaintedItem::setSmoothCache(bool)
 {
     // XXX todo
 }
@@ -337,7 +346,7 @@ QSGNode *QSGPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     node->setPreferredRenderTarget(d->renderTarget);
     node->setSize(QSize(d->width, d->height));
-    node->setSmoothPainting(d->smooth);
+    node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);

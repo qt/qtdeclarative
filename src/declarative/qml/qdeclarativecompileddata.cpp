@@ -246,7 +246,7 @@ void QDeclarativeCompiledData::dumpInstructions()
 {
     if (!name.isEmpty())
         qWarning() << name;
-    qWarning().nospace() << "Index\tLine\tOperation\t\tData1\tData2\tData3\tComments";
+    qWarning().nospace() << "Index\tOperation\t\tData1\tData2\tData3\tComments";
     qWarning().nospace() << "-------------------------------------------------------------------------------";
     for (int ii = 0; ii < bytecode.count(); ++ii) {
         dump(&bytecode[ii], ii);

@@ -1,4 +1,4 @@
-// Commit: 57676c237992e0aa5a93a4e8fa66b3e7b90c2c90
+// Commit: c6e6a35aeb8794d68a3ca0c4e27a3a1181c066b5
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -80,6 +80,7 @@ public:
     };
     void propagate(QSGMouseEvent* event, PropagateType);
     bool propagateHelper(QSGMouseEvent*, QSGItem*,const QPointF &, PropagateType);
+    void forwardEvent(QGraphicsSceneMouseEvent* event);
 
     bool isPressAndHoldConnected();
     bool isDoubleClickConnected();
@@ -105,6 +106,8 @@ public:
     Qt::MouseButtons lastButtons;
     Qt::KeyboardModifiers lastModifiers;
     QBasicTimer pressAndHoldTimer;
+    QDeclarativeListProperty<QSGItem> forwardTo;
+    QList<QSGItem*> forwardToList;
 };
 
 QT_END_NAMESPACE
