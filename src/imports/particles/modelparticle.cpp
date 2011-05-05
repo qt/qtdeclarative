@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 ModelParticle::ModelParticle(QSGItem *parent) :
-    ParticleType(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true)
+    ParticleType(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true), m_modelCount(0)
 {
     setFlag(QSGItem::ItemHasContents);
 }
@@ -79,9 +79,30 @@ void ModelParticle::setModel(const QVariant &arg)
     emit modelCountChanged();
     connect(m_model, SIGNAL(countChanged()),
             this, SIGNAL(modelCountChanged()));
-    m_available.clear();
-    for(int i=0; i<m_model->count(); i++)
-        m_available << i;//TODO: Track changes
+    connect(m_model, SIGNAL(countChanged()),
+            this, SLOT(updateCount()));
+    updateCount();
+}
+
+void ModelParticle::updateCount()
+{
+    int newCount = 0;
+    if(m_model)
+        newCount = m_model->count();
+    if(newCount < 0)
+        return;//WTF?
+    if(m_modelCount == 0 || newCount == 0){
+        m_available.clear();
+        for(int i=0; i<newCount; i++)
+            m_available << i;
+    }else if(newCount < m_modelCount){
+        for(int i=newCount; i<m_modelCount; i++) //existing ones must leave normally, but aren't readded
+            m_available.removeAll(i);
+    }else if(newCount > m_modelCount){
+        for(int i=m_modelCount; i<newCount; i++)
+            m_available << i;
+    }
+    m_modelCount = newCount;
 }
 
 QDeclarativeComponent *ModelParticle::delegate() const
@@ -105,8 +126,8 @@ void ModelParticle::setDelegate(QDeclarativeComponent *comp)
 int ModelParticle::modelCount() const
 {
     if(m_model)
-        return m_model->count();
-    return 0;
+        const_cast<ModelParticle*>(this)->updateCount();//TODO: Investigate why this doesn't get called properly
+    return m_modelCount;
 }
 
 
@@ -144,12 +165,12 @@ void ModelParticle::load(ParticleData* d)
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
         m_items[pos]->setOpacity(0.);
-        if(m_idx[pos] >= 0){
+        if(m_idx[pos] >= 0 && m_idx[pos] < m_modelCount){
             m_available << m_idx[pos];
             m_model->release(m_items[pos]);
         }else{
             ModelParticleAttached* mpa;
-            if((mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]))))
+            if((mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos], false))))
                 mpa->detach();//reparent as well?
         }
         m_idx[pos] = -1;
@@ -159,6 +180,11 @@ void ModelParticle::load(ParticleData* d)
     }
     if(m_available.isEmpty() && m_pendingItems.isEmpty())
         return;
+    ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
+    if(mpa)
+        qDebug() << (mpa->m_mp = this);
+    else
+        qDebug() << "Bugger";
     if(m_pendingItems.isEmpty()){
         m_items[pos] = m_model->item(m_available.first());
         m_idx[pos] = m_available.first();
@@ -168,8 +194,7 @@ void ModelParticle::load(ParticleData* d)
         m_pendingItems.pop_front();
         m_items[pos]->setX(d->curX() - m_items[pos]->width()/2);
         m_items[pos]->setY(d->curY() - m_items[pos]->height()/2);
-        ModelParticleAttached* mpa;
-        if((mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]))))
+        if(mpa)
             mpa->attach();
         m_idx[pos] = -2;
     }
@@ -205,11 +230,8 @@ void ModelParticle::reset()
     m_items.fill(0);
     m_data.fill(0);
     m_idx.fill(-1);
-    m_available.clear();
+    //m_available.clear();//Should this be reset too?
     //m_pendingItems.clear();//TODO: Should this be done? If so, Emit signal?
-    if(m_model)
-        for(int i=0; i<m_model->count(); i++)
-            m_available << i;//TODO: Track changes, then have this in the right place
 }
 
 
@@ -250,7 +272,7 @@ void ModelParticle::prepareNextFrame()
         }
         if(t >= 1.0){//Usually happens from load
             item->setOpacity(0.);
-            if(m_idx[i] >= 0){
+            if(m_idx[i] >= 0 && m_idx[i] < m_modelCount){
                 m_available << m_idx[i];
                 m_model->release(m_items[i]);
             }else{

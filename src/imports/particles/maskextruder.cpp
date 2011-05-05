@@ -77,7 +77,6 @@ void MaskExtruder::ensureInitialized(const QRectF &r)
     m_mask.clear();
     if(m_source.isEmpty())
         return;
-    qDebug() << "Rebuild required";
     m_img = QImage(m_source.toLocalFile());
     m_img = m_img.createAlphaMask();
     m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier

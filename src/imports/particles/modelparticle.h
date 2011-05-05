@@ -96,6 +96,8 @@ public slots:
 protected:
     virtual void reset();
     void prepareNextFrame();
+private slots:
+    void updateCount();
 private:
     bool m_ownModel;
     QDeclarativeComponent* m_comp;
@@ -113,16 +115,23 @@ private:
     QSet<QSGItem*> m_stasis;
     qreal m_lastT;
     int m_activeCount;
+    int m_modelCount;
 };
 
 class ModelParticleAttached : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(ModelParticle* particle READ particle CONSTANT);
 public:
-    ModelParticleAttached(QObject* parent){;}
+    ModelParticleAttached(QObject* parent)
+        : QObject(parent), m_mp(0)
+    {;}
+    ModelParticle* particle() {return m_mp;}
     void detach(){emit detached();}
     void attach(){emit attached();}
 private:
+    ModelParticle* m_mp;
+    friend class ModelParticle;
 Q_SIGNALS:
     void detached();
     void attached();

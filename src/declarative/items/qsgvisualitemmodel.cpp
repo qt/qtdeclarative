@@ -694,6 +694,8 @@ void QSGVisualDataModel::setModel(const QVariant &model)
         return;
     }
     if ((d->m_visualItemModel = qvariant_cast<QSGVisualDataModel *>(model))) {
+        QObject::connect(d->m_visualItemModel, SIGNAL(countChanged()),
+                         this, SIGNAL(countChanged()));
         QObject::connect(d->m_visualItemModel, SIGNAL(itemsInserted(int,int)),
                          this, SIGNAL(itemsInserted(int,int)));
         QObject::connect(d->m_visualItemModel, SIGNAL(itemsRemoved(int,int)),
