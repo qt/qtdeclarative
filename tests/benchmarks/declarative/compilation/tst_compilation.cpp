@@ -40,9 +40,18 @@
 ****************************************************************************/
 
 #include <qtest.h>
-#include <QDeclarativeEngine>
-#include <QDeclarativeComponent>
+
+#include <QtDeclarative/qdeclarativeengine.h>
+#include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtDeclarative/private/qdeclarativejsengine_p.h>
+#include <QtDeclarative/private/qdeclarativejsnodepool_p.h>
+#include <QtDeclarative/private/qdeclarativejsparser_p.h>
+#include <QtDeclarative/private/qdeclarativejslexer_p.h>
+#include <QtDeclarative/private/qdeclarativescriptparser_p.h>
+
 #include <QFile>
+#include <QDebug>
+#include <QTextStream>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -57,6 +66,12 @@ public:
 
 private slots:
     void boomblock();
+
+    void jsparser_data();
+    void jsparser();
+
+    void scriptparser_data();
+    void scriptparser();
 
 private:
     QDeclarativeEngine engine;
@@ -87,6 +102,61 @@ void tst_compilation::boomblock()
         QDeclarativeComponent c(&engine);
         c.setData(data, QUrl());
 //        QVERIFY(c.isReady());
+    }
+}
+
+void tst_compilation::jsparser_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("boomblock") << QString(SRCDIR + QLatin1String("/data/BoomBlock.qml"));
+}
+
+void tst_compilation::jsparser()
+{
+    QFETCH(QString, file);
+
+    QFile f(file);
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QByteArray data = f.readAll();
+
+    QTextStream stream(data, QIODevice::ReadOnly);
+    const QString code = stream.readAll();
+
+    QBENCHMARK {
+        QDeclarativeJS::Engine engine;
+        QDeclarativeJS::NodePool nodePool(file, &engine);
+
+        QDeclarativeJS::Lexer lexer(&engine);
+        lexer.setCode(code, -1);
+
+        QDeclarativeJS::Parser parser(&engine);
+        parser.parse();
+        parser.ast();
+    }
+}
+
+void tst_compilation::scriptparser_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("boomblock") << QString(SRCDIR + QLatin1String("/data/BoomBlock.qml"));
+}
+
+void tst_compilation::scriptparser()
+{
+    QFETCH(QString, file);
+
+    QFile f(file);
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QByteArray data = f.readAll();
+
+    QUrl url = QUrl::fromLocalFile(file);
+
+    QBENCHMARK {
+        QDeclarativeScriptParser parser;
+        parser.parse(data, url);
+        parser.tree();
     }
 }
 

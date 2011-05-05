@@ -67,7 +67,7 @@ QT_MODULE(Declarative)
 class QByteArray;
 
 class QDeclarativeScriptParserJsASTData;
-class QDeclarativeScriptParser
+class Q_AUTOTEST_EXPORT QDeclarativeScriptParser
 {
 public:
     class Import
