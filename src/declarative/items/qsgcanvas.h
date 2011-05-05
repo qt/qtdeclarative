@@ -105,7 +105,9 @@ private slots:
     void maybeUpdate();
 
 private:
-    Q_DISABLE_COPY(QSGCanvas);
+    Q_DISABLE_COPY(QSGCanvas)
+    Q_PRIVATE_SLOT(d_func(), void _q_animationStarted())
+    Q_PRIVATE_SLOT(d_func(), void _q_animationStopped())
 };
 
 QT_END_NAMESPACE

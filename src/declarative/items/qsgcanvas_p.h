@@ -77,18 +77,6 @@ public:
 
 class QSGCanvasPrivate;
 
-class QSGThreadedRendererAnimationDriver : public QAnimationDriver
-{
-public:
-    QSGThreadedRendererAnimationDriver(QSGCanvasPrivate *r, QObject *parent);
-
-protected:
-    virtual void started();
-    virtual void stopped();
-
-    QSGCanvasPrivate *renderer;
-};
-
 class QTouchEvent;
 class QSGCanvasPrivate : public QGLWidgetPrivate
 {
@@ -147,6 +135,9 @@ public:
     void syncSceneGraph();
     void renderSceneGraph();
     void runThread();
+
+    void _q_animationStarted();
+    void _q_animationStopped();
 
     QSGItem::UpdatePaintNodeData updatePaintNodeData;
 

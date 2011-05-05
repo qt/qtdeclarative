@@ -61,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(qmlThreadedRenderer, QML_THREADED_RENDERER)
+DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_NO_THREADED_RENDERER)
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 
 /*
@@ -97,24 +97,6 @@ int sceneGraphRenderTime;
 int readbackTime;
 #endif
 
-
-class QSGAnimationDriver : public QAnimationDriver
-{
-public:
-    QSGAnimationDriver(QWidget *w, QObject *parent)
-        : QAnimationDriver(parent), widget(w)
-    {
-        Q_ASSERT(w);
-    }
-
-    void started()
-    {
-        widget->update();
-    }
-
-    QWidget *widget;
-};
-
 QSGItem::UpdatePaintNodeData::UpdatePaintNodeData()
 : transformNode(0)
 {
@@ -124,34 +106,26 @@ QSGRootItem::QSGRootItem()
 {
 }
 
-QSGThreadedRendererAnimationDriver::QSGThreadedRendererAnimationDriver(QSGCanvasPrivate *r, QObject *parent)
-    : QAnimationDriver(parent)
-    , renderer(r)
-{
-}
-
-void QSGThreadedRendererAnimationDriver::started()
+void QSGCanvasPrivate::_q_animationStarted()
 {
 #ifdef THREAD_DEBUG
     qWarning("AnimationDriver: Main Thread: started");
 #endif
-    renderer->mutex.lock();
-    renderer->animationRunning = true;
-    if (renderer->idle)
-        renderer->wait.wakeOne();
-    renderer->mutex.unlock();
-
-
+    mutex.lock();
+    animationRunning = true;
+    if (idle)
+        wait.wakeOne();
+    mutex.unlock();
 }
 
-void QSGThreadedRendererAnimationDriver::stopped()
+void QSGCanvasPrivate::_q_animationStopped()
 {
 #ifdef THREAD_DEBUG
     qWarning("AnimationDriver: Main Thread: stopped");
 #endif
-    renderer->mutex.lock();
-    renderer->animationRunning = false;
-    renderer->mutex.unlock();
+    mutex.lock();
+    animationRunning = false;
+    mutex.unlock();
 }
 
 void QSGCanvas::paintEvent(QPaintEvent *)
@@ -238,8 +212,11 @@ void QSGCanvas::showEvent(QShowEvent *e)
     if (d->threadedRendering) {
         d->contextInThread = true;
         doneCurrent();
-        if (!d->animationDriver)
-            d->animationDriver = new QSGThreadedRendererAnimationDriver(d, this);
+        if (!d->animationDriver) {
+            d->animationDriver = new QAnimationDriver(this);
+            connect(d->animationDriver, SIGNAL(started()), this, SLOT(_q_animationStarted()), Qt::DirectConnection);
+            connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(_q_animationStopped()), Qt::DirectConnection);
+        }
         d->animationDriver->install();
         d->mutex.lock();
         d->thread->start();
@@ -250,7 +227,8 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
         if (!d->context || !d->context->isReady()) {
             d->initializeSceneGraph();
-            d->animationDriver = new QSGAnimationDriver(this, this);
+            d->animationDriver = new QAnimationDriver(this);
+            connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
         }
 
         d->animationDriver->install();
@@ -471,7 +449,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , thread(new MyThread(this))
     , animationDriver(0)
 {
-    threadedRendering = qmlThreadedRenderer();
+    threadedRendering = !qmlNoThreadedRenderer();
 }
 
 QSGCanvasPrivate::~QSGCanvasPrivate()
@@ -1893,5 +1871,7 @@ QSGEngine *QSGCanvas::sceneGraphEngine() const
         return d->context->engine();
     return 0;
 }
+
+#include "moc_qsgcanvas.cpp"
 
 QT_END_NAMESPACE
