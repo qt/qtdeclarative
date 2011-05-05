@@ -213,7 +213,7 @@ void QSGCanvas::showEvent(QShowEvent *e)
         d->contextInThread = true;
         doneCurrent();
         if (!d->animationDriver) {
-            d->animationDriver = new QAnimationDriver(this);
+            d->animationDriver = d->context->createAnimationDriver(this);
             connect(d->animationDriver, SIGNAL(started()), this, SLOT(_q_animationStarted()), Qt::DirectConnection);
             connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(_q_animationStopped()), Qt::DirectConnection);
         }
@@ -227,7 +227,7 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
         if (!d->context || !d->context->isReady()) {
             d->initializeSceneGraph();
-            d->animationDriver = new QAnimationDriver(this);
+            d->animationDriver = d->context->createAnimationDriver(this);
             connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
         }
 

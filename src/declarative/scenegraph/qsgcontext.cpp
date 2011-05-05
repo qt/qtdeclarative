@@ -425,4 +425,15 @@ qreal QSGContext::renderAlpha() const
 }
 
 
+
+/*!
+    Creates a new animation driver.
+ */
+
+QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
+{
+    return new QAnimationDriver(parent);
+}
+
+
 QT_END_NAMESPACE

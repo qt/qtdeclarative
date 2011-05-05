@@ -113,6 +113,8 @@ public:
     void setRenderAlpha(qreal renderAlpha);
     qreal renderAlpha() const;
 
+    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
+
 signals:
     void ready();
 };
