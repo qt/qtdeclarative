@@ -55,6 +55,15 @@ public:
 
 private slots:
     void dump();
+
+    void point();
+    void pointf();
+    void size();
+    void sizef();
+    void rect();
+    void rectf();
+    void vector3d();
+    void time();
 };
 
 static QStringList messages;
@@ -198,7 +207,6 @@ void tst_qdeclarativeinstruction::dump()
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreTime);
         i.storeTime.propertyIndex = 11;
-        i.storeTime.valueIndex = 33;
         data->addInstruction(i);
     }
 
@@ -206,39 +214,42 @@ void tst_qdeclarativeinstruction::dump()
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreDateTime);
         i.storeDateTime.propertyIndex = 12;
-        i.storeDateTime.valueIndex = 44;
         data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StorePoint);
-        i.storeRealPair.propertyIndex = 13;
-        i.storeRealPair.valueIndex = 3;
+        i.storePoint.propertyIndex = 13;
+        i.storePoint.point.xp = 3;
+        i.storePoint.point.yp = 7;
         data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StorePointF);
-        i.storeRealPair.propertyIndex = 14;
-        i.storeRealPair.valueIndex = 9;
+        i.storePointF.propertyIndex = 13;
+        i.storePointF.point.xp = 3;
+        i.storePointF.point.yp = 7;
         data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreSize);
-        i.storeRealPair.propertyIndex = 15;
-        i.storeRealPair.valueIndex = 8;
+        i.storeSize.propertyIndex = 15;
+        i.storeSize.size.wd = 8;
+        i.storeSize.size.ht = 11;
         data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreSizeF);
-        i.storeRealPair.propertyIndex = 16;
-        i.storeRealPair.valueIndex = 99;
+        i.storeSizeF.propertyIndex = 15;
+        i.storeSizeF.size.wd = 8;
+        i.storeSizeF.size.ht = 11;
         data->addInstruction(i);
     }
 
@@ -246,15 +257,21 @@ void tst_qdeclarativeinstruction::dump()
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreRect);
         i.storeRect.propertyIndex = 17;
-        i.storeRect.valueIndex = 2;
+        i.storeRect.rect.x1 = 7;
+        i.storeRect.rect.y1 = 9;
+        i.storeRect.rect.x2 = 11;
+        i.storeRect.rect.y2 = 13;
         data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreRectF);
-        i.storeRect.propertyIndex = 18;
-        i.storeRect.valueIndex = 19;
+        i.storeRectF.propertyIndex = 18;
+        i.storeRectF.rect.xp = 11.3;
+        i.storeRectF.rect.yp = 9.8;
+        i.storeRectF.rect.w = 3;
+        i.storeRectF.rect.h = 2.1;
         data->addInstruction(i);
     }
 
@@ -262,7 +279,9 @@ void tst_qdeclarativeinstruction::dump()
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::StoreVector3D);
         i.storeVector3D.propertyIndex = 19;
-        i.storeVector3D.valueIndex = 9;
+        i.storeVector3D.vector.xp = 9;
+        i.storeVector3D.vector.yp = 3;
+        i.storeVector3D.vector.zp = 92;
         data->addInstruction(i);
     }
 
@@ -329,7 +348,8 @@ void tst_qdeclarativeinstruction::dump()
         QDeclarativeInstruction i;
         i.setType(QDeclarativeInstruction::AssignCustomType);
         i.assignCustomType.propertyIndex = 25;
-        i.assignCustomType.valueIndex = 4;
+        i.assignCustomType.primitive = 6;
+        i.assignCustomType.type = 9;
         data->addInstruction(i);
     }
 
@@ -501,15 +521,15 @@ void tst_qdeclarativeinstruction::dump()
         << "11\t\tSTORE_URL\t\t8\t0\t\tQUrl(\"http://www.nokia.com\") "
         << "12\t\tSTORE_COLOR\t\t9\t\t\t\"ff00ff00\""
         << "13\t\tSTORE_DATE\t\t10\t9"
-        << "14\t\tSTORE_TIME\t\t11\t33"
-        << "15\t\tSTORE_DATETIME\t\t12\t44"
-        << "16\t\tSTORE_POINT\t\t13\t3"
-        << "17\t\tSTORE_POINTF\t\t14\t9"
-        << "18\t\tSTORE_SIZE\t\t15\t8"
-        << "19\t\tSTORE_SIZEF\t\t16\t99"
-        << "20\t\tSTORE_RECT\t\t17\t2"
-        << "21\t\tSTORE_RECTF\t\t18\t19"
-        << "22\t\tSTORE_VECTOR3D\t\t19\t9"
+        << "14\t\tSTORE_TIME\t\t11"
+        << "15\t\tSTORE_DATETIME\t\t12"
+        << "16\t\tSTORE_POINT\t\t13\t3\t7"
+        << "17\t\tSTORE_POINTF\t\t13\t3\t7"
+        << "18\t\tSTORE_SIZE\t\t15\t8\t11"
+        << "19\t\tSTORE_SIZEF\t\t15\t8\t11"
+        << "20\t\tSTORE_RECT\t\t17\t7\t9\t11\t13"
+        << "21\t\tSTORE_RECTF\t\t18\t11.3\t9.8\t3\t2.1"
+        << "22\t\tSTORE_VECTOR3D\t\t19\t9\t3\t92"
         << "23\t\tSTORE_VARIANT\t\t20\t2\t\t\"color(1, 1, 1, 1)\""
         << "24\t\tSTORE_OBJECT\t\t21"
         << "25\t\tSTORE_VARIANT_OBJECT\t22"
@@ -517,7 +537,7 @@ void tst_qdeclarativeinstruction::dump()
         << "27\t\tSTORE_SIGNAL\t\t2\t3\t\t\"console.log(1921)\""
         << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1"
         << "29\t\tASSIGN_SIGNAL_OBJECT\t0\t\t\t\"mySignal\""
-        << "30\t\tASSIGN_CUSTOMTYPE\t25\t4"
+        << "30\t\tASSIGN_CUSTOMTYPE\t25\t6\t9"
         << "31\t\tSTORE_BINDING\t26\t3\t2"
         << "32\t\tSTORE_COMPILED_BINDING\t27\t2\t4"
         << "33\t\tSTORE_VALUE_SOURCE\t29\t4"
@@ -551,6 +571,120 @@ void tst_qdeclarativeinstruction::dump()
     }
 
     data->release();
+}
+
+void tst_qdeclarativeinstruction::point()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storePoint::QPoint), sizeof(QPoint));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storePoint::QPoint), Q_ALIGNOF(QPoint));
+
+    QDeclarativeInstruction i;
+    i.storePoint.point.xp = 8;
+    i.storePoint.point.yp = 11;
+
+    const QPoint &point = (const QPoint &)(i.storePoint.point);
+    QCOMPARE(point.x(), 8);
+    QCOMPARE(point.y(), 11);
+}
+
+void tst_qdeclarativeinstruction::pointf()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storePointF::QPointF), sizeof(QPointF));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storePointF::QPointF), Q_ALIGNOF(QPointF));
+
+    QDeclarativeInstruction i;
+    i.storePointF.point.xp = 8.7;
+    i.storePointF.point.yp = 11.3;
+
+    const QPointF &point = (const QPointF &)(i.storePointF.point);
+    QCOMPARE(point.x(), 8.7);
+    QCOMPARE(point.y(), 11.3);
+}
+
+void tst_qdeclarativeinstruction::size()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeSize::QSize), sizeof(QSize));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeSize::QSize), Q_ALIGNOF(QSize));
+
+    QDeclarativeInstruction i;
+    i.storeSize.size.wd = 8;
+    i.storeSize.size.ht = 11;
+
+    const QSize &size = (const QSize &)(i.storeSize.size);
+    QCOMPARE(size.width(), 8);
+    QCOMPARE(size.height(), 11);
+}
+
+void tst_qdeclarativeinstruction::sizef()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeSizeF::QSizeF), sizeof(QSizeF));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeSizeF::QSizeF), Q_ALIGNOF(QSizeF));
+
+    QDeclarativeInstruction i;
+    i.storeSizeF.size.wd = 8;
+    i.storeSizeF.size.ht = 11;
+
+    const QSizeF &size = (const QSizeF &)(i.storeSizeF.size);
+    QCOMPARE(size.width(), (qreal)8);
+    QCOMPARE(size.height(), (qreal)11);
+}
+
+void tst_qdeclarativeinstruction::rect()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeRect::QRect), sizeof(QRect));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeRect::QRect), Q_ALIGNOF(QRect));
+
+    QDeclarativeInstruction i;
+    i.storeRect.rect.x1 = 8;
+    i.storeRect.rect.y1 = 11;
+    i.storeRect.rect.x2 = 13;
+    i.storeRect.rect.y2 = 19;
+
+    const QRect &rect = (const QRect &)(i.storeRect.rect);
+    QCOMPARE(rect.left(), 8);
+    QCOMPARE(rect.top(), 11);
+    QCOMPARE(rect.right(), 13);
+    QCOMPARE(rect.bottom(), 19);
+}
+
+void tst_qdeclarativeinstruction::rectf()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeRectF::QRectF), sizeof(QRectF));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeRectF::QRectF), Q_ALIGNOF(QRectF));
+
+    QDeclarativeInstruction i;
+    i.storeRectF.rect.xp = 8;
+    i.storeRectF.rect.yp = 11;
+    i.storeRectF.rect.w = 13;
+    i.storeRectF.rect.h = 19;
+
+    const QRectF &rect = (const QRectF &)(i.storeRectF.rect);
+    QCOMPARE(rect.left(), (qreal)8);
+    QCOMPARE(rect.top(), (qreal)11);
+    QCOMPARE(rect.width(), (qreal)13);
+    QCOMPARE(rect.height(), (qreal)19);
+}
+
+void tst_qdeclarativeinstruction::vector3d()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeVector3D::QVector3D), sizeof(QVector3D));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeVector3D::QVector3D), Q_ALIGNOF(QVector3D));
+
+    QDeclarativeInstruction i;
+    i.storeVector3D.vector.xp = 8.2;
+    i.storeVector3D.vector.yp = 99.3;
+    i.storeVector3D.vector.zp = 12.0;
+
+    const QVector3D &vector = (const QVector3D &)(i.storeVector3D.vector);
+    QCOMPARE(vector.x(), (qreal)(float)8.2);
+    QCOMPARE(vector.y(), (qreal)(float)99.3);
+    QCOMPARE(vector.z(), (qreal)(float)12.0);
+}
+
+void tst_qdeclarativeinstruction::time()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeTime::QTime), sizeof(QTime));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeTime::QTime), Q_ALIGNOF(QTime));
 }
 
 QTEST_MAIN(tst_qdeclarativeinstruction)

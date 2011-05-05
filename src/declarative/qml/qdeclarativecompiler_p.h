@@ -102,21 +102,12 @@ public:
         QDeclarativePropertyCache *createPropertyCache(QDeclarativeEngine *);
     };
     QList<TypeReference> types;
-    struct CustomTypeData
-    {
-        int index;
-        int type;
-    };
 
     const QMetaObject *root;
     QAbstractDynamicMetaObject rootData;
     QDeclarativePropertyCache *rootPropertyCache;
     QList<QString> primitives;
-    QList<float> floatData;
-    QList<int> intData;
-    QList<CustomTypeData> customTypeData;
     QList<QByteArray> datas;
-    QList<QDeclarativeParser::Location> locations;
     QByteArray bytecode;
     QList<QScriptProgram *> cachedPrograms;
     QList<QScriptValue *> cachedClosures;
@@ -144,10 +135,6 @@ private:
 
     int indexForString(const QString &);
     int indexForByteArray(const QByteArray &);
-    int indexForFloat(float *, int);
-    int indexForInt(int *, int);
-    int indexForLocation(const QDeclarativeParser::Location &);
-    int indexForLocation(const QDeclarativeParser::LocationSpan &);
     int indexForUrl(const QUrl &);
 };
 

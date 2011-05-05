@@ -549,11 +549,11 @@ void tst_qdeclarativelanguage::assignBasicTypes()
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
     QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
-    QCOMPARE(object->pointFProperty(), QPointF((float)-10.1, (float)12.3));
+    QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
-    QCOMPARE(object->sizeFProperty(), QSizeF((float)0.1, (float)0.2));
+    QCOMPARE(object->sizeFProperty(), QSizeF(0.1, 0.2));
     QCOMPARE(object->rectProperty(), QRect(9, 7, 100, 200));
-    QCOMPARE(object->rectFProperty(), QRectF((float)1000.1, (float)-10.9, (float)400, (float)90.99));
+    QCOMPARE(object->rectFProperty(), QRectF(1000.1, -10.9, 400, 90.99));
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));

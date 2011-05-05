@@ -441,74 +441,84 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Time:
             {
             QTime time = QDeclarativeStringConverters::timeFromString(string);
-            int data[] = { time.hour(), time.minute(),
-                           time.second(), time.msec() };
-            int index = output->indexForInt(data, 4);
             instr.setType(QDeclarativeInstruction::StoreTime);
             instr.storeTime.propertyIndex = prop.propertyIndex();
-            instr.storeTime.valueIndex = index;
+            instr.storeTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
             }
             break;
         case QVariant::DateTime:
             {
             QDateTime dateTime = QDeclarativeStringConverters::dateTimeFromString(string);
-            int data[] = { dateTime.date().toJulianDay(),
-                           dateTime.time().hour(),
-                           dateTime.time().minute(),
-                           dateTime.time().second(),
-                           dateTime.time().msec() };
-            int index = output->indexForInt(data, 5);
+            QTime time = dateTime.time();
             instr.setType(QDeclarativeInstruction::StoreDateTime);
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
-            instr.storeDateTime.valueIndex = index;
+            instr.storeDateTime.date = dateTime.date().toJulianDay();
+            instr.storeDateTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
             }
             break;
 #endif // QT_NO_DATESTRING
         case QVariant::Point:
+            {
+            bool ok;
+            QPoint point = QDeclarativeStringConverters::pointFFromString(string, &ok).toPoint();
+            instr.setType(QDeclarativeInstruction::StorePoint);
+            instr.storePoint.propertyIndex = prop.propertyIndex();
+            instr.storePoint.point.xp = point.x();
+            instr.storePoint.point.yp = point.y();
+            }
+            break;
         case QVariant::PointF:
             {
             bool ok;
-            QPointF point =
-                QDeclarativeStringConverters::pointFFromString(string, &ok);
-            float data[] = { float(point.x()), float(point.y()) };
-            int index = output->indexForFloat(data, 2);
-            if (type == QVariant::PointF)
-                instr.setType(QDeclarativeInstruction::StorePointF);
-            else
-                instr.setType(QDeclarativeInstruction::StorePoint);
-            instr.storeRealPair.propertyIndex = prop.propertyIndex();
-            instr.storeRealPair.valueIndex = index;
+            QPointF point = QDeclarativeStringConverters::pointFFromString(string, &ok);
+            instr.setType(QDeclarativeInstruction::StorePointF);
+            instr.storePointF.propertyIndex = prop.propertyIndex();
+            instr.storePointF.point.xp = point.x();
+            instr.storePointF.point.yp = point.y();
             }
             break;
         case QVariant::Size:
+            {
+            bool ok;
+            QSize size = QDeclarativeStringConverters::sizeFFromString(string, &ok).toSize();
+            instr.setType(QDeclarativeInstruction::StoreSize);
+            instr.storeSize.propertyIndex = prop.propertyIndex();
+            instr.storeSize.size.wd = size.width();
+            instr.storeSize.size.ht = size.height();
+            }
+            break;
         case QVariant::SizeF:
             {
             bool ok;
             QSizeF size = QDeclarativeStringConverters::sizeFFromString(string, &ok);
-            float data[] = { float(size.width()), float(size.height()) };
-            int index = output->indexForFloat(data, 2);
-            if (type == QVariant::SizeF)
-                instr.setType(QDeclarativeInstruction::StoreSizeF);
-            else
-                instr.setType(QDeclarativeInstruction::StoreSize);
-            instr.storeRealPair.propertyIndex = prop.propertyIndex();
-            instr.storeRealPair.valueIndex = index;
+            instr.setType(QDeclarativeInstruction::StoreSizeF);
+            instr.storeSizeF.propertyIndex = prop.propertyIndex();
+            instr.storeSizeF.size.wd = size.width();
+            instr.storeSizeF.size.ht = size.height();
             }
             break;
         case QVariant::Rect:
+            {
+            bool ok;
+            QRect rect = QDeclarativeStringConverters::rectFFromString(string, &ok).toRect();
+            instr.setType(QDeclarativeInstruction::StoreRect);
+            instr.storeRect.propertyIndex = prop.propertyIndex();
+            instr.storeRect.rect.x1 = rect.left();
+            instr.storeRect.rect.y1 = rect.top();
+            instr.storeRect.rect.x2 = rect.right();
+            instr.storeRect.rect.y2 = rect.bottom();
+            }
+            break;
         case QVariant::RectF:
             {
             bool ok;
             QRectF rect = QDeclarativeStringConverters::rectFFromString(string, &ok);
-            float data[] = { float(rect.x()), float(rect.y()),
-                             float(rect.width()), float(rect.height()) };
-            int index = output->indexForFloat(data, 4);
-            if (type == QVariant::RectF)
-                instr.setType(QDeclarativeInstruction::StoreRectF);
-            else
-                instr.setType(QDeclarativeInstruction::StoreRect);
-            instr.storeRect.propertyIndex = prop.propertyIndex();
-            instr.storeRect.valueIndex = index;
+            instr.setType(QDeclarativeInstruction::StoreRectF);
+            instr.storeRectF.propertyIndex = prop.propertyIndex();
+            instr.storeRectF.rect.xp = rect.left();
+            instr.storeRectF.rect.yp = rect.top();
+            instr.storeRectF.rect.w = rect.width();
+            instr.storeRectF.rect.h = rect.height();
             }
             break;
         case QVariant::Bool:
@@ -522,28 +532,21 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Vector3D:
             {
             bool ok;
-            QVector3D vector =
-                QDeclarativeStringConverters::vector3DFromString(string, &ok);
-            float data[] = { float(vector.x()), float(vector.y()), float(vector.z()) };
-            int index = output->indexForFloat(data, 3);
+            QVector3D vector = QDeclarativeStringConverters::vector3DFromString(string, &ok);
             instr.setType(QDeclarativeInstruction::StoreVector3D);
-            instr.storeRealPair.propertyIndex = prop.propertyIndex();
-            instr.storeRealPair.valueIndex = index;
+            instr.storeVector3D.propertyIndex = prop.propertyIndex();
+            instr.storeVector3D.vector.xp = vector.x();
+            instr.storeVector3D.vector.yp = vector.y();
+            instr.storeVector3D.vector.zp = vector.z();
             }
             break;
         default:
             {
             int t = prop.userType();
-            int index = output->customTypeData.count();
             instr.setType(QDeclarativeInstruction::AssignCustomType);
             instr.assignCustomType.propertyIndex = prop.propertyIndex();
-            instr.assignCustomType.valueIndex = index;
-            instr.assignCustomType.line = v->location.start.line;
-
-            QDeclarativeCompiledData::CustomTypeData data;
-            data.index = output->indexForString(string);
-            data.type = t;
-            output->customTypeData << data;
+            instr.assignCustomType.primitive = output->indexForString(string);
+            instr.assignCustomType.type = t;
             }
             break;
     }
@@ -557,9 +560,6 @@ void QDeclarativeCompiler::reset(QDeclarativeCompiledData *data)
 {
     data->types.clear();
     data->primitives.clear();
-    data->floatData.clear();
-    data->intData.clear();
-    data->customTypeData.clear();
     data->datas.clear();
     data->bytecode.clear();
 }

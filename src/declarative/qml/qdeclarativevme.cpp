@@ -161,9 +161,6 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
     const QList<QDeclarativeCompiledData::TypeReference> &types = comp->types;
     const QList<QString> &primitives = comp->primitives;
     const QList<QByteArray> &datas = comp->datas;
-    const QList<QDeclarativeCompiledData::CustomTypeData> &customTypeData = comp->customTypeData;
-    const QList<int> &intData = comp->intData;
-    const QList<float> &floatData = comp->floatData;
     const QList<QDeclarativePropertyCache *> &propertyCaches = comp->propertyCaches;
     const QList<QDeclarativeScriptData *> &scripts = comp->scripts;
     const QList<QUrl> &urls = comp->urls;
@@ -475,12 +472,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QTime t;
-            t.setHMS(intData.at(instr.valueIndex),
-                     intData.at(instr.valueIndex+1),
-                     intData.at(instr.valueIndex+2),
-                     intData.at(instr.valueIndex+3));
-            void *a[] = { &t, 0, &status, &flags };
+            QTime *t = (QTime *)&instr.time;
+            void *a[] = { t, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreTime)
@@ -489,12 +482,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QTime t;
-            t.setHMS(intData.at(instr.valueIndex+1),
-                     intData.at(instr.valueIndex+2),
-                     intData.at(instr.valueIndex+3),
-                     intData.at(instr.valueIndex+4));
-            QDateTime dt(QDate::fromJulianDay(intData.at(instr.valueIndex)), t);
+            QTime *t = (QTime *)&instr.time;
+            QDateTime dt(QDate::fromJulianDay(instr.date), *t);
             void *a[] = { &dt, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty,
                                   instr.propertyIndex, a);
@@ -504,9 +493,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QPoint p = QPointF(floatData.at(instr.valueIndex),
-                               floatData.at(instr.valueIndex+1)).toPoint();
-            void *a[] = { &p, 0, &status, &flags };
+            QPoint *p = (QPoint *)&instr.point;
+            void *a[] = { p, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StorePoint)
@@ -515,9 +503,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QPointF p(floatData.at(instr.valueIndex),
-                      floatData.at(instr.valueIndex+1));
-            void *a[] = { &p, 0, &status, &flags };
+            QPointF *p = (QPointF *)&instr.point;
+            void *a[] = { p, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StorePointF)
@@ -526,9 +513,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QSize p = QSizeF(floatData.at(instr.valueIndex),
-                             floatData.at(instr.valueIndex+1)).toSize();
-            void *a[] = { &p, 0, &status, &flags };
+            QSize *s = (QSize *)&instr.size;
+            void *a[] = { s, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreSize)
@@ -537,9 +523,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QSizeF s(floatData.at(instr.valueIndex),
-                     floatData.at(instr.valueIndex+1));
-            void *a[] = { &s, 0, &status, &flags };
+            QSizeF *s = (QSizeF *)&instr.size;
+            void *a[] = { s, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreSizeF)
@@ -548,11 +533,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QRect r = QRectF(floatData.at(instr.valueIndex),
-                             floatData.at(instr.valueIndex+1),
-                             floatData.at(instr.valueIndex+2),
-                             floatData.at(instr.valueIndex+3)).toRect();
-            void *a[] = { &r, 0, &status, &flags };
+            QRect *r = (QRect *)&instr.rect;
+            void *a[] = { r, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreRect)
@@ -561,11 +543,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QRectF r(floatData.at(instr.valueIndex),
-                     floatData.at(instr.valueIndex+1),
-                     floatData.at(instr.valueIndex+2),
-                     floatData.at(instr.valueIndex+3));
-            void *a[] = { &r, 0, &status, &flags };
+            QRectF *r = (QRectF *)&instr.rect;
+            void *a[] = { r, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreRectF)
@@ -574,10 +553,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QVector3D p(floatData.at(instr.valueIndex),
-                        floatData.at(instr.valueIndex+1),
-                        floatData.at(instr.valueIndex+2));
-            void *a[] = { &p, 0, &status, &flags };
+            QVector3D *v = (QVector3D *)&instr.vector;
+            void *a[] = { v, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreVector3D)
@@ -596,15 +573,14 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             QObject *target = stack.top();
             CLEAN_PROPERTY(target, instr.propertyIndex);
 
-            QDeclarativeCompiledData::CustomTypeData data = customTypeData.at(instr.valueIndex);
-            const QString &primitive = primitives.at(data.index);
-            QDeclarativeMetaType::StringConverter converter = 
-                QDeclarativeMetaType::customStringConverter(data.type);
+            const QString &primitive = primitives.at(instr.primitive);
+            int type = instr.type;
+            QDeclarativeMetaType::StringConverter converter = QDeclarativeMetaType::customStringConverter(type);
             QVariant v = (*converter)(primitive);
 
             QMetaProperty prop = 
                     target->metaObject()->property(instr.propertyIndex);
-            if (v.isNull() || ((int)prop.type() != data.type && prop.userType() != data.type)) 
+            if (v.isNull() || ((int)prop.type() != type && prop.userType() != type)) 
                 VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())), instr.line);
 
             void *a[] = { (void *)v.data(), 0, &status, &flags };

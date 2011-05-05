@@ -106,31 +106,31 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "STORE_DATE\t\t" << instr->storeDate.propertyIndex << "\t" << instr->storeDate.value;
         break;
     case QDeclarativeInstruction::StoreTime:
-        qWarning().nospace() << idx << "\t\t" << "STORE_TIME\t\t" << instr->storeTime.propertyIndex << "\t" << instr->storeTime.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_TIME\t\t" << instr->storeTime.propertyIndex;
         break;
     case QDeclarativeInstruction::StoreDateTime:
-        qWarning().nospace() << idx << "\t\t" << "STORE_DATETIME\t\t" << instr->storeDateTime.propertyIndex << "\t" << instr->storeDateTime.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_DATETIME\t\t" << instr->storeDateTime.propertyIndex;
         break;
     case QDeclarativeInstruction::StorePoint:
-        qWarning().nospace() << idx << "\t\t" << "STORE_POINT\t\t" << instr->storeRealPair.propertyIndex << "\t" << instr->storeRealPair.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_POINT\t\t" << instr->storePoint.propertyIndex << "\t" << instr->storePoint.point.xp << "\t" << instr->storePoint.point.yp;
         break;
     case QDeclarativeInstruction::StorePointF:
-        qWarning().nospace() << idx << "\t\t" << "STORE_POINTF\t\t" << instr->storeRealPair.propertyIndex << "\t" << instr->storeRealPair.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_POINTF\t\t" << instr->storePointF.propertyIndex << "\t" << instr->storePointF.point.xp << "\t" << instr->storePointF.point.yp;
         break;
     case QDeclarativeInstruction::StoreSize:
-        qWarning().nospace() << idx << "\t\t" << "STORE_SIZE\t\t" << instr->storeRealPair.propertyIndex << "\t" << instr->storeRealPair.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_SIZE\t\t" << instr->storeSize.propertyIndex << "\t" << instr->storeSize.size.wd << "\t" << instr->storeSize.size.ht;
         break;
     case QDeclarativeInstruction::StoreSizeF:
-        qWarning().nospace() << idx << "\t\t" << "STORE_SIZEF\t\t" << instr->storeRealPair.propertyIndex << "\t" << instr->storeRealPair.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_SIZEF\t\t" << instr->storeSizeF.propertyIndex << "\t" << instr->storeSizeF.size.wd << "\t" << instr->storeSizeF.size.ht;
         break;
     case QDeclarativeInstruction::StoreRect:
-        qWarning().nospace() << idx << "\t\t" << "STORE_RECT\t\t" << instr->storeRect.propertyIndex << "\t" << instr->storeRect.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_RECT\t\t" << instr->storeRect.propertyIndex << "\t" << instr->storeRect.rect.x1 << "\t" << instr->storeRect.rect.y1 << "\t" << instr->storeRect.rect.x2 << "\t" << instr->storeRect.rect.y2;
         break;
     case QDeclarativeInstruction::StoreRectF:
-        qWarning().nospace() << idx << "\t\t" << "STORE_RECTF\t\t" << instr->storeRect.propertyIndex << "\t" << instr->storeRect.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_RECTF\t\t" << instr->storeRectF.propertyIndex << "\t" << instr->storeRectF.rect.xp << "\t" << instr->storeRectF.rect.yp << "\t" << instr->storeRectF.rect.w << "\t" << instr->storeRectF.rect.h;
         break;
     case QDeclarativeInstruction::StoreVector3D:
-        qWarning().nospace() << idx << "\t\t" << "STORE_VECTOR3D\t\t" << instr->storeVector3D.propertyIndex << "\t" << instr->storeVector3D.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "STORE_VECTOR3D\t\t" << instr->storeVector3D.propertyIndex << "\t" << instr->storeVector3D.vector.xp << "\t" << instr->storeVector3D.vector.yp << "\t" << instr->storeVector3D.vector.zp;
         break;
     case QDeclarativeInstruction::StoreVariant:
         qWarning().nospace() << idx << "\t\t" << "STORE_VARIANT\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
@@ -166,7 +166,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal << "\t\t\t" << datas.at(instr->assignSignalObject.signal);
         break;
     case QDeclarativeInstruction::AssignCustomType:
-        qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.valueIndex;
+        qWarning().nospace() << idx << "\t\t" << "ASSIGN_CUSTOMTYPE\t" << instr->assignCustomType.propertyIndex << "\t" << instr->assignCustomType.primitive << "\t" << instr->assignCustomType.type;
         break;
     case QDeclarativeInstruction::StoreBinding:
         qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;

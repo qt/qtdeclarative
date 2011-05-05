@@ -81,12 +81,12 @@ QT_BEGIN_NAMESPACE
     F(StoreDate, storeDate) \
     F(StoreTime, storeTime) \
     F(StoreDateTime, storeDateTime) \
-    F(StorePoint, storeRealPair) \
-    F(StorePointF, storeRealPair) \
-    F(StoreSize, storeRealPair) \
-    F(StoreSizeF, storeRealPair) \
+    F(StorePoint, storePoint) \
+    F(StorePointF, storePointF) \
+    F(StoreSize, storeSize) \
+    F(StoreSizeF, storeSizeF) \
     F(StoreRect, storeRect) \
-    F(StoreRectF, storeRect) \
+    F(StoreRectF, storeRectF) \
     F(StoreVector3D, storeVector3D) \
     F(StoreObject, storeObject) \
     F(AssignCustomType, assignCustomType) \
@@ -268,27 +268,45 @@ union QDeclarativeInstruction
     struct instr_storeTime {
         QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QTime {
+            int mds;
+#if defined(Q_OS_WINCE)
+            int startTick;
+#endif
+        } time;
     };
     struct instr_storeDateTime {
         QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
-    };
-    struct instr_storeRealPair {
-        QML_INSTR_HEADER
-        int propertyIndex;
-        int valueIndex;
+        int date;
+        instr_storeTime::QTime time;
     };
     struct instr_storeRect {
         QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QRect {
+#if defined(Q_OS_MAC)
+            int y1;
+            int x1;
+            int y2;
+            int x2;
+#else
+            int x1;
+            int y1;
+            int x2;
+            int y2;
+#endif
+        } rect;
     };
-    struct instr_storeVector3D {
+    struct instr_storeRectF {
         QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QRectF {
+            qreal xp;
+            qreal yp;
+            qreal w;
+            qreal h;
+        } rect;
     };
     struct instr_storeObject {
         QML_INSTR_HEADER
@@ -298,7 +316,8 @@ union QDeclarativeInstruction
     struct instr_assignCustomType {
         QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        int primitive;
+        int type;
         ushort line;
     };
     struct instr_storeSignal {
@@ -335,6 +354,52 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         ushort line;
     };
+    struct instr_storePoint {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QPoint {
+#if defined(Q_OS_MAC)
+            int yp;
+            int xp;
+#else
+            int xp;
+            int yp;
+#endif
+        } point;
+    };
+    struct instr_storePointF {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QPointF {
+            qreal xp;
+            qreal yp;
+        } point;
+    };
+    struct instr_storeSize {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QSize {
+            int wd;
+            int ht;
+        } size;
+    };
+    struct instr_storeSizeF {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QSizeF {
+            qreal wd;
+            qreal ht;
+        } size;
+    };
+    struct instr_storeVector3D {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QVector3D {
+            float xp;
+            float yp;
+            float zp;
+        } vector;
+    };
 
     instr_common common;
     instr_init init;
@@ -362,8 +427,12 @@ union QDeclarativeInstruction
     instr_storeDate storeDate;
     instr_storeTime storeTime;
     instr_storeDateTime storeDateTime;
-    instr_storeRealPair storeRealPair;
+    instr_storePoint storePoint;
+    instr_storePointF storePointF;
+    instr_storeSize storeSize;
+    instr_storeSizeF storeSizeF;
     instr_storeRect storeRect;
+    instr_storeRectF storeRectF;
     instr_storeVector3D storeVector3D;
     instr_storeObject storeObject;
     instr_assignCustomType assignCustomType;
