@@ -60,18 +60,18 @@ namespace QDeclarativeJS {
 static struct DumpInstrAtStartup {
     DumpInstrAtStartup() {
 #define DUMP_INSTR_AT_STARTUP(Type, FMT) { Instr i; i.common.type = Instr::Type; i.dump(0); }
-        FOR_EACH_QML_INSTR(DUMP_INSTR_AT_STARTUP);
+        FOR_EACH_V4_INSTR(DUMP_INSTR_AT_STARTUP);
     }
 } dump_instr_at_startup;
 #endif
 
 int Instr::size() const
 {
-#define QML_RETURN_INSTR_SIZE(I, FMT) case I: return QML_INSTR_SIZE(I, FMT);
+#define V4_RETURN_INSTR_SIZE(I, FMT) case I: return QML_V4_INSTR_SIZE(I, FMT);
     switch (common.type) {
-    FOR_EACH_QML_INSTR(QML_RETURN_INSTR_SIZE)
+    FOR_EACH_V4_INSTR(V4_RETURN_INSTR_SIZE)
     }
-#undef QML_RETURN_INSTR_SIZE
+#undef V4_RETURN_INSTR_SIZE
     return 0;
 }
 

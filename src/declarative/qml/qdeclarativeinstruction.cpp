@@ -53,9 +53,12 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
     Q_UNUSED(instr)
     Q_UNUSED(idx)
 #else
-    switch(instr->type) {
+    switch(instr->type()) {
     case QDeclarativeInstruction::Init:
         qWarning().nospace() << idx << "\t\t" << "INIT\t\t\t" << instr->init.bindingsSize << "\t" << instr->init.parserStatusSize << "\t" << instr->init.contextCache << "\t" << instr->init.compiledBinding;
+        break;
+    case QDeclarativeInstruction::Done:
+        qWarning().nospace() << idx << "\t\t" << "DONE";
         break;
     case QDeclarativeInstruction::CreateObject:
         qWarning().nospace() << idx << "\t\t" << "CREATE\t\t\t" << instr->create.type << "\t" << instr->create.bindingBits << "\t\t" << types.at(instr->create.type).className;
@@ -214,10 +217,20 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "DEFER" << "\t\t\t" << instr->defer.deferCount;
         break;
     default:
-        qWarning().nospace() << idx << "\t\t" << "XXX UNKNOWN INSTRUCTION" << "\t" << instr->type;
+        qWarning().nospace() << idx << "\t\t" << "XXX UNKNOWN INSTRUCTION" << "\t" << instr->type();
         break;
     }
 #endif // QT_NO_DEBUG_STREAM
+}
+
+int QDeclarativeInstruction::size() const
+{
+#define QML_RETURN_INSTR_SIZE(I, FMT) case I: return QDeclarativeInstructionMeta<(int)I>::Size;
+    switch (common.instructionType) {
+    FOR_EACH_QML_INSTR(QML_RETURN_INSTR_SIZE)
+    default: return 0;
+    }
+#undef QML_RETURN_INSTR_SIZE
 }
 
 QT_END_NAMESPACE

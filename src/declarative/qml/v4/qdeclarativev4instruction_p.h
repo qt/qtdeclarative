@@ -61,7 +61,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-#define FOR_EACH_QML_INSTR(F) \
+#define FOR_EACH_V4_INSTR(F) \
     F(Noop, common) \
     F(BindingId, id) \
     F(Subscribe, subscribeop) \
@@ -146,23 +146,23 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #ifdef Q_ALIGNOF
-#  define QML_INSTR_ALIGN_MASK (Q_ALIGNOF(Instr) - 1)
+#  define QML_V4_INSTR_ALIGN_MASK (Q_ALIGNOF(Instr) - 1)
 #else
-#  define QML_INSTR_ALIGN_MASK (sizeof(void *) - 1)
+#  define QML_V4_INSTR_ALIGN_MASK (sizeof(void *) - 1)
 #endif
 
-#define QML_INSTR_ENUM(I, FMT) I,
-#define QML_INSTR_ADDR(I, FMT) &&op_##I,
-#define QML_INSTR_SIZE(I, FMT) ((sizeof(Instr::instr_##FMT) + QML_INSTR_ALIGN_MASK) & ~QML_INSTR_ALIGN_MASK)
+#define QML_V4_INSTR_ENUM(I, FMT) I,
+#define QML_V4_INSTR_ADDR(I, FMT) &&op_##I,
+#define QML_V4_INSTR_SIZE(I, FMT) ((sizeof(Instr::instr_##FMT) + QML_V4_INSTR_ALIGN_MASK) & ~QML_V4_INSTR_ALIGN_MASK)
 
 #ifdef QML_THREADED_INTERPRETER
-#  define QML_BEGIN_INSTR(I,FMT) op_##I:
-#  define QML_END_INSTR(I,FMT) code += QML_INSTR_SIZE(I, FMT); instr = (const Instr *) code; goto *instr->common.code;
-#  define QML_INSTR_HEADER void *code;
+#  define QML_V4_BEGIN_INSTR(I,FMT) op_##I:
+#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const Instr *) code; goto *instr->common.code;
+#  define QML_V4_INSTR_HEADER void *code;
 #else
-#  define QML_BEGIN_INSTR(I,FMT) case Instr::I:
-#  define QML_END_INSTR(I,FMT) code += QML_INSTR_SIZE(I, FMT); instr = (const Instr *) code; break;
-#  define QML_INSTR_HEADER
+#  define QML_V4_BEGIN_INSTR(I,FMT) case Instr::I:
+#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const Instr *) code; break;
+#  define QML_V4_INSTR_HEADER
 #endif
 
 namespace QDeclarativeJS {
@@ -200,30 +200,30 @@ union Instr {
     void block(quint32 mask);
 
     enum {
-        FOR_EACH_QML_INSTR(QML_INSTR_ENUM)
+        FOR_EACH_V4_INSTR(QML_V4_INSTR_ENUM)
     };
 
     struct instr_common {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
     };
 
     struct instr_id {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         quint16 column;
         quint32 line;
     };
 
     struct instr_init {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         quint16 subscriptions;
         quint16 identifiers;
     };
 
     struct instr_subscribeop {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint16 offset;
@@ -231,14 +231,14 @@ union Instr {
     };
 
     struct instr_load {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint32 index;
     };
 
     struct instr_attached {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 output;
         qint8 reg;
@@ -247,7 +247,7 @@ union Instr {
     };
 
     struct instr_store {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 output;
         qint8 reg;
@@ -256,14 +256,14 @@ union Instr {
     };
 
     struct instr_storetest {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         qint32 regType;
     };
 
     struct instr_fetchAndSubscribe {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint8 exceptionId;
@@ -273,7 +273,7 @@ union Instr {
     };
 
     struct instr_fetch{
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint8 exceptionId;
@@ -282,41 +282,41 @@ union Instr {
     };
 
     struct instr_copy {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         qint8 src;
     };
 
     struct instr_construct {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
     };
 
     struct instr_real_value {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         qreal value; // XXX Makes the instruction 12 bytes
     };
 
     struct instr_int_value {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         int value;
     };
 
     struct instr_bool_value {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         bool value;
     };
 
     struct instr_string_value {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint16 length;
@@ -324,7 +324,7 @@ union Instr {
     };
 
     struct instr_binaryop {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 output;
         qint8 left;
@@ -332,21 +332,21 @@ union Instr {
     };
 
     struct instr_unaryop {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 output;
         qint8 src;
     };
 
     struct instr_jump {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         quint32 count;
     };
 
     struct instr_find {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
         qint8 src;
@@ -356,27 +356,27 @@ union Instr {
     };
 
     struct instr_cleanup {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         qint8 reg;
     };
 
     struct instr_initstring {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         quint16 offset;
         quint32 dataIdx;
     };
 
     struct instr_branchop {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         quint8 reg;
         qint16 offset;
     };
 
     struct instr_blockop {
-        QML_INSTR_HEADER
+        QML_V4_INSTR_HEADER
         quint8 type;
         quint32 block;
     };

@@ -68,12 +68,12 @@ void tst_qdeclarativeinstruction::dump()
     QDeclarativeCompiledData *data = new QDeclarativeCompiledData(0);
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::Init;
+        i.setType(QDeclarativeInstruction::Init);
         i.init.bindingsSize = 0;
         i.init.parserStatusSize = 3;
         i.init.contextCache = -1;
         i.init.compiledBinding = -1;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
@@ -82,405 +82,405 @@ void tst_qdeclarativeinstruction::dump()
         data->types << ref;
 
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::CreateObject;
+        i.setType(QDeclarativeInstruction::CreateObject);
         i.create.type = 0;
         i.create.data = -1;
         i.create.bindingBits = -1;
         i.create.column = 10;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->primitives << "testId";
 
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::SetId;
+        i.setType(QDeclarativeInstruction::SetId);
         i.setId.value = data->primitives.count() - 1;
         i.setId.index = 0;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::SetDefault;
-        data->bytecode << i;
+        i.setType(QDeclarativeInstruction::SetDefault);
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::CreateComponent;
+        i.setType(QDeclarativeInstruction::CreateComponent);
         i.createComponent.count = 3;
         i.createComponent.column = 4;
         i.createComponent.endLine = 14;
         i.createComponent.metaObject = 0;
 
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreMetaObject;
+        i.setType(QDeclarativeInstruction::StoreMetaObject);
         i.storeMeta.data = 3;
         i.storeMeta.aliasData = 6;
         i.storeMeta.propertyCache = 7;
 
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreFloat;
+        i.setType(QDeclarativeInstruction::StoreFloat);
         i.storeFloat.propertyIndex = 3;
         i.storeFloat.value = 11.3;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreDouble;
+        i.setType(QDeclarativeInstruction::StoreDouble);
         i.storeDouble.propertyIndex = 4;
         i.storeDouble.value = 14.8;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreInteger;
+        i.setType(QDeclarativeInstruction::StoreInteger);
         i.storeInteger.propertyIndex = 5;
         i.storeInteger.value = 9;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreBool;
+        i.setType(QDeclarativeInstruction::StoreBool);
         i.storeBool.propertyIndex = 6;
         i.storeBool.value = true;
 
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->primitives << "Test String";
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreString;
+        i.setType(QDeclarativeInstruction::StoreString);
         i.storeString.propertyIndex = 7;
         i.storeString.value = data->primitives.count() - 1;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->urls << QUrl("http://www.nokia.com");
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreUrl;
+        i.setType(QDeclarativeInstruction::StoreUrl);
         i.storeUrl.propertyIndex = 8;
         i.storeUrl.value = data->urls.count() - 1;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreColor;
+        i.setType(QDeclarativeInstruction::StoreColor);
         i.storeColor.propertyIndex = 9;
         i.storeColor.value = 0xFF00FF00;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreDate;
+        i.setType(QDeclarativeInstruction::StoreDate);
         i.storeDate.propertyIndex = 10;
         i.storeDate.value = 9;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreTime;
+        i.setType(QDeclarativeInstruction::StoreTime);
         i.storeTime.propertyIndex = 11;
         i.storeTime.valueIndex = 33;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreDateTime;
+        i.setType(QDeclarativeInstruction::StoreDateTime);
         i.storeDateTime.propertyIndex = 12;
         i.storeDateTime.valueIndex = 44;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StorePoint;
+        i.setType(QDeclarativeInstruction::StorePoint);
         i.storeRealPair.propertyIndex = 13;
         i.storeRealPair.valueIndex = 3;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StorePointF;
+        i.setType(QDeclarativeInstruction::StorePointF);
         i.storeRealPair.propertyIndex = 14;
         i.storeRealPair.valueIndex = 9;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreSize;
+        i.setType(QDeclarativeInstruction::StoreSize);
         i.storeRealPair.propertyIndex = 15;
         i.storeRealPair.valueIndex = 8;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreSizeF;
+        i.setType(QDeclarativeInstruction::StoreSizeF);
         i.storeRealPair.propertyIndex = 16;
         i.storeRealPair.valueIndex = 99;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreRect;
+        i.setType(QDeclarativeInstruction::StoreRect);
         i.storeRect.propertyIndex = 17;
         i.storeRect.valueIndex = 2;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreRectF;
+        i.setType(QDeclarativeInstruction::StoreRectF);
         i.storeRect.propertyIndex = 18;
         i.storeRect.valueIndex = 19;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreVector3D;
+        i.setType(QDeclarativeInstruction::StoreVector3D);
         i.storeVector3D.propertyIndex = 19;
         i.storeVector3D.valueIndex = 9;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->primitives << "color(1, 1, 1, 1)";
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreVariant;
+        i.setType(QDeclarativeInstruction::StoreVariant);
         i.storeString.propertyIndex = 20;
         i.storeString.value = data->primitives.count() - 1;
 
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreObject;
+        i.setType(QDeclarativeInstruction::StoreObject);
         i.storeObject.propertyIndex = 21;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreVariantObject;
+        i.setType(QDeclarativeInstruction::StoreVariantObject);
         i.storeObject.propertyIndex = 22;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreInterface;
+        i.setType(QDeclarativeInstruction::StoreInterface);
         i.storeObject.propertyIndex = 23;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->primitives << "console.log(1921)";
 
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreSignal;
+        i.setType(QDeclarativeInstruction::StoreSignal);
         i.storeSignal.signalIndex = 2;
         i.storeSignal.value = data->primitives.count() - 1;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreScriptString;
+        i.setType(QDeclarativeInstruction::StoreScriptString);
         i.storeScriptString.propertyIndex = 24;
         i.storeScriptString.value = 3;
         i.storeScriptString.scope = 1;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         data->datas << "mySignal";
 
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::AssignSignalObject;
+        i.setType(QDeclarativeInstruction::AssignSignalObject);
         i.assignSignalObject.signal = 0;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::AssignCustomType;
+        i.setType(QDeclarativeInstruction::AssignCustomType);
         i.assignCustomType.propertyIndex = 25;
         i.assignCustomType.valueIndex = 4;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreBinding;
+        i.setType(QDeclarativeInstruction::StoreBinding);
         i.assignBinding.property = 26;
         i.assignBinding.value = 3;
         i.assignBinding.context = 2;
         i.assignBinding.owner = 0;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreCompiledBinding;
+        i.setType(QDeclarativeInstruction::StoreCompiledBinding);
         i.assignBinding.property = 27;
         i.assignBinding.value = 2;
         i.assignBinding.context = 4;
         i.assignBinding.owner = 0;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreValueSource;
+        i.setType(QDeclarativeInstruction::StoreValueSource);
         i.assignValueSource.property = 29;
         i.assignValueSource.owner = 1;
         i.assignValueSource.castValue = 4;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreValueInterceptor;
+        i.setType(QDeclarativeInstruction::StoreValueInterceptor);
         i.assignValueInterceptor.property = 30;
         i.assignValueInterceptor.owner = 2;
         i.assignValueInterceptor.castValue = -4;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::BeginObject;
+        i.setType(QDeclarativeInstruction::BeginObject);
         i.begin.castValue = 4;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreObjectQList;
-        data->bytecode << i;
+        i.setType(QDeclarativeInstruction::StoreObjectQList);
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::AssignObjectList;
-        data->bytecode << i;
+        i.setType(QDeclarativeInstruction::AssignObjectList);
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::FetchAttached;
+        i.setType(QDeclarativeInstruction::FetchAttached);
         i.fetchAttached.id = 23;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::FetchQList;
+        i.setType(QDeclarativeInstruction::FetchQList);
         i.fetch.property = 32;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::FetchObject;
+        i.setType(QDeclarativeInstruction::FetchObject);
         i.fetch.property = 33;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::FetchValueType;
+        i.setType(QDeclarativeInstruction::FetchValueType);
         i.fetchValue.property = 34;
         i.fetchValue.type = 6;
         i.fetchValue.bindingSkipList = 7;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::PopFetchedObject;
-        data->bytecode << i;
+        i.setType(QDeclarativeInstruction::PopFetchedObject);
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::PopQList;
-        data->bytecode << i;
+        i.setType(QDeclarativeInstruction::PopQList);
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::PopValueType;
+        i.setType(QDeclarativeInstruction::PopValueType);
         i.fetchValue.property = 35;
         i.fetchValue.type = 8;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::Defer;
+        i.setType(QDeclarativeInstruction::Defer);
         i.defer.deferCount = 7;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::Defer;
+        i.setType(QDeclarativeInstruction::Defer);
         i.defer.deferCount = 7;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreImportedScript;
+        i.setType(QDeclarativeInstruction::StoreImportedScript);
         i.storeScript.value = 2;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = (QDeclarativeInstruction::Type)(1234); // Non-existent
-        data->bytecode << i;
-    }
-
-    {
-        QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreVariantInteger;
+        i.setType(QDeclarativeInstruction::StoreVariantInteger);
         i.storeInteger.value = 11;
         i.storeInteger.propertyIndex = 32;
-        data->bytecode << i;
+        data->addInstruction(i);
     }
 
     {
         QDeclarativeInstruction i;
-        i.type = QDeclarativeInstruction::StoreVariantDouble;
+        i.setType(QDeclarativeInstruction::StoreVariantDouble);
         i.storeDouble.value = 33.7;
         i.storeDouble.propertyIndex = 19;
-        data->bytecode << i;
+        data->addInstruction(i);
+    }
+
+    {
+        QDeclarativeInstruction i;
+        i.setType(QDeclarativeInstruction::Done);
+        data->addInstruction(i);
     }
 
     QStringList expect;
@@ -535,9 +535,9 @@ void tst_qdeclarativeinstruction::dump()
         << "45\t\tDEFER\t\t\t7"
         << "46\t\tDEFER\t\t\t7"
         << "47\t\tSTORE_IMPORTED_SCRIPT\t2"
-        << "48\t\tXXX UNKNOWN INSTRUCTION\t1234"
-        << "49\t\tSTORE_VARIANT_INTEGER\t\t32\t11"
-        << "50\t\tSTORE_VARIANT_DOUBLE\t\t19\t33.7"
+        << "48\t\tSTORE_VARIANT_INTEGER\t\t32\t11"
+        << "49\t\tSTORE_VARIANT_DOUBLE\t\t19\t33.7"
+        << "50\t\tDONE"
         << "-------------------------------------------------------------------------------";
 
     messages = QStringList();

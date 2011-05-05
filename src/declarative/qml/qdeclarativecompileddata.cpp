@@ -248,11 +248,40 @@ void QDeclarativeCompiledData::dumpInstructions()
         qWarning() << name;
     qWarning().nospace() << "Index\tOperation\t\tData1\tData2\tData3\tComments";
     qWarning().nospace() << "-------------------------------------------------------------------------------";
-    for (int ii = 0; ii < bytecode.count(); ++ii) {
-        dump(&bytecode[ii], ii);
+
+    const char *instructionStream = bytecode.constData();
+    const char *endInstructionStream = bytecode.constData() + bytecode.size();
+
+    int instructionCount = 0;
+    while (instructionStream < endInstructionStream) {
+        QDeclarativeInstruction *instr = (QDeclarativeInstruction *)instructionStream;
+        dump(instr, instructionCount);
+        instructionStream += instr->size();
+        instructionCount++;
     }
+
     qWarning().nospace() << "-------------------------------------------------------------------------------";
 }
 
+int QDeclarativeCompiledData::addInstruction(const QDeclarativeInstruction &instr) 
+{ 
+    int ptrOffset = bytecode.size();
+    int size = instr.size();
+    bytecode.resize(bytecode.size() + size);
+    char *data = bytecode.data() + ptrOffset;
+    qMemCopy(data, &instr,  size);
+
+    return ptrOffset;
+}
+
+int QDeclarativeCompiledData::nextInstructionIndex() 
+{ 
+    return bytecode.size();
+}
+
+QDeclarativeInstruction *QDeclarativeCompiledData::instruction(int index) 
+{ 
+    return (QDeclarativeInstruction *)(bytecode.constData() + index);
+}
 
 QT_END_NAMESPACE

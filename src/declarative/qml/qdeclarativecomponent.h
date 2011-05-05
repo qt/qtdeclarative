@@ -113,7 +113,7 @@ protected:
     Q_INVOKABLE Q_REVISION(1) QScriptValue createObject(QObject* parent, const QScriptValue& valuemap); //XXX Versioning
 
 private:
-    QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, int, QObject *parent);
+    QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, QObject *parent);
 
     Q_DISABLE_COPY(QDeclarativeComponent)
     friend class QDeclarativeVME;

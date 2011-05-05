@@ -455,7 +455,7 @@ QDeclarativeComponent::QDeclarativeComponent(QDeclarativeEngine *engine, const Q
 /*!
     \internal
 */
-QDeclarativeComponent::QDeclarativeComponent(QDeclarativeEngine *engine, QDeclarativeCompiledData *cc, int start, int count, QObject *parent)
+QDeclarativeComponent::QDeclarativeComponent(QDeclarativeEngine *engine, QDeclarativeCompiledData *cc, int start, QObject *parent)
     : QObject(*(new QDeclarativeComponentPrivate), parent)
 {
     Q_D(QDeclarativeComponent);
@@ -463,7 +463,6 @@ QDeclarativeComponent::QDeclarativeComponent(QDeclarativeEngine *engine, QDeclar
     d->cc = cc;
     cc->addref();
     d->start = start;
-    d->count = count;
     d->url = cc->url;
     d->progress = 1.0;
 }
@@ -833,7 +832,7 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context, cons
         return 0;
     }
 
-    return begin(context, creationContext, cc, start, count, &state, 0, bindings);
+    return begin(context, creationContext, cc, start, &state, 0, bindings);
 }
 
 /*
@@ -866,7 +865,7 @@ static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
 
 QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentContext, 
                                               QDeclarativeContextData *componentCreationContext,
-                                              QDeclarativeCompiledData *component, int start, int count,
+                                              QDeclarativeCompiledData *component, int start, 
                                               ConstructionState *state, QList<QDeclarativeError> *errors,
                                               const QBitField &bindings)
 {
@@ -895,7 +894,7 @@ QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentCon
 
     QDeclarativeVME vme;
     enginePriv->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-    QObject *rv = vme.run(ctxt, component, start, count, bindings);
+    QObject *rv = vme.run(ctxt, component, start, bindings);
     enginePriv->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 
     if (vme.isError()) {

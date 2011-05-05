@@ -117,7 +117,7 @@ public:
     QList<CustomTypeData> customTypeData;
     QList<QByteArray> datas;
     QList<QDeclarativeParser::Location> locations;
-    QList<QDeclarativeInstruction> bytecode;
+    QByteArray bytecode;
     QList<QScriptProgram *> cachedPrograms;
     QList<QScriptValue *> cachedClosures;
     QList<QDeclarativePropertyCache *> propertyCaches;
@@ -126,6 +126,10 @@ public:
     QList<QUrl> urls;
 
     void dumpInstructions();
+
+    int addInstruction(const QDeclarativeInstruction &instr);
+    int nextInstructionIndex();
+    QDeclarativeInstruction *instruction(int index);
 
 protected:
     virtual void clear(); // From QDeclarativeCleanup

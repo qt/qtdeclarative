@@ -774,7 +774,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 #ifdef QML_THREADED_INTERPRETER
     if (table) {
         static void *decode_instr[] = {
-            FOR_EACH_QML_INSTR(QML_INSTR_ADDR)
+            FOR_EACH_V4_INSTR(QML_V4_INSTR_ADDR)
         };
 
         *table = decode_instr;
@@ -792,7 +792,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
     QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(context->engine);
     const char *code = program->instructions();
-    code += instrIndex * QML_INSTR_SIZE(Jump, jump);
+    code += instrIndex * QML_V4_INSTR_SIZE(Jump, jump);
     const Instr *instr = (const Instr *) code;
 
     const char *data = program->data();
@@ -809,28 +809,28 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         switch (instr->common.type) {
 #endif
 
-    QML_BEGIN_INSTR(Noop, common)
-    QML_END_INSTR(Noop, common)
+    QML_V4_BEGIN_INSTR(Noop, common)
+    QML_V4_END_INSTR(Noop, common)
 
-    QML_BEGIN_INSTR(BindingId, id)
+    QML_V4_BEGIN_INSTR(BindingId, id)
         bindingLine = instr->id.line;
         bindingColumn = instr->id.column;
-    QML_END_INSTR(BindingId, id)
+    QML_V4_END_INSTR(BindingId, id)
 
-    QML_BEGIN_INSTR(SubscribeId, subscribeop)
+    QML_V4_BEGIN_INSTR(SubscribeId, subscribeop)
         subscribeId(context, instr->subscribeop.index, instr->subscribeop.offset);
-    QML_END_INSTR(SubscribeId, subscribeop)
+    QML_V4_END_INSTR(SubscribeId, subscribeop)
 
-    QML_BEGIN_INSTR(Subscribe, subscribeop)
+    QML_V4_BEGIN_INSTR(Subscribe, subscribeop)
     {
         QObject *o = 0;
         const Register &object = registers[instr->subscribeop.reg];
         if (!object.isUndefined()) o = object.getQObject();
         subscribe(o, instr->subscribeop.index, instr->subscribeop.offset);
     }
-    QML_END_INSTR(Subscribe, subscribeop)
+    QML_V4_END_INSTR(Subscribe, subscribeop)
 
-    QML_BEGIN_INSTR(FetchAndSubscribe, fetchAndSubscribe)
+    QML_V4_BEGIN_INSTR(FetchAndSubscribe, fetchAndSubscribe)
     {
         Register &reg = registers[instr->fetchAndSubscribe.reg];
 
@@ -854,21 +854,21 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             QDeclarativeV4Compiler::fastPropertyAccessor()->accessor(instr->fetchAndSubscribe.function)(object, reg.typeDataPtr(), sub);
         }
     }
-    QML_END_INSTR(FetchAndSubscribe, fetchAndSubscribe)
+    QML_V4_END_INSTR(FetchAndSubscribe, fetchAndSubscribe)
 
-    QML_BEGIN_INSTR(LoadId, load)
+    QML_V4_BEGIN_INSTR(LoadId, load)
         registers[instr->load.reg].setQObject(context->idValues[instr->load.index].data());
-    QML_END_INSTR(LoadId, load)
+    QML_V4_END_INSTR(LoadId, load)
 
-    QML_BEGIN_INSTR(LoadScope, load)
+    QML_V4_BEGIN_INSTR(LoadScope, load)
         registers[instr->load.reg].setQObject(scope);
-    QML_END_INSTR(LoadScope, load)
+    QML_V4_END_INSTR(LoadScope, load)
 
-    QML_BEGIN_INSTR(LoadRoot, load)
+    QML_V4_BEGIN_INSTR(LoadRoot, load)
         registers[instr->load.reg].setQObject(context->contextObject);
-    QML_END_INSTR(LoadRoot, load)
+    QML_V4_END_INSTR(LoadRoot, load)
 
-    QML_BEGIN_INSTR(LoadAttached, attached)
+    QML_V4_BEGIN_INSTR(LoadAttached, attached)
     {
         const Register &input = registers[instr->attached.reg];
         Register &output = registers[instr->attached.output];
@@ -884,57 +884,57 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             output.setQObject(attached);
         }
     }
-    QML_END_INSTR(LoadAttached, attached)
+    QML_V4_END_INSTR(LoadAttached, attached)
 
-    QML_BEGIN_INSTR(UnaryNot, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryNot, unaryop)
     {
         registers[instr->unaryop.output].setbool(!registers[instr->unaryop.src].getbool());
     }
-    QML_END_INSTR(UnaryNot, unaryop)
+    QML_V4_END_INSTR(UnaryNot, unaryop)
 
-    QML_BEGIN_INSTR(UnaryMinusReal, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryMinusReal, unaryop)
     {
         registers[instr->unaryop.output].setqreal(-registers[instr->unaryop.src].getqreal());
     }
-    QML_END_INSTR(UnaryMinusReal, unaryop)
+    QML_V4_END_INSTR(UnaryMinusReal, unaryop)
 
-    QML_BEGIN_INSTR(UnaryMinusInt, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryMinusInt, unaryop)
     {
         registers[instr->unaryop.output].setint(-registers[instr->unaryop.src].getint());
     }
-    QML_END_INSTR(UnaryMinusInt, unaryop)
+    QML_V4_END_INSTR(UnaryMinusInt, unaryop)
 
-    QML_BEGIN_INSTR(UnaryPlusReal, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryPlusReal, unaryop)
     {
         registers[instr->unaryop.output].setqreal(+registers[instr->unaryop.src].getqreal());
     }
-    QML_END_INSTR(UnaryPlusReal, unaryop)
+    QML_V4_END_INSTR(UnaryPlusReal, unaryop)
 
-    QML_BEGIN_INSTR(UnaryPlusInt, unaryop)
+    QML_V4_BEGIN_INSTR(UnaryPlusInt, unaryop)
     {
         registers[instr->unaryop.output].setint(+registers[instr->unaryop.src].getint());
     }
-    QML_END_INSTR(UnaryPlusInt, unaryop)
+    QML_V4_END_INSTR(UnaryPlusInt, unaryop)
 
-    QML_BEGIN_INSTR(ConvertBoolToInt, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertBoolToInt, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setint(src.getbool());
     }
-    QML_END_INSTR(ConvertBoolToInt, unaryop)
+    QML_V4_END_INSTR(ConvertBoolToInt, unaryop)
 
-    QML_BEGIN_INSTR(ConvertBoolToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertBoolToReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setqreal(src.getbool());
     }
-    QML_END_INSTR(ConvertBoolToReal, unaryop)
+    QML_V4_END_INSTR(ConvertBoolToReal, unaryop)
 
-    QML_BEGIN_INSTR(ConvertBoolToString, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertBoolToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -945,27 +945,27 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             STRING_REGISTER(instr->unaryop.output);
         }
     }
-    QML_END_INSTR(ConvertBoolToString, unaryop)
+    QML_V4_END_INSTR(ConvertBoolToString, unaryop)
 
-    QML_BEGIN_INSTR(ConvertIntToBool, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertIntToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setbool(src.getint());
     }
-    QML_END_INSTR(ConvertIntToBool, unaryop)
+    QML_V4_END_INSTR(ConvertIntToBool, unaryop)
 
-    QML_BEGIN_INSTR(ConvertIntToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertIntToReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setqreal(qreal(src.getint()));
     }
-    QML_END_INSTR(ConvertIntToReal, unaryop)
+    QML_V4_END_INSTR(ConvertIntToReal, unaryop)
 
-    QML_BEGIN_INSTR(ConvertIntToString, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertIntToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -976,27 +976,27 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             STRING_REGISTER(instr->unaryop.output);
         }
     }
-    QML_END_INSTR(ConvertIntToString, unaryop)
+    QML_V4_END_INSTR(ConvertIntToString, unaryop)
 
-    QML_BEGIN_INSTR(ConvertRealToBool, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertRealToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setbool(src.getqreal() != 0);
     }
-    QML_END_INSTR(ConvertRealToBool, unaryop)
+    QML_V4_END_INSTR(ConvertRealToBool, unaryop)
 
-    QML_BEGIN_INSTR(ConvertRealToInt, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertRealToInt, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setint(toInt32(src.getqreal()));
     }
-    QML_END_INSTR(ConvertRealToInt, unaryop)
+    QML_V4_END_INSTR(ConvertRealToInt, unaryop)
 
-    QML_BEGIN_INSTR(ConvertRealToString, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertRealToString, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -1008,9 +1008,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             STRING_REGISTER(instr->unaryop.output);
         }
     }
-    QML_END_INSTR(ConvertRealToString, unaryop)
+    QML_V4_END_INSTR(ConvertRealToString, unaryop)
 
-    QML_BEGIN_INSTR(ConvertStringToBool, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertStringToBool, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -1028,9 +1028,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             output.setbool(tmp.toBool());
         }
     }
-    QML_END_INSTR(ConvertStringToBool, unaryop)
+    QML_V4_END_INSTR(ConvertStringToBool, unaryop)
 
-    QML_BEGIN_INSTR(ConvertStringToInt, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertStringToInt, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -1048,9 +1048,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             output.setint(tmp.toInt32());
         }
     }
-    QML_END_INSTR(ConvertStringToInt, unaryop)
+    QML_V4_END_INSTR(ConvertStringToInt, unaryop)
 
-    QML_BEGIN_INSTR(ConvertStringToReal, unaryop)
+    QML_V4_BEGIN_INSTR(ConvertStringToReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
@@ -1068,109 +1068,109 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             output.setqreal(tmp.toNumber());
         }
     }
-    QML_END_INSTR(ConvertStringToReal, unaryop)
+    QML_V4_END_INSTR(ConvertStringToReal, unaryop)
 
-    QML_BEGIN_INSTR(MathSinReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathSinReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setqreal(qSin(src.getqreal()));
     }
-    QML_END_INSTR(MathSinReal, unaryop)
+    QML_V4_END_INSTR(MathSinReal, unaryop)
 
-    QML_BEGIN_INSTR(MathCosReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathCosReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setqreal(qCos(src.getqreal()));
     }
-    QML_END_INSTR(MathCosReal, unaryop)
+    QML_V4_END_INSTR(MathCosReal, unaryop)
 
-    QML_BEGIN_INSTR(MathRoundReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathRoundReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setint(qRound(src.getqreal()));
     }
-    QML_END_INSTR(MathRoundReal, unaryop)
+    QML_V4_END_INSTR(MathRoundReal, unaryop)
 
-    QML_BEGIN_INSTR(MathFloorReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathFloorReal, unaryop)
     {
         const Register &src = registers[instr->unaryop.src];
         Register &output = registers[instr->unaryop.output];
         if (src.isUndefined()) output.setUndefined();
         else output.setint(qFloor(src.getqreal()));
     }
-    QML_END_INSTR(MathFloorReal, unaryop)
+    QML_V4_END_INSTR(MathFloorReal, unaryop)
 
-    QML_BEGIN_INSTR(MathPIReal, unaryop)
+    QML_V4_BEGIN_INSTR(MathPIReal, unaryop)
     {
         static const qsreal qmlPI = 2.0 * qAsin(1.0);
         Register &output = registers[instr->unaryop.output];
         output.setqreal(qmlPI);
     }
-    QML_END_INSTR(MathPIReal, unaryop)
+    QML_V4_END_INSTR(MathPIReal, unaryop)
 
-    QML_BEGIN_INSTR(Real, real_value)
+    QML_V4_BEGIN_INSTR(Real, real_value)
         registers[instr->real_value.reg].setqreal(instr->real_value.value);
-    QML_END_INSTR(Real, real_value)
+    QML_V4_END_INSTR(Real, real_value)
 
-    QML_BEGIN_INSTR(Int, int_value)
+    QML_V4_BEGIN_INSTR(Int, int_value)
         registers[instr->int_value.reg].setint(instr->int_value.value);
-    QML_END_INSTR(Int, int_value)
+    QML_V4_END_INSTR(Int, int_value)
 
-    QML_BEGIN_INSTR(Bool, bool_value)
+    QML_V4_BEGIN_INSTR(Bool, bool_value)
         registers[instr->bool_value.reg].setbool(instr->bool_value.value);
-    QML_END_INSTR(Bool, bool_value)
+    QML_V4_END_INSTR(Bool, bool_value)
 
-    QML_BEGIN_INSTR(String, string_value)
+    QML_V4_BEGIN_INSTR(String, string_value)
     {
         Register &output = registers[instr->string_value.reg];
         QChar *string = (QChar *)(data + instr->string_value.offset);
         new (output.getstringptr()) QString(string, instr->string_value.length);
         STRING_REGISTER(instr->string_value.reg);
     }
-    QML_END_INSTR(String, string_value)
+    QML_V4_END_INSTR(String, string_value)
 
-    QML_BEGIN_INSTR(EnableV4Test, string_value)
+    QML_V4_BEGIN_INSTR(EnableV4Test, string_value)
     {
         testBindingSource = new QString((QChar *)(data + instr->string_value.offset), instr->string_value.length);
         testBinding = true;
     }
-    QML_END_INSTR(String, string_value)
+    QML_V4_END_INSTR(String, string_value)
 
-    QML_BEGIN_INSTR(BitAndInt, binaryop)
+    QML_V4_BEGIN_INSTR(BitAndInt, binaryop)
     {
         registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() & 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(BitAndInt, binaryop)
+    QML_V4_END_INSTR(BitAndInt, binaryop)
 
-    QML_BEGIN_INSTR(BitOrInt, binaryop)
+    QML_V4_BEGIN_INSTR(BitOrInt, binaryop)
     {
         registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() | 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(BitAndInt, binaryop)
+    QML_V4_END_INSTR(BitAndInt, binaryop)
 
-    QML_BEGIN_INSTR(BitXorInt, binaryop)
+    QML_V4_BEGIN_INSTR(BitXorInt, binaryop)
     {
         registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() ^ 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(BitXorInt, binaryop)
+    QML_V4_END_INSTR(BitXorInt, binaryop)
 
-    QML_BEGIN_INSTR(AddReal, binaryop)
+    QML_V4_BEGIN_INSTR(AddReal, binaryop)
     {
         registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() + 
                                                    registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(AddReal, binaryop)
+    QML_V4_END_INSTR(AddReal, binaryop)
 
-    QML_BEGIN_INSTR(AddString, binaryop)
+    QML_V4_BEGIN_INSTR(AddString, binaryop)
     {
         QString &string = *registers[instr->binaryop.output].getstringptr();
         if (instr->binaryop.output == instr->binaryop.left) {
@@ -1180,30 +1180,30 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
                      *registers[instr->binaryop.right].getstringptr();
         }
     }
-    QML_END_INSTR(AddString, binaryop)
+    QML_V4_END_INSTR(AddString, binaryop)
 
-    QML_BEGIN_INSTR(SubReal, binaryop)
+    QML_V4_BEGIN_INSTR(SubReal, binaryop)
     {
         registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() - 
                                                    registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(SubReal, binaryop)
+    QML_V4_END_INSTR(SubReal, binaryop)
 
-    QML_BEGIN_INSTR(MulReal, binaryop)
+    QML_V4_BEGIN_INSTR(MulReal, binaryop)
     {
         registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() * 
                                                    registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(MulReal, binaryop)
+    QML_V4_END_INSTR(MulReal, binaryop)
 
-    QML_BEGIN_INSTR(DivReal, binaryop)
+    QML_V4_BEGIN_INSTR(DivReal, binaryop)
     {
         registers[instr->binaryop.output].setqreal(registers[instr->binaryop.left].getqreal() / 
                                                    registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(DivReal, binaryop)
+    QML_V4_END_INSTR(DivReal, binaryop)
 
-    QML_BEGIN_INSTR(ModReal, binaryop)
+    QML_V4_BEGIN_INSTR(ModReal, binaryop)
     {
         Register &target = registers[instr->binaryop.output];
         const Register &left = registers[instr->binaryop.left];
@@ -1213,86 +1213,86 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         else
             target.setqreal(::fmod(left.getqreal(), right.getqreal()));
     }
-    QML_END_INSTR(ModInt, binaryop)
+    QML_V4_END_INSTR(ModInt, binaryop)
 
-    QML_BEGIN_INSTR(LShiftInt, binaryop)
+    QML_V4_BEGIN_INSTR(LShiftInt, binaryop)
     {
         registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() << 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(LShiftInt, binaryop)
+    QML_V4_END_INSTR(LShiftInt, binaryop)
 
-    QML_BEGIN_INSTR(RShiftInt, binaryop)
+    QML_V4_BEGIN_INSTR(RShiftInt, binaryop)
     {
         registers[instr->binaryop.output].setint(registers[instr->binaryop.left].getint() >> 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(RShiftInt, binaryop)
+    QML_V4_END_INSTR(RShiftInt, binaryop)
 
-    QML_BEGIN_INSTR(URShiftInt, binaryop)
+    QML_V4_BEGIN_INSTR(URShiftInt, binaryop)
     {
         registers[instr->binaryop.output].setint((unsigned)registers[instr->binaryop.left].getint() >> 
                                                  registers[instr->binaryop.right].getint());
     }
-    QML_END_INSTR(URShiftInt, binaryop)
+    QML_V4_END_INSTR(URShiftInt, binaryop)
 
-    QML_BEGIN_INSTR(GtReal, binaryop)
+    QML_V4_BEGIN_INSTR(GtReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() > 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(GtReal, binaryop)
+    QML_V4_END_INSTR(GtReal, binaryop)
 
-    QML_BEGIN_INSTR(LtReal, binaryop)
+    QML_V4_BEGIN_INSTR(LtReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() < 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(LtReal, binaryop)
+    QML_V4_END_INSTR(LtReal, binaryop)
 
-    QML_BEGIN_INSTR(GeReal, binaryop)
+    QML_V4_BEGIN_INSTR(GeReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() >= 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(GeReal, binaryop)
+    QML_V4_END_INSTR(GeReal, binaryop)
 
-    QML_BEGIN_INSTR(LeReal, binaryop)
+    QML_V4_BEGIN_INSTR(LeReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() <= 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(LeReal, binaryop)
+    QML_V4_END_INSTR(LeReal, binaryop)
 
-    QML_BEGIN_INSTR(EqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(EqualReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() == 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(EqualReal, binaryop)
+    QML_V4_END_INSTR(EqualReal, binaryop)
 
-    QML_BEGIN_INSTR(NotEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(NotEqualReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() != 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(NotEqualReal, binaryop)
+    QML_V4_END_INSTR(NotEqualReal, binaryop)
 
-    QML_BEGIN_INSTR(StrictEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(StrictEqualReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() == 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(StrictEqualReal, binaryop)
+    QML_V4_END_INSTR(StrictEqualReal, binaryop)
 
-    QML_BEGIN_INSTR(StrictNotEqualReal, binaryop)
+    QML_V4_BEGIN_INSTR(StrictNotEqualReal, binaryop)
     {
         registers[instr->binaryop.output].setbool(registers[instr->binaryop.left].getqreal() != 
                                                   registers[instr->binaryop.right].getqreal());
     }
-    QML_END_INSTR(StrictNotEqualReal, binaryop)
+    QML_V4_END_INSTR(StrictNotEqualReal, binaryop)
 
-    QML_BEGIN_INSTR(GtString, binaryop)
+    QML_V4_BEGIN_INSTR(GtString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1303,9 +1303,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(GtString, binaryop)
+    QML_V4_END_INSTR(GtString, binaryop)
 
-    QML_BEGIN_INSTR(LtString, binaryop)
+    QML_V4_BEGIN_INSTR(LtString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1316,9 +1316,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(LtString, binaryop)
+    QML_V4_END_INSTR(LtString, binaryop)
 
-    QML_BEGIN_INSTR(GeString, binaryop)
+    QML_V4_BEGIN_INSTR(GeString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1329,9 +1329,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(GeString, binaryop)
+    QML_V4_END_INSTR(GeString, binaryop)
 
-    QML_BEGIN_INSTR(LeString, binaryop)
+    QML_V4_BEGIN_INSTR(LeString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1342,9 +1342,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(LeString, binaryop)
+    QML_V4_END_INSTR(LeString, binaryop)
 
-    QML_BEGIN_INSTR(EqualString, binaryop)
+    QML_V4_BEGIN_INSTR(EqualString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1355,9 +1355,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(EqualString, binaryop)
+    QML_V4_END_INSTR(EqualString, binaryop)
 
-    QML_BEGIN_INSTR(NotEqualString, binaryop)
+    QML_V4_BEGIN_INSTR(NotEqualString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1368,9 +1368,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(NotEqualString, binaryop)
+    QML_V4_END_INSTR(NotEqualString, binaryop)
 
-    QML_BEGIN_INSTR(StrictEqualString, binaryop)
+    QML_V4_BEGIN_INSTR(StrictEqualString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1381,9 +1381,9 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(StrictEqualString, binaryop)
+    QML_V4_END_INSTR(StrictEqualString, binaryop)
 
-    QML_BEGIN_INSTR(StrictNotEqualString, binaryop)
+    QML_V4_BEGIN_INSTR(StrictNotEqualString, binaryop)
     {
         const QString &a = *registers[instr->binaryop.left].getstringptr();
         const QString &b = *registers[instr->binaryop.right].getstringptr();
@@ -1394,25 +1394,25 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         }
         registers[instr->binaryop.output].setbool(result);
     }
-    QML_END_INSTR(StrictNotEqualString, binaryop)
+    QML_V4_END_INSTR(StrictNotEqualString, binaryop)
 
-    QML_BEGIN_INSTR(NewString, construct)
+    QML_V4_BEGIN_INSTR(NewString, construct)
     {
         Register &output = registers[instr->construct.reg];
         new (output.getstringptr()) QString;
         STRING_REGISTER(instr->construct.reg);
     }
-    QML_END_INSTR(NewString, construct)
+    QML_V4_END_INSTR(NewString, construct)
 
-    QML_BEGIN_INSTR(NewUrl, construct)
+    QML_V4_BEGIN_INSTR(NewUrl, construct)
     {
         Register &output = registers[instr->construct.reg];
         new (output.geturlptr()) QUrl;
         URL_REGISTER(instr->construct.reg);
     }
-    QML_END_INSTR(NewUrl, construct)
+    QML_V4_END_INSTR(NewUrl, construct)
 
-    QML_BEGIN_INSTR(Fetch, fetch)
+    QML_V4_BEGIN_INSTR(Fetch, fetch)
     {
         Register &reg = registers[instr->fetch.reg];
 
@@ -1430,17 +1430,17 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             QMetaObject::metacall(object, QMetaObject::ReadProperty, instr->fetch.index, argv);
         }
     }
-    QML_END_INSTR(Fetch, fetch)
+    QML_V4_END_INSTR(Fetch, fetch)
 
-    QML_BEGIN_INSTR(TestV4Store, storetest)
+    QML_V4_BEGIN_INSTR(TestV4Store, storetest)
     {
         Register &data = registers[instr->storetest.reg];
         testBindingResult(*testBindingSource, bindingLine, bindingColumn, context, 
                           scope, data, instr->storetest.regType);
     }
-    QML_END_INSTR(TestV4Store, storetest)
+    QML_V4_END_INSTR(TestV4Store, storetest)
 
-    QML_BEGIN_INSTR(Store, store)
+    QML_V4_BEGIN_INSTR(Store, store)
     {
         Register &data = registers[instr->store.reg];
 
@@ -1454,38 +1454,38 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
         goto programExit;
     }
-    QML_END_INSTR(Store, store)
+    QML_V4_END_INSTR(Store, store)
 
-    QML_BEGIN_INSTR(Copy, copy)
+    QML_V4_BEGIN_INSTR(Copy, copy)
         registers[instr->copy.reg].copy(registers[instr->copy.src]);
         if (registers[instr->copy.reg].gettype() >= FirstCleanupType)
             MARK_REGISTER(instr->copy.reg);
-    QML_END_INSTR(Copy, copy)
+    QML_V4_END_INSTR(Copy, copy)
 
-    QML_BEGIN_INSTR(Jump, jump)
+    QML_V4_BEGIN_INSTR(Jump, jump)
         if (instr->jump.reg == -1 || !registers[instr->jump.reg].getbool())
             code += instr->jump.count;
-    QML_END_INSTR(Jump, jump)
+    QML_V4_END_INSTR(Jump, jump)
 
-    QML_BEGIN_INSTR(BranchTrue, branchop)
+    QML_V4_BEGIN_INSTR(BranchTrue, branchop)
         if (registers[instr->branchop.reg].getbool())
             code += instr->branchop.offset;
-    QML_END_INSTR(BranchTrue, branchop)
+    QML_V4_END_INSTR(BranchTrue, branchop)
 
-    QML_BEGIN_INSTR(BranchFalse, branchop)
+    QML_V4_BEGIN_INSTR(BranchFalse, branchop)
         if (! registers[instr->branchop.reg].getbool())
             code += instr->branchop.offset;
-    QML_END_INSTR(BranchFalse, branchop)
+    QML_V4_END_INSTR(BranchFalse, branchop)
 
-    QML_BEGIN_INSTR(Branch, branchop)
+    QML_V4_BEGIN_INSTR(Branch, branchop)
         code += instr->branchop.offset;
-    QML_END_INSTR(Branch, branchop)
+    QML_V4_END_INSTR(Branch, branchop)
 
-    QML_BEGIN_INSTR(Block, blockop)
+    QML_V4_BEGIN_INSTR(Block, blockop)
         executedBlocks |= instr->blockop.block;
-    QML_END_INSTR(Block, blockop)
+    QML_V4_END_INSTR(Block, blockop)
 
-    QML_BEGIN_INSTR(InitString, initstring)
+    QML_V4_BEGIN_INSTR(InitString, initstring)
         if (!identifiers[instr->initstring.offset].identifier) {
             quint32 len = *(quint32 *)(data + instr->initstring.dataIdx);
             QChar *strdata = (QChar *)(data + instr->initstring.dataIdx + sizeof(quint32));
@@ -1494,11 +1494,11 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
             identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
         }
-    QML_END_INSTR(InitString, initstring)
+    QML_V4_END_INSTR(InitString, initstring)
 
-    QML_BEGIN_INSTR(CleanupRegister, cleanup)
+    QML_V4_BEGIN_INSTR(CleanupRegister, cleanup)
         registers[instr->cleanup.reg].cleanup();
-    QML_END_INSTR(CleanupRegister, cleanup)
+    QML_V4_END_INSTR(CleanupRegister, cleanup)
 
 #ifdef QML_THREADED_INTERPRETER
     // nothing to do
