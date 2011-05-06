@@ -72,8 +72,8 @@ QSGSimpleTextureNode::QSGSimpleTextureNode()
     : m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
 {
     setGeometry(&m_geometry);
-    setMaterial(&m_opaque_material);
-    setOpaqueMaterial(&m_material);
+    setMaterial(&m_material);
+    setOpaqueMaterial(&m_opaque_material);
 }
 
 /*!
