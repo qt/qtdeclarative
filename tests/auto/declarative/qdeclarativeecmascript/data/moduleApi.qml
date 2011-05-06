@@ -11,8 +11,13 @@ QtObject {
     property int existingUriTest: QtTest.qobjectTestProperty
     property int scriptTest: QtTestScriptApi.scriptTestProperty
     property int qobjectTest: QtTestQObjectApi.qobjectTestProperty
+    property int qobjectMethodTest: 2
     property int qobjectMinorVersionTest: QtTestMinorVersionQObjectApi.qobjectTestProperty
     property int qobjectMajorVersionTest: QtTestMajorVersionQObjectApi.qobjectTestProperty
     property int qobjectParentedTest: QtTestParentedQObjectApi.qobjectTestProperty
+
+    Component.onCompleted: {
+        qobjectMethodTest = QtTestQObjectApi.qobjectTestMethod();
+    }
 }
 

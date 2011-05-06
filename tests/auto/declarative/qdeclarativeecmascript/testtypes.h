@@ -939,11 +939,13 @@ class testQObjectApi : public QObject
 
 public:
     testQObjectApi(QObject* parent = 0)
-        : QObject(parent), m_testProperty(0)
+        : QObject(parent), m_testProperty(0), m_testWritableProperty(0), m_methodCallCount(0)
     {
     }
 
     ~testQObjectApi() {}
+
+    Q_INVOKABLE int qobjectTestMethod() { m_methodCallCount += 1; return m_methodCallCount; }
 
     int qobjectTestProperty() const { return m_testProperty; }
     void setQObjectTestProperty(int tp) { m_testProperty = tp; emit qobjectTestPropertyChanged(tp); }
@@ -958,6 +960,7 @@ signals:
 private:
     int m_testProperty;
     int m_testWritableProperty;
+    int m_methodCallCount;
 };
 
 void registerTypes();

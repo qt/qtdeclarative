@@ -2509,6 +2509,7 @@ void tst_qdeclarativeecmascript::moduleApi()
     QCOMPARE(object->property("existingUriTest").toInt(), 20);
     QCOMPARE(object->property("scriptTest").toInt(), 13);
     QCOMPARE(object->property("qobjectTest").toInt(), 20);
+    QCOMPARE(object->property("qobjectMethodTest").toInt(), 1); // first call of method, so count = 1.
     QCOMPARE(object->property("qobjectMinorVersionTest").toInt(), 20);
     QCOMPARE(object->property("qobjectMajorVersionTest").toInt(), 20);
     QCOMPARE(object->property("qobjectParentedTest").toInt(), 26);

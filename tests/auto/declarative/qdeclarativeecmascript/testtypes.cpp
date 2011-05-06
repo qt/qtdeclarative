@@ -104,7 +104,6 @@ public:
 static QScriptValue script_api(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
 {
     Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
 
     static int testProperty = 13;
     QScriptValue v = scriptEngine->newObject();
