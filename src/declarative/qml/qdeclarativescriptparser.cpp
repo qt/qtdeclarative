@@ -724,7 +724,7 @@ bool ProcessAST::visit(AST::UiScriptBinding *node)
     while (propertyCount--)
         _stateStack.pop();
 
-    return true;
+    return false;
 }
 
 static QList<int> collectCommas(AST::UiArrayMemberList *members)
@@ -759,7 +759,7 @@ bool ProcessAST::visit(AST::UiArrayBinding *node)
         error.setLine(this->location(propertyName).start.line);
         error.setColumn(this->location(propertyName).start.column);
         _parser->_errors << error;
-        return 0;
+        return false;
     }
 
     accept(node->members);
