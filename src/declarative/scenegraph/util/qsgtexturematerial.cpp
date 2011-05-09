@@ -109,6 +109,46 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 }
 
 
+/*!
+    \class QSGOpaqueTextureMaterial
+    \brief The QSGOpaqueTextureMaterial class provides a convenient way of
+    rendering textured geometry in the scene graph.
+
+    The opaque textured material will fill every pixel in a geometry with
+    the supplied texture. The material does not respect the opacity of the
+    QSGMaterialShader::RenderState, so opacity nodes in the parent chain
+    of nodes using this material, have no effect.
+
+    The geometry to be rendered with an opaque texture material requires
+    vertices in attribute location 0 and texture coordinates in attribute
+    location 1. The texture coordinate is a 2-dimensional floating-point
+    tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
+    attribute set compatible with this material.
+
+    The texture to be rendered is can be set using setTexture(). How the
+    texure should be rendered can be specified using setMipmapFiltering(),
+    setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
+    The rendering state is set on the texture instance just before it
+    is bound.
+
+    The opaque textured material respects the current matrix and the alpha
+    channel of the texture. It will disregard the accumulated opacity in
+    the scenegraph.
+
+    A texture material must have a texture set before it is used as
+    a material in the scene graph.
+ */
+
+
+
+/*!
+    Creates a new QSGOpaqueTextureMaterial.
+
+    The default mipmap filtering and filtering mode is set to
+    QSGTexture::Nearest. The default wrap modes is set to
+    QSGTexture::ClampToEdge.
+
+ */
 QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     : m_texture(0)
     , m_filtering(QSGTexture::Nearest)
@@ -119,17 +159,37 @@ QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
 }
 
 
-
+/*!
+    \internal
+ */
 QSGMaterialType *QSGOpaqueTextureMaterial::type() const
 {
     return &QSGOpaqueTextureMaterialShader::type;
 }
 
+/*!
+    \internal
+ */
 QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
 {
     return new QSGOpaqueTextureMaterialShader;
 }
 
+
+
+/*!
+    \fn QSGTexture *QSGOpaqueTextureMaterial::texture() const
+
+    Returns this texture material's texture.
+ */
+
+
+
+/*!
+    Sets the texture of this material to \a texture.
+
+    The material does not take ownership over the texture.
+ */
 
 void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 {
@@ -137,6 +197,98 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
     setFlag(Blending, m_texture ? m_texture->hasAlphaChannel() : false);
 }
 
+
+
+/*!
+    \fn void QSGOpaqueTextureMaterial::setMipmapFiltering(QSGTexture::Filtering filtering)
+
+    Sets the mipmap mode to \a filtering.
+
+    The mipmap filtering mode is set on the texture instance just before the
+    texture is bound for rendering.
+
+    If the texture does not have mipmapping support, enabling mipmapping has no
+    effect.
+ */
+
+
+
+/*!
+    \fn QSGTexture::Filtering QSGOpaqueTextureMaterial::mipmapFiltering() const
+
+    Returns this material's mipmap filtering mode.
+
+    The default mipmap mode is QSGTexture::Nearest.
+ */
+
+
+
+/*!
+    \fn void QSGOpaqueTextureMaterial::setFiltering(QSGTexture::Filtering filtering)
+
+    Sets the filtering to \a filtering.
+
+    The filtering mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+/*!
+    \fn QSGTexture::Filtering filtering() const
+
+    Returns this material's filtering mode.
+
+    The default filtering is QSGTexture::Nearest.
+ */
+
+
+
+/*!
+    \fn void setHorizontalWrapMode(QSGTexture::WrapMode mode)
+
+    Sets the horizontal wrap mode to \a mode.
+
+    The horizontal wrap mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+ /*!
+     \fn QSGTexture::WrapMode horizontalWrapMode() const
+
+     Returns this material's horizontal wrap mode.
+
+     The default horizontal wrap mode is QSGTexutre::ClampToEdge
+  */
+
+
+
+/*!
+    \fn void setVerticalWrapMode(QSGTexture::WrapMode mode)
+
+    Sets the vertical wrap mode to \a mode.
+
+    The vertical wrap mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+ /*!
+     \fn QSGTexture::WrapMode verticalWrapMode() const
+
+     Returns this material's vertical wrap mode.
+
+     The default vertical wrap mode is QSGTexutre::ClampToEdge
+  */
+
+
+
+/*!
+    \internal
+ */
 
 int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
 {
@@ -147,7 +299,35 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
     return int(m_filtering) - int(other->m_filtering);
 }
 
-// QSGTextureMaterial
+
+
+/*!
+    \class QSGTextureMaterial
+    \brief The QSGTextureMaterial class provides a convenient way of
+    rendering textured geometry in the scene graph.
+
+    The textured material will fill every pixel in a geometry with
+    the supplied texture.
+
+    The geometry to be rendered with an opaque texture material requires
+    vertices in attribute location 0 and texture coordinates in attribute
+    location 1. The texture coordinate is a 2-dimensional floating-point
+    tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
+    attribute set compatible with this material.
+
+    The texture to be rendered is set using setTexture(). How the
+    texure should be rendered can be specified using setMipmapFiltering(),
+    setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
+    The rendering state is set on the texture instance just before it
+    is bound.
+
+    The opaque textured material respects the current matrix and the alpha
+    channel of the texture. It will disregard the accumulated opacity in
+    the scenegraph.
+
+    A texture material must have a texture set before it is used as
+    a material in the scene graph.
+ */
 
 static const char qt_scenegraph_texture_material_opacity_fragment[] =
     "varying highp vec2 qt_TexCoord;                       \n"
@@ -172,10 +352,22 @@ protected:
 };
 QSGMaterialType QSGTextureMaterialShader::type;
 
+
+
+/*!
+    \internal
+ */
+
 QSGMaterialType *QSGTextureMaterial::type() const
 {
     return &QSGTextureMaterialShader::type;
 }
+
+
+
+/*!
+    \internal
+ */
 
 QSGMaterialShader *QSGTextureMaterial::createShader() const
 {
