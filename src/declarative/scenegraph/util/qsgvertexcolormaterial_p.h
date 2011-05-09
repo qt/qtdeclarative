@@ -53,17 +53,13 @@ QT_MODULE(Declarative)
 class QSGVertexColorMaterial : public QSGMaterial
 {
 public:
-    QSGVertexColorMaterial(bool opaque = false);
+    QSGVertexColorMaterial();
+
+    void setColorsAreOpaque(bool opaqueHint);
+
+protected:
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
-
-    void setOpaque(bool opaque);
-    bool opaque() const { return m_opaque; }
-
-    static bool is(const QSGMaterial *effect);
-
-private:
-    bool m_opaque;
 };
 
 QT_END_NAMESPACE

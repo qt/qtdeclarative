@@ -128,35 +128,22 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
  */
 
 
-QSGVertexColorMaterial::QSGVertexColorMaterial(bool opaque) : m_opaque(opaque)
+QSGVertexColorMaterial::QSGVertexColorMaterial()
 {
-    setFlag(Blending, !opaque);
+    setFlag(Blending, true);
 }
 
 
 
 /*!
-    \fn bool QSGVertexColorMaterial::opaque() const
+    Sets if the renderer should treat colors as opaque.
 
-    Returns if the vertex color material should interpret all colors
-    as opaque.
+    Setting this flag can in some cases improve performance.
  */
 
-
-
-/*!
-    Sets wether the material should interpret all colors in the
-    geometry as \a opaque.
-
-    This is an optimization hint. Setting opaque to true for geometry that only
-    contains opaque colors, can lead to better performance.
-
- */
-
-void QSGVertexColorMaterial::setOpaque(bool opaque)
+void QSGVertexColorMaterial::setColorsAreOpaque(bool opaqueHint)
 {
-    setFlag(Blending, !opaque);
-    m_opaque = opaque;
+    setFlag(Blending, !opaqueHint);
 }
 
 
@@ -179,11 +166,6 @@ QSGMaterialType *QSGVertexColorMaterial::type() const
 QSGMaterialShader *QSGVertexColorMaterial::createShader() const
 {
     return new QSGVertexColorMaterialShader;
-}
-
-bool QSGVertexColorMaterial::is(const QSGMaterial *effect)
-{
-    return effect->type() == &QSGVertexColorMaterialShader::type;
 }
 
 QT_END_NAMESPACE

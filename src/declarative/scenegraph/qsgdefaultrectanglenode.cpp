@@ -172,7 +172,7 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
             setGeometry(g);
             setFlag(OwnsGeometry);
         }
-        static_cast<QSGVertexColorMaterial *>(material())->setOpaque(m_gradient_is_opaque);
+        static_cast<QSGVertexColorMaterial *>(material())->setColorsAreOpaque(m_gradient_is_opaque);
     }
 
     m_dirty_geometry = true;
@@ -348,7 +348,6 @@ void QSGDefaultRectangleNode::updateGeometry()
                         borderIndexData.append(borderVertexCount - 2);
                     }
 
-                    Q_ASSERT(QSGVertexColorMaterial::is(material()));
                     ColorVertex *vertices = (ColorVertex *)fillVertices;
 
                     fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
@@ -460,7 +459,6 @@ void QSGDefaultRectangleNode::updateGeometry()
                 qreal gy = (innerRect.top() - halfPenWidth) + stops.at(nextGradientStop).first * m_rect.height();
                 Q_ASSERT(fillVertexCount >= 2);
 
-                Q_ASSERT(QSGVertexColorMaterial::is(material()));
                 ColorVertex *vertices = (ColorVertex *)fillVertices;
 
                 fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
