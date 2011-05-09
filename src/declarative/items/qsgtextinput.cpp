@@ -52,13 +52,15 @@
 #include <QtGui/qinputcontext.h>
 #include <QTextBoundaryFinder>
 #include <qstyle.h>
+#include <qsgtextnode_p.h>
+#include <qsgsimplerectnode.h>
 
 QT_BEGIN_NAMESPACE
 
 QWidgetPrivate *qt_widget_private(QWidget *widget);
 
 QSGTextInput::QSGTextInput(QSGItem* parent)
-: QSGImplicitSizePaintedItem(*(new QSGTextInputPrivate), parent)
+: QSGImplicitSizeItem(*(new QSGTextInputPrivate), parent)
 {
     Q_D(QSGTextInput);
     d->init();
@@ -616,7 +618,7 @@ void QSGTextInput::keyPressEvent(QKeyEvent* ev)
         d->control->processKeyEvent(ev);
     }
     if (!ev->isAccepted())
-        QSGPaintedItem::keyPressEvent(ev);
+        QSGImplicitSizeItem::keyPressEvent(ev);
 }
 
 void QSGTextInput::inputMethodEvent(QInputMethodEvent *ev)
@@ -631,7 +633,7 @@ void QSGTextInput::inputMethodEvent(QInputMethodEvent *ev)
         d->updateHorizontalScroll();
     }
     if (!ev->isAccepted())
-        QSGPaintedItem::inputMethodEvent(ev);
+        QSGImplicitSizeItem::inputMethodEvent(ev);
 
     if (wasComposing != (d->control->preeditAreaText().length() > 0))
         emit inputMethodComposingChanged();
@@ -647,7 +649,7 @@ void QSGTextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
     } else {
-        QSGPaintedItem::mouseDoubleClickEvent(event);
+        QSGImplicitSizeItem::mouseDoubleClickEvent(event);
     }
 }
 
@@ -692,7 +694,7 @@ void QSGTextInput::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
         event->setAccepted(true);
     } else {
-        QSGPaintedItem::mouseMoveEvent(event);
+        QSGImplicitSizeItem::mouseMoveEvent(event);
     }
 }
 
@@ -715,7 +717,7 @@ void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     d->clickCausedFocus = false;
     d->control->processEvent(event);
     if (!event->isAccepted())
-        QSGPaintedItem::mouseReleaseEvent(event);
+        QSGImplicitSizeItem::mouseReleaseEvent(event);
 }
 
 bool QSGTextInputPrivate::sendMouseEventToInputContext(
@@ -781,7 +783,7 @@ bool QSGTextInput::event(QEvent* ev)
             handled = d->control->processEvent(ev);
     }
     if(!handled)
-        handled = QSGPaintedItem::event(ev);
+        handled = QSGImplicitSizeItem::event(ev);
     return handled;
 }
 
@@ -793,7 +795,7 @@ void QSGTextInput::geometryChanged(const QRectF &newGeometry,
         updateSize();
         d->updateHorizontalScroll();
     }
-    QSGPaintedItem::geometryChanged(newGeometry, oldGeometry);
+    QSGImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
 int QSGTextInputPrivate::calculateTextWidth()
@@ -860,20 +862,46 @@ void QSGTextInputPrivate::updateHorizontalScroll()
     }
 }
 
-void QSGTextInput::paint(QPainter *p)
-{
-    // XXX todo
-    QRect r(0, 0, width(), height());
+//void QSGTextInput::paint(QPainter *p)
+//{
+//    // XXX todo
+//    QRect r(0, 0, width(), height());
 
+//    Q_D(QSGTextInput);
+//    p->setRenderHint(QPainter::TextAntialiasing, true);
+//    p->save();
+//    p->setPen(QPen(d->color));
+//    int flags = QLineControl::DrawText;
+//    if(!isReadOnly() && d->cursorVisible && !d->cursorItem)
+//        flags |= QLineControl::DrawCursor;
+//    if (d->control->hasSelectedText())
+//            flags |= QLineControl::DrawSelections;
+//    QPoint offset = QPoint(0,0);
+//    QFontMetrics fm = QFontMetrics(d->font);
+//    QRect br(boundingRect().toRect());
+//    if (d->autoScroll) {
+//        // the y offset is there to keep the baseline constant in case we have script changes in the text.
+//        offset = br.topLeft() - QPoint(d->hscroll, d->control->ascent() - fm.ascent());
+//    } else {
+//        offset = QPoint(d->hscroll, 0);
+//    }
+//    d->control->draw(p, offset, r, flags);
+//    p->restore();
+//}
+
+QSGNode *QSGTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+{
+    Q_UNUSED(data);
     Q_D(QSGTextInput);
-    p->setRenderHint(QPainter::TextAntialiasing, true);
-    p->save();
-    p->setPen(QPen(d->color));
-    int flags = QLineControl::DrawText;
-    if(!isReadOnly() && d->cursorVisible && !d->cursorItem)
-        flags |= QLineControl::DrawCursor;
-    if (d->control->hasSelectedText())
-            flags |= QLineControl::DrawSelections;
+
+    QSGTextNode *node = static_cast<QSGTextNode *>(oldNode);
+    if (node == 0)
+        node = new QSGTextNode(QSGItemPrivate::get(this)->sceneGraphContext());
+    d->textNode = node;
+
+    node->deleteContent();
+    node->setMatrix(QMatrix4x4());
+
     QPoint offset = QPoint(0,0);
     QFontMetrics fm = QFontMetrics(d->font);
     QRect br(boundingRect().toRect());
@@ -883,8 +911,26 @@ void QSGTextInput::paint(QPainter *p)
     } else {
         offset = QPoint(d->hscroll, 0);
     }
-    d->control->draw(p, offset, r, flags);
-    p->restore();
+
+    // ### Thread of text layout :/
+    QTextLayout *textLayout = d->control->textLayout();
+    node->addTextLayout(offset, textLayout, d->color,
+                        QSGText::Normal, QColor(),
+                        d->selectionColor, d->selectedTextColor,
+                        d->control->selectionStart(),
+                        d->control->selectionEnd() - 1); // selectionEnd() returns first char after
+                                                         // selection
+
+    if (!isReadOnly() && d->cursorItem == 0) {
+        offset.rx() += d->control->cursorToX();
+        node->setCursor(QRectF(offset, QSizeF(d->control->cursorWidth(), br.height())), d->color);
+        if (!d->cursorVisible
+                || (!d->control->cursorBlinkStatus() && d->control->cursorBlinkPeriod() > 0)) {
+            d->hideCursor();
+        }
+    }
+
+    return node;
 }
 
 QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
@@ -1123,7 +1169,7 @@ void QSGTextInput::focusInEvent(QFocusEvent *event)
             openSoftwareInputPanel();
         }
     }
-    QSGPaintedItem::focusInEvent(event);
+    QSGImplicitSizeItem::focusInEvent(event);
 }
 
 void QSGTextInput::itemChange(ItemChange change, const ItemChangeData &value)
@@ -1156,6 +1202,7 @@ void QSGTextInputPrivate::init()
     q->setSmooth(smooth);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QSGItem::ItemAcceptsInputMethod);
+    q->setFlag(QSGItem::ItemHasContents);
     q->connect(control, SIGNAL(cursorPositionChanged(int,int)),
                q, SLOT(cursorPosChanged()));
     q->connect(control, SIGNAL(selectionChanged()),
@@ -1246,19 +1293,56 @@ void QSGTextInput::q_textChanged()
     }
 }
 
+void QSGTextInputPrivate::showCursor()
+{
+    if (textNode != 0 && textNode->cursorNode() != 0)
+        textNode->cursorNode()->setColor(color);
+}
+
+void QSGTextInputPrivate::hideCursor()
+{
+    if (textNode != 0 && textNode->cursorNode() != 0)
+        textNode->cursorNode()->setColor(QColor(0, 0, 0, 0));
+}
+
 void QSGTextInput::updateRect(const QRect &r)
 {
     Q_D(QSGTextInput);
-    if(r == QRect())
+    if (!isComponentComplete())
+        return;
+
+    if (r.isEmpty()) {
         update();
-    else
-        update(QRect(r.x() - d->hscroll, r.y(), r.width(), r.height()));
+    } else { // Cursor update
+        QSGSimpleRectNode *cursorNode = d->textNode->cursorNode();
+        if (cursorNode != 0) {
+            QPoint offset = QPoint(0,0);
+            QFontMetrics fm = QFontMetrics(d->font);
+            QRect br(boundingRect().toRect());
+            if (d->autoScroll) {
+                // the y offset is there to keep the baseline constant in case we have script changes in the text.
+                offset = br.topLeft() - QPoint(d->hscroll, d->control->ascent() - fm.ascent());
+            } else {
+                offset = QPoint(d->hscroll, 0);
+            }
+            offset.rx() += d->control->cursorToX();
+
+            cursorNode->setRect(QRectF(offset, QSizeF(d->control->cursorWidth(), br.height())));
+
+            if (!d->cursorVisible
+                    || (!d->control->cursorBlinkStatus() && d->control->cursorBlinkPeriod() > 0)) {
+                d->hideCursor();
+            } else {
+                d->showCursor();
+            }
+        }
+    }
 }
 
 QRectF QSGTextInput::boundingRect() const
 {
     Q_D(const QSGTextInput);
-    QRectF r = QSGPaintedItem::boundingRect();
+    QRectF r = QSGImplicitSizeItem::boundingRect();
 
     int cursorWidth = d->cursorItem ? d->cursorItem->width() : d->control->cursorWidth();
 
@@ -1274,8 +1358,7 @@ void QSGTextInput::updateSize(bool needsRedraw)
     int w = width();
     int h = height();
     setImplicitHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
-    setImplicitWidth(d->calculateTextWidth());
-    setContentsSize(QSize(width(), height()));
+    setImplicitWidth(d->calculateTextWidth());    
     if(w==width() && h==height() && needsRedraw)
         update();
 }

@@ -47,6 +47,7 @@
 
 #include <private/qsgcontext_p.h>
 
+#include <QtCore/qpoint.h>
 #include <qmath.h>
 #include <qtextdocument.h>
 #include <qtextlayout.h>
@@ -64,7 +65,7 @@ QT_BEGIN_NAMESPACE
   Creates an empty QSGTextNode
 */
 QSGTextNode::QSGTextNode(QSGContext *context)
-: m_context(context)
+    : m_context(context), m_cursorNode(0)
 {
 #if defined(QML_RUNTIME_TESTING)
     description = QLatin1String("text");
@@ -184,21 +185,245 @@ void QSGTextNode::addTextDocument(const QPointF &position, QTextDocument *textDo
     }
 }
 
-void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
-                                QSGText::TextStyle style, const QColor &styleColor)
+void QSGTextNode::setCursor(const QRectF &rect, const QColor &color)
 {
-    QList<QGlyphRun> glyphsList(textLayout->glyphRuns());
-    for (int i=0; i<glyphsList.size(); ++i) {
-        QGlyphRun glyphs = glyphsList.at(i);
-        QRawFont font = glyphs.rawFont();
-        addGlyphs(position + QPointF(0, font.ascent()), glyphs, color, style, styleColor);
+    if (m_cursorNode != 0)
+        delete m_cursorNode;
+
+    m_cursorNode = new QSGSimpleRectNode(rect, color);
+    appendChildNode(m_cursorNode);
+}
+
+QSGGlyphNode *QSGTextNode::addGlyphsAndDecoration(const QPointF &position, const QGlyphRun &glyphRun,
+                                         const QColor &color, QSGText::TextStyle style,
+                                         const QColor &styleColor,
+                                         const QPointF &decorationPosition)
+{
+    QSGGlyphNode *node = addGlyphs(position, glyphRun, color, style, styleColor);
+
+    if (glyphRun.strikeOut() || glyphRun.overline() || glyphRun.underline()) {
+        QRectF rect = glyphRun.boundingRect();
+        qreal width = rect.right() - decorationPosition.x();
+
+        addTextDecorations(decorationPosition, glyphRun.rawFont(), color, width,
+                           glyphRun.overline(), glyphRun.strikeOut(), glyphRun.underline());
     }
 
+    return node;
+}
+
+namespace {
+
+    struct BinaryTreeNode {
+        enum SelectionState {
+            Unselected,
+            Selected
+        };
+
+        BinaryTreeNode()
+            : selectionState(Unselected)
+            , leftChildIndex(-1)
+            , rightChildIndex(-1)
+        {
+
+        }
+
+        BinaryTreeNode(const QGlyphRun &g, SelectionState selState, const QRectF &brect)
+            : glyphRun(g)
+            , boundingRect(brect)
+            , selectionState(selState)
+            , leftChildIndex(-1)
+            , rightChildIndex(-1)
+        {
+        }
+
+        QGlyphRun glyphRun;
+        QRectF boundingRect;
+        SelectionState selectionState;
+
+        int leftChildIndex;
+        int rightChildIndex;
+
+        static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree,
+                           const QGlyphRun &glyphRun,
+                           SelectionState selectionState)
+        {
+            int newIndex = binaryTree->size();
+            QRectF searchRect = glyphRun.boundingRect();
+
+            binaryTree->append(BinaryTreeNode(glyphRun, selectionState, searchRect));
+            if (newIndex == 0)
+                return;
+
+            int searchIndex = 0;
+            forever {
+                BinaryTreeNode *node = binaryTree->data() + searchIndex;
+                if (searchRect.left() < node->boundingRect.left()) {
+                    if (node->leftChildIndex < 0) {
+                        node->leftChildIndex = newIndex;
+                        break;
+                    } else {
+                        searchIndex = node->leftChildIndex;
+                    }
+                } else {
+                    if (node->rightChildIndex < 0) {
+                        node->rightChildIndex = newIndex;
+                        break;
+                    } else {
+                        searchIndex = node->rightChildIndex;
+                    }
+                }
+            }
+        }
+
+        static void inOrder(const QVarLengthArray<BinaryTreeNode> &binaryTree,
+                            QVarLengthArray<int> *sortedIndexes,
+                            int currentIndex = 0)
+        {
+            Q_ASSERT(currentIndex < binaryTree.size());
+
+            const BinaryTreeNode *node = binaryTree.data() + currentIndex;
+            if (node->leftChildIndex >= 0)
+                inOrder(binaryTree, sortedIndexes, node->leftChildIndex);
+
+            sortedIndexes->append(currentIndex);
+
+            if (node->rightChildIndex >= 0)
+                inOrder(binaryTree, sortedIndexes, node->rightChildIndex);
+        }
+    };
+}
+
+void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
+                                QSGText::TextStyle style, const QColor &styleColor,
+                                const QColor &selectionColor, const QColor &selectedTextColor,
+                                int selectionStart, int selectionEnd)
+{
     QFont font = textLayout->font();
-    QRawFont rawFont = QRawFont::fromFont(font);
-    if (font.strikeOut() || font.underline() || font.overline()) {
-        addTextDecorations(position, rawFont, color, textLayout->boundingRect().width(),
-                           font.overline(), font.strikeOut(), font.underline());
+    bool overline = font.overline();
+    bool underline = font.underline();
+    bool strikeOut = font.strikeOut();
+    QRawFont decorationRawFont = QRawFont::fromFont(font);
+
+    if (selectionStart < 0 || selectionEnd < 0) {
+        for (int i=0; i<textLayout->lineCount(); ++i) {
+            QTextLine line = textLayout->lineAt(i);
+
+            QList<QGlyphRun> glyphRuns = line.glyphRuns();
+            for (int j=0; j<glyphRuns.size(); ++j) {
+                QGlyphRun glyphRun = glyphRuns.at(j);
+                QPointF pos(position + QPointF(0, glyphRun.rawFont().ascent()));
+                addGlyphs(pos, glyphRun, color, style, styleColor);
+            }
+
+            addTextDecorations(QPointF(line.x(), line.y() + decorationRawFont.ascent()),
+                               decorationRawFont, color, line.naturalTextWidth(),
+                               overline, strikeOut, underline);
+        }
+
+    } else {
+        QVarLengthArray<BinaryTreeNode> binaryNodes;
+        for (int i=0; i<textLayout->lineCount(); ++i) {
+            QTextLine line = textLayout->lineAt(i);
+
+            // Make a list of glyph runs sorted on left-most x coordinate to make it possible
+            // to find the correct selection rects
+            if (line.textStart() < selectionStart) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(line.textStart(),
+                                                            qMin(selectionStart - line.textStart(),
+                                                                 line.textLength()));
+                for (int j=0; j<glyphRuns.size(); ++j) {
+                    const QGlyphRun &glyphRun = glyphRuns.at(j);
+                    BinaryTreeNode::insert(&binaryNodes, glyphRun, BinaryTreeNode::Unselected);
+                }
+            }
+
+            int lineEnd = line.textStart() + line.textLength();
+
+            // Add selected text
+            if (lineEnd >= selectionStart && selectionStart >= line.textStart()) {
+                QList<QGlyphRun> selectedGlyphRuns = line.glyphRuns(selectionStart,
+                                                                    selectionEnd - selectionStart + 1);
+                for (int j=0; j<selectedGlyphRuns.size(); ++j) {
+                    const QGlyphRun &selectedGlyphRun = selectedGlyphRuns.at(j);
+                    BinaryTreeNode::insert(&binaryNodes, selectedGlyphRun, BinaryTreeNode::Selected);
+                }
+            }
+
+            // If there is selected text in this line, add regular text after selection
+            if (selectionEnd >= line.textStart() && selectionEnd < lineEnd) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionEnd + 1, lineEnd - selectionEnd);
+                for (int j=0; j<glyphRuns.size(); ++j) {
+                    const QGlyphRun &glyphRun = glyphRuns.at(j);
+                    BinaryTreeNode::insert(&binaryNodes, glyphRun, BinaryTreeNode::Unselected);
+                }
+            }
+
+            // Go through glyph runs sorted by x position and add glyph nodes/text decoration
+            // and selection rects to the graph
+            QVarLengthArray<int> sortedIndexes;
+            BinaryTreeNode::inOrder(binaryNodes, &sortedIndexes);
+
+            Q_ASSERT(sortedIndexes.size() == binaryNodes.size());
+
+            BinaryTreeNode::SelectionState currentSelectionState = BinaryTreeNode::Unselected;
+            QRectF currentRect = QRectF(line.x(), line.y(), 1, 1);
+            for (int i=0; i<=sortedIndexes.size(); ++i) {
+                BinaryTreeNode *node = 0;
+                if (i < sortedIndexes.size()) {
+                    int sortedIndex = sortedIndexes.at(i);
+                    Q_ASSERT(sortedIndex < binaryNodes.size());
+
+                    node = binaryNodes.data() + sortedIndex;
+                    const QGlyphRun &glyphRun = node->glyphRun;
+
+                    QColor currentColor = node->selectionState == BinaryTreeNode::Unselected
+                            ? color
+                            : selectedTextColor;
+
+                    QPointF pos(position + QPointF(0, glyphRun.rawFont().ascent()));
+                    addGlyphs(pos, glyphRun, currentColor, style, styleColor);
+
+                    if (i == 0)
+                        currentSelectionState = node->selectionState;
+                }
+
+                // If we've reached an unselected node from a selected node, we add the
+                // selection rect to the graph, and we add decoration every time the
+                // selection state changes, because that means the text color changes
+                if (node == 0 || node->selectionState != currentSelectionState) {
+                    if (node != 0)
+                        currentRect.setRight(node->boundingRect.left());
+                    else
+                        currentRect.setWidth(line.naturalTextWidth() - (currentRect.x() - line.x()));
+                    currentRect.setY(line.y());
+                    currentRect.setHeight(line.height());
+
+                    // Draw selection all the way up to the left edge of the unselected item
+                    if (currentSelectionState == BinaryTreeNode::Selected)
+                        prependChildNode(new QSGSimpleRectNode(currentRect, selectionColor));
+
+                    if (overline || underline || strikeOut) {
+                        QColor currentColor = currentSelectionState == BinaryTreeNode::Unselected
+                                ? color
+                                : selectedTextColor;
+                        addTextDecorations(currentRect.topLeft() + QPointF(0, decorationRawFont.ascent()),
+                                           decorationRawFont, currentColor, currentRect.width(),
+                                           overline, strikeOut, underline);
+                    }
+
+                    if (node != 0) {
+                        currentSelectionState = node->selectionState;
+                        currentRect = node->boundingRect;
+                    }
+                } else {
+                    if (currentRect.isEmpty())
+                        currentRect = node->boundingRect;
+                    else
+                        currentRect = currentRect.united(node->boundingRect);
+                }
+            }
+        }
     }
 }
 
@@ -378,6 +603,7 @@ void QSGTextNode::deleteContent()
 {
     while (childCount() > 0)
         delete childAtIndex(0);
+    m_cursorNode = 0;
 }
 
 #if 0

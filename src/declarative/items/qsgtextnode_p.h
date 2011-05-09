@@ -54,6 +54,7 @@ class QColor;
 class QTextDocument;
 class QSGContext;
 class QRawFont;
+class QSGSimpleRectNode;
 
 class QSGTextNode : public QSGTransformNode
 {
@@ -65,18 +66,30 @@ public:
 
     void deleteContent();
     void addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color = QColor(),
-                       QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
+                       QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
+                       const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
+                       int selectionStart = -1, int selectionEnd = -1);
     void addTextDocument(const QPointF &position, QTextDocument *textDocument, const QColor &color = QColor(),
                          QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
+
+    void setCursor(const QRectF &rect, const QColor &color);
+    QSGSimpleRectNode *cursorNode() const { return m_cursorNode; }
 
 private:
     void addTextBlock(const QPointF &position, QTextDocument *textDocument, const QTextBlock &block,
                       const QColor &overrideColor, QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                                   QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
+    QSGGlyphNode *addGlyphsAndDecoration(const QPointF &position, const QGlyphRun &glyphs,
+                                         const QColor &color,
+                                         QSGText::TextStyle style = QSGText::Normal,
+                                         const QColor &styleColor = QColor(),
+                                         const QPointF &decorationPosition = QPointF());
+
     void addTextDecorations(const QPointF &position, const QRawFont &font, const QColor &color,
                             qreal width, bool hasOverline, bool hasStrikeOut, bool hasUnderline);
     QSGContext *m_context;
+    QSGSimpleRectNode *m_cursorNode;
 };
 
 QT_END_NAMESPACE
