@@ -118,8 +118,8 @@ private:
     QGLFramebufferObject *m_multisampledFbo;
     QImage m_image;
 
-    QSGTextureMaterial m_material;
-    QSGTextureMaterialWithOpacity m_materialO;
+    QSGOpaqueTextureMaterial m_material;
+    QSGTextureMaterial m_materialO;
     QSGGeometry m_geometry;
     QSGPainterTexture *m_texture;
 

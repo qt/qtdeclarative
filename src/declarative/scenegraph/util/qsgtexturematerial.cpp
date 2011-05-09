@@ -63,34 +63,34 @@ const char qt_scenegraph_texture_material_fragment[] =
     "}";
 
 
-const char *QSGTextureMaterialShader::vertexShader() const
+const char *QSGOpaqueTextureMaterialShader::vertexShader() const
 {
     return qt_scenegraph_texture_material_vertex_code;
 }
 
-const char *QSGTextureMaterialShader::fragmentShader() const
+const char *QSGOpaqueTextureMaterialShader::fragmentShader() const
 {
     return qt_scenegraph_texture_material_fragment;
 }
 
-QSGMaterialType QSGTextureMaterialShader::type;
+QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 
-char const *const *QSGTextureMaterialShader::attributeNames() const
+char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
 {
     static char const *const attr[] = { "qt_VertexPosition", "qt_VertexTexCoord", 0 };
     return attr;
 }
 
-void QSGTextureMaterialShader::initialize()
+void QSGOpaqueTextureMaterialShader::initialize()
 {
     m_matrix_id = m_program.uniformLocation("qt_Matrix");
 }
 
-void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
-    QSGTextureMaterial *tx = static_cast<QSGTextureMaterial *>(newEffect);
-    QSGTextureMaterial *oldTx = static_cast<QSGTextureMaterial *>(oldEffect);
+    QSGOpaqueTextureMaterial *tx = static_cast<QSGOpaqueTextureMaterial *>(newEffect);
+    QSGOpaqueTextureMaterial *oldTx = static_cast<QSGOpaqueTextureMaterial *>(oldEffect);
 
     QSGTexture *t = tx->texture();
 
@@ -109,7 +109,7 @@ void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial
 }
 
 
-QSGTextureMaterial::QSGTextureMaterial()
+QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
     : m_texture(0)
     , m_filtering(QSGTexture::Nearest)
     , m_mipmap_filtering(QSGTexture::Nearest)
@@ -120,34 +120,34 @@ QSGTextureMaterial::QSGTextureMaterial()
 
 
 
-QSGMaterialType *QSGTextureMaterial::type() const
+QSGMaterialType *QSGOpaqueTextureMaterial::type() const
 {
-    return &QSGTextureMaterialShader::type;
+    return &QSGOpaqueTextureMaterialShader::type;
 }
 
-QSGMaterialShader *QSGTextureMaterial::createShader() const
+QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
 {
-    return new QSGTextureMaterialShader;
+    return new QSGOpaqueTextureMaterialShader;
 }
 
 
-void QSGTextureMaterial::setTexture(QSGTexture *texture)
+void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 {
     m_texture = texture;
     setFlag(Blending, m_texture ? m_texture->hasAlphaChannel() : false);
 }
 
 
-int QSGTextureMaterial::compare(const QSGMaterial *o) const
+int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
-    const QSGTextureMaterial *other = static_cast<const QSGTextureMaterial *>(o);
+    const QSGOpaqueTextureMaterial *other = static_cast<const QSGOpaqueTextureMaterial *>(o);
     if (int diff = m_texture->textureId() - other->texture()->textureId())
         return diff;
     return int(m_filtering) - int(other->m_filtering);
 }
 
-// QSGTextureMaterialWithOpacity
+// QSGTextureMaterial
 
 static const char qt_scenegraph_texture_material_opacity_fragment[] =
     "varying highp vec2 qt_TexCoord;                       \n"
@@ -157,7 +157,7 @@ static const char qt_scenegraph_texture_material_opacity_fragment[] =
     "    gl_FragColor = texture2D(qt_Texture, qt_TexCoord) * opacity; \n"
     "}";
 
-class TextureMaterialWithOpacityShader : public QSGTextureMaterialShader
+class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
 {
 public:
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
@@ -170,30 +170,30 @@ protected:
 
     int m_opacity_id;
 };
-QSGMaterialType TextureMaterialWithOpacityShader::type;
+QSGMaterialType QSGTextureMaterialShader::type;
 
-QSGMaterialType *QSGTextureMaterialWithOpacity::type() const
+QSGMaterialType *QSGTextureMaterial::type() const
 {
-    return &TextureMaterialWithOpacityShader::type;
+    return &QSGTextureMaterialShader::type;
 }
 
-QSGMaterialShader *QSGTextureMaterialWithOpacity::createShader() const
+QSGMaterialShader *QSGTextureMaterial::createShader() const
 {
-    return new TextureMaterialWithOpacityShader;
+    return new QSGTextureMaterialShader;
 }
 
-void TextureMaterialWithOpacityShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
     if (state.isOpacityDirty())
         m_program.setUniformValue(m_opacity_id, state.opacity());
 
-    QSGTextureMaterialShader::updateState(state, newEffect, oldEffect);
+    QSGOpaqueTextureMaterialShader::updateState(state, newEffect, oldEffect);
 }
 
-void TextureMaterialWithOpacityShader::initialize()
+void QSGTextureMaterialShader::initialize()
 {
-    QSGTextureMaterialShader::initialize();
+    QSGOpaqueTextureMaterialShader::initialize();
     m_opacity_id = m_program.uniformLocation("opacity");
 }
 

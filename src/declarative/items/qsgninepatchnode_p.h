@@ -81,8 +81,8 @@ private:
     void fillRow(QSGGeometry::TexturedPoint2D *&v, float y, float ty, int xChunkCount, float xChunkSize);
     QRectF m_targetRect;
     QRectF m_innerRect;
-    QSGTextureMaterial m_material;
-    QSGTextureMaterialWithOpacity m_materialO;
+    QSGOpaqueTextureMaterial m_material;
+    QSGTextureMaterial m_materialO;
     QSGGeometry m_geometry;
 
     uint m_horizontalTileMode : 2;

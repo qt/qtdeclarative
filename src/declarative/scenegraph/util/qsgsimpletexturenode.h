@@ -69,8 +69,8 @@ public:
 
 private:
     QSGGeometry m_geometry;
-    QSGTextureMaterial m_opaque_material;
-    QSGTextureMaterialWithOpacity m_material;
+    QSGOpaqueTextureMaterial m_opaque_material;
+    QSGTextureMaterial m_material;
 
     QRectF m_rect;
 };

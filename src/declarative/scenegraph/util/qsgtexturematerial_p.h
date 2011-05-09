@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class Q_DECLARATIVE_EXPORT QSGTextureMaterialShader : public QSGMaterialShader
+class Q_DECLARATIVE_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterialShader
 {
 public:
     virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);

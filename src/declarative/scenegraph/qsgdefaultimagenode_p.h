@@ -75,8 +75,8 @@ private:
     QRectF m_targetRect;
     QRectF m_sourceRect;
 
-    QSGTextureMaterial m_material;
-    QSGTextureMaterialWithOpacity m_materialO;
+    QSGOpaqueTextureMaterial m_material;
+    QSGTextureMaterial m_materialO;
 
     uint m_dirtyGeometry : 1;
 

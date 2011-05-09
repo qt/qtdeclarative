@@ -52,10 +52,10 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 
-class Q_DECLARATIVE_EXPORT QSGTextureMaterial : public QSGMaterial
+class Q_DECLARATIVE_EXPORT QSGOpaqueTextureMaterial : public QSGMaterial
 {
 public:
-    QSGTextureMaterial();
+    QSGOpaqueTextureMaterial();
 
     virtual QSGMaterialType *type() const;
     virtual QSGMaterialShader *createShader() const;
@@ -83,10 +83,12 @@ protected:
     uint m_mipmap_filtering: 2;
     uint m_horizontal_wrap : 1;
     uint m_vertical_wrap: 1;
+
+    uint m_reserved : 26;
 };
 
 
-class Q_DECLARATIVE_EXPORT QSGTextureMaterialWithOpacity : public QSGTextureMaterial
+class Q_DECLARATIVE_EXPORT QSGTextureMaterial : public QSGOpaqueTextureMaterial
 {
 public:
     virtual QSGMaterialType *type() const;
