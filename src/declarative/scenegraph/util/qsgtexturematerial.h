@@ -81,8 +81,8 @@ protected:
 
     uint m_filtering: 2;
     uint m_mipmap_filtering: 2;
-    uint m_vertical_wrap: 1;
     uint m_horizontal_wrap : 1;
+    uint m_vertical_wrap: 1;
 };
 
 

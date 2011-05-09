@@ -729,6 +729,7 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
 {
     Q_Q(QSGCanvas);
 
+    Q_UNUSED(item);
     Q_ASSERT(item);
     Q_ASSERT(scope);
 

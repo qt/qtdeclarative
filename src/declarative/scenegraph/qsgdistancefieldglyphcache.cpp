@@ -238,9 +238,11 @@ static void drawTriangle(float *bits, int width, int height, const DFVertex *v1,
         v1 = tmp;
     }
 
-    //   v1
-    //  /  \
-    // v3--v2
+    /*
+       v1
+      /  \
+     v3--v2
+     */
 
     int fromY = qMax(0, qCeil(v1->p.y));
     int midY = qMin(height, qCeil(qMin(v2->p.y, v3->p.y)));
@@ -678,7 +680,7 @@ void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
 {
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs[i];
-        if (glyphIndex >= glyphCount()) {
+        if ((int) glyphIndex >= glyphCount()) {
             qWarning("Warning: distance-field glyph is not available with index %d", glyphIndex);
             continue;
         }
