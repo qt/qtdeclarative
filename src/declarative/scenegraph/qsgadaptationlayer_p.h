@@ -72,6 +72,7 @@ public:
     virtual void setPenWidth(qreal width) = 0;
     virtual void setGradientStops(const QGradientStops &stops) = 0;
     virtual void setRadius(qreal radius) = 0;
+    virtual void setAligned(bool aligned) = 0;
 
     virtual void update() = 0;
 };

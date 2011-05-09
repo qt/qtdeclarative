@@ -58,16 +58,20 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QSGPen : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int width READ width WRITE setWidth NOTIFY penChanged)
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY penChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
+    Q_PROPERTY(bool aligned READ aligned WRITE setAligned NOTIFY penChanged)
 public:
     QSGPen(QObject *parent=0);
 
-    int width() const;
-    void setWidth(int w);
+    qreal width() const;
+    void setWidth(qreal w);
 
     QColor color() const;
     void setColor(const QColor &c);
+
+    bool aligned() const;
+    void setAligned(bool aligned);
 
     bool isValid() const;
 
@@ -75,9 +79,10 @@ Q_SIGNALS:
     void penChanged();
 
 private:
-    int _width;
-    QColor _color;
-    bool _valid;
+    qreal m_width;
+    QColor m_color;
+    bool m_aligned : 1;
+    bool m_valid : 1;
 };
 
 class Q_AUTOTEST_EXPORT QSGGradientStop : public QObject

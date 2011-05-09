@@ -68,6 +68,7 @@ public:
     virtual void setPenWidth(qreal width);
     virtual void setGradientStops(const QGradientStops &stops);
     virtual void setRadius(qreal radius);
+    virtual void setAligned(bool aligned);
     virtual void update();
 
 private:
@@ -87,8 +88,9 @@ private:
     QRectF m_rect;
     QGradientStops m_gradient_stops;
     qreal m_radius;
-    int m_pen_width;
+    qreal m_pen_width;
 
+    uint m_aligned : 1;
     uint m_gradient_is_opaque : 1;
     uint m_dirty_geometry : 1;
 

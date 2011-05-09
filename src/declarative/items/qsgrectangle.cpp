@@ -55,64 +55,82 @@ QT_BEGIN_NAMESPACE
 // XXX todo - should we change rectangle to draw entirely within its width/height?
 
 QSGPen::QSGPen(QObject *parent)
-: QObject(parent), _width(1), _color("#000000"), _valid(false)
+    : QObject(parent)
+    , m_width(1)
+    , m_color("#000000")
+    , m_aligned(true)
+    , m_valid(false)
 {
+}
+
+qreal QSGPen::width() const
+{ 
+    return m_width;
+}
+
+void QSGPen::setWidth(qreal w)
+{
+    if (m_width == w && m_valid)
+        return;
+
+    m_width = w;
+    m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
+    emit penChanged();
 }
 
 QColor QSGPen::color() const 
 { 
-    return _color; 
+    return m_color; 
 }
 
 void QSGPen::setColor(const QColor &c)
 {
-    _color = c;
-    _valid = (_color.alpha() && _width >= 1) ? true : false;
+    m_color = c;
+    m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
     emit penChanged();
 }
 
-int QSGPen::width() const 
-{ 
-    return _width; 
+bool QSGPen::aligned() const
+{
+    return m_aligned;
 }
 
-void QSGPen::setWidth(int w)
+void QSGPen::setAligned(bool aligned)
 {
-    if (_width == w && _valid)
+    if (aligned == m_aligned)
         return;
-
-    _width = w;
-    _valid = (_color.alpha() && _width >= 1) ? true : false;
+    m_aligned = aligned;
+    m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
     emit penChanged();
 }
 
 bool QSGPen::isValid() const
 { 
-    return _valid; 
+    return m_valid;
 }
 
 QSGGradientStop::QSGGradientStop(QObject *parent) 
-: QObject(parent) 
+    : QObject(parent)
 {
 }
 
 qreal QSGGradientStop::position() const 
-{ 
+{
     return m_position; 
 }
 
 void QSGGradientStop::setPosition(qreal position) 
-{ 
+{
     m_position = position; updateGradient(); 
 }
 
 QColor QSGGradientStop::color() const 
-{ 
+{
     return m_color; 
 }
 
 void QSGGradientStop::setColor(const QColor &color) 
-{ 
+{
     m_color = color; updateGradient(); 
 }
 
@@ -128,12 +146,12 @@ QSGGradient::QSGGradient(QObject *parent)
 }
 
 QSGGradient::~QSGGradient() 
-{ 
+{
     delete m_gradient; 
 }
 
 QDeclarativeListProperty<QSGGradientStop> QSGGradient::stops() 
-{ 
+{
     return QDeclarativeListProperty<QSGGradientStop>(this, m_stops); 
 }
 
@@ -257,8 +275,8 @@ QSGNode *QSGRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *da
     if (d->pen && d->pen->isValid()) {
         rectangle->setPenColor(d->pen->color());
         rectangle->setPenWidth(d->pen->width());
+        rectangle->setAligned(d->pen->aligned());
     } else {
-        rectangle->setPenColor(QColor());
         rectangle->setPenWidth(0);
     }
 
