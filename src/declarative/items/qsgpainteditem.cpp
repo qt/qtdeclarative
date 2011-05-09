@@ -416,6 +416,7 @@ QSGNode *QSGPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     node->setSize(QSize(qRound(br.width()), qRound(br.height())));
     node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);
+    node->setMipmapping(d->smooth);
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);
     node->setContentsScale(d->contentsScale);

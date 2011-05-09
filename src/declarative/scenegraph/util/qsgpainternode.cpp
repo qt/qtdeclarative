@@ -108,6 +108,7 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_dirtyContents(false)
     , m_opaquePainting(false)
     , m_linear_filtering(false)
+    , m_mipmapping(false)
     , m_smoothPainting(false)
     , m_extensionsChecked(false)
     , m_multisamplingSupported(false)
@@ -194,6 +195,7 @@ void QSGPainterNode::update()
 
 void QSGPainterNode::updateTexture()
 {
+    m_texture->setHasMipmaps(m_mipmapping);
     m_texture->setHasAlphaChannel(!m_opaquePainting);
     m_material.setTexture(m_texture);
     m_materialO.setTexture(m_texture);
@@ -293,8 +295,6 @@ void QSGPainterNode::updateRenderTarget()
 
     texture->setTextureSize(m_size);
     m_texture = texture;
-    m_material.setFiltering(m_linear_filtering ? QSGTexture::Linear : QSGTexture::Nearest);
-    m_materialO.setFiltering(m_linear_filtering ? QSGTexture::Linear : QSGTexture::Nearest);
 }
 
 void QSGPainterNode::updateFBOSize()
@@ -359,6 +359,17 @@ void QSGPainterNode::setLinearFiltering(bool linearFiltering)
     m_material.setFiltering(linearFiltering ? QSGTexture::Linear : QSGTexture::Nearest);
     m_materialO.setFiltering(linearFiltering ? QSGTexture::Linear : QSGTexture::Nearest);
     markDirty(DirtyMaterial);
+}
+
+void QSGPainterNode::setMipmapping(bool mipmapping)
+{
+    if (mipmapping == m_mipmapping)
+        return;
+
+    m_mipmapping = mipmapping;
+    m_material.setMipmapFiltering(mipmapping ? QSGTexture::Linear : QSGTexture::None);
+    m_materialO.setMipmapFiltering(mipmapping ? QSGTexture::Linear : QSGTexture::None);
+    m_dirtyTexture = true;
 }
 
 void QSGPainterNode::setSmoothPainting(bool s)

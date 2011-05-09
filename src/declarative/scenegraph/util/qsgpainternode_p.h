@@ -87,6 +87,9 @@ public:
     void setLinearFiltering(bool linearFiltering);
     bool linearFiltering() const { return m_linear_filtering; }
 
+    void setMipmapping(bool mipmapping);
+    bool mipmapping() const { return m_mipmapping; }
+
     void setSmoothPainting(bool s);
     bool smoothPainting() const { return m_smoothPainting; }
 
@@ -126,6 +129,7 @@ private:
     QRect m_dirtyRect;
     bool m_opaquePainting;
     bool m_linear_filtering;
+    bool m_mipmapping;
     bool m_smoothPainting;
     bool m_extensionsChecked;
     bool m_multisamplingSupported;
