@@ -177,7 +177,9 @@ void QMLRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
 {
     QSGRenderer::nodeChanged(node, flags);
 
-    quint32 rebuildFlags = QSGNode::DirtyNodeAdded | QSGNode::DirtyNodeRemoved | QSGNode::DirtyMaterial | QSGNode::DirtyOpacity;
+    quint32 rebuildFlags = QSGNode::DirtyNodeAdded | QSGNode::DirtyNodeRemoved
+                         | QSGNode::DirtyMaterial | QSGNode::DirtyOpacity
+                         | QSGNode::DirtyForceUpdate;
 
     if (flags & rebuildFlags)
         m_rebuild_lists = true;

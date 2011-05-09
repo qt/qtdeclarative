@@ -83,14 +83,16 @@ public:
         DirtyNodeRemoved            = 0x0008,
         DirtyGeometry               = 0x0010,
         DirtyRenderOrder            = 0x0020,
-        DirtyMaterial               = 0x0100,
-        DirtyOpacity                = 0x0200,
+        DirtyMaterial               = 0x0040,
+        DirtyOpacity                = 0x0080,
+        DirtyForceUpdate            = 0x0100,
         DirtyAll                    = 0xffff,
 
         DirtyPropagationMask        = DirtyMatrix
                                       | DirtyClipList
                                       | DirtyNodeAdded
-                                      | DirtyOpacity,
+                                      | DirtyOpacity
+                                      | DirtyForceUpdate,
 
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)

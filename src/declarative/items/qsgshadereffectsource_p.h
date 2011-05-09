@@ -46,6 +46,7 @@
 #include <private/qsgtextureprovider_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgcontext_p.h>
+#include <private/qsgdefaultimagenode_p.h>
 
 #include "qpointer.h"
 #include "qsize.h"
@@ -62,6 +63,17 @@ QT_MODULE(Declarative)
 class QSGNode;
 class UpdatePaintNodeData;
 class QGLFramebufferObject;
+
+class QSGShaderEffectSourceNode : public QObject, public QSGDefaultImageNode
+{
+    Q_OBJECT
+
+public:
+    QSGShaderEffectSourceNode();
+
+private Q_SLOTS:
+    void markDirtyTexture();
+};
 
 class QSGShaderEffectTexture : public QSGDynamicTexture
 {

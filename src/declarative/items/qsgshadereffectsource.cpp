@@ -54,6 +54,17 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
 
+QSGShaderEffectSourceNode::QSGShaderEffectSourceNode()
+{
+    setFlag(UsePreprocess, true);
+}
+
+void QSGShaderEffectSourceNode::markDirtyTexture()
+{
+    markDirty(DirtyMaterial);
+}
+
+
 QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
     : QSGDynamicTexture()
     , m_item(0)
@@ -260,9 +271,8 @@ void QSGShaderEffectTexture::grab()
     }
 
     // Render texture.
-    QSGNode::DirtyFlags dirty = root->dirtyFlags();
-    root->markDirty(QSGNode::DirtyNodeAdded); // Force matrix and clip update.
-    m_renderer->nodeChanged(root, QSGNode::DirtyNodeAdded); // Force render list update.
+    root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip and opacity update.
+    m_renderer->nodeChanged(root, QSGNode::DirtyForceUpdate); // Force render list update.
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
     if (qmlFboOverlay()) {
@@ -329,7 +339,7 @@ void QSGShaderEffectTexture::grab()
         ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    root->markDirty(dirty | QSGNode::DirtyNodeAdded); // Force matrix, clip and render list update.
+    root->markDirty(QSGNode::DirtyForceUpdate); // Force matrix, clip, opacity and render list update.
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
     if (qmlFboOverlay())
@@ -488,7 +498,6 @@ void QSGShaderEffectSource::setMipmap(bool enabled)
 {
     if (enabled == m_mipmap)
         return;
-    printf("setting mipmap to: %d\n", enabled);
     m_mipmap = enabled;
     update();
     emit mipmapChanged();
@@ -560,12 +569,16 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
         return 0;
     }
 
-    QSGImageNode *node = static_cast<QSGImageNode *>(oldNode);
+    QSGShaderEffectSourceNode *node = static_cast<QSGShaderEffectSourceNode *>(oldNode);
     if (!node) {
-        node = QSGItemPrivate::get(this)->sceneGraphContext()->createImageNode();
-        node->setFlag(QSGNode::UsePreprocess, true);
+        node = new QSGShaderEffectSourceNode;
         node->setTexture(m_texture);
+        connect(m_texture, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
+
+    // If live and recursive, update continuously.
+    if (m_live && m_recursive)
+        node->markDirty(QSGNode::DirtyMaterial);
 
     QSGShaderEffectTexture *tex = qobject_cast<QSGShaderEffectTexture *>(m_texture);
 

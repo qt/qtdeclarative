@@ -126,10 +126,10 @@ QSGRenderer::QSGRenderer(QSGContext *context)
     , m_context(context)
     , m_root_node(0)
     , m_node_updater(0)
+    , m_bindable(0)
     , m_changed_emitted(false)
     , m_mirrored(false)
     , m_is_rendering(false)
-    , m_bindable(0)
 {
     initializeGLFunctions();
 }

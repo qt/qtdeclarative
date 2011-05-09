@@ -227,7 +227,7 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
 #endif
 
     if (n->dirtyFlags() || m_force_update) {
-        bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded);
+        bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
         if (forceUpdate)
             ++m_force_update;
 

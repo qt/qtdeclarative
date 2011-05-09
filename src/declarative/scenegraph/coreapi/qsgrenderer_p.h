@@ -174,11 +174,11 @@ private:
     QGLShaderProgram m_clip_program;
     int m_clip_matrix_id;
 
-    bool m_changed_emitted;
-    bool m_mirrored;
-    bool m_is_rendering;
-
     const Bindable *m_bindable;
+
+    bool m_changed_emitted : 1;
+    bool m_mirrored : 1;
+    bool m_is_rendering : 1;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
