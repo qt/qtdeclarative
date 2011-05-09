@@ -107,10 +107,51 @@ const char *QSGVertexColorMaterialShader::fragmentShader() const {
 }
 
 
+
+/*!
+    \class QSGVertexColorMaterial
+    \brief The QSGVertexColorMaterial provides a convenient way of rendering per-vertex
+    colored geometry in the scene graph.
+
+    The vertex color material will give each vertex in a geometry a color. Pixels between
+    vertices will be linearly interpolated. The colors can contain transparency.
+
+    The geometry to be rendered with vertex color must have the following layout. Attribute
+    position 0 must contain vertices. Attribute position 1 must contain colors, a tuple of
+    4 values with RGBA layout. Both floats in the range of 0 to 1 and unsigned bytes in
+    the range 0 to 255 are valid for the color values. The
+    QSGGeometry::defaultAttributes_ColoredPoint2D() constructs an attribute set
+    compatible with this material.
+
+    The vertex color material respets both current opacity and current matrix when
+    updating it's rendering state.
+ */
+
+
 QSGVertexColorMaterial::QSGVertexColorMaterial(bool opaque) : m_opaque(opaque)
 {
     setFlag(Blending, !opaque);
 }
+
+
+
+/*!
+    \fn bool QSGVertexColorMaterial::opaque() const
+
+    Returns if the vertex color material should interpret all colors
+    as opaque.
+ */
+
+
+
+/*!
+    Sets wether the material should interpret all colors in the
+    geometry as \a opaque.
+
+    This is an optimization hint. Setting opaque to true for geometry that only
+    contains opaque colors, can lead to better performance.
+
+ */
 
 void QSGVertexColorMaterial::setOpaque(bool opaque)
 {
@@ -118,10 +159,22 @@ void QSGVertexColorMaterial::setOpaque(bool opaque)
     m_opaque = opaque;
 }
 
+
+
+/*!
+    \internal
+ */
+
 QSGMaterialType *QSGVertexColorMaterial::type() const
 {
     return &QSGVertexColorMaterialShader::type;
 }
+
+
+
+/*!
+    \internal
+ */
 
 QSGMaterialShader *QSGVertexColorMaterial::createShader() const
 {

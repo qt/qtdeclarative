@@ -116,9 +116,50 @@ const char *FlatColorMaterialShader::fragmentShader() const {
 }
 
 
+
+/*!
+    \class QSGFlatColorMaterial
+    \brief The QSGFlatColorMaterial provides a convenient way of rendering
+    solid colored geometry in the scene graph.
+
+    The flat color material will fill every pixel in a geometry using
+    a solid color. The color can contain transparency.
+
+    The geometry to be rendered with a flat color material requires
+    vertices in attribute location 0 in the QSGGeometry object to render
+    correctly. The QSGGeometry::defaultAttributes_Point2D() returns an attribute
+    set compatible with this material.
+
+    The flat color material respects both current opacity and current matrix
+    when updating it's rendering state.
+ */
+
+
+/*!
+    Constructs a new flat color material.
+
+    The default color is white.
+ */
+
 QSGFlatColorMaterial::QSGFlatColorMaterial() : m_color(QColor(255, 255, 255))
 {
 }
+
+
+
+/*!
+    \fn QColor QSGFlatColorMaterial::color() const
+
+    Returns this flat color material's color.
+
+    The default color is white.
+ */
+
+
+
+/*!
+    Sets this flat color material's color to \a color.
+ */
 
 void QSGFlatColorMaterial::setColor(const QColor &color)
 {
@@ -127,10 +168,21 @@ void QSGFlatColorMaterial::setColor(const QColor &color)
 }
 
 
+
+/*!
+    \internal
+ */
+
 QSGMaterialType *QSGFlatColorMaterial::type() const
 {
     return &FlatColorMaterialShader::type;
 }
+
+
+
+/*!
+    \internal
+ */
 
 QSGMaterialShader *QSGFlatColorMaterial::createShader() const
 {
