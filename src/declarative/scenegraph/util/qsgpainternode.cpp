@@ -89,6 +89,12 @@ void QSGPainterTexture::bind()
                         GL_BGRA, GL_UNSIGNED_BYTE, subImage.constBits());
 #endif
 
+        if (m_has_mipmaps && !m_mipmaps_generated) {
+            const QGLContext *ctx = QGLContext::currentContext();
+            ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
+            m_mipmaps_generated = true;
+        }
+
         m_dirty_texture = false;
         m_dirty_bind_options = false;
     }
@@ -336,6 +342,9 @@ void QSGPainterNode::setDirty(bool d, const QRect &dirtyRect)
 {
     m_dirtyContents = d;
     m_dirtyRect = dirtyRect;
+
+    if (m_mipmapping)
+        m_dirtyTexture = true;
 
     markDirty(DirtyMaterial);
 }
