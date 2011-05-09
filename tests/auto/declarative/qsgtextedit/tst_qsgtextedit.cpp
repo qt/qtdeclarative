@@ -1339,20 +1339,32 @@ void tst_qsgtextedit::moveCursorSelectionSequence()
 void tst_qsgtextedit::mouseSelection_data()
 {
     QTest::addColumn<QString>("qmlfile");
-    QTest::addColumn<bool>("expectSelection");
+    QTest::addColumn<int>("from");
+    QTest::addColumn<int>("to");
+    QTest::addColumn<QString>("selectedText");
 
     // import installed
-    QTest::newRow("on") << SRCDIR "/data/mouseselection_true.qml" << true;
-    QTest::newRow("off") << SRCDIR "/data/mouseselection_false.qml" << false;
-    QTest::newRow("default") << SRCDIR "/data/mouseselection_default.qml" << false;
-    QTest::newRow("on word selection") << SRCDIR "/data/mouseselection_true_words.qml" << true;
-    QTest::newRow("off word selection") << SRCDIR "/data/mouseselection_false_words.qml" << false;
+    QTest::newRow("on") << SRCDIR "/data/mouseselection_true.qml" << 4 << 9 << "45678";
+    QTest::newRow("off") << SRCDIR "/data/mouseselection_false.qml" << 4 << 9 << QString();
+    QTest::newRow("default") << SRCDIR "/data/mouseselection_default.qml" << 4 << 9 << QString();
+    QTest::newRow("off word selection") << SRCDIR "/data/mouseselection_false_words.qml" << 4 << 9 << QString();
+    QTest::newRow("on word selection (4,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 4 << 9 << "0123456789";
+    QTest::newRow("on word selection (2,13)") << SRCDIR "/data/mouseselection_true_words.qml" << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (2,30)") << SRCDIR "/data/mouseselection_true_words.qml" << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,13)") << SRCDIR "/data/mouseselection_true_words.qml" << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,30)") << SRCDIR "/data/mouseselection_true_words.qml" << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (13,2)") << SRCDIR "/data/mouseselection_true_words.qml" << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (20,2)") << SRCDIR "/data/mouseselection_true_words.qml" << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (12,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (30,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 }
 
 void tst_qsgtextedit::mouseSelection()
 {
     QFETCH(QString, qmlfile);
-    QFETCH(bool, expectSelection);
+    QFETCH(int, from);
+    QFETCH(int, to);
+    QFETCH(QString, selectedText);
 
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1366,19 +1378,20 @@ void tst_qsgtextedit::mouseSelection()
     QVERIFY(textEditObject != 0);
 
     // press-and-drag-and-release from x1 to x2
-    int x1 = 10;
-    int x2 = 70;
-    int y = textEditObject->height()/2;
-    QTest::mousePress(&canvas, Qt::LeftButton, 0, QPoint(x1,y));
-    //QTest::mouseMove(canvas, QPoint(x2,y)); // doesn't work
-    QMouseEvent mv(QEvent::MouseMove, QPoint(x2,y), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
+    QPoint p2 = textEditObject->positionToRectangle(to).center().toPoint();
+    QTest::mousePress(&canvas, Qt::LeftButton, 0, p1);
+    //QTest::mouseMove(canvas->viewport(), canvas->mapFromScene(QPoint(x2,y))); // doesn't work
+    QMouseEvent mv(QEvent::MouseMove, p2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QApplication::sendEvent(&canvas, &mv);
-    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, QPoint(x2,y));
-    QString str = textEditObject->selectedText();
-    if (expectSelection)
-        QVERIFY(str.length() > 3); // don't reallly care *what* was selected (and it's too sensitive to platform)
-    else
-        QVERIFY(str.isEmpty());
+    QTest::mouseRelease(&canvas, Qt::LeftButton, 0, p2);
+    QCOMPARE(textEditObject->selectedText(), selectedText);
+
+    // Clicking and shift to clicking between the same points should select the same text.
+    textEditObject->setCursorPosition(0);
+    QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mouseClick(&canvas, Qt::LeftButton, Qt::ShiftModifier, p2);
+    QCOMPARE(textEditObject->selectedText(), selectedText);
 }
 
 void tst_qsgtextedit::dragMouseSelection()
@@ -1572,6 +1585,43 @@ void tst_qsgtextedit::cursorDelegate()
         QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
         QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
     }
+    // Clear preedit text;
+    QInputMethodEvent event;
+    QApplication::sendEvent(&view, &event);
+
+
+    // Test delegate gets moved on mouse press.
+    textEditObject->setSelectByMouse(true);
+    textEditObject->setCursorPosition(0);
+    const QPoint point1 = textEditObject->positionToRectangle(5).center().toPoint();
+    QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
+    QVERIFY(textEditObject->cursorPosition() != 0);
+    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
+    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+
+    // Test delegate gets moved on mouse drag
+    textEditObject->setCursorPosition(0);
+    const QPoint point2 = textEditObject->positionToRectangle(10).center().toPoint();
+    QTest::mousePress(&view, Qt::LeftButton, 0, point1);
+    QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QApplication::sendEvent(&view, &mv);
+    QTest::mouseRelease(&view, Qt::LeftButton, 0, point2);
+    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
+    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+
+    textEditObject->setReadOnly(true);
+    textEditObject->setCursorPosition(0);
+    QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
+    QVERIFY(textEditObject->cursorPosition() != 0);
+    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
+    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+
+    textEditObject->setCursorPosition(0);
+    QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
+    QVERIFY(textEditObject->cursorPosition() != 0);
+    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
+    QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
+
     textEditObject->setCursorPosition(0);
     QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
     QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
