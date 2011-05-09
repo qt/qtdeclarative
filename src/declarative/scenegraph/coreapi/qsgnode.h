@@ -163,6 +163,8 @@ private:
 
     Flags m_nodeFlags;
     DirtyFlags m_flags;
+
+    void *m_reserved;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyFlags);
