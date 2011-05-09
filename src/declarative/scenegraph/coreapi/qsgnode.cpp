@@ -64,8 +64,9 @@ static void qt_print_node_count()
 
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
-    insertChildNodeAfter(). Ordering is important as nodes are rendered in
-    order. Actually, the scene may reorder nodes freely, but the resulting visual
+    insertChildNodeAfter(). Ordering of nodes is important as geometry nodes
+    will be rendered in the order they are added to the scene graph.
+    Actually, the scene may reorder nodes freely, but the resulting visual
     order is still guaranteed.
 
     If nodes change every frame, the preprocess() function can be used to
@@ -163,6 +164,14 @@ void QSGNode::destroy()
     Q_ASSERT(m_children.isEmpty());
 }
 
+
+/*!
+    Prepends \a node to this node's the list of children.
+
+    Ordering of nodes is important as geometry nodes will be rendered in the
+    order they are added to the scene graph.
+ */
+
 void QSGNode::prependChildNode(QSGNode *node)
 {
     Q_ASSERT_X(!m_children.contains(node), "QSGNode::prependChildNode", "QSGNode is already a child!");
@@ -182,6 +191,13 @@ void QSGNode::prependChildNode(QSGNode *node)
     node->markDirty(DirtyNodeAdded);
 }
 
+/*!
+    Appends \a node to this node's list of children.
+
+    Ordering of nodes is important as geometry nodes will be rendered in the
+    order they are added to the scene graph.
+ */
+
 void QSGNode::appendChildNode(QSGNode *node)
 {
     Q_ASSERT_X(!m_children.contains(node), "QSGNode::appendChildNode", "QSGNode is already a child!");
@@ -200,6 +216,15 @@ void QSGNode::appendChildNode(QSGNode *node)
 
     node->markDirty(DirtyNodeAdded);
 }
+
+
+
+/*!
+    Inserts \a node to this node's list of children before the node specified with \a before.
+
+    Ordering of nodes is important as geometry nodes will be rendered in the
+    order they are added to the scene graph.
+ */
 
 void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)
 {
@@ -225,6 +250,15 @@ void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)
     node->markDirty(DirtyNodeAdded);
 }
 
+
+
+/*!
+    Inserts \a node to this node's list of children after the node specified with \a after.
+
+    Ordering of nodes is important as geometry nodes will be rendered in the
+    order they are added to the scene graph.
+ */
+
 void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 {
     Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeAfter", "QSGNode is already a child!");
@@ -248,6 +282,12 @@ void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 
     node->markDirty(DirtyNodeAdded);
 }
+
+
+
+/*!
+    Removes \a node fromt his node's list of children.
+ */
 
 void QSGNode::removeChildNode(QSGNode *node)
 {
@@ -293,6 +333,14 @@ void QSGNode::setFlags(Flags f, bool enabled)
 }
 
 
+
+/*!
+    Marks this node with the states in \a flags as dirty.
+
+    When a node is marked dirty, it recursively mark the parent chain
+    as dirty and notify all connected renderers that the has dirty states.
+ */
+
 void QSGNode::markDirty(DirtyFlags flags)
 {
     m_flags |= (flags & DirtyPropagationMask);
@@ -307,6 +355,20 @@ void QSGNode::markDirty(DirtyFlags flags)
     }
 }
 
+
+
+/*!
+    \class QSGBasicGeometryNode
+    \brief The QSGBasicGeometryNode serves as a baseclass for geometry based nodes
+
+    The QSGBasicGeometryNode class should not be used by itself. It is only encapsulates
+    shared functionality between the QSGGeometryNode and QSGClipNode classes.
+  */
+
+
+/*!
+    Creates a new basic geometry node.
+ */
 QSGBasicGeometryNode::QSGBasicGeometryNode()
     : m_geometry(0)
     , m_matrix(0)
@@ -314,12 +376,37 @@ QSGBasicGeometryNode::QSGBasicGeometryNode()
 {
 }
 
+
+/*!
+    Deletes this QSGBasicGeometryNode.
+
+    If the node has the flag QSGNode::OwnsGeometry set, it will also delete the
+    geometry object it is pointing to. This flag is not set by default.
+  */
+
 QSGBasicGeometryNode::~QSGBasicGeometryNode()
 {
     destroy();
     if (flags() & OwnsGeometry)
         delete m_geometry;
 }
+
+
+/*!
+    \fn QSGGeometry *QSGBasicGeometryNode::geometry() const
+
+    Returns this node's geometry.
+
+    The geometry is null by default.
+ */
+
+
+/*!
+    Sets the geometry of this node to \a geometry.
+
+    If the node has the flag QSGNode::OwnsGeometry set, it will also delete the
+    geometry object it is pointing to. This flag is not set by default.
+ */
 
 void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 {
@@ -330,6 +417,31 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 }
 
 
+
+/*!
+    \class QSGGeometryNode
+    \brief The QSGGeometryNode class is used for all rendered content in the scene graph.
+
+    The QSGGeometryNode consists of geometry and material. The geometry defines the mesh,
+    the vertices and their structure, to be drawn. The Material defines how the shape is
+    filled.
+
+    A geometry node must have both geometry and a normal material before it is added to
+    the scene graph.
+
+    The geometry node supports two types of materials, the opaqueMaterial and the normal
+    material. The opaqueMaterial is used when the accumulated scene graph opacity at the
+    time of rendering is 1. The primary usecase is to special case opaque rendering
+    to avoid an extra operation in the fragment shader can have significant performance
+    impact on embedded graphics chips. The opaque material is optional.
+
+ */
+
+
+/*!
+    Creates a new geometry node without geometry and material.
+ */
+
 QSGGeometryNode::QSGGeometryNode()
     : m_render_order(0)
     , m_material(0)
@@ -337,6 +449,15 @@ QSGGeometryNode::QSGGeometryNode()
     , m_opacity(1)
 {
 }
+
+
+/*!
+    Deletes this geometry node.
+
+    The flags QSGNode::OwnsMaterial, QSGNode::OwnsOpaqueMaterial and
+    QSGNode::OwnsGeometry decides weither the geometry node should also
+    delete the materials and geometry. By default, these flags are disabled.
+ */
 
 QSGGeometryNode::~QSGGeometryNode()
 {
@@ -346,6 +467,17 @@ QSGGeometryNode::~QSGGeometryNode()
     if (flags() & OwnsOpaqueMaterial)
         delete m_opaque_material;
 }
+
+
+
+/*!
+    \fn int QSGGeometryNode::renderOrder() const
+
+    Returns the render order of this geometry node.
+
+    \internal
+ */
+
 
 /*!
     Sets the render order of this node to be \a order.
@@ -370,7 +502,7 @@ void QSGGeometryNode::setRenderOrder(int order)
 /*!
     Sets the material of this geometry node to \a material.
 
-    GeometryNodes must have a material before they can be added to the
+    Geometry nodes must have a material before they can be added to the
     scene graph.
  */
 void QSGGeometryNode::setMaterial(QSGMaterial *material)
@@ -453,23 +585,78 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
 }
 
 
+/*!
+    \class QSGClipNode
+    \brief The QSGClipNode implements the clipping functionality in the scene graph.
+
+    Clipping applies to the node's subtree and can be nested. Multiple clip nodes will be
+    accumulated by intersecting all their geometries. The accumulation happens
+    as part of the rendering.
+
+    Clip nodes must have a geometry before they can be added to the scene graph.
+
+    Clipping is usually implemented by using the stencil buffer.
+ */
+
+
+
+/*!
+    Creates a new QSGClipNode without a geometry.
+
+    The clip node must have a geometry before it can be added to the
+    scene graph.
+ */
 
 QSGClipNode::QSGClipNode()
 {
 }
+
+
+
+/*!
+    Deletes this QSGClipNode.
+
+    If the flag QSGNode::OwnsGeometry is set, the geometry will also be
+    deleted.
+ */
 
 QSGClipNode::~QSGClipNode()
 {
     destroy();
 }
 
+
+
+/*!
+    \fn bool QSGClipNode::isRectangular() const
+
+    Returns if this clip node has a rectangular clip.
+ */
+
+
+
 /*!
     Sets whether this clip node has a rectangular clip to \a rectHint.
+
+    This is an optimization hint which means that the renderer can
+    use scissoring instead of stencil, which is significnatly faster.
+
+    When this hint is and it is applicable, the clip region will be
+    generated from clipRect() rather than geometry().
  */
+
 void QSGClipNode::setIsRectangular(bool rectHint)
 {
     m_is_rectangular = rectHint;
 }
+
+
+
+/*!
+    \fn void QSGClipNode::clipRect() const
+
+    Returns the clip rect of this node.
+ */
 
 
 /*!
@@ -484,14 +671,48 @@ void QSGClipNode::setClipRect(const QRectF &rect)
 }
 
 
+/*!
+    \class QSGTransformNode
+    \brief The QSGTransformNode implements transformations in the scene graph
+
+    Transformations apply the node's subtree and can be nested. Multiple transform nodes
+    will be accumulated by intersecting all their matrices. The accumulation happens
+    as part of the rendering.
+
+    The transform nodes implement a 4x4 matrix which in theory supports full 3D
+    transformations. However, because the renderer optimizes for 2D use-cases rather
+    than 3D use-cases, rendering a scene with full 3D transformations needs to
+    be done with some care.
+ */
+
 QSGTransformNode::QSGTransformNode()
 {
 }
+
+
+
+/*!
+    Deletes this transform node.
+ */
 
 QSGTransformNode::~QSGTransformNode()
 {
     destroy();
 }
+
+
+
+/*!
+    \fn QMatrix4x4 QSGTransformNode::matrix() const
+
+    Returns this transform node's matrix.
+ */
+
+
+
+/*!
+    Sets this transform node's matrix to \a matrix.
+ */
 
 void QSGTransformNode::setMatrix(const QMatrix4x4 &matrix)
 {
@@ -516,6 +737,32 @@ void QSGTransformNode::setCombinedMatrix(const QMatrix4x4 &matrix)
 
 
 
+/*!
+    \class QSGRootNode
+    \brief The QSGRootNode is the toplevel root of any scene graph.
+
+    The root node is used to attach a scene graph to a renderer.
+
+    \internal
+ */
+
+
+
+/*!
+    \fn QSGRootNode::QSGRootNode()
+
+    Creates a new root node.
+ */
+
+
+
+/*!
+    Deletes the root node.
+
+    When a root node is deleted it removes itself from all of renderers
+    that are referencing it.
+ */
+
 QSGRootNode::~QSGRootNode()
 {
     while (!m_renderers.isEmpty())
@@ -524,12 +771,36 @@ QSGRootNode::~QSGRootNode()
 }
 
 
+
+/*!
+    Called to notify all renderers that \a node has been marked as dirty
+    with \a flags.
+ */
+
 void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyFlags flags)
 {
     for (int i=0; i<m_renderers.size(); ++i) {
         m_renderers.at(i)->nodeChanged(node, flags);
     }
 }
+
+
+
+/*!
+    \class QSGOpacityNode
+    \brief The QSGOpacityNode is used
+
+    Opacity apply to its subtree and can be nested. Multiple opacity nodes
+    will be accumulated by multiplying their opacity. The accumulation happens
+    as part of the rendering.
+
+    When nested opacity gets below a certain threshold, the subtree might
+    be marked as blocked, causing isSubtreeBlocked() to return true. This
+    is done for performance reasons.
+
+ */
+
+
 
 /*!
     Constructs an opacity node with a default opacity of 1.
@@ -547,10 +818,24 @@ QSGOpacityNode::QSGOpacityNode()
 }
 
 
+
+/*!
+    Deletes the opacity node.
+ */
+
 QSGOpacityNode::~QSGOpacityNode()
 {
     destroy();
 }
+
+
+
+/*!
+    \fn qreal QSGOpacityNode::opacity() const
+
+    Returns this opacity node's opacity.
+ */
+
 
 
 /*!
@@ -561,6 +846,7 @@ QSGOpacityNode::~QSGOpacityNode()
 
     The value will be bounded to the range 0 to 1.
  */
+
 void QSGOpacityNode::setOpacity(qreal opacity)
 {
     opacity = qBound<qreal>(0, opacity, 1);
@@ -569,6 +855,20 @@ void QSGOpacityNode::setOpacity(qreal opacity)
     m_opacity = opacity;
     markDirty(DirtyOpacity);
 }
+
+
+
+/*!
+    \fn qreal QSGOpacityNode::combinedOpacity() const
+
+    Returns this node's accumulated opacity.
+
+    This vaule is calculated during rendering and only stored
+    in the opacity node temporarily.
+
+    \internal
+ */
+
 
 
 /*!
@@ -580,17 +880,34 @@ void QSGOpacityNode::setOpacity(qreal opacity)
 
     \internal
  */
+
 void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 {
     m_combined_opacity = opacity;
 }
 
 
+
+/*!
+    For performance reasons, we block the subtree when the nested opacity
+    gets below a certain threshold.
+
+    \internal
+ */
+
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
     return m_combined_opacity < 0.001;
 }
 
+
+
+/*!
+    \class QSGNodeVisitor
+    \bried The QSGNodeVisitor class is a helper class for traversing the scene graph.
+
+    \internal
+ */
 
 QSGNodeVisitor::~QSGNodeVisitor()
 {
@@ -810,6 +1127,16 @@ QDebug operator<<(QDebug d, const QSGNode *n)
     }
     return d;
 }
+
+
+/*!
+    \class QSGNodeDumper
+    \brief The QSGNodeDumper class provides a way of dumping a scene grahp to the console.
+
+    This class is solely for debugging purposes.
+
+    \internal
+ */
 
 void QSGNodeDumper::dump(QSGNode *n)
 {
