@@ -49,7 +49,7 @@
 #include <private/qsgcontext_p.h>
 #include <private/qrawfont_p.h>
 #include <qglfunctions.h>
-#include <qglyphs.h>
+#include <qglyphrun.h>
 #include <qrawfont.h>
 
 QT_BEGIN_NAMESPACE

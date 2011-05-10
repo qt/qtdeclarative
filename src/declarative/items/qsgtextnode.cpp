@@ -153,7 +153,7 @@ void QSGTextNode::addTextDecorations(const QPointF &position, const QRawFont &fo
     }
 }
 
-QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphs &glyphs, const QColor &color,
+QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                                            QSGText::TextStyle style, const QColor &styleColor)
 {
     QSGGlyphNode *node = m_context->createGlyphNode();
@@ -187,10 +187,10 @@ void QSGTextNode::addTextDocument(const QPointF &position, QTextDocument *textDo
 void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
                                 QSGText::TextStyle style, const QColor &styleColor)
 {
-    QList<QGlyphs> glyphsList(textLayout->glyphs());
+    QList<QGlyphRun> glyphsList(textLayout->glyphRuns());
     for (int i=0; i<glyphsList.size(); ++i) {
-        QGlyphs glyphs = glyphsList.at(i);
-        QRawFont font = glyphs.font();
+        QGlyphRun glyphs = glyphsList.at(i);
+        QRawFont font = glyphs.rawFont();
         addGlyphs(position + QPointF(0, font.ascent()), glyphs, color, style, styleColor);
     }
 
@@ -356,10 +356,10 @@ void QSGTextNode::addTextBlock(const QPointF &position, QTextDocument *textDocum
                     ? overrideColor
                     : charFormat.foreground().color();
 
-            QList<QGlyphs> glyphsList = fragment.glyphs();
+            QList<QGlyphRun> glyphsList = fragment.glyphRuns();
             for (int i=0; i<glyphsList.size(); ++i) {
-                QGlyphs glyphs = glyphsList.at(i);
-                QRawFont font = glyphs.font();
+                QGlyphRun glyphs = glyphsList.at(i);
+                QRawFont font = glyphs.rawFont();
                 QSGGlyphNode *glyphNode = addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
                                                     glyphs, color, style, styleColor);
 

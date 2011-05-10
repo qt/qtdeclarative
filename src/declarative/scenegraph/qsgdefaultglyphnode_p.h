@@ -60,13 +60,13 @@ public:
     ~QSGDefaultGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
-    virtual void setGlyphs(const QPointF &position, const QGlyphs &glyphs);
+    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
     virtual void setColor(const QColor &color);
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
 
 private:
-    QGlyphs m_glyphs;
+    QGlyphRun m_glyphs;
     QPointF m_position;
     QColor m_color;
 
