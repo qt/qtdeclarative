@@ -63,6 +63,7 @@ public:
     bool contentsDirty : 1;
     bool opaquePainting: 1;
     bool antialiasing: 1;
+    bool mipmap: 1;
 };
 
 QT_END_NAMESPACE

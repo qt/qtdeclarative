@@ -75,6 +75,9 @@ public:
     bool antialiasing() const;
     void setAntialiasing(bool enable);
 
+    bool mipmap() const;
+    void setMipmap(bool enable);
+
     QRectF contentsBoundingRect() const;
 
     QSize contentsSize() const;

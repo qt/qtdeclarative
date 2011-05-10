@@ -103,6 +103,8 @@ QSGPaintedItemPrivate::QSGPaintedItemPrivate()
     , geometryDirty(false)
     , contentsDirty(false)
     , opaquePainting(false)
+    , antialiasing(false)
+    , mipmap(false)
 {
 }
 
@@ -222,6 +224,40 @@ void QSGPaintedItem::setAntialiasing(bool enable)
         return;
 
     d->antialiasing = enable;
+    update();
+}
+
+/*!
+    Returns true if mipmaps are enabled; otherwise, false is returned.
+
+    By default, mipmapping is not enabled.
+
+    \sa setMipmap()
+*/
+bool QSGPaintedItem::mipmap() const
+{
+    Q_D(const QSGPaintedItem);
+    return d->mipmap;
+}
+
+/*!
+    If \a enable is true, mipmapping is enabled on the associated texture.
+
+    Mipmapping increases rendering speed and reduces aliasing artifacts when the item is
+    scaled down.
+
+    By default, mipmapping is not enabled.
+
+    \sa mipmap()
+*/
+void QSGPaintedItem::setMipmap(bool enable)
+{
+    Q_D(QSGPaintedItem);
+
+    if (d->mipmap == enable)
+        return;
+
+    d->mipmap = enable;
     update();
 }
 
@@ -416,7 +452,7 @@ QSGNode *QSGPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     node->setSize(QSize(qRound(br.width()), qRound(br.height())));
     node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);
-    node->setMipmapping(d->smooth);
+    node->setMipmapping(d->mipmap);
     node->setOpaquePainting(d->opaquePainting);
     node->setFillColor(d->fillColor);
     node->setContentsScale(d->contentsScale);
