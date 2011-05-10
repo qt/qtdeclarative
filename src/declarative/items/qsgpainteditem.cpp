@@ -415,6 +415,11 @@ void QSGPaintedItem::setRenderTarget(RenderTarget target)
 
     Reimplement this function in a QSGPaintedItem subclass to provide the
     item's painting implementation, using \a painter.
+
+    \note The QML Scene Graph uses two separate threads, the main thread does things such as
+    processing events or updating animations while a second thread does the actual OpenGL rendering.
+    As a consequence, paint() is not called from the main GUI thread but from the GL enabled
+    renderer thread.
 */
 
 /*!
