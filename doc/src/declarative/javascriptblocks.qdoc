@@ -168,6 +168,44 @@ Notice that calling \l {QML:Qt::include()}{Qt.include()} imports all functions f
 \c factorial.js into the \c MyScript namespace, which means the QML component can also
 access \c factorial() directly as \c MyScript.factorial().
 
+In QtQuick 2.0, support has been added to allow JavaScript files to import other
+JavaScript files and also QML modules using a variation of the standard QML import
+syntax (where all of the previously described rules and qualifications apply).
+
+A JavaScript file may import another in the following fashion:
+\code
+.import "filename.js" as UniqueQualifier
+\endcode
+For example:
+\code
+.import "factorial.js" as MathFunctions
+\endcode
+
+A JavaScript file may import a QML module in the following fashion:
+\code
+.import Module.Name MajorVersion.MinorVersion as UniqueQualifier
+\endcode
+For example:
+\code
+.import Qt.test 1.0 as JsQtTest
+\endcode
+In particular, this may be useful in order to access functionality provided
+via a module API; see qmlRegisterModuleApi() for more information.
+
+Due to the ability of a JavaScript file to import another script or QML module in
+this fashion in QtQuick 2.0, some extra semantics are defined:
+\list
+\o a script with imports will not inherit imports from the QML file which imported it (so accessing Component.error will fail, for example)
+\o a script without imports will inherit imports from the QML file which imported it (so accessing Component.error will succeed, for example)
+\o a shared script (i.e., defined as .pragma library) does not inherit imports from any QML file even if it imports no other scripts
+\endlist
+
+The first semantic is conceptually correct, given that a particular script
+might be imported by any number of QML files.  The second semantic is retained
+for the purposes of backwards-compatibility.  The third semantic remains
+unchanged from the current semantics for shared scripts, but is clarified here
+in respect to the newly possible case (where the script imports other scripts
+or modules).
 
 \section1 Running JavaScript at Startup
 
