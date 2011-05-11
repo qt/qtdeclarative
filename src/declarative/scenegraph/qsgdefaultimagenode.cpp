@@ -43,6 +43,10 @@
 
 #include <private/qsgtextureprovider_p.h>
 
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qmath.h>
+#include <QtOpenGL/qglfunctions.h>
+
 QT_BEGIN_NAMESPACE
 
 QSGDefaultImageNode::QSGDefaultImageNode()
@@ -159,19 +163,120 @@ void QSGDefaultImageNode::preprocess()
         markDirty(DirtyMaterial);
 }
 
+inline static bool isPowerOfTwo(int x)
+{
+    // Assumption: x >= 1
+    return x == (x & -x);
+}
+
 void QSGDefaultImageNode::updateGeometry()
 {
     const QSGTexture *t = m_material.texture();
     if (!t) {
+        m_geometry.allocate(4);
+        m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
         QSGGeometry::updateTexturedRectGeometry(&m_geometry, QRectF(), QRectF());
     } else {
         QRectF textureRect = t->textureSubRect();
-        QRectF sr(textureRect.x() + m_sourceRect.x() * textureRect.width(),
-                  textureRect.y() + m_sourceRect.y() * textureRect.height(),
-                  m_sourceRect.width() * textureRect.width(),
-                  m_sourceRect.height() * textureRect.height());
 
-        QSGGeometry::updateTexturedRectGeometry(&m_geometry, m_targetRect, sr);
+        bool isSubRect = textureRect != QRectF(0, 0, 1, 1);
+        const int ceilRight = qCeil(m_sourceRect.right());
+        const int floorLeft = qFloor(m_sourceRect.left());
+        const int ceilBottom = qCeil(m_sourceRect.bottom());
+        const int floorTop = qFloor(m_sourceRect.top());
+        const int hCells = ceilRight - floorLeft;
+        const int vCells = ceilBottom - floorTop;
+        bool isRepeating = hCells > 1 || vCells > 1;
+
+#ifdef QT_OPENGL_ES_2
+        const QGLContext *ctx = QGLContext::currentContext();
+        bool npotSupported = ctx->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+
+        QSize size = t->textureSize();
+        bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+
+        if (isRepeating && (isSubRect || (isNpot && !npotSupported))) {
+#else
+        if (isRepeating && isSubRect) {
+#endif
+            m_geometry.allocate(hCells * vCells * 4, hCells * vCells * 6);
+            m_geometry.setDrawingMode(GL_TRIANGLES);
+            struct X { float x, tx; };
+            struct Y { float y, ty; };
+            QVarLengthArray<X, 32> xData(2 * hCells);
+            QVarLengthArray<Y, 32> yData(2 * vCells);
+            X *xs = xData.data();
+            Y *ys = yData.data();
+            
+            xs->x = m_targetRect.left();
+            xs->tx = textureRect.x() + (m_sourceRect.left() - floorLeft) * textureRect.width();
+            ++xs;
+            ys->y = m_targetRect.top();
+            ys->ty = textureRect.y() + (m_sourceRect.top() - floorTop) * textureRect.height();
+            ++ys;
+
+            float a, b;
+            b = m_targetRect.width() / m_sourceRect.width();
+            a = m_targetRect.x() - m_sourceRect.x() * b;
+            for (int i = floorLeft + 1; i <= ceilRight - 1; ++i) {
+                xs[0].x = xs[1].x = a + b * i;
+                xs[0].tx = 1;
+                xs[1].tx = 0;
+                xs += 2;
+            }
+            b = m_targetRect.height() / m_sourceRect.height();
+            a = m_targetRect.y() - m_sourceRect.y() * b;
+            for (int i = floorTop + 1; i <= ceilBottom - 1; ++i) {
+                ys[0].y = ys[1].y = a + b * i;
+                ys[0].ty = 1;
+                ys[1].ty = 0;
+                ys += 2;
+            }
+
+            xs->x = m_targetRect.right();
+            xs->tx = textureRect.x() + (m_sourceRect.right() - ceilRight + 1) * textureRect.width();
+
+            ys->y = m_targetRect.bottom();
+            ys->ty = textureRect.y() + (m_sourceRect.bottom() - ceilBottom + 1) * textureRect.height();
+
+            QSGGeometry::TexturedPoint2D *vertices = m_geometry.vertexDataAsTexturedPoint2D();
+            ys = yData.data();
+            for (int j = 0; j < vCells; ++j, ys += 2) {
+                xs = xData.data();
+                for (int i = 0; i < hCells; ++i, xs += 2) {
+                    vertices[0].x = vertices[2].x = xs[0].x;
+                    vertices[0].tx = vertices[2].tx = xs[0].tx;
+                    vertices[1].x = vertices[3].x = xs[1].x;
+                    vertices[1].tx = vertices[3].tx = xs[1].tx;
+
+                    vertices[0].y = vertices[1].y = ys[0].y;
+                    vertices[0].ty = vertices[1].ty = ys[0].ty;
+                    vertices[2].y = vertices[3].y = ys[1].y;
+                    vertices[2].ty = vertices[3].ty = ys[1].ty;
+
+                    vertices += 4;
+                }
+            }
+
+            quint16 *indices = m_geometry.indexDataAsUShort();
+            for (int i = 0; i < 4 * vCells * hCells; i += 4) {
+                *indices++ = i;
+                *indices++ = i + 2;
+                *indices++ = i + 3;
+                *indices++ = i + 3;
+                *indices++ = i + 1;
+                *indices++ = i;
+            }
+        } else {
+            QRectF sr(textureRect.x() + m_sourceRect.x() * textureRect.width(),
+                      textureRect.y() + m_sourceRect.y() * textureRect.height(),
+                      m_sourceRect.width() * textureRect.width(),
+                      m_sourceRect.height() * textureRect.height());
+
+            m_geometry.allocate(4);
+            m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
+            QSGGeometry::updateTexturedRectGeometry(&m_geometry, m_targetRect, sr);
+        }
     }
     markDirty(DirtyGeometry);
     m_dirtyGeometry = false;

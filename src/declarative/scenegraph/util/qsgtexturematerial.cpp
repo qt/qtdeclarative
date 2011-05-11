@@ -41,9 +41,16 @@
 
 #include "qsgtexturematerial_p.h"
 
-#include <qglshaderprogram.h>
+#include <QtOpenGL/qglshaderprogram.h>
+#include <QtOpenGL/qglfunctions.h>
 
 QT_BEGIN_NAMESPACE
+
+inline static bool isPowerOfTwo(int x)
+{
+    // Assumption: x >= 1
+    return x == (x & -x);
+}
 
 const char qt_scenegraph_texture_material_vertex_code[] =
     "uniform highp mat4 qt_Matrix;                      \n"
@@ -95,8 +102,19 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
     QSGTexture *t = tx->texture();
 
     t->setFiltering(tx->filtering());
-    t->setHorizontalWrapMode(tx->horizontalWrapMode());
-    t->setVerticalWrapMode(tx->verticalWrapMode());
+#ifdef QT_OPENGL_ES_2
+    bool npotSupported = state.context()->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+    QSize size = t->textureSize();
+    bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+    if (!npotSupported && isNpot) {
+        t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    } else
+#endif
+    {
+        t->setHorizontalWrapMode(tx->horizontalWrapMode());
+        t->setVerticalWrapMode(tx->verticalWrapMode());
+    }
     t->setMipmapFiltering(tx->mipmapFiltering());
 
     if (oldTx == 0 || oldTx->texture()->textureId() != t->textureId())
