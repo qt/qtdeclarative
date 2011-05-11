@@ -11,6 +11,7 @@ QtObject {
     id: root
     property MyScarceResourceObject a: MyScarceResourceObject { id: scarceResourceProvider }
     property variant scarceResourceCopy;
+    property string srp_name: a.toString();
 
     function retrieveScarceResource() {
         root.scarceResourceCopy = scarceResourceProvider.scarceResource(); // common syntax error, should throw exception

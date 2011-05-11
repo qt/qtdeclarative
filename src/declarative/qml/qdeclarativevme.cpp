@@ -59,7 +59,6 @@
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativev4bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativeglobalscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
 
 #include <QStack>
@@ -962,68 +961,67 @@ QDeclarativeCompiledData::TypeReference::createInstance(QDeclarativeContextData 
     } 
 }
 
-QScriptValue QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
+v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
 {
     if (script->m_loaded)
-        return script->m_value;
+        return v8::Persistent<v8::Object>::New(script->m_value);
 
-    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(parentCtxt->engine);
-    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(parentCtxt->engine);
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
+    QV8Engine *v8engine = &ep->v8engine;
 
     bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
 
     // Create the script context if required
-    QDeclarativeContextData *ctxt = 0;
-    if (!shared) {
-        ctxt = new QDeclarativeContextData;
-        ctxt->isInternal = true;
-        ctxt->url = script->url;
+    QDeclarativeContextData *ctxt = new QDeclarativeContextData;
+    ctxt->isInternal = true;
+    ctxt->isJSContext = true;
+    ctxt->url = script->url;
 
-        // For backward compatibility, if there are no imports, we need to use the
-        // imports from the parent context.  See QTBUG-17518.
-        if (!script->importCache->isEmpty()) {
-            ctxt->imports = script->importCache;
-        } else {
-            ctxt->imports = parentCtxt->imports;
-        }
-
-        if (ctxt->imports) {
-            ctxt->imports->addref();
-        }
-
-        ctxt->setParent(parentCtxt, true);
-
-        for (int ii = 0; ii < script->scripts.count(); ++ii)
-            ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
-    }
-
-    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
-    if (shared) {
-        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(script->url.toString())); // XXX toString()?
+    // For backward compatibility, if there are no imports, we need to use the
+    // imports from the parent context.  See QTBUG-17518.
+    if (!script->importCache->isEmpty()) {
+        ctxt->imports = script->importCache;
     } else {
-        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(ctxt, 0, script->url.toString()));
+        ctxt->imports = parentCtxt->imports;
     }
 
-    scriptContext->pushScope(enginePriv->globalClass->staticGlobalObject());
-    QScriptValue scope = QScriptDeclarativeClass::newStaticScopeObject(scriptEngine);
-    scriptContext->pushScope(scope);
-
-    scriptEngine->evaluate(script->m_program);
-
-    if (scriptEngine->hasUncaughtException()) {
-        QDeclarativeError error;
-        QDeclarativeExpressionPrivate::exceptionToError(scriptEngine, error);
-        enginePriv->warning(error);
+    if (ctxt->imports) {
+        ctxt->imports->addref();
     }
 
-    scriptEngine->popContext();
+    ctxt->setParent(parentCtxt, true);
 
+    for (int ii = 0; ii < script->scripts.count(); ++ii) {
+        ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
+    }
+
+    // XXX aakenned optimize
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(v8engine->context());
+
+    v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
+
+    v8::TryCatch try_catch;
+    script->m_program->Run(qmlglobal);
+
+    v8::Persistent<v8::Object> rv;
+    
+    if (try_catch.HasCaught()) {
+        v8::Local<v8::Message> message = try_catch.Message();
+        if (!message.IsEmpty()) {
+            QDeclarativeError error;
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+            ep->warning(error);
+        }
+    } 
+
+    rv = v8::Persistent<v8::Object>::New(qmlglobal);
     if (shared) {
+        script->m_value = v8::Persistent<v8::Object>::New(qmlglobal);
         script->m_loaded = true;
-        script->m_value = scope;
     }
 
-    return scope;
+    return rv;
 }
 
 QT_END_NAMESPACE

@@ -1353,7 +1353,9 @@ QScriptValue NestedListModel::get(int index) const
     if (!node)
         return 0;
     
+#if 0
     return QDeclarativeEnginePrivate::qmlScriptObject(node->object(this), eng);
+#endif
 }
 
 void NestedListModel::set(int index, const QScriptValue& valuemap, QList<int> *roles)

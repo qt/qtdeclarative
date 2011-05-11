@@ -53,8 +53,6 @@
 #include <private/qdeclarativeengine_p.h>
 #include "../../../shared/util.h"
 
-Q_DECLARE_METATYPE(QScriptValue)
-
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
 #define SRCDIR "."
@@ -191,13 +189,12 @@ void tst_QDeclarativeWorkerScript::messaging_sendJsObject()
     // QVariant roundtrip, since the properties will be stored in a QVariantMap.
     QString jsObject = "{'haste': 1125, 'name': 'zyz', 'spell power': 3101}";
 
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(worker));
-    QScriptValue sv = engine->newObject();
-    sv.setProperty("haste", 1125);
-    sv.setProperty("name", "zyz");
-    sv.setProperty("spell power", 3101);
+    QVariantMap map;
+    map.insert("haste", 1125);
+    map.insert("name", "zyz");
+    map.insert("spell power", 3101);
 
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, qVariantFromValue(sv))));
+    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, qVariantFromValue(map))));
     waitForEchoMessage(worker);
 
     QVariant result = qVariantFromValue(false);
@@ -261,7 +258,7 @@ void tst_QDeclarativeWorkerScript::scriptError_onLoad()
     QVERIFY(worker != 0);
 
     QTRY_COMPARE(qdeclarativeworkerscript_lastWarning,
-            TEST_FILE("data/script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Parse error"));
+            TEST_FILE("data/script_error_onLoad.js").toString() + QLatin1String(":3: SyntaxError: Unexpected identifier"));
 
     qInstallMsgHandler(previousMsgHandler);
     qApp->processEvents();

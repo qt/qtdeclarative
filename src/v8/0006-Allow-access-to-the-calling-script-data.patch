@@ -1,0 +1,48 @@
+From b14d06d5999113a9a546bf045878d6f1a24b9c69 Mon Sep 17 00:00:00 2001
+From: Aaron Kennedy <aaron.kennedy@nokia.com>
+Date: Wed, 25 May 2011 10:36:13 +1000
+Subject: [PATCH 6/7] Allow access to the calling script data
+
+---
+ include/v8.h |    1 +
+ src/api.cc   |   12 ++++++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/include/v8.h b/include/v8.h
+index 62715ec..42ddbd9 100644
+--- a/include/v8.h
++++ b/include/v8.h
+@@ -3309,6 +3309,7 @@ class V8EXPORT Context {
+    */
+   static Local<Context> GetCalling();
+   static Local<Object> GetCallingQmlGlobal();
++  static Local<Value> GetCallingScriptData();
+ 
+   /**
+    * Sets the security token for the context.  To access an object in
+diff --git a/src/api.cc b/src/api.cc
+index e2efcaa..4c3c013 100644
+--- a/src/api.cc
++++ b/src/api.cc
+@@ -3942,6 +3942,18 @@ v8::Local<v8::Object> Context::GetCallingQmlGlobal() {
+   }
+ }
+ 
++v8::Local<v8::Value> Context::GetCallingScriptData()
++{
++  i::Isolate* isolate = i::Isolate::Current();
++  if (IsDeadCheck(isolate, "v8::Context::GetCallingScriptData()")) {
++    return Local<Object>();
++  }
++
++  i::JavaScriptFrameIterator it;
++  if (it.done()) return Local<Object>();
++  i::Handle<i::Script> script(i::Script::cast(i::JSFunction::cast(it.frame()->function())->shared()->script()));
++  return Utils::ToLocal(i::Handle<i::Object>(script->data()));
++}
+ 
+ v8::Local<v8::Object> Context::Global() {
+   if (IsDeadCheck(i::Isolate::Current(), "v8::Context::Global()")) {
+-- 
+1.7.2.3
+

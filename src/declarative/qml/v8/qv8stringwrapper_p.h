@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINCLUDE_P_H
-#define QDECLARATIVEINCLUDE_P_H
+#ifndef QDECLARATIVEV8STRINGWRAPPER_P_H
+#define QDECLARATIVEV8STRINGWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -53,63 +53,24 @@
 // We mean it.
 //
 
-#include <QtCore/qobject.h>
-#include <QtCore/qurl.h>
-#include <QtScript/qscriptvalue.h>
-
-#include <private/qdeclarativecontext_p.h>
-#include <private/qdeclarativeguard_p.h>
+#include <QtCore/qstring.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QScriptContext;
-class QScriptEngine;
-class QNetworkAccessManager;
-class QNetworkReply;
-class QDeclarativeInclude : public QObject
+class Q_AUTOTEST_EXPORT QV8StringWrapper 
 {
-    Q_OBJECT
 public:
-    enum Status {
-        Ok = 0,
-        Loading = 1,
-        NetworkError = 2,
-        Exception = 3
-    };
+    QV8StringWrapper();
+    ~QV8StringWrapper();
 
-    QDeclarativeInclude(const QUrl &, QDeclarativeEngine *, QScriptContext *ctxt);
-    ~QDeclarativeInclude();
+    void init();
+    void destroy();
 
-    void setCallback(const QScriptValue &);
-    QScriptValue callback() const;
-
-    QScriptValue result() const;
-
-    static QScriptValue resultValue(QScriptEngine *, Status status = Loading);
-    static void callback(QScriptEngine *, QScriptValue &callback, QScriptValue &status);
-
-    static QScriptValue include(QScriptContext *ctxt, QScriptEngine *engine);
-    static QScriptValue worker_include(QScriptContext *ctxt, QScriptEngine *engine);
-
-public slots:
-    void finished();
-
-private:
-    QDeclarativeEngine *m_engine;
-    QScriptEngine *m_scriptEngine;
-    QNetworkAccessManager *m_network;
-    QDeclarativeGuard<QNetworkReply> m_reply;
-
-    QUrl m_url;
-    int m_redirectCount;
-    QScriptValue m_callback;
-    QScriptValue m_result;
-    QDeclarativeGuardedContextData m_context;
-    QScriptValue m_scope[2];
+    v8::Local<v8::String> toString(const QString &);
+    QString toString(v8::Handle<v8::String>);
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVEINCLUDE_P_H
-
+#endif // QDECLARATIVEV8STRINGWRAPPER_P_H 

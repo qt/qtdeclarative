@@ -41,7 +41,6 @@
 
 #include "qdeclarativev4irbuilder_p.h"
 
-#include <private/qdeclarativeglobalscriptclass_p.h> // For illegalNames
 #include <private/qdeclarativeanchors_p_p.h> // For AnchorLine
 #include <private/qsganchors_p_p.h> // For AnchorLine
 #include <private/qdeclarativetypenamecache_p.h>
@@ -437,7 +436,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
     if (name.at(0) == QLatin1Char('u') && name.length() == 9 && name == QLatin1String("undefined")) {
         _expr.code = _block->CONST(IR::UndefinedType, 0); // ### undefined value
-    } else if(m_engine->globalClass->illegalNames().contains(name) ) {
+    } else if(m_engine->v8engine.illegalNames().contains(name) ) {
         if (qmlVerboseCompiler()) qWarning() << "*** illegal symbol:" << name;
         return false;
     } else if (const QDeclarativeParser::Object *obj = m_expression->ids.value(name)) {

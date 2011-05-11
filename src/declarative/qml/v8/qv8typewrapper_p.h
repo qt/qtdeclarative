@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEGLOBALSCRIPTCLASS_P_H
-#define QDECLARATIVEGLOBALSCRIPTCLASS_P_H
+#ifndef QV8TYPEWRAPPER_P_H
+#define QV8TYPEWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -53,34 +53,40 @@
 // We mean it.
 //
 
-#include <QtScript/qscriptclass.h>
-#include <QtCore/qset.h>
+#include <QtCore/qglobal.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QDeclarativeGlobalScriptClass : public QScriptClass
+class QObject;
+class QV8Engine;
+class QDeclarativeType;
+class QDeclarativeTypeNameCache;
+class QV8TypeWrapper 
 {
 public:
-    QDeclarativeGlobalScriptClass(QScriptEngine *);
+    QV8TypeWrapper();
+    ~QV8TypeWrapper();
 
-    virtual QueryFlags queryProperty(const QScriptValue &object,
-                                     const QScriptString &name,
-                                     QueryFlags flags, uint *id);
+    void init(QV8Engine *);
+    void destroy();
 
-    virtual void setProperty(QScriptValue &object, const QScriptString &name,
-                             uint id, const QScriptValue &value);
-
-    void explicitSetProperty(const QStringList &, const QList<QScriptValue> &);
-
-    const QScriptValue &staticGlobalObject() const { return m_staticGlobalObject; }
-
-    const QSet<QString> &illegalNames() const { return m_illegalNames; }
+    enum TypeNameMode { IncludeEnums, ExcludeEnums };
+    v8::Local<v8::Object> newObject(QObject *, QDeclarativeType *, TypeNameMode = IncludeEnums);
+    v8::Local<v8::Object> newObject(QObject *, QDeclarativeTypeNameCache *, TypeNameMode = IncludeEnums);
 
 private:
-    QSet<QString> m_illegalNames;
-    QScriptValue m_staticGlobalObject;
+    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
+                                        v8::Local<v8::Value> value,
+                                        const v8::AccessorInfo &info);
+
+    QV8Engine *m_engine;
+    v8::Persistent<v8::Function> m_constructor;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVEGLOBALSCRIPTCLASS_P_H
+#endif // QV8TYPEWRAPPER_P_H
+

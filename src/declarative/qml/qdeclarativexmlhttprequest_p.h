@@ -60,8 +60,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class QScriptEngine;
-void qt_add_qmlxmlhttprequest(QScriptEngine *engine);
+class QV8Engine;
+
+void *qt_add_qmlxmlhttprequest(QV8Engine *engine);
+void qt_rem_qmlxmlhttprequest(QV8Engine *engine, void *);
 
 QT_END_NAMESPACE
 

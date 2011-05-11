@@ -60,6 +60,8 @@
 
 #include <QtScript/qscriptvalue.h>
 
+#include <private/qv8engine_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeAbstractExpression
@@ -124,7 +126,8 @@ public:
     QString expression;
 
     Mode expressionFunctionMode;
-    QScriptValue expressionFunction;
+    v8::Persistent<v8::Function> v8function;
+    v8::Persistent<v8::Object> v8qmlscope;
 
     QScriptValue expressionContext; // Only used in ExplicitContext
     QObject *scopeObject;           // Only used in SharedContext
@@ -137,7 +140,7 @@ public:
     void setEvaluateFlags(EvaluateFlags flags);
     EvaluateFlags evaluateFlags() const;
 
-    QScriptValue scriptValue(QObject *secondaryScope, bool *isUndefined);
+    v8::Local<v8::Value> v8value(QObject *secondaryScope, bool *isUndefined);
 
     class DeleteWatcher {
     public:
@@ -152,7 +155,7 @@ public:
 
 private:
     void clearGuards();
-    QScriptValue eval(QObject *secondaryScope, bool *isUndefined);
+    v8::Local<v8::Value> eval(QObject *secondaryScope, bool *isUndefined);
     void updateGuards(const QPODVector<QDeclarativeEnginePrivate::CapturedProperty> &properties);
 
     bool trackChange;
@@ -180,11 +183,12 @@ public:
     ~QDeclarativeExpressionPrivate();
 
     void init(QDeclarativeContextData *, const QString &, QObject *);
-    void init(QDeclarativeContextData *, const QScriptValue &, QObject *);
+    void init(QDeclarativeContextData *, v8::Handle<v8::Function>, QObject *);
     void init(QDeclarativeContextData *, void *, QDeclarativeRefCount *, QObject *, const QString &, int);
 
     QVariant value(QObject *secondaryScope = 0, bool *isUndefined = 0);
-    QScriptValue scriptValue(QObject *secondaryScope = 0, bool *isUndefined = 0);
+
+    v8::Local<v8::Value> v8value(QObject *secondaryScope = 0, bool *isUndefined = 0);
 
     static QDeclarativeExpressionPrivate *get(QDeclarativeExpression *expr) {
         return static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr));
@@ -197,10 +201,15 @@ public:
     virtual void emitValueChanged();
 
     static void exceptionToError(QScriptEngine *, QDeclarativeError &);
+    static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
     static QScriptValue evalInObjectScope(QDeclarativeContextData *, QObject *, const QString &, const QString &,
                                           int, QScriptValue *);
     static QScriptValue evalInObjectScope(QDeclarativeContextData *, QObject *, const QScriptProgram &, 
                                           QScriptValue *);
+
+    static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
+                                                     const QString &code, const QString &filename, int line,
+                                                     v8::Persistent<v8::Object> *qmlscope = 0);
 
     bool expressionFunctionValid:1;
 

@@ -154,7 +154,7 @@ public:
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContextData *, QObject *parent=0);
     QDeclarativeBinding(void *, QDeclarativeRefCount *, QObject *, QDeclarativeContextData *, 
                         const QString &, int, QObject *parent);
-    QDeclarativeBinding(const QScriptValue &, QObject *, QDeclarativeContextData *, QObject *parent=0);
+    QDeclarativeBinding(void *, QObject *, QDeclarativeContextData *, QObject *parent=0);
 
     void setTarget(const QDeclarativeProperty &);
     QDeclarativeProperty property() const;

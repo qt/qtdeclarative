@@ -47,100 +47,20 @@
 #include "private/qdeclarativeengine_p.h"
 
 #include <QtCore/qobject.h>
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptvalueiterator.h>
-#include <QtScript/qscriptcontext.h>
-#include <QtScript/qscriptengine.h>
-#include <QtScript/qscriptclasspropertyiterator.h>
 #include <QtSql/qsqldatabase.h>
 #include <QtSql/qsqlquery.h>
 #include <QtSql/qsqlerror.h>
 #include <QtSql/qsqlrecord.h>
+#include <QtGui/qdesktopservices.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qsettings.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qdebug.h>
 
-Q_DECLARE_METATYPE(QSqlDatabase)
-Q_DECLARE_METATYPE(QSqlQuery)
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QDeclarativeSqlQueryScriptClass: public QScriptClass {
-public:
-    QDeclarativeSqlQueryScriptClass(QScriptEngine *engine) : QScriptClass(engine)
-    {
-        str_length = engine->toStringHandle(QLatin1String("length"));
-        str_forwardOnly = engine->toStringHandle(QLatin1String("forwardOnly")); // not in HTML5 (an optimization)
-    }
-
-    QueryFlags queryProperty(const QScriptValue &,
-                             const QScriptString &name,
-                             QueryFlags flags, uint *)
-    {
-        if (flags & HandlesReadAccess) {
-            if (name == str_length) {
-                return HandlesReadAccess;
-            } else if (name == str_forwardOnly) {
-                return flags;
-            }
-        }
-        if (flags & HandlesWriteAccess)
-            if (name == str_forwardOnly)
-                return flags;
-        return 0;
-    }
-
-    QScriptValue property(const QScriptValue &object,
-                          const QScriptString &name, uint)
-    {
-        QSqlQuery query = qscriptvalue_cast<QSqlQuery>(object.data());
-        if (name == str_length) {
-            int s = query.size();
-            if (s<0) {
-                // Inefficient.
-                if (query.last()) {
-                    return query.at()+1;
-                } else {
-                    return 0;
-                }
-            } else {
-                return s;
-            }
-        } else if (name == str_forwardOnly) {
-            return query.isForwardOnly();
-        }
-        return engine()->undefinedValue();
-    }
-
-    void setProperty(QScriptValue &object,
-                      const QScriptString &name, uint, const QScriptValue & value)
-    {
-        if (name == str_forwardOnly) {
-            QSqlQuery query = qscriptvalue_cast<QSqlQuery>(object.data());
-            query.setForwardOnly(value.toBool());
-        }
-    }
-
-    QScriptValue::PropertyFlags propertyFlags(const QScriptValue &/*object*/, const QScriptString &name, uint /*id*/)
-    {
-        if (name == str_length) {
-            return QScriptValue::Undeletable
-                | QScriptValue::SkipInEnumeration;
-        }
-        return QScriptValue::Undeletable;
-    }
-
-private:
-    QScriptString str_length;
-    QScriptString str_forwardOnly;
-};
-
-// If the spec changes to allow iteration, check git history...
-// class QDeclarativeSqlQueryScriptClassPropertyIterator : public QScriptClassPropertyIterator
-
-
 
 enum SqlException {
     UNKNOWN_ERR,
@@ -165,90 +85,227 @@ static const char* sqlerror[] = {
     0
 };
 
-#define THROW_SQL(error, desc) \
+#define THROW_SQL(error, desc)
+
+#define V8THROW_SQL(error, desc) \
 { \
-    QScriptValue errorValue = context->throwError(desc); \
-    errorValue.setProperty(QLatin1String("code"), error); \
-    return errorValue; \
+    v8::Local<v8::Value> v = v8::Exception::Error(engine->toString(desc)); \
+    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
+    v8::ThrowException(v); \
+    return v8::Handle<v8::Value>(); \
 }
 
-static QString qmlsqldatabase_databasesPath(QScriptEngine *engine)
+#define V8THROW_REFERENCE(string) { \
+    v8::ThrowException(v8::Exception::ReferenceError(v8::String::New(string))); \
+    return v8::Handle<v8::Value>(); \
+}
+
+#define V8THROW_REFERENCE_VOID(string) { \
+    v8::ThrowException(v8::Exception::ReferenceError(v8::String::New(string))); \
+    return; \
+}
+
+struct QDeclarativeSqlDatabaseData {
+    QDeclarativeSqlDatabaseData(QV8Engine *engine);
+    ~QDeclarativeSqlDatabaseData();
+
+    QString offlineStoragePath;
+    v8::Persistent<v8::Function> constructor;
+    v8::Persistent<v8::Function> queryConstructor;
+    v8::Persistent<v8::Function> rowsConstructor;
+
+    static inline QDeclarativeSqlDatabaseData *data(QV8Engine *e) {
+        return (QDeclarativeSqlDatabaseData *)e->sqlDatabaseData();
+    }
+    static inline QDeclarativeSqlDatabaseData *data(void *d) {
+        return (QDeclarativeSqlDatabaseData *)d;
+    }
+};
+
+class QV8SqlDatabaseResource : public QV8ObjectResource
 {
-    QDeclarativeScriptEngine *qmlengine = static_cast<QDeclarativeScriptEngine*>(engine);
-    return qmlengine->offlineStoragePath
-            + QDir::separator() + QLatin1String("Databases");
+    V8_RESOURCE_TYPE(SQLDatabaseType)
+
+public:
+    enum Type { Database, Query, Rows };
+
+    QV8SqlDatabaseResource(QV8Engine *e) 
+    : QV8ObjectResource(e), type(Database), inTransaction(false), readonly(false), forwardOnly(false) {}
+
+    Type type;
+    QSqlDatabase database;
+
+    QString version; // type == Database
+
+    bool inTransaction; // type == Query
+    bool readonly;   // type == Query
+
+    QSqlQuery query; // type == Rows
+    bool forwardOnly; // type == Rows
+};
+
+static v8::Handle<v8::Value> qmlsqldatabase_version(v8::Local<v8::String> property, const v8::AccessorInfo& info)
+{
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Database)
+        V8THROW_REFERENCE("Not a SQLDatabase object");
+
+    return r->engine->toString(r->version);
 }
 
-static void qmlsqldatabase_initDatabasesPath(QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_rows_length(v8::Local<v8::String> property, const v8::AccessorInfo& info)
+{
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Rows)
+        V8THROW_REFERENCE("Not a SQLDatabase::Rows object");
+
+    int s = r->query.size();
+    if (s < 0) {
+        // Inefficient
+        if (r->query.last()) {
+            s = r->query.at() + 1;
+        } else {
+            s = 0;
+        }
+    }
+    return v8::Integer::New(s);
+}
+
+static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Local<v8::String> property, 
+                                                             const v8::AccessorInfo& info)
+{
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Rows) 
+        V8THROW_REFERENCE("Not a SQLDatabase::Rows object");
+
+    return v8::Boolean::New(r->query.isForwardOnly());
+}
+
+static void qmlsqldatabase_rows_setForwardOnly(v8::Local<v8::String> property,
+                                               v8::Local<v8::Value> value,
+                                               const v8::AccessorInfo& info)
+{
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Rows)
+        V8THROW_REFERENCE_VOID("Not a SQLDatabase::Rows object");
+
+    r->query.setForwardOnly(value->BooleanValue());
+}
+
+QDeclarativeSqlDatabaseData::~QDeclarativeSqlDatabaseData()
+{
+    constructor.Dispose(); constructor = v8::Persistent<v8::Function>();
+    queryConstructor.Dispose(); queryConstructor = v8::Persistent<v8::Function>();
+}
+
+static QString qmlsqldatabase_databasesPath(QV8Engine *engine)
+{
+    return QDeclarativeSqlDatabaseData::data(engine)->offlineStoragePath +
+           QDir::separator() + QLatin1String("Databases");
+}
+
+static void qmlsqldatabase_initDatabasesPath(QV8Engine *engine)
 {
     QDir().mkpath(qmlsqldatabase_databasesPath(engine));
 }
 
-static QString qmlsqldatabase_databaseFile(const QString& connectionName, QScriptEngine *engine)
+static QString qmlsqldatabase_databaseFile(const QString& connectionName, QV8Engine *engine)
 {
-    return qmlsqldatabase_databasesPath(engine) + QDir::separator()
-            + connectionName;
+    return qmlsqldatabase_databasesPath(engine) + QDir::separator() + connectionName;
 }
 
-
-static QScriptValue qmlsqldatabase_item(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_rows_index(QV8SqlDatabaseResource *r, uint32_t index)
 {
-    QSqlQuery query = qscriptvalue_cast<QSqlQuery>(context->thisObject().data());
-    int i = context->argument(0).toNumber();
-    if (query.at() == i || query.seek(i)) { // Qt 4.6 doesn't optimize seek(at())
-        QSqlRecord r = query.record();
-        QScriptValue row = engine->newObject();
-        for (int j=0; j<r.count(); ++j) {
-            row.setProperty(r.fieldName(j), QScriptValue(engine,r.value(j).toString()));
+    if (r->query.at() == index || r->query.seek(index)) {
+
+        QSqlRecord record = r->query.record();
+        // XXX optimize
+        v8::Local<v8::Object> row = v8::Object::New();
+        for (int ii = 0; ii < record.count(); ++ii) {
+            row->Set(r->engine->toString(record.fieldName(ii)), 
+                     r->engine->toString(record.value(ii).toString()));
         }
         return row;
+    } else {
+        return v8::Undefined();
     }
-    return engine->undefinedValue();
 }
 
-static QScriptValue qmlsqldatabase_executeSql_outsidetransaction(QScriptContext *context, QScriptEngine * /*engine*/)
+static v8::Handle<v8::Value> qmlsqldatabase_rows_index(uint32_t index, const v8::AccessorInfo& info)
 {
-    THROW_SQL(DATABASE_ERR,QDeclarativeEngine::tr("executeSql called outside transaction()"));
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Rows)
+        V8THROW_REFERENCE("Not a SQLDatabase::Rows object");
+
+    return qmlsqldatabase_rows_index(r, index);
 }
 
-static QScriptValue qmlsqldatabase_executeSql(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_rows_item(const v8::Arguments& args)
 {
-    QSqlDatabase db = qscriptvalue_cast<QSqlDatabase>(context->thisObject());
-    QString sql = context->argument(0).toString();
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(args.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Rows)
+        V8THROW_REFERENCE("Not a SQLDatabase::Rows object");
+
+    return qmlsqldatabase_rows_index(r, args.Length()?args[0]->Uint32Value():0);
+}
+
+static v8::Handle<v8::Value> qmlsqldatabase_executeSql(const v8::Arguments& args)
+{
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(args.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Query)
+        V8THROW_REFERENCE("Not a SQLDatabase::Query object");
+
+    QV8Engine *engine = r->engine;
+
+    if (!r->inTransaction)
+        V8THROW_SQL(DATABASE_ERR,QDeclarativeEngine::tr("executeSql called outside transaction()"));
+
+    QSqlDatabase db = r->database;
+
+    QString sql = engine->toString(args[0]);
+
+    if (r->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
+        V8THROW_SQL(SYNTAX_ERR, QDeclarativeEngine::tr("Read-only Transaction"));
+    }
+
     QSqlQuery query(db);
     bool err = false;
 
-    QScriptValue result;
+    v8::Handle<v8::Value> result = v8::Undefined();
 
     if (query.prepare(sql)) {
-        if (context->argumentCount() > 1) {
-            QScriptValue values = context->argument(1);
-            if (values.isObject()) {
-                if (values.isArray()) {
-                    int size = values.property(QLatin1String("length")).toInt32();
-                    for (int i = 0; i < size; ++i)
-                        query.bindValue(i, values.property(i).toVariant());
-                } else {
-                    for (QScriptValueIterator it(values); it.hasNext();) {
-                        it.next();
-                        query.bindValue(it.name(),it.value().toVariant());
-                    }
-                }
+        if (args.Length() > 1) {
+            v8::Local<v8::Value> values = args[1];
+            if (values->IsArray()) {
+                v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(values);
+                uint32_t size = array->Length();
+                for (uint32_t ii = 0; ii < size; ++ii) 
+                    query.bindValue(ii, engine->toVariant(array->Get(ii), -1));
+            } else if (values->IsObject() && !values->ToObject()->GetExternalResource()) {
+                v8::Local<v8::Object> object = values->ToObject();
+                v8::Local<v8::Array> names = object->GetPropertyNames();
+                uint32_t size = names->Length();
+                for (uint32_t ii = 0; ii < size; ++ii) 
+                    query.bindValue(engine->toString(names->Get(ii)), 
+                                    engine->toVariant(object->Get(names->Get(ii)), -1));
             } else {
-                query.bindValue(0,values.toVariant());
+                query.bindValue(0, engine->toVariant(values, -1));
             }
         }
         if (query.exec()) {
-            result = engine->newObject();
-            QDeclarativeScriptEngine *qmlengine = static_cast<QDeclarativeScriptEngine*>(engine);
-            if (!qmlengine->sqlQueryClass)
-                qmlengine->sqlQueryClass = new QDeclarativeSqlQueryScriptClass(engine);
-            QScriptValue rows = engine->newObject(qmlengine->sqlQueryClass);
-            rows.setData(engine->newVariant(QVariant::fromValue(query)));
-            rows.setProperty(QLatin1String("item"), engine->newFunction(qmlsqldatabase_item,1), QScriptValue::SkipInEnumeration);
-            result.setProperty(QLatin1String("rows"),rows);
-            result.setProperty(QLatin1String("rowsAffected"),query.numRowsAffected());
-            result.setProperty(QLatin1String("insertId"),query.lastInsertId().toString());
+            v8::Handle<v8::Object> rows = QDeclarativeSqlDatabaseData::data(engine)->rowsConstructor->NewInstance();
+            QV8SqlDatabaseResource *r = new QV8SqlDatabaseResource(engine);
+            r->type = QV8SqlDatabaseResource::Rows;
+            r->database = db;
+            r->query = query;
+            rows->SetExternalResource(r);
+
+            v8::Local<v8::Object> resultObject = v8::Object::New();
+            result = resultObject;
+            // XXX optimize
+            resultObject->Set(v8::String::New("rowsAffected"), v8::Integer::New(query.numRowsAffected()));
+            resultObject->Set(v8::String::New("insertId"), engine->toString(query.lastInsertId().toString()));
+            resultObject->Set(v8::String::New("rows"), rows);
         } else {
             err = true;
         }
@@ -256,117 +313,138 @@ static QScriptValue qmlsqldatabase_executeSql(QScriptContext *context, QScriptEn
         err = true;
     }
     if (err)
-        THROW_SQL(DATABASE_ERR,query.lastError().text());
+        V8THROW_SQL(DATABASE_ERR,query.lastError().text());
+
     return result;
 }
 
-static QScriptValue qmlsqldatabase_executeSql_readonly(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_changeVersion(const v8::Arguments& args)
 {
-    QString sql = context->argument(0).toString();
-    if (sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
-        return qmlsqldatabase_executeSql(context,engine);
-    } else {
-        THROW_SQL(SYNTAX_ERR,QDeclarativeEngine::tr("Read-only Transaction"))
-    }
-}
+    if (args.Length() < 2)
+        return v8::Undefined();
 
-static QScriptValue qmlsqldatabase_change_version(QScriptContext *context, QScriptEngine *engine)
-{
-    if (context->argumentCount() < 2)
-        return engine->undefinedValue();
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(args.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Database)
+        V8THROW_REFERENCE("Not a SQLDatabase object");
 
-    QSqlDatabase db = qscriptvalue_cast<QSqlDatabase>(context->thisObject());
-    QString from_version = context->argument(0).toString();
-    QString to_version = context->argument(1).toString();
-    QScriptValue callback = context->argument(2);
+    QV8Engine *engine = r->engine;
 
-    QScriptValue instance = engine->newObject();
-    instance.setProperty(QLatin1String("executeSql"), engine->newFunction(qmlsqldatabase_executeSql,1));
-    QScriptValue tx = engine->newVariant(instance,QVariant::fromValue(db));
+    QSqlDatabase db = r->database;
+    QString from_version = engine->toString(args[0]);
+    QString to_version = engine->toString(args[1]);
+    v8::Handle<v8::Value> callback = args[2];
 
-    QString foundvers = context->thisObject().property(QLatin1String("version")).toString();
-    if (from_version!=foundvers) {
-        THROW_SQL(VERSION_ERR,QDeclarativeEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(foundvers));
-        return engine->undefinedValue();
-    }
+    if (from_version != r->version) 
+        V8THROW_SQL(VERSION_ERR, QDeclarativeEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(r->version));
+
+    v8::Local<v8::Object> instance = QDeclarativeSqlDatabaseData::data(engine)->queryConstructor->NewInstance();
+    QV8SqlDatabaseResource *r2 = new QV8SqlDatabaseResource(engine);
+    r2->type = QV8SqlDatabaseResource::Query;
+    r2->database = db;
+    r2->version = r->version;
+    r2->inTransaction = true;
+    instance->SetExternalResource(r2);
 
     bool ok = true;
-    if (callback.isFunction()) {
+    if (callback->IsFunction()) {
         ok = false;
         db.transaction();
-        callback.call(QScriptValue(), QScriptValueList() << tx);
-        if (engine->hasUncaughtException()) {
+
+        v8::TryCatch tc;
+        v8::Handle<v8::Value> callbackArgs[] = { instance };
+        v8::Handle<v8::Function>::Cast(callback)->Call(engine->global(), 1, callbackArgs);
+
+        if (tc.HasCaught()) {
             db.rollback();
+            tc.ReThrow();
+            return v8::Handle<v8::Value>();
+        } else if (!db.commit()) {
+            db.rollback();
+            V8THROW_SQL(UNKNOWN_ERR,QDeclarativeEngine::tr("SQL transaction failed"));
         } else {
-            if (!db.commit()) {
-                db.rollback();
-                THROW_SQL(UNKNOWN_ERR,QDeclarativeEngine::tr("SQL transaction failed"));
-            } else {
-                ok = true;
-            }
+            ok = true;
         }
     }
 
+    r2->inTransaction = false;
+
     if (ok) {
-        context->thisObject().setProperty(QLatin1String("version"), to_version, QScriptValue::ReadOnly);
+        r2->version = to_version;
 #ifndef QT_NO_SETTINGS
         QSettings ini(qmlsqldatabase_databaseFile(db.connectionName(),engine) + QLatin1String(".ini"), QSettings::IniFormat);
         ini.setValue(QLatin1String("Version"), to_version);
 #endif
     }
 
-    return engine->undefinedValue();
+    return v8::Undefined();
 }
 
-static QScriptValue qmlsqldatabase_transaction_shared(QScriptContext *context, QScriptEngine *engine, bool readOnly)
+static v8::Handle<v8::Value> qmlsqldatabase_transaction_shared(const v8::Arguments& args, bool readOnly)
 {
-    QSqlDatabase db = qscriptvalue_cast<QSqlDatabase>(context->thisObject());
-    QScriptValue callback = context->argument(0);
-    if (!callback.isFunction())
-        THROW_SQL(UNKNOWN_ERR,QDeclarativeEngine::tr("transaction: missing callback"));
+    QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(args.This());
+    if (!r || r->type != QV8SqlDatabaseResource::Database)
+        V8THROW_REFERENCE("Not a SQLDatabase object");
 
-    QScriptValue instance = engine->newObject();
-    instance.setProperty(QLatin1String("executeSql"),
-        engine->newFunction(readOnly ? qmlsqldatabase_executeSql_readonly : qmlsqldatabase_executeSql,1));
-    QScriptValue tx = engine->newVariant(instance,QVariant::fromValue(db));
+    QV8Engine *engine = r->engine;
+
+    if (args.Length() == 0 || !args[0]->IsFunction())
+        V8THROW_SQL(UNKNOWN_ERR,QDeclarativeEngine::tr("transaction: missing callback"));
+    
+    QSqlDatabase db = r->database;
+    v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[0]);
+
+    v8::Local<v8::Object> instance = QDeclarativeSqlDatabaseData::data(engine)->queryConstructor->NewInstance();
+    QV8SqlDatabaseResource *q = new QV8SqlDatabaseResource(engine);
+    q->type = QV8SqlDatabaseResource::Query;
+    q->database = db;
+    q->readonly = readOnly;
+    q->inTransaction = true;
+    instance->SetExternalResource(q);
 
     db.transaction();
-    callback.call(QScriptValue(), QScriptValueList() << tx);
-    instance.setProperty(QLatin1String("executeSql"),
-        engine->newFunction(qmlsqldatabase_executeSql_outsidetransaction));
-    if (engine->hasUncaughtException()) {
+    v8::TryCatch tc;
+    v8::Handle<v8::Value> callbackArgs[] = { instance };
+    callback->Call(engine->global(), 1, callbackArgs);
+
+    q->inTransaction = false;
+
+    if (tc.HasCaught()) {
         db.rollback();
-    } else {
-        if (!db.commit())
-            db.rollback();
+        tc.ReThrow();
+        return v8::Handle<v8::Value>();
+    } else if (!db.commit()) {
+        db.rollback();
     }
-    return engine->undefinedValue();
+
+    return v8::Undefined();
 }
 
-static QScriptValue qmlsqldatabase_transaction(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_transaction(const v8::Arguments& args)
 {
-    return qmlsqldatabase_transaction_shared(context,engine,false);
+    return qmlsqldatabase_transaction_shared(args, false);
 }
-static QScriptValue qmlsqldatabase_read_transaction(QScriptContext *context, QScriptEngine *engine)
+
+static v8::Handle<v8::Value> qmlsqldatabase_read_transaction(const v8::Arguments& args)
 {
-    return qmlsqldatabase_transaction_shared(context,engine,true);
+    return qmlsqldatabase_transaction_shared(args, true);
 }
 
 /*
     Currently documented in doc/src/declarative/globalobject.qdoc
 */
-static QScriptValue qmlsqldatabase_open_sync(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlsqldatabase_open_sync(const v8::Arguments& args)
 {
 #ifndef QT_NO_SETTINGS
+    QV8Engine *engine = V8ENGINE();
     qmlsqldatabase_initDatabasesPath(engine);
 
     QSqlDatabase database;
 
-    QString dbname = context->argument(0).toString();
-    QString dbversion = context->argument(1).toString();
-    QString dbdescription = context->argument(2).toString();
-    int dbestimatedsize = context->argument(3).toNumber();
-    QScriptValue dbcreationCallback = context->argument(4);
+    QString dbname = engine->toString(args[0]);
+    QString dbversion = engine->toString(args[1]);
+    QString dbdescription = engine->toString(args[2]);
+    int dbestimatedsize = args[3]->Int32Value();
+    v8::Handle<v8::Value> dbcreationCallback = args[4];
 
     QCryptographicHash md5(QCryptographicHash::Md5);
     md5.addData(dbname.toUtf8());
@@ -383,13 +461,13 @@ static QScriptValue qmlsqldatabase_open_sync(QScriptContext *context, QScriptEng
             database = QSqlDatabase::database(dbid);
             version = ini.value(QLatin1String("Version")).toString();
             if (version != dbversion && !dbversion.isEmpty() && !version.isEmpty())
-                THROW_SQL(VERSION_ERR,QDeclarativeEngine::tr("SQL: database version mismatch"));
+                V8THROW_SQL(VERSION_ERR, QDeclarativeEngine::tr("SQL: database version mismatch"));
         } else {
             created = !QFile::exists(basename+QLatin1String(".sqlite"));
             database = QSqlDatabase::addDatabase(QLatin1String("QSQLITE"), dbid);
             if (created) {
                 ini.setValue(QLatin1String("Name"), dbname);
-                if (dbcreationCallback.isFunction())
+                if (dbcreationCallback->IsFunction())
                     version = QString();
                 ini.setValue(QLatin1String("Version"), version);
                 ini.setValue(QLatin1String("Description"), dbdescription);
@@ -398,7 +476,7 @@ static QScriptValue qmlsqldatabase_open_sync(QScriptContext *context, QScriptEng
             } else {
                 if (!dbversion.isEmpty() && ini.value(QLatin1String("Version")) != dbversion) {
                     // Incompatible
-                    THROW_SQL(VERSION_ERR,QDeclarativeEngine::tr("SQL: database version mismatch"));
+                    V8THROW_SQL(VERSION_ERR,QDeclarativeEngine::tr("SQL: database version mismatch"));
                 }
                 version = ini.value(QLatin1String("Version")).toString();
             }
@@ -408,35 +486,96 @@ static QScriptValue qmlsqldatabase_open_sync(QScriptContext *context, QScriptEng
             database.open();
     }
 
-    QScriptValue instance = engine->newObject();
-    instance.setProperty(QLatin1String("transaction"), engine->newFunction(qmlsqldatabase_transaction,1));
-    instance.setProperty(QLatin1String("readTransaction"), engine->newFunction(qmlsqldatabase_read_transaction,1));
-    instance.setProperty(QLatin1String("version"), version, QScriptValue::ReadOnly);
-    instance.setProperty(QLatin1String("changeVersion"), engine->newFunction(qmlsqldatabase_change_version,3));
+    v8::Local<v8::Object> instance = QDeclarativeSqlDatabaseData::data(engine)->constructor->NewInstance();
+    QV8SqlDatabaseResource *r = new QV8SqlDatabaseResource(engine);
+    r->database = database;
+    r->version = version;
+    instance->SetExternalResource(r);
 
-    QScriptValue result = engine->newVariant(instance,QVariant::fromValue(database));
-
-    if (created && dbcreationCallback.isFunction()) {
-        dbcreationCallback.call(QScriptValue(), QScriptValueList() << result);
+    if (created && dbcreationCallback->IsFunction()) {
+        v8::TryCatch tc;
+        v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(dbcreationCallback);
+        v8::Handle<v8::Value> args[] = { instance };
+        callback->Call(engine->global(), 1, args);
+        if (tc.HasCaught()) {
+            tc.ReThrow();
+            return v8::Handle<v8::Value>();
+        }
     }
 
-    return result;
+    return instance;
 #else
-    return engine->undefinedValue();
+    return v8::Undefined();
 #endif // QT_NO_SETTINGS
 }
 
-void qt_add_qmlsqldatabase(QScriptEngine *engine)
+QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
 {
-    QScriptValue openDatabase = engine->newFunction(qmlsqldatabase_open_sync, 4);
-    engine->globalObject().setProperty(QLatin1String("openDatabaseSync"), openDatabase);
+    QString dataLocation = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator()) +
+                         QDir::separator() + QLatin1String("QML") +
+                         QDir::separator() + QLatin1String("OfflineStorage");
 
-    QScriptValue sqlExceptionPrototype = engine->newObject();
+    {
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->Set(v8::String::New("transaction"), 
+                                 V8FUNCTION(qmlsqldatabase_transaction, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("readTransaction"), 
+                                 V8FUNCTION(qmlsqldatabase_read_transaction, engine));
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("version"), qmlsqldatabase_version);
+    ft->PrototypeTemplate()->Set(v8::String::New("changeVersion"), 
+                                 V8FUNCTION(qmlsqldatabase_changeVersion, engine));
+    constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    }
+
+    {
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->Set(v8::String::New("executeSql"), 
+                                 V8FUNCTION(qmlsqldatabase_executeSql, engine));
+    queryConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    }
+    {
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->Set(v8::String::New("item"), V8FUNCTION(qmlsqldatabase_rows_item, engine));
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("length"), qmlsqldatabase_rows_length);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("forwardOnly"), qmlsqldatabase_rows_forwardOnly, 
+                                        qmlsqldatabase_rows_setForwardOnly);
+    ft->InstanceTemplate()->SetIndexedPropertyHandler(qmlsqldatabase_rows_index);
+    rowsConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    }
+}
+
+void *qt_add_qmlsqldatabase(QV8Engine *engine)
+{
+    v8::Local<v8::Function> openDatabase = V8FUNCTION(qmlsqldatabase_open_sync, engine);
+    engine->global()->Set(v8::String::New("openDatabaseSync"), openDatabase);
+
+    v8::PropertyAttribute attributes = (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum | v8::DontDelete);
+    v8::Local<v8::Object> sqlExceptionPrototype = v8::Object::New();
     for (int i=0; sqlerror[i]; ++i)
-        sqlExceptionPrototype.setProperty(QLatin1String(sqlerror[i]),
-            i,QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
+        sqlExceptionPrototype->Set(v8::String::New(sqlerror[i]), v8::Integer::New(i), attributes);
+    engine->global()->Set(v8::String::New("SQLException"), sqlExceptionPrototype);
 
-    engine->globalObject().setProperty(QLatin1String("SQLException"), sqlExceptionPrototype);
+    return (void *)new QDeclarativeSqlDatabaseData(engine);
+}
+
+void qt_rem_qmlsqldatabase(QV8Engine *engine, void *d)
+{
+    QDeclarativeSqlDatabaseData *data = (QDeclarativeSqlDatabaseData *)d;
+    delete data;
+}
+
+void qt_qmlsqldatabase_setOfflineStoragePath(QV8Engine *engine, const QString &path)
+{
+    QDeclarativeSqlDatabaseData::data(engine)->offlineStoragePath = path;
+}
+
+QString qt_qmlsqldatabase_getOfflineStoragePath(const QV8Engine *engine)
+{
+    return QDeclarativeSqlDatabaseData::data(const_cast<QV8Engine *>(engine))->offlineStoragePath;
 }
 
 /*

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVECONTEXTSCRIPTCLASS_P_H
-#define QDECLARATIVECONTEXTSCRIPTCLASS_P_H
+#ifndef QV8VARIANTWRAPPER_P_H
+#define QV8VARIANTWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -53,54 +53,49 @@
 // We mean it.
 //
 
-#include "private/qdeclarativetypenamecache_p.h"
-#include <private/qscriptdeclarativeclass_p.h>
+#include <QtCore/qglobal.h>
+#include <QtDeclarative/qdeclarativelist.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QDeclarativeContext;
-class QDeclarativeContextData;
-class QDeclarativeContextScriptClass : public QScriptDeclarativeClass
+class QV8Engine;
+class QV8ObjectResource;
+class QV8VariantWrapper 
 {
 public:
-    QDeclarativeContextScriptClass(QDeclarativeEngine *);
-    ~QDeclarativeContextScriptClass();
+    QV8VariantWrapper();
+    ~QV8VariantWrapper();
 
-    QScriptValue newContext(QDeclarativeContextData *, QObject * = 0);
-    QScriptValue newUrlContext(QDeclarativeContextData *, QObject *, const QString &);
-    QScriptValue newUrlContext(const QString &);
-    QScriptValue newSharedContext();
+    void init(QV8Engine *);
+    void destroy();
 
-    QDeclarativeContextData *contextFromValue(const QScriptValue &);
-    QUrl urlFromValue(const QScriptValue &);
-
-    QObject *setOverrideObject(QScriptValue &, QObject *);
-
-protected:
-    virtual QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, 
-                                                   QScriptClass::QueryFlags flags);
-    virtual Value property(Object *, const Identifier &);
-    virtual void setProperty(Object *, const Identifier &name, const QScriptValue &);
+    v8::Local<v8::Object> newVariant(const QVariant &);
+    bool isVariant(v8::Handle<v8::Value>);
+    QVariant toVariant(v8::Handle<v8::Object>);
+    QVariant toVariant(QV8ObjectResource *);
 
 private:
-    QScriptClass::QueryFlags queryProperty(QDeclarativeContextData *, QObject *scopeObject, 
-                                           const Identifier &,
-                                           QScriptClass::QueryFlags flags,
-                                           bool includeTypes);
+    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
+                                        v8::Local<v8::Value> value,
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> PreserveGetter(v8::Local<v8::String> property, 
+                                                const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> DestroyGetter(v8::Local<v8::String> property, 
+                                               const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Preserve(const v8::Arguments &args);
+    static v8::Handle<v8::Value> Destroy(const v8::Arguments &args);
 
-    QDeclarativeEngine *engine;
-
-    QObject *lastScopeObject;
-    QDeclarativeContextData *lastContext;
-    QDeclarativeTypeNameCache::Data *lastData;
-    int lastPropertyIndex;
-    QScriptValue lastFunction;
-
-    uint m_id;
+    QV8Engine *m_engine;
+    v8::Persistent<v8::Function> m_constructor;
+    v8::Persistent<v8::Function> m_scarceConstructor;
+    v8::Persistent<v8::Function> m_preserve;
+    v8::Persistent<v8::Function> m_destroy;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVECONTEXTSCRIPTCLASS_P_H
+#endif // QV8VARIANTWRAPPER_P_H
 

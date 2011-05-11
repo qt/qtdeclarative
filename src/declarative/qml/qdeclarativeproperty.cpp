@@ -1503,7 +1503,7 @@ QDeclarativePropertyPrivate::restore(const QDeclarativePropertyCache::Data &data
     prop.d = new QDeclarativePropertyPrivate;
     prop.d->object = object;
     prop.d->context = ctxt;
-    prop.d->engine = ctxt->engine;
+    prop.d->engine = ctxt?ctxt->engine:0;
 
     prop.d->core = data;
     prop.d->valueType = valueType;

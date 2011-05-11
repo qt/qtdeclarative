@@ -383,7 +383,7 @@ QDeclarativeVMEMetaObject::QDeclarativeVMEMetaObject(QObject *obj,
                                                      const QDeclarativeVMEMetaData *meta,
                                                      QDeclarativeCompiledData *cdata)
 : object(obj), compiledData(cdata), ctxt(QDeclarativeData::get(obj, true)->outerContext),
-  metaData(meta), data(0), methods(0), parent(0)
+  metaData(meta), data(0), v8methods(0), parent(0)
 {
     compiledData->addref();
 
@@ -418,7 +418,9 @@ QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
     compiledData->release();
     delete parent;
     delete [] data;
-    delete [] methods;
+
+    for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii)
+        v8methods[ii].Dispose();
 }
 
 int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
@@ -649,26 +651,34 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(ctxt->engine);
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-                QScriptValue function = method(id);
-
-                QScriptValueList args;
+                // XXX aakenned
+                v8::Handle<v8::Function> function = method(id);
                 QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + id;
+
+                v8::HandleScope handle_scope;
+                v8::Context::Scope scope(ep->v8engine.context());
+                v8::Handle<v8::Value> *args = 0;
+
                 if (data->parameterCount) {
-                    for (int ii = 0; ii < data->parameterCount; ++ii) {
-                        args << ep->scriptValueFromVariant(*(QVariant *)a[ii + 1]);
-                    }
+                    args = new v8::Handle<v8::Value>[data->parameterCount];
+                    for (int ii = 0; ii < data->parameterCount; ++ii) 
+                        args[ii] = ep->v8engine.fromVariant(*(QVariant *)a[ii + 1]);
                 }
 
-                QScriptValue rv = function.call(ep->objectClass->newQObject(object), args);
-                if (ep->scriptEngine.hasUncaughtException()) {
+                v8::TryCatch try_catch;
+
+                v8::Local<v8::Value> result = function->Call(ep->v8engine.global(), data->parameterCount, args);
+
+                QVariant rv;
+                if (try_catch.HasCaught()) {
                     QDeclarativeError error;
-                    QDeclarativeExpressionPrivate::exceptionToError(&ep->scriptEngine, error);
-                    if (error.isValid()) {
+                    QDeclarativeExpressionPrivate::exceptionToError(try_catch.Message(), error);
+                    if (error.isValid())
                         ep->warning(error);
-                    }
+                    if (a[0]) *(QVariant *)a[0] = QVariant();
+                } else {
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine.toVariant(result, 0);
                 }
-
-                if (a[0]) *reinterpret_cast<QVariant *>(a[0]) = ep->scriptValueToVariant(rv);
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
                 return -1;
@@ -683,12 +693,12 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
         return object->qt_metacall(c, _id, a);
 }
 
-QScriptValue QDeclarativeVMEMetaObject::method(int index)
+v8::Handle<v8::Function> QDeclarativeVMEMetaObject::method(int index)
 {
-    if (!methods) 
-        methods = new QScriptValue[metaData->methodCount];
+    if (!v8methods) 
+        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
 
-    if (!methods[index].isValid()) {
+    if (v8methods[index].IsEmpty()) {
         QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + index;
 
         const QChar *body = 
@@ -696,17 +706,17 @@ QScriptValue QDeclarativeVMEMetaObject::method(int index)
 
         QString code = QString::fromRawData(body, data->bodyLength);
 
-        // XXX Use QScriptProgram
         // XXX We should evaluate all methods in a single big script block to 
         // improve the call time between dynamic methods defined on the same
         // object
-        methods[index] = QDeclarativeExpressionPrivate::evalInObjectScope(ctxt, object, code, ctxt->url.toString(),
-                                                                          data->lineNumber, 0);
+        v8methods[index] = QDeclarativeExpressionPrivate::evalFunction(ctxt, object, code, ctxt->url.toString(),
+                                                                       data->lineNumber);
     }
 
-    return methods[index];
+    return v8methods[index];
 }
 
+#if 0
 QScriptValue QDeclarativeVMEMetaObject::readVarProperty(int id)
 {
     if (data[id].dataType() == qMetaTypeId<QScriptValue>())
@@ -716,22 +726,28 @@ QScriptValue QDeclarativeVMEMetaObject::readVarProperty(int id)
     else
         return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueFromVariant(data[id].asQVariant());
 }
+#endif
 
 QVariant QDeclarativeVMEMetaObject::readVarPropertyAsVariant(int id)
 {
+#if 0
     if (data[id].dataType() == qMetaTypeId<QScriptValue>())
         return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueToVariant(data[id].asQScriptValue());
-    else if (data[id].dataType() == QMetaType::QObjectStar) 
+    else 
+#endif
+    if (data[id].dataType() == QMetaType::QObjectStar) 
         return QVariant::fromValue(data[id].asQObject());
     else 
         return data[id].asQVariant();
 }
 
+#if 0
 void QDeclarativeVMEMetaObject::writeVarProperty(int id, const QScriptValue &value)
 {
     data[id].setValue(value);
     activate(object, methodOffset + id, 0);
 }
+#endif
 
 void QDeclarativeVMEMetaObject::writeVarProperty(int id, const QVariant &value)
 {
@@ -803,7 +819,7 @@ int QDeclarativeVMEMetaObject::vmeMethodLineNumber(int index)
     return data->lineNumber;
 }
 
-QScriptValue QDeclarativeVMEMetaObject::vmeMethod(int index)
+v8::Handle<v8::Function> QDeclarativeVMEMetaObject::vmeMethod(int index)
 {
     if (index < methodOffset) {
         Q_ASSERT(parent);
@@ -814,6 +830,7 @@ QScriptValue QDeclarativeVMEMetaObject::vmeMethod(int index)
     return method(index - methodOffset - plainSignals);
 }
 
+// Used by debugger
 void QDeclarativeVMEMetaObject::setVmeMethod(int index, const QScriptValue &value)
 {
     if (index < methodOffset) {
@@ -823,11 +840,14 @@ void QDeclarativeVMEMetaObject::setVmeMethod(int index, const QScriptValue &valu
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset + plainSignals) && index < (methodOffset + plainSignals + metaData->methodCount));
 
+#if 0
     if (!methods) 
         methods = new QScriptValue[metaData->methodCount];
     methods[index - methodOffset - plainSignals] = value;
+#endif
 }
 
+#if 0
 QScriptValue QDeclarativeVMEMetaObject::vmeProperty(int index)
 {
     if (index < propOffset) {
@@ -845,6 +865,7 @@ void QDeclarativeVMEMetaObject::setVMEProperty(int index, const QScriptValue &v)
     }
     return writeVarProperty(index - propOffset, v);
 }
+#endif
 
 bool QDeclarativeVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const
 {

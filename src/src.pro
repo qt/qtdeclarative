@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS += declarative plugins
+SUBDIRS += v8 declarative plugins
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
 SUBDIRS += imports

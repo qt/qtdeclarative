@@ -60,6 +60,7 @@ class QByteArray;
 class QDeclarativeComponentPrivate;
 class QDeclarativeEngine;
 class QDeclarativeComponentAttached;
+class QDeclarativeV8Function;
 class Q_DECLARATIVE_EXPORT QDeclarativeComponent : public QObject
 {
     Q_OBJECT
@@ -110,8 +111,7 @@ Q_SIGNALS:
 
 protected:
     QDeclarativeComponent(QDeclarativeComponentPrivate &dd, QObject* parent);
-    Q_INVOKABLE QScriptValue createObject(QObject* parent);
-    Q_INVOKABLE Q_REVISION(1) QScriptValue createObject(QObject* parent, const QScriptValue& valuemap); //XXX Versioning
+    Q_INVOKABLE void createObject(QDeclarativeV8Function *);
 
 private:
     QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, QObject *parent);

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVETYPENAMESCRIPTCLASS_P_H
-#define QDECLARATIVETYPENAMESCRIPTCLASS_P_H
+#ifndef QV8INCLUDE_P_H
+#define QV8INCLUDE_P_H
 
 //
 //  W A R N I N G
@@ -52,42 +52,62 @@
 //
 // We mean it.
 //
-#include "private/qdeclarativeengine_p.h"
 
-#include <private/qscriptdeclarativeclass_p.h>
-#include <QtScript/qscriptclass.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qurl.h>
+
+#include <private/qdeclarativecontext_p.h>
+#include <private/qdeclarativeguard_p.h>
+
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
-class QDeclarativeType;
-class QDeclarativeTypeNameCache;
-class QDeclarativeTypeNameScriptClass : public QScriptDeclarativeClass
+class QNetworkAccessManager;
+class QNetworkReply;
+class QV8Engine;
+class QV8Include : public QObject
 {
+    Q_OBJECT
 public:
-    QDeclarativeTypeNameScriptClass(QDeclarativeEngine *);
-    ~QDeclarativeTypeNameScriptClass();
+    enum Status {
+        Ok = 0,
+        Loading = 1,
+        NetworkError = 2,
+        Exception = 3
+    };
 
-    enum TypeNameMode { IncludeEnums, ExcludeEnums };
-    QScriptValue newObject(QObject *, QDeclarativeType *, TypeNameMode = IncludeEnums);
-    QScriptValue newObject(QObject *, QDeclarativeTypeNameCache *, TypeNameMode = IncludeEnums);
+    static v8::Handle<v8::Value> include(const v8::Arguments &args);
 
-protected:
-    virtual QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, 
-                                                   QScriptClass::QueryFlags flags);
-
-    virtual Value property(Object *, const Identifier &);
-    virtual void setProperty(Object *, const Identifier &name, const QScriptValue &);
+private slots:
+    void finished();
 
 private:
-    QDeclarativeEngine *engine;
-    QObject *object;
-    QDeclarativeType *type;
-    QDeclarativeMetaType::ModuleApiInstance *api;
-    quint32 enumValue;
+    QV8Include(const QUrl &, QV8Engine *, QDeclarativeContextData *,
+               v8::Handle<v8::Object>, v8::Handle<v8::Function>);
+    ~QV8Include();
+
+    v8::Handle<v8::Object> result();
+
+    static v8::Local<v8::Object> resultValue(Status status = Loading);
+    static void callback(QV8Engine *engine, v8::Handle<v8::Function> callback, v8::Handle<v8::Object> status);
+
+    QV8Engine *m_engine;
+    QNetworkAccessManager *m_network;
+    QDeclarativeGuard<QNetworkReply> m_reply;
+
+    QUrl m_url;
+    int m_redirectCount;
+
+    v8::Persistent<v8::Function> m_callbackFunction;
+    v8::Persistent<v8::Object> m_resultObject;
+
+    QDeclarativeGuardedContextData m_context;
+    v8::Persistent<v8::Object> m_qmlglobal;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVETYPENAMESCRIPTCLASS_P_H
+#endif // QV8INCLUDE_P_H
 

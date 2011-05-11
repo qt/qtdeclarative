@@ -287,8 +287,8 @@ public:
 
     void polish();
 
-    Q_INVOKABLE QScriptValue mapFromItem(const QScriptValue &item, qreal x, qreal y) const;
-    Q_INVOKABLE QScriptValue mapToItem(const QScriptValue &item, qreal x, qreal y) const;
+    Q_INVOKABLE void mapFromItem(QDeclarativeV8Function*) const;
+    Q_INVOKABLE void mapToItem(QDeclarativeV8Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE QSGItem *childAt(qreal x, qreal y) const;
 

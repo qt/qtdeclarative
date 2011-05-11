@@ -46,7 +46,6 @@
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativerewrite_p.h"
 #include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativeglobalscriptclass_p.h"
 
 #include <QtCore/qdebug.h>
 #include <QtScript/qscriptprogram.h>
@@ -79,6 +78,11 @@ QDeclarativeQtScriptExpression::QDeclarativeQtScriptExpression()
 
 QDeclarativeQtScriptExpression::~QDeclarativeQtScriptExpression()
 {
+    v8function.Dispose();
+    v8qmlscope.Dispose();
+    v8function = v8::Persistent<v8::Function>();
+    v8qmlscope = v8::Persistent<v8::Function>();
+
     if (guardList) { delete [] guardList; guardList = 0; }
     if (dataRef) dataRef->release();
     if (deleted) *deleted = true;
@@ -103,15 +107,16 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QS
     expressionFunctionValid = false;
 }
 
-void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QScriptValue &func,
+void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Handle<v8::Function> func,
                                          QObject *me)
 {
-    expression = func.toString();
+    // XXX aakenned
+    // expression = func.toString();
 
     QDeclarativeAbstractExpression::setContext(ctxt);
     scopeObject = me;
 
-    expressionFunction = func;
+    v8function = v8::Persistent<v8::Function>::New(func);
     expressionFunctionMode = ExplicitContext;
     expressionFunctionValid = true;
 }
@@ -123,7 +128,8 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, void *ex
     url = srcUrl;
     line = lineNumber;
 
-    if (dataRef) dataRef->release();
+    Q_ASSERT(!dataRef);
+
     dataRef = rc;
     if (dataRef) dataRef->addref();
 
@@ -136,45 +142,42 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, void *ex
     bool isSharedProgram = progIdx & 0x80000000;
     progIdx &= 0x7FFFFFFF;
 
-    QDeclarativeEngine *engine = ctxt->engine;
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(engine);
+    v8function = evalFunction(ctxt, me, expression, url, line, &v8qmlscope);
 
-    if (isSharedProgram) {
-
-        if (!dd->cachedClosures.at(progIdx)) {
-            QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
-            scriptContext->pushScope(ep->contextClass->newSharedContext());
-            scriptContext->pushScope(ep->globalClass->staticGlobalObject());
-            dd->cachedClosures[progIdx] = new QScriptValue(scriptEngine->evaluate(expression, url, line));
-            scriptEngine->popContext();
-        }
-
-        expressionFunction = *dd->cachedClosures.at(progIdx);
-        expressionFunctionMode = SharedContext;
-        expressionFunctionValid = true;
-
-    } else {
-
-        if (!dd->cachedPrograms.at(progIdx)) {
-            dd->cachedPrograms[progIdx] = new QScriptProgram(expression, url, line);
-        }
-
-        expressionFunction = evalInObjectScope(ctxt, me, *dd->cachedPrograms.at(progIdx), 
-                                                     &expressionContext);
-
-        expressionFunctionMode = ExplicitContext;
-        expressionFunctionValid = true;
-    }
+    expressionFunctionMode = ExplicitContext;
+    expressionFunctionValid = true;
 
     QDeclarativeAbstractExpression::setContext(ctxt);
     scopeObject = me;
+}
+
+// Callee owns the persistent handle
+v8::Persistent<v8::Function> 
+QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
+                                            const QString &code, const QString &filename, int line,
+                                            v8::Persistent<v8::Object> *qmlscope)
+{
+    QDeclarativeEngine *engine = ctxt->engine;
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+
+    // XXX aakenned optimize
+    v8::HandleScope handle_scope;
+    v8::Context::Scope ctxtscope(ep->v8engine.context());
+    
+    // XXX try/catch?
+
+    v8::Local<v8::Object> scopeobject = ep->v8engine.qmlScope(ctxt, scope);
+    v8::Local<v8::Script> script = ep->v8engine.qmlModeCompile(code, filename, line);
+    v8::Local<v8::Value> result = script->Run(scopeobject);
+    if (qmlscope) *qmlscope = v8::Persistent<v8::Object>::New(scopeobject);
+    return v8::Persistent<v8::Function>::New(v8::Local<v8::Function>::Cast(result));
 }
 
 QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContextData *context, QObject *object, 
                                                               const QString &program, const QString &fileName,
                                                               int lineNumber, QScriptValue *contextObject)
 {
+#if 0
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
     QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(&ep->scriptEngine);
     if (contextObject) {
@@ -187,12 +190,16 @@ QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContex
     QScriptValue rv = ep->scriptEngine.evaluate(program, fileName, lineNumber);
     ep->scriptEngine.popContext();
     return rv;
+#else
+    qFatal("Not impl");
+#endif
 }
 
 QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContextData *context, QObject *object, 
                                                               const QScriptProgram &program, 
                                                               QScriptValue *contextObject)
 {
+#if 0
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
     QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(&ep->scriptEngine);
     if (contextObject) {
@@ -205,6 +212,9 @@ QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContex
     QScriptValue rv = ep->scriptEngine.evaluate(program);
     ep->scriptEngine.popContext();
     return rv;
+#else
+    qFatal("Not impl");
+#endif
 }
 
 /*!
@@ -317,16 +327,26 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QO
     d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
-/*!  \internal */
-QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QObject *scope, const QScriptValue &func,
+/*!  
+    \internal 
+
+    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
+    For example:
+        v8::Handle<v8::Function> function;
+        new QDeclarativeExpression(ctxt, scope, &function, ...);
+ */
+QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QObject *scope, void *functionPtr,
                        QDeclarativeExpressionPrivate &dd)
 : QObject(dd, 0)
 {
+    v8::Handle<v8::Function> function = *(v8::Handle<v8::Function> *)functionPtr;
+
     Q_D(QDeclarativeExpression);
-    d->init(ctxt, func, scope);
+    d->init(ctxt, function, scope);
 
     if (QDeclarativeExpression_notifyIdx == -1)
         QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
+
     d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
 
@@ -377,34 +397,43 @@ void QDeclarativeExpression::setExpression(const QString &expression)
     d->resetNotifyOnChange();
     d->expression = expression;
     d->expressionFunctionValid = false;
-    d->expressionFunction = QScriptValue();
+    d->v8function.Dispose();
+    d->v8qmlscope.Dispose();
+    d->v8function = v8::Persistent<v8::Function>();
+    d->v8qmlscope = v8::Persistent<v8::Function>();
+}
+
+void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> message, 
+                                                     QDeclarativeError &error)
+{
+    Q_ASSERT(!message.IsEmpty());
+
+    v8::Handle<v8::Value> name = message->GetScriptResourceName();
+    v8::Handle<v8::String> description = message->Get();
+    int lineNumber = message->GetLineNumber();
+
+    Q_ASSERT(name->IsString());
+
+    v8::Local<v8::String> file = name->ToString();
+    if (file->Length() == 0) 
+        error.setUrl(QUrl(QLatin1String("<Unknown File>")));
+    else 
+        error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
+
+    error.setLine(lineNumber);
+    error.setColumn(-1);
+
+    QString qDescription = QV8Engine::toStringStatic(description);
+    if (qDescription.startsWith(QLatin1String("Uncaught ")))
+        qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
+
+    error.setDescription(qDescription);
 }
 
 void QDeclarativeExpressionPrivate::exceptionToError(QScriptEngine *scriptEngine, 
-                                            QDeclarativeError &error)
+                                                     QDeclarativeError &error)
 {
-    if (scriptEngine->hasUncaughtException() && 
-        scriptEngine->uncaughtException().isError()) {
-
-        QString fileName;
-        int lineNumber = scriptEngine->uncaughtExceptionLineNumber();
-
-        QScriptValue exception = scriptEngine->uncaughtException();
-        QLatin1String fileNameProp("fileName");
-
-        if (!exception.property(fileNameProp).toString().isEmpty()){
-            fileName = exception.property(fileNameProp).toString();
-        } else {
-            fileName = QLatin1String("<Unknown File>");
-        }
-
-        error.setUrl(QUrl(fileName));
-        error.setLine(lineNumber);
-        error.setColumn(-1);
-        error.setDescription(exception.toString());
-    } else {
-        error = QDeclarativeError();
-    }
+    qFatal("Not implemented - we use v8 now");
 }
 
 bool QDeclarativeQtScriptExpression::notifyOnValueChange() const
@@ -448,14 +477,14 @@ QDeclarativeQtScriptExpression::EvaluateFlags QDeclarativeQtScriptExpression::ev
     return evalFlags;
 }
 
-QScriptValue QDeclarativeQtScriptExpression::scriptValue(QObject *secondaryScope, bool *isUndefined)
+v8::Local<v8::Value> QDeclarativeQtScriptExpression::v8value(QObject *secondaryScope, bool *isUndefined)
 {
     Q_ASSERT(context() && context()->engine);
     Q_ASSERT(!trackChange || (guardObject && guardObjectNotifyIndex != -1));
 
-    if (!expressionFunction.isValid()) {
+    if (v8function.IsEmpty() || v8function->IsUndefined()) {
         if (isUndefined) *isUndefined = true;
-        return QScriptValue();
+        return v8::Local<v8::Value>();
     }
 
     DeleteWatcher watcher(this);
@@ -467,7 +496,7 @@ QScriptValue QDeclarativeQtScriptExpression::scriptValue(QObject *secondaryScope
     ep->captureProperties = trackChange;
     ep->capturedProperties.copyAndClear(lastCapturedProperties);
 
-    QScriptValue value = eval(secondaryScope, isUndefined);
+    v8::Local<v8::Value> value = eval(secondaryScope, isUndefined);
 
     if (!watcher.wasDeleted() && trackChange) {
         if (ep->capturedProperties.count() == 0) {
@@ -487,59 +516,52 @@ QScriptValue QDeclarativeQtScriptExpression::scriptValue(QObject *secondaryScope
     return value;
 }
 
-QScriptValue QDeclarativeQtScriptExpression::eval(QObject *secondaryScope, bool *isUndefined)
+v8::Local<v8::Value> QDeclarativeQtScriptExpression::eval(QObject *secondaryScope, bool *isUndefined)
 {
     Q_ASSERT(context() && context()->engine);
-
     DeleteWatcher watcher(this);
 
     QDeclarativeEngine *engine = context()->engine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
-    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(engine);
+    QObject *restoreSecondaryScope = 0;
+    if (secondaryScope) 
+        restoreSecondaryScope = ep->v8engine.contextWrapper()->setSecondaryScope(v8qmlscope, secondaryScope);
 
-    QDeclarativeContextData *oldSharedContext = 0;
-    QObject *oldSharedScope = 0;
-    QObject *oldOverride = 0;
-    bool isShared = (expressionFunctionMode == SharedContext);
+    v8::TryCatch try_catch;
+    v8::Context::Scope scope(ep->v8engine.context()); // XXX is this needed?
 
-    if (isShared) {
-        oldSharedContext = ep->sharedContext;
-        oldSharedScope = ep->sharedScope;
-        ep->sharedContext = context();
-        ep->sharedScope = scopeObject;
-    } else {
-        oldOverride = ep->contextClass->setOverrideObject(expressionContext, secondaryScope);
+    v8::Handle<v8::Object> This;
+
+    if (evaluateFlags() & RequiresThisObject) {
+        v8::Handle<v8::Value> value = ep->v8engine.newQObject(scopeObject);
+        if (value->IsObject()) This = v8::Handle<v8::Object>::Cast(value);
+    }
+    if (This.IsEmpty()) {
+        This = ep->v8engine.global();
     }
 
-    QScriptValue thisObject;
-    if (evalFlags & RequiresThisObject)
-        thisObject = ep->objectClass->newQObject(scopeObject);
-    QScriptValue svalue = expressionFunction.call(thisObject); // This could cause this c++ object to be deleted
+    v8::Local<v8::Value> result = v8function->Call(This, 0, 0);
 
-    if (isShared) {
-        ep->sharedContext = oldSharedContext;
-        ep->sharedScope = oldSharedScope;
-    } else if (!watcher.wasDeleted()) {
-        ep->contextClass->setOverrideObject(expressionContext, oldOverride);
-    }
+    if (secondaryScope) 
+        ep->v8engine.contextWrapper()->setSecondaryScope(v8qmlscope, restoreSecondaryScope);
 
     if (isUndefined)
-        *isUndefined = svalue.isUndefined() || scriptEngine->hasUncaughtException();
+        *isUndefined = try_catch.HasCaught() || result->IsUndefined();
 
-    // Handle exception
-    if (scriptEngine->hasUncaughtException()) {
-        if (!watcher.wasDeleted()) 
-           QDeclarativeExpressionPrivate::exceptionToError(scriptEngine, error);
-
-       scriptEngine->clearExceptions();
-       return QScriptValue();
-    } else {
-        if (!watcher.wasDeleted())
+    if (watcher.wasDeleted()) {
+    } else if (try_catch.HasCaught()) {
+        v8::Local<v8::Message> message = try_catch.Message();
+        if (!message.IsEmpty()) {
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+        } else {
             error = QDeclarativeError();
-
-        return svalue;
+        }
+    } else {
+        error = QDeclarativeError();
     }
+
+    return result;
 }
 
 void QDeclarativeQtScriptExpression::updateGuards(const QPODVector<QDeclarativeEnginePrivate::CapturedProperty> &properties)
@@ -625,31 +647,23 @@ void QDeclarativeQtScriptExpression::updateGuards(const QPODVector<QDeclarativeE
     }
 }
 
-QScriptValue QDeclarativeExpressionPrivate::scriptValue(QObject *secondaryScope, bool *isUndefined)
+// Must be called with a valid handle scope
+v8::Local<v8::Value> QDeclarativeExpressionPrivate::v8value(QObject *secondaryScope, bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         QDeclarativeEngine *engine = context()->engine;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-        QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(engine);
-
-        QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
-        expressionContext = ep->contextClass->newContext(context(), scopeObject);
-        scriptContext->pushScope(expressionContext);
-        scriptContext->pushScope(ep->globalClass->staticGlobalObject());
 
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
         rewriteBinding.setName(name);
         bool ok = true;
         const QString code = rewriteBinding(expression, &ok);
-        if (ok) 
-            expressionFunction = scriptEngine->evaluate(code, url, line);
-
-        scriptEngine->popContext();
+        if (ok) v8function = evalFunction(context(), scopeObject, code, url, line, &v8qmlscope);
         expressionFunctionMode = ExplicitContext;
         expressionFunctionValid = true;
     }
 
-    return QDeclarativeQtScriptExpression::scriptValue(secondaryScope, isUndefined);
+    return QDeclarativeQtScriptExpression::v8value(secondaryScope, isUndefined);
 }
 
 QVariant QDeclarativeExpressionPrivate::value(QObject *secondaryScope, bool *isUndefined)
@@ -662,10 +676,19 @@ QVariant QDeclarativeExpressionPrivate::value(QObject *secondaryScope, bool *isU
     }
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(q->engine());
+    QVariant rv;
+
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-    QVariant retn(ep->scriptValueToVariant(scriptValue(secondaryScope, isUndefined), qMetaTypeId<QList<QObject*> >()));
+
+    {
+        v8::HandleScope handle_scope;
+        v8::Local<v8::Value> result = v8value(secondaryScope, isUndefined);
+        rv = ep->v8engine.toVariant(result, qMetaTypeId<QList<QObject*> >());
+    }
+
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-    return retn;
+
+    return rv;
 }
 
 /*!

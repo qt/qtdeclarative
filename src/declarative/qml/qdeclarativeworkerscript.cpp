@@ -58,6 +58,8 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include "qdeclarativenetworkaccessmanagerfactory.h"
 
+#include <private/qv8engine_p.h>
+#include <private/qv8worker_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,15 +68,15 @@ class WorkerDataEvent : public QEvent
 public:
     enum Type { WorkerData = QEvent::User };
 
-    WorkerDataEvent(int workerId, const QVariant &data);
+    WorkerDataEvent(int workerId, const QByteArray &data);
     virtual ~WorkerDataEvent();
 
     int workerId() const;
-    QVariant data() const;
+    QByteArray data() const;
 
 private:
     int m_id;
-    QVariant m_data;
+    QByteArray m_data;
 };
 
 class WorkerLoadEvent : public QEvent
@@ -128,27 +130,28 @@ public:
 
     QDeclarativeWorkerScriptEnginePrivate(QDeclarativeEngine *eng);
 
-    struct ScriptEngine : public QDeclarativeScriptEngine
+    class WorkerEngine : public QV8Engine
     {
-        ScriptEngine(QDeclarativeWorkerScriptEnginePrivate *parent) : QDeclarativeScriptEngine(0), p(parent), accessManager(0) {}
-        ~ScriptEngine() { delete accessManager; }
-        QDeclarativeWorkerScriptEnginePrivate *p;
-        QNetworkAccessManager *accessManager;
+    public:
+        WorkerEngine(QDeclarativeWorkerScriptEnginePrivate *parent);
+        ~WorkerEngine();
 
-        virtual QNetworkAccessManager *networkAccessManager() {
-            if (!accessManager) {
-                if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
-                    accessManager = p->qmlengine->networkAccessManagerFactory()->create(this);
-                } else {
-                    accessManager = new QNetworkAccessManager(this);
-                }
-            }
-            return accessManager;
-        }
+        void init();
+        virtual QNetworkAccessManager *networkAccessManager();
+
+        QDeclarativeWorkerScriptEnginePrivate *p;
+
+        v8::Local<v8::Function> sendFunction(int id);
+        void callOnMessage(v8::Handle<v8::Object> object, v8::Handle<v8::Value> arg);
+    private:
+        v8::Persistent<v8::Function> onmessage;
+        v8::Persistent<v8::Function> createsend;
+        QNetworkAccessManager *accessManager;
     };
-    ScriptEngine *workerEngine;
-    static QDeclarativeWorkerScriptEnginePrivate *get(QScriptEngine *e) {
-        return static_cast<ScriptEngine *>(e)->p;
+
+    WorkerEngine *workerEngine;
+    static QDeclarativeWorkerScriptEnginePrivate *get(QV8Engine *e) {
+        return static_cast<WorkerEngine *>(e)->p;
     }
 
     QDeclarativeEngine *qmlengine;
@@ -158,26 +161,21 @@ public:
 
     struct WorkerScript {
         WorkerScript();
+        ~WorkerScript();
 
         int id;
         QUrl source;
         bool initialized;
         QDeclarativeWorkerScript *owner;
-        QScriptValue object;
-
-        QScriptValue callback;
+        v8::Persistent<v8::Object> object;
     };
 
     QHash<int, WorkerScript *> workers;
-    QScriptValue getWorker(int);
+    v8::Handle<v8::Object> getWorker(WorkerScript *);
 
     int m_nextId;
 
-    static QVariant scriptValueToVariant(const QScriptValue &);
-    static QScriptValue variantToScriptValue(const QVariant &, QScriptEngine *);
-
-    static QScriptValue onMessage(QScriptContext *ctxt, QScriptEngine *engine);
-    static QScriptValue sendMessage(QScriptContext *ctxt, QScriptEngine *engine);
+    static v8::Handle<v8::Value> sendMessage(const v8::Arguments &args);
 
 signals:
     void stopThread();
@@ -186,75 +184,133 @@ protected:
     virtual bool event(QEvent *);
 
 private:
-    void processMessage(int, const QVariant &);
+    void processMessage(int, const QByteArray &);
     void processLoad(int, const QUrl &);
-    void reportScriptException(WorkerScript *);
+    void reportScriptException(WorkerScript *, const QDeclarativeError &error);
 };
+
+QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QDeclarativeWorkerScriptEnginePrivate *parent) 
+: p(parent), accessManager(0) 
+{
+}
+
+QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine() 
+{ 
+    createsend.Dispose(); createsend.Clear();
+    onmessage.Dispose(); onmessage.Clear();
+    delete accessManager; 
+}
+
+void QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::init()
+{
+    QV8Engine::init(0);
+
+#define CALL_ONMESSAGE_SCRIPT \
+    "(function(object, message) { "\
+        "var isfunction = false; "\
+        "try { "\
+            "isfunction = object.WorkerScript.onMessage instanceof Function; "\
+        "} catch (e) {}" \
+        "if (isfunction) "\
+            "object.WorkerScript.onMessage(message); "\
+    "})"
+
+#define SEND_MESSAGE_CREATE_SCRIPT \
+    "(function(method, engine) { "\
+        "return (function(id) { "\
+            "return (function(message) { "\
+                "if (arguments.length) method(engine, id, message); "\
+            "}); "\
+        "}); "\
+    "})"
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(context());
+
+    {
+    v8::Local<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
+    onmessage = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(onmessagescript->Run()));
+    }
+    {
+    v8::Local<v8::Script> createsendscript = v8::Script::New(v8::String::New(SEND_MESSAGE_CREATE_SCRIPT));
+    v8::Local<v8::Function> createsendconstructor = v8::Local<v8::Function>::Cast(createsendscript->Run());
+
+    v8::Handle<v8::Value> args[] = { 
+        V8FUNCTION(QDeclarativeWorkerScriptEnginePrivate::sendMessage, this)
+    };
+    v8::Local<v8::Value> createsendvalue = createsendconstructor->Call(global(), 1, args);
+    
+    createsend = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(createsendvalue));
+    }
+}
+
+// Requires handle and context scope
+v8::Local<v8::Function> QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
+{
+    v8::Handle<v8::Value> args[] = { v8::Integer::New(id) };
+    return v8::Local<v8::Function>::Cast(createsend->Call(global(), 1, args));
+}
+
+// Requires handle and context scope
+void QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::callOnMessage(v8::Handle<v8::Object> object, 
+                                                                        v8::Handle<v8::Value> arg)
+{
+    v8::Handle<v8::Value> args[] = { object, arg };
+    onmessage->Call(global(), 2, args);
+}
+
+QNetworkAccessManager *QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager() 
+{
+    if (!accessManager) {
+        if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
+            accessManager = p->qmlengine->networkAccessManagerFactory()->create(p);
+        } else {
+            accessManager = new QNetworkAccessManager(p);
+        }
+    }
+    return accessManager;
+}
 
 QDeclarativeWorkerScriptEnginePrivate::QDeclarativeWorkerScriptEnginePrivate(QDeclarativeEngine *engine)
 : workerEngine(0), qmlengine(engine), m_nextId(0)
 {
 }
 
-QScriptValue QDeclarativeWorkerScriptEnginePrivate::onMessage(QScriptContext *ctxt, QScriptEngine *engine)
+v8::Handle<v8::Value> QDeclarativeWorkerScriptEnginePrivate::sendMessage(const v8::Arguments &args)
 {
-    QDeclarativeWorkerScriptEnginePrivate *p = QDeclarativeWorkerScriptEnginePrivate::get(engine);
+    WorkerEngine *engine = (WorkerEngine*)V8ENGINE();
 
-    int id = ctxt->thisObject().data().toVariant().toInt();
+    int id = args[1]->Int32Value();
 
-    WorkerScript *script = p->workers.value(id);
+    QByteArray data = QV8Worker::serialize(args[2], engine);
+
+    QMutexLocker(&engine->p->m_lock);
+    WorkerScript *script = engine->p->workers.value(id);
     if (!script)
-        return engine->undefinedValue();
-
-    if (ctxt->argumentCount() >= 1) 
-        script->callback = ctxt->argument(0);
-
-    return script->callback;
-}
-
-QScriptValue QDeclarativeWorkerScriptEnginePrivate::sendMessage(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if (!ctxt->argumentCount())
-        return engine->undefinedValue();
-
-    QDeclarativeWorkerScriptEnginePrivate *p = QDeclarativeWorkerScriptEnginePrivate::get(engine);
-
-    int id = ctxt->thisObject().data().toVariant().toInt();
-
-    WorkerScript *script = p->workers.value(id);
-    if (!script)
-        return engine->undefinedValue();
-
-    QMutexLocker(&p->m_lock);
+        return v8::Undefined();
 
     if (script->owner)
-        QCoreApplication::postEvent(script->owner,
-                                    new WorkerDataEvent(0, scriptValueToVariant(ctxt->argument(0))));
+        QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    return engine->undefinedValue();
+    return v8::Undefined();
 }
 
-QScriptValue QDeclarativeWorkerScriptEnginePrivate::getWorker(int id)
+// Requires handle scope and context scope
+v8::Handle<v8::Object> QDeclarativeWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
 {
-    QHash<int, WorkerScript *>::ConstIterator iter = workers.find(id);
-
-    if (iter == workers.end())
-        return workerEngine->nullValue();
-
-    WorkerScript *script = *iter;
     if (!script->initialized) {
-
         script->initialized = true;
-        script->object = workerEngine->newObject();
 
-        QScriptValue api = workerEngine->newObject();
-        api.setData(script->id);
+        script->object = v8::Persistent<v8::Object>::New(workerEngine->contextWrapper()->urlScope(script->source));
 
-        api.setProperty(QLatin1String("onMessage"), workerEngine->newFunction(onMessage),
-                        QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        api.setProperty(QLatin1String("sendMessage"), workerEngine->newFunction(sendMessage));
+        workerEngine->contextWrapper()->setReadOnly(script->object, false);
 
-        script->object.setProperty(QLatin1String("WorkerScript"), api);
+        v8::Local<v8::Object> api = v8::Object::New();
+        api->Set(v8::String::New("sendMessage"), workerEngine->sendFunction(script->id));
+
+        script->object->Set(v8::String::New("WorkerScript"), api);
+
+        workerEngine->contextWrapper()->setReadOnly(script->object, true);
     }
 
     return script->object;
@@ -262,6 +318,7 @@ QScriptValue QDeclarativeWorkerScriptEnginePrivate::getWorker(int id)
 
 bool QDeclarativeWorkerScriptEnginePrivate::event(QEvent *event)
 {
+    // XXX must handle remove request
     if (event->type() == (QEvent::Type)WorkerDataEvent::WorkerData) {
         WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
         processMessage(workerEvent->workerId(), workerEvent->data());
@@ -278,22 +335,24 @@ bool QDeclarativeWorkerScriptEnginePrivate::event(QEvent *event)
     }
 }
 
-void QDeclarativeWorkerScriptEnginePrivate::processMessage(int id, const QVariant &data)
+void QDeclarativeWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &data)
 {
     WorkerScript *script = workers.value(id);
     if (!script)
         return;
 
-    if (script->callback.isFunction()) {
-        QScriptValue args = workerEngine->newArray(1);
-        args.setProperty(0, variantToScriptValue(data, workerEngine));
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(workerEngine->context());
 
-        script->callback.call(script->object, args);
+    v8::Handle<v8::Value> value = QV8Worker::deserialize(data, workerEngine);
 
-        if (workerEngine->hasUncaughtException()) {
-            reportScriptException(script);
-            workerEngine->clearExceptions();
-        }
+    v8::TryCatch tc;
+    workerEngine->callOnMessage(script->object, value);
+
+    if (tc.HasCaught()) {
+        QDeclarativeError error;
+        QDeclarativeExpressionPrivate::exceptionToError(tc.Message(), error);
+        reportScriptException(script, error);
     }
 }
 
@@ -308,44 +367,41 @@ void QDeclarativeWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (f.open(QIODevice::ReadOnly)) {
         QByteArray data = f.readAll();
         QString sourceCode = QString::fromUtf8(data);
-
-        QScriptValue activation = getWorker(id);
-
-        QScriptContext *ctxt = QScriptDeclarativeClass::pushCleanContext(workerEngine);
-        QScriptValue urlContext = workerEngine->newObject();
-        urlContext.setData(QScriptValue(workerEngine, url.toString()));
-        ctxt->pushScope(urlContext);
-        ctxt->pushScope(activation);
-        ctxt->setActivationObject(activation);
         QDeclarativeScriptParser::extractPragmas(sourceCode);
 
-        workerEngine->baseUrl = url;
-        workerEngine->evaluate(sourceCode);
+        v8::HandleScope handle_scope;
+        v8::Context::Scope scope(workerEngine->context());
 
         WorkerScript *script = workers.value(id);
-        if (script) {
-            script->source = url;
-            if (workerEngine->hasUncaughtException()) {
-                reportScriptException(script);
-                workerEngine->clearExceptions();
-            }
-        }
+        if (!script)
+            return;
+        script->source = url;
+        v8::Handle<v8::Object> activation = getWorker(script);
+        if (activation.IsEmpty())
+            return;
 
-        workerEngine->popContext();
+        // XXX ???
+        // workerEngine->baseUrl = url;
+
+        v8::TryCatch tc;
+        v8::Local<v8::Script> program = workerEngine->qmlModeCompile(sourceCode, url.toString());
+
+        if (!tc.HasCaught()) 
+            program->Run(activation);
+        
+        if (tc.HasCaught()) {
+            QDeclarativeError error;
+            QDeclarativeExpressionPrivate::exceptionToError(tc.Message(), error);
+            reportScriptException(script, error);
+        }
     } else {
         qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
     }
 }
 
-void QDeclarativeWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script)
+void QDeclarativeWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script, 
+                                                                  const QDeclarativeError &error)
 {
-    if (!script || !workerEngine->hasUncaughtException())
-        return;
-
-    QDeclarativeError error;
-    QDeclarativeExpressionPrivate::exceptionToError(workerEngine, error);
-    error.setUrl(script->source);
-
     QDeclarativeWorkerScriptEnginePrivate *p = QDeclarativeWorkerScriptEnginePrivate::get(workerEngine);
 
     QMutexLocker(&p->m_lock);
@@ -353,109 +409,7 @@ void QDeclarativeWorkerScriptEnginePrivate::reportScriptException(WorkerScript *
         QCoreApplication::postEvent(script->owner, new WorkerErrorEvent(error));
 }
 
-QVariant QDeclarativeWorkerScriptEnginePrivate::scriptValueToVariant(const QScriptValue &value)
-{
-    if (value.isBool()) {
-        return QVariant(value.toBool());
-    } else if (value.isString()) {
-        return QVariant(value.toString());
-    } else if (value.isNumber()) {
-        return QVariant((qreal)value.toNumber());
-    } else if (value.isDate()) {
-        return QVariant(value.toDateTime());
-#ifndef QT_NO_REGEXP
-    } else if (value.isRegExp()) {
-        return QVariant(value.toRegExp());
-#endif
-    } else if (value.isArray()) {
-        QVariantList list;
-
-        quint32 length = (quint32)value.property(QLatin1String("length")).toNumber();
-
-        for (quint32 ii = 0; ii < length; ++ii) {
-            QVariant v = scriptValueToVariant(value.property(ii));
-            list << v;
-        }
-
-        return QVariant(list);
-    } else if (value.isQObject()) {
-        QDeclarativeListModel *lm = qobject_cast<QDeclarativeListModel *>(value.toQObject());
-        if (lm) {
-            QDeclarativeListModelWorkerAgent *agent = lm->agent();
-            if (agent) {
-                QDeclarativeListModelWorkerAgent::VariantRef v(agent);
-                return QVariant::fromValue(v);
-            } else {
-                return QVariant();
-            }
-        } else {
-            // No other QObject's are allowed to be sent
-            return QVariant();
-        }
-    } else if (value.isObject()) {
-        QVariantHash hash;
-
-        QScriptValueIterator iter(value);
-
-        while (iter.hasNext()) {
-            iter.next();
-            hash.insert(iter.name(), scriptValueToVariant(iter.value()));
-        }
-
-        return QVariant(hash);
-    }
-
-    return QVariant();
-
-}
-
-QScriptValue QDeclarativeWorkerScriptEnginePrivate::variantToScriptValue(const QVariant &value, QScriptEngine *engine)
-{
-    if (value.userType() == QVariant::Bool) {
-        return QScriptValue(value.toBool());
-    } else if (value.userType() == QVariant::String) {
-        return QScriptValue(value.toString());
-    } else if (value.userType() == QMetaType::QReal) {
-        return QScriptValue(value.toReal());
-    } else if (value.userType() == QVariant::DateTime) {
-        return engine->newDate(value.toDateTime());
-#ifndef QT_NO_REGEXP
-    } else if (value.userType() == QVariant::RegExp) {
-        return engine->newRegExp(value.toRegExp());
-#endif
-    } else if (value.userType() == qMetaTypeId<QDeclarativeListModelWorkerAgent::VariantRef>()) {
-        QDeclarativeListModelWorkerAgent::VariantRef vr = qvariant_cast<QDeclarativeListModelWorkerAgent::VariantRef>(value);
-        if (vr.a->scriptEngine() == 0)
-            vr.a->setScriptEngine(engine);
-        else if (vr.a->scriptEngine() != engine)
-            return engine->nullValue();
-        QScriptValue o = engine->newQObject(vr.a);
-        o.setData(engine->newVariant(value)); // Keeps the agent ref so that it is cleaned up on gc
-        return o;
-    } else if (value.userType() == QMetaType::QVariantList) {
-        QVariantList list = qvariant_cast<QVariantList>(value);
-        QScriptValue rv = engine->newArray(list.count());
-
-        for (quint32 ii = 0; ii < quint32(list.count()); ++ii)
-            rv.setProperty(ii, variantToScriptValue(list.at(ii), engine));
-
-        return rv;
-    } else if (value.userType() == QMetaType::QVariantHash) {
-
-        QVariantHash hash = qvariant_cast<QVariantHash>(value);
-
-        QScriptValue rv = engine->newObject();
-
-        for (QVariantHash::ConstIterator iter = hash.begin(); iter != hash.end(); ++iter)
-            rv.setProperty(iter.key(), variantToScriptValue(iter.value(), engine));
-
-        return rv;
-    } else {
-        return engine->nullValue();
-    }
-}
-
-WorkerDataEvent::WorkerDataEvent(int workerId, const QVariant &data)
+WorkerDataEvent::WorkerDataEvent(int workerId, const QByteArray &data)
 : QEvent((QEvent::Type)WorkerData), m_id(workerId), m_data(data)
 {
 }
@@ -469,7 +423,7 @@ int WorkerDataEvent::workerId() const
     return m_id;
 }
 
-QVariant WorkerDataEvent::data() const
+QByteArray WorkerDataEvent::data() const
 {
     return m_data;
 }
@@ -537,9 +491,16 @@ QDeclarativeWorkerScriptEnginePrivate::WorkerScript::WorkerScript()
 {
 }
 
+QDeclarativeWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
+{
+    object.Dispose(); object.Clear();
+}
+
 int QDeclarativeWorkerScriptEngine::registerWorkerScript(QDeclarativeWorkerScript *owner)
 {
-    QDeclarativeWorkerScriptEnginePrivate::WorkerScript *script = new QDeclarativeWorkerScriptEnginePrivate::WorkerScript;
+    typedef QDeclarativeWorkerScriptEnginePrivate::WorkerScript WorkerScript;
+    WorkerScript *script = new WorkerScript;
+
     script->id = d->m_nextId++;
     script->owner = owner;
 
@@ -560,7 +521,7 @@ void QDeclarativeWorkerScriptEngine::executeUrl(int id, const QUrl &url)
     QCoreApplication::postEvent(d, new WorkerLoadEvent(id, url));
 }
 
-void QDeclarativeWorkerScriptEngine::sendMessage(int id, const QVariant &data)
+void QDeclarativeWorkerScriptEngine::sendMessage(int id, const QByteArray &data)
 {
     QCoreApplication::postEvent(d, new WorkerDataEvent(id, data));
 }
@@ -569,7 +530,11 @@ void QDeclarativeWorkerScriptEngine::run()
 {
     d->m_lock.lock();
 
-    d->workerEngine = new QDeclarativeWorkerScriptEnginePrivate::ScriptEngine(d);
+    v8::Isolate *isolate = v8::Isolate::New();
+    isolate->Enter();
+
+    d->workerEngine = new QDeclarativeWorkerScriptEnginePrivate::WorkerEngine(d);
+    d->workerEngine->init();
 
     d->m_wait.wakeAll();
 
@@ -578,6 +543,9 @@ void QDeclarativeWorkerScriptEngine::run()
     exec();
 
     delete d->workerEngine; d->workerEngine = 0;
+
+    isolate->Exit();
+    isolate->Dispose();
 }
 
 
@@ -677,14 +645,18 @@ void QDeclarativeWorkerScript::setSource(const QUrl &source)
     of ListModel objects, any modifications by the other thread to an object
     passed in \c message will not be reflected in the original object.
 */
-void QDeclarativeWorkerScript::sendMessage(const QScriptValue &message)
+void QDeclarativeWorkerScript::sendMessage(QDeclarativeV8Function *args)
 {
     if (!engine()) {
         qWarning("QDeclarativeWorkerScript: Attempt to send message before WorkerScript establishment");
         return;
     }
 
-    m_engine->sendMessage(m_scriptId, QDeclarativeWorkerScriptEnginePrivate::scriptValueToVariant(message));
+    v8::Handle<v8::Value> argument = v8::Undefined();
+    if (args->Length() != 0) 
+        argument = (*args)[0];
+
+    m_engine->sendMessage(m_scriptId, QV8Worker::serialize(argument, args->engine()));
 }
 
 void QDeclarativeWorkerScript::classBegin()
@@ -731,11 +703,12 @@ bool QDeclarativeWorkerScript::event(QEvent *event)
     if (event->type() == (QEvent::Type)WorkerDataEvent::WorkerData) {
         QDeclarativeEngine *engine = qmlEngine(this);
         if (engine) {
-            QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(engine);
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
-            QScriptValue value =
-                QDeclarativeWorkerScriptEnginePrivate::variantToScriptValue(workerEvent->data(), scriptEngine);
-            emit message(value);
+            QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
+            v8::HandleScope handle_scope;
+            v8::Context::Scope scope(v8engine->context());
+            v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);
+            emit message(QDeclarativeV8Handle::fromHandle(value));
         }
         return true;
     } else if (event->type() == (QEvent::Type)WorkerErrorEvent::WorkerError) {

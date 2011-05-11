@@ -230,7 +230,8 @@ void tst_qdeclarativesqldatabase::testQml_cleanopen()
     // making it more like the tests are running in new processes.
     testQml();
 
-    QDeclarativeEnginePrivate::getScriptEngine(engine)->collectGarbage(); // close databases
+    engine->collectGarbage();
+
     foreach (QString dbname, QSqlDatabase::connectionNames()) {
         QSqlDatabase::removeDatabase(dbname);
     }

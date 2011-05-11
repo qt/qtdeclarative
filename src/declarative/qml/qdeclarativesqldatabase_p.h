@@ -58,8 +58,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QScriptEngine;
-void qt_add_qmlsqldatabase(QScriptEngine *engine);
+class QV8Engine;
+
+void *qt_add_qmlsqldatabase(QV8Engine *engine);
+void qt_rem_qmlsqldatabase(QV8Engine *engine, void *);
+void qt_qmlsqldatabase_setOfflineStoragePath(QV8Engine *engine, const QString &);
+QString qt_qmlsqldatabase_getOfflineStoragePath(const QV8Engine *); 
 
 QT_END_NAMESPACE
 

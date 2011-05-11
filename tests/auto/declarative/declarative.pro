@@ -94,7 +94,8 @@ contains(QT_CONFIG, private_tests) {
            qsgtext \
            qsgtextedit \
            qsgtextinput \
-           qsgvisualdatamodel
+           qsgvisualdatamodel \
+           v8
 
 }
 

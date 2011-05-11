@@ -64,7 +64,6 @@
 #include "private/qdeclarativescriptparser_p.h"
 #include "private/qdeclarativebinding_p.h"
 #include "private/qdeclarativev4compiler_p.h"
-#include "private/qdeclarativeglobalscriptclass_p.h"
 
 #include <QColor>
 #include <QDebug>
@@ -2253,7 +2252,7 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
         }
     } else {
         // Otherwise we have to search the whole type
-        // This matches the logic in QDeclarativeTypeNameScriptClass
+        // This matches the logic in QV8TypeWrapper
         QByteArray enumName = enumValue.toUtf8();
         const QMetaObject *metaObject = type->baseMetaObject();
         for (int ii = metaObject->enumeratorCount() - 1; value == -1 && ii >= 0; --ii) {
@@ -2358,7 +2357,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         if (propName.at(0).isUpper())
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
 
-        if (enginePrivate->globalClass->illegalNames().contains(propName))
+        if (enginePrivate->v8engine.illegalNames().contains(propName))
             COMPILE_EXCEPTION(&prop, tr("Illegal property name"));
 
         propNames.insert(prop.name);
@@ -2371,7 +2370,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
             COMPILE_EXCEPTION(obj, tr("Signal names cannot begin with an upper case letter"));
-        if (enginePrivate->globalClass->illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine.illegalNames().contains(nameStr))
             COMPILE_EXCEPTION(obj, tr("Illegal signal name"));
         methodNames.insert(name);
     }
@@ -2382,7 +2381,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
             COMPILE_EXCEPTION(obj, tr("Method names cannot begin with an upper case letter"));
-        if (enginePrivate->globalClass->illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine.illegalNames().contains(nameStr))
             COMPILE_EXCEPTION(obj, tr("Illegal method name"));
         methodNames.insert(name);
     }
@@ -2676,7 +2675,7 @@ bool QDeclarativeCompiler::checkValidId(QDeclarativeParser::Value *v, const QStr
 
     }
 
-    if (enginePrivate->globalClass->illegalNames().contains(val))
+    if (enginePrivate->v8engine.illegalNames().contains(val))
         COMPILE_EXCEPTION(v, tr( "ID illegally masks global JavaScript property"));
 
     return true;
@@ -2877,7 +2876,7 @@ int QDeclarativeCompiler::genContextCache()
     if (compileState.ids.count() == 0)
         return -1;
 
-    QDeclarativeIntegerCache *cache = new QDeclarativeIntegerCache(engine);
+    QDeclarativeIntegerCache *cache = new QDeclarativeIntegerCache();
 
     for (QHash<QString, QDeclarativeParser::Object *>::ConstIterator iter = compileState.ids.begin();
          iter != compileState.ids.end();

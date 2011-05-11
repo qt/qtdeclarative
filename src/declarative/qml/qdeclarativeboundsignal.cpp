@@ -227,7 +227,6 @@ QDeclarativeBoundSignalParameters::QDeclarativeBoundSignalParameters(const QMeta
         } else {
             QByteArray propType = type;
             if (t >= QVariant::UserType || t == QVariant::Invalid) {
-                //copy of QDeclarativeObjectScriptClass::enumType()
                 QByteArray scope;
                 QByteArray name;
                 int scopeIdx = propType.lastIndexOf("::");

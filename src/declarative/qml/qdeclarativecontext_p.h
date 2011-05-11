@@ -69,6 +69,8 @@
 #include <private/qobject_p.h>
 #include "private/qdeclarativeguard_p.h"
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeContext;
@@ -137,7 +139,8 @@ public:
     QDeclarativeContextPrivate *asQDeclarativeContextPrivate();
     quint32 isInternal:1;
     quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
-    quint32 dummy:30;
+    quint32 isJSContext:1;
+    quint32 dummy:29;
     QDeclarativeContext *publicContext;
 
     // Property name cache
@@ -147,7 +150,9 @@ public:
     QObject *contextObject;
 
     // Any script blocks that exist on this context
-    QList<QScriptValue> importedScripts;
+    // XXX aakenned
+    QList<v8::Persistent<v8::Object> > importedScripts;
+//    QList<QScriptValue> importedScripts;
 
     // Context base url
     QUrl url;
@@ -216,9 +221,10 @@ public:
     inline QDeclarativeGuardedContextData(QDeclarativeContextData *);
     inline ~QDeclarativeGuardedContextData();
 
+    inline QDeclarativeContextData *contextData();
     inline void setContextData(QDeclarativeContextData *);
 
-    inline QDeclarativeContextData *contextData();
+    inline bool isNull() const { return !m_contextData; }
 
     inline operator QDeclarativeContextData*() const { return m_contextData; }
     inline QDeclarativeContextData* operator->() const { return m_contextData; }

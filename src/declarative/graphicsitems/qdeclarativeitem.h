@@ -64,6 +64,7 @@ class QDeclarativeTransition;
 class QDeclarativeKeyEvent;
 class QDeclarativeAnchors;
 class QDeclarativeItemPrivate;
+class QDeclarativeV8Function;
 class Q_DECLARATIVE_EXPORT QDeclarativeItem : public QGraphicsObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
@@ -149,8 +150,8 @@ public:
     bool keepMouseGrab() const;
     void setKeepMouseGrab(bool);
 
-    Q_INVOKABLE QScriptValue mapFromItem(const QScriptValue &item, qreal x, qreal y) const;
-    Q_INVOKABLE QScriptValue mapToItem(const QScriptValue &item, qreal x, qreal y) const;
+    Q_INVOKABLE void mapFromItem(QDeclarativeV8Function*) const;
+    Q_INVOKABLE void mapToItem(QDeclarativeV8Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE QDeclarativeItem *childAt(qreal x, qreal y) const;
 

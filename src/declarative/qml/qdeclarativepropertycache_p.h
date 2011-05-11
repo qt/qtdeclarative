@@ -57,6 +57,7 @@
 #include "private/qdeclarativecleanup_p.h"
 #include "private/qdeclarativenotifier_p.h"
 
+#include "private/qhashedstring_p.h"
 #include <QtCore/qvector.h>
 
 #include <QtScript/private/qscriptdeclarativeclass_p.h>
@@ -64,6 +65,8 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
 class QMetaProperty;
+class QV8Engine;
+class QV8QObjectWrapper;
 
 class Q_AUTOTEST_EXPORT QDeclarativePropertyCache : public QDeclarativeRefCount, public QDeclarativeCleanup
 {
@@ -93,16 +96,30 @@ public:
                     IsQList           = 0x00000100,
                     IsQmlBinding      = 0x00000200,
                     IsQScriptValue    = 0x00000400,
+                    IsV8Handle        = 0x00000800,
 
                     // Apply only to IsFunctions
-                    IsVMEFunction     = 0x00000800,
-                    HasArguments      = 0x00001000,
-                    IsSignal          = 0x00002000,
-                    IsVMESignal       = 0x00004000
+                    IsVMEFunction     = 0x00001000,
+                    HasArguments      = 0x00002000,
+                    IsSignal          = 0x00004000,
+                    IsVMESignal       = 0x00008000,
+                    IsV8Function      = 0x00010000
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
         bool isValid() const { return coreIndex != -1; } 
+        bool isConstant() const { return flags & IsConstant; }
+        bool isWritable() const { return flags & IsWritable; }
+        bool isResettable() const { return flags & IsResettable; }
+        bool isAlias() const { return flags & IsAlias; }
+        bool isFinal() const { return flags & IsFinal; }
+        bool isFunction() const { return flags & IsFunction; }
+        bool isQObject() const { return flags & IsQObjectDerived; }
+        bool isEnum() const { return flags & IsEnumType; }
+        bool isQList() const { return flags & IsQList; }
+        bool isQmlBinding() const { return flags & IsQmlBinding; }
+        bool isQScriptValue() const { return flags & IsQScriptValue; }
+        bool isV8Handle() const { return flags & IsV8Handle; }
 
         Flags flags;
         int propType;
@@ -141,7 +158,7 @@ public:
 
     static Data create(const QMetaObject *, const QString &);
 
-    inline Data *property(const QScriptDeclarativeClass::Identifier &id) const;
+    inline Data *property(v8::Handle<v8::String>) const;
     Data *property(const QString &) const;
     Data *property(int) const;
     Data *method(int) const;
@@ -151,22 +168,25 @@ public:
     inline bool isAllowedInRevision(Data *) const;
 
     inline QDeclarativeEngine *qmlEngine() const;
-    static Data *property(QDeclarativeEngine *, QObject *, const QScriptDeclarativeClass::Identifier &, Data &);
     static Data *property(QDeclarativeEngine *, QObject *, const QString &, Data &);
+    static Data *property(QDeclarativeEngine *, QObject *, v8::Handle<v8::String>, Data &);
 
 protected:
     virtual void clear();
 
 private:
     friend class QDeclarativeEnginePrivate;
+    friend class QV8QObjectWrapper;
 
+    // Implemented in v8/qv8qobjectwrapper.cpp
+    v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
+
+    // XXX is this worth it anymore?
     struct RData : public Data, public QDeclarativeRefCount { 
-        QScriptDeclarativeClass::PersistentIdentifier identifier;
     };
 
     typedef QVector<RData *> IndexCache;
-    typedef QHash<QString, RData *> StringCache;
-    typedef QHash<QScriptDeclarativeClass::Identifier, RData *> IdentifierCache;
+    typedef QStringHash<RData *> StringCache;
     typedef QVector<int> AllowedRevisionCache;
 
     void updateRecur(QDeclarativeEngine *, const QMetaObject *);
@@ -175,8 +195,8 @@ private:
     IndexCache indexCache;
     IndexCache methodIndexCache;
     StringCache stringCache;
-    IdentifierCache identifierCache;
     AllowedRevisionCache allowedRevisionCache;
+    v8::Persistent<v8::Function> constructor;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativePropertyCache::Data::Flags);
   
@@ -207,12 +227,6 @@ QDeclarativePropertyCache::overrideData(Data *data) const
         return methodIndexCache.at(data->overrideIndex);
 }
 
-QDeclarativePropertyCache::Data *
-QDeclarativePropertyCache::property(const QScriptDeclarativeClass::Identifier &id) const 
-{
-    return identifierCache.value(id);
-}
-
 QDeclarativePropertyCache::ValueTypeData::ValueTypeData()
 : flags(QDeclarativePropertyCache::Data::NoFlags), valueTypeCoreIdx(-1), valueTypePropType(0) 
 {
@@ -234,6 +248,12 @@ bool QDeclarativePropertyCache::isAllowedInRevision(Data *data) const
 QDeclarativeEngine *QDeclarativePropertyCache::qmlEngine() const
 {
     return engine;
+}
+
+QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(v8::Handle<v8::String> str) const
+{
+    QDeclarativePropertyCache::RData **rv = stringCache.value(str);
+    return rv?*rv:0;
 }
 
 QT_END_NAMESPACE

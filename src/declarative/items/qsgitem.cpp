@@ -1817,20 +1817,33 @@ void QSGItem::polish()
     }
 }
 
-QScriptValue QSGItem::mapFromItem(const QScriptValue &item, qreal x, qreal y) const
+void QSGItem::mapFromItem(QDeclarativeV8Function *args) const
 {
-    QScriptValue sv = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this))->newObject();
-    QSGItem *itemObj = qobject_cast<QSGItem*>(item.toQObject());
-    if (!itemObj && !item.isNull()) {
-        qmlInfo(this) << "mapFromItem() given argument \"" << item.toString() << "\" which is neither null nor an Item";
-        return 0;
-    }
+    if (args->Length() != 0) {
+        v8::Local<v8::Value> item = (*args)[0];
+        QV8Engine *engine = args->engine();
 
-    // If QSGItem::mapFromItem() is called with 0, behaves the same as mapFromScene()
-    QPointF p = mapFromItem(itemObj, QPointF(x, y));
-    sv.setProperty(QLatin1String("x"), p.x());
-    sv.setProperty(QLatin1String("y"), p.y());
-    return sv;
+        QSGItem *itemObj = 0;
+        if (!item->IsNull())
+            itemObj = qobject_cast<QSGItem*>(engine->toQObject(item));
+
+        if (!itemObj && !item->IsNull()) {
+            qmlInfo(this) << "mapFromItem() given argument \"" << engine->toString(item->ToString())
+                          << "\" which is neither null nor an Item";
+            return;
+        }
+
+        v8::Local<v8::Object> rv = v8::Object::New();
+        args->returnValue(rv);
+
+        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
+        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+
+        QPointF p = mapFromItem(itemObj, QPointF(x, y));
+
+        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+    }
 }
 
 QTransform QSGItem::itemTransform(QSGItem *other, bool *ok) const
@@ -1847,20 +1860,33 @@ QTransform QSGItem::itemTransform(QSGItem *other, bool *ok) const
     return t;
 }
 
-QScriptValue QSGItem::mapToItem(const QScriptValue &item, qreal x, qreal y) const
+void QSGItem::mapToItem(QDeclarativeV8Function *args) const
 {
-    QScriptValue sv = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this))->newObject();
-    QSGItem *itemObj = qobject_cast<QSGItem*>(item.toQObject());
-    if (!itemObj && !item.isNull()) {
-        qmlInfo(this) << "mapToItem() given argument \"" << item.toString() << "\" which is neither null nor an Item";
-        return 0;
-    }
+    if (args->Length() != 0) {
+        v8::Local<v8::Value> item = (*args)[0];
+        QV8Engine *engine = args->engine();
 
-    // If QSGItem::mapToItem() is called with 0, behaves the same as mapToScene()
-    QPointF p = mapToItem(itemObj, QPointF(x, y));
-    sv.setProperty(QLatin1String("x"), p.x());
-    sv.setProperty(QLatin1String("y"), p.y());
-    return sv;
+        QSGItem *itemObj = 0;
+        if (!item->IsNull())
+            itemObj = qobject_cast<QSGItem*>(engine->toQObject(item));
+
+        if (!itemObj && !item->IsNull()) {
+            qmlInfo(this) << "mapToItem() given argument \"" << engine->toString(item->ToString())
+                          << "\" which is neither null nor an Item";
+            return;
+        }
+
+        v8::Local<v8::Object> rv = v8::Object::New();
+        args->returnValue(rv);
+
+        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
+        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+
+        QPointF p = mapToItem(itemObj, QPointF(x, y));
+
+        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+    }
 }
 
 void QSGItem::forceActiveFocus()

@@ -274,8 +274,17 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, QObject *obj, QDecl
     setNotifyOnValueChanged(true);
 }
 
-QDeclarativeBinding::QDeclarativeBinding(const QScriptValue &func, QObject *obj, QDeclarativeContextData *ctxt, QObject *parent)
-: QDeclarativeExpression(ctxt, obj, func, *new QDeclarativeBindingPrivate)
+/*!  
+    \internal 
+
+    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
+    For example:
+        v8::Handle<v8::Function> function;
+        new QDeclarativeBInding(&function, scope, ctxt);
+ */
+QDeclarativeBinding::QDeclarativeBinding(void *functionPtr, QObject *obj, QDeclarativeContextData *ctxt, 
+                                         QObject *parent)
+: QDeclarativeExpression(ctxt, obj, functionPtr, *new QDeclarativeBindingPrivate)
 {
     setParent(parent);
     setNotifyOnValueChanged(true);
@@ -362,25 +371,28 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             bool isUndefined = false;
             QVariant value;
 
-            QScriptValue scriptValue = d->scriptValue(0, &isUndefined);
+            v8::HandleScope handle_scope;
+            v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
             if (wasDeleted) {
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
                 return;
             }
 
-            if (d->property.propertyTypeCategory() == QDeclarativeProperty::List) {
-                value = ep->scriptValueToVariant(scriptValue, qMetaTypeId<QList<QObject *> >());
-            } else if (scriptValue.isNull() && 
-                       d->property.propertyTypeCategory() == QDeclarativeProperty::Object) {
+            if (isUndefined) {
+            } else if (d->property.propertyTypeCategory() == QDeclarativeProperty::List) {
+                value = ep->v8engine.toVariant(result, qMetaTypeId<QList<QObject *> >());
+            } else if (result->IsNull() && d->property.propertyTypeCategory() == QDeclarativeProperty::Object) {
                 value = QVariant::fromValue((QObject *)0);
             } else {
-                value = ep->scriptValueToVariant(scriptValue, d->property.propertyType());
+                value = ep->v8engine.toVariant(result, d->property.propertyType());
                 if (value.userType() == QMetaType::QObjectStar && !qvariant_cast<QObject*>(value)) {
                     // If the object is null, we extract the predicted type.  While this isn't
                     // 100% reliable, in many cases it gives us better error messages if we
                     // assign this null-object to an incompatible property
-                    int type = ep->objectClass->objectType(scriptValue);
+                    // XXX aakenned
+                    // int type = ep->objectClass->objectType(scriptValue);
+                    int type = QMetaType::QObjectStar;
                     QObject *o = 0;
                     value = QVariant(type, (void *)&o);
                 }
@@ -410,7 +422,7 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                                         QLatin1String(QMetaType::typeName(d->property.propertyType())) +
                                         QLatin1String(" ") + d->property.name());
 
-            } else if (!scriptValue.isRegExp() && scriptValue.isFunction()) {
+            } else if (result->IsFunction()) {
 
                 QUrl url = QUrl(d->url);
                 int line = d->line;

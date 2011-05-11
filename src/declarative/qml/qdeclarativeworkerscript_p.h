@@ -78,7 +78,7 @@ public:
     int registerWorkerScript(QDeclarativeWorkerScript *);
     void removeWorkerScript(int);
     void executeUrl(int, const QUrl &);
-    void sendMessage(int, const QVariant &);
+    void sendMessage(int, const QByteArray &);
 
 protected:
     virtual void run();
@@ -87,6 +87,8 @@ private:
     QDeclarativeWorkerScriptEnginePrivate *d;
 };
 
+class QDeclarativeV8Function;
+class QDeclarativeV8Handle;
 class Q_AUTOTEST_EXPORT QDeclarativeWorkerScript : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
@@ -101,11 +103,11 @@ public:
     void setSource(const QUrl &);
 
 public slots:
-    void sendMessage(const QScriptValue &);
+    void sendMessage(QDeclarativeV8Function*);
 
 signals:
     void sourceChanged();
-    void message(const QScriptValue &messageObject);
+    void message(const QDeclarativeV8Handle &messageObject);
 
 protected:
     virtual void classBegin();

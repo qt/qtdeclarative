@@ -59,6 +59,8 @@
 
 #include <private/qscriptdeclarativeclass_p.h>
 
+#include <private/qhashedstring_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeType;
@@ -71,7 +73,9 @@ public:
 
     struct Data {
         inline Data();
+        inline Data(const Data &);
         inline ~Data();
+        inline Data &operator=(const Data &);
         QDeclarativeType *type;
         QDeclarativeTypeNameCache *typeNamespace;
         int importedScriptIndex;
@@ -82,7 +86,7 @@ public:
     void add(const QString &, QDeclarativeTypeNameCache *);
 
     Data *data(const QString &) const;
-    inline Data *data(const QScriptDeclarativeClass::Identifier &id) const;
+    inline Data *data(v8::Handle<v8::String>) const;
     inline bool isEmpty() const;
 
     inline QDeclarativeMetaType::ModuleApiInstance *moduleApi() const;
@@ -92,14 +96,10 @@ protected:
     virtual void clear();
 
 private:
-    struct RData : public Data { 
-        QScriptDeclarativeClass::PersistentIdentifier identifier;
-    };
-    typedef QHash<QString, RData *> StringCache;
-    typedef QHash<QScriptDeclarativeClass::Identifier, RData *> IdentifierCache;
+    typedef QStringHash<Data> StringCache;
 
     StringCache stringCache;
-    IdentifierCache identifierCache;
+
     QDeclarativeEngine *engine;
     QDeclarativeMetaType::ModuleApiInstance *m_moduleApi;
 };
@@ -114,19 +114,35 @@ QDeclarativeTypeNameCache::Data::~Data()
     if (typeNamespace) typeNamespace->release();
 }
 
-QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(const QScriptDeclarativeClass::Identifier &id) const
-{
-    return identifierCache.value(id);
-}
-
 bool QDeclarativeTypeNameCache::isEmpty() const
 {
-    return identifierCache.isEmpty();
+    return stringCache.isEmpty();
+}
+
+QDeclarativeTypeNameCache::Data::Data(const QDeclarativeTypeNameCache::Data &o)
+: type(o.type), typeNamespace(o.typeNamespace), importedScriptIndex(o.importedScriptIndex)
+{
+    if (typeNamespace) typeNamespace->addref();
+}
+
+QDeclarativeTypeNameCache::Data &QDeclarativeTypeNameCache::Data::operator=(const QDeclarativeTypeNameCache::Data &o)
+{
+    if (o.typeNamespace) o.typeNamespace->addref();
+    if (typeNamespace) typeNamespace->release();
+    type = o.type;
+    typeNamespace = o.typeNamespace;
+    importedScriptIndex = o.importedScriptIndex;
+    return *this;
 }
 
 QDeclarativeMetaType::ModuleApiInstance *QDeclarativeTypeNameCache::moduleApi() const
 {
     return m_moduleApi;
+}
+
+QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(v8::Handle<v8::String> name) const
+{
+    return stringCache.value(name);
 }
 
 QT_END_NAMESPACE

@@ -49,7 +49,6 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qnumeric.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativeglobalscriptclass_p.h>
 #include <private/qscriptdeclarativeclass_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
@@ -1199,7 +1198,11 @@ void tst_qdeclarativeecmascript::functionErrors()
     url = componentTwo.url().toString();
     object = componentTwo.create();
     QVERIFY(object != 0);
-    warning = url + QLatin1String(":16: TypeError: Result of expression 'scarceResourceProvider.scarceResource' [[object Object]] is not a function.");
+
+    QString srpname = object->property("srp_name").toString();
+    
+    warning = url + QLatin1String(":17: TypeError: Property 'scarceResource' of object ") + srpname + 
+              QLatin1String(" is not a function");
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData()); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     delete object;
@@ -1214,14 +1217,11 @@ void tst_qdeclarativeecmascript::propertyAssignmentErrors()
 
     QString url = component.url().toString();
 
-    QString warning1 = url + ":11:Error: Cannot assign [undefined] to int";
-    QString warning2 = url + ":17:Error: Cannot assign QString to int";
-
-    QTest::ignoreMessage(QtDebugMsg, warning1.toLatin1().constData());
-    QTest::ignoreMessage(QtDebugMsg, warning2.toLatin1().constData());
-
     QObject *object = component.create();
     QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test1").toBool(), true);
+    QCOMPARE(object->property("test2").toBool(), true);
 
     delete object;
 }
@@ -1277,7 +1277,7 @@ void tst_qdeclarativeecmascript::exceptionClearsOnReeval()
     QDeclarativeComponent component(&engine, TEST_FILE("exceptionClearsOnReeval.qml"));
     QString url = component.url().toString();
 
-    QString warning = url + ":4: TypeError: Result of expression 'objectProperty' [null] is not an object.";
+    QString warning = url + ":4: TypeError: Cannot read property 'objectProperty' of null";
 
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
@@ -1490,56 +1490,119 @@ void tst_qdeclarativeecmascript::regExpBug()
     delete object;
 }
 
+static inline bool evaluate_error(QV8Engine *engine, v8::Handle<v8::Object> o, const char *source)
+{
+    QString functionSource = QLatin1String("(function(object) { return ") + 
+                             QLatin1String(source) + QLatin1String(" })");
+    v8::TryCatch tc;
+    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    if (tc.HasCaught())
+        return false;
+    v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
+    if (function.IsEmpty())
+        return false;
+    v8::Handle<v8::Value> args[] = { o };
+    function->Call(engine->global(), 1, args);
+    return tc.HasCaught();
+}
+
+static inline bool evaluate_value(QV8Engine *engine, v8::Handle<v8::Object> o, 
+                                  const char *source, v8::Handle<v8::Value> result)
+{
+    QString functionSource = QLatin1String("(function(object) { return ") + 
+                             QLatin1String(source) + QLatin1String(" })");
+    v8::TryCatch tc;
+    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    if (tc.HasCaught())
+        return false;
+    v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
+    if (function.IsEmpty())
+        return false;
+    v8::Handle<v8::Value> args[] = { o };
+
+    v8::Handle<v8::Value> value = function->Call(engine->global(), 1, args);
+
+    if (tc.HasCaught())
+        return false;
+
+    return value->StrictEquals(result);
+}
+
+static inline v8::Handle<v8::Value> evaluate(QV8Engine *engine, v8::Handle<v8::Object> o, 
+                                             const char *source)
+{
+    QString functionSource = QLatin1String("(function(object) { return ") + 
+                             QLatin1String(source) + QLatin1String(" })");
+    v8::TryCatch tc;
+    v8::Local<v8::Script> program = v8::Script::Compile(engine->toString(functionSource));
+    if (tc.HasCaught())
+        return v8::Handle<v8::Value>();
+    v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(program->Run());
+    if (function.IsEmpty())
+        return v8::Handle<v8::Value>();
+    v8::Handle<v8::Value> args[] = { o };
+
+    v8::Handle<v8::Value> value = function->Call(engine->global(), 1, args);
+
+    if (tc.HasCaught())
+        return v8::Handle<v8::Value>();
+    return value;
+}
+
+#define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
+#define EVALUATE_VALUE(source, result) evaluate_value(engine, object, source, result)
+#define EVALUATE(source) evaluate(engine, object, source)
+
 void tst_qdeclarativeecmascript::callQtInvokables()
 {
     MyInvokableObject o;
 
     QDeclarativeEngine qmlengine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(&qmlengine);
-    QScriptEngine *engine = &ep->scriptEngine;
+    
+    QV8Engine *engine = &ep->v8engine;
 
-    QStringList names; QList<QScriptValue> values;
-    names << QLatin1String("object"); values << ep->objectClass->newQObject(&o);
-    names << QLatin1String("undefined"); values << engine->undefinedValue();
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
 
-    ep->globalClass->explicitSetProperty(names, values);
+    v8::Local<v8::Object> object = engine->newQObject(&o)->ToObject();
 
     // Non-existent methods
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_nonexistent()").isError(), true);
+    QVERIFY(EVALUATE_ERROR("object.method_nonexistent()"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_nonexistent(10, 11)").isError(), true);
+    QVERIFY(EVALUATE_ERROR("object.method_nonexistent(10, 11)"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     // Insufficient arguments
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int()").isError(), true);
+    QVERIFY(EVALUATE_ERROR("object.method_int()"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intint(10)").isError(), true);
+    QVERIFY(EVALUATE_ERROR("object.method_intint(10)"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     // Excessive arguments
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(10, 11)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(10, 11)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(10));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intint(10, 11, 12)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intint(10, 11, 12)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 9);
     QCOMPARE(o.actuals().count(), 2);
@@ -1548,27 +1611,28 @@ void tst_qdeclarativeecmascript::callQtInvokables()
 
     // Test return types
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_NoArgs()").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs()", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 0);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
-    QVERIFY(engine->evaluate("object.method_NoArgs_int()").strictlyEquals(QScriptValue(engine, 6)));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_int()", v8::Integer::New(6)));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 1);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
-    QVERIFY(engine->evaluate("object.method_NoArgs_real()").strictlyEquals(QScriptValue(engine, 19.75)));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_real()", v8::Number::New(19.75)));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 2);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
     {
-    QScriptValue ret = engine->evaluate("object.method_NoArgs_QPointF()");
-    QCOMPARE(ret.toVariant(), QVariant(QPointF(123, 4.5)));
+    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QPointF()");
+    QVERIFY(!ret.IsEmpty());
+    QCOMPARE(engine->toVariant(ret, -1), QVariant(QPointF(123, 4.5)));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 3);
     QCOMPARE(o.actuals().count(), 0);
@@ -1576,81 +1640,83 @@ void tst_qdeclarativeecmascript::callQtInvokables()
 
     o.reset();
     {
-    QScriptValue ret = engine->evaluate("object.method_NoArgs_QObject()");
-    QVERIFY(ret.isQObject());
-    QCOMPARE(ret.toQObject(), (QObject *)&o);
+    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QObject()");
+    QCOMPARE(engine->toQObject(ret), (QObject *)&o);
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 4);
     QCOMPARE(o.actuals().count(), 0);
     }
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_NoArgs_unknown()").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_unknown()", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 5);
     QCOMPARE(o.actuals().count(), 0);
 
+    // XXX enable once qml/qtscript integration is implemented
+#if 0
     o.reset();
     {
-    QScriptValue ret = engine->evaluate("object.method_NoArgs_QScriptValue()");
-    QVERIFY(ret.isString());
-    QCOMPARE(ret.toString(), QString("Hello world"));
+    v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QScriptValue()");
+    QVERIFY(ret->IsString());
+    QCOMPARE(engine->toString(ret), QString("Hello world"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 6);
     QCOMPARE(o.actuals().count(), 0);
     }
+#endif
 
     o.reset();
-    QVERIFY(engine->evaluate("object.method_NoArgs_QVariant()").strictlyEquals(QScriptValue(engine, "QML rocks")));
+    QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", engine->toString("QML rocks")));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 7);
     QCOMPARE(o.actuals().count(), 0);
 
     // Test arg types
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(94)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(94)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(94));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(\"94\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(\"94\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(94));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(\"not a number\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(\"not a number\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_int(object)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_int(object)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 8);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intint(122, 9)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intint(122, 9)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 9);
     QCOMPARE(o.actuals().count(), 2);
@@ -1658,56 +1724,56 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().at(1), QVariant(9));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(94.3)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(94.3)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(94.3));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(\"94.3\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(\"94.3\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(94.3));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(\"not a number\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(\"not a number\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_real(object)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_real(object)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 10);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qIsNaN(o.actuals().at(0).toDouble()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QString(\"Hello world\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QString(\"Hello world\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 11);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant("Hello world"));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QString(19)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QString(19)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 11);
     QCOMPARE(o.actuals().count(), 1);
@@ -1716,7 +1782,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     o.reset();
     {
     QString expected = "MyInvokableObject(0x" + QString::number((quintptr)&o, 16) + ")";
-    QCOMPARE(engine->evaluate("object.method_QString(object)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QString(object)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 11);
     QCOMPARE(o.actuals().count(), 1);
@@ -1724,126 +1790,128 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     }
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QString(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QString(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 11);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QString()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QString(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QString(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 11);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QString()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(0)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(0)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(object)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(object)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF()));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(object.method_get_QPointF())").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF(99.3, -10.2)));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QPointF(object.method_get_QPoint())").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPoint())", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 12);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QPointF(9, 12)));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QObject(0)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QObject(0)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 13);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QObject(\"Hello world\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QObject(\"Hello world\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 13);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QObject(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QObject(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 13);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QObject(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QObject(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 13);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)0));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QObject(object)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QObject(object)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 13);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)&o));
 
+    // XXX enable once qml/qtscript integration is implemented
+#if 0
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QScriptValue(null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isNull());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QScriptValue(undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isUndefined());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QScriptValue(19)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(19)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).strictlyEquals(QScriptValue(engine, 19)));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QScriptValue([19, 20])").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QScriptValue([19, 20])", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isArray());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intQScriptValue(4, null)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(4, null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
@@ -1851,7 +1919,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isNull());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intQScriptValue(8, undefined)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(8, undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
@@ -1859,7 +1927,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isUndefined());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intQScriptValue(3, 19)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(3, 19)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
@@ -1867,28 +1935,29 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).strictlyEquals(QScriptValue(engine, 19)));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_intQScriptValue(44, [19, 20])").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(44, [19, 20])", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(44));
     QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isArray());
+#endif
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_overload()").isError(), true);
+    QVERIFY(EVALUATE_ERROR("object.method_overload()"));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -1);
     QCOMPARE(o.actuals().count(), 0);
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_overload(10)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_overload(10)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 16);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(10));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_overload(10, 11)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_overload(10, 11)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 17);
     QCOMPARE(o.actuals().count(), 2);
@@ -1896,21 +1965,21 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().at(1), QVariant(11));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_overload(\"Hello\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_overload(\"Hello\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 18);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(QString("Hello")));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_with_enum(9)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_with_enum(9)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 19);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(9));
 
     o.reset();
-    QVERIFY(engine->evaluate("object.method_default(10)").strictlyEquals(QScriptValue(19)));
+    QVERIFY(EVALUATE_VALUE("object.method_default(10)", v8::Integer::New(19)));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 20);
     QCOMPARE(o.actuals().count(), 2);
@@ -1918,7 +1987,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().at(1), QVariant(19));
 
     o.reset();
-    QVERIFY(engine->evaluate("object.method_default(10, 13)").strictlyEquals(QScriptValue(13)));
+    QVERIFY(EVALUATE_VALUE("object.method_default(10, 13)", v8::Integer::New(13)));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 20);
     QCOMPARE(o.actuals().count(), 2);
@@ -1926,14 +1995,14 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().at(1), QVariant(13));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_inherited(9)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_inherited(9)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), -3);
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), QVariant(9));
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QVariant(9)").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QVariant(9)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 21);
     QCOMPARE(o.actuals().count(), 2);
@@ -1941,7 +2010,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().at(1), QVariant());
 
     o.reset();
-    QCOMPARE(engine->evaluate("object.method_QVariant(\"Hello\", \"World\")").isUndefined(), true);
+    QVERIFY(EVALUATE_VALUE("object.method_QVariant(\"Hello\", \"World\")", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 21);
     QCOMPARE(o.actuals().count(), 2);
@@ -2236,7 +2305,8 @@ void tst_qdeclarativeecmascript::ownership()
         QVERIFY(own.object != 0);
 
         QObject *object = component.create(context);
-        QDeclarativeEnginePrivate::getScriptEngine(&engine)->collectGarbage();
+
+        engine.collectGarbage();
 
         QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
 
@@ -2253,7 +2323,8 @@ void tst_qdeclarativeecmascript::ownership()
         QVERIFY(own.object != 0);
 
         QObject *object = component.create(context);
-        QDeclarativeEnginePrivate::getScriptEngine(&engine)->collectGarbage();
+        
+        engine.collectGarbage();
 
         QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
 
@@ -2337,6 +2408,7 @@ void tst_qdeclarativeecmascript::ownershipCustomReturnValue()
     delete object;
     }
 
+    engine.collectGarbage();
     QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
 
     QVERIFY(source.value == 0);
@@ -2638,7 +2710,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object != 0);
     QVERIFY(object->property("scarceResourceCopy").isValid());
     QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(!eo->scarceResourceIsDetached()); // there are two copies of it in existence: the property of object, and the property of eo.
     delete object;
@@ -2648,7 +2720,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object != 0);
     QVERIFY(object->property("scarceResourceCopy").isValid());
     QCOMPARE(object->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(!eo->scarceResourceIsDetached()); // there are two copies of it in existence: the property of object, and the property of eo.
     delete object;
@@ -2657,7 +2729,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     object = componentThree.create();
     QVERIFY(object != 0);
     QVERIFY(!(object->property("scarceResourceCopy").isValid())); // was manually released prior to being returned.
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should have explicitly been released during the evaluation of the binding.
     delete object;
@@ -2669,7 +2741,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object != 0);
     QVERIFY(object->property("scarceResourceTest").isValid());
     QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // the resource should have been released after the binding was evaluated.
     delete object;
@@ -2679,7 +2751,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object != 0);
     QVERIFY(object->property("scarceResourceTest").isValid());
     QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(!eo->scarceResourceIsDetached()); // this won't be detached since we explicitly preserved it.
     delete object;
@@ -2689,7 +2761,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object != 0);
     QVERIFY(object->property("scarceResourceTest").isValid());
     QCOMPARE(object->property("scarceResourceTest").toInt(), 100);
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // all resources were released manually or automatically released.
     delete object;
@@ -2698,14 +2770,14 @@ void tst_qdeclarativeecmascript::scarceResources()
     QDeclarativeComponent componentSeven(&engine, TEST_FILE("scarceresources/scarceResourceCopyImportNoBinding.qml"));
     object = componentSeven.create();
     QVERIFY(object != 0); // the import should have caused the addition of a resource to the ScarceResources list
-    QVERIFY(ep->scarceResources == 0); // but they should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // but they should have been released by this point.
     delete object;
 
     QDeclarativeComponent componentEight(&engine, TEST_FILE("scarceresources/scarceResourceCopyImportFail.qml"));
     object = componentEight.create();
     QVERIFY(object != 0);
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // wasn't preserved, so shouldn't be valid.
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     QDeclarativeComponent componentNine(&engine, TEST_FILE("scarceresources/scarceResourceCopyImport.qml"));
@@ -2716,7 +2788,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(object->property("scarceResourceAssignedCopyOne").isValid()); // assigned before destroy(), so should be valid.
     QCOMPARE(object->property("scarceResourceAssignedCopyOne").value<QPixmap>(), origPixmap);
     QVERIFY(!object->property("scarceResourceAssignedCopyTwo").isValid()); // assigned after destroy(), so should be invalid.
-    QVERIFY(ep->scarceResources == 0); // this will still be zero, because "preserve()" REMOVES it from this list.
+    QVERIFY(ep->scarceResources.isEmpty()); // this will still be zero, because "preserve()" REMOVES it from this list.
     delete object;
 
     // test that scarce resources are handled properly in signal invocation
@@ -2739,7 +2811,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QCOMPARE(srsc->property("scarceResourceCopy").value<QPixmap>(), origPixmap);
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(!(eo->scarceResourceIsDetached())); // should be another copy of the resource now.
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that scarce resources are handled properly from js functions in qml files
@@ -2758,7 +2830,7 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // just released, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 
     // test that if an exception occurs while invoking js function from cpp, that the resources are released.
@@ -2768,13 +2840,14 @@ void tst_qdeclarativeecmascript::scarceResources()
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // not yet assigned, so should not be valid
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QString expectedWarning = QLatin1String("file://") + TEST_FILE("scarceresources/scarceResourceFunctionFail.qml").toLocalFile() + QLatin1String(":16: TypeError: Result of expression 'scarceResourceProvider.scarceResource' [[object Object]] is not a function.");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData()); // we expect a meaningful warning to be printed.
+    QString srp_name = object->property("srp_name").toString();
+    QString expectedWarning = componentTwelve.url().toString() + QLatin1String(":17: TypeError: Property 'scarceResource' of object ") + srp_name + QLatin1String(" is not a function");
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(expectedWarning)); // we expect a meaningful warning to be printed.
     QMetaObject::invokeMethod(object, "retrieveScarceResource");
     QVERIFY(!object->property("scarceResourceCopy").isValid()); // due to exception, assignment will NOT have occurred.
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
-    QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    QVERIFY(ep->scarceResources.isEmpty()); // should have been released by this point.
     delete object;
 }
 
@@ -3060,11 +3133,11 @@ void tst_qdeclarativeecmascript::functionAssignmentfromJS_invalid()
     QVERIFY(!o->property("a").isValid());
 
     QString url = component.url().toString();
-    QString warning = url + ":63: Unable to assign QString to int";
+    QString warning = url + ":67: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongType", true);
 
-    warning = url + ":70: Unable to assign QString to int";
+    warning = url + ":71: Unable to assign QString to int";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     o->setProperty("assignWrongTypeToValueType", true);
 

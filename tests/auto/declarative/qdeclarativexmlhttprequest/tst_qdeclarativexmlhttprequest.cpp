@@ -958,7 +958,6 @@ void tst_qdeclarativexmlhttprequest::invalidMethodUsage()
     QObject *object = component.create();
     QVERIFY(object != 0);
 
-    QCOMPARE(object->property("onreadystatechange").toBool(), true);
     QCOMPARE(object->property("readyState").toBool(), true);
     QCOMPARE(object->property("status").toBool(), true);
     QCOMPARE(object->property("statusText").toBool(), true);

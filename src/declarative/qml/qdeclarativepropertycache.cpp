@@ -43,9 +43,11 @@
 
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativebinding_p.h"
+#include "private/qv8engine_p.h"
 #include <QtCore/qdebug.h>
 
 Q_DECLARE_METATYPE(QScriptValue)
+Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +70,8 @@ QDeclarativePropertyCache::Data::Flags QDeclarativePropertyCache::Data::flagsFor
         flags |= Data::IsQmlBinding;
     } else if (propType == qMetaTypeId<QScriptValue>()) {
         flags |= Data::IsQScriptValue;
+    } else if (propType == qMetaTypeId<QDeclarativeV8Handle>()) {
+        flags |= Data::IsV8Handle;
     } else if (p.isEnumType()) {
         flags |= Data::IsEnumType;
     } else {
@@ -107,8 +111,13 @@ void QDeclarativePropertyCache::Data::load(const QMetaMethod &m)
         propType = QMetaType::type(returnType);
 
     QList<QByteArray> params = m.parameterTypes();
-    if (!params.isEmpty())
+    if (!params.isEmpty()) {
         flags |= Data::HasArguments;
+        if (params.at(0).length() == 23 && 
+            0 == qstrcmp(params.at(0).constData(), "QDeclarativeV8Function*")) {
+            flags |= Data::IsV8Function;
+        }
+    }
     revision = m.revision();
 }
 
@@ -156,16 +165,11 @@ void QDeclarativePropertyCache::clear()
         data->release(); 
     }
 
-    for (IdentifierCache::ConstIterator iter = identifierCache.begin(); 
-            iter != identifierCache.end(); ++iter) {
-        RData *data = (*iter);
-        data->release(); 
-    }
-
     indexCache.clear();
     methodIndexCache.clear();
     stringCache.clear();
-    identifierCache.clear();
+    constructor.Dispose();
+    constructor = v8::Persistent<v8::Function>();
 }
 
 QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObject *metaObject, 
@@ -219,7 +223,6 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy() const
     cache->indexCache = indexCache;
     cache->methodIndexCache = methodIndexCache;
     cache->stringCache = stringCache;
-    cache->identifierCache = identifierCache;
     cache->allowedRevisionCache = allowedRevisionCache;
 
     for (int ii = 0; ii < indexCache.count(); ++ii) {
@@ -230,8 +233,8 @@ QDeclarativePropertyCache *QDeclarativePropertyCache::copy() const
     }
     for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter)
         (*iter)->addref();
-    for (IdentifierCache::ConstIterator iter = identifierCache.begin(); iter != identifierCache.end(); ++iter)
-        (*iter)->addref();
+
+    // We specifically do *NOT* copy the constructor
 
     return cache;
 }
@@ -247,6 +250,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
                                        Data::Flag propertyFlags, Data::Flag methodFlags, Data::Flag signalFlags)
 {
     Q_UNUSED(revision);
+
+    constructor.Dispose(); // Now invalid
+    constructor = v8::Persistent<v8::Function>();
 
     allowedRevisionCache.append(0);
 
@@ -267,7 +273,6 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         methodName = methodName.left(parenIdx);
 
         RData *data = new RData;
-        data->identifier = enginePriv->objectClass->createPersistentIdentifier(methodName);
         methodIndexCache[ii] = data;  
 
         data->load(m);
@@ -286,12 +291,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             data->overrideIndexIsProperty = !bool(old->flags & Data::IsFunction);
             data->overrideIndex = old->coreIndex;
             stringCache[methodName]->release();
-            identifierCache[data->identifier.identifier]->release();
         }
 
         stringCache.insert(methodName, data);
-        identifierCache.insert(data->identifier.identifier, data);
-        data->addref();
         data->addref();
     }
 
@@ -307,7 +309,6 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         QString propName = QString::fromUtf8(p.name());
 
         RData *data = new RData;
-        data->identifier = enginePriv->objectClass->createPersistentIdentifier(propName);
         indexCache[ii] = data;
 
         data->load(p, engine);
@@ -320,12 +321,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             data->overrideIndexIsProperty = !bool(old->flags & Data::IsFunction);
             data->overrideIndex = old->coreIndex;
             stringCache[propName]->release();
-            identifierCache[data->identifier.identifier]->release();
         }
 
         stringCache.insert(propName, data);
-        identifierCache.insert(data->identifier.identifier, data);
-        data->addref();
         data->addref();
     }
 }
@@ -375,7 +373,8 @@ QDeclarativePropertyCache::method(int index) const
 QDeclarativePropertyCache::Data *
 QDeclarativePropertyCache::property(const QString &str) const
 {
-    return stringCache.value(str);
+    QDeclarativePropertyCache::RData **rv = stringCache.value(str);
+    return rv?*rv:0;
 }
 
 QString QDeclarativePropertyCache::Data::name(QObject *object)
@@ -407,29 +406,35 @@ QString QDeclarativePropertyCache::Data::name(const QMetaObject *metaObject)
 
 QStringList QDeclarativePropertyCache::propertyNames() const
 {
-    return stringCache.keys();
+    QStringList keys;
+    for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) 
+        keys.append(iter.key());
+    return keys;
 }
 
-QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
-                                                   const QScriptDeclarativeClass::Identifier &name, Data &local)
+QDeclarativePropertyCache::Data *
+QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
+                                    v8::Handle<v8::String> name, Data &local)
 {
-    QDeclarativePropertyCache::Data *rv = 0;
-
-    QDeclarativeEnginePrivate *enginePrivate = QDeclarativeEnginePrivate::get(engine);
+    Q_ASSERT(engine);
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
     QDeclarativePropertyCache *cache = 0;
     QDeclarativeData *ddata = QDeclarativeData::get(obj);
-    if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine)
+    if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine) // XXX aakenend
         cache = ddata->propertyCache;
     if (!cache) {
-        cache = enginePrivate->cache(obj);
+        cache = ep->cache(obj);
         if (cache && ddata && !ddata->propertyCache) { cache->addref(); ddata->propertyCache = cache; }
     }
+
+    QDeclarativePropertyCache::Data *rv = 0;
 
     if (cache) {
         rv = cache->property(name);
     } else {
-        local = QDeclarativePropertyCache::create(obj->metaObject(), enginePrivate->objectClass->toString(name));
+        QString strname = ep->v8engine.toString(name);
+        local = QDeclarativePropertyCache::create(obj->metaObject(), strname);
         if (local.isValid())
             rv = &local;
     }
@@ -437,8 +442,9 @@ QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(QDeclarativ
     return rv;
 }
 
-QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
-                                                   const QString &name, Data &local)
+QDeclarativePropertyCache::Data *
+QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
+                                    const QString &name, Data &local)
 {
     QDeclarativePropertyCache::Data *rv = 0;
 

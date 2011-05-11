@@ -1090,6 +1090,9 @@ void QDeclarativeScriptData::clear()
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
     scripts.clear();
+
+    m_program.Dispose();
+    m_value.Dispose();
 }
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
@@ -1218,7 +1221,13 @@ void QDeclarativeScriptBlob::done()
     m_imports.populateCache(m_scriptData->importCache, engine);
 
     m_scriptData->pragmas = m_pragmas;
-    m_scriptData->m_program = QScriptProgram(m_source, finalUrl().toString());
+
+    // XXX aakenned - what about error handling?
+    QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(v8engine->context());
+    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_source, finalUrl().toString(), 1);
+    m_scriptData->m_program = v8::Persistent<v8::Script>::New(program);
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)

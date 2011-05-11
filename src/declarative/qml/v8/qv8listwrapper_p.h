@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEVALUETYPESCRIPTCLASS_P_H
-#define QDECLARATIVEVALUETYPESCRIPTCLASS_P_H
+#ifndef QV8LISTWRAPPER_P_H
+#define QV8LISTWRAPPER_P_H
 
 //
 //  W A R N I N G
@@ -53,35 +53,44 @@
 // We mean it.
 //
 
-
-#include <private/qscriptdeclarativeclass_p.h>
+#include <QtCore/qglobal.h>
+#include <QtDeclarative/qdeclarativelist.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QDeclarativeValueType;
-class QDeclarativeValueTypeScriptClass : public QScriptDeclarativeClass
+class QV8Engine;
+class QV8ObjectResource;
+class QV8ListWrapper 
 {
 public:
-    QDeclarativeValueTypeScriptClass(QDeclarativeEngine *);
-    ~QDeclarativeValueTypeScriptClass();
+    QV8ListWrapper();
+    ~QV8ListWrapper();
 
-    QScriptValue newObject(QObject *object, int coreIndex, QDeclarativeValueType *);
-    QScriptValue newObject(const QVariant &, QDeclarativeValueType *);
+    void init(QV8Engine *);
+    void destroy();
 
-    virtual QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, 
-                                                   QScriptClass::QueryFlags flags);
-    virtual Value property(Object *, const Identifier &);
-    virtual void setProperty(Object *, const Identifier &name, const QScriptValue &);
+    v8::Handle<v8::Value> newList(QObject *, int, int);
+    v8::Handle<v8::Value> newList(const QDeclarativeListProperty<QObject> &, int);
+    QVariant toVariant(v8::Handle<v8::Object>);
+    QVariant toVariant(QV8ObjectResource *);
 
-    virtual QVariant toVariant(Object *, bool *ok = 0);
-    QVariant toVariant(const QScriptValue &);
 private:
-    QDeclarativeEngine *engine;
-    int m_lastIndex;
+    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
+                                        v8::Local<v8::Value> value,
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> IndexedGetter(uint32_t index, 
+                                               const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> LengthGetter(v8::Local<v8::String> property, 
+                                              const v8::AccessorInfo &info);
+
+    QV8Engine *m_engine;
+    v8::Persistent<v8::Function> m_constructor;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVEVALUETYPESCRIPTCLASS_P_H
+#endif // QV8LISTWRAPPER_P_H
 

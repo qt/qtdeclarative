@@ -9,7 +9,6 @@ SOURCES += \
     $$PWD/qdeclarativeproperty.cpp \
     $$PWD/qdeclarativecomponent.cpp \
     $$PWD/qdeclarativecontext.cpp \
-    $$PWD/qdeclarativeinclude.cpp \
     $$PWD/qdeclarativecustomparser.cpp \
     $$PWD/qdeclarativepropertyvaluesource.cpp \
     $$PWD/qdeclarativepropertyvalueinterceptor.cpp \
@@ -41,13 +40,6 @@ SOURCES += \
     $$PWD/qdeclarativetypenotavailable.cpp \
     $$PWD/qdeclarativetypenamecache.cpp \
     $$PWD/qdeclarativescriptstring.cpp \
-    $$PWD/qdeclarativeobjectscriptclass.cpp \
-    $$PWD/qdeclarativescarceresourcescriptclass.cpp \
-    $$PWD/qdeclarativecontextscriptclass.cpp \
-    $$PWD/qdeclarativeglobalscriptclass.cpp \
-    $$PWD/qdeclarativevaluetypescriptclass.cpp \
-    $$PWD/qdeclarativetypenamescriptclass.cpp \
-    $$PWD/qdeclarativelistscriptclass.cpp \
     $$PWD/qdeclarativeworkerscript.cpp \
     $$PWD/qdeclarativeimageprovider.cpp \
     $$PWD/qdeclarativenetworkaccessmanagerfactory.cpp \
@@ -90,7 +82,6 @@ HEADERS += \
     $$PWD/qdeclarativeinfo.h \
     $$PWD/qdeclarativeproperty_p.h \
     $$PWD/qdeclarativecontext_p.h \
-    $$PWD/qdeclarativeinclude_p.h \
     $$PWD/qdeclarativetypeloader_p.h \
     $$PWD/qdeclarativelist.h \
     $$PWD/qdeclarativelist_p.h \
@@ -114,13 +105,6 @@ HEADERS += \
     $$PWD/qdeclarativetypenotavailable_p.h \
     $$PWD/qdeclarativetypenamecache_p.h \
     $$PWD/qdeclarativescriptstring.h \
-    $$PWD/qdeclarativeobjectscriptclass_p.h \
-    $$PWD/qdeclarativescarceresourcescriptclass_p.h \
-    $$PWD/qdeclarativecontextscriptclass_p.h \
-    $$PWD/qdeclarativeglobalscriptclass_p.h \
-    $$PWD/qdeclarativevaluetypescriptclass_p.h \
-    $$PWD/qdeclarativetypenamescriptclass_p.h \
-    $$PWD/qdeclarativelistscriptclass_p.h \
     $$PWD/qdeclarativeworkerscript_p.h \
     $$PWD/qdeclarativeguard_p.h \
     $$PWD/qdeclarativeimageprovider.h \
@@ -136,6 +120,7 @@ QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(v4/v4.pri)
+include(v8/v8.pri)
 
 # mirrors logic in corelib/kernel/kernel.pri
 unix:!symbian: contains(QT_CONFIG, clock-gettime):include($$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri)

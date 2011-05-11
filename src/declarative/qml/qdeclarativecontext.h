@@ -94,8 +94,6 @@ private:
     friend class QDeclarativeEnginePrivate;
     friend class QDeclarativeExpression;
     friend class QDeclarativeExpressionPrivate;
-    friend class QDeclarativeContextScriptClass;
-    friend class QDeclarativeObjectScriptClass;
     friend class QDeclarativeComponent;
     friend class QDeclarativeComponentPrivate;
     friend class QDeclarativeScriptPrivate;

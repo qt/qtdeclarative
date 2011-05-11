@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVELISTSCRIPTCLASS_P_H
-#define QDECLARATIVELISTSCRIPTCLASS_P_H
+#ifndef QV8WORKER_P_H
+#define QV8WORKER_P_H
 
 //
 //  W A R N I N G
@@ -53,35 +53,23 @@
 // We mean it.
 //
 
-#include <private/qscriptdeclarativeclass_p.h>
-#include "qdeclarativelist.h"
+#include "qv8engine_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeEngine;
-class QDeclarativeListScriptClass : public QScriptDeclarativeClass
-{
+class QV8Worker {
 public:
-    QDeclarativeListScriptClass(QDeclarativeEngine *);
-    ~QDeclarativeListScriptClass();
+    struct SavedData {
+    };
 
-    QScriptValue newList(QObject *, int, int);
-    QScriptValue newList(const QDeclarativeListProperty<QObject> &, int);
-
-protected:
-    virtual QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, 
-                                                   QScriptClass::QueryFlags flags);
-    virtual Value property(Object *, const Identifier &);
-    virtual QVariant toVariant(Object *, bool *ok);
+    static QByteArray serialize(v8::Handle<v8::Value>, QV8Engine *);
+    static v8::Handle<v8::Value> deserialize(const QByteArray &, QV8Engine *);
 
 private:
-    PersistentIdentifier m_lengthId;
-    QDeclarativeEngine *engine;
-
-    quint32 lastIndex;
+    static void serialize(QByteArray &, v8::Handle<v8::Value>, QV8Engine *);
+    static v8::Handle<v8::Value> deserialize(const char *&, QV8Engine *);
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVELISTSCRIPTCLASS_P_H
-
+#endif // QV8WORKER_P_H
