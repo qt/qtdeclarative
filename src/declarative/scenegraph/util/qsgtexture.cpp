@@ -48,6 +48,12 @@
 
 QT_BEGIN_NAMESPACE
 
+inline static bool isPowerOfTwo(int x)
+{
+    // Assumption: x >= 1
+    return x == (x & -x);
+}
+
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)
     , filteringChanged(false)
@@ -252,6 +258,15 @@ void QSGTexture::updateBindOptions(bool force)
     }
 
     if (force || d->wrapChanged) {
+#if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
+        if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat) {
+            bool npotSupported = QGLContext::currentContext()->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+            QSize size = textureSize();
+            bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+            if (!npotSupported && isNpot)
+                qWarning("Scene Graph: This system does not support the REPEAT wrap mode for non-power-of-two textures.");
+        }
+#endif
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, d->horizontalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, d->verticalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
         d->wrapChanged = false;
