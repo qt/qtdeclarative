@@ -7,3 +7,4 @@ DESTDIR = ../imports/com/nokia/AutoTestQmlVersionPluginType
 symbian: {
     TARGET.EPOCALLOWDLLDATA=1
 }
+QT += core-private gui-private declarative-private

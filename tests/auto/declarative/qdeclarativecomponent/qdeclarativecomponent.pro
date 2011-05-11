@@ -11,3 +11,4 @@ SOURCES += tst_qdeclarativecomponent.cpp
 
 CONFIG += parallel_test
 
+QT += core-private gui-private declarative-private

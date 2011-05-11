@@ -14,3 +14,4 @@ SOURCES += tst_qdeclarativeimageprovider.cpp
 
 CONFIG += parallel_test
 
+QT += core-private gui-private declarative-private

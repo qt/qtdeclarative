@@ -19,3 +19,4 @@ SOURCES += tst_parserstress.cpp
 
 CONFIG += parallel_test
 
+QT += core-private gui-private declarative-private
