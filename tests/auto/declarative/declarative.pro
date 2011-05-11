@@ -26,9 +26,6 @@ SUBDIRS += \
            qmlvisual \
            moduleqt47
 
-SUBDIRS += \
-           qsgitem \
-
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += \
            qdeclarativeanchors \
@@ -84,6 +81,7 @@ contains(QT_CONFIG, private_tests) {
            qsgflipable \
            qsgfocusscope \
            qsggridview \
+           qsgitem \
            qsglistview \
            qsgloader \
            qsgmousearea \
