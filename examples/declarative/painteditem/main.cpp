@@ -67,6 +67,10 @@ public:
 
 int main(int argc, char ** argv)
 {
+#ifdef Q_WS_X11
+    QApplication::setAttribute(Qt::AA_X11InitThreads);
+#endif
+
     QApplication app(argc, argv);
 
     qmlRegisterType<MyPaintItem>("MyModule", 1, 0, "MyPaintItem");
