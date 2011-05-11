@@ -119,6 +119,8 @@ translations/*.qm
 translations/*_untranslated.ts
 qrc_*.cpp
 
+src/declarative/qtdeclarativeversion.h
+
 # Test generated files
 QObject.log
 tst_*
