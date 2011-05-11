@@ -106,6 +106,19 @@ QSGRootItem::QSGRootItem()
 {
 }
 
+void QSGCanvasPrivate::stopRenderingThread()
+{
+    if (thread->isRunning()) {
+        mutex.lock();
+        exitThread = true;
+        wait.wakeOne();
+        wait.wait(&mutex);
+        exitThread = false;
+        mutex.unlock();
+        thread->wait();
+    }
+}
+
 void QSGCanvasPrivate::_q_animationStarted()
 {
 #ifdef THREAD_DEBUG
@@ -239,15 +252,8 @@ void QSGCanvas::hideEvent(QHideEvent *e)
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering) {
-        d->mutex.lock();
-        d->exitThread = true;
-        d->wait.wakeOne();
-        d->wait.wait(&d->mutex);
-        d->exitThread = false;
-        d->mutex.unlock();
-        d->thread->wait();
-    }
+    if (d->threadedRendering)
+        d->stopRenderingThread();
 
     d->animationDriver->uninstall();
 
@@ -915,6 +921,9 @@ QSGCanvas::QSGCanvas(QSGCanvasPrivate &dd, const QGLFormat &format, QWidget *par
 QSGCanvas::~QSGCanvas()
 {
     Q_D(QSGCanvas);
+
+    if (d->threadedRendering)
+        d->stopRenderingThread();
 
     // ### should we change ~QSGItem to handle this better?
     // manually cleanup for the root item (item destructor only handles these when an item is parented)

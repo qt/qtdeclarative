@@ -115,6 +115,8 @@ public:
     void sendHoverEvent(QEvent::Type, QSGItem *, QGraphicsSceneHoverEvent *);
     void clearHover();
 
+    void stopRenderingThread();
+
     QDeclarativeGuard<QSGItem> hoverItem;
     enum FocusOption {
         DontChangeFocusProperty = 0x01,
