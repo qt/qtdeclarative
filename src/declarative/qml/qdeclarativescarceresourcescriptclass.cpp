@@ -144,9 +144,22 @@ QDeclarativeScarceResourceScriptClass::property(Object *object, const Identifier
 }
 
 /*
-   The user explicitly wants to preserve the resource.
-   We remove the scarce resource from the engine's linked list
-   of resources to release after evaluation completes.
+   This method is called when the user explicitly calls the "preserve" method of a scarce resource in JavaScript
+   within the specified evaluation context \a context of the script engine \a engine.
+   Calling this function signifies that the user explicitly wants to preserve the resource rather than let it
+   be automatically released once evaluation of the expression is complete.
+   This function removes the internal scarce resource from the declarative engine's linked list of scarce resources
+   to release after evaluation of the expression completes.  This means that the resource will only be truly
+   released when the JavaScript engine's garbage collector is run.
+
+   Example:
+   \qml
+   function getIcon(model) {
+       var icon = model.avatar; // a pixmap property
+       icon.preserve();         // explicitly preserves the resource
+       return icon;             // a valid variant will be returned
+   }
+   \endqml
  */
 QScriptValue QDeclarativeScarceResourceScriptClass::preserve(QScriptContext *context, QScriptEngine *engine)
 {
@@ -168,8 +181,21 @@ QScriptValue QDeclarativeScarceResourceScriptClass::preserve(QScriptContext *con
 }
 
 /*
-   The user explicitly wants to release the resource.
-   We set the internal scarce resource variant to the invalid variant.
+   This method is called when the user explicitly calls the "destroy" method of a scarce resource in JavaScript
+   within the specified evaluation context \a context of the script engine \a engine.
+   Calling this function signifies that the user explicitly wants to release the resource.
+   This function sets the internal scarce resource variant to the invalid variant, in order to release the original resource,
+   and then removes the resource from the declarative engine's linked-list of scarce resources to
+   to release after evaluation of the expression completes, as it has already been released.
+
+   Example:
+   \qml
+   function getIcon(model) {
+       var icon = model.avatar; // a pixmap property
+       icon.destroy();          // explicitly releases the resource
+       return icon;             // an invalid variant will be returned
+   }
+   \endqml
  */
 QScriptValue QDeclarativeScarceResourceScriptClass::destroy(QScriptContext *context, QScriptEngine *engine)
 {

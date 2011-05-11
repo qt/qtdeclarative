@@ -112,7 +112,7 @@ public:
     bool recursive() const { return bool(m_recursive); }
     void setRecursive(bool recursive);
 
-    void grab();
+    void scheduleUpdate();
 
 Q_SIGNALS:
     void textureChanged();
@@ -121,6 +121,8 @@ public Q_SLOTS:
     void markDirtyTexture();
 
 private:
+    void grab();
+
     QSGNode *m_item;
     QRectF m_rect;
     QSize m_size;
@@ -141,6 +143,7 @@ private:
     uint m_dirtyTexture : 1;
     uint m_multisamplingSupportChecked : 1;
     uint m_multisampling : 1;
+    uint m_grab : 1;
 };
 
 class QSGShaderEffectSource : public QSGItem, public QSGTextureProvider
@@ -204,7 +207,7 @@ public:
     QSGTexture *texture() const;
     const char *textureChangedSignal() const { return SIGNAL(textureChanged()); }
 
-    Q_INVOKABLE void grab();
+    Q_INVOKABLE void scheduleUpdate();
 
 Q_SIGNALS:
     void wrapModeChanged();
@@ -233,6 +236,7 @@ private:
     uint m_hideSource : 1;
     uint m_mipmap : 1;
     uint m_recursive : 1;
+    uint m_grab : 1;
 };
 
 QT_END_NAMESPACE

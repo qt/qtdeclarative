@@ -41,6 +41,7 @@
 
 #include <qtest.h>
 #include <QDeclarativeEngine>
+#include <QDeclarativeContext>
 #include <QDeclarativeComponent>
 #include <QFile>
 #include <QDebug>
@@ -70,9 +71,12 @@ private slots:
     void objectproperty();
     void basicproperty_data();
     void basicproperty();
+    void creation_data();
+    void creation();
 
 private:
     QDeclarativeEngine engine;
+    MyQmlObject tstObject;
 };
 
 tst_binding::tst_binding()
@@ -86,6 +90,7 @@ tst_binding::~tst_binding()
 void tst_binding::initTestCase()
 {
     registerTypes();
+    engine.rootContext()->setContextProperty("tstObject", &tstObject);
 }
 
 void tst_binding::cleanupTestCase()
@@ -159,6 +164,29 @@ void tst_binding::basicproperty()
 
     QBENCHMARK {
         object->setValue(1);
+    }
+}
+
+void tst_binding::creation_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("binding");
+
+    QTest::newRow("constant") << SRCDIR "/data/creation.txt" << "10";
+    QTest::newRow("ownProperty") << SRCDIR "/data/creation.txt" << "myObject.value";
+    QTest::newRow("declaredProperty") << SRCDIR "/data/creation.txt" << "myObject.myValue";
+    QTest::newRow("contextProperty") << SRCDIR "/data/creation.txt" << "tstObject.value";
+}
+
+void tst_binding::creation()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, binding);
+
+    COMPONENT(file, binding);
+
+    QBENCHMARK {
+        c.create();
     }
 }
 

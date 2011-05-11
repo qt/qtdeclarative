@@ -69,12 +69,12 @@ void QSGDefaultGlyphNode::setColor(const QColor &color)
     }
 }
 
-void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphs &glyphs)
+void QSGDefaultGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
 {
     if (m_material != 0)
         delete m_material;
 
-    QRawFont font = glyphs.font();
+    QRawFont font = glyphs.rawFont();
     m_material = new QSGTextMaskMaterial(font);
     m_material->setColor(m_color);
 

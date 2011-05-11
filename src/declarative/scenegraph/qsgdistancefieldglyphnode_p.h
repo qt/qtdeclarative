@@ -61,7 +61,7 @@ public:
     ~QSGDistanceFieldGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
-    virtual void setGlyphs(const QPointF &position, const QGlyphs &glyphs);
+    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs);
     virtual void setColor(const QColor &color);
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode mode);
@@ -78,7 +78,7 @@ private:
     QPointF m_baseLine;
     QSGDistanceFieldTextMaterial *m_material;
     QPointF m_position;
-    QGlyphs m_glyphs;
+    QGlyphRun m_glyphs;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     QSGGeometry m_geometry;
     QSGText::TextStyle m_style;

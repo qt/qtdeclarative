@@ -82,6 +82,7 @@ QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
     , m_dirtyTexture(true)
     , m_multisamplingSupportChecked(false)
     , m_multisampling(false)
+    , m_grab(false)
 {
 }
 
@@ -124,8 +125,9 @@ void QSGShaderEffectTexture::bind()
 
 bool QSGShaderEffectTexture::updateTexture()
 {
-    if (m_dirtyTexture) {
+    if ((m_live || m_grab) && m_dirtyTexture) {
         grab();
+        m_grab = false;
         return true;
     }
     return false;
@@ -181,6 +183,15 @@ void QSGShaderEffectTexture::setLive(bool live)
     markDirtyTexture();
 }
 
+void QSGShaderEffectTexture::scheduleUpdate()
+{
+    if (m_grab)
+        return;
+    m_grab = true;
+    if (m_dirtyTexture)
+        emit textureChanged();
+}
+
 void QSGShaderEffectTexture::setRecursive(bool recursive)
 {
     m_recursive = recursive;
@@ -188,10 +199,9 @@ void QSGShaderEffectTexture::setRecursive(bool recursive)
 
 void QSGShaderEffectTexture::markDirtyTexture()
 {
-    if (m_live) {
-        m_dirtyTexture = true;
+    m_dirtyTexture = true;
+    if (m_live || m_grab)
         emit textureChanged();
-    }
 }
 
 void QSGShaderEffectTexture::grab()
@@ -360,6 +370,7 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     , m_hideSource(false)
     , m_mipmap(false)
     , m_recursive(false)
+    , m_grab(true)
 {
     setFlag(ItemHasContents);
     m_texture = new QSGShaderEffectTexture(this);
@@ -516,17 +527,12 @@ void QSGShaderEffectSource::setRecursive(bool enabled)
     emit recursiveChanged();
 }
 
-void QSGShaderEffectSource::grab()
+void QSGShaderEffectSource::scheduleUpdate()
 {
-    if (!m_sourceItem)
+    if (m_grab)
         return;
-    QSGCanvas *canvas = m_sourceItem->canvas();
-    if (!canvas)
-        return;
-    QSGCanvasPrivate::get(canvas)->updateDirtyNodes();
-    QGLContext *glctx = const_cast<QGLContext *>(canvas->context());
-    glctx->makeCurrent();
-    qobject_cast<QSGShaderEffectTexture *>(m_texture)->grab();
+    m_grab = true;
+    update();
 }
 
 static void get_wrap_mode(QSGShaderEffectSource::WrapMode mode, QSGTexture::WrapMode *hWrap, QSGTexture::WrapMode *vWrap)
@@ -582,6 +588,7 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
 
     QSGShaderEffectTexture *tex = qobject_cast<QSGShaderEffectTexture *>(m_texture);
 
+    tex->setLive(m_live);
     tex->setItem(QSGItemPrivate::get(m_sourceItem)->itemNode());
     QRectF sourceRect = m_sourceRect.isNull()
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
@@ -591,10 +598,13 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
                       ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
     tex->setSize(textureSize);
-    tex->setLive(m_live);
     tex->setRecursive(m_recursive);
     tex->setFormat(GLenum(m_format));
     tex->setHasMipmaps(m_mipmap);
+
+    if (m_grab)
+        tex->scheduleUpdate();
+    m_grab = false;
 
     QSGTexture::Filtering filtering = QSGItemPrivate::get(this)->smooth
                                             ? QSGTexture::Linear

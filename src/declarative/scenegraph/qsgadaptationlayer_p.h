@@ -49,7 +49,7 @@
 #include <QtCore/qrect.h>
 #include <QtGui/qcolor.h>
 #include <QtCore/qsharedpointer.h>
-#include <QtGui/qglyphs.h>
+#include <QtGui/qglyphrun.h>
 #include <QtCore/qurl.h>
 
 QT_BEGIN_HEADER
@@ -103,7 +103,7 @@ public:
         SubPixelAntialiasing
     };
 
-    virtual void setGlyphs(const QPointF &position, const QGlyphs &glyphs) = 0;
+    virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
     virtual QPointF baseLine() const = 0;
 

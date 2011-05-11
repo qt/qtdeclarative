@@ -87,9 +87,9 @@ void QSGDistanceFieldGlyphNode::setPreferredAntialiasingMode(AntialiasingMode mo
     updateMaterial();
 }
 
-void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphs &glyphs)
+void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
 {
-    QRawFont font = glyphs.font();
+    QRawFont font = glyphs.rawFont();
     m_position = QPointF(position.x(), position.y() - font.ascent());
     m_glyphs = glyphs;
 
@@ -187,7 +187,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
 void QSGDistanceFieldGlyphNode::updateFont()
 {
-    m_glyph_cache = QSGDistanceFieldGlyphCache::get(QGLContext::currentContext(), m_glyphs.font());
+    m_glyph_cache = QSGDistanceFieldGlyphCache::get(QGLContext::currentContext(), m_glyphs.rawFont());
 }
 
 void QSGDistanceFieldGlyphNode::updateMaterial()

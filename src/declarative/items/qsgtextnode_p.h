@@ -72,7 +72,7 @@ public:
 private:
     void addTextBlock(const QPointF &position, QTextDocument *textDocument, const QTextBlock &block,
                       const QColor &overrideColor, QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
-    QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphs &glyphs, const QColor &color,
+    QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                                   QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
     void addTextDecorations(const QPointF &position, const QRawFont &font, const QColor &color,
                             qreal width, bool hasOverline, bool hasStrikeOut, bool hasUnderline);
