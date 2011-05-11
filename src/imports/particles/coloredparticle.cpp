@@ -100,7 +100,7 @@ public:
         QSGMaterialShader::deactivate();
 
         for (int i=0; i<8; ++i) {
-            m_program.setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
+            program()->setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
         }
     }
 
@@ -110,17 +110,17 @@ public:
         state.context()->functions()->glActiveTexture(GL_TEXTURE0);
         m->texture->bind();
 
-        m_program.setUniformValue(m_opacity_id, state.opacity());
-        m_program.setUniformValue(m_timestamp_id, (float) m->timestamp);
+        program()->setUniformValue(m_opacity_id, state.opacity());
+        program()->setUniformValue(m_timestamp_id, (float) m->timestamp);
 
         if (state.isMatrixDirty())
-            m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+            program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
     virtual void initialize() {
-        m_matrix_id = m_program.uniformLocation("matrix");
-        m_opacity_id = m_program.uniformLocation("opacity");
-        m_timestamp_id = m_program.uniformLocation("timestamp");
+        m_matrix_id = program()->uniformLocation("matrix");
+        m_opacity_id = program()->uniformLocation("opacity");
+        m_timestamp_id = program()->uniformLocation("timestamp");
     }
 
     virtual const char *vertexShader() const { return m_vertex_code.constData(); }
@@ -193,9 +193,9 @@ public:
 
     virtual void initialize() {
         ParticleTrailsMaterialData::initialize();
-        m_colortable_id = m_program.uniformLocation("colortable");
-        m_sizetable_id = m_program.uniformLocation("sizetable");
-        m_opacitytable_id = m_program.uniformLocation("opacitytable");
+        m_colortable_id = program()->uniformLocation("colortable");
+        m_sizetable_id = program()->uniformLocation("sizetable");
+        m_opacitytable_id = program()->uniformLocation("opacitytable");
     }
 
     virtual void updateState(const RenderState &state, QSGMaterial *current, QSGMaterial *old)
@@ -205,15 +205,15 @@ public:
         ParticleTrailsMaterialCT *m = static_cast<ParticleTrailsMaterialCT *>(current);
         state.context()->functions()->glActiveTexture(GL_TEXTURE1);
         m->colortable->bind();
-        m_program.setUniformValue(m_colortable_id, 1);
+        program()->setUniformValue(m_colortable_id, 1);
 
         state.context()->functions()->glActiveTexture(GL_TEXTURE2);
         m->sizetable->bind();
-        m_program.setUniformValue(m_sizetable_id, 2);
+        program()->setUniformValue(m_sizetable_id, 2);
 
         state.context()->functions()->glActiveTexture(GL_TEXTURE3);
         m->opacitytable->bind();
-        m_program.setUniformValue(m_opacitytable_id, 3);
+        program()->setUniformValue(m_opacitytable_id, 3);
 
         ParticleTrailsMaterialData::updateState(state, current, old);
     }

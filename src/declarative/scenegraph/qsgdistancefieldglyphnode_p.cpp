@@ -115,18 +115,18 @@ void QSGDistanceFieldTextMaterialShader::updateAlphaRange()
     qreal combinedScale = m_fontScale * m_matrixScale;
     qreal alphaMin = qMax(0.0, 0.5 - 0.07 / combinedScale);
     qreal alphaMax = qMin(0.5 + 0.07 / combinedScale, 1.0);
-    m_program.setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
-    m_program.setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
+    program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
+    program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
 }
 
 void QSGDistanceFieldTextMaterialShader::initialize()
 {
     QSGMaterialShader::initialize();
-    m_matrix_id = m_program.uniformLocation("matrix");
-    m_textureScale_id = m_program.uniformLocation("textureScale");
-    m_color_id = m_program.uniformLocation("color");
-    m_alphaMin_id = m_program.uniformLocation("alphaMin");
-    m_alphaMax_id = m_program.uniformLocation("alphaMax");
+    m_matrix_id = program()->uniformLocation("matrix");
+    m_textureScale_id = program()->uniformLocation("textureScale");
+    m_color_id = program()->uniformLocation("color");
+    m_alphaMin_id = program()->uniformLocation("alphaMin");
+    m_alphaMax_id = program()->uniformLocation("alphaMax");
 }
 
 void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -145,7 +145,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         QVector4D color(material->color().redF(), material->color().greenF(),
                         material->color().blueF(), material->color().alphaF());
         color *= state.opacity();
-        m_program.setUniformValue(m_color_id, color);
+        program()->setUniformValue(m_color_id, color);
     }
 
     bool updateRange = false;
@@ -155,7 +155,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         updateRange = true;
     }
     if (state.isMatrixDirty()) {
-        m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
         m_matrixScale = qSqrt(state.modelViewMatrix().determinant());
         updateRange = true;
     }
@@ -167,7 +167,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     if (updated
             || oldMaterial == 0
             || oldMaterial->glyphCache()->texture() != material->glyphCache()->texture()) {
-        m_program.setUniformValue(m_textureScale_id, QVector2D(1.0 / material->glyphCache()->textureSize().width(),
+        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->glyphCache()->textureSize().width(),
                                                                1.0 / material->glyphCache()->textureSize().height()));
         glBindTexture(GL_TEXTURE_2D, material->glyphCache()->texture());
 
@@ -253,7 +253,7 @@ DistanceFieldStyledTextMaterialShader::DistanceFieldStyledTextMaterialShader()
 void DistanceFieldStyledTextMaterialShader::initialize()
 {
     QSGDistanceFieldTextMaterialShader::initialize();
-    m_styleColor_id = m_program.uniformLocation("styleColor");
+    m_styleColor_id = program()->uniformLocation("styleColor");
 }
 
 void DistanceFieldStyledTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -269,7 +269,7 @@ void DistanceFieldStyledTextMaterialShader::updateState(const RenderState &state
         QVector4D color(material->styleColor().redF(), material->styleColor().greenF(),
                         material->styleColor().blueF(), material->styleColor().alphaF());
         color *= state.opacity();
-        m_program.setUniformValue(m_styleColor_id, color);
+        program()->setUniformValue(m_styleColor_id, color);
     }
 }
 
@@ -337,8 +337,8 @@ DistanceFieldOutlineTextMaterialShader::DistanceFieldOutlineTextMaterialShader()
 void DistanceFieldOutlineTextMaterialShader::initialize()
 {
     DistanceFieldStyledTextMaterialShader::initialize();
-    m_outlineAlphaMax0_id = m_program.uniformLocation("outlineAlphaMax0");
-    m_outlineAlphaMax1_id = m_program.uniformLocation("outlineAlphaMax1");
+    m_outlineAlphaMax0_id = program()->uniformLocation("outlineAlphaMax0");
+    m_outlineAlphaMax1_id = program()->uniformLocation("outlineAlphaMax1");
 }
 
 void DistanceFieldOutlineTextMaterialShader::updateOutlineAlphaRange(int dfRadius)
@@ -349,8 +349,8 @@ void DistanceFieldOutlineTextMaterialShader::updateOutlineAlphaRange(int dfRadiu
     qreal alphaMin = qMax(0.0, 0.5 - 0.07 / combinedScale);
     qreal styleAlphaMin0 = qMax(0.0, outlineLimit - 0.07 / combinedScale);
     qreal styleAlphaMin1 = qMin(qreal(outlineLimit + 0.07 / combinedScale), alphaMin);
-    m_program.setUniformValue(m_outlineAlphaMax0_id, GLfloat(styleAlphaMin0));
-    m_program.setUniformValue(m_outlineAlphaMax1_id, GLfloat(styleAlphaMin1));
+    program()->setUniformValue(m_outlineAlphaMax0_id, GLfloat(styleAlphaMin0));
+    program()->setUniformValue(m_outlineAlphaMax1_id, GLfloat(styleAlphaMin1));
 }
 
 void DistanceFieldOutlineTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -413,7 +413,7 @@ DistanceFieldShiftedStyleTextMaterialShader::DistanceFieldShiftedStyleTextMateri
 void DistanceFieldShiftedStyleTextMaterialShader::initialize()
 {
     DistanceFieldStyledTextMaterialShader::initialize();
-    m_shift_id = m_program.uniformLocation("shift");
+    m_shift_id = program()->uniformLocation("shift");
 }
 
 void DistanceFieldShiftedStyleTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -435,7 +435,7 @@ void DistanceFieldShiftedStyleTextMaterialShader::updateShift(const QSGDistanceF
 {
     QPointF texel(1.0 / cache->fontScale() * shift.x(),
                   1.0 / cache->fontScale() * shift.y());
-    m_program.setUniformValue(m_shift_id, texel);
+    program()->setUniformValue(m_shift_id, texel);
 }
 
 const char *DistanceFieldShiftedStyleTextMaterialShader::vertexShader() const
@@ -604,8 +604,8 @@ const char *QSGSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
 void QSGSubPixelDistanceFieldTextMaterialShader::initialize()
 {
     QSGDistanceFieldTextMaterialShader::initialize();
-    m_fontScale_id = m_program.uniformLocation("fontScale");
-    m_vecDelta_id = m_program.uniformLocation("vecDelta");
+    m_fontScale_id = program()->uniformLocation("fontScale");
+    m_vecDelta_id = program()->uniformLocation("vecDelta");
 }
 
 void QSGSubPixelDistanceFieldTextMaterialShader::activate()
@@ -625,8 +625,8 @@ void QSGSubPixelDistanceFieldTextMaterialShader::updateAlphaRange()
     qreal combinedScale = m_fontScale * m_matrixScale;
     qreal alphaMin = qMax(0.0, 0.5 - 0.05 / combinedScale);
     qreal alphaMax = qMin(0.5 + 0.05 / combinedScale, 1.0);
-    m_program.setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
-    m_program.setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
+    program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
+    program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
 }
 
 void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -641,12 +641,12 @@ void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &
     }
 
     if (oldMaterial == 0 || material->glyphCache()->fontScale() != oldMaterial->glyphCache()->fontScale())
-        m_program.setUniformValue(m_fontScale_id, GLfloat(material->glyphCache()->fontScale()));
+        program()->setUniformValue(m_fontScale_id, GLfloat(material->glyphCache()->fontScale()));
 
     if (oldMaterial == 0 || state.isMatrixDirty()) {
         int viewportWidth = state.viewportRect().width();
         QMatrix4x4 mat = state.combinedMatrix().inverted();
-        m_program.setUniformValue(m_vecDelta_id, mat.column(0) * (qreal(2) / viewportWidth));
+        program()->setUniformValue(m_vecDelta_id, mat.column(0) * (qreal(2) / viewportWidth));
     }
 
     QSGDistanceFieldTextMaterialShader::updateState(state, newEffect, oldEffect);

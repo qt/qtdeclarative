@@ -79,11 +79,11 @@ void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial 
                     c.greenF() * c.alphaF() * opacity,
                     c.blueF() * c.alphaF() * opacity,
                     c.alphaF() * opacity);
-        m_program.setUniformValue(m_color_id, v);
+        program()->setUniformValue(m_color_id, v);
     }
 
     if (state.isMatrixDirty())
-        m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
 char const *const *FlatColorMaterialShader::attributeNames() const
@@ -94,8 +94,8 @@ char const *const *FlatColorMaterialShader::attributeNames() const
 
 void FlatColorMaterialShader::initialize()
 {
-    m_matrix_id = m_program.uniformLocation("matrix");
-    m_color_id = m_program.uniformLocation("color");
+    m_matrix_id = program()->uniformLocation("matrix");
+    m_color_id = program()->uniformLocation("color");
 }
 
 const char *FlatColorMaterialShader::vertexShader() const {

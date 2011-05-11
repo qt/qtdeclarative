@@ -83,7 +83,7 @@ char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
 
 void QSGOpaqueTextureMaterialShader::initialize()
 {
-    m_matrix_id = m_program.uniformLocation("qt_Matrix");
+    m_matrix_id = program()->uniformLocation("qt_Matrix");
 }
 
 void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -105,7 +105,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
         t->updateBindOptions();
 
     if (state.isMatrixDirty())
-        m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
 
@@ -378,7 +378,7 @@ void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
     if (state.isOpacityDirty())
-        m_program.setUniformValue(m_opacity_id, state.opacity());
+        program()->setUniformValue(m_opacity_id, state.opacity());
 
     QSGOpaqueTextureMaterialShader::updateState(state, newEffect, oldEffect);
 }
@@ -386,7 +386,7 @@ void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial
 void QSGTextureMaterialShader::initialize()
 {
     QSGOpaqueTextureMaterialShader::initialize();
-    m_opacity_id = m_program.uniformLocation("opacity");
+    m_opacity_id = program()->uniformLocation("opacity");
 }
 
 QT_END_NAMESPACE

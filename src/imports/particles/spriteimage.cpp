@@ -114,7 +114,7 @@ public:
         QSGMaterialShader::deactivate();
 
         for (int i=0; i<8; ++i) {
-            m_program.setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
+            program()->setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
         }
     }
 
@@ -123,25 +123,25 @@ public:
         SpriteMaterial *m = static_cast<SpriteMaterial *>(newEffect);
         m->texture->bind();
 
-        m_program.setUniformValue(m_opacity_id, state.opacity());
-        m_program.setUniformValue(m_timestamp_id, (float) m->timestamp);
-        m_program.setUniformValue(m_framecount_id, (float) m->framecount);
-        m_program.setUniformValue(m_animcount_id, (float) m->animcount);
-        m_program.setUniformValue(m_width_id, (float) m->width);
-        m_program.setUniformValue(m_height_id, (float) m->height);
+        program()->setUniformValue(m_opacity_id, state.opacity());
+        program()->setUniformValue(m_timestamp_id, (float) m->timestamp);
+        program()->setUniformValue(m_framecount_id, (float) m->framecount);
+        program()->setUniformValue(m_animcount_id, (float) m->animcount);
+        program()->setUniformValue(m_width_id, (float) m->width);
+        program()->setUniformValue(m_height_id, (float) m->height);
 
         if (state.isMatrixDirty())
-            m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+            program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
     virtual void initialize() {
-        m_matrix_id = m_program.uniformLocation("matrix");
-        m_opacity_id = m_program.uniformLocation("opacity");
-        m_timestamp_id = m_program.uniformLocation("timestamp");
-        m_framecount_id = m_program.uniformLocation("framecount");
-        m_animcount_id = m_program.uniformLocation("animcount");
-        m_width_id = m_program.uniformLocation("width");
-        m_height_id = m_program.uniformLocation("height");
+        m_matrix_id = program()->uniformLocation("matrix");
+        m_opacity_id = program()->uniformLocation("opacity");
+        m_timestamp_id = program()->uniformLocation("timestamp");
+        m_framecount_id = program()->uniformLocation("framecount");
+        m_animcount_id = program()->uniformLocation("animcount");
+        m_width_id = program()->uniformLocation("width");
+        m_height_id = program()->uniformLocation("height");
     }
 
     virtual const char *vertexShader() const { return m_vertex_code.constData(); }

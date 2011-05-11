@@ -67,10 +67,10 @@ QSGMaterialType QSGVertexColorMaterialShader::type;
 void QSGVertexColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
 {
     if (!(newEffect->flags() & QSGMaterial::Blending) || state.isOpacityDirty())
-        m_program.setUniformValue(m_opacity_id, state.opacity());
+        program()->setUniformValue(m_opacity_id, state.opacity());
 
     if (state.isMatrixDirty())
-        m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
 char const *const *QSGVertexColorMaterialShader::attributeNames() const
@@ -81,8 +81,8 @@ char const *const *QSGVertexColorMaterialShader::attributeNames() const
 
 void QSGVertexColorMaterialShader::initialize()
 {
-    m_matrix_id = m_program.uniformLocation("matrix");
-    m_opacity_id = m_program.uniformLocation("opacity");
+    m_matrix_id = program()->uniformLocation("matrix");
+    m_opacity_id = program()->uniformLocation("opacity");
 }
 
 const char *QSGVertexColorMaterialShader::vertexShader() const {

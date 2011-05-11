@@ -105,9 +105,9 @@ QSGTextMaskMaterialData::QSGTextMaskMaterialData()
 
 void QSGTextMaskMaterialData::initialize()
 {
-    m_matrix_id = m_program.uniformLocation("matrix");
-    m_color_id = m_program.uniformLocation("color");
-    m_textureScale_id = m_program.uniformLocation("textureScale");
+    m_matrix_id = program()->uniformLocation("matrix");
+    m_color_id = program()->uniformLocation("color");
+    m_textureScale_id = program()->uniformLocation("textureScale");
 }
 
 void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
@@ -120,7 +120,7 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
         QVector4D color(material->color().redF(), material->color().greenF(),
                         material->color().blueF(), material->color().alphaF());
         color *= state.opacity();
-        m_program.setUniformValue(m_color_id, color);
+        program()->setUniformValue(m_color_id, color);
     }
 
     bool updated = material->ensureUpToDate();
@@ -130,7 +130,7 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
     if (updated
             || oldMaterial == 0
             || oldMaterial->texture()->textureId() != material->texture()->textureId()) {
-        m_program.setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
+        program()->setUniformValue(m_textureScale_id, QVector2D(1.0 / material->cacheTextureWidth(),
                                                                1.0 / material->cacheTextureHeight()));
         glBindTexture(GL_TEXTURE_2D, material->texture()->textureId());
 
@@ -143,7 +143,7 @@ void QSGTextMaskMaterialData::updateState(const RenderState &state, QSGMaterial 
     }
 
     if (state.isMatrixDirty())
-        m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
 }
 
 QSGTextMaskMaterial::QSGTextMaskMaterial(const QRawFont &font)

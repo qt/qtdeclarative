@@ -64,7 +64,7 @@ public:
         };
         Q_DECLARE_FLAGS(DirtyStates, DirtyState)
 
-        inline DirtyStates dirtyState() const { return m_dirty; }
+        inline DirtyStates dirtyStates() const { return m_dirty; }
 
         inline bool isMatrixDirty() const { return m_dirty & DirtyMatrix; }
         inline bool isOpacityDirty() const { return m_dirty & DirtyOpacity; }
@@ -91,15 +91,20 @@ public:
     virtual void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
     virtual char const *const *attributeNames() const = 0; // Array must end with null.
 
+    inline QGLShaderProgram *program() { return &m_program; }
+
 protected:
-    void compile();
+
+    friend class QSGContext;
+
+    virtual void compile();
     virtual void initialize() { }
 
     virtual const char *vertexShader() const = 0;
     virtual const char *fragmentShader() const = 0;
 
+private:
     QGLShaderProgram m_program;
-    bool m_compiled;
     void *m_reserved;
 };
 
@@ -121,9 +126,7 @@ public:
     virtual int compare(const QSGMaterial *other) const;
 
     QSGMaterial::Flags flags() const { return m_flags; }
-
-protected:
-    void setFlag(Flags flags, bool set);
+    void setFlag(Flags flags, bool on = true);
 
 private:
     Flags m_flags;

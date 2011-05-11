@@ -350,12 +350,14 @@ QSGTexture *QSGContext::decodeImageToTexture(QIODevice *dev,
 }
 
 
+
 /*!
     Factory function for texture objects.
 
     If \a image is a valid image, the QSGTexture::setImage function
     will be called with \a image as argument.
  */
+
 QSGTexture *QSGContext::createTexture(const QImage &image) const
 {
     QSGPlainTexture *t = new QSGPlainTexture();
@@ -365,9 +367,11 @@ QSGTexture *QSGContext::createTexture(const QImage &image) const
 }
 
 
+
 /*!
     Returns a material shader for the given material.
  */
+
 QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
 {
     Q_D(QSGContext);
@@ -377,13 +381,19 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
         return shader;
 
     shader = material->createShader();
+    shader->compile();
+    shader->initialize();
     d->materials[type] = shader;
+
     return shader;
 }
+
+
 
 /*!
     Sets weither the scene graph should render with flashing update rectangles or not
   */
+
 void QSGContext::setFlashModeEnabled(bool enabled)
 {
     d_func()->flashMode = enabled;

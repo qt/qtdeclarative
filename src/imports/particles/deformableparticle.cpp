@@ -100,7 +100,7 @@ public:
         QSGMaterialShader::deactivate();
 
         for (int i=0; i<8; ++i) {
-            m_program.setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
+            program()->setAttributeArray(i, GL_FLOAT, chunkOfBytes, 1, 0);
         }
     }
 
@@ -110,17 +110,17 @@ public:
         state.context()->functions()->glActiveTexture(GL_TEXTURE0);
         m->texture->bind();
 
-        m_program.setUniformValue(m_opacity_id, state.opacity());
-        m_program.setUniformValue(m_timestamp_id, (float) m->timestamp);
+        program()->setUniformValue(m_opacity_id, state.opacity());
+        program()->setUniformValue(m_timestamp_id, (float) m->timestamp);
 
         if (state.isMatrixDirty())
-            m_program.setUniformValue(m_matrix_id, state.combinedMatrix());
+            program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
     virtual void initialize() {
-        m_matrix_id = m_program.uniformLocation("matrix");
-        m_opacity_id = m_program.uniformLocation("opacity");
-        m_timestamp_id = m_program.uniformLocation("timestamp");
+        m_matrix_id = program()->uniformLocation("matrix");
+        m_opacity_id = program()->uniformLocation("opacity");
+        m_timestamp_id = program()->uniformLocation("timestamp");
     }
 
     virtual const char *vertexShader() const { return m_vertex_code.constData(); }

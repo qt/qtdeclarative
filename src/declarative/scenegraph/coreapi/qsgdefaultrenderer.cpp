@@ -468,6 +468,7 @@ void QMLRenderer::renderNodes(const QVector<QSGGeometryNode *> &list)
 
         QSGMaterial *material = geomNode->activeMaterial();
         QSGMaterialShader *program = m_context->prepareMaterial(material);
+        Q_ASSERT(program->program()->isLinked());
 
         bool changeClip = geomNode->clipList() != m_currentClip;
         QSGRenderer::ClipType clipType = QSGRenderer::NoClip;
