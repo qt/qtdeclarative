@@ -922,8 +922,10 @@ QSGCanvas::~QSGCanvas()
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering)
+    if (d->threadedRendering) {
         d->stopRenderingThread();
+        delete d->thread;
+    }
 
     // ### should we change ~QSGItem to handle this better?
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
