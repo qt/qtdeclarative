@@ -837,7 +837,7 @@ QDeclarativeImageProvider::ImageType QDeclarativeEnginePrivate::getImageProvider
     locker.unlock();
     if (provider)
         return provider->imageType();
-    return static_cast<QDeclarativeImageProvider::ImageType>(-1);
+    return QDeclarativeImageProvider::Invalid;
 }
 
 QSGTexture *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)

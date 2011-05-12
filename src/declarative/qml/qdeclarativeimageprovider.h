@@ -60,7 +60,8 @@ public:
     enum ImageType {
         Image,
         Pixmap,
-        Texture
+        Texture,
+        Invalid
     };
 
     QDeclarativeImageProvider(ImageType type);

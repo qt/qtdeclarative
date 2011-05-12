@@ -507,8 +507,19 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
         QSize readSize;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
         QDeclarativeImageProvider::ImageType imageType = ep->getImageProviderType(url);
-
-        if (imageType == QDeclarativeImageProvider::Image) {
+        if (imageType == QDeclarativeImageProvider::Invalid) {
+            QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::Loading;
+            QString errorStr = QDeclarativePixmap::tr("Invalid image provider: %1").arg(url.toString());
+            QImage image;
+            mutex.lock();
+            if (!cancelled.contains(runningJob)) {
+                if (sgContext)
+                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            }
+            mutex.unlock();
+        } else if (imageType == QDeclarativeImageProvider::Image) {
             QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
             QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::NoError;
             QString errorStr;
@@ -877,6 +888,9 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
         QDeclarativeImageProvider::ImageType imageType = ep->getImageProviderType(url);
 
         switch (imageType) {
+            case QDeclarativeImageProvider::Invalid:
+                return new QDeclarativePixmapData(url, requestSize,
+                    QDeclarativePixmap::tr("Invalid image provider: %1").arg(url.toString()));
             case QDeclarativeImageProvider::Texture:
             {
                 QSGTexture *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
@@ -912,7 +926,7 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
             }
         }
 
-        // no matching provider, or provider has bad image type, or provider returned null image
+        // provider has bad image type, or provider returned null image
         return new QDeclarativePixmapData(url, requestSize,
             QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString()));
     }
