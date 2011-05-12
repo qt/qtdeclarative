@@ -299,7 +299,9 @@ void QSGCanvasPrivate::polishItems()
 
 void QSGCanvasPrivate::syncSceneGraph()
 {
+    inSync = true;
     updateDirtyNodes();
+    inSync = false;
 }
 
 
@@ -452,6 +454,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , idle(false)
     , needsRepaint(true)
     , renderThreadAwakened(false)
+    , inSync(false)
     , thread(new MyThread(this))
     , animationDriver(0)
 {
@@ -1851,6 +1854,12 @@ void QSGCanvas::maybeUpdate()
                 qWarning("QSGRenderer: now maybe I should update...");
 #endif
                 d->wait.wakeOne();
+            } else if (d->inSync) {
+                // If we are in sync (on scene graph thread) someone has explicitely asked us
+                // to redraw, hence we tell the render loop to not go idle.
+                // The primary usecase for this is updatePaintNode() calling update() without
+                // changing the scene graph.
+                d->needsRepaint = true;
             }
             if (locked)
                 d->mutex.unlock();
