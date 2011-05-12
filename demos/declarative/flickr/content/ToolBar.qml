@@ -39,41 +39,31 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Item {
-    id: container
+    id: toolbar
 
-    signal clicked
+    property alias button1Label: button1.text
+    property alias button2Label: button2.text
+    property alias button2Visible: button2.visible
 
-    property string text
+    signal button1Clicked
+    signal button2Clicked
 
-    BorderImage {
-        id: buttonImage
-        source: "images/toolbutton.sci"
-        width: container.width; height: container.height
-    }
-    BorderImage {
-        id: pressed
-        opacity: 0
-        source: "images/toolbutton.sci"
-        width: container.width; height: container.height
-    }
-    MouseArea {
-        id: mouseRegion
-        anchors.fill: buttonImage
-        onClicked: { container.clicked(); }
-    }
-    Text {
-        color: "white"
-        anchors.centerIn: buttonImage; font.bold: true; font.pixelSize: 15
-        text: container.text; style: Text.Raised; styleColor: "black"
-    }
-    states: [
-        State {
-            name: "Pressed"
-            when: mouseRegion.pressed == true
-            PropertyChanges { target: pressed; opacity: 1 }
+    BorderImage { source: "images/titlebar.sci"; width: parent.width; height: parent.height + 14; y: -7 }
+
+    Row {
+        anchors.right: parent.right; anchors.rightMargin: 5; y: 3; height: 32; spacing: 30
+        Button {
+            id: button1
+            width: 140; height: 32
+            onClicked: toolbar.button1Clicked()
         }
-    ]
+
+        Button {
+            id: button2; width: 140; height: 32
+            onClicked: toolbar.button2Clicked()
+        }
+    }
 }

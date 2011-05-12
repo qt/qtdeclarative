@@ -39,31 +39,43 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Item {
-    id: toolbar
+    id: container
 
-    property alias button1Label: button1.text
-    property alias button2Label: button2.text
-    property alias button2Visible: button2.visible
+    property variant flickableArea
 
-    signal button1Clicked
-    signal button2Clicked
-
-    BorderImage { source: "images/titlebar.sci"; width: parent.width; height: parent.height + 14; y: -7 }
-
-    Row {
-        anchors.right: parent.right; anchors.rightMargin: 5; y: 3; height: 32; spacing: 30
-        Button {
-            id: button1
-            width: 140; height: 32
-            onClicked: toolbar.button1Clicked()
-        }
-
-        Button {
-            id: button2; width: 140; height: 32
-            onClicked: toolbar.button2Clicked()
-        }
+    Rectangle {
+        radius: 5
+        color: "black"
+        opacity: 0.3
+        border.color: "white"
+        border.width: 2
+        x: 0
+        y: flickableArea.visibleArea.yPosition * container.height
+        width: parent.width
+        height: flickableArea.visibleArea.heightRatio * container.height
     }
+    states: [
+        State {
+            name: "show"
+            when: flickableArea.movingVertically
+            PropertyChanges {
+                target: container
+                opacity: 1
+            }
+        }
+    ]
+    transitions: [
+        Transition {
+            from: "*"
+            to: "*"
+            NumberAnimation {
+                target: container
+                properties: "opacity"
+                duration: 400
+            }
+        }
+    ]
 }

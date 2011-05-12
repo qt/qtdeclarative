@@ -39,26 +39,50 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
+import Qt.labs.particles 2.0
 
-Component {
-    Item {
-        id: wrapper; width: wrapper.ListView.view.width; height: 86
-        Item {
-            id: moveMe
-            Rectangle { color: "black"; opacity: index % 2 ? 0.2 : 0.4; height: 84; width: wrapper.width; y: 1 }
-            Rectangle {
-                x: 6; y: 4; width: 77; height: 77; color: "white"; smooth: true
+Item{
+    id: container
+    property variant progress: 0
 
-                Image { source: imagePath; x: 1; y: 1 }
-                Image { source: "images/gloss.png" }
-            }
-            Column {
-                x: 92; width: wrapper.ListView.view.width - 95; y: 15; spacing: 2
-                Text { text: title; color: "white"; width: parent.width; font.pixelSize: 14; font.bold: true; elide: Text.ElideRight; style: Text.Raised; styleColor: "black" }
-                Text { text: photoAuthor; width: parent.width; font.pixelSize: 14; elide: Text.ElideLeft; color: "#cccccc"; style: Text.Raised; styleColor: "black" }
-                Text { text: photoDate; width: parent.width; font.pixelSize: 14; elide: Text.ElideRight; color: "#cccccc"; style: Text.Raised; styleColor: "black" }
-            }
+    Rectangle {
+        anchors.fill: parent; smooth: true
+        border.color: "white"; border.width: 0; radius: height/2 - 2
+        gradient: Gradient {
+            GradientStop { position: 0; color: "#66343434" }
+            GradientStop { position: 1.0; color: "#66000000" }
         }
+    }
+
+    ParticleSystem{
+        running: container.visible
+        id: barSys
+    }
+    ColoredParticle{
+        color: "lightsteelblue"
+        alpha: 0.1
+        colorVariation: 0.05
+        image: "images/particle.png"
+        system: barSys
+    }
+    TrailEmitter{
+        y: 2; height: parent.height-4;
+        x: 2; width: Math.max(parent.width * progress - 4, 0);
+        speed: AngleVector{ angleVariation: 180; magnitudeVariation: 12 }
+        system: barSys
+        particlesPerSecond: width;
+        particleDuration: 1000
+        particleSize: 20
+        particleSizeVariation: 4
+        particleEndSize: 12
+        maxParticles: parent.width;
+    }
+
+    Text {
+        text: Math.round(progress * 100) + "%"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        color: Qt.rgba(1.0, 1.0 - progress, 1.0 - progress,0.9); font.bold: true; font.pixelSize: 15
     }
 }

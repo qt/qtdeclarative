@@ -39,53 +39,26 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
-Item {
-    id: slider; width: 400; height: 16
+Component {
+    Item {
+        id: wrapper; width: wrapper.ListView.view.width; height: 86
+        Item {
+            id: moveMe
+            Rectangle { color: "black"; opacity: index % 2 ? 0.2 : 0.4; height: 84; width: wrapper.width; y: 1 }
+            Rectangle {
+                x: 6; y: 4; width: 77; height: 77; color: "white"; smooth: true
 
-    // value is read/write.
-    property real value: 1
-    onValueChanged: updatePos();
-    property real maximum: 1
-    property real minimum: 1
-    property int xMax: width - handle.width - 4
-    onXMaxChanged: updatePos();
-    onMinimumChanged: updatePos();
-
-    function updatePos() {
-        if (maximum > minimum) {
-            var pos = 2 + (value - minimum) * slider.xMax / (maximum - minimum);
-            pos = Math.min(pos, width - handle.width - 2);
-            pos = Math.max(pos, 2);
-            handle.x = pos;
-        } else {
-            handle.x = 2;
-        }
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        border.color: "white"; border.width: 0; radius: 8
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#66343434" }
-            GradientStop { position: 1.0; color: "#66000000" }
-        }
-    }
-
-    Rectangle {
-        id: handle; smooth: true
-        y: 2; width: 30; height: slider.height-4; radius: 6
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "lightgray" }
-            GradientStop { position: 1.0; color: "gray" }
-        }
-
-        MouseArea {
-            id: mouse
-            anchors.fill: parent; drag.target: parent
-            drag.axis: Drag.XAxis; drag.minimumX: 2; drag.maximumX: slider.xMax+2
-            onPositionChanged: { value = (maximum - minimum) * (handle.x-2) / slider.xMax + minimum; }
+                Image { source: imagePath; x: 1; y: 1 }
+                Image { source: "images/gloss.png" }
+            }
+            Column {
+                x: 92; width: wrapper.ListView.view.width - 95; y: 15; spacing: 2
+                Text { text: title; color: "white"; width: parent.width; font.pixelSize: 14; font.bold: true; elide: Text.ElideRight; style: Text.Raised; styleColor: "black" }
+                Text { text: photoAuthor; width: parent.width; font.pixelSize: 14; elide: Text.ElideLeft; color: "#cccccc"; style: Text.Raised; styleColor: "black" }
+                Text { text: photoDate; width: parent.width; font.pixelSize: 14; elide: Text.ElideRight; color: "#cccccc"; style: Text.Raised; styleColor: "black" }
+            }
         }
     }
 }

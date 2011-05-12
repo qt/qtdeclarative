@@ -118,6 +118,11 @@ emit overwriteChanged(arg);
 }
 }
 
+void fastForward(int ms)
+{
+    m_startTime += ms;
+}
+
 protected:
     void componentComplete();
 

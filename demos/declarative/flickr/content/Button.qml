@@ -39,43 +39,41 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Item {
     id: container
 
-    property variant flickableArea
+    signal clicked
 
-    Rectangle {
-        radius: 5
-        color: "black"
-        opacity: 0.3
-        border.color: "white"
-        border.width: 2
-        x: 0
-        y: flickableArea.visibleArea.yPosition * container.height
-        width: parent.width
-        height: flickableArea.visibleArea.heightRatio * container.height
+    property string text
+
+    BorderImage {
+        id: buttonImage
+        source: "images/toolbutton.sci"
+        width: container.width; height: container.height
+    }
+    BorderImage {
+        id: pressed
+        opacity: 0
+        source: "images/toolbutton.sci"
+        width: container.width; height: container.height
+    }
+    MouseArea {
+        id: mouseRegion
+        anchors.fill: buttonImage
+        onClicked: { container.clicked(); }
+    }
+    Text {
+        color: "white"
+        anchors.centerIn: buttonImage; font.bold: true; font.pixelSize: 15
+        text: container.text; style: Text.Raised; styleColor: "black"
     }
     states: [
         State {
-            name: "show"
-            when: flickableArea.movingVertically
-            PropertyChanges {
-                target: container
-                opacity: 1
-            }
-        }
-    ]
-    transitions: [
-        Transition {
-            from: "*"
-            to: "*"
-            NumberAnimation {
-                target: container
-                properties: "opacity"
-                duration: 400
-            }
+            name: "Pressed"
+            when: mouseRegion.pressed == true
+            PropertyChanges { target: pressed; opacity: 1 }
         }
     ]
 }

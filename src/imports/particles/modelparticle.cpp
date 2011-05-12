@@ -180,23 +180,26 @@ void ModelParticle::load(ParticleData* d)
     }
     if(m_available.isEmpty() && m_pendingItems.isEmpty())
         return;
-    ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
-    if(mpa)
-        qDebug() << (mpa->m_mp = this);
-    else
-        qDebug() << "Bugger";
     if(m_pendingItems.isEmpty()){
         m_items[pos] = m_model->item(m_available.first());
         m_idx[pos] = m_available.first();
         m_available.pop_front();
+        ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
+        if(mpa){
+            mpa->m_mp = this;
+            mpa->attach();
+        }
     }else{
         m_items[pos] = m_pendingItems.front();
         m_pendingItems.pop_front();
         m_items[pos]->setX(d->curX() - m_items[pos]->width()/2);
         m_items[pos]->setY(d->curY() - m_items[pos]->height()/2);
-        if(mpa)
-            mpa->attach();
         m_idx[pos] = -2;
+        ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
+        if(mpa){
+            mpa->m_mp = this;
+            mpa->attach();
+        }
     }
     m_items[pos]->setParentItem(this);
     m_data[pos] = d;

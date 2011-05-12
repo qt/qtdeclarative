@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "../common" as Common
+import QtQuick 2.0
+import Qt.labs.particles 2.0
 
 Flipable {
     id: container
@@ -95,7 +95,7 @@ Flipable {
 
         Rectangle { anchors.fill: parent; color: "black"; opacity: 0.4 }
 
-        Common.Progress {
+        Progress {
             anchors.centerIn: parent; width: 200; height: 22
             progress: bigImage.progress; visible: bigImage.status != Image.Ready
         }
@@ -126,7 +126,6 @@ Flipable {
                 id: imageContainer
                 width: Math.max(bigImage.width * bigImage.scale, flickable.width);
                 height: Math.max(bigImage.height * bigImage.scale, flickable.height);
-
                 Image {
                     id: bigImage; source: container.photoUrl; scale: slider.value
                     anchors.centerIn: parent; smooth: !flickable.movingVertically
@@ -137,7 +136,96 @@ Flipable {
                             prevScale = Math.min(slider.minimum, 1);
                             slider.value = prevScale;
                         }
+                        if (inBackState && bigImage.status == Image.Ready)
+                            particleBox.imageInAnim();
                     }
+                    property bool inBackState: false
+                    onInBackStateChanged:{
+                        if(inBackState && bigImage.status == Image.Ready)
+                            particleBox.imageInAnim();
+                        else if (!inBackState && bigImage.status == Image.Ready)
+                            particleBox.imageOutAnim();
+                    }
+                }
+
+                Item{
+                    id: particleBox
+                    width: bigImage.width * bigImage.scale
+                    height: bigImage.height * bigImage.scale
+                    anchors.centerIn: parent
+
+                    function imageInAnim(){
+                        cp.visible = true;
+                        pixAffect.onceOff = false;
+                        bigImage.visible = false;
+                        endEffectTimer.start();
+                        pixelEmitter.pulse(1);
+                    }
+                    function imageOutAnim(){
+                        cp.visible = true;
+                        pixAffect.onceOff = true;
+                        bigImage.visible = false;
+                        turbulence.active = true;
+                        endEffectTimer.start();
+                        pixelEmitter.burst(2048);
+                    }
+                    Timer{
+                        id: endEffectTimer
+                        interval: 1000
+                        repeat: false
+                        running: false
+                        onTriggered:{
+                            bigImage.visible = true;
+                            turbulence.active = false;
+                            cp.visible = false;
+                        }
+                    }
+                    ParticleSystem{
+                        id: imageSystem
+                    }
+                    ColoredParticle{
+                        id: cp
+                        system: imageSystem
+                        color: "gray"
+                        alpha: 1
+                        image: "images/squareParticle.png"
+                        colorVariation: 0
+                    }
+                    Picture{
+                        id: pixAffect
+                        system: imageSystem
+                        anchors.fill: parent
+                        image: container.photoUrl;
+                        onceOff: true
+                    }
+                    Turbulence{
+                        id: turbulence
+                        system: imageSystem
+                        anchors.fill: parent 
+                        frequency: 100
+                        strength: 250
+                        active: false
+                    }
+                    TrailEmitter{
+                        id: pixelEmitter0
+                        system: imageSystem
+                        height: parent.height
+                        particleSize: 4
+                        particleDuration: 1000
+                        particlesPerSecond: 4096
+                        speed: PointVector{x: 360; xVariation: 8; yVariation: 4}
+                        emitting: false
+                    }
+                    TrailEmitter{
+                        id: pixelEmitter
+                        system: imageSystem
+                        anchors.fill: parent
+                        particleSize: 4
+                        particleDuration: 1000
+                        particlesPerSecond: 2048
+                        emitting: false
+                    }
+
                 }
             }
         }
@@ -148,7 +236,7 @@ Flipable {
             anchors.centerIn: parent; color: "white"; font.bold: true
         }
 
-        Common.Slider {
+        Slider {
             id: slider; visible: { bigImage.status == Image.Ready && maximum > minimum }
             anchors {
                 bottom: parent.bottom; bottomMargin: 65
@@ -174,12 +262,13 @@ Flipable {
         PropertyChanges { target: itemRotation; angle: 180 }
         PropertyChanges { target: toolBar; button2Visible: false }
         PropertyChanges { target: toolBar; button1Label: "Back" }
+        PropertyChanges { target: bigImage; inBackState: true }
     }
 
     transitions: Transition {
         SequentialAnimation {
             PropertyAction { target: bigImage; property: "smooth"; value: false }
-            NumberAnimation { easing.type: Easing.InOutQuad; properties: "angle"; duration: 500 }
+            NumberAnimation { easing.type: Easing.InOutQuad; properties: "angle"; duration: 1000 }
             PropertyAction { target: bigImage; property: "smooth"; value: !flickable.movingVertically }
         }
     }

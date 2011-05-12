@@ -89,6 +89,7 @@ public:
     bool hasMipmaps() const { return m_has_mipmaps; }
 
     void setImage(const QImage &image);
+    const QImage &image() { return m_image; }
 
     virtual void bind();
 

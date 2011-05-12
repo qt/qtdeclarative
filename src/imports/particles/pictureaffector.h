@@ -50,12 +50,12 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QDeclarativePixmap;
 class PictureAffector : public ParticleAffector
 {
     Q_OBJECT
     //Usually want to use "particles" to target just colored stuff, and save performance
     //Use onceOff (inherited) to determine if this is an emitter modification or a more constant enforcer
-    //TODO: Onceoff isn't actually working right now...
     Q_PROPERTY(QUrl image READ image WRITE setImage NOTIFY imageChanged)
     //TODO: Bool smooth, where it interpolates
 public:
@@ -78,15 +78,17 @@ public slots:
     {
         if (m_image != arg) {
             m_image = arg;
-            m_loadedImage = QImage(m_image.toLocalFile());
-            if(m_loadedImage.isNull())
-                qWarning() << "PictureAffector could not load picture " << m_image.toLocalFile();
+            startLoadImage();
             emit imageChanged(arg);
         }
     }
 
+private slots:
+    void loadImage();
 private:
+    void startLoadImage();
     QUrl m_image;
+    QDeclarativePixmap* m_pix;
     QImage m_loadedImage;
 };
 

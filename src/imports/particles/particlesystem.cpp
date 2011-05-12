@@ -206,6 +206,8 @@ void ParticleSystem::reset()
     initializeSystem();
     foreach(ParticleType* p, m_particles)
         p->update();
+    foreach(ParticleEmitter* e, m_emitters)
+        e->emitWindow(0);//Start, so that starttime factors appropriately
 }
 
 ParticleData* ParticleSystem::newDatum(int groupId)

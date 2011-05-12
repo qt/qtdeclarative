@@ -42,11 +42,13 @@
 #include "pictureaffector.h"
 #include "coloredparticle.h"
 #include <QDebug>
+#include <private/qsgtexture_p.h>
+#include <private/qdeclarativepixmapcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
 PictureAffector::PictureAffector(QSGItem *parent) :
-    ParticleAffector(parent)
+    ParticleAffector(parent), m_pix(0)
 {
     m_needsReset = true;
 }
@@ -54,6 +56,27 @@ PictureAffector::PictureAffector(QSGItem *parent) :
 void PictureAffector::reset(int systemIdx)
 {
     ParticleAffector::reset(systemIdx);
+}
+
+void PictureAffector::startLoadImage()
+{
+    if(m_pix)
+        m_pix->clear();
+    else
+        m_pix = new QDeclarativePixmap();
+    m_pix->load(qmlEngine(this), m_image, QDeclarativePixmap::Cache);
+    if(m_pix->isReady())
+        loadImage();
+    else
+        m_pix->connectFinished(this, SLOT(loadImage()));
+}
+void PictureAffector::loadImage()
+{
+    QSGPlainTexture* ptext = qobject_cast<QSGPlainTexture*>(m_pix->texture());
+    if(ptext)
+        m_loadedImage = ptext->image();
+    if(m_loadedImage.isNull())
+        qWarning() << "PictureAffector could not load picture " << m_image;
 }
 
 bool PictureAffector::affectParticle(ParticleData *d, qreal dt)
@@ -74,7 +97,7 @@ bool PictureAffector::affectParticle(ParticleData *d, qreal dt)
     QPoint pos = QPoint(d->curX() - m_offset.x(), d->curY() - m_offset.y());
     if(!QRect(0,0,width(),height()).contains(pos)){
         //XXX: Just a debugging helper, as I don't think it can get here.
-        qWarning() << "An unexpected situation has occurred. But don't worry, everything will be fine.";
+        qWarning() << "PictureAffector gives up.";
         return false;
     }
     Color4ub c;
