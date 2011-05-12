@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
  */
 QSGTextureProvider *QSGTextureProvider::from(QObject *object)
 {
-    return static_cast<QSGTextureProvider *>(object->qt_metacast("QSGTextureProvider"));
+    return object ? static_cast<QSGTextureProvider *>(object->qt_metacast("QSGTextureProvider")) : 0;
 }
 
 
