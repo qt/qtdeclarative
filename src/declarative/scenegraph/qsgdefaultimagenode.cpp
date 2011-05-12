@@ -169,6 +169,11 @@ inline static bool isPowerOfTwo(int x)
     return x == (x & -x);
 }
 
+namespace {
+    struct X { float x, tx; };
+    struct Y { float y, ty; };
+}
+
 void QSGDefaultImageNode::updateGeometry()
 {
     const QSGTexture *t = m_material.texture();
@@ -201,8 +206,6 @@ void QSGDefaultImageNode::updateGeometry()
 #endif
             m_geometry.allocate(hCells * vCells * 4, hCells * vCells * 6);
             m_geometry.setDrawingMode(GL_TRIANGLES);
-            struct X { float x, tx; };
-            struct Y { float y, ty; };
             QVarLengthArray<X, 32> xData(2 * hCells);
             QVarLengthArray<Y, 32> yData(2 * vCells);
             X *xs = xData.data();
