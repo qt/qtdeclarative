@@ -157,6 +157,8 @@ private slots:
     void revisions();
     void revisionOverloads();
 
+    void propertyInit();
+
     // regression tests for crashes
     void crash1();
     void crash2();
@@ -2012,6 +2014,34 @@ void tst_qdeclarativelanguage::aliasPropertyChangeSignals()
         QVERIFY(o != 0);
 
         QCOMPARE(o->property("test").toBool(), true);
+
+        delete o;
+    }
+}
+
+// Tests property initializers
+void tst_qdeclarativelanguage::propertyInit()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("propertyInit.1.qml"));
+
+        VERIFY_ERRORS(0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QCOMPARE(o->property("test").toInt(), 1);
+
+        delete o;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("propertyInit.2.qml"));
+
+        VERIFY_ERRORS(0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QCOMPARE(o->property("test").toInt(), 123);
 
         delete o;
     }

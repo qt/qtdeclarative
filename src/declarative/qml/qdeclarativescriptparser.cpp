@@ -127,6 +127,7 @@ protected:
                                 LocationSpan location,
                                 AST::UiObjectInitializer *initializer = 0);
 
+    QDeclarativeParser::Variant getVariant(AST::Statement *stmt);
     QDeclarativeParser::Variant getVariant(AST::ExpressionNode *expr);
 
     LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
@@ -604,16 +605,16 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         property.location = location(node->firstSourceLocation(),
                                      node->lastSourceLocation());
 
-        if (node->expression) { // default value
+        if (node->statement) { // default value
             property.defaultValue = new Property;
             property.defaultValue->parent = _stateStack.top().object;
             property.defaultValue->location =
-                    location(node->expression->firstSourceLocation(),
-                             node->expression->lastSourceLocation());
+                    location(node->statement->firstSourceLocation(),
+                             node->statement->lastSourceLocation());
             QDeclarativeParser::Value *value = new QDeclarativeParser::Value;
-            value->location = location(node->expression->firstSourceLocation(),
-                                       node->expression->lastSourceLocation());
-            value->value = getVariant(node->expression);
+            value->location = location(node->statement->firstSourceLocation(),
+                                       node->statement->lastSourceLocation());
+            value->value = getVariant(node->statement);
             property.defaultValue->values << value;
         }
 
@@ -656,6 +657,18 @@ bool ProcessAST::visit(AST::UiObjectBinding *node)
                         typeLocation, l, node->initializer);
 
     return false;
+}
+
+QDeclarativeParser::Variant ProcessAST::getVariant(AST::Statement *stmt)
+{
+    if (stmt) {
+        if (AST::ExpressionStatement *exprStmt = AST::cast<AST::ExpressionStatement *>(stmt))
+            return getVariant(exprStmt->expression);
+
+        return QDeclarativeParser::Variant(asString(stmt), stmt);
+    }
+
+    return QDeclarativeParser::Variant();
 }
 
 QDeclarativeParser::Variant ProcessAST::getVariant(AST::ExpressionNode *expr)
