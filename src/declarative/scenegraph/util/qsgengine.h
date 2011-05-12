@@ -79,7 +79,7 @@ public:
     void setClearColor(const QColor &color);
     QColor clearColor() const;
 
-signals:
+Q_SIGNALS:
     void beforeRendering();
     void afterRendering();
 

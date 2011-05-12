@@ -75,7 +75,7 @@ public:
 
     QSGEngine *sceneGraphEngine() const;
 
-signals:
+Q_SIGNALS:
     void sceneGraphInitialized();
 
 protected:
@@ -100,7 +100,7 @@ protected:
     virtual void wheelEvent(QWheelEvent *);
 #endif
 
-private slots:
+private Q_SLOTS:
     void sceneGraphChanged();
     void maybeUpdate();
 
