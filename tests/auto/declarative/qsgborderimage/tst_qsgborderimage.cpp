@@ -52,6 +52,7 @@
 #include <private/qsgimagebase_p.h>
 #include <private/qsgscalegrid_p_p.h>
 #include <private/qsgloader_p.h>
+#include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 
 #include "../shared/testhttpserver.h"
@@ -86,8 +87,6 @@ private slots:
     void invalidSciFile();
     void pendingRemoteRequest();
     void pendingRemoteRequest_data();
-    void testQtQuick11Attributes();
-    void testQtQuick11Attributes_data();
 
 private:
     QDeclarativeEngine engine;
@@ -225,33 +224,26 @@ void tst_qsgborderimage::smooth()
 
 void tst_qsgborderimage::mirror()
 {
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" SRCDIR "/data/heart200.png\"; smooth: true; width: 300; height: 300; border { top: 50; right: 50; bottom: 50; left: 50 } }";
-    QDeclarativeComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
-    QVERIFY(obj != 0);
+    QSGView *canvas = new QSGView(0);
+    canvas->show();
 
-    int width = obj->property("width").toInt();
-    int height = obj->property("height").toInt();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
+    QSGBorderImage *image = qobject_cast<QSGBorderImage*>(canvas->rootObject());
+    QVERIFY(image != 0);
 
-    QGraphicsScene scene;
-    scene.addItem(qobject_cast<QSGItem *>(obj));
-    QPixmap screenshot(width, height);
-    screenshot.fill();
-    QPainter p_screenshot(&screenshot);
-    scene.render(&p_screenshot, QRect(0, 0, width, height), QRect(0, 0, width, height));
+    int width = image->property("width").toInt();
 
+    QPixmap screenshot = canvas->renderPixmap();
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
     QPixmap expected = screenshot.transformed(transform);
 
-    obj->setProperty("mirror", true);
-    p_screenshot.fillRect(QRect(0, 0, width, height), Qt::white);
-    scene.render(&p_screenshot, QRect(0, 0, width, height), QRect(0, 0, width, height));
+    image->setProperty("mirror", true);
+    screenshot = canvas->renderPixmap();
 
     QCOMPARE(screenshot, expected);
 
-    delete obj;
+    delete canvas;
 }
 
 void tst_qsgborderimage::tileModes()
@@ -380,45 +372,6 @@ void tst_qsgborderimage::pendingRemoteRequest_data()
 
     QTest::newRow("png file") << "http://localhost/none.png";
     QTest::newRow("sci file") << "http://localhost/none.sci";
-}
-
-void tst_qsgborderimage::testQtQuick11Attributes()
-{
-    QFETCH(QString, code);
-    QFETCH(QString, warning);
-    QFETCH(QString, error);
-
-    QDeclarativeEngine engine;
-    QObject *obj;
-
-    QDeclarativeComponent valid(&engine);
-    valid.setData("import QtQuick 1.1; BorderImage { " + code.toUtf8() + " }", QUrl(""));
-    obj = valid.create();
-    QVERIFY(obj);
-    QVERIFY(valid.errorString().isEmpty());
-    delete obj;
-
-    QDeclarativeComponent invalid(&engine);
-    invalid.setData("import QtQuick 1.0; BorderImage { " + code.toUtf8() + " }", QUrl(""));
-    QTest::ignoreMessage(QtWarningMsg, warning.toUtf8());
-    obj = invalid.create();
-    QCOMPARE(invalid.errorString(), error);
-    delete obj;
-}
-
-void tst_qsgborderimage::testQtQuick11Attributes_data()
-{
-    QTest::addColumn<QString>("code");
-    QTest::addColumn<QString>("warning");
-    QTest::addColumn<QString>("error");
-
-    QTest::newRow("mirror") << "mirror: true"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"BorderImage.mirror\" is not available in QtQuick 1.0.\n";
-
-    QTest::newRow("cache") << "cache: true"
-        << "QDeclarativeComponent: Component is not ready"
-        << ":1 \"BorderImage.cache\" is not available in QtQuick 1.0.\n";
 }
 
 QTEST_MAIN(tst_qsgborderimage)
