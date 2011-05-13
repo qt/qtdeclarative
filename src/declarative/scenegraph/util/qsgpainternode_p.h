@@ -101,7 +101,7 @@ public:
 
     void update();
 
-    void preprocess();
+    void paint();
 
 private:
     void updateTexture();

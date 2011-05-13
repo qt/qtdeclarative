@@ -127,7 +127,6 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
-    setFlag(UsePreprocess);
 }
 
 QSGPainterNode::~QSGPainterNode()
@@ -137,11 +136,8 @@ QSGPainterNode::~QSGPainterNode()
     delete m_multisampledFbo;
 }
 
-void QSGPainterNode::preprocess()
+void QSGPainterNode::paint()
 {
-    if (!m_dirtyContents)
-        return;
-
     QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
 
     QPainter painter;
@@ -181,7 +177,6 @@ void QSGPainterNode::preprocess()
         QGLFramebufferObject::blitFramebuffer(m_fbo, dirtyRect, m_multisampledFbo, dirtyRect);
     }
 
-    m_dirtyContents = false;
     m_dirtyRect = QRect();
 }
 
@@ -194,9 +189,13 @@ void QSGPainterNode::update()
     if (m_dirtyTexture)
         updateTexture();
 
+    if (m_dirtyContents)
+        paint();
+
     m_dirtyGeometry = false;
     m_dirtyRenderTarget = false;
     m_dirtyTexture = false;
+    m_dirtyContents = false;
 }
 
 void QSGPainterNode::updateTexture()
