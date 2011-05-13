@@ -419,7 +419,8 @@ void QSGPaintedItem::setRenderTarget(RenderTarget target)
     \note The QML Scene Graph uses two separate threads, the main thread does things such as
     processing events or updating animations while a second thread does the actual OpenGL rendering.
     As a consequence, paint() is not called from the main GUI thread but from the GL enabled
-    renderer thread.
+    renderer thread. At the moment paint() is called, the GUI thread is blocked and this is
+    therefore thread-safe.
 */
 
 /*!
