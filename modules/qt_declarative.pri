@@ -1,6 +1,6 @@
-QT.declarative.VERSION = 4.8.0
-QT.declarative.MAJOR_VERSION = 4
-QT.declarative.MINOR_VERSION = 8
+QT.declarative.VERSION = 5.0.0
+QT.declarative.MAJOR_VERSION = 5
+QT.declarative.MINOR_VERSION = 0
 QT.declarative.PATCH_VERSION = 0
 
 QT.declarative.name = QtDeclarative
