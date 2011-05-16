@@ -58,6 +58,9 @@ HEADERS += \
     $$PWD/qsgstateoperations_p.h \
     $$PWD/qsgimplicitsizeitem_p.h \
     $$PWD/qsgimplicitsizeitem_p_p.h \
+    $$PWD/qsgcanvasitem_p.h \
+    $$PWD/qsgcontext2d_p.h \
+    $$PWD/qsgcontext2d_p_p.h \
 
 SOURCES += \
     $$PWD/qsgevents.cpp \
@@ -95,6 +98,8 @@ SOURCES += \
     $$PWD/qsganimation.cpp \
     $$PWD/qsgstateoperations.cpp \
     $$PWD/qsgimplicitsizeitem.cpp \
+    $$PWD/qsgcanvasitem.cpp \
+    $$PWD/qsgcontext2d.cpp \
 
 SOURCES += \
     $$PWD/qsgshadereffectitem.cpp \
