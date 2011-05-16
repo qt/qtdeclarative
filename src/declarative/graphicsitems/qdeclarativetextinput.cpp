@@ -1876,6 +1876,7 @@ bool QDeclarativeTextInput::isInputMethodComposing() const
 void QDeclarativeTextInputPrivate::init()
 {
     Q_Q(QDeclarativeTextInput);
+    control->setParent(q);//Now mandatory due to accessibility changes
     control->setCursorWidth(1);
     control->setPasswordCharacter(QLatin1Char('*'));
     q->setSmooth(smooth);

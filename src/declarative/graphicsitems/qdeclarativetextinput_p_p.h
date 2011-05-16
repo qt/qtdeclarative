@@ -84,12 +84,10 @@ public:
             showInputPanelOnFocus = false;
         }
 #endif
-
     }
 
     ~QDeclarativeTextInputPrivate()
     {
-        delete control;
     }
 
     int xToPos(int x, QTextLine::CursorPosition betweenOrOn = QTextLine::CursorBetweenCharacters) const
