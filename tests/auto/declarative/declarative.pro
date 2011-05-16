@@ -76,6 +76,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativexmllistmodel \
            qpacketprotocol \
            qdeclarativev4 \
+           qsgborderimage \
            qsgcanvas \
            qsgflickable \
            qsgflipable \
