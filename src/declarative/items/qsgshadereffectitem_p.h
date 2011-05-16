@@ -106,7 +106,6 @@ Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
     void blendingChanged();
-    void marginsChanged();
     void meshChanged();
     void cullModeChanged();
 

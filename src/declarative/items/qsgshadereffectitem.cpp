@@ -85,6 +85,99 @@ const char *qtTexCoordAttributeName()
     return qt_texcoord_attribute_name;
 }
 
+/*!
+    \qmlclass ShaderEffectItem QSGShaderEffectItem
+    \since 5.0
+    \ingroup qml-basic-visual-elements
+    \brief The ShaderEffectItem element applies custom shaders to a rectangle.
+    \inherits Item
+
+    The ShaderEffectItem element applies a custom OpenGL
+    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
+    rectangle. It allows you to write effects such as drop shadow, blur,
+    colorize and page curl directly in QML.
+
+    There are two types of input to the \l vertexShader:
+    uniform variables and attributes. Some are predefined:
+    \list
+    \o uniform mat4 qt_ModelViewProjectionMatrix - combined transformation
+       matrix, the product of the matrices from the root item to this
+       ShaderEffectItem, and an orthogonal projection.
+    \o uniform float qt_Opacity - combined opacity, the product of the
+       opacities from the root item to this ShaderEffectItem.
+    \o attribute vec4 qt_Vertex - vertex position, the top-left vertex has
+       position (0, 0), the bottom-right (\l{Item::width}{width},
+       \l{Item::height}{height}).
+    \o attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
+       coordinate is (0, 0), the bottom-right (1, 1).
+    \endlist
+
+    In addition, any property that can be mapped to an OpenGL Shading Language
+    (GLSL) type is available as a uniform variable. The following list shows
+    how properties are mapped to GLSL uniform variables:
+    \list
+    \o bool, int, qreal -> bool, int, float - If the type in the shader is not
+       the same as in QML, the value is converted automatically.
+    \o QColor -> vec4 - When colors are passed to the shader, they are first
+       premultiplied. Thus Qt.rgba(0.2, 0.6, 1.0, 0.5) becomes
+       vec4(0.1, 0.3, 0.5, 0.5) in the shader, for example.
+    \o QRect, QRectF -> vec4 - Qt.rect(x, y, w, h) becomes vec4(x, y, w, h) in
+       the shader.
+    \o QPoint, QPointF, QSize, QSizeF -> vec2
+    \o QVector3D -> vec3
+    \o QTransform -> mat4
+    \o \l Image, \l ShaderEffectSource -> sampler2D - Origin is in the top-left
+       corner, and the color values are premultiplied.
+    \endlist
+
+    The output from the \l fragmentShader should be premultiplied. If
+    \l blending is enabled, source-over blending is used. However, additive
+    blending can be achieved by outputting zero in the alpha channel.
+
+    \row
+    \o \image declarative-shadereffectitem.png
+    \o \qml
+        import QtQuick 2.0
+
+        Rectangle {
+            width: 200; height: 100
+            Row {
+                Image { id: img; sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
+                ShaderEffectItem {
+                    width: 100; height: 100
+                    property variant src: img
+                    vertexShader: "
+                        uniform highp mat4 qt_ModelViewProjectionMatrix;
+                        attribute highp vec4 qt_Vertex;
+                        attribute highp vec2 qt_MultiTexCoord0;
+                        varying highp vec2 coord;
+                        void main() {
+                            coord = qt_MultiTexCoord0;
+                            gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;
+                        }"
+                    fragmentShader: "
+                        varying highp vec2 coord;
+                        uniform sampler2D src;
+                        uniform lowp float qt_Opacity;
+                        void main() {
+                            lowp vec4 tex = texture2D(src, coord);
+                            gl_FragColor = vec4(vec3(dot(tex.rgb, vec3(0.344, 0.5, 0.156))), tex.a) * qt_Opacity;
+                        }"
+                }
+            }
+        }
+        \endqml
+    \endrow
+
+    By default, the ShaderEffectItem consists of four vertices, one for each
+    corner. For non-linear vertex transformations, like page curl, you can
+    specify a fine grid of vertices by assigning a \l GridMesh to the \l mesh
+    property.
+
+    \note Scene Graph textures have origin in the top-left corner rather than
+    bottom-left which is common in OpenGL.
+*/
+
 QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
     : QSGItem(parent)
     , m_mesh(0)
@@ -109,6 +202,14 @@ void QSGShaderEffectItem::componentComplete()
     QSGItem::componentComplete();
 }
 
+/*!
+    \qmlproperty string ShaderEffectItem::fragmentShader
+
+    This property holds the fragment shader's GLSL source code.
+    The default shader passes the texture coordinate along to the fragment
+    shader as "varying highp vec2 qt_TexCoord0".
+*/
+
 void QSGShaderEffectItem::setFragmentShader(const QByteArray &code)
 {
     if (m_source.fragmentCode.constData() == code.constData())
@@ -120,6 +221,15 @@ void QSGShaderEffectItem::setFragmentShader(const QByteArray &code)
     }
     emit fragmentShaderChanged();
 }
+
+/*!
+    \qmlproperty string ShaderEffectItem::vertexShader
+
+    This property holds the vertex shader's GLSL source code.
+    The default shader expects the texture coordinate to be passed from the
+    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
+    sampler2D named "source".
+*/
 
 void QSGShaderEffectItem::setVertexShader(const QByteArray &code)
 {
@@ -133,6 +243,15 @@ void QSGShaderEffectItem::setVertexShader(const QByteArray &code)
     emit vertexShaderChanged();
 }
 
+/*!
+    \qmlproperty bool ShaderEffectItem::blending
+
+    If this property is true, the output from the \l fragmentShader is blended
+    with the background using source-over blend mode. If false, the background
+    is disregarded. Blending decreases the performance, so you should set this
+    property to false when blending is not needed. The default value is true.
+*/
+
 void QSGShaderEffectItem::setBlending(bool enable)
 {
     if (blending() == enable)
@@ -143,6 +262,14 @@ void QSGShaderEffectItem::setBlending(bool enable)
 
     emit blendingChanged();
 }
+
+/*!
+    \qmlproperty object ShaderEffectItem::mesh
+
+    This property holds the mesh definition. If not set, a simple mesh with one
+    vertex in each corner is used. Assign a \l GridMesh to this property to get
+    a higher resolution grid.
+*/
 
 void QSGShaderEffectItem::setMesh(QSGShaderEffectMesh *mesh)
 {
@@ -157,6 +284,20 @@ void QSGShaderEffectItem::setMesh(QSGShaderEffectMesh *mesh)
     update();
     emit meshChanged();
 }
+
+/*!
+    \qmlproperty enumeration ShaderEffectItem::cullMode
+
+    This property defines which sides of the element should be visible.
+
+    \list
+    \o ShaderEffectItem.NoCulling - Both sides are visible
+    \o ShaderEffectItem.BackFaceCulling - only front side is visible
+    \o ShaderEffectItem.FrontFaceCulling - only back side is visible
+    \endlist
+
+    The default is NoCulling.
+*/
 
 void QSGShaderEffectItem::setCullMode(CullMode face)
 {
