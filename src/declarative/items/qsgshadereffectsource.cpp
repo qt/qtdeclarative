@@ -359,6 +359,80 @@ void QSGShaderEffectTexture::grab()
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
 }
 
+/*!
+    \qmlclass ShaderEffectSource QSGShaderEffectSource
+    \since 5.0
+    \ingroup qml-basic-visual-elements
+    \brief The ShaderEffectSource element renders a QML element into a texture
+    and displays it.
+    \inherits Item
+
+    The ShaderEffectSource element renders \l sourceItem into a texture and
+    displays it in the scene. \l sourceItem is drawn into the texture as though
+    it was a fully opaque root element. Thus \l sourceItem itself can be
+    invisible, but still appear in the texture.
+
+    ShaderEffectSource can be used as:
+    \list
+    \o a texture source in a \l ShaderEffectItem.
+       This allows you to apply custom shader effects to any QML element.
+    \o a cache for a complex element.
+       The complex element can be rendered once into the texture, which can
+       then be animated freely without the need to render the complex element
+       again every frame.
+    \o an opacity layer. 
+       ShaderEffectSource allows you to apply an opacity to elements as a group
+       rather than each element individually.
+    \endlist
+
+    \row
+    \o \image declarative-shadereffectsource.png
+    \o \qml
+        import QtQuick 2.0
+
+        Rectangle {
+            width: 200
+            height: 100
+            gradient: Gradient {
+                GradientStop { position: 0; color: "white" }
+                GradientStop { position: 1; color: "black" }
+            }
+            Row {
+                opacity: 0.5
+                Item {
+                    id: foo
+                    width: 100; height: 100
+                    Rectangle { x: 5; y: 5; width: 60; height: 60; color: "red" }
+                    Rectangle { x: 20; y: 20; width: 60; height: 60; color: "orange" }
+                    Rectangle { x: 35; y: 35; width: 60; height: 60; color: "yellow" }
+                }
+                ShaderEffectSource {
+                    width: 100; height: 100
+                    sourceItem: foo
+                }
+            }
+        }
+        \endqml
+    \endrow
+
+    The ShaderEffectSource element does not redirect any mouse or keyboard
+    input to \l sourceItem. If you hide the \l sourceItem by setting
+    \l{Item::visible}{visible} to false or \l{Item::opacity}{opacity} to zero,
+    it will no longer react to input. In cases where the ShaderEffectSource is
+    meant to replace the \l sourceItem, you typically want to hide the
+    \l sourceItem while still handling input. For this, you can use
+    the \l hideSource property.
+
+    \note If \l sourceItem is a \l Rectangle with border, by default half the
+    border width falls outside the texture. To get the whole border, you can
+    extend the \l sourceRect.
+
+    \warning In most cases, using a ShaderEffectSource will decrease
+    performance, and in all cases, it will increase video memory usage.
+    Rendering through a ShaderEffectSource might also lead to lower quality
+    since some OpenGL implementations support multisampled backbuffer,
+    but not multisampled framebuffer objects.
+*/
 
 QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     : QSGItem(parent)
@@ -385,6 +459,24 @@ QSGShaderEffectSource::~QSGShaderEffectSource()
         QSGItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
 }
 
+/*!
+    \qmlproperty enumeration ShaderEffectSource::wrapMode
+
+    This property defines the OpenGL wrap modes associated with the texture.
+    Modifying this property makes most sense when the element is used as a
+    source texture of a \l ShaderEffectItem.
+
+    \list
+    \o ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
+    \o ShaderEffectSource.RepeatHorizontally - GL_REPEAT horizontally, GL_CLAMP_TO_EDGE vertically
+    \o ShaderEffectSource.RepeatVertically - GL_CLAMP_TO_EDGE horizontally, GL_REPEAT vertically
+    \o ShaderEffectSource.Repeat - GL_REPEAT both horizontally and vertically
+    \endlist
+
+    \note Some OpenGL ES 2 implementations do not support the GL_REPEAT
+    wrap mode with non-power-of-two textures.
+*/
+
 QSGShaderEffectSource::WrapMode QSGShaderEffectSource::wrapMode() const
 {
     return m_wrapMode;
@@ -398,6 +490,12 @@ void QSGShaderEffectSource::setWrapMode(WrapMode mode)
     update();
     emit wrapModeChanged();
 }
+
+/*!
+    \qmlproperty Item ShaderEffectSource::sourceItem
+
+    This property holds the element to be rendered into the texture.
+*/
 
 QSGItem *QSGShaderEffectSource::sourceItem() const
 {
@@ -426,6 +524,15 @@ void QSGShaderEffectSource::setSourceItem(QSGItem *item)
     emit sourceItemChanged();
 }
 
+/*!
+    \qmlproperty rect ShaderEffectSource::sourceRect
+
+    This property defines which rectangular area of the \l sourceItem to
+    render into the texture. The source rectangle can be larger than
+    \l sourceItem itself. If the rectangle is null, which is the default,
+    the whole \l sourceItem is rendered to texture.
+*/
+
 QRectF QSGShaderEffectSource::sourceRect() const
 {
     return m_sourceRect;
@@ -439,6 +546,13 @@ void QSGShaderEffectSource::setSourceRect(const QRectF &rect)
     update();
     emit sourceRectChanged();
 }
+
+/*!
+    \qmlproperty size ShaderEffectSource::textureSize
+
+    This property holds the size of the texture. If it is empty, which is the
+    default, the size of the source rectangle is used.
+*/
 
 QSize QSGShaderEffectSource::textureSize() const
 {
@@ -454,6 +568,23 @@ void QSGShaderEffectSource::setTextureSize(const QSize &size)
     emit textureSizeChanged();
 }
 
+/*!
+    \qmlproperty enumeration ShaderEffectSource::format
+
+    This property defines the internal OpenGL format of the texture.
+    Modifying this property makes most sense when the element is used as a
+    source texture of a \l ShaderEffectItem. Depending on the OpenGL
+    implementation, this property might allow you to save some texture memory.
+
+    \list
+    \o ShaderEffectSource.Alpha - GL_ALPHA
+    \o ShaderEffectSource.RGB - GL_RGB
+    \o ShaderEffectSource.RGBA - GL_RGBA
+    \endlist
+
+    \note Some OpenGL implementations do not support the GL_ALPHA format.
+*/
+
 QSGShaderEffectSource::Format QSGShaderEffectSource::format() const
 {
     return m_format;
@@ -468,6 +599,14 @@ void QSGShaderEffectSource::setFormat(QSGShaderEffectSource::Format format)
     emit formatChanged();
 }
 
+/*!
+    \qmlproperty bool ShaderEffectSource::live
+
+    If this property is true, the texture is updated whenever the
+    \l sourceItem changes. Otherwise, it will be a frozen image of the
+    \l sourceItem. The property is true by default.
+*/
+
 bool QSGShaderEffectSource::live() const
 {
     return m_live;
@@ -481,6 +620,17 @@ void QSGShaderEffectSource::setLive(bool live)
     update();
     emit liveChanged();
 }
+
+/*!
+    \qmlproperty bool ShaderEffectSource::hideSource
+
+    If this property is true, the \l sourceItem is hidden, though it will still
+    be rendered into the texture. As opposed to hiding the \l sourceItem by
+    setting \l{Item::visible}{visible} to false, setting this property to true
+    will not prevent mouse or keyboard input from reaching \l sourceItem.
+    The property is useful when the ShaderEffectSource is anchored on top of,
+    and meant to replace the \l sourceItem.
+*/
 
 bool QSGShaderEffectSource::hideSource() const
 {
@@ -500,6 +650,15 @@ void QSGShaderEffectSource::setHideSource(bool hide)
     emit hideSourceChanged();
 }
 
+/*!
+    \qmlproperty bool ShaderEffectSource::mipmap
+
+    If this property is true, mipmaps are generated for the texture.
+
+    \note Some OpenGL ES 2 implementations do not support mipmapping of
+    non-power-of-two textures.
+*/
+
 bool QSGShaderEffectSource::mipmap() const
 {
     return m_mipmap;
@@ -514,6 +673,24 @@ void QSGShaderEffectSource::setMipmap(bool enabled)
     emit mipmapChanged();
 }
 
+/*!
+    \qmlproperty bool ShaderEffectSource::recursive
+
+    Set this property to true if the ShaderEffectSource has a dependency on
+    itself. ShaderEffectSources form a dependency chain, where one
+    ShaderEffectSource can be part of the \l sourceItem of another.
+    If there is a loop in this chain, a ShaderEffectSource could end up trying
+    to render into the same texture it is using as source, which is not allowed
+    by OpenGL. When this property is set to true, an extra texture is allocated
+    so that ShaderEffectSource can keep a copy of the texture from the previous
+    frame. It can then render into one texture and use the texture from the
+    previous frame as source.
+
+    Setting both this property and \l live to true will cause the scene graph
+    to render continuously. Since the ShaderEffectSource depends on itself,
+    updating it means that it immediately becomes dirty again.
+*/
+
 bool QSGShaderEffectSource::recursive() const
 {
     return m_recursive;
@@ -526,6 +703,13 @@ void QSGShaderEffectSource::setRecursive(bool enabled)
     m_recursive = enabled;
     emit recursiveChanged();
 }
+
+/*!
+    \qmlmethod ShaderEffectSource::scheduleUpdate()
+
+    Schedules a re-rendering of the texture for the next frame.
+    Use this to update the texture when \l live is false.
+*/
 
 void QSGShaderEffectSource::scheduleUpdate()
 {
