@@ -52,6 +52,7 @@
 #include <QtDeclarative/private/qsgtext_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include "../../../shared/util.h"
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -65,6 +66,8 @@ public:
     tst_QSGGridView();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void items();
     void changed();
     void inserted();
@@ -106,7 +109,17 @@ private:
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
     void dumpTree(QSGItem *parent, int depth = 0);
 };
+void tst_QSGGridView::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("QSGGridView needs OpenGL 2.0", SkipAll);
+}
 
+void tst_QSGGridView::cleanupTestCase()
+{
+
+}
 class TestModel : public QAbstractListModel
 {
 public:

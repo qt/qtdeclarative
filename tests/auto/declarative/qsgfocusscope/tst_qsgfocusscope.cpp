@@ -47,6 +47,7 @@
 #include <private/qsgtextedit_p.h>
 #include <private/qsgtext_p.h>
 #include <QtDeclarative/private/qsgfocusscope_p.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -63,6 +64,8 @@ public:
     T *findItem(QSGItem *parent, const QString &id);
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void basic();
     void nested();
     void noFocus();
@@ -73,6 +76,17 @@ private slots:
     void qtBug13380();
     void forceActiveFocus();
 };
+void tst_qsgfocusscope::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("FocusScope item needs OpenGL 2.0", SkipAll);
+}
+
+void tst_qsgfocusscope::cleanupTestCase()
+{
+
+}
 
 /*
    Find an item with the specified id.

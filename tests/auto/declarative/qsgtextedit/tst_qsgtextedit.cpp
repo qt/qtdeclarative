@@ -60,6 +60,7 @@
 #include <QMimeData>
 #include <private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_WS_MAC
 #include <Carbon/Carbon.h>
@@ -97,6 +98,8 @@ public:
     tst_qsgtextedit();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void text();
     void width();
     void wrap();
@@ -170,7 +173,17 @@ private:
 
     QDeclarativeEngine engine;
 };
+void tst_qsgtextedit::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("TextEdit item needs OpenGL 2.0", SkipAll);
+}
 
+void tst_qsgtextedit::cleanupTestCase()
+{
+
+}
 tst_qsgtextedit::tst_qsgtextedit()
 {
     standard << "the quick brown fox jumped over the lazy dog"

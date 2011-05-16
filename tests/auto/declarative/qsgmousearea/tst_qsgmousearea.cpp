@@ -47,6 +47,7 @@
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeengine.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -57,6 +58,8 @@ class tst_QSGMouseArea: public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void dragProperties();
     void resetDrag();
     void dragging();
@@ -76,6 +79,18 @@ private slots:
 private:
     QSGView *createView();
 };
+
+void tst_QSGMouseArea::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("MouseArea needs OpenGL 2.0", SkipAll);
+}
+
+void tst_QSGMouseArea::cleanupTestCase()
+{
+
+}
 
 void tst_QSGMouseArea::dragProperties()
 {

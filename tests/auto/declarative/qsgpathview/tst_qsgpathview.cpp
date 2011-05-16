@@ -55,6 +55,7 @@
 #include <QStringListModel>
 #include <QStandardItemModel>
 #include <QFile>
+#include <QtOpenGL/QGLShaderProgram>
 
 #include "../../../shared/util.h"
 
@@ -89,6 +90,8 @@ public:
     tst_QSGPathView();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void initValues();
     void items();
     void dataModel();
@@ -120,6 +123,18 @@ private:
     template<typename T>
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
 };
+
+void tst_QSGPathView::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("PathView needs OpenGL 2.0", SkipAll);
+}
+
+void tst_QSGPathView::cleanupTestCase()
+{
+
+}
 
 class TestObject : public QObject
 {
