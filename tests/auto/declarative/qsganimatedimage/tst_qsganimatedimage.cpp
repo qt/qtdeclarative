@@ -79,18 +79,7 @@ private slots:
     void qtbug_16520();
     void progressAndStatusChanges();
 
-private:
-    QPixmap grabScene(QGraphicsScene *scene, int width, int height);
 };
-
-QPixmap tst_qsganimatedimage::grabScene(QGraphicsScene *scene, int width, int height)
-{
-    QPixmap screenshot(width, height);
-    screenshot.fill();
-    QPainter p_screenshot(&screenshot);
-    scene->render(&p_screenshot, QRect(0, 0, width, height), QRect(0, 0, width, height));
-    return screenshot;
-}
 
 void tst_qsganimatedimage::play()
 {
@@ -155,20 +144,19 @@ void tst_qsganimatedimage::mirror_running()
 {
     // test where mirror is set to true after animation has started
 
-    QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/hearts.qml"));
-    QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
+    QSGView *canvas = new QSGView;
+    canvas->show();
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/hearts.qml"));
+    QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(canvas->rootObject());
     QVERIFY(anim);
 
-    QGraphicsScene scene;
     int width = anim->property("width").toInt();
-    int height = anim->property("height").toInt();
-    scene.addItem(qobject_cast<QSGItem *>(anim));
 
     QCOMPARE(anim->currentFrame(), 0);
-    QPixmap frame0 = grabScene(&scene, width, height);
+    QPixmap frame0 = canvas->renderPixmap();
     anim->setCurrentFrame(1);
-    QPixmap frame1 = grabScene(&scene, width, height);
+    QPixmap frame1 = canvas->renderPixmap();
 
     anim->setCurrentFrame(0);
 
@@ -179,11 +167,11 @@ void tst_qsganimatedimage::mirror_running()
     anim->setProperty("mirror", true);
 
     QCOMPARE(anim->currentFrame(), 1);
-    QPixmap frame1_flipped = grabScene(&scene, width, height);
+    QPixmap frame1_flipped = canvas->renderPixmap();
 
     QTRY_VERIFY(spy.count() == 1); spy.clear();
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
-    QPixmap frame0_flipped = grabScene(&scene, width, height);
+    QPixmap frame0_flipped = canvas->renderPixmap();
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -192,22 +180,23 @@ void tst_qsganimatedimage::mirror_running()
 
     QCOMPARE(frame0_flipped, frame0_expected);
     QCOMPARE(frame1_flipped, frame1_expected);
+
+    delete canvas;
 }
 
 void tst_qsganimatedimage::mirror_notRunning()
 {
     QFETCH(QUrl, fileUrl);
 
-    QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, fileUrl);
-    QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
+    QSGView *canvas = new QSGView;
+    canvas->show();
+
+    canvas->setSource(fileUrl);
+    QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(canvas->rootObject());
     QVERIFY(anim);
 
-    QGraphicsScene scene;
     int width = anim->property("width").toInt();
-    int height = anim->property("height").toInt();
-    scene.addItem(qobject_cast<QSGItem *>(anim));
-    QPixmap screenshot = grabScene(&scene, width, height);
+    QPixmap screenshot = canvas->renderPixmap();
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -218,8 +207,9 @@ void tst_qsganimatedimage::mirror_notRunning()
     bool paused = anim->isPlaying();
 
     anim->setProperty("mirror", true);
-    screenshot = grabScene(&scene, width, height);
+    screenshot = canvas->renderPixmap();
 
+    QEXPECT_FAIL("", "QTBUG-19252", Abort);
     QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status
@@ -227,7 +217,7 @@ void tst_qsganimatedimage::mirror_notRunning()
     QCOMPARE(anim->isPlaying(), playing);
     QCOMPARE(anim->isPaused(), paused);
 
-    delete anim;
+    delete canvas;
 }
 
 void tst_qsganimatedimage::mirror_notRunning_data()
