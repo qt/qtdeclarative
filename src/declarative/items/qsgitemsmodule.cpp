@@ -73,6 +73,8 @@
 #include <private/qsgshadereffectitem_p.h>
 #include <private/qsgshadereffectsource_p.h>
 //#include "private/qsgpincharea_p.h"
+#include "qsgcanvasitem_p.h"
+#include "qsgcontext2d_p.h"
 
 static QDeclarativePrivate::AutoParentResult qsgitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -172,6 +174,11 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh");
 
     qmlRegisterUncreatableType<QSGPaintedItem>("QtQuick", 2, 0, "PaintedItem", QSGPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
+
+    qmlRegisterType<QSGCanvasItem>("QtQuick", 2, 0, "Canvas");
+    qmlRegisterType<QSGContext2D>();
+    qmlRegisterType<QSGCanvasGradient>();
+
 
     qmlRegisterType<QSGParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QSGAnchorChanges>(uri, major, minor,"AnchorChanges");
