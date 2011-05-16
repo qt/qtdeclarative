@@ -407,5 +407,12 @@ void QSGPainterNode::setContentsScale(qreal s)
     markDirty(DirtyMaterial);
 }
 
+QImage QSGPainterNode::toImage() const
+{
+    if (m_actualRenderTarget == QSGPaintedItem::Image)
+        return m_image;
+    else
+        return m_fbo->toImage();
+}
 
 QT_END_NAMESPACE

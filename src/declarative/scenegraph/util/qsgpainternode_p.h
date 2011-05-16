@@ -99,6 +99,7 @@ public:
     void setContentsScale(qreal s);
     qreal contentsScale() const { return m_contentsScale; }
 
+    QImage toImage() const;
     void update();
 
     void paint();
