@@ -1150,6 +1150,7 @@ bool QSGTextInput::isInputMethodComposing() const
 void QSGTextInputPrivate::init()
 {
     Q_Q(QSGTextInput);
+    control->setParent(q);//Now mandatory due to accessibility changes
     control->setCursorWidth(1);
     control->setPasswordCharacter(QLatin1Char('*'));
     q->setSmooth(smooth);

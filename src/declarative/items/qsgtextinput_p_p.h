@@ -83,12 +83,10 @@ public:
             showInputPanelOnFocus = false;
         }
 #endif
-
     }
 
     ~QSGTextInputPrivate()
     {
-        delete control;
     }
 
     int xToPos(int x, QTextLine::CursorPosition betweenOrOn = QTextLine::CursorBetweenCharacters) const
