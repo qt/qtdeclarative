@@ -155,7 +155,7 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
             type = "PNG";
             mime = QLatin1String("image/png");
         }
-        image.save(&buffer, type.ascii());
+        image.save(&buffer, type.toAscii());
         buffer.close();
         QString dataUrl = QLatin1String("data:%1;base64,%2");
         return dataUrl.arg(mime).arg(ba.toBase64().constData());
