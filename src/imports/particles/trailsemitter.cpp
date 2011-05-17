@@ -72,7 +72,7 @@ void TrailsEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && !m_emitLeft){
+    if((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
         m_reset_last = true;
         return;
     }
@@ -92,6 +92,7 @@ void TrailsEmitter::emitWindow(int timeStamp)
             m_burstLeft = 0;
         }
     }
+
     qreal time = timeStamp / 1000.;
 
     qreal particleRatio = 1. / m_particlesPerSecond;
@@ -116,71 +117,76 @@ void TrailsEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
     qreal emitter_x_offset = m_last_emitter.x() - x();
     qreal emitter_y_offset = m_last_emitter.y() - y();
-    while (pt < time || m_emitLeft) {
+    if(!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
+        pt = time;
+    while (pt < time || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
         ParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle]);
-        if(!datum){//skip this emission
-            if(!m_emitLeft)
-                pt += particleRatio;
-            else
-                --m_emitLeft;
-            continue;
+        if(datum){//actually emit(otherwise we've been asked to skip this one)
+            datum->e = this;//###useful?
+            ParticleVertex &p = datum->pv;
+            qreal t = 1 - (pt - opt) / dt;
+            qreal vx =
+              - 2 * ax * (1 - t)
+              + 2 * bx * (1 - 2 * t)
+              + 2 * cx * t;
+            qreal vy =
+              - 2 * ay * (1 - t)
+              + 2 * by * (1 - 2 * t)
+              + 2 * cy * t;
+
+
+            // Particle timestamp
+            p.t = pt;
+            p.lifeSpan = //TODO:Promote to base class?
+                    (m_particleDuration
+                     + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
+                    / 1000.0;
+
+            // Particle position
+            QRectF boundsRect;
+            if(!m_burstQueue.isEmpty()){
+                boundsRect = QRectF(m_burstQueue.first().second.x() - x(), m_burstQueue.first().second.y() - y(),
+                        width(), height());
+            } else {
+                boundsRect = QRectF(emitter_x_offset + dex * (pt - opt) / dt, emitter_y_offset + dey * (pt - opt) / dt
+                              , width(), height());
+            }
+            QPointF newPos = effectiveExtruder()->extrude(boundsRect);
+            p.x = newPos.x();
+            p.y = newPos.y();
+
+            // Particle speed
+            const QPointF &speed = m_speed->sample(newPos);
+            p.sx = speed.x()
+                    + m_speed_from_movement * vx;
+            p.sy = speed.y()
+                    + m_speed_from_movement * vy;
+
+            // Particle acceleration
+            const QPointF &accel = m_acceleration->sample(newPos);
+            p.ax = accel.x();
+            p.ay = accel.y();
+
+            // Particle size
+            float sizeVariation = -m_particleSizeVariation
+                    + rand() / float(RAND_MAX) * m_particleSizeVariation * 2;
+
+            float size = qMax((qreal)0.0 , m_particleSize + sizeVariation);
+            float endSize = qMax((qreal)0.0 , sizeAtEnd + sizeVariation);
+
+            p.size = size;// * float(m_emitting);
+            p.endSize = endSize;// * float(m_emitting);
+
+            m_system->emitParticle(datum);
         }
-        datum->e = this;//###useful?
-        ParticleVertex &p = datum->pv;
-        qreal t = 1 - (pt - opt) / dt;
-        qreal vx =
-          - 2 * ax * (1 - t)
-          + 2 * bx * (1 - 2 * t)
-          + 2 * cx * t;
-        qreal vy =
-          - 2 * ay * (1 - t)
-          + 2 * by * (1 - 2 * t)
-          + 2 * cy * t;
-
-
-        // Particle timestamp
-        p.t = pt;
-        p.lifeSpan = //TODO:Promote to base class?
-                (m_particleDuration
-                 + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
-                / 1000.0;
-
-        // Particle position
-        QRectF boundsRect(emitter_x_offset + dex * (pt - opt) / dt, emitter_y_offset + dey * (pt - opt) / dt
-                          , width(), height());
-        QPointF newPos = effectiveExtruder()->extrude(boundsRect);
-        p.x = newPos.x();
-        p.y = newPos.y();
-
-        // Particle speed
-        const QPointF &speed = m_speed->sample(newPos);
-        p.sx = speed.x()
-                + m_speed_from_movement * vx;
-        p.sy = speed.y()
-                + m_speed_from_movement * vy;
-
-        // Particle acceleration
-        const QPointF &accel = m_acceleration->sample(newPos);
-        p.ax = accel.x();
-        p.ay = accel.y();
-
-        // Particle size
-        float sizeVariation = -m_particleSizeVariation
-                + rand() / float(RAND_MAX) * m_particleSizeVariation * 2;
-
-        float size = qMax((qreal)0.0 , m_particleSize + sizeVariation);
-        float endSize = qMax((qreal)0.0 , sizeAtEnd + sizeVariation);
-
-        p.size = size;// * float(m_emitting);
-        p.endSize = endSize;// * float(m_emitting);
-
-        if(!m_emitLeft)
+        if(m_burstQueue.isEmpty()){
             pt += particleRatio;
-        else
-            --m_emitLeft;
-
-        m_system->emitParticle(datum);
+        }else{
+            m_burstQueue.first().first--;
+            if(m_burstQueue.first().first <= 0)
+                m_burstQueue.pop_front();
+        }
     }
     m_last_emission = pt;
 

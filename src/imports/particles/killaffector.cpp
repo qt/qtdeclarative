@@ -51,7 +51,9 @@ KillAffector::KillAffector(QSGItem *parent) :
 bool KillAffector::affectParticle(ParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    d->pv.t -= d->pv.lifeSpan;
-    return true;
+    if(d->stillAlive()){
+        d->pv.t -= d->pv.lifeSpan + 1;
+        return true;
+    }
 }
 QT_END_NAMESPACE

@@ -57,7 +57,6 @@ ParticleEmitter::ParticleEmitter(QSGItem *parent) :
   , m_particleSizeVariation(0)
   , m_maxParticleCount(-1)
   , m_burstLeft(0)
-  , m_emitLeft(0)
 
 {
     //TODO: Reset speed/acc back to null vector? Or allow null pointer?
@@ -117,7 +116,7 @@ void ParticleEmitter::burst(int num)
 {
     if(!particleCount())
         qWarning() << "burst called on an emitter with a particle count of zero";
-    m_emitLeft += num;
+    m_burstQueue << qMakePair(num, QPointF(x(), y()));
 }
 
 void ParticleEmitter::setMaxParticleCount(int arg)

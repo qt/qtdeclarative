@@ -48,6 +48,9 @@
 #include "particleextruder.h"
 #include "varyingvector.h"
 
+#include <QList>
+#include <QPair>
+#include <QPointF>
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -287,8 +290,8 @@ protected:
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
 
-       int m_burstLeft;
-       int m_emitLeft;
+       int m_burstLeft;//TODO: Rename to pulse
+       QList<QPair<int, QPointF > > m_burstQueue;
        int m_maxParticleCount;
 private:
        VaryingVector m_nullVector;
