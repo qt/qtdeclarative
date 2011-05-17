@@ -76,12 +76,14 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativexmllistmodel \
            qpacketprotocol \
            qdeclarativev4 \
+           qsganimatedimage \
            qsgborderimage \
            qsgcanvas \
            qsgflickable \
            qsgflipable \
            qsgfocusscope \
            qsggridview \
+           qsgimage \
            qsgitem \
            qsglistview \
            qsgloader \
