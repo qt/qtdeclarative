@@ -50,6 +50,48 @@ QSGShaderEffectMesh::QSGShaderEffectMesh(QObject *parent)
 {
 }
 
+/*!
+    \qmlclass GridMesh QSGGridMesh
+    \since 5.0
+    \ingroup qml-utility-elements
+    \brief GridMesh defines a mesh to be used with \l ShaderEffectItem.
+
+    GridMesh defines a rectangular mesh consisting of vertices arranged in an
+    evenly spaced grid. It can be assigned to the \l ShaderEffectItem's mesh
+    property. The grid resolution is specified with the \l resolution property.
+    
+    \row
+    \o \image declarative-gridmesh.png
+    \o \qml
+        import QtQuick 2.0
+
+        ShaderEffectItem {
+            width: 200
+            height: 200
+            mesh: GridMesh { resolution: Qt.size(20, 20) }
+            property variant source: Image {
+                source: "qt-logo.png"
+                sourceSize {width: 200; height: 200 }
+                smooth: true
+            }
+            vertexShader: "
+                uniform highp mat4 qt_ModelViewProjectionMatrix;
+                attribute highp vec4 qt_Vertex;
+                attribute highp vec2 qt_MultiTexCoord0;
+                varying highp vec2 qt_TexCoord0;
+                uniform highp float width;
+                void main() {
+                    highp vec4 pos = qt_Vertex;
+                    highp float d = .5 * smoothstep(0., 1., qt_MultiTexCoord0.y);
+                    pos.x = width * mix(d, 1.0 - d, qt_MultiTexCoord0.x);
+                    gl_Position = qt_ModelViewProjectionMatrix * pos;
+                    qt_TexCoord0 = qt_MultiTexCoord0;
+                }"
+        }
+        \endqml
+    \endrow
+
+*/
 
 QSGGridMesh::QSGGridMesh(QObject *parent)
     : QSGShaderEffectMesh(parent)
@@ -90,7 +132,7 @@ QSGGeometry *QSGGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QB
             break;
         default:
             qWarning("QSGGridMesh:: Too many attributes specified.");
-            break;;
+            break;
         }
 
         if (error) {
@@ -146,6 +188,15 @@ QSGGeometry *QSGGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QB
 
     return geometry;
 }
+
+/*!
+    \qmlproperty size GridMesh::resolution
+
+    This property holds the grid resolution. The resolution's width and height
+    specify the number of cells or spacings between vertices horizontally and
+    vertically respectively. The minimum and default is 1x1, which corresponds
+    to four vertices in total, one in each corner.
+*/
 
 void QSGGridMesh::setResolution(const QSize &res)
 {
