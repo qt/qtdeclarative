@@ -474,6 +474,8 @@ void tst_qsgtext::alignments_data()
 
 void tst_qsgtext::alignments()
 {
+    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph", SkipAll);
+
     QFETCH(int, hAlign);
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
