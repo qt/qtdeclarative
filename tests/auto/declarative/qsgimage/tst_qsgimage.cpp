@@ -106,7 +106,7 @@ tst_qsgimage::tst_qsgimage()
 
 void tst_qsgimage::noSource()
 {
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"\" }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -166,7 +166,7 @@ void tst_qsgimage::imageSource()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
 
-    QString componentStr = "import QtQuick 1.1\nImage { source: \"" + source + "\"; asynchronous: "
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + source + "\"; asynchronous: "
         + (async ? QLatin1String("true") : QLatin1String("false")) + "; cache: "
         + (cache ? QLatin1String("true") : QLatin1String("false")) + " }";
     QDeclarativeComponent component(&engine);
@@ -204,7 +204,7 @@ void tst_qsgimage::imageSource()
 
 void tst_qsgimage::clearSource()
 {
-    QString componentStr = "import QtQuick 1.0\nImage { source: srcImage }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
     QDeclarativeComponent component(&engine);
@@ -228,7 +228,7 @@ void tst_qsgimage::clearSource()
 
 void tst_qsgimage::resized()
 {
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -263,7 +263,7 @@ void tst_qsgimage::preserveAspectRatio()
 
 void tst_qsgimage::smooth()
 {
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -358,28 +358,17 @@ void tst_qsgimage::mirror_data()
 void tst_qsgimage::svg()
 {
     QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.svg").toString();
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->width(), 300.0);
     QCOMPARE(obj->height(), 300.0);
-#if defined(Q_OS_LINUX)
-    QCOMPARE(obj->pixmap(), QPixmap(SRCDIR "/data/heart.png"));
-#elif defined(Q_OS_WIN32)
-    QCOMPARE(obj->pixmap(), QPixmap(SRCDIR "/data/heart-win32.png"));
-#endif
-
     obj->setSourceSize(QSize(200,200));
 
     QCOMPARE(obj->width(), 200.0);
     QCOMPARE(obj->height(), 200.0);
-#if defined(Q_OS_LINUX)
-    QCOMPARE(obj->pixmap(), QPixmap(SRCDIR "/data/heart200.png"));
-#elif defined(Q_OS_WIN32)
-    QCOMPARE(obj->pixmap(), QPixmap(SRCDIR "/data/heart200-win32.png"));
-#endif
     delete obj;
 }
 
@@ -433,7 +422,7 @@ void tst_qsgimage::geometry()
     QFETCH(double, boundingHeight);
 
     QString src = QUrl::fromLocalFile(SRCDIR "/data/rect.png").toString();
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" + src + "\"; fillMode: Image." + fillMode + "; ";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; fillMode: Image." + fillMode + "; ";
 
     if (explicitWidth)
         componentStr.append("width: 300; ");
@@ -461,7 +450,7 @@ void tst_qsgimage::big()
     // have to build a 400 MB image. That would be a bug in the JPEG loader.
 
     QString src = QUrl::fromLocalFile(SRCDIR "/data/big.jpeg").toString();
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" + src + "\"; width: 100; sourceSize.height: 256 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 100; sourceSize.height: 256 }";
 
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -510,7 +499,7 @@ void tst_qsgimage::noLoading()
     server.serveDirectory(SRCDIR "/data");
     server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
 
-    QString componentStr = "import QtQuick 1.0\nImage { source: srcImage }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart.png"));
     QDeclarativeComponent component(&engine);
@@ -557,7 +546,7 @@ void tst_qsgimage::paintedWidthHeight()
 {
     {
         QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.png").toString();
-        QString componentStr = "import QtQuick 1.0\nImage { source: \"" + src + "\"; width: 200; height: 25; fillMode: Image.PreserveAspectFit }";
+        QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 200; height: 25; fillMode: Image.PreserveAspectFit }";
 
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -573,7 +562,7 @@ void tst_qsgimage::paintedWidthHeight()
 
     {
         QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.png").toString();
-        QString componentStr = "import QtQuick 1.0\nImage { source: \"" + src + "\"; width: 26; height: 175; fillMode: Image.PreserveAspectFit }";
+        QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 26; height: 175; fillMode: Image.PreserveAspectFit }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -589,7 +578,7 @@ void tst_qsgimage::paintedWidthHeight()
 
 void tst_qsgimage::sourceSize_QTBUG_14303()
 {
-    QString componentStr = "import QtQuick 1.0\nImage { source: srcImage }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart200.png"));
     QDeclarativeComponent component(&engine);
