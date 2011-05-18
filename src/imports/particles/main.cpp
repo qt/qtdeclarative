@@ -70,6 +70,8 @@
 #include "coloredparticle.h"
 #include "spriteparticle.h"
 #include "modelparticle.h"
+#include "superparticle.h"
+#include "ultraparticle.h"
 //#include "pairedparticle.h"
 #include "spriteimage.h"
 #include "followemitter.h"
@@ -108,6 +110,8 @@ void ParticlesPlugin::registerTypes(const char *uri)
     qmlRegisterType<ModelParticle>(uri, 2, 0, "ModelParticle");
     //qmlRegisterType<PairedParticle>(uri, 2, 0, "PairedParticle");
     qmlRegisterType<DeformableParticle>(uri, 2, 0, "DeformableParticle");
+    qmlRegisterType<SuperParticle>(uri, 2, 0, "SuperParticle");
+    qmlRegisterType<UltraParticle>(uri, 2, 0, "UltraParticle");
 
     qmlRegisterType<ParticleEmitter>(uri, 2, 0, "ParticleEmitter");
     qmlRegisterType<TrailsEmitter>(uri, 2, 0, "TrailEmitter");

@@ -46,9 +46,9 @@ HEADERS += \
     lineextruder.h \
     resetaffector.h \
     deformableparticle.h \
-    pictureaffector.h
-
-QT += core-private gui-private declarative-private script-private
+    pictureaffector.h \
+    superparticle.h \
+    ultraparticle.h
 
 SOURCES += \
     V1/qdeclarativeparticles.cpp \
@@ -94,9 +94,13 @@ SOURCES += \
     lineextruder.cpp \
     resetaffector.cpp \
     deformableparticle.cpp \
-    pictureaffector.cpp
+    pictureaffector.cpp \
+    superparticle.cpp \
+    ultraparticle.cpp
 
 QT += declarative opengl
+#Because we use QDeclarativePixmapCache once...
+QT += core-private gui-private declarative-private script-private 
 
 
 OTHER_FILES += \

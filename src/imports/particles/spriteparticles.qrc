@@ -12,5 +12,9 @@
         <file>resources/defaultFadeInOut.png</file>
         <file>resources/deformablefragment.shader</file>
         <file>resources/deformablevertex.shader</file>
+        <file>resources/ultravertex.shader</file>
+        <file>resources/ultrafragment.shader</file>
+        <file>resources/supervertex.shader</file>
+        <file>resources/superfragment.shader</file>
     </qresource>
 </RCC>
