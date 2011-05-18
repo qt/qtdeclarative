@@ -206,7 +206,13 @@ void QSGShaderEffectTexture::markDirtyTexture()
 
 void QSGShaderEffectTexture::grab()
 {
-    Q_ASSERT(m_item);
+    if (!m_item || m_size.isNull()) {
+        delete m_fbo;
+        delete m_secondaryFbo;
+        m_fbo = m_secondaryFbo = 0;
+        m_dirtyTexture = false;
+        return;
+    }
     QSGNode *root = m_item;
     while (root->childCount() && root->type() != QSGNode::RootNodeType)
         root = root->childAtIndex(0);

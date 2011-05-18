@@ -179,10 +179,12 @@ QSGTexture *QSGImage::texture() const
 {
     Q_D(const QSGImage);
     QSGTexture *t = d->pix.texture();
-    t->setFiltering(QSGItemPrivate::get(this)->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    t->setMipmapFiltering(QSGTexture::None);
-    t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-    t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    if (t) {
+        t->setFiltering(QSGItemPrivate::get(this)->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+        t->setMipmapFiltering(QSGTexture::None);
+        t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    }
     return t;
 }
 
