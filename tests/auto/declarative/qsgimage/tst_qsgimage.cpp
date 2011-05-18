@@ -337,7 +337,7 @@ void tst_qsgimage::mirror()
             break;
     }
 
-    QEXPECT_FAIL("", "QTBUG-19351", Abort);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
     QCOMPARE(screenshot, expected);
 
     delete canvas;

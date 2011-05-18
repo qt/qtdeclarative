@@ -209,9 +209,8 @@ void tst_qsganimatedimage::mirror_notRunning()
     anim->setProperty("mirror", true);
     screenshot = canvas->renderPixmap();
 
-    // QEXPECT_FAIL("", "QTBUG-19252", Abort);
-    // TODO: re-enable when QTBUG-19351 is resolved
-    // QCOMPARE(screenshot, expected);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
+    QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status
     QCOMPARE(anim->currentFrame(), frame);

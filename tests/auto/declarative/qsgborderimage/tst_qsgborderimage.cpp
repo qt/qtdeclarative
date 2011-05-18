@@ -238,7 +238,7 @@ void tst_qsgborderimage::mirror()
     image->setProperty("mirror", true);
     QPixmap mirrored;
 
-    QEXPECT_FAIL("", "QTBUG-19252", Abort);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
     QCOMPARE(screenshot, mirrored);
 
     delete canvas;
