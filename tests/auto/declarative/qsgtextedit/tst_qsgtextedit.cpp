@@ -60,6 +60,7 @@
 #include <QMimeData>
 #include <private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_WS_MAC
 #include <Carbon/Carbon.h>
@@ -97,6 +98,8 @@ public:
     tst_qsgtextedit();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void text();
     void width();
     void wrap();
@@ -170,7 +173,17 @@ private:
 
     QDeclarativeEngine engine;
 };
+void tst_qsgtextedit::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("TextEdit item needs OpenGL 2.0", SkipAll);
+}
 
+void tst_qsgtextedit::cleanupTestCase()
+{
+
+}
 tst_qsgtextedit::tst_qsgtextedit()
 {
     standard << "the quick brown fox jumped over the lazy dog"
@@ -2173,6 +2186,8 @@ void tst_qsgtextedit::preeditMicroFocus()
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
+    QSignalSpy cursorRectangleSpy(edit, SIGNAL(cursorRectangleChanged()));
+
     QRect currentRect;
     QRect previousRect = edit->inputMethodQuery(Qt::ImMicroFocus).toRect();
 
@@ -2183,8 +2198,9 @@ void tst_qsgtextedit::preeditMicroFocus()
     currentRect = edit->inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
-    QCOMPARE(ic.updateReceived, true);
+    QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
 #endif
+    QCOMPARE(cursorRectangleSpy.count(), 0);
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
@@ -2196,6 +2212,8 @@ void tst_qsgtextedit::preeditMicroFocus()
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
         QCOMPARE(ic.updateReceived, true);
 #endif
+        QVERIFY(cursorRectangleSpy.count() > 0);
+        cursorRectangleSpy.clear();
         previousRect = currentRect;
     }
 
@@ -2209,6 +2227,7 @@ void tst_qsgtextedit::preeditMicroFocus()
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
     QCOMPARE(ic.updateReceived, true);
 #endif
+    QVERIFY(cursorRectangleSpy.count() > 0);
 }
 
 void tst_qsgtextedit::inputContextMouseHandler()

@@ -47,6 +47,7 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
 #include "../../../shared/util.h"
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -60,6 +61,9 @@ public:
     tst_qsgflickable();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
     void create();
     void horizontalViewportSize();
     void verticalViewportSize();
@@ -84,6 +88,18 @@ private:
 
 tst_qsgflickable::tst_qsgflickable()
 {
+}
+
+void tst_qsgflickable::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("Flickable item needs OpenGL 2.0", SkipAll);
+}
+
+void tst_qsgflickable::cleanupTestCase()
+{
+
 }
 
 void tst_qsgflickable::create()

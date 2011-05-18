@@ -209,7 +209,7 @@ void tst_qsganimatedimage::mirror_notRunning()
     anim->setProperty("mirror", true);
     screenshot = canvas->renderPixmap();
 
-    QEXPECT_FAIL("", "QTBUG-19252", Abort);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
     QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status
@@ -288,7 +288,7 @@ void tst_qsganimatedimage::invalidSource()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\n AnimatedImage { source: \"no-such-file.gif\" }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0\n AnimatedImage { source: \"no-such-file.gif\" }", QUrl::fromLocalFile(""));
     QVERIFY(component.isReady());
 
     QTest::ignoreMessage(QtWarningMsg, "file::2:2: QML AnimatedImage: Error Reading Animated Image File file:no-such-file.gif");
@@ -332,7 +332,7 @@ void tst_qsganimatedimage::progressAndStatusChanges()
     server.serveDirectory(SRCDIR "/data");
 
     QDeclarativeEngine engine;
-    QString componentStr = "import QtQuick 1.0\nAnimatedImage { source: srcImage }";
+    QString componentStr = "import QtQuick 2.0\nAnimatedImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/stickman.gif"));
     QDeclarativeComponent component(&engine);

@@ -47,6 +47,8 @@
 #include <QFontMetrics>
 #include <private/qsgrectangle_p.h>
 #include <math.h>
+#include <QtOpenGL/QGLShaderProgram>
+
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -60,6 +62,8 @@ public:
     tst_qsgflipable();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void create();
     void checkFrontAndBack();
     void setFrontAndBack();
@@ -74,6 +78,17 @@ private:
 
 tst_qsgflipable::tst_qsgflipable()
 {
+}
+void tst_qsgflipable::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("Flipable item needs OpenGL 2.0", SkipAll);
+}
+
+void tst_qsgflipable::cleanupTestCase()
+{
+
 }
 
 void tst_qsgflipable::create()

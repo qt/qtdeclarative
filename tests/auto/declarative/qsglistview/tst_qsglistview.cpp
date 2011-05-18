@@ -53,6 +53,7 @@
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include "../../../shared/util.h"
 #include "incrementalmodel.h"
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -66,6 +67,8 @@ public:
     tst_QSGListView();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     // Test both QListModelInterface and QAbstractItemModel model types
     void qListModelInterface_items();
     void qAbstractItemModel_items();
@@ -133,6 +136,17 @@ private:
     void dumpTree(QSGItem *parent, int depth = 0);
 };
 
+void tst_QSGListView::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("QSGListView needs OpenGL 2.0", SkipAll);
+}
+
+void tst_QSGListView::cleanupTestCase()
+{
+
+}
 class TestObject : public QObject
 {
     Q_OBJECT

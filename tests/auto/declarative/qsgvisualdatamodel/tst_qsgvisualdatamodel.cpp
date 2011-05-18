@@ -51,6 +51,7 @@
 #include <private/qsgvisualitemmodel_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -115,6 +116,8 @@ public:
     tst_qsgvisualdatamodel();
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void rootIndex();
     void updateLayout();
     void childChanged();
@@ -128,7 +131,17 @@ private:
     template<typename T>
     T *findItem(QSGItem *parent, const QString &objectName, int index);
 };
+void tst_qsgvisualdatamodel::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("VisualDatamodel item needs OpenGL 2.0", SkipAll);
+}
 
+void tst_qsgvisualdatamodel::cleanupTestCase()
+{
+
+}
 class DataObject : public QObject
 {
     Q_OBJECT

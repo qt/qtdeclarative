@@ -51,6 +51,7 @@
 #include <QStyle>
 #include <QInputContext>
 #include <private/qapplication_p.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -83,7 +84,8 @@ public:
     tst_qsgtextinput();
 
 private slots:
-
+    void initTestCase();
+    void cleanupTestCase();
     void text();
     void width();
     void font();
@@ -144,7 +146,17 @@ private:
     QStringList standard;
     QStringList colorStrings;
 };
+void tst_qsgtextinput::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("TextInput item needs OpenGL 2.0", SkipAll);
+}
 
+void tst_qsgtextinput::cleanupTestCase()
+{
+
+}
 tst_qsgtextinput::tst_qsgtextinput()
 {
     standard << "the quick brown fox jumped over the lazy dog"

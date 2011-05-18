@@ -45,6 +45,7 @@
 #include <private/qsgrectangle_p.h>
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativecontext.h>
+#include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -55,6 +56,8 @@ class tst_QSGPinchArea: public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void pinchProperties();
     void scale();
     void pan();
@@ -62,7 +65,17 @@ private slots:
 private:
     QSGView *createView();
 };
+void tst_QSGPinchArea::initTestCase()
+{
+    QSGView canvas;
+    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
+        QSKIP("PinchArea needs OpenGL 2.0", SkipAll);
+}
 
+void tst_QSGPinchArea::cleanupTestCase()
+{
+
+}
 void tst_QSGPinchArea::pinchProperties()
 {
     QSGView *canvas = createView();
