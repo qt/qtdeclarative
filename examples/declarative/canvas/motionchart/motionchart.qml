@@ -4,7 +4,7 @@ Canvas {
   id:motionChart
   width:1300
   height: 700
-  property int progress:0
+  property int progress:-1
   property variant applesFrom: [1000, 300];
   property variant applesTo:[1200, 400];
   property variant orangesFrom: [1150, 200];
@@ -24,8 +24,12 @@ Canvas {
   Text {id:expenses; text: "Expenses 1300"; x:1170; y:670;font.bold:true; font.pixelSize:15; opacity:0}
   Timer {
     id:timer
-    interval: 1; running: false; repeat: true
+    interval: 1; running: true; repeat: true
     onTriggered: {
+      if (motionChart.progress == -1) {
+        motionChart.setup();
+        running = false;
+      }
       motionChart.draw();
     }
   }
@@ -46,6 +50,7 @@ Canvas {
     }
   }
 
+  
   function setup() {
     var ctx = motionChart.getContext("2d");
     ctx.globalCompositeOperation = "source-over";
