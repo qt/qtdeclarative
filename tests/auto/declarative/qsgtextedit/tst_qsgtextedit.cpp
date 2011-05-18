@@ -2186,6 +2186,8 @@ void tst_qsgtextedit::preeditMicroFocus()
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
+    QSignalSpy cursorRectangleSpy(edit, SIGNAL(cursorRectangleChanged()));
+
     QRect currentRect;
     QRect previousRect = edit->inputMethodQuery(Qt::ImMicroFocus).toRect();
 
@@ -2196,8 +2198,9 @@ void tst_qsgtextedit::preeditMicroFocus()
     currentRect = edit->inputMethodQuery(Qt::ImMicroFocus).toRect();
     QCOMPARE(currentRect, previousRect);
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
-    QCOMPARE(ic.updateReceived, true);
+    QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
 #endif
+    QCOMPARE(cursorRectangleSpy.count(), 0);
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
@@ -2209,6 +2212,8 @@ void tst_qsgtextedit::preeditMicroFocus()
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
         QCOMPARE(ic.updateReceived, true);
 #endif
+        QVERIFY(cursorRectangleSpy.count() > 0);
+        cursorRectangleSpy.clear();
         previousRect = currentRect;
     }
 
@@ -2222,6 +2227,7 @@ void tst_qsgtextedit::preeditMicroFocus()
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
     QCOMPARE(ic.updateReceived, true);
 #endif
+    QVERIFY(cursorRectangleSpy.count() > 0);
 }
 
 void tst_qsgtextedit::inputContextMouseHandler()
