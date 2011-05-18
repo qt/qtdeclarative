@@ -98,7 +98,7 @@ tst_qsgborderimage::tst_qsgborderimage()
 
 void tst_qsgborderimage::noSource()
 {
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"\" }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -142,7 +142,7 @@ void tst_qsgborderimage::imageSource()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
 
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" + source + "\" }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -171,7 +171,7 @@ void tst_qsgborderimage::imageSource()
 
 void tst_qsgborderimage::clearSource()
 {
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: srcImage }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
     QDeclarativeComponent component(&engine);
@@ -191,7 +191,7 @@ void tst_qsgborderimage::clearSource()
 
 void tst_qsgborderimage::resized()
 {
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() + "\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() + "\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -208,7 +208,7 @@ void tst_qsgborderimage::resized()
 
 void tst_qsgborderimage::smooth()
 {
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -247,7 +247,7 @@ void tst_qsgborderimage::mirror()
 void tst_qsgborderimage::tileModes()
 {
     {
-        QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 100; height: 300; horizontalTileMode: BorderImage.Repeat; verticalTileMode: BorderImage.Repeat }";
+        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 100; height: 300; horizontalTileMode: BorderImage.Repeat; verticalTileMode: BorderImage.Repeat }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -260,7 +260,7 @@ void tst_qsgborderimage::tileModes()
         delete obj;
     }
     {
-        QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 150; horizontalTileMode: BorderImage.Round; verticalTileMode: BorderImage.Round }";
+        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 150; horizontalTileMode: BorderImage.Round; verticalTileMode: BorderImage.Round }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -287,7 +287,7 @@ void tst_qsgborderimage::sciSource()
         server->serveDirectory(SRCDIR "/data");
     }
 
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" + source + "\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -333,7 +333,7 @@ void tst_qsgborderimage::invalidSciFile()
     QTest::ignoreMessage(QtWarningMsg, "QSGGridScaledImage: Invalid tile rule specified. Using Stretch."); // for "Roun"
     QTest::ignoreMessage(QtWarningMsg, "QSGGridScaledImage: Invalid tile rule specified. Using Stretch."); // for "Repea"
 
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/invalid.sci").toString() +"\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/invalid.sci").toString() +"\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -351,7 +351,7 @@ void tst_qsgborderimage::pendingRemoteRequest()
 {
     QFETCH(QString, source);
 
-    QString componentStr = "import QtQuick 1.0\nBorderImage { source: \"" + source + "\" }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
