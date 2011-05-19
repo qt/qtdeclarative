@@ -47,6 +47,7 @@
 #include <private/qsgtextedit_p.h>
 #include <private/qsgtext_p.h>
 #include <QtDeclarative/private/qsgfocusscope_p.h>
+#include "../../../shared/util.h"
 #include <QtOpenGL/QGLShaderProgram>
 
 #ifdef Q_OS_SYMBIAN
@@ -75,6 +76,7 @@ private slots:
     void signalEmission();
     void qtBug13380();
     void forceActiveFocus();
+    void canvasFocus();
 };
 void tst_qsgfocusscope::initTestCase()
 {
@@ -347,6 +349,15 @@ void tst_qsgfocusscope::noParentFocus()
     view->setSource(QUrl::fromLocalFile(SRCDIR "/data/chain.qml"));
     QVERIFY(view->rootObject());
 
+    view->show();
+    qApp->setActiveWindow(view);
+    qApp->processEvents();
+
+#ifdef Q_WS_X11
+    // to be safe and avoid failing setFocus with window managers
+    qt_x11_wait_for_window_manager(view);
+#endif
+
     QVERIFY(view->rootObject()->property("focus1") == false);
     QVERIFY(view->rootObject()->property("focus2") == false);
     QVERIFY(view->rootObject()->property("focus3") == true);
@@ -444,6 +455,15 @@ void tst_qsgfocusscope::forceActiveFocus()
 {
     QSGView *view = new QSGView;
     view->setSource(QUrl::fromLocalFile(SRCDIR "/data/forceActiveFocus.qml"));
+
+    view->show();
+    qApp->setActiveWindow(view);
+    qApp->processEvents();
+
+#ifdef Q_WS_X11
+    // to be safe and avoid failing setFocus with window managers
+    qt_x11_wait_for_window_manager(view);
+#endif
 
     QSGItem *rootObject = view->rootObject();
     QVERIFY(rootObject);
@@ -545,6 +565,135 @@ void tst_qsgfocusscope::forceActiveFocus()
     QCOMPARE(scopeBSpy.count(), 3);
     QCOMPARE(rootSpy.count(), 0);
     QCOMPARE(scopeSpy.count(), 1);
+
+    delete view;
+}
+
+void tst_qsgfocusscope::canvasFocus()
+{
+    QSGView *view = new QSGView;
+    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/canvasFocus.qml"));
+
+    QSGItem *rootObject = view->rootObject();
+    QVERIFY(rootObject);
+
+    QSGItem *rootItem = view->rootItem();
+    QSGItem *scope1 = findItem<QSGItem>(rootObject, QLatin1String("scope1"));
+    QSGItem *item1 = findItem<QSGItem>(rootObject, QLatin1String("item1"));
+    QSGItem *scope2 = findItem<QSGItem>(rootObject, QLatin1String("scope2"));
+    QSGItem *item2 = findItem<QSGItem>(rootObject, QLatin1String("item2"));
+
+    QVERIFY(scope1);
+    QVERIFY(item1);
+    QVERIFY(scope2);
+    QVERIFY(item2);
+
+    QSignalSpy rootFocusSpy(rootItem, SIGNAL(focusChanged(bool)));
+    QSignalSpy scope1FocusSpy(scope1, SIGNAL(focusChanged(bool)));
+    QSignalSpy item1FocusSpy(item1, SIGNAL(focusChanged(bool)));
+    QSignalSpy scope2FocusSpy(scope2, SIGNAL(focusChanged(bool)));
+    QSignalSpy item2FocusSpy(item2, SIGNAL(focusChanged(bool)));
+    QSignalSpy rootActiveFocusSpy(rootItem, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy scope1ActiveFocusSpy(scope1, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy item1ActiveFocusSpy(item1, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy scope2ActiveFocusSpy(scope2, SIGNAL(activeFocusChanged(bool)));
+    QSignalSpy item2ActiveFocusSpy(item2, SIGNAL(activeFocusChanged(bool)));
+
+    // until the canvas widget has gained focus, no one should have active focus
+    QCOMPARE(view->hasFocus(), false);
+    QCOMPARE(rootItem->hasFocus(), false);
+    QCOMPARE(rootItem->hasActiveFocus(), false);
+    QCOMPARE(scope1->hasFocus(), true);
+    QCOMPARE(scope1->hasActiveFocus(), false);
+    QCOMPARE(item1->hasFocus(), true);
+    QCOMPARE(item1->hasActiveFocus(), false);
+    QCOMPARE(scope2->hasFocus(), false);
+    QCOMPARE(scope2->hasActiveFocus(), false);
+    QCOMPARE(item2->hasFocus(), false);
+    QCOMPARE(item2->hasActiveFocus(), false);
+
+    view->show();
+    qApp->setActiveWindow(view);
+    qApp->processEvents();
+
+#ifdef Q_WS_X11
+    // to be safe and avoid failing setFocus with window managers
+    qt_x11_wait_for_window_manager(view);
+#endif
+
+    // Now the canvas has focus, active focus given to item1
+    QTRY_COMPARE(view->hasFocus(), true);
+    QCOMPARE(rootItem->hasFocus(), true);
+    QCOMPARE(rootItem->hasActiveFocus(), true);
+    QCOMPARE(scope1->hasFocus(), true);
+    QCOMPARE(scope1->hasActiveFocus(), true);
+    QCOMPARE(item1->hasFocus(), true);
+    QCOMPARE(item1->hasActiveFocus(), true);
+    QCOMPARE(scope2->hasFocus(), false);
+    QCOMPARE(scope2->hasActiveFocus(), false);
+    QCOMPARE(item2->hasFocus(), false);
+    QCOMPARE(item2->hasActiveFocus(), false);
+    QCOMPARE(rootFocusSpy.count(), 1);
+    QCOMPARE(rootActiveFocusSpy.count(), 1);
+    QCOMPARE(scope1FocusSpy.count(), 0);
+    QCOMPARE(scope1ActiveFocusSpy.count(), 1);
+    QCOMPARE(item1FocusSpy.count(), 0);
+    QCOMPARE(item1ActiveFocusSpy.count(), 1);
+
+    view->clearFocus();
+    QCOMPARE(rootItem->hasFocus(), false);
+    QCOMPARE(rootItem->hasActiveFocus(), false);
+    QCOMPARE(scope1->hasFocus(), true);
+    QCOMPARE(scope1->hasActiveFocus(), false);
+    QCOMPARE(item1->hasFocus(), true);
+    QCOMPARE(item1->hasActiveFocus(), false);
+    QCOMPARE(rootFocusSpy.count(), 2);
+    QCOMPARE(rootActiveFocusSpy.count(), 2);
+    QCOMPARE(scope1FocusSpy.count(), 0);
+    QCOMPARE(scope1ActiveFocusSpy.count(), 2);
+    QCOMPARE(item1FocusSpy.count(), 0);
+    QCOMPARE(item1ActiveFocusSpy.count(), 2);
+
+    // canvas does not have focus, so item2 will not get active focus
+    item2->forceActiveFocus();
+
+    QCOMPARE(rootItem->hasFocus(), false);
+    QCOMPARE(rootItem->hasActiveFocus(), false);
+    QCOMPARE(scope1->hasFocus(), false);
+    QCOMPARE(scope1->hasActiveFocus(), false);
+    QCOMPARE(item1->hasFocus(), true);
+    QCOMPARE(item1->hasActiveFocus(), false);
+    QCOMPARE(scope2->hasFocus(), true);
+    QCOMPARE(scope2->hasActiveFocus(), false);
+    QCOMPARE(item2->hasFocus(), true);
+    QCOMPARE(item2->hasActiveFocus(), false);
+
+    QCOMPARE(rootFocusSpy.count(), 2);
+    QCOMPARE(rootActiveFocusSpy.count(), 2);
+    QCOMPARE(scope1FocusSpy.count(), 1);
+    QCOMPARE(scope1ActiveFocusSpy.count(), 2);
+    QCOMPARE(item1FocusSpy.count(), 0);
+    QCOMPARE(item1ActiveFocusSpy.count(), 2);
+    QCOMPARE(scope2FocusSpy.count(), 1);
+    QCOMPARE(scope2ActiveFocusSpy.count(), 0);
+    QCOMPARE(item2FocusSpy.count(), 1);
+    QCOMPARE(item2ActiveFocusSpy.count(), 0);
+
+    // give the canvas focus, and item2 will get active focus
+    view->setFocus();
+
+    QCOMPARE(rootItem->hasFocus(), true);
+    QCOMPARE(rootItem->hasActiveFocus(), true);
+    QCOMPARE(scope2->hasFocus(), true);
+    QCOMPARE(scope2->hasActiveFocus(), true);
+    QCOMPARE(item2->hasFocus(), true);
+    QCOMPARE(item2->hasActiveFocus(), true);
+    QCOMPARE(rootFocusSpy.count(), 3);
+    QCOMPARE(rootActiveFocusSpy.count(), 3);
+    QCOMPARE(scope2FocusSpy.count(), 1);
+    QCOMPARE(scope2ActiveFocusSpy.count(), 1);
+    QCOMPARE(item2FocusSpy.count(), 1);
+    QCOMPARE(item2ActiveFocusSpy.count(), 1);
 
     delete view;
 }

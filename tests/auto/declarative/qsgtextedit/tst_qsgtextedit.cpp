@@ -2178,10 +2178,15 @@ void tst_qsgtextedit::preeditMicroFocus()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
     MyInputContext ic;
+    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
+    // and QWidget won't allow an input context to be set when the flag is not set.
+    view.setAttribute(Qt::WA_InputMethodEnabled, true);
     view.setInputContext(&ic);
+    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
+
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -2236,10 +2241,15 @@ void tst_qsgtextedit::inputContextMouseHandler()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
     MyInputContext ic;
+    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
+    // and QWidget won't allow an input context to be set when the flag is not set.
+    view.setAttribute(Qt::WA_InputMethodEnabled, true);
     view.setInputContext(&ic);
+    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
+
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
     QVERIFY(edit);

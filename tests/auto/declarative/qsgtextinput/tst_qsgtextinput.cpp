@@ -2197,7 +2197,11 @@ void tst_qsgtextinput::preeditAutoScroll()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/preeditAutoScroll.qml"));
     MyInputContext ic;
+    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
+    // and QWidget won't allow an input context to be set when the flag is not set.
+    view.setAttribute(Qt::WA_InputMethodEnabled, true);
     view.setInputContext(&ic);
+    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
@@ -2262,7 +2266,11 @@ void tst_qsgtextinput::preeditMicroFocus()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
     MyInputContext ic;
+    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
+    // and QWidget won't allow an input context to be set when the flag is not set.
+    view.setAttribute(Qt::WA_InputMethodEnabled, true);
     view.setInputContext(&ic);
+    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
@@ -2314,7 +2322,11 @@ void tst_qsgtextinput::inputContextMouseHandler()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
     MyInputContext ic;
+    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
+    // and QWidget won't allow an input context to be set when the flag is not set.
+    view.setAttribute(Qt::WA_InputMethodEnabled, true);
     view.setInputContext(&ic);
+    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);

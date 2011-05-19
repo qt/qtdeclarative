@@ -260,6 +260,19 @@ void QSGCanvas::hideEvent(QHideEvent *e)
     QGLWidget::hideEvent(e);
 }
 
+void QSGCanvas::focusOutEvent(QFocusEvent *event)
+{
+    Q_D(QSGCanvas);
+    d->rootItem->setFocus(false);
+    QGLWidget::focusOutEvent(event);
+}
+
+void QSGCanvas::focusInEvent(QFocusEvent *event)
+{
+    Q_D(QSGCanvas);
+    d->rootItem->setFocus(true);
+    QGLWidget::focusInEvent(event);
+}
 
 void QSGCanvasPrivate::initializeSceneGraph()
 {
@@ -480,9 +493,6 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QSGItem::ItemIsFocusScope;
-    rootItemPrivate->focus = true;
-    rootItemPrivate->activeFocus = true;
-    activeFocusItem = rootItem;
 
     context = QSGContext::createDefaultContext();
 }
@@ -633,17 +643,18 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
     Q_Q(QSGCanvas);
 
     Q_ASSERT(item);
-    Q_ASSERT(scope);
+    Q_ASSERT(scope || item == rootItem);
 
 #ifdef FOCUS_DEBUG
     qWarning() << "QSGCanvasPrivate::setFocusInScope():";
     qWarning() << "    scope:" << (QObject *)scope;
-    qWarning() << "    scopeSubFocusItem:" << (QObject *)QSGItemPrivate::get(scope)->subFocusItem;
+    if (scope)
+        qWarning() << "    scopeSubFocusItem:" << (QObject *)QSGItemPrivate::get(scope)->subFocusItem;
     qWarning() << "    item:" << (QObject *)item;
     qWarning() << "    activeFocusItem:" << (QObject *)activeFocusItem;
 #endif
 
-    QSGItemPrivate *scopePrivate = QSGItemPrivate::get(scope);
+    QSGItemPrivate *scopePrivate = scope ? QSGItemPrivate::get(scope) : 0;
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
 
     QSGItem *oldActiveFocusItem = 0;
@@ -652,69 +663,73 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
     QVarLengthArray<QSGItem *, 20> changed;
 
     // Does this change the active focus?
-    if (scopePrivate->activeFocus) {
+    if (item == rootItem || scopePrivate->activeFocus) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = item;
         while (newActiveFocusItem->isFocusScope() && newActiveFocusItem->scopedFocusItem())
             newActiveFocusItem = newActiveFocusItem->scopedFocusItem();
 
-        Q_ASSERT(oldActiveFocusItem);
-
+        if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-        if (QInputContext *ic = inputContext())
-            ic->reset();
+            if (QInputContext *ic = inputContext())
+                ic->reset();
 #endif
 
-        activeFocusItem = 0;
-        QFocusEvent event(QEvent::FocusOut, Qt::OtherFocusReason);
-        q->sendEvent(oldActiveFocusItem, &event);
+            activeFocusItem = 0;
+            QFocusEvent event(QEvent::FocusOut, Qt::OtherFocusReason);
+            q->sendEvent(oldActiveFocusItem, &event);
 
-        QSGItem *afi = oldActiveFocusItem;
-        while (afi != scope) {
-            if (QSGItemPrivate::get(afi)->activeFocus) {
-                QSGItemPrivate::get(afi)->activeFocus = false;
-                changed << afi;
+            QSGItem *afi = oldActiveFocusItem;
+            while (afi != scope) {
+                if (QSGItemPrivate::get(afi)->activeFocus) {
+                    QSGItemPrivate::get(afi)->activeFocus = false;
+                    changed << afi;
+                }
+                afi = afi->parentItem();
             }
-            afi = afi->parentItem();
         }
     }
 
-    QSGItem *oldSubFocusItem = scopePrivate->subFocusItem;
-    // Correct focus chain in scope
-    if (oldSubFocusItem) {
-        QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
-        while (sfi != scope) {
-            QSGItemPrivate::get(sfi)->subFocusItem = 0;
-            sfi = sfi->parentItem();
+    if (item != rootItem) {
+        QSGItem *oldSubFocusItem = scopePrivate->subFocusItem;
+        // Correct focus chain in scope
+        if (oldSubFocusItem) {
+            QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
+            while (sfi != scope) {
+                QSGItemPrivate::get(sfi)->subFocusItem = 0;
+                sfi = sfi->parentItem();
+            }
         }
-    }
-    {
-        scopePrivate->subFocusItem = item;
-        QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
-        while (sfi != scope) {
-            QSGItemPrivate::get(sfi)->subFocusItem = item;
-            sfi = sfi->parentItem();
+        {
+            scopePrivate->subFocusItem = item;
+            QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
+            while (sfi != scope) {
+                QSGItemPrivate::get(sfi)->subFocusItem = item;
+                sfi = sfi->parentItem();
+            }
         }
-    }
 
-    if (oldSubFocusItem) {
-        QSGItemPrivate::get(oldSubFocusItem)->focus = false;
-        changed << oldSubFocusItem;
+        if (oldSubFocusItem) {
+            QSGItemPrivate::get(oldSubFocusItem)->focus = false;
+            changed << oldSubFocusItem;
+        }
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        itemPrivate->focus = true;
-        changed << item;
+        if (item != rootItem || q->hasFocus()) {
+            itemPrivate->focus = true;
+            changed << item;
+        }
     }
 
-    if (newActiveFocusItem) {
+    if (newActiveFocusItem && q->hasFocus()) {
         activeFocusItem = newActiveFocusItem;
 
         QSGItemPrivate::get(newActiveFocusItem)->activeFocus = true;
         changed << newActiveFocusItem;
 
         QSGItem *afi = newActiveFocusItem->parentItem();
-        while (afi != scope) {
+        while (afi && afi != scope) {
             if (afi->isFocusScope()) {
                 QSGItemPrivate::get(afi)->activeFocus = true;
                 changed << afi;
@@ -730,7 +745,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
         updateInputMethodData();
     }
 
-    if (!changed.isEmpty()) 
+    if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
 }
 
@@ -740,7 +755,7 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
 
     Q_UNUSED(item);
     Q_ASSERT(item);
-    Q_ASSERT(scope);
+    Q_ASSERT(scope || item == rootItem);
 
 #ifdef FOCUS_DEBUG
     qWarning() << "QSGCanvasPrivate::clearFocusInScope():";
@@ -749,20 +764,20 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
     qWarning() << "    activeFocusItem:" << (QObject *)activeFocusItem;
 #endif
 
-    QSGItemPrivate *scopePrivate = QSGItemPrivate::get(scope);
+    QSGItemPrivate *scopePrivate = scope ? QSGItemPrivate::get(scope) : 0;
 
     QSGItem *oldActiveFocusItem = 0;
     QSGItem *newActiveFocusItem = 0;
 
     QVarLengthArray<QSGItem *, 20> changed;
 
-    Q_ASSERT(item == scopePrivate->subFocusItem);
+    Q_ASSERT(item == rootItem || item == scopePrivate->subFocusItem);
 
     // Does this change the active focus?
-    if (scopePrivate->activeFocus) {
+    if (item == rootItem || scopePrivate->activeFocus) {
         oldActiveFocusItem = activeFocusItem;
         newActiveFocusItem = scope;
-        
+
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
@@ -784,20 +799,25 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         }
     }
 
-    QSGItem *oldSubFocusItem = scopePrivate->subFocusItem;
-    // Correct focus chain in scope
-    if (oldSubFocusItem) {
-        QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
-        while (sfi != scope) {
-            QSGItemPrivate::get(sfi)->subFocusItem = 0;
-            sfi = sfi->parentItem();
+    if (item != rootItem) {
+        QSGItem *oldSubFocusItem = scopePrivate->subFocusItem;
+        // Correct focus chain in scope
+        if (oldSubFocusItem) {
+            QSGItem *sfi = scopePrivate->subFocusItem->parentItem();
+            while (sfi != scope) {
+                QSGItemPrivate::get(sfi)->subFocusItem = 0;
+                sfi = sfi->parentItem();
+            }
         }
-    }
-    scopePrivate->subFocusItem = 0;
+        scopePrivate->subFocusItem = 0;
 
-    if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
-        QSGItemPrivate::get(oldSubFocusItem)->focus = false;
-        changed << oldSubFocusItem;
+        if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
+            QSGItemPrivate::get(oldSubFocusItem)->focus = false;
+            changed << oldSubFocusItem;
+        }
+    } else if (!(options & DontChangeFocusProperty)) {
+        QSGItemPrivate::get(item)->focus = false;
+        changed << item;
     }
 
     if (newActiveFocusItem) {
@@ -1043,22 +1063,25 @@ bool QSGCanvas::event(QEvent *e)
 void QSGCanvas::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QSGCanvas);
-    
-    sendEvent(d->activeFocusItem, e);
+
+    if (d->activeFocusItem)
+        sendEvent(d->activeFocusItem, e);
 }
 
 void QSGCanvas::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QSGCanvas);
-    
-    sendEvent(d->activeFocusItem, e);
+
+    if (d->activeFocusItem)
+        sendEvent(d->activeFocusItem, e);
 }
 
 void QSGCanvas::inputMethodEvent(QInputMethodEvent *e)
 {
     Q_D(QSGCanvas);
 
-    sendEvent(d->activeFocusItem, e);
+    if (d->activeFocusItem)
+        sendEvent(d->activeFocusItem, e);
 }
 
 bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSceneMouseEvent *event)

@@ -97,6 +97,18 @@ private slots:
     void enabled();
 
     void mouseGrab();
+
+private:
+    void ensureFocus(QWidget *w) {
+        w->show();
+        qApp->setActiveWindow(w);
+        qApp->processEvents();
+
+#ifdef Q_WS_X11
+        // to be safe and avoid failing setFocus with window managers
+        qt_x11_wait_for_window_manager(w);
+#endif
+    }
 };
 
 tst_qsgitem::tst_qsgitem()
@@ -192,6 +204,7 @@ struct FocusState : public QHash<QSGItem *, FocusData>
 void tst_qsgitem::simpleFocus()
 {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
 
     QSGItem *l1c1 = new TestItem(canvas.rootItem());
     QSGItem *l1c2 = new TestItem(canvas.rootItem());
@@ -241,6 +254,7 @@ void tst_qsgitem::simpleFocus()
 void tst_qsgitem::scopedFocus()
 {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
 
     QSGItem *l1c1 = new TestItem(canvas.rootItem());
     QSGItem *l1c2 = new TestItem(canvas.rootItem());
@@ -319,6 +333,7 @@ void tst_qsgitem::addedToCanvas()
 {
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
 
     QSGItem *item = new TestItem;
 
@@ -337,6 +352,7 @@ void tst_qsgitem::addedToCanvas()
 
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
 
     QSGItem *item = new TestItem(canvas.rootItem());
 
@@ -364,6 +380,7 @@ void tst_qsgitem::addedToCanvas()
 
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
 
     QSGItem *tree = new TestItem;
     QSGItem *c1 = new TestItem(tree);
@@ -386,6 +403,7 @@ void tst_qsgitem::addedToCanvas()
 
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *tree = new TestFocusScope;
     QSGItem *c1 = new TestItem(tree);
     QSGItem *c2 = new TestItem(tree);
@@ -412,6 +430,7 @@ void tst_qsgitem::addedToCanvas()
 
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *tree = new TestFocusScope;
     QSGItem *c1 = new TestItem(tree);
     QSGItem *c2 = new TestItem(tree);
@@ -436,6 +455,7 @@ void tst_qsgitem::addedToCanvas()
 
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
     QSGItem *tree = new TestFocusScope;
     QSGItem *c1 = new TestItem(tree);
@@ -474,6 +494,7 @@ void tst_qsgitem::changeParent()
     // Parent to no parent
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
 
     FocusState focusState;
@@ -494,6 +515,7 @@ void tst_qsgitem::changeParent()
     // Different parent, same focus scope
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
     QSGItem *child2 = new TestItem(canvas.rootItem());
 
@@ -513,6 +535,7 @@ void tst_qsgitem::changeParent()
     // Different parent, different focus scope
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
     QSGItem *child2 = new TestFocusScope(canvas.rootItem());
     QSGItem *item = new TestItem(child);
@@ -533,6 +556,7 @@ void tst_qsgitem::changeParent()
     }
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
     QSGItem *child2 = new TestFocusScope(canvas.rootItem());
     QSGItem *item = new TestItem(child2);
@@ -553,6 +577,7 @@ void tst_qsgitem::changeParent()
     }
     {
     QSGCanvas canvas;
+    ensureFocus(&canvas);
     QSGItem *child = new TestItem(canvas.rootItem());
     QSGItem *child2 = new TestFocusScope(canvas.rootItem());
     QSGItem *item = new TestItem(child2);

@@ -88,6 +88,9 @@ protected:
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
 
+    virtual void focusOutEvent(QFocusEvent *);
+    virtual void focusInEvent(QFocusEvent *);
+
     virtual bool event(QEvent *);
     virtual void keyPressEvent(QKeyEvent *);
     virtual void keyReleaseEvent(QKeyEvent *);
