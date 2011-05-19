@@ -245,7 +245,6 @@ void QSGDefaultRectangleNode::updateGeometry()
         return;
     }
 
-
     QSGGeometry *fill = geometry();
 
     // Check that the vertex type matches the material.
@@ -255,19 +254,14 @@ void QSGDefaultRectangleNode::updateGeometry()
     QSGGeometry *borderGeometry = 0;
     if (m_border) {
         borderGeometry = border()->geometry();
-        Q_ASSERT(borderGeometry->stride() == sizeof(QSGGeometry::Point2D));
+        Q_ASSERT(borderGeometry->stride() == sizeof(Vertex));
     }
 
     int fillVertexCount = 0;
-    int borderVertexCount = 0;
-    int borderIndexCount = 0;
 
     // Preallocate arrays for a rectangle with 18 segments per corner and 3 gradient stops.
-    QVarLengthArray<uchar, sizeof(ColorVertex) * (19 * 4 + 3 * 2)> fillVertices;
-    QVarLengthArray<Vertex, 19 * 8 + 3 * 2> borderVertices;
-    QVarLengthArray<ushort, 19 * 8 + 3 * 4 + 2> borderIndices;
-    int borderIndexHead = 0;
-    int borderIndexTail = 0;
+    uchar *fillVertices = 0;
+    Vertex *borderVertices = 0;
 
     Color4ub fillColor = colorToColor4ub(m_fill_material.color());
     const QGradientStops &stops = m_gradient_stops;
@@ -304,21 +298,28 @@ void QSGDefaultRectangleNode::updateGeometry()
 
         */
 
-        // Overestimate the number of vertices and indices, reduce afterwards when the actual numbers are known.
-        if (penWidth) {
-            // The reason I add extra vertices where the gradient lines intersect the border is
-            // to avoid pixel sized gaps between the fill and the border caused by floating point
-            // inaccuracies.
-            borderVertices.resize((segments + 1) * 2 * 4 + m_gradient_stops.size() * 2);
-            borderIndices.resize((segments + 1) * 2 * 4 + m_gradient_stops.size() * 4 + 2);
-            borderIndexHead = borderIndexTail = (borderIndices.count() >> 1) - 1;
-        }
-        fillVertices.resize(((segments + 1) * 4 + m_gradient_stops.size() * 2) * fill->stride());
-
         int nextGradientStop = 0;
         qreal gradientPos = (radius - innerRadius) / (innerRect.height() + 2 * radius);
         while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
             ++nextGradientStop;
+        int lastGradientStop = stops.size() - 1;
+        qreal lastGradientPos = (innerRect.height() + radius + innerRadius) / (innerRect.height() + 2 * radius);
+        while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
+            --lastGradientStop;
+
+        int borderVertexHead = 0;
+        int borderVertexTail = 0;
+        if (penWidth) {
+            // The reason I add extra vertices where the gradient lines intersect the border is
+            // to avoid pixel sized gaps between the fill and the border caused by floating point
+            // inaccuracies.
+            borderGeometry->allocate((segments + 1) * 2 * 4 + (lastGradientStop - nextGradientStop + 1) * 4 + 2);
+            borderVertexHead = borderVertexTail = (borderGeometry->vertexCount() >> 1) - 1;
+            borderVertices = (Vertex *)borderGeometry->vertexData();
+        }
+
+        fill->allocate((segments + 1) * 4 + (lastGradientStop - nextGradientStop + 1) * 2);
+        fillVertices = (uchar *)fill->vertexData();
 
         qreal py = 0; // previous inner y-coordinate.
         qreal plx = 0; // previous inner left x-coordinate.
@@ -338,15 +339,9 @@ void QSGDefaultRectangleNode::updateGeometry()
                 qreal Y = (part ? innerRect.bottom() : innerRect.top()) - outerRadius * c; // current outer y-coordinate.
                 qreal lX = innerRect.left() - outerRadius * s; // current outer left x-coordinate.
                 qreal rX = innerRect.right() + outerRadius * s; // current outer right x-coordinate.
-                {
-                    // Rotate
-                    qreal tmp = c;
-                    c = c * cosStep - s * sinStep;
-                    s = s * cosStep + tmp * sinStep;
-                }
-
                 gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / (innerRect.height() + 2 * radius);
-                while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos) {
+
+                while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                     // Insert vertices at gradient stops.
                     qreal gy = (innerRect.top() - radius) + stops.at(nextGradientStop).first * (innerRect.height() + 2 * radius);
                     Q_ASSERT(fillVertexCount >= 2);
@@ -355,19 +350,16 @@ void QSGDefaultRectangleNode::updateGeometry()
                     qreal grx = prx * (1 - t) + t * rx;
 
                     if (penWidth) {
-                        borderVertices[borderVertexCount++].position = QVector2D(grx, gy);
-                        borderVertices[borderVertexCount++].position = QVector2D(glx, gy);
+                        const Vertex &first = borderVertices[borderVertexHead];
+                        borderVertices[--borderVertexHead].position = QVector2D(glx, gy);
+                        borderVertices[--borderVertexHead] = first;
 
-                        int first = borderIndices[borderIndexHead];
-                        borderIndices[--borderIndexHead] = borderVertexCount - 1;
-                        borderIndices[--borderIndexHead] = first;
-
-                        int last = borderIndices[borderIndexTail - 2];
-                        borderIndices[borderIndexTail++] = last;
-                        borderIndices[borderIndexTail++] = borderVertexCount - 2;
+                        const Vertex &last = borderVertices[borderVertexTail - 2];
+                        borderVertices[borderVertexTail++] = last;
+                        borderVertices[borderVertexTail++].position = QVector2D(grx, gy);
                     }
 
-                    ColorVertex *vertices = (ColorVertex *)fillVertices.data();
+                    ColorVertex *vertices = (ColorVertex *)fillVertices;
 
                     fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
                     vertices[fillVertexCount].position = QVector2D(grx, gy);
@@ -381,20 +373,15 @@ void QSGDefaultRectangleNode::updateGeometry()
                 }
 
                 if (penWidth) {
-                    borderVertices[borderVertexCount++].position = QVector2D(rX, Y);
-                    borderVertices[borderVertexCount++].position = QVector2D(lX, Y);
-                    borderVertices[borderVertexCount++].position = QVector2D(rx, y);
-                    borderVertices[borderVertexCount++].position = QVector2D(lx, y);
-
-                    borderIndices[--borderIndexHead] = borderVertexCount - 1;
-                    borderIndices[--borderIndexHead] = borderVertexCount - 3;
-                    borderIndices[borderIndexTail++] = borderVertexCount - 4;
-                    borderIndices[borderIndexTail++] = borderVertexCount - 2;
+                    borderVertices[--borderVertexHead].position = QVector2D(lx, y);
+                    borderVertices[--borderVertexHead].position = QVector2D(lX, Y);
+                    borderVertices[borderVertexTail++].position = QVector2D(rX, Y);
+                    borderVertices[borderVertexTail++].position = QVector2D(rx, y);
                 }
 
                 if (stops.isEmpty()) {
                     Q_ASSERT(m_material_type == TypeFlat);
-                    Vertex *vertices = (Vertex *)fillVertices.data();
+                    Vertex *vertices = (Vertex *)fillVertices;
                     vertices[fillVertexCount++].position = QVector2D(rx, y);
                     vertices[fillVertexCount++].position = QVector2D(lx, y);
                 } else {
@@ -409,7 +396,7 @@ void QSGDefaultRectangleNode::updateGeometry()
                         fillColor = (colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t);
                     }
 
-                    ColorVertex *vertices = (ColorVertex *)fillVertices.data();
+                    ColorVertex *vertices = (ColorVertex *)fillVertices;
                     vertices[fillVertexCount].position = QVector2D(rx, y);
                     vertices[fillVertexCount].color = fillColor;
                     ++fillVertexCount;
@@ -417,22 +404,27 @@ void QSGDefaultRectangleNode::updateGeometry()
                     vertices[fillVertexCount].color = fillColor;
                     ++fillVertexCount;
                 }
-
                 py = y;
                 plx = lx;
                 prx = rx;
+
+                // Rotate
+                qreal tmp = c;
+                c = c * cosStep - s * sinStep;
+                s = s * cosStep + tmp * sinStep;
             }
         }
 
         if (penWidth) {
             // Close border.
-            ushort first = borderIndices[borderIndexHead];
-            ushort second = borderIndices[borderIndexHead + 1];
-            borderIndices[borderIndexTail++] = first;
-            borderIndices[borderIndexTail++] = second;
+            const Vertex &first = borderVertices[borderVertexHead];
+            const Vertex &second = borderVertices[borderVertexHead + 1];
+            borderVertices[borderVertexTail++] = first;
+            borderVertices[borderVertexTail++] = second;
 
-            borderIndexCount = borderIndexTail - borderIndexHead;
+            Q_ASSERT(borderVertexHead == 0 && borderVertexTail == borderGeometry->vertexCount());
         }
+        Q_ASSERT(fillVertexCount == fill->vertexCount());
 
     } else {
 
@@ -453,27 +445,37 @@ void QSGDefaultRectangleNode::updateGeometry()
             outerRect.adjust(-halfPenWidth, -halfPenWidth, halfPenWidth, halfPenWidth);
         }
 
-        if (penWidth) {
-            borderVertices.resize((2 + stops.size()) * 2 + 4);
-            borderIndices.resize((2 + stops.size()) * 2 * 2 + 4);
-        }
-        fillVertices.resize((2 + stops.size()) * 2 * fill->stride());
-
         int nextGradientStop = 0;
         qreal gradientPos = halfPenWidth / m_rect.height();
         while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
             ++nextGradientStop;
+        int lastGradientStop = stops.size() - 1;
+        qreal lastGradientPos = (m_rect.height() - halfPenWidth) / m_rect.height();
+        while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
+            --lastGradientStop;
+
+        int borderVertexCount = 0;
+        ushort *borderIndices = 0;
+        if (penWidth) {
+            borderGeometry->allocate((1 + lastGradientStop - nextGradientStop) * 2 + 8,
+                                     (1 + lastGradientStop - nextGradientStop) * 4 + 10);
+            borderVertices = (Vertex *)borderGeometry->vertexData();
+            Q_ASSERT(borderGeometry->indexType() == GL_UNSIGNED_SHORT);
+            borderIndices = borderGeometry->indexDataAsUShort();
+        }
+        fill->allocate((3 + lastGradientStop - nextGradientStop) * 2);
+        fillVertices = (uchar *)fill->vertexData();
 
         for (int part = 0; part < 2; ++part) {
             qreal y = (part ? innerRect.bottom() : innerRect.top());
             gradientPos = (y - innerRect.top() + halfPenWidth) / m_rect.height();
 
-            while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos) {
+            while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                 // Insert vertices at gradient stops.
                 qreal gy = (innerRect.top() - halfPenWidth) + stops.at(nextGradientStop).first * m_rect.height();
                 Q_ASSERT(fillVertexCount >= 2);
 
-                ColorVertex *vertices = (ColorVertex *)fillVertices.data();
+                ColorVertex *vertices = (ColorVertex *)fillVertices;
 
                 fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
                 vertices[fillVertexCount].position = QVector2D(innerRect.right(), gy);
@@ -493,7 +495,7 @@ void QSGDefaultRectangleNode::updateGeometry()
 
             if (stops.isEmpty()) {
                 Q_ASSERT(m_material_type == TypeFlat);
-                Vertex *vertices = (Vertex *)fillVertices.data();
+                Vertex *vertices = (Vertex *)fillVertices;
                 vertices[fillVertexCount++].position = QVector2D(innerRect.right(), y);
                 vertices[fillVertexCount++].position = QVector2D(innerRect.left(), y);
             } else {
@@ -508,7 +510,7 @@ void QSGDefaultRectangleNode::updateGeometry()
                     fillColor = (colorToColor4ub(prev.second) * (1 - t) + colorToColor4ub(next.second) * t);
                 }
 
-                ColorVertex *vertices = (ColorVertex *)fillVertices.data();
+                ColorVertex *vertices = (ColorVertex *)fillVertices;
                 vertices[fillVertexCount].position = QVector2D(innerRect.right(), y);
                 vertices[fillVertexCount].color = fillColor;
                 ++fillVertexCount;
@@ -530,6 +532,7 @@ void QSGDefaultRectangleNode::updateGeometry()
             borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.bottom());
             borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.bottom());
 
+            int borderIndexCount = 0;
             for (int i = 0; i < fillVertexCount / 2; ++i) {
                 borderIndices[borderIndexCount++] = borderVertexCount - (i == 0 ? 4 : 2); // Upper or lower right corner.
                 borderIndices[borderIndexCount++] = 2 * i + 0;
@@ -541,19 +544,10 @@ void QSGDefaultRectangleNode::updateGeometry()
             borderIndices[borderIndexCount++] = fillVertexCount; // Upper right corner.
             borderIndices[borderIndexCount++] = 0;
             Q_ASSERT(fillVertexCount + 4 == borderVertexCount);
+            Q_ASSERT(borderIndexCount == borderGeometry->indexCount());
         }
+        Q_ASSERT(fillVertexCount == fill->vertexCount());
     }
-
-    // Copy from temporary datastructures to geometry...
-    if (penWidth) {
-        borderGeometry->allocate(borderVertexCount, borderIndexCount);
-        memcpy(borderGeometry->indexData(), borderIndices.constData() + borderIndexHead, borderIndexCount * sizeof(quint16));
-        memcpy(borderGeometry->vertexData(), borderVertices.constData(), borderVertexCount * sizeof(Vertex));
-        m_border->markDirty(DirtyGeometry);
-    }
-
-    fill->allocate(fillVertexCount);
-    memcpy(fill->vertexData(), fillVertices.constData(), fillVertexCount * fill->stride());
 
     markDirty(DirtyGeometry);
 }
