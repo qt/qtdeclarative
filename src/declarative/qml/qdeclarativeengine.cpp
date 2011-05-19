@@ -1398,7 +1398,7 @@ QScriptValue QDeclarativeEnginePrivate::createQmlObject(QScriptContext *ctxt, QS
         QScriptValue arr = ctxt->engine()->newArray(errors.length());
         int i = 0;
         foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("    ") + error.toString() + QLatin1String("\n");
+            errstr += QLatin1String("\n    ") + error.toString();
             QScriptValue qmlErrObject = ctxt->engine()->newObject();
             qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
             qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
@@ -1425,7 +1425,7 @@ QScriptValue QDeclarativeEnginePrivate::createQmlObject(QScriptContext *ctxt, QS
         QScriptValue arr = ctxt->engine()->newArray(errors.length());
         int i = 0;
         foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("    ") + error.toString() + QLatin1String("\n");
+            errstr += QLatin1String("\n    ") + error.toString();
             QScriptValue qmlErrObject = ctxt->engine()->newObject();
             qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
             qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
