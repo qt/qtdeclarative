@@ -455,16 +455,15 @@ void QSGDefaultRectangleNode::updateGeometry()
             --lastGradientStop;
 
         int borderVertexCount = 0;
-        ushort *borderIndices = 0;
         if (penWidth) {
-            borderGeometry->allocate((1 + lastGradientStop - nextGradientStop) * 2 + 8,
-                                     (1 + lastGradientStop - nextGradientStop) * 4 + 10);
+            borderGeometry->allocate((1 + lastGradientStop - nextGradientStop) * 4 + 10);
             borderVertices = (Vertex *)borderGeometry->vertexData();
-            Q_ASSERT(borderGeometry->indexType() == GL_UNSIGNED_SHORT);
-            borderIndices = borderGeometry->indexDataAsUShort();
         }
         fill->allocate((3 + lastGradientStop - nextGradientStop) * 2);
         fillVertices = (uchar *)fill->vertexData();
+
+        QVarLengthArray<qreal, 16> ys(3 + lastGradientStop - nextGradientStop);
+        int yCount = 0;
 
         for (int part = 0; part < 2; ++part) {
             qreal y = (part ? innerRect.bottom() : innerRect.top());
@@ -485,10 +484,7 @@ void QSGDefaultRectangleNode::updateGeometry()
                 vertices[fillVertexCount].color = fillColor;
                 ++fillVertexCount;
 
-                if (penWidth) {
-                    borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), gy);
-                    borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), gy);
-                }
+                ys[yCount++] = gy;
 
                 ++nextGradientStop;
             }
@@ -519,32 +515,28 @@ void QSGDefaultRectangleNode::updateGeometry()
                 ++fillVertexCount;
             }
 
-            if (penWidth) {
-                borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), y);
-                borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), y);
-            }
+            ys[yCount++] = y;
         }
 
         if (penWidth) {
-            // Add four corners.
             borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.top());
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.top());
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.bottom());
-            borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.bottom());
+            borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), ys[0]);
+            for (int i = 1; i < fillVertexCount / 2; ++i) {
+                borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.bottom());
+                borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), ys[i]);
+            }
 
-            int borderIndexCount = 0;
-            for (int i = 0; i < fillVertexCount / 2; ++i) {
-                borderIndices[borderIndexCount++] = borderVertexCount - (i == 0 ? 4 : 2); // Upper or lower right corner.
-                borderIndices[borderIndexCount++] = 2 * i + 0;
+            borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.bottom());
+            borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), ys[fillVertexCount / 2 - 1]);
+            for (int i = fillVertexCount / 2 - 2; i >= 0; --i) {
+                borderVertices[borderVertexCount++].position = QVector2D(outerRect.left(), outerRect.top());
+                borderVertices[borderVertexCount++].position = QVector2D(innerRect.left(), ys[i]);
             }
-            for (int i = 0; i < fillVertexCount / 2; ++i) {
-                borderIndices[borderIndexCount++] = borderVertexCount - (i == 0 ? 1 : 3); // Lower or upper left corner.
-                borderIndices[borderIndexCount++] = fillVertexCount - 2 * i - 1;
-            }
-            borderIndices[borderIndexCount++] = fillVertexCount; // Upper right corner.
-            borderIndices[borderIndexCount++] = 0;
-            Q_ASSERT(fillVertexCount + 4 == borderVertexCount);
-            Q_ASSERT(borderIndexCount == borderGeometry->indexCount());
+
+            borderVertices[borderVertexCount++].position = QVector2D(outerRect.right(), outerRect.top());
+            borderVertices[borderVertexCount++].position = QVector2D(innerRect.right(), innerRect.top());
+
+            Q_ASSERT(borderVertexCount == borderGeometry->vertexCount());
         }
         Q_ASSERT(fillVertexCount == fill->vertexCount());
     }
