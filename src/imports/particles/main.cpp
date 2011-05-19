@@ -66,6 +66,7 @@
 #include "particleemitter.h"
 //#include "spriteemitter.h"
 #include "trailsemitter.h"
+#include "burstemitter.h"
 #include "particle.h"
 #include "coloredparticle.h"
 #include "spriteparticle.h"
@@ -115,6 +116,7 @@ void ParticlesPlugin::registerTypes(const char *uri)
 
     qmlRegisterType<ParticleEmitter>(uri, 2, 0, "ParticleEmitter");
     qmlRegisterType<TrailsEmitter>(uri, 2, 0, "TrailEmitter");
+    qmlRegisterType<TrailsEmitter>(uri, 2, 0, "BurstEmitter");
 
     qmlRegisterType<FollowEmitter>(uri, 2, 0, "FollowEmitter");
     qmlRegisterType<ParticleExtruder>(uri, 2, 0, "Box");

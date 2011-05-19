@@ -16,5 +16,7 @@
         <file>resources/ultrafragment.shader</file>
         <file>resources/supervertex.shader</file>
         <file>resources/superfragment.shader</file>
+        <file>resources/simplevertex.shader</file>
+        <file>resources/simplefragment.shader</file>
     </qresource>
 </RCC>

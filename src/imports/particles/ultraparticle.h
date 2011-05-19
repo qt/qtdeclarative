@@ -66,6 +66,28 @@ class SpriteEngine;
     uchar a;
 };*/
 
+struct SimpleVertex {
+    float x;
+    float y;
+    float tx;
+    float ty;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float sx;
+    float sy;
+    float ax;
+    float ay;
+};
+
+struct SimpleVertices {
+    SimpleVertex v1;
+    SimpleVertex v2;
+    SimpleVertex v3;
+    SimpleVertex v4;
+};
+
 struct UltraVertex {
     float x;
     float y;
@@ -100,6 +122,13 @@ struct UltraVertices {
     UltraVertex v4;
 };
 
+struct IntermediateVertices {
+    UltraVertex* v1;
+    UltraVertex* v2;
+    UltraVertex* v3;
+    UltraVertex* v4;
+};
+
 class UltraParticle : public ParticleType
 {
     Q_OBJECT
@@ -108,6 +137,7 @@ class UltraParticle : public ParticleType
     Q_PROPERTY(QUrl sizeTable READ sizetable WRITE setSizetable NOTIFY sizetableChanged)
     Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged)
 
+    //###Now just colorize - add a flag for 'solid' color particles(where the img is just a mask?)?
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     //Stacks (added) with individual colorVariations
     Q_PROPERTY(qreal colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)
@@ -132,6 +162,7 @@ class UltraParticle : public ParticleType
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(VaryingVector* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
     Q_PROPERTY(QDeclarativeListProperty<SpriteState> sprites READ sprites)
+    Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
 public:
     explicit UltraParticle(QSGItem *parent = 0);
     virtual ~UltraParticle(){}
@@ -142,6 +173,15 @@ public:
 
     QDeclarativeListProperty<SpriteState> sprites();
     SpriteEngine* spriteEngine() {return m_spriteEngine;}
+
+    enum PerformanceLevel{//TODO: Expose?
+        Unknown = 0,
+        Simple,
+        Coloured,
+        Deformable,
+        Tabled,
+        Sprites
+    };
 
     QUrl image() const { return m_image_name; }
     void setImage(const QUrl &image);
@@ -223,6 +263,11 @@ public:
         return m_yVector;
     }
 
+    bool bloat() const
+    {
+        return m_bloat;
+    }
+
 signals:
 
     void imageChanged();
@@ -257,6 +302,8 @@ signals:
     void xVectorChanged(VaryingVector* arg);
 
     void yVectorChanged(VaryingVector* arg);
+
+    void bloatChanged(bool arg);
 
 public slots:
     void setAlphaVariation(qreal arg)
@@ -356,17 +403,27 @@ public slots:
         }
     }
 
+    void setBloat(bool arg)
+    {
+        if (m_bloat != arg) {
+            m_bloat = arg;
+            emit bloatChanged(arg);
+        }
+    }
+
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void reset();
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNode();
+    QSGGeometryNode* buildSimpleParticleNode();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
 private:
-    void vertexCopy(UltraVertex &b,const ParticleVertex& a);
+    //void vertexCopy(UltraVertex &b,const ParticleVertex& a);
+    IntermediateVertices* fetchIntermediateVertices(int pos);
     bool m_do_reset;
 
     QUrl m_image_name;
@@ -402,6 +459,8 @@ private:
     QList<SpriteState*> m_sprites;
     SpriteEngine* m_spriteEngine;
 
+    bool m_bloat;
+    PerformanceLevel perfLevel;
 };
 
 QT_END_NAMESPACE

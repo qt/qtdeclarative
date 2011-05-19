@@ -112,6 +112,22 @@ protected:
     QHash<int,int> m_particleStarts;
     int m_lastStart;
     QPointF m_systemOffset;
+
+    template <typename VertexStruct>
+    void vertexCopy(VertexStruct &b, const ParticleVertex& a)
+    {
+        b.x = a.x - m_systemOffset.x();
+        b.y = a.y - m_systemOffset.y();
+        b.t = a.t;
+        b.lifeSpan = a.lifeSpan;
+        b.size = a.size;
+        b.endSize = a.endSize;
+        b.sx = a.sx;
+        b.sy = a.sy;
+        b.ax = a.ax;
+        b.ay = a.ay;
+    }
+
 private:
 };
 

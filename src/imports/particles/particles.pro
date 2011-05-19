@@ -48,7 +48,8 @@ HEADERS += \
     deformableparticle.h \
     pictureaffector.h \
     superparticle.h \
-    ultraparticle.h
+    ultraparticle.h \
+    burstemitter.h
 
 SOURCES += \
     V1/qdeclarativeparticles.cpp \
@@ -96,7 +97,8 @@ SOURCES += \
     deformableparticle.cpp \
     pictureaffector.cpp \
     superparticle.cpp \
-    ultraparticle.cpp
+    ultraparticle.cpp \
+    burstemitter.cpp
 
 QT += declarative opengl
 #Because we use QDeclarativePixmapCache once...
