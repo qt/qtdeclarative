@@ -229,6 +229,10 @@ The examples can be found in Qt's \c examples/declarative directory.
 \o \l{declarative/cppextensions/networkaccessmanagerfactory}{Network access manager factory}
 \endlist
 
+\section2 Scenegraph
+\list
+\o \l{declarative/painteditem/textballoons}{Painted Item}
+\endlist
 
 \section1 Labs
 

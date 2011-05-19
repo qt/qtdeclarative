@@ -67,10 +67,6 @@ public:
 
 int main(int argc, char ** argv)
 {
-#ifdef Q_WS_X11
-    QApplication::setAttribute(Qt::AA_X11InitThreads);
-#endif
-
     QApplication app(argc, argv);
 
     qmlRegisterType<MyPaintItem>("MyModule", 1, 0, "MyPaintItem");
@@ -79,7 +75,7 @@ int main(int argc, char ** argv)
     f.setSampleBuffers(true);
     QSGView view(f);
     view.setResizeMode(QSGView::SizeRootObjectToView);
-    view.setSource(QUrl::fromLocalFile("myfile.qml"));
+    view.setSource(QUrl::fromLocalFile("smile.qml"));
     view.show();
     view.raise();
 
