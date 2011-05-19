@@ -1611,7 +1611,6 @@ void tst_qsgtextinput::passwordCharacter()
     qreal implicitWidth = textInput->implicitWidth();
     textInput->setPasswordCharacter(".");
 
-    QEXPECT_FAIL("", "QSGPaintedItem::contentSize()/setContentSize() not implemented", Continue);
     // QTBUG-12383 content is updated and redrawn
     QVERIFY(contentsSize != textInput->contentsSize());
     QVERIFY(textInput->implicitWidth() < implicitWidth);
