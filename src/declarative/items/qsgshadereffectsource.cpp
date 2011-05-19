@@ -780,12 +780,12 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
 
     tex->setLive(m_live);
     tex->setItem(QSGItemPrivate::get(m_sourceItem)->itemNode());
-    QRectF sourceRect = m_sourceRect.isEmpty()
+    QRectF sourceRect = m_sourceRect.isNull()
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
                       : m_sourceRect;
     tex->setRect(sourceRect);
     QSize textureSize = m_textureSize.isEmpty()
-                      ? QSize(qCeil(sourceRect.width()), qCeil(sourceRect.height()))
+                      ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
     tex->setSize(textureSize);
     tex->setRecursive(m_recursive);
