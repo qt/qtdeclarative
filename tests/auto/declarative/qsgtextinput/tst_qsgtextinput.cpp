@@ -2112,9 +2112,8 @@ void tst_qsgtextinput::setHAlignClearCache()
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(input.nbPaint, 1);
     input.setHAlign(QSGTextInput::AlignRight);
-    QApplication::processEvents();
     //Changing the alignment should trigger a repaint
-    QCOMPARE(input.nbPaint, 2);
+    QTRY_COMPARE(input.nbPaint, 2);
 }
 
 void tst_qsgtextinput::focusOutClearSelection()
