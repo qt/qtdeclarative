@@ -191,10 +191,6 @@ void tst_qdeclarativemetatype::copy()
     variantHash.insert("Hello World!", QVariant(19));
     QT_COPY_TEST(QVariantHash, variantHash);
 
-#ifdef QT3_SUPPORT
-    QT_COPY_TEST(QColorGroup, QColorGroup(Qt::red, Qt::red, Qt::red, Qt::red, Qt::red, Qt::red, Qt::red));
-#endif
-
     QT_COPY_TEST(QFont, QFont("Helvetica", 1024));
 
     {
