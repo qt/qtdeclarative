@@ -581,6 +581,7 @@ void tst_qdeclarativeimage::noLoading()
     QTRY_VERIFY(obj->status() == QDeclarativeImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 4);
+    QSKIP("QTBUG-19425", SkipSingle);
     QTRY_COMPARE(progressSpy.count(), 2);
     QTRY_COMPARE(statusSpy.count(), 2);
 
