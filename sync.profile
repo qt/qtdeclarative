@@ -1,5 +1,6 @@
 %modules = ( # path to module name map
     "QtDeclarative" => "$basedir/src/declarative",
+    "QtQuickTest" => "$basedir/src/qmltest",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
@@ -9,9 +10,11 @@
     "gui" => "#include <QtGui/QtGui>\n",
     "script" => "#include <QtScript/QtScript>\n",
     "network" => "#include <QtNetwork/QtNetwork>\n",
+    "testlib" => "#include <QtTest/QtTest>\n",
 );
 %modulepris = (
     "QtDeclarative" => "$basedir/modules/qt_declarative.pri",
+    "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
 );
 # Modules and programs, and their dependencies.
 # Each of the module version specifiers can take one of the following values:
@@ -28,5 +31,9 @@
         "QtNetwork" => "0c637cb07ba3c9b353e7e483a209537485cc4e2a",
         "QtSql" => "0c637cb07ba3c9b353e7e483a209537485cc4e2a",
         "QtCore" => "0c637cb07ba3c9b353e7e483a209537485cc4e2a",
+    },
+    "QtQuickTest" => {
+        "QtTest" => "0c637cb07ba3c9b353e7e483a209537485cc4e2a",
+        "QtDeclarative" => "THIS_REPOSITORY",
     },
 );
