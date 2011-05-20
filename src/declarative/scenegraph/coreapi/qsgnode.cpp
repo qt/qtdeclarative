@@ -83,8 +83,23 @@ static void qt_print_node_count()
 
 QSGNode::QSGNode()
     : m_parent(0)
+    , m_type(BasicNodeType)
     , m_nodeFlags(OwnedByParent)
     , m_flags(0)
+{
+    init();
+}
+
+QSGNode::QSGNode(NodeType type)
+    : m_parent(0)
+    , m_type(type)
+    , m_nodeFlags(OwnedByParent)
+    , m_flags(0)
+{
+    init();
+}
+
+void QSGNode::init()
 {
 #ifndef QT_NO_DEBUG
     ++qt_node_count;
@@ -94,7 +109,6 @@ QSGNode::QSGNode()
         atexit_registered = true;
     }
 #endif
-
 }
 
 QSGNode::~QSGNode()
@@ -369,8 +383,9 @@ void QSGNode::markDirty(DirtyFlags flags)
 /*!
     Creates a new basic geometry node.
  */
-QSGBasicGeometryNode::QSGBasicGeometryNode()
-    : m_geometry(0)
+QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
+    : QSGNode(type)
+    , m_geometry(0)
     , m_matrix(0)
     , m_clip_list(0)
 {
@@ -443,7 +458,8 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
  */
 
 QSGGeometryNode::QSGGeometryNode()
-    : m_render_order(0)
+    : QSGBasicGeometryNode(GeometryNodeType)
+    , m_render_order(0)
     , m_material(0)
     , m_opaque_material(0)
     , m_opacity(1)
@@ -608,6 +624,7 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
  */
 
 QSGClipNode::QSGClipNode()
+    : QSGBasicGeometryNode(ClipNodeType)
 {
 }
 
@@ -686,6 +703,7 @@ void QSGClipNode::setClipRect(const QRectF &rect)
  */
 
 QSGTransformNode::QSGTransformNode()
+    : QSGNode(TransformNodeType)
 {
 }
 
@@ -754,6 +772,10 @@ void QSGTransformNode::setCombinedMatrix(const QMatrix4x4 &matrix)
     Creates a new root node.
  */
 
+QSGRootNode::QSGRootNode()
+    : QSGNode(RootNodeType)
+{
+}
 
 
 /*!
@@ -812,7 +834,8 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyFlags flags)
     The default opacity of nodes is 1.
   */
 QSGOpacityNode::QSGOpacityNode()
-    : m_opacity(1)
+    : QSGNode(OpacityNodeType)
+    , m_opacity(1)
     , m_combined_opacity(1)
 {
 }
