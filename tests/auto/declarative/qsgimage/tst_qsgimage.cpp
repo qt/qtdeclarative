@@ -284,16 +284,15 @@ void tst_qsgimage::mirror()
     qreal height = 250;
 
     QSGView *canvas = new QSGView;
-    canvas->show();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
 
-    QSGImage *obj = qobject_cast<QSGImage*>(canvas->rootObject());
+    QSGImage *obj = canvas->rootObject()->findChild<QSGImage*>("image");
     QVERIFY(obj != 0);
 
-    obj->setProperty("width", width);
-    obj->setProperty("height", height);
     obj->setFillMode((QSGImage::FillMode)fillMode);
     obj->setProperty("mirror", true);
+
+    canvas->show();
 
     QPixmap screenshot = canvas->renderPixmap();
 
