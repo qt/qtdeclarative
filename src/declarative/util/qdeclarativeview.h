@@ -73,7 +73,6 @@ public:
     virtual ~QDeclarativeView();
 
     QUrl source() const;
-    void setSource(const QUrl&);
 
     QDeclarativeEngine* engine() const;
     QDeclarativeContext* rootContext() const;
@@ -91,6 +90,9 @@ public:
 
     QSize sizeHint() const;
     QSize initialSize() const;
+
+public Q_SLOTS:
+    void setSource(const QUrl&);
 
 Q_SIGNALS:
     void sceneResized(QSize size); // ???

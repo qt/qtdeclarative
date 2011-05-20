@@ -96,12 +96,13 @@ public:
     virtual QObject *beginCreate(QDeclarativeContext *);
     virtual void completeCreate();
 
-    void loadUrl(const QUrl &url);
-    void setData(const QByteArray &, const QUrl &baseUrl);
-
     QDeclarativeContext *creationContext() const;
 
     static QDeclarativeComponentAttached *qmlAttachedProperties(QObject *);
+
+public Q_SLOTS:
+    void loadUrl(const QUrl &url);
+    void setData(const QByteArray &, const QUrl &baseUrl);
 
 Q_SIGNALS:
     void statusChanged(QDeclarativeComponent::Status);
