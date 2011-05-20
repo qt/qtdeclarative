@@ -492,6 +492,8 @@ void tst_qsgtextedit::hAlign_RightToLeft()
     QVERIFY(textEdit != 0);
     canvas.show();
 
+    const QString rtlText = textEdit->text();
+
     // implicit alignment should follow the reading direction of text
     QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignRight);
     QVERIFY(textEdit->positionToRectangle(0).x() > canvas.width()/2);
@@ -567,6 +569,16 @@ void tst_qsgtextedit::hAlign_RightToLeft()
     textEdit->setText("Hello world!");
     QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignLeft);
     QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
+
+    QApplication::setActiveWindow(&canvas);
+    QTest::qWaitForWindowShown(&canvas);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+
+    textEdit->setText(QString());
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(&canvas, &ev); }
+    QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignRight);
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(&canvas, &ev); }
+    QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignLeft);
 
 #ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based

@@ -413,7 +413,11 @@ bool QDeclarative1TextInputPrivate::determineHorizontalAlignment()
     if (hAlignImplicit) {
         // if no explicit alignment has been set, follow the natural layout direction of the text
         QString text = control->text();
-        bool isRightToLeft = text.isEmpty() ? QApplication::keyboardInputDirection() == Qt::RightToLeft : text.isRightToLeft();
+        if (text.isEmpty())
+            text = control->preeditAreaText();
+        bool isRightToLeft = text.isEmpty()
+                ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QDeclarative1TextInput::AlignRight : QDeclarative1TextInput::AlignLeft);
     }
     return false;
@@ -1918,6 +1922,7 @@ void QDeclarative1TextInput::cursorPosChanged()
 void QDeclarative1TextInput::updateCursorRectangle()
 {
     Q_D(QDeclarative1TextInput);
+    d->determineHorizontalAlignment();
     d->updateHorizontalScroll();
     updateRect();//TODO: Only update rect between pos's
     updateMicroFocus();

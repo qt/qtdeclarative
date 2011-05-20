@@ -551,7 +551,15 @@ bool QSGTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QSGTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight = text.isEmpty() ? QApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight;
+        if (text.isEmpty()) {
+            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
+            alignToRight = preeditText.isEmpty()
+                    ? QApplication::keyboardInputDirection() == Qt::RightToLeft
+                    : preeditText.isRightToLeft();
+        } else {
+            alignToRight = rightToLeftText;
+        }
         return setHAlign(alignToRight ? QSGTextEdit::AlignRight : QSGTextEdit::AlignLeft);
     }
     return false;
@@ -1661,6 +1669,7 @@ void QSGTextEdit::q_textChanged()
 void QSGTextEdit::moveCursorDelegate()
 {
     Q_D(QSGTextEdit);
+    d->determineHorizontalAlignment();
     updateMicroFocus();
     emit cursorRectangleChanged();
     if(!d->cursor)

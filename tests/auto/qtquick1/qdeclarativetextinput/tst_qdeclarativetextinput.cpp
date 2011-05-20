@@ -1202,6 +1202,8 @@ void tst_qdeclarativetextinput::horizontalAlignment_RightToLeft()
     QVERIFY(textInput != 0);
     canvas->show();
 
+    const QString rtlText = textInput->text();
+
     QDeclarative1TextInputPrivate *textInputPrivate = QDeclarative1TextInputPrivate::get(textInput);
     QVERIFY(textInputPrivate != 0);
     QVERIFY(-textInputPrivate->hscroll > canvas->width()/2);
@@ -1265,6 +1267,17 @@ void tst_qdeclarativetextinput::horizontalAlignment_RightToLeft()
     textInput->setText("Hello world!");
     QCOMPARE(textInput->hAlign(), QDeclarative1TextInput::AlignLeft);
     QVERIFY(-textInputPrivate->hscroll < canvas->width()/2);
+
+    QApplication::setActiveWindow(canvas);
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
+
+    // If there is no commited text, the preedit text should determine the alignment.
+    textInput->setText(QString());
+    { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(canvas, &ev); }
+    QCOMPARE(textInput->hAlign(), QDeclarative1TextInput::AlignRight);
+    { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(canvas, &ev); }
+    QCOMPARE(textInput->hAlign(), QDeclarative1TextInput::AlignLeft);
 
 #ifndef Q_OS_MAC    // QTBUG-18040
     // empty text with implicit alignment follows the system locale-based
