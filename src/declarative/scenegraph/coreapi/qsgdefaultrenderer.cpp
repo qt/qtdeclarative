@@ -161,6 +161,9 @@ T Heap<T, prealloc>::pop()
 
 QMLRenderer::QMLRenderer(QSGContext *context)
     : QSGRenderer(context)
+    , m_opaqueNodes(64)
+    , m_transparentNodes(64)
+    , m_tempNodes(64)
     , m_rebuild_lists(false)
     , m_needs_sorting(false)
     , m_sort_front_to_back(false)
@@ -247,8 +250,8 @@ void QMLRenderer::render()
     m_currentMatrix = 0;
 
     if (m_rebuild_lists) {
-        m_opaqueNodes.clear();
-        m_transparentNodes.clear();
+        m_opaqueNodes.reset();
+        m_transparentNodes.reset();
         m_currentRenderOrder = 1;
         buildLists(rootNode());
         m_rebuild_lists = false;
@@ -260,10 +263,12 @@ void QMLRenderer::render()
 
 
     if (m_needs_sorting) {
-        qSort(m_opaqueNodes.begin(), m_opaqueNodes.end(),
-              m_sort_front_to_back
-              ? nodeLessThanWithRenderOrder
-              : nodeLessThan);
+        if (!m_opaqueNodes.isEmpty()) {
+            qSort(&m_opaqueNodes.first(), &m_opaqueNodes.first() + m_opaqueNodes.size(),
+                  m_sort_front_to_back
+                  ? nodeLessThanWithRenderOrder
+                  : nodeLessThan);
+        }
         m_needs_sorting = false;
     }
 
@@ -370,10 +375,10 @@ void QMLRenderer::buildLists(QSGNode *node)
         if ((m->flags() & QSGMaterial::Blending) || opacity < 1) {
 #endif
             geomNode->setRenderOrder(m_currentRenderOrder - 1);
-            m_transparentNodes.append(geomNode);
+            m_transparentNodes.add(geomNode);
         } else {
             geomNode->setRenderOrder(m_currentRenderOrder);
-            m_opaqueNodes.append(geomNode);
+            m_opaqueNodes.add(geomNode);
             m_currentRenderOrder += 2;
         }
     }
@@ -398,37 +403,39 @@ void QMLRenderer::buildLists(QSGNode *node)
             endIndices[i] = m_transparentNodes.size();
         }
 
-        Heap<Foo, 16> heap;
-        m_tempNodes.clear();
         int childNodeCount = m_transparentNodes.size() - baseCount;
-        while (childNodeCount) {
-            for (int i = 0; i < count; ++i) {
-                if (beginIndices[i] != endIndices[i])
-                    heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+        if (childNodeCount) {
+            Heap<Foo, 16> heap;
+            m_tempNodes.reset();
+            m_tempNodes.reserve(childNodeCount);
+            while (childNodeCount) {
+                for (int i = 0; i < count; ++i) {
+                    if (beginIndices[i] != endIndices[i])
+                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                }
+                while (!heap.isEmpty()) {
+                    Foo foo = heap.pop();
+                    m_tempNodes.add(foo.second);
+                    --childNodeCount;
+                    int i = foo.first;
+                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), foo.second))
+                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                }
             }
-            while (!heap.isEmpty()) {
-                Foo foo = heap.pop();
-                m_tempNodes.append(foo.second);
-                --childNodeCount;
-                int i = foo.first;
-                if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), foo.second))
-                    heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
-            }
-        }
-        Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
+            Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
 
-        m_transparentNodes.resize(baseCount);
-        m_transparentNodes << m_tempNodes;
+            qMemCopy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
+        }
     } else {
         for (int i = 0; i < count; ++i)
             buildLists(node->childAtIndex(i));
     }
 }
 
-void QMLRenderer::renderNodes(const QVector<QSGGeometryNode *> &list)
+void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
 {
     const float scale = 1.0f / m_currentRenderOrder;
-    int count = list.count();
+    int count = list.size();
     int currentRenderOrder = 0x80000000;
 
     //int clipChangeCount = 0;
