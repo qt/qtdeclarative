@@ -41,7 +41,7 @@ HEADERS += \
     pointvector.h \
     angledvector.h \
     directedvector.h \
-    modelparticle.h \
+    #modelparticle.h \
     eternalaffector.h \
     lineextruder.h \
     resetaffector.h \
@@ -92,7 +92,7 @@ SOURCES += \
     pointvector.cpp \
     angledvector.cpp \
     directedvector.cpp \
-    modelparticle.cpp \
+    #modelparticle.cpp \
     eternalaffector.cpp \
     lineextruder.cpp \
     resetaffector.cpp \

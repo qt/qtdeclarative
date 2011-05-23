@@ -70,7 +70,7 @@
 #include "particle.h"
 #include "coloredparticle.h"
 #include "spriteparticle.h"
-#include "modelparticle.h"
+//#include "modelparticle.h"
 #include "dataparticle.h"
 #include "itemparticle.h"
 #include "superparticle.h"
@@ -110,7 +110,7 @@ void ParticlesPlugin::registerTypes(const char *uri)
     qmlRegisterType<ParticleType>(uri, 2, 0, "Particle");
     qmlRegisterType<ColoredParticle>(uri, 2, 0, "ColoredParticle");
     qmlRegisterType<SpriteParticle>(uri, 2, 0, "SpriteParticle");
-    qmlRegisterType<ModelParticle>(uri, 2, 0, "ModelParticle");
+    //qmlRegisterType<ModelParticle>(uri, 2, 0, "ModelParticle");
     qmlRegisterType<DataParticle>(uri, 2, 0, "DataParticle");
     qmlRegisterType<ItemParticle>(uri, 2, 0, "ItemParticle");
     //qmlRegisterType<PairedParticle>(uri, 2, 0, "PairedParticle");
