@@ -203,6 +203,7 @@ QSGMaterialShader *UltraMaterial::createShader() const
 class SimpleMaterial : public UltraMaterial
 {
     virtual QSGMaterialShader *createShader() const;
+    virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
 };
 
 class SimpleMaterialData : public QSGMaterialShader
@@ -301,6 +302,7 @@ UltraParticle::UltraParticle(QSGItem* parent)
     , m_spriteEngine(0)
     , m_bloat(false)
     , perfLevel(Unknown)
+    , m_lastLevel(Unknown)
 {
     setFlag(ItemHasContents);
 }
@@ -353,6 +355,8 @@ void UltraParticle::setColor(const QColor &color)
         return;
     m_color = color;
     emit colorChanged();
+    if(perfLevel < Coloured)
+        reset();
 }
 
 void UltraParticle::setColorVariation(qreal var)
@@ -361,8 +365,139 @@ void UltraParticle::setColorVariation(qreal var)
         return;
     m_color_variation = var;
     emit colorVariationChanged();
+    if(perfLevel < Coloured)
+        reset();
 }
 
+void UltraParticle::setAlphaVariation(qreal arg)
+{
+    if (m_alphaVariation != arg) {
+        m_alphaVariation = arg;
+        emit alphaVariationChanged(arg);
+    }
+    if(perfLevel < Coloured)
+        reset();
+}
+
+void UltraParticle::setAlpha(qreal arg)
+{
+    if (m_alpha != arg) {
+        m_alpha = arg;
+        emit alphaChanged(arg);
+    }
+    if(perfLevel < Coloured)
+        reset();
+}
+
+void UltraParticle::setRedVariation(qreal arg)
+{
+    if (m_redVariation != arg) {
+        m_redVariation = arg;
+        emit redVariationChanged(arg);
+    }
+    if(perfLevel < Coloured)
+        reset();
+}
+
+void UltraParticle::setGreenVariation(qreal arg)
+{
+    if (m_greenVariation != arg) {
+        m_greenVariation = arg;
+        emit greenVariationChanged(arg);
+    }
+    if(perfLevel < Coloured)
+        reset();
+}
+
+void UltraParticle::setBlueVariation(qreal arg)
+{
+    if (m_blueVariation != arg) {
+        m_blueVariation = arg;
+        emit blueVariationChanged(arg);
+    }
+    if(perfLevel < Coloured)
+        reset();
+}
+
+void UltraParticle::setRotation(qreal arg)
+{
+    if (m_rotation != arg) {
+        m_rotation = arg;
+        emit rotationChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setRotationVariation(qreal arg)
+{
+    if (m_rotationVariation != arg) {
+        m_rotationVariation = arg;
+        emit rotationVariationChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setRotationSpeed(qreal arg)
+{
+    if (m_rotationSpeed != arg) {
+        m_rotationSpeed = arg;
+        emit rotationSpeedChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setRotationSpeedVariation(qreal arg)
+{
+    if (m_rotationSpeedVariation != arg) {
+        m_rotationSpeedVariation = arg;
+        emit rotationSpeedVariationChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setAutoRotation(bool arg)
+{
+    if (m_autoRotation != arg) {
+        m_autoRotation = arg;
+        emit autoRotationChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setXVector(VaryingVector* arg)
+{
+    if (m_xVector != arg) {
+        m_xVector = arg;
+        emit xVectorChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setYVector(VaryingVector* arg)
+{
+    if (m_yVector != arg) {
+        m_yVector = arg;
+        emit yVectorChanged(arg);
+    }
+    if(perfLevel < Deformable)
+        reset();
+}
+
+void UltraParticle::setBloat(bool arg)
+{
+    if (m_bloat != arg) {
+        m_bloat = arg;
+        emit bloatChanged(arg);
+    }
+    if(perfLevel < 9999)
+        reset();
+}
 void UltraParticle::setCount(int c)
 {
     ParticleType::setCount(c);
@@ -505,11 +640,11 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
         return 0;
     }
 
-    qDebug() << m_colortable_name.isEmpty() << !m_color.isValid();
     if(!m_sprites.count() && !m_bloat
             && m_colortable_name.isEmpty()
             && m_sizetable_name.isEmpty()
             && m_opacitytable_name.isEmpty()
+            && !m_autoRotation
             && !m_rotation && !m_rotationVariation
             && !m_rotationSpeed && !m_rotationSpeedVariation
             && !m_alphaVariation && m_alpha == 1.0
@@ -518,6 +653,8 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
             )
         return buildSimpleParticleNode();
     perfLevel = Sprites;//TODO: intermediate levels
+    if(!m_color.isValid())//But we're in colored level (or higher)
+        m_color = QColor(Qt::white);
     qDebug() << "Complex Case";
 
     QImage image;
@@ -544,30 +681,67 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
     g->setDrawingMode(GL_TRIANGLES);
 
     UltraVertex *vertices = (UltraVertex *) g->vertexData();
+    SimpleVertex *oldSimple = (SimpleVertex *) m_lastData;//TODO: Other levels
+    if(m_lastLevel == 1)
+        qDebug() << "Theta" << m_lastLevel << oldSimple[0].x << oldSimple[0].y << oldSimple[0].t;
     for (int p=0; p<m_count; ++p) {
 
-        for (int i=0; i<4; ++i) {
-            vertices[i].x = 0;
-            vertices[i].y = 0;
-            vertices[i].t = -1;
-            vertices[i].lifeSpan = 0;
-            vertices[i].size = 0;
-            vertices[i].endSize = 0;
-            vertices[i].sx = 0;
-            vertices[i].sy = 0;
-            vertices[i].ax = 0;
-            vertices[i].ay = 0;
-            vertices[i].xx = 1;
-            vertices[i].xy = 0;
-            vertices[i].yx = 0;
-            vertices[i].yy = 1;
-            vertices[i].rotation = 0;
-            vertices[i].rotationSpeed = 0;
-            vertices[i].autoRotate = 0;
-            vertices[i].animIdx = 0;
-            vertices[i].frameDuration = 1;
-            vertices[i].frameCount = 1;
-            vertices[i].animT = -1;
+        if (m_lastLevel == 1) {//Transplant/IntermediateVertices?
+            for (int i=0; i<4; ++i) {
+                vertices[i].x = oldSimple[i].x;
+                vertices[i].y = oldSimple[i].y;
+                vertices[i].t = oldSimple[i].t;
+                vertices[i].lifeSpan = oldSimple[i].lifeSpan;
+                vertices[i].size = oldSimple[i].size;
+                vertices[i].endSize = oldSimple[i].endSize;
+                vertices[i].sx = oldSimple[i].sx;
+                vertices[i].sy = oldSimple[i].sy;
+                vertices[i].ax = oldSimple[i].ax;
+                vertices[i].ay = oldSimple[i].ay;
+                vertices[i].xx = 1;
+                vertices[i].xy = 0;
+                vertices[i].yx = 0;
+                vertices[i].yy = 1;
+                vertices[i].rotation = 0;
+                vertices[i].rotationSpeed = 0;
+                vertices[i].autoRotate = 0;
+                vertices[i].animIdx = 0;
+                vertices[i].frameDuration = oldSimple[i].lifeSpan;
+                vertices[i].frameCount = 1;
+                vertices[i].animT = oldSimple[i].t;
+                vertices[i].color.r = 255;
+                vertices[i].color.g = 255;
+                vertices[i].color.b = 255;
+                vertices[i].color.a = 255;
+            }
+        } else {
+            for (int i=0; i<4; ++i) {
+                vertices[i].x = 0;
+                vertices[i].y = 0;
+                vertices[i].t = -1;
+                vertices[i].lifeSpan = 0;
+                vertices[i].size = 0;
+                vertices[i].endSize = 0;
+                vertices[i].sx = 0;
+                vertices[i].sy = 0;
+                vertices[i].ax = 0;
+                vertices[i].ay = 0;
+                vertices[i].xx = 1;
+                vertices[i].xy = 0;
+                vertices[i].yx = 0;
+                vertices[i].yy = 1;
+                vertices[i].rotation = 0;
+                vertices[i].rotationSpeed = 0;
+                vertices[i].autoRotate = 0;
+                vertices[i].animIdx = -1;
+                vertices[i].frameDuration = 1;
+                vertices[i].frameCount = 0;
+                vertices[i].animT = -1;
+                vertices[i].color.r = 0;//TODO:Some things never get used uninitialized. Consider dropping them here?
+                vertices[i].color.g = 0;
+                vertices[i].color.b = 0;
+                vertices[i].color.a = 0;
+            }
         }
 
         vertices[0].tx = 0;
@@ -583,9 +757,10 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
         vertices[3].ty = 1;
 
         vertices += 4;
+        oldSimple += 4;
     }
 
-    quint16 *indices = g->indexDataAsUShort();
+    quint16 *indices = g->indexDataAsUShort();//TODO: Speed gains by copying this over if count unchanged?
     for (int i=0; i<m_count; ++i) {
         int o = i * 4;
         indices[0] = o;
@@ -597,6 +772,7 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
         indices += 6;
     }
 
+    qFree(m_lastData);
     if (m_material) {
         delete m_material;
         m_material = 0;
@@ -640,8 +816,15 @@ QSGGeometryNode* UltraParticle::buildParticleNode()
 QSGNode *UltraParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 {
     if(m_pleaseReset){
-        if(m_node)
+        if(m_node){
+            if(perfLevel == 1){
+                qDebug() << "Beta";
+                m_lastData = qMalloc(m_count*sizeof(SimpleVertices));//TODO: Account for count_changed possibility
+                memcpy(m_lastData, m_node->geometry()->vertexData(), m_count * sizeof(SimpleVertices));//TODO: Multiple levels
+            }
+            m_lastLevel = perfLevel;
             delete m_node;
+        }
         if(m_material)
             delete m_material;
 
@@ -731,23 +914,6 @@ void UltraParticle::reloadColor(const Color4ub &c, ParticleData* d)
     UltraVertices &p = particles[pos];
     p.v1.color = p.v2.color = p.v3.color = p.v4.color = c;
 }
-
-/*Repalced by superclass templated function
-void UltraParticle::vertexCopy(UltraVertex &b,const ParticleVertex& a)
-{
-    b.x = a.x - m_systemOffset.x();
-    b.y = a.y - m_systemOffset.y();
-    b.t = a.t;
-    b.lifeSpan = a.lifeSpan;
-    b.size = a.size;
-    b.endSize = a.endSize;
-    b.sx = a.sx;
-    b.sy = a.sy;
-    b.ax = a.ax;
-    b.ay = a.ay;
-}
-*/
-
 
 void UltraParticle::reload(ParticleData *d)
 {

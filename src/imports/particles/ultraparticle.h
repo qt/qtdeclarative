@@ -154,7 +154,7 @@ class UltraParticle : public ParticleType
     Q_PROPERTY(qreal rotationSpeedVariation READ rotationSpeedVariation WRITE setRotationSpeedVariation NOTIFY rotationSpeedVariationChanged)
     //If true, then will face the direction of motion. Stacks with rotation, e.g. setting rotation
     //to 180 will lead to facing away from the direction of motion
-    Q_PROPERTY(bool autoRotation READ autoRotation WRITE autoRotation NOTIFY autoRotationChanged)
+    Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged)
 
     //###Call i/j? Makes more sense to those with vector calculus experience, and I could even add the cirumflex in QML?
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
@@ -203,70 +203,31 @@ public:
 
     qreal renderOpacity() const { return m_render_opacity; }
 
-    qreal alphaVariation() const
-    {
-        return m_alphaVariation;
-    }
+    qreal alphaVariation() const { return m_alphaVariation; }
 
-    qreal alpha() const
-    {
-        return m_alpha;
-    }
+    qreal alpha() const { return m_alpha; }
 
-    qreal redVariation() const
-    {
-        return m_redVariation;
-    }
+    qreal redVariation() const { return m_redVariation; }
 
-    qreal greenVariation() const
-    {
-        return m_greenVariation;
-    }
+    qreal greenVariation() const { return m_greenVariation; }
 
-    qreal blueVariation() const
-    {
-        return m_blueVariation;
-    }
+    qreal blueVariation() const { return m_blueVariation; }
 
-    qreal rotation() const
-    {
-        return m_rotation;
-    }
+    qreal rotation() const { return m_rotation; }
 
-    qreal rotationVariation() const
-    {
-        return m_rotationVariation;
-    }
+    qreal rotationVariation() const { return m_rotationVariation; }
 
-    qreal rotationSpeed() const
-    {
-        return m_rotationSpeed;
-    }
+    qreal rotationSpeed() const { return m_rotationSpeed; }
 
-    qreal rotationSpeedVariation() const
-    {
-        return m_rotationSpeedVariation;
-    }
+    qreal rotationSpeedVariation() const { return m_rotationSpeedVariation; }
 
-    bool autoRotation() const
-    {
-        return m_autoRotation;
-    }
+    bool autoRotation() const { return m_autoRotation; }
 
-    VaryingVector* xVector() const
-    {
-        return m_xVector;
-    }
+    VaryingVector* xVector() const { return m_xVector; }
 
-    VaryingVector* yVector() const
-    {
-        return m_yVector;
-    }
+    VaryingVector* yVector() const { return m_yVector; }
 
-    bool bloat() const
-    {
-        return m_bloat;
-    }
+    bool bloat() const { return m_bloat; }
 
 signals:
 
@@ -306,110 +267,32 @@ signals:
     void bloatChanged(bool arg);
 
 public slots:
-    void setAlphaVariation(qreal arg)
-    {
-        if (m_alphaVariation != arg) {
-            m_alphaVariation = arg;
-            emit alphaVariationChanged(arg);
-        }
-    }
-
-    void setAlpha(qreal arg)
-    {
-        if (m_alpha != arg) {
-            m_alpha = arg;
-            emit alphaChanged(arg);
-        }
-    }
-
-    void setRedVariation(qreal arg)
-    {
-        if (m_redVariation != arg) {
-            m_redVariation = arg;
-            emit redVariationChanged(arg);
-        }
-    }
-
-    void setGreenVariation(qreal arg)
-    {
-        if (m_greenVariation != arg) {
-            m_greenVariation = arg;
-            emit greenVariationChanged(arg);
-        }
-    }
-
-    void setBlueVariation(qreal arg)
-    {
-        if (m_blueVariation != arg) {
-            m_blueVariation = arg;
-            emit blueVariationChanged(arg);
-        }
-    }
-
     void reloadColor(const Color4ub &c, ParticleData* d);
-    void setRotation(qreal arg)
-    {
-        if (m_rotation != arg) {
-            m_rotation = arg;
-            emit rotationChanged(arg);
-        }
-    }
+    void setAlphaVariation(qreal arg);
 
-    void setRotationVariation(qreal arg)
-    {
-        if (m_rotationVariation != arg) {
-            m_rotationVariation = arg;
-            emit rotationVariationChanged(arg);
-        }
-    }
+    void setAlpha(qreal arg);
 
-    void setRotationSpeed(qreal arg)
-    {
-        if (m_rotationSpeed != arg) {
-            m_rotationSpeed = arg;
-            emit rotationSpeedChanged(arg);
-        }
-    }
+    void setRedVariation(qreal arg);
 
-    void setRotationSpeedVariation(qreal arg)
-    {
-        if (m_rotationSpeedVariation != arg) {
-            m_rotationSpeedVariation = arg;
-            emit rotationSpeedVariationChanged(arg);
-        }
-    }
+    void setGreenVariation(qreal arg);
 
-    void autoRotation(bool arg)
-    {
-        if (m_autoRotation != arg) {
-            m_autoRotation = arg;
-            emit autoRotationChanged(arg);
-        }
-    }
+    void setBlueVariation(qreal arg);
 
-    void setXVector(VaryingVector* arg)
-    {
-        if (m_xVector != arg) {
-            m_xVector = arg;
-            emit xVectorChanged(arg);
-        }
-    }
+    void setRotation(qreal arg);
 
-    void setYVector(VaryingVector* arg)
-    {
-        if (m_yVector != arg) {
-            m_yVector = arg;
-            emit yVectorChanged(arg);
-        }
-    }
+    void setRotationVariation(qreal arg);
 
-    void setBloat(bool arg)
-    {
-        if (m_bloat != arg) {
-            m_bloat = arg;
-            emit bloatChanged(arg);
-        }
-    }
+    void setRotationSpeed(qreal arg);
+
+    void setRotationSpeedVariation(qreal arg);
+
+    void setAutoRotation(bool arg);
+
+    void setXVector(VaryingVector* arg);
+
+    void setYVector(VaryingVector* arg);
+
+    void setBloat(bool arg);
 
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
@@ -461,6 +344,9 @@ private:
 
     bool m_bloat;
     PerformanceLevel perfLevel;
+
+    PerformanceLevel m_lastLevel;
+    void* m_lastData;
 };
 
 QT_END_NAMESPACE
