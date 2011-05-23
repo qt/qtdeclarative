@@ -53,7 +53,7 @@ class QDeclarativeFolderListModelPrivate
 {
 public:
     QDeclarativeFolderListModelPrivate()
-        : sortField(QDeclarativeFolderListModel::Name), sortReversed(false), count(0) {
+        : sortField(QDeclarativeFolderListModel::Name), sortReversed(false), count(0), showDirs(true), showDots(false), showOnlyReadable(false), insideRefresh(false) {
         nameFilters << QLatin1String("*");
     }
 
@@ -90,6 +90,10 @@ public:
     QDeclarativeFolderListModel::SortField sortField;
     bool sortReversed;
     int count;
+    bool showDirs;
+    bool showDots;
+    bool showOnlyReadable;
+    bool insideRefresh;
 };
 
 /*!
@@ -222,13 +226,37 @@ void QDeclarativeFolderListModel::setFolder(const QUrl &folder)
 {
     if (folder == d->folder)
         return;
-    QModelIndex index = d->model.index(folder.toLocalFile());
-    if ((index.isValid() && d->model.isDir(index)) || folder.toLocalFile().isEmpty()) {
 
+    QModelIndex index = d->model.index(folder.toLocalFile()); // This can modify the filtering rules.
+    if ((index.isValid() && d->model.isDir(index)) || folder.toLocalFile().isEmpty()) {
         d->folder = folder;
-        QMetaObject::invokeMethod(this, "refresh", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, "resetFiltering", Qt::QueuedConnection); // resetFiltering will invoke refresh().
         emit folderChanged();
     }
+}
+
+void QDeclarativeFolderListModel::resetFiltering()
+{
+    // ensure that we reset the filtering rules, because the QDirModel::index()
+    // function isn't quite as const as it claims to be.
+    QDir::Filters filt = d->model.filter();
+
+    if (d->showDirs)
+        filt |= (QDir::AllDirs | QDir::Drives);
+    else
+        filt &= ~(QDir::AllDirs | QDir::Drives);
+
+    if (d->showDots)
+        filt &= ~QDir::NoDotAndDotDot;
+    else
+        filt |= QDir::NoDotAndDotDot;
+
+    if (d->showOnlyReadable)
+        filt |= QDir::Readable;
+    else
+        filt &= ~QDir::Readable;
+
+    d->model.setFilter(filt); // this causes a refresh().
 }
 
 /*!
@@ -363,12 +391,17 @@ bool QDeclarativeFolderListModel::isFolder(int index) const
 
 void QDeclarativeFolderListModel::refresh()
 {
+    if (d->insideRefresh)
+        return;
+    d->insideRefresh = true;
+
     d->folderIndex = QModelIndex();
     if (d->count) {
         emit beginRemoveRows(QModelIndex(), 0, d->count-1);
         d->count = 0;
         emit endRemoveRows();
     }
+
     d->folderIndex = d->model.index(d->folder.toLocalFile());
     int newcount = d->model.rowCount(d->folderIndex);
     if (newcount) {
@@ -376,6 +409,8 @@ void QDeclarativeFolderListModel::refresh()
         d->count = newcount;
         emit endInsertRows();
     }
+
+    d->insideRefresh = false; // finished refreshing.
 }
 
 void QDeclarativeFolderListModel::inserted(const QModelIndex &index, int start, int end)
@@ -423,10 +458,13 @@ void  QDeclarativeFolderListModel::setShowDirs(bool on)
 {
     if (!(d->model.filter() & QDir::AllDirs) == !on)
         return;
-    if (on)
+    if (on) {
+        d->showDirs = true;
         d->model.setFilter(d->model.filter() | QDir::AllDirs | QDir::Drives);
-    else
+    } else {
+        d->showDirs = false;
         d->model.setFilter(d->model.filter() & ~(QDir::AllDirs | QDir::Drives));
+    }
 }
 
 /*!
@@ -448,10 +486,13 @@ void  QDeclarativeFolderListModel::setShowDotAndDotDot(bool on)
 {
     if (!(d->model.filter() & QDir::NoDotAndDotDot) == on)
         return;
-    if (on)
+    if (on) {
+        d->showDots = true;
         d->model.setFilter(d->model.filter() & ~QDir::NoDotAndDotDot);
-    else
+    } else {
+        d->showDots = false;
         d->model.setFilter(d->model.filter() | QDir::NoDotAndDotDot);
+    }
 }
 
 /*!
@@ -473,10 +514,13 @@ void QDeclarativeFolderListModel::setShowOnlyReadable(bool on)
 {
     if (!(d->model.filter() & QDir::Readable) == !on)
         return;
-    if (on)
+    if (on) {
+        d->showOnlyReadable = true;
         d->model.setFilter(d->model.filter() | QDir::Readable);
-    else
+    } else {
+        d->showOnlyReadable = false;
         d->model.setFilter(d->model.filter() & ~QDir::Readable);
+    }
 }
 
 //![code]
