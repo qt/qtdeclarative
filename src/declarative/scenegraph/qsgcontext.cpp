@@ -164,7 +164,7 @@ QSGEngine *QSGContext::engine() const
     The texture can be considered as deleted after this function has
     been called.
   */
-void QSGContext::schdelueTextureForCleanup(QSGTexture *texture)
+void QSGContext::scheduleTextureForCleanup(QSGTexture *texture)
 {
     Q_D(QSGContext);
     d->textureMutex.lock();

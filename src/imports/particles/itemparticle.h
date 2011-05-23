@@ -82,8 +82,6 @@ public slots:
 protected:
     virtual void reset();
     void prepareNextFrame();
-private slots:
-    void updateCount();
 private:
     QList<QPointer<QSGItem> > m_deletables;
     int m_particleCount;

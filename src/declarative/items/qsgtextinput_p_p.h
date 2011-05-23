@@ -65,7 +65,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QSGTextInputPrivate : public QSGImplicitSizePaintedItemPrivate
+class QSGTextNode;
+
+class Q_AUTOTEST_EXPORT QSGTextInputPrivate : public QSGImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QSGTextInput)
 public:
@@ -76,7 +78,7 @@ public:
                  hscroll(0), oldScroll(0), oldValidity(false), focused(false), focusOnPress(true),
                  showInputPanelOnFocus(true), clickCausedFocus(false), cursorVisible(false),
                  autoScroll(true), selectByMouse(false), canPaste(false), hAlignImplicit(true),
-                 selectPressed(false)
+                 selectPressed(false), textNode(0)
     {
 #ifdef Q_OS_SYMBIAN
         if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
@@ -106,6 +108,8 @@ public:
     int calculateTextWidth();
     bool sendMouseEventToInputContext(QGraphicsSceneMouseEvent *event, QEvent::Type eventType);
     void updateInputMethodHints();
+    void hideCursor();
+    void showCursor();
 
     QLineControl* control;
 
@@ -122,6 +126,7 @@ public:
     QPointer<QDeclarativeComponent> cursorComponent;
     QPointer<QSGItem> cursorItem;
     QPointF pressPos;
+    QSGTextNode *textNode;
 
     int lastSelectionStart;
     int lastSelectionEnd;
