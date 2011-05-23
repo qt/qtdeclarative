@@ -104,7 +104,7 @@ public:
 
     static QSGContext *createDefaultContext();
 
-    void schdelueTextureForCleanup(QSGTexture *texture);
+    void scheduleTextureForCleanup(QSGTexture *texture);
     void cleanupTextures();
 
     void setFlashModeEnabled(bool enabled);
