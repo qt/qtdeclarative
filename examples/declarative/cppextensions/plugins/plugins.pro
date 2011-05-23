@@ -27,3 +27,4 @@ symbian {
     CONFIG += qt_example
     TARGET.EPOCALLOWDLLDATA = 1
 }
+maemo5: include($$QT_SOURCE_TREE/examples/maemo5pkgrules.pri)
