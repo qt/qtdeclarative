@@ -678,6 +678,15 @@ int QSGDistanceFieldGlyphCache::distanceFieldRadius() const
 
 void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
 {
+    // Avoid useless and costly glyph re-generation
+    if (cacheIsFull() && !m_textureData->unusedGlyphs.isEmpty()) {
+        for (int i = 0; i < count; ++i) {
+            glyph_t glyphIndex = glyphs[i];
+            if (m_textureData->texCoords.contains(glyphIndex) && m_textureData->unusedGlyphs.contains(glyphIndex))
+                m_textureData->unusedGlyphs.remove(glyphIndex);
+        }
+    }
+
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs[i];
         if ((int) glyphIndex >= glyphCount()) {
