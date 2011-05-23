@@ -122,13 +122,26 @@ bool QDeclarativeCompiler::isAttachedPropertyName(const QByteArray &name)
 /*!
     Returns true if \a name refers to a signal property, false otherwise.
 
-    Signal property names are those that start with "on", followed by a capital
-    letter.
+    Signal property names are those that start with "on", followed by a first
+    character which is either a capital letter or one or more underscores followed
+    by a capital letter, which is then followed by other allowed characters.
+
+    Note that although ECMA-262r3 supports dollarsigns and escaped unicode
+    character codes in property names, for simplicity and performance reasons
+    QML only supports letters, numbers and underscores.
 */
 bool QDeclarativeCompiler::isSignalPropertyName(const QByteArray &name)
 {
-    return name.length() >= 3 && name.startsWith("on") &&
-           'A' <= name.at(2) && 'Z' >= name.at(2);
+    if (name.length() < 3) return false;
+    if (!name.startsWith("on")) return false;
+    int ns = name.size();
+    for (int i = 2; i < ns; ++i) {
+        char curr = name.at(i);
+        if (curr == '_') continue;
+        if (curr >= 'A' && curr <= 'Z') return true;
+        return false;
+    }
+    return false; // consists solely of underscores - invalid.
 }
 
 /*!
@@ -1340,8 +1353,15 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
     QByteArray name = prop->name;
     Q_ASSERT(name.startsWith("on"));
     name = name.mid(2);
-    if(name[0] >= 'A' && name[0] <= 'Z')
-        name[0] = name[0] - 'A' + 'a';
+
+    // Note that the property name could start with any alpha or '_' or '$' character,
+    // so we need to do the lower-casing of the first alpha character.
+    for (int firstAlphaIndex = 0; firstAlphaIndex < name.size(); ++firstAlphaIndex) {
+        if (name[firstAlphaIndex] >= 'A' && name[firstAlphaIndex] <= 'Z') {
+            name[firstAlphaIndex] = name[firstAlphaIndex] - 'A' + 'a';
+            break;
+        }
+    }
 
     bool notInRevision = false;
     int sigIdx = indexOfSignal(obj, name, &notInRevision);
