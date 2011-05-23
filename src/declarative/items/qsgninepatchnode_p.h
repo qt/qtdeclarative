@@ -75,6 +75,9 @@ public:
         return (QSGBorderImage::TileMode) m_verticalTileMode;
     }
 
+    void setMirror(bool m);
+    bool mirror() const { return m_mirror; }
+
     void update();
 
 private:
@@ -89,6 +92,7 @@ private:
     uint m_verticalTileMode : 2;
 
     uint m_dirtyGeometry : 1;
+    uint m_mirror : 1;
 };
 
 #endif // QSGNINEPATCHNODE_H

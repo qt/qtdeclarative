@@ -48,6 +48,7 @@ QSGNinePatchNode::QSGNinePatchNode()
     , m_horizontalTileMode(QSGBorderImage::Stretch)
     , m_verticalTileMode(QSGBorderImage::Stretch)
     , m_dirtyGeometry(false)
+    , m_mirror(false)
 {
     setOpaqueMaterial(&m_material);
     setMaterial(&m_materialO);
@@ -117,6 +118,15 @@ QSGTexture *QSGNinePatchNode::texture() const
 {
     return m_material.texture();
 }
+
+void QSGNinePatchNode::setMirror(bool m)
+{
+    if (m_mirror == m)
+        return;
+    m_mirror = m;
+    m_dirtyGeometry = true;
+}
+
 
 void QSGNinePatchNode::update()
 {
@@ -210,6 +220,13 @@ void QSGNinePatchNode::update()
     fillRow(v, m_targetRect.height() - bottomBorder, yTexChunk2, xChunkCount, xChunkSize);
     fillRow(v, m_targetRect.height(), 1, xChunkCount, xChunkSize);
 
+    if (m_mirror) {
+        v = m_geometry.vertexDataAsTexturedPoint2D();
+        for (int i=0; i<m_geometry.vertexCount(); ++i) {
+            v->x = m_targetRect.width() - v->x;
+            ++v;
+        }
+    }
 
 //    v = m_geometry.vertexDataAsTexturedPoint2D();
 //    for (int i=0; i<m_geometry.vertexCount(); ++i) {

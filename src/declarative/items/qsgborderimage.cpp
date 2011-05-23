@@ -346,6 +346,7 @@ QSGNode *QSGBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
     node->setHorzontalTileMode(d->horizontalTileMode);
     node->setVerticalTileMode(d->verticalTileMode);
+    node->setMirror(d->mirror);
     node->update();
 
     return node;
