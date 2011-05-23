@@ -1822,6 +1822,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
             }
         } else if (itemPriv->paintNode) {
             delete itemPriv->paintNode;
+            itemPriv->paintNode = 0;
         }
     }
 
