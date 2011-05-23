@@ -126,7 +126,7 @@ public:
     int childCount() const { return m_children.size(); }
     QSGNode *childAtIndex(int i) const { return m_children.at(i); }
 
-    virtual NodeType type() const { return BasicNodeType; }
+    inline NodeType type() const { return m_type; }
 
     void clearDirty() { m_flags = 0; }
     void markDirty(DirtyFlags flags);
@@ -145,22 +145,21 @@ public:
 #endif
 
 protected:
+    QSGNode(NodeType type);
+
     // When a node is destroyed, it will detach from the scene graph and the renderer will be
     // notified about the change. If the node is detached in the base node's destructor, the
-    // renderer can't check what type the node originally was because the node's type() method is
-    // virtual and will return the base node type. The renderer might therefore react incorrectly
-    // to the change. There are a few of ways I can think of to solve the problem:
-    // - The renderer must take into account that the notify method might be called from a node's
-    //   destructor.
-    // - The node can have a type property that is set in the constructor.
-    // - All the node destructors must call a common destroy method.
-    // I choose the third option since that will allow the renderer to treat the nodes as their
-    // proper types.
+    // renderer can't safely cast the node to its original type, since at this point it has been
+    // partly destroyed already. To solve this problem, all the node destructors must call a common
+    // destroy method.
 
     void destroy();
 
 private:
+    void init();
+
     QSGNode *m_parent;
+    NodeType m_type;
     QList<QSGNode *> m_children;
 
     Flags m_nodeFlags;
@@ -183,7 +182,6 @@ public:
 //    void setUsagePattern(UsagePattern pattern);
 //    UsagePattern usagePattern() const { return m_pattern; }
 
-    QSGBasicGeometryNode();
     ~QSGBasicGeometryNode();
 
     void setGeometry(QSGGeometry *geometry);
@@ -192,6 +190,9 @@ public:
 
     const QMatrix4x4 *matrix() const { return m_matrix; }
     const QSGClipNode *clipList() const { return m_clip_list; }
+
+protected:
+    QSGBasicGeometryNode(NodeType type);
 
 private:
     friend class QSGNodeUpdater;
@@ -222,8 +223,6 @@ public:
 
     QSGMaterial *activeMaterial() const;
 
-    virtual NodeType type() const { return GeometryNodeType; }
-
     void setRenderOrder(int order);
     int renderOrder() const { return m_render_order; }
 
@@ -246,8 +245,6 @@ public:
     QSGClipNode();
     ~QSGClipNode();
 
-    virtual NodeType type() const { return ClipNodeType; }
-
     void setIsRectangular(bool rectHint);
     bool isRectangular() const { return m_is_rectangular; }
 
@@ -268,8 +265,6 @@ public:
     QSGTransformNode();
     ~QSGTransformNode();
 
-    virtual NodeType type() const { return TransformNodeType; }
-
     void setMatrix(const QMatrix4x4 &matrix);
     const QMatrix4x4 &matrix() const { return m_matrix; }
 
@@ -285,8 +280,8 @@ private:
 class Q_DECLARATIVE_EXPORT QSGRootNode : public QSGNode
 {
 public:
+    QSGRootNode();
     ~QSGRootNode();
-    NodeType type() const { return RootNodeType; }
 
 private:
     void notifyNodeChange(QSGNode *node, DirtyFlags flags);
@@ -311,10 +306,7 @@ public:
     void setCombinedOpacity(qreal opacity);
     qreal combinedOpacity() const { return m_combined_opacity; }
 
-    virtual QSGNode::NodeType type() const { return OpacityNodeType; }
-
     bool isSubtreeBlocked() const;
-
 
 private:
     qreal m_opacity;

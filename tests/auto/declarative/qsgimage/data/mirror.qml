@@ -1,5 +1,11 @@
 import QtQuick 2.0
 
-Image {
-    source: "heart200.png"
+Rectangle {
+    width: 300
+    height: 250
+    Image {
+        objectName: "image"
+        anchors.fill: parent
+        source: "heart200.png"
+    }
 }

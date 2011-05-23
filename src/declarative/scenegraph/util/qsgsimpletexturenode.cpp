@@ -52,7 +52,7 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
         return;
 
     QSize ts = texture->textureSize();
-    QRectF sourceRect(0, ts.height(), ts.width(), -ts.height());
+    QRectF sourceRect(0, 0, ts.width(), ts.height());
     QSGGeometry::updateTexturedRectGeometry(g, rect, texture->convertToNormalizedSourceRect(sourceRect));
 }
 

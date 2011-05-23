@@ -44,6 +44,8 @@
 
 #include "qsgrenderer_p.h"
 
+#include <QtGui/private/qdatabuffer_p.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -65,16 +67,16 @@ public:
 
 private:
     void buildLists(QSGNode *node);
-    void renderNodes(const QVector <QSGGeometryNode *> &list);
+    void renderNodes(const QDataBuffer<QSGGeometryNode *> &list);
 
     const QSGClipNode *m_currentClip;
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
     const QMatrix4x4 *m_currentMatrix;
     QMatrix4x4 m_renderOrderMatrix;
-    QVector<QSGGeometryNode *> m_opaqueNodes;
-    QVector<QSGGeometryNode *> m_transparentNodes;
-    QVector<QSGGeometryNode *> m_tempNodes;
+    QDataBuffer<QSGGeometryNode *> m_opaqueNodes;
+    QDataBuffer<QSGGeometryNode *> m_transparentNodes;
+    QDataBuffer<QSGGeometryNode *> m_tempNodes;
 
     bool m_rebuild_lists;
     bool m_needs_sorting;

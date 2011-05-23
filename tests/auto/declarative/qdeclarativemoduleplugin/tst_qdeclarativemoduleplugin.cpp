@@ -71,6 +71,7 @@ private slots:
     void versionNotInstalled();
     void versionNotInstalled_data();
     void implicitQmldir();
+    void implicitQmldir_data();
 };
 
 #ifdef Q_OS_SYMBIAN
@@ -85,7 +86,8 @@ private slots:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QFile file(QLatin1String("data/") + QLatin1String(errorfile)); \
+        QString verify_errors_file_name = QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + QLatin1String(errorfile); \
+        QFile file(verify_errors_file_name); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
@@ -100,10 +102,11 @@ private slots:
                                   error.description().toUtf8(); \
             actual << errorStr; \
         } \
-        if (qgetenv("DEBUG") != "" && expected != actual) \
-            qWarning() << "Expected:" << expected << "Actual:" << actual;  \
+        if (qgetenv("DEBUG") != "" && expected != actual) { \
+            qWarning() << "Expected:" << expected << "Actual:" << actual; \
+        } \
         if (qgetenv("QDECLARATIVELANGUAGE_UPDATEERRORS") != "" && expected != actual) {\
-            QFile file(QLatin1String("data/") + QLatin1String(errorfile)); \
+            QFile file(QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + QLatin1String(errorfile)); \
             QVERIFY(file.open(QIODevice::WriteOnly)); \
             for (int ii = 0; ii < actual.count(); ++ii) { \
                 file.write(actual.at(ii)); file.write("\n"); \
@@ -310,46 +313,37 @@ void tst_qdeclarativemoduleplugin::versionNotInstalled()
 
 
 // test that errors are reporting correctly for plugin loading and qmldir parsing
-void tst_qdeclarativemoduleplugin::implicitQmldir()
+void tst_qdeclarativemoduleplugin::implicitQmldir_data()
 {
-    QDeclarativeEngine engine;
-
-    QObject *obj = 0;
-    QList<QDeclarativeError> errors;
-    QString qmldirUrl;
-    QStringList expectedErrors;
+    QTest::addColumn<QString>("directory");
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("errorFile");
 
     // parsing qmldir succeeds, but plugin specified in the qmldir file doesn't exist
-    QDeclarativeComponent c(&engine, TEST_FILE("data/implicit1/temptest.qml"));
-    qmldirUrl = TEST_FILE("data/implicit1/qmldir").toString();
-    errors = c.errors();
-    QString moduleName = TEST_FILE("data/implicit1").toString().remove(0,7).replace(QLatin1String("/"), QLatin1String("."));
-    expectedErrors << QString(QLatin1String(": module \"") + moduleName + QLatin1String("\" plugin \"AType\" not found"));
-    QVERIFY(errors.size() == expectedErrors.size());
-    for (int i = 0; i < errors.size(); ++i) {
-        QString msg = qmldirUrl + expectedErrors.at(i);
-        QCOMPARE(errors.at(i).toString(), msg); // ensure that the expected message matches the real message.
-    }
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
-    obj = c.create();
-    QVERIFY(!obj);
-    delete obj;
+    QTest::newRow("implicitQmldir") << "implicit1" << "temptest.qml" << "implicitQmldir.errors.txt";
 
-    // parsing qmldir fails due to syntax errors etc.
-    QDeclarativeComponent c2(&engine, TEST_FILE("data/implicit2/temptest2.qml"));
-    qmldirUrl = TEST_FILE("data/implicit2/qmldir").toString();
-    errors = c2.errors();
-    expectedErrors = QStringList();
-    expectedErrors << QLatin1String(":1:12: unexpected token");
-    expectedErrors << QLatin1String(":1: expected '.'");
-    expectedErrors << QLatin1String(":2:17: unexpected token");
-    QVERIFY(errors.size() == expectedErrors.size());
-    for (int i = 0; i < errors.size(); ++i) {
-        QString msg = qmldirUrl + expectedErrors.at(i);
-        QCOMPARE(errors.at(i).toString(), msg); // ensure that the expected message matches the real message.
-    }
+    // parsing qmldir fails due to syntax errors, etc.
+    QTest::newRow("implicitQmldir2") << "implicit2" << "temptest2.qml" << "implicitQmldir.2.errors.txt";
+}
+void tst_qdeclarativemoduleplugin::implicitQmldir()
+{
+    QFETCH(QString, directory);
+    QFETCH(QString, file);
+    QFETCH(QString, errorFile);
+
+    QString importPath = QLatin1String(SRCDIR) + QDir::separator() + QLatin1String("data") + QDir::separator() + directory;
+    QString fileName = QLatin1String("data") + QDir::separator() + directory + QDir::separator() + file;
+    QString errorFileName = directory + QDir::separator() + errorFile;
+    QUrl testFileUrl = TEST_FILE(fileName);
+
+    QDeclarativeEngine engine;
+    engine.addImportPath(importPath);
+
+    QDeclarativeComponent component(&engine, testFileUrl);
+    QList<QDeclarativeError> errors = component.errors();
+    VERIFY_ERRORS(errorFileName.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
-    obj = c2.create();
+    QObject *obj = component.create();
     QVERIFY(!obj);
     delete obj;
 }

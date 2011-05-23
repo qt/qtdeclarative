@@ -191,7 +191,6 @@ QSGTexture *QSGImage::texture() const
 QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QSGImage);
-    //XXX Support mirror property
 
     if (!d->pix.texture() || width() <= 0 || height() <= 0) {
         delete oldNode;
@@ -272,6 +271,12 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                   sourceRect.y() / d->pix.height(),
                   sourceRect.width() / d->pix.width(),
                   sourceRect.height() / d->pix.height());
+
+    if (d->mirror) {
+        qreal oldLeft = nsrect.left();
+        nsrect.setLeft(nsrect.right());
+        nsrect.setRight(oldLeft);
+    }
 
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
