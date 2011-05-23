@@ -228,7 +228,7 @@ public:
     ~QDeclarativePixmapData()
     {
         if (texture && context) {
-            context->schdelueTextureForCleanup(texture);
+            context->scheduleTextureForCleanup(texture);
         }
     }
 

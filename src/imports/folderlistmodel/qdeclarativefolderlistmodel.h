@@ -136,6 +136,7 @@ Q_SIGNALS:
 //![class end]
 private Q_SLOTS:
     void refresh();
+    void resetFiltering();
     void inserted(const QModelIndex &index, int start, int end);
     void removed(const QModelIndex &index, int start, int end);
     void handleDataChanged(const QModelIndex &start, const QModelIndex &end);

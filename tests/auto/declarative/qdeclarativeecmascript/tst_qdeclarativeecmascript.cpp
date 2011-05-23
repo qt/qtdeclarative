@@ -147,6 +147,7 @@ private slots:
     void moduleApi();
     void importScripts();
     void scarceResources();
+    void propertyChangeSlots();
 
     void bug1();
     void bug2();
@@ -2774,6 +2775,48 @@ void tst_qdeclarativeecmascript::scarceResources()
     eo = qobject_cast<ScarceResourceObject*>(QDeclarativeProperty::read(object, "a").value<QObject*>());
     QVERIFY(eo->scarceResourceIsDetached()); // should be no other copies of it at this stage.
     QVERIFY(ep->scarceResources == 0); // should have been released by this point.
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::propertyChangeSlots()
+{
+    // ensure that allowable property names are allowed and onPropertyNameChanged slots are generated correctly.
+    QDeclarativeComponent component(&engine, TEST_FILE("changeslots/propertyChangeSlots.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    delete object;
+
+    // ensure that invalid property names fail properly.
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
+    QDeclarativeComponent e1(&engine, TEST_FILE("changeslots/propertyChangeSlotErrors.1.qml"));
+    QString expectedErrorString = e1.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on_nameWithUnderscoreChanged\"");
+    QCOMPARE(e1.errors().at(0).toString(), expectedErrorString);
+    object = e1.create();
+    QVERIFY(object == 0);
+    delete object;
+
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
+    QDeclarativeComponent e2(&engine, TEST_FILE("changeslots/propertyChangeSlotErrors.2.qml"));
+    expectedErrorString = e2.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on____nameWithUnderscoresChanged\"");
+    QCOMPARE(e2.errors().at(0).toString(), expectedErrorString);
+    object = e2.create();
+    QVERIFY(object == 0);
+    delete object;
+
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
+    QDeclarativeComponent e3(&engine, TEST_FILE("changeslots/propertyChangeSlotErrors.3.qml"));
+    expectedErrorString = e3.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on$NameWithDollarsignChanged\"");
+    QCOMPARE(e3.errors().at(0).toString(), expectedErrorString);
+    object = e3.create();
+    QVERIFY(object == 0);
+    delete object;
+
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
+    QDeclarativeComponent e4(&engine, TEST_FILE("changeslots/propertyChangeSlotErrors.4.qml"));
+    expectedErrorString = e4.url().toString() + QLatin1String(":9:5: Cannot assign to non-existent property \"on_6NameWithUnderscoreNumberChanged\"");
+    QCOMPARE(e4.errors().at(0).toString(), expectedErrorString);
+    object = e4.create();
+    QVERIFY(object == 0);
     delete object;
 }
 
