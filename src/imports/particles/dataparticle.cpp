@@ -39,26 +39,25 @@
 **
 ****************************************************************************/
 
-#include "modelparticle.h"
+#include "dataparticle.h"
 #include <QtDeclarative/private/qsgvisualitemmodel_p.h>
 #include <qsgnode.h>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
-ModelParticle::ModelParticle(QSGItem *parent) :
+DataParticle::DataParticle(QSGItem *parent) :
     ParticleType(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true), m_modelCount(0)
 {
-    qDebug() << "Deprecation warning: ModelParticle has bifurcated. I really should just delete this class";//TODO: What he said
     setFlag(QSGItem::ItemHasContents);
 }
 
-QVariant ModelParticle::model() const
+QVariant DataParticle::model() const
 {
     return m_dataSource;
 }
 
-void ModelParticle::setModel(const QVariant &arg)
+void DataParticle::setModel(const QVariant &arg)
 {
     if(arg == m_dataSource)
         return;
@@ -85,7 +84,7 @@ void ModelParticle::setModel(const QVariant &arg)
     updateCount();
 }
 
-void ModelParticle::updateCount()
+void DataParticle::updateCount()
 {
     int newCount = 0;
     if(m_model)
@@ -106,14 +105,14 @@ void ModelParticle::updateCount()
     m_modelCount = newCount;
 }
 
-QDeclarativeComponent *ModelParticle::delegate() const
+QDeclarativeComponent *DataParticle::delegate() const
 {
     if(m_model)
         return m_model->delegate();
     return 0;
 }
 
-void ModelParticle::setDelegate(QDeclarativeComponent *comp)
+void DataParticle::setDelegate(QDeclarativeComponent *comp)
 {
     if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(m_model))
         if (comp == dataModel->delegate())
@@ -124,107 +123,75 @@ void ModelParticle::setDelegate(QDeclarativeComponent *comp)
     emit delegateChanged();
 }
 
-int ModelParticle::modelCount() const
+int DataParticle::modelCount() const
 {
     if(m_model)
-        const_cast<ModelParticle*>(this)->updateCount();//TODO: Investigate why this doesn't get called properly
+        const_cast<DataParticle*>(this)->updateCount();//TODO: Investigate why this doesn't get called properly
     return m_modelCount;
 }
 
 
-void ModelParticle::freeze(QSGItem* item)
+void DataParticle::freeze(QSGItem* item)
 {
     m_stasis << item;
 }
 
 
-void ModelParticle::unfreeze(QSGItem* item)
+void DataParticle::unfreeze(QSGItem* item)
 {
     m_stasis.remove(item);
 }
 
-void ModelParticle::take(QSGItem *item, bool prioritize)
+void DataParticle::load(ParticleData* d)
 {
-    if(prioritize)
-        m_pendingItems.push_front(item);
-    else
-        m_pendingItems.push_back(item);
-}
-
-void ModelParticle::give(QSGItem *item)
-{
-    //TODO: This
-}
-
-void ModelParticle::load(ParticleData* d)
-{
-    //if(!m_model || !m_model->count())//Not really a 'model' particle anymore
-    //    return;
+    if(!m_model || !m_model->count())
+        return;
     int pos = particleTypeIndex(d);
+    if(m_available.isEmpty())
+        return;
     if(m_items[pos]){
         if(m_stasis.contains(m_items[pos]))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
         m_items[pos]->setOpacity(0.);
-        if(m_idx[pos] >= 0 && m_idx[pos] < m_modelCount){
-            m_available << m_idx[pos];
-            m_model->release(m_items[pos]);
-        }else{
-            ModelParticleAttached* mpa;
-            if((mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos], false))))
-                mpa->detach();//reparent as well?
-        }
+        m_available << m_idx[pos];
+        m_model->release(m_items[pos]);
         m_idx[pos] = -1;
         m_items[pos] = 0;
         m_data[pos] = 0;
         m_activeCount--;
     }
-    if(m_available.isEmpty() && m_pendingItems.isEmpty())
-        return;
-    if(m_pendingItems.isEmpty()){
-        m_items[pos] = m_model->item(m_available.first());
-        m_idx[pos] = m_available.first();
-        m_available.pop_front();
-        ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
-        if(mpa){
-            mpa->m_mp = this;
-            mpa->attach();
-        }
-    }else{
-        m_items[pos] = m_pendingItems.front();
-        m_pendingItems.pop_front();
-        m_items[pos]->setX(d->curX() - m_items[pos]->width()/2);
-        m_items[pos]->setY(d->curY() - m_items[pos]->height()/2);
-        m_idx[pos] = -2;
-        ModelParticleAttached* mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[pos]));
-        if(mpa){
-            mpa->m_mp = this;
-            mpa->attach();
-        }
+    m_items[pos] = m_model->item(m_available.first());
+    m_idx[pos] = m_available.first();
+    m_available.pop_front();
+    DataParticleAttached* mpa = qobject_cast<DataParticleAttached*>(qmlAttachedPropertiesObject<DataParticle>(m_items[pos]));
+    if(mpa){
+        mpa->m_mp = this;
+        mpa->attach();
     }
     m_items[pos]->setParentItem(this);
     m_data[pos] = d;
     m_activeCount++;
 }
 
-void ModelParticle::reload(ParticleData* d)
+void DataParticle::reload(ParticleData* d)
 {
     //No-op unless we start copying the data.
 }
 
-void ModelParticle::setCount(int c)
+void DataParticle::setCount(int c)
 {
     ParticleType::setCount(c);//###Do we need our own?
     m_particleCount = c;
     reset();
 }
 
-int ModelParticle::count()
+int DataParticle::count()
 {
     return m_particleCount;
 }
 
-void ModelParticle::reset()
+void DataParticle::reset()
 {
     ParticleType::reset();
     //TODO: Cleanup items?
@@ -239,7 +206,7 @@ void ModelParticle::reset()
 }
 
 
-QSGNode* ModelParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
+QSGNode* DataParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 {
     //Dummy update just to get painting tick
     if(m_pleaseReset){
@@ -254,7 +221,7 @@ QSGNode* ModelParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
     return QSGItem::updatePaintNode(n,d);
 }
 
-void ModelParticle::prepareNextFrame()
+void DataParticle::prepareNextFrame()
 {
     qint64 timeStamp = m_system->systemSync(this);
     qreal curT = timeStamp/1000.0;
@@ -276,14 +243,8 @@ void ModelParticle::prepareNextFrame()
         }
         if(t >= 1.0){//Usually happens from load
             item->setOpacity(0.);
-            if(m_idx[i] >= 0 && m_idx[i] < m_modelCount){
-                m_available << m_idx[i];
-                m_model->release(m_items[i]);
-            }else{
-                ModelParticleAttached* mpa;
-                if((mpa = qobject_cast<ModelParticleAttached*>(qmlAttachedPropertiesObject<ModelParticle>(m_items[i]))))
-                    mpa->detach();//reparent as well?
-            }
+            m_available << m_idx[i];
+            m_model->release(m_items[i]);
             m_idx[i] = -1;
             m_items[i] = 0;
             m_data[i] = 0;
@@ -305,9 +266,9 @@ void ModelParticle::prepareNextFrame()
     }
 }
 
-ModelParticleAttached *ModelParticle::qmlAttachedProperties(QObject *object)
+DataParticleAttached *DataParticle::qmlAttachedProperties(QObject *object)
 {
-    return new ModelParticleAttached(object);
+    return new DataParticleAttached(object);
 }
 
 QT_END_NAMESPACE

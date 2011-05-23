@@ -74,6 +74,10 @@ class ParticleSystem : public QSGItem
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     Q_PROPERTY(bool overwrite READ overwrite WRITE setOverwrite NOTIFY overwriteChanged)//XXX: Should just be an implementation detail, but I can't decide which way
+    /* The problem is that it ought to be false (usually) for stasis effects like model particles,
+       but it ought to be true (usually) for burst effects where you want it to burst, and forget the old stuff
+       Ideally burst never overflows? But that leads to crappy behaviour from crappy users...
+    */
 
 public:
     explicit ParticleSystem(QSGItem *parent = 0);

@@ -69,7 +69,7 @@ Rectangle {
         width: 200; height:200
         model: visualModel.parts.list
     }
-    ModelParticle{
+    DataParticle{
         x: 200; width: 200; height:200
         model: visualModel.parts.grid
         system: sys

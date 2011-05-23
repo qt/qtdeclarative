@@ -52,7 +52,7 @@ Item{
         anchors.fill:parent
         overwrite: false
     }
-    ModelParticle{
+    DataParticle{
         id: mp
         fade: false
         system: sys

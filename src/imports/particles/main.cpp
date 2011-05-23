@@ -71,6 +71,8 @@
 #include "coloredparticle.h"
 #include "spriteparticle.h"
 #include "modelparticle.h"
+#include "dataparticle.h"
+#include "itemparticle.h"
 #include "superparticle.h"
 #include "ultraparticle.h"
 //#include "pairedparticle.h"
@@ -109,6 +111,8 @@ void ParticlesPlugin::registerTypes(const char *uri)
     qmlRegisterType<ColoredParticle>(uri, 2, 0, "ColoredParticle");
     qmlRegisterType<SpriteParticle>(uri, 2, 0, "SpriteParticle");
     qmlRegisterType<ModelParticle>(uri, 2, 0, "ModelParticle");
+    qmlRegisterType<DataParticle>(uri, 2, 0, "DataParticle");
+    qmlRegisterType<ItemParticle>(uri, 2, 0, "ItemParticle");
     //qmlRegisterType<PairedParticle>(uri, 2, 0, "PairedParticle");
     qmlRegisterType<DeformableParticle>(uri, 2, 0, "DeformableParticle");
     qmlRegisterType<SuperParticle>(uri, 2, 0, "SuperParticle");

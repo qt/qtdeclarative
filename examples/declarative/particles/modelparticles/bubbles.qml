@@ -70,7 +70,7 @@ Item{
         system: sys
         xDrift: 200
     }
-    ModelParticle{
+    DataParticle{
         id: mp
         z: 0
         system: sys

@@ -80,7 +80,7 @@ Item{
         width: 120
         height: 120
     }
-    ModelParticle{
+    DataParticle{
         system: sys
         model: theModel.parts.particles
     }

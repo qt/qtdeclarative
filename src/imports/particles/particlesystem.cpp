@@ -67,7 +67,7 @@ ParticleData::ParticleData()
 }
 
 ParticleSystem::ParticleSystem(QSGItem *parent) :
-    QSGItem(parent), m_particle_count(0), m_running(true) , m_startTime(0), m_overwrite(true)
+    QSGItem(parent), m_particle_count(0), m_running(true) , m_startTime(0), m_overwrite(false)
 {
     m_groupIds = QHash<QString, int>();
 }
