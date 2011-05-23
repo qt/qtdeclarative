@@ -959,7 +959,19 @@ QSGCanvas::~QSGCanvas()
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
 
+
+    // We need to remove all references to textures pointing to "our" QSGContext
+    // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
+    // part of those cache entries.
+    // To "play nice" with other GL apps that are potentially running in the GUI thread,
+    // We get the current context and only temporarily make our own current
+    QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
+    makeCurrent();
+    extern void qt_declarative_pixmapstore_clean(QSGContext *context);
+    qt_declarative_pixmapstore_clean(d->context);
     delete d->context;
+    if (currentContext)
+        currentContext->makeCurrent();
 }
 
 QSGItem *QSGCanvas::rootItem() const

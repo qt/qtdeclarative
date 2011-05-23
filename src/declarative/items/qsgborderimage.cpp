@@ -322,7 +322,9 @@ QSGNode *QSGBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 {
     Q_D(QSGBorderImage);
 
-    if (!d->pix.texture() || width() <= 0 || height() <= 0) {
+    QSGTexture *texture = d->pix.texture(d->sceneGraphContext());
+
+    if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
         return 0;
     }
@@ -333,7 +335,7 @@ QSGNode *QSGBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         node = new QSGNinePatchNode();
     }
 
-    node->setTexture(d->pix.texture());
+    node->setTexture(texture);
 
     const QSGScaleGrid *border = d->getScaleGrid();
     node->setInnerRect(QRectF(border->left(),

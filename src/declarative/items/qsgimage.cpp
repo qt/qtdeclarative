@@ -178,7 +178,7 @@ QRectF QSGImage::boundingRect() const
 QSGTexture *QSGImage::texture() const
 {
     Q_D(const QSGImage);
-    QSGTexture *t = d->pix.texture();
+    QSGTexture *t = d->pix.texture(d->sceneGraphContext());
     if (t) {
         t->setFiltering(QSGItemPrivate::get(this)->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
         t->setMipmapFiltering(QSGTexture::None);
@@ -192,7 +192,9 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QSGImage);
 
-    if (!d->pix.texture() || width() <= 0 || height() <= 0) {
+    QSGTexture *texture = d->pix.texture(d->sceneGraphContext());
+
+    if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
         return 0;
     }
@@ -201,15 +203,14 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     if (!node) { 
         d->pixmapChanged = true;
         node = d->sceneGraphContext()->createImageNode();
-        node->setTexture(d->pix.texture());
+        node->setTexture(texture);
     }
 
     if (d->pixmapChanged) {
         // force update the texture in the node to trigger reconstruction of
         // geometry and the likes when a atlas segment has changed.
-        QSGTexture *t = d->pix.texture();
         node->setTexture(0);
-        node->setTexture(t);
+        node->setTexture(texture);
         d->pixmapChanged = false;
     }
 

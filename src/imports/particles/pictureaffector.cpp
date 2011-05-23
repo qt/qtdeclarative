@@ -72,9 +72,7 @@ void PictureAffector::startLoadImage()
 }
 void PictureAffector::loadImage()
 {
-    QSGPlainTexture* ptext = qobject_cast<QSGPlainTexture*>(m_pix->texture());
-    if(ptext)
-        m_loadedImage = ptext->image();
+    m_loadedImage = m_pix->pixmap().toImage();
     if(m_loadedImage.isNull())
         qWarning() << "PictureAffector could not load picture " << m_image;
 }

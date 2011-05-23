@@ -103,7 +103,7 @@ public:
     class Event : public QEvent {
     public:
         Event(ReadError, const QString &, const QSize &, const QImage &image);
-        Event(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context);
+        Event(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context, const QImage &image);
 
         ReadError error;
         QString errorString;
@@ -113,7 +113,7 @@ public:
         QSGContext *context;
     };
     void postReply(ReadError, const QString &, const QSize &, const QImage &);
-    void postReply(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context);
+    void postReply(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context, const QImage &image);
 
 
 Q_SIGNALS:
@@ -211,9 +211,9 @@ public:
     {
     }
 
-    QDeclarativePixmapData(const QUrl &u, QSGTexture *t, QSGContext *c, const QSize &s, const QSize &r)
+    QDeclarativePixmapData(const QUrl &u, QSGTexture *t, QSGContext *c, const QPixmap &p, const QSize &s, const QSize &r)
     : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready),
-      url(u), implicitSize(s), requestSize(r), texture(t), context(c), reply(0), prevUnreferenced(0),
+      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(t), context(c), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
     }
@@ -282,10 +282,10 @@ void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorStr
 
 void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorString,
                                         const QSize &implicitSize, QSGTexture *texture,
-                                        QSGContext *context)
+                                        QSGContext *context, const QImage &image)
 {
     loading = false;
-    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, texture, context));
+    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, texture, context, image));
 }
 
 QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, const QImage &i)
@@ -293,8 +293,8 @@ QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize
 {
 }
 
-QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, QSGTexture *t, QSGContext *c)
-    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), texture(t), context(c)
+QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, QSGTexture *t, QSGContext *c, const QImage &i)
+    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i), texture(t), context(c)
 {
 }
 
@@ -419,7 +419,7 @@ void QDeclarativePixmapReader::networkRequestDone(QNetworkReply *reply)
         mutex.lock();
         if (!cancelled.contains(job)) {
             if (texture)
-                job->postReply(error, errorString, readSize, texture, ctx);
+                job->postReply(error, errorString, readSize, texture, ctx, image);
             else
                 job->postReply(error, errorString, readSize, image);
         } else {
@@ -514,7 +514,7 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
             mutex.lock();
             if (!cancelled.contains(runningJob)) {
                 if (sgContext)
-                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext);
+                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext, image);
                 else
                     runningJob->postReply(errorCode, errorStr, readSize, image);
             }
@@ -530,7 +530,7 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
             mutex.lock();
             if (!cancelled.contains(runningJob)) {
                 if (sgContext)
-                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext);
+                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext, image);
                 else
                     runningJob->postReply(errorCode, errorStr, readSize, image);
             }
@@ -545,7 +545,7 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
             }
             mutex.lock();
             if (!cancelled.contains(runningJob))
-                runningJob->postReply(errorCode, errorStr, readSize, t, sgContext);
+                runningJob->postReply(errorCode, errorStr, readSize, t, sgContext, QImage());
             mutex.unlock();
 
         }
@@ -577,7 +577,7 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
             mutex.lock();
             if (!cancelled.contains(runningJob)) {
                 if (texture)
-                    runningJob->postReply(errorCode, errorStr, readSize, texture, sgContext);
+                    runningJob->postReply(errorCode, errorStr, readSize, texture, sgContext, image);
                 else
                     runningJob->postReply(errorCode, errorStr, readSize, image);
             } else {
@@ -678,6 +678,8 @@ inline uint qHash(const QDeclarativePixmapKey &key)
     return qHash(*key.url) ^ key.size->width() ^ key.size->height();
 }
 
+class QSGContext;
+
 class QDeclarativePixmapStore : public QObject
 {
     Q_OBJECT
@@ -693,6 +695,9 @@ protected:
 public:
     QHash<QDeclarativePixmapKey, QDeclarativePixmapData *> m_cache;
 
+    void cleanTexturesForContext(QSGContext *context);
+    void cleanTextureForContext(QDeclarativePixmapData *data);
+
 private:
     void shrinkCache(int remove);
 
@@ -704,10 +709,51 @@ private:
 };
 Q_GLOBAL_STATIC(QDeclarativePixmapStore, pixmapStore);
 
+
+void qt_declarative_pixmapstore_clean(QSGContext *context)
+{
+    pixmapStore()->cleanTexturesForContext(context);
+}
+
+
 QDeclarativePixmapStore::QDeclarativePixmapStore()
 : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1)
 {
 }
+
+void QDeclarativePixmapStore::cleanTextureForContext(QDeclarativePixmapData *data)
+{
+    if (data->context) {
+        Q_ASSERT(QGLContext::currentContext());
+        delete data->texture;
+        data->context = 0;
+        data->texture = 0;
+    }
+}
+
+void QDeclarativePixmapStore::cleanTexturesForContext(QSGContext *context)
+{
+    QDeclarativePixmapData *data = m_unreferencedPixmaps;
+    while (data) {
+        if (data->context == context)
+            cleanTextureForContext(data);
+        if (data == m_lastUnreferencedPixmap)
+            break;
+        data = data->nextUnreferenced;
+    }
+
+    QHash<QDeclarativePixmapKey, QDeclarativePixmapData *>::iterator it = m_cache.begin();
+    while (it != m_cache.end()) {
+        data = *it;
+        if (data->context == context) {
+            cleanTextureForContext(data);
+        }
+        ++it;
+    }
+
+}
+
+
 
 void QDeclarativePixmapStore::unreferencePixmap(QDeclarativePixmapData *data)
 {
@@ -896,7 +942,7 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                 QSGTexture *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
                 if (texture) {
                     *ok = true;
-                    return new QDeclarativePixmapData(url, texture, sgContext, readSize, requestSize);
+                    return new QDeclarativePixmapData(url, texture, sgContext, QPixmap(), readSize, requestSize);
                 }
             }
 
@@ -907,7 +953,7 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                     *ok = true;
                     if (sgContext) {
                         QSGTexture *t = sgContext->createTexture(image);
-                        return new QDeclarativePixmapData(url, t, sgContext,readSize, requestSize);
+                        return new QDeclarativePixmapData(url, t, sgContext, QPixmap::fromImage(image), readSize, requestSize);
                     }
                     return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
                 }
@@ -919,7 +965,7 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                     *ok = true;
                     if (sgContext) {
                         QSGTexture *t = sgContext->createTexture(pixmap.toImage());
-                        return new QDeclarativePixmapData(url, t, sgContext,readSize, requestSize);
+                        return new QDeclarativePixmapData(url, t, sgContext, pixmap, readSize, requestSize);
                     }
                     return new QDeclarativePixmapData(url, pixmap, readSize, requestSize);
                 }
@@ -959,7 +1005,7 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
         }
 
         if (texture)
-            return new QDeclarativePixmapData(url, texture, ctx, readSize, requestSize);
+            return new QDeclarativePixmapData(url, texture, ctx, QPixmap::fromImage(image), readSize, requestSize);
         else
             return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
 
@@ -1062,9 +1108,17 @@ const QSize &QDeclarativePixmap::requestSize() const
         return nullPixmap()->size;
 }
 
-QSGTexture *QDeclarativePixmap::texture() const
+QSGTexture *QDeclarativePixmap::texture(QSGContext *context) const
 {
-    return d ? d->texture : 0;
+    if (d) {
+        if (d->texture)
+            return d->texture;
+        else if (d->pixmapStatus == Ready) {
+            d->texture = context->createTexture(d->pixmap.toImage());
+            return d->texture;
+        }
+    }
+    return 0;
 }
 
 const QPixmap &QDeclarativePixmap::pixmap() const
