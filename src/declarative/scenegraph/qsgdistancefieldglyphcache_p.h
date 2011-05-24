@@ -47,6 +47,7 @@
 #include <private/qgl_p.h>
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
+#include <QtGui/private/qdatabuffer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -126,7 +127,7 @@ private:
         GLuint fbo;
         QSize size;
         QHash<glyph_t, TexCoord> texCoords;
-        QSet<glyph_t> pendingGlyphs;
+        QDataBuffer<glyph_t> pendingGlyphs;
         QHash<glyph_t, quint32> glyphRefCount;
         QSet<glyph_t> unusedGlyphs;
         int currX;
@@ -137,6 +138,7 @@ private:
         DistanceFieldTextureData(const QGLContext *)
             : texture(0)
             , fbo(0)
+            , pendingGlyphs(64)
             , currX(0)
             , currY(0)
             , doubleGlyphResolution(false)

@@ -632,12 +632,13 @@ QSGDistanceFieldGlyphCache::Metrics QSGDistanceFieldGlyphCache::glyphMetrics(gly
     QHash<glyph_t, Metrics>::iterator metric = m_metrics.find(glyph);
     if (metric == m_metrics.end()) {
         QPainterPath path = m_font.pathForGlyph(glyph);
+        QRectF br = path.boundingRect();
 
         Metrics m;
-        m.width = path.boundingRect().width();
-        m.height = path.boundingRect().height();
-        m.baselineX = path.boundingRect().x();
-        m.baselineY = -path.boundingRect().y();
+        m.width = br.width();
+        m.height = br.height();
+        m.baselineX = br.x();
+        m.baselineY = -br.y();
 
         metric = m_metrics.insert(glyph, m);
     }
@@ -706,14 +707,15 @@ void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
             m_textureData->texCoords.insert(glyphIndex, TexCoord());
             continue;
         }
+        QRectF br = path.boundingRect();
 
         TexCoord c;
         c.xMargin = QT_DISTANCEFIELD_RADIUS / qreal(QT_DISTANCEFIELD_SCALE);
         c.yMargin = QT_DISTANCEFIELD_RADIUS / qreal(QT_DISTANCEFIELD_SCALE);
         c.x = m_textureData->currX;
         c.y = m_textureData->currY;
-        c.width = path.boundingRect().width();
-        c.height = path.boundingRect().height();
+        c.width = br.width();
+        c.height = br.height();
 
         if (!cacheIsFull()) {
             m_textureData->currX += QT_DISTANCEFIELD_TILESIZE;
@@ -735,7 +737,7 @@ void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
 
         if (c.y < maxTextureSize()) {
             m_textureData->texCoords.insert(glyphIndex, c);
-            m_textureData->pendingGlyphs.insert(glyphIndex);
+            m_textureData->pendingGlyphs.add(glyphIndex);
         }
     }
 }
@@ -914,10 +916,10 @@ void QSGDistanceFieldGlyphCache::updateCache()
     resizeTexture((requiredWidth), (requiredHeight));
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
 
-    QSet<glyph_t>::const_iterator i = m_textureData->pendingGlyphs.constBegin();
-    for (; i != m_textureData->pendingGlyphs.constEnd(); ++i) {
-        QImage glyph = renderDistanceFieldGlyph(*i);
-        TexCoord c = m_textureData->texCoords.value(*i);
+    for (int i = 0; i < m_textureData->pendingGlyphs.size(); ++i) {
+        glyph_t glyphIndex = m_textureData->pendingGlyphs.at(i);
+        QImage glyph = renderDistanceFieldGlyph(glyphIndex);
+        TexCoord c = m_textureData->texCoords.value(glyphIndex);
 
         if (ctx->d_ptr->workaround_brokenFBOReadBack) {
             QPainter p(&m_textureData->image);
@@ -929,7 +931,7 @@ void QSGDistanceFieldGlyphCache::updateCache()
         convert_to_Format_Alpha(&glyph);
         glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
     }
-    m_textureData->pendingGlyphs.clear();
+    m_textureData->pendingGlyphs.reset();
 }
 
 bool QSGDistanceFieldGlyphCache::useWorkaroundBrokenFBOReadback() const
