@@ -93,26 +93,6 @@ void QDeclarativePropertyCache::Data::load(const QMetaProperty &p, QDeclarativeE
     revision = p.revision();
 }
 
-int QDeclarativePropertyCache::Data::enumType(const QMetaObject *meta, const QString &strname)
-{
-    QByteArray str = strname.toUtf8();
-    QByteArray scope;
-    QByteArray name;
-    int scopeIdx = str.lastIndexOf("::");
-    if (scopeIdx != -1) {
-        scope = str.left(scopeIdx);
-        name = str.mid(scopeIdx + 2);
-    } else {
-        name = str;
-    }
-    for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
-        QMetaEnum m = meta->enumerator(i);
-        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
-            return QVariant::Int;
-    }
-    return QVariant::Invalid;
-}
-
 void QDeclarativePropertyCache::Data::load(const QMetaMethod &m)
 {
     coreIndex = m.methodIndex();
@@ -127,17 +107,8 @@ void QDeclarativePropertyCache::Data::load(const QMetaMethod &m)
         propType = QMetaType::type(returnType);
 
     QList<QByteArray> params = m.parameterTypes();
-    if (!params.isEmpty()) {
+    if (!params.isEmpty())
         flags |= Data::HasArguments;
-        paramTypes.resize(params.size());
-        for (int i = 0; i < params.size(); ++i) {
-            paramTypes[i] = QMetaType::type(params.at(i));
-            if (paramTypes[i] == QVariant::Invalid)
-                paramTypes[i] = enumType(m.enclosingMetaObject(), QString::fromLatin1(params.at(i)));
-            if (paramTypes[i] == QVariant::Invalid)
-                paramTypes[i] = -1; //Unknown method parameter type
-        }
-    }
     revision = m.revision();
 }
 
