@@ -59,6 +59,10 @@ class SpriteState : public QObject
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
+    //If frame height or width is not specified, it is assumed to be a single long row of frames.
+    //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
+    Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
+    Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(int durationVariance READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
     Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
@@ -75,6 +79,16 @@ public:
     int frames() const
     {
         return m_frames;
+    }
+
+    int frameHeight() const
+    {
+        return m_frameHeight;
+    }
+
+    int frameWidth() const
+    {
+        return m_frameWidth;
     }
 
     int duration() const
@@ -108,6 +122,10 @@ signals:
 
     void framesChanged(int arg);
 
+    void frameHeightChanged(int arg);
+
+    void frameWidthChanged(int arg);
+
     void durationChanged(int arg);
 
     void nameChanged(QString arg);
@@ -133,6 +151,22 @@ public slots:
         if (m_frames != arg) {
             m_frames = arg;
             emit framesChanged(arg);
+        }
+    }
+
+    void setFrameHeight(int arg)
+    {
+        if (m_frameHeight != arg) {
+            m_frameHeight = arg;
+            emit frameHeightChanged(arg);
+        }
+    }
+
+    void setFrameWidth(int arg)
+    {
+        if (m_frameWidth != arg) {
+            m_frameWidth = arg;
+            emit frameWidthChanged(arg);
         }
     }
 
@@ -179,8 +213,12 @@ public slots:
 private:
     friend class SpriteParticle;
     friend class SpriteEngine;
+    int m_generatedCount;
+    int m_framesPerRow;
     QUrl m_source;
     int m_frames;
+    int m_frameHeight;
+    int m_frameWidth;
     int m_duration;
     QString m_name;
     QVariantMap m_to;

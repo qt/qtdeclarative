@@ -263,12 +263,11 @@ QSGGeometryNode* SpriteImage::buildNode()
     g->setDrawingMode(GL_TRIANGLES);
 
     SpriteVertices *p = (SpriteVertices *) g->vertexData();
+    m_spriteEngine->startSprite(0);
     p->v1.animT = p->v2.animT = p->v3.animT = p->v4.animT = 0;
     p->v1.animIdx = p->v2.animIdx = p->v3.animIdx = p->v4.animIdx = 0;
-    SpriteState* state = m_spriteEngine->state(0);
-    p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = state->frames();
-    p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = state->duration();
-    m_spriteEngine->startSprite(0);
+    p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->spriteFrames();
+    p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = m_spriteEngine->spriteDuration();
 
     p->v1.tx = 0;
     p->v1.ty = 0;
@@ -335,7 +334,7 @@ void SpriteImage::prepareNextFrame()
     uint timeInt = m_timestamp.elapsed();
     qreal time =  timeInt / 1000.;
     m_material->timestamp = time;
-    m_material->animcount = m_spriteEngine->stateCount();
+    m_material->animcount = m_spriteEngine->spriteCount();
     m_material->height = height();
     m_material->width = width();
 
@@ -346,8 +345,8 @@ void SpriteImage::prepareNextFrame()
     if(curIdx != p->v1.animIdx){
         p->v1.animIdx = p->v2.animIdx = p->v3.animIdx = p->v4.animIdx = curIdx;
         p->v1.animT = p->v2.animT = p->v3.animT = p->v4.animT = m_spriteEngine->spriteStart()/1000.0;
-        p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->state(curIdx)->frames();
-        p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = m_spriteEngine->state(curIdx)->duration();
+        p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->spriteFrames();
+        p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = m_spriteEngine->spriteDuration();
     }
 }
 

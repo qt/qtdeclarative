@@ -82,11 +82,11 @@ public:
     int count() const {return m_sprites.count();}
     void setCount(int c);
 
-    int spriteState(int sprite=0) {return m_sprites[sprite];}
-    int spriteStart(int sprite=0) {return m_startTimes[sprite];}
-    int stateIndex(SpriteState* s){return m_states.indexOf(s);}
-    SpriteState* state(int idx){return m_states[idx];}
-    int stateCount() {return m_states.count();}
+    int spriteState(int sprite=0);// {return m_sprites[sprite];}
+    int spriteStart(int sprite=0);// {return m_startTimes[sprite];}
+    int spriteFrames(int sprite=0);
+    int spriteDuration(int sprite=0);
+    int spriteCount();//Like state count, but for the image states
     int maxFrames();
 
     void setGoal(int state, int sprite=0, bool jump=false);
@@ -94,6 +94,11 @@ public:
 
     void startSprite(int index=0);
 
+private://Nothing outside should use this?
+    friend class SpriteGoalAffector;//XXX: Fix interface
+    int stateCount() {return m_states.count();}
+    int stateIndex(SpriteState* s){return m_states.indexOf(s);}//TODO: Does this need to be hidden?
+    SpriteState* state(int idx){return m_states[idx];}//Used by spritegoal affector
 signals:
 
     void globalGoalChanged(QString arg);
@@ -123,6 +128,7 @@ private:
     uint m_timeOffset;
     QString m_globalGoal;
     int m_maxFrames;
+    int m_imageStateCount;
 };
 
 //Common use is to have your own list property which is transparently an engine

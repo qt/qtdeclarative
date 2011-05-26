@@ -45,7 +45,11 @@ QT_BEGIN_NAMESPACE
 
 SpriteState::SpriteState(QObject *parent) :
     QObject(parent)
+    , m_generatedCount(0)
+    , m_framesPerRow(0)
     , m_frames(1)
+    , m_frameHeight(0)
+    , m_frameWidth(0)
     , m_duration(1000)
 {
 }

@@ -73,6 +73,7 @@ signals:
     void fadeChanged();
 
 public slots:
+    //TODO: Add a follow mode, where moving the delegate causes the logical particle to go with it?
     void freeze(QSGItem* item);
     void unfreeze(QSGItem* item);
     void take(QSGItem* item,bool prioritize=false);//take by modelparticle

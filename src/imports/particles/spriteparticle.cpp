@@ -360,12 +360,11 @@ void SpriteParticle::load(ParticleData *d)
     SpriteParticleVertices &p = particles[pos];
 
     // Initial Sprite State
+    m_spriteEngine->startSprite(pos);
     p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = p.v1.t;
     p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = 0;
-    SpriteState* state = m_spriteEngine->state(0);
-    p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = state->frames();
-    p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = state->duration();
-    m_spriteEngine->startSprite(pos);
+    p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(pos);
+    p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(pos);
 
     vertexCopy(p.v1, d->pv);
     vertexCopy(p.v2, d->pv);
@@ -424,7 +423,7 @@ void SpriteParticle::prepareNextFrame()
 
     qreal time =  timeStamp / 1000.;
     m_material->timestamp = time;
-    m_material->animcount = m_spriteEngine->stateCount();
+    m_material->animcount = m_spriteEngine->spriteCount();
 
     //Advance State
     SpriteParticleVertices *particles = (SpriteParticleVertices *) m_node->geometry()->vertexData();
@@ -435,8 +434,8 @@ void SpriteParticle::prepareNextFrame()
         if(curIdx != p.v1.animIdx){
             p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = curIdx;
             p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(i)/1000.0;
-            p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->state(curIdx)->frames();
-            p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->state(curIdx)->duration();
+            p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(i);
+            p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(i);
         }
     }
 }

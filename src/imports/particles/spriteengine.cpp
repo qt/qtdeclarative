@@ -70,11 +70,64 @@ SpriteEngine::~SpriteEngine()
 
 int SpriteEngine::maxFrames()
 {
-   int max = 0;
-   foreach(SpriteState* s, m_states)
-       if(s->frames() > max)
-           max = s->frames();
-   return max;
+    return m_maxFrames;
+}
+
+/* States too large to fit in one row are split into multiple rows
+   This is more efficient for the implementation, but should remain an implementation detail (invisible from QML)
+   Therefore the below functions abstract sprite from the viewpoint of classes that pass the details onto shaders
+   But States maintain their listed index for internal structures
+TODO: All these calculations should be pre-calculated and cached during initialization for a significant performance boost
+*/
+int SpriteEngine::spriteState(int sprite)
+{
+    int state = m_sprites[sprite];
+    if(!m_states[state]->m_generatedCount)
+        return state;
+    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    return state + extra;
+}
+
+int SpriteEngine::spriteStart(int sprite)
+{
+    int state = m_sprites[sprite];
+    if(!m_states[state]->m_generatedCount)
+        return m_startTimes[sprite];
+    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    return state + extra*rowDuration;
+}
+
+int SpriteEngine::spriteFrames(int sprite)
+{
+    int state = m_sprites[sprite];
+    if(!m_states[state]->m_generatedCount)
+        return m_states[state]->frames();
+    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    if(extra == m_states[state]->m_generatedCount - 1)//last state
+        return m_states[state]->frames() % m_states[state]->m_framesPerRow;
+    else
+        return m_states[state]->m_framesPerRow;
+}
+
+int SpriteEngine::spriteDuration(int sprite)
+{
+    int state = m_sprites[sprite];
+    if(!m_states[state]->m_generatedCount)
+        return m_states[state]->duration();
+    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
+    if(extra == m_states[state]->m_generatedCount - 1)//last state
+        return (m_states[state]->duration() * m_states[state]->frames()) % rowDuration;
+    else
+        return rowDuration;
+}
+
+int SpriteEngine::spriteCount()//TODO: Actually image state count, need to rename these things to make sense together
+{
+    return m_imageStateCount;
 }
 
 void SpriteEngine::setGoal(int state, int sprite, bool jump)
@@ -99,6 +152,7 @@ QImage SpriteEngine::assembledImage()
     int frameHeight = 0;
     int frameWidth = 0;
     m_maxFrames = 0;
+    m_imageStateCount = 0;
 
     int maxSize;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
@@ -113,46 +167,96 @@ QImage SpriteEngine::assembledImage()
             return QImage();
         }
 
+        //Check that the frame sizes are the same within one engine
+        int imgWidth = state->frameWidth();
+        if(!imgWidth)
+            imgWidth = img.width() / state->frames();
         if(frameWidth){
-            if(img.width() / state->frames() != frameWidth){
+            if(imgWidth != frameWidth){
                 qWarning() << "SpriteEngine: Irregular frame width..." << state->source().toLocalFile();
                 return QImage();
             }
         }else{
-            frameWidth = img.width() / state->frames();
-        }
-        if(img.width() > maxSize){
-            qWarning() << "SpriteEngine: Animation too wide..." << state->source().toLocalFile();
-            return QImage();
+            frameWidth = imgWidth;
         }
 
+        int imgHeight = state->frameHeight();
+        if(!imgHeight)
+            imgHeight = img.height();
         if(frameHeight){
-            if(img.height()!=frameHeight){
+            if(imgHeight!=frameHeight){
                 qWarning() << "SpriteEngine: Irregular frame height..." << state->source().toLocalFile();
                 return QImage();
             }
         }else{
-            frameHeight = img.height();
+            frameHeight = imgHeight;
         }
 
-        if(img.height() > maxSize){
-            qWarning() << "SpriteEngine: Animation too tall..." << state->source().toLocalFile();
-            return QImage();
+        if(state->frames() * frameWidth > maxSize){
+            struct helper{
+                static int divRoundUp(int a, int b){return (a+b-1)/b;}
+            };
+            int rowsNeeded = helper::divRoundUp(state->frames(), helper::divRoundUp(maxSize, frameWidth));
+            if(rowsNeeded * frameHeight > maxSize){
+                qWarning() << "SpriteEngine: Animation too large to fit in one texture..." << state->source().toLocalFile();
+                qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
+            }
+            state->m_generatedCount = rowsNeeded;
+            m_imageStateCount += rowsNeeded;
+        }else{
+            m_imageStateCount++;
         }
     }
 
-    QImage image(frameWidth * m_maxFrames, frameHeight * m_states.count(), QImage::Format_ARGB32);
+    //maxFrames is max number in a line of the texture
+    if(m_maxFrames * frameWidth > maxSize)
+        m_maxFrames = maxSize/frameWidth;
+    QImage image(frameWidth * m_maxFrames, frameHeight * m_imageStateCount, QImage::Format_ARGB32);
     image.fill(0);
     QPainter p(&image);
     int y = 0;
     foreach(SpriteState* state, m_states){
         QImage img(state->source().toLocalFile());
-        p.drawImage(0,y,img);
-        y += frameHeight;
+        if(img.height() == frameHeight && img.width() <  maxSize){//Simple case
+            p.drawImage(0,y,img);
+            y += frameHeight;
+        }else{
+            state->m_framesPerRow = image.width()/frameWidth;
+            int x = 0;
+            int curX = 0;
+            int curY = 0;
+            int framesLeft = state->frames();
+            while(framesLeft > 0){
+                if(image.width() - x + curX <= img.width()){//finish a row in image (dest)
+                    int copied = image.width() - x;
+                    Q_ASSERT(!(copied % frameWidth));//XXX: Just checking
+                    framesLeft -= copied/frameWidth;
+                    p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
+                    y += frameHeight;
+                    curX += copied;
+                    x = 0;
+                    if(curX == img.width()){
+                        curX = 0;
+                        curY += frameHeight;
+                    }
+                }else{//finish a row in img (src)
+                    int copied = img.width() - curX;
+                    Q_ASSERT(!(copied % frameWidth));//XXX: Just checking
+                    framesLeft -= copied/frameWidth;
+                    p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
+                    curY += frameHeight;
+                    x += copied;
+                    curX = 0;
+                }
+            }
+            if(x)
+                y += frameHeight;
+        }
     }
 
     if(image.height() > maxSize){
         qWarning() << "SpriteEngine: Too many animations to fit in one texture...";
+        qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
         return QImage();
     }
     return image;
@@ -224,7 +328,7 @@ uint SpriteEngine::updateSprites(uint time)
 
             m_sprites[idx] = nextIdx;
             m_startTimes[idx] = time;
-            //TODO: emit something?
+            //TODO: emit something? Remember to emit this when a psuedostate changes too
             addToUpdateList((m_states[nextIdx]->duration() * m_states[nextIdx]->frames()) + time, idx);
         }
         m_stateUpdates.pop_front();

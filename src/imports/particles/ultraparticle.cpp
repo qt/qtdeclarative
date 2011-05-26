@@ -858,7 +858,7 @@ void UltraParticle::prepareNextFrame()
 
     //Advance State
     if(m_spriteEngine){//perfLevel == Sprites?
-        m_material->animcount = m_spriteEngine->stateCount();
+        m_material->animcount = m_spriteEngine->spriteCount();
         UltraVertices *particles = (UltraVertices *) m_node->geometry()->vertexData();
         m_spriteEngine->updateSprites(timeStamp);
         for(int i=0; i<m_count; i++){
@@ -867,8 +867,8 @@ void UltraParticle::prepareNextFrame()
             if(curIdx != p.v1.animIdx){
                 p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = curIdx;
                 p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(i)/1000.0;
-                p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->state(curIdx)->frames();
-                p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->state(curIdx)->duration();
+                p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(i);
+                p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(i);
             }
         }
     }else{
@@ -947,10 +947,9 @@ void UltraParticle::load(ParticleData *d)
             p->v1->animT = p->v2->animT = p->v3->animT = p->v4->animT = p->v1->t;
             p->v1->animIdx = p->v2->animIdx = p->v3->animIdx = p->v4->animIdx = 0;
             if(m_spriteEngine){
-                SpriteState* state = m_spriteEngine->state(0);
-                p->v1->frameCount = p->v2->frameCount = p->v3->frameCount = p->v4->frameCount = state->frames();
-                p->v1->frameDuration = p->v2->frameDuration = p->v3->frameDuration = p->v4->frameDuration = state->duration();
                 m_spriteEngine->startSprite(pos);
+                p->v1->frameCount = p->v2->frameCount = p->v3->frameCount = p->v4->frameCount = m_spriteEngine->spriteFrames(pos);
+                p->v1->frameDuration = p->v2->frameDuration = p->v3->frameDuration = p->v4->frameDuration = m_spriteEngine->spriteDuration(pos);
             }else{
                 p->v1->frameCount = p->v2->frameCount = p->v3->frameCount = p->v4->frameCount = 1;
                 p->v1->frameDuration = p->v2->frameDuration = p->v3->frameDuration = p->v4->frameDuration = 9999;
