@@ -876,6 +876,10 @@ bool QDeclarativePixmapReply::event(QEvent *event)
 
 int QDeclarativePixmapData::cost() const
 {
+    if (texture) {
+        const QSize textureSize = texture->textureSize();
+        return textureSize.width() * textureSize.height();
+    }
     return (pixmap.width() * pixmap.height() * pixmap.depth()) / 8;
 }
 
