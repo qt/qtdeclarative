@@ -136,7 +136,9 @@ or anchors its left and right edges but additionally sets a \l {Item::}{width}, 
 result is undefined, as it would not be clear whether the item should use anchoring or absolute
 positioning. The same can be said for setting an item's \l {Item::}{y} and \l {Item::}{height}
 with \l {Item::}{anchors.top} and \l {Item::}{anchors.bottom}, or setting \l {Item::}{anchors.fill}
-as well as \l {Item::}{width} or \l {Item::}{height}. If you wish to change from using
+as well as \l {Item::}{width} or \l {Item::}{height}. The same apples when using positioners
+such as Row and Grid, which may set the item's \l {Item::}{x} and \l {Item::}{y} properties.
+If you wish to change from using
 anchor-based to absolute positioning, you can clear an anchor value by setting it to \c undefined.
 
 */
