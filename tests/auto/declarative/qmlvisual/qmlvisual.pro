@@ -26,7 +26,6 @@ symbian: {
     rect \
     repeater \
     selftest_noimages \
-    webview
     DEPLOYMENT += importFiles
 } else {
     DEFINES += QT_TEST_SOURCE_DIR=\"\\\"$$PWD\\\"\"
