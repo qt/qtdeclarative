@@ -5,9 +5,9 @@ QT += declarative
 TARGET = qmltextballoonplugin
 
 HEADERS += textballoonplugin/plugin.h \
-    textballoonplugin/textballoon.h
+    textballoon.h
 
-SOURCES += textballoonplugin/textballoon.cpp
+SOURCES += textballoon.cpp
 
 DESTDIR = textballoonplugin
 

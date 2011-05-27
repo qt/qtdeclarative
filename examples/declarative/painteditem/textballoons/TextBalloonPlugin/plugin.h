@@ -41,7 +41,7 @@
 
 #include <QDeclarativeExtensionPlugin>
 
-#include "textballoon.h"
+#include "../textballoon.h"
 
 class TextBalloonPlugin : public QDeclarativeExtensionPlugin
 {
