@@ -95,16 +95,6 @@ private:
     QDeclarativeEngine *engine;
 };
 
-/*
-class QWebPageWithJavaScriptConsoleMessages : public QWebPage {
-public:
-    void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
-    {
-        qWarning() << sourceID << ":" << lineNumber << ":" << message;
-    }
-};
-*/
-
 void removeRecursive(const QString& dirname)
 {
     QDir dir(dirname);
@@ -170,6 +160,14 @@ void tst_qdeclarativesqldatabase::testQml_data()
 }
 
 /*
+class QWebPageWithJavaScriptConsoleMessages : public QWebPage {
+public:
+    void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
+    {
+        qWarning() << sourceID << ":" << lineNumber << ":" << message;
+    }
+};
+
 void tst_qdeclarativesqldatabase::validateAgainstWebkit()
 {
     // Validates tests against WebKit (HTML5) support.
