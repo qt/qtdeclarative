@@ -1607,12 +1607,10 @@ void tst_qsgtextinput::passwordCharacter()
     QVERIFY(textInput != 0);
 
     textInput->setPasswordCharacter("X");
-    QSize contentsSize = textInput->contentsSize();
     qreal implicitWidth = textInput->implicitWidth();
     textInput->setPasswordCharacter(".");
 
     // QTBUG-12383 content is updated and redrawn
-    QVERIFY(contentsSize != textInput->contentsSize());
     QVERIFY(textInput->implicitWidth() < implicitWidth);
 
     delete textInput;
@@ -2093,10 +2091,10 @@ public:
     {
         nbPaint = 0;
     }
-    void paint(QPainter *painter)
+    virtual QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data)
     {
        nbPaint++;
-       QSGTextInput::paint(painter);
+       return QSGTextInput::updatePaintNode(node, data);
     }
     int nbPaint;
 };

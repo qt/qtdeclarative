@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,34 +38,14 @@
 **
 ****************************************************************************/
 
-// Demonstrates opening new WebViews from HTML
-//
-// Note that to open windows from JavaScript, you will need to
-// allow it on WebView with settings.javascriptCanOpenWindows: true
-
 import QtQuick 1.0
-import QtWebKit 1.0
 
-Grid {
-    columns: 3
-    id: pages
-    height: 300; width: 600
-
-    Component {
-        id: webViewPage
-        Rectangle {
-            width: webView.width
-            height: webView.height
-            border.color: "gray"
-
-            WebView {
-                id: webView
-                newWindowComponent: webViewPage
-                newWindowParent: pages
-                url: "newwindows.html"
-            }
-        }
+Rectangle {
+    width: 50; height: 50
+    color: "black"
+    Text {
+        color: "white"
+        text: String.fromCharCode(65 + Math.floor(26*Math.random()))
+        anchors.centerIn: parent
     }
-
-    Loader { sourceComponent: webViewPage }
 }

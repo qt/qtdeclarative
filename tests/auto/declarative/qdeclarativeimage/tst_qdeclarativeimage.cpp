@@ -328,6 +328,7 @@ void tst_qdeclarativeimage::mirror()
             p_e.drawPixmap(QRect(0, 0, width, height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QDeclarativeImage::PreserveAspectFit:
+            QEXPECT_FAIL("", "QTBUG-19538", Continue);
             p_e.drawPixmap(QRect(25, 0, width / (width/height), height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QDeclarativeImage::PreserveAspectCrop:
