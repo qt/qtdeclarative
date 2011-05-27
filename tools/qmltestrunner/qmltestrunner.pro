@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = qmltestrunner
-CONFIG += warn_on qmltestcase
+CONFIG += warn_on
 SOURCES += main.cpp
 
 contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2) {

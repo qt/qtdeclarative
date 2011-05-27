@@ -9,3 +9,5 @@ OTHER_FILES += \
     qdecarativebinding/tst_binding.qml \
     selftests/tst_compare.qml \
     selftests/tst_compare_quickobjects.qml
+
+CONFIG+=insignificant_test

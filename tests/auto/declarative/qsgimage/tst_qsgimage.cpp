@@ -630,9 +630,10 @@ void tst_qsgimage::sourceSize_QTBUG_16389()
 }
 
 static int numberOfWarnings = 0;
-static void checkWarnings(QtMsgType, const char *)
+static void checkWarnings(QtMsgType, const char *msg)
 {
-    numberOfWarnings++;
+    if (!QString(msg).contains("QGLContext::makeCurrent(): Failed."))
+        numberOfWarnings++;
 }
 
 // QTBUG-15690
