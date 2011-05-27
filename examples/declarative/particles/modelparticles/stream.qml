@@ -212,8 +212,8 @@ Item{
             //TODO: Darken based on 'depth'
             width: 132
             height: 132
-            //ModelParticle.onAttached: console.log("I'm in"  + x + "," + y + ":" + opacity);
-            ModelParticle.onDetached: mp.take(container);//respawns
+            //ItemParticle.onAttached: console.log("I'm in"  + x + "," + y + ":" + opacity);
+            ItemParticle.onDetached: mp.take(container);//respawns
             function manage()
             {
                 if(state == "selected"){
