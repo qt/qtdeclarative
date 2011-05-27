@@ -45,10 +45,12 @@
 #include <private/qdeclarativetext_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <QtCore/qcryptographichash.h>
+/*
 #include <QtWebKit/qwebpage.h>
 #include <QtWebKit/qwebframe.h>
 #include <QtWebKit/qwebdatabase.h>
 #include <QtWebKit/qwebsecurityorigin.h>
+*/
 #include <QtSql/qsqldatabase.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -93,6 +95,7 @@ private:
     QDeclarativeEngine *engine;
 };
 
+/*
 class QWebPageWithJavaScriptConsoleMessages : public QWebPage {
 public:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
@@ -100,6 +103,7 @@ public:
         qWarning() << sourceID << ":" << lineNumber << ":" << message;
     }
 };
+*/
 
 void removeRecursive(const QString& dirname)
 {
