@@ -3,9 +3,10 @@ TARGET = qmltestrunner
 CONFIG += warn_on
 SOURCES += main.cpp
 
-contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2) {
-    QT += opengl
-}
+
+QT += declarative qmltest
+
+DEFINES += QUICK_TEST_SOURCE_DIR=\"\\\"$$OUT_PWD\\\"\"
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target
