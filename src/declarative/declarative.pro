@@ -19,7 +19,7 @@ exists("qdeclarative_enable_gcov") {
     LIBS += -lgcov
 }
 
-include($$QT_SOURCE_TREE/src/qbase.pri)
+load(qt_module_config)
 
 HEADERS += qtdeclarativeversion.h
 
