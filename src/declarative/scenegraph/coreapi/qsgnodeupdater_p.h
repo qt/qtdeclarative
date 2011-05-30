@@ -44,7 +44,7 @@
 
 #include "qsgnode.h"
 #include "qsgmatrix4x4stack.h"
-#include <qstack.h>
+#include <QtGui/private/qdatabuffer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,8 +56,8 @@ public:
     virtual void updateStates(QSGNode *n);
     virtual bool isNodeBlocked(QSGNode *n, QSGNode *root) const;
 
-    void setToplevelOpacity(qreal alpha) { m_opacity_stack.top() = alpha; }
-    qreal toplevelOpacity() const { return m_opacity_stack.top(); }
+    void setToplevelOpacity(qreal alpha) { m_opacity_stack.last() = alpha; }
+    qreal toplevelOpacity() const { return m_opacity_stack.last(); }
 
 protected:
     virtual void enterTransformNode(QSGTransformNode *);
@@ -73,9 +73,9 @@ protected:
     void visitChildren(QSGNode *n);
 
 
-    QSGMatrix4x4Stack m_matrix_stack;
-    QStack<const QMatrix4x4 *> m_combined_matrix_stack;
-    QStack<qreal> m_opacity_stack;
+    QDataBuffer<QMatrix4x4> m_matrix_stack;
+    QDataBuffer<const QMatrix4x4 *> m_combined_matrix_stack;
+    QDataBuffer<qreal> m_opacity_stack;
     const QSGClipNode *m_current_clip;
 
     int m_force_update;
