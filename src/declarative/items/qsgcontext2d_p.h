@@ -85,38 +85,9 @@ public:
 Q_DECLARE_METATYPE(QSGCanvasGradient*)
 
 
-//class QSGCanvasImage: public QObject
-//{
-//    Q_OBJECT
-//    Q_PROPERTY(QString src READ src WRITE setSrc NOTIFY sourceChanged)
-//public:
-//    QSGCanvasImage() {}
-//    QSGCanvasImage(const QString &url) : m_image(url), m_src(url) {
-//    }
-//    QSGCanvasImage(const QImage &img) {m_image = img;}
-
-//public slots:
-//    QImage &value() { return m_image; }
-//    const QImage &value() const{ return m_image; }
-//    QString src() { return m_src; }
-//    void setSrc(const QString &src) { m_src = src; m_image.load(src); emit sourceChanged();}
-//signals:
-//    void sourceChanged();
-
-//private:
-//    QSGImage* img;
-//    QString   src;
-//};
-
-//Q_DECLARE_METATYPE(QSGCanvasImage*)
-
-
-/*
-
-  */
-
 class QSGContext2DWorkerAgent;
 class QSGContext2DPrivate;
+class QSGCanvasItem;
 class QSGContext2D : public QObject
 {
     Q_OBJECT
@@ -215,6 +186,9 @@ public:
     QSGContext2D(QObject *parent = 0);
     QSGContext2D(QSGContext2D *ctx2d, QSGContext2DWorkerAgent* agentData);
     ~QSGContext2D();
+
+    QSGCanvasItem*  canvas() const;
+
     void setSize(int width, int height);
     void setSize(const QSize &size);
     QSize size() const;

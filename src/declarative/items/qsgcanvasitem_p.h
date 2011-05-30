@@ -55,6 +55,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
+class QScriptValue;
 class QSGContext2D;
 class QSGCanvasItemPrivate;
 class QSGCanvasItem : public QSGPaintedItem
@@ -68,7 +69,7 @@ signals:
     void canvasUpdated();
 public Q_SLOTS:
     QString toDataURL(const QString& type = QLatin1String("image/png")) const;
-    QSGContext2D* getContext(const QString & = QLatin1String("2d"));
+    QScriptValue getContext(const QString & = QLatin1String("2d"));
     void requestPaint();
 
     // Save current canvas to disk
