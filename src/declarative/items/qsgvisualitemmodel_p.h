@@ -60,7 +60,7 @@ class QDeclarativeComponent;
 class QDeclarativePackage;
 class QSGVisualDataModelPrivate;
 
-class Q_AUTOTEST_EXPORT QSGVisualModel : public QObject
+class Q_DECLARATIVE_EXPORT QSGVisualModel : public QObject
 {
     Q_OBJECT
 
