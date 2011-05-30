@@ -111,48 +111,47 @@ static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
     return a->matrix() < b->matrix();
 }
 
-// Minimum heap.
-template <typename T, int prealloc = 256>
-class Heap
-{
-public:
-    void insert(const T &x);
-    const T &top() const { return v[0]; }
-    T pop();
-    bool isEmpty() const { return v.isEmpty(); }
-private:
-    static int parent(int i) { return (i - 1) >> 1; }
-    static int left(int i) { return (i << 1) | 1; }
-    static int right(int i) { return (i + 1) << 1; }
-    QVarLengthArray<T, prealloc> v;
-};
 
-template <typename T, int prealloc>
-void Heap<T, prealloc>::insert(const T &x)
+IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
+    : QPair<int, QSGGeometryNode *>(i, node)
+{
+}
+
+bool IndexGeometryNodePair::operator < (const IndexGeometryNodePair &other) const
+{
+    return nodeLessThan(second, other.second);
+}
+
+
+IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
+    : v(64)
+{
+}
+
+void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
 {
     int i = v.size();
-    v.append(x);
-    while (i != 0 && v[i] < v[parent(i)]) {
-        qSwap(v[parent(i)], v[i]);
+    v.add(x);
+    while (i != 0 && v.at(i) < v.at(parent(i))) {
+        qSwap(v.at(parent(i)), v.at(i));
         i = parent(i);
     }
 }
 
-template <typename T, int prealloc>
-T Heap<T, prealloc>::pop()
+IndexGeometryNodePair IndexGeometryNodePairHeap::pop()
 {
-    T x = top();
+    IndexGeometryNodePair x = top();
     if (v.size() > 1)
-        qSwap(v[0], v[v.size() - 1]);
-    v.resize(v.size() - 1);
+        qSwap(v.first(), v.last());
+    v.pop_back();
     int i = 0;
     while (left(i) < v.size()) {
         int low = left(i);
-        if (right(i) < v.size() && v[right(i)] < v[low])
+        if (right(i) < v.size() && v.at(right(i)) < v.at(low))
             low = right(i);
-        if (!(v[low] < v[i]))
+        if (!(v.at(low) < v.at(i)))
             break;
-        qSwap(v[i], v[low]);
+        qSwap(v.at(i), v.at(low));
         i = low;
     }
     return x;
@@ -340,14 +339,6 @@ void QMLRenderer::render()
 
 }
 
-class Foo : public QPair<int, QSGGeometryNode *>
-{
-public:
-    Foo() { }
-    Foo(int i, QSGGeometryNode *n) : QPair<int, QSGGeometryNode *>(i, n) { }
-    bool operator < (const Foo &other) const { return nodeLessThan(second, other.second); }
-};
-
 void QMLRenderer::setSortFrontToBackEnabled(bool sort)
 {
     printf("setting sorting to... %d\n", sort);
@@ -405,21 +396,20 @@ void QMLRenderer::buildLists(QSGNode *node)
 
         int childNodeCount = m_transparentNodes.size() - baseCount;
         if (childNodeCount) {
-            Heap<Foo, 16> heap;
             m_tempNodes.reset();
             m_tempNodes.reserve(childNodeCount);
             while (childNodeCount) {
                 for (int i = 0; i < count; ++i) {
                     if (beginIndices[i] != endIndices[i])
-                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
-                while (!heap.isEmpty()) {
-                    Foo foo = heap.pop();
-                    m_tempNodes.add(foo.second);
+                while (!m_heap.isEmpty()) {
+                    IndexGeometryNodePair pair = m_heap.pop();
+                    m_tempNodes.add(pair.second);
                     --childNodeCount;
-                    int i = foo.first;
-                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), foo.second))
-                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                    int i = pair.first;
+                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), pair.second))
+                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
             }
             Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);

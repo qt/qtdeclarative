@@ -52,6 +52,31 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class IndexGeometryNodePair : public QPair<int, QSGGeometryNode *>
+{
+public:
+    IndexGeometryNodePair(int i, QSGGeometryNode *n);
+    bool operator < (const IndexGeometryNodePair &other) const;
+};
+
+
+// Minimum heap.
+class IndexGeometryNodePairHeap
+{
+public:
+    IndexGeometryNodePairHeap();
+    void insert(const IndexGeometryNodePair &x);
+    const IndexGeometryNodePair &top() const { return v.first(); }
+    IndexGeometryNodePair pop();
+    bool isEmpty() const { return v.isEmpty(); }
+private:
+    static int parent(int i) { return (i - 1) >> 1; }
+    static int left(int i) { return (i << 1) | 1; }
+    static int right(int i) { return (i + 1) << 1; }
+    QDataBuffer<IndexGeometryNodePair> v;
+};
+
+
 class QMLRenderer : public QSGRenderer
 {
     Q_OBJECT
@@ -77,13 +102,12 @@ private:
     QDataBuffer<QSGGeometryNode *> m_opaqueNodes;
     QDataBuffer<QSGGeometryNode *> m_transparentNodes;
     QDataBuffer<QSGGeometryNode *> m_tempNodes;
+    IndexGeometryNodePairHeap m_heap;
 
     bool m_rebuild_lists;
     bool m_needs_sorting;
     bool m_sort_front_to_back;
     int m_currentRenderOrder;
-
-
 
 #ifdef QML_RUNTIME_TESTING
     bool m_render_opaque_nodes;
