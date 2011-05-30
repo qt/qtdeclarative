@@ -1,4 +1,4 @@
-// Commit: fda9cc1d8a0e49817d1c6192c52d18dffcecf327
+// Commit: 806f031efeda71d3f4d7d2f949b437493e79cf52
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -814,7 +814,8 @@ void QSGGridViewPrivate::createHighlight()
     if (highlight) {
         if (trackedItem == highlight)
             trackedItem = 0;
-        delete highlight->item;
+        highlight->item->setParentItem(0);
+        highlight->item->deleteLater();
         delete highlight;
         highlight = 0;
         delete highlightXAnimator;
@@ -1348,6 +1349,7 @@ void QSGGridView::setDelegate(QDeclarativeComponent *delegate)
         d->ownModel = true;
     }
     if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model)) {
+        int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         if (isComponentComplete()) {
             for (int i = 0; i < d->visibleItems.count(); ++i)
@@ -1365,6 +1367,8 @@ void QSGGridView::setDelegate(QDeclarativeComponent *delegate)
             }
             d->moveReason = QSGGridViewPrivate::Other;
         }
+        if (oldCount != dataModel->count())
+            emit countChanged();
         emit delegateChanged();
     }
 }

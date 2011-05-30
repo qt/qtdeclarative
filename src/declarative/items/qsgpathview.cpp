@@ -1,4 +1,4 @@
-// Commit: 8878e2c53a0c9408d4b468e2dad485743c32f58b
+// Commit: 806f031efeda71d3f4d7d2f949b437493e79cf52
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -205,7 +205,8 @@ void QSGPathViewPrivate::createHighlight()
 
     bool changed = false;
     if (highlightItem) {
-        delete highlightItem;
+        highlightItem->setParentItem(0);
+        highlightItem->deleteLater();
         highlightItem = 0;
         changed = true;
     }
@@ -717,9 +718,12 @@ void QSGPathView::setDelegate(QDeclarativeComponent *delegate)
         d->ownModel = true;
     }
     if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model)) {
+        int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         d->modelCount = dataModel->count();
         d->regenerate();
+        if (oldCount != dataModel->count())
+            emit countChanged();
         emit delegateChanged();
     }
 }

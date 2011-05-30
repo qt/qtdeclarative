@@ -1,4 +1,4 @@
-// Commit: 45153a37e4d9e39e8c326a0f33ea17be49bb29e2
+// Commit: dcb9148091cbf6872b60407c301d7c92427583a6
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -1227,7 +1227,12 @@ void QSGVisualDataModel::_q_layoutChanged()
 
 void QSGVisualDataModel::_q_modelReset()
 {
+    Q_D(QSGVisualDataModel);
+    d->m_root = QModelIndex();
     emit modelReset();
+    emit rootIndexChanged();
+    if (d->m_abstractItemModel && d->m_abstractItemModel->canFetchMore(d->m_root))
+        d->m_abstractItemModel->fetchMore(d->m_root);
 }
 
 void QSGVisualDataModel::_q_createdPackage(int index, QDeclarativePackage *package)

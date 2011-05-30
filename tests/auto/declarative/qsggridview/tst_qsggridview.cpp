@@ -234,6 +234,7 @@ void tst_QSGGridView::items()
     QTRY_VERIFY(contentItem != 0);
 
     QTRY_COMPARE(gridview->count(), model.count());
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     for (int i = 0; i < model.count(); ++i) {
@@ -318,6 +319,7 @@ void tst_QSGGridView::inserted()
     QTRY_VERIFY(contentItem != 0);
 
     model.insertItem(1, "Will", "9876");
+    QCOMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
@@ -396,6 +398,7 @@ void tst_QSGGridView::removed()
     QTRY_VERIFY(contentItem != 0);
 
     model.removeItem(1);
+    QCOMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     QSGText *name = findItem<QSGText>(contentItem, "textName", 1);
     QTRY_VERIFY(name != 0);

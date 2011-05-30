@@ -2,6 +2,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: root
+    property int count: grid.count
     property bool showHeader: false
     property bool showFooter: false
     property int added: -1

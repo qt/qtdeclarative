@@ -1,4 +1,4 @@
-// Commit: cce89db1e2555cbca8fc28072e1c6dd737cec6c4
+// Commit: 806f031efeda71d3f4d7d2f949b437493e79cf52
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -731,6 +731,7 @@ void QSGListViewPrivate::refill(qreal from, qreal to, bool doBuffer)
     if (doBuffer && (bufferMode & BufferBefore))
         fillFrom = bufferFrom;
 
+    bool haveValidItems = false;
     int modelIndex = visibleIndex;
     qreal itemEnd = visiblePos-1;
     if (!visibleItems.isEmpty()) {
@@ -739,11 +740,13 @@ void QSGListViewPrivate::refill(qreal from, qreal to, bool doBuffer)
         int i = visibleItems.count() - 1;
         while (i > 0 && visibleItems.at(i)->index == -1)
             --i;
-        if (visibleItems.at(i)->index != -1)
+        if (visibleItems.at(i)->index != -1) {
+            haveValidItems = true;
             modelIndex = visibleItems.at(i)->index + 1;
+        }
     }
 
-    if (visibleItems.count() && (fillFrom > itemEnd+averageSize+spacing
+    if (haveValidItems && (fillFrom > itemEnd+averageSize+spacing
         || fillTo < visiblePos - averageSize - spacing)) {
         // We've jumped more than a page.  Estimate which items are now
         // visible and fill from there.
@@ -938,7 +941,8 @@ void QSGListViewPrivate::createHighlight()
     if (highlight) {
         if (trackedItem == highlight)
             trackedItem = 0;
-        delete highlight->item;
+        highlight->item->setParentItem(0);
+        highlight->item->deleteLater();
         delete highlight;
         highlight = 0;
         delete highlightPosAnimator;
@@ -1642,6 +1646,7 @@ void QSGListView::setDelegate(QDeclarativeComponent *delegate)
         d->ownModel = true;
     }
     if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model)) {
+        int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         if (isComponentComplete()) {
             for (int i = 0; i < d->visibleItems.count(); ++i)
@@ -1660,6 +1665,8 @@ void QSGListView::setDelegate(QDeclarativeComponent *delegate)
             }
             d->updateViewport();
         }
+        if (oldCount != dataModel->count())
+            emit countChanged();
     }
     emit delegateChanged();
 }
@@ -2855,9 +2862,9 @@ void QSGListView::itemsRemoved(int modelIndex, int count)
         }
     }
 
-    if (removedVisible && !haveVisibleIndex) {
+    if (!haveVisibleIndex) {
         d->timeline.clear();
-        if (d->itemCount == 0) {
+        if (removedVisible && d->itemCount == 0) {
             d->visibleIndex = 0;
             d->visiblePos = d->header ? d->header->size() : 0;
             d->setPosition(0);
