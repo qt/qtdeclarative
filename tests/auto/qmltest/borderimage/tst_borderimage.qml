@@ -231,8 +231,8 @@ Item {
 
 
         function test_invalidSciFile() {
-            ignoreWarning("QDeclarativeGridScaledImage: Invalid tile rule specified. Using Stretch.") // for "Roun"
-            ignoreWarning("QDeclarativeGridScaledImage: Invalid tile rule specified. Using Stretch.") // for "Repea"
+            ignoreWarning("QSGGridScaledImage: Invalid tile rule specified. Using Stretch.") // for "Roun"
+            ignoreWarning("QSGGridScaledImage: Invalid tile rule specified. Using Stretch.") // for "Repea"
 
             var component = Qt.createComponent("InvalidSciFile.qml")
             var invalidSciFile = component.createObject(top)
