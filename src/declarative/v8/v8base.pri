@@ -11,8 +11,9 @@ isEmpty(V8DIR) {
 
     # mksnapshot hangs if gcc 4.5 is used
     # for reference look at http://code.google.com/p/v8/issues/detail?id=884
-    # FIXME how to find 4.5 series?
-    message(because of a bug in gcc / v8 we need to add -fno-strict-aliasing)
-    QMAKE_CFLAGS += -fno-strict-aliasing
-    QMAKE_CXXFLAGS += -fno-strict-aliasing
+    equals(QT_GCC_MAJOR_VERSION, 4): equals(QT_GCC_MINOR_VERSION, 5) {
+      message(because of a bug in gcc / v8 we need to add -fno-strict-aliasing)
+      QMAKE_CFLAGS += -fno-strict-aliasing
+      QMAKE_CXXFLAGS += -fno-strict-aliasing
+    }
 }
