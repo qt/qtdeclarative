@@ -23,7 +23,6 @@ SUBDIRS += \
            qdeclarativeview \
            qdeclarativeviewer \
            qdeclarativexmlhttprequest \
-           qmlvisual \
            moduleqt47
 
 contains(QT_CONFIG, private_tests) {
