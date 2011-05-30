@@ -4,20 +4,20 @@ QT += declarative
 
 TARGET = qmltextballoonplugin
 
-HEADERS += textballoonplugin/plugin.h \
+HEADERS += TextBalloonPlugin/plugin.h \
     textballoon.h
 
 SOURCES += textballoon.cpp
 
-DESTDIR = textballoonplugin
+DESTDIR = TextBalloonPlugin
 
 qdeclarativesources.files += \
-    textballoonplugin/qmldir
+    TextBalloonPlugin/qmldir
 
-qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/painteditem/textballoons/textballoonplugin
+qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/painteditem/textballoons/TextBalloonPlugin
  
 sources.files = textballoons.qml
 sources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/painteditem/textballoons
-target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/painteditem/textballoons/textballoonplugin
+target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/painteditem/textballoons/TextBalloonPlugin
 
 INSTALLS = qdeclarativesources sources target
