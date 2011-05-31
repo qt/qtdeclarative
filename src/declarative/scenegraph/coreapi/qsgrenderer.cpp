@@ -122,7 +122,7 @@ QSGRenderer::QSGRenderer(QSGContext *context)
     : QObject()
     , m_clear_color(Qt::transparent)
     , m_clear_mode(ClearColorBuffer | ClearDepthBuffer)
-    , m_render_opacity(1)
+    , m_current_opacity(1)
     , m_context(context)
     , m_root_node(0)
     , m_node_updater(0)
@@ -249,12 +249,12 @@ void QSGRenderer::renderScene(const Bindable &bindable)
 #endif
 }
 
-void QSGRenderer::setProjectMatrixToDeviceRect()
+void QSGRenderer::setProjectionMatrixToDeviceRect()
 {
-    setProjectMatrixToRect(m_device_rect);
+    setProjectionMatrixToRect(m_device_rect);
 }
 
-void QSGRenderer::setProjectMatrixToRect(const QRectF &rect)
+void QSGRenderer::setProjectionMatrixToRect(const QRectF &rect)
 {
     QMatrix4x4 matrix;
     matrix.ortho(rect.x(),
@@ -263,10 +263,10 @@ void QSGRenderer::setProjectMatrixToRect(const QRectF &rect)
                  rect.y(),
                  qreal(0.01),
                  -1);
-    setProjectMatrix(matrix);
+    setProjectionMatrix(matrix);
 }
 
-void QSGRenderer::setProjectMatrix(const QMatrix4x4 &matrix)
+void QSGRenderer::setProjectionMatrix(const QMatrix4x4 &matrix)
 {
     m_projection_matrix = matrix;
     // Mirrored relative to the usual Qt coordinate system with origin in the top left corner.
@@ -369,11 +369,9 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
     int clipDepth = 0;
     QRect clipRect;
     while (clip) {
-        QMatrix4x4 matrix = m_projectionMatrix.top();
+        QMatrix4x4 m = m_current_projection_matrix;
         if (clip->matrix())
-            matrix *= *clip->matrix();
-
-        const QMatrix4x4 &m = matrix;
+            m *= *clip->matrix();
 
         // TODO: Check for multisampling and pixel grid alignment.
         bool canUseScissor = clip->isRectangular()

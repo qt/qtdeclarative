@@ -310,7 +310,7 @@ void QSGShaderEffectTexture::grab()
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
-    m_renderer->setProjectMatrixToRect(mirrored);
+    m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {

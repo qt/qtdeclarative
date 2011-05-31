@@ -237,9 +237,8 @@ void QMLRenderer::render()
 
     QRect r = viewportRect();
     glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
-    m_projectionMatrix = projectMatrix();
-    m_projectionMatrix.push();
-    m_modelViewMatrix.setToIdentity();
+    m_current_projection_matrix = projectionMatrix();
+    m_current_model_view_matrix.setToIdentity();
 
     m_currentClip = 0;
     glDisable(GL_STENCIL_TEST);
@@ -317,8 +316,6 @@ void QMLRenderer::render()
 
     if (m_currentProgram)
         m_currentProgram->deactivate();
-
-    m_projectionMatrix.pop();
 
 #ifdef RENDERER_DEBUG
     if (debugTimer.elapsed() > DEBUG_THRESHOLD) {
@@ -427,6 +424,7 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
     const float scale = 1.0f / m_currentRenderOrder;
     int count = list.size();
     int currentRenderOrder = 0x80000000;
+    m_current_projection_matrix.setColumn(2, scale * projectionMatrix().column(2));
 
     //int clipChangeCount = 0;
     //int programChangeCount = 0;
@@ -448,18 +446,17 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         if (changeMatrix) {
             m_currentMatrix = geomNode->matrix();
             if (m_currentMatrix)
-                m_modelViewMatrix = *m_currentMatrix;
+                m_current_model_view_matrix = *m_currentMatrix;
             else
-                m_modelViewMatrix.setToIdentity();
+                m_current_model_view_matrix.setToIdentity();
             updates |= QSGMaterialShader::RenderState::DirtyMatrix;
         }
 
-        bool changeOpacity = m_render_opacity != geomNode->inheritedOpacity();
+        bool changeOpacity = m_current_opacity != geomNode->inheritedOpacity();
         if (changeOpacity) {
             updates |= QSGMaterialShader::RenderState::DirtyOpacity;
-            m_render_opacity = geomNode->inheritedOpacity();
+            m_current_opacity = geomNode->inheritedOpacity();
         }
-
 
         Q_ASSERT(geomNode->activeMaterial());
 
@@ -475,7 +472,7 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
 #ifdef FORCE_NO_REORDER
             glDepthMask(false);
 #else
-            glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_render_opacity == 1);
+            glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_current_opacity == 1);
 #endif
             //++clipChangeCount;
         }
@@ -497,10 +494,9 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         bool changeRenderOrder = currentRenderOrder != geomNode->renderOrder();
         if (changeRenderOrder) {
             currentRenderOrder = geomNode->renderOrder();
-            m_renderOrderMatrix(2, 3) = currentRenderOrder * scale;
-            m_projectionMatrix.pop();
-            m_projectionMatrix.push();
-            m_projectionMatrix *= m_renderOrderMatrix;
+            m_current_projection_matrix.setColumn(3, projectionMatrix().column(3)
+                                                  + currentRenderOrder
+                                                  * m_current_projection_matrix.column(2));
             updates |= QSGMaterialShader::RenderState::DirtyMatrix;
         }
 

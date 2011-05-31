@@ -43,7 +43,6 @@
 #define NODEUPDATER_P_H
 
 #include "qsgnode.h"
-#include "qsgmatrix4x4stack.h"
 #include <QtGui/private/qdatabuffer_p.h>
 
 QT_BEGIN_NAMESPACE

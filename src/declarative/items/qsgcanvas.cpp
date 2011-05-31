@@ -343,7 +343,7 @@ void QSGCanvasPrivate::renderSceneGraph(const QSize &size)
 {
     context->renderer()->setDeviceRect(QRect(QPoint(0, 0), size));
     context->renderer()->setViewportRect(QRect(QPoint(0, 0), size));
-    context->renderer()->setProjectMatrixToDeviceRect();
+    context->renderer()->setProjectionMatrixToDeviceRect();
 
     context->renderNextFrame();
 
