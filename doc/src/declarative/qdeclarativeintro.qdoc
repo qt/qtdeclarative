@@ -236,8 +236,8 @@ properties are modified:
 Rectangle {
     width: 100; height: 100
 
-    onWidthChanged: console.log("Width has changed to:", width)
-    onColorChanged: console.log("Color has changed to:", color)
+    onWidthChanged: console.log("Width has changed to: " + width)
+    onColorChanged: console.log("Color has changed to: " + color)
 }
 \endqml
 
