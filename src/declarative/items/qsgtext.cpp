@@ -290,6 +290,8 @@ void QSGTextPrivate::updateSize()
     int dy = q->height();
     QSize size(0, 0);
 
+    layoutThread = QThread::currentThread();
+
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
         QRect textRect = setupTextLayout();
@@ -377,8 +379,6 @@ QRect QSGTextPrivate::setupTextLayout()
 
     bool elideText = false;
     bool truncate = false;
-
-    layoutThread = QThread::currentThread();
 
     QFontMetrics fm(layout.font());
     elidePos = QPointF();
@@ -1063,6 +1063,11 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
     Q_D(QSGText);
+
+    if (d->text.isEmpty()) {
+        delete oldNode;
+        return 0;
+    }
 
     bool richTextAsImage = false;
     if (d->richText) {
