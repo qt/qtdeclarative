@@ -1655,7 +1655,6 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         QList<QSGItem *> orderedChildren = itemPriv->paintOrderChildItems();
         int ii = 0;
 
-        itemPriv->paintNodeIndex = 0;
         for (; ii < orderedChildren.count() && orderedChildren.at(ii)->z() < 0; ++ii) {
             QSGItemPrivate *childPrivate = QSGItemPrivate::get(orderedChildren.at(ii));
             if (!childPrivate->explicitVisible && !childPrivate->effectRefCount)
@@ -1664,8 +1663,8 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
                 childPrivate->itemNode()->parent()->removeChildNode(childPrivate->itemNode());
 
             itemPriv->childContainerNode()->appendChildNode(childPrivate->itemNode());
-            itemPriv->paintNodeIndex++;
         }
+        itemPriv->beforePaintNode = itemPriv->groupNode ? itemPriv->groupNode->lastChild() : 0;
 
         if (itemPriv->paintNode)
             itemPriv->childContainerNode()->appendChildNode(itemPriv->paintNode);
@@ -1721,10 +1720,10 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
             if (itemPriv->paintNode && itemPriv->paintNode->parent() == 0) {
-                if (itemPriv->childContainerNode()->childCount() == itemPriv->paintNodeIndex)
-                    itemPriv->childContainerNode()->appendChildNode(itemPriv->paintNode);
-                else 
-                    itemPriv->childContainerNode()->insertChildNodeBefore(itemPriv->paintNode, itemPriv->childContainerNode()->childAtIndex(itemPriv->paintNodeIndex));
+                if (itemPriv->beforePaintNode)
+                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, itemPriv->beforePaintNode);
+                else
+                    itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
             }
         } else if (itemPriv->paintNode) {
             delete itemPriv->paintNode;
@@ -1760,8 +1759,8 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
             Q_ASSERT(parent == itemPriv->groupNode || parent->childCount() == 1);
             Q_ASSERT(child->parent() == parent);
             bool containsChild = false;
-            for (int i = 0; i < parent->childCount(); ++i)
-                containsChild |= (parent->childAtIndex(i) == child);
+            for (QSGNode *n = parent->firstChild(); n; n = n->nextSibling())
+                containsChild |= (n == child);
             Q_ASSERT(containsChild);
         }
         ip = ic;

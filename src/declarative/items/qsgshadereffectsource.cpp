@@ -214,8 +214,8 @@ void QSGShaderEffectTexture::grab()
         return;
     }
     QSGNode *root = m_item;
-    while (root->childCount() && root->type() != QSGNode::RootNodeType)
-        root = root->childAtIndex(0);
+    while (root->firstChild() && root->type() != QSGNode::RootNodeType)
+        root = root->firstChild();
     if (root->type() != QSGNode::RootNodeType)
         return;
 

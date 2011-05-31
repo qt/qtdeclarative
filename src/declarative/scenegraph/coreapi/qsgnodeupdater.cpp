@@ -222,9 +222,8 @@ void QSGNodeUpdater::leaveOpacityNode(QSGOpacityNode *o)
 
 void QSGNodeUpdater::visitChildren(QSGNode *n)
 {
-    int count = n->childCount();
-    for (int i = 0; i < count; ++i)
-        visitNode(n->childAtIndex(i));
+    for (QSGNode *c = n->firstChild(); c; c = c->nextSibling())
+        visitNode(c);
 }
 
 void QSGNodeUpdater::visitNode(QSGNode *n)

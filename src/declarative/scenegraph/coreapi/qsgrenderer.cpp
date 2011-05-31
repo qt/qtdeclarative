@@ -331,16 +331,16 @@ void QSGRenderer::preprocess()
 
 void QSGRenderer::addNodesToPreprocess(QSGNode *node)
 {
-    for (int i = 0; i < node->childCount(); ++i)
-        addNodesToPreprocess(node->childAtIndex(i));
+    for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
+        addNodesToPreprocess(c);
     if (node->flags() & QSGNode::UsePreprocess)
         m_nodes_to_preprocess.insert(node);
 }
 
 void QSGRenderer::removeNodesToPreprocess(QSGNode *node)
 {
-    for (int i = 0; i < node->childCount(); ++i)
-        removeNodesToPreprocess(node->childAtIndex(i));
+    for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
+        removeNodesToPreprocess(c);
     if (node->flags() & QSGNode::UsePreprocess)
         m_nodes_to_preprocess.remove(node);
 }

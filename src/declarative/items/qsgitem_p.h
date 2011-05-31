@@ -387,7 +387,7 @@ public:
     QSGRootNode *rootNode;
     QSGNode *groupNode;
     QSGNode *paintNode;
-    int paintNodeIndex;
+    QSGNode *beforePaintNode;
 
     virtual QSGTransformNode *createTransformNode();
 

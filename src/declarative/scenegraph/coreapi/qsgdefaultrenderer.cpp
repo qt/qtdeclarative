@@ -371,8 +371,7 @@ void QMLRenderer::buildLists(QSGNode *node)
         }
     }
 
-    int count = node->childCount();
-    if (!count)
+    if (!node->firstChild())
         return;
 
 #ifdef FORCE_NO_REORDER
@@ -381,14 +380,16 @@ void QMLRenderer::buildLists(QSGNode *node)
     static bool reorder = !qApp->arguments().contains(QLatin1String("--no-reorder"));
 #endif
 
-    if (reorder && count > 1 && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
-        QVarLengthArray<int, 16> beginIndices(count);
-        QVarLengthArray<int, 16> endIndices(count);
+    if (reorder && node->firstChild() != node->lastChild() && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
+        QVarLengthArray<int, 16> beginIndices;
+        QVarLengthArray<int, 16> endIndices;
         int baseCount = m_transparentNodes.size();
-        for (int i = 0; i < count; ++i) {
-            beginIndices[i] = m_transparentNodes.size();
-            buildLists(node->childAtIndex(i));
-            endIndices[i] = m_transparentNodes.size();
+        int count = 0;
+        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling()) {
+            beginIndices.append(m_transparentNodes.size());
+            buildLists(c);
+            endIndices.append(m_transparentNodes.size());
+            ++count;
         }
 
         int childNodeCount = m_transparentNodes.size() - baseCount;
@@ -414,8 +415,8 @@ void QMLRenderer::buildLists(QSGNode *node)
             qMemCopy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
         }
     } else {
-        for (int i = 0; i < count; ++i)
-            buildLists(node->childAtIndex(i));
+        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
+            buildLists(c);
     }
 }
 
