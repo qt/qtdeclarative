@@ -103,7 +103,7 @@ private:
 
 class QSGVisualItemModelAttached;
 class QSGVisualItemModelPrivate;
-class Q_AUTOTEST_EXPORT QSGVisualItemModel : public QSGVisualModel
+class Q_DECLARATIVE_EXPORT QSGVisualItemModel : public QSGVisualModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGVisualItemModel)
@@ -138,7 +138,7 @@ private:
 };
 
 
-class Q_AUTOTEST_EXPORT QSGVisualDataModel : public QSGVisualModel
+class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGVisualDataModel)
