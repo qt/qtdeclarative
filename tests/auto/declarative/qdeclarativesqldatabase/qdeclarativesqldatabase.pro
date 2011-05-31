@@ -1,6 +1,6 @@
 load(qttest_p4)
 contains(QT_CONFIG,declarative): QT += declarative
-QT += sql script webkit
+QT += sql script 
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativesqldatabase.cpp
@@ -15,3 +15,4 @@ symbian: {
 
 CONFIG += parallel_test
 
+QT += core-private gui-private declarative-private script-private

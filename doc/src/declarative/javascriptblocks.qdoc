@@ -168,6 +168,44 @@ Notice that calling \l {QML:Qt::include()}{Qt.include()} imports all functions f
 \c factorial.js into the \c MyScript namespace, which means the QML component can also
 access \c factorial() directly as \c MyScript.factorial().
 
+In QtQuick 2.0, support has been added to allow JavaScript files to import other
+JavaScript files and also QML modules using a variation of the standard QML import
+syntax (where all of the previously described rules and qualifications apply).
+
+A JavaScript file may import another in the following fashion:
+\code
+.import "filename.js" as UniqueQualifier
+\endcode
+For example:
+\code
+.import "factorial.js" as MathFunctions
+\endcode
+
+A JavaScript file may import a QML module in the following fashion:
+\code
+.import Module.Name MajorVersion.MinorVersion as UniqueQualifier
+\endcode
+For example:
+\code
+.import Qt.test 1.0 as JsQtTest
+\endcode
+In particular, this may be useful in order to access functionality provided
+via a module API; see qmlRegisterModuleApi() for more information.
+
+Due to the ability of a JavaScript file to import another script or QML module in
+this fashion in QtQuick 2.0, some extra semantics are defined:
+\list
+\o a script with imports will not inherit imports from the QML file which imported it (so accessing Component.error will fail, for example)
+\o a script without imports will inherit imports from the QML file which imported it (so accessing Component.error will succeed, for example)
+\o a shared script (i.e., defined as .pragma library) does not inherit imports from any QML file even if it imports no other scripts
+\endlist
+
+The first semantic is conceptually correct, given that a particular script
+might be imported by any number of QML files.  The second semantic is retained
+for the purposes of backwards-compatibility.  The third semantic remains
+unchanged from the current semantics for shared scripts, but is clarified here
+in respect to the newly possible case (where the script imports other scripts
+or modules).
 
 \section1 Running JavaScript at Startup
 
@@ -320,5 +358,196 @@ Item {
 \endqml
 
 \endlist
+
+\section1 Scarce Resources in JavaScript
+
+As described in the documentation for \l{QML Basic Types}, a \c variant type
+property may hold a "scarce resource" (image or pixmap).  There are several
+important semantics of scarce resources which should be noted:
+
+\list
+\o By default, a scarce resource is automatically released by the declarative engine as soon as evaluation of the expression in which the scarce resource is allocated is complete if there are no other references to the resource
+\o A client may explicitly preserve a scarce resource, which will ensure that the resource will not be released until all references to the resource are released and the JavaScript engine runs its garbage collector
+\o A client may explicitly destroy a scarce resource, which will immediately release the resource
+\endlist
+
+In most cases, allowing the engine to automatically release the resource is
+the correct choice.  In some cases, however, this may result in an invalid
+variant being returned from a function in JavaScript, and in those cases it
+may be necessary for clients to manually preserve or destroy resources for
+themselves.
+
+For the following examples, imagine that we have defined the following class:
+\code
+class AvatarExample : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QPixmap avatar READ avatar WRITE setAvatar NOTIFY avatarChanged)
+public:
+    AvatarExample(QObject *parent = 0) : QObject(parent), m_value(100, 100) { m_value.fill(Qt::blue); }
+    ~AvatarExample() {}
+
+    QPixmap avatar() const { return m_value; }
+    void setAvatar(QPixmap v) { m_value = v; emit avatarChanged(); }
+
+signals:
+    void avatarChanged();
+
+private:
+    QPixmap m_value;
+};
+\endcode
+
+and that we have registered it with the QML type-system as follows:
+\code
+qmlRegisterType<AvatarExample>("Qt.example", 1, 0, "AvatarExample");
+\endcode
+
+The AvatarExample class has a property which is a pixmap.  When the property
+is accessed in JavaScript scope, a copy of the resource will be created and
+stored in a JavaScript object which can then be used within JavaScript.  This
+copy will take up valuable system resources, and so by default the scarce
+resource copy in the JavaScript object will be released automatically by the
+declarative engine once evaluation of the JavaScript expression is complete,
+unless the client explicitly preserves it.
+
+\section2 Example One: Automatic Release
+
+In this example, the resource will be automatically
+released after the binding expression evaluation is
+complete.
+
+\qml
+// exampleOne.qml
+import QtQuick 1.0
+import Qt.example 1.0
+
+QtObject {
+    property AvatarExample a;
+    a: AvatarExample { id: example }
+    property variant avatar: example.avatar
+}
+\endqml
+
+\code
+QDeclarativeComponent component(&engine, "exampleOne.qml");
+QObject *object = component.create();
+// The scarce resource will have been released automatically
+// after the binding expression was evaluated.
+// Since the scarce resource was not released explicitly prior
+// to the binding expression being evaluated, we get the
+// expected result:
+//object->property("scarceResourceCopy").isValid() == true
+delete object;
+\endcode
+
+\section2 Example Two: Explicit Preservation
+
+In this example, the resource must be explicitly preserved in order
+to prevent the declarative engine from automatically releasing the
+resource after evaluation of the imported script.
+
+\code
+// exampleTwo.js
+.import Qt.example 1.0 as QtExample
+
+var component = Qt.createComponent("exampleOne.qml");
+var exampleOneElement = component.createObject(null);
+var avatarExample = exampleOneElement.a;
+var retn = avatarExample.avatar;
+
+// without the following call, the scarce resource held
+// by retn would be automatically released by the engine
+// after the import statement in exampleTwo.qml, prior
+// to the variable assignment.
+retn.preserve();
+
+function importAvatar() {
+    return retn;
+}
+\endcode
+
+\qml
+// exampleTwo.qml
+import QtQuick 1.0
+import Qt.example 1.0
+import "exampleTwo.js" as ExampleTwoJs
+
+QtObject {
+    property variant avatar: ExampleTwoJs.importAvatar()
+}
+\endqml
+
+\code
+QDeclarativeComponent component(&engine, "exampleTwo.qml");
+QObject *object = component.create();
+// The resource was preserved explicitly during evaluation of the
+// JavaScript expression.  Thus, during property assignment, the
+// scarce resource was still valid, and so we get the expected result:
+//object->property("avatar").isValid() == true
+// The scarce resource may not have been cleaned up by the JS GC yet;
+// it will continue to consume system resources until the JS GC runs.
+delete object;
+\endcode
+
+\section2 Example Three: Explicit Destruction
+
+In the following example, we release (via destroy()) an explicitly preserved
+scarce resource variant.  This example shows how a client may free system
+resources by releasing the scarce resource held in a JavaScript object, if
+required, during evaluation of a JavaScript expression.
+
+\code
+// exampleThree.js
+.import Qt.example 1.0 as QtExample
+
+var component = Qt.createComponent("exampleOne.qml");
+var exampleOneElement = component.createObject(null);
+var avatarExample = exampleOneElement.a;
+var retn = avatarExample.avatar;
+retn.preserve();
+
+function importAvatar() {
+    return retn;
+}
+
+function releaseAvatar() {
+    retn.destroy();
+}
+\endcode
+
+\qml
+// exampleThree.qml
+import QtQuick 1.0
+import Qt.example 1.0
+import "exampleThree.js" as ExampleThreeJs
+
+QtObject {
+    property variant avatarOne
+    property variant avatarTwo
+
+    Component.onCompleted: {
+        avatarOne = ExampleThreeJs.importAvatar(); // valid at this stage
+        ExampleThreeJs.releaseAvatar();            // explicit release
+        avatarTwo = ExampleThreeJs.importAvatar(); // invalid at this stage
+    }
+}
+\endqml
+
+\code
+QDeclarativeComponent component(&engine, "exampleThree.qml");
+QObject *object = component.create();
+// The scarce resource was explicitly preserved by the client during
+// the evaluation of the imported script, and so the scarce resource
+// remains valid until the explicit call to releaseAvatar().  As such,
+// we get the expected results:
+//object->property("avatarOne").isValid() == true
+//object->property("avatarTwo").isValid() == false
+// Because the scarce resource was released explicitly, it will no longer
+// be consuming any system resources (beyond what a normal JS Object would;
+// that small overhead will exist until the JS GC runs, as per any other
+// JavaScript object).
+delete object;
+\endcode
 
 */

@@ -57,8 +57,9 @@
 #include "private/qdeclarativevmemetaobject_p.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecompiledbindings_p.h"
+#include "private/qdeclarativev4bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
+#include "private/qdeclarativeglobalscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
 
 #include <QStack>
@@ -71,6 +72,7 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdatetime.h>
+#include <QtScript/qscriptvalue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -78,11 +80,11 @@ QDeclarativeVME::QDeclarativeVME()
 {
 }
 
-#define VME_EXCEPTION(desc) \
+#define VME_EXCEPTION(desc, line) \
     { \
         QDeclarativeError error; \
         error.setDescription(desc.trimmed()); \
-        error.setLine(instr.line); \
+        error.setLine(line); \
         error.setUrl(comp->url); \
         vmeErrors << error; \
         break; \
@@ -100,14 +102,13 @@ struct ListInstance
 };
 
 QObject *QDeclarativeVME::run(QDeclarativeContextData *ctxt, QDeclarativeCompiledData *comp, 
-                              int start, int count, const QBitField &bindingSkipList)
+                              int start, const QBitField &bindingSkipList)
 {
     QDeclarativeVMEStack<QObject *> stack;
 
     if (start == -1) start = 0;
-    if (count == -1) count = comp->bytecode.count();
 
-    return run(stack, ctxt, comp, start, count, bindingSkipList);
+    return run(stack, ctxt, comp, start, bindingSkipList);
 }
 
 void QDeclarativeVME::runDeferred(QObject *object)
@@ -119,12 +120,11 @@ void QDeclarativeVME::runDeferred(QObject *object)
 
     QDeclarativeContextData *ctxt = data->context;
     QDeclarativeCompiledData *comp = data->deferredComponent;
-    int start = data->deferredIdx + 1;
-    int count = data->deferredComponent->bytecode.at(data->deferredIdx).defer.deferCount;
+    int start = data->deferredIdx;
     QDeclarativeVMEStack<QObject *> stack;
     stack.push(object);
 
-    run(stack, ctxt, comp, start, count, QBitField());
+    run(stack, ctxt, comp, start, QBitField());
 }
 
 inline bool fastHasBinding(QObject *o, int index) 
@@ -141,24 +141,28 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
+#define QML_BEGIN_INSTR(I) \
+    case QDeclarativeInstruction::I: { \
+        const QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::DataType &instr = QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::data(genericInstr); \
+        instructionStream += QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::Size; \
+        Q_UNUSED(instr); 
+
+#define QML_END_INSTR(I) } break;
+
 #define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
 
 QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack, 
                               QDeclarativeContextData *ctxt, 
                               QDeclarativeCompiledData *comp, 
-                              int start, int count, 
-                              const QBitField &bindingSkipList)
+                              int start, const QBitField &bindingSkipList)
 {
     Q_ASSERT(comp);
     Q_ASSERT(ctxt);
     const QList<QDeclarativeCompiledData::TypeReference> &types = comp->types;
     const QList<QString> &primitives = comp->primitives;
     const QList<QByteArray> &datas = comp->datas;
-    const QList<QDeclarativeCompiledData::CustomTypeData> &customTypeData = comp->customTypeData;
-    const QList<int> &intData = comp->intData;
-    const QList<float> &floatData = comp->floatData;
     const QList<QDeclarativePropertyCache *> &propertyCaches = comp->propertyCaches;
-    const QList<QDeclarativeParser::Object::ScriptBlock> &scripts = comp->scripts;
+    const QList<QDeclarativeScriptData *> &scripts = comp->scripts;
     const QList<QUrl> &urls = comp->urls;
 
     QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding> bindValues;
@@ -173,821 +177,725 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
     QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::BypassInterceptor |
                                                     QDeclarativePropertyPrivate::RemoveBindingOnAliasWrite;
 
-    for (int ii = start; !isError() && ii < (start + count); ++ii) {
-        const QDeclarativeInstruction &instr = comp->bytecode.at(ii);
+    const char *instructionStream = comp->bytecode.constData() + start;
 
-        switch(instr.type) {
-        case QDeclarativeInstruction::Init:
-            {
-                if (instr.init.bindingsSize) 
-                    bindValues = QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding>(instr.init.bindingsSize);
-                if (instr.init.parserStatusSize)
-                    parserStatus = QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus>(instr.init.parserStatusSize);
-                if (instr.init.contextCache != -1) 
-                    ctxt->setIdPropertyData(comp->contextCaches.at(instr.init.contextCache));
-                if (instr.init.compiledBinding != -1) 
-                    ctxt->optimizedBindings = new QDeclarativeCompiledBindings(datas.at(instr.init.compiledBinding).constData(), ctxt);
+    bool done = false;
+    while (!isError() && !done) {
+        const QDeclarativeInstruction &genericInstr = *((QDeclarativeInstruction *)instructionStream);
+
+        switch(genericInstr.type()) {
+        QML_BEGIN_INSTR(Init)
+            if (instr.bindingsSize) 
+                bindValues = QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding>(instr.bindingsSize);
+            if (instr.parserStatusSize)
+                parserStatus = QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus>(instr.parserStatusSize);
+            if (instr.contextCache != -1) 
+                ctxt->setIdPropertyData(comp->contextCaches.at(instr.contextCache));
+            if (instr.compiledBinding != -1) 
+                    ctxt->optimizedBindings = new QDeclarativeV4Bindings(datas.at(instr.compiledBinding).constData(), ctxt);
+        QML_END_INSTR(Init)
+
+        QML_BEGIN_INSTR(Done)
+            done = true;
+        QML_END_INSTR(Done)
+
+        QML_BEGIN_INSTR(CreateObject)
+            QBitField bindings;
+            if (instr.bindingBits != -1) {
+                const QByteArray &bits = datas.at(instr.bindingBits);
+                bindings = QBitField((const quint32*)bits.constData(),
+                                     bits.size() * 8);
             }
-            break;
+            if (stack.isEmpty())
+                bindings = bindings.united(bindingSkipList);
 
-        case QDeclarativeInstruction::CreateObject:
-            {
-                QBitField bindings;
-                if (instr.create.bindingBits != -1) {
-                    const QByteArray &bits = datas.at(instr.create.bindingBits);
-                    bindings = QBitField((const quint32*)bits.constData(),
-                                         bits.size() * 8);
-                }
-                if (stack.isEmpty())
-                    bindings = bindings.united(bindingSkipList);
+            QObject *o = 
+                types.at(instr.type).createInstance(ctxt, bindings, &vmeErrors);
 
-                QObject *o = 
-                    types.at(instr.create.type).createInstance(ctxt, bindings, &vmeErrors);
+            if (!o) {
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(QString::fromLatin1(types.at(instr.type).className)), instr.line);
+            }
 
-                if (!o) {
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(QString::fromLatin1(types.at(instr.create.type).className)));
-                }
+            QDeclarativeData *ddata = QDeclarativeData::get(o);
+            Q_ASSERT(ddata);
 
-                QDeclarativeData *ddata = QDeclarativeData::get(o);
-                Q_ASSERT(ddata);
-
-                if (stack.isEmpty()) {
-                    if (ddata->context) {
-                        Q_ASSERT(ddata->context != ctxt);
-                        Q_ASSERT(ddata->outerContext);
-                        Q_ASSERT(ddata->outerContext != ctxt);
-                        QDeclarativeContextData *c = ddata->context;
-                        while (c->linkedContext) c = c->linkedContext;
-                        c->linkedContext = ctxt;
-                    } else {
-                        ctxt->addObject(o);
-                    }
-
-                    ddata->ownContext = true;
-                } else if (!ddata->context) {
+            if (stack.isEmpty()) {
+                if (ddata->context) {
+                    Q_ASSERT(ddata->context != ctxt);
+                    Q_ASSERT(ddata->outerContext);
+                    Q_ASSERT(ddata->outerContext != ctxt);
+                    QDeclarativeContextData *c = ddata->context;
+                    while (c->linkedContext) c = c->linkedContext;
+                    c->linkedContext = ctxt;
+                } else {
                     ctxt->addObject(o);
                 }
 
-                ddata->setImplicitDestructible();
-                ddata->outerContext = ctxt;
-                ddata->lineNumber = instr.line;
-                ddata->columnNumber = instr.create.column;
+                ddata->ownContext = true;
+            } else if (!ddata->context) {
+                ctxt->addObject(o);
+            }
 
-                if (instr.create.data != -1) {
-                    QDeclarativeCustomParser *customParser =
-                        types.at(instr.create.type).type->customParser();
-                    customParser->setCustomData(o, datas.at(instr.create.data));
-                }
-                if (!stack.isEmpty()) {
-                    QObject *parent = stack.top();
-                    if (o->isWidgetType()) { 
-                        QWidget *widget = static_cast<QWidget*>(o); 
-                        if (parent->isWidgetType()) { 
-                            QWidget *parentWidget = static_cast<QWidget*>(parent); 
-                            widget->setParent(parentWidget); 
-                        } else { 
-                            // TODO: parent might be a layout 
-                        } 
+            ddata->setImplicitDestructible();
+            ddata->outerContext = ctxt;
+            ddata->lineNumber = instr.line;
+            ddata->columnNumber = instr.column;
+
+            if (instr.data != -1) {
+                QDeclarativeCustomParser *customParser =
+                    types.at(instr.type).type->customParser();
+                customParser->setCustomData(o, datas.at(instr.data));
+            }
+            if (!stack.isEmpty()) {
+                QObject *parent = stack.top();
+                if (o->isWidgetType()) { 
+                    QWidget *widget = static_cast<QWidget*>(o); 
+                    if (parent->isWidgetType()) { 
+                        QWidget *parentWidget = static_cast<QWidget*>(parent); 
+                        widget->setParent(parentWidget); 
                     } else { 
-			    QDeclarative_setParent_noEvent(o, parent);
+                        // TODO: parent might be a layout 
                     } 
-                }
-                stack.push(o);
-            }
-            break;
-
-        case QDeclarativeInstruction::CreateSimpleObject:
-            {
-                QObject *o = (QObject *)operator new(instr.createSimple.typeSize + 
-                                                     sizeof(QDeclarativeData));   
-                ::memset(o, 0, instr.createSimple.typeSize + sizeof(QDeclarativeData));
-                instr.createSimple.create(o);
-
-                QDeclarativeData *ddata = (QDeclarativeData *)(((const char *)o) + instr.createSimple.typeSize);
-                const QDeclarativeCompiledData::TypeReference &ref = types.at(instr.createSimple.type);
-                if (!ddata->propertyCache && ref.typePropertyCache) {
-                    ddata->propertyCache = ref.typePropertyCache;
-                    ddata->propertyCache->addref();
-                }
-                ddata->lineNumber = instr.line;
-                ddata->columnNumber = instr.createSimple.column;
-
-                QObjectPrivate::get(o)->declarativeData = ddata;                                                      
-                ddata->context = ddata->outerContext = ctxt;
-                ddata->nextContextObject = ctxt->contextObjects; 
-                if (ddata->nextContextObject) 
-                    ddata->nextContextObject->prevContextObject = &ddata->nextContextObject; 
-                ddata->prevContextObject = &ctxt->contextObjects; 
-                ctxt->contextObjects = ddata; 
-
-                QObject *parent = stack.top();                                                                    
-                QDeclarative_setParent_noEvent(o, parent);                                                        
-
-                stack.push(o);
-            }
-            break;
-
-        case QDeclarativeInstruction::SetId:
-            {
-                QObject *target = stack.top();
-                ctxt->setIdProperty(instr.setId.index, target);
-            }
-            break;
-
-
-        case QDeclarativeInstruction::SetDefault:
-            {
-                ctxt->contextObject = stack.top();
-            }
-            break;
-
-        case QDeclarativeInstruction::CreateComponent:
-            {
-                QDeclarativeComponent *qcomp = 
-                    new QDeclarativeComponent(ctxt->engine, comp, ii + 1, instr.createComponent.count,
-                                              stack.isEmpty() ? 0 : stack.top());
-
-                QDeclarativeData *ddata = QDeclarativeData::get(qcomp, true);
-                Q_ASSERT(ddata);
-
-                ctxt->addObject(qcomp);
-
-                if (stack.isEmpty()) 
-                    ddata->ownContext = true;
-
-                ddata->setImplicitDestructible();
-                ddata->outerContext = ctxt;
-                ddata->lineNumber = instr.line;
-                ddata->columnNumber = instr.create.column;
-
-                QDeclarativeComponentPrivate::get(qcomp)->creationContext = ctxt;
-
-                stack.push(qcomp);
-                ii += instr.createComponent.count;
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreMetaObject:
-            {
-                QObject *target = stack.top();
-
-                QMetaObject mo;
-                const QByteArray &metadata = datas.at(instr.storeMeta.data);
-                QMetaObjectBuilder::fromRelocatableData(&mo, 0, metadata);
-
-                const QDeclarativeVMEMetaData *data = 
-                    (const QDeclarativeVMEMetaData *)datas.at(instr.storeMeta.aliasData).constData();
-
-                (void)new QDeclarativeVMEMetaObject(target, &mo, data, comp);
-
-                if (instr.storeMeta.propertyCache != -1) {
-                    QDeclarativeData *ddata = QDeclarativeData::get(target, true);
-                    if (ddata->propertyCache) ddata->propertyCache->release();
-                    ddata->propertyCache = propertyCaches.at(instr.storeMeta.propertyCache);
-                    ddata->propertyCache->addref();
-                }
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVariant:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeString.propertyIndex);
-
-                // XXX - can be more efficient
-                QVariant v = QDeclarativeStringConverters::variantFromString(primitives.at(instr.storeString.value));
-                void *a[] = { &v, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVariantInteger:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeString.propertyIndex);
-
-                QVariant v(instr.storeInteger.value);
-                void *a[] = { &v, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVariantDouble:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeString.propertyIndex);
-
-                QVariant v(instr.storeDouble.value);
-                void *a[] = { &v, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVariantBool:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeString.propertyIndex);
-
-                QVariant v(instr.storeBool.value);
-                void *a[] = { &v, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreString:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeString.propertyIndex);
-
-                void *a[] = { (void *)&primitives.at(instr.storeString.value), 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreUrl:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeUrl.propertyIndex);
-
-                void *a[] = { (void *)&urls.at(instr.storeUrl.value), 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeUrl.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreFloat:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeFloat.propertyIndex);
-
-                float f = instr.storeFloat.value;
-                void *a[] = { &f, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                      instr.storeFloat.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreDouble:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeDouble.propertyIndex);
-
-                double d = instr.storeDouble.value;
-                void *a[] = { &d, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                      instr.storeDouble.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreBool:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeBool.propertyIndex);
-
-                void *a[] = { (void *)&instr.storeBool.value, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeBool.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreInteger:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeInteger.propertyIndex);
-
-                void *a[] = { (void *)&instr.storeInteger.value, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeInteger.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreColor:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeColor.propertyIndex);
-
-                QColor c = QColor::fromRgba(instr.storeColor.value);
-                void *a[] = { &c, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeColor.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreDate:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeDate.propertyIndex);
-
-                QDate d = QDate::fromJulianDay(instr.storeDate.value);
-                void *a[] = { &d, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeDate.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreTime:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeTime.propertyIndex);
-
-                QTime t;
-                t.setHMS(intData.at(instr.storeTime.valueIndex),
-                         intData.at(instr.storeTime.valueIndex+1),
-                         intData.at(instr.storeTime.valueIndex+2),
-                         intData.at(instr.storeTime.valueIndex+3));
-                void *a[] = { &t, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeTime.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreDateTime:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeDateTime.propertyIndex);
-
-                QTime t;
-                t.setHMS(intData.at(instr.storeDateTime.valueIndex+1),
-                         intData.at(instr.storeDateTime.valueIndex+2),
-                         intData.at(instr.storeDateTime.valueIndex+3),
-                         intData.at(instr.storeDateTime.valueIndex+4));
-                QDateTime dt(QDate::fromJulianDay(intData.at(instr.storeDateTime.valueIndex)), t);
-                void *a[] = { &dt, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty,
-                                      instr.storeDateTime.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StorePoint:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRealPair.propertyIndex);
-
-                QPoint p = QPointF(floatData.at(instr.storeRealPair.valueIndex),
-                                   floatData.at(instr.storeRealPair.valueIndex+1)).toPoint();
-                void *a[] = { &p, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRealPair.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StorePointF:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRealPair.propertyIndex);
-
-                QPointF p(floatData.at(instr.storeRealPair.valueIndex),
-                          floatData.at(instr.storeRealPair.valueIndex+1));
-                void *a[] = { &p, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRealPair.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreSize:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRealPair.propertyIndex);
-
-                QSize p = QSizeF(floatData.at(instr.storeRealPair.valueIndex),
-                                 floatData.at(instr.storeRealPair.valueIndex+1)).toSize();
-                void *a[] = { &p, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRealPair.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreSizeF:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRealPair.propertyIndex);
-
-                QSizeF s(floatData.at(instr.storeRealPair.valueIndex),
-                         floatData.at(instr.storeRealPair.valueIndex+1));
-                void *a[] = { &s, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRealPair.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreRect:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRect.propertyIndex);
-
-                QRect r = QRectF(floatData.at(instr.storeRect.valueIndex),
-                                 floatData.at(instr.storeRect.valueIndex+1),
-                                 floatData.at(instr.storeRect.valueIndex+2),
-                                 floatData.at(instr.storeRect.valueIndex+3)).toRect();
-                void *a[] = { &r, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRect.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreRectF:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeRect.propertyIndex);
-
-                QRectF r(floatData.at(instr.storeRect.valueIndex),
-                         floatData.at(instr.storeRect.valueIndex+1),
-                         floatData.at(instr.storeRect.valueIndex+2),
-                         floatData.at(instr.storeRect.valueIndex+3));
-                void *a[] = { &r, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeRect.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVector3D:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeVector3D.propertyIndex);
-
-                QVector3D p(floatData.at(instr.storeVector3D.valueIndex),
-                            floatData.at(instr.storeVector3D.valueIndex+1),
-                            floatData.at(instr.storeVector3D.valueIndex+2));
-                void *a[] = { &p, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeVector3D.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreObject:
-            {
-                QObject *assignObj = stack.pop();
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeObject.propertyIndex);
-
-                void *a[] = { (void *)&assignObj, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeObject.propertyIndex, a);
-            }
-            break;
-
-
-        case QDeclarativeInstruction::AssignCustomType:
-            {
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.assignCustomType.propertyIndex);
-
-                QDeclarativeCompiledData::CustomTypeData data = customTypeData.at(instr.assignCustomType.valueIndex);
-                const QString &primitive = primitives.at(data.index);
-                QDeclarativeMetaType::StringConverter converter = 
-                    QDeclarativeMetaType::customStringConverter(data.type);
-                QVariant v = (*converter)(primitive);
-
-                QMetaProperty prop = 
-                        target->metaObject()->property(instr.assignCustomType.propertyIndex);
-                if (v.isNull() || ((int)prop.type() != data.type && prop.userType() != data.type)) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())));
-
-                void *a[] = { (void *)v.data(), 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.assignCustomType.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::AssignSignalObject:
-            {
-                // XXX optimize
-
-                QObject *assign = stack.pop();
-                QObject *target = stack.top();
-                int sigIdx = instr.assignSignalObject.signal;
-                const QByteArray &pr = datas.at(sigIdx);
-
-                QDeclarativeProperty prop(target, QString::fromUtf8(pr));
-                if (prop.type() & QDeclarativeProperty::SignalProperty) {
-
-                    QMetaMethod method = QDeclarativeMetaType::defaultMethod(assign);
-                    if (method.signature() == 0)
-                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())));
-
-                    if (!QMetaObject::checkConnectArgs(prop.method().signature(), method.signature()))
-                        VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot connect mismatched signal/slot %1 %vs. %2").arg(QString::fromLatin1(method.signature())).arg(QString::fromLatin1(prop.method().signature())));
-
-                    QDeclarativePropertyPrivate::connect(target, prop.index(), assign, method.methodIndex());
-
-                } else {
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(QString::fromUtf8(pr)));
-                }
-
-
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreSignal:
-            {
-                QObject *target = stack.top();
-                QObject *context = stack.at(stack.count() - 1 - instr.storeSignal.context);
-
-                QMetaMethod signal = target->metaObject()->method(instr.storeSignal.signalIndex);
-
-                QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
-                QDeclarativeExpression *expr = 
-                    new QDeclarativeExpression(ctxt, context, primitives.at(instr.storeSignal.value));
-                expr->setSourceLocation(comp->name, instr.line);
-                static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr))->name = datas.at(instr.storeSignal.name);
-                bs->setExpression(expr);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreImportedScript:
-            {
-                ctxt->addImportedScript(scripts.at(instr.storeScript.value));
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreScriptString:
-            {
-                QObject *target = stack.top();
-                QObject *scope = stack.at(stack.count() - 1 - instr.storeScriptString.scope);
-                QDeclarativeScriptString ss;
-                ss.setContext(ctxt->asQDeclarativeContext());
-                ss.setScopeObject(scope);
-                ss.setScript(primitives.at(instr.storeScriptString.value));
-
-                void *a[] = { &ss, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeScriptString.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::BeginObject:
-            {
-                QObject *target = stack.top();
-                QDeclarativeParserStatus *status = reinterpret_cast<QDeclarativeParserStatus *>(reinterpret_cast<char *>(target) + instr.begin.castValue);
-                parserStatus.append(status);
-                status->d = &parserStatus.values[parserStatus.count - 1];
-
-                status->classBegin();
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreBinding:
-        case QDeclarativeInstruction::StoreBindingOnAlias:
-            {
-                QObject *target = 
-                    stack.at(stack.count() - 1 - instr.assignBinding.owner);
-                QObject *context = 
-                    stack.at(stack.count() - 1 - instr.assignBinding.context);
-
-                QDeclarativeProperty mp = 
-                    QDeclarativePropertyPrivate::restore(datas.at(instr.assignBinding.property), target, ctxt);
-
-                int coreIndex = mp.index();
-
-                if ((stack.count() - instr.assignBinding.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
-                    break;
-
-                QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.assignBinding.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
-                bindValues.append(bind);
-                bind->m_mePtr = &bindValues.values[bindValues.count - 1];
-                bind->setTarget(mp);
-
-                if (instr.type == QDeclarativeInstruction::StoreBindingOnAlias) {
-                    QDeclarativeAbstractBinding *old = QDeclarativePropertyPrivate::setBindingNoEnable(target, coreIndex, QDeclarativePropertyPrivate::valueTypeCoreIndex(mp), bind);
-                    if (old) { old->destroy(); }
-                } else {
-                    bind->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
-                }
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreCompiledBinding:
-            {
-                QObject *target = 
-                    stack.at(stack.count() - 1 - instr.assignBinding.owner);
-                QObject *scope = 
-                    stack.at(stack.count() - 1 - instr.assignBinding.context);
-
-                int property = instr.assignBinding.property;
-                if (stack.count() == 1 && bindingSkipList.testBit(property & 0xFFFF))  
-                    break;
-
-                QDeclarativeAbstractBinding *binding = 
-                    ctxt->optimizedBindings->configBinding(instr.assignBinding.value, target, scope, property);
-                bindValues.append(binding);
-                binding->m_mePtr = &bindValues.values[bindValues.count - 1];
-                binding->addToObject(target, property);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreValueSource:
-            {
-                QObject *obj = stack.pop();
-                QDeclarativePropertyValueSource *vs = reinterpret_cast<QDeclarativePropertyValueSource *>(reinterpret_cast<char *>(obj) + instr.assignValueSource.castValue);
-                QObject *target = stack.at(stack.count() - 1 - instr.assignValueSource.owner);
-
-                QDeclarativeProperty prop = 
-                    QDeclarativePropertyPrivate::restore(datas.at(instr.assignValueSource.property), target, ctxt);
-                obj->setParent(target);
-                vs->setTarget(prop);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreValueInterceptor:
-            {
-                QObject *obj = stack.pop();
-                QDeclarativePropertyValueInterceptor *vi = reinterpret_cast<QDeclarativePropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.assignValueInterceptor.castValue);
-                QObject *target = stack.at(stack.count() - 1 - instr.assignValueInterceptor.owner);
-                QDeclarativeProperty prop = 
-                    QDeclarativePropertyPrivate::restore(datas.at(instr.assignValueInterceptor.property), target, ctxt);
-                obj->setParent(target);
-                vi->setTarget(prop);
-                QDeclarativeVMEMetaObject *mo = static_cast<QDeclarativeVMEMetaObject *>((QMetaObject*)target->metaObject());
-                mo->registerInterceptor(prop.index(), QDeclarativePropertyPrivate::valueTypeCoreIndex(prop), vi);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreObjectQList:
-            {
-                QObject *assign = stack.pop();
-
-                const ListInstance &list = qliststack.top();
-                list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, assign);
-            }
-            break;
-
-        case QDeclarativeInstruction::AssignObjectList:
-            {
-                // This is only used for assigning interfaces
-                QObject *assign = stack.pop();
-                const ListInstance &list = qliststack.top();
-
-                int type = list.type;
-
-                void *ptr = 0;
-
-                const char *iid = QDeclarativeMetaType::interfaceIId(type);
-                if (iid) 
-                    ptr = assign->qt_metacast(iid);
-                if (!ptr) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to list"));
-
-
-                list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, ptr);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreVariantObject:
-            {
-                QObject *assign = stack.pop();
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeObject.propertyIndex);
-
-                QVariant v = QVariant::fromValue(assign);
-                void *a[] = { &v, 0, &status, &flags };
-                QMetaObject::metacall(target, QMetaObject::WriteProperty, 
-                                      instr.storeObject.propertyIndex, a);
-            }
-            break;
-
-        case QDeclarativeInstruction::StoreInterface:
-            {
-                QObject *assign = stack.pop();
-                QObject *target = stack.top();
-                CLEAN_PROPERTY(target, instr.storeObject.propertyIndex);
-
-                int coreIdx = instr.storeObject.propertyIndex;
-                QMetaProperty prop = target->metaObject()->property(coreIdx);
-                int t = prop.userType();
-                const char *iid = QDeclarativeMetaType::interfaceIId(t);
-                bool ok = false;
-                if (iid) {
-                    void *ptr = assign->qt_metacast(iid);
-                    if (ptr) {
-                        void *a[] = { &ptr, 0, &status, &flags };
-                        QMetaObject::metacall(target, 
-                                              QMetaObject::WriteProperty,
-                                              coreIdx, a);
-                        ok = true;
-                    }
+                } else { 
+                        QDeclarative_setParent_noEvent(o, parent);
                 } 
-
-                if (!ok) 
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to interface property"));
             }
-            break;
-            
-        case QDeclarativeInstruction::FetchAttached:
-            {
-                QObject *target = stack.top();
+            stack.push(o);
+        QML_END_INSTR(CreateObject)
 
-                QObject *qmlObject = qmlAttachedPropertiesObjectById(instr.fetchAttached.id, target);
+        QML_BEGIN_INSTR(CreateSimpleObject)
+            QObject *o = (QObject *)operator new(instr.typeSize + sizeof(QDeclarativeData));   
+            ::memset(o, 0, instr.typeSize + sizeof(QDeclarativeData));
+            instr.create(o);
 
-                if (!qmlObject)
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create attached object"));
-
-                stack.push(qmlObject);
+            QDeclarativeData *ddata = (QDeclarativeData *)(((const char *)o) + instr.typeSize);
+            const QDeclarativeCompiledData::TypeReference &ref = types.at(instr.type);
+            if (!ddata->propertyCache && ref.typePropertyCache) {
+                ddata->propertyCache = ref.typePropertyCache;
+                ddata->propertyCache->addref();
             }
-            break;
+            ddata->lineNumber = instr.line;
+            ddata->columnNumber = instr.column;
 
-        case QDeclarativeInstruction::FetchQList:
-            {
-                QObject *target = stack.top();
+            QObjectPrivate::get(o)->declarativeData = ddata;                                                      
+            ddata->context = ddata->outerContext = ctxt;
+            ddata->nextContextObject = ctxt->contextObjects; 
+            if (ddata->nextContextObject) 
+                ddata->nextContextObject->prevContextObject = &ddata->nextContextObject; 
+            ddata->prevContextObject = &ctxt->contextObjects; 
+            ctxt->contextObjects = ddata; 
 
-                qliststack.push(ListInstance(instr.fetchQmlList.type));
+            QObject *parent = stack.top();                                                                    
+            QDeclarative_setParent_noEvent(o, parent);                                                        
 
-                void *a[1];
-                a[0] = (void *)&(qliststack.top().qListProperty);
-                QMetaObject::metacall(target, QMetaObject::ReadProperty, 
-                                      instr.fetchQmlList.property, a);
+            stack.push(o);
+        QML_END_INSTR(CreateSimpleObject)
+
+        QML_BEGIN_INSTR(SetId)
+            QObject *target = stack.top();
+            ctxt->setIdProperty(instr.index, target);
+        QML_END_INSTR(SetId)
+
+        QML_BEGIN_INSTR(SetDefault)
+            ctxt->contextObject = stack.top();
+        QML_END_INSTR(SetDefault)
+
+        QML_BEGIN_INSTR(CreateComponent)
+            QDeclarativeComponent *qcomp = 
+                new QDeclarativeComponent(ctxt->engine, comp, instructionStream - comp->bytecode.constData(),
+                                          stack.isEmpty() ? 0 : stack.top());
+
+            QDeclarativeData *ddata = QDeclarativeData::get(qcomp, true);
+            Q_ASSERT(ddata);
+
+            ctxt->addObject(qcomp);
+
+            if (stack.isEmpty()) 
+                ddata->ownContext = true;
+
+            ddata->setImplicitDestructible();
+            ddata->outerContext = ctxt;
+            ddata->lineNumber = instr.line;
+            ddata->columnNumber = instr.column;
+
+            QDeclarativeComponentPrivate::get(qcomp)->creationContext = ctxt;
+
+            stack.push(qcomp);
+            instructionStream += instr.count;
+        QML_END_INSTR(CreateComponent)
+
+        QML_BEGIN_INSTR(StoreMetaObject)
+            QObject *target = stack.top();
+
+            QMetaObject mo;
+            const QByteArray &metadata = datas.at(instr.data);
+            QMetaObjectBuilder::fromRelocatableData(&mo, 0, metadata);
+
+            const QDeclarativeVMEMetaData *data = 
+                (const QDeclarativeVMEMetaData *)datas.at(instr.aliasData).constData();
+
+            (void)new QDeclarativeVMEMetaObject(target, &mo, data, comp);
+
+            if (instr.propertyCache != -1) {
+                QDeclarativeData *ddata = QDeclarativeData::get(target, true);
+                if (ddata->propertyCache) ddata->propertyCache->release();
+                ddata->propertyCache = propertyCaches.at(instr.propertyCache);
+                ddata->propertyCache->addref();
             }
-            break;
+        QML_END_INSTR(StoreMetaObject)
 
-        case QDeclarativeInstruction::FetchObject:
-            {
-                QObject *target = stack.top();
+        QML_BEGIN_INSTR(StoreVariant)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
 
-                QObject *obj = 0;
-                // NOTE: This assumes a cast to QObject does not alter the 
-                // object pointer
-                void *a[1];
-                a[0] = &obj;
-                QMetaObject::metacall(target, QMetaObject::ReadProperty, 
-                                      instr.fetch.property, a);
+            // XXX - can be more efficient
+            QVariant v = QDeclarativeStringConverters::variantFromString(primitives.at(instr.value));
+            void *a[] = { &v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVariant)
 
-                if (!obj)
-                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.fetch.property).name())));
+        QML_BEGIN_INSTR(StoreVariantInteger)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
 
-                stack.push(obj);
+            QVariant v(instr.value);
+            void *a[] = { &v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVariantInteger)
+
+        QML_BEGIN_INSTR(StoreVariantDouble)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QVariant v(instr.value);
+            void *a[] = { &v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVariantDouble)
+
+        QML_BEGIN_INSTR(StoreVariantBool)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QVariant v(instr.value);
+            void *a[] = { &v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVariantBool)
+
+        QML_BEGIN_INSTR(StoreString)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            void *a[] = { (void *)&primitives.at(instr.value), 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreString)
+
+        QML_BEGIN_INSTR(StoreByteArray)
+            QObject *target = stack.top();
+            void *a[] = { (void *)&datas.at(instr.value), 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreByteArray)
+
+        QML_BEGIN_INSTR(StoreUrl)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            void *a[] = { (void *)&urls.at(instr.value), 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreUrl)
+
+        QML_BEGIN_INSTR(StoreFloat)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            float f = instr.value;
+            void *a[] = { &f, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreFloat)
+
+        QML_BEGIN_INSTR(StoreDouble)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            double d = instr.value;
+            void *a[] = { &d, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreDouble)
+
+        QML_BEGIN_INSTR(StoreBool)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            void *a[] = { (void *)&instr.value, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreBool)
+
+        QML_BEGIN_INSTR(StoreInteger)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            void *a[] = { (void *)&instr.value, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreInteger)
+
+        QML_BEGIN_INSTR(StoreColor)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QColor c = QColor::fromRgba(instr.value);
+            void *a[] = { &c, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreColor)
+
+        QML_BEGIN_INSTR(StoreDate)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QDate d = QDate::fromJulianDay(instr.value);
+            void *a[] = { &d, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreDate)
+
+        QML_BEGIN_INSTR(StoreTime)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QTime *t = (QTime *)&instr.time;
+            void *a[] = { t, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreTime)
+
+        QML_BEGIN_INSTR(StoreDateTime)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QTime *t = (QTime *)&instr.time;
+            QDateTime dt(QDate::fromJulianDay(instr.date), *t);
+            void *a[] = { &dt, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreDateTime)
+
+        QML_BEGIN_INSTR(StorePoint)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QPoint *p = (QPoint *)&instr.point;
+            void *a[] = { p, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StorePoint)
+
+        QML_BEGIN_INSTR(StorePointF)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QPointF *p = (QPointF *)&instr.point;
+            void *a[] = { p, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StorePointF)
+
+        QML_BEGIN_INSTR(StoreSize)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QSize *s = (QSize *)&instr.size;
+            void *a[] = { s, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreSize)
+
+        QML_BEGIN_INSTR(StoreSizeF)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QSizeF *s = (QSizeF *)&instr.size;
+            void *a[] = { s, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreSizeF)
+
+        QML_BEGIN_INSTR(StoreRect)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QRect *r = (QRect *)&instr.rect;
+            void *a[] = { r, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreRect)
+
+        QML_BEGIN_INSTR(StoreRectF)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QRectF *r = (QRectF *)&instr.rect;
+            void *a[] = { r, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreRectF)
+
+        QML_BEGIN_INSTR(StoreVector3D)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QVector3D *v = (QVector3D *)&instr.vector;
+            void *a[] = { v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVector3D)
+
+        QML_BEGIN_INSTR(StoreObject)
+            QObject *assignObj = stack.pop();
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            void *a[] = { (void *)&assignObj, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreObject)
+
+        QML_BEGIN_INSTR(AssignCustomType)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            const QString &primitive = primitives.at(instr.primitive);
+            int type = instr.type;
+            QDeclarativeMetaType::StringConverter converter = QDeclarativeMetaType::customStringConverter(type);
+            QVariant v = (*converter)(primitive);
+
+            QMetaProperty prop = 
+                    target->metaObject()->property(instr.propertyIndex);
+            if (v.isNull() || ((int)prop.type() != type && prop.userType() != type)) 
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign value %1 to property %2").arg(primitive).arg(QString::fromUtf8(prop.name())), instr.line);
+
+            void *a[] = { (void *)v.data(), 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(AssignCustomType)
+
+        QML_BEGIN_INSTR(AssignSignalObject)
+            // XXX optimize
+
+            QObject *assign = stack.pop();
+            QObject *target = stack.top();
+            int sigIdx = instr.signal;
+            const QByteArray &pr = datas.at(sigIdx);
+
+            QDeclarativeProperty prop(target, QString::fromUtf8(pr));
+            if (prop.type() & QDeclarativeProperty::SignalProperty) {
+
+                QMetaMethod method = QDeclarativeMetaType::defaultMethod(assign);
+                if (method.signature() == 0)
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object type %1 with no default method").arg(QString::fromLatin1(assign->metaObject()->className())), instr.line);
+
+                if (!QMetaObject::checkConnectArgs(prop.method().signature(), method.signature()))
+                    VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot connect mismatched signal/slot %1 %vs. %2").arg(QString::fromLatin1(method.signature())).arg(QString::fromLatin1(prop.method().signature())), instr.line);
+
+                QDeclarativePropertyPrivate::connect(target, prop.index(), assign, method.methodIndex());
+
+            } else {
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(QString::fromUtf8(pr)), instr.line);
             }
-            break;
 
-        case QDeclarativeInstruction::PopQList:
-            {
-                qliststack.pop();
-            }
-            break;
 
-        case QDeclarativeInstruction::Defer:
-            {
-                if (instr.defer.deferCount) {
-                    QObject *target = stack.top();
-                    QDeclarativeData *data = 
-                        QDeclarativeData::get(target, true);
-                    comp->addref();
-                    data->deferredComponent = comp;
-                    data->deferredIdx = ii;
-                    ii += instr.defer.deferCount;
+        QML_END_INSTR(AssignSignalObject)
+
+        QML_BEGIN_INSTR(StoreSignal)
+            QObject *target = stack.top();
+            QObject *context = stack.at(stack.count() - 1 - instr.context);
+
+            QMetaMethod signal = target->metaObject()->method(instr.signalIndex);
+
+            QDeclarativeBoundSignal *bs = new QDeclarativeBoundSignal(target, signal, target);
+            QDeclarativeExpression *expr = 
+                new QDeclarativeExpression(ctxt, context, primitives.at(instr.value));
+            expr->setSourceLocation(comp->name, instr.line);
+            static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr))->name = datas.at(instr.name);
+            bs->setExpression(expr);
+        QML_END_INSTR(StoreSignal)
+
+        QML_BEGIN_INSTR(StoreImportedScript)
+            ctxt->importedScripts << run(ctxt, scripts.at(instr.value));
+        QML_END_INSTR(StoreImportedScript)
+
+        QML_BEGIN_INSTR(StoreScriptString)
+            QObject *target = stack.top();
+            QObject *scope = stack.at(stack.count() - 1 - instr.scope);
+            QDeclarativeScriptString ss;
+            ss.setContext(ctxt->asQDeclarativeContext());
+            ss.setScopeObject(scope);
+            ss.setScript(primitives.at(instr.value));
+
+            void *a[] = { &ss, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreScriptString)
+
+        QML_BEGIN_INSTR(BeginObject)
+            QObject *target = stack.top();
+            QDeclarativeParserStatus *status = reinterpret_cast<QDeclarativeParserStatus *>(reinterpret_cast<char *>(target) + instr.castValue);
+            parserStatus.append(status);
+            status->d = &parserStatus.values[parserStatus.count - 1];
+
+            status->classBegin();
+        QML_END_INSTR(BeginObject)
+
+        QML_BEGIN_INSTR(StoreBinding)
+            QObject *target = 
+                stack.at(stack.count() - 1 - instr.owner);
+            QObject *context = 
+                stack.at(stack.count() - 1 - instr.context);
+
+            QDeclarativeProperty mp = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+
+            int coreIndex = mp.index();
+
+            if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
+                break;
+
+            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            bindValues.append(bind);
+            bind->m_mePtr = &bindValues.values[bindValues.count - 1];
+            bind->setTarget(mp);
+
+            bind->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
+        QML_END_INSTR(StoreBinding)
+
+        QML_BEGIN_INSTR(StoreBindingOnAlias)
+            QObject *target = 
+                stack.at(stack.count() - 1 - instr.owner);
+            QObject *context = 
+                stack.at(stack.count() - 1 - instr.context);
+
+            QDeclarativeProperty mp = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+
+            int coreIndex = mp.index();
+
+            if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
+                break;
+
+            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            bindValues.append(bind);
+            bind->m_mePtr = &bindValues.values[bindValues.count - 1];
+            bind->setTarget(mp);
+
+            QDeclarativeAbstractBinding *old = QDeclarativePropertyPrivate::setBindingNoEnable(target, coreIndex, QDeclarativePropertyPrivate::valueTypeCoreIndex(mp), bind);
+            if (old) { old->destroy(); }
+        QML_END_INSTR(StoreBindingOnAlias)
+
+        QML_BEGIN_INSTR(StoreCompiledBinding)
+            QObject *target = 
+                stack.at(stack.count() - 1 - instr.owner);
+            QObject *scope = 
+                stack.at(stack.count() - 1 - instr.context);
+
+            int property = instr.property;
+            if (stack.count() == 1 && bindingSkipList.testBit(property & 0xFFFF))  
+                break;
+
+            QDeclarativeAbstractBinding *binding = 
+                ctxt->optimizedBindings->configBinding(instr.value, target, scope, property);
+            bindValues.append(binding);
+            binding->m_mePtr = &bindValues.values[bindValues.count - 1];
+            binding->addToObject(target, property);
+        QML_END_INSTR(StoreCompiledBinding)
+
+        QML_BEGIN_INSTR(StoreValueSource)
+            QObject *obj = stack.pop();
+            QDeclarativePropertyValueSource *vs = reinterpret_cast<QDeclarativePropertyValueSource *>(reinterpret_cast<char *>(obj) + instr.castValue);
+            QObject *target = stack.at(stack.count() - 1 - instr.owner);
+
+            QDeclarativeProperty prop = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+            obj->setParent(target);
+            vs->setTarget(prop);
+        QML_END_INSTR(StoreValueSource)
+
+        QML_BEGIN_INSTR(StoreValueInterceptor)
+            QObject *obj = stack.pop();
+            QDeclarativePropertyValueInterceptor *vi = reinterpret_cast<QDeclarativePropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.castValue);
+            QObject *target = stack.at(stack.count() - 1 - instr.owner);
+            QDeclarativeProperty prop = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+            obj->setParent(target);
+            vi->setTarget(prop);
+            QDeclarativeVMEMetaObject *mo = static_cast<QDeclarativeVMEMetaObject *>((QMetaObject*)target->metaObject());
+            mo->registerInterceptor(prop.index(), QDeclarativePropertyPrivate::valueTypeCoreIndex(prop), vi);
+        QML_END_INSTR(StoreValueInterceptor)
+
+        QML_BEGIN_INSTR(StoreObjectQList)
+            QObject *assign = stack.pop();
+
+            const ListInstance &list = qliststack.top();
+            list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, assign);
+        QML_END_INSTR(StoreObjectQList)
+
+        QML_BEGIN_INSTR(AssignObjectList)
+            // This is only used for assigning interfaces
+            QObject *assign = stack.pop();
+            const ListInstance &list = qliststack.top();
+
+            int type = list.type;
+
+            void *ptr = 0;
+
+            const char *iid = QDeclarativeMetaType::interfaceIId(type);
+            if (iid) 
+                ptr = assign->qt_metacast(iid);
+            if (!ptr) 
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to list"), instr.line);
+
+
+            list.qListProperty.append((QDeclarativeListProperty<void>*)&list.qListProperty, ptr);
+        QML_END_INSTR(AssignObjectList)
+
+        QML_BEGIN_INSTR(StoreVariantObject)
+            QObject *assign = stack.pop();
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QVariant v = QVariant::fromValue(assign);
+            void *a[] = { &v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty, 
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVariantObject)
+
+        QML_BEGIN_INSTR(StoreInterface)
+            QObject *assign = stack.pop();
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            int coreIdx = instr.propertyIndex;
+            QMetaProperty prop = target->metaObject()->property(coreIdx);
+            int t = prop.userType();
+            const char *iid = QDeclarativeMetaType::interfaceIId(t);
+            bool ok = false;
+            if (iid) {
+                void *ptr = assign->qt_metacast(iid);
+                if (ptr) {
+                    void *a[] = { &ptr, 0, &status, &flags };
+                    QMetaObject::metacall(target, 
+                                          QMetaObject::WriteProperty,
+                                          coreIdx, a);
+                    ok = true;
                 }
-            }
-            break;
+            } 
 
-        case QDeclarativeInstruction::PopFetchedObject:
-            {
-                stack.pop();
-            }
-            break;
+            if (!ok) 
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign object to interface property"), instr.line);
+        QML_END_INSTR(StoreInterface)
+            
+        QML_BEGIN_INSTR(FetchAttached)
+            QObject *target = stack.top();
 
-        case QDeclarativeInstruction::FetchValueType:
-            {
+            QObject *qmlObject = qmlAttachedPropertiesObjectById(instr.id, target);
+
+            if (!qmlObject)
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create attached object"), instr.line);
+
+            stack.push(qmlObject);
+        QML_END_INSTR(FetchAttached)
+
+        QML_BEGIN_INSTR(FetchQList)
+            QObject *target = stack.top();
+
+            qliststack.push(ListInstance(instr.type));
+
+            void *a[1];
+            a[0] = (void *)&(qliststack.top().qListProperty);
+            QMetaObject::metacall(target, QMetaObject::ReadProperty, 
+                                  instr.property, a);
+        QML_END_INSTR(FetchQList)
+
+        QML_BEGIN_INSTR(FetchObject)
+            QObject *target = stack.top();
+
+            QObject *obj = 0;
+            // NOTE: This assumes a cast to QObject does not alter the 
+            // object pointer
+            void *a[1];
+            a[0] = &obj;
+            QMetaObject::metacall(target, QMetaObject::ReadProperty, 
+                                  instr.property, a);
+
+            if (!obj)
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot set properties on %1 as it is null").arg(QString::fromUtf8(target->metaObject()->property(instr.property).name())), instr.line);
+
+            stack.push(obj);
+        QML_END_INSTR(FetchObject)
+
+        QML_BEGIN_INSTR(PopQList)
+            qliststack.pop();
+        QML_END_INSTR(PopQList)
+
+        QML_BEGIN_INSTR(Defer)
+            if (instr.deferCount) {
                 QObject *target = stack.top();
+                QDeclarativeData *data = 
+                    QDeclarativeData::get(target, true);
+                comp->addref();
+                data->deferredComponent = comp;
+                data->deferredIdx = instructionStream - comp->bytecode.constData();
+                instructionStream += instr.deferCount;
+            }
+        QML_END_INSTR(Defer)
 
-                if (instr.fetchValue.bindingSkipList != 0) {
-                    // Possibly need to clear bindings
-                    QDeclarativeData *targetData = QDeclarativeData::get(target);
-                    if (targetData) {
-                        QDeclarativeAbstractBinding *binding = 
-                            QDeclarativePropertyPrivate::binding(target, instr.fetchValue.property, -1);
+        QML_BEGIN_INSTR(PopFetchedObject)
+            stack.pop();
+        QML_END_INSTR(PopFetchedObject)
 
-                        if (binding && binding->bindingType() != QDeclarativeAbstractBinding::ValueTypeProxy) {
-                            QDeclarativePropertyPrivate::setBinding(target, instr.fetchValue.property, -1, 0);
-                            binding->destroy();
-                        } else if (binding) {
-                            QDeclarativeValueTypeProxyBinding *proxy = 
-                                static_cast<QDeclarativeValueTypeProxyBinding *>(binding);
-                            proxy->removeBindings(instr.fetchValue.bindingSkipList);
-                        }
+        QML_BEGIN_INSTR(FetchValueType)
+            QObject *target = stack.top();
+
+            if (instr.bindingSkipList != 0) {
+                // Possibly need to clear bindings
+                QDeclarativeData *targetData = QDeclarativeData::get(target);
+                if (targetData) {
+                    QDeclarativeAbstractBinding *binding = 
+                        QDeclarativePropertyPrivate::binding(target, instr.property, -1);
+
+                    if (binding && binding->bindingType() != QDeclarativeAbstractBinding::ValueTypeProxy) {
+                        QDeclarativePropertyPrivate::setBinding(target, instr.property, -1, 0);
+                        binding->destroy();
+                    } else if (binding) {
+                        QDeclarativeValueTypeProxyBinding *proxy = 
+                            static_cast<QDeclarativeValueTypeProxyBinding *>(binding);
+                        proxy->removeBindings(instr.bindingSkipList);
                     }
                 }
-
-                QDeclarativeValueType *valueHandler = ep->valueTypes[instr.fetchValue.type];
-                valueHandler->read(target, instr.fetchValue.property);
-                stack.push(valueHandler);
             }
-            break;
 
-        case QDeclarativeInstruction::PopValueType:
-            {
-                QDeclarativeValueType *valueHandler = 
-                    static_cast<QDeclarativeValueType *>(stack.pop());
-                QObject *target = stack.top();
-                valueHandler->write(target, instr.fetchValue.property, 
-                                    QDeclarativePropertyPrivate::BypassInterceptor);
-            }
-            break;
+            QDeclarativeValueType *valueHandler = ep->valueTypes[instr.type];
+            valueHandler->read(target, instr.property);
+            stack.push(valueHandler);
+        QML_END_INSTR(FetchValueType)
+
+        QML_BEGIN_INSTR(PopValueType)
+            QDeclarativeValueType *valueHandler = 
+                static_cast<QDeclarativeValueType *>(stack.pop());
+            QObject *target = stack.top();
+            valueHandler->write(target, instr.property, QDeclarativePropertyPrivate::BypassInterceptor);
+        QML_END_INSTR(PopValueType)
 
         default:
-            qFatal("QDeclarativeCompiledData: Internal error - unknown instruction %d", instr.type);
+            qFatal("QDeclarativeCompiledData: Internal error - unknown instruction %d", genericInstr.type());
             break;
         }
     }
@@ -1050,9 +958,72 @@ QDeclarativeCompiledData::TypeReference::createInstance(QDeclarativeContextData 
         return rv;
     } else {
         Q_ASSERT(component);
-        return QDeclarativeComponentPrivate::begin(ctxt, 0, component, -1, -1, 0, errors, bindings);
+        return QDeclarativeComponentPrivate::begin(ctxt, 0, component, -1, 0, errors, bindings);
     } 
 }
 
+QScriptValue QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
+{
+    if (script->m_loaded)
+        return script->m_value;
+
+    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(parentCtxt->engine);
+    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(parentCtxt->engine);
+
+    bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
+
+    // Create the script context if required
+    QDeclarativeContextData *ctxt = 0;
+    if (!shared) {
+        ctxt = new QDeclarativeContextData;
+        ctxt->isInternal = true;
+        ctxt->url = script->url;
+
+        // For backward compatibility, if there are no imports, we need to use the
+        // imports from the parent context.  See QTBUG-17518.
+        if (!script->importCache->isEmpty()) {
+            ctxt->imports = script->importCache;
+        } else {
+            ctxt->imports = parentCtxt->imports;
+        }
+
+        if (ctxt->imports) {
+            ctxt->imports->addref();
+        }
+
+        ctxt->setParent(parentCtxt, true);
+
+        for (int ii = 0; ii < script->scripts.count(); ++ii)
+            ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
+    }
+
+    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
+    if (shared) {
+        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(script->url.toString())); // XXX toString()?
+    } else {
+        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(ctxt, 0, script->url.toString()));
+    }
+
+    scriptContext->pushScope(enginePriv->globalClass->staticGlobalObject());
+    QScriptValue scope = QScriptDeclarativeClass::newStaticScopeObject(scriptEngine);
+    scriptContext->pushScope(scope);
+
+    scriptEngine->evaluate(script->m_program);
+
+    if (scriptEngine->hasUncaughtException()) {
+        QDeclarativeError error;
+        QDeclarativeExpressionPrivate::exceptionToError(scriptEngine, error);
+        enginePriv->warning(error);
+    }
+
+    scriptEngine->popContext();
+
+    if (shared) {
+        script->m_loaded = true;
+        script->m_value = scope;
+    }
+
+    return scope;
+}
 
 QT_END_NAMESPACE

@@ -47,6 +47,10 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativeengine_p.h>
 
+#include <qsgtexture.h>
+#include <private/qsgtexture_p.h>
+#include <private/qsgcontext_p.h>
+
 #include <QCoreApplication>
 #include <QImageReader>
 #include <QHash>
@@ -75,7 +79,7 @@ QT_BEGIN_NAMESPACE
 #if defined(Q_WS_QWS) || defined(Q_WS_WINCE)
 static int cache_limit = 2048 * 1024; // 2048 KB cache limit for embedded
 #else
-static int cache_limit = 10240 * 1024; // 10 MB cache limit for desktop
+static int cache_limit = 128 * 1024; // 10 MB cache limit for desktop
 #endif
 
 class QDeclarativePixmapReader;
@@ -98,14 +102,18 @@ public:
 
     class Event : public QEvent {
     public:
-        Event(ReadError, const QString &, const QSize &, const QImage &);
+        Event(ReadError, const QString &, const QSize &, const QImage &image);
+        Event(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context, const QImage &image);
 
         ReadError error;
         QString errorString;
         QSize implicitSize;
         QImage image;
+        QSGTexture *texture;
+        QSGContext *context;
     };
     void postReply(ReadError, const QString &, const QSize &, const QImage &);
+    void postReply(ReadError, const QString &, const QSize &, QSGTexture *t, QSGContext *context, const QImage &image);
 
 
 Q_SIGNALS:
@@ -184,30 +192,44 @@ class QDeclarativePixmapData
 public:
     QDeclarativePixmapData(const QUrl &u, const QSize &s, const QString &e)
     : refCount(1), inCache(false), pixmapStatus(QDeclarativePixmap::Error), 
-      url(u), errorString(e), requestSize(s), reply(0), prevUnreferenced(0),
+      url(u), errorString(e), requestSize(s), texture(0), context(0), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
     }
 
     QDeclarativePixmapData(const QUrl &u, const QSize &r)
     : refCount(1), inCache(false), pixmapStatus(QDeclarativePixmap::Loading), 
-      url(u), requestSize(r), reply(0), prevUnreferenced(0), prevUnreferencedPtr(0), 
+      url(u), requestSize(r), texture(0), context(0), reply(0), prevUnreferenced(0), prevUnreferencedPtr(0),
       nextUnreferenced(0)
     {
     }
 
     QDeclarativePixmapData(const QUrl &u, const QPixmap &p, const QSize &s, const QSize &r)
-    : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready), 
-      url(u), pixmap(p), implicitSize(s), requestSize(r), reply(0), prevUnreferenced(0),
+    : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready),
+      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(0), context(0), reply(0), prevUnreferenced(0),
+      prevUnreferencedPtr(0), nextUnreferenced(0)
+    {
+    }
+
+    QDeclarativePixmapData(const QUrl &u, QSGTexture *t, QSGContext *c, const QPixmap &p, const QSize &s, const QSize &r)
+    : refCount(1), inCache(false), privatePixmap(false), pixmapStatus(QDeclarativePixmap::Ready),
+      url(u), pixmap(p), implicitSize(s), requestSize(r), texture(t), context(c), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
     }
 
     QDeclarativePixmapData(const QPixmap &p)
     : refCount(1), inCache(false), privatePixmap(true), pixmapStatus(QDeclarativePixmap::Ready),
-      pixmap(p), implicitSize(p.size()), requestSize(p.size()), reply(0), prevUnreferenced(0),
+      pixmap(p), implicitSize(p.size()), requestSize(p.size()), texture(0), context(0), reply(0), prevUnreferenced(0),
       prevUnreferencedPtr(0), nextUnreferenced(0)
     {
+    }
+
+    ~QDeclarativePixmapData()
+    {
+        if (texture && context) {
+            context->scheduleTextureForCleanup(texture);
+        }
     }
 
     int cost() const;
@@ -227,6 +249,9 @@ public:
     QPixmap pixmap;
     QSize implicitSize;
     QSize requestSize;
+
+    QSGTexture *texture;
+    QSGContext *context;
 
     QDeclarativePixmapReply *reply;
 
@@ -248,15 +273,28 @@ int QDeclarativePixmapReader::downloadProgress = -1;
 int QDeclarativePixmapReader::threadNetworkRequestDone = -1;
 
 
-void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorString, 
+void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorString,
                                         const QSize &implicitSize, const QImage &image)
 {
     loading = false;
     QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, image));
 }
 
+void QDeclarativePixmapReply::postReply(ReadError error, const QString &errorString,
+                                        const QSize &implicitSize, QSGTexture *texture,
+                                        QSGContext *context, const QImage &image)
+{
+    loading = false;
+    QCoreApplication::postEvent(this, new Event(error, errorString, implicitSize, texture, context, image));
+}
+
 QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, const QImage &i)
-: QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i)
+    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i), texture(0), context(0)
+{
+}
+
+QDeclarativePixmapReply::Event::Event(ReadError e, const QString &s, const QSize &iSize, QSGTexture *t, QSGContext *c, const QImage &i)
+    : QEvent(QEvent::User), error(e), errorString(s), implicitSize(iSize), image(i), texture(t), context(c)
 {
 }
 
@@ -355,6 +393,8 @@ void QDeclarativePixmapReader::networkRequestDone(QNetworkReply *reply)
         }
 
         QImage image;
+        QSGTexture *texture = 0;
+        QSGContext *ctx = QDeclarativeEnginePrivate::get(engine)->sgContext;
         QDeclarativePixmapReply::ReadError error = QDeclarativePixmapReply::NoError;
         QString errorString;
         QSize readSize;
@@ -365,13 +405,26 @@ void QDeclarativePixmapReader::networkRequestDone(QNetworkReply *reply)
             QByteArray all = reply->readAll();
             QBuffer buff(&all);
             buff.open(QIODevice::ReadOnly);
-            if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, job->requestSize)) {
-                error = QDeclarativePixmapReply::Decoding;
+            if (ctx && ctx->canDecodeImageToTexture())
+                texture = ctx->decodeImageToTexture(&buff, &readSize, job->requestSize);
+            if (!texture) {
+                if (!readImage(reply->url(), &buff, &image, &errorString, &readSize, job->requestSize)) {
+                    error = QDeclarativePixmapReply::Decoding;
+                } else if (ctx) {
+                    texture = ctx->createTexture(image);
+                }
             }
         }
         // send completion event to the QDeclarativePixmapReply
         mutex.lock();
-        if (!cancelled.contains(job)) job->postReply(error, errorString, readSize, image);
+        if (!cancelled.contains(job)) {
+            if (texture)
+                job->postReply(error, errorString, readSize, texture, ctx, image);
+            else
+                job->postReply(error, errorString, readSize, image);
+        } else {
+            delete texture;
+        }
         mutex.unlock();
     }
     reply->deleteLater();
@@ -446,23 +499,57 @@ void QDeclarativePixmapReader::processJobs()
 void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, const QUrl &url, 
                                           const QSize &requestSize)
 {
+    QSGContext *sgContext = QDeclarativeEnginePrivate::get(engine)->sgContext;
+
     // fetch
     if (url.scheme() == QLatin1String("image")) {
         // Use QmlImageProvider
         QSize readSize;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-        QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
+        QDeclarativeImageProvider::ImageType imageType = ep->getImageProviderType(url);
+        if (imageType == QDeclarativeImageProvider::Invalid) {
+            QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::Loading;
+            QString errorStr = QDeclarativePixmap::tr("Invalid image provider: %1").arg(url.toString());
+            QImage image;
+            mutex.lock();
+            if (!cancelled.contains(runningJob)) {
+                if (sgContext)
+                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext, image);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            }
+            mutex.unlock();
+        } else if (imageType == QDeclarativeImageProvider::Image) {
+            QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
+            QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::NoError;
+            QString errorStr;
+            if (image.isNull()) {
+                errorCode = QDeclarativePixmapReply::Loading;
+                errorStr = QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString());
+            }
+            mutex.lock();
+            if (!cancelled.contains(runningJob)) {
+                if (sgContext)
+                    runningJob->postReply(errorCode, errorStr, readSize, sgContext->createTexture(image), sgContext, image);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            }
+            mutex.unlock();
+        } else {
+            QSGTexture *t = ep->getTextureFromProvider(url, &readSize, requestSize);
+            QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::NoError;
+            QString errorStr;
+            if (!t) {
+                errorCode = QDeclarativePixmapReply::Loading;
+                errorStr = QDeclarativePixmap::tr("Failed to get texture from provider: %1").arg(url.toString());
+            }
+            mutex.lock();
+            if (!cancelled.contains(runningJob))
+                runningJob->postReply(errorCode, errorStr, readSize, t, sgContext, QImage());
+            mutex.unlock();
 
-        QDeclarativePixmapReply::ReadError errorCode = QDeclarativePixmapReply::NoError;
-        QString errorStr;
-        if (image.isNull()) {
-            errorCode = QDeclarativePixmapReply::Loading;
-            errorStr = QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString());
         }
 
-        mutex.lock();
-        if (!cancelled.contains(runningJob)) runningJob->postReply(errorCode, errorStr, readSize, image);
-        mutex.unlock();
     } else {
         QString lf = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url);
         if (!lf.isEmpty()) {
@@ -472,15 +559,30 @@ void QDeclarativePixmapReader::processJob(QDeclarativePixmapReply *runningJob, c
             QString errorStr;
             QFile f(lf);
             QSize readSize;
+            QSGTexture *texture = 0;
             if (f.open(QIODevice::ReadOnly)) {
-                if (!readImage(url, &f, &image, &errorStr, &readSize, requestSize))
-                    errorCode = QDeclarativePixmapReply::Loading;
+                if (sgContext && sgContext ->canDecodeImageToTexture())
+                    texture = sgContext->decodeImageToTexture(&f, &readSize, requestSize);
+                if (!texture) {
+                    if (!readImage(url, &f, &image, &errorStr, &readSize, requestSize)) {
+                        errorCode = QDeclarativePixmapReply::Loading;
+                    } else if (sgContext) {
+                        texture = sgContext->createTexture(image);
+                    }
+                }
             } else {
                 errorStr = QDeclarativePixmap::tr("Cannot open: %1").arg(url.toString());
                 errorCode = QDeclarativePixmapReply::Loading;
             }
             mutex.lock();
-            if (!cancelled.contains(runningJob)) runningJob->postReply(errorCode, errorStr, readSize, image);
+            if (!cancelled.contains(runningJob)) {
+                if (texture)
+                    runningJob->postReply(errorCode, errorStr, readSize, texture, sgContext, image);
+                else
+                    runningJob->postReply(errorCode, errorStr, readSize, image);
+            } else {
+                delete texture;
+            }
             mutex.unlock();
         } else {
             // Network resource
@@ -576,6 +678,8 @@ inline uint qHash(const QDeclarativePixmapKey &key)
     return qHash(*key.url) ^ key.size->width() ^ key.size->height();
 }
 
+class QSGContext;
+
 class QDeclarativePixmapStore : public QObject
 {
     Q_OBJECT
@@ -591,6 +695,9 @@ protected:
 public:
     QHash<QDeclarativePixmapKey, QDeclarativePixmapData *> m_cache;
 
+    void cleanTexturesForContext(QSGContext *context);
+    void cleanTextureForContext(QDeclarativePixmapData *data);
+
 private:
     void shrinkCache(int remove);
 
@@ -602,10 +709,51 @@ private:
 };
 Q_GLOBAL_STATIC(QDeclarativePixmapStore, pixmapStore);
 
+
+void qt_declarative_pixmapstore_clean(QSGContext *context)
+{
+    pixmapStore()->cleanTexturesForContext(context);
+}
+
+
 QDeclarativePixmapStore::QDeclarativePixmapStore()
 : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1)
 {
 }
+
+void QDeclarativePixmapStore::cleanTextureForContext(QDeclarativePixmapData *data)
+{
+    if (data->context) {
+        Q_ASSERT(QGLContext::currentContext());
+        delete data->texture;
+        data->context = 0;
+        data->texture = 0;
+    }
+}
+
+void QDeclarativePixmapStore::cleanTexturesForContext(QSGContext *context)
+{
+    QDeclarativePixmapData *data = m_unreferencedPixmaps;
+    while (data) {
+        if (data->context == context)
+            cleanTextureForContext(data);
+        if (data == m_lastUnreferencedPixmap)
+            break;
+        data = data->nextUnreferenced;
+    }
+
+    QHash<QDeclarativePixmapKey, QDeclarativePixmapData *>::iterator it = m_cache.begin();
+    while (it != m_cache.end()) {
+        data = *it;
+        if (data->context == context) {
+            cleanTextureForContext(data);
+        }
+        ++it;
+    }
+
+}
+
+
 
 void QDeclarativePixmapStore::unreferencePixmap(QDeclarativePixmapData *data)
 {
@@ -702,9 +850,13 @@ bool QDeclarativePixmapReply::event(QEvent *event)
         if (data) {
             Event *de = static_cast<Event *>(event);
             data->pixmapStatus = (de->error == NoError) ? QDeclarativePixmap::Ready : QDeclarativePixmap::Error;
-            
+
             if (data->pixmapStatus == QDeclarativePixmap::Ready) {
-                data->pixmap = QPixmap::fromImage(de->image);
+                if (de->texture) {
+                    data->texture = de->texture;
+                    data->context = de->context;
+                } else
+                    data->pixmap = QPixmap::fromImage(de->image);
                 data->implicitSize = de->implicitSize;
             } else {
                 data->errorString = de->errorString;
@@ -724,6 +876,10 @@ bool QDeclarativePixmapReply::event(QEvent *event)
 
 int QDeclarativePixmapData::cost() const
 {
+    if (texture) {
+        const QSize textureSize = texture->textureSize();
+        return textureSize.width() * textureSize.height();
+    }
     return (pixmap.width() * pixmap.height() * pixmap.depth()) / 8;
 }
 
@@ -774,17 +930,35 @@ void QDeclarativePixmapData::removeFromCache()
 
 static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, const QUrl &url, const QSize &requestSize, bool *ok)
 {
+    QSGContext *sgContext = QDeclarativeEnginePrivate::get(engine)->sgContext;
+
     if (url.scheme() == QLatin1String("image")) {
         QSize readSize;
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
         QDeclarativeImageProvider::ImageType imageType = ep->getImageProviderType(url);
 
         switch (imageType) {
+            case QDeclarativeImageProvider::Invalid:
+                return new QDeclarativePixmapData(url, requestSize,
+                    QDeclarativePixmap::tr("Invalid image provider: %1").arg(url.toString()));
+            case QDeclarativeImageProvider::Texture:
+            {
+                QSGTexture *texture = ep->getTextureFromProvider(url, &readSize, requestSize);
+                if (texture) {
+                    *ok = true;
+                    return new QDeclarativePixmapData(url, texture, sgContext, QPixmap(), readSize, requestSize);
+                }
+            }
+
             case QDeclarativeImageProvider::Image:
             {
                 QImage image = ep->getImageFromProvider(url, &readSize, requestSize);
                 if (!image.isNull()) {
                     *ok = true;
+                    if (sgContext) {
+                        QSGTexture *t = sgContext->createTexture(image);
+                        return new QDeclarativePixmapData(url, t, sgContext, QPixmap::fromImage(image), readSize, requestSize);
+                    }
                     return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
                 }
             }
@@ -793,12 +967,16 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
                 QPixmap pixmap = ep->getPixmapFromProvider(url, &readSize, requestSize);
                 if (!pixmap.isNull()) {
                     *ok = true;
+                    if (sgContext) {
+                        QSGTexture *t = sgContext->createTexture(pixmap.toImage());
+                        return new QDeclarativePixmapData(url, t, sgContext, pixmap, readSize, requestSize);
+                    }
                     return new QDeclarativePixmapData(url, pixmap, readSize, requestSize);
                 }
             }
         }
 
-        // no matching provider, or provider has bad image type, or provider returned null image
+        // provider has bad image type, or provider returned null image
         return new QDeclarativePixmapData(url, requestSize,
             QDeclarativePixmap::tr("Failed to get image from provider: %1").arg(url.toString()));
     }
@@ -812,11 +990,29 @@ static QDeclarativePixmapData* createPixmapDataSync(QDeclarativeEngine *engine, 
     QString errorString;
 
     if (f.open(QIODevice::ReadOnly)) {
+        QSGContext *ctx = QDeclarativeEnginePrivate::get(engine)->sgContext;
+        QSGTexture *texture = 0;
         QImage image;
-        if (readImage(url, &f, &image, &errorString, &readSize, requestSize)) {
+
+        if (ctx && ctx->canDecodeImageToTexture()) {
+            texture = ctx->decodeImageToTexture(&f, &readSize, requestSize);
             *ok = true;
-            return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
         }
+
+        if (!texture) {
+            if (readImage(url, &f, &image, &errorString, &readSize, requestSize))
+                *ok = true;
+
+            if (ok && ctx) {
+                texture = ctx->createTexture(image);
+            }
+        }
+
+        if (texture)
+            return new QDeclarativePixmapData(url, texture, ctx, QPixmap::fromImage(image), readSize, requestSize);
+        else
+            return new QDeclarativePixmapData(url, QPixmap::fromImage(image), readSize, requestSize);
+
     } else {
         errorString = QDeclarativePixmap::tr("Cannot open: %1").arg(url.toString());
     }
@@ -916,6 +1112,19 @@ const QSize &QDeclarativePixmap::requestSize() const
         return nullPixmap()->size;
 }
 
+QSGTexture *QDeclarativePixmap::texture(QSGContext *context) const
+{
+    if (d) {
+        if (d->texture)
+            return d->texture;
+        else if (d->pixmapStatus == Ready) {
+            d->texture = context->createTexture(d->pixmap.toImage());
+            return d->texture;
+        }
+    }
+    return 0;
+}
+
 const QPixmap &QDeclarativePixmap::pixmap() const
 {
     if (d) 
@@ -935,7 +1144,7 @@ void QDeclarativePixmap::setPixmap(const QPixmap &p)
 int QDeclarativePixmap::width() const
 {
     if (d) 
-        return d->pixmap.width();
+        return d->texture ? d->texture->textureSize().width() : d->pixmap.width();
     else
         return 0;
 }
@@ -943,7 +1152,7 @@ int QDeclarativePixmap::width() const
 int QDeclarativePixmap::height() const
 {
     if (d) 
-        return d->pixmap.height();
+        return d->texture? d->texture->textureSize().height() : d->pixmap.height();
     else
         return 0;
 }
@@ -951,7 +1160,7 @@ int QDeclarativePixmap::height() const
 QRect QDeclarativePixmap::rect() const
 {
     if (d)
-        return d->pixmap.rect();
+        return d->texture ? QRect(QPoint(), d->texture->textureSize()) : d->pixmap.rect();
     else
         return QRect();
 }

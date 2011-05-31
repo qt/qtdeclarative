@@ -62,7 +62,8 @@
 QT_BEGIN_NAMESPACE
 
 class QObject;
-class QDeclarativeInstruction;
+class QScriptValue;
+class QDeclarativeScriptData;
 class QDeclarativeCompiledData;
 class QDeclarativeCompiledData;
 class QDeclarativeContextData;
@@ -101,8 +102,9 @@ public:
     QDeclarativeVME();
 
     QObject *run(QDeclarativeContextData *, QDeclarativeCompiledData *, 
-                 int start = -1, int count = -1, 
-                 const QBitField & = QBitField());
+                 int start = -1, const QBitField & = QBitField());
+    QScriptValue run(QDeclarativeContextData *, QDeclarativeScriptData *);
+
     void runDeferred(QObject *);
 
     bool isError() const;
@@ -111,8 +113,7 @@ public:
 private:
     QObject *run(QDeclarativeVMEStack<QObject *> &, 
                  QDeclarativeContextData *, QDeclarativeCompiledData *, 
-                 int start, int count, 
-                 const QBitField &);
+                 int start, const QBitField &);
     QList<QDeclarativeError> vmeErrors;
 };
 

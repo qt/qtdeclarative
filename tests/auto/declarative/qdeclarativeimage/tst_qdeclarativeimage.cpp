@@ -224,6 +224,8 @@ void tst_qdeclarativeimage::clearSource()
     QCOMPARE(obj->width(), 0.);
     QCOMPARE(obj->height(), 0.);
     QCOMPARE(obj->progress(), 0.0);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::resized()
@@ -326,6 +328,7 @@ void tst_qdeclarativeimage::mirror()
             p_e.drawPixmap(QRect(0, 0, width, height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QDeclarativeImage::PreserveAspectFit:
+            QEXPECT_FAIL("", "QTBUG-19538", Continue);
             p_e.drawPixmap(QRect(25, 0, width / (width/height), height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QDeclarativeImage::PreserveAspectCrop:
@@ -531,6 +534,8 @@ void tst_qdeclarativeimage::tiling_QTBUG_6716()
             }
         }
     }
+
+    delete canvas;
 }
 
 void tst_qdeclarativeimage::noLoading()
@@ -540,7 +545,7 @@ void tst_qdeclarativeimage::noLoading()
     server.serveDirectory(SRCDIR "/data");
     server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
 
-    QString componentStr = "import QtQuick 1.0\nImage { source: srcImage }";
+    QString componentStr = "import QtQuick 1.1\nImage { source: srcImage; cache: true }";
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart.png"));
     QDeclarativeComponent component(&engine);
@@ -554,7 +559,7 @@ void tst_qdeclarativeimage::noLoading()
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QDeclarativeImageBase::Status)));
 
     // Loading local file
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/green.png"));
     QTRY_VERIFY(obj->status() == QDeclarativeImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);
@@ -562,7 +567,7 @@ void tst_qdeclarativeimage::noLoading()
     QTRY_COMPARE(statusSpy.count(), 0);
 
     // Loading remote file
-    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/heart200.png");
+    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
     QTRY_VERIFY(obj->status() == QDeclarativeImage::Loading);
     QTRY_VERIFY(obj->progress() == 0.0);
     QTRY_VERIFY(obj->status() == QDeclarativeImage::Ready);
@@ -572,13 +577,15 @@ void tst_qdeclarativeimage::noLoading()
     QTRY_COMPARE(statusSpy.count(), 2);
 
     // Loading remote file again - should not go through 'Loading' state.
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
-    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/heart200.png");
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/green.png"));
+    ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
     QTRY_VERIFY(obj->status() == QDeclarativeImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 4);
     QTRY_COMPARE(progressSpy.count(), 2);
     QTRY_COMPARE(statusSpy.count(), 2);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::paintedWidthHeight()
@@ -648,6 +655,8 @@ void tst_qdeclarativeimage::sourceSize_QTBUG_14303()
     QTRY_COMPARE(obj->sourceSize().width(), 200);
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 2);
+
+    delete obj;
 }
 
 void tst_qdeclarativeimage::sourceSize_QTBUG_16389()

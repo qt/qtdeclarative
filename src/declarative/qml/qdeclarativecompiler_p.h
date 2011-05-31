@@ -102,30 +102,25 @@ public:
         QDeclarativePropertyCache *createPropertyCache(QDeclarativeEngine *);
     };
     QList<TypeReference> types;
-    struct CustomTypeData
-    {
-        int index;
-        int type;
-    };
 
     const QMetaObject *root;
     QAbstractDynamicMetaObject rootData;
     QDeclarativePropertyCache *rootPropertyCache;
     QList<QString> primitives;
-    QList<float> floatData;
-    QList<int> intData;
-    QList<CustomTypeData> customTypeData;
     QList<QByteArray> datas;
-    QList<QDeclarativeParser::Location> locations;
-    QList<QDeclarativeInstruction> bytecode;
+    QByteArray bytecode;
     QList<QScriptProgram *> cachedPrograms;
     QList<QScriptValue *> cachedClosures;
     QList<QDeclarativePropertyCache *> propertyCaches;
     QList<QDeclarativeIntegerCache *> contextCaches;
-    QList<QDeclarativeParser::Object::ScriptBlock> scripts;
+    QList<QDeclarativeScriptData *> scripts;
     QList<QUrl> urls;
 
     void dumpInstructions();
+
+    int addInstruction(const QDeclarativeInstruction &instr);
+    int nextInstructionIndex();
+    QDeclarativeInstruction *instruction(int index);
 
 protected:
     virtual void clear(); // From QDeclarativeCleanup
@@ -140,10 +135,6 @@ private:
 
     int indexForString(const QString &);
     int indexForByteArray(const QByteArray &);
-    int indexForFloat(float *, int);
-    int indexForInt(int *, int);
-    int indexForLocation(const QDeclarativeParser::Location &);
-    int indexForLocation(const QDeclarativeParser::LocationSpan &);
     int indexForUrl(const QUrl &);
 };
 
@@ -305,11 +296,12 @@ private:
     struct ComponentCompileState
     {
         ComponentCompileState() 
-            : parserStatusCount(0), pushedProperties(0), root(0) {}
+            : parserStatusCount(0), pushedProperties(0), nested(false), root(0) {}
         QHash<QString, QDeclarativeParser::Object *> ids;
         QHash<int, QDeclarativeParser::Object *> idIndexes;
         int parserStatusCount;
         int pushedProperties;
+        bool nested;
 
         QByteArray compiledBindingData;
 

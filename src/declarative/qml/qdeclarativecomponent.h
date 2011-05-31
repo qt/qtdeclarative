@@ -96,12 +96,13 @@ public:
     virtual QObject *beginCreate(QDeclarativeContext *);
     virtual void completeCreate();
 
-    void loadUrl(const QUrl &url);
-    void setData(const QByteArray &, const QUrl &baseUrl);
-
     QDeclarativeContext *creationContext() const;
 
     static QDeclarativeComponentAttached *qmlAttachedProperties(QObject *);
+
+public Q_SLOTS:
+    void loadUrl(const QUrl &url);
+    void setData(const QByteArray &, const QUrl &baseUrl);
 
 Q_SIGNALS:
     void statusChanged(QDeclarativeComponent::Status);
@@ -113,11 +114,10 @@ protected:
     Q_INVOKABLE Q_REVISION(1) QScriptValue createObject(QObject* parent, const QScriptValue& valuemap); //XXX Versioning
 
 private:
-    QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, int, QObject *parent);
+    QDeclarativeComponent(QDeclarativeEngine *, QDeclarativeCompiledData *, int, QObject *parent);
 
     Q_DISABLE_COPY(QDeclarativeComponent)
     friend class QDeclarativeVME;
-    friend class QDeclarativeCompositeTypeData;
     friend class QDeclarativeTypeData;
 };
 

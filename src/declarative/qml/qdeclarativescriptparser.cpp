@@ -59,6 +59,22 @@ QT_BEGIN_NAMESPACE
 using namespace QDeclarativeJS;
 using namespace QDeclarativeParser;
 
+void QDeclarativeScriptParser::Import::extractVersion(int *maj, int *min) const
+{
+    *maj = -1; *min = -1;
+
+    if (!version.isEmpty()) {
+        int dot = version.indexOf(QLatin1Char('.'));
+        if (dot < 0) {
+            *maj = version.toInt();
+            *min = 0;
+        } else {
+            *maj = version.left(dot).toInt();
+            *min = version.mid(dot+1).toInt();
+        }
+    }
+}
+
 namespace {
 
 class ProcessAST: protected AST::Visitor
@@ -111,6 +127,7 @@ protected:
                                 LocationSpan location,
                                 AST::UiObjectInitializer *initializer = 0);
 
+    QDeclarativeParser::Variant getVariant(AST::Statement *stmt);
     QDeclarativeParser::Variant getVariant(AST::ExpressionNode *expr);
 
     LocationSpan location(AST::SourceLocation start, AST::SourceLocation end);
@@ -588,16 +605,16 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         property.location = location(node->firstSourceLocation(),
                                      node->lastSourceLocation());
 
-        if (node->expression) { // default value
+        if (node->statement) { // default value
             property.defaultValue = new Property;
             property.defaultValue->parent = _stateStack.top().object;
             property.defaultValue->location =
-                    location(node->expression->firstSourceLocation(),
-                             node->expression->lastSourceLocation());
+                    location(node->statement->firstSourceLocation(),
+                             node->statement->lastSourceLocation());
             QDeclarativeParser::Value *value = new QDeclarativeParser::Value;
-            value->location = location(node->expression->firstSourceLocation(),
-                                       node->expression->lastSourceLocation());
-            value->value = getVariant(node->expression);
+            value->location = location(node->statement->firstSourceLocation(),
+                                       node->statement->lastSourceLocation());
+            value->value = getVariant(node->statement);
             property.defaultValue->values << value;
         }
 
@@ -640,6 +657,18 @@ bool ProcessAST::visit(AST::UiObjectBinding *node)
                         typeLocation, l, node->initializer);
 
     return false;
+}
+
+QDeclarativeParser::Variant ProcessAST::getVariant(AST::Statement *stmt)
+{
+    if (stmt) {
+        if (AST::ExpressionStatement *exprStmt = AST::cast<AST::ExpressionStatement *>(stmt))
+            return getVariant(exprStmt->expression);
+
+        return QDeclarativeParser::Variant(asString(stmt), stmt);
+    }
+
+    return QDeclarativeParser::Variant();
 }
 
 QDeclarativeParser::Variant ProcessAST::getVariant(AST::ExpressionNode *expr)
@@ -708,7 +737,7 @@ bool ProcessAST::visit(AST::UiScriptBinding *node)
     while (propertyCount--)
         _stateStack.pop();
 
-    return true;
+    return false;
 }
 
 static QList<int> collectCommas(AST::UiArrayMemberList *members)
@@ -743,7 +772,7 @@ bool ProcessAST::visit(AST::UiArrayBinding *node)
         error.setLine(this->location(propertyName).start.line);
         error.setColumn(this->location(propertyName).start.column);
         _parser->_errors << error;
-        return 0;
+        return false;
     }
 
     accept(node->members);
@@ -896,6 +925,19 @@ static void replaceWithSpace(QString &str, int idx, int n)
         *data++ = space;
 }
 
+static QDeclarativeParser::LocationSpan
+locationFromLexer(const QDeclarativeJS::Lexer &lex, int startLine, int startColumn, int startOffset)
+{
+    QDeclarativeParser::LocationSpan l;
+
+    l.start.line = startLine; l.start.column = startColumn;
+    l.end.line = lex.endLineNo(); l.end.column = lex.endColumnNo();
+    l.range.offset = startOffset;
+    l.range.length = lex.tokenOffset() + lex.tokenLength() - startOffset;
+
+    return l;
+}
+
 /*
 Searches for ".pragma <value>" declarations within \a script.  Currently supported pragmas
 are:
@@ -1024,7 +1066,8 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
             return rv;
 
         int startOffset = l.tokenOffset();
-        int startLine = l.currentLineNo();
+        int startLine = l.startLineNo();
+        int startColumn = l.startColumnNo();
 
         token = l.lex();
 
@@ -1062,8 +1105,11 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                 if (!importId.at(0).isUpper())
                     return rv;
 
+                QDeclarativeParser::LocationSpan location =
+                    locationFromLexer(l, startLine, startColumn, startOffset);
+
                 token = l.lex();
-                if (l.currentLineNo() == startLine)
+                if (l.startLineNo() == startLine)
                     return rv;
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
@@ -1072,9 +1118,9 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                 import.type = Import::Script;
                 import.uri = file;
                 import.qualifier = importId;
+                import.location = location;
 
                 rv.imports << import;
-
             } else {
                 // URI
                 QString uri;
@@ -1117,8 +1163,11 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                 if (!importId.at(0).isUpper())
                     return rv;
 
+                QDeclarativeParser::LocationSpan location =
+                    locationFromLexer(l, startLine, startColumn, startOffset);
+
                 token = l.lex();
-                if (l.currentLineNo() == startLine)
+                if (l.startLineNo() == startLine)
                     return rv;
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
@@ -1128,6 +1177,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                 import.uri = uri;
                 import.version = version;
                 import.qualifier = importId;
+                import.location = location;
 
                 rv.imports << import;
             }
@@ -1143,7 +1193,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
             QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
             int endOffset = l.tokenLength() + l.tokenOffset();
 
-            if (pragmaValue == QLatin1String("library")) {
+            if (pragmaValue == library) {
                 pragmas |= QDeclarativeParser::Object::ScriptBlock::Shared;
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
             } else {

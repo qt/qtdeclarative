@@ -9,3 +9,4 @@ SOURCES += tst_qdeclarativestyledtext.cpp
 # LIBS += -lgcov
 
 CONFIG += parallel_test
+QT += core-private gui-private declarative-private

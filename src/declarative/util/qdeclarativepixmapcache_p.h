@@ -55,6 +55,9 @@ QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
 class QDeclarativePixmapData;
+class QSGTexture;
+class QSGContext;
+
 class Q_DECLARATIVE_EXPORT QDeclarativePixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QDeclarativePixmap)
@@ -84,6 +87,8 @@ public:
     const QSize &requestSize() const;
     const QPixmap &pixmap() const;
     void setPixmap(const QPixmap &);
+
+    QSGTexture *texture(QSGContext *context) const;
 
     QRect rect() const;
     int width() const;

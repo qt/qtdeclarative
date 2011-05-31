@@ -67,7 +67,7 @@ QT_MODULE(Declarative)
 class QByteArray;
 
 class QDeclarativeScriptParserJsASTData;
-class QDeclarativeScriptParser
+class Q_AUTOTEST_EXPORT QDeclarativeScriptParser
 {
 public:
     class Import
@@ -81,6 +81,8 @@ public:
         QString uri;
         QString qualifier;
         QString version;
+
+        void extractVersion(int *maj, int *min) const;
 
         QDeclarativeParser::LocationSpan location;
     };

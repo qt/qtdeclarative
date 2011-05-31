@@ -84,7 +84,6 @@ public:
             showInputPanelOnFocus = false;
         }
 #endif
-
     }
 
     ~QDeclarativeTextInputPrivate()

@@ -29,6 +29,12 @@
 \title What's New in Qt Quick
 \page qtquick-whatsnew.html
 
+\section1 Qt 5.0.0 includes QtQuick 2.0
+
+QtQuick 2.0 is a major update.
+
+MouseArea now propagates clicked, doubleClicked and pressAndHold differently.
+
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
 QtQuick 1.1 is a minor feature update.  \e {import QtQuick 1.1} to use the new

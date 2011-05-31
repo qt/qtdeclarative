@@ -157,6 +157,8 @@ private slots:
     void revisions();
     void revisionOverloads();
 
+    void propertyInit();
+
     // regression tests for crashes
     void crash1();
     void crash2();
@@ -273,6 +275,7 @@ void tst_qdeclarativelanguage::errors_data()
     QTest::newRow("wrongType (int for string)") << "wrongType.14.qml" << "wrongType.14.errors.txt" << false;
     QTest::newRow("wrongType (int for url)") << "wrongType.15.qml" << "wrongType.15.errors.txt" << false;
     QTest::newRow("wrongType (invalid object)") << "wrongType.16.qml" << "wrongType.16.errors.txt" << false;
+    QTest::newRow("wrongType (int for enum)") << "wrongType.17.qml" << "wrongType.17.errors.txt" << false;
 
     QTest::newRow("readOnly.1") << "readOnly.1.qml" << "readOnly.1.errors.txt" << false;
     QTest::newRow("readOnly.2") << "readOnly.2.qml" << "readOnly.2.errors.txt" << false;
@@ -548,11 +551,11 @@ void tst_qdeclarativelanguage::assignBasicTypes()
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
     QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
-    QCOMPARE(object->pointFProperty(), QPointF((float)-10.1, (float)12.3));
+    QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
-    QCOMPARE(object->sizeFProperty(), QSizeF((float)0.1, (float)0.2));
+    QCOMPARE(object->sizeFProperty(), QSizeF(0.1, 0.2));
     QCOMPARE(object->rectProperty(), QRect(9, 7, 100, 200));
-    QCOMPARE(object->rectFProperty(), QRectF((float)1000.1, (float)-10.9, (float)400, (float)90.99));
+    QCOMPARE(object->rectFProperty(), QRectF(1000.1, -10.9, 400, 90.99));
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
@@ -2011,6 +2014,34 @@ void tst_qdeclarativelanguage::aliasPropertyChangeSignals()
         QVERIFY(o != 0);
 
         QCOMPARE(o->property("test").toBool(), true);
+
+        delete o;
+    }
+}
+
+// Tests property initializers
+void tst_qdeclarativelanguage::propertyInit()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("propertyInit.1.qml"));
+
+        VERIFY_ERRORS(0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QCOMPARE(o->property("test").toInt(), 1);
+
+        delete o;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("propertyInit.2.qml"));
+
+        VERIFY_ERRORS(0);
+        QObject *o = component.create();
+        QVERIFY(o != 0);
+
+        QCOMPARE(o->property("test").toInt(), 123);
 
         delete o;
     }

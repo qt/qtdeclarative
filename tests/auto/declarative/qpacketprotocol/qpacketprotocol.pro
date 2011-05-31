@@ -7,3 +7,4 @@ SOURCES += tst_qpacketprotocol.cpp \
            ../shared/debugutil.cpp
 
 CONFIG += parallel_test
+QT += core-private gui-private declarative-private

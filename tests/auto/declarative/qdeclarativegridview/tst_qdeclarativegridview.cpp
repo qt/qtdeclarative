@@ -866,6 +866,8 @@ void tst_QDeclarativeGridView::noCurrentIndex()
     QCOMPARE(gridview->currentIndex(), 5);
     QVERIFY(gridview->currentItem());
     QVERIFY(gridview->highlightItem());
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::changeFlow()
@@ -1624,6 +1626,8 @@ void tst_QDeclarativeGridView::resetModel()
         QTRY_VERIFY(display != 0);
         QTRY_COMPARE(display->text(), strings.at(i));
     }
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::enforceRange()
@@ -1751,6 +1755,8 @@ void tst_QDeclarativeGridView::QTBUG_8456()
     QTRY_VERIFY(gridview != 0);
 
     QTRY_COMPARE(gridview->currentIndex(), 0);
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::manualHighlight()
@@ -1795,6 +1801,8 @@ void tst_QDeclarativeGridView::manualHighlight()
     QTRY_COMPARE(gridview->currentItem(), findItem<QDeclarativeItem>(contentItem, "wrapper", 0));
     QTRY_COMPARE(gridview->highlightItem()->y() - 5, gridview->currentItem()->y());
     QTRY_COMPARE(gridview->highlightItem()->x() - 5, gridview->currentItem()->x());
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::footer()
@@ -1842,6 +1850,8 @@ void tst_QDeclarativeGridView::footer()
     QCOMPARE(footer->y(), 600.0);
     QCOMPARE(footer->height(), 20.0);
     QCOMPARE(gridview->contentY(), 0.0);
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::header()
@@ -1891,6 +1901,8 @@ void tst_QDeclarativeGridView::header()
     QCOMPARE(header->y(), 10.0);
     QCOMPARE(header->height(), 20.0);
     QCOMPARE(gridview->contentY(), 10.0);
+
+    delete canvas;
 }
 
 void tst_QDeclarativeGridView::indexAt()

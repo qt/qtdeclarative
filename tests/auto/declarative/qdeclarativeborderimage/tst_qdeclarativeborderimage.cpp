@@ -249,6 +249,7 @@ void tst_qdeclarativeborderimage::mirror()
     p_screenshot.fillRect(QRect(0, 0, width, height), Qt::white);
     scene.render(&p_screenshot, QRect(0, 0, width, height), QRect(0, 0, width, height));
 
+    QEXPECT_FAIL("", "QTBUG-19538", Continue);
     QCOMPARE(screenshot, expected);
 
     delete obj;

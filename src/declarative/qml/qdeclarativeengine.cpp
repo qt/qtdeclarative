@@ -55,6 +55,7 @@
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativexmlhttprequest_p.h"
 #include "private/qdeclarativesqldatabase_p.h"
+#include "private/qdeclarativescarceresourcescriptclass_p.h"
 #include "private/qdeclarativetypenamescriptclass_p.h"
 #include "private/qdeclarativelistscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
@@ -104,6 +105,8 @@
 
 #include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
+#include <private/qsgitemsmodule_p.h>
+#include <qsgtexture.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
@@ -350,13 +353,15 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
   objectClass(0), valueTypeClass(0), globalClass(0), cleanup(0), erroredBindings(0),
   inProgressCreations(0), scriptEngine(this), workerScriptEngine(0), componentAttached(0),
   inBeginCreate(false), networkAccessManager(0), networkAccessManagerFactory(0),
-  typeLoader(e), importDatabase(e), uniqueId(1)
+  scarceResources(0), scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
+  sgContext(0)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
         QDeclarativeItemModule::defineModule();
         QDeclarativeUtilModule::defineModule();
         QDeclarativeEnginePrivate::defineModule();
+        QSGItemsModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
     globalClass = new QDeclarativeGlobalScriptClass(&scriptEngine);
@@ -500,6 +505,8 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
     contextClass = 0;
     delete objectClass;
     objectClass = 0;
+    delete scarceResourceClass;
+    scarceResourceClass = 0;
     delete valueTypeClass;
     valueTypeClass = 0;
     delete typeNameClass;
@@ -515,7 +522,10 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
         (*iter)->release();
     for(QHash<QPair<QDeclarativeType *, int>, QDeclarativePropertyCache *>::Iterator iter = typePropertyCache.begin(); iter != typePropertyCache.end(); ++iter)
         (*iter)->release();
-
+    for(QHash<QDeclarativeMetaType::ModuleApi, QDeclarativeMetaType::ModuleApiInstance *>::Iterator iter = moduleApiInstances.begin(); iter != moduleApiInstances.end(); ++iter) {
+        delete (*iter)->qobjectApi;
+        delete *iter;
+    }
 }
 
 void QDeclarativeEnginePrivate::clear(SimpleList<QDeclarativeAbstractBinding> &bvs)
@@ -572,6 +582,7 @@ void QDeclarativeEnginePrivate::init()
 
     contextClass = new QDeclarativeContextScriptClass(q);
     objectClass = new QDeclarativeObjectScriptClass(q);
+    scarceResourceClass = new QDeclarativeScarceResourceScriptClass(q);
     valueTypeClass = new QDeclarativeValueTypeScriptClass(q);
     typeNameClass = new QDeclarativeTypeNameScriptClass(q);
     listClass = new QDeclarativeListScriptClass(q);
@@ -647,9 +658,23 @@ QDeclarativeEngine::QDeclarativeEngine(QObject *parent)
 QDeclarativeEngine::~QDeclarativeEngine()
 {
     Q_D(QDeclarativeEngine);
-    if (d->isDebugging) {
+    if (d->isDebugging)
         QDeclarativeEngineDebugServer::instance()->remEngine(this);
-        QJSDebugService::instance()->removeEngine(this);
+
+    // if we are the parent of any of the qobject module api instances,
+    // we need to remove them from our internal list, in order to prevent
+    // a segfault in engine private dtor.
+    QList<QDeclarativeMetaType::ModuleApi> keys = d->moduleApiInstances.keys();
+    QObject *currQObjectApi = 0;
+    QDeclarativeMetaType::ModuleApiInstance *currInstance = 0;
+    foreach (const QDeclarativeMetaType::ModuleApi &key, keys) {
+        currInstance = d->moduleApiInstances.value(key);
+        currQObjectApi = currInstance->qobjectApi;
+        if (this->children().contains(currQObjectApi)) {
+            delete currQObjectApi;
+            delete currInstance;
+            d->moduleApiInstances.remove(key);
+        }
     }
 }
 
@@ -814,7 +839,19 @@ QDeclarativeImageProvider::ImageType QDeclarativeEnginePrivate::getImageProvider
     locker.unlock();
     if (provider)
         return provider->imageType();
-    return static_cast<QDeclarativeImageProvider::ImageType>(-1);
+    return QDeclarativeImageProvider::Invalid;
+}
+
+QSGTexture *QDeclarativeEnginePrivate::getTextureFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
+{
+    QMutexLocker locker(&mutex);
+    QSharedPointer<QDeclarativeImageProvider> provider = imageProviders.value(url.host());
+    locker.unlock();
+    if (provider) {
+        QString imageId = url.toString(QUrl::RemoveScheme | QUrl::RemoveAuthority).mid(1);
+        return provider->requestTexture(imageId, size, req_size);
+    }
+    return 0;
 }
 
 QImage QDeclarativeEnginePrivate::getImageFromProvider(const QUrl &url, QSize *size, const QSize& req_size)
@@ -1315,6 +1352,8 @@ Example (where \c parentItem is the id of an existing QML item):
 In the case of an error, a QtScript Error object is thrown. This object has an additional property,
 \c qmlErrors, which is an array of the errors encountered.
 Each object in this array has the members \c lineNumber, \c columnNumber, \c fileName and \c message.
+For example, if the above snippet had misspelled color as 'colro' then the array would contain an object like the following:
+{ "lineNumber" : 1, "columnNumber" : 32, "fileName" : "dynamicSnippet1", "message" : "Cannot assign to non-existent property \"colro\""}.
 
 Note that this function returns immediately, and therefore may not work if
 the \a qml string loads new components (that is, external QML files that have not yet been loaded).
@@ -1361,7 +1400,7 @@ QScriptValue QDeclarativeEnginePrivate::createQmlObject(QScriptContext *ctxt, QS
         QScriptValue arr = ctxt->engine()->newArray(errors.length());
         int i = 0;
         foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("    ") + error.toString() + QLatin1String("\n");
+            errstr += QLatin1String("\n    ") + error.toString();
             QScriptValue qmlErrObject = ctxt->engine()->newObject();
             qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
             qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
@@ -1388,7 +1427,7 @@ QScriptValue QDeclarativeEnginePrivate::createQmlObject(QScriptContext *ctxt, QS
         QScriptValue arr = ctxt->engine()->newArray(errors.length());
         int i = 0;
         foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("    ") + error.toString() + QLatin1String("\n");
+            errstr += QLatin1String("\n    ") + error.toString();
             QScriptValue qmlErrObject = ctxt->engine()->newObject();
             qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
             qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
@@ -1702,9 +1741,6 @@ QScriptValue QDeclarativeEnginePrivate::rect(QScriptContext *ctxt, QScriptEngine
     qsreal y = ctxt->argument(1).toNumber();
     qsreal w = ctxt->argument(2).toNumber();
     qsreal h = ctxt->argument(3).toNumber();
-
-    if (w < 0 || h < 0)
-        return engine->nullValue();
 
     return QDeclarativeEnginePrivate::get(engine)->scriptValueFromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
 }
@@ -2060,7 +2096,9 @@ QScriptValue QDeclarativeEnginePrivate::tint(QScriptContext *ctxt, QScriptEngine
 
 QScriptValue QDeclarativeEnginePrivate::scriptValueFromVariant(const QVariant &val)
 {
-    if (val.userType() == qMetaTypeId<QDeclarativeListReference>()) {
+    if (variantIsScarceResource(val)) {
+        return scarceResourceClass->newScarceResource(val);
+    } else if (val.userType() == qMetaTypeId<QDeclarativeListReference>()) {
         QDeclarativeListReferencePrivate *p =
             QDeclarativeListReferencePrivate::get((QDeclarativeListReference*)val.constData());
         if (p->object) {
@@ -2089,11 +2127,69 @@ QScriptValue QDeclarativeEnginePrivate::scriptValueFromVariant(const QVariant &v
     }
 }
 
+/*
+   If the variant is a scarce resource (consumes a large amount of memory, or
+   only a limited number of them can be held in memory at any given time without
+   exhausting supply for future use) we need to release the scarce resource
+   after evaluation of the javascript binding is complete.
+ */
+bool QDeclarativeEnginePrivate::variantIsScarceResource(const QVariant& val)
+{
+    if (val.type() == QVariant::Pixmap) {
+        return true;
+    } else if (val.type() == QVariant::Image) {
+        return true;
+    }
+
+    return false;
+}
+
+/*
+   This function should be called prior to evaluation of any js expression,
+   so that scarce resources are not freed prematurely (eg, if there is a
+   nested javascript expression).
+ */
+void QDeclarativeEnginePrivate::referenceScarceResources()
+{
+    scarceResourcesRefCount += 1;
+}
+
+/*
+   This function should be called after evaluation of the js expression is
+   complete, and so the scarce resources may be freed safely.
+ */
+void QDeclarativeEnginePrivate::dereferenceScarceResources()
+{
+    Q_ASSERT(scarceResourcesRefCount > 0);
+    scarceResourcesRefCount -= 1;
+
+    // if the refcount is zero, then evaluation of the "top level"
+    // expression must have completed.  We can safely release the
+    // scarce resources.
+    if (scarceResourcesRefCount == 0) {
+        // iterate through the list and release them all.
+        // note that the actual SRD is owned by the JS engine,
+        // so we cannot delete the SRD; but we can free the
+        // memory used by the variant in the SRD.
+        ScarceResourceData *srd = 0;
+        while (scarceResources) {
+            srd = scarceResources; // srd points to the "old" (current) head of the list
+            scarceResources = srd->next; // srd->next is the "new" head of the list
+            if (srd->next) srd->next->prev = &scarceResources; // newHead->prev = listptr.
+            srd->next = 0;
+            srd->prev = 0;
+            srd->releaseResource(); // release the old head node.
+        }
+    }
+}
+
 QVariant QDeclarativeEnginePrivate::scriptValueToVariant(const QScriptValue &val, int hint)
 {
     QScriptDeclarativeClass *dc = QScriptDeclarativeClass::scriptClass(val);
     if (dc == objectClass)
         return QVariant::fromValue(objectClass->toQObject(val));
+    else if (dc == scarceResourceClass)
+        return scarceResourceClass->toVariant(val);
     else if (dc == valueTypeClass)
         return valueTypeClass->toVariant(val);
     else if (dc == contextClass)
@@ -2222,6 +2318,20 @@ void QDeclarativeEngine::setPluginPathList(const QStringList &paths)
   Imports the plugin named \a filePath with the \a uri provided.
   Returns true if the plugin was successfully imported; otherwise returns false.
 
+  On failure and if non-null, the \a errors list will have any errors which occurred prepended to it.
+
+  The plugin has to be a Qt plugin which implements the QDeclarativeExtensionPlugin interface.
+*/
+bool QDeclarativeEngine::importPlugin(const QString &filePath, const QString &uri, QList<QDeclarativeError> *errors)
+{
+    Q_D(QDeclarativeEngine);
+    return d->importDatabase.importPlugin(filePath, uri, errors);
+}
+
+/*!
+  Imports the plugin named \a filePath with the \a uri provided.
+  Returns true if the plugin was successfully imported; otherwise returns false.
+
   On failure and if non-null, *\a errorString will be set to a message describing the failure.
 
   The plugin has to be a Qt plugin which implements the QDeclarativeExtensionPlugin interface.
@@ -2229,7 +2339,18 @@ void QDeclarativeEngine::setPluginPathList(const QStringList &paths)
 bool QDeclarativeEngine::importPlugin(const QString &filePath, const QString &uri, QString *errorString)
 {
     Q_D(QDeclarativeEngine);
-    return d->importDatabase.importPlugin(filePath, uri, errorString);
+    QList<QDeclarativeError> errors;
+    bool retn = d->importDatabase.importPlugin(filePath, uri, &errors);
+    if (!errors.isEmpty()) {
+        QString builtError;
+        for (int i = 0; i < errors.size(); ++i) {
+            builtError = QString(QLatin1String("%1\n        %2"))
+                    .arg(builtError)
+                    .arg(errors.at(i).toString());
+        }
+        *errorString = builtError;
+    }
+    return retn;
 }
 
 /*!

@@ -174,7 +174,7 @@ void tst_qdeclarativeqt::rect()
     QCOMPARE(qvariant_cast<QRectF>(object->property("test2")), QRectF(-10, 13, 100, 109.6));
     QCOMPARE(qvariant_cast<QRectF>(object->property("test3")), QRectF());
     QCOMPARE(qvariant_cast<QRectF>(object->property("test4")), QRectF());
-    QCOMPARE(qvariant_cast<QRectF>(object->property("test5")), QRectF());
+    QCOMPARE(qvariant_cast<QRectF>(object->property("test5")), QRectF(10, 13, 100, -109));
 
     delete object;
 }
@@ -412,11 +412,11 @@ void tst_qdeclarativeqt::createQmlObject()
     QDeclarativeComponent component(&engine, TEST_FILE("createQmlObject.qml"));
 
     QString warning1 = component.url().toString() + ":7: Error: Qt.createQmlObject(): Invalid arguments";
-    QString warning2 = component.url().toString()+ ":10: Error: Qt.createQmlObject() failed to create object:     " + TEST_FILE("inline").toString() + ":2:10: Blah is not a type\n";
-    QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject() failed to create object:     " + TEST_FILE("main.qml").toString() + ":4:1: Duplicate property name\n";
+    QString warning2 = component.url().toString()+ ":10: Error: Qt.createQmlObject() failed to create object: \n    " + TEST_FILE("inline").toString() + ":2:10: Blah is not a type";
+    QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject() failed to create object: \n    " + TEST_FILE("main.qml").toString() + ":4:1: Duplicate property name";
     QString warning4 = component.url().toString()+ ":9: Error: Qt.createQmlObject(): Missing parent object";
     QString warning5 = component.url().toString()+ ":8: Error: Qt.createQmlObject(): Invalid arguments";
-    QString warning6 = "RunTimeError:  Qt.createQmlObject() failed to create object:     " + TEST_FILE("inline").toString() + ":3: Cannot assign object type QObject with no default method\n";
+    QString warning6 = "RunTimeError:  Qt.createQmlObject() failed to create object: \n    " + TEST_FILE("inline").toString() + ":3: Cannot assign object type QObject with no default method";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));

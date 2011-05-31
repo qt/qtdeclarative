@@ -79,7 +79,7 @@ class Q_AUTOTEST_EXPORT QDeclarativeComponentPrivate : public QObjectPrivate, pu
     Q_DECLARE_PUBLIC(QDeclarativeComponent)
         
 public:
-    QDeclarativeComponentPrivate() : typeData(0), progress(0.), start(-1), count(-1), cc(0), engine(0), creationContext(0) {}
+    QDeclarativeComponentPrivate() : typeData(0), progress(0.), start(-1), cc(0), engine(0), creationContext(0) {}
 
     QObject *beginCreate(QDeclarativeContextData *, const QBitField &);
     void completeCreate();
@@ -94,7 +94,6 @@ public:
     qreal progress;
 
     int start;
-    int count;
     QDeclarativeCompiledData *cc;
 
     struct ConstructionState {
@@ -109,7 +108,7 @@ public:
     ConstructionState state;
 
     static QObject *begin(QDeclarativeContextData *parentContext, QDeclarativeContextData *componentCreationContext,
-                          QDeclarativeCompiledData *component, int start, int count, 
+                          QDeclarativeCompiledData *component, int start, 
                           ConstructionState *state, QList<QDeclarativeError> *errors, 
                           const QBitField &bindings = QBitField());
     static void beginDeferred(QDeclarativeEnginePrivate *enginePriv, QObject *object, 

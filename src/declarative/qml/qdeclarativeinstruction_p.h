@@ -57,302 +57,407 @@
 
 QT_BEGIN_NAMESPACE
 
+#define FOR_EACH_QML_INSTR(F) \
+    F(Init, init) \
+    F(Done, common) \
+    F(CreateObject, create) \
+    F(CreateSimpleObject, createSimple) \
+    F(SetId, setId) \
+    F(SetDefault, common) \
+    F(CreateComponent, createComponent) \
+    F(StoreMetaObject, storeMeta) \
+    F(StoreVariant, storeString) \
+    F(StoreVariantInteger, storeInteger) \
+    F(StoreVariantDouble, storeDouble) \
+    F(StoreVariantBool, storeBool) \
+    F(StoreString, storeString) \
+    F(StoreByteArray, storeByteArray) \
+    F(StoreUrl, storeUrl) \
+    F(StoreFloat, storeFloat) \
+    F(StoreDouble, storeDouble) \
+    F(StoreBool, storeBool) \
+    F(StoreInteger, storeInteger) \
+    F(StoreColor, storeColor) \
+    F(StoreDate, storeDate) \
+    F(StoreTime, storeTime) \
+    F(StoreDateTime, storeDateTime) \
+    F(StorePoint, storePoint) \
+    F(StorePointF, storePointF) \
+    F(StoreSize, storeSize) \
+    F(StoreSizeF, storeSizeF) \
+    F(StoreRect, storeRect) \
+    F(StoreRectF, storeRectF) \
+    F(StoreVector3D, storeVector3D) \
+    F(StoreObject, storeObject) \
+    F(AssignCustomType, assignCustomType) \
+    F(AssignSignalObject, assignSignalObject) \
+    F(StoreSignal, storeSignal) \
+    F(StoreImportedScript, storeScript) \
+    F(StoreScriptString, storeScriptString) \
+    F(BeginObject, begin) \
+    F(StoreBinding, assignBinding) \
+    F(StoreBindingOnAlias, assignBinding) \
+    F(StoreCompiledBinding, assignBinding) \
+    F(StoreValueSource, assignValueSource) \
+    F(StoreValueInterceptor, assignValueInterceptor) \
+    F(StoreObjectQList, common) \
+    F(AssignObjectList, assignObjectList) \
+    F(StoreVariantObject, storeObject) \
+    F(StoreInterface, storeObject) \
+    F(FetchAttached, fetchAttached) \
+    F(FetchQList, fetchQmlList) \
+    F(FetchObject, fetch) \
+    F(PopQList, common) \
+    F(Defer, defer) \
+    F(PopFetchedObject, common) \
+    F(FetchValueType, fetchValue) \
+    F(PopValueType, fetchValue) 
+
+#ifdef Q_ALIGNOF
+#  define QML_INSTR_ALIGN_MASK (Q_ALIGNOF(QDeclarativeInstruction) - 1)
+#else
+#  define QML_INSTR_ALIGN_MASK (sizeof(void *) - 1)
+#endif
+
+#define QML_INSTR_HEADER quint8 instructionType;
+#define QML_INSTR_ENUM(I, FMT)  I,
+#define QML_INSTR_SIZE(I, FMT) ((sizeof(QDeclarativeInstruction::instr_##FMT) + QML_INSTR_ALIGN_MASK) & ~QML_INSTR_ALIGN_MASK)
+
 class QDeclarativeCompiledData;
-class Q_AUTOTEST_EXPORT QDeclarativeInstruction
+union QDeclarativeInstruction
 {
-public:
     enum Type { 
-        //
-        // Object Creation
-        //
-        //    CreateObject - Create a new object instance and push it on the 
-        //                   object stack
-        //    SetId - Set the id of the object on the top of the object stack
-        //    SetDefault - Sets the instance on the top of the object stack to
-        //                 be the context's default object.
-        //    StoreMetaObject - Assign the dynamic metaobject to object on the
-        //                      top of the stack.
-        Init,                     /* init */
-        CreateObject,             /* create */
-        CreateSimpleObject,       /* createSimple */
-        SetId,                    /* setId */
-        SetDefault,
-        CreateComponent,          /* createComponent */
-        StoreMetaObject,          /* storeMeta */
-
-        //
-        // Precomputed single assignment
-        //
-        //    StoreFloat - Store a float in a core property
-        //    StoreDouble - Store a double in a core property
-        //    StoreInteger - Store a int or uint in a core property
-        //    StoreBool - Store a bool in a core property
-        //    StoreString - Store a QString in a core property
-        //    StoreUrl - Store a QUrl in a core property
-        //    StoreColor - Store a QColor in a core property
-        //    StoreDate - Store a QDate in a core property
-        //    StoreTime - Store a QTime in a core property
-        //    StoreDateTime - Store a QDateTime in a core property
-        //    StoreVariant - Store a QVariant in a core property
-        //    StoreObject - Pop the object on the top of the object stack and
-        //                  store it in a core property
-        StoreFloat,               /* storeFloat */
-        StoreDouble,              /* storeDouble */
-        StoreInteger,             /* storeInteger */
-        StoreBool,                /* storeBool */
-        StoreString,              /* storeString */
-        StoreUrl,                 /* storeUrl */
-        StoreColor,               /* storeColor */
-        StoreDate,                /* storeDate */
-        StoreTime,                /* storeTime */
-        StoreDateTime,            /* storeDateTime */
-        StorePoint,               /* storeRealPair */
-        StorePointF,              /* storeRealPair */
-        StoreSize,                /* storeRealPair */
-        StoreSizeF,               /* storeRealPair */
-        StoreRect,                /* storeRect */
-        StoreRectF,               /* storeRect */
-        StoreVector3D,            /* storeVector3D */
-        StoreVariant,             /* storeString */
-        StoreVariantInteger,      /* storeInteger */
-        StoreVariantDouble,       /* storeDouble */
-        StoreVariantBool,         /* storeBool */
-        StoreObject,              /* storeObject */
-        StoreVariantObject,       /* storeObject */
-        StoreInterface,           /* storeObject */
-
-        StoreSignal,              /* storeSignal */
-        StoreImportedScript,      /* storeScript */
-        StoreScriptString,        /* storeScriptString */
-
-        //
-        // Unresolved single assignment
-        //
-        AssignSignalObject,       /* assignSignalObject */
-        AssignCustomType,         /* assignCustomType */
-
-        StoreBinding,             /* assignBinding */
-        StoreBindingOnAlias,      /* assignBinding */
-        StoreCompiledBinding,     /* assignBinding */
-        StoreValueSource,         /* assignValueSource */
-        StoreValueInterceptor,    /* assignValueInterceptor */
-
-        BeginObject,              /* begin */
-
-        StoreObjectQList,         /* NA */
-        AssignObjectList,         /* NA */
-
-        FetchAttached,            /* fetchAttached */
-        FetchQList,               /* fetch */
-        FetchObject,              /* fetch */
-        FetchValueType,           /* fetchValue */
-
-        //
-        // Stack manipulation
-        // 
-        //    PopFetchedObject - Remove an object from the object stack
-        //    PopQList - Remove a list from the list stack
-        PopFetchedObject,
-        PopQList,
-        PopValueType,            /* fetchValue */
-
-        // 
-        // Deferred creation
-        //
-        Defer                    /* defer */
+        FOR_EACH_QML_INSTR(QML_INSTR_ENUM)
     };
-    QDeclarativeInstruction()
-        : line(0) {}
 
-    Type type;
-    unsigned short line;
+    inline void setType(Type type) { common.instructionType = type; }
+    inline Type type() const { return (Type)common.instructionType; }
 
-    struct InitInstruction {
+    struct instr_common {
+        QML_INSTR_HEADER
+    };
+    struct instr_init {
+        QML_INSTR_HEADER
         int bindingsSize;
         int parserStatusSize;
         int contextCache;
         int compiledBinding;
     };
-    struct CreateInstruction {
+    struct instr_create {
+        QML_INSTR_HEADER
         int type;
         int data;
         int bindingBits;
         ushort column;
+        ushort line; 
     };
-    struct CreateSimpleInstruction {
+    struct instr_createSimple {
+        QML_INSTR_HEADER
         void (*create)(void *);
         int typeSize;
         int type;
         ushort column;
+        ushort line; 
     };
-    struct StoreMetaInstruction {
+    struct instr_storeMeta {
+        QML_INSTR_HEADER
         int data;
         int aliasData;
         int propertyCache;
     };
-    struct SetIdInstruction {
+    struct instr_setId {
+        QML_INSTR_HEADER
         int value;
         int index;
     };
-    struct AssignValueSourceInstruction {
+    struct instr_assignValueSource {
+        QML_INSTR_HEADER
         int property;
         int owner;
         int castValue;
     };
-    struct AssignValueInterceptorInstruction {
+    struct instr_assignValueInterceptor {
+        QML_INSTR_HEADER
         int property;
         int owner;
         int castValue;
     };
-    struct AssignBindingInstruction {
+    struct instr_assignBinding {
+        QML_INSTR_HEADER
         unsigned int property;
         int value;
         short context;
         short owner;
+        ushort line;
     };
-    struct FetchInstruction {
+    struct instr_fetch {
+        QML_INSTR_HEADER
         int property;
+        ushort line;
     };
-    struct FetchValueInstruction {
+    struct instr_fetchValue {
+        QML_INSTR_HEADER
         int property;
         int type;
         quint32 bindingSkipList;
     };
-    struct FetchQmlListInstruction {
+    struct instr_fetchQmlList {
+        QML_INSTR_HEADER
         int property;
         int type;
     };
-    struct BeginInstruction {
+    struct instr_begin {
+        QML_INSTR_HEADER
         int castValue;
     }; 
-    struct StoreFloatInstruction {
+    struct instr_storeFloat {
+        QML_INSTR_HEADER
         int propertyIndex;
         float value;
     };
-    struct StoreDoubleInstruction {
+    struct instr_storeDouble {
+        QML_INSTR_HEADER
         int propertyIndex;
         double value;
     };
-    struct StoreIntegerInstruction {
+    struct instr_storeInteger {
+        QML_INSTR_HEADER
         int propertyIndex;
         int value;
     };
-    struct StoreBoolInstruction {
+    struct instr_storeBool {
+        QML_INSTR_HEADER
         int propertyIndex;
         bool value;
     };
-    struct StoreStringInstruction {
+    struct instr_storeString {
+        QML_INSTR_HEADER
         int propertyIndex;
         int value;
     };
-    struct StoreScriptStringInstruction {
+    struct instr_storeByteArray {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        int value;
+    };
+    struct instr_storeScriptString {
+        QML_INSTR_HEADER
         int propertyIndex;
         int value;
         int scope;
     }; 
-    struct StoreScriptInstruction {
+    struct instr_storeScript {
+        QML_INSTR_HEADER
         int value;
     };
-    struct StoreUrlInstruction {
+    struct instr_storeUrl {
+        QML_INSTR_HEADER
         int propertyIndex;
         int value;
     };
-    struct StoreColorInstruction {
+    struct instr_storeColor {
+        QML_INSTR_HEADER
         int propertyIndex;
         unsigned int value;
     };
-    struct StoreDateInstruction {
+    struct instr_storeDate {
+        QML_INSTR_HEADER
         int propertyIndex;
         int value;
     };
-    struct StoreTimeInstruction {
+    struct instr_storeTime {
+        QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QTime {
+            int mds;
+#if defined(Q_OS_WINCE)
+            int startTick;
+#endif
+        } time;
     };
-    struct StoreDateTimeInstruction {
+    struct instr_storeDateTime {
+        QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        int date;
+        instr_storeTime::QTime time;
     };
-    struct StoreRealPairInstruction {
+    struct instr_storeRect {
+        QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QRect {
+#if defined(Q_OS_MAC)
+            int y1;
+            int x1;
+            int y2;
+            int x2;
+#else
+            int x1;
+            int y1;
+            int x2;
+            int y2;
+#endif
+        } rect;
     };
-    struct StoreRectInstruction {
+    struct instr_storeRectF {
+        QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        struct QRectF {
+            qreal xp;
+            qreal yp;
+            qreal w;
+            qreal h;
+        } rect;
     };
-    struct StoreVector3DInstruction {
+    struct instr_storeObject {
+        QML_INSTR_HEADER
         int propertyIndex;
-        int valueIndex;
+        ushort line;
     };
-    struct StoreObjectInstruction {
+    struct instr_assignCustomType {
+        QML_INSTR_HEADER
         int propertyIndex;
+        int primitive;
+        int type;
+        ushort line;
     };
-    struct AssignCustomTypeInstruction {
-        int propertyIndex;
-        int valueIndex;
-    };
-    struct StoreSignalInstruction {
+    struct instr_storeSignal {
+        QML_INSTR_HEADER
         int signalIndex;
         int value;
         short context;
         int name;
+        ushort line;
     };
-    struct AssignSignalObjectInstruction {
+    struct instr_assignSignalObject {
+        QML_INSTR_HEADER
         int signal;
+        ushort line; 
     };
-    struct CreateComponentInstruction {
+    struct instr_createComponent {
+        QML_INSTR_HEADER
         int count;
-        ushort column;
         int endLine;
         int metaObject;
+        ushort column;
+        ushort line;
     };
-    struct FetchAttachedInstruction {
+    struct instr_fetchAttached {
+        QML_INSTR_HEADER
         int id;
+        ushort line;
     };
-    struct DeferInstruction {
+    struct instr_defer {
+        QML_INSTR_HEADER
         int deferCount;
     };
-
-    union {
-        InitInstruction init;
-        CreateInstruction create;
-        CreateSimpleInstruction createSimple;
-        StoreMetaInstruction storeMeta;
-        SetIdInstruction setId;
-        AssignValueSourceInstruction assignValueSource;
-        AssignValueInterceptorInstruction assignValueInterceptor;
-        AssignBindingInstruction assignBinding;
-        FetchInstruction fetch;
-        FetchValueInstruction fetchValue;
-        FetchQmlListInstruction fetchQmlList;
-        BeginInstruction begin;
-        StoreFloatInstruction storeFloat;
-        StoreDoubleInstruction storeDouble;
-        StoreIntegerInstruction storeInteger;
-        StoreBoolInstruction storeBool;
-        StoreStringInstruction storeString;
-        StoreScriptStringInstruction storeScriptString;
-        StoreScriptInstruction storeScript;
-        StoreUrlInstruction storeUrl;
-        StoreColorInstruction storeColor;
-        StoreDateInstruction storeDate;
-        StoreTimeInstruction storeTime;
-        StoreDateTimeInstruction storeDateTime;
-        StoreRealPairInstruction storeRealPair;
-        StoreRectInstruction storeRect;
-        StoreVector3DInstruction storeVector3D;
-        StoreObjectInstruction storeObject;
-        AssignCustomTypeInstruction assignCustomType;
-        StoreSignalInstruction storeSignal;
-        AssignSignalObjectInstruction assignSignalObject;
-        CreateComponentInstruction createComponent;
-        FetchAttachedInstruction fetchAttached;
-        DeferInstruction defer;
+    struct instr_assignObjectList {
+        QML_INSTR_HEADER
+        ushort line;
+    };
+    struct instr_storePoint {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QPoint {
+#if defined(Q_OS_MAC)
+            int yp;
+            int xp;
+#else
+            int xp;
+            int yp;
+#endif
+        } point;
+    };
+    struct instr_storePointF {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QPointF {
+            qreal xp;
+            qreal yp;
+        } point;
+    };
+    struct instr_storeSize {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QSize {
+            int wd;
+            int ht;
+        } size;
+    };
+    struct instr_storeSizeF {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QSizeF {
+            qreal wd;
+            qreal ht;
+        } size;
+    };
+    struct instr_storeVector3D {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QVector3D {
+            float xp;
+            float yp;
+            float zp;
+        } vector;
     };
 
-    void dump(QDeclarativeCompiledData *);
+    instr_common common;
+    instr_init init;
+    instr_create create;
+    instr_createSimple createSimple;
+    instr_storeMeta storeMeta;
+    instr_setId setId;
+    instr_assignValueSource assignValueSource;
+    instr_assignValueInterceptor assignValueInterceptor;
+    instr_assignBinding assignBinding;
+    instr_fetch fetch;
+    instr_fetchValue fetchValue;
+    instr_fetchQmlList fetchQmlList;
+    instr_begin begin;
+    instr_storeFloat storeFloat;
+    instr_storeDouble storeDouble;
+    instr_storeInteger storeInteger;
+    instr_storeBool storeBool;
+    instr_storeString storeString;
+    instr_storeByteArray storeByteArray;
+    instr_storeScriptString storeScriptString;
+    instr_storeScript storeScript;
+    instr_storeUrl storeUrl;
+    instr_storeColor storeColor;
+    instr_storeDate storeDate;
+    instr_storeTime storeTime;
+    instr_storeDateTime storeDateTime;
+    instr_storePoint storePoint;
+    instr_storePointF storePointF;
+    instr_storeSize storeSize;
+    instr_storeSizeF storeSizeF;
+    instr_storeRect storeRect;
+    instr_storeRectF storeRectF;
+    instr_storeVector3D storeVector3D;
+    instr_storeObject storeObject;
+    instr_assignCustomType assignCustomType;
+    instr_storeSignal storeSignal;
+    instr_assignSignalObject assignSignalObject;
+    instr_createComponent createComponent;
+    instr_fetchAttached fetchAttached;
+    instr_defer defer;
+    instr_assignObjectList assignObjectList;
+
+    int size() const;
 };
+
+template<int N>
+struct QDeclarativeInstructionMeta {
+};
+
+#define QML_INSTR_META_TEMPLATE(I, FMT) \
+    template<> struct QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I> { \
+        enum { Size = QML_INSTR_SIZE(I, FMT) }; \
+        typedef QDeclarativeInstruction::instr_##FMT DataType; \
+        static const DataType &data(const QDeclarativeInstruction &instr) { return instr.FMT; } \
+    }; 
+FOR_EACH_QML_INSTR(QML_INSTR_META_TEMPLATE);
+#undef QML_INSTR_META_TEMPLATE
 
 QT_END_NAMESPACE
 

@@ -1,0 +1,410 @@
+/****************************************************************************
+**
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the QtDeclarative module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** No Commercial Usage
+** This file contains pre-release code and may not be distributed.
+** You may use this file in accordance with the terms and conditions
+** contained in the Technology Preview License Agreement accompanying
+** this package.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain additional
+** rights.  These rights are described in the Nokia Qt LGPL Exception
+** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
+**
+** If you have questions regarding the use of this file, please contact
+** Nokia at qt-info@nokia.com.
+**
+**
+**
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qsgtexturematerial_p.h"
+
+#include <QtOpenGL/qglshaderprogram.h>
+#include <QtOpenGL/qglfunctions.h>
+
+QT_BEGIN_NAMESPACE
+
+inline static bool isPowerOfTwo(int x)
+{
+    // Assumption: x >= 1
+    return x == (x & -x);
+}
+
+const char qt_scenegraph_texture_material_vertex_code[] =
+    "uniform highp mat4 qt_Matrix;                      \n"
+    "attribute highp vec4 qt_VertexPosition;            \n"
+    "attribute highp vec2 qt_VertexTexCoord;            \n"
+    "varying highp vec2 qt_TexCoord;                    \n"
+    "void main() {                                      \n"
+    "    qt_TexCoord = qt_VertexTexCoord;               \n"
+    "    gl_Position = qt_Matrix * qt_VertexPosition;   \n"
+    "}";
+
+const char qt_scenegraph_texture_material_fragment[] =
+    "varying highp vec2 qt_TexCoord;                    \n"
+    "uniform sampler2D qt_Texture;                      \n"
+    "void main() {                                      \n"
+    "    gl_FragColor = texture2D(qt_Texture, qt_TexCoord);\n"
+    "}";
+
+
+const char *QSGOpaqueTextureMaterialShader::vertexShader() const
+{
+    return qt_scenegraph_texture_material_vertex_code;
+}
+
+const char *QSGOpaqueTextureMaterialShader::fragmentShader() const
+{
+    return qt_scenegraph_texture_material_fragment;
+}
+
+QSGMaterialType QSGOpaqueTextureMaterialShader::type;
+
+char const *const *QSGOpaqueTextureMaterialShader::attributeNames() const
+{
+    static char const *const attr[] = { "qt_VertexPosition", "qt_VertexTexCoord", 0 };
+    return attr;
+}
+
+void QSGOpaqueTextureMaterialShader::initialize()
+{
+    m_matrix_id = program()->uniformLocation("qt_Matrix");
+}
+
+void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+{
+    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    QSGOpaqueTextureMaterial *tx = static_cast<QSGOpaqueTextureMaterial *>(newEffect);
+    QSGOpaqueTextureMaterial *oldTx = static_cast<QSGOpaqueTextureMaterial *>(oldEffect);
+
+    QSGTexture *t = tx->texture();
+
+    t->setFiltering(tx->filtering());
+#ifdef QT_OPENGL_ES_2
+    bool npotSupported = state.context()->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+    QSize size = t->textureSize();
+    bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
+    if (!npotSupported && isNpot) {
+        t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    } else
+#endif
+    {
+        t->setHorizontalWrapMode(tx->horizontalWrapMode());
+        t->setVerticalWrapMode(tx->verticalWrapMode());
+    }
+    t->setMipmapFiltering(tx->mipmapFiltering());
+
+    if (oldTx == 0 || oldTx->texture()->textureId() != t->textureId())
+        t->bind();
+    else
+        t->updateBindOptions();
+
+    if (state.isMatrixDirty())
+        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
+}
+
+
+/*!
+    \class QSGOpaqueTextureMaterial
+    \brief The QSGOpaqueTextureMaterial class provides a convenient way of
+    rendering textured geometry in the scene graph.
+
+    The opaque textured material will fill every pixel in a geometry with
+    the supplied texture. The material does not respect the opacity of the
+    QSGMaterialShader::RenderState, so opacity nodes in the parent chain
+    of nodes using this material, have no effect.
+
+    The geometry to be rendered with an opaque texture material requires
+    vertices in attribute location 0 and texture coordinates in attribute
+    location 1. The texture coordinate is a 2-dimensional floating-point
+    tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
+    attribute set compatible with this material.
+
+    The texture to be rendered is can be set using setTexture(). How the
+    texure should be rendered can be specified using setMipmapFiltering(),
+    setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
+    The rendering state is set on the texture instance just before it
+    is bound.
+
+    The opaque textured material respects the current matrix and the alpha
+    channel of the texture. It will disregard the accumulated opacity in
+    the scenegraph.
+
+    A texture material must have a texture set before it is used as
+    a material in the scene graph.
+ */
+
+
+
+/*!
+    Creates a new QSGOpaqueTextureMaterial.
+
+    The default mipmap filtering and filtering mode is set to
+    QSGTexture::Nearest. The default wrap modes is set to
+    QSGTexture::ClampToEdge.
+
+ */
+QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()
+    : m_texture(0)
+    , m_filtering(QSGTexture::Nearest)
+    , m_mipmap_filtering(QSGTexture::Nearest)
+    , m_horizontal_wrap(QSGTexture::ClampToEdge)
+    , m_vertical_wrap(QSGTexture::ClampToEdge)
+{
+}
+
+
+/*!
+    \internal
+ */
+QSGMaterialType *QSGOpaqueTextureMaterial::type() const
+{
+    return &QSGOpaqueTextureMaterialShader::type;
+}
+
+/*!
+    \internal
+ */
+QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
+{
+    return new QSGOpaqueTextureMaterialShader;
+}
+
+
+
+/*!
+    \fn QSGTexture *QSGOpaqueTextureMaterial::texture() const
+
+    Returns this texture material's texture.
+ */
+
+
+
+/*!
+    Sets the texture of this material to \a texture.
+
+    The material does not take ownership over the texture.
+ */
+
+void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
+{
+    m_texture = texture;
+    setFlag(Blending, m_texture ? m_texture->hasAlphaChannel() : false);
+}
+
+
+
+/*!
+    \fn void QSGOpaqueTextureMaterial::setMipmapFiltering(QSGTexture::Filtering filtering)
+
+    Sets the mipmap mode to \a filtering.
+
+    The mipmap filtering mode is set on the texture instance just before the
+    texture is bound for rendering.
+
+    If the texture does not have mipmapping support, enabling mipmapping has no
+    effect.
+ */
+
+
+
+/*!
+    \fn QSGTexture::Filtering QSGOpaqueTextureMaterial::mipmapFiltering() const
+
+    Returns this material's mipmap filtering mode.
+
+    The default mipmap mode is QSGTexture::Nearest.
+ */
+
+
+
+/*!
+    \fn void QSGOpaqueTextureMaterial::setFiltering(QSGTexture::Filtering filtering)
+
+    Sets the filtering to \a filtering.
+
+    The filtering mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+/*!
+    \fn QSGTexture::Filtering filtering() const
+
+    Returns this material's filtering mode.
+
+    The default filtering is QSGTexture::Nearest.
+ */
+
+
+
+/*!
+    \fn void setHorizontalWrapMode(QSGTexture::WrapMode mode)
+
+    Sets the horizontal wrap mode to \a mode.
+
+    The horizontal wrap mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+ /*!
+     \fn QSGTexture::WrapMode horizontalWrapMode() const
+
+     Returns this material's horizontal wrap mode.
+
+     The default horizontal wrap mode is QSGTexutre::ClampToEdge
+  */
+
+
+
+/*!
+    \fn void setVerticalWrapMode(QSGTexture::WrapMode mode)
+
+    Sets the vertical wrap mode to \a mode.
+
+    The vertical wrap mode is set on the texture instance just before the texture
+    is bound for rendering.
+ */
+
+
+
+ /*!
+     \fn QSGTexture::WrapMode verticalWrapMode() const
+
+     Returns this material's vertical wrap mode.
+
+     The default vertical wrap mode is QSGTexutre::ClampToEdge
+  */
+
+
+
+/*!
+    \internal
+ */
+
+int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
+{
+    Q_ASSERT(o && type() == o->type());
+    const QSGOpaqueTextureMaterial *other = static_cast<const QSGOpaqueTextureMaterial *>(o);
+    if (int diff = m_texture->textureId() - other->texture()->textureId())
+        return diff;
+    return int(m_filtering) - int(other->m_filtering);
+}
+
+
+
+/*!
+    \class QSGTextureMaterial
+    \brief The QSGTextureMaterial class provides a convenient way of
+    rendering textured geometry in the scene graph.
+
+    The textured material will fill every pixel in a geometry with
+    the supplied texture.
+
+    The geometry to be rendered with an opaque texture material requires
+    vertices in attribute location 0 and texture coordinates in attribute
+    location 1. The texture coordinate is a 2-dimensional floating-point
+    tuple. The QSGGeometry::defaultAttributes_TexturedPoint2D returns an
+    attribute set compatible with this material.
+
+    The texture to be rendered is set using setTexture(). How the
+    texure should be rendered can be specified using setMipmapFiltering(),
+    setFiltering(), setHorizontalWrapMode() and setVerticalWrapMode().
+    The rendering state is set on the texture instance just before it
+    is bound.
+
+    The opaque textured material respects the current matrix and the alpha
+    channel of the texture. It will disregard the accumulated opacity in
+    the scenegraph.
+
+    A texture material must have a texture set before it is used as
+    a material in the scene graph.
+ */
+
+static const char qt_scenegraph_texture_material_opacity_fragment[] =
+    "varying highp vec2 qt_TexCoord;                       \n"
+    "uniform sampler2D qt_Texture;                         \n"
+    "uniform lowp float opacity;                        \n"
+    "void main() {                                      \n"
+    "    gl_FragColor = texture2D(qt_Texture, qt_TexCoord) * opacity; \n"
+    "}";
+
+class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
+{
+public:
+    virtual void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect);
+    virtual void initialize();
+
+    static QSGMaterialType type;
+
+protected:
+    virtual const char *fragmentShader() const { return qt_scenegraph_texture_material_opacity_fragment; }
+
+    int m_opacity_id;
+};
+QSGMaterialType QSGTextureMaterialShader::type;
+
+
+
+/*!
+    \internal
+ */
+
+QSGMaterialType *QSGTextureMaterial::type() const
+{
+    return &QSGTextureMaterialShader::type;
+}
+
+
+
+/*!
+    \internal
+ */
+
+QSGMaterialShader *QSGTextureMaterial::createShader() const
+{
+    return new QSGTextureMaterialShader;
+}
+
+void QSGTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+{
+    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    if (state.isOpacityDirty())
+        program()->setUniformValue(m_opacity_id, state.opacity());
+
+    QSGOpaqueTextureMaterialShader::updateState(state, newEffect, oldEffect);
+}
+
+void QSGTextureMaterialShader::initialize()
+{
+    QSGOpaqueTextureMaterialShader::initialize();
+    m_opacity_id = program()->uniformLocation("opacity");
+}
+
+QT_END_NAMESPACE

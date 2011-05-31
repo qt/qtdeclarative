@@ -72,6 +72,7 @@ public slots:
 
 private slots:
     void basicProperties();
+    void resetFiltering();
     void refresh();
 
 private:
@@ -109,7 +110,7 @@ void tst_qdeclarativefolderlistmodel::basicProperties()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder",QUrl::fromLocalFile(SRCDIR "/data"));
-    QTRY_COMPARE(flm->property("count").toInt(),2); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(SRCDIR "/data"));
     QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(SRCDIR));
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
@@ -125,6 +126,37 @@ void tst_qdeclarativefolderlistmodel::basicProperties()
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(""));
 }
 
+void tst_qdeclarativefolderlistmodel::resetFiltering()
+{
+    // see QTBUG-17837
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/resetFiltering.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+
+    connect(flm, SIGNAL(rowsRemoved(const QModelIndex&,int,int)),
+            this, SLOT(removed(const QModelIndex&,int,int)));
+
+    flm->setProperty("folder",QUrl::fromLocalFile(SRCDIR "/data/resetfiltering"));
+    QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test.txt" visible
+    int count = flm->rowCount();
+    QCOMPARE(removeStart, 0);
+    QCOMPARE(removeEnd, count-1);
+
+    flm->setProperty("folder",QUrl::fromLocalFile(SRCDIR "/data/resetfiltering/innerdir"));
+    QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test2.txt" visible
+    count = flm->rowCount();
+    QCOMPARE(removeStart, 0);
+    QCOMPARE(removeEnd, count-1);
+
+    flm->setProperty("folder",QUrl::fromLocalFile(SRCDIR "/data/resetfiltering"));
+    QTRY_COMPARE(flm->property("count").toInt(),1); // should just be "test.txt" visible
+    count = flm->rowCount();
+    QCOMPARE(removeStart, 0);
+    QCOMPARE(removeEnd, count-1);
+}
+
 void tst_qdeclarativefolderlistmodel::refresh()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/basic.qml"));
@@ -134,7 +166,7 @@ void tst_qdeclarativefolderlistmodel::refresh()
     QVERIFY(flm != 0);
 
     flm->setProperty("folder",QUrl::fromLocalFile(SRCDIR "/data"));
-    QTRY_COMPARE(flm->property("count").toInt(),2); // wait for refresh
+    QTRY_COMPARE(flm->property("count").toInt(),4); // wait for refresh
 
     int count = flm->rowCount();
 

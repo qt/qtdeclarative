@@ -39,21 +39,62 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "common" as Common
-import "mobile" as Mobile
+import QtQuick 2.0
+import Qt.labs.particles 2.0
+import "content"
 
 Item {
     id: screen; width: 320; height: 480
-    property bool inListView : false
+    property bool inGridView : false
 
     Rectangle {
         id: background
         anchors.fill: parent; color: "#343434";
 
-        Image { source: "mobile/images/stripes.png"; fillMode: Image.Tile; anchors.fill: parent; opacity: 0.3 }
+        Image { source: "content/images/stripes.png"; fillMode: Image.Tile; anchors.fill: parent; opacity: 0.3 }
+        ParticleSystem {
+            id: bgParticles
+            startTime: 16000
+        }
+        ColoredParticle {
+            particles: ["trail"]
+            image: "content/images/particle.png"
+            color: "#1A1A6F"
+            alpha: 0.1
+            colorVariation: 0.01
+            blueVariation: 0.8
+            system: bgParticles
+        }
+        TrailEmitter {
+            particle: "drops"
+            width: parent.width
+            particlesPerSecond: 0.5
+            particleDuration: 20000
+            speed: PointVector{
+                y: {screen.height/18} 
+            }
+            system: bgParticles
+        }
+        FollowEmitter {
+            follow: "drops"
+            particle: "trail"
+            particlesPerParticlePerSecond: 18
+            particleSize: 32
+            particleEndSize: 0
+            particleSizeVariation: 4
+            particleDuration: 1200
+            system: bgParticles
+            anchors.fill: parent
+            emissionWidth: 16
+            emissionHeight: 16
+            emissionShape: Ellipse{}
+        }
 
-        Common.RssModel { id: rssModel }
+        VisualDataModel{
+            id: vdm
+            delegate: UnifiedDelegate{}
+            model: RssModel { id: rssModel }
+        }
 
         Item {
             id: views
@@ -61,39 +102,38 @@ Item {
             anchors.top: titleBar.bottom; anchors.bottom: toolBar.top
 
             GridView {
-                id: photoGridView; model: rssModel; delegate: Mobile.GridDelegate {}
+                id: photoGridView; model: vdm.parts.grid
                 cacheBuffer: 1000
                 cellWidth: (parent.width-2)/4; cellHeight: cellWidth; width: parent.width; height: parent.height
             }
 
-            ListView {
-                id: photoListView; model: rssModel; delegate: Mobile.ListDelegate { }
-                width: parent.width; height: parent.height; x: -(parent.width * 1.5); cacheBuffer: 100;
+            StreamView{
+                id: photoStreamView
+                model: vdm.parts.stream
+                width: parent.width; height: parent.height
             }
 
             states: State {
-                name: "ListView"; when: screen.inListView == true
-                PropertyChanges { target: photoListView; x: 0 }
-                PropertyChanges { target: photoGridView; x: -(parent.width * 1.5) }
+                name: "GridView"; when: screen.inGridView == true
             }
 
             transitions: Transition {
                 NumberAnimation { properties: "x"; duration: 500; easing.type: Easing.InOutQuad }
             }
 
-            Mobile.ImageDetails { id: imageDetails; width: parent.width; anchors.left: views.right; height: parent.height }
+            ImageDetails { id: imageDetails; width: parent.width; anchors.left: views.right; height: parent.height }
 
             Item { id: foreground; anchors.fill: parent }
         }
 
-        Mobile.TitleBar { id: titleBar; width: parent.width; height: 40; opacity: 0.9 }
+        TitleBar { id: titleBar; width: parent.width; height: 40; opacity: 0.9 }
 
-        Mobile.ToolBar {
+        ToolBar {
             id: toolBar
             height: 40; anchors.bottom: parent.bottom; width: parent.width; opacity: 0.9
             button1Label: "Update"; button2Label: "View mode"
             onButton1Clicked: rssModel.reload()
-            onButton2Clicked: if (screen.inListView == true) screen.inListView = false; else screen.inListView = true
+            onButton2Clicked: if (screen.inGridView == true) screen.inGridView = false; else screen.inGridView = true
         }
 
         Connections {
@@ -121,5 +161,6 @@ Item {
         transitions: Transition {
             NumberAnimation { properties: "x"; duration: 500; easing.type: Easing.InOutQuad }
         }
+
     }
 }

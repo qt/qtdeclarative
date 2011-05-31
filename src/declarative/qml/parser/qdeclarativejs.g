@@ -127,10 +127,10 @@
 
 #include <string.h>
 
-#include "private/qdeclarativejsengine_p.h"
-#include "private/qdeclarativejslexer_p.h"
-#include "private/qdeclarativejsast_p.h"
-#include "private/qdeclarativejsnodepool_p.h"
+#include "qdeclarativejsengine_p.h"
+#include "qdeclarativejslexer_p.h"
+#include "qdeclarativejsast_p.h"
+#include "qdeclarativejsnodepool_p.h"
 
 ./
 
@@ -195,10 +195,10 @@
 #ifndef QDECLARATIVEJSPARSER_P_H
 #define QDECLARATIVEJSPARSER_P_H
 
-#include "private/qdeclarativejsglobal_p.h"
-#include "private/qdeclarativejsgrammar_p.h"
-#include "private/qdeclarativejsast_p.h"
-#include "private/qdeclarativejsengine_p.h"
+#include "qdeclarativejsglobal_p.h"
+#include "qdeclarativejsgrammar_p.h"
+#include "qdeclarativejsast_p.h"
+#include "qdeclarativejsengine_p.h"
 
 #include <QtCore/QList>
 #include <QtCore/QString>
@@ -375,7 +375,7 @@ protected:
 
 /.
 
-#include "private/qdeclarativejsparser_p.h"
+#include "qdeclarativejsparser_p.h"
 #include <QVarLengthArray>
 
 //
@@ -782,19 +782,14 @@ case $rule_number: {
 } break;
 ./
 
-UiObjectMember: UiQualifiedId T_COLON Block ;
-/.case $rule_number:./
+UiScriptStatement: Block ;
+UiScriptStatement: EmptyStatement ;
+UiScriptStatement: ExpressionStatement ;
+UiScriptStatement: IfStatement ;  --- ### do we really want if statement in a binding?
 
-UiObjectMember: UiQualifiedId T_COLON EmptyStatement ;
-/.case $rule_number:./
-
-UiObjectMember: UiQualifiedId T_COLON ExpressionStatement ;
-/.case $rule_number:./
-
-UiObjectMember: UiQualifiedId T_COLON IfStatement ; --- ### do we really want if statement in a binding?
-/.case $rule_number:./
-
+UiObjectMember: UiQualifiedId T_COLON UiScriptStatement ;
 /.
+case $rule_number:
 {
     AST::UiScriptBinding *node = makeAstNode<AST::UiScriptBinding> (driver->nodePool(),
         sym(1).UiQualifiedId, sym(3).Statement);
@@ -922,51 +917,45 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_SEMICOLON ;
+UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = makeAstNode<AST::UiPublicMember> (driver->nodePool(), sym(2).sval, sym(3).sval,
-        sym(5).Expression);
+        sym(5).Statement);
     node->propertyToken = loc(1);
     node->typeToken = loc(2);
     node->identifierToken = loc(3);
     node->colonToken = loc(4);
-    node->semicolonToken = loc(6);
     sym(1).Node = node;
 }   break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_SEMICOLON ;
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = makeAstNode<AST::UiPublicMember> (driver->nodePool(), sym(3).sval, sym(4).sval,
-        sym(6).Expression);
+        sym(6).Statement);
     node->isReadonlyMember = true;
     node->readonlyToken = loc(1);
     node->propertyToken = loc(2);
     node->typeToken = loc(3);
     node->identifierToken = loc(4);
     node->colonToken = loc(5);
-    node->semicolonToken = loc(7);
     sym(1).Node = node;
 }   break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_COLON Expression T_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = makeAstNode<AST::UiPublicMember> (driver->nodePool(), sym(3).sval, sym(4).sval,
-        sym(6).Expression);
+        sym(6).Statement);
     node->isDefaultMember = true;
     node->defaultToken = loc(1);
     node->propertyToken = loc(2);
     node->typeToken = loc(3);
     node->identifierToken = loc(4);
     node->colonToken = loc(5);
-    node->semicolonToken = loc(7);
     sym(1).Node = node;
 }   break;
 ./

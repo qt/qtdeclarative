@@ -1,0 +1,3 @@
+plugin qmltestplugin
+TestCase 1.0 TestCase.qml
+SignalSpy 1.0 SignalSpy.qml

@@ -115,7 +115,6 @@ int tst_qdeclarativelistmodel::roleFromName(const QDeclarativeListModel *model, 
         if (model->toString(roles[i]) == roleName)
             return roles[i];
     }
-    Q_ASSERT(false);
     return -1;
 }
 
@@ -741,6 +740,7 @@ void tst_qdeclarativelistmodel::get()
          "}", QUrl());
     QDeclarativeListModel *model = qobject_cast<QDeclarativeListModel*>(component.create());
     int role = roleFromName(model, roleName);
+    QVERIFY(role >= 0);
 
     QSignalSpy spy(model, SIGNAL(itemsChanged(int, int, QList<int>)));
     QDeclarativeExpression expr(eng.rootContext(), model, expression);
@@ -754,6 +754,8 @@ void tst_qdeclarativelistmodel::get()
     QCOMPARE(spyResult.at(0).toInt(), index);
     QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
     QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
+
+    delete model;
 }
 
 void tst_qdeclarativelistmodel::get_data()
@@ -802,6 +804,7 @@ void tst_qdeclarativelistmodel::get_worker()
     model.append(sv);
     model.append(sv);
     int role = roleFromName(&model, roleName);
+    QVERIFY(role >= 0);
 
     const char *warning = "<Unknown File>: QML ListModel: Cannot add list-type data when modifying or after modification from a worker script";
     if (roleValue.type() == QVariant::List || roleValue.type() == QVariant::Map)
@@ -893,6 +896,7 @@ void tst_qdeclarativelistmodel::get_nested()
         int outerListIndex = testData[i].first;
         QString outerListRoleName = testData[i].second;
         int outerListRole = roleFromName(model, outerListRoleName);
+        QVERIFY(outerListRole >= 0);
 
         childModel = qobject_cast<QDeclarativeListModel*>(model->data(outerListIndex, outerListRole).value<QObject*>());
         QVERIFY(childModel);
@@ -905,6 +909,7 @@ void tst_qdeclarativelistmodel::get_nested()
         QVERIFY(!expr.hasError());
 
         int role = roleFromName(childModel, roleName);
+        QVERIFY(role >= 0);
         QCOMPARE(childModel->data(index, role), roleValue);
         QCOMPARE(spy.count(), 1);
 
@@ -913,6 +918,8 @@ void tst_qdeclarativelistmodel::get_nested()
         QCOMPARE(spyResult.at(1).toInt(), 1);  // only 1 item is modified at a time
         QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
     }
+
+    delete model;
 }
 
 void tst_qdeclarativelistmodel::get_nested_data()
@@ -933,6 +940,8 @@ void tst_qdeclarativelistmodel::crash_model_with_multiple_roles()
 
     // used to cause a crash in QDeclarativeVisualDataModel
     model->setProperty(0, "black", true);
+
+    delete rootItem;
 }
 
 //QTBUG-15190
@@ -944,6 +953,8 @@ void tst_qdeclarativelistmodel::set_model_cache()
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
     QVERIFY(model != 0);
     QVERIFY(model->property("ok").toBool());
+
+    delete model;
 }
 
 void tst_qdeclarativelistmodel::property_changes()

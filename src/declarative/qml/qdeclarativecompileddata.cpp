@@ -97,70 +97,6 @@ int QDeclarativeCompiledData::indexForUrl(const QUrl &data)
     return idx;
 }
 
-int QDeclarativeCompiledData::indexForFloat(float *data, int count)
-{
-    Q_ASSERT(count > 0);
-
-    for (int ii = 0; ii <= floatData.count() - count; ++ii) {
-        bool found = true;
-        for (int jj = 0; jj < count; ++jj) {
-            if (floatData.at(ii + jj) != data[jj]) {
-                found = false;
-                break;
-            }
-        }
-
-        if (found)
-            return ii;
-    }
-
-    int idx = floatData.count();
-    for (int ii = 0; ii < count; ++ii)
-        floatData << data[ii];
-
-    return idx;
-}
-
-int QDeclarativeCompiledData::indexForInt(int *data, int count)
-{
-    Q_ASSERT(count > 0);
-
-    for (int ii = 0; ii <= intData.count() - count; ++ii) {
-        bool found = true;
-        for (int jj = 0; jj < count; ++jj) {
-            if (intData.at(ii + jj) != data[jj]) {
-                found = false;
-                break;
-            }
-        }
-
-        if (found)
-            return ii;
-    }
-
-    int idx = intData.count();
-    for (int ii = 0; ii < count; ++ii)
-        intData << data[ii];
-
-    return idx;
-}
-
-int QDeclarativeCompiledData::indexForLocation(const QDeclarativeParser::Location &l)
-{
-    // ### FIXME
-    int rv = locations.count();
-    locations << l;
-    return rv;
-}
-
-int QDeclarativeCompiledData::indexForLocation(const QDeclarativeParser::LocationSpan &l)
-{
-    // ### FIXME
-    int rv = locations.count();
-    locations << l.start << l.end;
-    return rv;
-}
-
 QDeclarativeCompiledData::QDeclarativeCompiledData(QDeclarativeEngine *engine)
 : QDeclarativeCleanup(engine), importCache(0), root(0), rootPropertyCache(0)
 {
@@ -180,6 +116,9 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
 
     for (int ii = 0; ii < contextCaches.count(); ++ii)
         contextCaches.at(ii)->release();
+
+    for (int ii = 0; ii < scripts.count(); ++ii)
+        scripts.at(ii)->release();
 
     if (importCache)
         importCache->release();
@@ -243,13 +182,42 @@ void QDeclarativeCompiledData::dumpInstructions()
 {
     if (!name.isEmpty())
         qWarning() << name;
-    qWarning().nospace() << "Index\tLine\tOperation\t\tData1\tData2\tData3\tComments";
+    qWarning().nospace() << "Index\tOperation\t\tData1\tData2\tData3\tComments";
     qWarning().nospace() << "-------------------------------------------------------------------------------";
-    for (int ii = 0; ii < bytecode.count(); ++ii) {
-        dump(&bytecode[ii], ii);
+
+    const char *instructionStream = bytecode.constData();
+    const char *endInstructionStream = bytecode.constData() + bytecode.size();
+
+    int instructionCount = 0;
+    while (instructionStream < endInstructionStream) {
+        QDeclarativeInstruction *instr = (QDeclarativeInstruction *)instructionStream;
+        dump(instr, instructionCount);
+        instructionStream += instr->size();
+        instructionCount++;
     }
+
     qWarning().nospace() << "-------------------------------------------------------------------------------";
 }
 
+int QDeclarativeCompiledData::addInstruction(const QDeclarativeInstruction &instr) 
+{ 
+    int ptrOffset = bytecode.size();
+    int size = instr.size();
+    bytecode.resize(bytecode.size() + size);
+    char *data = bytecode.data() + ptrOffset;
+    qMemCopy(data, &instr,  size);
+
+    return ptrOffset;
+}
+
+int QDeclarativeCompiledData::nextInstructionIndex() 
+{ 
+    return bytecode.size();
+}
+
+QDeclarativeInstruction *QDeclarativeCompiledData::instruction(int index) 
+{ 
+    return (QDeclarativeInstruction *)(bytecode.constData() + index);
+}
 
 QT_END_NAMESPACE

@@ -11,7 +11,7 @@ QT.declarative.sources = $$QT_MODULE_BASE/src/declarative
 QT.declarative.libs = $$QT_MODULE_LIB_BASE
 QT.declarative.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.declarative.imports = $$QT_MODULE_IMPORT_BASE
-QT.declarative.depends = gui script network
+QT.declarative.depends = gui script network opengl xmlpatterns
 QT.declarative.DEFINES = QT_DECLARATIVE_LIB
 
 QT_CONFIG += declarative

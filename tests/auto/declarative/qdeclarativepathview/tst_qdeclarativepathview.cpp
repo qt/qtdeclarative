@@ -473,6 +473,7 @@ void tst_QDeclarativePathView::dataModel()
     QTRY_COMPARE(pathview->offset(), 2.);
 
     delete canvas;
+    delete testObject;
 }
 
 void tst_QDeclarativePathView::pathMoved()
@@ -632,6 +633,8 @@ void tst_QDeclarativePathView::resetModel()
         QVERIFY(display != 0);
         QCOMPARE(display->text(), strings.at(i));
     }
+
+    delete canvas;
 }
 
 void tst_QDeclarativePathView::propertyChanges()

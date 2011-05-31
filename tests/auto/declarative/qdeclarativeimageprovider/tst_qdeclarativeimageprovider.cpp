@@ -210,7 +210,7 @@ void tst_qdeclarativeimageprovider::fillRequestTestsData(const QString &id)
 
     QTest::newRow(QTest::toString(id + " unknown provider"))
         << "image://bogus/exists.png" << "" << "" << QSize()
-        << "file::2:1: QML Image: Failed to get image from provider: image://bogus/exists.png";
+        << "file::2:1: QML Image: Invalid image provider: image://bogus/exists.png";
 }
 
 void tst_qdeclarativeimageprovider::runTest(bool async, QDeclarativeImageProvider *provider)
@@ -350,7 +350,7 @@ void tst_qdeclarativeimageprovider::removeProvider()
 
     // remove the provider and confirm
     QString fileName = newImageFileName();
-    QString error("file::2:1: QML Image: Failed to get image from provider: " + fileName);
+    QString error("file::2:1: QML Image: Invalid image provider: " + fileName);
     QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
 
     engine.removeImageProvider("test");

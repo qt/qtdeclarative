@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativejsast_p.h"
+#include "qdeclarativejsast_p.h"
 
-#include "private/qdeclarativejsastvisitor_p.h"
+#include "qdeclarativejsastvisitor_p.h"
 
 QT_QML_BEGIN_NAMESPACE
 
@@ -836,7 +836,7 @@ void UiFormal::accept0(Visitor *visitor)
 void UiPublicMember::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(expression, visitor);
+        accept(statement, visitor);
         accept(binding, visitor);
     }
 

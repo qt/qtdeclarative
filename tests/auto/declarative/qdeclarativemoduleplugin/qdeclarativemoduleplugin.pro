@@ -6,3 +6,4 @@ SUBDIRS += tst_qdeclarativemoduleplugin.pro
 
 CONFIG += parallel_test
 
+QT += core-private gui-private declarative-private

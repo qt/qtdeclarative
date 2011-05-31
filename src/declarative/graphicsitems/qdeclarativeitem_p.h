@@ -382,7 +382,10 @@ class QDeclarativeKeyNavigationAttachedPrivate : public QObjectPrivate
 {
 public:
     QDeclarativeKeyNavigationAttachedPrivate()
-        : QObjectPrivate(), left(0), right(0), up(0), down(0), tab(0), backtab(0) {}
+        : QObjectPrivate(),
+          left(0), right(0), up(0), down(0), tab(0), backtab(0),
+          leftSet(false), rightSet(false), upSet(false), downSet(false),
+          tabSet(false), backtabSet(false) {}
 
     QDeclarativeItem *left;
     QDeclarativeItem *right;
@@ -390,6 +393,12 @@ public:
     QDeclarativeItem *down;
     QDeclarativeItem *tab;
     QDeclarativeItem *backtab;
+    bool leftSet : 1;
+    bool rightSet : 1;
+    bool upSet : 1;
+    bool downSet : 1;
+    bool tabSet : 1;
+    bool backtabSet : 1;
 };
 
 class QDeclarativeKeyNavigationAttached : public QObject, public QDeclarativeItemKeyFilter
