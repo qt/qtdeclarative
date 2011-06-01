@@ -167,6 +167,13 @@ QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &g
 
     appendChildNode(node);
 
+    if (glyphs.overline() || glyphs.strikeOut() || glyphs.underline()) {
+        QPointF baseLine = node->baseLine();
+        qreal width = node->boundingRect().width();
+        addTextDecorations(baseLine, glyphs.rawFont(), color, width,
+                           glyphs.overline(), glyphs.strikeOut(), glyphs.underline());
+    }
+
     return node;
 }
 
@@ -192,13 +199,6 @@ void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout
         QGlyphRun glyphs = glyphsList.at(i);
         QRawFont font = glyphs.rawFont();
         addGlyphs(position + QPointF(0, font.ascent()), glyphs, color, style, styleColor);
-    }
-
-    QFont font = textLayout->font();
-    QRawFont rawFont = QRawFont::fromFont(font);
-    if (font.strikeOut() || font.underline() || font.overline()) {
-        addTextDecorations(position, rawFont, color, textLayout->boundingRect().width(),
-                           font.overline(), font.strikeOut(), font.underline());
     }
 }
 
@@ -360,13 +360,8 @@ void QSGTextNode::addTextBlock(const QPointF &position, QTextDocument *textDocum
             for (int i=0; i<glyphsList.size(); ++i) {
                 QGlyphRun glyphs = glyphsList.at(i);
                 QRawFont font = glyphs.rawFont();
-                QSGGlyphNode *glyphNode = addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
-                                                    glyphs, color, style, styleColor);
-
-                QPointF baseLine = glyphNode->baseLine();
-                qreal width = glyphNode->boundingRect().width();
-                addTextDecorations(baseLine, font, color, width,
-                                   glyphs.overline(), glyphs.strikeOut(), glyphs.underline());
+                addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
+                          glyphs, color, style, styleColor);
             }
         }
 
