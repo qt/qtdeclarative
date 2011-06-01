@@ -121,6 +121,7 @@ public:
     bool rightToLeftText:1;
     bool layoutTextElided:1;
     bool richTextAsImage:1;
+    bool textureImageCacheDirty:1;
 
     QRect layedOutTextRect;
     QSize paintedSize;

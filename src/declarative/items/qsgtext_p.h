@@ -199,6 +199,7 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual bool event(QEvent *);
 
 private:
     Q_DISABLE_COPY(QSGText)

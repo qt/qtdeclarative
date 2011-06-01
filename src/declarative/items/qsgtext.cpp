@@ -103,11 +103,11 @@ QSGTextPrivate::QSGTextPrivate()
   lineHeightMode(QSGText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
   maximumLineCountValid(false),
   texture(0),
-  imageCacheDirty(true), updateOnComponentComplete(true),
+  imageCacheDirty(false), updateOnComponentComplete(true),
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), richTextAsImage(false), naturalWidth(0), doc(0), layoutThread(0),
-  nodeType(NodeIsNull)
+  layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
+  doc(0), layoutThread(0), nodeType(NodeIsNull)
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -580,9 +580,10 @@ void QSGTextPrivate::invalidateImageCache()
             return;
 
         imageCacheDirty = true;
-        imageCache = QPixmap();
-    }
-    if (q->isComponentComplete())
+
+        if (q->isComponentComplete())
+            QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+    } else if (q->isComponentComplete())
         q->update();
 }
 
@@ -591,6 +592,8 @@ void QSGTextPrivate::invalidateImageCache()
 */
 void QSGTextPrivate::checkImageCache()
 {
+    Q_Q(QSGText);
+
     if (!imageCacheDirty)
         return;
 
@@ -631,6 +634,8 @@ void QSGTextPrivate::checkImageCache()
     }
 
     imageCacheDirty = false;
+    textureImageCacheDirty = true;
+    q->update();
 }
 
 /*!
@@ -1080,9 +1085,8 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 
     // XXX todo - some styled text can be done by the QSGTextNode
     if (d->richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
-        bool wasDirty = d->imageCacheDirty;
-
-        d->checkImageCache();
+        bool wasDirty = d->textureImageCacheDirty;
+        d->textureImageCacheDirty = false;
 
         if (d->imageCache.isNull()) {
             delete oldNode;
@@ -1139,6 +1143,17 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         }
 
         return node;
+    }
+}
+
+bool QSGText::event(QEvent *e)
+{
+    Q_D(QSGText);
+    if (e->type() == QEvent::User) {
+        d->checkImageCache();
+        return true;
+    } else {
+        return QSGImplicitSizeItem::event(e);
     }
 }
 
