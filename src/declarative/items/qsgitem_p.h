@@ -670,6 +670,7 @@ QSGTransformNode *QSGItemPrivate::itemNode()
 { 
     if (!itemNodeInstance) {
         itemNodeInstance = createTransformNode();
+        itemNodeInstance->setFlag(QSGNode::OwnedByParent, false);
 #ifdef QML_RUNTIME_TESTING
         Q_Q(QSGItem);
         itemNodeInstance->description = QString::fromLatin1("QSGItem(%1)").arg(QString::fromLatin1(q->metaObject()->className()));
