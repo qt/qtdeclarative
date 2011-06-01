@@ -855,8 +855,8 @@ bool QDeclarativePixmapReply::event(QEvent *event)
                 if (de->texture) {
                     data->texture = de->texture;
                     data->context = de->context;
-                } else
-                    data->pixmap = QPixmap::fromImage(de->image);
+                }
+                data->pixmap = QPixmap::fromImage(de->image);
                 data->implicitSize = de->implicitSize;
             } else {
                 data->errorString = de->errorString;
