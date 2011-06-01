@@ -43,6 +43,8 @@
 #include "qsgtextedit_p_p.h"
 #include "qsgevents_p_p.h"
 #include "qsgcanvas.h"
+#include "qsgtextnode_p.h"
+#include "qsgsimplerectnode.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qapplication.h>
@@ -55,8 +57,13 @@
 #include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qwidget_p.h>
+#include <private/qsgdistancefieldglyphcache_p.h>
+#include <private/qsgtexture_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
+
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QWidgetPrivate *qt_widget_private(QWidget *widget);
 /*!
@@ -111,7 +118,7 @@ TextEdit {
     \a link string provides access to the particular link.
 */
 QSGTextEdit::QSGTextEdit(QSGItem *parent)
-: QSGImplicitSizePaintedItem(*(new QSGTextEditPrivate), parent)
+: QSGImplicitSizeItem(*(new QSGTextEditPrivate), parent)
 {
     Q_D(QSGTextEdit);
     d->init();
@@ -255,6 +262,7 @@ void QSGTextEdit::setText(const QString &text)
 #else
         d->control->setPlainText(text);
 #endif
+        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
     } else {
         d->control->setPlainText(text);
     }
@@ -324,6 +332,7 @@ void QSGTextEdit::setTextFormat(TextFormat format)
         d->control->setPlainText(d->text);
 #endif
         updateSize();
+        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
     }
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
@@ -358,7 +367,7 @@ void QSGTextEdit::setFont(const QFont &font)
             moveCursorDelegate();
         }
         updateSize();
-        update();
+        updateDocument();
     }
     emit fontChanged(d->sourceFont);
 }
@@ -394,7 +403,7 @@ void QSGTextEdit::setColor(const QColor &color)
     QPalette pal = d->control->palette();
     pal.setColor(QPalette::Text, color);
     d->control->setPalette(pal);
-    update();
+    updateDocument();
     emit colorChanged(d->color);
 }
 
@@ -419,7 +428,7 @@ void QSGTextEdit::setSelectionColor(const QColor &color)
     QPalette pal = d->control->palette();
     pal.setColor(QPalette::Highlight, color);
     d->control->setPalette(pal);
-    update();
+    updateDocument();
     emit selectionColorChanged(d->selectionColor);
 }
 
@@ -444,7 +453,7 @@ void QSGTextEdit::setSelectedTextColor(const QColor &color)
     QPalette pal = d->control->palette();
     pal.setColor(QPalette::HighlightedText, color);
     d->control->setPalette(pal);
-    update();
+    updateDocument();
     emit selectedTextColorChanged(d->selectedTextColor);
 }
 
@@ -861,7 +870,7 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
     if(d->cursorComponent){
         if(d->cursor){
             d->control->setCursorWidth(-1);
-            update(cursorRectangle());
+            updateCursor();
             delete d->cursor;
             d->cursor = 0;
         }
@@ -886,7 +895,7 @@ void QSGTextEdit::loadCursorDelegate()
     d->cursor = qobject_cast<QSGItem*>(d->cursorComponent->create(qmlContext(this)));
     if(d->cursor){
         d->control->setCursorWidth(0);
-        update(cursorRectangle());
+        updateCursor();
         QDeclarative_setParent_noEvent(d->cursor, this);
         d->cursor->setParentItem(this);
         d->cursor->setHeight(QFontMetrics(d->font).height());
@@ -1016,7 +1025,7 @@ void QSGTextEdit::geometryChanged(const QRectF &newGeometry,
 {
     if (newGeometry.width() != oldGeometry.width())
         updateSize();
-    QSGPaintedItem::geometryChanged(newGeometry, oldGeometry);
+    QSGImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
 }
 
 /*!
@@ -1026,13 +1035,19 @@ void QSGTextEdit::geometryChanged(const QRectF &newGeometry,
 void QSGTextEdit::componentComplete()
 {
     Q_D(QSGTextEdit);
-    QSGPaintedItem::componentComplete();
+    QSGImplicitSizeItem::componentComplete();
+
+    if (d->richText) {
+        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
+    }
+
     if (d->dirty) {
         d->determineHorizontalAlignment();
         d->updateDefaultTextOption();
         updateSize();
         d->dirty = false;
     }
+
 }
 /*!
     \qmlproperty bool QtQuick2::TextEdit::selectByMouse
@@ -1164,7 +1179,7 @@ bool QSGTextEdit::event(QEvent *event)
         d->control->processEvent(event, QPointF(0, -d->yoff));
         return event->isAccepted();
     }
-    return QSGPaintedItem::event(event);
+    return QSGImplicitSizeItem::event(event);
 }
 
 /*!
@@ -1176,7 +1191,7 @@ void QSGTextEdit::keyPressEvent(QKeyEvent *event)
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
-        QSGPaintedItem::keyPressEvent(event);
+        QSGImplicitSizeItem::keyPressEvent(event);
 }
 
 /*!
@@ -1188,7 +1203,7 @@ void QSGTextEdit::keyReleaseEvent(QKeyEvent *event)
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
-        QSGPaintedItem::keyReleaseEvent(event);
+        QSGImplicitSizeItem::keyReleaseEvent(event);
 }
 
 /*!
@@ -1332,7 +1347,7 @@ void QSGTextEdit::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
-        QSGPaintedItem::mousePressEvent(event);
+        QSGImplicitSizeItem::mousePressEvent(event);
 }
 
 /*!
@@ -1353,7 +1368,7 @@ void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     d->clickCausedFocus = false;
 
     if (!event->isAccepted())
-        QSGPaintedItem::mouseReleaseEvent(event);
+        QSGImplicitSizeItem::mouseReleaseEvent(event);
 }
 
 /*!
@@ -1365,7 +1380,7 @@ void QSGTextEdit::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
-        QSGPaintedItem::mouseDoubleClickEvent(event);
+        QSGImplicitSizeItem::mouseDoubleClickEvent(event);
 }
 
 /*!
@@ -1377,7 +1392,7 @@ void QSGTextEdit::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
-        QSGPaintedItem::mouseMoveEvent(event);
+        QSGImplicitSizeItem::mouseMoveEvent(event);
 }
 
 /*!
@@ -1412,41 +1427,122 @@ QVariant QSGTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
     return d->control->inputMethodQuery(property);
 }
 
-/*!
-Draws the contents of the text edit using the given \a painter within
-the given \a bounds.
-*/
-void QSGTextEdit::paint(QPainter *painter)
+void QSGTextEdit::updateImageCache(const QRectF &)
 {
-    // XXX todo
-    QRect bounds(0, 0, width(), height());
     Q_D(QSGTextEdit);
 
-    painter->setRenderHint(QPainter::TextAntialiasing, true);
-    painter->translate(0,d->yoff);
+    // Do we really need the image cache?
+    if (!d->richText || !d->isComplexRichText) {
+        if (!d->pixmapCache.isNull())
+            d->pixmapCache = QPixmap();
+        return;
+    }
 
-    d->control->drawContents(painter, bounds.translated(0,-d->yoff));
+    if (width() != d->pixmapCache.width() || height() != d->pixmapCache.height())
+        d->pixmapCache = QPixmap(width(), height());
 
-    painter->translate(0,-d->yoff);
+    if (d->pixmapCache.isNull())
+        return;
+
+    // ### Use supplied rect, clear area and update only this part (for cursor updates)
+    QRectF bounds = QRectF(0, 0, width(), height());
+    d->pixmapCache.fill(Qt::transparent);
+    {
+        QPainter painter(&d->pixmapCache);
+
+        painter.setRenderHint(QPainter::TextAntialiasing);
+        painter.translate(0, d->yoff);
+
+        d->control->drawContents(&painter, bounds);
+    }
+
 }
 
-void QSGTextEdit::updateImgCache(const QRectF &rf)
+QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
-    Q_D(const QSGTextEdit);
-    QRect r;
-    if (!rf.isValid()) {
-        r = QRect(0,0,INT_MAX,INT_MAX);
-    } else {
-        r = rf.toRect();
-        if (r.height() > INT_MAX/2) {
-            // Take care of overflow when translating "everything"
-            r.setTop(r.y() + d->yoff);
-            r.setBottom(INT_MAX/2);
+    Q_UNUSED(updatePaintNodeData);
+    Q_D(QSGTextEdit);
+
+    QSGNode *currentNode = oldNode;
+    if (d->richText && d->isComplexRichText) {
+        QSGImageNode *node = 0;
+        if (oldNode == 0 || d->nodeType != QSGTextEditPrivate::NodeIsTexture) {
+            delete oldNode;
+            node = QSGItemPrivate::get(this)->sceneGraphContext()->createImageNode();
+            d->texture = new QSGPlainTexture();
+            d->nodeType = QSGTextEditPrivate::NodeIsTexture;
+            currentNode = node;
         } else {
-            r = r.translated(0,d->yoff);
+            node = static_cast<QSGImageNode *>(oldNode);
         }
+
+        qobject_cast<QSGPlainTexture *>(d->texture)->setImage(d->pixmapCache.toImage());
+        node->setTexture(0);
+        node->setTexture(d->texture);
+
+        node->setTargetRect(QRectF(0, 0, d->pixmapCache.width(), d->pixmapCache.height()));
+        node->setSourceRect(QRectF(0, 0, 1, 1));
+        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
+        node->setFiltering(QSGTexture::Linear); // Nonsmooth text just ugly, so don't do that..
+        node->update();
+
+    } else if (oldNode == 0 || d->documentDirty) {
+        d->documentDirty = false;
+
+#if defined(Q_WS_MAC)
+        // Make sure document is relayouted in the paint node on Mac
+        // to avoid crashes due to the font engines created in the
+        // shaping process
+        d->document->markContentsDirty(0, d->document->characterCount());
+#endif
+
+        QSGTextNode *node = 0;
+        if (oldNode == 0 || d->nodeType != QSGTextEditPrivate::NodeIsText) {
+            delete oldNode;
+            node = new QSGTextNode(QSGItemPrivate::get(this)->sceneGraphContext());
+            d->nodeType = QSGTextEditPrivate::NodeIsText;
+            currentNode = node;
+        } else {
+            node = static_cast<QSGTextNode *>(oldNode);
+        }
+
+        node->deleteContent();
+        node->setMatrix(QMatrix4x4());
+
+        QRectF bounds = boundingRect();
+
+        QColor selectionColor = d->control->palette().color(QPalette::Highlight);
+        QColor selectedTextColor = d->control->palette().color(QPalette::HighlightedText);
+        node->addTextDocument(bounds.topLeft(), d->document, d->color, QSGText::Normal, QColor(),
+                              selectionColor, selectedTextColor, selectionStart(),
+                              selectionEnd());
+
+#if defined(Q_WS_MAC)
+        // We also need to make sure the document layout is redone when
+        // control is returned to the main thread, as all the font engines
+        // are now owned by the rendering thread
+        d->document->markContentsDirty(0, d->document->characterCount());
+#endif
     }
-    update(r);
+
+    if (d->nodeType == QSGTextEditPrivate::NodeIsText && d->cursorComponent == 0 && !isReadOnly()) {
+        QSGTextNode *node = static_cast<QSGTextNode *>(currentNode);
+
+        QColor color = (!d->cursorVisible || !d->control->cursorOn())
+                ? QColor(0, 0, 0, 0)
+                : d->color;
+
+        if (node->cursorNode() == 0) {
+            node->setCursor(cursorRectangle(), color);
+        } else {
+            node->cursorNode()->setRect(cursorRectangle());
+            node->cursorNode()->setColor(color);
+        }
+
+    }
+
+    return currentNode;
 }
 
 /*!
@@ -1502,11 +1598,21 @@ void QSGTextEditPrivate::init()
     q->setSmooth(smooth);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QSGItem::ItemAcceptsInputMethod);
+    q->setFlag(QSGItem::ItemHasContents);
 
     control = new QTextControl(q);
     control->setIgnoreUnusedNavigationEvents(true);
     control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setDragEnabled(false);
+
+    // By default, QTextControl will issue both a updateCursorRequest() and an updateRequest()
+    // when the cursor needs to be repainted. We need the signals to be separate to be able to
+    // distinguish the cursor updates so that we can avoid updating the whole subtree when the
+    // cursor blinks.
+    if (!QObject::disconnect(control, SIGNAL(updateCursorRequest(QRectF)),
+                             control, SIGNAL(updateRequest(QRectF)))) {
+        qWarning("QSGTextEditPrivate::init: Failed to disconnect updateCursorRequest and updateRequest");
+    }
 
     // QTextControl follows the default text color
     // defined by the platform, declarative text
@@ -1517,8 +1623,8 @@ void QSGTextEditPrivate::init()
         control->setPalette(pal);
     }
 
-    QObject::connect(control, SIGNAL(updateRequest(QRectF)), q, SLOT(updateImgCache(QRectF)));
-
+    QObject::connect(control, SIGNAL(updateRequest(QRectF)), q, SLOT(updateDocument()));
+    QObject::connect(control, SIGNAL(updateCursorRequest()), q, SLOT(updateCursor()));
     QObject::connect(control, SIGNAL(textChanged()), q, SLOT(q_textChanged()));
     QObject::connect(control, SIGNAL(selectionChanged()), q, SIGNAL(selectionChanged()));
     QObject::connect(control, SIGNAL(selectionChanged()), q, SLOT(updateSelectionMarkers()));
@@ -1597,7 +1703,7 @@ void QSGTextEdit::updateSelectionMarkers()
 QRectF QSGTextEdit::boundingRect() const
 {
     Q_D(const QSGTextEdit);
-    QRectF r = QSGPaintedItem::boundingRect();
+    QRectF r = QSGImplicitSizeItem::boundingRect();
     int cursorWidth = 1;
     if(d->cursor)
         cursorWidth = d->cursor->width();
@@ -1679,12 +1785,31 @@ void QSGTextEdit::updateSize()
         setImplicitHeight(newHeight);
 
         d->paintedSize = QSize(newWidth, newHeight);
-        setContentsSize(d->paintedSize);
         emit paintedSizeChanged();
     } else {
         d->dirty = true;
     }
-    update();
+    updateDocument();
+}
+
+void QSGTextEdit::updateDocument()
+{
+    Q_D(QSGTextEdit);
+    d->documentDirty = true;
+
+    if (isComponentComplete()) {
+        updateImageCache();
+        update();
+    }
+}
+
+void QSGTextEdit::updateCursor()
+{
+    Q_D(QSGTextEdit);
+    if (isComponentComplete()) {
+        updateImageCache(d->control->cursorRect());
+        update();
+    }
 }
 
 void QSGTextEdit::updateTotalLines()
@@ -1725,8 +1850,15 @@ void QSGTextEditPrivate::updateDefaultTextOption()
     QTextOption::WrapMode oldWrapMode = opt.wrapMode();
     opt.setWrapMode(QTextOption::WrapMode(wrapMode));
 
-    if (oldWrapMode == opt.wrapMode() && oldAlignment == opt.alignment())
+    bool oldUseDesignMetrics = opt.useDesignMetrics();
+    bool useDesignMetrics = !qmlDisableDistanceField();
+    opt.setUseDesignMetrics(useDesignMetrics);
+
+    if (oldWrapMode == opt.wrapMode()
+            && oldAlignment == opt.alignment()
+            && oldUseDesignMetrics == useDesignMetrics) {
         return;
+    }
     document->setDefaultTextOption(opt);
 }
 
@@ -1838,7 +1970,7 @@ void QSGTextEdit::focusInEvent(QFocusEvent *event)
             openSoftwareInputPanel();
         }
     }
-    QSGPaintedItem::focusInEvent(event);
+    QSGImplicitSizeItem::focusInEvent(event);
 }
 
 void QSGTextEdit::q_canPasteChanged()

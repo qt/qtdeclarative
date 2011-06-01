@@ -45,13 +45,14 @@
 #include "qsgnode.h"
 #include "qsgtexture.h"
 #include <private/qsgtext_p.h>
-
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qcolor.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtGui/qglyphrun.h>
 #include <QtCore/qurl.h>
+
+#include <private/qsgtext_p.h>
 
 QT_BEGIN_HEADER
 

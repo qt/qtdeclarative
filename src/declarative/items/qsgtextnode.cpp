@@ -47,6 +47,7 @@
 
 #include <private/qsgcontext_p.h>
 
+#include <QtCore/qpoint.h>
 #include <qmath.h>
 #include <qtextdocument.h>
 #include <qtextlayout.h>
@@ -57,6 +58,7 @@
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
 #include <private/qrawfont_p.h>
+#include <qhash.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +66,7 @@ QT_BEGIN_NAMESPACE
   Creates an empty QSGTextNode
 */
 QSGTextNode::QSGTextNode(QSGContext *context)
-: m_context(context)
+    : m_context(context), m_cursorNode(0)
 {
 #if defined(QML_RUNTIME_TESTING)
     description = QLatin1String("text");
@@ -119,117 +121,673 @@ void QSGTextNode::setStyleColor(const QColor &styleColor)
 }
 #endif
 
-void QSGTextNode::addTextDecorations(Decoration decorations, const QPointF &position,
-                                     const QColor &color, qreal width, qreal lineThickness,
-                                     qreal underlinePos, qreal ascent)
-{
-    QRectF line(position.x(), position.y() - lineThickness / 2.0, width, lineThickness);
-
-    if (decorations & Underline) {
-        int underlinePosition = qCeil(underlinePos);
-        QRectF underline(line);
-        underline.translate(0.0, underlinePosition);
-        appendChildNode(new QSGSimpleRectNode(underline, color));
-    }
-
-    if (decorations & Overline) {
-        QRectF overline(line);
-        overline.translate(0.0, -ascent);
-        appendChildNode(new QSGSimpleRectNode(overline, color));
-    }
-
-    if (decorations & StrikeOut) {
-        QRectF strikeOut(line);
-        strikeOut.translate(0.0, ascent / -3.0);
-        appendChildNode(new QSGSimpleRectNode(strikeOut, color));
-    }
-}
-
 QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
-                                           QSGText::TextStyle style, const QColor &styleColor, QSGGlyphNode *prevNode)
+                                     QSGText::TextStyle style, const QColor &styleColor,
+                                     QSGNode *parentNode)
 {
-    QSGGlyphNode *node = prevNode;
-
-    if (!node)
-        node = m_context->createGlyphNode();
-
-    node->setGlyphs(position, glyphs);
-
-    if (node != prevNode) {
-        node->setStyle(style);
-        node->setStyleColor(styleColor);
-        node->setColor(color);
-    }
-
+    QSGGlyphNode *node = m_context->createGlyphNode();
+    node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
+    node->setStyle(style);
+    node->setStyleColor(styleColor);
+    node->setColor(color);
     node->update();
 
-    if (node != prevNode)
-        appendChildNode(node);
+    if (parentNode == 0)
+        parentNode = this;
+    parentNode->appendChildNode(node);
 
     return node;
 }
 
-void QSGTextNode::addTextDocument(const QPointF &position, QTextDocument *textDocument, const QColor &color,
-                                  QSGText::TextStyle style, const QColor &styleColor)
+void QSGTextNode::setCursor(const QRectF &rect, const QColor &color)
 {
-    Q_UNUSED(position)
-    QTextFrame *textFrame = textDocument->rootFrame();
-    QPointF p = textDocument->documentLayout()->frameBoundingRect(textFrame).topLeft();
+    if (m_cursorNode != 0)
+        delete m_cursorNode;
 
-    QTextFrame::iterator it = textFrame->begin();
-    while (!it.atEnd()) {
-        addTextBlock(p, textDocument, it.currentBlock(), color, style, styleColor);
-        ++it;
+    m_cursorNode = new QSGSimpleRectNode(rect, color);
+    appendChildNode(m_cursorNode);
+}
+
+namespace {
+
+    struct BinaryTreeNode {
+        enum SelectionState {
+            Unselected,
+            Selected
+        };
+
+        BinaryTreeNode()
+            : selectionState(Unselected)
+            , clipNode(0)
+            , decorations(QSGTextNode::NoDecoration)
+            , leftChildIndex(-1)
+            , rightChildIndex(-1)
+        {
+
+        }
+
+        BinaryTreeNode(const QGlyphRun &g, SelectionState selState, const QRectF &brect,
+                       const QSGTextNode::Decorations &decs, const QColor &c,
+                       const QPointF &pos)
+            : glyphRun(g)
+            , boundingRect(brect)
+            , selectionState(selState)
+            , clipNode(0)
+            , decorations(decs)
+            , color(c)
+            , position(pos)
+            , leftChildIndex(-1)
+            , rightChildIndex(-1)
+        {
+        }
+
+        QGlyphRun glyphRun;
+        QRectF boundingRect;
+        SelectionState selectionState;
+        QSGClipNode *clipNode;
+        QSGTextNode::Decorations decorations;
+        QColor color;
+        QPointF position;
+
+        int leftChildIndex;
+        int rightChildIndex;
+
+        static void insert(QVarLengthArray<BinaryTreeNode> *binaryTree,
+                           const QGlyphRun &glyphRun,
+                           SelectionState selectionState,
+                           const QColor &textColor,
+                           const QPointF &position)
+        {
+            int newIndex = binaryTree->size();
+            QRectF searchRect = glyphRun.boundingRect();
+
+            if (qFuzzyIsNull(searchRect.width()) || qFuzzyIsNull(searchRect.height()))
+                return;
+
+            QSGTextNode::Decorations decorations = QSGTextNode::NoDecoration;
+            decorations |= (glyphRun.underline() ? QSGTextNode::Underline : QSGTextNode::NoDecoration);
+            decorations |= (glyphRun.overline()  ? QSGTextNode::Overline  : QSGTextNode::NoDecoration);
+            decorations |= (glyphRun.strikeOut() ? QSGTextNode::StrikeOut : QSGTextNode::NoDecoration);
+
+            binaryTree->append(BinaryTreeNode(glyphRun, selectionState, searchRect, decorations,
+                                              textColor, position));
+            if (newIndex == 0)
+                return;
+
+            int searchIndex = 0;
+            forever {
+                BinaryTreeNode *node = binaryTree->data() + searchIndex;
+                if (searchRect.left() < node->boundingRect.left()) {
+                    if (node->leftChildIndex < 0) {
+                        node->leftChildIndex = newIndex;
+                        break;
+                    } else {
+                        searchIndex = node->leftChildIndex;
+                    }
+                } else {
+                    if (node->rightChildIndex < 0) {
+                        node->rightChildIndex = newIndex;
+                        break;
+                    } else {
+                        searchIndex = node->rightChildIndex;
+                    }
+                }
+            }
+        }
+
+        static void inOrder(const QVarLengthArray<BinaryTreeNode> &binaryTree,
+                            QVarLengthArray<int> *sortedIndexes,
+                            int currentIndex = 0)
+        {
+            Q_ASSERT(currentIndex < binaryTree.size());
+
+            const BinaryTreeNode *node = binaryTree.data() + currentIndex;
+            if (node->leftChildIndex >= 0)
+                inOrder(binaryTree, sortedIndexes, node->leftChildIndex);
+
+            sortedIndexes->append(currentIndex);
+
+            if (node->rightChildIndex >= 0)
+                inOrder(binaryTree, sortedIndexes, node->rightChildIndex);
+        }
+    };
+
+    // Engine that takes glyph runs as input, and produces a set of glyph nodes, clip nodes,
+    // and rectangle nodes to represent the text, decorations and selection. Will try to minimize
+    // number of nodes, and join decorations in neighbouring items
+    class SelectionEngine
+    {
+    public:
+        SelectionEngine() : m_hasSelection(false) {}
+
+        QTextLine currentLine() const { return m_currentLine; }
+
+        void setCurrentLine(const QTextLine &currentLine)
+        {
+            if (m_currentLine.isValid())
+                processCurrentLine();
+
+            m_currentLine = currentLine;
+        }
+
+        void addSelectedGlyphs(const QGlyphRun &glyphRun);
+        void addUnselectedGlyphs(const QGlyphRun &glyphRun);
+
+        void addToSceneGraph(QSGTextNode *parent,
+                             QSGText::TextStyle style = QSGText::Normal,
+                             const QColor &styleColor = QColor());
+
+        void setSelectionColor(const QColor &selectionColor)
+        {
+            m_selectionColor = selectionColor;
+        }
+
+        void setSelectedTextColor(const QColor &selectedTextColor)
+        {
+            m_selectedTextColor = selectedTextColor;
+        }
+
+        void setTextColor(const QColor &textColor)
+        {
+            m_textColor = textColor;
+        }
+
+        void setPosition(const QPointF &position)
+        {
+            m_position = position;
+        }
+
+    private:
+        struct TextDecoration
+        {
+            TextDecoration() : selectionState(BinaryTreeNode::Unselected) {}
+            TextDecoration(const BinaryTreeNode::SelectionState &s,
+                           const QRectF &r,
+                           const QColor &c)
+                : selectionState(s)
+                , rect(r)
+                , color(c)
+            {
+            }
+
+            BinaryTreeNode::SelectionState selectionState;
+            QRectF rect;
+            QColor color;
+        };
+
+        void processCurrentLine();
+        void addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations,
+                                qreal offset, qreal thickness);
+
+        QColor m_selectionColor;
+        QColor m_textColor;
+        QColor m_selectedTextColor;
+        QPointF m_position;
+
+        QTextLine m_currentLine;
+        bool m_hasSelection;
+
+        QList<QRectF> m_selectionRects;
+        QVarLengthArray<BinaryTreeNode> m_currentLineTree;
+
+        QList<TextDecoration> m_lines;
+        QVector<BinaryTreeNode> m_processedNodes;
+    };
+
+    void SelectionEngine::addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations,
+                                             qreal offset, qreal thickness)
+    {
+        for (int i=0; i<textDecorations.size(); ++i) {
+            TextDecoration textDecoration = textDecorations.at(i);
+
+            {
+                QRectF &rect = textDecoration.rect;
+                rect.setY(qRound(rect.y() + m_currentLine.ascent() + offset));
+                rect.setHeight(thickness);
+            }
+
+            m_lines.append(textDecoration);
+        }
+    }
+
+    void SelectionEngine::processCurrentLine()
+    {
+        // No glyphs, do nothing
+        if (m_currentLineTree.isEmpty())
+            return;
+
+        // 1. Go through current line and get correct decoration position for each node based on
+        // neighbouring decorations. Add decoration to global list
+        // 2. Create clip nodes for all selected text. Try to merge as many as possible within
+        // the line.
+        // 3. Add QRects to a list of selection rects.
+        // 4. Add all nodes to a global processed list
+        QVarLengthArray<int> sortedIndexes; // Indexes in tree sorted by x position
+        BinaryTreeNode::inOrder(m_currentLineTree, &sortedIndexes);
+
+        Q_ASSERT(sortedIndexes.size() == m_currentLineTree.size());
+
+        BinaryTreeNode::SelectionState currentSelectionState = BinaryTreeNode::Unselected;
+        QRectF currentRect;
+
+        QSGTextNode::Decorations currentDecorations = QSGTextNode::NoDecoration;
+        qreal underlineOffset = 0.0;
+        qreal underlineThickness = 0.0;
+
+        qreal overlineOffset = 0.0;
+        qreal overlineThickness = 0.0;
+
+        qreal strikeOutOffset = 0.0;
+        qreal strikeOutThickness = 0.0;
+
+        QRectF decorationRect = currentRect;
+
+        QColor lastColor;
+
+        QVarLengthArray<TextDecoration> pendingUnderlines;
+        QVarLengthArray<TextDecoration> pendingOverlines;
+        QVarLengthArray<TextDecoration> pendingStrikeOuts;
+        if (!sortedIndexes.isEmpty()) {
+            QSGClipNode *currentClipNode = m_hasSelection ? new QSGClipNode : 0;
+            bool currentClipNodeUsed = false;
+            for (int i=0; i<=sortedIndexes.size(); ++i) {
+                BinaryTreeNode *node = 0;
+                if (i < sortedIndexes.size()) {
+                    int sortedIndex = sortedIndexes.at(i);
+                    Q_ASSERT(sortedIndex < m_currentLineTree.size());
+
+                    node = m_currentLineTree.data() + sortedIndex;
+                }
+
+                if (i == 0)
+                    currentSelectionState = node->selectionState;
+
+                // Update decorations
+                if (currentDecorations != QSGTextNode::NoDecoration) {
+                    decorationRect.setY(m_position.y() + m_currentLine.y());
+                    decorationRect.setHeight(m_currentLine.height());
+
+                    if (node != 0)
+                        decorationRect.setRight(node->boundingRect.left());
+
+                    TextDecoration textDecoration(currentSelectionState, decorationRect, lastColor);
+                    if (currentDecorations & QSGTextNode::Underline)
+                        pendingUnderlines.append(textDecoration);
+
+                    if (currentDecorations & QSGTextNode::Overline)
+                        pendingOverlines.append(textDecoration);
+
+                    if (currentDecorations & QSGTextNode::StrikeOut)
+                        pendingStrikeOuts.append(textDecoration);
+                }
+
+                // If we've reached an unselected node from a selected node, we add the
+                // selection rect to the graph, and we add decoration every time the
+                // selection state changes, because that means the text color changes
+                if (node == 0 || node->selectionState != currentSelectionState) {
+                    if (node != 0)
+                        currentRect.setRight(node->boundingRect.left());
+                    currentRect.setY(m_position.y() + m_currentLine.y());
+                    currentRect.setHeight(m_currentLine.height());
+
+                    // Draw selection all the way up to the left edge of the unselected item
+                    if (currentSelectionState == BinaryTreeNode::Selected)
+                        m_selectionRects.append(currentRect);
+
+                    if (currentClipNode != 0) {
+                        if (!currentClipNodeUsed) {
+                            delete currentClipNode;
+                        } else {
+                            currentClipNode->setIsRectangular(true);
+                            currentClipNode->setClipRect(currentRect);
+                        }
+                    }
+
+                    if (node != 0 && m_hasSelection)
+                        currentClipNode = new QSGClipNode;
+                    else
+                        currentClipNode = 0;
+                    currentClipNodeUsed = false;
+
+                    if (node != 0) {
+                        currentSelectionState = node->selectionState;
+                        currentRect = node->boundingRect;
+
+                        // Make sure currentRect is valid, otherwise the unite won't work
+                        if (currentRect.isNull())
+                            currentRect.setSize(QSizeF(1, 1));
+                    }
+                } else {
+                    if (currentRect.isNull())
+                        currentRect = node->boundingRect;
+                    else
+                        currentRect = currentRect.united(node->boundingRect);
+                }
+
+                if (node != 0) {
+                    node->clipNode = currentClipNode;
+                    currentClipNodeUsed = true;
+
+                    decorationRect = node->boundingRect;
+
+                    // If previous item(s) had underline and current does not, then we add the
+                    // pending lines to the lists and likewise for overlines and strikeouts
+                    if (!pendingUnderlines.isEmpty()
+                      && !(node->decorations & QSGTextNode::Underline)) {
+                        addTextDecorations(pendingUnderlines, underlineOffset, underlineThickness);
+
+                        pendingUnderlines.clear();
+
+                        underlineOffset = 0.0;
+                        underlineThickness = 0.0;
+                    }
+
+                    // ### Add pending when overlineOffset/thickness changes to minimize number of
+                    // nodes
+                    if (!pendingOverlines.isEmpty()) {
+                        addTextDecorations(pendingOverlines, overlineOffset, overlineThickness);
+
+                        pendingOverlines.clear();
+
+                        overlineOffset = 0.0;
+                        overlineThickness = 0.0;
+                    }
+
+                    // ### Add pending when overlineOffset/thickness changes to minimize number of
+                    // nodes
+                    if (!pendingStrikeOuts.isEmpty()) {
+                        addTextDecorations(pendingStrikeOuts, strikeOutOffset, strikeOutThickness);
+
+                        pendingStrikeOuts.clear();
+
+                        strikeOutOffset = 0.0;
+                        strikeOutThickness = 0.0;
+                    }
+
+                    // Merge current values with previous. Prefer greatest thickness
+                    QRawFont rawFont = node->glyphRun.rawFont();
+                    if (node->decorations & QSGTextNode::Underline) {
+                        if (rawFont.lineThickness() > underlineThickness) {
+                            underlineThickness = rawFont.lineThickness();
+                            underlineOffset = rawFont.underlinePosition();
+                        }
+                    }
+
+                    if (node->decorations & QSGTextNode::Overline) {
+                        overlineOffset = -rawFont.ascent();
+                        overlineThickness = rawFont.lineThickness();
+                    }
+
+                    if (node->decorations & QSGTextNode::StrikeOut) {
+                        strikeOutThickness = rawFont.lineThickness();
+                        strikeOutOffset = rawFont.ascent() / -3.0;
+                    }
+
+                    currentDecorations = node->decorations;
+                    lastColor = node->color;
+                    m_processedNodes.append(*node);
+                }
+            }
+
+            // If there are pending decorations, we need to add them
+            if (!pendingUnderlines.isEmpty())
+                addTextDecorations(pendingUnderlines, underlineOffset, underlineThickness);
+
+            if (!pendingOverlines.isEmpty())
+                addTextDecorations(pendingOverlines, overlineOffset, overlineThickness);
+
+            if (!pendingStrikeOuts.isEmpty())
+                addTextDecorations(pendingStrikeOuts, strikeOutOffset, strikeOutThickness);
+        }
+
+        m_currentLineTree.clear();
+        m_currentLine = QTextLine();
+        m_hasSelection = false;
+    }
+
+    void SelectionEngine::addUnselectedGlyphs(const QGlyphRun &glyphRun)
+    {
+        BinaryTreeNode::insert(&m_currentLineTree, glyphRun, BinaryTreeNode::Unselected,
+                               m_textColor, m_position);
+    }
+
+    void SelectionEngine::addSelectedGlyphs(const QGlyphRun &glyphRun)
+    {
+        int currentSize = m_currentLineTree.size();
+        BinaryTreeNode::insert(&m_currentLineTree, glyphRun, BinaryTreeNode::Selected,
+                               m_textColor, m_position);
+        m_hasSelection = m_hasSelection || m_currentLineTree.size() > currentSize;
+    }
+
+    void SelectionEngine::addToSceneGraph(QSGTextNode *parentNode,
+                                          QSGText::TextStyle style,
+                                          const QColor &styleColor)
+    {
+        if (m_currentLine.isValid())
+            processCurrentLine();
+
+        // First, prepend all selection rectangles to the tree
+        for (int i=0; i<m_selectionRects.size(); ++i) {
+            const QRectF &rect = m_selectionRects.at(i);
+
+            parentNode->appendChildNode(new QSGSimpleRectNode(rect, m_selectionColor));
+        }
+
+        // Then, go through all the nodes for all lines and combine all QGlyphRuns with a common
+        // font, selection state and clip node.
+        typedef QPair<QFontEngine *, QPair<QSGClipNode *, QPair<QRgb, int> > > KeyType;
+        QHash<KeyType, BinaryTreeNode *> map;
+        for (int i=0; i<m_processedNodes.size(); ++i) {
+            BinaryTreeNode *node = m_processedNodes.data() + i;
+
+            QGlyphRun glyphRun = node->glyphRun;
+            QRawFont rawFont = glyphRun.rawFont();
+            QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
+
+            QFontEngine *fontEngine = rawFontD->fontEngine;
+
+            KeyType key(qMakePair(fontEngine,
+                                  qMakePair(node->clipNode,
+                                            qMakePair(node->color.rgba(), int(node->selectionState)))));
+
+            BinaryTreeNode *otherNode = map.value(key, 0);
+            if (otherNode != 0) {
+                QGlyphRun &otherGlyphRun = otherNode->glyphRun;
+
+                QVector<quint32> otherGlyphIndexes = otherGlyphRun.glyphIndexes();
+                QVector<QPointF> otherGlyphPositions = otherGlyphRun.positions();
+
+                otherGlyphIndexes += glyphRun.glyphIndexes();
+
+                QVector<QPointF> glyphPositions = glyphRun.positions();
+                for (int j=0; j<glyphPositions.size(); ++j) {
+                    otherGlyphPositions += glyphPositions.at(j) + (node->position - otherNode->position);
+                }
+
+                otherGlyphRun.setGlyphIndexes(otherGlyphIndexes);
+                otherGlyphRun.setPositions(otherGlyphPositions);
+
+            } else {
+                map.insert(key, node);
+            }
+        }
+
+        // ...and add clip nodes and glyphs to tree.
+        QHash<KeyType, BinaryTreeNode *>::const_iterator it = map.constBegin();
+        while (it != map.constEnd()) {
+
+            BinaryTreeNode *node = it.value();
+
+            QSGClipNode *clipNode = node->clipNode;
+            if (clipNode != 0 && clipNode->parent() == 0 )
+                parentNode->appendChildNode(clipNode);
+
+            QColor color = node->selectionState == BinaryTreeNode::Selected
+                    ? m_selectedTextColor
+                    : node->color;
+
+            parentNode->addGlyphs(node->position, node->glyphRun, color, style, styleColor, clipNode);
+
+            ++it;
+        }
+
+        // Finally, add decorations for each node to the tree.
+        for (int i=0; i<m_lines.size(); ++i) {
+            const TextDecoration &textDecoration = m_lines.at(i);
+
+            QColor color = textDecoration.selectionState == BinaryTreeNode::Selected
+                    ? m_selectedTextColor
+                    : textDecoration.color;
+
+            parentNode->appendChildNode(new QSGSimpleRectNode(textDecoration.rect, color));
+        }
     }
 }
 
-void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
-                                QSGText::TextStyle style, const QColor &styleColor)
+void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
+                                  const QColor &textColor,
+                                  QSGText::TextStyle style, const QColor &styleColor,
+                                  const QColor &selectionColor, const QColor &selectedTextColor,
+                                  int selectionStart, int selectionEnd)
 {
-    QList<QGlyphRun> glyphsList(textLayout->glyphRuns());
+    QTextFrame *textFrame = textDocument->rootFrame();
+    QPointF position = textDocument->documentLayout()->frameBoundingRect(textFrame).topLeft();
 
-    QSGGlyphNode *prevNode = 0;
+    SelectionEngine engine;
+    engine.setTextColor(textColor);
+    engine.setSelectedTextColor(selectedTextColor);
+    engine.setSelectionColor(selectionColor);
 
-    QFont font = textLayout->font();
-    qreal underlinePosition, ascent, lineThickness;
-    int decorations = NoDecoration;
-    decorations |= (font.underline() ? Underline : 0);
-    decorations |= (font.overline()  ? Overline  : 0);
-    decorations |= (font.strikeOut() ? StrikeOut : 0);
+    bool hasSelection = selectionStart >= 0 && selectionEnd >= 0 && selectionStart != selectionEnd;
 
-    underlinePosition = ascent = lineThickness = 0;
-    for (int i=0; i<glyphsList.size(); ++i) {
-        QGlyphRun glyphs = glyphsList.at(i);
-        QRawFont rawfont = glyphs.rawFont();
-        prevNode = addGlyphs(position + QPointF(0, rawfont.ascent()), glyphs, color, style, styleColor);
+    QTextFrame::iterator it = textFrame->begin();
+    while (!it.atEnd()) {
+        Q_ASSERT(!engine.currentLine().isValid());
 
-        if (decorations) {
-            qreal rawAscent = rawfont.ascent();
-            if (decorations & Underline) {
-                ascent = qMax(ascent, rawAscent);
-                qreal pos = rawfont.underlinePosition();
-                if (pos > underlinePosition) {
-                    underlinePosition = pos;
-                    // take line thickness from the rawfont with maximum underline
-                    // position in this case
-                    lineThickness = rawfont.lineThickness();
+        QTextBlock block = it.currentBlock();
+
+        QTextBlock::iterator blockIterator = block.begin();
+        while (!blockIterator.atEnd()) {
+            QTextFragment fragment = blockIterator.fragment();
+            if (fragment.text().isEmpty())
+                continue;
+
+            QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft();
+            engine.setPosition(position + blockPosition);
+
+            QTextCharFormat charFormat = fragment.charFormat();
+            if (!textColor.isValid())
+                engine.setTextColor(charFormat.foreground().color());
+
+            int fragmentEnd = fragment.position() + fragment.length();
+            int textPos = fragment.position();
+            while (textPos < fragmentEnd) {
+                int blockRelativePosition = textPos - block.position();
+                QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
+                Q_ASSERT(line.textLength() > 0);
+                if (!engine.currentLine().isValid() || line.lineNumber() != engine.currentLine().lineNumber())
+                    engine.setCurrentLine(line);
+
+                int lineEnd = line.textStart() + block.position() + line.textLength();
+
+                int len = qMin(lineEnd - textPos, fragmentEnd - textPos);
+                Q_ASSERT(len > 0);
+
+                int currentStepEnd = textPos + len;
+
+                if (!hasSelection || selectionStart > currentStepEnd || selectionEnd < textPos) {
+                    QList<QGlyphRun> glyphRuns = fragment.glyphRuns(blockRelativePosition, len);
+                    for (int j=0; j<glyphRuns.size(); ++j)
+                        engine.addUnselectedGlyphs(glyphRuns.at(j));
+                } else {
+                    if (textPos < selectionStart) {
+                        int unselectedPartLength = qMin(selectionStart - textPos, len);
+                        QList<QGlyphRun> glyphRuns = fragment.glyphRuns(blockRelativePosition,
+                                                                        unselectedPartLength);
+                        for (int j=0; j<glyphRuns.size(); ++j)
+                            engine.addUnselectedGlyphs(glyphRuns.at(j));
+                    }
+
+                    if (selectionStart < currentStepEnd && selectionEnd > textPos) {
+                        int currentSelectionStart = qMax(selectionStart, textPos);
+                        int currentSelectionLength = qMin(selectionEnd - currentSelectionStart,
+                                                          currentStepEnd - currentSelectionStart);
+                        int selectionRelativeBlockPosition = currentSelectionStart - block.position();
+
+                        QList<QGlyphRun> glyphRuns = fragment.glyphRuns(selectionRelativeBlockPosition,
+                                                                        currentSelectionLength);
+                        for (int j=0; j<glyphRuns.size(); ++j)
+                            engine.addSelectedGlyphs(glyphRuns.at(j));
+                    }
+
+                    if (selectionEnd >= textPos && selectionEnd < currentStepEnd) {
+                        QList<QGlyphRun> glyphRuns = fragment.glyphRuns(selectionEnd - block.position(),
+                                                                        currentStepEnd - selectionEnd);
+                        for (int j=0; j<glyphRuns.size(); ++j)
+                            engine.addUnselectedGlyphs(glyphRuns.at(j));
+                    }
                 }
-            } else {
-                // otherwise it's strike out or overline, we take line thickness
-                // from the rawfont with maximum ascent
-                if (rawAscent > ascent) {
-                    ascent = rawAscent;
-                    lineThickness = rawfont.lineThickness();
-                }
+
+                textPos = currentStepEnd;
+            }
+
+            ++blockIterator;
+        }
+
+        engine.setCurrentLine(QTextLine()); // Reset current line because the text layout changed
+        ++it;
+    }
+
+    engine.addToSceneGraph(this, style, styleColor);
+}
+
+void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color,
+                                QSGText::TextStyle style, const QColor &styleColor,
+                                const QColor &selectionColor, const QColor &selectedTextColor,
+                                int selectionStart, int selectionEnd)
+{
+    SelectionEngine engine;
+    engine.setTextColor(color);
+    engine.setSelectedTextColor(selectedTextColor);
+    engine.setSelectionColor(selectionColor);
+    engine.setPosition(position);
+
+    for (int i=0; i<textLayout->lineCount(); ++i) {
+        QTextLine line = textLayout->lineAt(i);
+
+        engine.setCurrentLine(line);
+
+        int lineEnd = line.textStart() + line.textLength();
+        if (selectionStart > lineEnd || selectionEnd < line.textStart()) {
+            QList<QGlyphRun> glyphRuns = line.glyphRuns();
+            for (int j=0; j<glyphRuns.size(); ++j)
+                engine.addUnselectedGlyphs(glyphRuns.at(j));
+        } else {
+            if (line.textStart() < selectionStart) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(line.textStart(),
+                                                            qMin(selectionStart - line.textStart(),
+                                                                 line.textLength()));
+
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    engine.addUnselectedGlyphs(glyphRuns.at(j));
+            }
+
+            if (lineEnd >= selectionStart && selectionStart >= line.textStart()) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionStart, selectionEnd - selectionStart + 1);
+
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    engine.addSelectedGlyphs(glyphRuns.at(j));
+            }
+
+            if (selectionEnd >= line.textStart() && selectionEnd < lineEnd) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionEnd + 1, lineEnd - selectionEnd);
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    engine.addUnselectedGlyphs(glyphRuns.at(j));
             }
         }
     }
 
-    if (decorations) {
-        addTextDecorations(Decoration(decorations), position + QPointF(0, ascent), color,
-                           textLayout->boundingRect().width(),
-                           lineThickness, underlinePosition, ascent);
-    }
+    engine.addToSceneGraph(this, style, styleColor);
 }
 
 
@@ -369,49 +927,11 @@ bool QSGTextNode::isComplexRichText(QTextDocument *doc)
     return reader.hasError();
 }
 
-void QSGTextNode::addTextBlock(const QPointF &position, QTextDocument *textDocument, const QTextBlock &block,
-                               const QColor &overrideColor, QSGText::TextStyle style, const QColor &styleColor)
-{
-    if (!block.isValid())
-        return;
-
-    QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft();
-
-    QTextBlock::iterator it = block.begin();
-    while (!it.atEnd()) {
-        QTextFragment fragment = it.fragment();
-        if (!fragment.text().isEmpty()) {
-            QTextCharFormat charFormat = fragment.charFormat();
-            QColor color = overrideColor.isValid()
-                    ? overrideColor
-                    : charFormat.foreground().color();
-
-            QList<QGlyphRun> glyphsList = fragment.glyphRuns();
-            for (int i=0; i<glyphsList.size(); ++i) {
-                QGlyphRun glyphs = glyphsList.at(i);
-                QRawFont font = glyphs.rawFont();
-                QSGGlyphNode *glyphNode = addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
-                                                    glyphs, color, style, styleColor);
-                int decorations = (glyphs.overline() ? Overline : 0) |
-                                  (glyphs.strikeOut() ? StrikeOut : 0) |
-                                  (glyphs.underline() ? Underline : 0);
-                if (decorations) {
-                    QPointF baseLine = glyphNode->baseLine();
-                    qreal width = glyphNode->boundingRect().width();
-                    addTextDecorations(Decoration(decorations), baseLine, color, width,
-                                       font.lineThickness(), font.underlinePosition(), font.ascent());
-                }
-            }
-        }
-
-        ++it;
-    }
-}
-
 void QSGTextNode::deleteContent()
 {
-    while (firstChild() > 0)
+    while (firstChild() != 0)
         delete firstChild();
+    m_cursorNode = 0;
 }
 
 #if 0

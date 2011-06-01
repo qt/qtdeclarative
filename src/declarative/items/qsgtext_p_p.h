@@ -134,7 +134,6 @@ public:
     QPixmap textLayoutImage(bool drawStyle);
     void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
     QTextLayout layout;
-    QThread *layoutThread;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource, int yOffset);
@@ -146,9 +145,13 @@ public:
     enum NodeType {
         NodeIsNull,
         NodeIsTexture,
-        NodeIsText,
+        NodeIsText
     };
     NodeType nodeType;
+
+#if defined(Q_OS_MAC)
+    QThread *layoutThread;
+#endif
 };
 
 QT_END_NAMESPACE

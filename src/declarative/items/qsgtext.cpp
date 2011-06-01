@@ -107,7 +107,12 @@ QSGTextPrivate::QSGTextPrivate()
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
-  doc(0), layoutThread(0), nodeType(NodeIsNull)
+  doc(0), nodeType(NodeIsNull)
+
+#if defined(Q_OS_MAC)
+  , layoutThread(0)
+#endif
+
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -291,7 +296,9 @@ void QSGTextPrivate::updateSize()
     int dy = q->height();
     QSize size(0, 0);
 
+#if defined(Q_OS_MAC)
     layoutThread = QThread::currentThread();
+#endif
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
@@ -313,6 +320,8 @@ void QSGTextPrivate::updateSize()
         QTextOption option;
         option.setAlignment((Qt::Alignment)int(horizontalAlignment | vAlign));
         option.setWrapMode(QTextOption::WrapMode(wrapMode));
+        if (!cacheAllTextAsImage && !richTextAsImage && !qmlDisableDistanceField())
+            option.setUseDesignMetrics(true);
         doc->setDefaultTextOption(option);
         if (requireImplicitWidth && q->widthValid()) {
             doc->setTextWidth(-1);
@@ -376,6 +385,8 @@ QRect QSGTextPrivate::setupTextLayout()
     QTextOption textOption = layout.textOption();
     textOption.setAlignment(Qt::Alignment(q->effectiveHAlign()));
     textOption.setWrapMode(QTextOption::WrapMode(wrapMode));
+    if (!cacheAllTextAsImage && !richTextAsImage && !qmlDisableDistanceField())
+        textOption.setUseDesignMetrics(true);
     layout.setTextOption(textOption);
 
     bool elideText = false;
@@ -907,8 +918,6 @@ void QSGText::setFont(const QFont &font)
     d->sourceFont = font;
     QFont oldFont = d->font;
     d->font = font;
-    if (!qmlDisableDistanceField())
-        d->font.setHintingPreference(QFont::PreferNoHinting);
 
     if (d->font.pointSizeF() != -1) {
         // 0.5pt resolution
@@ -1480,8 +1489,10 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     QRectF bounds = boundingRect();
 
     // We need to make sure the layout is done in the current thread
+#if defined(Q_OS_MAC)
     if (d->layoutThread != QThread::currentThread())
         d->updateLayout();
+#endif
 
     // XXX todo - some styled text can be done by the QSGTextNode
     if (d->richTextAsImage || d->cacheAllTextAsImage || (qmlDisableDistanceField() && d->style != Normal)) {

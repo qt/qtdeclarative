@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGTextEditPrivate;
-class Q_AUTOTEST_EXPORT QSGTextEdit : public QSGImplicitSizePaintedItem
+class Q_AUTOTEST_EXPORT QSGTextEdit : public QSGImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(VAlignment)
@@ -260,16 +260,18 @@ public Q_SLOTS:
 #endif
 
 private Q_SLOTS:
-    void updateImgCache(const QRectF &rect);
     void q_textChanged();
     void updateSelectionMarkers();
     void moveCursorDelegate();
     void loadCursorDelegate();
     void q_canPasteChanged();
+    void updateDocument();
+    void updateCursor();
 
 private:
     void updateSize();
     void updateTotalLines();
+    void updateImageCache(const QRectF &rect = QRectF());
 
 protected:
     virtual void geometryChanged(const QRectF &newGeometry, 
@@ -288,7 +290,8 @@ protected:
     void inputMethodEvent(QInputMethodEvent *e);
     virtual void itemChange(ItemChange, const ItemChangeData &);
 
-    void paint(QPainter *);
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData);
+
 private:
     Q_DISABLE_COPY(QSGTextEdit)
     Q_DECLARE_PRIVATE(QSGTextEdit)

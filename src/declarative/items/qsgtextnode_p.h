@@ -54,10 +54,20 @@ class QColor;
 class QTextDocument;
 class QSGContext;
 class QRawFont;
+class QSGSimpleRectNode;
+class QSGClipNode;
 
 class QSGTextNode : public QSGTransformNode
 {
 public:
+    enum Decoration {
+        NoDecoration = 0x0,
+        Underline    = 0x1,
+        Overline     = 0x2,
+        StrikeOut    = 0x4
+    };
+    Q_DECLARE_FLAGS(Decorations, Decoration)
+
     QSGTextNode(QSGContext *);
     ~QSGTextNode();
 
@@ -65,26 +75,24 @@ public:
 
     void deleteContent();
     void addTextLayout(const QPointF &position, QTextLayout *textLayout, const QColor &color = QColor(),
-                       QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
+                       QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
+                       const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
+                       int selectionStart = -1, int selectionEnd = -1);
     void addTextDocument(const QPointF &position, QTextDocument *textDocument, const QColor &color = QColor(),
-                         QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
+                         QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
+                         const QColor &selectionColor = QColor(), const QColor &selectedTextColor = QColor(),
+                         int selectionStart = -1, int selectionEnd = -1);
+
+    void setCursor(const QRectF &rect, const QColor &color);
+    QSGSimpleRectNode *cursorNode() const { return m_cursorNode; }
+
+    QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
+                            QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
+                            QSGNode *parentNode = 0);
 
 private:
-    enum Decoration {
-        NoDecoration = 0x0,
-        Underline    = 0x1,
-        Overline     = 0x2,
-        StrikeOut    = 0x4
-    };
-
-    void addTextBlock(const QPointF &position, QTextDocument *textDocument, const QTextBlock &block,
-                      const QColor &overrideColor, QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
-    QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
-                                  QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
-                            QSGGlyphNode *node = 0);
-    void addTextDecorations(Decoration decorations, const QPointF &position, const QColor &color,
-                            qreal width, qreal lineThickness, qreal underlinePosition, qreal ascent);
     QSGContext *m_context;
+    QSGSimpleRectNode *m_cursorNode;
 };
 
 QT_END_NAMESPACE

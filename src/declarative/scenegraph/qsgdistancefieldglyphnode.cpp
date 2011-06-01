@@ -167,6 +167,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     QPointF margins(2, 2);
     QPointF texMargins = margins / m_glyph_cache->fontScale();
 
+    QVector<QPointF> glyphPositions = m_glyphs.positions();
     for (int i = 0; i < glyphIndexes.size(); ++i) {
         quint32 glyphIndex = glyphIndexes.at(i);
         QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex);
@@ -183,9 +184,9 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
                 c.height += texMargins.y() * 2;
         }
 
-        QPointF glyphPosition = m_glyphs.positions().at(i) + m_position;
-        qreal x = glyphPosition.x() + metrics.baselineX;
-        qreal y = glyphPosition.y() - metrics.baselineY;
+        const QPointF &glyphPosition = glyphPositions.at(i);
+        qreal x = glyphPosition.x() + metrics.baselineX + m_position.x();
+        qreal y = glyphPosition.y() - metrics.baselineY + m_position.y();
 
         boundingRect |= QRectF(x, y, metrics.width, metrics.height);
 

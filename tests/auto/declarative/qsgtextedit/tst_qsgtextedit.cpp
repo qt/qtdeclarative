@@ -51,6 +51,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qsgtextedit_p.h>
 #include <private/qsgtextedit_p_p.h>
+#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QFontMetrics>
 #include <QSGView>
 #include <QDir>
@@ -72,6 +73,7 @@
 #endif
 
 Q_DECLARE_METATYPE(QSGTextEdit::SelectionMode)
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
@@ -280,12 +282,40 @@ void tst_qsgtextedit::width()
         QCOMPARE(textEditObject->width(), 0.0);
     }
 
+    bool requiresUnhintedMetrics = !qmlDisableDistanceField();
+
     for (int i = 0; i < standard.size(); i++)
     {
         QFont f;
-        QFontMetricsF fm(f);
-        qreal metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
-        metricWidth = ceil(metricWidth);
+        qreal metricWidth = 0.0;
+
+        if (requiresUnhintedMetrics) {
+            QString s = standard.at(i);
+            s.replace(QLatin1Char('\n'), QChar::LineSeparator);
+
+            QTextLayout layout(s);
+            layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            forever {
+                QTextLine line = layout.createLine();
+                if (!line.isValid())
+                    break;
+            }
+
+            layout.endLayout();
+
+            metricWidth = ceil(layout.boundingRect().width());
+        } else {
+            QFontMetricsF fm(f);
+            metricWidth = fm.size(Qt::TextExpandTabs | Qt::TextShowMnemonic, standard.at(i)).width();
+            metricWidth = ceil(metricWidth);
+        }
 
         QString componentStr = "import QtQuick 2.0\nTextEdit { text: \"" + standard.at(i) + "\" }";
         QDeclarativeComponent texteditComponent(&engine);
@@ -301,6 +331,8 @@ void tst_qsgtextedit::width()
         QTextDocument document;
         document.setHtml(richText.at(i));
         document.setDocumentMargin(0);
+        if (requiresUnhintedMetrics)
+            document.setUseDesignMetrics(true);
 
         int documentWidth = ceil(document.idealWidth());
 
@@ -455,7 +487,6 @@ void tst_qsgtextedit::hAlign()
 
 void tst_qsgtextedit::hAlign_RightToLeft()
 {
-    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
     QSGTextEdit *textEdit = canvas.rootObject()->findChild<QSGTextEdit*>("text");
     QVERIFY(textEdit != 0);
@@ -1471,7 +1502,28 @@ void tst_qsgtextedit::positionAt()
     const int y1 = fm.height() * 3 / 2;
 
     int pos = texteditObject->positionAt(texteditObject->width()/2, y0);
-    int diff = abs(int(fm.width(texteditObject->text().left(pos))-texteditObject->width()/2));
+    int width = 0;
+    if (!qmlDisableDistanceField()) {
+        QTextLayout layout(texteditObject->text().left(pos));
+
+        {
+            QTextOption option;
+            option.setUseDesignMetrics(true);
+            layout.setTextOption(option);
+        }
+
+        layout.beginLayout();
+        QTextLine line = layout.createLine();
+        layout.endLayout();
+
+        width = ceil(line.horizontalAdvance());
+
+    } else {
+        width = fm.width(texteditObject->text().left(pos));
+    }
+
+
+    int diff = abs(int(width-texteditObject->width()/2));
 
     // some tollerance for different fonts.
 #ifdef Q_OS_LINUX
