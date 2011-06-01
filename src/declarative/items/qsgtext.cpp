@@ -106,7 +106,8 @@ QSGTextPrivate::QSGTextPrivate()
   imageCacheDirty(true), updateOnComponentComplete(true),
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), naturalWidth(0), doc(0), layoutThread(0), nodeType(NodeIsNull)
+  layoutTextElided(false), richTextAsImage(false), naturalWidth(0), doc(0), layoutThread(0),
+  nodeType(NodeIsNull)
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -574,7 +575,7 @@ void QSGTextPrivate::invalidateImageCache()
 {
     Q_Q(QSGText);
 
-    if(cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && style != QSGText::Normal)){//If actually using the image cache
+    if(richTextAsImage || cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && style != QSGText::Normal)){//If actually using the image cache
         if (imageCacheDirty)
             return;
 
@@ -749,6 +750,7 @@ void QSGText::setText(const QString &n)
             d->ensureDoc();
             d->doc->setText(n);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -988,6 +990,7 @@ void QSGText::setTextFormat(TextFormat format)
     if (!wasRich && d->richText && isComponentComplete()) {
         d->ensureDoc();
         d->doc->setText(d->text);
+        d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
     }
 
     d->updateLayout();
@@ -1069,12 +1072,6 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         return 0;
     }
 
-    bool richTextAsImage = false;
-    if (d->richText) {
-        d->ensureDoc();
-        richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
-    }
-
     QRectF bounds = boundingRect();
 
     // We need to make sure the layout is done in the current thread
@@ -1082,7 +1079,7 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         d->updateLayout();
 
     // XXX todo - some styled text can be done by the QSGTextNode
-    if (richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
+    if (d->richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
         bool wasDirty = d->imageCacheDirty;
 
         d->checkImageCache();
@@ -1213,6 +1210,7 @@ void QSGText::componentComplete()
             d->ensureDoc();
             d->doc->setText(d->text);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }

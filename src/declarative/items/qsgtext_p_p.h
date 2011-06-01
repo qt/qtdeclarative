@@ -120,12 +120,13 @@ public:
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
     bool layoutTextElided:1;
+    bool richTextAsImage:1;
 
     QRect layedOutTextRect;
     QSize paintedSize;
     qreal naturalWidth;
     virtual qreal getImplicitWidth() const;
-    
+
     void ensureDoc();
     QPixmap textDocumentImage(bool drawStyle);
     QSGTextDocumentWithImageResources *doc;
