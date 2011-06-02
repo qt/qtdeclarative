@@ -43,7 +43,7 @@
 #define QDECLARATIVEDEBUGTRACE_P_H
 
 #include <private/qdeclarativedebugservice_p.h>
-#include <private/qperformancetimer_p.h>
+#include <QtCore/qelapsedtimer.h>
 
 QT_BEGIN_HEADER
 
@@ -117,7 +117,7 @@ private:
     void endRangeImpl(RangeType);
     void processMessage(const QDeclarativeDebugData &);
     void sendMessages();
-    QPerformanceTimer m_timer;
+    QElapsedTimer m_timer;
     bool m_enabled;
     bool m_deferredSend;
     bool m_messageReceived;

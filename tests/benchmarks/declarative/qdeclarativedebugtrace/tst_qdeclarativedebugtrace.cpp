@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,41 +39,62 @@
 **
 ****************************************************************************/
 
-#ifndef QPERFORMANCETIMER_P_H
-#define QPERFORMANCETIMER_P_H
+#include <QtCore/QElapsedTimer>
+#include <QObject>
+#include <qtest.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists for the convenience
-// of moc.  This header file may change from version to version without notice,
-// or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class Q_AUTOTEST_EXPORT QPerformanceTimer
+class tst_qdeclarativedebugtrace : public QObject
 {
-public:
-    void start();
-    qint64 elapsed() const;
+    Q_OBJECT
 
-private:
-    qint64 t1;
-    qint64 t2;
+public:
+    tst_qdeclarativedebugtrace() {}
+
+private slots:
+    void all();
+    void startElapsed();
+    void doubleElapsed();
+    void trace();
 };
 
-QT_END_NAMESPACE
+void tst_qdeclarativedebugtrace::all()
+{
+    QBENCHMARK {
+        QElapsedTimer t;
+        t.start();
+        t.nsecsElapsed();
+    }
+}
 
-QT_END_HEADER
+void tst_qdeclarativedebugtrace::startElapsed()
+{
+    QElapsedTimer t;
+    QBENCHMARK {
+        t.start();
+        t.nsecsElapsed();
+    }
+}
 
-#endif // QPERFORMANCETIMER_P_H
+void tst_qdeclarativedebugtrace::doubleElapsed()
+{
+    QElapsedTimer t;
+    t.start();
+    QBENCHMARK {
+        t.nsecsElapsed();
+        t.nsecsElapsed();
+    }
+}
+
+void tst_qdeclarativedebugtrace::trace()
+{
+    QString s("A decent sized string of text here.");
+    QBENCHMARK {
+        QByteArray data;
+        QDataStream ds(&data, QIODevice::WriteOnly);
+        ds << (qint64)100 << (int)5 << (int)5 << s;
+    }
+}
+
+QTEST_MAIN(tst_qdeclarativedebugtrace)
+
+#include "tst_qdeclarativedebugtrace.moc"
