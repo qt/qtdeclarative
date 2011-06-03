@@ -301,6 +301,14 @@ QDeclarativeState &QDeclarativeState::operator<<(QDeclarativeStateOperation *op)
     return *this;
 }
 
+QDeclarativeListProperty<QDeclarativeStateChange> QDeclarativeState::stateChanges()
+{
+    Q_D(QDeclarativeState);
+    return QDeclarativeListProperty<QDeclarativeStateChange>(this, &d->stateChanges, QDeclarativeStatePrivate::stateChanges_append,
+                                              QDeclarativeStatePrivate::stateChanges_count, QDeclarativeStatePrivate::stateChanges_at,
+                                              QDeclarativeStatePrivate::stateChanges_clear);
+}
+
 void QDeclarativeStatePrivate::complete()
 {
     Q_Q(QDeclarativeState);
@@ -314,6 +322,9 @@ void QDeclarativeStatePrivate::complete()
         }
     }
     reverting.clear();
+
+    for (int i = 0; i < stateChanges.count(); ++i)
+        stateChanges.at(i)->setActive(true);
 
     emit q->completed();
 }
@@ -362,6 +373,15 @@ void QDeclarativeState::cancel()
 {
     Q_D(QDeclarativeState);
     d->transitionManager.cancel();
+}
+
+void QDeclarativeState::prepareForExit()
+{
+    Q_D(QDeclarativeState);
+    cancel();
+
+    for (int i = 0; i < d->stateChanges.count(); ++i)
+        d->stateChanges.at(i)->setActive(false);
 }
 
 void QDeclarativeAction::deleteFromBinding()
@@ -567,7 +587,7 @@ void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransit
 
     cancel();
     if (revert)
-        revert->cancel();
+        revert->prepareForExit();
     d->revertList.clear();
     d->reverting.clear();
 

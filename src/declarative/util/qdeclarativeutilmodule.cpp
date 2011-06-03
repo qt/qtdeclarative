@@ -73,6 +73,7 @@
 #ifndef QT_NO_XMLPATTERNS
 #include "private/qdeclarativexmllistmodel_p.h"
 #endif
+#include "qdeclarativestatechange_p.h"
 
 void QDeclarativeUtilModule::defineModule()
 {
@@ -125,6 +126,8 @@ void QDeclarativeUtilModule::defineModule()
     qmlRegisterCustomType<QDeclarativeListModel>("QtQuick",1,0,"ListModel", new QDeclarativeListModelParser);
     qmlRegisterCustomType<QDeclarativePropertyChanges>("QtQuick",1,0,"PropertyChanges", new QDeclarativePropertyChangesParser);
     qmlRegisterCustomType<QDeclarativeConnections>("QtQuick",1,0,"Connections", new QDeclarativeConnectionsParser);
+
+    qmlRegisterType<QDeclarativeStateChange>("QtQuick",2,0,"StateChange");
 
 #ifndef QT_NO_IMPORT_QT47_QML
     qmlRegisterType<QDeclarativeAnchorAnimation>("Qt",4,7,"AnchorAnimation");

@@ -236,6 +236,29 @@ public:
         return list->at(index);
     }
 
+    //### should use same "guarded" approach as above
+    QList<QDeclarativeStateChange*> stateChanges;
+    static void stateChanges_append(QDeclarativeListProperty<QDeclarativeStateChange> *prop, QDeclarativeStateChange *change) {
+        QList<QDeclarativeStateChange*> *list = static_cast<QList<QDeclarativeStateChange*> *>(prop->data);
+        change->setState(qobject_cast<QDeclarativeState*>(prop->object));
+        list->append(change);
+    }
+    static void stateChanges_clear(QDeclarativeListProperty<QDeclarativeStateChange> *prop) {
+        QList<QDeclarativeStateChange*> *list = static_cast<QList<QDeclarativeStateChange*> *>(prop->data);
+        QMutableListIterator<QDeclarativeStateChange*> listIterator(*list);
+        while(listIterator.hasNext())
+            listIterator.next()->setState(0);
+        list->clear();
+    }
+    static int stateChanges_count(QDeclarativeListProperty<QDeclarativeStateChange> *prop) {
+        QList<QDeclarativeStateChange*> *list = static_cast<QList<QDeclarativeStateChange*> *>(prop->data);
+        return list->count();
+    }
+    static QDeclarativeStateChange *stateChanges_at(QDeclarativeListProperty<QDeclarativeStateChange> *prop, int index) {
+        QList<QDeclarativeStateChange*> *list = static_cast<QList<QDeclarativeStateChange*> *>(prop->data);
+        return list->at(index);
+    }
+
     QDeclarativeTransitionManager transitionManager;
 
     SimpleActionList revertList;

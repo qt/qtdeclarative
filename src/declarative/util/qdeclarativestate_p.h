@@ -47,6 +47,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qsharedpointer.h>
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativestatechange_p.h>
 
 QT_BEGIN_HEADER
 
@@ -148,6 +149,7 @@ class Q_DECLARATIVE_EXPORT QDeclarativeState : public QObject
     Q_PROPERTY(QDeclarativeBinding *when READ when WRITE setWhen)
     Q_PROPERTY(QString extend READ extends WRITE setExtends)
     Q_PROPERTY(QDeclarativeListProperty<QDeclarativeStateOperation> changes READ changes)
+    Q_PROPERTY(QDeclarativeListProperty<QDeclarativeStateChange> stateChanges READ stateChanges)
     Q_CLASSINFO("DefaultProperty", "changes")
     Q_CLASSINFO("DeferredPropertyNames", "changes")
 
@@ -174,8 +176,11 @@ public:
 
     QDeclarativeState &operator<<(QDeclarativeStateOperation *);
 
+    QDeclarativeListProperty<QDeclarativeStateChange> stateChanges();
+
     void apply(QDeclarativeStateGroup *, QDeclarativeTransition *, QDeclarativeState *revert);
     void cancel();
+    void prepareForExit();
 
     QDeclarativeStateGroup *stateGroup() const;
     void setStateGroup(QDeclarativeStateGroup *);

@@ -28,7 +28,8 @@ SOURCES += \
     $$PWD/qdeclarativefontloader.cpp \
     $$PWD/qdeclarativestyledtext.cpp \
     $$PWD/qdeclarativelistmodelworkeragent.cpp \
-    $$PWD/qlistmodelinterface.cpp
+    $$PWD/qlistmodelinterface.cpp \
+    util/qdeclarativestatechange.cpp
 
 HEADERS += \
     $$PWD/qdeclarativeapplication_p.h \
@@ -63,7 +64,8 @@ HEADERS += \
     $$PWD/qdeclarativefontloader_p.h \
     $$PWD/qdeclarativestyledtext_p.h \
     $$PWD/qdeclarativelistmodelworkeragent_p.h \
-    $$PWD/qlistmodelinterface_p.h
+    $$PWD/qlistmodelinterface_p.h \
+    util/qdeclarativestatechange_p.h
 
 contains(QT_CONFIG, xmlpatterns) {
     QT+=xmlpatterns

@@ -90,6 +90,7 @@ private:
     friend class QDeclarativePropertyCache;
     friend class QV8QObjectConnectionList;
     friend class QV8QObjectInstance;
+    friend class QDeclarativeStateChange;
 
     v8::Local<v8::Object> newQObject(QObject *, QDeclarativeData *, QV8Engine *);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
