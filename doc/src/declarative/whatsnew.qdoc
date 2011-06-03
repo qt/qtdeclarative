@@ -35,6 +35,9 @@ QtQuick 2.0 is a major update.
 
 MouseArea now propagates clicked, doubleClicked and pressAndHold differently.
 
+The Binding element now restores any previously set binding when its \e when
+clause becomes false.
+
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
 QtQuick 1.1 is a minor feature update.  \e {import QtQuick 1.1} to use the new
