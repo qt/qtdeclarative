@@ -5,6 +5,7 @@
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );
 %classnames = (
+    "qtdeclarativeversion.h" => "QtDeclarativeVersion",
 );
 %mastercontent = (
     "gui" => "#include <QtGui/QtGui>\n",

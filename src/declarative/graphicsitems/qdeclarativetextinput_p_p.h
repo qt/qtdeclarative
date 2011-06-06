@@ -70,7 +70,7 @@ class Q_AUTOTEST_EXPORT QDeclarativeTextInputPrivate : public QDeclarativeImplic
 {
     Q_DECLARE_PUBLIC(QDeclarativeTextInput)
 public:
-    QDeclarativeTextInputPrivate() : control(new QLineControl(QString())),
+    QDeclarativeTextInputPrivate() : control(new QLineControl),
                  color((QRgb)0), style(QDeclarativeText::Normal),
                  styleColor((QRgb)0), hAlign(QDeclarativeTextInput::AlignLeft),
                  mouseSelectionMode(QDeclarativeTextInput::SelectCharacters), inputMethodHints(Qt::ImhNone),
