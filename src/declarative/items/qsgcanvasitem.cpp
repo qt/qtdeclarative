@@ -111,7 +111,7 @@ QSGContext2D* QSGCanvasItem::getContext(const QString &contextId)
 
 void QSGCanvasItem::requestPaint()
 {
-    Q_D(QSGCanvasItem);
+    // Q_D(QSGCanvasItem);
     //TODO:update(d->context->dirtyRect());
     update();
 }
@@ -140,19 +140,19 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
         QString mime = mimeType;
         QString type;
         if (mimeType == QLatin1String("image/bmp"))
-            type = "BMP";
+            type = QLatin1String("BMP");
         else if (mimeType == QLatin1String("image/jpeg"))
-            type = "JPEG";
+            type = QLatin1String("JPEG");
         else if (mimeType == QLatin1String("image/x-portable-pixmap"))
-            type = "PPM";
+            type = QLatin1String("PPM");
         else if (mimeType == QLatin1String("image/tiff"))
-            type = "TIFF";
+            type = QLatin1String("TIFF");
         else if (mimeType == QLatin1String("image/xbm"))
-            type = "XBM";
+            type = QLatin1String("XBM");
         else if (mimeType == QLatin1String("image/xpm"))
-            type = "XPM";
+            type = QLatin1String("XPM");
         else {
-            type = "PNG";
+            type = QLatin1String("PNG");
             mime = QLatin1String("image/png");
         }
         image.save(&buffer, type.toAscii());
