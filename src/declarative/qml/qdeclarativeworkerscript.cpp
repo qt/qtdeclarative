@@ -477,8 +477,6 @@ QDeclarativeWorkerScriptEngine::QDeclarativeWorkerScriptEngine(QDeclarativeEngin
 QDeclarativeWorkerScriptEngine::~QDeclarativeWorkerScriptEngine()
 {
     d->m_lock.lock();
-    qDeleteAll(d->workers);
-    d->workers.clear();
     QCoreApplication::postEvent(d, new QEvent((QEvent::Type)QDeclarativeWorkerScriptEnginePrivate::WorkerDestroyEvent));
     d->m_lock.unlock();
 
@@ -530,7 +528,7 @@ void QDeclarativeWorkerScriptEngine::run()
 {
     d->m_lock.lock();
 
-    v8::Isolate *isolate = v8::Isolate::New();
+    v8::Isolate *isolate = v8::Isolate::New(); 
     isolate->Enter();
 
     d->workerEngine = new QDeclarativeWorkerScriptEnginePrivate::WorkerEngine(d);
@@ -541,6 +539,9 @@ void QDeclarativeWorkerScriptEngine::run()
     d->m_lock.unlock();
 
     exec();
+
+    qDeleteAll(d->workers);
+    d->workers.clear();
 
     delete d->workerEngine; d->workerEngine = 0;
 

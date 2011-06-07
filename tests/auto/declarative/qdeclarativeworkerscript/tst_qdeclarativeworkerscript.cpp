@@ -80,6 +80,7 @@ private slots:
     void script_included();
     void scriptError_onLoad();
     void scriptError_onCall();
+    void stressDispose();
 
 private:
     void waitForEchoMessage(QDeclarativeWorkerScript *worker) {
@@ -283,6 +284,18 @@ void tst_QDeclarativeWorkerScript::scriptError_onCall()
     delete worker;
 }
 
+// Rapidly create and destroy worker scripts to test resources are being disposed
+// in the correct isolate
+void tst_QDeclarativeWorkerScript::stressDispose()
+{
+    for (int ii = 0; ii < 100; ++ii) {
+        QDeclarativeEngine engine;
+        QDeclarativeComponent component(&engine, SRCDIR "/data/stressDispose.qml");
+        QObject *o = component.create();
+        QVERIFY(o);
+        delete o;
+    }
+}
 
 QTEST_MAIN(tst_QDeclarativeWorkerScript)
 
