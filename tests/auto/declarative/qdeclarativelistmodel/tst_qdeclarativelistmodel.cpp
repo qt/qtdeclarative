@@ -108,6 +108,7 @@ private slots:
     void property_changes_worker_data();
     void clear();
 };
+
 int tst_qdeclarativelistmodel::roleFromName(const QDeclarativeListModel *model, const QString &roleName)
 {
     QList<int> roles = model->roles();
@@ -152,19 +153,74 @@ void tst_qdeclarativelistmodel::waitForWorker(QDeclarativeItem *item)
     QVERIFY(timer.isActive());
 }
 
+void tst_qdeclarativelistmodel::static_types_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QVariant>("value");
+
+    QTest::newRow("string")
+        << "ListElement { foo: \"bar\" }"
+        << QVariant(QString("bar"));
+
+    QTest::newRow("real")
+        << "ListElement { foo: 10.5 }"
+        << QVariant(10.5);
+
+    QTest::newRow("real0")
+        << "ListElement { foo: 0 }"
+        << QVariant(double(0));
+
+    QTest::newRow("bool")
+        << "ListElement { foo: false }"
+        << QVariant(false);
+
+    QTest::newRow("bool")
+        << "ListElement { foo: true }"
+        << QVariant(true);
+
+    QTest::newRow("enum")
+        << "ListElement { foo: Text.AlignHCenter }"
+        << QVariant(double(QDeclarativeText::AlignHCenter));
+}
+
+void tst_qdeclarativelistmodel::static_types()
+{
+    QFETCH(QString, qml);
+    QFETCH(QVariant, value);
+
+    qml = "import QtQuick 1.0\nItem { property variant test: model.get(0).foo; ListModel { id: model; " + qml + " } }";
+
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
+    component.setData(qml.toUtf8(),
+                      QUrl::fromLocalFile(QString("dummy.qml")));
+
+    QVERIFY(!component.isError());
+
+    QObject *obj = component.create();
+    QVERIFY(obj != 0);
+
+    QVariant actual = obj->property("test");
+
+    QCOMPARE(actual, value);
+    QCOMPARE(actual.toString(), value.toString());
+
+    delete obj;
+}
+
 void tst_qdeclarativelistmodel::static_i18n()
 {
     QString expect = QString::fromUtf8("na\303\257ve");
 
-    QString componentStr = "import QtQuick 1.0\nListModel { ListElement { prop1: \""+expect+"\"; prop2: QT_TR_NOOP(\""+expect+"\") } }";
+    QString componentStr = "import QtQuick 1.0\nItem { property string prop1: model.get(0).prop1; property string prop2: model.get(0).prop2; ListModel { id: model; ListElement { prop1: \""+expect+"\"; prop2: QT_TR_NOOP(\""+expect+"\") } } }";
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toUtf8(), QUrl::fromLocalFile(""));
-    QDeclarativeListModel *obj = qobject_cast<QDeclarativeListModel*>(component.create());
+    QObject *obj = component.create();
     QVERIFY(obj != 0);
-    QString prop1 = obj->get(0).property(QLatin1String("prop1")).toString();
+    QString prop1 = obj->property("prop1").toString();
     QCOMPARE(prop1,expect);
-    QString prop2 = obj->get(0).property(QLatin1String("prop2")).toString();
+    QString prop2 = obj->property("prop2").toString();
     QCOMPARE(prop2,expect); // (no, not translated, QT_TR_NOOP is a no-op)
     delete obj;
 }
@@ -180,25 +236,29 @@ void tst_qdeclarativelistmodel::static_nestedElements()
 
     QString componentStr = 
         "import QtQuick 1.0\n"
-        "ListModel {\n"
-        "   ListElement {\n"
-        "       attributes: [\n";
+        "Item {\n"
+        "    property variant count: model.get(0).attributes.count\n"
+        "    ListModel {\n"
+        "        id: model\n"
+        "        ListElement {\n"
+        "            attributes: [\n";
     componentStr += elementsStr.toUtf8().constData();
     componentStr += 
-        "       ]\n"
-        "   }\n"
+        "            ]\n"
+        "        }\n"
+        "    }\n"
         "}";
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toUtf8(), QUrl::fromLocalFile(""));
 
-    QDeclarativeListModel *obj = qobject_cast<QDeclarativeListModel*>(component.create());
+    QObject *obj = component.create();
     QVERIFY(obj != 0);
 
-    QScriptValue prop = obj->get(0).property(QLatin1String("attributes")).property(QLatin1String("count"));
-    QVERIFY(prop.isNumber());
-    QCOMPARE(prop.toInt32(), qint32(elementCount));
+    QVariant count = obj->property("count");
+    QCOMPARE(count.type(), QVariant::Int);
+    QCOMPARE(count.toInt(), elementCount);
 
     delete obj;
 }
@@ -384,8 +444,6 @@ void tst_qdeclarativelistmodel::dynamic_worker()
     qApp->processEvents();
 }
 
-
-
 void tst_qdeclarativelistmodel::dynamic_worker_sync_data()
 {
     dynamic_data();
@@ -438,6 +496,17 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
     qApp->processEvents();
 }
 
+#define RUNEVAL(object, string) \
+    QVERIFY(QMetaObject::invokeMethod(object, "runEval", Q_ARG(QVariant, QString(string))));
+
+inline QVariant runexpr(QDeclarativeEngine *engine, const QString &str)
+{
+    QDeclarativeExpression expr(engine->rootContext(), 0, str);
+    return expr.evaluate();
+}
+
+#define RUNEXPR(string) runexpr(&engine, QString(string))
+
 void tst_qdeclarativelistmodel::convertNestedToFlat_fail()
 {
     // If a model has nested data, it cannot be used at all from a worker script
@@ -450,11 +519,9 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_fail()
     QDeclarativeItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
-    QScriptEngine s_eng;
-    QScriptValue plainData = s_eng.newObject();
-    plainData.setProperty("foo", QScriptValue(123));
-    model.append(plainData);
-    model.append(nestedListValue(&s_eng));
+    RUNEVAL(item, "model.append({foo: 123})");
+    RUNEVAL(item, "model.append({foo: [{}, {}]})");
+
     QCOMPARE(model.count(), 2);
 
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML ListModel: List contains list-type data and cannot be used from a worker script");
@@ -482,6 +549,7 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_fail_data()
 }
 
 void tst_qdeclarativelistmodel::convertNestedToFlat_ok()
+
 {
     // If a model only has plain data, it can be modified from a worker script. However,
     // once the model is used from a worker script, it no longer accepts nested data
@@ -494,10 +562,8 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_ok()
     QDeclarativeItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
-    QScriptEngine s_eng;
-    QScriptValue plainData = s_eng.newObject();
-    plainData.setProperty("foo", QScriptValue(123));
-    model.append(plainData);
+    RUNEVAL(item, "model.append({foo: 123})");
+
     QCOMPARE(model.count(), 1);
 
     QVERIFY(QMetaObject::invokeMethod(item, "evalExpressionViaWorker", Q_ARG(QVariant, script)));
@@ -505,20 +571,21 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_ok()
 
     // can still add plain data
     int count = model.count();
-    model.append(plainData);
+
+    RUNEVAL(item, "model.append({foo: 123})");
+
     QCOMPARE(model.count(), count+1);
 
-    QScriptValue nested = nestedListValue(&s_eng);
     const char *warning = "<Unknown File>: QML ListModel: Cannot add list-type data when modifying or after modification from a worker script";
 
     QTest::ignoreMessage(QtWarningMsg, warning);
-    model.append(nested);
+    RUNEVAL(item, "model.append({foo: [{}, {}]})");
 
     QTest::ignoreMessage(QtWarningMsg, warning);
-    model.insert(0, nested);
+    RUNEVAL(item, "model.insert(0, {foo: [{}, {}]})");
 
     QTest::ignoreMessage(QtWarningMsg, warning);
-    model.set(0, nested);
+    RUNEVAL(item, "model.set(0, {foo: [{}, {}]})");
 
     QCOMPARE(model.count(), count+1);
 
@@ -529,67 +596,6 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_ok()
 void tst_qdeclarativelistmodel::convertNestedToFlat_ok_data()
 {
     convertNestedToFlat_fail_data();
-}
-
-void tst_qdeclarativelistmodel::static_types_data()
-{
-    QTest::addColumn<QString>("qml");
-    QTest::addColumn<QVariant>("value");
-
-    QTest::newRow("string")
-        << "ListElement { foo: \"bar\" }"
-        << QVariant(QString("bar"));
-
-    QTest::newRow("real")
-        << "ListElement { foo: 10.5 }"
-        << QVariant(10.5);
-
-    QTest::newRow("real0")
-        << "ListElement { foo: 0 }"
-        << QVariant(double(0));
-
-    QTest::newRow("bool")
-        << "ListElement { foo: false }"
-        << QVariant(false);
-
-    QTest::newRow("bool")
-        << "ListElement { foo: true }"
-        << QVariant(true);
-
-    QTest::newRow("enum")
-        << "ListElement { foo: Text.AlignHCenter }"
-        << QVariant(double(QDeclarativeText::AlignHCenter));
-}
-
-void tst_qdeclarativelistmodel::static_types()
-{
-    QFETCH(QString, qml);
-    QFETCH(QVariant, value);
-
-    qml = "import QtQuick 1.0\nListModel { " + qml + " }";
-
-    QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine);
-    component.setData(qml.toUtf8(),
-                      QUrl::fromLocalFile(QString("dummy.qml")));
-
-    if (value.toString().startsWith("QTBUG-"))
-        QEXPECT_FAIL("",value.toString().toLatin1(),Abort);
-
-    QVERIFY(!component.isError());
-
-    QDeclarativeListModel *obj = qobject_cast<QDeclarativeListModel*>(component.create());
-    QVERIFY(obj != 0);
-
-    QScriptValue actual = obj->get(0).property(QLatin1String("foo"));
-
-    QCOMPARE(actual.isString(), value.type() == QVariant::String);
-    QCOMPARE(actual.isBoolean(), value.type() == QVariant::Bool);
-    QCOMPARE(actual.isNumber(), value.type() == QVariant::Double);
-
-    QCOMPARE(actual.toString(), value.toString());
-
-    delete obj;
 }
 
 void tst_qdeclarativelistmodel::enumerate()
@@ -607,7 +613,6 @@ void tst_qdeclarativelistmodel::enumerate()
     QCOMPARE(r[4],QLatin1String("val5=trueY"));
     delete item;
 }
-
 
 void tst_qdeclarativelistmodel::error_data()
 {
@@ -701,21 +706,16 @@ void tst_qdeclarativelistmodel::set()
     QDeclarativeEngine engine;
     QDeclarativeListModel model;
     QDeclarativeEngine::setContextForObject(&model,engine.rootContext());
-    engine.rootContext()->setContextObject(&model);
-    QScriptEngine *seng = QDeclarativeEnginePrivate::getScriptEngine(&engine);
+    engine.rootContext()->setContextProperty("model", &model);
 
-    QScriptValue sv = seng->newObject();
-    sv.setProperty("test", QScriptValue(false));
-    model.append(sv);
+    RUNEXPR("model.append({test:false})");
+    RUNEXPR("model.set(0, {test:true})");
 
-    sv.setProperty("test", QScriptValue(true));
-    model.set(0, sv);
-    QCOMPARE(model.get(0).property("test").toBool(), true); // triggers creation of model cache
+    QCOMPARE(RUNEXPR("model.get(0).test").toBool(), true); // triggers creation of model cache
     QCOMPARE(model.data(0, model.roles()[0]), qVariantFromValue(true)); 
 
-    sv.setProperty("test", QScriptValue(false));
-    model.set(0, sv);
-    QCOMPARE(model.get(0).property("test").toBool(), false); // tests model cache is updated
+    RUNEXPR("model.set(0, {test:false})");
+    QCOMPARE(RUNEXPR("model.get(0).test").toBool(), false); // tests model cache is updated
     QCOMPARE(model.data(0, model.roles()[0]), qVariantFromValue(false)); 
 }
 
@@ -729,8 +729,8 @@ void tst_qdeclarativelistmodel::get()
     QFETCH(QString, roleName);
     QFETCH(QVariant, roleValue);
 
-    QDeclarativeEngine eng;
-    QDeclarativeComponent component(&eng);
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine);
     component.setData(
         "import QtQuick 1.0\n"
         "ListModel { \n"
@@ -743,7 +743,7 @@ void tst_qdeclarativelistmodel::get()
     QVERIFY(role >= 0);
 
     QSignalSpy spy(model, SIGNAL(itemsChanged(int, int, QList<int>)));
-    QDeclarativeExpression expr(eng.rootContext(), model, expression);
+    QDeclarativeExpression expr(engine.rootContext(), model, expression);
     expr.evaluate();
     QVERIFY(!expr.hasError());
 
@@ -792,17 +792,12 @@ void tst_qdeclarativelistmodel::get_worker()
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
     QDeclarativeItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
-    QScriptEngine *seng = QDeclarativeEnginePrivate::getScriptEngine(&eng);
 
     // Add some values like get() test
-    QScriptValue sv = seng->newObject();
-    sv.setProperty(QLatin1String("roleA"), seng->newVariant(QVariant::fromValue(100)));
-    model.append(sv);
-    sv = seng->newObject();
-    sv.setProperty(QLatin1String("roleA"), seng->newVariant(QVariant::fromValue(200)));
-    sv.setProperty(QLatin1String("roleB"), seng->newVariant(QVariant::fromValue(400)));
-    model.append(sv);
-    model.append(sv);
+    RUNEVAL(item, "model.append({roleA: 100})");
+    RUNEVAL(item, "model.append({roleA: 200, roleB: 400})");
+    RUNEVAL(item, "model.append({roleA: 200, roleB: 400})");
+
     int role = roleFromName(&model, roleName);
     QVERIFY(role >= 0);
 
@@ -1055,7 +1050,6 @@ void tst_qdeclarativelistmodel::property_changes_data()
             << "b" << 0 << true << "get(0).b.count == 0";
 }
 
-
 void tst_qdeclarativelistmodel::property_changes_worker()
 {
     // nested models are not supported when WorkerScript is involved
@@ -1108,33 +1102,26 @@ void tst_qdeclarativelistmodel::clear()
     QDeclarativeEngine engine;
     QDeclarativeListModel model;
     QDeclarativeEngine::setContextForObject(&model, engine.rootContext());
-    engine.rootContext()->setContextObject(&model);
-
-    QScriptEngine *seng = QDeclarativeEnginePrivate::getScriptEngine(&engine);
-    QScriptValue sv = seng->newObject();
-    QVariant result;
+    engine.rootContext()->setContextProperty("model", &model);
 
     model.clear();
     QCOMPARE(model.count(), 0);
 
-    sv.setProperty("propertyA", "value a");
-    sv.setProperty("propertyB", "value b");
-    model.append(sv);
+    RUNEXPR("model.append({propertyA: \"value a\", propertyB: \"value b\"})");
     QCOMPARE(model.count(), 1);
 
     model.clear();
     QCOMPARE(model.count(), 0);
 
-    model.append(sv);
-    model.append(sv);
+    RUNEXPR("model.append({propertyA: \"value a\", propertyB: \"value b\"})");
+    RUNEXPR("model.append({propertyA: \"value a\", propertyB: \"value b\"})");
     QCOMPARE(model.count(), 2);
 
     model.clear();
     QCOMPARE(model.count(), 0);
 
     // clearing does not remove the roles
-    sv.setProperty("propertyC", "value c");
-    model.append(sv);
+    RUNEXPR("model.append({propertyA: \"value a\", propertyB: \"value b\", propertyC: \"value c\"})");
     QList<int> roles = model.roles();
     model.clear();
     QCOMPARE(model.count(), 0);

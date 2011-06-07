@@ -83,10 +83,7 @@ void QDeclarativeListModelWorkerAgent::Data::changedChange(int index, int count,
 }
 
 QDeclarativeListModelWorkerAgent::QDeclarativeListModelWorkerAgent(QDeclarativeListModel *model)
-    : m_engine(0), 
-      m_ref(1), 
-      m_orig(model), 
-      m_copy(new QDeclarativeListModel(model, this))
+: m_engine(0), m_ref(1), m_orig(model), m_copy(new QDeclarativeListModel(model, this))
 {
 }
 
@@ -94,14 +91,14 @@ QDeclarativeListModelWorkerAgent::~QDeclarativeListModelWorkerAgent()
 {
 }
 
-void QDeclarativeListModelWorkerAgent::setScriptEngine(QScriptEngine *eng)
+void QDeclarativeListModelWorkerAgent::setV8Engine(QV8Engine *eng)
 {
     m_engine = eng;
     if (m_copy->m_flat)
-        m_copy->m_flat->m_scriptEngine = eng;
+        m_copy->m_flat->m_engine = eng;
 }
 
-QScriptEngine *QDeclarativeListModelWorkerAgent::scriptEngine() const
+QV8Engine *QDeclarativeListModelWorkerAgent::v8engine() const
 {
     return m_engine;
 }
@@ -140,7 +137,7 @@ void QDeclarativeListModelWorkerAgent::remove(int index)
         data.removeChange(index, 1);
 }
 
-void QDeclarativeListModelWorkerAgent::append(const QScriptValue &value)
+void QDeclarativeListModelWorkerAgent::append(const QDeclarativeV8Handle &value)
 {
     int count = m_copy->count();
     m_copy->append(value);
@@ -149,7 +146,7 @@ void QDeclarativeListModelWorkerAgent::append(const QScriptValue &value)
         data.insertChange(m_copy->count() - 1, 1);
 }
 
-void QDeclarativeListModelWorkerAgent::insert(int index, const QScriptValue &value)
+void QDeclarativeListModelWorkerAgent::insert(int index, const QDeclarativeV8Handle &value)
 {
     int count = m_copy->count();
     m_copy->insert(index, value);
@@ -158,12 +155,12 @@ void QDeclarativeListModelWorkerAgent::insert(int index, const QScriptValue &val
         data.insertChange(index, 1);
 }
 
-QScriptValue QDeclarativeListModelWorkerAgent::get(int index) const
+QDeclarativeV8Handle QDeclarativeListModelWorkerAgent::get(int index) const
 {
     return m_copy->get(index);
 }
 
-void QDeclarativeListModelWorkerAgent::set(int index, const QScriptValue &value)
+void QDeclarativeListModelWorkerAgent::set(int index, const QDeclarativeV8Handle &value)
 {
     QList<int> roles;
     m_copy->set(index, value, &roles);

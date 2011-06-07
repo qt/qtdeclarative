@@ -168,8 +168,8 @@ void QDeclarativePropertyCache::clear()
     indexCache.clear();
     methodIndexCache.clear();
     stringCache.clear();
-    constructor.Dispose();
-    constructor = v8::Persistent<v8::Function>();
+    constructor.Dispose(); 
+    constructor.Clear();
 }
 
 QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObject *metaObject, 
@@ -252,7 +252,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
     Q_UNUSED(revision);
 
     constructor.Dispose(); // Now invalid
-    constructor = v8::Persistent<v8::Function>();
+    constructor.Clear();
 
     allowedRevisionCache.append(0);
 
@@ -416,16 +416,18 @@ QDeclarativePropertyCache::Data *
 QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
                                     v8::Handle<v8::String> name, Data &local)
 {
-    Q_ASSERT(engine);
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-
+    // XXX Optimize for worker script case where engine isn't available
     QDeclarativePropertyCache *cache = 0;
-    QDeclarativeData *ddata = QDeclarativeData::get(obj);
-    if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine) // XXX aakenend
-        cache = ddata->propertyCache;
-    if (!cache) {
-        cache = ep->cache(obj);
-        if (cache && ddata && !ddata->propertyCache) { cache->addref(); ddata->propertyCache = cache; }
+    if (engine) {
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+
+        QDeclarativeData *ddata = QDeclarativeData::get(obj);
+        if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine) // XXX aakenend
+            cache = ddata->propertyCache;
+        if (!cache) {
+            cache = ep->cache(obj);
+            if (cache && ddata && !ddata->propertyCache) { cache->addref(); ddata->propertyCache = cache; }
+        }
     }
 
     QDeclarativePropertyCache::Data *rv = 0;
@@ -433,7 +435,8 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
     if (cache) {
         rv = cache->property(name);
     } else {
-        QString strname = ep->v8engine.toString(name);
+        QString strname = QV8Engine::toStringStatic(name);
+        // QString strname = ep->v8engine.toString(name);
         local = QDeclarativePropertyCache::create(obj->metaObject(), strname);
         if (local.isValid())
             rv = &local;

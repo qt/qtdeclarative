@@ -67,7 +67,7 @@
 QT_BEGIN_NAMESPACE
 
 QV8Engine::QV8Engine()
-: m_xmlHttpRequestData(0), m_sqlDatabaseData(0)
+: m_xmlHttpRequestData(0), m_sqlDatabaseData(0), m_listModelData(0)
 {
 }
 
@@ -77,6 +77,8 @@ QV8Engine::~QV8Engine()
     m_sqlDatabaseData = 0;
     qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData); 
     m_xmlHttpRequestData = 0;
+    delete m_listModelData;
+    m_listModelData = 0;
 
     m_getOwnPropertyNames.Dispose(); m_getOwnPropertyNames.Clear();
     
@@ -88,6 +90,7 @@ QV8Engine::~QV8Engine()
     m_contextWrapper.destroy();
     m_stringWrapper.destroy();
     m_context.Dispose();
+    m_context.Clear();
 }
 
 void QV8Engine::init(QDeclarativeEngine *engine)
@@ -146,6 +149,7 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::SQLDatabaseType:
+            case QV8ObjectResource::ListModelType:
                 return QVariant();
             case QV8ObjectResource::QObjectType:
                 return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));

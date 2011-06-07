@@ -90,7 +90,8 @@ class QV8ObjectResource : public v8::Object::ExternalResource
 public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
-                        ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType };
+                        ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
+                        ListModelType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
@@ -170,6 +171,10 @@ public:
     QV8Engine();
     ~QV8Engine();
 
+    struct Deletable {
+        ~Deletable() {}
+    };
+
     void init(QDeclarativeEngine *);
 
     QDeclarativeEngine *engine() { return m_engine; }
@@ -183,6 +188,9 @@ public:
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
     void *sqlDatabaseData() { return m_sqlDatabaseData; }
+
+    Deletable *listModelData() { return m_listModelData; }
+    void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
 
     QDeclarativeContextData *callingContext();
 
@@ -246,6 +254,7 @@ private:
 
     void *m_xmlHttpRequestData;
     void *m_sqlDatabaseData;
+    Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
 

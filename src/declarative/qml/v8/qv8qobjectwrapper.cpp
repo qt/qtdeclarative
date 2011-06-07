@@ -70,6 +70,9 @@ Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 #define QOBJECT_TOSTRING_INDEX -2
 #define QOBJECT_DESTROY_INDEX -3
 
+// XXX Need to check all calls to QDeclarativeEngine *engine() to confirm this class works
+// correctly in a worker thread
+
 class QV8QObjectResource : public QV8ObjectResource
 {
     V8_RESOURCE_TYPE(QObjectType);
@@ -153,11 +156,11 @@ void QV8QObjectWrapper::destroy()
     qDeleteAll(m_connections);
     m_connections.clear();
 
-    m_hiddenObject.Dispose();
-    m_destroySymbol.Dispose();
-    m_toStringSymbol.Dispose();
-    m_methodConstructor.Dispose();
-    m_constructor.Dispose();
+    m_hiddenObject.Dispose(); m_hiddenObject.Clear();
+    m_destroySymbol.Dispose(); m_destroySymbol.Clear();
+    m_toStringSymbol.Dispose(); m_toStringSymbol.Clear();
+    m_methodConstructor.Dispose(); m_methodConstructor.Clear();
+    m_constructor.Dispose(); m_constructor.Clear();
 }
 
 #define FAST_VALUE_GETTER(name, cpptype, defaultvalue, constructor) \
@@ -175,8 +178,8 @@ static v8::Handle<v8::Value> name ## ValueGetter(v8::Local<v8::String>, const v8
     int notify = (data & 0x7FFF0000) >> 16; \
     if (notify == 0x7FFF) notify = -1; \
  \
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(resource->engine->engine()); \
-    if (notify /* 0 means constant */ && ep->captureProperties) { \
+    QDeclarativeEnginePrivate *ep = resource->engine->engine()?QDeclarativeEnginePrivate::get(resource->engine->engine()):0; \
+    if (ep && notify /* 0 means constant */ && ep->captureProperties) { \
         typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty; \
         ep->capturedProperties << CapturedProperty(object, index, notify); \
     } \
@@ -331,7 +334,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     if (!result)
         return v8::Handle<v8::Value>();
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
+    QDeclarativeEnginePrivate *ep = engine->engine()?QDeclarativeEnginePrivate::get(engine->engine()):0;
 
     if (revisionMode == QV8QObjectWrapper::CheckRevision && result->revision != 0) {
         QDeclarativeData *ddata = QDeclarativeData::get(object);
@@ -351,7 +354,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         }
     }
 
-    if (ep->captureProperties && !result->isConstant()) {
+    if (ep && ep->captureProperties && !result->isConstant()) {
         if (result->coreIndex == 0)
             ep->capturedProperties << CapturedProperty(QDeclarativeData::get(object, true)->objectNameNotifier());
         else
@@ -661,6 +664,7 @@ static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *
     QV8QObjectInstance *instance = (QV8QObjectInstance *)data;
     instance->v8object.Clear();
     handle.Dispose();
+    handle.Clear();
 }
 
 v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8Engine *engine)
@@ -808,7 +812,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         return rv;
 
     } else {
-
         // If this object is tainted, we have to check to see if it is in our
         // tainted object list
         TaintedHash::Iterator iter =
@@ -896,6 +899,8 @@ QV8QObjectConnectionList::~QV8QObjectConnectionList()
         for (int ii = 0; ii < connections.count(); ++ii) {
             connections[ii].thisObject.Dispose();
             connections[ii].function.Dispose();
+            connections[ii].thisObject.Clear();
+            connections[ii].function.Clear();
         }
     }
     slotHash.clear();
@@ -1081,6 +1086,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                     // Match!
                     connection.thisObject.Dispose();
                     connection.function.Dispose();
+                    connection.thisObject.Clear();
+                    connection.function.Clear();
                     connections.removeAt(ii);
                     return v8::Undefined();
                 }
@@ -1097,6 +1104,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 // Match!
                 connection.thisObject.Dispose();
                 connection.function.Dispose();
+                connection.thisObject.Clear();
+                connection.function.Clear();
                 connections.removeAt(ii);
                 return v8::Undefined();
             }

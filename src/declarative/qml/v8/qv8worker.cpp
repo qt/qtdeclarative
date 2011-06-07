@@ -41,6 +41,9 @@
 
 #include "qv8worker_p.h"
 
+#include <private/qdeclarativelistmodel_p.h>
+#include <private/qdeclarativelistmodelworkeragent_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // We allow the following JavaScript types to be passed between the main and 
@@ -70,7 +73,8 @@ enum Type {
     WorkerUint32,
     WorkerNumber,
     WorkerDate,
-    WorkerRegexp
+    WorkerRegexp,
+    WorkerListModel
 };
 
 static inline quint32 valueheader(Type type, quint32 size = 0)
@@ -98,6 +102,11 @@ static inline void push(QByteArray &data, double value)
     data.append((const char *)&value, sizeof(double));
 }
 
+static inline void push(QByteArray &data, void *ptr)
+{
+    data.append((const char *)&ptr, sizeof(void *));
+}
+
 static inline void reserve(QByteArray &data, int extra)
 {
     data.reserve(data.size() + extra);
@@ -114,6 +123,13 @@ static inline double popDouble(const char *&data)
 {
     double rv = *((double *)data);
     data += sizeof(double);
+    return rv;
+}
+
+static inline void *popPtr(const char *&data)
+{
+    void *rv = *((void **)data);
+    data += sizeof(void *);
     return rv;
 }
 
@@ -221,23 +237,21 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
                 serialize(data, val, engine);
             }
         }
+    } else if (engine->isQObject(v)) {
+        // XXX Can we generalize this?
+        QDeclarativeListModel *lm = qobject_cast<QDeclarativeListModel *>(engine->toQObject(v));
+        if (lm && lm->agent()) {
+            QDeclarativeListModelWorkerAgent *agent = lm->agent();
+            agent->addref();
+            push(data, valueheader(WorkerListModel));
+            push(data, (void *)agent);
+            return;
+        } 
+        // No other QObject's are allowed to be sent
+        push(data, valueheader(WorkerUndefined));
     } else {
         push(data, valueheader(WorkerUndefined));
     }
-
-    // XXX Need to serialize QDeclarativeListModel
-    /*
-        QDeclarativeListModel *lm = qobject_cast<QDeclarativeListModel *>(value.toQObject());
-        if (lm) {
-            QDeclarativeListModelWorkerAgent *agent = lm->agent();
-            if (agent) {
-                QDeclarativeListModelWorkerAgent::VariantRef v(agent);
-                return QVariant::fromValue(v);
-            } else {
-                return QVariant();
-            }
-        }
-    */
 }
 
 v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engine)
@@ -299,6 +313,20 @@ v8::Handle<v8::Value> QV8Worker::deserialize(const char *&data, QV8Engine *engin
         v8::Local<v8::String> source = v8::String::New((uint16_t*)data, length - 1);
         data += ALIGN(length * sizeof(uint16_t));
         return v8::RegExp::New(source, (v8::RegExp::Flags)flags);
+    }
+    case WorkerListModel:
+    {
+        void *ptr = popPtr(data);
+        QDeclarativeListModelWorkerAgent *agent = (QDeclarativeListModelWorkerAgent *)ptr;
+        v8::Handle<v8::Value> rv = engine->newQObject(agent);
+        if (rv->IsObject()) {
+            QDeclarativeListModelWorkerAgent::VariantRef ref(agent);
+            QVariant var = qVariantFromValue(ref);
+            rv->ToObject()->SetHiddenValue(v8::String::New("qml::ref"), engine->fromVariant(var));
+        }
+        agent->release();
+        agent->setV8Engine(engine);
+        return rv;
     }
     }
     Q_ASSERT(!"Unreachable");

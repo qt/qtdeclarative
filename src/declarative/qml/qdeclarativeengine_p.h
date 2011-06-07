@@ -278,6 +278,7 @@ public:
     static void warning(QDeclarativeEnginePrivate *, const QDeclarativeError &);
     static void warning(QDeclarativeEnginePrivate *, const QList<QDeclarativeError> &);
 
+    static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return &e->d_func()->v8engine; }
     static QScriptEngine *getScriptEngine(QDeclarativeEngine *e) { return &e->d_func()->scriptEngine; }
     static QDeclarativeEngine *getEngine(QScriptEngine *e) { return static_cast<QDeclarativeScriptEngine*>(e)->p->q_func(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e) { return e->d_func(); }

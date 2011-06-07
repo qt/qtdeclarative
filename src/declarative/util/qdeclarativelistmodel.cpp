@@ -58,6 +58,122 @@ Q_DECLARE_METATYPE(QListModelInterface *)
 
 QT_BEGIN_NAMESPACE
 
+QV8ListModelResource::QV8ListModelResource(FlatListModel *model, FlatNodeData *data, QV8Engine *engine)
+: QV8ObjectResource(engine), model(model), nodeData(data)
+{
+    if (nodeData) nodeData->addData(this);
+}
+
+QV8ListModelResource::~QV8ListModelResource()
+{
+    if (nodeData) nodeData->removeData(this);
+}
+
+class QDeclarativeListModelV8Data : public QV8Engine::Deletable
+{
+public:
+    QDeclarativeListModelV8Data();
+    ~QDeclarativeListModelV8Data();
+
+    v8::Persistent<v8::Function> constructor;
+
+    static v8::Local<v8::Object> create(QV8Engine *);
+
+    static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
+                                        const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
+                                        v8::Local<v8::Value> value,
+                                        const v8::AccessorInfo &info);
+};
+
+v8::Local<v8::Object> QDeclarativeListModelV8Data::create(QV8Engine *engine)
+{
+    if (!engine->listModelData()) {
+        QDeclarativeListModelV8Data *d = new QDeclarativeListModelV8Data;
+        engine->setListModelData(d);
+    }
+
+    QDeclarativeListModelV8Data *d = (QDeclarativeListModelV8Data *)engine->listModelData();
+    return d->constructor->NewInstance();
+}
+
+QDeclarativeListModelV8Data::QDeclarativeListModelV8Data()
+{
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+}
+
+QDeclarativeListModelV8Data::~QDeclarativeListModelV8Data()
+{
+    constructor.Dispose(); constructor.Clear();
+}
+
+v8::Handle<v8::Value> QDeclarativeListModelV8Data::Getter(v8::Local<v8::String> property, 
+                                                          const v8::AccessorInfo &info)
+{
+    QV8ListModelResource *r =  v8_resource_cast<QV8ListModelResource>(info.This());
+    if (!r)
+        return v8::Undefined();
+
+    if (!r->nodeData) // Item at this index has been deleted
+        return v8::Undefined();
+
+
+    int index = r->nodeData->index;
+    QString propName = r->engine->toString(property);
+
+    int role = r->model->m_strings.value(propName, -1);
+
+    if (role >= 0 && index >=0 ) {
+        const QHash<int, QVariant> &row = r->model->m_values[index];
+        return r->engine->fromVariant(row[role]);
+    }
+
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> QDeclarativeListModelV8Data::Setter(v8::Local<v8::String> property, 
+                                                          v8::Local<v8::Value> value,
+                                                          const v8::AccessorInfo &info)
+{
+    QV8ListModelResource *r =  v8_resource_cast<QV8ListModelResource>(info.This());
+    if (!r)
+        return v8::Undefined();
+
+    if (!r->nodeData) // item at this index has been deleted
+        return value;
+
+
+    if (!value->IsRegExp() && !value->IsDate() && value->IsObject() && !r->engine->isVariant(value)) {
+        qmlInfo(r->model->m_listModel) << "Cannot add list-type data when modifying or after modification from a worker script";
+        return value;
+    }
+
+    int index = r->nodeData->index;
+    QString propName = r->engine->toString(property);
+
+    int role = r->model->m_strings.value(propName, -1);
+    if (role >= 0 && index >= 0) {
+        QHash<int, QVariant> &row = r->model->m_values[index];
+        row[role] = r->engine->toVariant(value, -1);
+
+        QList<int> roles;
+        roles << role;
+        if (r->model->m_parentAgent) {
+            // This is the list in the worker thread, so tell the agent to
+            // emit itemsChanged() later
+            r->model->m_parentAgent->changedData(index, 1, roles);
+        } else {
+            // This is the list in the main thread, so emit itemsChanged()
+            emit r->model->m_listModel->itemsChanged(index, 1, roles);
+        }
+    }
+
+    return value;
+}
+
 template<typename T>
 void qdeclarativelistmodel_move(int from, int to, int n, T *items)
 {
@@ -367,13 +483,14 @@ QDeclarativeListModel *ModelNode::model(const NestedListModel *model)
 ModelObject *ModelNode::object(const NestedListModel *model)
 {
     if (!objectCache) {
-        objectCache = new ModelObject(this, 
-                const_cast<NestedListModel*>(model), 
-                QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(model->m_listModel)));
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(qmlEngine(model->m_listModel));
+        objectCache = new ModelObject(this, const_cast<NestedListModel*>(model), &ep->v8engine);
+
         QHash<QString, ModelNode *>::iterator it;
         for (it = properties.begin(); it != properties.end(); ++it) {
             objectCache->setValue(it.key().toUtf8(), model->valueForNode(*it));
         }
+
         objectCache->setNodeUpdatesEnabled(true);
     }
     return objectCache;
@@ -419,9 +536,11 @@ void QDeclarativeListModel::remove(int index)
 
     \sa set() append()
 */
-void QDeclarativeListModel::insert(int index, const QScriptValue& valuemap)
+void QDeclarativeListModel::insert(int index, const QDeclarativeV8Handle &handle)
 {
-    if (!valuemap.isObject() || valuemap.isArray()) {
+    v8::Handle<v8::Value> valuemap = handle.toHandle();
+
+    if (!valuemap->IsObject() || valuemap->IsArray()) {
         qmlInfo(this) << tr("insert: value is not an object");
         return;
     }
@@ -432,6 +551,7 @@ void QDeclarativeListModel::insert(int index, const QScriptValue& valuemap)
     }
 
     bool ok = m_flat ?  m_flat->insert(index, valuemap) : m_nested->insert(index, valuemap);
+
     if (ok && !inWorkerThread()) {
         emit itemsInserted(index, 1);
         emit countChanged();
@@ -494,14 +614,16 @@ void QDeclarativeListModel::move(int from, int to, int n)
 
     \sa set() remove()
 */
-void QDeclarativeListModel::append(const QScriptValue& valuemap)
+void QDeclarativeListModel::append(const QDeclarativeV8Handle &handle)
 {
-    if (!valuemap.isObject() || valuemap.isArray()) {
+    v8::Handle<v8::Value> valuemap = handle.toHandle();
+
+    if (!valuemap->IsObject() || valuemap->IsArray()) {
         qmlInfo(this) << tr("append: value is not an object");
         return;
     }
 
-    insert(count(), valuemap);
+    insert(count(), handle);
 }
 
 /*!
@@ -535,10 +657,10 @@ void QDeclarativeListModel::append(const QScriptValue& valuemap)
 
     \sa append()
 */
-QScriptValue QDeclarativeListModel::get(int index) const
+QDeclarativeV8Handle QDeclarativeListModel::get(int index) const
 {
     // the internal flat/nested class checks for bad index
-    return m_flat ? m_flat->get(index) : m_nested->get(index);
+    return QDeclarativeV8Handle::fromHandle(m_flat ? m_flat->get(index) : m_nested->get(index));
 }
 
 /*!
@@ -557,7 +679,7 @@ QScriptValue QDeclarativeListModel::get(int index) const
 
     \sa append()
 */
-void QDeclarativeListModel::set(int index, const QScriptValue& valuemap)
+void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &valuemap)
 {
     QList<int> roles;
     set(index, valuemap, &roles);
@@ -565,9 +687,11 @@ void QDeclarativeListModel::set(int index, const QScriptValue& valuemap)
         emit itemsChanged(index, 1, roles);
 }
 
-void QDeclarativeListModel::set(int index, const QScriptValue& valuemap, QList<int> *roles)
+void QDeclarativeListModel::set(int index, const QDeclarativeV8Handle &handle, QList<int> *roles)
 {
-    if (!valuemap.isObject() || valuemap.isArray()) {
+    v8::Handle<v8::Value> valuemap = handle.toHandle();
+
+    if (!valuemap->IsObject() || valuemap->IsArray()) {
         qmlInfo(this) << tr("set: value is not an object");
         return;
     }
@@ -577,7 +701,7 @@ void QDeclarativeListModel::set(int index, const QScriptValue& valuemap, QList<i
     }
 
     if (index == count()) {
-        append(valuemap);
+        append(handle);
     } else {
         if (m_flat)
             m_flat->set(index, valuemap, roles);
@@ -912,7 +1036,7 @@ bool QDeclarativeListModelParser::definesEmptyList(const QString &s)
 */
 
 FlatListModel::FlatListModel(QDeclarativeListModel *base)
-    : m_scriptEngine(0), m_listModel(base), m_scriptClass(0), m_parentAgent(0)
+: m_engine(0), m_listModel(base), m_scriptClass(0), m_parentAgent(0)
 {
 }
 
@@ -960,7 +1084,7 @@ void FlatListModel::remove(int index)
     removedNode(index);
 }
 
-bool FlatListModel::insert(int index, const QScriptValue &value)
+bool FlatListModel::insert(int index, v8::Handle<v8::Value> value)
 {
     Q_ASSERT(index >= 0 && index <= m_values.count());
 
@@ -974,19 +1098,27 @@ bool FlatListModel::insert(int index, const QScriptValue &value)
     return true;
 }
 
-QScriptValue FlatListModel::get(int index) const
+QV8Engine *FlatListModel::engine() const
 {
-    QScriptEngine *scriptEngine = m_scriptEngine ? m_scriptEngine : QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(m_listModel));
+    return m_engine?m_engine:QDeclarativeEnginePrivate::getV8Engine(qmlEngine(m_listModel));
+}
 
-    if (!scriptEngine) 
-        return 0;
+QV8Engine *NestedListModel::engine() const
+{
+    return QDeclarativeEnginePrivate::getV8Engine(qmlEngine(m_listModel));
+}
+
+v8::Handle<v8::Value> FlatListModel::get(int index) const
+{
+    QV8Engine *v8engine = engine();
+
+    if (!v8engine) 
+        return v8::Undefined();
 
     if (index < 0 || index >= m_values.count())
-        return scriptEngine->undefinedValue();
+        return v8::Undefined();
 
     FlatListModel *that = const_cast<FlatListModel*>(this);
-    if (!m_scriptClass)
-        that->m_scriptClass = new FlatListScriptClass(that, scriptEngine);
 
     FlatNodeData *data = m_nodeData.value(index);
     if (!data) {
@@ -994,10 +1126,13 @@ QScriptValue FlatListModel::get(int index) const
         that->m_nodeData.replace(index, data);
     }
 
-    return QScriptDeclarativeClass::newObject(scriptEngine, m_scriptClass, new FlatNodeObjectData(data));
+    v8::Local<v8::Object> rv = QDeclarativeListModelV8Data::create(v8engine);
+    QV8ListModelResource *r = new QV8ListModelResource(that, data, v8engine);
+    rv->SetExternalResource(r);
+    return rv;
 }
 
-void FlatListModel::set(int index, const QScriptValue &value, QList<int> *roles)
+void FlatListModel::set(int index, v8::Handle<v8::Value> value, QList<int> *roles)
 {
     Q_ASSERT(index >= 0 && index < m_values.count());
 
@@ -1032,19 +1167,25 @@ void FlatListModel::move(int from, int to, int n)
     moveNodes(from, to, n);
 }
 
-bool FlatListModel::addValue(const QScriptValue &value, QHash<int, QVariant> *row, QList<int> *roles)
+bool FlatListModel::addValue(v8::Handle<v8::Value> value, QHash<int, QVariant> *row, QList<int> *roles)
 {
-    QScriptValueIterator it(value);
-    while (it.hasNext()) {
-        it.next();
-        QScriptValue value = it.value();
-        if (!value.isVariant() && !value.isRegExp() && !value.isDate() && value.isObject()) {
+    if (!value->IsObject())
+        return false;
+
+    v8::Local<v8::Array> properties = engine()->getOwnPropertyNames(value->ToObject());
+    uint32_t length = properties->Length();
+    for (uint32_t ii = 0; ii < length; ++ii) {
+        // XXX TryCatch?
+        v8::Handle<v8::Value> property = properties->Get(ii);
+        v8::Handle<v8::Value> jsv = value->ToObject()->Get(property);
+
+        if (!jsv->IsRegExp() && !jsv->IsDate() && jsv->IsObject() && !engine()->isVariant(jsv)) {
             qmlInfo(m_listModel) << "Cannot add list-type data when modifying or after modification from a worker script";
             return false;
         }
 
-        QString name = it.name();
-        QVariant v = it.value().toVariant();
+        QString name = engine()->toString(property);
+        QVariant v = engine()->toVariant(jsv, -1);
 
         QHash<QString, int>::Iterator iter = m_strings.find(name);
         if (iter == m_strings.end()) {
@@ -1100,27 +1241,26 @@ void FlatListModel::moveNodes(int from, int to, int n)
     }
 }
 
-
-
 FlatNodeData::~FlatNodeData()
 {
-    for (QSet<FlatNodeObjectData *>::Iterator iter = objects.begin(); iter != objects.end(); ++iter) {
-        FlatNodeObjectData *data = *iter;
+    for (QSet<QV8ListModelResource *>::Iterator iter = objects.begin(); iter != objects.end(); ++iter) {
+        QV8ListModelResource *data = *iter;
         data->nodeData = 0;
     }
 }
 
-void FlatNodeData::addData(FlatNodeObjectData *data) 
+void FlatNodeData::addData(QV8ListModelResource *data) 
 {
     objects.insert(data);
 }
 
-void FlatNodeData::removeData(FlatNodeObjectData *data)
+void FlatNodeData::removeData(QV8ListModelResource *data)
 {
     objects.remove(data);
 }
 
 
+#if 0
 FlatListScriptClass::FlatListScriptClass(FlatListModel *model, QScriptEngine *seng)
     : QScriptDeclarativeClass(seng),
       m_model(model)
@@ -1193,11 +1333,10 @@ bool FlatListScriptClass::compare(Object *obj1, Object *obj2)
 
     return data1->nodeData->index == data2->nodeData->index;
 }
-
-
+#endif
 
 NestedListModel::NestedListModel(QDeclarativeListModel *base)
-    : _root(0), m_ownsRoot(false), m_listModel(base), _rolesOk(false)
+: _root(0), m_ownsRoot(false), m_listModel(base), _rolesOk(false)
 {
 }
 
@@ -1315,7 +1454,7 @@ void NestedListModel::remove(int index)
         delete node;
 }
 
-bool NestedListModel::insert(int index, const QScriptValue& valuemap)
+bool NestedListModel::insert(int index, v8::Handle<v8::Value> valuemap)
 {
     if (!_root) {
         _root = new ModelNode(this);
@@ -1336,44 +1475,47 @@ void NestedListModel::move(int from, int to, int n)
     qdeclarativelistmodel_move<QVariantList>(from, to, n, &_root->values);
 }
 
-QScriptValue NestedListModel::get(int index) const
+v8::Handle<v8::Value> NestedListModel::get(int index) const
 {   
     QDeclarativeEngine *eng = qmlEngine(m_listModel);
     if (!eng) 
-        return 0;
+        return v8::Undefined();;
 
-    if (index < 0 || index >= count()) {
-        QScriptEngine *seng = QDeclarativeEnginePrivate::getScriptEngine(eng);
-        if (seng)
-            return seng->undefinedValue();
-        return 0;
-    }
+    if (index < 0 || index >= count()) 
+        return v8::Undefined();
 
     ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
     if (!node)
-        return 0;
-    
-#if 0
-    return QDeclarativeEnginePrivate::qmlScriptObject(node->object(this), eng);
-#endif
+        return v8::Undefined();;
+
+    return QDeclarativeEnginePrivate::get(eng)->v8engine.newQObject(node->object(this));
 }
 
-void NestedListModel::set(int index, const QScriptValue& valuemap, QList<int> *roles)
+void NestedListModel::set(int index, v8::Handle<v8::Value> valuemap, QList<int> *roles)
 {
     Q_ASSERT(index >=0 && index < count());
+
+    if (!valuemap->IsObject())
+        return;
 
     ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
     bool emitItemsChanged = node->setObjectValue(valuemap);
     if (!emitItemsChanged)
         return;
 
-    QScriptValueIterator it(valuemap);
-    while (it.hasNext()) {
-        it.next();
-        int r = roleStrings.indexOf(it.name());
+    QV8Engine *v8engine = engine();
+
+    v8::Local<v8::Array> properties = v8engine->getOwnPropertyNames(valuemap->ToObject());
+    uint32_t length = properties->Length();
+    for (uint32_t ii = 0; ii < length; ++ii) {
+        // XXX TryCatch?
+        v8::Handle<v8::Value> property = properties->Get(ii);
+        QString name = v8engine->toString(property);
+
+        int r = roleStrings.indexOf(name);
         if (r < 0) {
             r = roleStrings.count();
-            roleStrings << it.name();
+            roleStrings << name;
         }
         roles->append(r);
     }
@@ -1458,55 +1600,75 @@ void ModelNode::clear()
     properties.clear();
 }
 
-bool ModelNode::setObjectValue(const QScriptValue& valuemap, bool writeToCache)
+bool ModelNode::setObjectValue(v8::Handle<v8::Value> valuemap, bool writeToCache)
 {
+    if (!valuemap->IsObject())
+        return false;
+
     bool emitItemsChanged = false;
 
-    QScriptValueIterator it(valuemap);
-    while (it.hasNext()) {
-        it.next();
-        ModelNode *prev = properties.value(it.name());
-        ModelNode *value = new ModelNode(m_model);
-        QScriptValue v = it.value();
+    QV8Engine *v8engine = m_model->engine();
 
-        if (v.isArray()) {
+    v8::Local<v8::Array> propertyNames = v8engine->getOwnPropertyNames(valuemap->ToObject());
+    uint32_t length = propertyNames->Length();
+
+    for (uint32_t ii = 0; ii < length; ++ii) {
+        // XXX TryCatch?
+        v8::Handle<v8::Value> property = propertyNames->Get(ii);
+        v8::Handle<v8::Value> v = valuemap->ToObject()->Get(property);
+
+        QString name = v8engine->toString(property);
+        ModelNode *prev = properties.value(name);
+        ModelNode *value = new ModelNode(m_model);
+
+        if (v->IsArray()) {
             value->isArray = true;
             value->setListValue(v);
             if (writeToCache && objectCache)
-                objectCache->setValue(it.name().toUtf8(), QVariant::fromValue(value->model(m_model)));
+                objectCache->setValue(name.toUtf8(), QVariant::fromValue(value->model(m_model)));
             emitItemsChanged = true;    // for now, too inefficient to check whether list and sublists have changed
         } else {
-            value->values << v.toVariant();
+            value->values << v8engine->toVariant(v, -1);
             if (writeToCache && objectCache)
-                objectCache->setValue(it.name().toUtf8(), value->values.last());
+                objectCache->setValue(name.toUtf8(), value->values.last());
             if (!emitItemsChanged && prev && prev->values.count() == 1
                     && prev->values[0] != value->values.last()) {
                 emitItemsChanged = true;
             }
         }
-        if (properties.contains(it.name()))
-            delete properties[it.name()];
-        properties.insert(it.name(), value);
+        if (properties.contains(name))
+            delete properties[name];
+        properties.insert(name, value);
     }
     return emitItemsChanged;
 }
 
-void ModelNode::setListValue(const QScriptValue& valuelist) {
+void ModelNode::setListValue(v8::Handle<v8::Value> valuelist) 
+{
+    Q_ASSERT(valuelist->IsArray());
     values.clear();
-    int size = valuelist.property(QLatin1String("length")).toInt32();
-    for (int i=0; i<size; i++) {
+
+    QV8Engine *engine = m_model->engine();
+
+    v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(valuelist);
+    uint32_t length = array->Length();
+    for (uint32_t ii = 0; ii < length; ++ii) {
         ModelNode *value = new ModelNode(m_model);
-        QScriptValue v = valuelist.property(i);
-        if (v.isArray()) {
+
+        // XXX TryCatch?
+        v8::Handle<v8::Value> v = array->Get(ii);
+
+        if (v->IsArray()) {
             value->isArray = true;
             value->setListValue(v);
-        } else if (v.isObject()) {
-            value->listIndex = i;
+        } else if (v->IsObject()) {
+            value->listIndex = ii;
             value->setObjectValue(v);
         } else {
-            value->listIndex = i;
-            value->values << v.toVariant();
+            value->listIndex = ii;
+            value->values << engine->toVariant(v, -1);
         }
+
         values.append(QVariant::fromValue(value));
     }
 }
@@ -1583,10 +1745,8 @@ void ModelNode::dump(ModelNode *node, int ind)
     }
 }
 
-ModelObject::ModelObject(ModelNode *node, NestedListModel *model, QScriptEngine *seng)
-    : m_model(model),
-      m_node(node),
-      m_meta(new ModelNodeMetaObject(seng, this))
+ModelObject::ModelObject(ModelNode *node, NestedListModel *model, QV8Engine *eng)
+: m_model(model), m_node(node), m_meta(new ModelNodeMetaObject(eng, this))
 {
 }
 
@@ -1601,12 +1761,8 @@ void ModelObject::setNodeUpdatesEnabled(bool enable)
     m_meta->m_enabled = enable;
 }
 
-
-ModelNodeMetaObject::ModelNodeMetaObject(QScriptEngine *seng, ModelObject *object)
-    : QDeclarativeOpenMetaObject(object),
-      m_enabled(false),
-      m_seng(seng),
-      m_obj(object)
+ModelNodeMetaObject::ModelNodeMetaObject(QV8Engine *eng, ModelObject *object)
+: QDeclarativeOpenMetaObject(object), m_enabled(false), m_engine(eng), m_obj(object)
 {
 }
 
@@ -1618,12 +1774,13 @@ void ModelNodeMetaObject::propertyWritten(int index)
     QString propName = QString::fromUtf8(name(index));
     QVariant value = operator[](index);
 
-    QScriptValue sv = m_seng->newObject();
-    sv.setProperty(propName, m_seng->newVariant(value));
-    bool changed = m_obj->m_node->setObjectValue(sv, false);
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(m_engine->context());
+    v8::Local<v8::Object> object = v8::Object::New();
+    object->Set(m_engine->toString(propName), m_engine->variantWrapper()->newVariant(value));
+    bool changed = m_obj->m_node->setObjectValue(object, false);
     if (changed)
         m_obj->m_node->changedProperty(propName);
 }
-
 
 QT_END_NAMESPACE

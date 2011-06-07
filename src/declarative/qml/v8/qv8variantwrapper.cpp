@@ -95,10 +95,10 @@ void QV8VariantWrapper::init(QV8Engine *engine)
 
 void QV8VariantWrapper::destroy()
 {
-    m_destroy.Dispose();
-    m_preserve.Dispose();
-    m_scarceConstructor.Dispose();
-    m_constructor.Dispose();
+    m_destroy.Dispose(); m_destroy.Clear();
+    m_preserve.Dispose(); m_preserve.Clear();
+    m_scarceConstructor.Dispose(); m_scarceConstructor.Clear();
+    m_constructor.Dispose(); m_constructor.Clear();
 }
 
 v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
@@ -106,13 +106,12 @@ v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
     bool scarceResource = value.type() == QVariant::Pixmap ||
                           value.type() == QVariant::Image;
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(m_engine->engine());
-
     // XXX aakenned - NewInstance() is slow for our case
     v8::Local<v8::Object> rv;
     QV8VariantResource *r = new QV8VariantResource(m_engine, value);
 
     if (scarceResource) {
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(m_engine->engine());
         Q_ASSERT(ep->scarceResourcesRefCount);
         rv = m_scarceConstructor->NewInstance();
         ep->scarceResources.insert(r);
