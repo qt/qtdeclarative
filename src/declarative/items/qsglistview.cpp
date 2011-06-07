@@ -53,6 +53,7 @@
 
 #include <private/qdeclarativesmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
+#include <private/qdeclarativetransitionmanager_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,15 +91,17 @@ QString QSGViewSection::sectionString(const QString &value)
 
 //----------------------------------------------------------------------------
 
+class ListViewTransitionManager;
 class FxListItemSG
 {
 public:
-    FxListItemSG(QSGItem *i, QSGListView *v) : item(i), section(0), view(v) {
+    FxListItemSG(QSGItem *i, QSGListView *v) : item(i), section(0), view(v), posTransition(0) {
         attached = static_cast<QSGListViewAttached*>(qmlAttachedPropertiesObject<QSGListView>(item));
         if (attached)
             attached->setView(view);
     }
     ~FxListItemSG() {}
+
     qreal position() const {
         if (section) {
             if (view->orientation() == QSGListView::Vertical)
@@ -109,11 +112,21 @@ public:
             return itemPosition();
         }
     }
+    qreal itemX() const {
+        if (posTransition)
+            return posAfterTransition.x();
+        return item->x();
+    }
+    qreal itemY() const {
+        if (posTransition)
+            return posAfterTransition.y();
+        return item->y();
+    }
     qreal itemPosition() const {
         if (view->orientation() == QSGListView::Vertical)
-            return item->y();
+            return itemY();
         else
-            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-item->x() : item->x());
+            return (view->effectiveLayoutDirection() == Qt::RightToLeft ? -item->width()-itemX() : itemX());
     }
     qreal size() const {
         if (section)
@@ -131,35 +144,62 @@ public:
     }
     qreal endPosition() const {
         if (view->orientation() == QSGListView::Vertical) {
-            return item->y() + (item->height() >= 1.0 ? item->height() : 1) - 1;
+            return itemY() + (item->height() >= 1.0 ? item->height() : 1) - 1;
         } else {
             return (view->effectiveLayoutDirection() == Qt::RightToLeft
-                    ? -item->width()-item->x() + (item->width() >= 1.0 ? item->width() : 1)
-                    : item->x() + (item->width() >= 1.0 ? item->width() : 1)) - 1;
+                    ? -item->width()-itemX() + (item->width() >= 1.0 ? item->width() : 1)
+                    : itemX() + (item->width() >= 1.0 ? item->width() : 1)) - 1;
         }
     }
-    void setPosition(qreal pos) {
+
+    void setSectionPosition(qreal pos) {
+        if (!section)
+            return;
         if (view->orientation() == QSGListView::Vertical) {
-            if (section) {
-                section->setY(pos);
-                pos += section->height();
-            }
-            item->setY(pos);
+            section->setY(pos);
+            pos += section->height();
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
-                if (section) {
-                    section->setX(-section->width()-pos);
-                    pos += section->width();
-                }
-                item->setX(-item->width()-pos);
+                section->setX(-section->width()-pos);
+                pos += section->width();
             } else {
-                if (section) {
-                    section->setX(pos);
-                    pos += section->width();
-                }
-                item->setX(pos);
+                section->setX(pos);
+                pos += section->width();
             }
         }
+    }
+
+    QPointF positionIfMovedTo(qreal pos, bool resetUnchangedAxis) {
+        qreal x = 0;
+        qreal y = 0;
+        if (view->orientation() == QSGListView::Vertical) {
+            if (section)
+                pos += section->height();
+            y = pos;
+            if (!resetUnchangedAxis)
+                x = item->x();
+        } else {
+            if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
+                if (section)
+                    pos += section->width();
+                x = -item->width()-pos;
+                if (!resetUnchangedAxis)
+                    y = item->y();
+            } else {
+                if (section)
+                    pos += section->width();
+                x = pos;
+                if (!resetUnchangedAxis)
+                    y = item->y();
+            }
+        }
+        return QPointF(x, y);
+    }
+
+    void setPosition(qreal pos) {
+        if (posTransition)
+            return;
+        item->setPos(positionIfMovedTo(pos, false));
     }
     void setSize(qreal size) {
         if (view->orientation() == QSGListView::Vertical)
@@ -168,8 +208,8 @@ public:
             item->setWidth(size);
     }
     bool contains(qreal x, qreal y) const {
-        return (x >= item->x() && x < item->x() + item->width() &&
-                y >= item->y() && y < item->y() + item->height());
+        return (x >= itemX() && x < itemX() + item->width() &&
+                y >= itemY() && y < itemY() + item->height());
     }
 
     QSGItem *item;
@@ -177,7 +217,41 @@ public:
     QSGListView *view;
     QSGListViewAttached *attached;
     int index;
+
+    QPointF posAfterTransition;
+    ListViewTransitionManager *posTransition;
 };
+
+class ListViewTransitionManager : public QDeclarativeTransitionManager
+{
+public:
+    ~ListViewTransitionManager();
+
+    void addItem(FxListItemSG *item, const QPointF &pos);
+    void startTransition();
+
+    bool isActive() const;
+    void itemReleased(FxListItemSG *);
+
+    static ListViewTransitionManager *getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent);
+
+protected:
+    virtual void finished();
+
+private:
+    ListViewTransitionManager(QSGListViewPrivate *p, bool autoDelete, QDeclarativeTransition *t);
+    void cleanUp();
+
+    QSet<FxListItemSG *> listItems;
+    bool autoDelete;
+    QSGListViewPrivate *viewPrivate;
+
+    QDeclarativeTransition *transitionObject;
+    QDeclarativeStateOperation::ActionList actions;
+    QSet<QObject *> defaultTargets;
+};
+
+
 
 //----------------------------------------------------------------------------
 
@@ -199,6 +273,7 @@ public:
         , snapMode(QSGListView::NoSnap), overshootDist(0.0)
         , footerComponent(0), footer(0), headerComponent(0), header(0)
         , bufferMode(BufferBefore | BufferAfter)
+        , addTransitionComponent(0)
         , ownModel(false), wrap(false), autoHighlight(true), haveHighlightRange(false)
         , correctFlick(false), inFlickCorrection(false), lazyRelease(false)
         , deferredRelease(false), layoutScheduled(false), currentIndexCleared(false)
@@ -211,6 +286,8 @@ public:
     void clear();
     FxListItemSG *createItem(int modelIndex);
     void releaseItem(FxListItemSG *item);
+
+    void finishedTransition(FxListItemSG *item);
 
     FxListItemSG *visibleItem(int modelIndex) const {
         if (modelIndex >= visibleIndex && modelIndex < visibleIndex + visibleItems.count()) {
@@ -590,6 +667,8 @@ public:
     int bufferMode;
     mutable qreal minExtent;
     mutable qreal maxExtent;
+    QDeclarativeComponent *addTransitionComponent;
+    QSet<int> indexesInTransition;
 
     bool ownModel : 1;
     bool wrap : 1;
@@ -700,6 +779,8 @@ void QSGListViewPrivate::releaseItem(FxListItemSG *item)
         // item was not destroyed, and we no longer reference it.
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
+    if (item->posTransition)
+        item->posTransition->itemReleased(item);
     if (item->section) {
         int i = 0;
         do {
@@ -1005,6 +1086,8 @@ void QSGListViewPrivate::createHighlight()
 
 void QSGListViewPrivate::updateHighlight()
 {
+    if (indexesInTransition.contains(currentIndex))
+        return;
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
     if (currentItem && autoHighlight && highlight && !movingHorizontally && !movingVertically) {
@@ -1169,13 +1252,15 @@ void QSGListViewPrivate::updateCurrent(int modelIndex)
     if (oldCurrentItem && (!currentItem || oldCurrentItem->item != currentItem->item))
         oldCurrentItem->attached->setIsCurrentItem(false);
     if (currentItem) {
-        if (modelIndex == visibleIndex - 1 && visibleItems.count()) {
-            // We can calculate exact postion in this case
-            currentItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
-        } else {
-            // Create current item now and position as best we can.
-            // Its position will be corrected when it becomes visible.
-            currentItem->setPosition(positionAt(modelIndex));
+        if (!indexesInTransition.contains(currentIndex)) {
+            if (modelIndex == visibleIndex - 1 && visibleItems.count()) {
+                // We can calculate exact postion in this case
+                currentItem->setPosition(visibleItems.first()->position() - currentItem->size() - spacing);
+            } else {
+                // Create current item now and position as best we can.
+                // Its position will be corrected when it becomes visible.
+                currentItem->setPosition(positionAt(modelIndex));
+            }
         }
         currentItem->item->setFocus(true);
         currentItem->attached->setIsCurrentItem(true);
@@ -1532,6 +1617,93 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
         fixup(data, minExtent, maxExtent);
     }
 }
+
+void QSGListViewPrivate::finishedTransition(FxListItemSG *item)
+{
+    if (!item || !indexesInTransition.contains(item->index))
+        return;
+    indexesInTransition.remove(item->index);
+    if (currentItem && item->index == currentIndex) {
+        currentItem->setPosition(positionAt(currentIndex));
+        updateHighlight();
+    }
+}
+
+
+
+ListViewTransitionManager::ListViewTransitionManager(QSGListViewPrivate *p, bool autoDelete, QDeclarativeTransition *t)
+    : autoDelete(autoDelete), viewPrivate(p), transitionObject(t)
+{
+}
+
+ListViewTransitionManager::~ListViewTransitionManager()
+{
+    cleanUp();
+    delete transitionObject;
+}
+
+bool ListViewTransitionManager::isActive() const
+{
+    return listItems.count() > 0;
+}
+
+void ListViewTransitionManager::addItem(FxListItemSG *item, const QPointF &pos)
+{
+    item->posTransition = this;
+    item->posAfterTransition = pos;
+    listItems << item;
+
+    actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(pos.x()));
+    actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(pos.y()));
+
+    defaultTargets << item->item;
+}
+
+void ListViewTransitionManager::startTransition()
+{
+    transition(actions, transitionObject, defaultTargets.toList());
+}
+
+void ListViewTransitionManager::itemReleased(FxListItemSG *item)
+{
+    if (listItems.contains(item)) {
+        item->posTransition = 0;
+        listItems.remove(item);
+    }
+}
+
+void ListViewTransitionManager::cleanUp()
+{
+    for (QSet<FxListItemSG*>::Iterator it = listItems.begin(); it != listItems.end(); ++it) {
+        if (viewPrivate)
+            viewPrivate->finishedTransition(*it);
+        (*it)->posTransition = 0;
+    }
+    listItems.clear();
+}
+
+
+void ListViewTransitionManager::finished()
+{
+    cleanUp();
+    if (autoDelete)
+        delete this;
+}
+
+ListViewTransitionManager *ListViewTransitionManager::getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent)
+{
+    static ListViewTransitionManager *defaultManager = 0;
+    if (!defaultManager) {
+        defaultManager = new ListViewTransitionManager(p, false,
+                qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+    }
+
+    if (!defaultManager->isActive())
+        return defaultManager;
+
+    return new ListViewTransitionManager(p, true, qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+}
+
 
 //----------------------------------------------------------------------------
 
@@ -2086,6 +2258,30 @@ void QSGListView::setHeader(QDeclarativeComponent *header)
             d->fixupPosition();
         }
         emit headerChanged();
+    }
+}
+
+/*!
+    \qmlproperty Transition ListView::add
+
+    This property holds the transition to be applied when adding an
+    item to the view. The transition will only be applied to the
+    added item(s).
+
+    \sa move
+*/
+QDeclarativeComponent *QSGListView::add() const
+{
+    Q_D(const QSGListView);
+    return d->addTransitionComponent;
+}
+
+void QSGListView::setAdd(QDeclarativeComponent *add)
+{
+    Q_D(QSGListView);
+    if (add != d->addTransitionComponent) {
+        d->addTransitionComponent = add;
+        emit addChanged();
     }
 }
 
@@ -2699,6 +2895,8 @@ void QSGListView::itemsInserted(int modelIndex, int count)
     int initialPos = pos;
     int diff = 0;
     QList<FxListItemSG*> added;
+    ListViewTransitionManager *transition = d->addTransitionComponent ?
+        ListViewTransitionManager::getManager(d, d->addTransitionComponent) : 0;
     bool addedVisible = false;
     FxListItemSG *firstVisible = d->firstVisibleItem();
     if (firstVisible && pos < firstVisible->position()) {
@@ -2743,7 +2941,12 @@ void QSGListView::itemsInserted(int modelIndex, int count)
             }
             FxListItemSG *item = d->createItem(modelIndex + i);
             d->visibleItems.insert(index, item);
-            item->setPosition(pos);
+            if (transition) {
+                transition->addItem(item, item->positionIfMovedTo(pos, true));
+                d->indexesInTransition.insert(item->index);
+            } else {
+                item->setPosition(pos);
+            }
             added.append(item);
             pos += item->size() + d->spacing;
             ++index;
@@ -2775,9 +2978,11 @@ void QSGListView::itemsInserted(int modelIndex, int count)
         if (listItem->index != -1)
             listItem->index += count;
     }
-    // everything is in order now - emit add() signal
+    // everything is in order now - emit add() signal and start transitions
     for (int j = 0; j < added.count(); ++j)
         added.at(j)->attached->emitAdd();
+    if (transition)
+        transition->startTransition();
 
     d->updateSections();
     d->itemCount += count;

@@ -127,6 +127,8 @@ class Q_AUTOTEST_EXPORT QSGListView : public QSGFlickable
     Q_PROPERTY(QDeclarativeComponent *header READ header WRITE setHeader NOTIFY headerChanged)
     Q_PROPERTY(QDeclarativeComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
 
+    Q_PROPERTY(QDeclarativeComponent *add READ add WRITE setAdd NOTIFY addChanged)
+
     Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(Orientation)
     Q_ENUMS(SnapMode)
@@ -210,6 +212,9 @@ public:
     QDeclarativeComponent *header() const;
     void setHeader(QDeclarativeComponent *);
 
+    QDeclarativeComponent *add() const;
+    void setAdd(QDeclarativeComponent *);
+
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);
 
@@ -251,6 +256,7 @@ Q_SIGNALS:
     void snapModeChanged();
     void headerChanged();
     void footerChanged();
+    void addChanged();
 
 protected:
     virtual void updatePolish();

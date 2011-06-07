@@ -46,6 +46,7 @@
 
 #include <private/qdeclarativesmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
+#include <private/qdeclarativetransitionmanager_p_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>
@@ -56,25 +57,37 @@ QT_BEGIN_NAMESPACE
 
 //----------------------------------------------------------------------------
 
+class GridViewTransitionManager;
 class FxGridItemSG
 {
 public:
-    FxGridItemSG(QSGItem *i, QSGGridView *v) : item(i), view(v) {
+    FxGridItemSG(QSGItem *i, QSGGridView *v) : item(i), view(v), posTransition(0) {
         attached = static_cast<QSGGridViewAttached*>(qmlAttachedPropertiesObject<QSGGridView>(item));
         if (attached)
             attached->setView(view);
     }
     ~FxGridItemSG() {}
 
+    qreal itemX() const {
+        if (posTransition)
+            return posAfterTransition.x();
+        return item->x();
+    }
+    qreal itemY() const {
+        if (posTransition)
+            return posAfterTransition.y();
+        return item->y();
+    }
+
     qreal rowPos() const {
         qreal rowPos = 0;
         if (view->flow() == QSGGridView::LeftToRight) {
-            rowPos = item->y();
+            rowPos = itemY();
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft)
-                rowPos = -view->cellWidth()-item->x();
+                rowPos = -view->cellWidth()-itemX();
             else
-                rowPos = item->x();
+                rowPos = itemX();
         }
         return rowPos;
     }
@@ -84,51 +97,92 @@ public:
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 int colSize = view->cellWidth();
                 int columns = view->width()/colSize;
-                colPos = colSize * (columns-1) - item->x();
+                colPos = colSize * (columns-1) - itemX();
             } else {
-                colPos = item->x();
+                colPos = itemX();
             }
         } else {
-            colPos = item->y();
+            colPos = itemY();
         }
 
         return colPos;
     }
     qreal endRowPos() const {
         if (view->flow() == QSGGridView::LeftToRight) {
-            return item->y() + view->cellHeight() - 1;
+            return itemY() + view->cellHeight() - 1;
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft)
-                return -item->x() - 1;
+                return -itemX() - 1;
             else
-                return item->x() + view->cellWidth() - 1;
+                return itemX() + view->cellWidth() - 1;
         }
     }
-    void setPosition(qreal col, qreal row) {
+
+    QPointF positionIfMovedTo(qreal col, qreal row) {
         if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
             if (view->flow() == QSGGridView::LeftToRight) {
                 int columns = view->width()/view->cellWidth();
-                item->setPos(QPointF((view->cellWidth() * (columns-1) - col), row));
+                return QPointF((view->cellWidth() * (columns-1) - col), row);
             } else {
-                item->setPos(QPointF(-view->cellWidth()-row, col));
+                return QPointF(-view->cellWidth()-row, col);
             }
         } else {
             if (view->flow() == QSGGridView::LeftToRight)
-                item->setPos(QPointF(col, row));
+                return QPointF(col, row);
             else
-                item->setPos(QPointF(row, col));
+                return QPointF(row, col);
         }
     }
+
+    void setPosition(qreal col, qreal row) {
+        if (posTransition)
+            return;
+        item->setPos(positionIfMovedTo(col, row));
+    }
     bool contains(qreal x, qreal y) const {
-        return (x >= item->x() && x < item->x() + view->cellWidth() &&
-                y >= item->y() && y < item->y() + view->cellHeight());
+        return (x >= itemX() && x < itemX() + view->cellWidth() &&
+                y >= itemY() && y < itemY() + view->cellHeight());
     }
 
     QSGItem *item;
     QSGGridView *view;
     QSGGridViewAttached *attached;
     int index;
+
+    QPointF posAfterTransition;
+    GridViewTransitionManager *posTransition;
 };
+
+class QSGGridViewPrivate;
+class GridViewTransitionManager : public QDeclarativeTransitionManager
+{
+public:
+    ~GridViewTransitionManager();
+
+    void addItem(FxGridItemSG *item, const QPointF &pos);
+    void startTransition();
+
+    bool isActive() const;
+    void itemReleased(FxGridItemSG *item);
+
+    static GridViewTransitionManager *getManager(QSGGridViewPrivate *p, QDeclarativeComponent *transitionComponent);
+
+protected:
+    virtual void finished();
+
+private:
+    GridViewTransitionManager(QSGGridViewPrivate *p, bool autoDelete, QDeclarativeTransition *t);
+    void cleanUp();
+
+    QSet<FxGridItemSG *> gridItems;
+    bool autoDelete;
+    QSGGridViewPrivate *viewPrivate;
+
+    QDeclarativeTransition *transitionObject;
+    QDeclarativeStateOperation::ActionList actions;
+    QSet<QObject*> defaultTargets;
+};
+
 
 //----------------------------------------------------------------------------
 
@@ -148,6 +202,7 @@ public:
     , highlightMoveDuration(150)
     , footerComponent(0), footer(0), headerComponent(0), header(0)
     , bufferMode(BufferBefore | BufferAfter), snapMode(QSGGridView::NoSnap)
+    , addTransitionComponent(0)
     , ownModel(false), wrap(false), autoHighlight(true)
     , fixCurrentVisibility(false), lazyRelease(false), layoutScheduled(false)
     , deferredRelease(false), haveHighlightRange(false), currentIndexCleared(false)
@@ -171,6 +226,9 @@ public:
     void updateHeader();
     void updateFooter();
     void fixupPosition();
+
+    void finishedTransition(FxGridItemSG *item);
+
 
     FxGridItemSG *visibleItem(int modelIndex) const {
         if (modelIndex >= visibleIndex && modelIndex < visibleIndex + visibleItems.count()) {
@@ -471,6 +529,8 @@ public:
     enum BufferMode { NoBuffer = 0x00, BufferBefore = 0x01, BufferAfter = 0x02 };
     int bufferMode;
     QSGGridView::SnapMode snapMode;
+    QDeclarativeComponent *addTransitionComponent;
+    QSet<int> indexesInTransition;
 
     bool ownModel : 1;
     bool wrap : 1;
@@ -531,7 +591,6 @@ FxGridItemSG *QSGGridViewPrivate::createItem(int modelIndex)
     return listItem;
 }
 
-
 void QSGGridViewPrivate::releaseItem(FxGridItemSG *item)
 {
     Q_Q(QSGGridView);
@@ -546,6 +605,8 @@ void QSGGridViewPrivate::releaseItem(FxGridItemSG *item)
         // item was not destroyed, and we no longer reference it.
         unrequestedItems.insert(item->item, model->indexOf(item->item, q));
     }
+    if (item->posTransition)
+        item->posTransition->itemReleased(item);
     delete item;
 }
 
@@ -868,12 +929,14 @@ void QSGGridViewPrivate::createHighlight()
 
 void QSGGridViewPrivate::updateHighlight()
 {
+    if (indexesInTransition.contains(currentIndex))
+        return;
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
     if (currentItem && autoHighlight && highlight && !movingHorizontally && !movingVertically) {
         // auto-update highlight
-        highlightXAnimator->to = currentItem->item->x();
-        highlightYAnimator->to = currentItem->item->y();
+        highlightXAnimator->to = currentItem->itemX();
+        highlightYAnimator->to = currentItem->itemY();
         highlight->item->setWidth(currentItem->item->width());
         highlight->item->setHeight(currentItem->item->height());
         highlightXAnimator->restart();
@@ -912,7 +975,8 @@ void QSGGridViewPrivate::updateCurrent(int modelIndex)
     if (oldCurrentItem && (!currentItem || oldCurrentItem->item != currentItem->item))
         oldCurrentItem->attached->setIsCurrentItem(false);
     if (currentItem) {
-        currentItem->setPosition(colPosAt(modelIndex), rowPosAt(modelIndex));
+        if (!indexesInTransition.contains(currentIndex))
+            currentItem->setPosition(colPosAt(modelIndex), rowPosAt(modelIndex));
         currentItem->item->setFocus(true);
         currentItem->attached->setIsCurrentItem(true);
     }
@@ -1235,6 +1299,90 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     }
 }
 
+void QSGGridViewPrivate::finishedTransition(FxGridItemSG *item)
+{
+    if (!item || !indexesInTransition.contains(item->index))
+        return;
+    indexesInTransition.remove(item->index);
+    if (currentItem && item->index == currentIndex) {
+        currentItem->setPosition(colPosAt(currentIndex), rowPosAt(currentIndex));
+        updateHighlight();
+    }
+}
+
+
+
+GridViewTransitionManager::GridViewTransitionManager(QSGGridViewPrivate *p, bool autoDelete, QDeclarativeTransition *t)
+    : autoDelete(autoDelete), viewPrivate(p), transitionObject(t)
+{
+}
+
+GridViewTransitionManager::~GridViewTransitionManager()
+{
+    cleanUp();
+    delete transitionObject;
+}
+
+bool GridViewTransitionManager::isActive() const
+{
+    return gridItems.count() > 0;
+}
+
+void GridViewTransitionManager::addItem(FxGridItemSG *item, const QPointF &pos)
+{
+    item->posTransition = this;
+    item->posAfterTransition = pos;
+    gridItems << item;
+
+    actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(pos.x()));
+    actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(pos.y()));
+
+    defaultTargets << item->item;
+}
+
+void GridViewTransitionManager::startTransition()
+{
+    transition(actions, transitionObject, defaultTargets.toList());
+}
+
+void GridViewTransitionManager::itemReleased(FxGridItemSG *item)
+{
+    if (gridItems.contains(item)) {
+        item->posTransition = 0;
+        gridItems.remove(item);
+    }
+}
+
+void GridViewTransitionManager::cleanUp()
+{
+    for (QSet<FxGridItemSG*>::Iterator it = gridItems.begin(); it != gridItems.end(); ++it) {
+        if (viewPrivate)
+            viewPrivate->finishedTransition(*it);
+        (*it)->posTransition = 0;
+    }
+    gridItems.clear();
+}
+
+void GridViewTransitionManager::finished()
+{
+    cleanUp();
+    if (autoDelete)
+        delete this;
+}
+
+GridViewTransitionManager *GridViewTransitionManager::getManager(QSGGridViewPrivate *p, QDeclarativeComponent *transitionComponent)
+{
+    static GridViewTransitionManager *defaultManager = 0;
+    if (!defaultManager) {
+        defaultManager = new GridViewTransitionManager(p, false,
+                qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+    }
+
+    if (!defaultManager->isActive())
+        return defaultManager;
+
+    return new GridViewTransitionManager(p, true, qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+}
 
 //----------------------------------------------------------------------------
 
@@ -1732,6 +1880,30 @@ void QSGGridView::setHeader(QDeclarativeComponent *header)
     }
 }
 
+/*!
+    \qmlproperty Transition GridView::add
+
+    This property holds the transition to be applied when adding an
+    item to the view. The transition will only be applied to the
+    added item(s).
+
+    \sa move
+*/
+QDeclarativeComponent *QSGGridView::add() const
+{
+    Q_D(const QSGGridView);
+    return d->addTransitionComponent;
+}
+
+void QSGGridView::setAdd(QDeclarativeComponent *add)
+{
+    Q_D(QSGGridView);
+    if (add != d->addTransitionComponent) {
+        d->addTransitionComponent = add;
+        emit addChanged();
+    }
+}
+
 void QSGGridView::setContentX(qreal pos)
 {
     Q_D(QSGGridView);
@@ -1808,9 +1980,9 @@ void QSGGridView::viewportMoved()
                 d->updateCurrent(idx);
                 if (d->currentItem && d->currentItem->colPos() != d->highlight->colPos() && d->autoHighlight) {
                     if (d->flow == LeftToRight)
-                        d->highlightXAnimator->to = d->currentItem->item->x();
+                        d->highlightXAnimator->to = d->currentItem->itemX();
                     else
-                        d->highlightYAnimator->to = d->currentItem->item->y();
+                        d->highlightYAnimator->to = d->currentItem->itemY();
                 }
             }
         }
@@ -2352,6 +2524,8 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
 
     bool addedVisible = false;
     QList<FxGridItemSG*> added;
+    GridViewTransitionManager *transition = d->addTransitionComponent ?
+        GridViewTransitionManager::getManager(d, d->addTransitionComponent) : 0;
     int i = 0;
     while (i < insertCount && rowPos <= to + d->rowSize()*(d->columns - (colPos/d->colSize()))/qreal(d->columns)) {
         if (!addedVisible) {
@@ -2360,7 +2534,12 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
         }
         FxGridItemSG *item = d->createItem(modelIndex + i);
         d->visibleItems.insert(index, item);
-        item->setPosition(colPos, rowPos);
+        if (transition) {
+            transition->addItem(item, item->positionIfMovedTo(colPos, rowPos));
+            d->indexesInTransition.insert(item->index);
+        } else {
+            item->setPosition(colPos, rowPos);
+        }
         added.append(item);
         colPos += d->colSize();
         if (colPos > d->colSize() * (d->columns-1)) {
@@ -2399,9 +2578,11 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
         setCurrentIndex(0);
     }
 
-    // everything is in order now - emit add() signal
+    // everything is in order now - emit add() signal and start transitions
     for (int j = 0; j < added.count(); ++j)
         added.at(j)->attached->emitAdd();
+    if (transition)
+        transition->startTransition();
 
     d->itemCount += count;
     emit countChanged();
@@ -2534,6 +2715,7 @@ void QSGGridView::itemsMoved(int from, int to, int count)
         }
     }
 
+    QList<GridViewTransitionManager *> transitions;
     int remaining = count;
     int endIndex = d->visibleIndex;
     it = d->visibleItems.begin();
@@ -2545,8 +2727,9 @@ void QSGGridView::itemsMoved(int from, int to, int count)
             if (!movedItem)
                 movedItem = d->createItem(item->index);
             it = d->visibleItems.insert(it, movedItem);
-            if (it == d->visibleItems.begin() && firstItem)
+            if (it == d->visibleItems.begin() && firstItem) {
                 movedItem->setPosition(firstItem->colPos(), firstItem->rowPos());
+            }
             ++it;
             --remaining;
         } else {
