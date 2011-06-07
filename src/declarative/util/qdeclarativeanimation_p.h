@@ -128,7 +128,8 @@ public:
     enum TransitionDirection { Forward, Backward };
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation() = 0;
 
 private Q_SLOTS:
@@ -186,7 +187,8 @@ public:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -231,7 +233,8 @@ Q_SIGNALS:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -284,7 +287,8 @@ protected:
     QDeclarativePropertyAnimation(QDeclarativePropertyAnimationPrivate &dd, QObject *parent);
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 
 Q_SIGNALS:
@@ -420,7 +424,8 @@ public:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -436,7 +441,8 @@ public:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -471,7 +477,8 @@ Q_SIGNALS:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -503,7 +510,8 @@ Q_SIGNALS:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 

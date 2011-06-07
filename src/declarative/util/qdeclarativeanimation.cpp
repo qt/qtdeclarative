@@ -535,11 +535,13 @@ void QDeclarativeAbstractAnimation::setDisableUserControl()
 
 void QDeclarativeAbstractAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
-                                      TransitionDirection direction)
+                                      TransitionDirection direction,
+                                      const QObjectList &defaultTargets)
 {
     Q_UNUSED(actions);
     Q_UNUSED(modified);
     Q_UNUSED(direction);
+    Q_UNUSED(defaultTargets);
 }
 
 void QDeclarativeAbstractAnimation::timelineComplete()
@@ -833,10 +835,12 @@ void QDeclarativeScriptActionPrivate::execute()
 
 void QDeclarativeScriptAction::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
-                                    TransitionDirection direction)
+                                    TransitionDirection direction,
+                                    const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativeScriptAction);
     Q_UNUSED(modified);
+    Q_UNUSED(defaultTargets);
 
     d->hasRunScriptScript = false;
     d->reversing = (direction == Backward);
@@ -1029,10 +1033,12 @@ QAbstractAnimation *QDeclarativePropertyAction::qtAnimation()
 
 void QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
-                                      TransitionDirection direction)
+                                      TransitionDirection direction,
+                                      const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativePropertyAction);
     Q_UNUSED(direction);
+    Q_UNUSED(defaultTargets);
 
     struct QDeclarativeSetPropertyAnimationAction : public QAbstractAnimationAction
     {
@@ -1607,7 +1613,8 @@ QAbstractAnimation *QDeclarativeSequentialAnimation::qtAnimation()
 
 void QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actions,
                                     QDeclarativeProperties &modified,
-                                    TransitionDirection direction)
+                                    TransitionDirection direction,
+                                      const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativeAnimationGroup);
 
@@ -1622,7 +1629,7 @@ void QDeclarativeSequentialAnimation::transition(QDeclarativeStateActions &actio
     for (int ii = from; ii < d->animations.count() && ii >= 0; ii += inc) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        d->animations.at(ii)->transition(actions, modified, direction, defaultTargets);
     }
 }
 
@@ -1676,14 +1683,15 @@ QAbstractAnimation *QDeclarativeParallelAnimation::qtAnimation()
 
 void QDeclarativeParallelAnimation::transition(QDeclarativeStateActions &actions,
                                       QDeclarativeProperties &modified,
-                                      TransitionDirection direction)
+                                      TransitionDirection direction,
+                                      const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativeAnimationGroup);
     bool valid = d->defaultProperty.isValid();
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        d->animations.at(ii)->transition(actions, modified, direction, defaultTargets);
     }
 }
 
@@ -2319,7 +2327,8 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
 
 void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions,
                                      QDeclarativeProperties &modified,
-                                     TransitionDirection direction)
+                                     TransitionDirection direction,
+                                     const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativePropertyAnimation);
 
@@ -2340,6 +2349,9 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
         props << d->defaultProperty.name();
         targets << d->defaultProperty.object();
     }
+
+    if (targets.isEmpty())
+        targets.append(defaultTargets);
 
     if (props.isEmpty() && !d->defaultProperties.isEmpty()) {
         props << d->defaultProperties.split(QLatin1Char(','));
@@ -2597,7 +2609,8 @@ QPointF QDeclarativeParentAnimationPrivate::computeTransformOrigin(QDeclarativeI
 
 void QDeclarativeParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                         const QObjectList &defaultTargets)
 {
     Q_D(QDeclarativeParentAnimation);
 
@@ -2781,7 +2794,7 @@ void QDeclarativeParentAnimation::transition(QDeclarativeStateActions &actions,
     for (int ii = 0; ii < d->animations.count(); ++ii) {
         if (valid)
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
-        d->animations.at(ii)->transition(actions, modified, direction);
+        d->animations.at(ii)->transition(actions, modified, direction, defaultTargets);
     }
 
 }
@@ -2912,9 +2925,11 @@ void QDeclarativeAnchorAnimation::setEasing(const QEasingCurve &e)
 
 void QDeclarativeAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                        const QObjectList &defaultTargets)
 {
     Q_UNUSED(modified);
+    Q_UNUSED(defaultTargets);
     Q_D(QDeclarativeAnchorAnimation);
     QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
     data->interpolatorType = QMetaType::QReal;

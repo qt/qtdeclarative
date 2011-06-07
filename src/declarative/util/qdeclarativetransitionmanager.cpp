@@ -56,7 +56,7 @@ class QDeclarativeTransitionManagerPrivate
 {
 public:
     QDeclarativeTransitionManagerPrivate()
-        : state(0) {}
+        : state(0), running(false) {}
 
     void applyBindings();
     typedef QList<QDeclarativeSimpleAction> SimpleActionList;
@@ -64,6 +64,7 @@ public:
     QDeclarativeGuard<QDeclarativeTransition> transition;
     QDeclarativeStateOperation::ActionList bindingsList;
     SimpleActionList completeList;
+    bool running;
 };
 
 QDeclarativeTransitionManager::QDeclarativeTransitionManager()
@@ -94,6 +95,13 @@ void QDeclarativeTransitionManager::complete()
 
     if (d->state) 
         static_cast<QDeclarativeStatePrivate*>(QObjectPrivate::get(d->state))->complete();
+
+    d->running = false;
+    finished();
+}
+
+void QDeclarativeTransitionManager::finished()
+{
 }
 
 void QDeclarativeTransitionManagerPrivate::applyBindings()
@@ -113,10 +121,17 @@ void QDeclarativeTransitionManagerPrivate::applyBindings()
     bindingsList.clear();
 }
 
+bool QDeclarativeTransitionManager::isRunning() const
+{
+    return d->running;
+}
+
 void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &list,
-                                      QDeclarativeTransition *transition)
+                                      QDeclarativeTransition *transition,
+                                      const QObjectList &defaultTargets)
 {
     cancel();
+    d->running = true;
 
     QDeclarativeStateOperation::ActionList applyList = list;
     // Determine which actions are binding changes.
@@ -191,7 +206,7 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     if (transition) {
         QList<QDeclarativeProperty> touched;
         d->transition = transition;
-        d->transition->prepare(applyList, touched, this);
+        d->transition->prepare(applyList, touched, this, defaultTargets);
 
         // Modify the action list to remove actions handled in the transition
         for (int ii = 0; ii < applyList.count(); ++ii) {
@@ -251,10 +266,12 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
 
 void QDeclarativeTransitionManager::cancel()
 {
+    if (!d->running)
+        return;
+
     if (d->transition) {
         // ### this could potentially trigger a complete in rare circumstances
         d->transition->stop();
-        d->transition = 0;
     }
 
     for(int i = 0; i < d->bindingsList.count(); ++i) {
@@ -271,6 +288,8 @@ void QDeclarativeTransitionManager::cancel()
     }
     d->bindingsList.clear();
     d->completeList.clear();
+
+    d->running = false;
 }
 
 QT_END_NAMESPACE

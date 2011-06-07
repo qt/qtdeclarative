@@ -65,9 +65,14 @@ public:
     QDeclarativeTransitionManager();
     ~QDeclarativeTransitionManager();
 
-    void transition(const QList<QDeclarativeAction> &, QDeclarativeTransition *transition);
+    bool isRunning() const;
+
+    void transition(const QList<QDeclarativeAction> &, QDeclarativeTransition *transition, const QObjectList &defaultTargets = QObjectList());
 
     void cancel();
+
+protected:
+    virtual void finished();
 
 private:
     Q_DISABLE_COPY(QDeclarativeTransitionManager)
