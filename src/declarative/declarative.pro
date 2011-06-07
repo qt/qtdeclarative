@@ -21,6 +21,8 @@ exists("qdeclarative_enable_gcov") {
 
 include($$QT_SOURCE_TREE/src/qbase.pri)
 
+HEADERS += qtdeclarativeversion.h
+
 #INCLUDEPATH -= $$QMAKE_INCDIR_QT/$$TARGET
 #DESTDIR=.
 
