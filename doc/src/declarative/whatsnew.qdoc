@@ -33,7 +33,9 @@
 
 QtQuick 2.0 is a major update.
 
-MouseArea now propagates clicked, doubleClicked and pressAndHold differently.
+MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed. 
+These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
+You can still ignore these events in the handler to let them pass through.
 
 The Binding element now restores any previously set binding when its \e when
 clause becomes false.
