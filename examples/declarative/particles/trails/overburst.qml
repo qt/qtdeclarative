@@ -39,21 +39,21 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "black"
     width: 360
     height: 540
     ParticleSystem{ id: sys }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         id: cp
         image: "content/particle.png"
         colorVariation: 0.4
         color: "#000000FF"
     }
-    TrailEmitter{
+    Emitter{
         //burst on click
         id: bursty
         system: sys
@@ -63,7 +63,7 @@ Rectangle{
         particlesPerSecond: 16000
         particleDuration: 1000
         maxParticles: 4000
-        acceleration: AngleVector{angleVariation: 360; magnitude: 360; }
+        acceleration: AngledDirection{angleVariation: 360; magnitude: 360; }
         particleSize: 8
         particleEndSize: 16
         particleSizeVariation: 4

@@ -57,7 +57,23 @@ class QSGPointAttractorAffector : public QSGParticleAffector
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
+    Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
+    Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
+    Q_ENUMS(PhysicsAffects)
+    Q_ENUMS(Proportion)
+
 public:
+    enum Proportion{
+        Linear,
+        Quadratic
+    };
+
+    enum PhysicsAffects {
+        Position,
+        Velocity,
+        Acceleration
+    };
+
     explicit QSGPointAttractorAffector(QSGItem *parent = 0);
 
     qreal strength() const
@@ -75,6 +91,16 @@ public:
         return m_y;
     }
 
+    PhysicsAffects physics() const
+    {
+        return m_physics;
+    }
+
+    Proportion proportionalToDistance() const
+    {
+        return m_proportionalToDistance;
+    }
+
 signals:
 
     void strengthChanged(qreal arg);
@@ -82,6 +108,10 @@ signals:
     void xChanged(qreal arg);
 
     void yChanged(qreal arg);
+
+    void physicsChanged(PhysicsAffects arg);
+
+    void proportionalToDistanceChanged(Proportion arg);
 
 public slots:
 void setStrength(qreal arg)
@@ -107,12 +137,30 @@ void setY(qreal arg)
         emit yChanged(arg);
     }
 }
+void setPhysics(PhysicsAffects arg)
+{
+    if (m_physics != arg) {
+        m_physics = arg;
+        emit physicsChanged(arg);
+    }
+}
+
+void setProportionalToDistance(Proportion arg)
+{
+    if (m_proportionalToDistance != arg) {
+        m_proportionalToDistance = arg;
+        emit proportionalToDistanceChanged(arg);
+    }
+}
+
 protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
 private:
 qreal m_strength;
 qreal m_x;
 qreal m_y;
+PhysicsAffects m_physics;
+Proportion m_proportionalToDistance;
 };
 
 QT_END_NAMESPACE

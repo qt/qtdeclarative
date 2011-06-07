@@ -39,13 +39,13 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "goldenrod"
     width: 400
     height: 400
-    ColoredParticle{
+    ImageParticle{
         id: test
         particles: ["Test"]
         image: "content/particle.png"
@@ -55,23 +55,23 @@ Rectangle{
         color: "#336666CC"
         colorVariation: 0.0
     }
-    SpriteParticle{
+    ImageParticle{
         id: single
         particles: ["Face"]
         system: sys
         z: 2
         anchors.fill: parent
-        Sprite{
+        sprites: Sprite{
             source: "content/squarefacesprite.png"
             frames: 6
             duration: 120
         }
     }
-    Mask{
+    MaskShape{
         id: mask
         source: "content/smileMask.png"
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         particle: "Test"
         anchors.fill: parent
@@ -82,7 +82,7 @@ Rectangle{
         particleSize: 10
         shape: mask
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         particle: "Face"
         anchors.fill: parent
@@ -90,7 +90,7 @@ Rectangle{
         particlesPerSecond: 60
         particleDuration: 1440
         emitting: true
-        speed: PointVector{xVariation: 10; yVariation: 10;}
+        speed: PointDirection{xVariation: 10; yVariation: 10;}
         particleSize: 30
         particleSizeVariation: 10
         shape: mask

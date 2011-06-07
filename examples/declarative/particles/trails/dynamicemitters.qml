@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     id: root
@@ -49,7 +49,7 @@ Rectangle{
     ParticleSystem{
         id: sys
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         image: "content/particle.png"
         color: "white"
@@ -58,9 +58,9 @@ Rectangle{
     }
     Component{
         id: emitterComp
-        TrailEmitter{
+        Emitter{
             id: container
-            TrailEmitter{
+            Emitter{
                 id: emitMore
                 system: sys
                 emitting: true
@@ -68,7 +68,7 @@ Rectangle{
                 particleDuration: 600
                 particleSize: 16
                 particleEndSize: 8
-                speed: AngleVector{angleVariation:360; magnitude: 60}
+                speed: AngledDirection{angleVariation:360; magnitude: 60}
             }
 
             property int life: 2600

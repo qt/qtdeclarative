@@ -52,7 +52,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
 class QSGParticleAffector : public QSGItem
 {
     Q_OBJECT

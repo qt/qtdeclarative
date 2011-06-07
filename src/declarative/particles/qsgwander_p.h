@@ -63,11 +63,19 @@ struct WanderData{
 class QSGWanderAffector : public QSGParticleAffector
 {
     Q_OBJECT
+    Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged)
     Q_PROPERTY(qreal xVariance READ xVariance WRITE setXVariance NOTIFY xVarianceChanged)
     Q_PROPERTY(qreal yVariance READ yVariance WRITE setYVariance NOTIFY yVarianceChanged)
-    Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged)
+    Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
+    Q_ENUMS(PhysicsAffects)
 
 public:
+    enum PhysicsAffects {
+        Position,
+        Velocity,
+        Acceleration
+    };
+
     explicit QSGWanderAffector(QSGItem *parent = 0);
     ~QSGWanderAffector();
     virtual void reset(int systemIdx);
@@ -86,6 +94,12 @@ public:
     {
         return m_pace;
     }
+
+    PhysicsAffects physics() const
+    {
+        return m_physics;
+    }
+
 protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
 signals:
@@ -95,6 +109,9 @@ signals:
     void yVarianceChanged(qreal arg);
 
     void paceChanged(qreal arg);
+
+
+    void physicsChanged(PhysicsAffects arg);
 
 public slots:
 void setXVariance(qreal arg)
@@ -121,12 +138,22 @@ void setPace(qreal arg)
     }
 }
 
+
+void setPhysics(PhysicsAffects arg)
+{
+    if (m_physics != arg) {
+        m_physics = arg;
+        emit physicsChanged(arg);
+    }
+}
+
 private:
     WanderData* getData(int idx);
     QHash<int, WanderData*> m_wanderData;
     qreal m_xVariance;
     qreal m_yVariance;
     qreal m_pace;
+    PhysicsAffects m_physics;
 };
 
 QT_END_NAMESPACE

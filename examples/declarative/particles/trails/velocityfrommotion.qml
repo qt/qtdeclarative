@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle {
 
@@ -75,7 +75,7 @@ Rectangle {
     }
 
     ParticleSystem{ id: sys1 }
-    ColoredParticle{
+    ImageParticle{
         system: sys1
         image: "content/particle.png"
         color: "cyan"
@@ -105,7 +105,7 @@ Rectangle {
         }
         colorVariation: 0.3
     }
-    TrailEmitter{
+    Emitter{
         id: trailsNormal
         system: sys1
 
@@ -116,15 +116,15 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointVector{xVariation: 4; yVariation: 4;}
-        acceleration: PointVector{xVariation: 10; yVariation: 10;}
+        speed: PointDirection{xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
         particleSize: 8
         particleSizeVariation: 4
     }
     ParticleSystem { id: sys2 }
-    ColoredParticle{
+    ImageParticle{
         color: "cyan"
         system: sys2
         alpha: 0
@@ -144,7 +144,7 @@ Rectangle {
         colorVariation: 0.5
         image: "content/star.png"
     }
-    TrailEmitter{
+    Emitter{
         id: trailsStars
         system: sys2
 
@@ -155,15 +155,15 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointVector{xVariation: 4; yVariation: 4;}
-        acceleration: PointVector{xVariation: 10; yVariation: 10;}
+        speed: PointDirection{xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
         particleSize: 22
         particleSizeVariation: 4
     }
     ParticleSystem { id: sys3; }
-    ColoredParticle{
+    ImageParticle{
         image: "content/particle.png"
         system: sys3
         color: "orange"
@@ -185,7 +185,7 @@ Rectangle {
         colorVariation: 0.2
 
     }
-    TrailEmitter{
+    Emitter{
         id: trailsNormal2
         system: sys3
 
@@ -197,14 +197,14 @@ Rectangle {
 
         speedFromMovement: 16
 
-        speed: PointVector{xVariation: 4; yVariation: 4;}
-        acceleration: PointVector{xVariation: 10; yVariation: 10;}
+        speed: PointDirection{xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
 
         particleSize: 12
         particleSizeVariation: 4
     }
     ParticleSystem { id: sys4; }
-    ColoredParticle{
+    ImageParticle{
         system: sys4
         image: "content/star.png"
         color: "green"
@@ -225,7 +225,7 @@ Rectangle {
 
         colorVariation: 0.5
     }
-    TrailEmitter{
+    Emitter{
         id: trailsStars2
         system: sys4
 
@@ -237,8 +237,8 @@ Rectangle {
         x: mouseArea.pressed ? mouseArea.mouseX : circle2.cx
 
         speedFromMovement: 16
-        speed: PointVector{xVariation: 2; yVariation: 2;}
-        acceleration: PointVector{xVariation: 10; yVariation: 10;}
+        speed: PointDirection{xVariation: 2; yVariation: 2;}
+        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
 
         particleSize: 22
         particleSizeVariation: 4

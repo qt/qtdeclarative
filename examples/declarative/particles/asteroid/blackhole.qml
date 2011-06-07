@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     id: root
@@ -65,7 +65,7 @@ Rectangle{
         }
     }
 
-    TrailEmitter{
+    Emitter{
         particle: "stars"
         system: particles
         particlesPerSecond: 40
@@ -73,10 +73,10 @@ Rectangle{
         emitting: true
         particleSize: 30
         particleSizeVariation: 10
-        speed: PointVector{ x: 220; xVariation: 40 }
+        speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
-    TrailEmitter{
+    Emitter{
         particle: "roids"
         system: particles
         particlesPerSecond: 10
@@ -84,14 +84,14 @@ Rectangle{
         emitting: true
         particleSize: 30
         particleSizeVariation: 10
-        speed: PointVector{ x: 220; xVariation: 40 }
+        speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
     ParticleSystem{
         id: particles
         anchors.fill: parent
     }
-    ColoredParticle{
+    ImageParticle{
         id: stars
         particles: ["stars"]
         system: particles
@@ -99,7 +99,7 @@ Rectangle{
         color: "white"
         colorVariation: 0.1
     }
-    SpriteParticle{
+    ImageParticle{
         id: roids
         particles: ["roids"]
         system: particles
@@ -112,7 +112,7 @@ Rectangle{
             speedModifiesDuration: -0.1
         }
     }
-    ColoredParticle{
+    ImageParticle{
         id: shot
         particles: ["shot"]
         system: particles
@@ -121,7 +121,7 @@ Rectangle{
         color: "#0FF06600"
         colorVariation: 0.3
     }
-    ColoredParticle{
+    ImageParticle{
         id: engine
         particles: ["engine"]
         system: particles
@@ -166,7 +166,7 @@ Rectangle{
             drag.axis: Drag.XandYAxis
             drag.target: ship
         }
-        TrailEmitter{
+        Emitter{
             particle: "engine"
             system: particles
             particlesPerSecond: 200
@@ -175,18 +175,18 @@ Rectangle{
             particleSize: 10
             particleEndSize: 4
             particleSizeVariation: 4
-            speed: PointVector{ x: -128; xVariation: 32 }
+            speed: PointDirection{ x: -128; xVariation: 32 }
             height: parent.height
             width: 20
         }
-        TrailEmitter{
+        Emitter{
             particle: "shot"
             system: particles
             particlesPerSecond: 32
             particleDuration: 2000
             emitting: spacePressed
             particleSize: 40
-            speed: PointVector{ x: 256; }
+            speed: PointDirection{ x: 256; }
             x: parent.width
             y: parent.height/2
         }

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Rectangle {
@@ -69,7 +69,7 @@ Rectangle {
         width: 200; height:200
         model: visualModel.parts.list
     }
-    DataParticle{
+    ModelParticle{
         x: 200; width: 200; height:200
         model: visualModel.parts.grid
         system: sys
@@ -80,11 +80,11 @@ Rectangle {
         id: sys
         anchors.fill: parent
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         width: 100
         x: 50
-        speed: PointVector{ y: 40 }
+        speed: PointDirection{ y: 40 }
         particleDuration: 5000
         particlesPerSecond: 1.6
     }

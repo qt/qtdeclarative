@@ -1,0 +1,125 @@
+import QtQuick 2.0
+import QtQuick.Particles 2.0
+
+Rectangle{
+    color: "white"
+    width: 240
+    height: 360
+    ParticleSystem{
+        id: sys
+    }
+    Emitter{
+        system:sys
+        height: parent.height
+        particlesPerSecond: 1
+        particleDuration: 12000
+        speed: PointDirection{x:20;}
+        particleSize: 64
+    }
+    ShaderEffectSource{
+        id: theSource
+        sourceItem: theItem
+        hideSource: true
+    }
+    Image{
+        id: theItem
+        source: "content/smile.png"
+    }
+
+    CustomParticle{
+        system: sys 
+        //TODO: Someway that you don't have to rewrite the basics for a simple addition
+        vertexShader:"
+            attribute highp vec2 vPos;
+            attribute highp vec2 vTex;
+            attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
+            attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
+            attribute highp float r;
+
+            uniform highp mat4 qt_ModelViewProjectionMatrix;                              
+            uniform highp float timestamp;
+            uniform lowp float qt_Opacity;
+
+            varying highp vec2 fTex;                                
+            varying lowp float fFade;
+            varying lowp float fBlur;
+
+            void main() {                                           
+                fTex = vTex;                                        
+                highp float size = vData.z;
+                highp float endSize = vData.w;
+
+                highp float t = (timestamp - vData.x) / vData.y;
+
+                highp float currentSize = mix(size, endSize, t * t);
+
+                if (t < 0. || t > 1.)
+                currentSize = 0.;
+
+                highp vec2 pos = vPos
+                - currentSize / 2. + currentSize * vTex          // adjust size
+                + vVec.xy * t * vData.y         // apply speed vector..
+                + 0.5 * vVec.zw * pow(t * vData.y, 2.);
+
+                gl_Position = qt_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0, 1);
+
+                highp float fadeIn = min(t * 10., 1.);
+                highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
+
+                fFade = fadeIn * fadeOut * qt_Opacity;
+                fBlur = max(0.2 * t, t * r);
+            }
+        "
+        property variant source: theSource
+        property variant blurred: ShaderEffectSource {
+        smooth: true
+        sourceItem: ShaderEffectItem {
+            width: theItem.width
+            height: theItem.height
+            property variant delta: Qt.size(0.0, 1.0 / height)
+            property variant source: ShaderEffectSource {
+                smooth: true
+                sourceItem: ShaderEffectItem {
+                    width: theItem.width
+                    height: theItem.height
+                    property variant delta: Qt.size(1.0 / width, 0.0)
+                    property variant source: theSource
+                    fragmentShader: "
+                        uniform sampler2D source;
+                        uniform highp vec2 delta;
+                        varying highp vec2 qt_TexCoord0;
+                        void main() {
+                            gl_FragColor = 0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
+                                         + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
+                                         + 0.2466 * texture2D(source, qt_TexCoord0)
+                                         + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
+                                         + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta);
+                        }"
+                }
+            }
+            fragmentShader: "
+                uniform sampler2D source;
+                uniform highp vec2 delta;
+                varying highp vec2 qt_TexCoord0;
+                void main() {
+                    gl_FragColor = 0.0538 * texture2D(source, qt_TexCoord0 - 3.182 * delta)
+                                 + 0.3229 * texture2D(source, qt_TexCoord0 - 1.364 * delta)
+                                 + 0.2466 * texture2D(source, qt_TexCoord0)
+                                 + 0.3229 * texture2D(source, qt_TexCoord0 + 1.364 * delta)
+                                 + 0.0538 * texture2D(source, qt_TexCoord0 + 3.182 * delta);
+                }"
+            }
+        }
+        fragmentShader: "
+            uniform sampler2D source;
+            uniform sampler2D blurred;
+            varying highp vec2 fTex;
+            varying highp float fBlur;
+            varying highp float fFade;
+            void main() {
+                gl_FragColor = mix(texture2D(source, fTex), texture2D(blurred, fTex), min(1.0,fBlur*3.0)) * fFade;
+            }"
+
+    }
+}
+

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Item{
@@ -48,13 +48,14 @@ Item{
     height: 240
     property bool inGrid: false
     ParticleSystem{ id: sys }
-    TrailEmitter{
+    Emitter{
         system: sys
         id: burster;
         emitting: false
         particlesPerSecond: 1000
-        particleDuration: 500
-        speed: PointVector{xVariation: 400; yVariation: 400}
+        particleDuration: 50000
+        maxParticles: 100;
+        speed: PointDirection{xVariation: 400; yVariation: 400}
         anchors.centerIn: parent
         Timer{
             interval: 1000
@@ -69,7 +70,7 @@ Item{
             onTriggered: {inGrid = true;}// sys.running = false;}
         }
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         image: "../trails/content/particle.png"
         color: "black"
@@ -80,17 +81,14 @@ Item{
         width: 120
         height: 120
     }
-    DataParticle{
+    ModelParticle{
         system: sys
         model: theModel.parts.particles
+        fade: false
     }
     Friction{
         system: sys
-        factor: 1
-    }
-    Stasis{
-        system: sys
-        targetLife: 400
+        factor: 5
     }
     VisualDataModel{
         id: theModel

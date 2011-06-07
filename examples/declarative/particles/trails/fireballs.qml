@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle {
     id: root
@@ -52,7 +52,7 @@ Rectangle {
     }
 
     /*
-    ColoredParticle{
+    ImageParticle{
         id: fireball
         anchors.fill: parent
         particles: ["E"]
@@ -62,7 +62,7 @@ Rectangle {
         color: "#00ff400f"
     }
     */
-    ColoredParticle{
+    ImageParticle{
         id: smoke
         system: particles
         anchors.fill: parent
@@ -71,7 +71,7 @@ Rectangle {
         colorVariation: 0
         color: "#00111111"
     }
-    ColoredParticle{
+    ImageParticle{
         id: flame
         anchors.fill: parent
         system: particles
@@ -80,7 +80,7 @@ Rectangle {
         colorVariation: 0.1
         color: "#00ff400f"
     }
-    TrailEmitter{
+    Emitter{
         id: fire
         system: particles
         particle: "C"
@@ -91,8 +91,8 @@ Rectangle {
         particlesPerSecond: 350
         particleDuration: 3500
 
-        acceleration: PointVector{ y: -17; xVariation: 3 }
-        speed: PointVector{xVariation: 3}
+        acceleration: PointDirection{ y: -17; xVariation: 3 }
+        speed: PointDirection{xVariation: 3}
 
         particleSize: 24
         particleSizeVariation: 8
@@ -109,8 +109,8 @@ Rectangle {
         particlesPerParticlePerSecond: 1
         particleDuration: 2000
 
-        speed: PointVector{y:-17*6; yVariation: -17; xVariation: 3}
-        acceleration: PointVector{xVariation: 3}
+        speed: PointDirection{y:-17*6; yVariation: -17; xVariation: 3}
+        acceleration: PointDirection{xVariation: 3}
 
         particleSize: 36
         particleSizeVariation: 8
@@ -145,14 +145,14 @@ Rectangle {
         emissionWidth: 16
         emissionHeight: 16
 
-        speed: PointVector{yVariation: 16; xVariation: 16}
-        acceleration: PointVector{y: -16}
+        speed: PointDirection{yVariation: 16; xVariation: 16}
+        acceleration: PointDirection{y: -16}
 
         particleSize: 24
         particleSizeVariation: 8
         particleEndSize: 8
     }
-    TrailEmitter{
+    Emitter{
         id: balls
         system: particles
         particle: "E"
@@ -163,8 +163,8 @@ Rectangle {
         particlesPerSecond: 2
         particleDuration: 7000
 
-        speed: PointVector{y:-17*4*2; xVariation: 6*6}
-        acceleration: PointVector{y: 17*2; xVariation: 6*6}
+        speed: PointDirection{y:-17*4*2; xVariation: 6*6}
+        acceleration: PointDirection{y: 17*2; xVariation: 6*6}
 
         particleSize: 12
         particleSizeVariation: 4

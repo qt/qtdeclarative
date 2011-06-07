@@ -44,7 +44,8 @@
 QT_BEGIN_NAMESPACE
 
 QSGWanderAffector::QSGWanderAffector(QSGItem *parent) :
-    QSGParticleAffector(parent)
+    QSGParticleAffector(parent), m_xVariance(0), m_yVariance(0), m_pace(0)
+    , m_physics(Velocity)
 {
     m_needsReset = true;
 }
@@ -81,6 +82,7 @@ void QSGWanderAffector::reset(int systemIdx)
 
 bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
 {
+    /*TODO: Add a mode which does basically this - picking a direction, going in it (random speed) and then going back
     WanderData* d = getData(data->systemIndex);
     if (m_xVariance != 0.) {
         if ((d->x_vel > d->x_peak && d->x_var > 0.0) || (d->x_vel < -d->x_peak && d->x_var < 0.0)) {
@@ -105,6 +107,38 @@ bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
     p->x += dx;
 
     p->y += dy;
+    return true;
+    */
+    qreal dx = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
+    qreal dy = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
+    qreal newX, newY;
+    switch(m_physics){
+    case Position:
+        newX = data->curX() + dx;
+        if(m_xVariance > qAbs(newX) )
+            data->pv.x += dx;
+        newY = data->curY() + dy;
+        if(m_yVariance > qAbs(newY) )
+            data->pv.y += dy;
+        break;
+    default:
+    case Velocity:
+        newX = data->curSX() + dx;
+        if(m_xVariance > qAbs(newX) )
+            data->setInstantaneousSX(newX);
+        newY = data->curSY() + dy;
+        if(m_yVariance > qAbs(newY) )
+            data->setInstantaneousSY(newY);
+        break;
+    case Acceleration:
+        newX = data->pv.ax + dx;
+        if(m_xVariance > qAbs(newX) )
+            data->setInstantaneousAX(newX);
+        newY = data->pv.ay + dy;
+        if(m_yVariance > qAbs(newY) )
+            data->setInstantaneousAY(newY);
+        break;
+    }
     return true;
 }
 QT_END_NAMESPACE

@@ -43,14 +43,14 @@
 // highlight bar is moved between items. + Particles.
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Rectangle {
     width: 200; height: 300
     color: "black"
     ParticleSystem{ id: particles }
-    ColoredParticle{
+    ImageParticle{
         anchors.fill: parent
         system: particles
         z: 10
@@ -92,7 +92,7 @@ Rectangle {
             y: listView.currentItem.y;
             //Behavior on y { SpringAnimation { spring: 2; damping: 0.1 } }
             Behavior on y { NumberAnimation {id: anim} }
-            TrailEmitter{
+            Emitter{
                 anchors.fill: parent
                 system: particles;
                 emitting: anim.running

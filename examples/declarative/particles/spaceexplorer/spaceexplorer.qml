@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content/helpers.js" as Helpers
 
 Rectangle{
@@ -75,7 +75,7 @@ Rectangle{
     property bool fakeMoving: false
     property real fakeMovementDir: 0
 
-    TrailEmitter{
+    Emitter{
         particle: "stars2"
         system: background
         particlesPerSecond: 60
@@ -86,7 +86,7 @@ Rectangle{
         anchors.fill: parent
     }
     ParticleSystem{ id: background }
-    ColoredParticle{
+    ImageParticle{
         particles: ["stars2"]
         system: background
         anchors.fill: parent
@@ -197,7 +197,7 @@ Rectangle{
 
 
     ParticleSystem{ id: foreground }
-    ColoredParticle{
+    ImageParticle{
         particles: ["stars"]
         anchors.fill: parent
         system: foreground
@@ -205,7 +205,7 @@ Rectangle{
         color: "white"
         colorVariation: 0.1
     }
-    ColoredParticle{
+    ImageParticle{
         particles: ["shot"]
         anchors.fill: parent
         system: foreground
@@ -214,7 +214,7 @@ Rectangle{
         color: "orange"
         colorVariation: 0.3
     }
-    ColoredParticle{
+    ImageParticle{
         id: engine
         particles: ["engine"]
         anchors.fill: parent
@@ -238,30 +238,31 @@ Rectangle{
 
         colorVariation: 0.2
     }
-    SpriteParticle{
+    ImageParticle{
         particles: ["powerups"]
         anchors.fill: parent
         system: foreground
-        Sprite{
+        sprites:[Sprite{
             name: "norm"
             source: "content/powerupScore.png"
             frames: 35
             duration: 40
             to: {"norm":1, "got":0}
-        }
+        },
         Sprite{
             name: "got"
             source: "content/powerupScore_got.png"
             frames: 22
             duration: 40
             to: {"null":1}
-        }
+        },
         Sprite{
             name: "null"
             source: "content/powerupScore_gone.png"
             frames: 1
             duration: 1000
         }
+        ]
     }
     SpriteGoal{
         x: rocket.x - 30
@@ -273,8 +274,9 @@ Rectangle{
         onAffected: if(!gameOver) score += 1000
         system: foreground
     }
-    GravitationalSingularity{
+    PointAttractor{
         id: gs1; x: vorteX; y: vorteY; strength: 800000;
+        proportionalToDistance: PointAttractor.Quadratic;
         system: foreground
     }
     Kill{
@@ -285,8 +287,9 @@ Rectangle{
         system: foreground
     }
 
-    GravitationalSingularity{
+    PointAttractor{
         id: gs2; x: vorteX2; y: vorteY2; strength: 800000;
+        proportionalToDistance: PointAttractor.Quadratic;
         system: foreground
     }
     Kill{
@@ -297,8 +300,9 @@ Rectangle{
         system: foreground
     }
 
-    GravitationalSingularity{
+    PointAttractor{
         id: gs3; x: vorteX3; y: vorteY3; strength: 800000;
+        proportionalToDistance: PointAttractor.Quadratic;
         system: foreground
     }
     Kill{
@@ -308,8 +312,9 @@ Rectangle{
         height: holeSize * 2
         system: foreground
     }
-    GravitationalSingularity{
+    PointAttractor{
         id: gs4; x: vorteX4; y: vorteY4; strength: 800000;
+        proportionalToDistance: PointAttractor.Quadratic;
         system: foreground
     }
     Kill{
@@ -319,7 +324,7 @@ Rectangle{
         height: holeSize * 2
         system: foreground
     }        
-    TrailEmitter{
+    Emitter{
         particle: "powerups"
         system: foreground
         particlesPerSecond: 1
@@ -329,7 +334,7 @@ Rectangle{
         particleSizeVariation: 10
         anchors.fill: parent
     }
-    TrailEmitter{
+    Emitter{
         particle: "stars"
         system: foreground
         particlesPerSecond: 40
@@ -374,7 +379,7 @@ Rectangle{
             drag.axis: Drag.XandYAxis
             drag.target: rocket
         },
-        TrailEmitter{
+        Emitter{
             system: foreground
             particle: "engine"
             particlesPerSecond: 100
@@ -383,7 +388,7 @@ Rectangle{
             particleSize: 10
             particleEndSize: 4
             particleSizeVariation: 4
-            speed: PointVector{
+            speed: PointDirection{
                 x: -128 * Math.cos(rocket.rotation * (Math.PI / 180))
                 y: -128 * Math.sin(rocket.rotation * (Math.PI / 180))
             }
@@ -392,14 +397,14 @@ Rectangle{
             width: 4
             
         }, 
-        TrailEmitter{
+        Emitter{
             system: foreground
             particle: "shot"
             particlesPerSecond: 16
             particleDuration: 1600
             emitting: !gameOver && shoot
             particleSize: 40
-            speed: PointVector{
+            speed: PointDirection{
                 x: 256 * Math.cos(rocket.rotation * (Math.PI / 180))
                 y: 256 * Math.sin(rocket.rotation * (Math.PI / 180))
             }

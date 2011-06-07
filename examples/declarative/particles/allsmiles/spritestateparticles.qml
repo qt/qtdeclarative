@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "goldenrod"
@@ -109,7 +109,7 @@ Rectangle{
         z:4
     }
     ParticleSystem{ id: sys }
-    SpriteParticle{
+    ImageParticle{
         anchors.fill: parent
         id: particles
         system: sys
@@ -168,13 +168,13 @@ Rectangle{
             duration: 10000
         }]
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         particlesPerSecond: 16
         particleDuration: 10000
         emitting: true
-        speed: AngleVector{angle: 90; magnitude: 60; angleVariation: 5}
-        acceleration: PointVector{ y: 10 }
+        speed: AngledDirection{angle: 90; magnitude: 60; angleVariation: 5}
+        acceleration: PointDirection{ y: 10 }
         particleSize: 30
         particleSizeVariation: 10
         width: parent.width

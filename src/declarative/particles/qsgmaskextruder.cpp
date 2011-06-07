@@ -53,7 +53,7 @@ QSGMaskExtruder::QSGMaskExtruder(QObject *parent) :
 QPointF QSGMaskExtruder::extrude(const QRectF &r)
 {
     ensureInitialized(r);
-    if(!m_mask.count())
+    if(!m_mask.count() || m_img.isNull())
         return r.topLeft();
     const QPointF p = m_mask[rand() % m_mask.count()];
     //### Should random sub-pixel positioning be added?
@@ -63,6 +63,8 @@ QPointF QSGMaskExtruder::extrude(const QRectF &r)
 bool QSGMaskExtruder::contains(const QRectF &bounds, const QPointF &point)
 {
     ensureInitialized(bounds);//###Current usage patterns WILL lead to different bounds/r calls. Separate list?
+    if(m_img.isNull())
+        return false;
     QPoint p = point.toPoint() - bounds.topLeft().toPoint();
     return m_img.rect().contains(p) && (bool)m_img.pixelIndex(p);
 }
@@ -70,14 +72,19 @@ bool QSGMaskExtruder::contains(const QRectF &bounds, const QPointF &point)
 void QSGMaskExtruder::ensureInitialized(const QRectF &r)
 {
     if(m_lastWidth == r.width() && m_lastHeight == r.height())
-        return;
+        return;//Same as before
     m_lastWidth = r.width();
     m_lastHeight = r.height();
 
+    m_img = QImage();
     m_mask.clear();
     if(m_source.isEmpty())
         return;
     m_img = QImage(m_source.toLocalFile());
+    if(m_img.isNull()){
+        qWarning() << "MaskShape: Cannot load" << qPrintable(m_source.toLocalFile());
+        return;
+    }
     m_img = m_img.createAlphaMask();
     m_img = m_img.convertToFormat(QImage::Format_Mono);//Else LSB, but I think that's easier
     m_img = m_img.scaled(r.size().toSize());//TODO: Do they need aspect ratio stuff? Or tiling?

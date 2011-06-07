@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import QtQuick 2.0
 
 Rectangle {
@@ -48,7 +48,7 @@ Rectangle {
     color: "black"
 
     ParticleSystem{ id: particles }
-    ColoredParticle{
+    ImageParticle{
         system: particles
         colorVariation: 0.5
         alpha: 0
@@ -57,7 +57,7 @@ Rectangle {
         colorTable: "content/colortable.png"
         sizeTable: "content/colortable.png"
     }
-    TrailEmitter{
+    Emitter{
         system: particles
         particlesPerSecond: 500
         particleDuration: 2000
@@ -72,8 +72,8 @@ Rectangle {
 
         speedFromMovement: 20
 
-        speed: PointVector{ xVariation: 5; yVariation: 5;}
-        acceleration: PointVector{ xVariation: 5; yVariation: 5;}
+        speed: PointDirection{ xVariation: 5; yVariation: 5;}
+        acceleration: PointDirection{ xVariation: 5; yVariation: 5;}
 
         particleSize: 16
         //particleEndSize: 8
