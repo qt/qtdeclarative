@@ -52,6 +52,7 @@
 #include <QtScript/qscriptvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
+#include <QtCore/qatomic.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,31 @@ public:
     QV8QObjectResource(QV8Engine *engine, QObject *object);
 
     QDeclarativeGuard<QObject> object;
+};
+
+class QV8QObjectInstance : public QDeclarativeGuard<QObject>
+{
+public:
+    QV8QObjectInstance(QObject *o, QV8QObjectWrapper *w)
+    : QDeclarativeGuard<QObject>(o), wrapper(w)
+    {
+    }
+
+    ~QV8QObjectInstance()
+    {
+        v8object.Dispose();
+        v8object.Clear();
+    }
+
+    virtual void objectDestroyed(QObject *o)
+    {
+        if (wrapper)
+            wrapper->m_taintedObjects.remove(o);
+        delete this;
+    }
+
+    v8::Persistent<v8::Object> v8object;
+    QV8QObjectWrapper *wrapper;
 };
 
 namespace {
@@ -105,13 +131,21 @@ QV8QObjectResource::QV8QObjectResource(QV8Engine *engine, QObject *object)
 {
 }
 
+static QAtomicInt objectIdCounter(1);
+
 QV8QObjectWrapper::QV8QObjectWrapper()
-: m_engine(0)
+: m_engine(0), m_id(objectIdCounter.fetchAndAddOrdered(1))
 {
 }
 
 QV8QObjectWrapper::~QV8QObjectWrapper()
 {
+    for (TaintedHash::Iterator iter = m_taintedObjects.begin(); 
+         iter != m_taintedObjects.end();
+         ++iter) {
+        (*iter)->wrapper = 0;
+    }
+    m_taintedObjects.clear();
 }
 
 void QV8QObjectWrapper::destroy()
@@ -619,8 +653,13 @@ static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void 
         }
     }
 
-    // XXX do we want to use the objectDataRefCount to support multiple concurrent engines?
+    handle.Dispose();
+}
 
+static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *data)
+{
+    QV8QObjectInstance *instance = (QV8QObjectInstance *)data;
+    instance->v8object.Clear();
     handle.Dispose();
 }
 
@@ -628,10 +667,8 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
 {
     Q_ASSERT(object);
 
-    QDeclarativeData *ddata = QDeclarativeData::get(object, false);
-
-    Q_ASSERT(ddata && ddata->propertyCache && ddata->propertyCache == this);
-    Q_ASSERT(ddata->v8object.IsEmpty());
+    Q_ASSERT(QDeclarativeData::get(object, false));
+    Q_ASSERT(QDeclarativeData::get(object, false)->propertyCache == this);
 
     // Setup constructor
     if (constructor.IsEmpty()) {
@@ -709,16 +746,42 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
     v8::Local<v8::Object> result = constructor->NewInstance();
     QV8QObjectResource *r = new QV8QObjectResource(engine, object);
     result->SetExternalResource(r);
-
-    ddata->v8object = v8::Persistent<v8::Object>::New(result);
-    ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
     return result;
 }
 
+v8::Local<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QDeclarativeData *ddata, QV8Engine *engine)
+{
+    v8::Local<v8::Object> rv;
+
+    if (ddata->propertyCache) {
+        rv = ddata->propertyCache->newQObject(object, engine);
+    } else {
+        // XXX aakenned - NewInstance() is slow for our case
+        rv = m_constructor->NewInstance(); 
+        QV8QObjectResource *r = new QV8QObjectResource(engine, object);
+        rv->SetExternalResource(r);
+    }
+
+    return rv;
+}
+
+/*
+As V8 doesn't support an equality callback, for QObject's we have to return exactly the same
+V8 handle for subsequent calls to newQObject for the same QObject.  To do this we have a two
+pronged strategy:
+   1. If there is no current outstanding V8 handle to the QObject, we create one and store a 
+      persistent handle in QDeclarativeData::v8object.  We mark the QV8QObjectWrapper that 
+      "owns" this handle by setting the QDeclarativeData::v8objectid to the id of this 
+      QV8QObjectWrapper.
+   2. If another QV8QObjectWrapper has create the handle in QDeclarativeData::v8object we create 
+      an entry in the m_taintedObject hash where we store the handle and mark the object as 
+      "tainted" in the QDeclarativeData::hasTaintedV8Object flag.
+We have to mark the object as tainted to ensure that we search our m_taintedObject hash even
+in the case that the original QV8QObjectWrapper owner of QDeclarativeData::v8object has 
+released the handle.
+*/
 v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 {
-    // XXX aakenned QDeclarativeObjectScriptClass::newQObject()  does a lot more
-
     if (!object)
         return v8::Null();
 
@@ -730,23 +793,56 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     if (!ddata) 
         return v8::Undefined();
 
-    if (ddata->v8object.IsEmpty()) {
+    if (ddata->v8objectid == m_id && !ddata->v8object.IsEmpty()) {
+        // We own the v8object 
+        return v8::Local<v8::Object>::New(ddata->v8object);
+    } else if (ddata->v8object.IsEmpty() && 
+               (ddata->v8objectid == m_id || // We own the QObject
+                ddata->v8objectid == 0 ||    // No one owns the QObject
+                !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
-        if (ddata->propertyCache) {
-            return ddata->propertyCache->newQObject(object, m_engine);
+        v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
+        ddata->v8object = v8::Persistent<v8::Object>::New(rv);
+        ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
+        ddata->v8objectid = m_id;
+        return rv;
+
+    } else {
+
+        // If this object is tainted, we have to check to see if it is in our
+        // tainted object list
+        TaintedHash::Iterator iter =
+            ddata->hasTaintedV8Object?m_taintedObjects.find(object):m_taintedObjects.end();
+        bool found = iter != m_taintedObjects.end();
+
+        // If our tainted handle doesn't exist or has been collected, and there isn't
+        // a handle in the ddata, we can assume ownership of the ddata->v8object
+        if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.IsEmpty()) {
+            v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
+            ddata->v8object = v8::Persistent<v8::Object>::New(rv);
+            ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
+            ddata->v8objectid = m_id;
+
+            if (found) {
+                delete (*iter);
+                m_taintedObjects.erase(iter);
+            }
+
+            return rv;
+        } else if (!found) {
+            QV8QObjectInstance *instance = new QV8QObjectInstance(object, this);
+            iter = m_taintedObjects.insert(object, instance);
+            ddata->hasTaintedV8Object = true;
         }
 
-        // XXX aakenned - NewInstance() is slow for our case
-        v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
-        QV8QObjectResource *r = new QV8QObjectResource(m_engine, object);
-        rv->SetExternalResource(r);
-        ddata->v8object = v8::Persistent<v8::Object>::New(rv);
+        if ((*iter)->v8object.IsEmpty()) {
+            v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
+            (*iter)->v8object = v8::Persistent<v8::Object>::New(rv);
+            (*iter)->v8object.MakeWeak((*iter), WeakQObjectInstanceCallback);
+        }
+
+        return v8::Local<v8::Object>::New((*iter)->v8object);
     }
-
-    // XXX do we have to check that the v8object isn't "owned" by another engine?
-
-    ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
-    return v8::Local<v8::Object>::New(ddata->v8object);
 }
 
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)

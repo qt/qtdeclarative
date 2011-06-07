@@ -77,9 +77,10 @@ class Q_AUTOTEST_EXPORT QDeclarativeData : public QAbstractDeclarativeData
 public:
     QDeclarativeData()
         : ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false), 
-          context(0), outerContext(0), bindings(0), nextContextObject(0), prevContextObject(0), bindingBitsSize(0), 
-          bindingBits(0), lineNumber(0), columnNumber(0), deferredComponent(0), deferredIdx(0), propertyCache(0), 
-          guards(0), extendedData(0) {
+          hasTaintedV8Object(false), context(0), outerContext(0), bindings(0), nextContextObject(0), 
+          prevContextObject(0), bindingBitsSize(0), bindingBits(0), lineNumber(0), columnNumber(0), 
+          deferredComponent(0), deferredIdx(0), v8objectid(0), propertyCache(0), guards(0), 
+          extendedData(0) {
           init(); 
       }
 
@@ -105,7 +106,8 @@ public:
     quint32 ownContext:1;
     quint32 indestructible:1;
     quint32 explicitIndestructibleSet:1;
-    quint32 dummy:28;
+    quint32 hasTaintedV8Object:1;
+    quint32 dummy:27;
 
     // The context that created the C++ object
     QDeclarativeContextData *context; 
@@ -130,7 +132,9 @@ public:
     QDeclarativeCompiledData *deferredComponent; // Can't this be found from the context?
     unsigned int deferredIdx;
 
+    quint32 v8objectid;
     v8::Persistent<v8::Object> v8object;
+
     QDeclarativePropertyCache *propertyCache;
 
     QDeclarativeGuard<QObject> *guards;

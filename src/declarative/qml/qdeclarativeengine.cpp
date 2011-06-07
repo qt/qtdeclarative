@@ -1080,7 +1080,7 @@ void QDeclarativeData::destroyed(QObject *object)
     if (extendedData)
         delete extendedData;
 
-    v8object.Dispose();
+    v8object.Clear(); // The WeakReference handler will clean the actual handle
 
     if (ownMemory)
         delete this;

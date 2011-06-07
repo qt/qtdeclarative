@@ -63,9 +63,11 @@ QT_BEGIN_NAMESPACE
 
 class QObject;
 class QV8Engine;
+class QDeclarativeData;
 class QV8ObjectResource;
-class QDeclarativePropertyCache;
+class QV8QObjectInstance;
 class QV8QObjectConnectionList;
+class QDeclarativePropertyCache;
 class Q_AUTOTEST_EXPORT QV8QObjectWrapper 
 {
 public:
@@ -87,7 +89,9 @@ public:
 private:
     friend class QDeclarativePropertyCache;
     friend class QV8QObjectConnectionList;
+    friend class QV8QObjectInstance;
 
+    v8::Local<v8::Object> newQObject(QObject *, QDeclarativeData *, QV8Engine *);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
                                              v8::Handle<v8::String>, QV8QObjectWrapper::RevisionMode);
     static bool SetProperty(QV8Engine *, QObject *, v8::Handle<v8::String>,
@@ -106,12 +110,15 @@ private:
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
 
     QV8Engine *m_engine;
+    quint32 m_id;
     v8::Persistent<v8::Function> m_constructor;
     v8::Persistent<v8::Function> m_methodConstructor;
     v8::Persistent<v8::String> m_toStringSymbol;
     v8::Persistent<v8::String> m_destroySymbol;
     v8::Persistent<v8::Object> m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
+    typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
+    TaintedHash m_taintedObjects;
 };
 
 QT_END_NAMESPACE
