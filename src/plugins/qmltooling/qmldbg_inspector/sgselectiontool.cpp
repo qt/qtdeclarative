@@ -49,6 +49,8 @@
 #include <QtDeclarative/private/qsgitem_p.h>
 #include <QtDeclarative/private/qsgrectangle_p.h>
 
+namespace QmlJSDebugger {
+
 /*
  * Returns the first visible item at the given position, or 0 when no such
  * child exists.
@@ -110,3 +112,5 @@ void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
     m_hoverHighlight->setPos(root->mapFromItem(item->parentItem(), item->pos()));
     m_hoverHighlight->setVisible(true);
 }
+
+} // namespace QmlJSDebugger

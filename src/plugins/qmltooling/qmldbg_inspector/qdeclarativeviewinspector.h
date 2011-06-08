@@ -39,53 +39,51 @@
 **
 ****************************************************************************/
 
-#ifndef QSGVIEWINSPECTOR_H
-#define QSGVIEWINSPECTOR_H
+#ifndef QDECLARATIVEVIEWINSPECTOR_H
+#define QDECLARATIVEVIEWINSPECTOR_H
 
+#include <private/qdeclarativeglobal_p.h>
+
+#include "qmlinspectorconstants.h"
 #include "abstractviewinspector.h"
 
-#include <QtCore/QWeakPointer>
+#include <QtCore/QScopedPointer>
+#include <QtDeclarative/QDeclarativeView>
 
-QT_BEGIN_NAMESPACE
-class QMouseEvent;
-class QKeyEvent;
-class QWheelEvent;
-
-class QSGView;
-class QSGItem;
-QT_END_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QDeclarativeItem)
+QT_FORWARD_DECLARE_CLASS(QMouseEvent)
+QT_FORWARD_DECLARE_CLASS(QToolBar)
 
 namespace QmlJSDebugger {
 
-class SGAbstractTool;
-class SGSelectionTool;
+class QDeclarativeViewInspectorPrivate;
 
-class SGViewInspector : public AbstractViewInspector
+class QDeclarativeViewInspector : public AbstractViewInspector
 {
     Q_OBJECT
+
 public:
-    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
+    explicit QDeclarativeViewInspector(QDeclarativeView *view, QObject *parent = 0);
+    ~QDeclarativeViewInspector();
 
     // AbstractViewInspector
     void changeCurrentObjects(const QList<QObject*> &objects);
     void reloadView();
     void reparentQmlObject(QObject *object, QObject *newParent);
     void changeTool(InspectorProtocol::Tool tool);
-    QWidget *viewWidget() const;
+    QWidget *viewWidget() const { return declarativeView(); }
     QDeclarativeEngine *declarativeEngine() const;
 
-    QSGView *view() const { return m_view; }
-    QSGItem *overlay() const { return m_overlay; }
+    void setSelectedItems(QList<QGraphicsItem *> items);
+    QList<QGraphicsItem *> selectedItems() const;
 
-    QList<QSGItem *> selectedItems() const;
-    void setSelectedItems(const QList<QSGItem*> &items);
+    QDeclarativeView *declarativeView() const;
 
+    QRectF adjustToScreenBoundaries(const QRectF &boundingRectInSceneSpace);
+
+protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
-private slots:
-    void removeFromSelectedItems(QObject *);
-
-private:
     bool leaveEvent(QEvent *);
     bool mousePressEvent(QMouseEvent *event);
     bool mouseMoveEvent(QMouseEvent *event);
@@ -95,17 +93,17 @@ private:
     bool mouseDoubleClickEvent(QMouseEvent *event);
     bool wheelEvent(QWheelEvent *event);
 
-    QSGView *m_view;
-    QSGItem *m_overlay;
-    SGAbstractTool *m_currentTool;
+    void setSelectedItemsForTools(QList<QGraphicsItem *> items);
 
-    SGSelectionTool *m_selectionTool;
+private:
+    Q_DISABLE_COPY(QDeclarativeViewInspector)
 
-    QList<QWeakPointer<QSGItem> > m_selectedItems;
-
-    bool m_designMode;
+    inline QDeclarativeViewInspectorPrivate *d_func() { return data.data(); }
+    QScopedPointer<QDeclarativeViewInspectorPrivate> data;
+    friend class QDeclarativeViewInspectorPrivate;
+    friend class AbstractLiveEditTool;
 };
 
 } // namespace QmlJSDebugger
 
-#endif // QSGVIEWINSPECTOR_H
+#endif // QDECLARATIVEVIEWINSPECTOR_H

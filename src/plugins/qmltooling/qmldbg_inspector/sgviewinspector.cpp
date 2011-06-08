@@ -55,7 +55,7 @@
 
 #include <cfloat>
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
 
 SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
     AbstractViewInspector(parent),
@@ -280,4 +280,4 @@ bool SGViewInspector::wheelEvent(QWheelEvent *event)
     return true;
 }
 
-QT_END_NAMESPACE
+} // namespace QmlJSDebugger

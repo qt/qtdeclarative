@@ -43,7 +43,7 @@
 
 #include "sgviewinspector.h"
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
 
 SGAbstractTool::SGAbstractTool(SGViewInspector *inspector) :
     QObject(inspector),
@@ -51,4 +51,4 @@ SGAbstractTool::SGAbstractTool(SGViewInspector *inspector) :
 {
 }
 
-QT_END_NAMESPACE
+} // namespace QmlJSDebugger

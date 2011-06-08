@@ -46,9 +46,9 @@
 
 #include <QtCore/QList>
 
-QT_BEGIN_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QSGRectangle)
 
-class QSGRectangle;
+namespace QmlJSDebugger {
 
 class SGSelectionTool : public SGAbstractTool
 {
@@ -78,6 +78,6 @@ private:
     QSGRectangle *m_hoverHighlight;
 };
 
-QT_END_NAMESPACE
+} // namespace QmlJSDebugger
 
 #endif // SGSELECTIONTOOL_H

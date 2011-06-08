@@ -45,10 +45,12 @@
 #include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
-
 class QMouseEvent;
 class QKeyEvent;
 class QWheelEvent;
+QT_END_NAMESPACE
+
+namespace QmlJSDebugger {
 
 class SGViewInspector;
 
@@ -78,6 +80,6 @@ private:
     SGViewInspector *m_inspector;
 };
 
-QT_END_NAMESPACE
+} // namespace QmlJSDebugger
 
 #endif // SGABSTRACTTOOL_H

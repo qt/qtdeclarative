@@ -48,7 +48,7 @@
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
 #include <QtDeclarative/QSGView>
 
-QT_BEGIN_NAMESPACE
+namespace QmlJSDebugger {
 
 QDeclarativeInspectorPlugin::QDeclarativeInspectorPlugin() :
     m_inspector(0)
@@ -80,6 +80,6 @@ void QDeclarativeInspectorPlugin::deactivate()
     delete m_inspector;
 }
 
-Q_EXPORT_PLUGIN2(declarativeinspector, QDeclarativeInspectorPlugin)
+} // namespace QmlJSDebugger
 
-QT_END_NAMESPACE
+Q_EXPORT_PLUGIN2(declarativeinspector, QmlJSDebugger::QDeclarativeInspectorPlugin)
