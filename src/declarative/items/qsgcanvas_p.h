@@ -156,6 +156,7 @@ public:
 
     QSGContext *context;
 
+    uint contextFailed : 1;
     uint contextInThread : 1;
     uint threadedRendering : 1;
     uint exitThread : 1;

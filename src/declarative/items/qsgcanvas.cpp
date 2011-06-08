@@ -222,29 +222,31 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
     QGLWidget::showEvent(e);
 
-    if (d->threadedRendering) {
-        d->contextInThread = true;
-        doneCurrent();
-        if (!d->animationDriver) {
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), this, SLOT(_q_animationStarted()), Qt::DirectConnection);
-            connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(_q_animationStopped()), Qt::DirectConnection);
-        }
-        d->animationDriver->install();
-        d->mutex.lock();
-        d->thread->start();
-        d->wait.wait(&d->mutex);
-        d->mutex.unlock();
-    } else {
-        makeCurrent();
+    if (!d->contextFailed) {
+        if (d->threadedRendering) {
+            d->contextInThread = true;
+            doneCurrent();
+            if (!d->animationDriver) {
+                d->animationDriver = d->context->createAnimationDriver(this);
+                connect(d->animationDriver, SIGNAL(started()), this, SLOT(_q_animationStarted()), Qt::DirectConnection);
+                connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(_q_animationStopped()), Qt::DirectConnection);
+            }
+            d->animationDriver->install();
+            d->mutex.lock();
+            d->thread->start();
+            d->wait.wait(&d->mutex);
+            d->mutex.unlock();
+        } else {
+            makeCurrent();
 
-        if (!d->context || !d->context->isReady()) {
-            d->initializeSceneGraph();
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
-        }
+            if (!d->context || !d->context->isReady()) {
+                d->initializeSceneGraph();
+                d->animationDriver = d->context->createAnimationDriver(this);
+                connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
+            }
 
-        d->animationDriver->install();
+            d->animationDriver->install();
+        }
     }
 }
 
@@ -252,10 +254,12 @@ void QSGCanvas::hideEvent(QHideEvent *e)
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering)
-        d->stopRenderingThread();
+    if (!d->contextFailed) {
+        if (d->threadedRendering)
+            d->stopRenderingThread();
 
-    d->animationDriver->uninstall();
+        d->animationDriver->uninstall();
+    }
 
     QGLWidget::hideEvent(e);
 }
@@ -460,6 +464,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , hoverItem(0)
     , dirtyItemList(0)
     , context(0)
+    , contextFailed(false)
     , contextInThread(false)
     , threadedRendering(false)
     , exitThread(false)
@@ -481,6 +486,11 @@ QSGCanvasPrivate::~QSGCanvasPrivate()
 void QSGCanvasPrivate::init(QSGCanvas *c)
 {
     QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+
+    if (!c->context() || !c->context()->isValid()) {
+        contextFailed = true;
+        qWarning("QSGCanvas: Couldn't acquire a GL context.");
+    }
 
     q_ptr = c;
 
@@ -960,18 +970,20 @@ QSGCanvas::~QSGCanvas()
     d->cleanupNodes();
 
 
-    // We need to remove all references to textures pointing to "our" QSGContext
-    // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
-    // part of those cache entries.
-    // To "play nice" with other GL apps that are potentially running in the GUI thread,
-    // We get the current context and only temporarily make our own current
-    QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
-    makeCurrent();
-    extern void qt_declarative_pixmapstore_clean(QSGContext *context);
-    qt_declarative_pixmapstore_clean(d->context);
-    delete d->context;
-    if (currentContext)
-        currentContext->makeCurrent();
+    if (!d->contextFailed) {
+        // We need to remove all references to textures pointing to "our" QSGContext
+        // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
+        // part of those cache entries.
+        // To "play nice" with other GL apps that are potentially running in the GUI thread,
+        // We get the current context and only temporarily make our own current
+        QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
+        makeCurrent();
+        extern void qt_declarative_pixmapstore_clean(QSGContext *context);
+        qt_declarative_pixmapstore_clean(d->context);
+        delete d->context;
+        if (currentContext)
+            currentContext->makeCurrent();
+    }
 }
 
 QSGItem *QSGCanvas::rootItem() const
