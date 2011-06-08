@@ -202,7 +202,7 @@ public:
     , highlightMoveDuration(150)
     , footerComponent(0), footer(0), headerComponent(0), header(0)
     , bufferMode(BufferBefore | BufferAfter), snapMode(QSGGridView::NoSnap)
-    , addTransitionComponent(0)
+    , addTransitionComponent(0), moveTransitionComponent(0)
     , ownModel(false), wrap(false), autoHighlight(true)
     , fixCurrentVisibility(false), lazyRelease(false), layoutScheduled(false)
     , deferredRelease(false), haveHighlightRange(false), currentIndexCleared(false)
@@ -530,6 +530,7 @@ public:
     int bufferMode;
     QSGGridView::SnapMode snapMode;
     QDeclarativeComponent *addTransitionComponent;
+    QDeclarativeComponent *moveTransitionComponent;
     QSet<int> indexesInTransition;
 
     bool ownModel : 1;
@@ -1330,6 +1331,11 @@ bool GridViewTransitionManager::isActive() const
 
 void GridViewTransitionManager::addItem(FxGridItemSG *item, const QPointF &pos)
 {
+    if (item->posTransition) {
+        item->posTransition->cancel();
+        item->posTransition->finished();
+    }
+
     item->posTransition = this;
     item->posAfterTransition = pos;
     gridItems << item;
@@ -1901,6 +1907,21 @@ void QSGGridView::setAdd(QDeclarativeComponent *add)
     if (add != d->addTransitionComponent) {
         d->addTransitionComponent = add;
         emit addChanged();
+    }
+}
+
+QDeclarativeComponent *QSGGridView::move() const
+{
+    Q_D(const QSGGridView);
+    return d->moveTransitionComponent;
+}
+
+void QSGGridView::setMove(QDeclarativeComponent *move)
+{
+    Q_D(QSGGridView);
+    if (move != d->moveTransitionComponent) {
+        d->moveTransitionComponent = move;
+        emit moveChanged();
     }
 }
 

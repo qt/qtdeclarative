@@ -89,6 +89,7 @@ class Q_AUTOTEST_EXPORT QSGGridView : public QSGFlickable
     Q_PROPERTY(QDeclarativeComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
 
     Q_PROPERTY(QDeclarativeComponent *add READ add WRITE setAdd NOTIFY addChanged)
+    Q_PROPERTY(QDeclarativeComponent *move READ move WRITE setMove NOTIFY moveChanged)
 
     Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(SnapMode)
@@ -168,6 +169,9 @@ public:
     QDeclarativeComponent *add() const;
     void setAdd(QDeclarativeComponent *);
 
+    QDeclarativeComponent *move() const;
+    void setMove(QDeclarativeComponent *);
+
     virtual void setContentX(qreal pos);
     virtual void setContentY(qreal pos);
 
@@ -208,6 +212,7 @@ Q_SIGNALS:
     void headerChanged();
     void footerChanged();
     void addChanged();
+    void moveChanged();
 
 protected:
     virtual void updatePolish();
