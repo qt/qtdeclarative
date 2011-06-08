@@ -85,7 +85,7 @@ Component {
                 anchors.centerIn: parent; anchors.verticalCenterOffset: -30
                 path: Path {
                     PathAttribute { name: 'z'; value: 9999.0 }
-                    PathLine { x: 1; y: 1 }
+                    PathLineShape { x: 1; y: 1 }
                     PathAttribute { name: 'z'; value: 0.0 }
                 }
             }

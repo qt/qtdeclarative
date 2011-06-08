@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Flipable {
     id: container
@@ -56,6 +56,8 @@ Flipable {
     property string photoUrl
     property int rating: 2
     property variant prevScale: 1.0
+
+    property int flipDuration: 1600
 
     signal closed
 
@@ -137,94 +139,172 @@ Flipable {
                             slider.value = prevScale;
                         }
                         if (inBackState && bigImage.status == Image.Ready)
-                            particleBox.imageInAnim();
+                            effectBox.imageInAnim();
                     }
                     property bool inBackState: false
                     onInBackStateChanged:{
                         if(inBackState && bigImage.status == Image.Ready)
-                            particleBox.imageInAnim();
+                            effectBox.imageInAnim();
                         else if (!inBackState && bigImage.status == Image.Ready)
-                            particleBox.imageOutAnim();
+                            effectBox.imageOutAnim();
                     }
+                }
+                ShaderEffectSource{
+                    id: pictureSource
+                    sourceItem: bigImage 
+                    smooth: true
+                    //Workaround: Doesn't work below lines
+                    width: bigImage.width
+                    height: bigImage.width
+                    visible: false
+                }
+                Turbulence{//only fill visible rect
+                    id: turbulence
+                    system: imageSystem
+                    anchors.fill: parent 
+                    frequency: 100
+                    strength: 250
+                    active: false
                 }
 
                 Item{
-                    id: particleBox
+                    id: effectBox
                     width: bigImage.width * bigImage.scale
                     height: bigImage.height * bigImage.scale
                     anchors.centerIn: parent
-
                     function imageInAnim(){
-                        cp.visible = true;
-                        pixAffect.onceOff = false;
                         bigImage.visible = false;
+                        noiseIn.visible = true;
                         endEffectTimer.start();
-                        pixelEmitter.pulse(1);
                     }
                     function imageOutAnim(){
-                        cp.visible = true;
-                        pixAffect.onceOff = true;
                         bigImage.visible = false;
+                        noiseIn.visible = false;
                         turbulence.active = true;
                         endEffectTimer.start();
                         pixelEmitter.burst(2048);
                     }
                     Timer{
                         id: endEffectTimer
-                        interval: 1000
+                        interval: flipDuration
                         repeat: false
                         running: false
                         onTriggered:{
-                            bigImage.visible = true;
                             turbulence.active = false;
-                            cp.visible = false;
+                            noiseIn.visible = false;
+                            bigImage.visible = true;
                         }
+                    }
+                    ShaderEffectItem{
+                        id: noiseIn
+                        anchors.fill: parent
+                        property real t: 0
+                        visible: false
+                        onVisibleChanged: tAnim.start()
+                        NumberAnimation{
+                            id: tAnim
+                            target: noiseIn
+                            property: "t"
+                            from: 0.0 
+                            to: 1.0
+                            duration: flipDuration
+                        }
+                        property variant source: pictureSource
+                        property variant noise: ShaderEffectSource{
+                            sourceItem:Image{
+                                source: "images/noise.png"
+                            }
+                            hideSource: true
+                            smooth: false
+                        }
+                        fragmentShader:"
+                            uniform sampler2D noise;
+                            uniform sampler2D source;
+                            uniform highp float t;
+                            uniform lowp float qt_Opacity;
+                            varying highp vec2 qt_TexCoord0;
+                            void main(){
+                                //Want to use noise2, but it always returns (0,0)?
+                                if(texture2D(noise, qt_TexCoord0).w <= t)
+                                    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;
+                                else
+                                    gl_FragColor = vec4(0.,0.,0.,0.);
+                            }
+                        "
                     }
                     ParticleSystem{
                         id: imageSystem
                     }
-                    ColoredParticle{
-                        id: cp
-                        system: imageSystem
-                        color: "gray"
-                        alpha: 1
-                        image: "images/squareParticle.png"
-                        colorVariation: 0
-                    }
-                    Picture{
-                        id: pixAffect
-                        system: imageSystem
-                        anchors.fill: parent
-                        image: container.photoUrl;
-                        onceOff: true
-                    }
-                    Turbulence{
-                        id: turbulence
-                        system: imageSystem
-                        anchors.fill: parent 
-                        frequency: 100
-                        strength: 250
-                        active: false
-                    }
-                    TrailEmitter{
-                        id: pixelEmitter0
-                        system: imageSystem
-                        height: parent.height
-                        particleSize: 4
-                        particleDuration: 1000
-                        particlesPerSecond: 4096
-                        speed: PointVector{x: 360; xVariation: 8; yVariation: 4}
-                        emitting: false
-                    }
-                    TrailEmitter{
+                    Emitter{
                         id: pixelEmitter
                         system: imageSystem
-                        anchors.fill: parent
+                        //anchors.fill: parent
+                        width: Math.min(bigImage.width * bigImage.scale, flickable.width);
+                        height: Math.min(bigImage.height * bigImage.scale, flickable.height);
+                        anchors.centerIn: parent
                         particleSize: 4
-                        particleDuration: 1000
+                        particleDuration: flipDuration
                         particlesPerSecond: 2048
                         emitting: false
                     }
+                    CustomParticle{
+                        id: blowOut
+                        system: imageSystem
+                        property real maxWidth: effectBox.width
+                        property real maxHeight: effectBox.height
+                        vertexShader:"
+                            attribute highp vec2 vPos;
+                            attribute highp vec2 vTex;
+                            attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
+                            attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
+                            attribute highp float r;
+
+                            uniform highp float maxWidth;
+                            uniform highp float maxHeight;
+
+                            uniform highp mat4 qt_ModelViewProjectionMatrix;
+                            uniform highp float timestamp;
+                            uniform lowp float qt_Opacity;
+
+                            varying highp vec2 fTex2;
+                            varying lowp float fFade;
+
+                            void main() {
+                                fTex2 = vec2(vPos.x / maxWidth, vPos.y / maxHeight);
+                                highp float size = vData.z;
+                                highp float endSize = vData.w;
+
+                                highp float t = (timestamp - vData.x) / vData.y;
+
+                                highp float currentSize = mix(size, endSize, t * t);
+
+                                if (t < 0. || t > 1.)
+                                currentSize = 0.;
+
+                                highp vec2 pos = vPos
+                                - currentSize / 2. + currentSize * vTex          // adjust size
+                                + vVec.xy * t * vData.y         // apply speed vector..
+                                + 0.5 * vVec.zw * pow(t * vData.y, 2.);
+
+                                gl_Position = qt_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0, 1);
+
+                                highp float fadeIn = min(t * 10., 1.);
+                                highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
+
+                                fFade = 1.0;//fadeIn * fadeOut * qt_Opacity;
+                            }
+                        "
+                        property variant pictureTexture: pictureSource
+                        fragmentShader: "
+                            uniform sampler2D pictureTexture;
+                            varying highp vec2 fTex2;
+                            varying highp float fFade;
+                            void main() {
+                                gl_FragColor = texture2D(pictureTexture, fTex2) * fFade;
+                        }"
+                    }
+
+
 
                 }
             }
@@ -268,7 +348,7 @@ Flipable {
     transitions: Transition {
         SequentialAnimation {
             PropertyAction { target: bigImage; property: "smooth"; value: false }
-            NumberAnimation { easing.type: Easing.InOutQuad; properties: "angle"; duration: 1000 }
+            NumberAnimation { easing.type: Easing.InOutQuad; properties: "angle"; duration: flipDuration }
             PropertyAction { target: bigImage; property: "smooth"; value: !flickable.movingVertically }
         }
     }

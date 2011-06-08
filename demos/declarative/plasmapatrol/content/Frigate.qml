@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: container
@@ -54,7 +54,7 @@ Item {
     property int gunType: 0
     width: 128
     height: 128
-    TrailEmitter{
+    Emitter{
         system: container.system
         particle: "frigateShield"
         anchors.centerIn: parent
@@ -63,13 +63,13 @@ Item {
         particleDuration: 4800
         emitting: hp > 0
     }
-    TrailEmitter{
+    Emitter{
         system: container.system
         particle: container.shipParticle
         anchors.centerIn: parent
         width: 64 
         height: 16
-        shape: Ellipse{}
+        shape: EllipseShape{}
 
         particleSize: 16
         particleSizeVariation: 8

@@ -98,6 +98,7 @@ Rectangle{
         image: "content/star.png"
         color: "white"
         colorVariation: 0.1
+        alpha: 0
     }
     ImageParticle{
         id: roids
@@ -144,9 +145,11 @@ Rectangle{
 
         colorVariation: 0.2
     }
-    GravitationalSingularity{
+    PointAttractor{
         id: gs; x: root.width/2; y: root.height/2; strength: 4000000;
         system: particles
+        physics: PointAttractor.Acceleration
+        proportionalToDistance: PointAttractor.Quadratic
     }
     Kill{
         system: particles

@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Item {
@@ -56,7 +56,7 @@ Item {
             id: bgParticles
             startTime: 16000
         }
-        ColoredParticle {
+        ImageParticle {
             particles: ["trail"]
             image: "content/images/particle.png"
             color: "#1A1A6F"
@@ -65,12 +65,12 @@ Item {
             blueVariation: 0.8
             system: bgParticles
         }
-        TrailEmitter {
+        Emitter {
             particle: "drops"
             width: parent.width
             particlesPerSecond: 0.5
             particleDuration: 20000
-            speed: PointVector{
+            speed: PointDirection{
                 y: {screen.height/18} 
             }
             system: bgParticles
@@ -87,7 +87,7 @@ Item {
             anchors.fill: parent
             emissionWidth: 16
             emissionHeight: 16
-            emissionShape: Ellipse{}
+            emissionShape: EllipseShape{}
         }
 
         VisualDataModel{

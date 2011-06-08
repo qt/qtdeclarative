@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "SamegameCore"
 import "SamegameCore/samegame.js" as Logic
 
@@ -77,7 +77,7 @@ Rectangle {
         }
         Item{
             ParticleSystem{ id: particleSystem; }
-            ColoredParticle {
+            ImageParticle {
                 system: particleSystem
                 particles: ["red"]
                 color: Qt.darker("red");//Actually want desaturated...
@@ -85,7 +85,7 @@ Rectangle {
                 colorVariation: 0.4
                 alpha: 0.1
             }
-            ColoredParticle {
+            ImageParticle {
                 system: particleSystem
                 particles: ["green"]
                 color: Qt.darker("green");//Actually want desaturated...
@@ -93,7 +93,7 @@ Rectangle {
                 colorVariation: 0.4
                 alpha: 0.1
             }
-            ColoredParticle {
+            ImageParticle {
                 system: particleSystem
                 particles: ["blue"]
                 color: Qt.darker("blue");//Actually want desaturated...

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: container
@@ -49,7 +49,7 @@ Item {
 
     width: 24
     height: 24
-    TrailEmitter{
+    Emitter{
         id: visualization
         particle: "cannon"
         emitting: container.show
@@ -78,7 +78,7 @@ Item {
         }
         emitter.burst(1);
     }
-    TrailEmitter{
+    Emitter{
         id: emitter
         particle: "cannon"
         emitting: false
@@ -89,7 +89,7 @@ Item {
         particlesPerSecond: 1
         particleSize: 8
         particleEndSize: 4
-        speed: DirectedVector{
+        speed: TargetedDirection{
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true
         }

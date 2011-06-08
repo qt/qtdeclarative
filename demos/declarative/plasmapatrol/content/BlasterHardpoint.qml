@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: container
@@ -53,14 +53,14 @@ Item {
 
     width: 24
     height: 24
-    TrailEmitter{
+    Emitter{
         id: visualization
         particle: "blaster"
         system: container.system
         emitting: show
         anchors.fill: parent
-        shape: Ellipse{}
-        speed: DirectedVector{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true}
+        shape: EllipseShape{}
+        speed: TargetedDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true}
         particleDuration: 1000
         particlesPerSecond: 64 
 
@@ -112,7 +112,7 @@ Item {
                 rofTimer.repeat = false;
         }
     }
-    TrailEmitter{
+    Emitter{
         id: emitter
         particle: "blaster"
         emitting: false
@@ -125,7 +125,7 @@ Item {
         particleSize: 24
         particleEndSize:16
         particleSizeVariation: 8
-        speed: DirectedVector{
+        speed: TargetedDirection{
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true
         }

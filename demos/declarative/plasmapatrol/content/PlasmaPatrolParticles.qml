@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item{
     property ParticleSystem sys
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["default"]
         image: "pics/blur-circle3.png"
@@ -51,7 +51,7 @@ Item{
         colorVariation: 0.1
         z: 0
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["redTeam"]
         image: "pics/blur-circle3.png"
@@ -59,7 +59,7 @@ Item{
         colorVariation: 0.1
         z: 0
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["greenTeam"]
         image: "pics/blur-circle3.png"
@@ -67,7 +67,7 @@ Item{
         colorVariation: 0.1
        z: 0
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["blaster"]
         image: "pics/star2.png"
@@ -76,7 +76,7 @@ Item{
         colorVariation: 0.2
         z: 2
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["laser"]
         image: "pics/star3.png"
@@ -85,7 +85,7 @@ Item{
         colorVariation: 0.2
         z: 2
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["cannon"]
         image: "pics/particle.png"
@@ -93,7 +93,7 @@ Item{
         colorVariation: 0.1
         z: 2
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["cannonCore"]
         image: "pics/particle.png"
@@ -101,7 +101,7 @@ Item{
         colorVariation: 0.8
         z: 1
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["cannonWake"]
         image: "pics/star.png"
@@ -109,7 +109,7 @@ Item{
         colorVariation: 0.2
         z: 1
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["frigateShield"]
         image: "pics/blur-circle2.png"
@@ -119,7 +119,7 @@ Item{
         greenVariation: 0.1
         z: 3
     }
-    SpriteParticle{
+    ImageParticle{
         system: sys
         particles: ["cruiserArmor"]
         z: 1
@@ -150,7 +150,7 @@ Item{
         follow: "cannon"
         particlesPerParticlePerSecond: 64
         particleDuration: 600
-        speed: AngleVector{ angleVariation: 360; magnitude: 48}
+        speed: AngledDirection{ angleVariation: 360; magnitude: 48}
         particleSize: 16
         particleEndSize: 8
         particleSizeVariation: 2

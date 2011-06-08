@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item{
     id: container
@@ -59,17 +59,17 @@ Item{
         running: container.visible
         id: barSys
     }
-    ColoredParticle{
+    ImageParticle{
         color: "lightsteelblue"
         alpha: 0.1
         colorVariation: 0.05
         image: "images/particle.png"
         system: barSys
     }
-    TrailEmitter{
+    Emitter{
         y: 2; height: parent.height-4;
         x: 2; width: Math.max(parent.width * progress - 4, 0);
-        speed: AngleVector{ angleVariation: 180; magnitudeVariation: 12 }
+        speed: AngledDirection{ angleVariation: 180; magnitudeVariation: 12 }
         system: barSys
         particlesPerSecond: width;
         particleDuration: 1000

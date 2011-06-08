@@ -39,56 +39,40 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import QtQuick.Particles 2.0
-import "content"
-import "../launcherContent" as UI
 
-Rectangle{
-    width: 360
-    height: 540
-    ParticleSystem { id: particles }
-    ImageParticle {
-        system: particles
-        sprites: Sprite{
-            name: "snow"
-            source: "content/flake-01.png"
-            frames: 51
-            duration: 40
+Loader{
+    id: ldr
+    visible: false
+    focus: visible
+    onVisibleChanged: source = ""
+    opacity: visible?1:0
+    Behavior on opacity{NumberAnimation{}}
+
+    function setDemo(str){
+        visible = true;
+        source = str;
+    }
+    Image{//TODO: Augment with PARTICLES
+        z: 1
+        source: "icons/close.png"
+        MouseArea{
+            anchors.fill: parent
+            onClicked: ldr.visible = false;
         }
     }
-    Wander { 
-        id: wanderer
-        system: particles
+    Rectangle{
+        z: -1
         anchors.fill: parent
-        xVariance: 360/(wanderer.physics+1);
-        pace: 100*(wanderer.physics+1);
-    }
-    Emitter {
-        system: particles
-        particlesPerSecond: 20
-        particleDuration: 7000
-        emitting: true
-        speed: PointDirection{ y:80; yVariation: 40; }
-        acceleration: PointDirection{ y: 4 }
-        particleSize: 20
-        particleSizeVariation: 10
-        width: parent.width
-        height: 100
-    }
-    Row{
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        UI.Button{
-            text:"dx/dt"
-            onClicked: wanderer.physics = Wander.Position;
+        color:"black"
+        Text{
+            color: "white"
+            anchors.centerIn: parent
+            text: ldr.Status == Loader.Error ? "Error :(" : "Loading..."
         }
-        UI.Button{
-            text:"dv/dt"
-            onClicked: wanderer.physics = Wander.Velocity;
-        }
-        UI.Button{
-            text:"da/dt"
-            onClicked: wanderer.physics = Wander.Acceleration;
+        MouseArea{
+            id: graball
+            anchors.fill: parent
+            onClicked:;
         }
     }
 }

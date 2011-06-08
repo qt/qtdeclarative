@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Rectangle {
@@ -93,18 +93,18 @@ Rectangle {
                     id: title
                     width: root.width
                     height: 240
-                    TrailEmitter{
+                    Emitter{
                         anchors.fill: parent
                         system: particles
                         emitting: true
                         particle: "default"
                         particlesPerSecond: 1200
                         particleDuration: 1200
-                        shape: Mask{source:"content/pics/TitleText.png"}
+                        shape: MaskShape{source:"content/pics/TitleText.png"}
                         particleSize: 16
                         particleEndSize: 0
                         particleSizeVariation: 8
-                        speed: AngleVector{angleVariation:360; magnitudeVariation: 6}
+                        speed: AngledDirection{angleVariation:360; magnitudeVariation: 6}
                     }
                 }
                 Button{
