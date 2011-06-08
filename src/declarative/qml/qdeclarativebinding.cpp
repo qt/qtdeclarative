@@ -372,6 +372,7 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             QVariant value;
 
             v8::HandleScope handle_scope;
+            v8::Context::Scope scope(ep->v8engine.context());
             v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
             if (wasDeleted) {
