@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
-    QObject(parent),
+    AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QSGItem),
     m_currentTool(0),
@@ -76,6 +76,106 @@ SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
 
     view->installEventFilter(this);
     m_currentTool = m_selectionTool;
+}
+
+void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
+{
+    QList<QSGItem*> items;
+    foreach (QObject *obj, objects)
+        if (QSGItem *item = qobject_cast<QSGItem*>(obj))
+            items << item;
+
+    setSelectedItems(items);
+}
+
+void SGViewInspector::reloadView()
+{
+    // TODO
+    emit reloadRequested();
+}
+
+void SGViewInspector::reparentQmlObject(QObject *object, QObject *newParent)
+{
+    if (!newParent)
+        return;
+
+    object->setParent(newParent);
+    QSGItem *newParentItem = qobject_cast<QSGItem*>(newParent);
+    QSGItem *item = qobject_cast<QSGItem*>(object);
+    if (newParentItem && item)
+        item->setParentItem(newParentItem);
+}
+
+void SGViewInspector::changeTool(InspectorProtocol::Tool tool)
+{
+    switch (tool) {
+    case InspectorProtocol::ColorPickerTool:
+        // TODO
+        emit colorPickerActivated();
+        break;
+    case InspectorProtocol::SelectMarqueeTool:
+        // TODO
+        emit marqueeSelectToolActivated();
+        break;
+    case InspectorProtocol::SelectTool:
+        m_currentTool = m_selectionTool;
+        emit selectToolActivated();
+        break;
+    case InspectorProtocol::ZoomTool:
+        // TODO
+        emit zoomToolActivated();
+        break;
+    }
+}
+
+QDeclarativeEngine *SGViewInspector::declarativeEngine() const
+{
+    return m_view->engine();
+}
+
+QWidget *SGViewInspector::viewWidget() const
+{
+    return m_view;
+}
+
+QList<QSGItem*> SGViewInspector::selectedItems() const
+{
+    QList<QSGItem *> selection;
+    foreach (const QWeakPointer<QSGItem> &selectedItem, m_selectedItems) {
+        if (selectedItem)
+            selection << selectedItem.data();
+    }
+    return selection;
+}
+
+void SGViewInspector::setSelectedItems(const QList<QSGItem *> &items)
+{
+    // Disconnect and remove items that are no longer selected
+    foreach (const QWeakPointer<QSGItem> &item, m_selectedItems) {
+        if (!item)
+            continue;
+
+        if (!items.contains(item.data())) {
+            QObject::disconnect(item.data(), SIGNAL(destroyed(QObject*)),
+                                this, SLOT(removeFromSelection(QObject*)));
+            m_selectedItems.removeOne(item);
+        }
+    }
+
+    // Connect and add newly selected items
+    foreach (QSGItem *item, items) {
+        if (!m_selectedItems.contains(item)) {
+            QObject::connect(item, SIGNAL(destroyed(QObject*)),
+                             this, SLOT(removeFromSelection(QObject*)));
+            m_selectedItems.append(item);
+        }
+    }
+}
+
+void SGViewInspector::removeFromSelectedItems(QObject *object)
+{
+    if (QSGItem *item = qobject_cast<QSGItem*>(object))
+        m_selectedItems.removeOne(item);
 }
 
 bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)

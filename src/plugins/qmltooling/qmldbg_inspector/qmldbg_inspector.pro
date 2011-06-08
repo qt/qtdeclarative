@@ -9,6 +9,7 @@ DESTDIR  = $$QT.declarative.plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"
 
 SOURCES += \
+    abstractviewinspector.cpp \
     qdeclarativeinspectorplugin.cpp \
     qdeclarativeviewinspector.cpp \
     editor/abstractliveedittool.cpp \
@@ -29,6 +30,7 @@ SOURCES += \
     sgselectiontool.cpp
 
 HEADERS += \
+    abstractviewinspector.h \
     qdeclarativeinspectorplugin.h \
     qdeclarativeinspectorprotocol.h \
     qdeclarativeviewinspector_p.h \

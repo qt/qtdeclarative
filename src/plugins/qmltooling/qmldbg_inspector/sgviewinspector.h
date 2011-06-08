@@ -42,7 +42,8 @@
 #ifndef QSGVIEWINSPECTOR_H
 #define QSGVIEWINSPECTOR_H
 
-#include <QtCore/QObject>
+#include "abstractviewinspector.h"
+
 #include <QtCore/QWeakPointer>
 
 QT_BEGIN_NAMESPACE
@@ -57,16 +58,30 @@ class QSGItem;
 class SGAbstractTool;
 class SGSelectionTool;
 
-class SGViewInspector : public QObject
+class SGViewInspector : public AbstractViewInspector
 {
     Q_OBJECT
 public:
     explicit SGViewInspector(QSGView *view, QObject *parent = 0);
 
+    // AbstractViewInspector
+    void changeCurrentObjects(const QList<QObject*> &objects);
+    void reloadView();
+    void reparentQmlObject(QObject *object, QObject *newParent);
+    void changeTool(InspectorProtocol::Tool tool);
+    QWidget *viewWidget() const;
+    QDeclarativeEngine *declarativeEngine() const;
+
     QSGView *view() const { return m_view; }
     QSGItem *overlay() const { return m_overlay; }
 
+    QList<QSGItem *> selectedItems() const;
+    void setSelectedItems(const QList<QSGItem*> &items);
+
     bool eventFilter(QObject *obj, QEvent *event);
+
+private slots:
+    void removeFromSelectedItems(QObject *);
 
 private:
     bool leaveEvent(QEvent *);
@@ -83,6 +98,8 @@ private:
     SGAbstractTool *m_currentTool;
 
     SGSelectionTool *m_selectionTool;
+
+    QList<QWeakPointer<QSGItem> > m_selectedItems;
 
     bool m_designMode;
 };
