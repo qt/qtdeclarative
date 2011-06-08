@@ -571,6 +571,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     global->Set(v8::String::New("print"), printFn);
     global->Set(v8::String::New("console"), console);
     global->Set(v8::String::New("Qt"), qt);
+    global->Set(v8::String::New("gc"), V8FUNCTION(gc, this));
 
     // XXX mainthread only
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
@@ -606,6 +607,18 @@ void QV8Engine::freezeGlobal()
 #undef FREEZE
 
     test->Run();
+}
+
+void QV8Engine::gc()
+{
+    v8::V8::LowMemoryNotification();
+    while (!v8::V8::IdleNotification()) {}
+}
+
+v8::Handle<v8::Value> QV8Engine::gc(const v8::Arguments &args)
+{
+    gc();
+    return v8::Undefined();
 }
 
 v8::Handle<v8::Value> QV8Engine::print(const v8::Arguments &args)

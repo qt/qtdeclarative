@@ -824,8 +824,7 @@ void QDeclarativeEngine::setOutputWarningsToStandardError(bool enabled)
 */
 void QDeclarativeEngine::collectGarbage()
 {
-    v8::V8::LowMemoryNotification();
-    while (!v8::V8::IdleNotification()) {}
+    QV8Engine::gc();
 }
 
 /*!

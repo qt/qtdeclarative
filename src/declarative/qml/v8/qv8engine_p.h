@@ -238,6 +238,8 @@ public:
     // Return the list of illegal id names (the names of the properties on the global object)
     const QSet<QString> &illegalNames() const;
 
+    static void gc();
+
 private:
     QDeclarativeEngine *m_engine;
     v8::Persistent<v8::Context> m_context;
@@ -263,6 +265,7 @@ private:
     void initializeGlobal(v8::Handle<v8::Object>);
     void freezeGlobal();
 
+    static v8::Handle<v8::Value> gc(const v8::Arguments &args);
     static v8::Handle<v8::Value> print(const v8::Arguments &args);
     static v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
     static v8::Handle<v8::Value> rgba(const v8::Arguments &args);
