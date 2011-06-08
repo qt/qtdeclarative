@@ -154,8 +154,8 @@ public:
     QSGVisualDataModel(QDeclarativeContext *, QObject *parent=0);
     virtual ~QSGVisualDataModel();
 
-    QVariant model() const;
-    void setModel(const QVariant &);
+    virtual QVariant model() const;
+    virtual void setModel(const QVariant &);
 
     QDeclarativeComponent *delegate() const;
     void setDelegate(QDeclarativeComponent *);
@@ -188,6 +188,12 @@ Q_SIGNALS:
     void destroyingPackage(QDeclarativePackage *package);
     void rootIndexChanged();
 
+protected:
+    QSGVisualDataModel(QSGVisualDataModelPrivate &dd, QObject *parent = 0);
+    void insertItems(int index, const QList<QSGItem *> &items);
+    QSGItem *takeItem(int index);
+    virtual void insertChangeComplete(int) {}
+
 private Q_SLOTS:
     void _q_itemsChanged(int, int, const QList<int> &);
     void _q_itemsInserted(int index, int count);
@@ -205,6 +211,48 @@ private Q_SLOTS:
 private:
     Q_DISABLE_COPY(QSGVisualDataModel)
 };
+
+class QSGVisualListModelPrivate;
+class QSGVisualListModelAttached;
+class Q_AUTOTEST_EXPORT QSGVisualListModel : public QSGVisualDataModel
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QSGVisualListModel)
+    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
+
+public:
+    QSGVisualListModel(QObject *parent = 0);
+    ~QSGVisualListModel();
+
+    virtual void setModel(const QVariant &model);
+    virtual QVariant model() const;
+
+    // XXX Q_INVOKABLE void insert(int index, QSGItem *item, const QScriptValue &sv);
+
+
+    Q_INVOKABLE QSGItem *get(int index);
+
+    Q_INVOKABLE void remove(int index);
+    Q_INVOKABLE void move(int from, int to, int count);
+
+    Q_INVOKABLE void transfer(int fromIndex, int count, QSGVisualListModel *dest, int toIndex, QSGItem *newParent);
+    Q_INVOKABLE void transfer(const QVariantList &sourceIndexes, QSGVisualListModel *dest, const QVariantList &destIndexes, QSGItem *newParent);
+
+    virtual int count() const;
+
+protected:
+    virtual ReleaseFlags release(QSGItem *item);
+    virtual void insertChangeComplete(int index);
+
+private:
+    Q_DISABLE_COPY(QSGVisualListModel)
+
+    typedef QPair<QSGItem *, QHash<int, QVariant> > QSGVisualItemData;
+
+    void transfer(const QList<int> &sourceIndexes, QSGVisualListModel *dest, const QList<int> &destIndexes, QSGItem *newParent);
+    void insertItems(const QList<QSGVisualItemData> &itemData, const QList<int> &destIndexes, QSGItem *newParent);
+};
+
 
 class QSGVisualItemModelAttached : public QObject
 {
@@ -251,6 +299,7 @@ QML_DECLARE_TYPE(QSGVisualModel)
 QML_DECLARE_TYPE(QSGVisualItemModel)
 QML_DECLARE_TYPEINFO(QSGVisualItemModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGVisualDataModel)
+QML_DECLARE_TYPE(QSGVisualListModel)
 
 QT_END_HEADER
 

@@ -49,6 +49,7 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 
 #include <private/qdeclarativecontext_p.h>
+#include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativepackage_p.h>
 #include <private/qdeclarativeopenmetaobject_p.h>
 #include <private/qdeclarativelistaccessor_p.h>
@@ -525,6 +526,7 @@ void QSGVisualDataModelData::setIndex(int index)
     emit indexChanged();
 }
 
+
 //---------------------------------------------------------------------------
 
 class QSGVisualDataModelPartsMetaObject : public QDeclarativeOpenMetaObject
@@ -594,6 +596,11 @@ QSGVisualDataModel::QSGVisualDataModel()
 
 QSGVisualDataModel::QSGVisualDataModel(QDeclarativeContext *ctxt, QObject *parent)
 : QSGVisualModel(*(new QSGVisualDataModelPrivate(ctxt)), parent)
+{
+}
+
+QSGVisualDataModel::QSGVisualDataModel(QSGVisualDataModelPrivate &dd, QObject *parent)
+: QSGVisualModel(dd, parent)
 {
 }
 
@@ -1081,6 +1088,27 @@ void QSGVisualDataModel::_q_itemsChanged(int index, int count,
         emit itemsChanged(index, count);
 }
 
+void QSGVisualDataModel::insertItems(int index, const QList<QSGItem *> &items)
+{
+    Q_D(QSGVisualDataModel);
+    for (int i=0; i<items.count(); i++) {
+        d->m_cache.insertItem(index + i, items[i]);
+        QSGVisualDataModelData *data = d->data(items[i]);
+        data->setIndex(index + i);
+    }
+}
+
+QSGItem *QSGVisualDataModel::takeItem(int index)
+{
+    Q_D(QSGVisualDataModel);
+    QSGItem *item = 0;
+    if (d->m_cache.contains(index)) {
+        item = qobject_cast<QSGItem *>(d->m_cache[index].obj);
+        d->m_cache.remove(index);
+    }
+    return item;
+}
+
 void QSGVisualDataModel::_q_itemsInserted(int index, int count)
 {
     Q_D(QSGVisualDataModel);
@@ -1105,6 +1133,8 @@ void QSGVisualDataModel::_q_itemsInserted(int index, int count)
         }
     }
     d->m_cache.unite(items);
+
+    insertChangeComplete(index);
 
     emit itemsInserted(index, count);
     emit countChanged();
@@ -1245,6 +1275,638 @@ void QSGVisualDataModel::_q_destroyingPackage(QDeclarativePackage *package)
 {
     Q_D(QSGVisualDataModel);
     emit destroyingItem(qobject_cast<QSGItem*>(package->part(d->m_part)));
+}
+
+
+//============================================================================
+
+class VisualListModelList : public QListModelInterface
+{
+    Q_OBJECT
+public:
+    VisualListModelList(QObject *parent = 0);
+
+    virtual int count() const;
+    virtual QVariant data(int index, int role) const;
+    virtual QList<int> roles() const;
+    virtual QString toString(int role) const;
+
+    void setModel(const QVariant &model);
+
+    void inserted(int index, const QList<QHash<int, QVariant> > &values);
+    void moved(int from, int to, int count);
+    void removed(int index, int count);
+
+    bool contains(int index) const;
+    void dump(QSGVisualListModel *);
+
+    friend class QSGVisualListModel;
+    QListModelInterface *m_model;
+    QVariant m_modelValue;
+
+private slots:
+    void _q_itemsChanged(int, int, const QList<int> &);
+    void _q_itemsInserted(int index, int count);
+    void _q_itemsRemoved(int index, int count);
+    void _q_itemsMoved(int from, int to, int count);
+
+private:
+    QHash<int, QVariant> data(int index) const;
+
+    struct IndexData {
+        int index;
+        QHash<int, QVariant> values;
+    };
+
+    QHash<int, IndexData> m_indexes;
+};
+
+
+VisualListModelList::VisualListModelList(QObject *parent)
+    : QListModelInterface(parent),
+      m_model(0)
+{
+}
+
+int VisualListModelList::count() const
+{
+    return m_indexes.count();
+}
+
+QVariant VisualListModelList::data(int index, int role) const
+{
+    if (!m_indexes.contains(index)) {
+        qWarning() << "VisualListModelList::data(): bad index!" << index;
+        return QVariant();
+    }
+    if (m_indexes[index].index >= 0 && m_model)
+        return m_model->data(m_indexes[index].index, role);
+    return m_indexes[index].values.value(role);
+}
+
+QHash<int, QVariant> VisualListModelList::data(int index) const
+{
+    if (!m_indexes.contains(index)) {
+        qWarning() << "VisualListModelList::data(): bad index!" << index;
+        return QHash<int, QVariant>();
+    }
+    if (m_indexes[index].index >= 0 && m_model) {
+        QHash<int, QVariant> values;
+        QList<int> roles = m_model->roles();
+        for (int i=0; i<roles.count(); i++)
+            values.insert(roles[i], m_model->data(m_indexes[index].index, roles[i]));
+        return values;
+    }
+    return m_indexes[index].values;
+}
+
+QList<int> VisualListModelList::roles() const
+{
+    return m_model->roles();
+}
+
+QString VisualListModelList::toString(int role) const
+{
+    return m_model->toString(role);
+}
+
+void VisualListModelList::setModel(const QVariant &model)
+{
+    if (model == m_modelValue)
+        return;
+    QListModelInterface *newModel = qobject_cast<QListModelInterface *>(qvariant_cast<QObject *>(model));
+    if (!newModel) {
+        // XXX should use the models adaptor object from models2 research to accept all model types
+        qmlInfo(this) << "setModel: model object is not valid";
+        return;
+    }
+
+    if (m_model) {
+        QObject::disconnect(m_model, SIGNAL(itemsChanged(int,int,QList<int>)),
+                this, SLOT(_q_itemsChanged(int,int,QList<int>)));
+        QObject::disconnect(m_model, SIGNAL(itemsInserted(int,int)),
+                this, SLOT(_q_itemsInserted(int,int)));
+        QObject::disconnect(m_model, SIGNAL(itemsRemoved(int,int)),
+                this, SLOT(_q_itemsRemoved(int,int)));
+        QObject::disconnect(m_model, SIGNAL(itemsMoved(int,int,int)),
+                this, SLOT(_q_itemsMoved(int,int,int)));
+    }
+
+    m_indexes.clear();
+    m_modelValue = model;
+    m_model = newModel;
+    for (int i=0; i<m_model->count(); i++) {
+        IndexData data = { i, QHash<int, QVariant>() };
+        m_indexes.insert(i, data);
+    }
+
+    QObject::connect(m_model, SIGNAL(itemsChanged(int,int,QList<int>)),
+                     this, SLOT(_q_itemsChanged(int,int,QList<int>)));
+    QObject::connect(m_model, SIGNAL(itemsInserted(int,int)),
+                     this, SLOT(_q_itemsInserted(int,int)));
+    QObject::connect(m_model, SIGNAL(itemsRemoved(int,int)),
+                     this, SLOT(_q_itemsRemoved(int,int)));
+    QObject::connect(m_model, SIGNAL(itemsMoved(int,int,int)),
+                     this, SLOT(_q_itemsMoved(int,int,int)));
+}
+
+void VisualListModelList::inserted(int index, const QList<QHash<int, QVariant> > &values)
+{
+    if (values.isEmpty())
+        return;
+    QHash<int, IndexData> items;
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end();) {
+        if (iter.key() >= index) {
+            IndexData data = *iter;
+            int newIndex = iter.key() + values.count();
+            items.insert(newIndex, data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    for (int i=0; i<values.count(); i++) {
+        IndexData data = { -1, values[i] };
+        items.insert(index + i, data);
+    }
+    m_indexes.unite(items);
+    emit itemsInserted(index, values.count());
+}
+
+void VisualListModelList::moved(int from, int to, int count)
+{
+    QHash<int, IndexData> items;
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        if (iter.key() >= from && iter.key() < from + count) {
+            IndexData data = *iter;
+            int newIndex = iter.key() - from + to;
+            items.insert(newIndex, data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        int diff = from > to ? count : -count;
+        if (iter.key() >= qMin(from,to) && iter.key() < qMax(from+count,to+count)) {
+            IndexData data = *iter;
+            int newIndex = iter.key() + diff;
+            items.insert(newIndex, data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    m_indexes.unite(items);
+    emit itemsMoved(from, to, count);
+}
+
+void VisualListModelList::removed(int index, int count)
+{
+    if (count < 1)
+        return;
+    QHash<int, IndexData> items;
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        if (iter.key() >= index && iter.key() < index + count) {
+            iter = m_indexes.erase(iter);
+        } else if (iter.key() >= index + count) {
+            IndexData data = *iter;
+            int newIndex = iter.key() - count;
+            items.insert(newIndex, data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    m_indexes.unite(items);
+    emit itemsRemoved(index, count);
+}
+
+bool VisualListModelList::contains(int index) const
+{
+    return m_indexes.contains(index);
+}
+
+void VisualListModelList::dump(QSGVisualListModel *visualListModel)
+{
+    qDebug() << "\tKeys:" << m_indexes.keys();
+    qDebug() << "\tCount:" << m_indexes.count();
+    for (QHash<int, IndexData>::Iterator it = m_indexes.begin(); it != m_indexes.end(); ++it) {
+        IndexData data = *it;
+        qDebug() << "\t" << it.key() << ":" << data.index << data.values << visualListModel->item(it.key());
+    }
+}
+
+void VisualListModelList::_q_itemsChanged(int index, int count, const QList<int> &roles)
+{
+    // XXX this just emits itemsChanged() for all visual items in between the real items, regardless
+    // of whether they have changed
+    // Once we have the new model classes this method can be removed
+
+    int visualModelFrom = -1;
+    int visualModelTo = -1;
+
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        if ((*iter).index == index)
+            visualModelFrom = iter.key();
+        else if ((*iter).index == index + count - 1)
+            visualModelTo = iter.key();
+        if (visualModelFrom >= 0 && visualModelTo >= 0)
+            break;
+    }
+
+    emit itemsChanged(visualModelFrom, visualModelTo - visualModelFrom + 1, roles);
+}
+
+void VisualListModelList::_q_itemsInserted(int listModelIndex, int count)
+{
+    if (listModelIndex < 0 || count < 1)
+        return;
+    int visualModelIndex = -1;
+
+    // update listModelIndex for items that point to actual model indexes
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ++iter) {
+        IndexData &data = *iter;
+        if (data.index == listModelIndex) {
+            visualModelIndex = iter.key();
+            data.index += count;
+        } else if (data.index >= listModelIndex + count) {
+            data.index += count;
+        }
+    }
+
+    QHash<int, IndexData> items;
+    if (visualModelIndex >= 0) {
+        // update index key for all items that moved
+        for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+            if (iter.key() >= visualModelIndex) {
+                IndexData data = *iter;
+                int index = iter.key() + count;
+                items.insert(index, data);
+                iter = m_indexes.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+    } else {
+        // there are no items that refer to actual model items, so add the new items to the end
+        visualModelIndex = m_indexes.count();
+    }
+    for (int i=0; i<count; i++) {
+        IndexData data = { listModelIndex + i, QHash<int, QVariant>() };
+        items.insert(visualModelIndex + i, data);
+    }
+
+    m_indexes.unite(items);
+    emit itemsInserted(visualModelIndex, count);
+}
+
+void VisualListModelList::_q_itemsRemoved(int listModelIndex, int count)
+{
+    if (count < 1)
+        return;
+    int visualModelIndex = -1;
+
+    // update listModelIndex for items that point to actual model indexes
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        IndexData &data = *iter;
+        if (data.index == listModelIndex) {
+            visualModelIndex = iter.key();
+            iter = m_indexes.erase(iter);
+        } else if (data.index >= listModelIndex + count) {
+            data.index -= count;
+            ++iter;
+        } else {
+            ++iter;
+        }
+    }
+
+    if (visualModelIndex >= 0) {
+        // update index key for all items that moved
+        QHash<int, IndexData> items;
+        for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+            if (iter.key() >= visualModelIndex) {
+                IndexData data = *iter;
+                int index = iter.key() - count;
+                items.insert(index, data);
+                iter = m_indexes.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+        m_indexes.unite(items);
+
+        // as for _q_itemsInserted(), don't need to insert visual list model itemsRemoved()
+        emit itemsRemoved(visualModelIndex, count);
+    }
+}
+
+void VisualListModelList::_q_itemsMoved(int from, int to, int count)
+{
+    if (count < 1 || from == to || from < 0 || to < 0)
+        return;
+    int visualModelFrom = -1;
+    int visualModelTo = -1;
+    QSet<int> visualItemsInBetween;
+    QSet<int> otherShiftedVisualItems;
+
+    // find the matching visual model from & to indexes
+    // and update the actual list model index for moved items
+    QHash<int, IndexData> items;
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        IndexData data = *iter;
+        int listModelIndex = data.index;
+
+        if (listModelIndex == from)
+            visualModelFrom = iter.key();
+        else if (listModelIndex == to)
+            visualModelTo = iter.key();
+
+        if (listModelIndex >= 0 && listModelIndex >= from && listModelIndex < from + count) {
+            data.index = listModelIndex - from + to;
+            items.insert(iter.key(), data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+
+    // record the visual model indexes that are affected by the move
+    // and update the actual list model index for other indexes affected by move
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        int index = iter.key();
+        IndexData data = *iter;
+        int listModelIndex = data.index;
+
+        if (listModelIndex < 0 && index > visualModelFrom && iter.key() < visualModelTo)
+            visualItemsInBetween.insert(index);
+        else if (listModelIndex < 0 && index >= qMin(visualModelFrom,visualModelTo)
+                && index < qMax(visualModelFrom+count,visualModelTo+count))
+            otherShiftedVisualItems.insert(index);
+
+        int diff = from > to ? count : -count;
+        if (listModelIndex >= 0 && listModelIndex >= qMin(from,to) && listModelIndex < qMax(from+count,to+count)) {
+            data.index = listModelIndex + diff;
+            items.insert(index, data);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    m_indexes.unite(items);
+
+    count += visualItemsInBetween.count();
+    if (from < to)
+        visualModelTo = visualModelTo + otherShiftedVisualItems.count() - visualItemsInBetween.count();
+
+    // update the visual model index for all items affected by the move
+    items.clear();
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        if (iter.key() >= visualModelFrom && iter.key() < visualModelFrom + count) {
+            int newIndex = iter.key() - visualModelFrom + visualModelTo;
+            items.insert(newIndex, *iter);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    for (QHash<int, IndexData>::Iterator iter = m_indexes.begin(); iter != m_indexes.end(); ) {
+        int diff = from > to ? count : -count;
+        if (iter.key() >= qMin(visualModelFrom,visualModelTo)
+                && iter.key() < qMax(visualModelFrom+count,visualModelTo+count)) {
+            int newIndex = iter.key() + diff;
+            items.insert(newIndex, *iter);
+            iter = m_indexes.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    m_indexes.unite(items);
+
+    if (visualModelFrom >= 0 && visualModelTo >= 0)
+        emit itemsMoved(visualModelFrom, visualModelTo, count);
+}
+
+
+
+class QSGVisualListModelPrivate : public QSGVisualDataModelPrivate
+{
+    Q_DECLARE_PUBLIC(QSGVisualListModel)
+public:
+    QSGVisualListModelPrivate()
+        : QSGVisualDataModelPrivate(0)
+    {
+        wrapperModel = new VisualListModelList;
+    }
+
+    ~QSGVisualListModelPrivate() {
+        delete wrapperModel;
+    }
+
+    VisualListModelList *wrapperModel;
+    QList<QSGItem *> itemsToTransfer;
+};
+
+
+QSGVisualListModel::QSGVisualListModel(QObject *parent)
+    : QSGVisualDataModel(*(new QSGVisualListModelPrivate), parent)
+{
+}
+
+QSGVisualListModel::~QSGVisualListModel()
+{
+}
+
+void QSGVisualListModel::setModel(const QVariant &model)
+{
+    Q_D(QSGVisualListModel);
+    d->wrapperModel->setModel(model);
+
+    QSGVisualDataModel::setModel(QVariant::fromValue(static_cast<QObject*>(d->wrapperModel)));
+}
+
+QVariant QSGVisualListModel::model() const
+{
+    Q_D(const QSGVisualListModel);
+    return d->wrapperModel->m_modelValue;
+}
+
+int QSGVisualListModel::count() const
+{
+    Q_D(const QSGVisualListModel);
+    return d->wrapperModel->count();
+}
+
+QSGItem *QSGVisualListModel::get(int index)
+{
+    return item(index);
+}
+
+void QSGVisualListModel::remove(int index)
+{
+    Q_D(QSGVisualListModel);
+
+    QSGItem *item = takeItem(index);
+
+    if (item) {
+        d->wrapperModel->removed(index, 1); // causes parent VisualDataModel to emit itemsRemoved()
+        item->setParentItem(0);
+        QDeclarative_setParent_noEvent(item, 0);
+        item->deleteLater();
+    }
+}
+
+void QSGVisualListModel::move(int from, int to, int count)
+{
+    Q_D(QSGVisualListModel);
+    if (from < 0 || count < 0 || from == to)
+        return;
+
+    d->wrapperModel->moved(from, to, count);  // causes parent VisualDataModel to emit itemsMoved()
+}
+
+// XXX remove newParent arg, transfer ownership via signals
+void QSGVisualListModel::transfer(int fromIndex, int count, QSGVisualListModel *dest, int toIndex, QSGItem *newParent)
+{
+    QList<int> srcIndexes;
+    QList<int> destIndexes;
+    for (int i=0; i<count; i++) {
+        srcIndexes << fromIndex + i;
+        destIndexes << toIndex + i;
+    }
+
+    transfer(srcIndexes, dest, destIndexes, newParent);
+}
+
+// XXX remove newParent arg, transfer ownership via signals
+void QSGVisualListModel::transfer(const QVariantList &sourceIndexes, QSGVisualListModel *dest, const QVariantList &destIndexes, QSGItem *newParent)
+{
+    QList<int> sourceInts;
+    QList<int> destInts;
+    bool ok = false;
+    for (int i=0; i<sourceIndexes.count(); i++) {
+        int value = sourceIndexes[i].toInt(&ok);
+        if (!ok) {
+            qmlInfo(this) << "transfer: sourceIndexes contains non-integer values";
+            return;
+        }
+        sourceInts << value;
+    }
+    for (int i=0; i<destIndexes.count(); i++) {
+        int value = destIndexes[i].toInt(&ok);
+        if (!ok) {
+            qmlInfo(this) << "transfer: destIndexes contains non-integer values";
+            return;
+        }
+        destInts << value;
+    }
+
+    transfer(sourceInts, dest, destInts, newParent);
+}
+
+void QSGVisualListModel::transfer(const QList<int> &sourceIndexes, QSGVisualListModel *dest, const QList<int> &destIndexes, QSGItem *newParent)
+{
+    if (!newParent) {
+        qmlInfo(this) << "transfer: invalid newParent argument";
+        return;
+    }
+
+    if (this == dest) {
+        qmlInfo(this) << "transfer: source and destination models are the same";
+        return;
+    }
+
+    if (sourceIndexes.isEmpty() || destIndexes.isEmpty() || sourceIndexes.count() != destIndexes.count()) {
+        qmlInfo(this) << "transfer: source or destination index lists are empty or differ in size";
+        return;
+    }
+
+    Q_D(QSGVisualListModel);
+    QList<int> updatedSrcIndexes = sourceIndexes;
+    QList<QSGVisualItemData> itemData;
+    for (int i=0; i<updatedSrcIndexes.count();) {
+        int removeCount = 0;
+        int fromIndex = updatedSrcIndexes[i];
+        int currIndex = 0;
+        do {
+            currIndex = updatedSrcIndexes[i];
+            QSGItem *item = QSGVisualDataModel::takeItem(currIndex);
+            if (!item)
+                qmlInfo(this) << "transfer: no item found at source model index" << currIndex;
+            QHash<int, QVariant> values = d->wrapperModel->data(currIndex);
+            itemData.append(qMakePair(item, values));
+            removeCount++;
+            i++;
+        } while (i < updatedSrcIndexes.count() && updatedSrcIndexes[i] == currIndex + 1);
+
+        // update wrapper model for all removed indexes
+        // This causes parent VisualDataModel to emit itemsRemoved(). Ideally when model classes
+        // get the bulk changes feature, all these remove changes would be done together instead
+        // of once each loop
+        d->wrapperModel->removed(fromIndex, removeCount);
+
+        // update indexes shifted by the removal
+        for (int j=i; j<updatedSrcIndexes.count(); j++) {
+            if (updatedSrcIndexes[j] > currIndex)
+                updatedSrcIndexes[j] -= removeCount;
+        }
+    }
+
+    dest->insertItems(itemData, destIndexes, newParent);
+}
+
+void QSGVisualListModel::insertItems(const QList<QSGVisualItemData> &itemData, const QList<int> &destIndexes, QSGItem *newParent)
+{
+    Q_D(QSGVisualListModel);
+    Q_ASSERT(!destIndexes.isEmpty() && destIndexes.count() == itemData.count());
+
+    if (itemData.isEmpty())
+        return;
+
+    QList<QSGItem *> items;
+    QList<QHash<int, QVariant> > values;
+
+    for (int i=0; i<destIndexes.count();) {
+        int toIndex = destIndexes[i];
+        int currIndex = 0;
+        do {
+            currIndex = destIndexes[i];
+
+            QSGItem *item = itemData[i].first;
+            if (item) {
+                // XXX also need to set a mapped transform?
+                QPointF mappedPos = newParent->mapFromItem(item->parentItem(), item->pos());
+                item->setPos(mappedPos);
+                item->setParentItem(newParent);
+                QDeclarative_setParent_noEvent(item, this);
+
+                items << item;
+                values << itemData[i].second;
+            }
+            i++;
+        } while (i < destIndexes.count() && destIndexes[i] == currIndex + 1);
+
+        d->itemsToTransfer = items;
+        d->wrapperModel->inserted(toIndex, values);
+        d->itemsToTransfer.clear();
+
+        items.clear();
+        values.clear();
+    }
+}
+
+QSGVisualModel::ReleaseFlags QSGVisualListModel::release(QSGItem *item)
+{
+    // this does not mean the index can be removed from d->m_indexes because
+    // the index may be requested again later
+    return QSGVisualDataModel::release(item);
+}
+
+void QSGVisualListModel::insertChangeComplete(int index)
+{
+    Q_D(QSGVisualListModel);
+    if (!d->itemsToTransfer.isEmpty())
+        QSGVisualDataModel::insertItems(index, d->itemsToTransfer);
 }
 
 QT_END_NAMESPACE
