@@ -80,8 +80,7 @@ QV8Engine::~QV8Engine()
     delete m_listModelData;
     m_listModelData = 0;
 
-    m_getOwnPropertyNames.Dispose(); m_getOwnPropertyNames.Clear();
-    
+    qPersistentDispose(m_getOwnPropertyNames);
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
     m_listWrapper.destroy();
@@ -89,8 +88,7 @@ QV8Engine::~QV8Engine()
     m_qobjectWrapper.destroy();
     m_contextWrapper.destroy();
     m_stringWrapper.destroy();
-    m_context.Dispose();
-    m_context.Clear();
+    qPersistentDispose(m_context);
 }
 
 void QV8Engine::init(QDeclarativeEngine *engine)
@@ -103,6 +101,7 @@ void QV8Engine::init(QDeclarativeEngine *engine)
 
     v8::HandleScope handle_scope;
     m_context = v8::Context::New();
+    qPersistentRegister(m_context);
     v8::Context::Scope context_scope(m_context);
 
     m_stringWrapper.init();
@@ -115,7 +114,7 @@ void QV8Engine::init(QDeclarativeEngine *engine)
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
-    m_getOwnPropertyNames = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(v));
+    m_getOwnPropertyNames = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(v));
     }
 
     initializeGlobal(m_context->Global());
@@ -614,6 +613,43 @@ void QV8Engine::gc()
     v8::V8::LowMemoryNotification();
     while (!v8::V8::IdleNotification()) {}
 }
+
+#ifdef QML_GLOBAL_HANDLE_DEBUGGING
+#include <QtCore/qthreadstorage.h>
+static QThreadStorage<QSet<void *> *> QV8Engine_activeHandles;
+
+void QV8Engine::registerHandle(void *handle)
+{
+    if (!handle) {
+        qWarning("Attempting to register a null handle");
+        return;
+    }
+
+    if (!QV8Engine_activeHandles.hasLocalData()) 
+        QV8Engine_activeHandles.setLocalData(new QSet<void *>);
+
+    if (QV8Engine_activeHandles.localData()->contains(handle)) {
+        qFatal("Handle %p already alive", handle);
+    } else {
+        QV8Engine_activeHandles.localData()->insert(handle);
+    }
+}
+
+void QV8Engine::releaseHandle(void *handle)
+{
+    if (!handle)
+        return;
+
+    if (!QV8Engine_activeHandles.hasLocalData()) 
+        QV8Engine_activeHandles.setLocalData(new QSet<void *>);
+
+    if (QV8Engine_activeHandles.localData()->contains(handle)) {
+        QV8Engine_activeHandles.localData()->remove(handle);
+    } else {
+        qFatal("Handle %p already dead", handle);
+    }
+}
+#endif
 
 v8::Handle<v8::Value> QV8Engine::gc(const v8::Arguments &args)
 {

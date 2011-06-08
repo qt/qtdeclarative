@@ -74,11 +74,11 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
-    m_preserve = v8::Persistent<v8::Function>::New(v8::FunctionTemplate::New(Preserve)->GetFunction());
-    m_destroy = v8::Persistent<v8::Function>::New(v8::FunctionTemplate::New(Destroy)->GetFunction());
+    m_preserve = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Preserve)->GetFunction());
+    m_destroy = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(Destroy)->GetFunction());
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
@@ -88,17 +88,17 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("destroy"), DestroyGetter, 0, 
                                         m_destroy, v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
-    m_scarceConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_scarceConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 
 }
 
 void QV8VariantWrapper::destroy()
 {
-    m_destroy.Dispose(); m_destroy.Clear();
-    m_preserve.Dispose(); m_preserve.Clear();
-    m_scarceConstructor.Dispose(); m_scarceConstructor.Clear();
-    m_constructor.Dispose(); m_constructor.Clear();
+    qPersistentDispose(m_destroy);
+    qPersistentDispose(m_preserve);
+    qPersistentDispose(m_scarceConstructor);
+    qPersistentDispose(m_constructor);
 }
 
 v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)

@@ -610,8 +610,9 @@ void QDeclarativeContextData::destroy()
     if (optimizedBindings)
         optimizedBindings->release();
 
-    for (int ii = 0; ii < importedScripts.count(); ++ii)
-        importedScripts[ii].Dispose();
+    for (int ii = 0; ii < importedScripts.count(); ++ii) {
+        qPersistentDispose(importedScripts[ii]);
+    }
 
     delete [] idValues;
 

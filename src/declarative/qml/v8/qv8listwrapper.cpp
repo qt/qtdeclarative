@@ -75,12 +75,12 @@ void QV8ListWrapper::init(QV8Engine *engine)
                                         v8::Handle<v8::Value>(), v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 void QV8ListWrapper::destroy()
 {
-    m_constructor.Dispose();
+    qPersistentDispose(m_constructor);
 }
 
 v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int propType)

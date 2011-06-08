@@ -70,6 +70,13 @@
 
 QT_BEGIN_NAMESPACE
 
+
+// Uncomment the following line to enable global handle debugging.  When enabled, all the persistent
+// handles allocated using qPersistentNew() (or registered with qPersistentRegsiter()) and disposed
+// with qPersistentDispose() are tracked.  If you try and do something illegal, like double disposing
+// a handle, qFatal() is called.
+// #define QML_GLOBAL_HANDLE_DEBUGGING
+
 #define V8_RESOURCE_TYPE(resourcetype) \
 public: \
     enum { V8ResourceType = QV8ObjectResource:: resourcetype }; \
@@ -240,6 +247,12 @@ public:
 
     static void gc();
 
+#ifdef QML_GLOBAL_HANDLE_DEBUGGING
+    // Used for handle debugging
+    static void registerHandle(void *);
+    static void releaseHandle(void *);
+#endif
+
 private:
     QDeclarativeEngine *m_engine;
     v8::Persistent<v8::Context> m_context;
@@ -293,6 +306,42 @@ private:
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
 };
+
+// Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated
+// using this method.
+template<class T>
+v8::Persistent<T> qPersistentNew(v8::Handle<T> that)
+{
+    v8::Persistent<T> rv = v8::Persistent<T>::New(that);
+#ifdef QML_GLOBAL_HANDLE_DEBUGGING
+    QV8Engine::registerHandle(*rv);
+#endif
+    return rv;
+}
+
+// Register a Persistent handle that was returned to you by V8 (such as by
+// v8::Context::New). This allows us to do handle tracking on these handles too.
+template<class T>
+void qPersistentRegister(v8::Persistent<T> handle)
+{
+#ifdef QML_GLOBAL_HANDLE_DEBUGGING
+    QV8Engine::registerHandle(*handle);
+#else
+    Q_UNUSED(handle);
+#endif
+}
+
+// Dispose and clear a persistent handle.  *ALL* persistent handles in QML must be
+// disposed using this method.
+template<class T>
+void qPersistentDispose(v8::Persistent<T> &that)
+{
+#ifdef QML_GLOBAL_HANDLE_DEBUGGING
+    QV8Engine::releaseHandle(*that);
+#endif
+    that.Dispose();
+    that.Clear();
+}
 
 QString QV8Engine::toString(v8::Handle<v8::Value> string)
 {

@@ -78,10 +78,8 @@ QDeclarativeQtScriptExpression::QDeclarativeQtScriptExpression()
 
 QDeclarativeQtScriptExpression::~QDeclarativeQtScriptExpression()
 {
-    v8function.Dispose();
-    v8qmlscope.Dispose();
-    v8function = v8::Persistent<v8::Function>();
-    v8qmlscope = v8::Persistent<v8::Function>();
+    qPersistentDispose(v8function);
+    qPersistentDispose(v8qmlscope);
 
     if (guardList) { delete [] guardList; guardList = 0; }
     if (dataRef) dataRef->release();
@@ -116,7 +114,7 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Hand
     QDeclarativeAbstractExpression::setContext(ctxt);
     scopeObject = me;
 
-    v8function = v8::Persistent<v8::Function>::New(func);
+    v8function = qPersistentNew<v8::Function>(func);
     expressionFunctionMode = ExplicitContext;
     expressionFunctionValid = true;
 }
@@ -169,8 +167,8 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     v8::Local<v8::Object> scopeobject = ep->v8engine.qmlScope(ctxt, scope);
     v8::Local<v8::Script> script = ep->v8engine.qmlModeCompile(code, filename, line);
     v8::Local<v8::Value> result = script->Run(scopeobject);
-    if (qmlscope) *qmlscope = v8::Persistent<v8::Object>::New(scopeobject);
-    return v8::Persistent<v8::Function>::New(v8::Local<v8::Function>::Cast(result));
+    if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
+    return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
 }
 
 /*!
@@ -353,10 +351,8 @@ void QDeclarativeExpression::setExpression(const QString &expression)
     d->resetNotifyOnChange();
     d->expression = expression;
     d->expressionFunctionValid = false;
-    d->v8function.Dispose();
-    d->v8qmlscope.Dispose();
-    d->v8function = v8::Persistent<v8::Function>();
-    d->v8qmlscope = v8::Persistent<v8::Function>();
+    qPersistentDispose(d->v8function);
+    qPersistentDispose(d->v8qmlscope);
 }
 
 void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> message, 

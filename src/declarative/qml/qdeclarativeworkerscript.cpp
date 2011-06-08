@@ -196,8 +196,8 @@ QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QDeclarativeWo
 
 QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine() 
 { 
-    createsend.Dispose(); createsend.Clear();
-    onmessage.Dispose(); onmessage.Clear();
+    qPersistentDispose(createsend);
+    qPersistentDispose(onmessage);
     delete accessManager; 
 }
 
@@ -229,7 +229,7 @@ void QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::init()
 
     {
     v8::Local<v8::Script> onmessagescript = v8::Script::New(v8::String::New(CALL_ONMESSAGE_SCRIPT));
-    onmessage = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(onmessagescript->Run()));
+    onmessage = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(onmessagescript->Run()));
     }
     {
     v8::Local<v8::Script> createsendscript = v8::Script::New(v8::String::New(SEND_MESSAGE_CREATE_SCRIPT));
@@ -240,7 +240,7 @@ void QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::init()
     };
     v8::Local<v8::Value> createsendvalue = createsendconstructor->Call(global(), 1, args);
     
-    createsend = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(createsendvalue));
+    createsend = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(createsendvalue));
     }
 }
 
@@ -301,7 +301,7 @@ v8::Handle<v8::Object> QDeclarativeWorkerScriptEnginePrivate::getWorker(WorkerSc
     if (!script->initialized) {
         script->initialized = true;
 
-        script->object = v8::Persistent<v8::Object>::New(workerEngine->contextWrapper()->urlScope(script->source));
+        script->object = qPersistentNew<v8::Object>(workerEngine->contextWrapper()->urlScope(script->source));
 
         workerEngine->contextWrapper()->setReadOnly(script->object, false);
 
@@ -491,7 +491,7 @@ QDeclarativeWorkerScriptEnginePrivate::WorkerScript::WorkerScript()
 
 QDeclarativeWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
 {
-    object.Dispose(); object.Clear();
+    qPersistentDispose(object);
 }
 
 int QDeclarativeWorkerScriptEngine::registerWorkerScript(QDeclarativeWorkerScript *owner)

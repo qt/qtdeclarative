@@ -194,8 +194,8 @@ static void qmlsqldatabase_rows_setForwardOnly(v8::Local<v8::String> property,
 
 QDeclarativeSqlDatabaseData::~QDeclarativeSqlDatabaseData()
 {
-    constructor.Dispose(); constructor = v8::Persistent<v8::Function>();
-    queryConstructor.Dispose(); queryConstructor = v8::Persistent<v8::Function>();
+    qPersistentDispose(constructor);
+    qPersistentDispose(queryConstructor);
 }
 
 static QString qmlsqldatabase_databasesPath(QV8Engine *engine)
@@ -526,7 +526,7 @@ QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("version"), qmlsqldatabase_version);
     ft->PrototypeTemplate()->Set(v8::String::New("changeVersion"), 
                                  V8FUNCTION(qmlsqldatabase_changeVersion, engine));
-    constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 
     {
@@ -534,7 +534,7 @@ QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->Set(v8::String::New("executeSql"), 
                                  V8FUNCTION(qmlsqldatabase_executeSql, engine));
-    queryConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    queryConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -544,7 +544,7 @@ QDeclarativeSqlDatabaseData::QDeclarativeSqlDatabaseData(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("forwardOnly"), qmlsqldatabase_rows_forwardOnly, 
                                         qmlsqldatabase_rows_setForwardOnly);
     ft->InstanceTemplate()->SetIndexedPropertyHandler(qmlsqldatabase_rows_index);
-    rowsConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    rowsConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 }
 

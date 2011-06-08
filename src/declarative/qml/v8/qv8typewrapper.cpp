@@ -83,7 +83,7 @@ QV8TypeWrapper::~QV8TypeWrapper()
 
 void QV8TypeWrapper::destroy()
 {
-    m_constructor.Dispose();
+    qPersistentDispose(m_constructor);
 }
 
 void QV8TypeWrapper::init(QV8Engine *engine)
@@ -92,7 +92,7 @@ void QV8TypeWrapper::init(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeType *t, TypeNameMode mode)

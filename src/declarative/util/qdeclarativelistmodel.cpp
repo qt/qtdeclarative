@@ -102,12 +102,12 @@ QDeclarativeListModelV8Data::QDeclarativeListModelV8Data()
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 QDeclarativeListModelV8Data::~QDeclarativeListModelV8Data()
 {
-    constructor.Dispose(); constructor.Clear();
+    qPersistentDispose(constructor);
 }
 
 v8::Handle<v8::Value> QDeclarativeListModelV8Data::Getter(v8::Local<v8::String> property, 

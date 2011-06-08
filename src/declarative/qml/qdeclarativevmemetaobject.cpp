@@ -419,8 +419,9 @@ QDeclarativeVMEMetaObject::~QDeclarativeVMEMetaObject()
     delete parent;
     delete [] data;
 
-    for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii)
-        v8methods[ii].Dispose();
+    for (int ii = 0; v8methods && ii < metaData->methodCount; ++ii) {
+        qPersistentDispose(v8methods[ii]);
+    }
 }
 
 int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
@@ -845,7 +846,7 @@ void QDeclarativeVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Funct
 
     int methodIndex = index - methodOffset - plainSignals;
     if (!v8methods[methodIndex].IsEmpty()) 
-        v8methods[methodIndex].Dispose();
+        qPersistentDispose(v8methods[methodIndex]);
     v8methods[methodIndex] = value;
 }
 

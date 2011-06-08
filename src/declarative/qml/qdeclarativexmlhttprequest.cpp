@@ -133,16 +133,16 @@ QDeclarativeXMLHttpRequestData::QDeclarativeXMLHttpRequestData()
 
 QDeclarativeXMLHttpRequestData::~QDeclarativeXMLHttpRequestData()
 {
-    nodeFunction.Dispose(); nodeFunction.Clear();
-    namedNodeMapPrototype.Dispose(); namedNodeMapPrototype.Clear();
-    nodeListPrototype.Dispose(); nodeListPrototype.Clear();
-    nodePrototype.Dispose(); nodePrototype.Clear();
-    elementPrototype.Dispose(); elementPrototype.Clear();
-    attrPrototype.Dispose(); attrPrototype.Clear();
-    characterDataPrototype.Dispose(); characterDataPrototype.Clear();
-    textPrototype.Dispose(); textPrototype.Clear();
-    cdataPrototype.Dispose(); cdataPrototype.Clear();
-    documentPrototype.Dispose(); documentPrototype.Clear();
+    qPersistentDispose(nodeFunction);
+    qPersistentDispose(namedNodeMapPrototype);
+    qPersistentDispose(nodeListPrototype);
+    qPersistentDispose(nodePrototype);
+    qPersistentDispose(elementPrototype);
+    qPersistentDispose(attrPrototype);
+    qPersistentDispose(characterDataPrototype);
+    qPersistentDispose(textPrototype);
+    qPersistentDispose(cdataPrototype);
+    qPersistentDispose(documentPrototype);
 }
 
 v8::Local<v8::Object> QDeclarativeXMLHttpRequestData::newNode()
@@ -150,7 +150,7 @@ v8::Local<v8::Object> QDeclarativeXMLHttpRequestData::newNode()
     if (nodeFunction.IsEmpty()) {
         v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
         ft->InstanceTemplate()->SetHasExternalResource(true);
-        nodeFunction = v8::Persistent<v8::Function>::New(ft->GetFunction());
+        nodeFunction = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 
     return nodeFunction->NewInstance();
@@ -515,7 +515,7 @@ v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->nodePrototype.IsEmpty()) {
-        d->nodePrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->nodePrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->nodePrototype->SetAccessor(v8::String::New("nodeName"), nodeName,
                                       0, v8::External::Wrap(engine));
         d->nodePrototype->SetAccessor(v8::String::New("nodeValue"), nodeValue,
@@ -582,7 +582,7 @@ v8::Handle<v8::Object> Element::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->elementPrototype.IsEmpty()) {
-        d->elementPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->elementPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->elementPrototype->SetPrototype(Node::prototype(engine));
         d->elementPrototype->SetAccessor(v8::String::New("tagName"), nodeName,
                                          0, v8::External::Wrap(engine));
@@ -595,7 +595,7 @@ v8::Handle<v8::Object> Attr::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->attrPrototype.IsEmpty()) {
-        d->attrPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->attrPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->attrPrototype->SetPrototype(Node::prototype(engine));
         d->attrPrototype->SetAccessor(v8::String::New("name"), name,
                                       0, v8::External::Wrap(engine));
@@ -648,7 +648,7 @@ v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->characterDataPrototype.IsEmpty()) {
-        d->characterDataPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->characterDataPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->characterDataPrototype->SetPrototype(Node::prototype(engine));
         d->characterDataPrototype->SetAccessor(v8::String::New("data"), nodeValue,
                                                0, v8::External::Wrap(engine));
@@ -681,7 +681,7 @@ v8::Handle<v8::Object> Text::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->textPrototype.IsEmpty()) {
-        d->textPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->textPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->textPrototype->SetPrototype(CharacterData::prototype(engine));
         d->textPrototype->SetAccessor(v8::String::New("isElementContentWhitespace"), isElementContentWhitespace,
                                                0, v8::External::Wrap(engine));
@@ -696,7 +696,7 @@ v8::Handle<v8::Object> CDATA::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->cdataPrototype.IsEmpty()) {
-        d->cdataPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->cdataPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->cdataPrototype->SetPrototype(Text::prototype(engine));
         // XXX freeze
     }
@@ -707,7 +707,7 @@ v8::Handle<v8::Object> Document::prototype(QV8Engine *engine)
 {
     QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
     if (d->documentPrototype.IsEmpty()) {
-        d->documentPrototype = v8::Persistent<v8::Object>::New(v8::Object::New());
+        d->documentPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->documentPrototype->SetPrototype(Node::prototype(engine));
         d->documentPrototype->SetAccessor(v8::String::New("xmlVersion"), xmlVersion, 
                                           0, v8::External::Wrap(engine));
@@ -878,7 +878,7 @@ v8::Handle<v8::Object> NamedNodeMap::prototype(QV8Engine *engine)
         ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::Wrap(engine));
         ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
         ot->SetFallbackPropertyHandler(named, 0, 0, 0, 0, v8::External::Wrap(engine));
-        d->namedNodeMapPrototype = v8::Persistent<v8::Object>::New(ot->NewInstance());
+        d->namedNodeMapPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
         // XXX freeze
     }
     return d->namedNodeMapPrototype;
@@ -927,7 +927,7 @@ v8::Handle<v8::Object> NodeList::prototype(QV8Engine *engine)
         v8::Local<v8::ObjectTemplate> ot = v8::ObjectTemplate::New();
         ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::Wrap(engine));
         ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
-        d->nodeListPrototype = v8::Persistent<v8::Object>::New(ot->NewInstance());
+        d->nodeListPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
         // XXX freeze
     }
     return d->nodeListPrototype;
@@ -1259,11 +1259,10 @@ v8::Handle<v8::Object> QDeclarativeXMLHttpRequest::getMe() const
 
 void QDeclarativeXMLHttpRequest::setMe(v8::Handle<v8::Object> me)
 {
-    m_me.Dispose();
-    m_me = v8::Persistent<v8::Object>();
+    qPersistentDispose(m_me);
 
     if (!me.IsEmpty()) 
-        m_me = v8::Persistent<v8::Object>::New(me);
+        m_me = qPersistentNew<v8::Object>(me);
 }
 
 void QDeclarativeXMLHttpRequest::downloadProgress(qint64 bytes)

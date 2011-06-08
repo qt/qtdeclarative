@@ -123,8 +123,8 @@ QV8ContextWrapper::~QV8ContextWrapper()
 
 void QV8ContextWrapper::destroy()
 {
-    m_urlConstructor.Dispose(); m_urlConstructor.Clear();
-    m_constructor.Dispose(); m_constructor.Clear();
+    qPersistentDispose(m_urlConstructor);
+    qPersistentDispose(m_constructor);
 }
 
 void QV8ContextWrapper::init(QV8Engine *engine)
@@ -134,13 +134,13 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
-    m_constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
-    m_urlConstructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_urlConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 }
 

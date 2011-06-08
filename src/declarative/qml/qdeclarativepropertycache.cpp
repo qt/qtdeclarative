@@ -168,8 +168,7 @@ void QDeclarativePropertyCache::clear()
     indexCache.clear();
     methodIndexCache.clear();
     stringCache.clear();
-    constructor.Dispose(); 
-    constructor.Clear();
+    qPersistentDispose(constructor);
 }
 
 QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObject *metaObject, 
@@ -251,8 +250,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 {
     Q_UNUSED(revision);
 
-    constructor.Dispose(); // Now invalid
-    constructor.Clear();
+    qPersistentDispose(constructor); // Now invalid
 
     allowedRevisionCache.append(0);
 

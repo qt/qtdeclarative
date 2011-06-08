@@ -964,7 +964,7 @@ QDeclarativeCompiledData::TypeReference::createInstance(QDeclarativeContextData 
 v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
 {
     if (script->m_loaded)
-        return v8::Persistent<v8::Object>::New(script->m_value);
+        return qPersistentNew<v8::Object>(script->m_value);
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
     QV8Engine *v8engine = &ep->v8engine;
@@ -1015,9 +1015,9 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
         }
     } 
 
-    rv = v8::Persistent<v8::Object>::New(qmlglobal);
+    rv = qPersistentNew<v8::Object>(qmlglobal);
     if (shared) {
-        script->m_value = v8::Persistent<v8::Object>::New(qmlglobal);
+        script->m_value = qPersistentNew<v8::Object>(qmlglobal);
         script->m_loaded = true;
     }
 

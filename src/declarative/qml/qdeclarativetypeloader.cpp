@@ -1101,8 +1101,8 @@ void QDeclarativeScriptData::clear()
         scripts.at(ii)->release();
     scripts.clear();
 
-    m_program.Dispose();
-    m_value.Dispose();
+    qPersistentDispose(m_program);
+    qPersistentDispose(m_value);
 }
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
@@ -1237,7 +1237,7 @@ void QDeclarativeScriptBlob::done()
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
     v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_source, finalUrl().toString(), 1);
-    m_scriptData->m_program = v8::Persistent<v8::Script>::New(program);
+    m_scriptData->m_program = qPersistentNew<v8::Script>(program);
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)

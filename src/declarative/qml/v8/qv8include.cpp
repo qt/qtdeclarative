@@ -54,11 +54,11 @@ QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QDeclarativeContextDa
                        v8::Handle<v8::Object> qmlglobal, v8::Handle<v8::Function> callback)
 : m_engine(engine), m_network(0), m_reply(0), m_url(url), m_redirectCount(0), m_context(context)
 {
-    m_qmlglobal = v8::Persistent<v8::Object>::New(qmlglobal);
+    m_qmlglobal = qPersistentNew<v8::Object>(qmlglobal);
     if (!callback.IsEmpty())
-        m_callbackFunction = v8::Persistent<v8::Function>::New(callback);
+        m_callbackFunction = qPersistentNew<v8::Function>(callback);
 
-    m_resultObject = v8::Persistent<v8::Object>::New(resultValue());
+    m_resultObject = qPersistentNew<v8::Object>(resultValue());
 
     m_network = engine->networkAccessManager();
 
@@ -72,8 +72,8 @@ QV8Include::QV8Include(const QUrl &url, QV8Engine *engine, QDeclarativeContextDa
 QV8Include::~QV8Include()
 {
     delete m_reply; m_reply = 0;
-    m_callbackFunction.Dispose();
-    m_resultObject.Dispose();
+    qPersistentDispose(m_callbackFunction);
+    qPersistentDispose(m_resultObject);
 }
 
 v8::Local<v8::Object> QV8Include::resultValue(Status status)

@@ -93,8 +93,7 @@ public:
 
     ~QV8QObjectInstance()
     {
-        v8object.Dispose();
-        v8object.Clear();
+        qPersistentDispose(v8object);
     }
 
     virtual void objectDestroyed(QObject *o)
@@ -156,11 +155,11 @@ void QV8QObjectWrapper::destroy()
     qDeleteAll(m_connections);
     m_connections.clear();
 
-    m_hiddenObject.Dispose(); m_hiddenObject.Clear();
-    m_destroySymbol.Dispose(); m_destroySymbol.Clear();
-    m_toStringSymbol.Dispose(); m_toStringSymbol.Clear();
-    m_methodConstructor.Dispose(); m_methodConstructor.Clear();
-    m_constructor.Dispose(); m_constructor.Clear();
+    qPersistentDispose(m_hiddenObject);
+    qPersistentDispose(m_destroySymbol);
+    qPersistentDispose(m_toStringSymbol);
+    qPersistentDispose(m_methodConstructor);
+    qPersistentDispose(m_constructor);
 }
 
 #define FAST_VALUE_GETTER(name, cpptype, defaultvalue, constructor) \
@@ -204,15 +203,15 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
 
-    m_toStringSymbol = v8::Persistent<v8::String>::New(v8::String::NewSymbol("toString"));
-    m_destroySymbol = v8::Persistent<v8::String>::New(v8::String::NewSymbol("destroy"));
-    m_hiddenObject = v8::Persistent<v8::Object>::New(v8::Object::New());
+    m_toStringSymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("toString"));
+    m_destroySymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("destroy"));
+    m_hiddenObject = qPersistentNew<v8::Object>(v8::Object::New());
 
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, Query, 0, Enumerator);
     ft->InstanceTemplate()->SetHasExternalResource(true);
-    m_constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+    m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
     v8::ScriptOrigin origin(m_hiddenObject); // Hack to allow us to identify these functions
@@ -221,7 +220,7 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     v8::Handle<v8::Value> invokeFn = v8::FunctionTemplate::New(Invoke)->GetFunction();
     v8::Handle<v8::Value> args[] = { invokeFn };
     v8::Local<v8::Function> createFn = v8::Local<v8::Function>::Cast(fn->Call(engine->global(), 1, args));
-    m_methodConstructor = v8::Persistent<v8::Function>::New(createFn);
+    m_methodConstructor = qPersistentNew<v8::Function>(createFn);
     }
 
     {
@@ -656,15 +655,14 @@ static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void 
         }
     }
 
-    handle.Dispose();
+    qPersistentDispose(handle);
 }
 
 static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *data)
 {
     QV8QObjectInstance *instance = (QV8QObjectInstance *)data;
     instance->v8object.Clear();
-    handle.Dispose();
-    handle.Clear();
+    qPersistentDispose(handle);
 }
 
 v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8Engine *engine)
@@ -735,7 +733,7 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
         }
 
         if (ft.IsEmpty()) {
-            constructor = v8::Persistent<v8::Function>::New(engine->qobjectWrapper()->m_constructor);
+            constructor = qPersistentNew<v8::Function>(engine->qobjectWrapper()->m_constructor);
         } else {
             ft->InstanceTemplate()->SetFallbackPropertyHandler(QV8QObjectWrapper::Getter, 
                                                                QV8QObjectWrapper::Setter,
@@ -743,7 +741,7 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
                                                                0,
                                                                QV8QObjectWrapper::Enumerator);
             ft->InstanceTemplate()->SetHasExternalResource(true);
-            constructor = v8::Persistent<v8::Function>::New(ft->GetFunction());
+            constructor = qPersistentNew<v8::Function>(ft->GetFunction());
         }
     }
 
@@ -806,7 +804,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
                 !ddata->hasTaintedV8Object)) { // Someone else has used the QObject, but it isn't tainted
 
         v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
-        ddata->v8object = v8::Persistent<v8::Object>::New(rv);
+        ddata->v8object = qPersistentNew<v8::Object>(rv);
         ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
         ddata->v8objectid = m_id;
         return rv;
@@ -822,7 +820,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
         // a handle in the ddata, we can assume ownership of the ddata->v8object
         if ((!found || (*iter)->v8object.IsEmpty()) && ddata->v8object.IsEmpty()) {
             v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
-            ddata->v8object = v8::Persistent<v8::Object>::New(rv);
+            ddata->v8object = qPersistentNew<v8::Object>(rv);
             ddata->v8object.MakeWeak(0, WeakQObjectReferenceCallback);
             ddata->v8objectid = m_id;
 
@@ -840,7 +838,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
 
         if ((*iter)->v8object.IsEmpty()) {
             v8::Local<v8::Object> rv = newQObject(object, ddata, m_engine);
-            (*iter)->v8object = v8::Persistent<v8::Object>::New(rv);
+            (*iter)->v8object = qPersistentNew<v8::Object>(rv);
             (*iter)->v8object.MakeWeak((*iter), WeakQObjectInstanceCallback);
         }
 
@@ -897,10 +895,8 @@ QV8QObjectConnectionList::~QV8QObjectConnectionList()
     for (SlotHash::Iterator iter = slotHash.begin(); iter != slotHash.end(); ++iter) {
         QList<Connection> &connections = *iter;
         for (int ii = 0; ii < connections.count(); ++ii) {
-            connections[ii].thisObject.Dispose();
-            connections[ii].function.Dispose();
-            connections[ii].thisObject.Clear();
-            connections[ii].function.Clear();
+            qPersistentDispose(connections[ii].thisObject);
+            qPersistentDispose(connections[ii].function);
         }
     }
     slotHash.clear();
@@ -1010,8 +1006,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
 
     QV8QObjectConnectionList::Connection connection;
     if (!functionThisValue.IsEmpty()) 
-        connection.thisObject = v8::Persistent<v8::Object>::New(functionThisValue->ToObject());
-    connection.function = v8::Persistent<v8::Function>::New(v8::Handle<v8::Function>::Cast(functionValue));
+        connection.thisObject = qPersistentNew<v8::Object>(functionThisValue->ToObject());
+    connection.function = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(functionValue));
 
     slotIter->append(connection);
 
@@ -1084,10 +1080,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function);
                 if (connectedFunctionData == functionData) {
                     // Match!
-                    connection.thisObject.Dispose();
-                    connection.function.Dispose();
-                    connection.thisObject.Clear();
-                    connection.function.Clear();
+                    qPersistentDispose(connection.thisObject);
+                    qPersistentDispose(connection.function);
                     connections.removeAt(ii);
                     return v8::Undefined();
                 }
@@ -1102,10 +1096,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 connection.thisObject.IsEmpty() == functionThisValue.IsEmpty() &&
                 (connection.thisObject.IsEmpty() || connection.thisObject->StrictEquals(functionThisValue))) {
                 // Match!
-                connection.thisObject.Dispose();
-                connection.function.Dispose();
-                connection.thisObject.Clear();
-                connection.function.Clear();
+                qPersistentDispose(connection.thisObject);
+                qPersistentDispose(connection.function);
                 connections.removeAt(ii);
                 return v8::Undefined();
             }
