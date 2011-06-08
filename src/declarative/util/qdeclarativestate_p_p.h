@@ -196,7 +196,7 @@ class QDeclarativeStatePrivate : public QObjectPrivate
 
 public:
     QDeclarativeStatePrivate()
-    : when(0), named(false), inState(false), group(0) {}
+        : when(0), named(false), inState(false), group(0), prevState(0) {}
 
     typedef QList<QDeclarativeSimpleAction> SimpleActionList;
 
@@ -266,6 +266,7 @@ public:
     QString extends;
     mutable bool inState;
     QDeclarativeStateGroup *group;
+    QDeclarativeGuard<QDeclarativeState> prevState;
 
     QDeclarativeStateOperation::ActionList generateActionList(QDeclarativeStateGroup *) const;
     void complete();

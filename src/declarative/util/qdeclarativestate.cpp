@@ -323,10 +323,15 @@ void QDeclarativeStatePrivate::complete()
     }
     reverting.clear();
 
+    if (prevState) {
+        prevState->exited();
+        prevState = 0;
+    }
+    emit q->completed();
+    emit q->entered();
+
     for (int i = 0; i < stateChanges.count(); ++i)
         stateChanges.at(i)->setActive(true);
-
-    emit q->completed();
 }
 
 // Generate a list of actions for this state.  This includes coelescing state
@@ -378,6 +383,8 @@ void QDeclarativeState::cancel()
 void QDeclarativeState::prepareForExit()
 {
     Q_D(QDeclarativeState);
+    emit aboutToExit();
+
     cancel();
 
     for (int i = 0; i < d->stateChanges.count(); ++i)
@@ -591,6 +598,9 @@ void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransit
     d->revertList.clear();
     d->reverting.clear();
 
+    emit aboutToEnter();
+
+    d->prevState = revert;
     if (revert) {
         QDeclarativeStatePrivate *revertPrivate =
             static_cast<QDeclarativeStatePrivate*>(revert->d_func());

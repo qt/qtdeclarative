@@ -198,7 +198,11 @@ public:
     bool isStateActive() const;
 
 Q_SIGNALS:
-    void completed();
+    void completed();   //for compatibility (same as entered)
+    void aboutToEnter();
+    void entered();
+    void aboutToExit();
+    void exited();
 
 private:
     Q_DECLARE_PRIVATE(QDeclarativeState)
