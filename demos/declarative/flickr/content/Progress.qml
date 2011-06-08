@@ -63,7 +63,7 @@ Item{
         color: "lightsteelblue"
         alpha: 0.1
         colorVariation: 0.05
-        image: "images/particle.png"
+        source: "images/particle.png"
         system: barSys
     }
     Emitter{
@@ -71,12 +71,12 @@ Item{
         x: 2; width: Math.max(parent.width * progress - 4, 0);
         speed: AngledDirection{ angleVariation: 180; magnitudeVariation: 12 }
         system: barSys
-        particlesPerSecond: width;
-        particleDuration: 1000
-        particleSize: 20
-        particleSizeVariation: 4
-        particleEndSize: 12
-        maxParticles: parent.width;
+        emitRate: width;
+        lifeSpan: 1000
+        size: 20
+        sizeVariation: 4
+        endSize: 12
+        emitCap: parent.width;
     }
 
     Text {

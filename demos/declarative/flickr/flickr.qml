@@ -58,7 +58,7 @@ Item {
         }
         ImageParticle {
             particles: ["trail"]
-            image: "content/images/particle.png"
+            source: "content/images/particle.png"
             color: "#1A1A6F"
             alpha: 0.1
             colorVariation: 0.01
@@ -68,8 +68,8 @@ Item {
         Emitter {
             particle: "drops"
             width: parent.width
-            particlesPerSecond: 0.5
-            particleDuration: 20000
+            emitRate: 0.5
+            lifeSpan: 20000
             speed: PointDirection{
                 y: {screen.height/18} 
             }
@@ -78,16 +78,16 @@ Item {
         FollowEmitter {
             follow: "drops"
             particle: "trail"
-            particlesPerParticlePerSecond: 18
-            particleSize: 32
-            particleEndSize: 0
-            particleSizeVariation: 4
-            particleDuration: 1200
+            emitRatePerParticle: 18
+            size: 32
+            endSize: 0
+            sizeVariation: 4
+            lifeSpan: 1200
             system: bgParticles
             anchors.fill: parent
-            emissionWidth: 16
-            emissionHeight: 16
-            emissionShape: EllipseShape{}
+            emitWidth: 16
+            emitHeight: 16
+            emitShape: EllipseShape{}
         }
 
         VisualDataModel{

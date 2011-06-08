@@ -98,12 +98,12 @@ Rectangle {
                         system: particles
                         emitting: true
                         particle: "default"
-                        particlesPerSecond: 1200
-                        particleDuration: 1200
+                        emitRate: 1200
+                        lifeSpan: 1200
                         shape: MaskShape{source:"content/pics/TitleText.png"}
-                        particleSize: 16
-                        particleEndSize: 0
-                        particleSizeVariation: 8
+                        size: 16
+                        endSize: 0
+                        sizeVariation: 8
                         speed: AngledDirection{angleVariation:360; magnitudeVariation: 6}
                     }
                 }

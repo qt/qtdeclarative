@@ -78,11 +78,11 @@ Rectangle{
     Emitter{
         particle: "stars2"
         system: background
-        particlesPerSecond: 60
-        particleDuration: 4000
+        emitRate: 60
+        lifeSpan: 4000
         emitting: true
-        particleSize: 10
-        particleSizeVariation: 10
+        size: 10
+        sizeVariation: 10
         anchors.fill: parent
     }
     ParticleSystem{ id: background }
@@ -90,7 +90,7 @@ Rectangle{
         particles: ["stars2"]
         system: background
         anchors.fill: parent
-        image: "content/star.png"
+        source: "content/star.png"
         color: "white"
         colorVariation: 0.1
     }
@@ -201,7 +201,7 @@ Rectangle{
         particles: ["stars"]
         anchors.fill: parent
         system: foreground
-        image: "content/star.png"
+        source: "content/star.png"
         color: "white"
         colorVariation: 0.1
     }
@@ -209,7 +209,7 @@ Rectangle{
         particles: ["shot"]
         anchors.fill: parent
         system: foreground
-        image: "content/star.png"
+        source: "content/star.png"
 
         color: "orange"
         colorVariation: 0.3
@@ -219,7 +219,7 @@ Rectangle{
         particles: ["engine"]
         anchors.fill: parent
         system: foreground
-        image: "content/particle4.png"
+        source: "content/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {
@@ -327,21 +327,21 @@ Rectangle{
     Emitter{
         particle: "powerups"
         system: foreground
-        particlesPerSecond: 1
-        particleDuration: 6000
+        emitRate: 1
+        lifeSpan: 6000
         emitting: !gameOver
-        particleSize: 60
-        particleSizeVariation: 10
+        size: 60
+        sizeVariation: 10
         anchors.fill: parent
     }
     Emitter{
         particle: "stars"
         system: foreground
-        particlesPerSecond: 40
-        particleDuration: 4000
+        emitRate: 40
+        lifeSpan: 4000
         emitting: !gameOver
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
         anchors.fill: parent
     }
     SpriteImage{
@@ -382,12 +382,12 @@ Rectangle{
         Emitter{
             system: foreground
             particle: "engine"
-            particlesPerSecond: 100
-            particleDuration: 1000
+            emitRate: 100
+            lifeSpan: 1000
             emitting: !gameOver 
-            particleSize: 10
-            particleEndSize: 4
-            particleSizeVariation: 4
+            size: 10
+            endSize: 4
+            sizeVariation: 4
             speed: PointDirection{
                 x: -128 * Math.cos(rocket.rotation * (Math.PI / 180))
                 y: -128 * Math.sin(rocket.rotation * (Math.PI / 180))
@@ -400,10 +400,10 @@ Rectangle{
         Emitter{
             system: foreground
             particle: "shot"
-            particlesPerSecond: 16
-            particleDuration: 1600
+            emitRate: 16
+            lifeSpan: 1600
             emitting: !gameOver && shoot
-            particleSize: 40
+            size: 40
             speed: PointDirection{
                 x: 256 * Math.cos(rocket.rotation * (Math.PI / 180))
                 y: 256 * Math.sin(rocket.rotation * (Math.PI / 180))

@@ -52,8 +52,6 @@ Rectangle{
         id: shell
         anchors.fill: parent
     }
-    property string emissionMode: "Falling"
-    onEmissionModeChanged: workaround.active = true
     VisualDataModel{//TODO: Transitions between modes
         id: vdm
         model: [
@@ -111,72 +109,8 @@ Rectangle{
     }
     GridView{
         anchors.fill: parent
-        anchors.bottomMargin: 128
+        cellWidth: 120
+        cellHeight: 120
         model: vdm
-        visible: emissionMode == "Grid"
-        opacity: visible?1:0
-        Behavior on opacity{NumberAnimation{}}
-    }
-    ParticleSystem{ id: sys }
-    ModelParticle{
-        system: sys
-        model: vdm
-    }
-    Kill{
-        //TODO: File bug?
-        id: workaround
-        system: sys
-        active: false
-        onActiveChanged: timer.start()
-        Timer{
-            id: timer
-            interval: 32
-            running: false
-            repeat: false
-            onTriggered: workaround.active = false
-        }
-    }
-    Emitter{
-        system: sys
-        emitting: emissionMode == "Falling"
-        width: parent.width
-        particlesPerSecond: 2
-        particleDuration: 6000
-        speed: PointDirection{y:100;}
-    }
-    Emitter{
-        system: sys
-        emitting: emissionMode == "Bursting"
-        anchors.centerIn: parent
-        particlesPerSecond: 2
-        particleDuration: 6000
-        speed: AngledDirection{magnitude: 60; angleVariation: 360}
-    }
-    Emitter{
-        system: sys
-        emitting: emissionMode == "Shimmering"
-        anchors.fill: parent
-        particlesPerSecond: 4
-        particleDuration: 4000
-    }
-    Row{
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        Button{
-            text:"Grid"
-            onClicked: emissionMode = "Grid";
-        }
-        Button{
-            text:"Fall"
-            onClicked: emissionMode = "Falling";
-        }
-        Button{
-            text:"Burst"
-            onClicked: emissionMode = "Bursting";
-        }
-        Button{
-            text:"Shimmer"
-            onClicked: emissionMode = "Shimmering";
-        }
     }
 }

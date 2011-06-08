@@ -46,7 +46,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["default"]
-        image: "pics/blur-circle3.png"
+        source: "pics/blur-circle3.png"
         color: "#003A3A3A"
         colorVariation: 0.1
         z: 0
@@ -54,7 +54,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["redTeam"]
-        image: "pics/blur-circle3.png"
+        source: "pics/blur-circle3.png"
         color: "#0028060A"
         colorVariation: 0.1
         z: 0
@@ -62,7 +62,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["greenTeam"]
-        image: "pics/blur-circle3.png"
+        source: "pics/blur-circle3.png"
         color: "#0006280A"
         colorVariation: 0.1
        z: 0
@@ -70,7 +70,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["blaster"]
-        image: "pics/star2.png"
+        source: "pics/star2.png"
         //color: "#0F282406"
         color: "#0F484416"
         colorVariation: 0.2
@@ -79,7 +79,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["laser"]
-        image: "pics/star3.png"
+        source: "pics/star3.png"
         //color: "#00123F68"
         color: "#00428FF8"
         colorVariation: 0.2
@@ -88,7 +88,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["cannon"]
-        image: "pics/particle.png"
+        source: "pics/particle.png"
         color: "#80FFAAFF"
         colorVariation: 0.1
         z: 2
@@ -96,7 +96,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["cannonCore"]
-        image: "pics/particle.png"
+        source: "pics/particle.png"
         color: "#00666666"
         colorVariation: 0.8
         z: 1
@@ -104,7 +104,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["cannonWake"]
-        image: "pics/star.png"
+        source: "pics/star.png"
         color: "#00CCCCCC"
         colorVariation: 0.2
         z: 1
@@ -112,7 +112,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["frigateShield"]
-        image: "pics/blur-circle2.png"
+        source: "pics/blur-circle2.png"
         color: "#00000000"
         colorVariation: 0.05
         blueVariation: 0.5
@@ -148,12 +148,12 @@ Item{
         system: sys
         particle: "cannonWake"
         follow: "cannon"
-        particlesPerParticlePerSecond: 64
-        particleDuration: 600
+        emitRatePerParticle: 64
+        lifeSpan: 600
         speed: AngledDirection{ angleVariation: 360; magnitude: 48}
-        particleSize: 16
-        particleEndSize: 8
-        particleSizeVariation: 2
+        size: 16
+        endSize: 8
+        sizeVariation: 2
         emitting: true
         width: 1000//XXX: Terrible hack
         height: 1000
@@ -162,10 +162,10 @@ Item{
         system: sys
         particle: "cannonCore"
         follow: "cannon"
-        particlesPerParticlePerSecond: 256
-        particleDuration: 128
-        particleSize: 24
-        particleEndSize: 8
+        emitRatePerParticle: 256
+        lifeSpan: 128
+        size: 24
+        endSize: 8
         emitting: true
         width: 1000//XXX: Terrible hack
         height: 1000

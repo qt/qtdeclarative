@@ -57,7 +57,7 @@ Rectangle {
         anchors.fill: parent
         particles: ["E"]
         system: particles
-        image: "content/particleA.png"
+        source: "content/particleA.png"
         colorVariation: 0.2
         color: "#00ff400f"
     }
@@ -67,7 +67,7 @@ Rectangle {
         system: particles
         anchors.fill: parent
         particles: ["A", "B"]
-        image: "content/particle.png"
+        source: "content/particle.png"
         colorVariation: 0
         color: "#00111111"
     }
@@ -76,7 +76,7 @@ Rectangle {
         anchors.fill: parent
         system: particles
         particles: ["C", "D"]
-        image: "content/particle.png"
+        source: "content/particle.png"
         colorVariation: 0.1
         color: "#00ff400f"
     }
@@ -88,15 +88,15 @@ Rectangle {
         y: parent.height
         width: parent.width
 
-        particlesPerSecond: 350
-        particleDuration: 3500
+        emitRate: 350
+        lifeSpan: 3500
 
         acceleration: PointDirection{ y: -17; xVariation: 3 }
         speed: PointDirection{xVariation: 3}
 
-        particleSize: 24
-        particleSizeVariation: 8
-        particleEndSize: 4
+        size: 24
+        sizeVariation: 8
+        endSize: 4
     }
     FollowEmitter{
         id: fireSmoke
@@ -106,15 +106,15 @@ Rectangle {
         width: root.width
         height: root.height - 68
 
-        particlesPerParticlePerSecond: 1
-        particleDuration: 2000
+        emitRatePerParticle: 1
+        lifeSpan: 2000
 
         speed: PointDirection{y:-17*6; yVariation: -17; xVariation: 3}
         acceleration: PointDirection{xVariation: 3}
 
-        particleSize: 36
-        particleSizeVariation: 8
-        particleEndSize: 16
+        size: 36
+        sizeVariation: 8
+        endSize: 16
     }
     FollowEmitter{
         id: fireballFlame
@@ -123,14 +123,14 @@ Rectangle {
         particle: "D"
         follow: "E"
 
-        particlesPerParticlePerSecond: 120
-        particleDuration: 180
-        emissionWidth: 8
-        emissionHeight: 8
+        emitRatePerParticle: 120
+        lifeSpan: 180
+        emitWidth: 8
+        emitHeight: 8
 
-        particleSize: 16
-        particleSizeVariation: 4
-        particleEndSize: 4
+        size: 16
+        sizeVariation: 4
+        endSize: 4
     }
     
     FollowEmitter{
@@ -140,17 +140,17 @@ Rectangle {
         particle: "A"
         follow: "E"
 
-        particlesPerParticlePerSecond: 128
-        particleDuration: 2400
-        emissionWidth: 16
-        emissionHeight: 16
+        emitRatePerParticle: 128
+        lifeSpan: 2400
+        emitWidth: 16
+        emitHeight: 16
 
         speed: PointDirection{yVariation: 16; xVariation: 16}
         acceleration: PointDirection{y: -16}
 
-        particleSize: 24
-        particleSizeVariation: 8
-        particleEndSize: 8
+        size: 24
+        sizeVariation: 8
+        endSize: 8
     }
     Emitter{
         id: balls
@@ -160,14 +160,14 @@ Rectangle {
         y: parent.height
         width: parent.width
 
-        particlesPerSecond: 2
-        particleDuration: 7000
+        emitRate: 2
+        lifeSpan: 7000
 
         speed: PointDirection{y:-17*4*2; xVariation: 6*6}
         acceleration: PointDirection{y: 17*2; xVariation: 6*6}
 
-        particleSize: 12
-        particleSizeVariation: 4
+        size: 12
+        sizeVariation: 4
     }
 
 }

@@ -52,9 +52,9 @@ Item{
         system: sys
         id: burster;
         emitting: false
-        particlesPerSecond: 1000
-        particleDuration: 50000
-        maxParticles: 100;
+        emitRate: 1000
+        lifeSpan: 50000
+        emitCap: 100;
         speed: PointDirection{xVariation: 400; yVariation: 400}
         anchors.centerIn: parent
         Timer{
@@ -72,7 +72,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        image: "../trails/content/particle.png"
+        source: "../trails/content/particle.png"
         color: "black"
         colorVariation: 0.0
     }

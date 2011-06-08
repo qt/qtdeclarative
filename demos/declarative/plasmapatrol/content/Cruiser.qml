@@ -64,13 +64,13 @@ Item {
         height: 64
         shape: EllipseShape{}
 
-        particlesPerSecond: hp > 0 ?  hp * 1 + 20 : 0 
-        particleDuration: 2400
-        maxParticles: (maxHP * 1 + 20)*2.4
+        emitRate: hp > 0 ?  hp * 1 + 20 : 0 
+        lifeSpan: 2400
+        emitCap: (maxHP * 1 + 20)*2.4
 
-        particleSize: 48
-        particleSizeVariation: 16
-        particleEndSize: 16
+        size: 48
+        sizeVariation: 16
+        endSize: 16
 
         speed: AngledDirection{angleVariation:360; magnitudeVariation: 32}
     }
@@ -81,11 +81,11 @@ Item {
         shape: EllipseShape{ fill: false }
         emitting: hp>0
         
-        particlesPerSecond: 16
-        particleDuration: 2000
+        emitRate: 16
+        lifeSpan: 2000
 
-        particleSize: 48
-        particleSizeVariation: 24
+        size: 48
+        sizeVariation: 24
 
         SpriteGoal{
             id: destructor

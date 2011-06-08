@@ -49,7 +49,7 @@ Rectangle{
     ImageParticle{
         system: sys
         id: cp
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "#00FFFFFF"
         colorVariation: 0.4
     }
@@ -58,12 +58,12 @@ Rectangle{
         id: bursty
         system: sys
         emitting: false
-        particlesPerSecond: 2000
-        particleDuration: 500
+        emitRate: 2000
+        lifeSpan: 500
         acceleration: AngledDirection{ angle: 90; angleVariation: 360; magnitude: 640; }
-        particleSize: 8
-        particleEndSize: 16
-        particleSizeVariation: 4
+        size: 8
+        endSize: 16
+        sizeVariation: 4
     }
     Emitter{
         system: sys
@@ -71,12 +71,12 @@ Rectangle{
         emitting: ma.pressed
         x: ma.mouseX
         y: ma.mouseY
-        particlesPerSecond: 400
-        particleDuration: 2000
+        emitRate: 400
+        lifeSpan: 2000
         acceleration: AngledDirection{ angle: 90; angleVariation: 22; magnitude: 32; }
-        particleSize: 8
-        particleEndSize: 16
-        particleSizeVariation: 8
+        size: 8
+        endSize: 16
+        sizeVariation: 8
     }
     MouseArea{
         id: ma

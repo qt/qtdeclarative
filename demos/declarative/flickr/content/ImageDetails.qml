@@ -242,9 +242,9 @@ Flipable {
                         width: Math.min(bigImage.width * bigImage.scale, flickable.width);
                         height: Math.min(bigImage.height * bigImage.scale, flickable.height);
                         anchors.centerIn: parent
-                        particleSize: 4
-                        particleDuration: flipDuration
-                        particlesPerSecond: 2048
+                        size: 4
+                        lifeSpan: flipDuration
+                        emitRate: 2048
                         emitting: false
                     }
                     CustomParticle{

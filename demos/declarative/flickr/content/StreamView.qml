@@ -73,9 +73,9 @@ Item{
         y: -128
         height: 32
         speed: PointDirection{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
     Emitter{
         system: sys
@@ -84,9 +84,9 @@ Item{
         y: -128
         height: 32
         speed: PointDirection{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
     Emitter{
         system: sys
@@ -95,9 +95,9 @@ Item{
         y: -128
         height: 32
         speed: PointDirection{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
     Kill{
         system: sys

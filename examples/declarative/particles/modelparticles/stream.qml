@@ -75,8 +75,8 @@ Item{
         x: -132/2
         y: 132/2
         speed: PointDirection{ x: 32; xVariation: 8 }
-        particlesPerSecond: 0.5
-        particleDuration: 120000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
+        emitRate: 0.5
+        lifeSpan: 120000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
         particle: "photos"
     }
     Kill{
@@ -88,7 +88,7 @@ Item{
     ImageParticle{
         system: sys
         particles: ["fireworks"]
-        image: "../trails/content/star.png"
+        source: "../trails/content/star.png"
         color: "lightsteelblue"
         alpha: 0
         colorVariation: 0
@@ -163,9 +163,9 @@ Item{
     Emitter{
         id: centerEmitter
         speed: PointDirection{ x: 32; xVariation: 8;}
-        particlesPerSecond: 0.5
-        particleDuration: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
-        maxParticles: 20
+        emitRate: 0.5
+        lifeSpan: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
+        emitCap: 20
         particle: "photos"
         system: sys
         anchors.centerIn: parent
@@ -177,16 +177,16 @@ Item{
         id: spawnFireworks
         particle: "fireworks"
         system: sys
-        maxParticles: 400
-        particlesPerSecond: 400
-        particleDuration: 2800
+        emitCap: 400
+        emitRate: 400
+        lifeSpan: 2800
         x: parent.width/2
         y: parent.height/2 - 64
         width: 8
         height: 8
         emitting: false
-        particleSize: 32
-        particleEndSize: 8
+        size: 32
+        endSize: 8
         speed: AngledDirection{ magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
         acceleration: PointDirection{ y: 160 }
     }

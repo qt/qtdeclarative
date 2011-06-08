@@ -81,7 +81,7 @@ Rectangle {
                 system: particleSystem
                 particles: ["red"]
                 color: Qt.darker("red");//Actually want desaturated...
-                image: "SamegameCore/pics/particle.png"
+                source: "SamegameCore/pics/particle.png"
                 colorVariation: 0.4
                 alpha: 0.1
             }
@@ -89,7 +89,7 @@ Rectangle {
                 system: particleSystem
                 particles: ["green"]
                 color: Qt.darker("green");//Actually want desaturated...
-                image: "SamegameCore/pics/particle.png"
+                source: "SamegameCore/pics/particle.png"
                 colorVariation: 0.4
                 alpha: 0.1
             }
@@ -97,7 +97,7 @@ Rectangle {
                 system: particleSystem
                 particles: ["blue"]
                 color: Qt.darker("blue");//Actually want desaturated...
-                image: "SamegameCore/pics/particle.png"
+                source: "SamegameCore/pics/particle.png"
                 colorVariation: 0.4
                 alpha: 0.1
             }

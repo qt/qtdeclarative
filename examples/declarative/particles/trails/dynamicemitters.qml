@@ -51,7 +51,7 @@ Rectangle{
     }
     ImageParticle{
         system: sys
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "white"
         colorVariation: 1.0
         alpha: 0.1
@@ -64,10 +64,10 @@ Rectangle{
                 id: emitMore
                 system: sys
                 emitting: true
-                particlesPerSecond: 128
-                particleDuration: 600
-                particleSize: 16
-                particleEndSize: 8
+                emitRate: 128
+                lifeSpan: 600
+                size: 16
+                endSize: 8
                 speed: AngledDirection{angleVariation:360; magnitude: 60}
             }
 
@@ -81,10 +81,10 @@ Rectangle{
             }
             system: sys
             emitting: true
-            particlesPerSecond: 64
-            particleDuration: 600
-            particleSize: 24
-            particleEndSize: 8
+            emitRate: 64
+            lifeSpan: 600
+            size: 24
+            endSize: 8
             NumberAnimation on x{
                 id: xAnim;
                 to: targetX

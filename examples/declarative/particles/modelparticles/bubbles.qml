@@ -63,8 +63,8 @@ Item{
         x: parent.width/4
         y:parent.height
         speed: PointDirection{ y: -64; yVariation: 16 }
-        particlesPerSecond: 1
-        particleDuration: 8000
+        emitRate: 1
+        lifeSpan: 8000
     }
     Wander{
         system: sys

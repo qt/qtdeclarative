@@ -170,13 +170,13 @@ Rectangle{
     }
     Emitter{
         system: sys
-        particlesPerSecond: 16
-        particleDuration: 10000
+        emitRate: 16
+        lifeSpan: 10000
         emitting: true
         speed: AngledDirection{angle: 90; magnitude: 60; angleVariation: 5}
         acceleration: PointDirection{ y: 10 }
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
         width: parent.width
         height: 100
     }

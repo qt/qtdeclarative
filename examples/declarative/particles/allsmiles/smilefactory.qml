@@ -49,7 +49,7 @@ Rectangle{
     ImageParticle{
         system: sys
         particles: ["goingLeft", "goingRight"]
-        image: "content/singlesmile.png"
+        source: "content/singlesmile.png"
         rotation: 90
         rotationSpeed: 90
         autoRotation: true
@@ -57,7 +57,7 @@ Rectangle{
     ImageParticle{
         system: sys
         particles: ["goingDown"]
-        image: "content/squarefacespriteXX.png"
+        source: "content/squarefacespriteXX.png"
         rotation: 180
         yVector: PointDirection{ y: 0.5; yVariation: 0.25; xVariation: 0.25; }
     }
@@ -87,9 +87,9 @@ Rectangle{
         emitting: false
         particle: "goingRight"
         speed: PointDirection{ x: 100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
     Emitter{
         id: emitB
@@ -99,9 +99,9 @@ Rectangle{
         emitting: false
         particle: "goingLeft"
         speed: PointDirection{ x: -100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
     Emitter{
         id: emitC
@@ -111,8 +111,8 @@ Rectangle{
         emitting: false
         particle: "goingDown"
         speed: PointDirection{ x: 100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
 }

@@ -63,15 +63,15 @@ Item {
         particle: container.shipParticle
         shape: EllipseShape{}
 
-        particlesPerSecond: hp > 0 ?  hp + 20 : 0 
-        particleDuration: blinkInterval
-        maxParticles: (maxHP + 20)
+        emitRate: hp > 0 ?  hp + 20 : 0 
+        lifeSpan: blinkInterval
+        emitCap: (maxHP + 20)
 
         acceleration: AngledDirection{angleVariation: 360; magnitude: 8}
 
-        particleSize: 24
-        particleEndSize: 4
-        particleSizeVariation: 8
+        size: 24
+        endSize: 4
+        sizeVariation: 8
         width: 16
         height: 16
         x: 64

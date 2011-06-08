@@ -54,7 +54,7 @@ Rectangle {
         anchors.fill: parent
         system: particles
         z: 10
-        image: "content/star.png"
+        source: "content/star.png"
         color: "white"
         colorVariation: 0.0
     }
@@ -96,10 +96,10 @@ Rectangle {
                 anchors.fill: parent
                 system: particles;
                 emitting: anim.running
-                particlesPerSecond: 600
-                particleDuration: 600
-                particleSize: 16
-                particleEndSize: 8
+                emitRate: 600
+                lifeSpan: 600
+                size: 16
+                endSize: 8
             }
         }
     }

@@ -58,9 +58,9 @@ Item {
         system: container.system
         particle: "frigateShield"
         anchors.centerIn: parent
-        particleSize: 92
-        particlesPerSecond: 1
-        particleDuration: 4800
+        size: 92
+        emitRate: 1
+        lifeSpan: 4800
         emitting: hp > 0
     }
     Emitter{
@@ -71,12 +71,12 @@ Item {
         height: 16
         shape: EllipseShape{}
 
-        particleSize: 16
-        particleSizeVariation: 8
-        particleEndSize: 8
-        particlesPerSecond: hp > 0 ?  hp * 1 + 20 : 0 
-        particleDuration: 1200
-        maxParticles: (maxHP * 1 + 20)*2
+        size: 16
+        sizeVariation: 8
+        endSize: 8
+        emitRate: hp > 0 ?  hp * 1 + 20 : 0 
+        lifeSpan: 1200
+        emitCap: (maxHP * 1 + 20)*2
     }
     Timer{
         id: fireControl

@@ -49,7 +49,7 @@ Rectangle{
     ImageParticle{
         system: sys
         id: cp
-        image: "content/particle.png"
+        source: "content/particle.png"
         colorVariation: 0.4
         color: "#000000FF"
     }
@@ -60,13 +60,13 @@ Rectangle{
         emitting: ma.pressed
         x: ma.mouseX
         y: ma.mouseY
-        particlesPerSecond: 16000
-        particleDuration: 1000
-        maxParticles: 4000
+        emitRate: 16000
+        lifeSpan: 1000
+        emitCap: 4000
         acceleration: AngledDirection{angleVariation: 360; magnitude: 360; }
-        particleSize: 8
-        particleEndSize: 16
-        particleSizeVariation: 4
+        size: 8
+        endSize: 16
+        sizeVariation: 4
     }
     MouseArea{
         anchors.fill: parent

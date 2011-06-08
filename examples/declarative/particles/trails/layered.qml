@@ -59,20 +59,20 @@ Rectangle{
         system: sys
         y:root.height + 20
         width: root.width
-        particlesPerSecond: 200
-        particleDuration: 4000
+        emitRate: 200
+        lifeSpan: 4000
         speed: PointDirection{ y: -120; }
     }
     ImageParticle{
         system: sys
         visible: !cloneMode
-        image: "content/particle2.png"
+        source: "content/particle2.png"
     }
     ImageParticle{
         system: sys
         visible: cloneMode
         z: 0
-        image: "content/particle3.png"
+        source: "content/particle3.png"
     }
     ImageParticle{
         system: sys
@@ -82,6 +82,6 @@ Rectangle{
         height: 240
         width: root.width
         z: 1
-        image: "content/particle.png"
+        source: "content/particle.png"
     }
 }

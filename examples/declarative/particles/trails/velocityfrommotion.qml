@@ -77,7 +77,7 @@ Rectangle {
     ParticleSystem{ id: sys1 }
     ImageParticle{
         system: sys1
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "cyan"
         alpha: 0
         SequentialAnimation on color {
@@ -109,8 +109,8 @@ Rectangle {
         id: trailsNormal
         system: sys1
 
-        particlesPerSecond: 500
-        particleDuration: 2000
+        emitRate: 500
+        lifeSpan: 2000
 
 
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
@@ -120,8 +120,8 @@ Rectangle {
         acceleration: PointDirection{xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
-        particleSize: 8
-        particleSizeVariation: 4
+        size: 8
+        sizeVariation: 4
     }
     ParticleSystem { id: sys2 }
     ImageParticle{
@@ -142,14 +142,14 @@ Rectangle {
             }
         }
         colorVariation: 0.5
-        image: "content/star.png"
+        source: "content/star.png"
     }
     Emitter{
         id: trailsStars
         system: sys2
 
-        particlesPerSecond: 100
-        particleDuration: 2200
+        emitRate: 100
+        lifeSpan: 2200
 
 
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
@@ -159,12 +159,12 @@ Rectangle {
         acceleration: PointDirection{xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
-        particleSize: 22
-        particleSizeVariation: 4
+        size: 22
+        sizeVariation: 4
     }
     ParticleSystem { id: sys3; }
     ImageParticle{
-        image: "content/particle.png"
+        source: "content/particle.png"
         system: sys3
         color: "orange"
         alpha: 0
@@ -189,8 +189,8 @@ Rectangle {
         id: trailsNormal2
         system: sys3
 
-        particlesPerSecond: 300
-        particleDuration: 2000
+        emitRate: 300
+        lifeSpan: 2000
 
         y: mouseArea.pressed ? mouseArea.mouseY : circle2.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle2.cx
@@ -200,13 +200,13 @@ Rectangle {
         speed: PointDirection{xVariation: 4; yVariation: 4;}
         acceleration: PointDirection{xVariation: 10; yVariation: 10;}
 
-        particleSize: 12
-        particleSizeVariation: 4
+        size: 12
+        sizeVariation: 4
     }
     ParticleSystem { id: sys4; }
     ImageParticle{
         system: sys4
-        image: "content/star.png"
+        source: "content/star.png"
         color: "green"
         alpha: 0
         SequentialAnimation on color {
@@ -229,8 +229,8 @@ Rectangle {
         id: trailsStars2
         system: sys4
 
-        particlesPerSecond: 50
-        particleDuration: 2200
+        emitRate: 50
+        lifeSpan: 2200
 
 
         y: mouseArea.pressed ? mouseArea.mouseY : circle2.cy
@@ -240,8 +240,8 @@ Rectangle {
         speed: PointDirection{xVariation: 2; yVariation: 2;}
         acceleration: PointDirection{xVariation: 10; yVariation: 10;}
 
-        particleSize: 22
-        particleSizeVariation: 4
+        size: 22
+        sizeVariation: 4
     }
 
 

@@ -85,7 +85,7 @@ Rectangle {
         width: 100
         x: 50
         speed: PointDirection{ y: 40 }
-        particleDuration: 5000
-        particlesPerSecond: 1.6
+        lifeSpan: 5000
+        emitRate: 1.6
     }
 }

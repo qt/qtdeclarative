@@ -9,14 +9,14 @@ Rectangle{
     ImageParticle{
         id: up
         system: sys
-        image: "content/singlesmile.png"
+        source: "content/singlesmile.png"
     }
     Emitter{
         anchors.centerIn: parent
         system: sys
-        particlesPerSecond: 1000
-        particleSize: 20
-        particleDuration: 10000
+        emitRate: 1000
+        size: 20
+        lifeSpan: 10000
         speed: AngledDirection{angleVariation: 360; magnitudeVariation: 100;}
     }
     MouseArea{

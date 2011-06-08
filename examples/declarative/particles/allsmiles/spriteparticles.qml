@@ -48,7 +48,7 @@ Rectangle{
     ImageParticle{
         id: test
         particles: ["Test"]
-        image: "content/particle.png"
+        source: "content/particle.png"
         system: sys
         z: 2
         anchors.fill: parent
@@ -76,10 +76,10 @@ Rectangle{
         particle: "Test"
         anchors.fill: parent
         id: particles2
-        particlesPerSecond: 6000
-        particleDuration: 720
+        emitRate: 6000
+        lifeSpan: 720
         emitting: true
-        particleSize: 10
+        size: 10
         shape: mask
     }
     Emitter{
@@ -87,12 +87,12 @@ Rectangle{
         particle: "Face"
         anchors.fill: parent
         id: particles
-        particlesPerSecond: 60
-        particleDuration: 1440
+        emitRate: 60
+        lifeSpan: 1440
         emitting: true
         speed: PointDirection{xVariation: 10; yVariation: 10;}
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
         shape: mask
     }
     ParticleSystem{

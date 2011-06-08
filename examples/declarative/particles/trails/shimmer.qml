@@ -56,7 +56,7 @@ Rectangle{
     ImageParticle{
         anchors.fill: parent
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
         sizeTable: "content/sparkleSize.png"
         alpha: 0
         colorVariation: 0.6
@@ -64,10 +64,10 @@ Rectangle{
     Emitter{
         anchors.fill: parent
         system: particles
-        particlesPerSecond: 2000
-        particleDuration: 2000
+        emitRate: 2000
+        lifeSpan: 2000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
     }
 }

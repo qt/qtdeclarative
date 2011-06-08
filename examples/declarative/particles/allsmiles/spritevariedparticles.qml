@@ -96,13 +96,13 @@ Rectangle{
         id: particleEmitter
         system: sys
         width: parent.width
-        particlesPerSecond: 16
-        particleDuration: 8000
+        emitRate: 16
+        lifeSpan: 8000
         emitting: true
         speed: AngledDirection{angle: 90; magnitude: 300; magnitudeVariation: 100; angleVariation: 5}
         acceleration: PointDirection{ y: 10 }
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
     }
     Binding{
         target: particleEmitter

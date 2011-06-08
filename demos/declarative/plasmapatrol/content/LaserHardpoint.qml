@@ -57,12 +57,12 @@ Item {
         emitting: container.show
         shape: EllipseShape{}
         speed: TargetedDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
-        particleDuration: 1000
-        particlesPerSecond: 64
+        lifeSpan: 1000
+        emitRate: 64
 
-        particleSize: 24
-        particleSizeVariation: 8
-        particleEndSize: 8
+        size: 24
+        sizeVariation: 8
+        endSize: 8
     }
 
     function fireAt(targetArg, hardpoint){
@@ -97,11 +97,11 @@ Item {
             mirrored: (emitter.y < 0 || emitter.x < 0) && !(emitter.y < 0 && emitter.x < 0 )//I just want XOR
         }
 
-        particleDuration: 1000
-        particlesPerSecond: 8000
-        maxParticles: 800
-        particleSize: 16
-        particleEndSize: 0
+        lifeSpan: 1000
+        emitRate: 8000
+        emitCap: 800
+        size: 16
+        endSize: 0
 
         speed: PointDirection{xVariation: 4; yVariation: 4}
     }

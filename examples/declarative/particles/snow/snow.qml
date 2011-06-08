@@ -65,13 +65,13 @@ Rectangle{
     }
     Emitter {
         system: particles
-        particlesPerSecond: 20
-        particleDuration: 7000
+        emitRate: 20
+        lifeSpan: 7000
         emitting: true
         speed: PointDirection{ y:80; yVariation: 40; }
         acceleration: PointDirection{ y: 4 }
-        particleSize: 20
-        particleSizeVariation: 10
+        size: 20
+        sizeVariation: 10
         width: parent.width
         height: 100
     }

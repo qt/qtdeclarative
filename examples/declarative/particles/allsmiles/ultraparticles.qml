@@ -84,12 +84,12 @@ Rectangle{
         system: sys
         anchors.centerIn: parent
         id: particles
-        particlesPerSecond: 200
-        particleDuration: 6000
+        emitRate: 200
+        lifeSpan: 6000
         emitting: true
         speed: AngledDirection{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
-        particleSize: 40
-        particleEndSize: 80
+        size: 40
+        endSize: 80
     }
     Text{
         x: 16

@@ -130,7 +130,7 @@ struct IntermediateVertices {
 class QSGImageParticle : public QSGParticlePainter
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl image READ image WRITE setImage NOTIFY imageChanged)
+    Q_PROPERTY(QUrl source READ image WRITE setImage NOTIFY imageChanged)
     Q_PROPERTY(QUrl colorTable READ colortable WRITE setColortable NOTIFY colortableChanged)
     Q_PROPERTY(QUrl sizeTable READ sizetable WRITE setSizetable NOTIFY sizetableChanged)
     Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged)

@@ -129,10 +129,10 @@ Rectangle{
         id: emitter
         system: sys
         emitting: false
-        particleDuration: 4000
-        maxParticles: 1200
+        lifeSpan: 4000
+        emitCap: 1200
         anchors.fill: parent
-        particleSize: 32
+        size: 32
         speed: PointDirection{ xVariation: 12; yVariation: 12 }
     }
     MouseArea{

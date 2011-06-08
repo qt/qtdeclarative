@@ -55,11 +55,11 @@ Item {
         emitting: container.show
         system: container.system
         anchors.centerIn: parent
-        particleDuration: 2000
-        particlesPerSecond: 1
+        lifeSpan: 2000
+        emitRate: 1
 
-        particleSize: 4
-        particleEndSize: 0
+        size: 4
+        endSize: 0
     }
 
     function fireAt(targetArg, hardpoint){
@@ -85,10 +85,10 @@ Item {
         system: container.system
         anchors.centerIn: parent
 
-        particleDuration: 1000
-        particlesPerSecond: 1
-        particleSize: 8
-        particleEndSize: 4
+        lifeSpan: 1000
+        emitRate: 1
+        size: 8
+        endSize: 4
         speed: TargetedDirection{
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true

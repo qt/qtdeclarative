@@ -68,22 +68,22 @@ Rectangle{
     Emitter{
         particle: "stars"
         system: particles
-        particlesPerSecond: 40
-        particleDuration: 4000
+        emitRate: 40
+        lifeSpan: 4000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
         speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
     Emitter{
         particle: "roids"
         system: particles
-        particlesPerSecond: 10
-        particleDuration: 4000
+        emitRate: 10
+        lifeSpan: 4000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
         speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
@@ -95,7 +95,7 @@ Rectangle{
         id: stars
         particles: ["stars"]
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
         color: "white"
         colorVariation: 0.1
         alpha: 0
@@ -117,7 +117,7 @@ Rectangle{
         id: shot
         particles: ["shot"]
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
 
         color: "#0FF06600"
         colorVariation: 0.3
@@ -126,7 +126,7 @@ Rectangle{
         id: engine
         particles: ["engine"]
         system: particles
-        image: "content/particle4.png"
+        source: "content/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {
@@ -172,12 +172,12 @@ Rectangle{
         Emitter{
             particle: "engine"
             system: particles
-            particlesPerSecond: 200
-            particleDuration: 1000
+            emitRate: 200
+            lifeSpan: 1000
             emitting: true
-            particleSize: 10
-            particleEndSize: 4
-            particleSizeVariation: 4
+            size: 10
+            endSize: 4
+            sizeVariation: 4
             speed: PointDirection{ x: -128; xVariation: 32 }
             height: parent.height
             width: 20
@@ -185,10 +185,10 @@ Rectangle{
         Emitter{
             particle: "shot"
             system: particles
-            particlesPerSecond: 32
-            particleDuration: 2000
+            emitRate: 32
+            lifeSpan: 2000
             emitting: spacePressed
-            particleSize: 40
+            size: 40
             speed: PointDirection{ x: 256; }
             x: parent.width
             y: parent.height/2

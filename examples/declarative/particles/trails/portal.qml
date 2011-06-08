@@ -58,7 +58,7 @@ Rectangle{
         particles: ["center","edge"]
         anchors.fill: parent
         system: particles
-        image: "content/particle.png"
+        source: "content/particle.png"
         colorVariation: 0.1
         color: "#009999FF"
     }
@@ -66,12 +66,12 @@ Rectangle{
         anchors.fill: parent
         particle: "center"
         system: particles
-        particlesPerSecond: 200
-        particleDuration: 2000
+        emitRate: 200
+        lifeSpan: 2000
         emitting: true
-        particleSize: 20
-        particleSizeVariation: 2
-        particleEndSize: 0
+        size: 20
+        sizeVariation: 2
+        endSize: 0
         shape: EllipseShape{fill: false}
         speed: TargetedDirection{
             targetX: root.width/2 
@@ -84,12 +84,12 @@ Rectangle{
         anchors.fill: parent
         particle: "edge"
         system: particles
-        particlesPerSecond: 4000
-        particleDuration: 2000
+        emitRate: 4000
+        lifeSpan: 2000
         emitting: true
-        particleSize: 20
-        particleSizeVariation: 2
-        particleEndSize: 0
+        size: 20
+        sizeVariation: 2
+        endSize: 0
         shape: EllipseShape{fill: false}
         speed: TargetedDirection{
             targetX: root.width/2 

@@ -11,10 +11,10 @@ Rectangle{
     Emitter{
         system:sys
         height: parent.height
-        particlesPerSecond: 1
-        particleDuration: 12000
+        emitRate: 1
+        lifeSpan: 12000
         speed: PointDirection{x:20;}
-        particleSize: 64
+        size: 64
     }
     ShaderEffectSource{
         id: theSource
