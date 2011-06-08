@@ -1012,12 +1012,14 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 {
     typedef QPair<Property *, int> PropPair;
     foreach(const PropPair &prop, obj->scriptStringProperties) {
+        const QString &script = prop.first->values.at(0)->value.asScript();
         QDeclarativeInstruction ss;
         ss.setType(QDeclarativeInstruction::StoreScriptString);
         ss.storeScriptString.propertyIndex = prop.first->index;
-        ss.storeScriptString.value = 
-            output->indexForString(prop.first->values.at(0)->value.asScript());
+        ss.storeScriptString.value = output->indexForString(script);
         ss.storeScriptString.scope = prop.second;
+        ss.storeScriptString.bindingId = rewriteBinding(script, prop.first->name);
+        ss.storeScriptString.line = prop.first->location.start.line;
         output->addInstruction(ss);
     }
 

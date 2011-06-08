@@ -40,6 +40,9 @@ You can still ignore these events in the handler to let them pass through.
 The Binding element now restores any previously set binding when its \e when
 clause becomes false.
 
+QDeclarativeExpression can now be directly (and more efficiently) constructed from a
+QDeclarativeScriptString.
+
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
 QtQuick 1.1 is a minor feature update.  \e {import QtQuick 1.1} to use the new

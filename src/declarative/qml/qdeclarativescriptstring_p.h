@@ -39,52 +39,25 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESCRIPTSTRING_H
-#define QDECLARATIVESCRIPTSTRING_H
+#ifndef QDECLARATIVESCRIPTSTRING_P_H
+#define QDECLARATIVESCRIPTSTRING_P_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qmetatype.h>
-
-QT_BEGIN_HEADER
+#include <QtDeclarative/qdeclarativecontext.h>
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
-
-class QObject;
-class QDeclarativeContext;
-class QDeclarativeScriptStringPrivate;
-class Q_DECLARATIVE_EXPORT QDeclarativeScriptString 
+class QDeclarativeScriptStringPrivate : public QSharedData
 {
 public:
-    QDeclarativeScriptString();
-    QDeclarativeScriptString(const QDeclarativeScriptString &);
-    ~QDeclarativeScriptString();
+    QDeclarativeScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(-1) {}
 
-    QDeclarativeScriptString &operator=(const QDeclarativeScriptString &);
-
-    QDeclarativeContext *context() const;
-    void setContext(QDeclarativeContext *);
-
-    QObject *scopeObject() const;
-    void setScopeObject(QObject *);
-
-    QString script() const;
-    void setScript(const QString &);
-
-private:
-    QSharedDataPointer<QDeclarativeScriptStringPrivate> d;
-
-    friend class QDeclarativeVME;
-    friend class QDeclarativeExpression;
+    QDeclarativeContext *context;
+    QObject *scope;
+    QString script;
+    int bindingId;
+    int lineNumber;
 };
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QDeclarativeScriptString)
-
-QT_END_HEADER
-
-#endif // QDECLARATIVESCRIPTSTRING_H
-
+#endif // QDECLARATIVESCRIPTSTRING_P_H

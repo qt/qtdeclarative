@@ -129,6 +129,7 @@ HEADERS += \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
     $$PWD/qintrusivelist_p.h \
+    $$PWD/qdeclarativescriptstring_p.h
 
 QT += sql
 include(parser/parser.pri)

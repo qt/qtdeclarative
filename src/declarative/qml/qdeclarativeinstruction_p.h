@@ -245,6 +245,8 @@ union QDeclarativeInstruction
         int propertyIndex;
         int value;
         int scope;
+        int bindingId;
+        ushort line;
     }; 
     struct instr_storeScript {
         QML_INSTR_HEADER

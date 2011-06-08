@@ -43,6 +43,7 @@
 #define QDECLARATIVEEXPRESSION_H
 
 #include <QtDeclarative/qdeclarativeerror.h>
+#include <QtDeclarative/qdeclarativescriptstring.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qvariant.h>
@@ -66,6 +67,7 @@ class Q_DECLARATIVE_EXPORT QDeclarativeExpression : public QObject
 public:
     QDeclarativeExpression();
     QDeclarativeExpression(QDeclarativeContext *, QObject *, const QString &, QObject * = 0);
+    explicit QDeclarativeExpression(const QDeclarativeScriptString &, QObject * = 0);
     virtual ~QDeclarativeExpression();
 
     QDeclarativeEngine *engine() const;
