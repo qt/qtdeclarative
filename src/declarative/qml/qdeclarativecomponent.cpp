@@ -889,8 +889,11 @@ QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentCon
     ctxt->imports = component->importCache;
 
     // Nested global imports
-    if (componentCreationContext && start != -1) 
+    if (componentCreationContext && start != -1) {
         ctxt->importedScripts = componentCreationContext->importedScripts;
+        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
+            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
+    }
 
     component->importCache->addref();
     ctxt->setParent(parentContext);
