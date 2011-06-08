@@ -2085,8 +2085,11 @@ void QSGCanvasRenderThread::paint()
     exhaustSyncEvent();
 
     isPaintCompleted = false;
-    while (isRunning() && !isPaintCompleted)
+    while (isRunning() && !isPaintCompleted) {
+        if (isRenderBlocked)
+            wake();
         wait();
+    }
     unlockInGui();
 
     // paint is only called for the inital show. After that we will do all
@@ -2182,9 +2185,7 @@ QImage QSGCanvasRenderThread::grab()
     doGrab = true;
     isPaintCompleted = false;
     while (isRunning() && !isPaintCompleted) {
-        // If we're in an animation we don't need to wake as we know another frame
-        // will be pending anyway.
-        if (!d->animationRunning)
+        if (!isRenderBlocked)
             wake();
         wait();
     }
