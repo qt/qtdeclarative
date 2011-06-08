@@ -144,7 +144,7 @@ public:
     void registerInterceptor(int index, int valueIndex, QDeclarativePropertyValueInterceptor *interceptor);
     v8::Handle<v8::Function> vmeMethod(int index);
     int vmeMethodLineNumber(int index);
-    void setVmeMethod(int index, const QScriptValue &);
+    void setVmeMethod(int index, v8::Persistent<v8::Function>);
 #if 0
     QScriptValue vmeProperty(int index);
     void setVMEProperty(int index, const QScriptValue &);
@@ -171,7 +171,6 @@ private:
     QBitArray aInterceptors;
     QHash<int, QPair<int, QDeclarativePropertyValueInterceptor*> > interceptors;
 
-    QScriptValue *methods;
     v8::Persistent<v8::Function> *v8methods;
     v8::Handle<v8::Function> method(int);
 

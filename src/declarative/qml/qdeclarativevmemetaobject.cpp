@@ -831,7 +831,7 @@ v8::Handle<v8::Function> QDeclarativeVMEMetaObject::vmeMethod(int index)
 }
 
 // Used by debugger
-void QDeclarativeVMEMetaObject::setVmeMethod(int index, const QScriptValue &value)
+void QDeclarativeVMEMetaObject::setVmeMethod(int index, v8::Persistent<v8::Function> value)
 {
     if (index < methodOffset) {
         Q_ASSERT(parent);
@@ -840,11 +840,13 @@ void QDeclarativeVMEMetaObject::setVmeMethod(int index, const QScriptValue &valu
     int plainSignals = metaData->signalCount + metaData->propertyCount + metaData->aliasCount;
     Q_ASSERT(index >= (methodOffset + plainSignals) && index < (methodOffset + plainSignals + metaData->methodCount));
 
-#if 0
-    if (!methods) 
-        methods = new QScriptValue[metaData->methodCount];
-    methods[index - methodOffset - plainSignals] = value;
-#endif
+    if (!v8methods) 
+        v8methods = new v8::Persistent<v8::Function>[metaData->methodCount];
+
+    int methodIndex = index - methodOffset - plainSignals;
+    if (!v8methods[methodIndex].IsEmpty()) 
+        v8methods[methodIndex].Dispose();
+    v8methods[methodIndex] = value;
 }
 
 #if 0

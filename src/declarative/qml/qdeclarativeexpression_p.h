@@ -202,11 +202,6 @@ public:
 
     static void exceptionToError(QScriptEngine *, QDeclarativeError &);
     static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
-    static QScriptValue evalInObjectScope(QDeclarativeContextData *, QObject *, const QString &, const QString &,
-                                          int, QScriptValue *);
-    static QScriptValue evalInObjectScope(QDeclarativeContextData *, QObject *, const QScriptProgram &, 
-                                          QScriptValue *);
-
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
                                                      const QString &code, const QString &filename, int line,
                                                      v8::Persistent<v8::Object> *qmlscope = 0);

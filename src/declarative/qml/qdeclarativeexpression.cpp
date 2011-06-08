@@ -173,50 +173,6 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     return v8::Persistent<v8::Function>::New(v8::Local<v8::Function>::Cast(result));
 }
 
-QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContextData *context, QObject *object, 
-                                                              const QString &program, const QString &fileName,
-                                                              int lineNumber, QScriptValue *contextObject)
-{
-#if 0
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
-    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(&ep->scriptEngine);
-    if (contextObject) {
-        *contextObject = ep->contextClass->newContext(context, object);
-        scriptContext->pushScope(*contextObject);
-    } else {
-        scriptContext->pushScope(ep->contextClass->newContext(context, object));
-    }
-    scriptContext->pushScope(ep->globalClass->staticGlobalObject());
-    QScriptValue rv = ep->scriptEngine.evaluate(program, fileName, lineNumber);
-    ep->scriptEngine.popContext();
-    return rv;
-#else
-    qFatal("Not impl");
-#endif
-}
-
-QScriptValue QDeclarativeExpressionPrivate::evalInObjectScope(QDeclarativeContextData *context, QObject *object, 
-                                                              const QScriptProgram &program, 
-                                                              QScriptValue *contextObject)
-{
-#if 0
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context->engine);
-    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(&ep->scriptEngine);
-    if (contextObject) {
-        *contextObject = ep->contextClass->newContext(context, object);
-        scriptContext->pushScope(*contextObject);
-    } else {
-        scriptContext->pushScope(ep->contextClass->newContext(context, object));
-    }
-    scriptContext->pushScope(ep->globalClass->staticGlobalObject());
-    QScriptValue rv = ep->scriptEngine.evaluate(program);
-    ep->scriptEngine.popContext();
-    return rv;
-#else
-    qFatal("Not impl");
-#endif
-}
-
 /*!
     \class QDeclarativeExpression
     \since 4.7

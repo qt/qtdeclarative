@@ -7,6 +7,8 @@ SUBDIRS += \
 
 SUBDIRS += \
            examples \
+           geometry \
+           node \
            parserstress \
            qdeclarativecomponent \
            qdeclarativecontext \
@@ -37,6 +39,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativeconnection \
            qdeclarativedebug \
            qdeclarativedebugclient \
+           qdeclarativedebughelper \
            qdeclarativedebugservice \
            qdeclarativeecmascript \
            qdeclarativeflickable \
@@ -59,6 +62,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativeproperty \
            qdeclarativepropertymap \
            qdeclarativerepeater \
+           qdeclarativescriptdebugging \
            qdeclarativesmoothedanimation \
            qdeclarativespringanimation \
            qdeclarativestyledtext \
