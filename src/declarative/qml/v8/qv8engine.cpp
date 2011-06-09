@@ -658,6 +658,8 @@ void QV8Engine::releaseHandle(void *handle)
 
 struct QV8EngineRegistrationData
 {
+    QV8EngineRegistrationData() : extensionCount(0) {}
+
     QMutex mutex;
     int extensionCount;
 };
@@ -676,7 +678,7 @@ int QV8Engine::registerExtension()
 void QV8Engine::setExtensionData(int index, Deletable *data)
 {
     if (m_extensionData.count() <= index) 
-        m_extensionData.resize(index);
+        m_extensionData.resize(index + 1);
 
     if (m_extensionData.at(index)) 
         delete m_extensionData.at(index);
