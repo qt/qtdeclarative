@@ -56,6 +56,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qset.h>
+#include <QtCore/qmutex.h>
 #include <private/qv8_p.h>
 
 #include <private/qdeclarativepropertycache_p.h>
@@ -85,11 +86,33 @@ private:
 
 #define V8ENGINE() ((QV8Engine *)v8::External::Unwrap(args.Data()))
 #define V8FUNCTION(function, engine) v8::FunctionTemplate::New(function, v8::External::Wrap((QV8Engine*)engine))->GetFunction()
-// XXX Are we mean to return a value here, or is an empty handle ok?
 #define V8THROW_ERROR(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
+#define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Unwrap(info.Data()));
+#define V8THROW_ERROR_SETTER(string) { \
+    v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
+    return; \
+}
+
+#define V8_DEFINE_EXTENSION(dataclass, datafunction) \
+    inline dataclass *datafunction(QV8Engine *engine) \
+    { \
+        static int extensionId = -1; \
+        if (extensionId == -1) { \
+            QV8Engine::registrationMutex()->lock(); \
+            if (extensionId == -1) \
+                extensionId = QV8Engine::registerExtension(); \
+            QV8Engine::registrationMutex()->unlock(); \
+        } \
+        dataclass *rv = (dataclass *)engine->extensionData(extensionId); \
+        if (!rv) { \
+            rv = new dataclass(engine); \
+            engine->setExtensionData(extensionId, rv); \
+        } \
+        return rv; \
+    } \
 
 class QV8Engine;
 class QV8ObjectResource : public v8::Object::ExternalResource
@@ -98,7 +121,7 @@ public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
-                        ListModelType };
+                        ListModelType, Context2DType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
@@ -253,6 +276,12 @@ public:
     static void releaseHandle(void *);
 #endif
 
+    static QMutex *registrationMutex();
+    static int registerExtension();
+
+    inline Deletable *extensionData(int) const;
+    void setExtensionData(int, Deletable *);
+
 private:
     QDeclarativeEngine *m_engine;
     v8::Persistent<v8::Context> m_context;
@@ -269,6 +298,8 @@ private:
 
     void *m_xmlHttpRequestData;
     void *m_sqlDatabaseData;
+
+    QVector<Deletable *> m_extensionData;
     Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
@@ -402,6 +433,14 @@ bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
     uint16_t c = buffer[0];
     return ((c != '_' ) && (!(c >= 'a' && c <= 'z')) &&
            ((c >= 'A' && c <= 'Z') || QChar::category(c) == QChar::Letter_Uppercase));
+}
+
+QV8Engine::Deletable *QV8Engine::extensionData(int index) const
+{
+    if (index < m_extensionData.count())
+        return m_extensionData[index];
+    else
+        return 0;
 }
 
 QT_END_NAMESPACE

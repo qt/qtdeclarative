@@ -73,6 +73,10 @@ QV8Engine::QV8Engine()
 
 QV8Engine::~QV8Engine()
 {
+    for (int ii = 0; ii < m_extensionData.count(); ++ii) 
+        delete m_extensionData[ii];
+    m_extensionData.clear();
+
     qt_rem_qmlsqldatabase(this, m_sqlDatabaseData); 
     m_sqlDatabaseData = 0;
     qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData); 
@@ -149,6 +153,7 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::SQLDatabaseType:
             case QV8ObjectResource::ListModelType:
+            case QV8ObjectResource::Context2DType:
                 return QVariant();
             case QV8ObjectResource::QObjectType:
                 return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));
@@ -650,6 +655,34 @@ void QV8Engine::releaseHandle(void *handle)
     }
 }
 #endif
+
+struct QV8EngineRegistrationData
+{
+    QMutex mutex;
+    int extensionCount;
+};
+Q_GLOBAL_STATIC(QV8EngineRegistrationData, registrationData);
+
+QMutex *QV8Engine::registrationMutex()
+{
+    return &registrationData()->mutex;
+}
+
+int QV8Engine::registerExtension()
+{
+    return registrationData()->extensionCount++;
+}
+
+void QV8Engine::setExtensionData(int index, Deletable *data)
+{
+    if (m_extensionData.count() <= index) 
+        m_extensionData.resize(index);
+
+    if (m_extensionData.at(index)) 
+        delete m_extensionData.at(index);
+
+    m_extensionData[index] = data;
+}
 
 v8::Handle<v8::Value> QV8Engine::gc(const v8::Arguments &args)
 {
