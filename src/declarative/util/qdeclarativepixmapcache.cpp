@@ -1119,6 +1119,7 @@ QSGTexture *QDeclarativePixmap::texture(QSGContext *context) const
             return d->texture;
         else if (d->pixmapStatus == Ready) {
             d->texture = context->createTexture(d->pixmap.toImage());
+            d->context = context;
             return d->texture;
         }
     }

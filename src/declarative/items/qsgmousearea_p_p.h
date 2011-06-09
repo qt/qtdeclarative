@@ -96,6 +96,7 @@ public:
     bool stealMouse : 1;
     bool doubleClick : 1;
     bool preventStealing : 1;
+    bool dragRejected : 1;
     QSGDrag *drag;
     QPointF startScene;
     qreal startX;

@@ -77,6 +77,7 @@
 #include "qsgcontext2d_p.h"
 #include "qsgsprite_p.h"
 #include "qsgspriteimage_p.h"
+#include "qsgdragtarget_p.h"
 
 static QDeclarativePrivate::AutoParentResult qsgitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -189,6 +190,9 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGAnchorSet>();
     qmlRegisterType<QSGAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QSGParentAnimation>(uri, major, minor,"ParentAnimation");
+
+    qmlRegisterType<QSGDragTarget>("QtQuick", 2, 0, "DragTarget");
+    qmlRegisterType<QSGDragTargetEvent>();
 }
 
 void QSGItemsModule::defineModule()

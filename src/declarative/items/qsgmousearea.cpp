@@ -43,6 +43,7 @@
 #include "qsgmousearea_p.h"
 #include "qsgmousearea_p_p.h"
 #include "qsgcanvas.h"
+#include "qsgevent.h"
 #include "qsgevents_p_p.h"
 
 #include <QtGui/qgraphicssceneevent.h>
@@ -54,8 +55,8 @@ QT_BEGIN_NAMESPACE
 static const int PressAndHoldDelay = 800;
 
 QSGDrag::QSGDrag(QObject *parent)
-: QObject(parent), _target(0), _axis(XandYAxis), _xmin(-FLT_MAX), _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX),
-_active(false), _filterChildren(false)
+: QObject(parent), _target(0), _dropItem(0), _grabItem(0), _axis(XandYAxis), _xmin(-FLT_MAX),
+_xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false)
 {
 }
 
@@ -78,10 +79,68 @@ void QSGDrag::setTarget(QSGItem *t)
 
 void QSGDrag::resetTarget()
 {
-    if (!_target)
+    if (_target == 0)
         return;
     _target = 0;
     emit targetChanged();
+}
+
+/*!
+    \qmlproperty Item MouseArea::drag.dropItem
+
+    This property holds the item an active drag will be dropped on if released
+    at the current position.
+*/
+
+QSGItem *QSGDrag::dropItem() const
+{
+    return _dropItem;
+}
+
+void QSGDrag::setDropItem(QSGItem *item)
+{
+    if (_dropItem != item) {
+        _dropItem = item;
+        emit dropItemChanged();
+    }
+}
+
+QSGItem *QSGDrag::grabItem() const
+{
+    return _grabItem;
+}
+
+void QSGDrag::setGrabItem(QSGItem *item)
+{
+    _grabItem = item;
+}
+
+/*!
+    \qmlproperty variant MouseArea::drag.data
+
+    This property holds the data sent to recipients of drag events generated
+    by a MouseArea.
+*/
+
+QVariant QSGDrag::data() const
+{
+    return _data;
+}
+
+void QSGDrag::setData(const QVariant &data)
+{
+    if (_data != data) {
+        _data = data;
+        emit dataChanged();
+    }
+}
+
+void QSGDrag::resetData()
+{
+    if (!_data.isNull()) {
+        _data = QVariant();
+        emit dataChanged();
+    }
 }
 
 QSGDrag::Axis QSGDrag::axis() const
@@ -175,9 +234,30 @@ void QSGDrag::setFilterChildren(bool filter)
     emit filterChildrenChanged();
 }
 
+/*!
+    \qmlproperty stringlist MouseArea::drag.keys
+
+    This property holds a list of keys drag recipients can use to identify the
+    source or data type of a drag event.
+*/
+
+QStringList QSGDrag::keys() const
+{
+    return _keys;
+}
+
+void QSGDrag::setKeys(const QStringList &keys)
+{
+    if (_keys != keys) {
+        _keys = keys;
+        emit keysChanged();
+    }
+}
+
 QSGMouseAreaPrivate::QSGMouseAreaPrivate()
 : absorb(true), hovered(false), pressed(false), longPress(false),
-  moved(false), stealMouse(false), doubleClick(false), preventStealing(false), drag(0)
+  moved(false), stealMouse(false), doubleClick(false), preventStealing(false), dragRejected(false),
+  drag(0)
 {
     Q_Q(QSGMouseArea);
     forwardTo = QDeclarativeListProperty<QSGItem>(q, forwardToList);
@@ -384,6 +464,7 @@ void QSGMouseArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
         QSGItem::mousePressEvent(event);
     else {
         d->longPress = false;
+        d->dragRejected = false;
         d->saveEvent(event);
         if (d->drag) {
             d->dragX = drag()->axis() & QSGDrag::XAxis;
@@ -440,8 +521,24 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         qreal dx = qAbs(curLocalPos.x() - startLocalPos.x());
         qreal dy = qAbs(curLocalPos.y() - startLocalPos.y());
 
-        if (keepMouseGrab() && d->stealMouse)
-            d->drag->setActive(true);
+        if (keepMouseGrab() && d->stealMouse && !d->dragRejected && !d->drag->active()) {
+            QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
+            d->drag->emitDragged(&me);
+            if (me.isAccepted()) {
+                d->drag->setActive(true);
+                QSGDragEvent dragEvent(
+                        QSGEvent::SGDragEnter,
+                        d->startScene,
+                        d->drag->data(),
+                        d->drag->keys());
+                QCoreApplication::sendEvent(canvas(), &dragEvent);
+
+                d->drag->setGrabItem(dragEvent.grabItem());
+                d->drag->setDropItem(dragEvent.dropItem());
+            } else {
+                d->dragRejected = true;
+            }
+        }
 
         if (d->dragX && d->drag->active()) {
             qreal x = (curLocalPos.x() - startLocalPos.x()) + d->startX;
@@ -470,6 +567,18 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         }
 
         d->moved = true;
+
+        if (d->drag->active()) {
+            QSGDragEvent dragEvent(
+                    QSGEvent::SGDragMove,
+                    event->scenePos(),
+                    d->drag->data(),
+                    d->drag->keys(),
+                    d->drag->grabItem());
+            QCoreApplication::sendEvent(canvas(), &dragEvent);
+            d->drag->setGrabItem(dragEvent.grabItem());
+            d->drag->setDropItem(dragEvent.dropItem());
+        }
     }
     QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
     emit mousePositionChanged(&me);
@@ -490,8 +599,24 @@ void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     } else {
         d->saveEvent(event);
         setPressed(false);
-        if (d->drag)
+        if (d->drag && d->drag->active()) {
+            QSGDragEvent dragEvent(
+                    QSGEvent::SGDragDrop,
+                    event->scenePos(),
+                    d->drag->data(),
+                    d->drag->keys(),
+                    d->drag->grabItem());
+            QCoreApplication::sendEvent(canvas(), &dragEvent);
+            d->drag->setGrabItem(0);
+            if (dragEvent.isAccepted()) {
+                d->drag->setDropItem(dragEvent.dropItem());
+                d->drag->emitDropped(dragEvent.dropItem());
+            } else {
+                d->drag->emitCanceled();
+            }
+            d->drag->setDropItem(0);
             d->drag->setActive(false);
+        }
         // If we don't accept hover, we need to reset containsMouse.
         if (!acceptHoverEvents())
             setHovered(false);

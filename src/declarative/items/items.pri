@@ -64,6 +64,8 @@ HEADERS += \
     $$PWD/qsgspriteengine_p.h \
     $$PWD/qsgsprite_p.h \
     $$PWD/qsgspriteimage_p.h \
+    $$PWD/qsgevent.h \
+    $$PWD/qsgdragtarget_p.h \
 
 SOURCES += \
     $$PWD/qsgevents.cpp \
@@ -106,6 +108,7 @@ SOURCES += \
     $$PWD/qsgspriteengine.cpp \
     $$PWD/qsgsprite.cpp \
     $$PWD/qsgspriteimage.cpp \
+    $$PWD/qsgdragtarget.cpp \
 
 SOURCES += \
     $$PWD/qsgshadereffectitem.cpp \
