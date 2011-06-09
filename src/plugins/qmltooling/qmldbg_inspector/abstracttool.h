@@ -39,16 +39,47 @@
 **
 ****************************************************************************/
 
-#include "sgabstracttool.h"
+#ifndef ABSTRACTTOOL_H
+#define ABSTRACTTOOL_H
 
-#include "sgviewinspector.h"
+#include <QtCore/QObject>
+
+QT_BEGIN_NAMESPACE
+class QMouseEvent;
+class QKeyEvent;
+class QWheelEvent;
+QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
 
-SGAbstractTool::SGAbstractTool(SGViewInspector *inspector) :
-    QObject(inspector),
-    m_inspector(inspector)
+class AbstractViewInspector;
+
+class AbstractTool : public QObject
 {
-}
+    Q_OBJECT
+
+public:
+    explicit AbstractTool(AbstractViewInspector *inspector);
+
+    AbstractViewInspector *inspector() const { return m_inspector; }
+
+    virtual void leaveEvent(QEvent *event) = 0;
+
+    virtual void mousePressEvent(QMouseEvent *event) = 0;
+    virtual void mouseMoveEvent(QMouseEvent *event) = 0;
+    virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
+
+    virtual void hoverMoveEvent(QMouseEvent *event) = 0;
+    virtual void wheelEvent(QWheelEvent *event) = 0;
+
+    virtual void keyPressEvent(QKeyEvent *event) = 0;
+    virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
+
+private:
+    AbstractViewInspector *m_inspector;
+};
 
 } // namespace QmlJSDebugger
+
+#endif // ABSTRACTTOOL_H

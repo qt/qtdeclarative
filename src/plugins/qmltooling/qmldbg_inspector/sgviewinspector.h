@@ -47,17 +47,12 @@
 #include <QtCore/QWeakPointer>
 
 QT_BEGIN_NAMESPACE
-class QMouseEvent;
-class QKeyEvent;
-class QWheelEvent;
-
 class QSGView;
 class QSGItem;
 QT_END_NAMESPACE
 
 namespace QmlJSDebugger {
 
-class SGAbstractTool;
 class SGSelectionTool;
 
 class SGViewInspector : public AbstractViewInspector
@@ -86,18 +81,8 @@ private slots:
     void removeFromSelectedItems(QObject *);
 
 private:
-    bool leaveEvent(QEvent *);
-    bool mousePressEvent(QMouseEvent *event);
-    bool mouseMoveEvent(QMouseEvent *event);
-    bool mouseReleaseEvent(QMouseEvent *event);
-    bool keyPressEvent(QKeyEvent *event);
-    bool keyReleaseEvent(QKeyEvent *keyEvent);
-    bool mouseDoubleClickEvent(QMouseEvent *event);
-    bool wheelEvent(QWheelEvent *event);
-
     QSGView *m_view;
     QSGItem *m_overlay;
-    SGAbstractTool *m_currentTool;
 
     SGSelectionTool *m_selectionTool;
 

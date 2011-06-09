@@ -42,8 +42,6 @@
 #include "sgviewinspector.h"
 
 #include "qdeclarativeinspectorprotocol.h"
-
-#include "sgabstracttool.h"
 #include "sgselectiontool.h"
 
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
@@ -61,7 +59,6 @@ SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
     AbstractViewInspector(parent),
     m_view(view),
     m_overlay(new QSGItem),
-    m_currentTool(0),
     m_selectionTool(new SGSelectionTool(this)),
     m_designMode(true)
 {
@@ -75,7 +72,7 @@ SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
         m_overlay->setParentItem(root);
 
     view->installEventFilter(this);
-    m_currentTool = m_selectionTool;
+    setCurrentTool(m_selectionTool);
 }
 
 void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
@@ -118,7 +115,7 @@ void SGViewInspector::changeTool(InspectorProtocol::Tool tool)
         emit marqueeSelectToolActivated();
         break;
     case InspectorProtocol::SelectTool:
-        m_currentTool = m_selectionTool;
+        setCurrentTool(m_selectionTool);
         emit selectToolActivated();
         break;
     case InspectorProtocol::ZoomTool:
@@ -180,104 +177,10 @@ void SGViewInspector::removeFromSelectedItems(QObject *object)
 
 bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj != m_view || !m_designMode)
+    if (obj != m_view)
         return QObject::eventFilter(obj, event);
 
-    switch (event->type()) {
-    case QEvent::Leave:
-        if (leaveEvent(event))
-            return true;
-        break;
-    case QEvent::MouseButtonPress:
-        if (mousePressEvent(static_cast<QMouseEvent*>(event)))
-            return true;
-        break;
-    case QEvent::MouseMove:
-        if (mouseMoveEvent(static_cast<QMouseEvent*>(event)))
-            return true;
-        break;
-    case QEvent::MouseButtonRelease:
-        if (mouseReleaseEvent(static_cast<QMouseEvent*>(event)))
-            return true;
-        break;
-    case QEvent::KeyPress:
-        if (keyPressEvent(static_cast<QKeyEvent*>(event)))
-            return true;
-        break;
-    case QEvent::KeyRelease:
-        if (keyReleaseEvent(static_cast<QKeyEvent*>(event)))
-            return true;
-        break;
-    case QEvent::MouseButtonDblClick:
-        if (mouseDoubleClickEvent(static_cast<QMouseEvent*>(event)))
-            return true;
-        break;
-    case QEvent::Wheel:
-        if (wheelEvent(static_cast<QWheelEvent*>(event)))
-            return true;
-        break;
-    default:
-        break;
-    }
-
-    return QObject::eventFilter(obj, event);
-}
-
-bool SGViewInspector::leaveEvent(QEvent *event)
-{
-    m_currentTool->leaveEvent(event);
-    return true;
-}
-
-bool SGViewInspector::mousePressEvent(QMouseEvent *event)
-{
-    m_currentTool->mousePressEvent(event);
-    return true;
-}
-
-bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
-{
-    if (event->buttons()) {
-        m_currentTool->mouseMoveEvent(event);
-    } else {
-        m_currentTool->hoverMoveEvent(event);
-    }
-    return true;
-}
-
-bool SGViewInspector::mouseReleaseEvent(QMouseEvent *event)
-{
-    m_currentTool->mouseReleaseEvent(event);
-    return true;
-}
-
-bool SGViewInspector::keyPressEvent(QKeyEvent *event)
-{
-    m_currentTool->keyPressEvent(event);
-    return true;
-}
-
-bool SGViewInspector::keyReleaseEvent(QKeyEvent *event)
-{
-    switch (event->key()) {
-    default:
-        break;
-    }
-
-    m_currentTool->keyReleaseEvent(event);
-    return true;
-}
-
-bool SGViewInspector::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    m_currentTool->mouseDoubleClickEvent(event);
-    return true;
-}
-
-bool SGViewInspector::wheelEvent(QWheelEvent *event)
-{
-    m_currentTool->wheelEvent(event);
-    return true;
+    return AbstractViewInspector::eventFilter(obj, event);
 }
 
 } // namespace QmlJSDebugger

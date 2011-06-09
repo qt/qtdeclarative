@@ -86,7 +86,7 @@ static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
 
 
 SGSelectionTool::SGSelectionTool(SGViewInspector *inspector) :
-    SGAbstractTool(inspector),
+    AbstractTool(inspector),
     m_hoverHighlight(new QSGRectangle(inspector->overlay()))
 {
     m_hoverHighlight->border()->setColor(QColor(64, 128, 255));
@@ -100,9 +100,10 @@ void SGSelectionTool::leaveEvent(QEvent *)
 
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
 {
-    QSGItem *root = inspector()->view()->rootItem();
+    SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
+    QSGItem *root = sgInspector->view()->rootItem();
     QPointF mappedPos = root->mapFromScene(event->pos());
-    QSGItem *item = itemAt(root, mappedPos, inspector()->overlay());
+    QSGItem *item = itemAt(root, mappedPos, sgInspector->overlay());
     if (!item || item == root) {
         m_hoverHighlight->setVisible(false);
         return;

@@ -25,7 +25,7 @@ SOURCES += \
     editor/colorpickertool.cpp \
     editor/qmltoolbar.cpp \
     editor/toolbarcolorbox.cpp \
-    sgabstracttool.cpp \
+    abstracttool.cpp \
     sgviewinspector.cpp \
     sgselectiontool.cpp
 
@@ -49,7 +49,7 @@ HEADERS += \
     editor/colorpickertool.h \
     editor/qmltoolbar.h \
     editor/toolbarcolorbox.h \
-    sgabstracttool.h \
+    abstracttool.h \
     sgviewinspector.h \
     sgselectiontool.h
 

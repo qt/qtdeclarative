@@ -42,7 +42,7 @@
 #ifndef SGSELECTIONTOOL_H
 #define SGSELECTIONTOOL_H
 
-#include "sgabstracttool.h"
+#include "abstracttool.h"
 
 #include <QtCore/QList>
 
@@ -50,7 +50,9 @@ QT_FORWARD_DECLARE_CLASS(QSGRectangle)
 
 namespace QmlJSDebugger {
 
-class SGSelectionTool : public SGAbstractTool
+class SGViewInspector;
+
+class SGSelectionTool : public AbstractTool
 {
     Q_OBJECT
 public:

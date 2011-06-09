@@ -43,7 +43,7 @@
 #define ABSTRACTLIVEEDITTOOL_H
 
 #include <QtCore/QList>
-#include <QtCore/QObject>
+#include "../abstracttool.h"
 
 QT_BEGIN_NAMESPACE
 class QMouseEvent;
@@ -60,7 +60,7 @@ namespace QmlJSDebugger {
 
 class QDeclarativeViewInspector;
 
-class AbstractLiveEditTool : public QObject
+class AbstractLiveEditTool : public AbstractTool
 {
     Q_OBJECT
 public:
@@ -68,16 +68,8 @@ public:
 
     virtual ~AbstractLiveEditTool();
 
-    virtual void mousePressEvent(QMouseEvent *event) = 0;
-    virtual void mouseMoveEvent(QMouseEvent *event) = 0;
-    virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
+    void leaveEvent(QEvent *) {}
 
-    virtual void hoverMoveEvent(QMouseEvent *event) = 0;
-    virtual void wheelEvent(QWheelEvent *event) = 0;
-
-    virtual void keyPressEvent(QKeyEvent *event) = 0;
-    virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
     virtual void itemsAboutToRemoved(const QList<QGraphicsItem*> &itemList) = 0;
 
     virtual void clear() = 0;
@@ -104,7 +96,6 @@ protected:
     QGraphicsScene *scene() const;
 
 private:
-    QDeclarativeViewInspector *m_inspector;
     QList<QGraphicsItem*> m_itemList;
 };
 
