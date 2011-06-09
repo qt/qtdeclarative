@@ -536,7 +536,7 @@ v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
                                       0, v8::External::Wrap(engine));
         d->nodePrototype->SetAccessor(v8::String::New("attributes"), attributes,
                                       0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->nodePrototype);
     }
     return d->nodePrototype;
 }
@@ -586,7 +586,7 @@ v8::Handle<v8::Object> Element::prototype(QV8Engine *engine)
         d->elementPrototype->SetPrototype(Node::prototype(engine));
         d->elementPrototype->SetAccessor(v8::String::New("tagName"), nodeName,
                                          0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->elementPrototype);
     }
     return d->elementPrototype;
 }
@@ -603,7 +603,7 @@ v8::Handle<v8::Object> Attr::prototype(QV8Engine *engine)
                                       0, v8::External::Wrap(engine));
         d->attrPrototype->SetAccessor(v8::String::New("ownerElement"), ownerElement,
                                       0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->attrPrototype);
     }
     return d->attrPrototype;
 }
@@ -654,7 +654,7 @@ v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
                                                0, v8::External::Wrap(engine));
         d->characterDataPrototype->SetAccessor(v8::String::New("length"), length,
                                                0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->characterDataPrototype);
     }
     return d->characterDataPrototype;
 }
@@ -687,7 +687,7 @@ v8::Handle<v8::Object> Text::prototype(QV8Engine *engine)
                                                0, v8::External::Wrap(engine));
         d->textPrototype->SetAccessor(v8::String::New("wholeText"), wholeText,
                                                0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->textPrototype);
     }
     return d->textPrototype;
 }
@@ -698,7 +698,7 @@ v8::Handle<v8::Object> CDATA::prototype(QV8Engine *engine)
     if (d->cdataPrototype.IsEmpty()) {
         d->cdataPrototype = qPersistentNew<v8::Object>(v8::Object::New());
         d->cdataPrototype->SetPrototype(Text::prototype(engine));
-        // XXX freeze
+        engine->freezeObject(d->cdataPrototype);
     }
     return d->cdataPrototype;
 }
@@ -717,7 +717,7 @@ v8::Handle<v8::Object> Document::prototype(QV8Engine *engine)
                                           0, v8::External::Wrap(engine));
         d->documentPrototype->SetAccessor(v8::String::New("documentElement"), documentElement, 
                                           0, v8::External::Wrap(engine));
-        // XXX freeze
+        engine->freezeObject(d->documentPrototype);
     }
     return d->documentPrototype;
 }
@@ -879,7 +879,7 @@ v8::Handle<v8::Object> NamedNodeMap::prototype(QV8Engine *engine)
         ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
         ot->SetFallbackPropertyHandler(named, 0, 0, 0, 0, v8::External::Wrap(engine));
         d->namedNodeMapPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
-        // XXX freeze
+        engine->freezeObject(d->namedNodeMapPrototype);
     }
     return d->namedNodeMapPrototype;
 }
@@ -906,7 +906,6 @@ v8::Handle<v8::Value> NodeList::indexed(uint32_t index, const v8::AccessorInfo& 
     if (index < r->d->children.count()) {
         return Node::create(engine, r->d->children.at(index));
     } else {
-        // XXX RangeError exception?
         return v8::Undefined();
     }
 }
@@ -928,7 +927,7 @@ v8::Handle<v8::Object> NodeList::prototype(QV8Engine *engine)
         ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::Wrap(engine));
         ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
         d->nodeListPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
-        // XXX freeze
+        engine->freezeObject(d->nodeListPrototype);
     }
     return d->nodeListPrototype;
 }

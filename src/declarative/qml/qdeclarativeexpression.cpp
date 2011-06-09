@@ -68,8 +68,9 @@ bool QDeclarativeDelayedError::addError(QDeclarativeEnginePrivate *e)
 }
 
 QDeclarativeQtScriptExpression::QDeclarativeQtScriptExpression()
-: dataRef(0), expressionFunctionMode(ExplicitContext), scopeObject(0), trackChange(false), 
-  guardList(0), guardListLength(0), guardObject(0), guardObjectNotifyIndex(-1), deleted(0)
+: dataRef(0), extractExpressionFromFunction(false), expressionFunctionMode(ExplicitContext), 
+  scopeObject(0), trackChange(false), guardList(0), guardListLength(0), guardObject(0), 
+  guardObjectNotifyIndex(-1), deleted(0)
 {
 }
 
@@ -105,15 +106,13 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QS
 void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Handle<v8::Function> func,
                                          QObject *me)
 {
-    // XXX aakenned
-    // expression = func.toString();
-
     QDeclarativeAbstractExpression::setContext(ctxt);
     scopeObject = me;
 
     v8function = qPersistentNew<v8::Function>(func);
     expressionFunctionMode = ExplicitContext;
     expressionFunctionValid = true;
+    extractExpressionFromFunction = true;
 }
 
 void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, void *expr, 
@@ -155,15 +154,16 @@ QDeclarativeExpressionPrivate::evalFunction(QDeclarativeContextData *ctxt, QObje
     QDeclarativeEngine *engine = ctxt->engine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
-    // XXX aakenned optimize
+    // XXX TODO: Implement script caching, like we used to do with QScriptProgram in the
+    // QtScript days
     v8::HandleScope handle_scope;
     v8::Context::Scope ctxtscope(ep->v8engine.context());
     
-    // XXX try/catch?
-
+    v8::TryCatch tc;
     v8::Local<v8::Object> scopeobject = ep->v8engine.qmlScope(ctxt, scope);
     v8::Local<v8::Script> script = ep->v8engine.qmlModeCompile(code, filename, line);
     v8::Local<v8::Value> result = script->Run(scopeobject);
+    if (tc.HasCaught()) return v8::Persistent<v8::Function>();
     if (qmlscope) *qmlscope = qPersistentNew<v8::Object>(scopeobject);
     return qPersistentNew<v8::Function>(v8::Local<v8::Function>::Cast(result));
 }
@@ -335,6 +335,13 @@ QDeclarativeContext *QDeclarativeExpression::context() const
 QString QDeclarativeExpression::expression() const
 {
     Q_D(const QDeclarativeExpression);
+    if (d->extractExpressionFromFunction && context()->engine()) {
+        QV8Engine *v8engine = QDeclarativeEnginePrivate::getV8Engine(context()->engine());
+        v8::HandleScope handle_scope;
+        v8::Context::Scope scope(v8engine->context());
+
+        return v8engine->toString(v8::Handle<v8::Value>(d->v8function));
+    }
     return d->expression;
 }
 
@@ -472,7 +479,6 @@ v8::Local<v8::Value> QDeclarativeQtScriptExpression::eval(QObject *secondaryScop
         restoreSecondaryScope = ep->v8engine.contextWrapper()->setSecondaryScope(v8qmlscope, secondaryScope);
 
     v8::TryCatch try_catch;
-    v8::Context::Scope scope(ep->v8engine.context()); // XXX is this needed?
 
     v8::Handle<v8::Object> This;
 
@@ -494,6 +500,7 @@ v8::Local<v8::Value> QDeclarativeQtScriptExpression::eval(QObject *secondaryScop
 
     if (watcher.wasDeleted()) {
     } else if (try_catch.HasCaught()) {
+        v8::Context::Scope scope(ep->v8engine.context());
         v8::Local<v8::Message> message = try_catch.Message();
         if (!message.IsEmpty()) {
             QDeclarativeExpressionPrivate::exceptionToError(message, error);

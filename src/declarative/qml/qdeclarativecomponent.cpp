@@ -982,7 +982,6 @@ void QDeclarativeComponentPrivate::complete(QDeclarativeEnginePrivate *enginePri
                 state->bindValues.at(ii);
             for (int jj = 0; jj < bv.count; ++jj) {
                 if(bv.at(jj)) {
-                    // XXX akennedy
                     bv.at(jj)->m_mePtr = 0;
                     bv.at(jj)->setEnabled(true, QDeclarativePropertyPrivate::BypassInterceptor | 
                                                 QDeclarativePropertyPrivate::DontRemoveBinding);

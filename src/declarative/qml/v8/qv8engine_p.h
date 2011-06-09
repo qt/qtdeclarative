@@ -225,6 +225,7 @@ public:
     QDeclarativeContextData *callingContext();
 
     v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
+    void freezeObject(v8::Handle<v8::Value>);
 
     inline QString toString(v8::Handle<v8::Value> string);
     inline QString toString(v8::Handle<v8::String> string);
@@ -295,6 +296,7 @@ private:
     QV8ValueTypeWrapper m_valueTypeWrapper;
 
     v8::Persistent<v8::Function> m_getOwnPropertyNames;
+    v8::Persistent<v8::Function> m_freezeObject;
 
     void *m_xmlHttpRequestData;
     void *m_sqlDatabaseData;
@@ -307,7 +309,6 @@ private:
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 
     void initializeGlobal(v8::Handle<v8::Object>);
-    void freezeGlobal();
 
     static v8::Handle<v8::Value> gc(const v8::Arguments &args);
     static v8::Handle<v8::Value> print(const v8::Arguments &args);
@@ -424,7 +425,8 @@ v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QDeclarativ
     return m_valueTypeWrapper.newValueType(value, type);
 }
 
-// XXX perf?
+// XXX Can this be made more optimal?  It is called prior to resolving each and every 
+// unqualified name in QV8ContextWrapper.
 bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
 {
     uint16_t buffer[2];

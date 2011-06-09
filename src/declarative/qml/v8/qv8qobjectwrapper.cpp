@@ -70,7 +70,7 @@ Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 #define QOBJECT_TOSTRING_INDEX -2
 #define QOBJECT_DESTROY_INDEX -3
 
-// XXX Need to check all calls to QDeclarativeEngine *engine() to confirm this class works
+// XXX TODO: Need to review all calls to QDeclarativeEngine *engine() to confirm QObjects work
 // correctly in a worker thread
 
 class QV8QObjectResource : public QV8ObjectResource
@@ -297,7 +297,8 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
                                                      v8::Handle<v8::String> property,
                                                      QV8QObjectWrapper::RevisionMode revisionMode)
 {
-    // XXX aakenned This can't possibly be the best solution!!!
+    // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
+    // will be a faster way of creating QObject method objects.
     struct MethodClosure {
        static v8::Handle<v8::Value> create(QV8Engine *engine, QObject *object, 
                                            v8::Handle<v8::Value> *objectHandle, 
@@ -505,12 +506,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
                 return v8engine->typeWrapper()->newObject(object, data->typeNamespace, QV8TypeWrapper::ExcludeEnums);
             }
         }
+    } 
 
-        return v8::Undefined();
-    } else {
-        // XXX throw?
-        return v8::Undefined();
-    }
+    return v8::Undefined();
 }
 
 v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property, 
@@ -584,8 +582,6 @@ v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info
             if (ddata) { cache->addref(); ddata->propertyCache = cache; }
         } else {
             // Not cachable - fall back to QMetaObject (eg. dynamic meta object)
-            // XXX QDeclarativeOpenMetaObject has a cache, so this is suboptimal.
-            // XXX This is a workaround for QTBUG-9420.
             const QMetaObject *mo = object->metaObject();
             int pc = mo->propertyCount();
             int po = mo->propertyOffset();
@@ -679,9 +675,9 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
         QString toString = QLatin1String("toString");
         QString destroy = QLatin1String("destroy");
 
-        // XXX Enables fast property accessors.  These more than double the property access 
+        // XXX TODO: Enables fast property accessors.  These more than double the property access 
         // performance, but the  cost of setting up this structure hasn't been measured so 
-        // its not guarenteed that this is a win overall
+        // its not guarenteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
             Data *property = *iter;
             if (property->isFunction() || !property->isWritable() ||
@@ -758,7 +754,7 @@ v8::Local<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QDeclarativ
     if (ddata->propertyCache) {
         rv = ddata->propertyCache->newQObject(object, engine);
     } else {
-        // XXX aakenned - NewInstance() is slow for our case
+        // XXX NewInstance() should be optimized
         rv = m_constructor->NewInstance(); 
         QV8QObjectResource *r = new QV8QObjectResource(engine, object);
         rv->SetExternalResource(r);
@@ -872,21 +868,47 @@ struct QV8QObjectConnectionList : public QObject, public QDeclarativeGuard<QObje
     ~QV8QObjectConnectionList();
 
     struct Connection {
+        Connection() 
+        : needsDestroy(false) {}
+        Connection(const Connection &other) 
+        : thisObject(other.thisObject), function(other.function), needsDestroy(false) {}
+        Connection &operator=(const Connection &other) {
+            thisObject = other.thisObject;
+            function = other.function;
+            needsDestroy = other.needsDestroy;
+            return *this;
+        }
+
         v8::Persistent<v8::Object> thisObject;
         v8::Persistent<v8::Function> function;
+
+        void dispose() {
+            qPersistentDispose(thisObject);
+            qPersistentDispose(function);
+        }
+
+        bool needsDestroy;
+    };
+
+    struct ConnectionList : public QList<Connection> {
+        ConnectionList() : connectionsInUse(0), connectionsNeedClean(false) {}
+        int connectionsInUse;
+        bool connectionsNeedClean;
     };
 
     QV8Engine *engine;
 
-    typedef QHash<int, QList<Connection> > SlotHash;
+    typedef QHash<int, ConnectionList> SlotHash;
     SlotHash slotHash;
+    bool needsDestroy;
+    int inUse;
 
     virtual void objectDestroyed(QObject *);
     virtual int qt_metacall(QMetaObject::Call, int, void **);
 };
 
 QV8QObjectConnectionList::QV8QObjectConnectionList(QObject *object, QV8Engine *engine)
-: QDeclarativeGuard<QObject>(object), engine(engine)
+: QDeclarativeGuard<QObject>(object), engine(engine), needsDestroy(false), inUse(0)
 {
 }
 
@@ -905,7 +927,11 @@ QV8QObjectConnectionList::~QV8QObjectConnectionList()
 void QV8QObjectConnectionList::objectDestroyed(QObject *object)
 {
     engine->qobjectWrapper()->m_connections.remove(object);
-    delete this;
+
+    if (inUse)
+        needsDestroy = true;
+    else
+        delete this;
 }
 
 int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void **metaArgs)
@@ -914,13 +940,20 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
         SlotHash::Iterator iter = slotHash.find(index);
         if (iter == slotHash.end())
             return -1;
-        QList<Connection> &connections = *iter;
-        if (connections.isEmpty())
+        ConnectionList &connectionList = *iter;
+        if (connectionList.isEmpty())
             return -1;
 
-        // XXX optimize
+        inUse++;
+
+        connectionList.connectionsInUse++;
+
+        QList<Connection> connections = connectionList;
+
         QMetaMethod method = data()->metaObject()->method(index);
         Q_ASSERT(method.methodType() == QMetaMethod::Signal);
+        // XXX TODO: We should figure out a way to cache the parameter types to avoid resolving
+        // them each time.
         QList<QByteArray> params = method.parameterTypes();
 
         v8::HandleScope handle_scope;
@@ -938,15 +971,33 @@ int QV8QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, v
             }
         }
 
-        // XXX what if this list changes or this object is deleted during the calls?
         for (int ii = 0; ii < connections.count(); ++ii) {
             Connection &connection = connections[ii];
+            if (connection.needsDestroy)
+                continue;
             if (connection.thisObject.IsEmpty()) {
                 connection.function->Call(engine->global(), argCount, args.data());
             } else {
                 connection.function->Call(connection.thisObject, argCount, args.data());
             }
         }
+
+        connectionList.connectionsInUse--;
+        if (connectionList.connectionsInUse == 0 && connectionList.connectionsNeedClean) {
+            for (QList<Connection>::Iterator iter = connectionList.begin(); 
+                 iter != connectionList.end(); ) {
+                if (iter->needsDestroy) {
+                    iter->dispose();
+                    iter = connectionList.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
+        }
+
+        inUse--;
+        if (inUse == 0 && needsDestroy)
+            delete this;
     } 
 
     return -1;
@@ -1000,7 +1051,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
     QV8QObjectConnectionList *connectionList = *iter;
     QV8QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(signalIndex);
     if (slotIter == connectionList->slotHash.end()) {
-        slotIter = connectionList->slotHash.insert(signalIndex, QList<QV8QObjectConnectionList::Connection>());
+        slotIter = connectionList->slotHash.insert(signalIndex, QV8QObjectConnectionList::ConnectionList());
         QMetaObject::connect(signalObject, signalIndex, connectionList, signalIndex);
     }
 
@@ -1064,7 +1115,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
     if (slotIter == connectionList->slotHash.end()) 
         return v8::Undefined(); // Nothing to disconnect from
 
-    QList<QV8QObjectConnectionList::Connection> &connections = *slotIter;
+    QV8QObjectConnectionList::ConnectionList &connections = *slotIter;
 
     v8::Local<v8::Function> function = v8::Local<v8::Function>::Cast(functionValue);
     QPair<QObject *, int> functionData = ExtractQtMethod(engine, function);
@@ -1080,9 +1131,12 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 QPair<QObject *, int> connectedFunctionData = ExtractQtMethod(engine, connection.function);
                 if (connectedFunctionData == functionData) {
                     // Match!
-                    qPersistentDispose(connection.thisObject);
-                    qPersistentDispose(connection.function);
-                    connections.removeAt(ii);
+                    if (connections.connectionsInUse) {
+                        connection.needsDestroy = true;
+                    } else {
+                        connection.dispose();
+                        connections.removeAt(ii);
+                    }
                     return v8::Undefined();
                 }
             }
@@ -1096,9 +1150,12 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
                 connection.thisObject.IsEmpty() == functionThisValue.IsEmpty() &&
                 (connection.thisObject.IsEmpty() || connection.thisObject->StrictEquals(functionThisValue))) {
                 // Match!
-                qPersistentDispose(connection.thisObject);
-                qPersistentDispose(connection.function);
-                connections.removeAt(ii);
+                if (connections.connectionsInUse) {
+                    connection.needsDestroy = true;
+                } else {
+                    connection.dispose();
+                    connections.removeAt(ii);
+                }
                 return v8::Undefined();
             }
         }
@@ -1790,8 +1847,8 @@ v8::Handle<v8::Value> MetaCallArgument::toValue(QV8Engine *engine)
             QDeclarativeData::get(object, true)->setImplicitDestructible();
         return engine->newQObject(object);
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
-        // XXX aakenned Can this be more optimal?  Just use Array as a prototype and 
-        // implement directly against QList<QObject*>?
+        // XXX Can this be made more by using Array as a prototype and implementing
+        // directly against QList<QObject*>?
         QList<QObject *> &list = *(QList<QObject *>*)&data;
         v8::Local<v8::Array> array = v8::Array::New(list.count());
         for (int ii = 0; ii < list.count(); ++ii) 

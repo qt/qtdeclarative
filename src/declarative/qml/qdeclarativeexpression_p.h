@@ -122,6 +122,7 @@ public:
     QDeclarativeRefCount *dataRef;
 
     QString expression;
+    bool extractExpressionFromFunction;
 
     Mode expressionFunctionMode;
     v8::Persistent<v8::Function> v8function;

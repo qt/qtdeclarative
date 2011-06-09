@@ -62,8 +62,8 @@
 #include <private/qdeclarativexmlhttprequest_p.h>
 #include <private/qdeclarativesqldatabase_p.h>
 
-// XXX Need to check all the global functions will also work in a worker script where the QDeclarativeEngine
-// is not available
+// XXX TODO: Need to check all the global functions will also work in a worker script where the 
+// QDeclarativeEngine is not available
 QT_BEGIN_NAMESPACE
 
 QV8Engine::QV8Engine()
@@ -84,6 +84,7 @@ QV8Engine::~QV8Engine()
     delete m_listModelData;
     m_listModelData = 0;
 
+    qPersistentDispose(m_freezeObject);
     qPersistentDispose(m_getOwnPropertyNames);
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
@@ -122,7 +123,7 @@ void QV8Engine::init(QDeclarativeEngine *engine)
     }
 
     initializeGlobal(m_context->Global());
-    freezeGlobal();
+    freezeObject(m_context->Global());
 }
 
 QString QV8Engine::toStringStatic(v8::Handle<v8::Value> jsstr)
@@ -335,8 +336,8 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
                 return v8::Null();
             }
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
-            // XXX aakenned Can this be more optimal?  Just use Array as a prototype and 
-            // implement directly against QList<QObject*>?
+            // XXX Can this be made more by using Array as a prototype and implementing
+            // directly against QList<QObject*>?
             const QList<QObject *> &list = *(QList<QObject *>*)ptr;
             v8::Local<v8::Array> array = v8::Array::New(list.count());
             for (int ii = 0; ii < list.count(); ++ii) 
@@ -350,49 +351,12 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             return newQObject(obj);
     }
 
+    // XXX TODO: To be compatible, we still need to handle:
+    //    + QScriptValue
+    //    + QObjectList
+    //    + QList<int>
+
     return m_variantWrapper.newVariant(variant);
-
-    // XXX aakenned
-#if 0
-#ifndef QT_NO_REGEXP
-        case QMetaType::QRegExp:
-            result = newRegExp(exec, *reinterpret_cast<const QRegExp *>(ptr));
-            break;
-#endif
-#ifndef QT_NO_QOBJECT
-#endif
-        case QMetaType::QVariant:
-            result = eng->newVariant(*reinterpret_cast<const QVariant*>(ptr));
-            break;
-        default:
-            if (type == qMetaTypeId<QScriptValue>()) {
-                result = eng->scriptValueToJSCValue(*reinterpret_cast<const QScriptValue*>(ptr));
-                if (!result)
-                    return JSC::jsUndefined();
-            }
-
-#ifndef QT_NO_QOBJECT
-            // lazy registration of some common list types
-            else if (type == qMetaTypeId<QObjectList>()) {
-                qScriptRegisterSequenceMetaType<QObjectList>(eng->q_func());
-                return create(exec, type, ptr);
-            }
-#endif
-            else if (type == qMetaTypeId<QList<int> >()) {
-                qScriptRegisterSequenceMetaType<QList<int> >(eng->q_func());
-                return create(exec, type, ptr);
-            }
-
-            else {
-                QByteArray typeName = QMetaType::typeName(type);
-                if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(ptr))
-                    return JSC::jsNull();
-                else
-                    result = eng->newVariant(QVariant(type, ptr));
-            }
-        }
-    }
-#endif
 }
 
 // A handle scope and context must be entered
@@ -522,8 +486,6 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     console->Set(v8::String::New("log"), printFn);
     console->Set(v8::String::New("debug"), printFn);
 
-    // XXX - Qt global object properties
-
     v8::Local<v8::Object> qt = v8::Object::New();
 
     // Set all the enums from the "Qt" namespace
@@ -562,22 +524,21 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("md5"), V8FUNCTION(md5, this));
     qt->Set(v8::String::New("btoa"), V8FUNCTION(btoa, this));
     qt->Set(v8::String::New("atob"), V8FUNCTION(atob, this));
-    qt->Set(v8::String::New("quit"), V8FUNCTION(quit, this));
     qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
 
     if (m_engine) {
+        qt->Set(v8::String::New("quit"), V8FUNCTION(quit, this));
         qt->Set(v8::String::New("createQmlObject"), V8FUNCTION(createQmlObject, this));
         qt->Set(v8::String::New("createComponent"), V8FUNCTION(createComponent, this));
     }
 
-    // XXX translator functions
+    // XXX TODO - Implement translator functions
 
     global->Set(v8::String::New("print"), printFn);
     global->Set(v8::String::New("console"), console);
     global->Set(v8::String::New("Qt"), qt);
     global->Set(v8::String::New("gc"), V8FUNCTION(gc, this));
 
-    // XXX mainthread only
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
     m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
@@ -588,29 +549,38 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     for (quint32 ii = 0; ii < namesArray->Length(); ++ii) 
         m_illegalNames.insert(toString(namesArray->Get(ii)));
     }
+
+    {
+#define FREEZE_SOURCE "(function freeze_recur(obj) { "\
+                      "    if (Qt.isQtObject(obj)) return;"\
+                      "    if (obj != Function.connect && obj != Function.disconnect && "\
+                      "        obj instanceof Object) {"\
+                      "        var properties = Object.getOwnPropertyNames(obj);"\
+                      "        for (var prop in properties) { "\
+                      "            if (prop == \"connect\" || prop == \"disconnect\") {"\
+                      "                Object.freeze(obj[prop]); "\
+                      "                continue;"\
+                      "            }"\
+                      "            freeze_recur(obj[prop]);"\
+                      "        }"\
+                      "    }"\
+                      "    if (obj instanceof Object) {"\
+                      "        Object.freeze(obj);"\
+                      "    }"\
+                      "})"
+
+    v8::Local<v8::Script> freeze = v8::Script::New(v8::String::New(FREEZE_SOURCE));
+    v8::Local<v8::Value> result = freeze->Run();
+    Q_ASSERT(result->IsFunction());
+    m_freezeObject = qPersistentNew(v8::Local<v8::Function>::Cast(result));
+#undef FREEZE_SOURCE
+    }
 }
 
-void QV8Engine::freezeGlobal()
+void QV8Engine::freezeObject(v8::Handle<v8::Value> value)
 {
-    // Freeze the global object 
-    // XXX I don't think this is sufficient as it misses non-enumerable properties
-#define FREEZE "(function freeze_recur(obj) { "\
-               "    if (Qt.isQtObject(obj)) return;"\
-               "    for (var prop in obj) { " \
-               "        if (prop == \"connect\" || prop == \"disconnect\") {" \
-               "            Object.freeze(obj[prop]); "\
-               "            continue;" \
-               "        }" \
-               "        freeze_recur(obj[prop]);" \
-               "    }" \
-               "    if (obj instanceof Object) {" \
-               "        Object.freeze(obj);" \
-               "    }"\
-               "})(this);"
-    v8::Local<v8::Script> test = v8::Script::New(v8::String::New(FREEZE));
-#undef FREEZE
-
-    test->Run();
+    v8::Handle<v8::Value> args[] = { value };
+    m_freezeObject->Call(global(), 1, args);
 }
 
 void QV8Engine::gc()
@@ -1270,7 +1240,6 @@ v8::Handle<v8::Value> QV8Engine::openUrlExternally(const v8::Arguments &args)
 v8::Handle<v8::Value> QV8Engine::resolvedUrl(const v8::Arguments &args)
 {
     QUrl url = V8ENGINE()->toVariant(args[0], -1).toUrl();
-    // XXX uses QDeclarativeEngine which means it wont work in worker script?
     QDeclarativeEngine *e = V8ENGINE()->engine();
     QDeclarativeEnginePrivate *p = 0;
     if (e) p = QDeclarativeEnginePrivate::get(e);
@@ -1349,7 +1318,6 @@ QDeclarativeEngine::quit() signal to the QCoreApplication::quit() slot.
 */
 v8::Handle<v8::Value> QV8Engine::quit(const v8::Arguments &args)
 {
-    // XXX worker script?
     QDeclarativeEnginePrivate::get(V8ENGINE()->engine())->sendQuit();
     return v8::Undefined();
 }

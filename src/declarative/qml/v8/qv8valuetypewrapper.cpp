@@ -117,7 +117,7 @@ void QV8ValueTypeWrapper::init(QV8Engine *engine)
 
 v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int property, QDeclarativeValueType *type)
 {
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8ValueTypeReferenceResource *r = new QV8ValueTypeReferenceResource(m_engine);
     r->type = type; r->object = object; r->property = property;
@@ -127,7 +127,7 @@ v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(QObject *object, int pro
 
 v8::Local<v8::Object> QV8ValueTypeWrapper::newValueType(const QVariant &value, QDeclarativeValueType *type)
 {
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8ValueTypeCopyResource *r = new QV8ValueTypeCopyResource(m_engine);
     r->type = type; r->value = value;
@@ -172,9 +172,9 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
     if (!r) return v8::Undefined();
 
-    // XXX aakenned - this is horribly inefficient.  People seem to have taken a
-    // liking to value type properties, so we should probably try and optimize it
-    // a little.
+    // XXX This is horribly inefficient.  Sadly people seem to have taken a liking to 
+    // value type properties, so we should probably try and optimize it a little.
+    // We should probably just replace all value properties with dedicated accessors.
 
     QByteArray propName = r->engine->toString(property).toUtf8();
     int index = r->type->metaObject()->indexOfProperty(propName.constData());

@@ -98,7 +98,7 @@ void QV8TypeWrapper::init(QV8Engine *engine)
 v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeType *t, TypeNameMode mode)
 {
     Q_ASSERT(t);
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     r->mode = mode; r->object = o; r->type = t;
@@ -109,7 +109,7 @@ v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeType *t,
 v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeTypeNameCache *t, TypeNameMode mode)
 {
     Q_ASSERT(t);
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     t->addref();
@@ -169,8 +169,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         if (d && d->type) {
             return v8engine->typeWrapper()->newObject(object, d->type, resource->mode);
         } else if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = typeNamespace->moduleApi()) {
-
-            // XXX QtScript/JSC required
+            // XXX TODO: Currently module APIs are implemented against QScriptValues.  Consequently we
+            // can't do anything here until the QtScript/V8 binding is complete.
             return v8::Undefined();
 
         }
@@ -195,7 +195,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
 
     QV8Engine *v8engine = resource->engine;
 
-    // XXX module api
+    // XXX TODO: Implement writes to module API objects
 
     if (resource->type && resource->object) {
         QDeclarativeType *type = resource->type;

@@ -88,7 +88,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
     if (!object || propId == -1)
         return v8::Null();
 
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = object;
@@ -101,7 +101,7 @@ v8::Handle<v8::Value> QV8ListWrapper::newList(QObject *object, int propId, int p
 
 v8::Handle<v8::Value> QV8ListWrapper::newList(const QDeclarativeListProperty<QObject> &prop, int propType)
 {
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8ListResource *r = new QV8ListResource(m_engine);
     r->object = prop.object;

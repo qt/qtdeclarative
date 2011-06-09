@@ -150,9 +150,7 @@ public:
     QObject *contextObject;
 
     // Any script blocks that exist on this context
-    // XXX aakenned
     QList<v8::Persistent<v8::Object> > importedScripts;
-//    QList<QScriptValue> importedScripts;
 
     // Context base url
     QUrl url;

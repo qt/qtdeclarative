@@ -1232,7 +1232,7 @@ void QDeclarativeScriptBlob::done()
 
     m_scriptData->pragmas = m_pragmas;
 
-    // XXX aakenned - what about error handling?
+    // XXX TODO: Handle errors that occur duing the script compile
     QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());

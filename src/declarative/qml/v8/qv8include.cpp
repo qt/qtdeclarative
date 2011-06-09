@@ -78,7 +78,7 @@ QV8Include::~QV8Include()
 
 v8::Local<v8::Object> QV8Include::resultValue(Status status)
 {
-    // XXX aakenned inefficient
+    // XXX It seems inefficient to create this object from scratch each time.
     v8::Local<v8::Object> result = v8::Object::New();
     result->Set(v8::String::New("OK"), v8::Integer::New(Ok));
     result->Set(v8::String::New("LOADING"), v8::Integer::New(Loading));
@@ -94,7 +94,7 @@ void QV8Include::callback(QV8Engine *engine, v8::Handle<v8::Function> callback, 
 {
     if (!callback.IsEmpty()) {
         v8::Handle<v8::Value> args[] = { status };
-        // XXX TryCatch?
+        v8::TryCatch tc;
         callback->Call(engine->global(), 1, args);
     }
 }

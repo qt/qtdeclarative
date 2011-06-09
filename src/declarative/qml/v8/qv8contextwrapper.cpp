@@ -69,7 +69,12 @@ public:
 
     QObject *secondaryScope;
 
-    // XXX aakenned - this is somewhat of a horrible abuse of external strings :)
+    // This is a pretty horrible hack, and an abuse of external strings.  When we create a 
+    // sub-context (a context created by a Qt.include() in an external javascript file),
+    // we pass a specially crafted SubContext external string as the v8::Script::Data() to
+    // the script, which contains a pointer to the context.  We can then access the 
+    // v8::Script::Data() later on to resolve names and URLs against the sub-context instead
+    // of the main outer context.
     struct SubContext : public v8::String::ExternalStringResource {
         SubContext(QDeclarativeContextData *context) : context(context) {}
         QDeclarativeGuardedContextData context;
@@ -146,7 +151,7 @@ void QV8ContextWrapper::init(QV8Engine *engine)
 
 v8::Local<v8::Object> QV8ContextWrapper::qmlScope(QDeclarativeContextData *ctxt, QObject *scope)
 {
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8ContextResource *r = new QV8ContextResource(m_engine, ctxt, scope);
     rv->SetExternalResource(r);
@@ -160,7 +165,7 @@ v8::Local<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
     context->isInternal = true;
     context->isJSContext = true;
 
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_urlConstructor->NewInstance(); 
     QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0);
     r->ownsContext = true;
@@ -219,7 +224,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String> proper
     QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
 
     if (!resource)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Undefined();
 
     QV8Engine *engine = resource->engine;
 
@@ -234,13 +239,14 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
 
     if (!resource)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Undefined();
 
-    // XXX aakenned too agressive
+    // Its possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definately needed.
     QDeclarativeContextData *context = resource->getContext();
 
     if (!context)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Undefined();
 
     // Search type (attached property/enum/imported scripts) names
     // Secondary scope object
@@ -352,7 +358,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> proper
     QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
 
     if (!resource)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Handle<v8::Value>();
 
     QV8Engine *engine = resource->engine;
 
@@ -362,7 +368,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> proper
         QString error = QLatin1String("Invalid write to global property \"") + engine->toString(property) + 
                         QLatin1String("\"");
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
-        return v8::Undefined();
+        return v8::Handle<v8::Value>();
     }
 }
 
@@ -373,13 +379,14 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
 
     if (!resource)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Undefined();
 
-    // XXX aakenned too agressive
+    // Its possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definately needed.
     QDeclarativeContextData *context = resource->getContext();
 
     if (!context)
-        return v8::Undefined(); // XXX Should we throw here?
+        return v8::Undefined();
 
     // See QV8ContextWrapper::Getter for resolution order
 

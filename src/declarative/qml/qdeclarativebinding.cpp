@@ -387,16 +387,6 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                 value = QVariant::fromValue((QObject *)0);
             } else {
                 value = ep->v8engine.toVariant(result, d->property.propertyType());
-                if (value.userType() == QMetaType::QObjectStar && !qvariant_cast<QObject*>(value)) {
-                    // If the object is null, we extract the predicted type.  While this isn't
-                    // 100% reliable, in many cases it gives us better error messages if we
-                    // assign this null-object to an incompatible property
-                    // XXX aakenned
-                    // int type = ep->objectClass->objectType(scriptValue);
-                    int type = QMetaType::QObjectStar;
-                    QObject *o = 0;
-                    value = QVariant(type, (void *)&o);
-                }
             }
 
 

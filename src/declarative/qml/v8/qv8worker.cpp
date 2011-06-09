@@ -133,9 +133,9 @@ static inline void *popPtr(const char *&data)
     return rv;
 }
 
-// XXX double check exception safety
+// XXX TODO: Check that worker script is exception safe in the case of 
+// serialization/deserialization failures
 
-#include <QDebug>
 #define ALIGN(size) (((size) + 3) & ~3)
 void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *engine)
 {
@@ -166,7 +166,8 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
 
         string->Write((uint16_t*)buffer);
     } else if (v->IsFunction()) {
-        // XXX
+        // XXX TODO: Implement passing function objects between the main and
+        // worker scripts
         push(data, valueheader(WorkerUndefined));
     } else if (v->IsArray()) {
         v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(v);
@@ -238,7 +239,8 @@ void QV8Worker::serialize(QByteArray &data, v8::Handle<v8::Value> v, QV8Engine *
             }
         }
     } else if (engine->isQObject(v)) {
-        // XXX Can we generalize this?
+        // XXX TODO: Generalize passing objects between the main thread and worker scripts so 
+        // that others can trivially plug in their elements.
         QDeclarativeListModel *lm = qobject_cast<QDeclarativeListModel *>(engine->toQObject(v));
         if (lm && lm->agent()) {
             QDeclarativeListModelWorkerAgent *agent = lm->agent();

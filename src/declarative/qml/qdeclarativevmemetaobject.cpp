@@ -652,7 +652,6 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(ctxt->engine);
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-                // XXX aakenned
                 v8::Handle<v8::Function> function = method(id);
                 QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + id;
 

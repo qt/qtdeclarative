@@ -106,7 +106,7 @@ v8::Local<v8::Object> QV8VariantWrapper::newVariant(const QVariant &value)
     bool scarceResource = value.type() == QVariant::Pixmap ||
                           value.type() == QVariant::Image;
 
-    // XXX aakenned - NewInstance() is slow for our case
+    // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv;
     QV8VariantResource *r = new QV8VariantResource(m_engine, value);
 

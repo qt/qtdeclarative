@@ -995,7 +995,6 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
     }
 
-    // XXX aakenned optimize
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
 
