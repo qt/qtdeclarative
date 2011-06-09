@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: container
@@ -49,20 +49,20 @@ Item {
 
     width: 24
     height: 24
-    TrailEmitter{
+    Emitter{
         id: visualization
         particle: "laser"
         system: container.system
         anchors.fill: parent
         emitting: container.show
-        shape: Ellipse{}
-        speed: DirectedVector{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
-        particleDuration: 1000
-        particlesPerSecond: 64
+        shape: EllipseShape{}
+        speed: TargetedDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
+        lifeSpan: 1000
+        emitRate: 64
 
-        particleSize: 24
-        particleSizeVariation: 8
-        particleEndSize: 8
+        size: 24
+        sizeVariation: 8
+        endSize: 8
     }
 
     function fireAt(targetArg, hardpoint){
@@ -84,7 +84,7 @@ Item {
         emitter.pulse(0.10);
  //       console.log("Fire box: " +  Math.min(container.width/2, target.x) + "," + Math.min(container.height/2, target.y) + " " + (Math.max(container.width/2, target.x) - Math.min(container.width/2, target.x)) + "," + (Math.max(container.height/2, target.y) - Math.min(container.height/2, target.y)));
     }
-    TrailEmitter{
+    Emitter{
         id: emitter
         particle: "laser"
         emitting: false
@@ -93,16 +93,16 @@ Item {
         width: Math.max(container.width/2, target.x) - x;
         y: Math.min(container.height/2, target.y);
         height: Math.max(container.height/2, target.y) - y;
-        shape: Line{
+        shape: LineShape{
             mirrored: (emitter.y < 0 || emitter.x < 0) && !(emitter.y < 0 && emitter.x < 0 )//I just want XOR
         }
 
-        particleDuration: 1000
-        particlesPerSecond: 8000
-        maxParticles: 800
-        particleSize: 16
-        particleEndSize: 0
+        lifeSpan: 1000
+        emitRate: 8000
+        emitCap: 800
+        size: 16
+        endSize: 0
 
-        speed: PointVector{xVariation: 4; yVariation: 4}
+        speed: PointDirection{xVariation: 4; yVariation: 4}
     }
 }

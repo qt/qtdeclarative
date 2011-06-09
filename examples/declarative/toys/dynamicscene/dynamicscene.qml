@@ -147,27 +147,27 @@ Item {
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "Sun.qml"
-                        image: "../images/sun.png"
+                        source: "../images/sun.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "GenericSceneItem.qml"
-                        image: "../images/moon.png"
+                        source: "../images/moon.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        image: "../images/tree_s.png"
+                        source: "../images/tree_s.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        image: "../images/rabbit_brown.png"
+                        source: "../images/rabbit_brown.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        image: "../images/rabbit_bw.png"
+                        source: "../images/rabbit_bw.png"
                     }
                 }
             }

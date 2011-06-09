@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     id: root
@@ -55,30 +55,26 @@ Rectangle{
         id: sys
         startTime: 4000
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         y:root.height + 20
         width: root.width
-        particlesPerSecond: 200
-        particleDuration: 4000
-        speed: PointVector{ y: -120; }
+        emitRate: 200
+        lifeSpan: 4000
+        speed: PointDirection{ y: -120; }
     }
-    SpriteParticle{
+    ImageParticle{
         system: sys
         visible: !cloneMode
-        Sprite{
-            source: "content/particle2.png"
-        }
+        source: "content/particle2.png"
     }
-    SpriteParticle{
+    ImageParticle{
         system: sys
         visible: cloneMode
         z: 0
-        Sprite{
-            source: "content/particle3.png"
-        }
+        source: "content/particle3.png"
     }
-    SpriteParticle{
+    ImageParticle{
         system: sys
         clip: true
         visible: cloneMode
@@ -86,8 +82,6 @@ Rectangle{
         height: 240
         width: root.width
         z: 1
-        Sprite{
-            source: "content/particle.png"
-        }
+        source: "content/particle.png"
     }
 }

@@ -42,8 +42,8 @@ import "ImageProviderCore" // import the plugin that registers the color image p
 
 //![0]
 Column {
-    Image { source: "image://colors/yellow" }
-    Image { source: "image://colors/red" }
+    Image { source: "source://colors/yellow" }
+    Image { source: "source://colors/red" }
 }
 //![0]
 

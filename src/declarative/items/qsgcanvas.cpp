@@ -64,6 +64,8 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_NO_THREADED_RENDERER)
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 
+extern Q_OPENGL_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+
 /*
 Focus behavior
 ==============
@@ -79,9 +81,64 @@ a scope focused item that takes precedence over the item being added.  Otherwise
 the focus of the added tree is used.  In the case of of a tree of items being 
 added to a canvas for the first time, which may have a conflicted focus state (two
 or more items in one scope having focus set), the same rule is applied item by item - 
-thus the first item that has focus will get it (assuming the scope doesn't already 
+thus the first item that has focus will get it (assuming the scope doesn't already
 have a scope focused item), and the other items will have their focus cleared.
 */
+
+/*
+  Threaded Rendering
+  ==================
+
+  The threaded rendering uses a number of different variables to track potential
+  states used to handle resizing, initial paint, grabbing and driving animations
+  while ALWAYS keeping the GL context in the rendering thread and keeping the
+  overhead of normal one-shot paints and vblank driven animations at a minimum.
+
+  Resize, initial show and grab suffer slightly in this model as they are locked
+  to the rendering in the rendering thread, but this is a necessary evil for
+  the system to work.
+
+  Variables that are used:
+
+  Private::animationRunning: This is true while the animations are running, and only
+  written to inside locks.
+
+  RenderThread::isGuiBlocked: This is used to indicate that the GUI thread owns the
+  lock. This variable is an integer to allow for recursive calls to lockInGui()
+  without using a recursive mutex. See isGuiBlockPending.
+
+  RenderThread::isPaintComplete: This variable is cleared when rendering starts and
+  set once rendering is complete. It is monitored in the paintEvent(),
+  resizeEvent() and grab() functions to force them to wait for rendering to
+  complete.
+
+  RenderThread::isGuiBlockPending: This variable is set in the render thread just
+  before the sync event is sent to the GUI thread. It is used to avoid deadlocks
+  in the case where render thread waits while waiting for GUI to pick up the sync
+  event and GUI thread gets a resizeEvent, the initial paintEvent or a grab.
+  When this happens, we use the
+  exhaustSyncEvent() function to do the sync right there and mark the coming
+  sync event to be discarded. There can only ever be one sync incoming.
+
+  RenderThread::isRenderBlock: This variable is true when animations are not
+  running and the render thread has gone to sleep, waiting for more to do.
+
+  RenderThread::isExternalUpdatePending: This variable is set to false during
+  the sync phase in the GUI thread and to true in maybeUpdate(). It is an
+  indication to the render thread that another render pass needs to take
+  place, rather than the render thread going to sleep after completing its swap.
+
+  RenderThread::doGrab: This variable is set by the grab() function and
+  tells the renderer to do a grab after rendering is complete and before
+  swapping happens.
+
+  RenderThread::shouldExit: This variable is used to determine if the render
+  thread should do a nother pass. It is typically set as a result of show()
+  and unset as a result of hide() or during shutdown()
+
+  RenderThread::hasExited: Used by the GUI thread to synchronize the shutdown
+  after shouldExit has been set to true.
+ */
 
 // #define FOCUS_DEBUG
 // #define MOUSE_DEBUG
@@ -104,41 +161,6 @@ QSGItem::UpdatePaintNodeData::UpdatePaintNodeData()
 
 QSGRootItem::QSGRootItem()
 {
-}
-
-void QSGCanvasPrivate::stopRenderingThread()
-{
-    if (thread->isRunning()) {
-        mutex.lock();
-        exitThread = true;
-        wait.wakeOne();
-        wait.wait(&mutex);
-        exitThread = false;
-        mutex.unlock();
-        thread->wait();
-    }
-}
-
-void QSGCanvasPrivate::_q_animationStarted()
-{
-#ifdef THREAD_DEBUG
-    qWarning("AnimationDriver: Main Thread: started");
-#endif
-    mutex.lock();
-    animationRunning = true;
-    if (idle)
-        wait.wakeOne();
-    mutex.unlock();
-}
-
-void QSGCanvasPrivate::_q_animationStopped()
-{
-#ifdef THREAD_DEBUG
-    qWarning("AnimationDriver: Main Thread: stopped");
-#endif
-    mutex.lock();
-    animationRunning = false;
-    mutex.unlock();
 }
 
 void QSGCanvas::paintEvent(QPaintEvent *)
@@ -180,7 +202,9 @@ void QSGCanvas::paintEvent(QPaintEvent *)
         int syncTime = frameTimer.elapsed();
 #endif
 
-        d->renderSceneGraph();
+        d->renderSceneGraph(d->widgetSize);
+
+        swapBuffers();
 
 #ifdef FRAME_TIMING
         printf("FrameTimes, last=%d, animations=%d, polish=%d, makeCurrent=%d, sync=%d, sgrender=%d, readback=%d, total=%d\n",
@@ -198,6 +222,11 @@ void QSGCanvas::paintEvent(QPaintEvent *)
 
         if (d->animationDriver->isRunning())
             update();
+    } else {
+        if (isUpdatesEnabled()) {
+            d->thread->paint();
+            setUpdatesEnabled(false);
+        }
     }
 }
 
@@ -205,10 +234,7 @@ void QSGCanvas::resizeEvent(QResizeEvent *e)
 {
     Q_D(QSGCanvas);
     if (d->threadedRendering) {
-        d->mutex.lock();
-        QGLWidget::resizeEvent(e);
-        d->widgetSize = e->size();
-        d->mutex.unlock();
+        d->thread->resize(e->size());
     } else {
         d->widgetSize = e->size();
         d->viewportSize = d->widgetSize;
@@ -222,29 +248,27 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
     QGLWidget::showEvent(e);
 
-    if (d->threadedRendering) {
-        d->contextInThread = true;
-        doneCurrent();
-        if (!d->animationDriver) {
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), this, SLOT(_q_animationStarted()), Qt::DirectConnection);
-            connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(_q_animationStopped()), Qt::DirectConnection);
-        }
-        d->animationDriver->install();
-        d->mutex.lock();
-        d->thread->start();
-        d->wait.wait(&d->mutex);
-        d->mutex.unlock();
-    } else {
-        makeCurrent();
+    if (!d->contextFailed) {
+        if (d->threadedRendering) {
+            if (!d->animationDriver) {
+                d->animationDriver = d->context->createAnimationDriver(this);
+                connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
+                connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
+            }
+            d->animationDriver->install();
+            d->thread->startRenderThread();
+            setUpdatesEnabled(true);
+        } else {
+            makeCurrent();
 
-        if (!d->context || !d->context->isReady()) {
-            d->initializeSceneGraph();
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
-        }
+            if (!d->context || !d->context->isReady()) {
+                d->initializeSceneGraph();
+                d->animationDriver = d->context->createAnimationDriver(this);
+                connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
+            }
 
-        d->animationDriver->install();
+            d->animationDriver->install();
+        }
     }
 }
 
@@ -252,10 +276,13 @@ void QSGCanvas::hideEvent(QHideEvent *e)
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering)
-        d->stopRenderingThread();
+    if (!d->contextFailed) {
+        if (d->threadedRendering) {
+            d->thread->stopRenderThread();
+        }
 
-    d->animationDriver->uninstall();
+        d->animationDriver->uninstall();
+    }
 
     QGLWidget::hideEvent(e);
 }
@@ -312,18 +339,14 @@ void QSGCanvasPrivate::polishItems()
 
 void QSGCanvasPrivate::syncSceneGraph()
 {
-    inSync = true;
     updateDirtyNodes();
-    inSync = false;
 }
 
 
-void QSGCanvasPrivate::renderSceneGraph()
+void QSGCanvasPrivate::renderSceneGraph(const QSize &size)
 {
-    QGLContext *glctx = const_cast<QGLContext *>(QGLContext::currentContext());
-
-    context->renderer()->setDeviceRect(QRect(QPoint(0, 0), viewportSize));
-    context->renderer()->setViewportRect(QRect(QPoint(0, 0), viewportSize));
+    context->renderer()->setDeviceRect(QRect(QPoint(0, 0), size));
+    context->renderer()->setViewportRect(QRect(QPoint(0, 0), size));
     context->renderer()->setProjectMatrixToDeviceRect();
 
     context->renderNextFrame();
@@ -332,126 +355,21 @@ void QSGCanvasPrivate::renderSceneGraph()
     sceneGraphRenderTime = frameTimer.elapsed();
 #endif
 
-
 #ifdef FRAME_TIMING
 //    int pixel;
 //    glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
     readbackTime = frameTimer.elapsed();
 #endif
-
-    glctx->swapBuffers();
 }
 
 
+// ### Do we need this?
 void QSGCanvas::sceneGraphChanged()
 {
-    Q_D(QSGCanvas);
-    d->needsRepaint = true;
+//    Q_D(QSGCanvas);
+//    d->needsRepaint = true;
 }
 
-
-void QSGCanvasPrivate::runThread()
-{
-#ifdef THREAD_DEBUG
-    qWarning("QSGRenderer: Render thread running");
-#endif
-    Q_Q(QSGCanvas);
-
-    printf("QSGCanvas::runThread(), rendering in a thread...\n");
-
-    q->makeCurrent();
-    initializeSceneGraph();
-
-    QObject::connect(context->renderer(), SIGNAL(sceneGraphChanged()),
-                      q, SLOT(sceneGraphChanged()),
-                      Qt::DirectConnection);
-
-    mutex.lock();
-    wait.wakeOne(); // Wake the main thread waiting for us to start
-
-    while (true) {
-        QSize s;
-        s = widgetSize;
-
-        if (exitThread)
-            break;
-
-        if (s != viewportSize) {
-            glViewport(0, 0, s.width(), s.height());
-            viewportSize = s;
-        }
-
-#ifdef THREAD_DEBUG
-        qWarning("QSGRenderer: Render Thread: Waiting for main thread to stop");
-#endif
-        QCoreApplication::postEvent(q, new QEvent(QEvent::User));
-        wait.wait(&mutex);
-
-        if (exitThread) {
-#ifdef THREAD_DEBUG
-            qWarning("QSGRenderer: Render Thread: Shutting down...");
-#endif
-            break;
-        }
-
-#ifdef THREAD_DEBUG
-        qWarning("QSGRenderer: Render Thread: Main thread has stopped, syncing scene");
-#endif
-
-        // Do processing while main thread is frozen
-        syncSceneGraph();
-
-#ifdef THREAD_DEBUG
-        qWarning("QSGRenderer: Render Thread: Resuming main thread");
-#endif
-
-        // Read animationRunning while inside the locked section
-        bool continous = animationRunning;
-
-        wait.wakeOne();
-        mutex.unlock();
-
-        bool enterIdle = false;
-        if (needsRepaint) {
-#ifdef THREAD_DEBUG
-            qWarning("QSGRenderer: Render Thread: rendering scene");
-#endif
-            renderSceneGraph();
-            needsRepaint = false;
-        } else if (continous) {
-#ifdef THREAD_DEBUG
-            qWarning("QSGRenderer: Render Thread: waiting a while...");
-#endif
-            MyThread::doWait();
-        } else {
-            enterIdle = true;
-        }
-
-        mutex.lock();
-
-        if (enterIdle) {
-#ifdef THREAD_DEBUG
-            qWarning("QSGRenderer: Render Thread: Nothing has changed, going idle...");
-#endif
-            idle = true;
-            wait.wait(&mutex);
-            idle = false;
-#ifdef THREAD_DEBUG
-            qWarning("QSGRenderer: Render Thread: waking up from idle");
-#endif
-        }
-
-    }
-
-
-#ifdef THREAD_DEBUG
-    qWarning("QSGRenderer: Render Thread: shutting down, waking up main thread");
-#endif
-    wait.wakeOne();
-    mutex.unlock();
-
-    q->doneCurrent();
-}
 
 QSGCanvasPrivate::QSGCanvasPrivate()
     : rootItem(0)
@@ -460,15 +378,11 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , hoverItem(0)
     , dirtyItemList(0)
     , context(0)
-    , contextInThread(false)
+    , contextFailed(false)
     , threadedRendering(false)
-    , exitThread(false)
     , animationRunning(false)
-    , idle(false)
-    , needsRepaint(true)
     , renderThreadAwakened(false)
-    , inSync(false)
-    , thread(new MyThread(this))
+    , thread(0)
     , animationDriver(0)
 {
     threadedRendering = !qmlNoThreadedRenderer();
@@ -481,6 +395,11 @@ QSGCanvasPrivate::~QSGCanvasPrivate()
 void QSGCanvasPrivate::init(QSGCanvas *c)
 {
     QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+
+    if (!c->context() || !c->context()->isValid()) {
+        contextFailed = true;
+        qWarning("QSGCanvas: Couldn't acquire a GL context.");
+    }
 
     q_ptr = c;
 
@@ -495,6 +414,13 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     rootItemPrivate->flags |= QSGItem::ItemIsFocusScope;
 
     context = QSGContext::createDefaultContext();
+
+    if (threadedRendering) {
+        thread = new QSGCanvasRenderThread;
+        thread->renderer = q;
+        thread->d = this;
+    }
+
 }
 
 void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
@@ -945,9 +871,10 @@ QSGCanvas::~QSGCanvas()
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering) {
-        d->stopRenderingThread();
+    if (d->threadedRendering && d->thread->isRunning()) {
+        d->thread->stopRenderThread();
         delete d->thread;
+        d->thread = 0;
     }
 
     // ### should we change ~QSGItem to handle this better?
@@ -960,18 +887,20 @@ QSGCanvas::~QSGCanvas()
     d->cleanupNodes();
 
 
-    // We need to remove all references to textures pointing to "our" QSGContext
-    // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
-    // part of those cache entries.
-    // To "play nice" with other GL apps that are potentially running in the GUI thread,
-    // We get the current context and only temporarily make our own current
-    QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
-    makeCurrent();
-    extern void qt_declarative_pixmapstore_clean(QSGContext *context);
-    qt_declarative_pixmapstore_clean(d->context);
-    delete d->context;
-    if (currentContext)
-        currentContext->makeCurrent();
+    if (!d->contextFailed) {
+        // We need to remove all references to textures pointing to "our" QSGContext
+        // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
+        // part of those cache entries.
+        // To "play nice" with other GL apps that are potentially running in the GUI thread,
+        // We get the current context and only temporarily make our own current
+        QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
+        makeCurrent();
+        extern void qt_declarative_pixmapstore_clean(QSGContext *context);
+        qt_declarative_pixmapstore_clean(d->context);
+        delete d->context;
+        if (currentContext)
+            currentContext->makeCurrent();
+    }
 }
 
 QSGItem *QSGCanvas::rootItem() const
@@ -1022,31 +951,24 @@ bool QSGCanvas::event(QEvent *e)
     Q_D(QSGCanvas);
 
     if (e->type() == QEvent::User) {
-        Q_ASSERT(d->threadedRendering);
+        if (!d->thread->syncAlreadyHappened)
+            d->thread->sync(false);
 
-        d->mutex.lock();
+        d->thread->syncAlreadyHappened = false;
+
+        if (d->animationRunning) {
 #ifdef THREAD_DEBUG
-        qWarning("QSGRenderer: Main Thread: Stopped");
+            qDebug("GUI: Advancing animations...\n");
 #endif
 
-        d->polishItems();
-
-        d->renderThreadAwakened = false;
-
-        d->wait.wakeOne();
-
-        // The thread is exited when the widget has been hidden. We then need to
-        // skip the waiting, otherwise we would be waiting for a wakeup that never
-        // comes.
-        if (d->thread->isRunning())
-            d->wait.wait(&d->mutex);
-#ifdef THREAD_DEBUG
-        qWarning("QSGRenderer: Main Thread: Resumed");
-#endif
-        d->mutex.unlock();
-
-        if (d->animationRunning)
             d->animationDriver->advance();
+
+#ifdef THREAD_DEBUG
+            qDebug("GUI: Animations advanced...\n");
+#endif
+        }
+
+        return true;
     }
 
     switch (e->type()) {
@@ -1881,24 +1803,17 @@ void QSGCanvas::maybeUpdate()
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering) {
+    if (d->threadedRendering && d->thread && d->thread->isRunning()) {
         if (!d->renderThreadAwakened) {
-            d->renderThreadAwakened = true;
-            bool locked = d->mutex.tryLock();
-            if (d->idle && locked) {
 #ifdef THREAD_DEBUG
-                qWarning("QSGRenderer: now maybe I should update...");
+            printf("GUI: doing update...\n");
 #endif
-                d->wait.wakeOne();
-            } else if (d->inSync) {
-                // If we are in sync (on scene graph thread) someone has explicitely asked us
-                // to redraw, hence we tell the render loop to not go idle.
-                // The primary usecase for this is updatePaintNode() calling update() without
-                // changing the scene graph.
-                d->needsRepaint = true;
-            }
-            if (locked)
-                d->mutex.unlock();
+            d->renderThreadAwakened = true;
+            d->thread->lockInGui();
+            d->thread->isExternalUpdatePending = true;
+            if (d->thread->isRenderBlocked)
+                d->thread->wake();
+            d->thread->unlockInGui();
         }
     } else if (!d->animationDriver || !d->animationDriver->isRunning()) {
         update();
@@ -1928,6 +1843,373 @@ QSGEngine *QSGCanvas::sceneGraphEngine() const
         return d->context->engine();
     return 0;
 }
+
+
+/*!
+    Grabs the contents of the framebuffer and returns it as an image.
+
+    This function might not work if the view is not visible.
+
+    \warning Calling this function will cause performance problems.
+ */
+QImage QSGCanvas::grabFrameBuffer()
+{
+    Q_D(QSGCanvas);
+    if (d->threadedRendering)
+        return d->thread ? d->thread->grab() : QImage();
+    else {
+        // render a fresh copy of the scene graph in the current thread.
+        d->renderSceneGraph(size());
+        return QGLWidget::grabFrameBuffer(false);
+    }
+}
+
+
+void QSGCanvasRenderThread::run()
+{
+    qDebug("QML Rendering Thread Started");
+
+    renderer->makeCurrent();
+
+    if (!d->context->isReady())
+        d->initializeSceneGraph();
+
+    
+    while (!shouldExit) {
+        lock();
+
+        bool sizeChanged = false;
+        isExternalUpdatePending = false;
+
+        if (renderedSize != windowSize) {
+#ifdef THREAD_DEBUG
+            printf("                RenderThread: window has changed size...\n");
+#endif
+            glViewport(0, 0, windowSize.width(), windowSize.height());
+            sizeChanged = true;
+        }
+
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: preparing to sync...\n");
+#endif
+
+        if (!isGuiBlocked) {
+            isGuiBlockPending = true;
+
+#ifdef THREAD_DEBUG
+            printf("                RenderThread: aquired sync lock...\n");
+#endif
+            QApplication::postEvent(renderer, new QEvent(QEvent::User));
+#ifdef THREAD_DEBUG
+            printf("                RenderThread: going to sleep...\n");
+#endif
+            wait();
+
+            isGuiBlockPending = false;
+        }
+
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: Doing locked sync\n");
+#endif
+        d->syncSceneGraph();
+
+        // Wake GUI after sync to let it continue animating and event processing.
+        wake();
+        unlock();
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: sync done\n");
+#endif
+
+
+
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: rendering... %d x %d\n", windowSize.width(), windowSize.height());
+#endif
+
+        d->renderSceneGraph(windowSize);
+
+        // The content of the target buffer is undefined after swap() so grab needs
+        // to happen before swap();
+        if (doGrab) {
+#ifdef THREAD_DEBUG
+            printf("                RenderThread: doing a grab...\n");
+#endif
+            grabContent = qt_gl_read_framebuffer(windowSize, false, false);
+            doGrab = false;
+        }
+
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: wait for swap...\n");
+#endif
+
+        renderer->swapBuffers();
+#ifdef THREAD_DEBUG
+        printf("                RenderThread: swap complete...\n");
+#endif
+
+        lock();
+        isPaintCompleted = true;
+        if (sizeChanged)
+            renderedSize = windowSize;
+
+        // Wake the GUI thread now that rendering is complete, to signal that painting
+        // is done, resizing is done or grabbing is completed. For grabbing, we're
+        // signalling this much later than needed (we could have done it before swap)
+        // but we don't want to lock an extra time.
+        wake();
+
+        if (!d->animationRunning && !isExternalUpdatePending) {
+#ifdef THREAD_DEBUG
+            printf("                RenderThread: nothing to do, going to sleep...\n");
+#endif
+            isRenderBlocked = true;
+            wait();
+            isRenderBlocked = false;
+        }
+
+        unlock();
+    }
+
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: exited... Good Night!\n");
+#endif
+
+    renderer->doneCurrent();
+
+    lock();
+    hasExited = true;
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: waking GUI for final sleep..\n");
+#endif
+    wake();
+    unlock();
+}
+
+
+
+void QSGCanvasRenderThread::exhaustSyncEvent()
+{
+    if (isGuiBlockPending) {
+        sync(true);
+        syncAlreadyHappened = true;
+    }
+}
+
+
+
+void QSGCanvasRenderThread::sync(bool guiAlreadyLocked)
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: sync - %s\n", guiAlreadyLocked ? "outside event" : "inside event");
+#endif
+    Q_ASSERT(d->threadedRendering);
+
+    if (!guiAlreadyLocked)
+        d->thread->lockInGui();
+
+    d->renderThreadAwakened = false;
+
+    d->polishItems();
+
+    d->thread->wake();
+    d->thread->wait();
+
+    if (!guiAlreadyLocked)
+        d->thread->unlockInGui();
+}
+
+
+
+
+/*!
+    Acquires the mutex for the GUI thread. The function uses the isGuiBlocked
+    variable to keep track of how many recursion levels the gui is locket with.
+    We only actually acquire the mutex for the first level to avoid deadlocking
+    ourselves.
+ */
+
+void QSGCanvasRenderThread::lockInGui()
+{
+    // We must avoid recursive locking in the GUI thread, hence we
+    // only lock when we are the first one to try to block.
+    if (!isGuiBlocked)
+        lock();
+
+    isGuiBlocked++;
+
+#ifdef THREAD_DEBUG
+    printf("GUI: aquired lock... %d\n", isGuiBlocked);
+#endif
+}
+
+
+
+void QSGCanvasRenderThread::unlockInGui()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: releasing lock... %d\n", isGuiBlocked);
+#endif
+    --isGuiBlocked;
+    if (!isGuiBlocked)
+        unlock();
+}
+
+
+
+
+void QSGCanvasRenderThread::animationStarted()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: animationStarted()\n");
+#endif
+
+    lockInGui();
+
+    d->animationRunning = true;
+
+    if (isRenderBlocked)
+        wake();
+
+    unlockInGui();
+}
+
+
+
+void QSGCanvasRenderThread::animationStopped()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: animationStopped()...\n");
+#endif
+
+    lockInGui();
+    d->animationRunning = false;
+    unlockInGui();
+}
+
+
+void QSGCanvasRenderThread::paint()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: paint called..\n");
+#endif
+
+    lockInGui();
+    exhaustSyncEvent();
+
+    isPaintCompleted = false;
+    while (isRunning() && !isPaintCompleted) {
+        if (isRenderBlocked)
+            wake();
+        wait();
+    }
+    unlockInGui();
+
+    // paint is only called for the inital show. After that we will do all
+    // drawing ourselves, so block future updates..
+    renderer->setUpdatesEnabled(false);
+}
+
+
+
+void QSGCanvasRenderThread::resize(const QSize &size)
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: Resize Event: %dx%d\n", size.width(), size.height());
+#endif
+
+    if (!isRunning()) {
+        windowSize = size;
+        return;
+    }
+
+    lockInGui();
+    exhaustSyncEvent();
+
+    windowSize = size;
+
+    while (isRunning() && renderedSize != windowSize) {
+        if (isRenderBlocked)
+            wake();
+        wait();
+    }
+    unlockInGui();
+}
+
+
+
+void QSGCanvasRenderThread::startRenderThread()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: Starting Render Thread\n");
+#endif
+    hasExited = false;
+    shouldExit = false;
+    isGuiBlocked = 0;
+    isGuiBlockPending = false;
+
+    renderer->doneCurrent();
+    start();
+}
+
+
+
+void QSGCanvasRenderThread::stopRenderThread()
+{
+#ifdef THREAD_DEBUG
+    printf("GUI: stopping render thread\n");
+#endif
+
+    lockInGui();
+    exhaustSyncEvent();
+    shouldExit = true;
+
+    if (isRenderBlocked) {
+#ifdef THREAD_DEBUG
+        printf("GUI: waking up render thread\n");
+#endif
+        wake();
+    }
+
+    while (!hasExited) {
+#ifdef THREAD_DEBUG
+        printf("GUI: waiting for render thread to have exited..\n");
+#endif
+        wait();
+    }
+
+    unlockInGui();
+}
+
+
+
+QImage QSGCanvasRenderThread::grab()
+{
+    if (!isRunning())
+        return QImage();
+
+#ifdef THREAD_DEBUG
+    printf("GUI: doing a pixelwise grab..\n");
+#endif
+
+    lockInGui();
+    exhaustSyncEvent();
+
+    doGrab = true;
+    isPaintCompleted = false;
+    while (isRunning() && !isPaintCompleted) {
+        if (!isRenderBlocked)
+            wake();
+        wait();
+    }
+
+    QImage grabbed = grabContent;
+    grabContent = QImage();
+
+    unlockInGui();
+
+    return grabbed;
+}
+
 
 #include "moc_qsgcanvas.cpp"
 

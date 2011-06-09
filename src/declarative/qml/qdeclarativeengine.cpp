@@ -99,6 +99,7 @@
 #include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qsgitemsmodule_p.h>
+#include <private/qsgparticlesmodule_p.h>
 #include <qsgtexture.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -355,6 +356,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
         QDeclarativeUtilModule::defineModule();
         QDeclarativeEnginePrivate::defineModule();
         QSGItemsModule::defineModule();
+        QSGParticlesModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
 }
@@ -650,9 +652,6 @@ QNetworkAccessManager *QDeclarativeEngine::networkAccessManager() const
 
   All required image providers should be added to the engine before any
   QML sources files are loaded.
-
-  Note that images loaded from a QDeclarativeImageProvider are cached
-  by QPixmapCache, similar to any image loaded by QML.
 
   \sa removeImageProvider()
 */

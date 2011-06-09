@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item{
     id: container
@@ -52,7 +52,7 @@ Item{
         anchors.fill:parent
         overwrite: false
     }
-    DataParticle{
+    ModelParticle{
         id: mp
         fade: false
         system: sys
@@ -66,38 +66,38 @@ Item{
         }
     }
     property real emitterSpacing: parent.width/3
-    TrailEmitter{
+    Emitter{
         system: sys
         width: emitterSpacing - 64
         x: emitterSpacing*0 + 32
         y: -128
         height: 32
-        speed: PointVector{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        speed: PointDirection{ y: (container.height + 128)/12 }
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         width: emitterSpacing - 64
         x: emitterSpacing*1 + 32
         y: -128
         height: 32
-        speed: PointVector{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        speed: PointDirection{ y: (container.height + 128)/12 }
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         width: emitterSpacing - 64
         x: emitterSpacing*2 + 32
         y: -128
         height: 32
-        speed: PointVector{ y: (container.height + 128)/12 }
-        particlesPerSecond: 0.4
-        particleDuration: 1000000//eventually -1 should mean a million seconds for neatness
-        maxParticles: 15
+        speed: PointDirection{ y: (container.height + 128)/12 }
+        emitRate: 0.4
+        lifeSpan: 1000000//eventually -1 should mean a million seconds for neatness
+        emitCap: 15
     }
     Kill{
         system: sys

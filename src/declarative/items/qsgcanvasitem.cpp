@@ -117,7 +117,6 @@ QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 
 void QSGCanvasItem::requestPaint()
 {
-    //Q_D(QSGCanvasItem);
     //TODO:update(d->context->dirtyRect());
     update();
 }

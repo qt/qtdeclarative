@@ -45,6 +45,7 @@
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativerewrite_p.h"
+#include "private/qdeclarativescriptstring_p.h"
 #include "private/qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
@@ -225,6 +226,58 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, vo
     d->init(ctxt, expr, rc, me, url, lineNumber);
 
     if (QDeclarativeExpression_notifyIdx == -1) 
+        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
+    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
+}
+
+/*!
+    Create a QDeclarativeExpression object that is a child of \a parent.
+
+    The \script provides the expression to be evaluated, the context to evaluate it in,
+    and the scope object to evaluate it with.
+
+    This constructor is functionally equivalent to the following, but in most cases
+    is more efficient.
+    \code
+    QDeclarativeExpression expression(script.context(), script.scopeObject(), script.script(), parent);
+    \endcode
+
+    \sa QDeclarativeScriptString
+*/
+QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &script, QObject *parent)
+: QObject(*new QDeclarativeExpressionPrivate, parent)
+{
+    Q_D(QDeclarativeExpression);
+    bool defaultConstruction = false;
+
+    int id = script.d.data()->bindingId;
+    if (id < 0) {
+        defaultConstruction = true;
+    } else {
+        QDeclarativeContextData *ctxtdata = QDeclarativeContextData::get(script.context());
+
+        QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(qmlEngine(script.scopeObject()));
+        QDeclarativeCompiledData *cdata = 0;
+        QDeclarativeTypeData *typeData = 0;
+        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
+            typeData = engine->typeLoader.get(ctxtdata->url);
+            cdata = typeData->compiledData();
+        }
+
+        if (cdata)
+            d->init(ctxtdata, (void*)cdata->datas.at(id).constData(), cdata, script.scopeObject(),
+                    cdata->name, script.d.data()->lineNumber);
+        else
+           defaultConstruction = true;
+
+        if (typeData)
+            typeData->release();
+    }
+
+    if (defaultConstruction)
+        d->init(QDeclarativeContextData::get(script.context()), script.script(), script.scopeObject());
+
+    if (QDeclarativeExpression_notifyIdx == -1)
         QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
     d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }

@@ -113,12 +113,10 @@ HEADERS += \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
     $$PWD/qintrusivelist_p.h \
+    $$PWD/qdeclarativescriptstring_p.h
 
 QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(v4/v4.pri)
 include(v8/v8.pri)
-
-# mirrors logic in corelib/kernel/kernel.pri
-unix:!symbian: contains(QT_CONFIG, clock-gettime):include($$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri)

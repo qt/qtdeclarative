@@ -40,18 +40,9 @@
 ****************************************************************************/
 
 #include "qdeclarativescriptstring.h"
+#include "qdeclarativescriptstring_p.h"
 
 QT_BEGIN_NAMESPACE
-
-class QDeclarativeScriptStringPrivate : public QSharedData
-{
-public:
-    QDeclarativeScriptStringPrivate() : context(0), scope(0) {}
-
-    QDeclarativeContext *context;
-    QObject *scope;
-    QString script;
-};
 
 /*!
 \class QDeclarativeScriptString
@@ -75,8 +66,8 @@ and the class could choose how to handle it. Typically, the class will evaluate
 the script at some later time using a QDeclarativeExpression.
 
 \code
-QDeclarativeExpression expr(scriptString.context(), scriptString.script(), scriptStr.scopeObject());
-expr.value();
+QDeclarativeExpression expr(scriptString);
+expr.evaluate();
 \endcode
 
 \sa QDeclarativeExpression

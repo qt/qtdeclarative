@@ -29,6 +29,7 @@ HEADERS += \
     $$PWD/util/qsgareaallocator_p.h \
     $$PWD/util/qsgengine.h \
     $$PWD/util/qsgflatcolormaterial.h \
+    $$PWD/util/qsgsimplematerial.h \
     $$PWD/util/qsgsimplerectnode.h \
     $$PWD/util/qsgsimpletexturenode.h \
     $$PWD/util/qsgtexturematerial.h \

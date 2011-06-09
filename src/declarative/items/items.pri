@@ -61,6 +61,9 @@ HEADERS += \
     $$PWD/qsgcanvasitem_p.h \
     $$PWD/qsgcontext2d_p.h \
     $$PWD/qsgcontext2d_p_p.h \
+    $$PWD/qsgspriteengine_p.h \
+    $$PWD/qsgsprite_p.h \
+    $$PWD/qsgspriteimage_p.h \
 
 SOURCES += \
     $$PWD/qsgevents.cpp \
@@ -100,6 +103,9 @@ SOURCES += \
     $$PWD/qsgimplicitsizeitem.cpp \
     $$PWD/qsgcanvasitem.cpp \
     $$PWD/qsgcontext2d.cpp \
+    $$PWD/qsgspriteengine.cpp \
+    $$PWD/qsgsprite.cpp \
+    $$PWD/qsgspriteimage.cpp \
 
 SOURCES += \
     $$PWD/qsgshadereffectitem.cpp \

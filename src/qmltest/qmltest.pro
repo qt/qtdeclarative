@@ -11,7 +11,7 @@ QT += testlib-private declarative script testlib
 DEFINES += QT_BUILD_QUICK_TEST_LIB QT_NO_URL_CAST_FROM_STRING
 
 
-include($$QT_SOURCE_TREE/src/qbase.pri)
+load(qt_module_config)
 
 # Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
 # can be used in customer applications to build against QtQuickTest.

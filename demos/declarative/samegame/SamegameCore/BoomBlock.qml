@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: block
@@ -71,7 +71,7 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 200 } }
         anchors.fill: parent
     }
-    TrailEmitter {
+    Emitter {
         id: particles
         system: particleSystem
         particle: { 
@@ -85,14 +85,14 @@ Item {
         }
         anchors.fill: parent
 
-        speed: DirectedVector{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
-        shape: Ellipse{fill:true}
+        speed: TargetedDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
+        shape: EllipseShape{fill:true}
         emitting: false;
-        particleDuration: 700; particleDurationVariation: 100
-        particlesPerSecond: 1000
-        maxParticles: 100 //only fires 0.1s bursts (still 2x old number, ColoredParticle wants less than 16000 max though)
-        particleSize: 28
-        particleEndSize: 14
+        lifeSpan: 700; lifeSpanVariation: 100
+        emitRate: 1000
+        emitCap: 100 //only fires 0.1s bursts (still 2x old number, ImageParticle wants less than 16000 max though)
+        size: 28
+        endSize: 14
     }
 
     states: [

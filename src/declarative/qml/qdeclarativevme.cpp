@@ -60,6 +60,7 @@
 #include "private/qdeclarativev4bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
 #include "qdeclarativescriptstring.h"
+#include "qdeclarativescriptstring_p.h"
 
 #include <QStack>
 #include <QWidget>
@@ -639,6 +640,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             ss.setContext(ctxt->asQDeclarativeContext());
             ss.setScopeObject(scope);
             ss.setScript(primitives.at(instr.value));
+            ss.d.data()->bindingId = instr.bindingId;
+            ss.d.data()->lineNumber = instr.line;
 
             void *a[] = { &ss, 0, &status, &flags };
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
