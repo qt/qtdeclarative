@@ -55,7 +55,6 @@
 
 #include "qdeclarative.h"
 
-#include <QtScript/qscriptvalue.h>
 #include <QtGui/qevent.h>
 #include <QMutex>
 #include <QWaitCondition>
@@ -69,7 +68,6 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeListModel;
-class FlatListScriptClass;
 
 class QDeclarativeListModelWorkerAgent : public QObject
 {

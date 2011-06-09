@@ -58,8 +58,6 @@
 #include "private/qdeclarativeopenmetaobject_p.h"
 #include "qdeclarative.h"
 
-#include <private/qscriptdeclarativeclass_p.h>
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -69,7 +67,6 @@ QT_MODULE(Declarative)
 class QDeclarativeOpenMetaObject;
 class QDeclarativeListModelWorkerAgent;
 struct ModelNode;
-class FlatListScriptClass;
 class FlatNodeData;
 
 class FlatListModel
@@ -110,31 +107,9 @@ private:
     QList<QHash<int, QVariant> > m_values;
     QDeclarativeListModel *m_listModel;
 
-    FlatListScriptClass *m_scriptClass;
     QList<FlatNodeData *> m_nodeData;
     QDeclarativeListModelWorkerAgent *m_parentAgent;
 };
-
-
-#if 0
-/*
-    Created when get() is called on a FlatListModel. This allows changes to the
-    object returned by get() to be tracked, and passed onto the model.
-*/
-class FlatListScriptClass : public QScriptDeclarativeClass
-{
-public:
-    FlatListScriptClass(FlatListModel *model, QScriptEngine *seng);
-
-    Value property(Object *, const Identifier &);
-    void setProperty(Object *, const Identifier &name, const QScriptValue &);
-    QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, QScriptClass::QueryFlags flags);
-    bool compare(Object *, Object *);
-
-private:
-    FlatListModel *m_model;
-};
-#endif
 
 /*
     FlatNodeData and FlatNodeObjectData allow objects returned by get() to still

@@ -51,7 +51,6 @@
 #include <QtCore/QList>
 #include <QtCore/QVariant>
 #include <private/qlistmodelinterface_p.h>
-#include <QtScript/qscriptvalue.h>
 
 #include <private/qv8engine_p.h>
 
@@ -65,7 +64,6 @@ class FlatListModel;
 class NestedListModel;
 class QDeclarativeListModelWorkerAgent;
 struct ModelNode;
-class FlatListScriptClass;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeListModel : public QListModelInterface
 {
     Q_OBJECT

@@ -52,7 +52,6 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
 #include <QXmlStreamReader>
-#include <QtScript/qscriptvalueiterator.h>
 
 Q_DECLARE_METATYPE(QListModelInterface *)
 
@@ -1036,7 +1035,7 @@ bool QDeclarativeListModelParser::definesEmptyList(const QString &s)
 */
 
 FlatListModel::FlatListModel(QDeclarativeListModel *base)
-: m_engine(0), m_listModel(base), m_scriptClass(0), m_parentAgent(0)
+: m_engine(0), m_listModel(base), m_parentAgent(0)
 {
 }
 
@@ -1258,82 +1257,6 @@ void FlatNodeData::removeData(QV8ListModelResource *data)
 {
     objects.remove(data);
 }
-
-
-#if 0
-FlatListScriptClass::FlatListScriptClass(FlatListModel *model, QScriptEngine *seng)
-    : QScriptDeclarativeClass(seng),
-      m_model(model)
-{
-}
-
-QScriptDeclarativeClass::Value FlatListScriptClass::property(Object *obj, const Identifier &name)
-{
-    FlatNodeObjectData *objData = static_cast<FlatNodeObjectData*>(obj);
-    if (!objData->nodeData) // item at this index has been deleted
-        return QScriptDeclarativeClass::Value(engine(), engine()->undefinedValue());
-
-    int index = objData->nodeData->index;
-    QString propName = toString(name);
-    int role = m_model->m_strings.value(propName, -1);
-
-    if (role >= 0 && index >=0 ) {
-        const QHash<int, QVariant> &row = m_model->m_values[index];
-        QScriptValue sv = engine()->toScriptValue<QVariant>(row[role]);
-        return QScriptDeclarativeClass::Value(engine(), sv);
-    }
-
-    return QScriptDeclarativeClass::Value(engine(), engine()->undefinedValue());
-}
-
-void FlatListScriptClass::setProperty(Object *obj, const Identifier &name, const QScriptValue &value)
-{
-    if (!value.isVariant() && !value.isRegExp() && !value.isDate() && value.isObject()) {
-        qmlInfo(m_model->m_listModel) << "Cannot add list-type data when modifying or after modification from a worker script";
-        return;
-    }
-
-    FlatNodeObjectData *objData = static_cast<FlatNodeObjectData*>(obj);
-    if (!objData->nodeData) // item at this index has been deleted
-        return;
-
-    int index = objData->nodeData->index;
-    QString propName = toString(name);
-
-    int role = m_model->m_strings.value(propName, -1);
-    if (role >= 0 && index >= 0) {
-        QHash<int, QVariant> &row = m_model->m_values[index];
-        row[role] = value.toVariant();
-
-        QList<int> roles;
-        roles << role;
-        if (m_model->m_parentAgent) {
-            // This is the list in the worker thread, so tell the agent to
-            // emit itemsChanged() later
-            m_model->m_parentAgent->changedData(index, 1, roles);
-        } else {
-            // This is the list in the main thread, so emit itemsChanged()
-            emit m_model->m_listModel->itemsChanged(index, 1, roles);
-        }
-    }
-}
-
-QScriptClass::QueryFlags FlatListScriptClass::queryProperty(Object *, const Identifier &, QScriptClass::QueryFlags)
-{
-    return (QScriptClass::HandlesReadAccess | QScriptClass::HandlesWriteAccess);
-}
-
-bool FlatListScriptClass::compare(Object *obj1, Object *obj2)
-{
-    FlatNodeObjectData *data1 = static_cast<FlatNodeObjectData*>(obj1);
-    FlatNodeObjectData *data2 = static_cast<FlatNodeObjectData*>(obj2);
-
-    if (!data1->nodeData || !data2->nodeData)
-        return false;
-
-    return data1->nodeData->index == data2->nodeData->index;
-}
-#endif
 
 NestedListModel::NestedListModel(QDeclarativeListModel *base)
 : _root(0), m_ownsRoot(false), m_listModel(base), _rolesOk(false)
