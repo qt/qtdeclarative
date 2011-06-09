@@ -56,6 +56,8 @@ QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
 
 void QSGParticleAffector::componentComplete()
 {
+    if(!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
+        setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
     if(!m_system)
         qWarning() << "Affector created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();

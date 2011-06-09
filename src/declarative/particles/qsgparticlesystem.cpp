@@ -67,7 +67,9 @@ QSGParticleData::QSGParticleData()
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent), m_particle_count(0), m_running(true) , m_startTime(0), m_overwrite(false)
+    QSGItem(parent), m_particle_count(0), m_running(true)
+  , m_startTime(0), m_overwrite(false)
+  , m_componentComplete(false)
 {
     m_groupIds = QHash<QString, int>();
 }
@@ -111,7 +113,9 @@ void QSGParticleSystem::setRunning(bool arg)
 void QSGParticleSystem::componentComplete()
 {
     QSGItem::componentComplete();
-    reset();
+    m_componentComplete = true;
+    if(!m_emitters.isEmpty() && !m_particles.isEmpty())
+        reset();
 }
 
 void QSGParticleSystem::initializeSystem()
@@ -191,6 +195,8 @@ void QSGParticleSystem::initializeSystem()
 
 void QSGParticleSystem::reset()
 {
+    if(!m_componentComplete)
+        return;//Batch starting reset()s a little
     //Clear guarded pointers which have been deleted
     int cleared = 0;
     cleared += m_emitters.removeAll(0);

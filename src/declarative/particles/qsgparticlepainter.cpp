@@ -54,8 +54,10 @@ QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
 
 void QSGParticlePainter::componentComplete()
 {
+    if(!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
+        setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
     if(!m_system)
-        qWarning() << "Particle created without a particle system specified";//TODO: useful QML warnings, like line number?
+        qWarning() << "ParticlePainter created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
 
