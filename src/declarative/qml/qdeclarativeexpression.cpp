@@ -48,9 +48,6 @@
 #include "private/qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
-#include <QtScript/qscriptprogram.h>
-
-#include <private/qscriptdeclarativeclass_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -380,12 +377,6 @@ void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> mes
         qDescription = qDescription.mid(9 /* strlen("Uncaught ") */);
 
     error.setDescription(qDescription);
-}
-
-void QDeclarativeExpressionPrivate::exceptionToError(QScriptEngine *scriptEngine, 
-                                                     QDeclarativeError &error)
-{
-    qFatal("Not implemented - we use v8 now");
 }
 
 bool QDeclarativeQtScriptExpression::notifyOnValueChange() const

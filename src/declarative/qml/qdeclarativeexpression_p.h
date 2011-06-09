@@ -58,8 +58,6 @@
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativeguard_p.h"
 
-#include <QtScript/qscriptvalue.h>
-
 #include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -129,7 +127,6 @@ public:
     v8::Persistent<v8::Function> v8function;
     v8::Persistent<v8::Object> v8qmlscope;
 
-    QScriptValue expressionContext; // Only used in ExplicitContext
     QObject *scopeObject;           // Only used in SharedContext
 
     bool notifyOnValueChange() const;
@@ -200,7 +197,6 @@ public:
     void _q_notify();
     virtual void emitValueChanged();
 
-    static void exceptionToError(QScriptEngine *, QDeclarativeError &);
     static void exceptionToError(v8::Handle<v8::Message>, QDeclarativeError &);
     static v8::Persistent<v8::Function> evalFunction(QDeclarativeContextData *ctxt, QObject *scope, 
                                                      const QString &code, const QString &filename, int line,
