@@ -46,6 +46,7 @@
 
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
 #include <QtDeclarative/private/qdeclarativedebughelper_p.h>
+#include <QtDeclarative/private/qsgitem_p.h>
 
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
@@ -55,6 +56,40 @@
 #include <cfloat>
 
 namespace QmlJSDebugger {
+
+/*
+ * Returns the first visible item at the given position, or 0 when no such
+ * child exists.
+ */
+static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
+{
+    if (item == overlay)
+        return 0;
+
+    if (!item->isVisible() || item->opacity() == 0.0)
+        return 0;
+
+    if (item->flags() & QSGItem::ItemClipsChildrenToShape) {
+        if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
+            return 0;
+    }
+
+    QList<QSGItem *> children = QSGItemPrivate::get(item)->paintOrderChildItems();
+    for (int i = children.count() - 1; i >= 0; --i) {
+        QSGItem *child = children.at(i);
+        if (QSGItem *betterCandidate = itemAt(child, item->mapToItem(child, pos), overlay))
+            return betterCandidate;
+    }
+
+    if (!(item->flags() & QSGItem::ItemHasContents))
+        return 0;
+
+    if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
+        return 0;
+
+    return item;
+}
+
 
 class SGSelectionHighlight : public QSGPaintedItem
 {
@@ -150,6 +185,12 @@ QWidget *SGViewInspector::viewWidget() const
     return m_view;
 }
 
+QSGItem *SGViewInspector::topVisibleItemAt(const QPointF &pos)
+{
+    QSGItem *root = m_view->rootItem();
+    return itemAt(root, root->mapFromScene(pos), m_overlay);
+}
+
 QList<QSGItem*> SGViewInspector::selectedItems() const
 {
     QList<QSGItem *> selection;
@@ -234,6 +275,39 @@ bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
         return QObject::eventFilter(obj, event);
 
     return AbstractViewInspector::eventFilter(obj, event);
+}
+
+bool SGViewInspector::mouseMoveEvent(QMouseEvent *event)
+{
+    if (QSGItem *item = topVisibleItemAt(event->pos()))
+        m_view->setToolTip(titleForItem(item));
+    else
+        m_view->setToolTip(QString());
+
+    return AbstractViewInspector::mouseMoveEvent(event);
+}
+
+QString SGViewInspector::titleForItem(QSGItem *item) const
+{
+    QString className = QLatin1String(item->metaObject()->className());
+    QString objectStringId = idStringForObject(item);
+
+    className.remove(QRegExp(QLatin1String("_QMLTYPE_\\d+")));
+    className.remove(QRegExp(QLatin1String("_QML_\\d+")));
+    if (className.startsWith(QLatin1String("QSG")))
+        className = className.mid(3);
+
+    QString constructedName;
+
+    if (!objectStringId.isEmpty()) {
+        constructedName = objectStringId + QLatin1String(" (") + className + QLatin1Char(')');
+    } else if (!item->objectName().isEmpty()) {
+        constructedName = item->objectName() + QLatin1String(" (") + className + QLatin1Char(')');
+    } else {
+        constructedName = className;
+    }
+
+    return constructedName;
 }
 
 } // namespace QmlJSDebugger

@@ -74,10 +74,15 @@ public:
     QSGView *view() const { return m_view; }
     QSGItem *overlay() const { return m_overlay; }
 
+    QSGItem *topVisibleItemAt(const QPointF &pos);
+
     QList<QSGItem *> selectedItems() const;
     void setSelectedItems(const QList<QSGItem*> &items);
 
+protected:
     bool eventFilter(QObject *obj, QEvent *event);
+
+    bool mouseMoveEvent(QMouseEvent *);
 
 private slots:
     void removeFromSelectedItems(QObject *);
@@ -85,6 +90,8 @@ private slots:
 
 private:
     bool syncSelectedItems(const QList<QSGItem*> &items);
+
+    QString titleForItem(QSGItem *item) const;
 
     QSGView *m_view;
     QSGItem *m_overlay;

@@ -47,43 +47,8 @@
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
 #include <QtDeclarative/QSGPaintedItem>
-#include <QtDeclarative/private/qsgitem_p.h>
 
 namespace QmlJSDebugger {
-
-/*
- * Returns the first visible item at the given position, or 0 when no such
- * child exists.
- */
-static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
-{
-    if (item == overlay)
-        return 0;
-
-    if (!item->isVisible() || item->opacity() == 0.0)
-        return 0;
-
-    if (item->flags() & QSGItem::ItemClipsChildrenToShape) {
-        if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
-            return 0;
-    }
-
-    QList<QSGItem *> children = QSGItemPrivate::get(item)->paintOrderChildItems();
-    for (int i = children.count() - 1; i >= 0; --i) {
-        QSGItem *child = children.at(i);
-        if (QSGItem *betterCandidate = itemAt(child, item->mapToItem(child, pos), overlay))
-            return betterCandidate;
-    }
-
-    if (!(item->flags() & QSGItem::ItemHasContents))
-        return 0;
-
-    if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
-        return 0;
-
-    return item;
-}
-
 
 class SGHoverHighlight : public QSGPaintedItem
 {
@@ -117,24 +82,21 @@ void SGSelectionTool::leaveEvent(QEvent *)
 void SGSelectionTool::mousePressEvent(QMouseEvent *event)
 {
     SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
-    QSGItem *root = sgInspector->view()->rootItem();
-    QPointF mappedPos = root->mapFromScene(event->pos());
-    QSGItem *item = itemAt(root, mappedPos, sgInspector->overlay());
-    if (item && item != root)
+    QSGItem *item = sgInspector->topVisibleItemAt(event->pos());
+    if (item)
         sgInspector->setSelectedItems(QList<QSGItem*>() << item);
 }
 
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
 {
     SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
-    QSGItem *root = sgInspector->view()->rootItem();
-    QPointF mappedPos = root->mapFromScene(event->pos());
-    QSGItem *item = itemAt(root, mappedPos, sgInspector->overlay());
-    if (!item || item == root) {
+    QSGItem *item = sgInspector->topVisibleItemAt(event->pos());
+    if (!item) {
         m_hoverHighlight->setVisible(false);
         return;
     }
 
+    QSGItem *root = sgInspector->view()->rootItem();
     m_hoverHighlight->setSize(QSizeF(item->width(), item->height()));
     m_hoverHighlight->setPos(root->mapFromItem(item->parentItem(), item->pos()));
     m_hoverHighlight->setVisible(true);
