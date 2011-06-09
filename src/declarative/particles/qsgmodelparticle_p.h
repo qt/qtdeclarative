@@ -96,12 +96,14 @@ protected:
     void prepareNextFrame();
 private slots:
     void updateCount();
+    void processPending();
 private:
     bool m_ownModel;
     QDeclarativeComponent* m_comp;
     QSGVisualDataModel *m_model;
     QVariant m_dataSource;
-    QList<QPointer<QSGItem> > m_deletables;
+    QList<QSGItem*> m_deletables;
+    QList< int > m_requests;
     int m_particleCount;
     bool m_fade;
 

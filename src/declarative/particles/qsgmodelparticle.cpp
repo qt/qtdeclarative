@@ -42,6 +42,7 @@
 #include "qsgmodelparticle_p.h"
 #include <QtDeclarative/private/qsgvisualitemmodel_p.h>
 #include <qsgnode.h>
+#include <QTimer>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -50,6 +51,12 @@ QSGModelParticle::QSGModelParticle(QSGItem *parent) :
     QSGParticlePainter(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true), m_modelCount(0)
 {
     setFlag(QSGItem::ItemHasContents);
+    QTimer* manageDelegates = new QTimer(this);//TODO: don't leak
+    connect(manageDelegates, SIGNAL(timeout()),
+            this, SLOT(processPending()));
+    manageDelegates->setInterval(16);
+    manageDelegates->setSingleShot(false);
+    manageDelegates->start();
 }
 
 QVariant QSGModelParticle::model() const
@@ -153,25 +160,36 @@ void QSGModelParticle::load(QSGParticleData* d)
         if(m_stasis.contains(m_items[pos]))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
-        m_items[pos]->setOpacity(0.);
+        m_deletables << m_items[pos];
         m_available << m_idx[pos];
-        m_model->release(m_items[pos]);
         m_idx[pos] = -1;
         m_items[pos] = 0;
         m_data[pos] = 0;
         m_activeCount--;
     }
-    m_items[pos] = m_model->item(m_available.first());
-    m_idx[pos] = m_available.first();
-    m_available.pop_front();
-    QSGModelParticleAttached* mpa = qobject_cast<QSGModelParticleAttached*>(qmlAttachedPropertiesObject<QSGModelParticle>(m_items[pos]));
-    if(mpa){
-        mpa->m_mp = this;
-        mpa->attach();
-    }
-    m_items[pos]->setParentItem(this);
+    m_requests << pos;
     m_data[pos] = d;
     m_activeCount++;
+}
+
+void QSGModelParticle::processPending()
+{//can't create/delete arbitrary items in the render thread
+    foreach(QSGItem* item, m_deletables){
+        item->setOpacity(0.);
+        m_model->release(item);
+    }
+
+    foreach(int pos, m_requests){
+        m_items[pos] = m_model->item(m_available.first());
+        m_idx[pos] = m_available.first();
+        m_available.pop_front();
+        QSGModelParticleAttached* mpa = qobject_cast<QSGModelParticleAttached*>(qmlAttachedPropertiesObject<QSGModelParticle>(m_items[pos]));
+        if(mpa){
+            mpa->m_mp = this;
+            mpa->attach();
+        }
+        m_items[pos]->setParentItem(this);
+    }
 }
 
 void QSGModelParticle::reload(QSGParticleData* d)
@@ -242,9 +260,8 @@ void QSGModelParticle::prepareNextFrame()
             continue;
         }
         if(t >= 1.0){//Usually happens from load
-            item->setOpacity(0.);
             m_available << m_idx[i];
-            m_model->release(m_items[i]);
+            m_deletables << item;
             m_idx[i] = -1;
             m_items[i] = 0;
             m_data[i] = 0;
