@@ -135,8 +135,3 @@ QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(v4/v4.pri)
-
-# clock_gettime() is implemented in librt on these systems
-contains(QT_CONFIG, clock-gettime) {
-    linux-*|hpux-*|solaris-*:LIBS_PRIVATE *= -lrt
-}
