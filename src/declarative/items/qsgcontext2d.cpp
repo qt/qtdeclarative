@@ -53,7 +53,8 @@
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
 #include "qdeclarativepixmapcache_p.h"
-#include <QtScript/QScriptEngine>
+
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -366,535 +367,857 @@ static QString compositeOperatorToString(QPainter::CompositionMode op)
     return QString();
 }
 
-
- #include <QScriptEngine>
-
-//static QtScript functions
-static QScriptValue ctx2d_sync(QScriptContext *c, QScriptEngine* e)
+class QV8Context2DResource : public QV8ObjectResource
 {
-  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-  ctx2d->sync();
-  return e->nullValue();
+    V8_RESOURCE_TYPE(Context2DType)
+public:
+    QV8Context2DResource(QV8Engine *e) : QV8ObjectResource(e) {}
+    QDeclarativeGuard<QSGContext2D> context;
+};
+
+//static script functions
+static v8::Handle<v8::Value> ctx2d_sync(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->sync();
+
+    return v8::Undefined();
 }
 
-
 // back-reference to the canvas, getter
-static QScriptValue ctx2d_canvas(QScriptContext *c, QScriptEngine* e)
+static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-  return e->newQObject(ctx2d->canvas());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->newQObject(r->context->canvas());
 }
 
 // state
-static QScriptValue ctx2d_restore(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
 {
-  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-  ctx2d->restore();
-  return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+  r->context->restore();
+
+  return v8::Undefined();
 }
 
-static QScriptValue ctx2d_save(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->save();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->save();
+
+    return v8::Undefined();
 }
 
 // transformations
-static QScriptValue ctx2d_rotate(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {
-        ctx2d->rotate(c->argument(0).toNumber());
-    }
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 1) 
+        r->context->rotate(args[0]->NumberValue());
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_scale(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 2) {
-        ctx2d->scale(c->argument(0).toNumber(), c->argument(1).toNumber());
-    }
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 2) 
+        r->context->scale(args[0]->NumberValue(), args[1]->NumberValue());
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_setTransform(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 6) {
-        ctx2d->setTransform(c->argument(0).toNumber()
-                          , c->argument(1).toNumber()
-                          , c->argument(2).toNumber()
-                          , c->argument(3).toNumber()
-                          , c->argument(4).toNumber()
-                          , c->argument(5).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 6) {
+        r->context->setTransform(args[0]->NumberValue(),
+                                 args[1]->NumberValue(),
+                                 args[2]->NumberValue(),
+                                 args[3]->NumberValue(),
+                                 args[4]->NumberValue(),
+                                 args[5]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_transform(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 6) {
-        ctx2d->transform(c->argument(0).toNumber()
-                       , c->argument(1).toNumber()
-                       , c->argument(2).toNumber()
-                       , c->argument(3).toNumber()
-                       , c->argument(4).toNumber()
-                       , c->argument(5).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 6) {
+        r->context->transform(args[0]->NumberValue(),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue(),
+                              args[3]->NumberValue(),
+                              args[4]->NumberValue(),
+                              args[5]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_translate(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 2) {
-        ctx2d->translate(c->argument(0).toNumber()
-                       , c->argument(1).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 2) {
+        r->context->translate(args[0]->NumberValue(),
+                              args[1]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
 
 // compositing
 // float getter/setter default 1.0
-static QScriptValue ctx2d_globalAlpha(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setGlobalAlpha(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->globalAlpha());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->globalAlpha());
+}
+
+static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setGlobalAlpha(value->NumberValue());
 }
 
 // string getter/setter default "source-over"
-static QScriptValue ctx2d_globalCompositeOperation(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (ctx2d) {
-        if (c->argumentCount() == 1) {//setter
-            ctx2d->setGlobalCompositeOperation(c->argument(0).toString());
-        }
-        return e->toScriptValue(ctx2d->globalCompositeOperation());
-    }
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->toString(r->context->globalCompositeOperation());
+}
+
+static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setGlobalCompositeOperation(engine->toString(value));
 }
 
 // colors and styles
 // getter/setter
-static QScriptValue ctx2d_fillStyle(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setFillStyle(c->argument(0).toVariant());
-    }
-    return e->toScriptValue(ctx2d->fillStyle());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->fromVariant(r->context->fillStyle());
+}
+
+static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setFillStyle(engine->toVariant(value, -1));
 }
 
 // colors and styles
 // getter/setter
-static QScriptValue ctx2d_fillColor(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_fillColor(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setFillColor(c->argument(0).toVariant().value<QColor>());
-    }
-    return e->toScriptValue(ctx2d->fillColor());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->fromVariant(r->context->fillColor());
 }
 
+static void ctx2d_fillColor_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setFillColor(engine->toVariant(value, -1).value<QColor>());
+}
 
 //getter/setter
-static QScriptValue ctx2d_strokeStyle(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setStrokeStyle(c->argument(0).toVariant());
-    }
-    return e->toScriptValue(ctx2d->strokeStyle());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->fromVariant(r->context->strokeStyle());
+}
+
+static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setStrokeStyle(engine->toVariant(value, -1));
 }
 
 // colors and styles
 // getter/setter
-static QScriptValue ctx2d_strokeColor(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_strokeColor(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setStrokeColor(c->argument(0).toVariant().value<QColor>());
-    }
-    return e->toScriptValue(ctx2d->strokeColor());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->fromVariant(r->context->strokeColor());
 }
 
-static QScriptValue ctx2d_createLinearGradient(QScriptContext *c, QScriptEngine *e)
+static void ctx2d_strokeColor_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        QObject* gradient = ctx2d->createLinearGradient( c->argument(0).toNumber()
-                                                        ,c->argument(1).toNumber()
-                                                        ,c->argument(2).toNumber()
-                                                        ,c->argument(3).toNumber());
-        return e->toScriptValue(gradient);
-    }
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setStrokeColor(engine->toVariant(value, -1).value<QColor>());
 }
-static QScriptValue ctx2d_createRadialGradient(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 6) {
-        QObject* gradient = ctx2d->createRadialGradient( c->argument(0).toNumber()
-                                                        ,c->argument(1).toNumber()
-                                                        ,c->argument(2).toNumber()
-                                                        ,c->argument(3).toNumber()
-                                                        ,c->argument(4).toNumber()
-                                                        ,c->argument(5).toNumber());
-        return e->toScriptValue(gradient);
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 4) {
+        QObject* gradient = r->context->createLinearGradient(args[0]->NumberValue(),
+                                                             args[1]->NumberValue(),
+                                                             args[2]->NumberValue(),
+                                                             args[3]->NumberValue());
+        return engine->newQObject(gradient);
     }
-    return e->nullValue();
+
+    return v8::Null();
 }
-static QScriptValue ctx2d_createPattern(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 6) {
+        QObject* gradient = r->context->createRadialGradient(args[0]->NumberValue(),
+                                                             args[1]->NumberValue(),
+                                                             args[2]->NumberValue(),
+                                                             args[3]->NumberValue(),
+                                                             args[4]->NumberValue(),
+                                                             args[5]->NumberValue());
+        return engine->newQObject(gradient);
+    }
+
+    return v8::Null();
+}
+
+static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 {
     //TODO
-    return e->nullValue();
+    return v8::Null();
 }
 
 // line styles
 // string getter/setter
-static QScriptValue ctx2d_lineCap(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_lineCap(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setLineCap(c->argument(0).toString());
-    }
-    return e->toScriptValue(ctx2d->lineCap());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->toString(r->context->lineCap());
+}
+
+static void ctx2d_lineCap_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setLineCap(engine->toString(value));
 }
 
 // string getter/setter
-static QScriptValue ctx2d_lineJoin(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_lineJoin(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setLineJoin(c->argument(0).toString());
-    }
-    return e->toScriptValue(ctx2d->lineJoin());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->toString(r->context->lineJoin());
 }
-// float getter/setter
-static QScriptValue ctx2d_lineWidth(QScriptContext *c, QScriptEngine *e)
+
+static void ctx2d_lineJoin_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setLineWidth(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->lineWidth());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setLineJoin(engine->toString(value));
 }
+
 // float getter/setter
-static QScriptValue ctx2d_miterLimit(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_lineWidth(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setMiterLimit(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->miterLimit());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->lineWidth());
+}
+
+static void ctx2d_lineWidth_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setLineWidth(value->NumberValue());
+}
+
+// float getter/setter
+v8::Handle<v8::Value> ctx2d_miterLimit(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->miterLimit());
+}
+
+static void ctx2d_miterLimit_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setMiterLimit(value->NumberValue());
 }
 
 // shadows
 // float getter/setter
-static QScriptValue ctx2d_shadowBlur(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_shadowBlur(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setShadowBlur(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->shadowBlur());
-}
-static QScriptValue ctx2d_shadowColor(QScriptContext *c, QScriptEngine *e)
-{
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setShadowColor(c->argument(0).toString());
-    }
-    return e->toScriptValue(ctx2d->shadowColor());
-}
-static QScriptValue ctx2d_shadowOffsetX(QScriptContext *c, QScriptEngine *e)
-{
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setShadowOffsetX(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->shadowOffsetX());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->shadowBlur());
 }
 
-static QScriptValue ctx2d_shadowOffsetY(QScriptContext *c, QScriptEngine *e)
+static void ctx2d_shadowBlur_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 1) {//setter
-        ctx2d->setShadowOffsetY(c->argument(0).toNumber());
-    }
-    return e->toScriptValue(ctx2d->shadowOffsetY());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setShadowBlur(value->NumberValue());
+}
+
+v8::Handle<v8::Value> ctx2d_shadowColor(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    return engine->toString(r->context->shadowColor());
+}
+
+static void ctx2d_shadowColor_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setShadowColor(engine->toString(value));
+}
+
+v8::Handle<v8::Value> ctx2d_shadowOffsetX(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->shadowOffsetX());
+}
+
+static void ctx2d_shadowOffsetX_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setShadowOffsetX(value->NumberValue());
+}
+
+v8::Handle<v8::Value> ctx2d_shadowOffsetY(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Number::New(r->context->shadowOffsetY());
+}
+
+static void ctx2d_shadowOffsetY_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    r->context->setShadowOffsetY(value->NumberValue());
 }
 
 //rects
-static QScriptValue ctx2d_clearRect(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_clearRect(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        ctx2d->clearRect(c->argument(0).toNumber()
-                        ,c->argument(1).toNumber()
-                        ,c->argument(2).toNumber()
-                        ,c->argument(3).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 4) {
+        r->context->clearRect(args[0]->NumberValue(),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue(),
+                              args[3]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_fillRect(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_fillRect(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        ctx2d->fillRect(c->argument(0).toNumber()
-                       ,c->argument(1).toNumber()
-                       ,c->argument(2).toNumber()
-                       ,c->argument(3).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 4) {
+        r->context->fillRect(args[0]->NumberValue(),
+                             args[1]->NumberValue(),
+                             args[2]->NumberValue(),
+                             args[3]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_strokeRect(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        ctx2d->strokeRect(c->argument(0).toNumber()
-                         ,c->argument(1).toNumber()
-                         ,c->argument(2).toNumber()
-                         ,c->argument(3).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 4) {
+        r->context->strokeRect(args[0]->NumberValue(),
+                               args[1]->NumberValue(),
+                               args[2]->NumberValue(),
+                               args[3]->NumberValue());
     }
-    return e->nullValue();
+    
+    return v8::Undefined();
 }
 
 // Complex shapes (paths) API
-static QScriptValue ctx2d_arc(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 6) {
-        ctx2d->arc(c->argument(0).toNumber()
-                  ,c->argument(1).toNumber()
-                  ,c->argument(2).toNumber()
-                  ,c->argument(3).toNumber()
-                  ,c->argument(4).toNumber()
-                  ,c->argument(5).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 6) {
+        r->context->arc(args[0]->NumberValue(),
+                        args[1]->NumberValue(),
+                        args[2]->NumberValue(),
+                        args[3]->NumberValue(),
+                        args[4]->NumberValue(),
+                        args[5]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_arcTo(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 5) {
-        ctx2d->arcTo(c->argument(0).toNumber()
-                    ,c->argument(1).toNumber()
-                    ,c->argument(2).toNumber()
-                    ,c->argument(3).toNumber()
-                    ,c->argument(4).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 5) {
+        r->context->arcTo(args[0]->NumberValue(),
+                          args[1]->NumberValue(),
+                          args[2]->NumberValue(),
+                          args[3]->NumberValue(),
+                          args[4]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_beginPath(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->beginPath();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->beginPath();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_bezierCurveTo(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 5) {
-        ctx2d->bezierCurveTo(c->argument(0).toNumber()
-                            ,c->argument(1).toNumber()
-                            ,c->argument(2).toNumber()
-                            ,c->argument(3).toNumber()
-                            ,c->argument(4).toNumber()
-                            ,c->argument(5).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 5) {
+        r->context->bezierCurveTo(args[0]->NumberValue(),
+                                  args[1]->NumberValue(),
+                                  args[2]->NumberValue(),
+                                  args[3]->NumberValue(),
+                                  args[4]->NumberValue(),
+                                  args[5]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_clip(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->clip();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->clip();
+    
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_closePath(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->closePath();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->closePath();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_fill(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->fill();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->fill();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_lineTo(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 2) {
-        ctx2d->lineTo(c->argument(0).toNumber()
-                     ,c->argument(1).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 2) {
+        r->context->lineTo(args[0]->NumberValue(),
+                           args[1]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_moveTo(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 2) {
-        ctx2d->moveTo(c->argument(0).toNumber()
-                     ,c->argument(1).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 2) {
+        r->context->moveTo(args[0]->NumberValue(),
+                           args[1]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_quadraticCurveTo(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        ctx2d->quadraticCurveTo(c->argument(0).toNumber()
-                               ,c->argument(1).toNumber()
-                               ,c->argument(2).toNumber()
-                               ,c->argument(3).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 4) {
+        r->context->quadraticCurveTo(args[0]->NumberValue(),
+                                     args[1]->NumberValue(),
+                                     args[2]->NumberValue(),
+                                     args[3]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_rect(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 4) {
-        ctx2d->rect(c->argument(0).toNumber()
-                   ,c->argument(1).toNumber()
-                   ,c->argument(2).toNumber()
-                   ,c->argument(3).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    if (args.Length() == 4) {
+        r->context->rect(args[0]->NumberValue(),
+                         args[1]->NumberValue(),
+                         args[2]->NumberValue(),
+                         args[3]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_stroke(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    ctx2d->stroke();
-    return e->nullValue();
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    r->context->stroke();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_isPointInPath(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
     bool pointInPath = false;
-    if (c->argumentCount() == 2) {
-        pointInPath = ctx2d->isPointInPath(c->argument(0).toNumber()
-                                          ,c->argument(1).toNumber());
+    if (args.Length() == 2) {
+        pointInPath = r->context->isPointInPath(args[0]->NumberValue(),
+                                                args[1]->NumberValue());
     }
-    return e->toScriptValue(pointInPath);
+
+    return v8::Boolean::New(pointInPath);
 }
 
 // text
-static QScriptValue ctx2d_font(QScriptContext *c, QScriptEngine *e)
+v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_textAlign(QScriptContext *c, QScriptEngine *e)
+
+static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    Q_UNUSED(value);
 }
-static QScriptValue ctx2d_textBaseline(QScriptContext *c, QScriptEngine *e)
+
+v8::Handle<v8::Value> ctx2d_textAlign(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_fillText(QScriptContext *c, QScriptEngine *e)
+
+static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 3) {
-        ctx2d->fillText(c->argument(0).toString()
-                       ,c->argument(1).toNumber()
-                       ,c->argument(2).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    Q_UNUSED(value);
+}
+
+v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    return v8::Undefined();
+}
+
+static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR_SETTER("Not a Context2D object");
+
+    Q_UNUSED(value);
+}
+
+static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 3) {
+        r->context->fillText(engine->toString(args[0]),
+                             args[1]->NumberValue(),
+                             args[2]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
-static QScriptValue ctx2d_strokeText(QScriptContext *c, QScriptEngine *e)
+
+static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 3) {
-        ctx2d->strokeText(c->argument(0).toString()
-                         ,c->argument(1).toNumber()
-                         ,c->argument(2).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 3) {
+        r->context->strokeText(engine->toString(args[0]),
+                               args[1]->NumberValue(),
+                               args[2]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
 
 // drawing images
-static QScriptValue ctx2d_drawImage(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 {
-    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
-    if (c->argumentCount() == 3) {
-        ctx2d->drawImage(c->argument(0).toString()
-                        ,c->argument(1).toNumber()
-                        ,c->argument(2).toNumber());
-    } else if (c->argumentCount() == 5) {
-        ctx2d->drawImage(c->argument(0).toString()
-                        ,c->argument(1).toNumber()
-                        ,c->argument(2).toNumber()
-                        ,c->argument(3).toNumber()
-                        ,c->argument(4).toNumber());
-    } else if (c->argumentCount() == 9) {
-        ctx2d->drawImage(c->argument(0).toString()
-                        ,c->argument(1).toNumber()
-                        ,c->argument(2).toNumber()
-                        ,c->argument(3).toNumber()
-                        ,c->argument(4).toNumber()
-                        ,c->argument(5).toNumber()
-                        ,c->argument(6).toNumber()
-                        ,c->argument(7).toNumber()
-                        ,c->argument(8).toNumber());
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context) 
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+
+    if (args.Length() == 3) {
+        r->context->drawImage(engine->toString(args[0]),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue());
+    } else if (args.Length() == 5) {
+        r->context->drawImage(engine->toString(args[0]),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue(),
+                              args[3]->NumberValue(),
+                              args[4]->NumberValue());
+    } else if (args.Length() == 9) {
+        r->context->drawImage(engine->toString(args[0]),
+                              args[1]->NumberValue(),
+                              args[2]->NumberValue(),
+                              args[3]->NumberValue(),
+                              args[4]->NumberValue(),
+                              args[5]->NumberValue(),
+                              args[6]->NumberValue(),
+                              args[7]->NumberValue(),
+                              args[8]->NumberValue());
     }
-    return e->nullValue();
+
+    return v8::Undefined();
 }
 
 // pixel manipulation
-static QScriptValue ctx2d_createImageData(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_createImageData(const v8::Arguments &args)
 {
     //#TODO
-}
-static QScriptValue ctx2d_getImageData(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
-}
-static QScriptValue ctx2d_putImageData(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
+    return v8::Undefined();
 }
 
-//Image Data Interface
-static QScriptValue ctx2d_imageData_data(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_getImageData(const v8::Arguments &args)
 {
     //#TODO
-}
-static QScriptValue ctx2d_imageData_height(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
-}
-static QScriptValue ctx2d_imageData_width(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
+    return v8::Undefined();
 }
 
-//CanvasPixelArray interface
-static QScriptValue ctx2d_pixelArray_length(QScriptContext *c, QScriptEngine *e)
+static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
 {
     //#TODO
+    return v8::Undefined();
 }
-//getter/setter by index how to?
-static QScriptValue ctx2d_pixelArray(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
-}
-
-//CanvasGradient interface
-static QScriptValue ctx2d_gradient_addColorStop(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
-
-}
-
-//TextMetrics
-static QScriptValue ctx2d_textMetrics_width(QScriptContext *c, QScriptEngine *e)
-{
-    //#TODO
-
-}
-
 
 bool QSGContext2DPrivate::hasShadow() const
 {
@@ -2173,78 +2496,108 @@ bool QSGContext2D::isDirty() const
     return !d->commands.isEmpty();
 }
 
-QScriptValue QSGContext2D::scriptValue() const
+v8::Handle<v8::Object> QSGContext2D::v8value() const
 {
     Q_D(const QSGContext2D);
-    return d->scriptValue;
+    return d->v8value;
 }
 
-void QSGContext2D::setScriptEngine(QScriptEngine *eng)
+class QSGContext2DEngineData : public QV8Engine::Deletable
+{
+public:
+    QSGContext2DEngineData(QV8Engine *engine);
+    ~QSGContext2DEngineData();
+
+    v8::Persistent<v8::Function> constructor;
+};
+
+QSGContext2DEngineData::QSGContext2DEngineData(QV8Engine *engine)
+{
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->Set(v8::String::New("sync"), V8FUNCTION(ctx2d_sync, engine));
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("canvas"), ctx2d_canvas, 0, v8::External::Wrap(engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("restore"), V8FUNCTION(ctx2d_restore, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("save"), V8FUNCTION(ctx2d_save, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("rotate"), V8FUNCTION(ctx2d_rotate, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("scale"), V8FUNCTION(ctx2d_scale, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("setTransform"), V8FUNCTION(ctx2d_setTransform, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("transform"), V8FUNCTION(ctx2d_transform, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("translate"), V8FUNCTION(ctx2d_translate, engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("globalAlpha"), ctx2d_globalAlpha, ctx2d_globalAlpha_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("globalCompositeOperation"), ctx2d_globalCompositeOperation, ctx2d_globalCompositeOperation_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("fillStyle"), ctx2d_fillStyle, ctx2d_fillStyle_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("strokeStyle"), ctx2d_strokeStyle, ctx2d_strokeStyle_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("fillColor"), ctx2d_fillColor, ctx2d_fillColor_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("strokeColor"), ctx2d_strokeColor, ctx2d_strokeColor_set, v8::External::Wrap(engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("createLinearGradient"), V8FUNCTION(ctx2d_createLinearGradient, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("createRadialGradient"), V8FUNCTION(ctx2d_createRadialGradient, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("createPattern"), V8FUNCTION(ctx2d_createPattern, engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineCap"), ctx2d_lineCap, ctx2d_lineCap_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineJoin"), ctx2d_lineJoin, ctx2d_lineJoin_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("lineWidth"), ctx2d_lineWidth, ctx2d_lineWidth_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("miterLimit"), ctx2d_miterLimit, ctx2d_miterLimit_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowBlur"), ctx2d_shadowBlur, ctx2d_shadowBlur_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowColor"), ctx2d_shadowColor, ctx2d_shadowColor_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowOffsetX"), ctx2d_shadowOffsetX, ctx2d_shadowOffsetX_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("shadowOffsetY"), ctx2d_shadowOffsetY, ctx2d_shadowOffsetY_set, v8::External::Wrap(engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("clearRect"), V8FUNCTION(ctx2d_clearRect, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("fillRect"), V8FUNCTION(ctx2d_fillRect, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("strokeRect"), V8FUNCTION(ctx2d_strokeRect, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("arc"), V8FUNCTION(ctx2d_arc, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("arcTo"), V8FUNCTION(ctx2d_arcTo, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("beginPath"), V8FUNCTION(ctx2d_beginPath, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("bezierCurveTo"), V8FUNCTION(ctx2d_bezierCurveTo, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("clip"), V8FUNCTION(ctx2d_clip, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("closePath"), V8FUNCTION(ctx2d_closePath, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("fill"), V8FUNCTION(ctx2d_fill, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("lineTo"), V8FUNCTION(ctx2d_lineTo, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("moveTo"), V8FUNCTION(ctx2d_moveTo, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("quadraticCurveTo"), V8FUNCTION(ctx2d_quadraticCurveTo, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("rect"), V8FUNCTION(ctx2d_rect, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("stroke"), V8FUNCTION(ctx2d_stroke, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("isPointInPath"), V8FUNCTION(ctx2d_isPointInPath, engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("font"), ctx2d_font, ctx2d_font_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("textAlign"), ctx2d_textAlign, ctx2d_textAlign_set, v8::External::Wrap(engine));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("textBaseline"), ctx2d_textBaseline, ctx2d_textBaseline_set, v8::External::Wrap(engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("fillText"), V8FUNCTION(ctx2d_fillText, engine));
+    // ft->PrototypeTemplate()->Set(v8::String::New("measureText"), V8FUNCTION(ctx2d_measureText, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("strokeText"), V8FUNCTION(ctx2d_strokeText, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("drawImage"), V8FUNCTION(ctx2d_drawImage, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("createImageData"), V8FUNCTION(ctx2d_createImageData, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("getImageData"), V8FUNCTION(ctx2d_getImageData, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("putImageData"), V8FUNCTION(ctx2d_putImageData, engine));
+
+    constructor = qPersistentNew(ft->GetFunction());
+}
+
+QSGContext2DEngineData::~QSGContext2DEngineData()
+{
+    qPersistentDispose(constructor);
+}
+
+V8_DEFINE_EXTENSION(QSGContext2DEngineData, engineData);
+
+void QSGContext2D::setV8Engine(QV8Engine *engine)
 {
     Q_D(QSGContext2D);
-    if (d->scriptEngine != eng) {
-        d->scriptEngine = eng;
-        d->scriptValue = eng->newObject();
-        d->scriptValue.setData(eng->toScriptValue(this));
-        d->scriptValue.setProperty(QLatin1String("sync"), eng->newFunction(ctx2d_sync));
-        d->scriptValue.setProperty(QLatin1String("canvas"), eng->newFunction(ctx2d_canvas),QScriptValue::PropertyGetter);
-        d->scriptValue.setProperty(QLatin1String("restore"), eng->newFunction(ctx2d_restore));
-        d->scriptValue.setProperty(QLatin1String("save"), eng->newFunction(ctx2d_save));
-        d->scriptValue.setProperty(QLatin1String("rotate"), eng->newFunction(ctx2d_rotate, 1));
-        d->scriptValue.setProperty(QLatin1String("scale"), eng->newFunction(ctx2d_scale, 2));
-        d->scriptValue.setProperty(QLatin1String("setTransform"), eng->newFunction(ctx2d_setTransform, 6));
-        d->scriptValue.setProperty(QLatin1String("transform"), eng->newFunction(ctx2d_transform, 6));
-        d->scriptValue.setProperty(QLatin1String("translate"), eng->newFunction(ctx2d_translate, 2));
-        d->scriptValue.setProperty(QLatin1String("globalAlpha"), eng->newFunction(ctx2d_globalAlpha), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("globalCompositeOperation"), eng->newFunction(ctx2d_globalCompositeOperation), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("fillStyle"), eng->newFunction(ctx2d_fillStyle), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("strokeStyle"), eng->newFunction(ctx2d_strokeStyle),  QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("fillColor"), eng->newFunction(ctx2d_fillColor), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("strokeColor"), eng->newFunction(ctx2d_strokeColor),  QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("createLinearGradient"), eng->newFunction(ctx2d_createLinearGradient, 4));
-        d->scriptValue.setProperty(QLatin1String("createRadialGradient"), eng->newFunction(ctx2d_createRadialGradient, 6));
-        d->scriptValue.setProperty(QLatin1String("createPattern"), eng->newFunction(ctx2d_createPattern, 2));
-        d->scriptValue.setProperty(QLatin1String("lineCap"), eng->newFunction(ctx2d_lineCap), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("lineJoin"), eng->newFunction(ctx2d_lineJoin), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("lineWidth"), eng->newFunction(ctx2d_lineWidth), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("miterLimit"), eng->newFunction(ctx2d_miterLimit), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("shadowBlur"), eng->newFunction(ctx2d_shadowBlur), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("shadowColor"), eng->newFunction(ctx2d_shadowColor), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("shadowOffsetX"), eng->newFunction(ctx2d_shadowOffsetX), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("shadowOffsetY"), eng->newFunction(ctx2d_shadowOffsetY), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("clearRect"), eng->newFunction(ctx2d_clearRect, 4));
-        d->scriptValue.setProperty(QLatin1String("fillRect"), eng->newFunction(ctx2d_fillRect, 4));
-        d->scriptValue.setProperty(QLatin1String("strokeRect"), eng->newFunction(ctx2d_strokeRect, 4));
-        d->scriptValue.setProperty(QLatin1String("arc"), eng->newFunction(ctx2d_arc, 6));
-        d->scriptValue.setProperty(QLatin1String("arcTo"), eng->newFunction(ctx2d_arcTo, 5));
-        d->scriptValue.setProperty(QLatin1String("beginPath"), eng->newFunction(ctx2d_beginPath));
-        d->scriptValue.setProperty(QLatin1String("bezierCurveTo"), eng->newFunction(ctx2d_bezierCurveTo, 6));
-        d->scriptValue.setProperty(QLatin1String("clip"), eng->newFunction(ctx2d_clip));
-        d->scriptValue.setProperty(QLatin1String("closePath"), eng->newFunction(ctx2d_closePath));
-        d->scriptValue.setProperty(QLatin1String("fill"), eng->newFunction(ctx2d_fill));
-        d->scriptValue.setProperty(QLatin1String("lineTo"), eng->newFunction(ctx2d_lineTo, 2));
-        d->scriptValue.setProperty(QLatin1String("moveTo"), eng->newFunction(ctx2d_moveTo, 2));
-        d->scriptValue.setProperty(QLatin1String("quadraticCurveTo"), eng->newFunction(ctx2d_quadraticCurveTo, 4));
-        d->scriptValue.setProperty(QLatin1String("rect"), eng->newFunction(ctx2d_rect, 4));
-        d->scriptValue.setProperty(QLatin1String("stroke"), eng->newFunction(ctx2d_stroke));
-        d->scriptValue.setProperty(QLatin1String("isPointInPath"), eng->newFunction(ctx2d_isPointInPath, 2));
-        d->scriptValue.setProperty(QLatin1String("font"), eng->newFunction(ctx2d_font), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("textAlign"), eng->newFunction(ctx2d_textAlign), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("textBaseline"), eng->newFunction(ctx2d_textBaseline), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-        d->scriptValue.setProperty(QLatin1String("fillText"), eng->newFunction(ctx2d_fillText, 4));
-        //d->scriptValue.setProperty(QLatin1String("measureText"), eng->newFunction(ctx2d_measureText, 1));
-        d->scriptValue.setProperty(QLatin1String("strokeText"), eng->newFunction(ctx2d_strokeText, 4));
-        d->scriptValue.setProperty(QLatin1String("drawImage"), eng->newFunction(ctx2d_drawImage, 9));
-        d->scriptValue.setProperty(QLatin1String("createImageData"), eng->newFunction(ctx2d_createImageData, 2));
-        d->scriptValue.setProperty(QLatin1String("getImageData"), eng->newFunction(ctx2d_getImageData, 4));
-        d->scriptValue.setProperty(QLatin1String("putImageData"), eng->newFunction(ctx2d_putImageData, 7));
-    }
-}
+    if (d->v8engine != engine) {
+        d->v8engine = engine;
 
-QScriptEngine *QSGContext2D::scriptEngine() const
-{
-    Q_D(const QSGContext2D);
-    return d->scriptEngine;
+        qPersistentDispose(d->v8value);
+
+        if (d->v8engine == 0)
+            return;
+
+        QSGContext2DEngineData *ed = engineData(engine);
+        d->v8value = qPersistentNew(ed->constructor->NewInstance());
+        QV8Context2DResource *r = new QV8Context2DResource(engine);
+        r->context = this;
+        d->v8value->SetExternalResource(r);
+    }
 }
 
 void QSGContext2D::addref()

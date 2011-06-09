@@ -99,20 +99,20 @@ void QSGCanvasItem::paint(QPainter *painter)
     }
 }
 
-QScriptValue QSGCanvasItem::getContext(const QString &contextId)
+QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
-    QScriptEngine* e = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
+
     if (contextId == QLatin1String("2d")) {
         if (!d->context) {
+            QV8Engine *e = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
             d->context = new QSGContext2D(this);
-            d->context->setScriptEngine(e);
+            d->context->setV8Engine(e);
             connect(d->context, SIGNAL(changed()), this, SLOT(requestPaint()));
         }
-        return d->context->scriptValue();
+        return QDeclarativeV8Handle::fromHandle(d->context->v8value());
     }
-    qDebug("Canvas:requesting unsupported context");
-    return e->undefinedValue();
+    return QDeclarativeV8Handle::fromHandle(v8::Undefined());
 }
 
 void QSGCanvasItem::requestPaint()

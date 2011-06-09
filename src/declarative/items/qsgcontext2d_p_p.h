@@ -78,12 +78,17 @@ public:
     QSGContext2DPrivate()
         : agent(0)
         , agentData(0)
-        , scriptEngine(0)
+        , v8engine(0)
         , cachedImage(1,1, QImage::Format_ARGB32)
         , canvas(0)
         , waitingForPainting(false)
     {
     }
+    ~QSGContext2DPrivate() 
+    {
+        qPersistentDispose(v8value);
+    }
+
     void updateMatrix(const QMatrix& m);
 
     void setSize(const QSize &s)
@@ -215,8 +220,10 @@ public:
     //workerscript agent
     QSGContext2D* agent;
     QSGContext2DWorkerAgent* agentData;
-    QScriptEngine* scriptEngine;
-    QScriptValue scriptValue;
+
+    QV8Engine *v8engine;
+    v8::Persistent<v8::Object> v8value;
+
     QImage cachedImage;
     QSGCanvasItem* canvas;
     bool waitingForPainting;

@@ -56,6 +56,7 @@
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qvariant.h>
 #include <QtScript/qscriptvalue.h>
+#include <private/qv8engine_p.h>
 #include <QMutex>
 #include <QWaitCondition>
 #include "qsgimage_p.h"
@@ -309,9 +310,8 @@ signals:
     void painted();
 public:
     bool isDirty() const;
-    QScriptValue scriptValue() const;
-    void setScriptEngine(QScriptEngine *eng);
-    QScriptEngine *scriptEngine() const;
+    v8::Handle<v8::Object> v8value() const;
+    void setV8Engine(QV8Engine *eng);
 
     void addref();
     void release();
