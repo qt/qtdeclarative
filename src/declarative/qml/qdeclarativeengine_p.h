@@ -70,14 +70,11 @@
 #include "private/qdeclarativedirparser_p.h"
 #include "private/qintrusivelist_p.h"
 
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptString>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qmutex.h>
-#include <QtScript/qscriptengine.h>
 
 #include <private/qobject_p.h>
 
@@ -91,12 +88,10 @@ class QDeclarativeContextPrivate;
 class QDeclarativeExpression;
 class QDeclarativeImportDatabase;
 class ScarceResourceData;
-class QScriptEngineDebugger;
 class QNetworkReply;
 class QNetworkAccessManager;
 class QDeclarativeNetworkAccessManagerFactory;
 class QDeclarativeAbstractBinding;
-class QScriptDeclarativeClass;
 class QDeclarativeTypeNameCache;
 class QDeclarativeComponentAttached;
 class QDeclarativeCleanup;
@@ -105,21 +100,6 @@ class QDeclarativeWorkerScriptEngine;
 class QDir;
 class QSGTexture;
 class QSGContext;
-
-class QDeclarativeScriptEngine : public QScriptEngine
-{
-public:
-    QDeclarativeScriptEngine(QDeclarativeEnginePrivate *priv);
-    virtual ~QDeclarativeScriptEngine();
-
-    static QDeclarativeScriptEngine *get(QScriptEngine* e) { return static_cast<QDeclarativeScriptEngine*>(e); }
-
-    QDeclarativeEnginePrivate *p;
-
-    QUrl baseUrl;
-
-    virtual QNetworkAccessManager *networkAccessManager();
-};
 
 class Q_AUTOTEST_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
 {
@@ -161,8 +141,6 @@ public:
 
     // V8 Engine
     QV8Engine v8engine;
-
-    QDeclarativeScriptEngine scriptEngine;
 
     QDeclarativeWorkerScriptEngine *getWorkerScriptEngine();
     QDeclarativeWorkerScriptEngine *workerScriptEngine;
@@ -279,12 +257,9 @@ public:
     static void warning(QDeclarativeEnginePrivate *, const QList<QDeclarativeError> &);
 
     static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return &e->d_func()->v8engine; }
-    static QScriptEngine *getScriptEngine(QDeclarativeEngine *e) { return &e->d_func()->scriptEngine; }
-    static QDeclarativeEngine *getEngine(QScriptEngine *e) { return static_cast<QDeclarativeScriptEngine*>(e)->p->q_func(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e) { return e->d_func(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeContext *c) { return (c && c->engine()) ? QDeclarativeEnginePrivate::get(c->engine()) : 0; }
     static QDeclarativeEnginePrivate *get(QDeclarativeContextData *c) { return (c && c->engine) ? QDeclarativeEnginePrivate::get(c->engine) : 0; }
-    static QDeclarativeEnginePrivate *get(QScriptEngine *e) { return static_cast<QDeclarativeScriptEngine*>(e)->p; }
     static QDeclarativeEngine *get(QDeclarativeEnginePrivate *p) { return p->q_func(); }
 
     static QString urlToLocalFileOrQrc(const QUrl& url);

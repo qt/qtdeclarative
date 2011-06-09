@@ -95,7 +95,6 @@
 #include <QtCore/qcryptographichash.h>
 
 #include <private/qobject_p.h>
-#include <private/qscriptdeclarativeclass_p.h>
 
 #include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
@@ -344,7 +343,7 @@ the same object as is returned from the Qt.include() call.
 QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 : captureProperties(false), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
-  cleanup(0), erroredBindings(0), inProgressCreations(0), scriptEngine(this), 
+  cleanup(0), erroredBindings(0), inProgressCreations(0), 
   workerScriptEngine(0), componentAttached(0), inBeginCreate(false), 
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
@@ -358,30 +357,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
         QSGItemsModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
-}
-
-QDeclarativeScriptEngine::QDeclarativeScriptEngine(QDeclarativeEnginePrivate *priv)
-: p(priv)
-{
-    // Note that all documentation for stuff put on the global object goes in
-    // doc/src/declarative/globalobject.qdoc
-
-    QScriptValue qtObject =
-        newQMetaObject(StaticQtMetaObject::get());
-    globalObject().setProperty(QLatin1String("Qt"), qtObject);
-
-    // translation functions need to be installed
-    // before the global script class is constructed (QTBUG-6437)
-    installTranslatorFunctions();
-}
-
-QDeclarativeScriptEngine::~QDeclarativeScriptEngine()
-{
-}
-
-QNetworkAccessManager *QDeclarativeScriptEngine::networkAccessManager()
-{
-    return p->getNetworkAccessManager();
 }
 
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
@@ -1085,10 +1060,10 @@ void QDeclarativeData::destroyed(QObject *object)
         delete this;
 }
 
-void QDeclarativeData::parentChanged(QObject *, QObject *parent)
+void QDeclarativeData::parentChanged(QObject *object, QObject *parent)
 {
-    // XXX aakenned
-//    if (!parent && scriptValue) { delete scriptValue; scriptValue = 0; }
+    Q_UNUSED(object);
+    Q_UNUSED(parent);
 }
 
 void QDeclarativeData::objectNameChanged(QObject *)
