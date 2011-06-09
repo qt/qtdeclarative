@@ -18,3 +18,4 @@ symbian {
     CONFIG += qt_example
     TARGET.EPOCALLOWDLLDATA = 1
 }
+maemo5: CONFIG += qt_example

@@ -54,8 +54,7 @@ SOURCES += \
     $$PWD/qdeclarativedirparser.cpp \
     $$PWD/qdeclarativeextensionplugin.cpp \
     $$PWD/qdeclarativeimport.cpp \
-    $$PWD/qdeclarativelist.cpp \ 
-    $$PWD/qperformancetimer.cpp \
+    $$PWD/qdeclarativelist.cpp \
     $$PWD/qintrusivelist.cpp \
 
 HEADERS += \
@@ -129,13 +128,10 @@ HEADERS += \
     $$PWD/qdeclarativeextensioninterface.h \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
-    $$PWD/qperformancetimer_p.h \
     $$PWD/qintrusivelist_p.h \
+    $$PWD/qdeclarativescriptstring_p.h
 
 QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
 include(v4/v4.pri)
-
-# mirrors logic in corelib/kernel/kernel.pri
-unix:!symbian: contains(QT_CONFIG, clock-gettime):include($$QT_SOURCE_TREE/config.tests/unix/clock-gettime/clock-gettime.pri)

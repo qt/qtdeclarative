@@ -22,3 +22,4 @@ symbian:{
 
     DEPLOYMENT += importFiles
 }
+maemo5: CONFIG += qt_example

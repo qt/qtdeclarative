@@ -7,29 +7,29 @@
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
-** No Commercial Usage
-** This file contains pre-release code and may not be distributed.
-** You may use this file in accordance with the terms and conditions
-** contained in the Technology Preview License Agreement accompanying
-** this package.
-**
 ** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
+** rights. These rights are described in the Nokia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
 **
-**
-**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
 **
 **
 **
@@ -45,6 +45,7 @@
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativerewrite_p.h"
+#include "private/qdeclarativescriptstring_p.h"
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativeglobalscriptclass_p.h"
 
@@ -264,6 +265,58 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, vo
     d->init(ctxt, expr, rc, me, url, lineNumber);
 
     if (QDeclarativeExpression_notifyIdx == -1) 
+        QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
+    d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
+}
+
+/*!
+    Create a QDeclarativeExpression object that is a child of \a parent.
+
+    The \script provides the expression to be evaluated, the context to evaluate it in,
+    and the scope object to evaluate it with.
+
+    This constructor is functionally equivalent to the following, but in most cases
+    is more efficient.
+    \code
+    QDeclarativeExpression expression(script.context(), script.scopeObject(), script.script(), parent);
+    \endcode
+
+    \sa QDeclarativeScriptString
+*/
+QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &script, QObject *parent)
+: QObject(*new QDeclarativeExpressionPrivate, parent)
+{
+    Q_D(QDeclarativeExpression);
+    bool defaultConstruction = false;
+
+    int id = script.d.data()->bindingId;
+    if (id < 0) {
+        defaultConstruction = true;
+    } else {
+        QDeclarativeContextData *ctxtdata = QDeclarativeContextData::get(script.context());
+
+        QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(qmlEngine(script.scopeObject()));
+        QDeclarativeCompiledData *cdata = 0;
+        QDeclarativeTypeData *typeData = 0;
+        if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
+            typeData = engine->typeLoader.get(ctxtdata->url);
+            cdata = typeData->compiledData();
+        }
+
+        if (cdata)
+            d->init(ctxtdata, (void*)cdata->datas.at(id).constData(), cdata, script.scopeObject(),
+                    cdata->name, script.d.data()->lineNumber);
+        else
+           defaultConstruction = true;
+
+        if (typeData)
+            typeData->release();
+    }
+
+    if (defaultConstruction)
+        d->init(QDeclarativeContextData::get(script.context()), script.script(), script.scopeObject());
+
+    if (QDeclarativeExpression_notifyIdx == -1)
         QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
     d->setNotifyObject(this, QDeclarativeExpression_notifyIdx);
 }
