@@ -39,47 +39,54 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativeinspectorplugin.h"
+#ifndef QSGVIEWINSPECTOR_H
+#define QSGVIEWINSPECTOR_H
 
-#include "qdeclarativeviewinspector_p.h"
-#include "sgviewinspector.h"
-
-#include <QtCore/qplugin.h>
-#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/QSGView>
+#include <QtCore/QObject>
+#include <QtCore/QWeakPointer>
 
 QT_BEGIN_NAMESPACE
 
-QDeclarativeInspectorPlugin::QDeclarativeInspectorPlugin() :
-    m_inspector(0)
+class QMouseEvent;
+class QKeyEvent;
+class QWheelEvent;
+
+class QSGView;
+class QSGItem;
+
+class SGAbstractTool;
+class SGSelectionTool;
+
+class SGViewInspector : public QObject
 {
-}
+    Q_OBJECT
+public:
+    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
 
-QDeclarativeInspectorPlugin::~QDeclarativeInspectorPlugin()
-{
-    delete m_inspector;
-}
+    QSGView *view() const { return m_view; }
+    QSGItem *overlay() const { return m_overlay; }
 
-void QDeclarativeInspectorPlugin::activate()
-{
-    QDeclarativeInspectorService *service = QDeclarativeInspectorService::instance();
-    QList<QObject*> views = service->views();
-    if (views.isEmpty())
-        return;
+    bool eventFilter(QObject *obj, QEvent *event);
 
-    // TODO: Support multiple views
-    QObject *firstView = views.first();
-    if (QDeclarativeView *declarativeView = qobject_cast<QDeclarativeView*>(firstView))
-        m_inspector = new QDeclarativeViewInspector(declarativeView, declarativeView);
-    else if (QSGView *sgView = qobject_cast<QSGView*>(firstView))
-        m_inspector = new SGViewInspector(sgView, sgView);
-}
+private:
+    bool leaveEvent(QEvent *);
+    bool mousePressEvent(QMouseEvent *event);
+    bool mouseMoveEvent(QMouseEvent *event);
+    bool mouseReleaseEvent(QMouseEvent *event);
+    bool keyPressEvent(QKeyEvent *event);
+    bool keyReleaseEvent(QKeyEvent *keyEvent);
+    bool mouseDoubleClickEvent(QMouseEvent *event);
+    bool wheelEvent(QWheelEvent *event);
 
-void QDeclarativeInspectorPlugin::deactivate()
-{
-    delete m_inspector;
-}
+    QSGView *m_view;
+    QSGItem *m_overlay;
+    SGAbstractTool *m_currentTool;
 
-Q_EXPORT_PLUGIN2(declarativeinspector, QDeclarativeInspectorPlugin)
+    SGSelectionTool *m_selectionTool;
+
+    bool m_designMode;
+};
 
 QT_END_NAMESPACE
+
+#endif // QSGVIEWINSPECTOR_H

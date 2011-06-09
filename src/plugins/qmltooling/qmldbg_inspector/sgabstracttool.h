@@ -39,47 +39,45 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativeinspectorplugin.h"
+#ifndef SGABSTRACTTOOL_H
+#define SGABSTRACTTOOL_H
 
-#include "qdeclarativeviewinspector_p.h"
-#include "sgviewinspector.h"
-
-#include <QtCore/qplugin.h>
-#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/QSGView>
+#include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
 
-QDeclarativeInspectorPlugin::QDeclarativeInspectorPlugin() :
-    m_inspector(0)
+class QMouseEvent;
+class QKeyEvent;
+class QWheelEvent;
+
+class SGViewInspector;
+
+class SGAbstractTool : public QObject
 {
-}
+    Q_OBJECT
 
-QDeclarativeInspectorPlugin::~QDeclarativeInspectorPlugin()
-{
-    delete m_inspector;
-}
+public:
+    explicit SGAbstractTool(SGViewInspector *inspector);
 
-void QDeclarativeInspectorPlugin::activate()
-{
-    QDeclarativeInspectorService *service = QDeclarativeInspectorService::instance();
-    QList<QObject*> views = service->views();
-    if (views.isEmpty())
-        return;
+    SGViewInspector *inspector() const { return m_inspector; }
 
-    // TODO: Support multiple views
-    QObject *firstView = views.first();
-    if (QDeclarativeView *declarativeView = qobject_cast<QDeclarativeView*>(firstView))
-        m_inspector = new QDeclarativeViewInspector(declarativeView, declarativeView);
-    else if (QSGView *sgView = qobject_cast<QSGView*>(firstView))
-        m_inspector = new SGViewInspector(sgView, sgView);
-}
+    virtual void leaveEvent(QEvent *event) = 0;
 
-void QDeclarativeInspectorPlugin::deactivate()
-{
-    delete m_inspector;
-}
+    virtual void mousePressEvent(QMouseEvent *event) = 0;
+    virtual void mouseMoveEvent(QMouseEvent *event) = 0;
+    virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) = 0;
 
-Q_EXPORT_PLUGIN2(declarativeinspector, QDeclarativeInspectorPlugin)
+    virtual void hoverMoveEvent(QMouseEvent *event) = 0;
+    virtual void wheelEvent(QWheelEvent *event) = 0;
+
+    virtual void keyPressEvent(QKeyEvent *event) = 0;
+    virtual void keyReleaseEvent(QKeyEvent *keyEvent) = 0;
+
+private:
+    SGViewInspector *m_inspector;
+};
 
 QT_END_NAMESPACE
+
+#endif // SGABSTRACTTOOL_H

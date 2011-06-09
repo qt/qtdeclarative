@@ -1,7 +1,7 @@
 load(qt_module)
 
 TARGET = qmldbg_inspector
-QT       += declarative-private
+QT       += declarative-private core-private gui-private opengl-private
 
 load(qt_plugin)
 
@@ -23,7 +23,10 @@ SOURCES += \
     editor/zoomtool.cpp \
     editor/colorpickertool.cpp \
     editor/qmltoolbar.cpp \
-    editor/toolbarcolorbox.cpp
+    editor/toolbarcolorbox.cpp \
+    sgabstracttool.cpp \
+    sgviewinspector.cpp \
+    sgselectiontool.cpp
 
 HEADERS += \
     qdeclarativeinspectorplugin.h \
@@ -43,7 +46,10 @@ HEADERS += \
     editor/zoomtool_p.h \
     editor/colorpickertool_p.h \
     editor/qmltoolbar_p.h \
-    editor/toolbarcolorbox_p.h
+    editor/toolbarcolorbox_p.h \
+    sgabstracttool.h \
+    sgviewinspector.h \
+    sgselectiontool.h
 
 RESOURCES += editor/editor.qrc
 

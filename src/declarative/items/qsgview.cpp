@@ -46,6 +46,7 @@
 #include "qsgitemchangelistener_p.h"
 
 #include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeinspectorservice_p.h>
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <private/qdeclarativeengine_p.h>
@@ -92,6 +93,8 @@ void QSGViewPrivate::init()
 {
     q_func()->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
     QDeclarativeEnginePrivate::get(&engine)->sgContext = QSGCanvasPrivate::context;
+
+    QDeclarativeInspectorService::instance()->addView(q_func());
 }
 
 QSGViewPrivate::QSGViewPrivate()
@@ -101,7 +104,9 @@ QSGViewPrivate::QSGViewPrivate()
 
 QSGViewPrivate::~QSGViewPrivate() 
 { 
-    delete root; 
+    QDeclarativeInspectorService::instance()->removeView(q_func());
+
+    delete root;
 }
 
 void QSGViewPrivate::execute()

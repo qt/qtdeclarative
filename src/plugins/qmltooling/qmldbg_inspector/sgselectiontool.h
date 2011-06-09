@@ -39,47 +39,45 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativeinspectorplugin.h"
+#ifndef SGSELECTIONTOOL_H
+#define SGSELECTIONTOOL_H
 
-#include "qdeclarativeviewinspector_p.h"
-#include "sgviewinspector.h"
+#include "sgabstracttool.h"
 
-#include <QtCore/qplugin.h>
-#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/QSGView>
+#include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE
 
-QDeclarativeInspectorPlugin::QDeclarativeInspectorPlugin() :
-    m_inspector(0)
+class QSGRectangle;
+
+class SGSelectionTool : public SGAbstractTool
 {
-}
+    Q_OBJECT
+public:
+    explicit SGSelectionTool(SGViewInspector *inspector);
 
-QDeclarativeInspectorPlugin::~QDeclarativeInspectorPlugin()
-{
-    delete m_inspector;
-}
+    void leaveEvent(QEvent *);
 
-void QDeclarativeInspectorPlugin::activate()
-{
-    QDeclarativeInspectorService *service = QDeclarativeInspectorService::instance();
-    QList<QObject*> views = service->views();
-    if (views.isEmpty())
-        return;
+    void mousePressEvent(QMouseEvent *) {}
+    void mouseMoveEvent(QMouseEvent *) {}
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
 
-    // TODO: Support multiple views
-    QObject *firstView = views.first();
-    if (QDeclarativeView *declarativeView = qobject_cast<QDeclarativeView*>(firstView))
-        m_inspector = new QDeclarativeViewInspector(declarativeView, declarativeView);
-    else if (QSGView *sgView = qobject_cast<QSGView*>(firstView))
-        m_inspector = new SGViewInspector(sgView, sgView);
-}
+    void hoverMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *) {}
 
-void QDeclarativeInspectorPlugin::deactivate()
-{
-    delete m_inspector;
-}
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
 
-Q_EXPORT_PLUGIN2(declarativeinspector, QDeclarativeInspectorPlugin)
+signals:
+
+public slots:
+
+private:
+    QList<QSGRectangle*> m_highlightItems;
+    QSGRectangle *m_hoverHighlight;
+};
 
 QT_END_NAMESPACE
+
+#endif // SGSELECTIONTOOL_H

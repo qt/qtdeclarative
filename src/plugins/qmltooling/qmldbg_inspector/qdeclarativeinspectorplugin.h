@@ -63,7 +63,7 @@ public:
     void deactivate();
 
 private:
-    QPointer<QDeclarativeViewInspector> m_inspector;
+    QPointer<QObject> m_inspector;
 };
 
 QT_END_NAMESPACE

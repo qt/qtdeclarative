@@ -47,8 +47,6 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 
-#include <QtDeclarative/QDeclarativeView>
-
 QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QDeclarativeInspectorService, serviceInstance)
@@ -64,12 +62,12 @@ QDeclarativeInspectorService *QDeclarativeInspectorService::instance()
     return serviceInstance();
 }
 
-void QDeclarativeInspectorService::addView(QDeclarativeView *view)
+void QDeclarativeInspectorService::addView(QObject *view)
 {
     m_views.append(view);
 }
 
-void QDeclarativeInspectorService::removeView(QDeclarativeView *view)
+void QDeclarativeInspectorService::removeView(QObject *view)
 {
     m_views.removeAll(view);
 }
