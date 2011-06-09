@@ -180,6 +180,7 @@ public:
         , isRenderBlocked(false)
         , isExternalUpdatePending(false)
         , syncAlreadyHappened(false)
+        , inSync(false)
         , doGrab(false)
         , shouldExit(false)
         , hasExited(false)
@@ -222,6 +223,7 @@ public:
     uint isRenderBlocked : 1;
     uint isExternalUpdatePending : 1;
     uint syncAlreadyHappened : 1;
+    uint inSync : 1;
 
     uint doGrab : 1;
     uint shouldExit : 1;

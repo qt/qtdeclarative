@@ -1804,7 +1804,14 @@ void QSGCanvas::maybeUpdate()
     Q_D(QSGCanvas);
 
     if (d->threadedRendering && d->thread && d->thread->isRunning()) {
-        if (!d->renderThreadAwakened) {
+        Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || d->thread->inSync,
+                   "QSGCanvas::update",
+                   "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
+
+        if (d->thread->inSync) {
+            d->thread->isExternalUpdatePending = true;
+
+        } else if (!d->renderThreadAwakened) {
 #ifdef THREAD_DEBUG
             printf("GUI: doing update...\n");
 #endif
@@ -1911,7 +1918,9 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: Doing locked sync\n");
 #endif
+        inSync = true;
         d->syncSceneGraph();
+        inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
         wake();
