@@ -163,6 +163,7 @@ private:
     qint64 m_startTime;
     int m_nextGroupId;
     bool m_overwrite;
+    bool m_componentComplete;
 };
 
 //TODO: Clean up all this into ParticleData
