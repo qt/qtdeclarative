@@ -535,7 +535,7 @@ void tst_qdeclarativeinstruction::dump()
         << "25\t\tSTORE_VARIANT_OBJECT\t22"
         << "26\t\tSTORE_INTERFACE\t\t23"
         << "27\t\tSTORE_SIGNAL\t\t2\t3\t\t\"console.log(1921)\""
-        << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1"
+        << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1\t3"
         << "29\t\tASSIGN_SIGNAL_OBJECT\t0\t\t\t\"mySignal\""
         << "30\t\tASSIGN_CUSTOMTYPE\t25\t6\t9"
         << "31\t\tSTORE_BINDING\t26\t3\t2"
