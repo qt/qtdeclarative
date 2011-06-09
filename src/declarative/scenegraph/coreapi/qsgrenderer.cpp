@@ -206,10 +206,7 @@ void QSGRenderer::renderScene()
     class B : public Bindable
     {
     public:
-        B() : m_ctx(const_cast<QGLContext *>(QGLContext::currentContext())) { }
         void bind() const { QGLFramebufferObject::bindDefault(); }
-    private:
-        QGLContext *m_ctx;
     } b;
     renderScene(b);
 }

@@ -281,10 +281,17 @@ QSGImageNode *QSGContext::createImageNode()
  */
 QSGGlyphNode *QSGContext::createGlyphNode()
 {
+    // ### Do something with these before final release...
+    static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
+    static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
+
     if (QSGDistanceFieldGlyphCache::distanceFieldEnabled()) {
         QSGGlyphNode *node = new QSGDistanceFieldGlyphNode;
-        if (qApp->arguments().contains(QLatin1String("--subpixel-antialiasing")))
+
+        if (doSubpixel)
             node->setPreferredAntialiasingMode(QSGGlyphNode::SubPixelAntialiasing);
+        else if (doGray)
+            node->setPreferredAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
         return node;
     } else {
         return new QSGDefaultGlyphNode;
@@ -299,8 +306,10 @@ QSGGlyphNode *QSGContext::createGlyphNode()
  */
 QSGRenderer *QSGContext::createRenderer()
 {
+    // ### Do something with this before release...
+    static bool doFrontToBack = qApp->arguments().contains(QLatin1String("--opaque-front-to-back"));
     QMLRenderer *renderer = new QMLRenderer(this);
-    if (qApp->arguments().contains(QLatin1String("--opaque-front-to-back"))) {
+    if (doFrontToBack) {
         printf("QSGContext: Sorting opaque nodes front to back...\n");
         renderer->setSortFrontToBackEnabled(true);
     }
