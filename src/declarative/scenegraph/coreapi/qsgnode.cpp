@@ -60,7 +60,7 @@ static void qt_print_node_count()
 
 /*!
     \class QSGNode
-    \bried The QSGNode class is the base class for all nodes in the scene graph.
+    \brief The QSGNode class is the base class for all nodes in the scene graph.
 
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
@@ -927,7 +927,7 @@ bool QSGOpacityNode::isSubtreeBlocked() const
 
 /*!
     \class QSGNodeVisitor
-    \bried The QSGNodeVisitor class is a helper class for traversing the scene graph.
+    \brief The QSGNodeVisitor class is a helper class for traversing the scene graph.
 
     \internal
  */

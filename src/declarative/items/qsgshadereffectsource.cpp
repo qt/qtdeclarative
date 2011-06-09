@@ -391,6 +391,7 @@ void QSGShaderEffectTexture::grab()
        rather than each element individually.
     \endlist
 
+    \table
     \row
     \o \image declarative-shadereffectsource.png
     \o \qml
@@ -420,6 +421,7 @@ void QSGShaderEffectTexture::grab()
         }
         \endqml
     \endrow
+    \endtable
 
     The ShaderEffectSource element does not redirect any mouse or keyboard
     input to \l sourceItem. If you hide the \l sourceItem by setting
