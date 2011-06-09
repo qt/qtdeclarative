@@ -49,11 +49,26 @@
 
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
+#include <QtDeclarative/QSGPaintedItem>
 #include <QtGui/QMouseEvent>
 
 #include <cfloat>
 
 namespace QmlJSDebugger {
+
+class SGSelectionHighlight : public QSGPaintedItem
+{
+public:
+    SGSelectionHighlight(QSGItem *parent) : QSGPaintedItem(parent)
+    { }
+
+    void paint(QPainter *painter)
+    {
+        painter->setPen(QColor(108, 141, 221));
+        painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+    }
+};
+
 
 SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
     AbstractViewInspector(parent),
@@ -82,7 +97,7 @@ void SGViewInspector::changeCurrentObjects(const QList<QObject*> &objects)
         if (QSGItem *item = qobject_cast<QSGItem*>(obj))
             items << item;
 
-    setSelectedItems(items);
+    syncSelectedItems(items);
 }
 
 void SGViewInspector::reloadView()
@@ -147,32 +162,70 @@ QList<QSGItem*> SGViewInspector::selectedItems() const
 
 void SGViewInspector::setSelectedItems(const QList<QSGItem *> &items)
 {
+    if (!syncSelectedItems(items))
+        return;
+
+    QList<QObject*> objectList;
+    foreach (QSGItem *item, items)
+        objectList << item;
+
+    sendCurrentObjects(objectList);
+}
+
+bool SGViewInspector::syncSelectedItems(const QList<QSGItem *> &items)
+{
+    bool selectionChanged = false;
+
     // Disconnect and remove items that are no longer selected
     foreach (const QWeakPointer<QSGItem> &item, m_selectedItems) {
-        if (!item)
+        if (!item) // Don't see how this can happen due to handling of destroyed()
+            continue;
+        if (items.contains(item.data()))
             continue;
 
-        if (!items.contains(item.data())) {
-            QObject::disconnect(item.data(), SIGNAL(destroyed(QObject*)),
-                                this, SLOT(removeFromSelection(QObject*)));
-            m_selectedItems.removeOne(item);
-        }
+        selectionChanged = true;
+        item.data()->disconnect(this);
+        m_selectedItems.removeOne(item);
+        delete m_highlightItems.take(item.data());
     }
 
     // Connect and add newly selected items
     foreach (QSGItem *item, items) {
-        if (!m_selectedItems.contains(item)) {
-            QObject::connect(item, SIGNAL(destroyed(QObject*)),
-                             this, SLOT(removeFromSelection(QObject*)));
-            m_selectedItems.append(item);
-        }
+        if (m_selectedItems.contains(item))
+            continue;
+
+        selectionChanged = true;
+        connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(removeFromSelectedItems(QObject*)));
+        connect(item, SIGNAL(xChanged()), this, SLOT(adjustSelectionHighlight()));
+        connect(item, SIGNAL(yChanged()), this, SLOT(adjustSelectionHighlight()));
+        connect(item, SIGNAL(widthChanged()), this, SLOT(adjustSelectionHighlight()));
+        connect(item, SIGNAL(heightChanged()), this, SLOT(adjustSelectionHighlight()));
+        connect(item, SIGNAL(rotationChanged()), this, SLOT(adjustSelectionHighlight()));
+        m_selectedItems.append(item);
+        m_highlightItems.insert(item, new SGSelectionHighlight(m_overlay));
+        adjustSelectionHighlight(item);
     }
+
+    return selectionChanged;
 }
 
 void SGViewInspector::removeFromSelectedItems(QObject *object)
 {
-    if (QSGItem *item = qobject_cast<QSGItem*>(object))
-        m_selectedItems.removeOne(item);
+    if (QSGItem *item = qobject_cast<QSGItem*>(object)) {
+        if (m_selectedItems.removeOne(item))
+            delete m_highlightItems.take(item);
+    }
+}
+
+void SGViewInspector::adjustSelectionHighlight(QSGItem *item)
+{
+    if (!item)
+        item = static_cast<QSGItem*>(sender());
+
+    SGSelectionHighlight *highlight = m_highlightItems.value(item);
+
+    highlight->setSize(QSizeF(item->width(), item->height()));
+    highlight->setPos(m_overlay->mapFromItem(item->parentItem(), item->pos()));
 }
 
 bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)

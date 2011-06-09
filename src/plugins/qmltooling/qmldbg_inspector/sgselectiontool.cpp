@@ -46,8 +46,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
+#include <QtDeclarative/QSGPaintedItem>
 #include <QtDeclarative/private/qsgitem_p.h>
-#include <QtDeclarative/private/qsgrectangle_p.h>
 
 namespace QmlJSDebugger {
 
@@ -85,17 +85,43 @@ static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
 }
 
 
+class SGHoverHighlight : public QSGPaintedItem
+{
+public:
+    SGHoverHighlight(QSGItem *parent) : QSGPaintedItem(parent)
+    {
+        setZ(1); // hover highlight on top of selection indicator
+    }
+
+    void paint(QPainter *painter)
+    {
+        painter->setPen(QPen(QColor(0, 22, 159)));
+        painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
+        painter->setPen(QColor(158, 199, 255));
+        painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+    }
+};
+
+
 SGSelectionTool::SGSelectionTool(SGViewInspector *inspector) :
     AbstractTool(inspector),
-    m_hoverHighlight(new QSGRectangle(inspector->overlay()))
+    m_hoverHighlight(new SGHoverHighlight(inspector->overlay()))
 {
-    m_hoverHighlight->border()->setColor(QColor(64, 128, 255));
-    m_hoverHighlight->setColor(Qt::transparent);
 }
 
 void SGSelectionTool::leaveEvent(QEvent *)
 {
     m_hoverHighlight->setVisible(false);
+}
+
+void SGSelectionTool::mousePressEvent(QMouseEvent *event)
+{
+    SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
+    QSGItem *root = sgInspector->view()->rootItem();
+    QPointF mappedPos = root->mapFromScene(event->pos());
+    QSGItem *item = itemAt(root, mappedPos, sgInspector->overlay());
+    if (item && item != root)
+        sgInspector->setSelectedItems(QList<QSGItem*>() << item);
 }
 
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
@@ -109,7 +135,7 @@ void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
         return;
     }
 
-    m_hoverHighlight->setSize(QSizeF(item->width() - 1, item->height() - 1));
+    m_hoverHighlight->setSize(QSizeF(item->width(), item->height()));
     m_hoverHighlight->setPos(root->mapFromItem(item->parentItem(), item->pos()));
     m_hoverHighlight->setVisible(true);
 }

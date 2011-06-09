@@ -45,6 +45,7 @@
 #include "abstractviewinspector.h"
 
 #include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
 class QSGView;
@@ -54,6 +55,7 @@ QT_END_NAMESPACE
 namespace QmlJSDebugger {
 
 class SGSelectionTool;
+class SGSelectionHighlight;
 
 class SGViewInspector : public AbstractViewInspector
 {
@@ -79,14 +81,18 @@ public:
 
 private slots:
     void removeFromSelectedItems(QObject *);
+    void adjustSelectionHighlight(QSGItem *item = 0);
 
 private:
+    bool syncSelectedItems(const QList<QSGItem*> &items);
+
     QSGView *m_view;
     QSGItem *m_overlay;
 
     SGSelectionTool *m_selectionTool;
 
     QList<QWeakPointer<QSGItem> > m_selectedItems;
+    QHash<QSGItem*, SGSelectionHighlight*> m_highlightItems;
 
     bool m_designMode;
 };

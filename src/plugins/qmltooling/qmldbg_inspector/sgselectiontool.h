@@ -46,11 +46,10 @@
 
 #include <QtCore/QList>
 
-QT_FORWARD_DECLARE_CLASS(QSGRectangle)
-
 namespace QmlJSDebugger {
 
 class SGViewInspector;
+class SGHoverHighlight;
 
 class SGSelectionTool : public AbstractTool
 {
@@ -60,7 +59,7 @@ public:
 
     void leaveEvent(QEvent *);
 
-    void mousePressEvent(QMouseEvent *) {}
+    void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *) {}
     void mouseReleaseEvent(QMouseEvent *) {}
     void mouseDoubleClickEvent(QMouseEvent *) {}
@@ -71,13 +70,8 @@ public:
     void keyPressEvent(QKeyEvent *) {}
     void keyReleaseEvent(QKeyEvent *) {}
 
-signals:
-
-public slots:
-
 private:
-    QList<QSGRectangle*> m_highlightItems;
-    QSGRectangle *m_hoverHighlight;
+    SGHoverHighlight *m_hoverHighlight;
 };
 
 } // namespace QmlJSDebugger
