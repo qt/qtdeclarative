@@ -649,6 +649,7 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
             out->dumpInstructions();
         if (compilerStatDump())
             dumpStats();
+        Q_ASSERT(out->rootPropertyCache);
     } else {
         reset(out);
     }
@@ -1228,6 +1229,11 @@ void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
         id.setId.value = output->indexForString(obj->id);
         id.setId.index = obj->idIndex;
         output->addInstruction(id);
+    }
+
+    if (obj == unitRoot) {
+        output->rootPropertyCache = output->types[obj->type].createPropertyCache(engine);
+        output->rootPropertyCache->addref();
     }
 }
 
