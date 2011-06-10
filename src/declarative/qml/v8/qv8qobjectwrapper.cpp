@@ -687,7 +687,6 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
 
             v8::AccessorGetter fastgetter = 0;
 
-            
             if (property->isQObject()) 
                 fastgetter = QObjectValueGetter;
             else if (property->propType == QMetaType::Int || property->isEnum()) 
@@ -750,6 +749,11 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
 v8::Local<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QDeclarativeData *ddata, QV8Engine *engine)
 {
     v8::Local<v8::Object> rv;
+
+    if (!ddata->propertyCache && engine->engine()) {
+        ddata->propertyCache = QDeclarativeEnginePrivate::get(engine->engine())->cache(object);
+        if (ddata->propertyCache) ddata->propertyCache->addref();
+    }
 
     if (ddata->propertyCache) {
         rv = ddata->propertyCache->newQObject(object, engine);
