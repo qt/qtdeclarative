@@ -45,6 +45,10 @@
 #include "abstracttool.h"
 
 #include <QtCore/QList>
+#include <QtCore/QPoint>
+
+QT_FORWARD_DECLARE_CLASS(QAction)
+QT_FORWARD_DECLARE_CLASS(QSGItem)
 
 namespace QmlJSDebugger {
 
@@ -70,7 +74,15 @@ public:
     void keyPressEvent(QKeyEvent *) {}
     void keyReleaseEvent(QKeyEvent *) {}
 
+private slots:
+    void contextMenuElementHovered(QAction *action);
+    void contextMenuElementSelected();
+
 private:
+    void createContextMenu(const QList<QSGItem*> &items, QPoint pos);
+
+    SGViewInspector *inspector() const;
+
     SGHoverHighlight *m_hoverHighlight;
 };
 

@@ -43,6 +43,7 @@
 
 #include "sgviewinspector.h"
 
+#include <QtGui/QMenu>
 #include <QtGui/QMouseEvent>
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
@@ -56,6 +57,13 @@ public:
     SGHoverHighlight(QSGItem *parent) : QSGPaintedItem(parent)
     {
         setZ(1); // hover highlight on top of selection indicator
+    }
+
+    void setItem(QSGItem *item)
+    {
+        setSize(QSizeF(item->width(), item->height()));
+        setPos(parentItem()->mapFromItem(item, QPointF()));
+        setVisible(true);
     }
 
     void paint(QPainter *painter)
@@ -81,25 +89,70 @@ void SGSelectionTool::leaveEvent(QEvent *)
 
 void SGSelectionTool::mousePressEvent(QMouseEvent *event)
 {
-    SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
-    QSGItem *item = sgInspector->topVisibleItemAt(event->pos());
-    if (item)
-        sgInspector->setSelectedItems(QList<QSGItem*>() << item);
+    if (event->button() == Qt::LeftButton) {
+        if (QSGItem *item = inspector()->topVisibleItemAt(event->pos()))
+            inspector()->setSelectedItems(QList<QSGItem*>() << item);
+    } else if (event->button() == Qt::RightButton) {
+        QList<QSGItem*> items = inspector()->itemsAt(event->pos());
+        createContextMenu(items, event->globalPos());
+    }
 }
 
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
 {
-    SGViewInspector *sgInspector = static_cast<SGViewInspector*>(inspector());
-    QSGItem *item = sgInspector->topVisibleItemAt(event->pos());
-    if (!item) {
+    QSGItem *item = inspector()->topVisibleItemAt(event->pos());
+    if (!item)
         m_hoverHighlight->setVisible(false);
-        return;
+    else
+        m_hoverHighlight->setItem(item);
+}
+
+void SGSelectionTool::createContextMenu(const QList<QSGItem *> &items, QPoint pos)
+{
+    QMenu contextMenu;
+    connect(&contextMenu, SIGNAL(hovered(QAction*)),
+            this, SLOT(contextMenuElementHovered(QAction*)));
+
+    const QList<QSGItem*> selectedItems = inspector()->selectedItems();
+    int shortcutKey = Qt::Key_1;
+
+    foreach (QSGItem *item, items) {
+        const QString title = inspector()->titleForItem(item);
+        QAction *elementAction = contextMenu.addAction(title);
+        elementAction->setData(QVariant::fromValue(item));
+
+        connect(elementAction, SIGNAL(triggered()), this, SLOT(contextMenuElementSelected()));
+
+        if (selectedItems.contains(item)) {
+            QFont font = elementAction->font();
+            font.setBold(true);
+            elementAction->setFont(font);
+        }
+
+        if (shortcutKey <= Qt::Key_9) {
+            elementAction->setShortcut(QKeySequence(shortcutKey));
+            shortcutKey++;
+        }
     }
 
-    QSGItem *root = sgInspector->view()->rootItem();
-    m_hoverHighlight->setSize(QSizeF(item->width(), item->height()));
-    m_hoverHighlight->setPos(root->mapFromItem(item->parentItem(), item->pos()));
-    m_hoverHighlight->setVisible(true);
+    contextMenu.exec(pos);
+}
+
+void SGSelectionTool::contextMenuElementHovered(QAction *action)
+{
+    if (QSGItem *item = action->data().value<QSGItem*>())
+        m_hoverHighlight->setItem(item);
+}
+
+void SGSelectionTool::contextMenuElementSelected()
+{
+    if (QSGItem *item = static_cast<QAction*>(sender())->data().value<QSGItem*>())
+        inspector()->setSelectedItems(QList<QSGItem*>() << item);
+}
+
+SGViewInspector *SGSelectionTool::inspector() const
+{
+    return static_cast<SGViewInspector*>(AbstractTool::inspector());
 }
 
 } // namespace QmlJSDebugger

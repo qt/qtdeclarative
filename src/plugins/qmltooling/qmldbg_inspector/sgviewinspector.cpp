@@ -58,6 +58,32 @@
 namespace QmlJSDebugger {
 
 /*
+ * Collects all the items at the given position, from top to bottom.
+ */
+static void collectItemsAt(QSGItem *item, const QPointF &pos, QSGItem *overlay,
+                           QList<QSGItem *> &resultList)
+{
+    if (item == overlay)
+        return;
+
+    if (item->flags() & QSGItem::ItemClipsChildrenToShape) {
+        if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
+            return;
+    }
+
+    QList<QSGItem *> children = QSGItemPrivate::get(item)->paintOrderChildItems();
+    for (int i = children.count() - 1; i >= 0; --i) {
+        QSGItem *child = children.at(i);
+        collectItemsAt(child, item->mapToItem(child, pos), overlay, resultList);
+    }
+
+    if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
+        return;
+
+    resultList.append(item);
+}
+
+/*
  * Returns the first visible item at the given position, or 0 when no such
  * child exists.
  */
@@ -185,10 +211,18 @@ QWidget *SGViewInspector::viewWidget() const
     return m_view;
 }
 
-QSGItem *SGViewInspector::topVisibleItemAt(const QPointF &pos)
+QSGItem *SGViewInspector::topVisibleItemAt(const QPointF &pos) const
 {
     QSGItem *root = m_view->rootItem();
     return itemAt(root, root->mapFromScene(pos), m_overlay);
+}
+
+QList<QSGItem *> SGViewInspector::itemsAt(const QPointF &pos) const
+{
+    QSGItem *root = m_view->rootItem();
+    QList<QSGItem *> resultList;
+    collectItemsAt(root, root->mapFromScene(pos), m_overlay, resultList);
+    return resultList;
 }
 
 QList<QSGItem*> SGViewInspector::selectedItems() const
