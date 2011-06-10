@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_DECLARATIVE_EXPORT QSGNodeUpdater : public QSGNodeVisitor
+class Q_DECLARATIVE_EXPORT QSGNodeUpdater
 {
 public:
     QSGNodeUpdater();
@@ -60,13 +60,14 @@ public:
     qreal toplevelOpacity() const { return m_opacity_stack.top(); }
 
 protected:
-    void enterTransformNode(QSGTransformNode *);
-    void leaveTransformNode(QSGTransformNode *);
+    virtual void enterTransformNode(QSGTransformNode *);
+    virtual void leaveTransformNode(QSGTransformNode *);
     void enterClipNode(QSGClipNode *c);
     void leaveClipNode(QSGClipNode *c);
     void enterOpacityNode(QSGOpacityNode *o);
     void leaveOpacityNode(QSGOpacityNode *o);
     void enterGeometryNode(QSGGeometryNode *);
+    void leaveGeometryNode(QSGGeometryNode *);
 
     void visitNode(QSGNode *n);
     void visitChildren(QSGNode *n);

@@ -189,6 +189,13 @@ void QSGNodeUpdater::enterGeometryNode(QSGGeometryNode *g)
     g->setInheritedOpacity(m_opacity_stack.top());
 }
 
+void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
+{
+#ifdef QSG_UPDATER_DEBUG
+    qDebug() << "leave geometry" << g;
+#endif
+}
+
 void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
 {
     if (o->dirtyFlags() & QSGNode::DirtyOpacity)
@@ -216,8 +223,11 @@ void QSGNodeUpdater::leaveOpacityNode(QSGOpacityNode *o)
 
 void QSGNodeUpdater::visitChildren(QSGNode *n)
 {
-    if (!n->isSubtreeBlocked())
-        QSGNodeVisitor::visitChildren(n);
+    if (!n->isSubtreeBlocked()) {
+        int count = n->childCount();
+        for (int i = 0; i < count; ++i)
+            visitNode(n->childAtIndex(i));
+    }
 }
 
 void QSGNodeUpdater::visitNode(QSGNode *n)
@@ -226,18 +236,47 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
     qDebug() << "enter:" << n;
 #endif
 
-    if (n->dirtyFlags() || m_force_update) {
-        bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
-        if (forceUpdate)
-            ++m_force_update;
+    if (!n->dirtyFlags() && !m_force_update)
+        return;
 
-        QSGNodeVisitor::visitNode(n);
+    bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
+    if (forceUpdate)
+        ++m_force_update;
 
-        if (forceUpdate)
-            --m_force_update;
-
-        n->clearDirty();
+    switch (n->type()) {
+    case QSGNode::TransformNodeType: {
+        QSGTransformNode *t = static_cast<QSGTransformNode *>(n);
+        enterTransformNode(t);
+        visitChildren(t);
+        leaveTransformNode(t);
+        break; }
+    case QSGNode::GeometryNodeType: {
+        QSGGeometryNode *g = static_cast<QSGGeometryNode *>(n);
+        enterGeometryNode(g);
+        visitChildren(g);
+        leaveGeometryNode(g);
+        break; }
+    case QSGNode::ClipNodeType: {
+        QSGClipNode *c = static_cast<QSGClipNode *>(n);
+        enterClipNode(c);
+        visitChildren(c);
+        leaveClipNode(c);
+        break; }
+    case QSGNode::OpacityNodeType: {
+        QSGOpacityNode *o = static_cast<QSGOpacityNode *>(n);
+        enterOpacityNode(o);
+        visitChildren(o);
+        leaveOpacityNode(o);
+        break; }
+    default:
+        visitChildren(n);
+        break;
     }
+
+    if (forceUpdate)
+        --m_force_update;
+
+    n->clearDirty();
 }
 
 QT_END_NAMESPACE
