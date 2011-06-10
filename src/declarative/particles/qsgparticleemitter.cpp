@@ -121,6 +121,13 @@ void QSGParticleEmitter::burst(int num)
     m_burstQueue << qMakePair(num, QPointF(x(), y()));
 }
 
+void QSGParticleEmitter::burst(int num, qreal x, qreal y)
+{
+    if(!particleCount())
+        qWarning() << "burst called on an emitter with a particle count of zero";
+    m_burstQueue << qMakePair(num, QPointF(x, y));
+}
+
 void QSGParticleEmitter::setMaxParticleCount(int arg)
 {
     if (m_maxParticleCount != arg) {

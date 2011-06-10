@@ -177,6 +177,7 @@ void QSGModelParticle::processPending()
     foreach(QSGItem* item, m_deletables){
         item->setOpacity(0.);
         m_model->release(item);
+        m_deletables.removeAll(item);
     }
 
     foreach(int pos, m_requests){
@@ -189,6 +190,7 @@ void QSGModelParticle::processPending()
             mpa->attach();
         }
         m_items[pos]->setParentItem(this);
+        m_requests.removeAll(pos);
     }
 }
 

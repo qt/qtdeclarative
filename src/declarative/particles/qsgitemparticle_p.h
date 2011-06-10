@@ -55,8 +55,8 @@ class QSGItemParticleAttached;
 class QSGItemParticle : public QSGParticlePainter
 {
     Q_OBJECT
-
     Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
+    Q_PROPERTY(QDeclarativeComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 public:
     explicit QSGItemParticle(QSGItem *parent = 0);
 
@@ -69,8 +69,15 @@ public:
     virtual int count();
 
     static QSGItemParticleAttached *qmlAttachedProperties(QObject *object);
+    QDeclarativeComponent* delegate() const
+    {
+        return m_delegate;
+    }
+
 signals:
     void fadeChanged();
+
+    void delegateChanged(QDeclarativeComponent* arg);
 
 public slots:
     //TODO: Add a follow mode, where moving the delegate causes the logical particle to go with it?
@@ -80,11 +87,22 @@ public slots:
     void give(QSGItem* item);//give from modelparticle
 
     void setFade(bool arg){if(arg == m_fade) return; m_fade = arg; emit fadeChanged();}
+    void setDelegate(QDeclarativeComponent* arg)
+    {
+        if (m_delegate != arg) {
+            m_delegate = arg;
+            emit delegateChanged(arg);
+        }
+    }
+
 protected:
     virtual void reset();
     void prepareNextFrame();
+private slots:
+    void tick();
 private:
-    QList<QPointer<QSGItem> > m_deletables;
+    QList<QSGItem* > m_deletables;
+    QList< int > m_loadables;
     int m_particleCount;
     bool m_fade;
 
@@ -96,6 +114,7 @@ private:
     QSet<QSGItem*> m_stasis;
     qreal m_lastT;
     int m_activeCount;
+    QDeclarativeComponent* m_delegate;
 };
 
 class QSGItemParticleAttached : public QObject

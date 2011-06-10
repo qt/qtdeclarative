@@ -42,14 +42,22 @@
 #include "qsgitemparticle_p.h"
 #include <QtDeclarative/private/qsgvisualitemmodel_p.h>
 #include <qsgnode.h>
+#include <QTimer>
+#include <QDeclarativeComponent>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
 QSGItemParticle::QSGItemParticle(QSGItem *parent) :
-    QSGParticlePainter(parent), m_fade(true)
+    QSGParticlePainter(parent), m_fade(true), m_delegate(0)
 {
     setFlag(QSGItem::ItemHasContents);
+    QTimer* manageDelegates = new QTimer(this);//TODO: don't leak
+    connect(manageDelegates, SIGNAL(timeout()),
+            this, SLOT(tick()));
+    manageDelegates->setInterval(16);
+    manageDelegates->setSingleShot(false);
+    manageDelegates->start();
 }
 
 
@@ -79,33 +87,54 @@ void QSGItemParticle::give(QSGItem *item)
 
 void QSGItemParticle::load(QSGParticleData* d)
 {
-    if(m_pendingItems.isEmpty())
-        return;
     int pos = particleTypeIndex(d);
-    if(m_items[pos]){
+    m_data[pos] = d;
+    m_loadables << pos;
+}
+
+void QSGItemParticle::tick()
+{
+    foreach(QSGItem* item, m_deletables){
+        if(m_fade)
+            item->setOpacity(0.);
+        QSGItemParticleAttached* mpa;
+        if((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(item))))
+            mpa->detach();//reparent as well?
+        //TODO: Delete iff we created it
+        m_activeCount--;
+        m_deletables.removeAll(item);
+    }
+
+    foreach(int pos, m_loadables){
         if(m_stasis.contains(m_items[pos]))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
-        m_items[pos]->setOpacity(0.);
-        QSGItemParticleAttached* mpa;
-        if((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_items[pos], false))))
-            mpa->detach();//reparent as well?
+        if(m_items[pos]){
+            m_deletables << m_items[pos];
+            m_activeCount--;
+        }
         m_items[pos] = 0;
-        m_data[pos] = 0;
-        m_activeCount--;
+        if(!m_pendingItems.isEmpty()){
+            m_items[pos] = m_pendingItems.front();
+            m_pendingItems.pop_front();
+        }else if(m_delegate){
+            m_items[pos] = qobject_cast<QSGItem*>(m_delegate->create(qmlContext(this)));
+        }
+        if(m_items[pos]){
+            m_items[pos]->setX(m_data[pos]->curX() - m_items[pos]->width()/2);//TODO: adjust for system?
+            m_items[pos]->setY(m_data[pos]->curY() - m_items[pos]->height()/2);
+            QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_items[pos]));
+            if(mpa){
+                mpa->m_mp = this;
+                mpa->attach();
+            }
+            m_items[pos]->setParentItem(this);
+            if(m_fade)
+                m_items[pos]->setOpacity(0.);
+            m_activeCount++;
+        }
+        m_loadables.removeAll(pos);
     }
-    m_items[pos] = m_pendingItems.front();
-    m_pendingItems.pop_front();
-    m_items[pos]->setX(d->curX() - m_items[pos]->width()/2);
-    m_items[pos]->setY(d->curY() - m_items[pos]->height()/2);
-    QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_items[pos]));
-    if(mpa){
-        mpa->m_mp = this;
-        mpa->attach();
-    }
-    m_items[pos]->setParentItem(this);
-    m_data[pos] = d;
-    m_activeCount++;
 }
 
 void QSGItemParticle::reload(QSGParticleData* d)
@@ -173,10 +202,7 @@ void QSGItemParticle::prepareNextFrame()
             continue;
         }
         if(t >= 1.0){//Usually happens from load
-            item->setOpacity(0.);
-            QSGItemParticleAttached* mpa;
-            if((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_items[i]))))
-                mpa->detach();//reparent as well?
+            m_deletables << item;
             m_items[i] = 0;
             m_data[i] = 0;
             m_activeCount--;
