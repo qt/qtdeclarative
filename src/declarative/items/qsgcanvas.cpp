@@ -225,7 +225,7 @@ void QSGCanvas::paintEvent(QPaintEvent *)
         if (d->animationDriver && d->animationDriver->isRunning())
             update();
     } else {
-        if (isUpdatesEnabled()) {
+        if (updatesEnabled()) {
             d->thread->paint();
             setUpdatesEnabled(false);
         }
