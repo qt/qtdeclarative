@@ -38,36 +38,45 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+
 #include "v8test.h"
 
 using namespace v8;
 
-class tst_v8 : public QObject
-{
-    Q_OBJECT
-public:
-    tst_v8() {}
+#define BEGINTEST() bool _testPassed = true;
+#define ENDTEST() return _testPassed;
 
-private slots:
-    void initTestCase() {}
-    void cleanupTestCase() {}
-
-    void eval();
-};
-
-void tst_v8::eval()
-{
-    QVERIFY(v8test_eval());
+#define VERIFY(expr) { \
+    if (!(expr)) { \
+        _testPassed = false; \
+        goto cleanup; \
+    }  \
 }
 
-int main(int argc, char *argv[]) 
-{ 
-    V8::SetFlagsFromCommandLine(&argc, argv, true);
 
-    QCoreApplication app(argc, argv); 
-    tst_v8 tc; 
-    return QTest::qExec(&tc, argc, argv); 
+bool v8test_eval()
+{
+    BEGINTEST();
+
+    HandleScope handle_scope;
+    v8::Persistent<v8::Context> context = Context::New();
+    Context::Scope context_scope(context);
+
+    Local<Object> qmlglobal = Object::New();
+    qmlglobal->Set(String::New("a"), v8::Integer::New(1922));
+
+    Local<Script> script = Script::Compile(String::New("eval(\"a\")"), NULL, NULL, 
+                                           Handle<String>(), Script::QmlMode);
+    
+    TryCatch tc;
+    Local<Value> result = script->Run(qmlglobal);
+
+    VERIFY(!tc.HasCaught());
+    VERIFY(result->Int32Value() == 1922);
+
+cleanup:
+    context.Dispose();
+
+    ENDTEST();
 }
 
-#include "tst_v8.moc"

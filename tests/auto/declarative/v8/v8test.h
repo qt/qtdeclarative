@@ -38,36 +38,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
-#include "v8test.h"
 
-using namespace v8;
+#ifndef V8TEST_H
+#define V8TEST_H
 
-class tst_v8 : public QObject
-{
-    Q_OBJECT
-public:
-    tst_v8() {}
+#include "../../../../src/3rdparty/v8/include/v8.h"
 
-private slots:
-    void initTestCase() {}
-    void cleanupTestCase() {}
+bool v8test_eval();
 
-    void eval();
-};
+#endif // V8TEST_H
 
-void tst_v8::eval()
-{
-    QVERIFY(v8test_eval());
-}
-
-int main(int argc, char *argv[]) 
-{ 
-    V8::SetFlagsFromCommandLine(&argc, argv, true);
-
-    QCoreApplication app(argc, argv); 
-    tst_v8 tc; 
-    return QTest::qExec(&tc, argc, argv); 
-}
-
-#include "tst_v8.moc"
