@@ -223,11 +223,9 @@ void QSGNodeUpdater::leaveOpacityNode(QSGOpacityNode *o)
 
 void QSGNodeUpdater::visitChildren(QSGNode *n)
 {
-    if (!n->isSubtreeBlocked()) {
-        int count = n->childCount();
-        for (int i = 0; i < count; ++i)
-            visitNode(n->childAtIndex(i));
-    }
+    int count = n->childCount();
+    for (int i = 0; i < count; ++i)
+        visitNode(n->childAtIndex(i));
 }
 
 void QSGNodeUpdater::visitNode(QSGNode *n)
@@ -237,6 +235,8 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
 #endif
 
     if (!n->dirtyFlags() && !m_force_update)
+        return;
+    if (n->isSubtreeBlocked())
         return;
 
     bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);

@@ -939,17 +939,16 @@ void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 
 
 /*!
-    For performance reasons, we block the subtree when the nested opacity
-    gets below a certain threshold.
+    For performance reasons, we block the subtree when the opacity
+    is below a certain threshold.
 
     \internal
  */
 
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
-    return QSGNode::isSubtreeBlocked() || m_combined_opacity < 0.001;
+    return QSGNode::isSubtreeBlocked() || m_opacity < 0.001;
 }
-
 
 
 /*!
