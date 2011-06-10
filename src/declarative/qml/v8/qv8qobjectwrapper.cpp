@@ -633,6 +633,21 @@ static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
     StoreProperty(resource->engine, object, pdata, value);
 }
 
+static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8::Value>,
+                                    const v8::AccessorInfo& info)
+{
+    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+
+    if (!resource || resource->object.isNull()) 
+        return; 
+
+    QV8Engine *v8engine = resource->engine;
+
+    QString error = QLatin1String("Cannot assign to non-existent property \"") +
+                    v8engine->toString(property) + QLatin1Char('\"');
+    v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
+}
+
 static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void *)
 {
     Q_ASSERT(handle->IsObject());
@@ -680,12 +695,15 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
         // its not guarenteed that this is a win overall.  We need to try and measure the cost.
         for (StringCache::ConstIterator iter = stringCache.begin(); iter != stringCache.end(); ++iter) {
             Data *property = *iter;
-            if (property->isFunction() || !property->isWritable() ||
+            if (property->isFunction() || 
                 property->coreIndex >= 0x7FFF || property->notifyIndex >= 0x7FFF || 
                 property->coreIndex == 0)
                 continue;
 
             v8::AccessorGetter fastgetter = 0;
+            v8::AccessorSetter fastsetter = FastValueSetter;
+            if (!property->isWritable())
+                fastsetter = FastValueSetterReadOnly;
 
             if (property->isQObject()) 
                 fastgetter = QObjectValueGetter;
@@ -722,7 +740,7 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
                     ft->InstanceTemplate()->SetHasExternalResource(true);
                 }
 
-                ft->InstanceTemplate()->SetAccessor(engine->toString(name), fastgetter, FastValueSetter,
+                ft->InstanceTemplate()->SetAccessor(engine->toString(name), fastgetter, fastsetter,
                                                     v8::Integer::NewFromUnsigned(data));
             }
         }
