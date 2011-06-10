@@ -132,7 +132,7 @@ public:
     void markDirty(DirtyFlags flags);
     DirtyFlags dirtyFlags() const { return m_flags; }
 
-    virtual bool isSubtreeBlocked() const { return false; }
+    virtual bool isSubtreeBlocked() const;
 
     Flags flags() const { return m_nodeFlags; }
     void setFlag(Flag, bool = true);
@@ -161,6 +161,7 @@ private:
     QSGNode *m_parent;
     NodeType m_type;
     QList<QSGNode *> m_children;
+    int m_subtreeGeometryCount;
 
     Flags m_nodeFlags;
     DirtyFlags m_flags;

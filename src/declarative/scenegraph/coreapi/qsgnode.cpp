@@ -84,6 +84,7 @@ static void qt_print_node_count()
 QSGNode::QSGNode()
     : m_parent(0)
     , m_type(BasicNodeType)
+    , m_subtreeGeometryCount(0)
     , m_nodeFlags(OwnedByParent)
     , m_flags(0)
 {
@@ -93,6 +94,7 @@ QSGNode::QSGNode()
 QSGNode::QSGNode(NodeType type)
     : m_parent(0)
     , m_type(type)
+    , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
     , m_flags(0)
 {
@@ -150,8 +152,6 @@ QSGNode::~QSGNode()
 
 
 /*!
-    \fn bool QSGNode::isSubtreeBlocked() const
-
     Returns whether this node and its subtree is available for use.
 
     Blocked subtrees will not get their dirty states updated and they
@@ -160,6 +160,11 @@ QSGNode::~QSGNode()
     The QSGOpacityNode will return a blocked subtree when accumulated opacity
     is 0, for instance.
  */
+
+bool QSGNode::isSubtreeBlocked() const
+{
+    return m_subtreeGeometryCount == 0;
+}
 
 
 void QSGNode::destroy()
@@ -360,9 +365,17 @@ void QSGNode::markDirty(DirtyFlags flags)
     m_flags |= (flags & DirtyPropagationMask);
 
     DirtyFlags subtreeFlags = DirtyFlags((flags & DirtyPropagationMask) << 16);
+
+    int geometryCountDiff = 0;
+    if (flags & DirtyNodeAdded)
+        geometryCountDiff = m_subtreeGeometryCount;
+    if (flags & DirtyNodeRemoved)
+        geometryCountDiff = -m_subtreeGeometryCount;
+
     QSGNode *p = m_parent;
     while (p) {
         p->m_flags |= subtreeFlags;
+        p->m_subtreeGeometryCount += geometryCountDiff;
         if (p->type() == RootNodeType)
             static_cast<QSGRootNode *>(p)->notifyNodeChange(this, flags);
         p = p->m_parent;
@@ -920,7 +933,7 @@ void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
-    return m_combined_opacity < 0.001;
+    return QSGNode::isSubtreeBlocked() || m_combined_opacity < 0.001;
 }
 
 
