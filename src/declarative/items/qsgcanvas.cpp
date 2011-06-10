@@ -174,7 +174,7 @@ void QSGCanvas::paintEvent(QPaintEvent *)
         int lastFrame = frameTimer.restart();
 #endif
 
-        if (d->animationDriver->isRunning())
+        if (d->animationDriver && d->animationDriver->isRunning())
             d->animationDriver->advance();
 
 #ifdef FRAME_TIMING
@@ -222,7 +222,7 @@ void QSGCanvas::paintEvent(QPaintEvent *)
 
         QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Painting);
 
-        if (d->animationDriver->isRunning())
+        if (d->animationDriver && d->animationDriver->isRunning())
             update();
     } else {
         if (isUpdatesEnabled()) {
@@ -252,12 +252,14 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
     if (!d->contextFailed) {
         if (d->threadedRendering) {
-            if (!d->animationDriver) {
-                d->animationDriver = d->context->createAnimationDriver(this);
-                connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
-                connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
+            if (d->vsyncAnimations) {
+                if (!d->animationDriver) {
+                    d->animationDriver = d->context->createAnimationDriver(this);
+                    connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
+                    connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
+                }
+                d->animationDriver->install();
             }
-            d->animationDriver->install();
             d->thread->startRenderThread();
             setUpdatesEnabled(true);
         } else {
@@ -265,11 +267,14 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
             if (!d->context || !d->context->isReady()) {
                 d->initializeSceneGraph();
-                d->animationDriver = d->context->createAnimationDriver(this);
-                connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
+                if (d->vsyncAnimations) {
+                    d->animationDriver = d->context->createAnimationDriver(this);
+                    connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
+                }
             }
 
-            d->animationDriver->install();
+            if (d->animationDriver)
+                d->animationDriver->install();
         }
     }
 }
@@ -283,11 +288,51 @@ void QSGCanvas::hideEvent(QHideEvent *e)
             d->thread->stopRenderThread();
         }
 
-        d->animationDriver->uninstall();
+        if (d->animationDriver)
+            d->animationDriver->uninstall();
     }
 
     QGLWidget::hideEvent(e);
 }
+
+
+
+/*!
+    Sets weither this canvas should use vsync driven animations.
+
+    This option can only be set on one single QSGCanvas, and that it's
+    vsync signal will then be used to drive all animations in the
+    process.
+
+    This feature is primarily useful for single QSGCanvas, QML-only
+    applications.
+
+    \warning Enabling vsync on multiple QSGCanvas instances has
+    undefined behavior.
+ */
+void QSGCanvas::setVSyncAnimations(bool enabled)
+{
+    Q_D(QSGCanvas);
+    if (isVisible()) {
+        qWarning("QSGCanvas::setVSyncAnimations: Cannot be changed when widget is shown");
+        return;
+    }
+    d->vsyncAnimations = enabled;
+}
+
+
+
+/*!
+    Returns true if this canvas should use vsync driven animations;
+    otherwise returns false.
+ */
+bool QSGCanvas::vsyncAnimations() const
+{
+    Q_D(const QSGCanvas);
+    return d->vsyncAnimations;
+}
+
+
 
 void QSGCanvas::focusOutEvent(QFocusEvent *event)
 {
@@ -384,6 +429,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , threadedRendering(false)
     , animationRunning(false)
     , renderThreadAwakened(false)
+    , vsyncAnimations(false)
     , thread(0)
     , animationDriver(0)
 {
@@ -958,7 +1004,7 @@ bool QSGCanvas::event(QEvent *e)
 
         d->thread->syncAlreadyHappened = false;
 
-        if (d->animationRunning) {
+        if (d->animationRunning && d->animationDriver) {
 #ifdef THREAD_DEBUG
             qDebug("GUI: Advancing animations...\n");
 #endif
@@ -2053,7 +2099,7 @@ void QSGCanvasRenderThread::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!d->animationRunning && !isExternalUpdatePending) {
+        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
