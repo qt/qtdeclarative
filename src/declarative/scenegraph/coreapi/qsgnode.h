@@ -118,6 +118,7 @@ public:
     QSGNode *parent() const { return m_parent; }
 
     void removeChildNode(QSGNode *node);
+    void removeAllChildNodes();
     void prependChildNode(QSGNode *node);
     void appendChildNode(QSGNode *node);
     void insertChildNodeBefore(QSGNode *node, QSGNode *before);

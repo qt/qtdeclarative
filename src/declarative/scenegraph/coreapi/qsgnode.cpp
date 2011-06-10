@@ -305,7 +305,7 @@ void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 
 
 /*!
-    Removes \a node fromt his node's list of children.
+    Removes \a node from this node's list of children.
  */
 
 void QSGNode::removeChildNode(QSGNode *node)
@@ -317,6 +317,20 @@ void QSGNode::removeChildNode(QSGNode *node)
 
     node->markDirty(DirtyNodeRemoved);
     node->m_parent = 0;
+}
+
+
+/*!
+    Removes all child nodes from this node's list of children.
+ */
+
+void QSGNode::removeAllChildNodes()
+{
+    while (!m_children.isEmpty()) {
+        QSGNode *node = m_children.takeLast();
+        node->markDirty(DirtyNodeRemoved);
+        node->m_parent = 0;
+    }
 }
 
 

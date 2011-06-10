@@ -1615,10 +1615,8 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         }
     }
 
-    if (dirty & QSGItemPrivate::ChildrenUpdateMask) {
-        while (itemPriv->childContainerNode()->childCount())
-            itemPriv->childContainerNode()->removeChildNode(itemPriv->childContainerNode()->childAtIndex(0));
-    }
+    if (dirty & QSGItemPrivate::ChildrenUpdateMask)
+        itemPriv->childContainerNode()->removeAllChildNodes();
 
     if (effectRefEffectivelyChanged) {
         QSGNode *parent = itemPriv->clipNode;
@@ -1651,10 +1649,8 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
 
     if (dirty & QSGItemPrivate::ChildrenUpdateMask) {
         QSGNode *groupNode = itemPriv->groupNode;
-        if (groupNode) {
-            for (int count = groupNode->childCount(); count; --count)
-                groupNode->removeChildNode(groupNode->childAtIndex(0));
-        }
+        if (groupNode)
+            groupNode->removeAllChildNodes();
 
         QList<QSGItem *> orderedChildren = itemPriv->paintOrderChildItems();
         int ii = 0;
