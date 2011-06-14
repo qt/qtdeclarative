@@ -178,7 +178,6 @@ private slots:
     void aliasBindingsAssignCorrectly();
     void aliasBindingsOverrideTarget();
     void aliasWritesOverrideBindings();
-    void pushCleanContext();
     void realToInt();
 
     void include();
@@ -3551,44 +3550,6 @@ void tst_qdeclarativeecmascript::revision()
         QCOMPARE(object->property("test").toReal(), 11.);
         delete object;
     }
-}
-
-// Test for QScriptDeclarativeClass::pushCleanContext()
-void tst_qdeclarativeecmascript::pushCleanContext()
-{
-    QScriptEngine engine;
-    engine.globalObject().setProperty("a", 6);
-    QCOMPARE(engine.evaluate("a").toInt32(), 6);
-
-    // First confirm pushContext() behaves as we expect
-    QScriptValue object = engine.newObject();
-    object.setProperty("a", 15);
-    QScriptContext *context1 = engine.pushContext();
-    context1->pushScope(object);
-    QCOMPARE(engine.evaluate("a").toInt32(), 15);
-
-    QScriptContext *context2 = engine.pushContext();
-    Q_UNUSED(context2);
-    QCOMPARE(engine.evaluate("a").toInt32(), 15);
-    QScriptValue func1 = engine.evaluate("(function() { return a; })");
-
-    // Now check that pushCleanContext() works
-    QScriptDeclarativeClass::pushCleanContext(&engine);
-    QCOMPARE(engine.evaluate("a").toInt32(), 6);
-    QScriptValue func2 = engine.evaluate("(function() { return a; })");
-
-    engine.popContext();
-    QCOMPARE(engine.evaluate("a").toInt32(), 15);
-
-    engine.popContext();
-    QCOMPARE(engine.evaluate("a").toInt32(), 15);
-
-    engine.popContext();
-    QCOMPARE(engine.evaluate("a").toInt32(), 6);
-
-    // Check that function objects created in these contexts work
-    QCOMPARE(func1.call().toInt32(), 15);
-    QCOMPARE(func2.call().toInt32(), 6);
 }
 
 void tst_qdeclarativeecmascript::realToInt()

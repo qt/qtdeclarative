@@ -69,7 +69,6 @@ public:
 
 private:
     int roleFromName(const QDeclarativeListModel *model, const QString &roleName);
-    QScriptValue nestedListValue(QScriptEngine *eng) const;
     QDeclarativeItem *createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model);
     void waitForWorker(QDeclarativeItem *item);
 
@@ -117,16 +116,6 @@ int tst_qdeclarativelistmodel::roleFromName(const QDeclarativeListModel *model, 
             return roles[i];
     }
     return -1;
-}
-
-QScriptValue tst_qdeclarativelistmodel::nestedListValue(QScriptEngine *eng) const
-{
-    QScriptValue list = eng->newArray();
-    list.setProperty(0, eng->newObject());
-    list.setProperty(1, eng->newObject());
-    QScriptValue sv = eng->newObject();
-    sv.setProperty("foo", list);
-    return sv;
 }
 
 QDeclarativeItem *tst_qdeclarativelistmodel::createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model)

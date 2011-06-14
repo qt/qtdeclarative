@@ -52,7 +52,6 @@
 class tst_qdeclarativedebughelper : public QObject {
     Q_OBJECT
 private slots:
-    void getScriptEngine();
     void setAnimationSlowDownFactor();
     void enableDebugging();
 };
@@ -70,15 +69,6 @@ public:
         return 100;
     }
 };
-
-void tst_qdeclarativedebughelper::getScriptEngine()
-{
-    QDeclarativeEngine engine;
-
-    QScriptEngine *scriptEngine = QDeclarativeDebugHelper::getScriptEngine(&engine);
-    QVERIFY(scriptEngine);
-    QCOMPARE(scriptEngine, QDeclarativeEnginePrivate::getScriptEngine(&engine));
-}
 
 void tst_qdeclarativedebughelper::setAnimationSlowDownFactor()
 {

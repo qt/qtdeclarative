@@ -62,7 +62,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativeproperty \
            qdeclarativepropertymap \
            qdeclarativerepeater \
-           qdeclarativescriptdebugging \
+#           qdeclarativescriptdebugging \
            qdeclarativesmoothedanimation \
            qdeclarativespringanimation \
            qdeclarativestyledtext \
