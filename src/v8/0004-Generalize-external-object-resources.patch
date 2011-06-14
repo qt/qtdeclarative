@@ -1,4 +1,4 @@
-From d5dbc0acceb9cc848dfd994b2f54bc37c624fe98 Mon Sep 17 00:00:00 2001
+From a9108d655fcd8ffa45a32257160cc10eaf0256ee Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 16:55:35 +1000
 Subject: [PATCH 4/7] Generalize external object resources
@@ -31,10 +31,10 @@ object space.
  11 files changed, 280 insertions(+), 115 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index beaaca4..eaa0ec4 100644
+index 94da79c..b377c53 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -1603,6 +1603,25 @@ class Object : public Value {
+@@ -1606,6 +1606,25 @@ class Object : public Value {
    /** Sets a native pointer in an internal field. */
    V8EXPORT void SetPointerInInternalField(int index, void* value);
  
@@ -60,7 +60,7 @@ index beaaca4..eaa0ec4 100644
    // Testers for local properties.
    V8EXPORT bool HasRealNamedProperty(Handle<String> key);
    V8EXPORT bool HasRealIndexedProperty(uint32_t index);
-@@ -2304,6 +2323,12 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2307,6 +2326,12 @@ class V8EXPORT ObjectTemplate : public Template {
     */
    void SetInternalFieldCount(int value);
  
@@ -74,7 +74,7 @@ index beaaca4..eaa0ec4 100644
    ObjectTemplate();
    static Local<ObjectTemplate> New(Handle<FunctionTemplate> constructor);
 diff --git a/src/api.cc b/src/api.cc
-index ebca4f9..f62c5a0 100644
+index 2ac4395..3137d6c 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -1294,6 +1294,34 @@ void ObjectTemplate::SetInternalFieldCount(int value) {
@@ -112,7 +112,7 @@ index ebca4f9..f62c5a0 100644
  // --- S c r i p t D a t a ---
  
  
-@@ -3624,6 +3652,34 @@ void v8::Object::SetPointerInInternalField(int index, void* value) {
+@@ -3637,6 +3665,34 @@ void v8::Object::SetPointerInInternalField(int index, void* value) {
  }
  
  
@@ -147,7 +147,7 @@ index ebca4f9..f62c5a0 100644
  // --- E n v i r o n m e n t ---
  
  
-@@ -4116,7 +4172,7 @@ Local<String> v8::String::NewExternal(
+@@ -4129,7 +4185,7 @@ Local<String> v8::String::NewExternal(
    LOG_API(isolate, "String::NewExternal");
    ENTER_V8(isolate);
    i::Handle<i::String> result = NewExternalStringHandle(isolate, resource);
@@ -156,7 +156,7 @@ index ebca4f9..f62c5a0 100644
    return Utils::ToLocal(result);
  }
  
-@@ -4134,7 +4190,7 @@ bool v8::String::MakeExternal(v8::String::ExternalStringResource* resource) {
+@@ -4147,7 +4203,7 @@ bool v8::String::MakeExternal(v8::String::ExternalStringResource* resource) {
    }
    bool result = obj->MakeExternal(resource);
    if (result && !obj->IsSymbol()) {
@@ -165,7 +165,7 @@ index ebca4f9..f62c5a0 100644
    }
    return result;
  }
-@@ -4147,7 +4203,7 @@ Local<String> v8::String::NewExternal(
+@@ -4160,7 +4216,7 @@ Local<String> v8::String::NewExternal(
    LOG_API(isolate, "String::NewExternal");
    ENTER_V8(isolate);
    i::Handle<i::String> result = NewExternalAsciiStringHandle(isolate, resource);
@@ -174,7 +174,7 @@ index ebca4f9..f62c5a0 100644
    return Utils::ToLocal(result);
  }
  
-@@ -4166,7 +4222,7 @@ bool v8::String::MakeExternal(
+@@ -4179,7 +4235,7 @@ bool v8::String::MakeExternal(
    }
    bool result = obj->MakeExternal(resource);
    if (result && !obj->IsSymbol()) {
@@ -837,7 +837,7 @@ index 0c09e84..a205f02 100644
  ACCESSORS(SignatureInfo, receiver, Object, kReceiverOffset)
  ACCESSORS(SignatureInfo, args, Object, kArgsOffset)
 diff --git a/src/objects.h b/src/objects.h
-index 4389456..61685cc 100644
+index 3fdc69f..439ad1e 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -1636,6 +1636,9 @@ class JSObject: public HeapObject {
@@ -871,7 +871,7 @@ index 4389456..61685cc 100644
  
    // Layout of the default cache. It holds alternating name and code objects.
    static const int kCodeCacheEntrySize = 2;
-@@ -6417,6 +6427,7 @@ class ObjectTemplateInfo: public TemplateInfo {
+@@ -6418,6 +6428,7 @@ class ObjectTemplateInfo: public TemplateInfo {
   public:
    DECL_ACCESSORS(constructor, Object)
    DECL_ACCESSORS(internal_field_count, Object)
@@ -879,7 +879,7 @@ index 4389456..61685cc 100644
  
    static inline ObjectTemplateInfo* cast(Object* obj);
  
-@@ -6433,7 +6444,8 @@ class ObjectTemplateInfo: public TemplateInfo {
+@@ -6434,7 +6445,8 @@ class ObjectTemplateInfo: public TemplateInfo {
    static const int kConstructorOffset = TemplateInfo::kHeaderSize;
    static const int kInternalFieldCountOffset =
        kConstructorOffset + kPointerSize;

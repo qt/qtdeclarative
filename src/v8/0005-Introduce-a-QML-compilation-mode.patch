@@ -1,4 +1,4 @@
-From 6311077b6acd840a5b877e293fdc8eda3f83701e Mon Sep 17 00:00:00 2001
+From 980411965c51c0b2c80803d96ac55c498bb1b2c9 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 18:26:19 +1000
 Subject: [PATCH 5/7] Introduce a QML compilation mode
@@ -17,6 +17,9 @@ runs.
 ---
  include/v8.h                    |   18 ++++++++--
  src/api.cc                      |   46 +++++++++++++++++++++-----
+ src/arm/code-stubs-arm.cc       |    4 ++
+ src/arm/full-codegen-arm.cc     |   21 +++++++-----
+ src/arm/macro-assembler-arm.h   |    5 +++
  src/ast-inl.h                   |    5 +++
  src/ast.h                       |    1 +
  src/compiler.cc                 |   15 +++++++-
@@ -45,10 +48,10 @@ runs.
  src/x64/code-stubs-x64.cc       |    4 ++
  src/x64/full-codegen-x64.cc     |   21 +++++++-----
  src/x64/macro-assembler-x64.h   |    5 +++
- 30 files changed, 320 insertions(+), 77 deletions(-)
+ 33 files changed, 341 insertions(+), 86 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index eaa0ec4..62715ec 100644
+index b377c53..a67feb2 100644
 --- a/include/v8.h
 +++ b/include/v8.h
 @@ -577,6 +577,10 @@ class ScriptOrigin {
@@ -110,7 +113,7 @@ index eaa0ec4..62715ec 100644
  
    /**
     * Returns the script id value.
-@@ -3299,6 +3308,7 @@ class V8EXPORT Context {
+@@ -3302,6 +3311,7 @@ class V8EXPORT Context {
     * JavaScript frames an empty handle is returned.
     */
    static Local<Context> GetCalling();
@@ -119,7 +122,7 @@ index eaa0ec4..62715ec 100644
    /**
     * Sets the security token for the context.  To access an object in
 diff --git a/src/api.cc b/src/api.cc
-index f62c5a0..e2efcaa 100644
+index 3137d6c..2f5898c 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -1372,7 +1372,8 @@ ScriptData* ScriptData::New(const char* data, int length) {
@@ -204,7 +207,7 @@ index f62c5a0..e2efcaa 100644
      EXCEPTION_BAILOUT_CHECK(isolate, Local<Value>());
      raw_result = *result;
    }
-@@ -3915,6 +3925,24 @@ v8::Local<v8::Context> Context::GetCalling() {
+@@ -3928,6 +3938,24 @@ v8::Local<v8::Context> Context::GetCalling() {
  }
  
  
@@ -229,6 +232,107 @@ index f62c5a0..e2efcaa 100644
  v8::Local<v8::Object> Context::Global() {
    if (IsDeadCheck(i::Isolate::Current(), "v8::Context::Global()")) {
      return Local<v8::Object>();
+diff --git a/src/arm/code-stubs-arm.cc b/src/arm/code-stubs-arm.cc
+index 8c147f9..a2626bf 100644
+--- a/src/arm/code-stubs-arm.cc
++++ b/src/arm/code-stubs-arm.cc
+@@ -166,6 +166,10 @@ void FastNewContextStub::Generate(MacroAssembler* masm) {
+   __ ldr(r1, MemOperand(cp, Context::SlotOffset(Context::GLOBAL_INDEX)));
+   __ str(r1, MemOperand(r0, Context::SlotOffset(Context::GLOBAL_INDEX)));
+ 
++  // Copy the qml global object from the surrounding context.
++  __ ldr(r1, MemOperand(cp, Context::SlotOffset(Context::QML_GLOBAL_INDEX)));
++  __ str(r1, MemOperand(r0, Context::SlotOffset(Context::QML_GLOBAL_INDEX)));
++
+   // Initialize the rest of the slots to undefined.
+   __ LoadRoot(r1, Heap::kUndefinedValueRootIndex);
+   for (int i = Context::MIN_CONTEXT_SLOTS; i < length; i++) {
+diff --git a/src/arm/full-codegen-arm.cc b/src/arm/full-codegen-arm.cc
+index 871b453..f132de6 100644
+--- a/src/arm/full-codegen-arm.cc
++++ b/src/arm/full-codegen-arm.cc
+@@ -1247,9 +1247,9 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
+     __ bind(&fast);
+   }
+ 
+-  __ ldr(r0, GlobalObjectOperand());
++  __ ldr(r0, slot->var()->is_qml_global()?QmlGlobalObjectOperand():GlobalObjectOperand());
+   __ mov(r2, Operand(slot->var()->name()));
+-  RelocInfo::Mode mode = (typeof_state == INSIDE_TYPEOF)
++  RelocInfo::Mode mode = (typeof_state == INSIDE_TYPEOF || slot->var()->is_qml_global())
+       ? RelocInfo::CODE_TARGET
+       : RelocInfo::CODE_TARGET_CONTEXT;
+   Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
+@@ -1268,10 +1268,10 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
+     Comment cmnt(masm_, "Global variable");
+     // Use inline caching. Variable name is passed in r2 and the global
+     // object (receiver) in r0.
+-    __ ldr(r0, GlobalObjectOperand());
++    __ ldr(r0, var->is_qml_global()?QmlGlobalObjectOperand():GlobalObjectOperand());
+     __ mov(r2, Operand(var->name()));
+     Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
+-    EmitCallIC(ic, RelocInfo::CODE_TARGET_CONTEXT);
++    EmitCallIC(ic, var->is_qml_global()?RelocInfo::CODE_TARGET:RelocInfo::CODE_TARGET_CONTEXT);
+     context()->Plug(r0);
+ 
+   } else if (slot != NULL && slot->type() == Slot::LOOKUP) {
+@@ -1893,11 +1893,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
+     // assignment.  Right-hand-side value is passed in r0, variable name in
+     // r2, and the global object in r1.
+     __ mov(r2, Operand(var->name()));
+-    __ ldr(r1, GlobalObjectOperand());
++    __ ldr(r1, var->is_qml_global()?QmlGlobalObjectOperand():GlobalObjectOperand());
+     Handle<Code> ic = is_strict_mode()
+         ? isolate()->builtins()->StoreIC_Initialize_Strict()
+         : isolate()->builtins()->StoreIC_Initialize();
+-    EmitCallIC(ic, RelocInfo::CODE_TARGET_CONTEXT);
++    EmitCallIC(ic, var->is_qml_global()?RelocInfo::CODE_TARGET:RelocInfo::CODE_TARGET_CONTEXT);
+ 
+   } else if (op == Token::INIT_CONST) {
+     // Like var declarations, const declarations are hoisted to function
+@@ -2184,10 +2184,13 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
+   // Push the strict mode flag.
+   __ mov(r1, Operand(Smi::FromInt(strict_mode_flag())));
+   __ push(r1);
++  // Push the qml mode flag.
++  __ mov(r1, Operand(Smi::FromInt(is_qml_mode())));
++  __ push(r1);
+ 
+   __ CallRuntime(flag == SKIP_CONTEXT_LOOKUP
+                  ? Runtime::kResolvePossiblyDirectEvalNoLookup
+-                 : Runtime::kResolvePossiblyDirectEval, 4);
++                 : Runtime::kResolvePossiblyDirectEval, 5);
+ }
+ 
+ 
+@@ -2263,9 +2266,9 @@ void FullCodeGenerator::VisitCall(Call* expr) {
+     context()->DropAndPlug(1, r0);
+   } else if (var != NULL && !var->is_this() && var->is_global()) {
+     // Push global object as receiver for the call IC.
+-    __ ldr(r0, GlobalObjectOperand());
++    __ ldr(r0, var->is_qml_global()?QmlGlobalObjectOperand():GlobalObjectOperand());
+     __ push(r0);
+-    EmitCallWithIC(expr, var->name(), RelocInfo::CODE_TARGET_CONTEXT);
++    EmitCallWithIC(expr, var->name(), var->is_qml_global()?RelocInfo::CODE_TARGET:RelocInfo::CODE_TARGET_CONTEXT);
+   } else if (var != NULL && var->AsSlot() != NULL &&
+              var->AsSlot()->type() == Slot::LOOKUP) {
+     // Call to a lookup slot (dynamically introduced variable).
+diff --git a/src/arm/macro-assembler-arm.h b/src/arm/macro-assembler-arm.h
+index ab5efb0..d40cdbc 100644
+--- a/src/arm/macro-assembler-arm.h
++++ b/src/arm/macro-assembler-arm.h
+@@ -1056,6 +1056,11 @@ static inline MemOperand GlobalObjectOperand()  {
+ }
+ 
+ 
++static inline MemOperand QmlGlobalObjectOperand()  {
++  return ContextOperand(cp, Context::QML_GLOBAL_INDEX);
++}
++
++
+ #ifdef GENERATED_CODE_COVERAGE
+ #define CODE_COVERAGE_STRINGIFY(x) #x
+ #define CODE_COVERAGE_TOSTRING(x) CODE_COVERAGE_STRINGIFY(x)
 diff --git a/src/ast-inl.h b/src/ast-inl.h
 index d80684a..adc5a1f 100644
 --- a/src/ast-inl.h
@@ -733,7 +837,7 @@ index a205f02..8c0c2d0 100644
  ACCESSORS(CodeCache, normal_type_cache, Object, kNormalTypeCacheOffset)
  
 diff --git a/src/objects.h b/src/objects.h
-index 61685cc..f6549be 100644
+index 439ad1e..918ab61 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -4331,6 +4331,10 @@ class SharedFunctionInfo: public HeapObject {

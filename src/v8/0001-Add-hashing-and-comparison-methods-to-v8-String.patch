@@ -1,4 +1,4 @@
-From be15626304572957f432160bb0fa35af5e6663b2 Mon Sep 17 00:00:00 2001
+From b828611412fae2c423b6e02d3fb266400492c4c0 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 15:47:20 +1000
 Subject: [PATCH 1/7] Add hashing and comparison methods to v8::String
@@ -6,17 +6,17 @@ Subject: [PATCH 1/7] Add hashing and comparison methods to v8::String
 This allows us to more rapidly search for a v8::String inside
 a hash of QStrings.
 ---
- include/v8.h   |   17 +++++++++++++++++
- src/api.cc     |   15 +++++++++++++++
- src/objects.cc |   29 +++++++++++++++++++++++++++++
- src/objects.h  |    2 ++
- 4 files changed, 63 insertions(+), 0 deletions(-)
+ include/v8.h   |   20 ++++++++++++++++++
+ src/api.cc     |   28 ++++++++++++++++++++++++++
+ src/objects.cc |   60 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/objects.h  |    3 ++
+ 4 files changed, 111 insertions(+), 0 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index d15d024..ac3c062 100644
+index d15d024..bd48503 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -994,6 +994,23 @@ class String : public Primitive {
+@@ -994,6 +994,24 @@ class String : public Primitive {
    V8EXPORT int Utf8Length() const;
  
    /**
@@ -35,16 +35,26 @@ index d15d024..ac3c062 100644
 +   * string data provided.
 +   */
 +  V8EXPORT bool Equals(uint16_t *string, int length);
++  V8EXPORT bool Equals(char *string, int length);
 +
 +  /**
     * Write the contents of the string to an external buffer.
     * If no arguments are given, expects the buffer to be large
     * enough to hold the entire string and NULL terminator. Copies
+@@ -1023,6 +1041,8 @@ class String : public Primitive {
+     HINT_MANY_WRITES_EXPECTED = 1
+   };
+ 
++  V8EXPORT uint16_t GetCharacter(int index);
++
+   V8EXPORT int Write(uint16_t* buffer,
+                      int start = 0,
+                      int length = -1,
 diff --git a/src/api.cc b/src/api.cc
-index a2373cd..09b6b93 100644
+index a2373cd..f509673 100644
 --- a/src/api.cc
 +++ b/src/api.cc
-@@ -3284,6 +3284,21 @@ int String::Utf8Length() const {
+@@ -3284,6 +3284,34 @@ int String::Utf8Length() const {
    return str->Utf8Length();
  }
  
@@ -58,7 +68,20 @@ index a2373cd..09b6b93 100644
 +  return i::HashSequentialString<i::uc16>(string, length) >> i::String::kHashShift;
 +}
 +
++uint16_t String::GetCharacter(int index)
++{
++  i::Handle<i::String> str = Utils::OpenHandle(this);
++  return str->Get(index);
++}
++
 +bool String::Equals(uint16_t *string, int length) {
++  i::Handle<i::String> str = Utils::OpenHandle(this);
++  if (IsDeadCheck(str->GetIsolate(), "v8::String::Equals()")) return 0;
++  return str->SlowEqualsExternal(string, length);
++}
++
++bool String::Equals(char *string, int length)
++{
 +  i::Handle<i::String> str = Utils::OpenHandle(this);
 +  if (IsDeadCheck(str->GetIsolate(), "v8::String::Equals()")) return 0;
 +  return str->SlowEqualsExternal(string, length);
@@ -67,10 +90,10 @@ index a2373cd..09b6b93 100644
  int String::WriteUtf8(char* buffer,
                        int capacity,
 diff --git a/src/objects.cc b/src/objects.cc
-index df61956..bbdb37b 100644
+index df61956..5bd7f95 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
-@@ -5346,6 +5346,35 @@ static inline bool CompareStringContentsPartial(Isolate* isolate,
+@@ -5346,6 +5346,66 @@ static inline bool CompareStringContentsPartial(Isolate* isolate,
    }
  }
  
@@ -85,7 +108,6 @@ index df61956..bbdb37b 100644
 +
 +  String* lhs = this->TryFlattenGetString();
 +
-+  Isolate* isolate = GetIsolate();
 +  if (lhs->IsFlat()) {
 +    if (lhs->IsAsciiRepresentation()) {
 +      Vector<const char> vec1 = lhs->ToAsciiVector();
@@ -98,8 +120,40 @@ index df61956..bbdb37b 100644
 +      return CompareRawStringContents(vec1, vec2);
 +    }
 +  } else {
++    Isolate* isolate = GetIsolate();
 +    isolate->objects_string_compare_buffer_a()->Reset(0, lhs);
 +    VectorIterator<uc16> ib(string, length);
++    return CompareStringContents(isolate->objects_string_compare_buffer_a(), &ib);
++  }
++}
++
++bool String::SlowEqualsExternal(char *string, int length)
++{
++  int len = this->length();
++  if (len != length) return false;
++  if (len == 0) return true;
++
++  // We know the strings are both non-empty. Compare the first chars
++  // before we try to flatten the strings.
++  if (this->Get(0) != string[0]) return false;
++
++  String* lhs = this->TryFlattenGetString();
++
++  if (StringShape(lhs).IsSequentialAscii()) {
++      const char* str1 = SeqAsciiString::cast(lhs)->GetChars();
++      return CompareRawStringContents(Vector<const char>(str1, len),
++                                      Vector<const char>(string, len));
++  }
++
++  if (lhs->IsFlat()) {
++      Vector<const uc16> vec1 = lhs->ToUC16Vector();
++      VectorIterator<const uc16> buf1(vec1);
++      VectorIterator<char> buf2(string, length);
++      return CompareStringContents(&buf1, &buf2);
++  } else {
++    Isolate* isolate = GetIsolate();
++    isolate->objects_string_compare_buffer_a()->Reset(0, lhs);
++    VectorIterator<char> ib(string, length);
 +    return CompareStringContents(isolate->objects_string_compare_buffer_a(), &ib);
 +  }
 +}
@@ -107,14 +161,15 @@ index df61956..bbdb37b 100644
  bool String::SlowEquals(String* other) {
    // Fast check: negative check with lengths.
 diff --git a/src/objects.h b/src/objects.h
-index e966b3d..cd11c88 100644
+index e966b3d..f4c27d2 100644
 --- a/src/objects.h
 +++ b/src/objects.h
-@@ -5359,6 +5359,8 @@ class String: public HeapObject {
+@@ -5359,6 +5359,9 @@ class String: public HeapObject {
    bool IsAsciiEqualTo(Vector<const char> str);
    bool IsTwoByteEqualTo(Vector<const uc16> str);
  
 +  bool SlowEqualsExternal(uc16 *string, int length);
++  bool SlowEqualsExternal(char *string, int length);
 +
    // Return a UTF8 representation of the string.  The string is null
    // terminated but may optionally contain nulls.  Length is returned

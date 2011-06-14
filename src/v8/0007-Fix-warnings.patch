@@ -1,4 +1,4 @@
-From 15eb9c6a9444307a867a854c742505c15bd8b867 Mon Sep 17 00:00:00 2001
+From b16d11e3e614470004b1f80b25c55a8926c9e15e Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Fri, 27 May 2011 13:04:15 +1000
 Subject: [PATCH 7/7] Fix warnings
@@ -8,10 +8,10 @@ Subject: [PATCH 7/7] Fix warnings
  1 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index 42ddbd9..bc229f9 100644
+index 6577a30..3e1f520 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -2388,7 +2388,7 @@ class V8EXPORT Extension {  // NOLINT
+@@ -2391,7 +2391,7 @@ class V8EXPORT Extension {  // NOLINT
              const char** deps = 0);
    virtual ~Extension() { }
    virtual v8::Handle<v8::FunctionTemplate>
@@ -20,7 +20,7 @@ index 42ddbd9..bc229f9 100644
      return v8::Handle<v8::FunctionTemplate>();
    }
  
-@@ -3694,13 +3694,13 @@ class Internals {
+@@ -3697,13 +3697,13 @@ class Internals {
      return *reinterpret_cast<T*>(addr);
    }
  

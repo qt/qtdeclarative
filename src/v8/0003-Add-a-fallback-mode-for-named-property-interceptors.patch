@@ -1,4 +1,4 @@
-From 001373a7856d8a6f4620552c62ae87866c4194c0 Mon Sep 17 00:00:00 2001
+From 7ccd4af88f3323405ef834acabee15e1e6748474 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 16:21:02 +1000
 Subject: [PATCH 3/7] Add a "fallback" mode for named property interceptors
@@ -24,10 +24,10 @@ declarations.
  9 files changed, 99 insertions(+), 18 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index ac3c062..beaaca4 100644
+index bd48503..94da79c 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -2142,6 +2142,7 @@ class V8EXPORT FunctionTemplate : public Template {
+@@ -2145,6 +2145,7 @@ class V8EXPORT FunctionTemplate : public Template {
                                         NamedPropertyQuery query,
                                         NamedPropertyDeleter remover,
                                         NamedPropertyEnumerator enumerator,
@@ -35,7 +35,7 @@ index ac3c062..beaaca4 100644
                                         Handle<Value> data);
    void SetIndexedInstancePropertyHandler(IndexedPropertyGetter getter,
                                           IndexedPropertySetter setter,
-@@ -2226,6 +2227,13 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2229,6 +2230,13 @@ class V8EXPORT ObjectTemplate : public Template {
                                 NamedPropertyEnumerator enumerator = 0,
                                 Handle<Value> data = Handle<Value>());
  
@@ -50,7 +50,7 @@ index ac3c062..beaaca4 100644
     * Sets an indexed property handler on the object template.
     *
 diff --git a/src/api.cc b/src/api.cc
-index 09b6b93..ebca4f9 100644
+index f509673..2ac4395 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -981,6 +981,7 @@ void FunctionTemplate::SetNamedInstancePropertyHandler(
@@ -185,7 +185,7 @@ index bbe05f6..0c09e84 100644
  ACCESSORS(CallHandlerInfo, callback, Object, kCallbackOffset)
  ACCESSORS(CallHandlerInfo, data, Object, kDataOffset)
 diff --git a/src/objects.cc b/src/objects.cc
-index fcde7eb..d72e30b 100644
+index 92ab958..08d130e 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -1712,9 +1712,10 @@ MaybeObject* JSObject::SetPropertyWithInterceptor(
@@ -246,7 +246,7 @@ index fcde7eb..d72e30b 100644
    }
    result->NotFound();
 diff --git a/src/objects.h b/src/objects.h
-index 124c353..4389456 100644
+index a61733e..3fdc69f 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -1405,7 +1405,8 @@ class JSObject: public HeapObject {
@@ -291,7 +291,7 @@ index 124c353..4389456 100644
  
    // Layout of the default cache. It holds alternating name and code objects.
    static const int kCodeCacheEntrySize = 2;
-@@ -6267,6 +6275,7 @@ class InterceptorInfo: public Struct {
+@@ -6268,6 +6276,7 @@ class InterceptorInfo: public Struct {
    DECL_ACCESSORS(deleter, Object)
    DECL_ACCESSORS(enumerator, Object)
    DECL_ACCESSORS(data, Object)
@@ -299,7 +299,7 @@ index 124c353..4389456 100644
  
    static inline InterceptorInfo* cast(Object* obj);
  
-@@ -6286,7 +6295,8 @@ class InterceptorInfo: public Struct {
+@@ -6287,7 +6296,8 @@ class InterceptorInfo: public Struct {
    static const int kDeleterOffset = kQueryOffset + kPointerSize;
    static const int kEnumeratorOffset = kDeleterOffset + kPointerSize;
    static const int kDataOffset = kEnumeratorOffset + kPointerSize;

@@ -1,4 +1,4 @@
-From edf12cdcd4ec04bc6de8c031c0b9c13a664ba7a9 Mon Sep 17 00:00:00 2001
+From f2d11bae75512a1173da7b9f9edfaeeb1a1e73ce Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 15:55:26 +1000
 Subject: [PATCH 2/7] Add a bit field 3 to Map
@@ -53,7 +53,7 @@ index 65aec5d..bbe05f6 100644
    if (value) {
      set_bit_field(bit_field() | (1 << kHasNonInstancePrototype));
 diff --git a/src/objects.cc b/src/objects.cc
-index bbdb37b..fcde7eb 100644
+index 5bd7f95..92ab958 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -3614,6 +3614,7 @@ MaybeObject* Map::CopyDropDescriptors() {
@@ -73,7 +73,7 @@ index bbdb37b..fcde7eb 100644
    Map::cast(result)->set_is_shared(sharing == SHARED_NORMALIZED_MAP);
  
 diff --git a/src/objects.h b/src/objects.h
-index cd11c88..124c353 100644
+index f4c27d2..a61733e 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -3597,6 +3597,10 @@ class Map: public HeapObject {
