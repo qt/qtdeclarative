@@ -540,6 +540,7 @@ QSGNode *QSGShaderEffectItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeD
             s.fragmentCode = qt_default_fragment_code;
         if (s.vertexCode.isEmpty())
             s.vertexCode = qt_default_vertex_code;
+        s.className = metaObject()->className();
 
         m_material.setProgramSource(s);
         node->markDirty(QSGNode::DirtyMaterial);
