@@ -102,8 +102,8 @@ void QSGItemParticle::tick()
             mpa->detach();//reparent as well?
         //TODO: Delete iff we created it
         m_activeCount--;
-        m_deletables.removeAll(item);
     }
+    m_deletables.clear();
 
     foreach(int pos, m_loadables){
         if(m_stasis.contains(m_items[pos]))
@@ -133,8 +133,8 @@ void QSGItemParticle::tick()
                 m_items[pos]->setOpacity(0.);
             m_activeCount++;
         }
-        m_loadables.removeAll(pos);
     }
+    m_loadables.clear();
 }
 
 void QSGItemParticle::reload(QSGParticleData* d)
