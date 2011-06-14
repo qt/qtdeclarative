@@ -160,6 +160,8 @@ public:
     uint animationRunning: 1;
     uint renderThreadAwakened : 1;
 
+    uint vsyncAnimations : 1;
+
     QSGCanvasRenderThread *thread;
     QSize widgetSize;
     QSize viewportSize;
