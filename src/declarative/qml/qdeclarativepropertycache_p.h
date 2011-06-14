@@ -158,7 +158,7 @@ public:
 
     static Data create(const QMetaObject *, const QString &);
 
-    inline Data *property(v8::Handle<v8::String>) const;
+    inline Data *property(const QHashedV8String &) const;
     Data *property(const QString &) const;
     Data *property(int) const;
     Data *method(int) const;
@@ -169,7 +169,7 @@ public:
 
     inline QDeclarativeEngine *qmlEngine() const;
     static Data *property(QDeclarativeEngine *, QObject *, const QString &, Data &);
-    static Data *property(QDeclarativeEngine *, QObject *, v8::Handle<v8::String>, Data &);
+    static Data *property(QDeclarativeEngine *, QObject *, const QHashedV8String &, Data &);
 
 protected:
     virtual void clear();
@@ -250,7 +250,7 @@ QDeclarativeEngine *QDeclarativePropertyCache::qmlEngine() const
     return engine;
 }
 
-QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(v8::Handle<v8::String> str) const
+QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(const QHashedV8String &str) const
 {
     QDeclarativePropertyCache::RData **rv = stringCache.value(str);
     return rv?*rv:0;

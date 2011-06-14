@@ -412,7 +412,7 @@ QStringList QDeclarativePropertyCache::propertyNames() const
 
 QDeclarativePropertyCache::Data *
 QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj, 
-                                    v8::Handle<v8::String> name, Data &local)
+                                    const QHashedV8String &name, Data &local)
 {
     // XXX Optimize for worker script case where engine isn't available
     QDeclarativePropertyCache *cache = 0;
@@ -433,7 +433,7 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
     if (cache) {
         rv = cache->property(name);
     } else {
-        QString strname = QV8Engine::toStringStatic(name);
+        QString strname = QV8Engine::toStringStatic(name.string());
         // QString strname = ep->v8engine.toString(name);
         local = QDeclarativePropertyCache::create(obj->metaObject(), strname);
         if (local.isValid())

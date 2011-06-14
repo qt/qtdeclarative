@@ -130,6 +130,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
     QV8Engine *v8engine = resource->engine;
     QObject *object = resource->object;
 
+    QHashedV8String propertystring(property);
+
     if (resource->type) {
         QDeclarativeType *type = resource->type;
 
@@ -153,7 +155,8 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         } else if (resource->object) {
             QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
             if (ao) 
-                return v8engine->qobjectWrapper()->getProperty(ao, property, QV8QObjectWrapper::IgnoreRevision);
+                return v8engine->qobjectWrapper()->getProperty(ao, propertystring, 
+                                                               QV8QObjectWrapper::IgnoreRevision);
 
             // Fall through to undefined
         }
@@ -163,7 +166,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
     } else if (resource->typeNamespace) {
 
         QDeclarativeTypeNameCache *typeNamespace = resource->typeNamespace;
-        QDeclarativeTypeNameCache::Data *d = typeNamespace->data(property);
+        QDeclarativeTypeNameCache::Data *d = typeNamespace->data(propertystring);
         Q_ASSERT(!d || !d->typeNamespace); // Nested namespaces not supported
 
         if (d && d->type) {
@@ -197,12 +200,15 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
 
     // XXX TODO: Implement writes to module API objects
 
+    QHashedV8String propertystring(property);
+
     if (resource->type && resource->object) {
         QDeclarativeType *type = resource->type;
         QObject *object = resource->object;
         QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
         if (ao) 
-            v8engine->qobjectWrapper()->setProperty(ao, property, value, QV8QObjectWrapper::IgnoreRevision);
+            v8engine->qobjectWrapper()->setProperty(ao, propertystring, value, 
+                                                    QV8QObjectWrapper::IgnoreRevision);
     }
 
     return value;

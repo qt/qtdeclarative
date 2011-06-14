@@ -70,7 +70,7 @@ public:
     void add(const QString &, int);
 
     int value(const QString &);
-    inline int value(v8::Handle<v8::String>);
+    inline int value(const QHashedV8String &);
 
     QString findId(int value) const;
 
@@ -79,7 +79,7 @@ private:
     StringCache stringCache;
 };
 
-int QDeclarativeIntegerCache::value(v8::Handle<v8::String> name)
+int QDeclarativeIntegerCache::value(const QHashedV8String &name)
 {
     int *result = stringCache.value(name);
     return result?*result:-1;

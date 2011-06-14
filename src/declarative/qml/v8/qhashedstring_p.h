@@ -83,6 +83,26 @@ private:
     mutable quint32 m_hash;
 };
 
+class QHashedV8String 
+{
+public:
+    inline QHashedV8String();
+    explicit inline QHashedV8String(v8::Handle<v8::String>);
+    inline QHashedV8String(const QHashedV8String &string);
+    inline QHashedV8String &operator=(const QHashedV8String &other);
+
+    inline bool operator==(const QHashedV8String &string);
+
+    inline quint32 hash() const;
+    inline int length() const; 
+    inline v8::Handle<v8::String> string() const;
+
+private:
+    quint32 m_hash;
+    int m_length;
+    v8::Handle<v8::String> m_string;
+};
+
 class QHashedStringRef 
 {
 public:
@@ -151,7 +171,7 @@ private:
     QStringHashData data;
 
     inline Node *findNode(const QHashedStringRef &) const;
-    inline Node *findNode(v8::Handle<v8::String> &, quint32) const;
+    inline Node *findNode(const QHashedV8String &) const;
     Node *createNode(const QHashedString &, const T &);
 
 public:
@@ -172,8 +192,7 @@ public:
     inline T *value(const QString &) const;
     inline T *value(const QHashedString &) const;
     inline T *value(const QHashedStringRef &) const;
-    inline T *value(v8::Handle<v8::String> &) const;
-    inline T *value(v8::Handle<v8::String> &, quint32 hash) const;
+    inline T *value(const QHashedV8String &) const;
 
     inline bool contains(const QString &) const;
     inline bool contains(const QHashedString &) const;
@@ -343,13 +362,15 @@ typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedStringRef &
 }
 
 template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(v8::Handle<v8::String> &string, quint32 hash) const
+typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedV8String &string) const
 {
     QStringHashNode *node = 0;
     if (data.numBuckets) {
+        quint32 hash = string.hash();
         node = data.buckets[hash % data.numBuckets];
-        int length = string->Length();
-        while (node && (length != node->key.length() || !string->Equals((uint16_t*)node->key.constData(), length)))
+        int length = string.length();
+        while (node && (length != node->key.length() || hash != node->key.hash() ||
+                        !string.string()->Equals((uint16_t*)node->key.constData(), length)))
             node = node->next;
     } 
 
@@ -378,15 +399,9 @@ T *QStringHash<T>::value(const QHashedStringRef &key) const
 }
 
 template<class T>
-T *QStringHash<T>::value(v8::Handle<v8::String> &key) const
+T *QStringHash<T>::value(const QHashedV8String &string) const
 {
-    return value(key, (quint32)key->Hash());
-}
-
-template<class T>
-T *QStringHash<T>::value(v8::Handle<v8::String> &key, quint32 hash) const
-{
-    Node *n = findNode(key, hash);
+    Node *n = findNode(string);
     return n?&n->value:0;
 }
 
@@ -499,6 +514,52 @@ bool QHashedString::isUpper(const QChar &qc)
     // Optimize for _, a-z and A-Z.
     return ((c != '_' ) && (!(c >= 'a' && c <= 'z')) &&
            ((c >= 'A' && c <= 'Z') || QChar::category(c) == QChar::Letter_Uppercase));
+}
+
+QHashedV8String::QHashedV8String()
+: m_hash(0)
+{
+}
+
+QHashedV8String::QHashedV8String(v8::Handle<v8::String> string)
+: m_hash(string->Hash()), m_length(string->Length()), m_string(string)
+{
+    Q_ASSERT(!m_string.IsEmpty());
+}
+
+QHashedV8String::QHashedV8String(const QHashedV8String &string)
+: m_hash(string.m_hash), m_length(string.m_length), m_string(string.m_string)
+{
+}
+
+QHashedV8String &QHashedV8String::operator=(const QHashedV8String &other)
+{
+    m_hash = other.m_hash;
+    m_length = other.m_length;
+    m_string = other.m_string;
+    return *this;
+}
+
+bool QHashedV8String::operator==(const QHashedV8String &string)
+{
+    return m_hash == string.m_hash && m_length == string.m_length &&
+           m_string.IsEmpty() == m_string.IsEmpty() && 
+           (m_string.IsEmpty() || m_string->StrictEquals(string.m_string));
+}
+
+quint32 QHashedV8String::hash() const
+{
+    return m_hash;
+}
+
+int QHashedV8String::length() const
+{
+    return m_length;
+}
+
+v8::Handle<v8::String> QHashedV8String::string() const
+{
+    return m_string;
 }
 
 QHashedStringRef::QHashedStringRef() 

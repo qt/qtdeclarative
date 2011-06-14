@@ -86,7 +86,7 @@ public:
     void add(const QString &, QDeclarativeTypeNameCache *);
 
     Data *data(const QString &) const;
-    inline Data *data(v8::Handle<v8::String>) const;
+    inline Data *data(const QHashedV8String &) const;
     inline bool isEmpty() const;
 
     inline QDeclarativeMetaType::ModuleApiInstance *moduleApi() const;
@@ -140,7 +140,7 @@ QDeclarativeMetaType::ModuleApiInstance *QDeclarativeTypeNameCache::moduleApi() 
     return m_moduleApi;
 }
 
-QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(v8::Handle<v8::String> name) const
+QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(const QHashedV8String &name) const
 {
     return stringCache.value(name);
 }

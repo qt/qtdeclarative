@@ -58,6 +58,9 @@
 #include <QtCore/qpair.h>
 #include <QtCore/qhash.h>
 #include <private/qv8_p.h>
+#include <private/qhashedstring_p.h>
+#include <private/qdeclarativedata_p.h>
+#include <private/qdeclarativepropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -83,8 +86,8 @@ public:
     QObject *toQObject(QV8ObjectResource *);
 
     enum RevisionMode { IgnoreRevision, CheckRevision };
-    v8::Handle<v8::Value> getProperty(QObject *, v8::Handle<v8::String>, RevisionMode);
-    bool setProperty(QObject *, v8::Handle<v8::String>, v8::Handle<v8::Value>, RevisionMode);
+    inline v8::Handle<v8::Value> getProperty(QObject *, const QHashedV8String &, RevisionMode);
+    inline bool setProperty(QObject *, const QHashedV8String &, v8::Handle<v8::Value>, RevisionMode);
 
 private:
     friend class QDeclarativePropertyCache;
@@ -93,8 +96,8 @@ private:
 
     v8::Local<v8::Object> newQObject(QObject *, QDeclarativeData *, QV8Engine *);
     static v8::Handle<v8::Value> GetProperty(QV8Engine *, QObject *, v8::Handle<v8::Value> *, 
-                                             v8::Handle<v8::String>, QV8QObjectWrapper::RevisionMode);
-    static bool SetProperty(QV8Engine *, QObject *, v8::Handle<v8::String>,
+                                             const QHashedV8String &, QV8QObjectWrapper::RevisionMode);
+    static bool SetProperty(QV8Engine *, QObject *, const QHashedV8String &,
                             v8::Handle<v8::Value>, QV8QObjectWrapper::RevisionMode);
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
                                         const v8::AccessorInfo &info);
@@ -115,11 +118,37 @@ private:
     v8::Persistent<v8::Function> m_methodConstructor;
     v8::Persistent<v8::String> m_toStringSymbol;
     v8::Persistent<v8::String> m_destroySymbol;
+    QHashedV8String m_toStringString;
+    QHashedV8String m_destroyString;
     v8::Persistent<v8::Object> m_hiddenObject;
     QHash<QObject *, QV8QObjectConnectionList *> m_connections;
     typedef QHash<QObject *, QV8QObjectInstance *> TaintedHash;
     TaintedHash m_taintedObjects;
 };
+
+v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV8String &string,  
+                                                     RevisionMode mode)
+{
+    QDeclarativeData *dd = QDeclarativeData::get(object, false);
+    if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
+        dd->propertyCache->property(string)) {
+        return GetProperty(m_engine, object, 0, string, mode);
+    } else {
+        return v8::Handle<v8::Value>();
+    }
+}
+
+bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV8String &string, 
+                                    v8::Handle<v8::Value> value, RevisionMode mode)
+{
+    QDeclarativeData *dd = QDeclarativeData::get(object, false);
+    if (!dd || !dd->propertyCache || m_toStringString == string || m_destroyString == string ||
+        dd->propertyCache->property(string)) {
+        return SetProperty(m_engine, object, string, value, mode);
+    } else {
+        return false;
+    }
+}
 
 QT_END_NAMESPACE
 

@@ -429,12 +429,9 @@ v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QDeclarativ
 // unqualified name in QV8ContextWrapper.
 bool QV8Engine::startsWithUpper(v8::Handle<v8::String> string)
 {
-    uint16_t buffer[2];
-    int written = string->Write(buffer, 0, 1);
-    if (written == 0) return false;
-    uint16_t c = buffer[0];
-    return ((c != '_' ) && (!(c >= 'a' && c <= 'z')) &&
-           ((c >= 'A' && c <= 'Z') || QChar::category(c) == QChar::Letter_Uppercase));
+    uint16_t c = string->GetCharacter(0);
+    return (c >= 'A' && c <= 'Z') || 
+           (c > 127 && QChar::category(c) == QChar::Letter_Uppercase);
 }
 
 QV8Engine::Deletable *QV8Engine::extensionData(int index) const

@@ -207,6 +207,9 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     m_destroySymbol = qPersistentNew<v8::String>(v8::String::NewSymbol("destroy"));
     m_hiddenObject = qPersistentNew<v8::Object>(v8::Object::New());
 
+    m_toStringString = QHashedV8String(m_toStringSymbol);
+    m_destroyString = QHashedV8String(m_destroySymbol);
+
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter, Query, 0, Enumerator);
@@ -270,7 +273,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
     } else if (property.isQList()) {
         return engine->listWrapper()->newList(object, property.coreIndex, property.propType);
     } else PROPERTY_LOAD(QReal, qreal, v8::Number::New)
-    else PROPERTY_LOAD(Int || property.isEnum(), int, v8::Number::New)
+    else PROPERTY_LOAD(Int || property.isEnum(), int, v8::Integer::New)
     else PROPERTY_LOAD(Bool, bool, v8::Boolean::New)
     else PROPERTY_LOAD(QString, QString, engine->toString)
     else PROPERTY_LOAD(UInt, uint, v8::Integer::NewFromUnsigned)
@@ -294,7 +297,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 
 v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object, 
                                                      v8::Handle<v8::Value> *objectHandle, 
-                                                     v8::Handle<v8::String> property,
+                                                     const QHashedV8String &property,
                                                      QV8QObjectWrapper::RevisionMode revisionMode)
 {
     // XXX More recent versions of V8 introduced "Callable" objects.  It is possible that these
@@ -321,15 +324,21 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
        }
     };
 
-    if (engine->qobjectWrapper()->m_toStringSymbol->StrictEquals(property)) {
+    if (engine->qobjectWrapper()->m_toStringString == property) {
         return MethodClosure::create(engine, object, objectHandle, QOBJECT_TOSTRING_INDEX);
-    } else if (engine->qobjectWrapper()->m_destroySymbol->StrictEquals(property)) {
+    } else if (engine->qobjectWrapper()->m_destroyString == property) {
         return MethodClosure::create(engine, object, objectHandle, QOBJECT_DESTROY_INDEX);
     }
 
     QDeclarativePropertyCache::Data local;
     QDeclarativePropertyCache::Data *result = 0;
-    result = QDeclarativePropertyCache::property(engine->engine(), object, property, local);
+    {
+        QDeclarativeData *ddata = QDeclarativeData::get(object, false);
+        if (ddata && ddata->propertyCache)
+            result = ddata->propertyCache->property(property);
+        else
+            result = QDeclarativePropertyCache::property(engine->engine(), object, property, local);
+    }
 
     if (!result)
         return v8::Handle<v8::Value>();
@@ -447,11 +456,11 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
     }
 }
 
-bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, v8::Handle<v8::String> property,
+bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QHashedV8String &property,
                                     v8::Handle<v8::Value> value, QV8QObjectWrapper::RevisionMode revisionMode)
 {
-    if (engine->qobjectWrapper()->m_toStringSymbol->StrictEquals(property) ||
-        engine->qobjectWrapper()->m_destroySymbol->StrictEquals(property))
+    if (engine->qobjectWrapper()->m_toStringString == property ||
+        engine->qobjectWrapper()->m_destroyString == property)
         return true;
 
     QDeclarativePropertyCache::Data local;
@@ -469,7 +478,7 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, v8::Hand
 
     if (!result->isWritable() && !result->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +
-                        engine->toString(property) + QLatin1Char('\"');
+                        engine->toString(property.string()) + QLatin1Char('\"');
         v8::ThrowException(v8::Exception::Error(engine->toString(error)));
         return true;
     }
@@ -489,15 +498,19 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
 
     QObject *object = resource->object;
 
+    QHashedV8String propertystring(property);
+
     QV8Engine *v8engine = resource->engine;
-    v8::Handle<v8::Value> result = GetProperty(v8engine, object, &This, property, QV8QObjectWrapper::IgnoreRevision);
+    v8::Handle<v8::Value> result = GetProperty(v8engine, object, &This, propertystring, 
+                                               QV8QObjectWrapper::IgnoreRevision);
     if (!result.IsEmpty())
         return result;
 
     if (QV8Engine::startsWithUpper(property)) {
         // Check for attached properties
         QDeclarativeContextData *context = v8engine->callingContext();
-        QDeclarativeTypeNameCache::Data *data = context && (context->imports)?context->imports->data(property):0;
+        QDeclarativeTypeNameCache::Data *data = 
+            context && (context->imports)?context->imports->data(propertystring):0;
 
         if (data) {
             if (data->type) {
@@ -522,8 +535,10 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
 
     QObject *object = resource->object;
 
+    QHashedV8String propertystring(property);
+
     QV8Engine *v8engine = resource->engine;
-    bool result = SetProperty(v8engine, object, property, value, QV8QObjectWrapper::IgnoreRevision);
+    bool result = SetProperty(v8engine, object, propertystring, value, QV8QObjectWrapper::IgnoreRevision);
 
     if (!result) {
         QString error = QLatin1String("Cannot assign to non-existent property \"") +
@@ -546,9 +561,11 @@ v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Local<v8::String> property,
     QV8Engine *engine = resource->engine;
     QObject *object = resource->object;
 
+    QHashedV8String propertystring(property);
+
     QDeclarativePropertyCache::Data local;
     QDeclarativePropertyCache::Data *result = 0;
-    result = QDeclarativePropertyCache::property(engine->engine(), object, property, local);
+    result = QDeclarativePropertyCache::property(engine->engine(), object, propertystring, local);
 
     if (!result)
         return v8::Handle<v8::Integer>();
@@ -643,7 +660,7 @@ static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8
 
     QV8Engine *v8engine = resource->engine;
 
-    QString error = QLatin1String("Cannot assign to non-existent property \"") +
+    QString error = QLatin1String("Cannot assign to read-only property \"") +
                     v8engine->toString(property) + QLatin1Char('\"');
     v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
 }
@@ -1187,17 +1204,16 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
 }
 
 /*!
+    \fn v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, const QHashedV8String &property, QV8QObjectWrapper::RevisionMode revisionMode)
+
     Get the \a property of \a object.  Returns an empty handle if the property doesn't exist.
 
     Only searches for real properties of \a object (including methods), not attached properties etc.
 */
-v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, v8::Handle<v8::String> property,
-                                                     QV8QObjectWrapper::RevisionMode revisionMode)
-{
-    return GetProperty(m_engine, object, 0, property, revisionMode);
-}
 
 /*
+    \fn bool QV8QObjectWrapper::setProperty(QObject *object, const QHashedV8String &property, v8::Handle<v8::Value> value, RevisionMode revisionMode)
+
     Set the \a property of \a object to \a value.
 
     Returns true if the property was "set" - even if this results in an exception being thrown -
@@ -1205,11 +1221,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::getProperty(QObject *object, v8::Handle
 
     Only searches for real properties of \a object (including methods), not attached properties etc.
 */
-bool QV8QObjectWrapper::setProperty(QObject *object, v8::Handle<v8::String> property, 
-                                    v8::Handle<v8::Value> value, RevisionMode revisionMode)
-{
-    return SetProperty(m_engine, object, property, value, revisionMode);
-}
 
 namespace {
 struct CallArgs

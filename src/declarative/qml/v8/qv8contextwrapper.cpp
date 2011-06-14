@@ -260,9 +260,11 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     QV8Engine *engine = resource->engine;
     QObject *scopeObject = resource->scopeObject;
 
+    QHashedV8String propertystring(property);
+
     if (context->imports && QV8Engine::startsWithUpper(property)) {
         // Search for attached properties, enums and imported scripts
-        QDeclarativeTypeNameCache::Data *data = context->imports->data(property);
+        QDeclarativeTypeNameCache::Data *data = context->imports->data(propertystring);
 
         if (data) {
             if (data->importedScriptIndex != -1) {
@@ -286,7 +288,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
 
     if (resource->secondaryScope) {
-        v8::Handle<v8::Value> result = qobjectWrapper->getProperty(resource->secondaryScope, property, 
+        v8::Handle<v8::Value> result = qobjectWrapper->getProperty(resource->secondaryScope, propertystring, 
                                                                    QV8QObjectWrapper::IgnoreRevision);
         if (!result.IsEmpty()) return result;
     }
@@ -294,7 +296,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     while (context) {
         // Search context properties
         if (context->propertyNames) {
-            int propertyIdx = context->propertyNames->value(property);
+            int propertyIdx = context->propertyNames->value(propertystring);
 
             if (propertyIdx != -1) {
                 typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty;
@@ -329,7 +331,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
         // Search scope object
         if (scopeObject) {
-            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(scopeObject, property, 
+            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(scopeObject, propertystring,
                                                                        QV8QObjectWrapper::CheckRevision);
             if (!result.IsEmpty()) return result;
         }
@@ -338,7 +340,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
         // Search context object
         if (context->contextObject) {
-            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(context->contextObject, property,
+            v8::Handle<v8::Value> result = qobjectWrapper->getProperty(context->contextObject, propertystring,
                                                                        QV8QObjectWrapper::CheckRevision);
             if (!result.IsEmpty()) return result;
         }
@@ -393,27 +395,31 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     QV8Engine *engine = resource->engine;
     QObject *scopeObject = resource->scopeObject;
 
+    QHashedV8String propertystring(property);
+
     QV8QObjectWrapper *qobjectWrapper = engine->qobjectWrapper();
 
     // Search scope object
-    if (resource->secondaryScope && qobjectWrapper->setProperty(resource->secondaryScope, property, value, 
-                                                                QV8QObjectWrapper::IgnoreRevision))
+    if (resource->secondaryScope && 
+        qobjectWrapper->setProperty(resource->secondaryScope, propertystring, value, 
+                                    QV8QObjectWrapper::IgnoreRevision))
         return value;
 
     while (context) {
         // Search context properties
-        if (context->propertyNames && -1 != context->propertyNames->value(property))
+        if (context->propertyNames && -1 != context->propertyNames->value(propertystring))
             return value;
 
         // Search scope object
         if (scopeObject && 
-            qobjectWrapper->setProperty(scopeObject, property, value, QV8QObjectWrapper::CheckRevision))
+            qobjectWrapper->setProperty(scopeObject, propertystring, value, QV8QObjectWrapper::CheckRevision))
             return value;
         scopeObject = 0;
 
         // Search context object
         if (context->contextObject &&
-            qobjectWrapper->setProperty(context->contextObject, property, value, QV8QObjectWrapper::CheckRevision))
+            qobjectWrapper->setProperty(context->contextObject, propertystring, value, 
+                                        QV8QObjectWrapper::CheckRevision))
             return value;
 
         context = context->parent;
