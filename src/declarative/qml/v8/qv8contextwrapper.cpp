@@ -221,10 +221,7 @@ QDeclarativeContextData *QV8ContextWrapper::context(v8::Handle<v8::Value> value)
 v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String> property, 
                                                     const v8::AccessorInfo &info)
 {
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
-
-    if (!resource)
-        return v8::Undefined();
+    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
 
     QV8Engine *engine = resource->engine;
 
@@ -236,10 +233,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullGetter(v8::Local<v8::String> proper
 v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property, 
                                                 const v8::AccessorInfo &info)
 {
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
-
-    if (!resource)
-        return v8::Undefined();
+    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
 
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.
@@ -357,10 +351,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::NullSetter(v8::Local<v8::String> proper
                                                     v8::Local<v8::Value>,
                                                     const v8::AccessorInfo &info)
 {
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
-
-    if (!resource)
-        return v8::Handle<v8::Value>();
+    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
 
     QV8Engine *engine = resource->engine;
 
@@ -378,10 +369,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
                                                 v8::Local<v8::Value> value,
                                                 const v8::AccessorInfo &info)
 {
-    QV8ContextResource *resource = v8_resource_cast<QV8ContextResource>(info.This());
-
-    if (!resource)
-        return v8::Undefined();
+    QV8ContextResource *resource = v8_resource_check<QV8ContextResource>(info.This());
 
     // Its possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definately needed.

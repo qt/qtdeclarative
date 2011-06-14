@@ -166,9 +166,9 @@ void QV8QObjectWrapper::destroy()
 static v8::Handle<v8::Value> name ## ValueGetter(v8::Local<v8::String>, const v8::AccessorInfo &info) \
 { \
     v8::Handle<v8::Object> This = info.This(); \
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(This); \
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(This); \
  \
-    if (!resource || resource->object.isNull()) return v8::Undefined(); \
+    if (resource->object.isNull()) return v8::Undefined(); \
  \
     QObject *object = resource->object; \
  \
@@ -188,6 +188,32 @@ static v8::Handle<v8::Value> name ## ValueGetter(v8::Local<v8::String>, const v8
     QMetaObject::metacall(object, QMetaObject::ReadProperty, index, args); \
  \
     return constructor(value); \
+} \
+static v8::Handle<v8::Value> name ## ValueGetterDirect(v8::Local<v8::String>, const v8::AccessorInfo &info) \
+{ \
+    v8::Handle<v8::Object> This = info.This(); \
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(This); \
+ \
+    if (resource->object.isNull()) return v8::Undefined(); \
+ \
+    QObject *object = resource->object; \
+ \
+    uint32_t data = info.Data()->Uint32Value(); \
+    int index = data & 0x7FFF; \
+    int notify = (data & 0x7FFF0000) >> 16; \
+    if (notify == 0x7FFF) notify = -1; \
+ \
+    QDeclarativeEnginePrivate *ep = resource->engine->engine()?QDeclarativeEnginePrivate::get(resource->engine->engine()):0; \
+    if (ep && notify /* 0 means constant */ && ep->captureProperties) { \
+        typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty; \
+        ep->capturedProperties << CapturedProperty(object, index, notify); \
+    } \
+ \
+    cpptype value = defaultvalue; \
+    void *args[] = { &value, 0 }; \
+    object->qt_metacall(QMetaObject::ReadProperty, index, args); \
+ \
+    return constructor(value); \
 } 
 
 #define CREATE_FUNCTION \
@@ -199,6 +225,10 @@ static v8::Handle<v8::Value> name ## ValueGetter(v8::Local<v8::String>, const v8
         "});"\
     "})"
 
+
+static quint32 toStringHash = -1;
+static quint32 destroyHash = -1;
+
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
@@ -209,6 +239,9 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 
     m_toStringString = QHashedV8String(m_toStringSymbol);
     m_destroyString = QHashedV8String(m_destroySymbol);
+
+    toStringHash = m_toStringString.hash();
+    destroyHash = m_destroyString.hash();
 
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -293,6 +326,53 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
 
     QVariant var = object->metaObject()->property(property.coreIndex).read(object);
     return engine->fromVariant(var);
+
+#undef PROPERTY_LOAD
+}
+
+static v8::Handle<v8::Value> LoadPropertyDirect(QV8Engine *engine, QObject *object, 
+                                                const QDeclarativePropertyCache::Data &property)
+{
+    Q_ASSERT(!property.isFunction());
+
+#define PROPERTY_LOAD(metatype, cpptype, constructor) \
+    if (property.propType == QMetaType:: metatype) { \
+        cpptype type = cpptype(); \
+        void *args[] = { &type, 0 }; \
+        object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args); \
+        return constructor(type); \
+    }
+
+    if (property.isQObject()) {
+        QObject *rv = 0;
+        void *args[] = { &rv, 0 };
+        QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex, args);
+        return engine->newQObject(rv);
+    } else if (property.isQList()) {
+        return engine->listWrapper()->newList(object, property.coreIndex, property.propType);
+    } else PROPERTY_LOAD(QReal, qreal, v8::Number::New)
+    else PROPERTY_LOAD(Int || property.isEnum(), int, v8::Integer::New)
+    else PROPERTY_LOAD(Bool, bool, v8::Boolean::New)
+    else PROPERTY_LOAD(QString, QString, engine->toString)
+    else PROPERTY_LOAD(UInt, uint, v8::Integer::NewFromUnsigned)
+    else PROPERTY_LOAD(Float, float, v8::Number::New)
+    else PROPERTY_LOAD(Double, double, v8::Number::New)
+    else if(property.isV8Handle()) {
+        QDeclarativeV8Handle handle;
+        void *args[] = { &handle, 0 };
+        object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args); 
+        return reinterpret_cast<v8::Handle<v8::Value> &>(handle);
+    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
+        QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
+        if (valueType)
+            return engine->newValueType(object, property.coreIndex, valueType);
+    } 
+
+    QVariant var = object->metaObject()->property(property.coreIndex).read(object);
+    return engine->fromVariant(var);
+
+#undef PROPERTY_LOAD
 }
 
 v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject *object, 
@@ -324,10 +404,14 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
        }
     };
 
-    if (engine->qobjectWrapper()->m_toStringString == property) {
-        return MethodClosure::create(engine, object, objectHandle, QOBJECT_TOSTRING_INDEX);
-    } else if (engine->qobjectWrapper()->m_destroyString == property) {
-        return MethodClosure::create(engine, object, objectHandle, QOBJECT_DESTROY_INDEX);
+    {
+        // Comparing the hash first actually makes a measurable difference here, at least on x86
+        quint32 hash = property.hash();
+        if (hash == toStringHash && engine->qobjectWrapper()->m_toStringString == property) {
+            return MethodClosure::create(engine, object, objectHandle, QOBJECT_TOSTRING_INDEX);
+        } else if (hash == destroyHash && engine->qobjectWrapper()->m_destroyString == property) {
+            return MethodClosure::create(engine, object, objectHandle, QOBJECT_DESTROY_INDEX);
+        }
     }
 
     QDeclarativePropertyCache::Data local;
@@ -342,8 +426,6 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
 
     if (!result)
         return v8::Handle<v8::Value>();
-
-    QDeclarativeEnginePrivate *ep = engine->engine()?QDeclarativeEnginePrivate::get(engine->engine()):0;
 
     if (revisionMode == QV8QObjectWrapper::CheckRevision && result->revision != 0) {
         QDeclarativeData *ddata = QDeclarativeData::get(object);
@@ -363,6 +445,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
         }
     }
 
+    QDeclarativeEnginePrivate *ep = engine->engine()?QDeclarativeEnginePrivate::get(engine->engine()):0;
     if (ep && ep->captureProperties && !result->isConstant()) {
         if (result->coreIndex == 0)
             ep->capturedProperties << CapturedProperty(QDeclarativeData::get(object, true)->objectNameNotifier());
@@ -370,7 +453,11 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             ep->capturedProperties << CapturedProperty(object, result->coreIndex, result->notifyIndex);
     }
 
-    return LoadProperty(engine, object, *result);
+    if (result->isDirect())  {
+        return LoadPropertyDirect(engine, object, *result);
+    } else {
+        return LoadProperty(engine, object, *result);
+    }
 }
 
 // Setter for writable properties.  Shared between the interceptor and fast property accessor
@@ -491,16 +578,17 @@ bool QV8QObjectWrapper::SetProperty(QV8Engine *engine, QObject *object, const QH
 v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property, 
                                                 const v8::AccessorInfo &info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
-    v8::Handle<v8::Value> This = info.This();
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) return v8::Undefined();
+    if (resource->object.isNull()) 
+        return v8::Undefined();
 
     QObject *object = resource->object;
 
     QHashedV8String propertystring(property);
 
     QV8Engine *v8engine = resource->engine;
+    v8::Handle<v8::Value> This = info.This();
     v8::Handle<v8::Value> result = GetProperty(v8engine, object, &This, propertystring, 
                                                QV8QObjectWrapper::IgnoreRevision);
     if (!result.IsEmpty())
@@ -528,9 +616,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
                                                 v8::Local<v8::Value> value,
                                                 const v8::AccessorInfo &info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) 
+    if (resource->object.isNull()) 
         return value;
 
     QObject *object = resource->object;
@@ -553,9 +641,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property,
 v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Local<v8::String> property,
                                                  const v8::AccessorInfo &info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) 
+    if (resource->object.isNull()) 
         return v8::Handle<v8::Integer>();
 
     QV8Engine *engine = resource->engine;
@@ -577,9 +665,9 @@ v8::Handle<v8::Integer> QV8QObjectWrapper::Query(v8::Local<v8::String> property,
 
 v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) 
+    if (resource->object.isNull()) 
         return v8::Array::New();
 
     QObject *object = resource->object;
@@ -628,9 +716,9 @@ FAST_VALUE_GETTER(Double, double, 0, v8::Number::New);
 static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
                             const v8::AccessorInfo& info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) 
+    if (resource->object.isNull()) 
         return; 
 
     QObject *object = resource->object;
@@ -653,9 +741,9 @@ static void FastValueSetter(v8::Local<v8::String>, v8::Local<v8::Value> value,
 static void FastValueSetterReadOnly(v8::Local<v8::String> property, v8::Local<v8::Value>,
                                     const v8::AccessorInfo& info)
 {
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(info.This());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
-    if (!resource || resource->object.isNull()) 
+    if (resource->object.isNull()) 
         return; 
 
     QV8Engine *v8engine = resource->engine;
@@ -669,7 +757,7 @@ static void WeakQObjectReferenceCallback(v8::Persistent<v8::Value> handle, void 
 {
     Q_ASSERT(handle->IsObject());
     
-    QV8QObjectResource *resource = v8_resource_cast<QV8QObjectResource>(handle->ToObject());
+    QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(handle->ToObject());
 
     Q_ASSERT(resource);
 
@@ -723,19 +811,19 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
                 fastsetter = FastValueSetterReadOnly;
 
             if (property->isQObject()) 
-                fastgetter = QObjectValueGetter;
+                fastgetter = property->isDirect()?QObjectValueGetterDirect:QObjectValueGetter;
             else if (property->propType == QMetaType::Int || property->isEnum()) 
-                fastgetter = IntValueGetter;
+                fastgetter = property->isDirect()?IntValueGetterDirect:IntValueGetter;
             else if (property->propType == QMetaType::Bool)
-                fastgetter = BoolValueGetter;
+                fastgetter = property->isDirect()?BoolValueGetterDirect:BoolValueGetter;
             else if (property->propType == QMetaType::QString)
-                fastgetter = QStringValueGetter;
+                fastgetter = property->isDirect()?QStringValueGetterDirect:QStringValueGetter;
             else if (property->propType == QMetaType::UInt)
-                fastgetter = UIntValueGetter;
+                fastgetter = property->isDirect()?UIntValueGetterDirect:UIntValueGetter;
             else if (property->propType == QMetaType::Float) 
-                fastgetter = FloatValueGetter;
+                fastgetter = property->isDirect()?FloatValueGetterDirect:FloatValueGetter;
             else if (property->propType == QMetaType::Double) 
-                fastgetter = DoubleValueGetter;
+                fastgetter = property->isDirect()?DoubleValueGetterDirect:DoubleValueGetter;
 
             if (fastgetter) {
                 int notifyIndex = property->notifyIndex;

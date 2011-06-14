@@ -44,6 +44,9 @@
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativebinding_p.h"
 #include "private/qv8engine_p.h"
+
+#include <private/qmetaobject_p.h>
+
 #include <QtCore/qdebug.h>
 
 Q_DECLARE_METATYPE(QScriptValue)
@@ -252,6 +255,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
     qPersistentDispose(constructor); // Now invalid
 
+    bool dynamicMetaObject = isDynamicMetaObject(metaObject);
+
     allowedRevisionCache.append(0);
 
     QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
@@ -278,6 +283,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             data->flags |= methodFlags;
         else if (m.methodType() == QMetaMethod::Signal)
             data->flags |= signalFlags;
+
+        if (!dynamicMetaObject)
+            data->flags |= Data::IsDirect;
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
@@ -311,6 +319,9 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->load(p, engine);
         data->flags |= propertyFlags;
+
+        if (!dynamicMetaObject) 
+            data->flags |= Data::IsDirect;
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
@@ -475,6 +486,14 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
     }
 
     return rv;
+}
+
+static inline const QMetaObjectPrivate *priv(const uint* data)
+{ return reinterpret_cast<const QMetaObjectPrivate*>(data); }
+
+bool QDeclarativePropertyCache::isDynamicMetaObject(const QMetaObject *mo)
+{
+    return priv(mo->d.data)->revision >= 3 && priv(mo->d.data)->flags & DynamicMetaObject;
 }
 
 QT_END_NAMESPACE

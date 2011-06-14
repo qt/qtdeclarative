@@ -83,27 +83,28 @@ public:
                     NoFlags           = 0x00000000,
 
                     // Can apply to all properties, except IsFunction
-                    IsConstant        = 0x00000001,
-                    IsWritable        = 0x00000002,
-                    IsResettable      = 0x00000004,
-                    IsAlias           = 0x00000008,
-                    IsFinal           = 0x00000010,
+                    IsConstant        = 0x00000001, // Has CONST flag
+                    IsWritable        = 0x00000002, // Has WRITE function
+                    IsResettable      = 0x00000004, // Has RESET function
+                    IsAlias           = 0x00000008, // Is a QML alias to another property
+                    IsFinal           = 0x00000010, // Has FINAL flag
+                    IsDirect          = 0x00000020, // Exists on a C++ QMetaObject
 
                     // These are mutualy exclusive
-                    IsFunction        = 0x00000020,
-                    IsQObjectDerived  = 0x00000040,
-                    IsEnumType        = 0x00000080,
-                    IsQList           = 0x00000100,
-                    IsQmlBinding      = 0x00000200,
-                    IsQScriptValue    = 0x00000400,
-                    IsV8Handle        = 0x00000800,
+                    IsFunction        = 0x00000040, // Is an invokable
+                    IsQObjectDerived  = 0x00000080, // Property type is a QObject* derived type
+                    IsEnumType        = 0x00000100, // Property type is an enum
+                    IsQList           = 0x00000200, // Property type is a QML list
+                    IsQmlBinding      = 0x00000400, // Property type is a QDeclarativeBinding*
+                    IsQScriptValue    = 0x00000800, // Property type is a QScriptValue
+                    IsV8Handle        = 0x00001000, // Property type is a QDeclarativeV8Handle
 
                     // Apply only to IsFunctions
-                    IsVMEFunction     = 0x00001000,
-                    HasArguments      = 0x00002000,
-                    IsSignal          = 0x00004000,
-                    IsVMESignal       = 0x00008000,
-                    IsV8Function      = 0x00010000
+                    IsVMEFunction     = 0x00002000, // Function was added by QML
+                    HasArguments      = 0x00004000, // Function takes arguments
+                    IsSignal          = 0x00008000, // Function is a signal
+                    IsVMESignal       = 0x00010000, // Signal was added by QML
+                    IsV8Function      = 0x00020000  // Function takes QDeclarativeV8Function* args
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -113,6 +114,7 @@ public:
         bool isResettable() const { return flags & IsResettable; }
         bool isAlias() const { return flags & IsAlias; }
         bool isFinal() const { return flags & IsFinal; }
+        bool isDirect() const { return flags & IsDirect; }
         bool isFunction() const { return flags & IsFunction; }
         bool isQObject() const { return flags & IsQObjectDerived; }
         bool isEnum() const { return flags & IsEnumType; }
@@ -171,6 +173,7 @@ public:
     static Data *property(QDeclarativeEngine *, QObject *, const QString &, Data &);
     static Data *property(QDeclarativeEngine *, QObject *, const QHashedV8String &, Data &);
 
+    static bool isDynamicMetaObject(const QMetaObject *);
 protected:
     virtual void clear();
 
