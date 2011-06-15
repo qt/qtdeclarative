@@ -344,10 +344,8 @@ static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfSca
     bool isShortData = polys.indices.type() == QVertexIndexVector::UnsignedShort;
     const void *indices = polys.indices.data();
     int index = 0;
-    QVector<DFPoint> normals;
-    QVector<DFVertex> vertices;
-    normals.reserve(polys.vertices.count());
-    vertices.reserve(polys.vertices.count());
+    QVarLengthArray<DFPoint> normals(polys.vertices.count());
+    QVarLengthArray<DFVertex> vertices(polys.vertices.count());
 
     while (index < polys.indices.size()) {
         normals.clear();
@@ -386,7 +384,7 @@ static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfSca
             vertices.append(v);
         }
 
-        QVector<bool> isConvex(normals.count());
+        QVarLengthArray<bool> isConvex(normals.count());
         for (int next = 0, prev = normals.count() - 1; next < normals.count(); prev = next++)
             isConvex[prev] = (normals.at(prev).x * normals.at(next).y - normals.at(prev).y * normals.at(next).x > 0);
 
@@ -473,11 +471,14 @@ static void convert_to_Format_Alpha(QImage *image)
     const int width = image->width();
     const int height = image->height();
     uchar *data = image->bits();
+    const uint *src = (const uint *) data;
+    int stride = image->bytesPerLine() / sizeof(uint);
 
     for (int i = 0; i < height; ++i) {
         uchar *o = data + i * width;
         for (int x = 0; x < width; ++x)
-            o[x] = (uchar)qAlpha(image->pixel(x, i));
+            o[x] = (uchar)qAlpha(src[x]);
+        src += stride;
     }
 }
 

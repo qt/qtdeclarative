@@ -9,8 +9,6 @@ HEADERS += \
     $$PWD/coreapi/qsgdefaultrenderer_p.h \
     $$PWD/coreapi/qsggeometry.h \
     $$PWD/coreapi/qsgmaterial.h \
-    $$PWD/coreapi/qsgmatrix4x4stack.h \
-    $$PWD/coreapi/qsgmatrix4x4stack_p.h \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
     $$PWD/coreapi/qsgrenderer_p.h
@@ -18,7 +16,6 @@ SOURCES += \
     $$PWD/coreapi/qsgdefaultrenderer.cpp \
     $$PWD/coreapi/qsggeometry.cpp \
     $$PWD/coreapi/qsgmaterial.cpp \
-    $$PWD/coreapi/qsgmatrix4x4stack.cpp \
     $$PWD/coreapi/qsgnode.cpp \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp

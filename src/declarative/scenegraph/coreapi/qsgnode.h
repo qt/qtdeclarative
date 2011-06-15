@@ -118,13 +118,18 @@ public:
     QSGNode *parent() const { return m_parent; }
 
     void removeChildNode(QSGNode *node);
+    void removeAllChildNodes();
     void prependChildNode(QSGNode *node);
     void appendChildNode(QSGNode *node);
     void insertChildNodeBefore(QSGNode *node, QSGNode *before);
     void insertChildNodeAfter(QSGNode *node, QSGNode *after);
 
-    int childCount() const { return m_children.size(); }
-    QSGNode *childAtIndex(int i) const { return m_children.at(i); }
+    int childCount() const;
+    QSGNode *childAtIndex(int i) const;
+    QSGNode *firstChild() const { return m_firstChild; }
+    QSGNode *lastChild() const { return m_lastChild; }
+    QSGNode *nextSibling() const { return m_nextSibling; }
+    QSGNode* previousSibling() const { return m_previousSibling; }
 
     inline NodeType type() const { return m_type; }
 
@@ -132,7 +137,7 @@ public:
     void markDirty(DirtyFlags flags);
     DirtyFlags dirtyFlags() const { return m_flags; }
 
-    virtual bool isSubtreeBlocked() const { return false; }
+    virtual bool isSubtreeBlocked() const;
 
     Flags flags() const { return m_nodeFlags; }
     void setFlag(Flag, bool = true);
@@ -160,7 +165,11 @@ private:
 
     QSGNode *m_parent;
     NodeType m_type;
-    QList<QSGNode *> m_children;
+    QSGNode *m_firstChild;
+    QSGNode *m_lastChild;
+    QSGNode *m_nextSibling;
+    QSGNode *m_previousSibling;
+    int m_subtreeGeometryCount;
 
     Flags m_nodeFlags;
     DirtyFlags m_flags;
