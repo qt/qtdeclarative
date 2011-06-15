@@ -198,6 +198,8 @@ public Q_SLOTS:
                     packets.append(inProgress);
                     inProgressSize = -1;
                     inProgress.clear();
+
+                    waitingForPacket = false;
                     emit readyRead();
                 } else
                     return;

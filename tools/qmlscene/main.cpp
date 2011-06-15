@@ -252,6 +252,7 @@ struct Options
         , scenegraphOnGraphicsview(false)
         , clip(false)
         , versionDetection(true)
+        , vsync(true)
     {
     }
 
@@ -263,6 +264,7 @@ struct Options
     bool scenegraphOnGraphicsview;
     bool clip;
     bool versionDetection;
+    bool vsync;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -440,6 +442,7 @@ static void usage()
     qWarning("  --sg-on-gv [--clip] ....................... Scenegraph on graphicsview (and clip to item)");
 #endif
     qWarning("  --no-version-detection .................... Do not try to detect the version of the .qml file");
+    qWarning("  --no-vsync-animations ..................... Do not use vsync based animations");
 
     qWarning(" ");
     exit(1);
@@ -474,6 +477,8 @@ int main(int argc, char ** argv)
             options.versionDetection = false;
         else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("-i") && i + 1 < argc)
             imports.append(QString::fromLatin1(argv[++i]));
+        else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--no-vsync-animations"))
+            options.vsync = false;
         else if (QString::fromLatin1(argv[i]).toLower() == QLatin1String("--help")
                  || QString::fromLatin1(argv[i]).toLower() == QLatin1String("-help")
                  || QString::fromLatin1(argv[i]).toLower() == QLatin1String("--h")
@@ -520,6 +525,7 @@ int main(int argc, char ** argv)
             if (options.versionDetection)
                 checkAndAdaptVersion(options.file);
             QSGView *qxView = new MyQSGView();
+            qxView->setVSyncAnimations(options.vsync);
             engine = qxView->engine();
             for (int i = 0; i < imports.size(); ++i)
                 engine->addImportPath(imports.at(i));

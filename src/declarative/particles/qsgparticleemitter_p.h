@@ -142,6 +142,7 @@ signals:
 public slots:
     void pulse(qreal seconds);
     void burst(int num);
+    void burst(int num, qreal x, qreal y);
 
     void setEmitting(bool arg);
 

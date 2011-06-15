@@ -178,18 +178,22 @@ void QSGModelParticle::processPending()
         item->setOpacity(0.);
         m_model->release(item);
     }
+    m_deletables.clear();
 
     foreach(int pos, m_requests){
-        m_items[pos] = m_model->item(m_available.first());
-        m_idx[pos] = m_available.first();
-        m_available.pop_front();
-        QSGModelParticleAttached* mpa = qobject_cast<QSGModelParticleAttached*>(qmlAttachedPropertiesObject<QSGModelParticle>(m_items[pos]));
-        if(mpa){
-            mpa->m_mp = this;
-            mpa->attach();
+        if(!m_available.isEmpty()){
+            m_items[pos] = m_model->item(m_available.first());
+            m_idx[pos] = m_available.first();
+            m_available.pop_front();
+            QSGModelParticleAttached* mpa = qobject_cast<QSGModelParticleAttached*>(qmlAttachedPropertiesObject<QSGModelParticle>(m_items[pos]));
+            if(mpa){
+                mpa->m_mp = this;
+                mpa->attach();
+            }
+            m_items[pos]->setParentItem(this);
         }
-        m_items[pos]->setParentItem(this);
     }
+    m_requests.clear();
 }
 
 void QSGModelParticle::reload(QSGParticleData* d)

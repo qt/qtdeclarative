@@ -75,6 +75,9 @@ public:
 
     QSGEngine *sceneGraphEngine() const;
 
+    void setVSyncAnimations(bool enabled);
+    bool vsyncAnimations() const;
+
     QImage grabFrameBuffer();
 
 Q_SIGNALS:
