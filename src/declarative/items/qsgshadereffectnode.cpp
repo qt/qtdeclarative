@@ -84,6 +84,7 @@ QSGCustomMaterialShader::QSGCustomMaterialShader(const QSGShaderEffectMaterialKe
 
 void QSGCustomMaterialShader::deactivate()
 {
+    QSGMaterialShader::deactivate();
     glDisable(GL_CULL_FACE);
 }
 
