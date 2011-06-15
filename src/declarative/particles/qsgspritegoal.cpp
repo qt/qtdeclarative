@@ -81,7 +81,7 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
     Q_UNUSED(dt);
     //TODO: Affect all engines
     QSGSpriteEngine *engine = 0;
-    foreach(QSGParticlePainter *p, m_system->m_groupData[d->group]->types)
+    foreach(QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
         if(qobject_cast<QSGImageParticle*>(p))
             engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
     if(!engine)
@@ -89,8 +89,8 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
 
     if(m_goalIdx == -2 || engine != m_lastEngine)
         updateStateIndex(engine);
-    if(engine->spriteState(d->particleIndex) != m_goalIdx){
-        engine->setGoal(m_goalIdx, d->particleIndex, m_jump);
+    if(engine->spriteState(d->index) != m_goalIdx){
+        engine->setGoal(m_goalIdx, d->index, m_jump);
         emit affected(QPointF(d->curX(), d->curY()));//###Expensive if unconnected? Move to Affector?
         return true; //Doesn't affect particle data, but necessary for onceOff
     }

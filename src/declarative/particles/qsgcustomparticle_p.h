@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGNode;
-
+struct PlainVertices;
 //Genealogy: Hybrid of UltraParticle and ShaderEffectItem
 class QSGCustomParticle : public QSGParticlePainter
 {
@@ -64,7 +64,6 @@ public:
     explicit QSGCustomParticle(QSGItem* parent=0);
     virtual void load(QSGParticleData*);
     virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
 
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
     void setFragmentShader(const QByteArray &code);
@@ -84,13 +83,16 @@ protected:
     void disconnectPropertySignals();
     void connectPropertySignals();
     void reset();
+    void resize(int oldCount, int newCount);
     void updateProperties();
     void lookThroughShaderCode(const QByteArray &code);
     virtual void componentComplete();
     QSGShaderEffectNode *buildCustomNode();
+    void performPendingResize();
 
 private:
     void buildData();
+
 
     bool m_pleaseReset;
     bool m_dirtyData;
@@ -105,6 +107,10 @@ private:
     QSGShaderEffectMaterial m_material;
     QSGShaderEffectNode* m_node;
     qreal m_lastTime;
+
+    bool m_resizePending;
+    QVector<PlainVertices*> m_pendingResizeVector;
+    PlainVertices* m_defaultVertices;
 };
 
 QT_END_NAMESPACE

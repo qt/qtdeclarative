@@ -47,6 +47,7 @@
 #include <QVector>
 #include <QHash>
 #include <QPointer>
+#include <QSignalMapper>
 
 QT_BEGIN_HEADER
 
@@ -61,11 +62,14 @@ class QSGParticlePainter;
 class QSGParticleData;
 
 
-struct GroupData{
+class QSGParticleGroupData{
+public:
+    QSGParticleGroupData():size(0),nextIdx(0)
+    {}
     int size;
-    int start;
     int nextIdx;
-    QList<QSGParticlePainter*> types;
+    QSet<QSGParticlePainter*> painters;
+    QVector<QSGParticleData*> data;
 };
 
 class QSGParticleSystem : public QSGItem
@@ -131,20 +135,20 @@ protected:
     void componentComplete();
 
 private slots:
-    void countChanged();
+    void emittersChanged();
+    void loadPainter(QObject* p);
 public://but only really for related class usage. Perhaps we should all be friends?
     void emitParticle(QSGParticleData* p);
     QSGParticleData* newDatum(int groupId);
     qint64 systemSync(QSGParticlePainter* p);
     QElapsedTimer m_timestamp;
-    QVector<QSGParticleData*> m_data;
     QSet<QSGParticleData*> m_needsReset;
     QHash<QString, int> m_groupIds;
-    QHash<int, GroupData*> m_groupData;//id, size, start
+    QHash<int, QSGParticleGroupData*> m_groupData;
     qint64 m_timeInt;
     bool m_initialized;
 
-    void registerParticleType(QSGParticlePainter* p);
+    void registerParticlePainter(QSGParticlePainter* p);
     void registerParticleEmitter(QSGParticleEmitter* e);
     void registerParticleAffector(QSGParticleAffector* a);
     bool overwrite() const
@@ -158,12 +162,15 @@ private:
     bool m_running;
     QList<QPointer<QSGParticleEmitter> > m_emitters;
     QList<QPointer<QSGParticleAffector> > m_affectors;
-    QList<QPointer<QSGParticlePainter> > m_particles;
+    QList<QPointer<QSGParticlePainter> > m_particlePainters;
     QList<QPointer<QSGParticlePainter> > m_syncList;
     qint64 m_startTime;
     int m_nextGroupId;
     bool m_overwrite;
     bool m_componentComplete;
+
+    QSignalMapper m_painterMapper;
+    QSignalMapper m_emitterMapper;
 };
 
 //TODO: Clean up all this into ParticleData
@@ -211,10 +218,9 @@ public:
     qreal curSY() const;
 
     int group;
-    QSGParticleEmitter* e;
+    QSGParticleEmitter* e;//### Needed?
     QSGParticleSystem* system;
-    int particleIndex;
-    int systemIndex;
+    int index;
 
     void debugDump();
     bool stillAlive();

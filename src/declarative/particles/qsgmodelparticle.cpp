@@ -201,25 +201,17 @@ void QSGModelParticle::reload(QSGParticleData* d)
     //No-op unless we start copying the data.
 }
 
-void QSGModelParticle::setCount(int c)
+void QSGModelParticle::resize(int oldCount, int newCount)
 {
-    QSGParticlePainter::setCount(c);//###Do we need our own?
-    m_particleCount = c;
-    reset();
-}
-
-int QSGModelParticle::count()
-{
-    return m_particleCount;
+    groupShuffle(m_items, (QSGItem *) 0);
+    groupShuffle(m_data, (QSGParticleData*) 0);
+    groupShuffle(m_idx, -1);
 }
 
 void QSGModelParticle::reset()
 {
     QSGParticlePainter::reset();
     //TODO: Cleanup items?
-    m_items.resize(m_particleCount);
-    m_data.resize(m_particleCount);
-    m_idx.resize(m_particleCount);
     m_items.fill(0);
     m_data.fill(0);
     m_idx.fill(-1);
@@ -253,7 +245,7 @@ void QSGModelParticle::prepareNextFrame()
         return;
 
     //TODO: Size, better fade?
-    for(int i=0; i<m_particleCount; i++){
+    for(int i=0; i<count(); i++){
         QSGItem* item = m_items[i];
         QSGParticleData* data = m_data[i];
         if(!item || !data)

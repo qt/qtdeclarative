@@ -81,7 +81,7 @@ Rectangle{
             }
             system: sys
             emitting: true
-            emitRate: 64
+            emitRate: 32
             lifeSpan: 600
             size: 24
             endSize: 8
@@ -107,12 +107,12 @@ Rectangle{
     MouseArea{
         anchors.fill: parent
         onClicked:{
-            for(var i=0; i<16; i++){
+            for(var i=0; i<8; i++){
                 var obj = emitterComp.createObject(root);
                 obj.x = mouse.x
                 obj.y = mouse.y
-                obj.targetX = Math.random() * 640
-                obj.targetY = Math.random() * 480
+                obj.targetX = Math.random() * 240 - 120 + obj.x
+                obj.targetY = Math.random() * 240 - 120 + obj.y
                 obj.life = Math.round(Math.random() * 2400) + 200
                 obj.go();
             }

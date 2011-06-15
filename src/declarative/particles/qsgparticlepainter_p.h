@@ -63,8 +63,8 @@ public:
     explicit QSGParticlePainter(QSGItem *parent = 0);
     virtual void load(QSGParticleData*);
     virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
-    virtual int count();
+    void setCount(int c);
+    int count();
     QSGParticleSystem* system() const
     {
         return m_system;
@@ -76,7 +76,6 @@ public:
         return m_particles;
     }
 
-    int particleTypeIndex(QSGParticleData*);
 signals:
     void countChanged();
     void systemChanged(QSGParticleSystem* arg);
@@ -95,25 +94,23 @@ void setParticles(QStringList arg)
 }
 private slots:
     void calcSystemOffset();
+    void updateParticleStarts();
+
 protected:
     virtual void reset();
     virtual void componentComplete();
 
-//    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *){
-//        qDebug() << "Shouldn't be here..." << this;
-//        return 0;
-//    }
 
     QSGParticleSystem* m_system;
     friend class QSGParticleSystem;
     int m_count;
     bool m_pleaseReset;
     QStringList m_particles;
-    QHash<int,int> m_particleStarts;
+    QHash<int,QPair<int, int> > m_particleStarts; //Group, size, idx
     int m_lastStart;
     QPointF m_systemOffset;
 
-    template <typename VertexStruct>
+    template <typename VertexStruct>//just convenience
     void vertexCopy(VertexStruct &b, const ParticleVertex& a)
     {
         b.x = a.x - m_systemOffset.x();
@@ -126,6 +123,36 @@ protected:
         b.sy = a.sy;
         b.ax = a.ax;
         b.ay = a.ay;
+    }
+
+    //###Abstracted primarily for code reuse. Demote to subclasses?
+    int particleTypeIndex(QSGParticleData*);
+    virtual void resize(int oldCount, int newCount);
+    template <typename T>
+    void groupShuffle(QVector<T> &v, const T& zero)//Must be called inside resize
+    {
+        //TODO: In place shuffling because it's faster
+        QVector<T> v0(v);
+        v.clear();
+        v.resize(m_count);
+        int lastStart = 0;
+        QList<int> particleList;
+        if(m_particles.isEmpty())
+            particleList << 0;
+        foreach(const QString &s, m_particles)
+            particleList << m_system->m_groupIds[s];
+
+        foreach(int gIdx, particleList){
+            QSGParticleGroupData *gd = m_system->m_groupData[gIdx];
+            for(int i=0; i<gd->data.size(); i++){//TODO: When group didn't exist before
+                int newIdx = lastStart + i;//Have to make the same way as in updateParticleStarts
+                if(i >= m_particleStarts[gIdx].first || v0.size() <= m_particleStarts[gIdx].second + i)
+                    v[newIdx] = zero;
+                else
+                    v[newIdx] = v0[m_particleStarts[gIdx].second + i];
+            }
+            lastStart += gd->size;
+        }
     }
 
 private:

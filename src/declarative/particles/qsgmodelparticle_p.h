@@ -76,8 +76,6 @@ public:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual void load(QSGParticleData*);
     virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
-    virtual int count();
 
     static QSGModelParticleAttached *qmlAttachedProperties(QObject *object);
 signals:
@@ -93,6 +91,7 @@ public slots:
     void setFade(bool arg){if(arg == m_fade) return; m_fade = arg; emit fadeChanged();}
 protected:
     virtual void reset();
+    virtual void resize(int oldCount, int newCount);
     void prepareNextFrame();
 private slots:
     void updateCount();
@@ -104,7 +103,6 @@ private:
     QVariant m_dataSource;
     QList<QSGItem*> m_deletables;
     QList< int > m_requests;
-    int m_particleCount;
     bool m_fade;
 
     QList<QSGItem*> m_pendingItems;

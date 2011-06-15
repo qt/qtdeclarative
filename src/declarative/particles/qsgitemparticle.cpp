@@ -87,6 +87,7 @@ void QSGItemParticle::give(QSGItem *item)
 
 void QSGItemParticle::load(QSGParticleData* d)
 {
+    Q_ASSERT(d);
     int pos = particleTypeIndex(d);
     m_data[pos] = d;
     m_loadables << pos;
@@ -120,7 +121,7 @@ void QSGItemParticle::tick()
         }else if(m_delegate){
             m_items[pos] = qobject_cast<QSGItem*>(m_delegate->create(qmlContext(this)));
         }
-        if(m_items[pos]){
+        if(m_items[pos] && m_data[pos]){//###Data can be zero if creating an item leads to a reset - this screws things up.
             m_items[pos]->setX(m_data[pos]->curX() - m_items[pos]->width()/2);//TODO: adjust for system?
             m_items[pos]->setY(m_data[pos]->curY() - m_items[pos]->height()/2);
             QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_items[pos]));
@@ -142,27 +143,22 @@ void QSGItemParticle::reload(QSGParticleData* d)
     //No-op unless we start copying the data.
 }
 
-void QSGItemParticle::setCount(int c)
+void QSGItemParticle::resize(int oldCount, int newCount)
 {
-    QSGParticlePainter::setCount(c);//###Do we need our own?
-    m_particleCount = c;
-    reset();
-}
-
-int QSGItemParticle::count()
-{
-    return m_particleCount;
+    if(!m_system)
+        return;
+    groupShuffle(m_items, (QSGItem*)0);
+    groupShuffle(m_data, (QSGParticleData*)0);
 }
 
 void QSGItemParticle::reset()
 {
     QSGParticlePainter::reset();
     //TODO: Cleanup items?
-    m_items.resize(m_particleCount);
-    m_data.resize(m_particleCount);
     m_items.fill(0);
     m_data.fill(0);
-    //m_pendingItems.clear();//TODO: Should this be done? If so, Emit signal?
+    m_loadables.clear();
+    //deletables?
 }
 
 
@@ -191,7 +187,7 @@ void QSGItemParticle::prepareNextFrame()
         return;
 
     //TODO: Size, better fade?
-    for(int i=0; i<m_particleCount; i++){
+    for(int i=0; i<count(); i++){
         QSGItem* item = m_items[i];
         QSGParticleData* data = m_data[i];
         if(!item || !data)

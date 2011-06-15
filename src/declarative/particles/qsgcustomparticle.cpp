@@ -44,16 +44,8 @@
 #include <cstdlib>
 
 QT_BEGIN_NAMESPACE
-/*
-    "uniform highp mat4 qt_ModelViewProjectionMatrix;               \n"
-    "attribute highp vec4 qt_Vertex;                                \n"
-    "attribute highp vec2 qt_MultiTexCoord0;                        \n"
-    "varying highp vec2 qt_TexCoord0;                               \n"
-    "void main() {                                                  \n"
-    "    qt_TexCoord0 = qt_MultiTexCoord0;                          \n"
-    "    gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;    \n"
-    "}";
-*/
+
+//TODO: Can we make the code such that you don't have to copy the whole vertex shader just to add one little calculation?
 //Includes comments because the code isn't self explanatory
 static const char qt_particles_default_vertex_code[] =
         "attribute highp vec2 vPos;                                                         \n"
@@ -85,23 +77,6 @@ static const char qt_particles_default_fragment_code[] =//TODO: Default frag req
         "void main() {                                              \n"
         "    gl_FragColor = texture2D(source, fTex) * qt_Opacity;   \n"
         "}";
-
-/*
-static const char qt_particles_default_vertex_code[] =
-        "attribute highp vec2 vPos;                                                         \n"
-        "attribute highp vec2 vTex;                                                         \n"
-        "uniform highp mat4 qt_ModelViewProjectionMatrix;                                   \n"
-        "void main() {                                                                      \n"
-        "    highp float currentSize = 1000.0; \n"
-        "    highp vec2 pos = vec2(100.0,100.0) \n"
-        "                   - currentSize / 2. + currentSize * vTex;          // adjust size \n"
-        "    gl_Position = qt_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0, 1);         \n"
-        "}";
-static const char qt_particles_default_fragment_code[] =//TODO: Default frag requires source?
-        "void main() {                                              \n"
-        "    gl_FragColor = vec4(0,255,0,255);   \n"
-        "}";
-*/
 
 static const char qt_position_attribute_name[] = "qt_Vertex";
 static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
@@ -148,8 +123,36 @@ QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_pleaseReset(true)
     , m_dirtyData(true)
+    , m_resizePending(false)
 {
     setFlag(QSGItem::ItemHasContents);
+    m_defaultVertices = new PlainVertices;
+    PlainVertex* vertices = (PlainVertex*) m_defaultVertices;
+    for (int i=0; i<4; ++i) {
+        vertices[i].x = 0;
+        vertices[i].y = 0;
+        vertices[i].t = -1;
+        vertices[i].lifeSpan = 0;
+        vertices[i].size = 0;
+        vertices[i].endSize = 0;
+        vertices[i].sx = 0;
+        vertices[i].sy = 0;
+        vertices[i].ax = 0;
+        vertices[i].ay = 0;
+        vertices[i].r = 0;
+    }
+
+    vertices[0].tx = 0;
+    vertices[0].ty = 0;
+
+    vertices[1].tx = 1;
+    vertices[1].ty = 0;
+
+    vertices[2].tx = 0;
+    vertices[2].ty = 1;
+
+    vertices[3].tx = 1;
+    vertices[3].ty = 1;
 }
 
 void QSGCustomParticle::componentComplete()
@@ -199,10 +202,17 @@ void QSGCustomParticle::setVertexShader(const QByteArray &code)
     emit vertexShaderChanged();
 }
 
-void QSGCustomParticle::setCount(int c)
+void QSGCustomParticle::resize(int oldCount, int newCount)
 {
-    QSGParticlePainter::setCount(c);
-    m_pleaseReset = true;
+    if(!m_node)
+        return;
+    if(!m_resizePending){
+        m_pendingResizeVector.resize(oldCount);
+        PlainVertices *particles = (PlainVertices *) m_node->geometry()->vertexData();
+        for(int i=0; i<oldCount; i++)
+            m_pendingResizeVector[i] = &particles[i];
+    }
+    groupShuffle(m_pendingResizeVector, m_defaultVertices);
 }
 
 void QSGCustomParticle::reset()
@@ -401,6 +411,8 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         m_pleaseReset = false;
         m_dirtyData = false;
     }
+    if(m_resizePending)
+        performPendingResize();
 
     if(m_system && m_system->isRunning())
         prepareNextFrame();
@@ -425,6 +437,32 @@ void QSGCustomParticle::prepareNextFrame(){
         buildData();
 }
 
+void QSGCustomParticle::performPendingResize()
+{
+    m_resizePending = false;
+    if(!m_node)
+        return;
+    Q_ASSERT(m_pendingResizeVector.size() == m_count);//XXX
+    PlainVertices tmp[m_count];//###More vast memcpys that will decrease performance
+    for(int i=0; i<m_count; i++)
+        tmp[i] = *m_pendingResizeVector[i];
+    m_node->setFlag(QSGNode::OwnsGeometry, false);
+    m_node->geometry()->allocate(m_count*4, m_count*6);
+    memcpy(m_node->geometry()->vertexData(), tmp, sizeof(PlainVertices) * m_count);
+    quint16 *indices = m_node->geometry()->indexDataAsUShort();
+    for (int i=0; i<m_count; ++i) {
+        int o = i * 4;
+        indices[0] = o;
+        indices[1] = o + 1;
+        indices[2] = o + 2;
+        indices[3] = o + 1;
+        indices[4] = o + 3;
+        indices[5] = o + 2;
+        indices += 6;
+    }
+    m_node->setFlag(QSGNode::OwnsGeometry, true);
+}
+
 QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
 {
     if (m_count * 4 > 0xffff) {
@@ -437,6 +475,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
         return 0;
     }
 
+    m_resizePending = false;//reset resizes as well.
 
     //Create Particle Geometry
     int vCount = m_count * 4;
@@ -446,32 +485,9 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
     PlainVertex *vertices = (PlainVertex *) g->vertexData();
     for (int p=0; p<m_count; ++p) {
         double r = rand()/(double)RAND_MAX;//TODO: Seed?
-        for (int i=0; i<4; ++i) {
-            vertices[i].x = 0;
-            vertices[i].y = 0;
-            vertices[i].t = -1;
-            vertices[i].lifeSpan = 0;
-            vertices[i].size = 0;
-            vertices[i].endSize = 0;
-            vertices[i].sx = 0;
-            vertices[i].sy = 0;
-            vertices[i].ax = 0;
-            vertices[i].ay = 0;
+        memcpy(vertices, m_defaultVertices, sizeof(PlainVertices));
+        for(int i=0; i<4; i++)
             vertices[i].r = r;
-        }
-
-        vertices[0].tx = 0;
-        vertices[0].ty = 0;
-
-        vertices[1].tx = 1;
-        vertices[1].ty = 0;
-
-        vertices[2].tx = 0;
-        vertices[2].ty = 1;
-
-        vertices[3].tx = 1;
-        vertices[3].ty = 1;
-
         vertices += 4;
     }
     quint16 *indices = g->indexDataAsUShort();
@@ -493,23 +509,6 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
     node->setGeometry(g);
     node->setMaterial(&m_material);
 
-    /*
-    //For debugging, just use grid vertices like ShaderEffect
-    node->setGeometry(0);
-    QSGShaderEffectMesh* mesh = new QSGGridMesh();
-    node->setFlag(QSGNode::OwnsGeometry, false);
-
-    qDebug() << m_source.attributeNames;
-    QSGGeometry* geometry = node->geometry();
-    geometry = mesh->updateGeometry(geometry, m_source.attributeNames, QRectF(0,0,width(),height()));
-    if(!geometry)
-        qDebug() << "Should have written the error handling";
-    else
-        qDebug() << "Mesh Loaded";
-    node->setGeometry(geometry);
-    qDebug() << QString("INIT") << geometry << (QObject*)node;
-    node->setFlag(QSGNode::OwnsGeometry, true);
-    */
     QSGShaderEffectProgram s = m_source;
     if (s.fragmentCode.isEmpty())
         s.fragmentCode = qt_particles_default_fragment_code;

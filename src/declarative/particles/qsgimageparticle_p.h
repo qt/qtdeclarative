@@ -167,7 +167,6 @@ public:
 
     virtual void load(QSGParticleData*);
     virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
 
     QDeclarativeListProperty<QSGSprite> sprites();
     QSGSpriteEngine* spriteEngine() {return m_spriteEngine;}
@@ -298,12 +297,14 @@ protected:
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNode();
     QSGGeometryNode* buildSimpleParticleNode();
+    void resize(int oldCount, int newCount);
+    void performPendingResize();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
 private:
-    //void vertexCopy(UltraVertex &b,const ParticleVertex& a);
+    //template <class T> void verticesUpgrade(IntermediateVertices* prev, T* next);//### Loses typessafety again...
     IntermediateVertices* fetchIntermediateVertices(int pos);
     bool m_do_reset;
 
@@ -345,6 +346,14 @@ private:
 
     PerformanceLevel m_lastLevel;
     void* m_lastData;
+    int m_lastCount;
+
+    //TODO: Some smart method that scales to multiple types better
+    bool m_resizePending;
+    QVector<UltraVertices*> m_resizePendingUltra;
+    QVector<SimpleVertices*> m_resizePendingSimple;
+    UltraVertices* m_defaultUltra;
+    SimpleVertices* m_defaultSimple;
 };
 
 QT_END_NAMESPACE

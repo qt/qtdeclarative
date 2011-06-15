@@ -54,6 +54,7 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
   , m_emissionExtruder(0)
   , m_defaultEmissionExtruder(new QSGParticleExtruder(this))
 {
+    //TODO: If followed increased their size
     connect(this, SIGNAL(followChanged(QString)),
             this, SLOT(recalcParticlesPerSecond()));
     connect(this, SIGNAL(particleDurationChanged(int)),
@@ -67,7 +68,7 @@ void QSGFollowEmitter::recalcParticlesPerSecond(){
         return;
     m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size;
     if(!m_followCount){
-        setParticlesPerSecond(1000);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
+        setParticlesPerSecond(1);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
         setParticlesPerSecond(m_particlesPerParticlePerSecond * m_followCount);
         m_lastEmission.resize(m_followCount);
@@ -111,16 +112,15 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
     int gId = m_system->m_groupIds[m_follow];
     int gId2 = m_system->m_groupIds[m_particle];
-    for(int i=0; i<m_system->m_groupData[gId]->size; i++){
-        pt = m_lastEmission[i];
-        QSGParticleData* d = m_system->m_data[i + m_system->m_groupData[gId]->start];
+    foreach(QSGParticleData *d, m_system->m_groupData[gId]->data){
         if(!d || !d->stillAlive())
             continue;
+        pt = m_lastEmission[d->index];
         if(pt < d->pv.t)
             pt = d->pv.t;
 
         if(!effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
-            m_lastEmission[i] = time;//jump over this time period without emitting, because it's outside
+            m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
             continue;
         }
         while(pt < time || !m_burstQueue.isEmpty()){
@@ -187,7 +187,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 pt += particleRatio;
             }
         }
-        m_lastEmission[i] = pt;
+        m_lastEmission[d->index] = pt;
     }
 
     m_lastTimeStamp = time;
