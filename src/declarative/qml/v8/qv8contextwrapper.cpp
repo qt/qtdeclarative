@@ -63,9 +63,8 @@ public:
     QDeclarativeGuard<QObject> scopeObject;
 
     quint32 hasSubContexts:1;
-    quint32 ownsContext:1;
     quint32 readOnly:1;
-    quint32 dummy:29;
+    quint32 dummy:30;
 
     QObject *secondaryScope;
 
@@ -88,14 +87,14 @@ private:
 };
 
 QV8ContextResource::QV8ContextResource(QV8Engine *engine, QDeclarativeContextData *context, QObject *scopeObject)
-: QV8ObjectResource(engine), scopeObject(scopeObject), hasSubContexts(false), ownsContext(false),
-  readOnly(true), secondaryScope(0), context(context)
+: QV8ObjectResource(engine), scopeObject(scopeObject), hasSubContexts(false), readOnly(true), 
+  secondaryScope(0), context(context)
 {
 }
 
 QV8ContextResource::~QV8ContextResource()
 {
-    if (ownsContext && context)
+    if (context && context->isJSContext)
         context->destroy();
 }
 
@@ -168,7 +167,6 @@ v8::Local<v8::Object> QV8ContextWrapper::urlScope(const QUrl &url)
     // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_urlConstructor->NewInstance(); 
     QV8ContextResource *r = new QV8ContextResource(m_engine, context, 0);
-    r->ownsContext = true;
     rv->SetExternalResource(r);
     return rv;
 }
@@ -242,6 +240,9 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     if (!context)
         return v8::Undefined();
 
+    if (v8::Context::GetCallingQmlGlobal() != info.This())
+        return v8::Handle<v8::Value>();
+
     // Search type (attached property/enum/imported scripts) names
     // Secondary scope object
     // while (context) {
@@ -252,6 +253,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
     // }
 
     QV8Engine *engine = resource->engine;
+
     QObject *scopeObject = resource->scopeObject;
 
     QHashedV8String propertystring(property);
@@ -378,8 +380,11 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     if (!context)
         return v8::Undefined();
 
-    // See QV8ContextWrapper::Getter for resolution order
+    if (v8::Context::GetCallingQmlGlobal() != info.This())
+        return v8::Handle<v8::Value>();
 
+    // See QV8ContextWrapper::Getter for resolution order
+    
     QV8Engine *engine = resource->engine;
     QObject *scopeObject = resource->scopeObject;
 

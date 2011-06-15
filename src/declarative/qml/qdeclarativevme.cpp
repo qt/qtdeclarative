@@ -974,25 +974,34 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
 
     bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
 
+    QDeclarativeContextData *effectiveCtxt = parentCtxt;
+    if (shared)
+        effectiveCtxt = 0;
+
     // Create the script context if required
     QDeclarativeContextData *ctxt = new QDeclarativeContextData;
     ctxt->isInternal = true;
     ctxt->isJSContext = true;
+    if (shared)
+        ctxt->isPragmaLibraryContext = true;
+    else
+        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
     ctxt->url = script->url;
 
     // For backward compatibility, if there are no imports, we need to use the
     // imports from the parent context.  See QTBUG-17518.
     if (!script->importCache->isEmpty()) {
         ctxt->imports = script->importCache;
-    } else {
-        ctxt->imports = parentCtxt->imports;
+    } else if (effectiveCtxt) {
+        ctxt->imports = effectiveCtxt->imports;
     }
 
     if (ctxt->imports) {
         ctxt->imports->addref();
     }
 
-    ctxt->setParent(parentCtxt, true);
+    if (effectiveCtxt)
+        ctxt->setParent(effectiveCtxt, true);
 
     for (int ii = 0; ii < script->scripts.count(); ++ii) {
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());

@@ -2571,6 +2571,8 @@ void tst_qdeclarativeecmascript::signalWithUnknownTypes()
 
 void tst_qdeclarativeecmascript::moduleApi()
 {
+    QSKIP("Module API not supported with V8", SkipAll);
+
     QDeclarativeComponent component(&engine, TEST_FILE("moduleApi.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -2639,7 +2641,7 @@ void tst_qdeclarativeecmascript::importScripts()
 
     // then, ensure that unintended behaviour does not work.
     QDeclarativeComponent failOneComponent(&engine, TEST_FILE("jsimportfail/failOne.qml"));
-    QString expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Result of expression 'TestScriptImport.ImportOneJs' [undefined] is not an object.");
+    QString expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
     object = failOneComponent.create();
     QVERIFY(object != 0);
@@ -2653,7 +2655,7 @@ void tst_qdeclarativeecmascript::importScripts()
     QVERIFY(object->property("importScriptFunctionValue").toString().isEmpty());
     delete object;
     QDeclarativeComponent failThreeComponent(&engine, TEST_FILE("jsimportfail/failThree.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Result of expression 'testQtObject.TestModuleImport.JsQtTest' [undefined] is not an object.");
+    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
     object = failThreeComponent.create();
     QVERIFY(object != 0);

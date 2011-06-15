@@ -1378,7 +1378,12 @@ v8::Handle<v8::Value> QV8Engine::createQmlObject(const v8::Arguments &args)
     QDeclarativeEngine *engine = v8engine->engine();
     
     QDeclarativeContextData *context = v8engine->callingContext();
-    Q_ASSERT(context);
+    QDeclarativeContext *effectiveContext = 0;
+    if (context->isPragmaLibraryContext)
+        effectiveContext = engine->rootContext();
+    else
+        effectiveContext = context->asQDeclarativeContext();
+    Q_ASSERT(context && effectiveContext);
 
     QString qml = v8engine->toString(args[0]->ToString());
     if (qml.isEmpty())
@@ -1408,7 +1413,7 @@ v8::Handle<v8::Value> QV8Engine::createQmlObject(const v8::Arguments &args)
     if (!component.isReady())
         V8THROW_ERROR("Qt.createQmlObject(): Component is not ready");
 
-    QObject *obj = component.beginCreate(context->asQDeclarativeContext());
+    QObject *obj = component.beginCreate(effectiveContext);
     if(obj)
         QDeclarativeData::get(obj, true)->setImplicitDestructible();
     component.completeCreate();
@@ -1462,6 +1467,9 @@ v8::Handle<v8::Value> QV8Engine::createComponent(const v8::Arguments &args)
     QDeclarativeEngine *engine = v8engine->engine();
 
     QDeclarativeContextData *context = v8engine->callingContext();
+    QDeclarativeContextData *effectiveContext = context;
+    if (context->isPragmaLibraryContext)
+        effectiveContext = 0;
     Q_ASSERT(context);
 
     QString arg = v8engine->toString(args[0]->ToString());
@@ -1470,7 +1478,7 @@ v8::Handle<v8::Value> QV8Engine::createComponent(const v8::Arguments &args)
 
     QUrl url = context->resolvedUrl(QUrl(arg));
     QDeclarativeComponent *c = new QDeclarativeComponent(engine, url, engine);
-    QDeclarativeComponentPrivate::get(c)->creationContext = context;
+    QDeclarativeComponentPrivate::get(c)->creationContext = effectiveContext;
     QDeclarativeData::get(c, true)->setImplicitDestructible();
     return v8engine->newQObject(c);
 }

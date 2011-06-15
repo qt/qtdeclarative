@@ -140,7 +140,8 @@ public:
     quint32 isInternal:1;
     quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
     quint32 isJSContext:1;
-    quint32 dummy:29;
+    quint32 isPragmaLibraryContext:1;
+    quint32 dummy:28;
     QDeclarativeContext *publicContext;
 
     // Property name cache

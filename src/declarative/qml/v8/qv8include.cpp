@@ -136,6 +136,7 @@ void QV8Include::finished()
         importContext->isInternal = true;
         importContext->isJSContext = true;
         importContext->url = m_url;
+        importContext->isPragmaLibraryContext = m_context->isPragmaLibraryContext;
         importContext->setParent(m_context, true);
 
         v8::Context::Scope ctxtscope(m_engine->context());
