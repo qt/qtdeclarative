@@ -440,6 +440,7 @@ void QDeclarativeEnginePrivate::init()
     qRegisterMetaType<QDeclarativeScriptString>("QDeclarativeScriptString");
     qRegisterMetaType<QScriptValue>("QScriptValue");
     qRegisterMetaType<QDeclarativeComponent::Status>("QDeclarativeComponent::Status");
+    qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
 
     QDeclarativeData::init();
 
