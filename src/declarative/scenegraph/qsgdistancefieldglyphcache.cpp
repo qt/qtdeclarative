@@ -473,11 +473,14 @@ static void convert_to_Format_Alpha(QImage *image)
     const int width = image->width();
     const int height = image->height();
     uchar *data = image->bits();
+    const uint *src = (const uint *) data;
+    int stride = image->bytesPerLine() / sizeof(uint);
 
     for (int i = 0; i < height; ++i) {
         uchar *o = data + i * width;
         for (int x = 0; x < width; ++x)
-            o[x] = (uchar)qAlpha(image->pixel(x, i));
+            o[x] = (uchar)qAlpha(src[x]);
+        src += stride;
     }
 }
 
