@@ -829,7 +829,7 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
                 int notifyIndex = property->notifyIndex;
                 if (property->isConstant()) notifyIndex = 0;
                 else if (notifyIndex == -1) notifyIndex = 0x7FFF;
-                uint32_t data = (property->notifyIndex & 0x7FFF) << 16 | property->coreIndex;
+                uint32_t data = (notifyIndex & 0x7FFF) << 16 | property->coreIndex;
 
                 QString name = iter.key();
                 if (name == toString || name == destroy)
