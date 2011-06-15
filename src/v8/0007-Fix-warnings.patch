@@ -1,4 +1,4 @@
-From b16d11e3e614470004b1f80b25c55a8926c9e15e Mon Sep 17 00:00:00 2001
+From f7c8bc0d210ba97fad3261c5581f48221610f503 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Fri, 27 May 2011 13:04:15 +1000
 Subject: [PATCH 7/7] Fix warnings
