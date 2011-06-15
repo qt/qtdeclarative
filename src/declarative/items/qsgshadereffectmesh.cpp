@@ -198,7 +198,6 @@ void QSGGridMesh::setResolution(const QSize &res)
     if (res == m_resolution)
         return;
     if (res.width() < 1 || res.height() < 1) {
-        qWarning("QSGGridMesh: Resolution must be at least 1x1");
         return;
     }
     m_resolution = res;
