@@ -52,11 +52,11 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QMLRenderer : public QSGRenderer
+class QSGDefaultRenderer : public QSGRenderer
 {
     Q_OBJECT
 public:
-    QMLRenderer(QSGContext *context);
+    QSGDefaultRenderer(QSGContext *context);
 
     void render();
 
