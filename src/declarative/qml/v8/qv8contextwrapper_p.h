@@ -88,6 +88,9 @@ public:
 
     QDeclarativeContextData *callingContext();
     QDeclarativeContextData *context(v8::Handle<v8::Value>);
+
+    inline v8::Handle<v8::Object> sharedContext() const;
+
 private:
     static v8::Handle<v8::Value> NullGetter(v8::Local<v8::String> property, 
                                             const v8::AccessorInfo &info);
@@ -103,7 +106,13 @@ private:
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;
     v8::Persistent<v8::Function> m_urlConstructor;
+    v8::Persistent<v8::Object> m_sharedContext;
 };
+
+v8::Handle<v8::Object> QV8ContextWrapper::sharedContext() const
+{
+    return m_sharedContext;
+}
 
 QT_END_NAMESPACE
 

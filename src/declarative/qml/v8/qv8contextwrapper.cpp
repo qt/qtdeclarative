@@ -59,12 +59,12 @@ public:
     ~QV8ContextResource();
 
     inline QDeclarativeContextData *getContext() const;
+    inline QObject *getScopeObject() const;
 
-    QDeclarativeGuard<QObject> scopeObject;
-
+    quint32 isSharedContext:1;
     quint32 hasSubContexts:1;
     quint32 readOnly:1;
-    quint32 dummy:30;
+    quint32 dummy:29;
 
     QObject *secondaryScope;
 
@@ -84,11 +84,13 @@ public:
 
 private:
     QDeclarativeGuardedContextData context;
+    QDeclarativeGuard<QObject> scopeObject;
+
 };
 
 QV8ContextResource::QV8ContextResource(QV8Engine *engine, QDeclarativeContextData *context, QObject *scopeObject)
-: QV8ObjectResource(engine), scopeObject(scopeObject), hasSubContexts(false), readOnly(true), 
-  secondaryScope(0), context(context)
+: QV8ObjectResource(engine), isSharedContext(false), hasSubContexts(false), readOnly(true), 
+  secondaryScope(0), context(context), scopeObject(scopeObject)
 {
 }
 
@@ -98,9 +100,21 @@ QV8ContextResource::~QV8ContextResource()
         context->destroy();
 }
 
+// Returns the scope object
+QObject *QV8ContextResource::getScopeObject() const
+{
+    if (isSharedContext)
+        return QDeclarativeEnginePrivate::get(engine->engine())->sharedScope;
+    else
+        return scopeObject;
+}
+
 // Returns the context, including resolving a subcontext
 QDeclarativeContextData *QV8ContextResource::getContext() const
 {
+    if (isSharedContext)
+        return QDeclarativeEnginePrivate::get(engine->engine())->sharedContext;
+    
     if (!hasSubContexts)
         return context;
 
@@ -127,6 +141,7 @@ QV8ContextWrapper::~QV8ContextWrapper()
 
 void QV8ContextWrapper::destroy()
 {
+    qPersistentDispose(m_sharedContext);
     qPersistentDispose(m_urlConstructor);
     qPersistentDispose(m_constructor);
 }
@@ -145,6 +160,13 @@ void QV8ContextWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->InstanceTemplate()->SetFallbackPropertyHandler(NullGetter, NullSetter);
     m_urlConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    }
+    {
+    v8::Local<v8::Object> sharedContext = m_constructor->NewInstance();
+    QV8ContextResource *r = new QV8ContextResource(engine, 0, 0);
+    r->isSharedContext = true;
+    sharedContext->SetExternalResource(r);
+    m_sharedContext = qPersistentNew<v8::Object>(sharedContext);
     }
 }
 
@@ -254,7 +276,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     QV8Engine *engine = resource->engine;
 
-    QObject *scopeObject = resource->scopeObject;
+    QObject *scopeObject = resource->getScopeObject();
 
     QHashedV8String propertystring(property);
 
@@ -386,7 +408,7 @@ v8::Handle<v8::Value> QV8ContextWrapper::Setter(v8::Local<v8::String> property,
     // See QV8ContextWrapper::Getter for resolution order
     
     QV8Engine *engine = resource->engine;
-    QObject *scopeObject = resource->scopeObject;
+    QObject *scopeObject = resource->getScopeObject();
 
     QHashedV8String propertystring(property);
 
