@@ -55,8 +55,8 @@
 
 #include "qdeclarativeexpression.h"
 
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativeguard_p.h"
+#include <private/qdeclarativeengine_p.h>
+#include <private/qdeclarativeguard_p.h>
 
 #include <private/qv8engine_p.h>
 
@@ -107,73 +107,84 @@ private:
     QDeclarativeDelayedError **prevError;
 };
 
-class QDeclarativeQtScriptExpression : public QDeclarativeAbstractExpression, 
-                                       public QDeclarativeDelayedError
+class QDeclarativeDeleteWatchable
 {
 public:
-    enum Mode { SharedContext, ExplicitContext };
-
-    enum EvaluateFlag { RequiresThisObject = 0x01 };
-    Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
-
-    QDeclarativeQtScriptExpression();
-    virtual ~QDeclarativeQtScriptExpression();
-
-    QDeclarativeRefCount *dataRef;
-
-    QString expression;
-    bool extractExpressionFromFunction;
-
-    Mode expressionFunctionMode;
-    v8::Persistent<v8::Function> v8function;
-    v8::Persistent<v8::Object> v8qmlscope;
-
-    QObject *scopeObject;           // Only used in SharedContext
-
-    bool notifyOnValueChange() const;
-    void setNotifyOnValueChange(bool);
-    void resetNotifyOnChange();
-    void setNotifyObject(QObject *, int );
-
-    void setEvaluateFlags(EvaluateFlags flags);
-    EvaluateFlags evaluateFlags() const;
-
-    v8::Local<v8::Value> v8value(QObject *secondaryScope, bool *isUndefined);
-
-    class DeleteWatcher {
-    public:
-        inline DeleteWatcher(QDeclarativeQtScriptExpression *data);
-        inline ~DeleteWatcher();
-        inline bool wasDeleted() const;
-    private:
-        bool *m_wasDeleted;
-        bool m_wasDeletedStorage;
-        QDeclarativeQtScriptExpression *m_d;
-    };
-
+    inline QDeclarativeDeleteWatchable();
+    inline ~QDeclarativeDeleteWatchable();
 private:
-    void clearGuards();
-    v8::Local<v8::Value> eval(QObject *secondaryScope, bool *isUndefined);
-    void updateGuards(const QPODVector<QDeclarativeEnginePrivate::CapturedProperty> &properties);
-
-    bool trackChange;
-
-    QDeclarativeNotifierEndpoint *guardList;
-    int guardListLength;
-
-    QObject *guardObject;
-    int guardObjectNotifyIndex;
-    bool *deleted;
-
-    EvaluateFlags evalFlags;
+    friend class QDeclarativeDeleteWatcher;
+    bool *m_wasDeleted;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeQtScriptExpression::EvaluateFlags)
+class QDeclarativeDeleteWatcher {
+public:
+    inline QDeclarativeDeleteWatcher(QDeclarativeDeleteWatchable *data);
+    inline ~QDeclarativeDeleteWatcher();
+    inline bool wasDeleted() const;
+private:
+    void *operator new(size_t);
+    bool *m_wasDeleted;
+    bool m_wasDeletedStorage;
+    QDeclarativeDeleteWatchable *m_d;
+};
 
+class QDeclarativeJavaScriptExpression : public QDeclarativeAbstractExpression, 
+                                         public QDeclarativeDelayedError,
+                                         public QDeclarativeDeleteWatchable
+{
+public:
+    QDeclarativeJavaScriptExpression();
+    virtual ~QDeclarativeJavaScriptExpression();
+
+    v8::Local<v8::Value> evaluate(v8::Handle<v8::Function>, bool *isUndefined);
+
+    inline bool requiresThisObject() const;
+    inline void setRequiresThisObject(bool v);
+    inline bool useSharedContext() const;
+    inline void setUseSharedContext(bool v);
+    inline bool notifyOnValueChanged() const;
+
+    void setNotifyOnValueChanged(bool v);
+    void resetNotifyOnValueChanged();
+    void setNotifyObject(QObject *, int );
+
+    inline QObject *scopeObject() const;
+    inline void setScopeObject(QObject *v);
+
+protected:
+    inline virtual QStringRef expressionString();
+
+private:
+    quint32 m_requiresThisObject:1;
+    quint32 m_useSharedContext:1;
+    quint32 m_notifyOnValueChanged:1;
+    quint32 m_dummy:29;
+
+    QObject *m_scopeObject;
+    QObject *m_notifyObject;
+    int m_notifyIndex;
+
+    class GuardList {
+    public:
+        inline GuardList();
+        inline ~GuardList();
+        void inline clear();
+
+        typedef QPODVector<QDeclarativeEnginePrivate::CapturedProperty> CapturedProperties;
+        void updateGuards(QObject *guardObject, int guardObjectNotifyIndex,
+                          const QStringRef &expression, const CapturedProperties &properties);
+
+    private:
+        QDeclarativeNotifierEndpoint *endpoints;
+        int length;
+    };
+    GuardList guardList;
+};
 
 class QDeclarativeExpression;
 class QString;
-class QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeQtScriptExpression
+class QDeclarativeExpressionPrivate : public QObjectPrivate, public QDeclarativeJavaScriptExpression
 {
     Q_DECLARE_PUBLIC(QDeclarativeExpression)
 public:
@@ -188,12 +199,8 @@ public:
 
     v8::Local<v8::Value> v8value(QObject *secondaryScope = 0, bool *isUndefined = 0);
 
-    static QDeclarativeExpressionPrivate *get(QDeclarativeExpression *expr) {
-        return static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr));
-    }
-    static QDeclarativeExpression *get(QDeclarativeExpressionPrivate *expr) {
-        return expr->q_func();
-    }
+    static inline QDeclarativeExpressionPrivate *get(QDeclarativeExpression *expr);
+    static inline QDeclarativeExpression *get(QDeclarativeExpressionPrivate *expr);
 
     void _q_notify();
     virtual void emitValueChanged();
@@ -204,29 +211,121 @@ public:
                                                      v8::Persistent<v8::Object> *qmlscope = 0);
 
     bool expressionFunctionValid:1;
+    bool extractExpressionFromFunction:1;
+
+    inline virtual QStringRef expressionString();
+
+    QString expression;
+
+    v8::Persistent<v8::Object> v8qmlscope;
+    v8::Persistent<v8::Function> v8function;
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     int line;
     QByteArray name; //function name, hint for the debugger
+
+    QDeclarativeRefCount *dataRef;
 };
 
-QDeclarativeQtScriptExpression::DeleteWatcher::DeleteWatcher(QDeclarativeQtScriptExpression *data)
+QDeclarativeDeleteWatchable::QDeclarativeDeleteWatchable()
+: m_wasDeleted(0)
+{
+}
+
+QDeclarativeDeleteWatchable::~QDeclarativeDeleteWatchable()
+{
+    if (m_wasDeleted) *m_wasDeleted = true;
+}
+
+QDeclarativeDeleteWatcher::QDeclarativeDeleteWatcher(QDeclarativeDeleteWatchable *data)
 : m_wasDeletedStorage(false), m_d(data) 
 {
-    if (!m_d->deleted) 
-        m_d->deleted = &m_wasDeletedStorage; 
-    m_wasDeleted = m_d->deleted;
+    if (!m_d->m_wasDeleted) 
+        m_d->m_wasDeleted = &m_wasDeletedStorage; 
+    m_wasDeleted = m_d->m_wasDeleted;
 }
 
-QDeclarativeQtScriptExpression::DeleteWatcher::~DeleteWatcher() 
+QDeclarativeDeleteWatcher::~QDeclarativeDeleteWatcher() 
 {
-    if (false == *m_wasDeleted && m_wasDeleted == m_d->deleted)
-        m_d->deleted = 0;
+    if (false == *m_wasDeleted && m_wasDeleted == m_d->m_wasDeleted)
+        m_d->m_wasDeleted = 0;
 }
 
-bool QDeclarativeQtScriptExpression::DeleteWatcher::wasDeleted() const 
+bool QDeclarativeDeleteWatcher::wasDeleted() const 
 { 
     return *m_wasDeleted; 
+}
+
+bool QDeclarativeJavaScriptExpression::requiresThisObject() const 
+{ 
+    return m_requiresThisObject; 
+}
+
+void QDeclarativeJavaScriptExpression::setRequiresThisObject(bool v) 
+{ 
+    m_requiresThisObject = v; 
+}
+
+bool QDeclarativeJavaScriptExpression::useSharedContext() const 
+{ 
+    return m_useSharedContext; 
+}
+
+void QDeclarativeJavaScriptExpression::setUseSharedContext(bool v) 
+{ 
+    m_useSharedContext = v; 
+}
+
+bool QDeclarativeJavaScriptExpression::notifyOnValueChanged() const 
+{ 
+    return m_notifyOnValueChanged; 
+}
+
+QObject *QDeclarativeJavaScriptExpression::scopeObject() const 
+{ 
+    return m_scopeObject; 
+}
+
+void QDeclarativeJavaScriptExpression::setScopeObject(QObject *v) 
+{ 
+    m_scopeObject = v; 
+}
+
+QStringRef QDeclarativeJavaScriptExpression::expressionString() 
+{ 
+    return QStringRef(); 
+}
+
+QDeclarativeJavaScriptExpression::GuardList::GuardList() 
+: endpoints(0), length(0) 
+{
+}
+
+QDeclarativeJavaScriptExpression::GuardList::~GuardList() 
+{ 
+    clear(); 
+}
+
+void QDeclarativeJavaScriptExpression::GuardList::clear() 
+{ 
+    delete [] endpoints; 
+    endpoints = 0; 
+    length = 0; 
+}
+
+QDeclarativeExpressionPrivate *QDeclarativeExpressionPrivate::get(QDeclarativeExpression *expr) 
+{
+    return static_cast<QDeclarativeExpressionPrivate *>(QObjectPrivate::get(expr));
+}
+
+QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressionPrivate *expr) 
+{
+    return expr->q_func();
+}
+
+QStringRef QDeclarativeExpressionPrivate::expressionString()
+{
+    return QStringRef(&expression);
 }
 
 QT_END_NAMESPACE

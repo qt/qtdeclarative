@@ -147,7 +147,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBinding : public QDeclarativeExpr
 {
 Q_OBJECT
 public:
-    enum EvaluateFlag { RequiresThisObject = 0x01 };
+    enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
     Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
 
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContext *, QObject *parent=0);

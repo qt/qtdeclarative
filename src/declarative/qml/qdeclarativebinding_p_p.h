@@ -69,6 +69,10 @@ public:
 
     virtual void emitValueChanged();
 
+    static bool writeBindingResult(QDeclarativeJavaScriptExpression *expression,
+                                   QDeclarativeProperty &prop, v8::Handle<v8::Value> value, bool isUndefined,
+                                   QDeclarativePropertyPrivate::WriteFlags flags);
+
 protected:
     virtual void refresh();
 
@@ -76,8 +80,6 @@ private:
     bool updating:1;
     bool enabled:1;
     QDeclarativeProperty property; 
-
-    bool *deleted;
 };
 
 QT_END_NAMESPACE

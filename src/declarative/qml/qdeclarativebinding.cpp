@@ -218,13 +218,12 @@ void QDeclarativeBindingPrivate::refresh()
 }
 
 QDeclarativeBindingPrivate::QDeclarativeBindingPrivate()
-: updating(false), enabled(false), deleted(0)
+: updating(false), enabled(false)
 {
 }
 
 QDeclarativeBindingPrivate::~QDeclarativeBindingPrivate()
 {
-    if (deleted) *deleted = true;
 }
 
 QDeclarativeBinding::QDeclarativeBinding(void *data, QDeclarativeRefCount *rc, QObject *obj, 
@@ -311,13 +310,13 @@ QDeclarativeProperty QDeclarativeBinding::property() const
 void QDeclarativeBinding::setEvaluateFlags(EvaluateFlags flags)
 {
     Q_D(QDeclarativeBinding);
-    d->setEvaluateFlags(QDeclarativeQtScriptExpression::EvaluateFlags(static_cast<int>(flags)));
+    d->setRequiresThisObject(flags & RequiresThisObject);
 }
 
 QDeclarativeBinding::EvaluateFlags QDeclarativeBinding::evaluateFlags() const
 {
     Q_D(const QDeclarativeBinding);
-    return QDeclarativeBinding::EvaluateFlags(static_cast<int>(d->evaluateFlags()));
+    return d->requiresThisObject()?RequiresThisObject:None;
 }
 
 
@@ -336,6 +335,57 @@ public:
     }
 };
 
+bool QDeclarativeBindingPrivate::writeBindingResult(QDeclarativeJavaScriptExpression *expression,
+                                                    QDeclarativeProperty &prop, v8::Handle<v8::Value> result, 
+                                                    bool isUndefined, QDeclarativePropertyPrivate::WriteFlags flags)
+{
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(expression->context()->engine);
+    QDeclarativeDeleteWatcher watcher(expression);
+
+    QVariant value;
+
+    if (isUndefined) {
+    } else if (prop.propertyTypeCategory() == QDeclarativeProperty::List) {
+        value = engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
+    } else if (result->IsNull() && prop.propertyTypeCategory() == QDeclarativeProperty::Object) {
+        value = QVariant::fromValue((QObject *)0);
+    } else {
+        value = engine->toVariant(result, prop.propertyType());
+    }
+
+    if (expression->error.isValid()) {
+        return false;
+    } else if (isUndefined && prop.isResettable()) {
+        prop.reset();
+    } else if (isUndefined && prop.propertyType() == qMetaTypeId<QVariant>()) {
+        QDeclarativePropertyPrivate::write(prop, QVariant(), flags);
+    } else if (isUndefined) {
+        expression->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
+                                         QLatin1String(QMetaType::typeName(prop.propertyType())) +
+                                         QLatin1String(" ") + prop.name());
+        return false;
+    } else if (result->IsFunction()) {
+        expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
+        return false;
+    } else if (prop.object() && !QDeclarativePropertyPrivate::write(prop, value, flags)) {
+
+        if (watcher.wasDeleted()) 
+            return true;
+
+        const char *valueType = 0;
+        if (value.userType() == QVariant::Invalid) valueType = "null";
+        else valueType = QMetaType::typeName(value.userType());
+
+        expression->error.setDescription(QLatin1String("Unable to assign ") +
+                                         QLatin1String(valueType) +
+                                         QLatin1String(" to ") +
+                                         QLatin1String(QMetaType::typeName(prop.propertyType())));
+        return false;
+    }
+
+    return true;
+}
+
 void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     Q_D(QDeclarativeBinding);
@@ -346,8 +396,8 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     if (!d->updating) {
         QDeclarativeBindingProfiler prof(this);
         d->updating = true;
-        bool wasDeleted = false;
-        d->deleted = &wasDeleted;
+
+        QDeclarativeDeleteWatcher watcher(d);
 
         if (d->property.propertyType() == qMetaTypeId<QDeclarativeBinding *>()) {
 
@@ -361,9 +411,6 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                                   QMetaObject::WriteProperty,
                                   idx, a);
 
-            if (wasDeleted)
-                return;
-
         } else {
             QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->context()->engine);
             ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
@@ -375,99 +422,36 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             v8::Context::Scope scope(ep->v8engine.context());
             v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
-            if (wasDeleted) {
-                ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                return;
+            bool needsErrorData = false;
+            if (!watcher.wasDeleted() && !d->error.isValid()) {
+                needsErrorData = !d->writeBindingResult(d, d->property, result, isUndefined, flags);
             }
 
-            if (isUndefined) {
-            } else if (d->property.propertyTypeCategory() == QDeclarativeProperty::List) {
-                value = ep->v8engine.toVariant(result, qMetaTypeId<QList<QObject *> >());
-            } else if (result->IsNull() && d->property.propertyTypeCategory() == QDeclarativeProperty::Object) {
-                value = QVariant::fromValue((QObject *)0);
-            } else {
-                value = ep->v8engine.toVariant(result, d->property.propertyType());
-            }
+            if (!watcher.wasDeleted()) {
+               
+                if (needsErrorData) {
+                    QUrl url = QUrl(d->url);
+                    int line = d->line;
+                    if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
 
-
-            if (d->error.isValid()) {
-
-            } else if (isUndefined && d->property.isResettable()) {
-
-                d->property.reset();
-
-            } else if (isUndefined && d->property.propertyType() == qMetaTypeId<QVariant>()) {
-
-                QDeclarativePropertyPrivate::write(d->property, QVariant(), flags);
-
-            } else if (isUndefined) {
-
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
-                                        QLatin1String(QMetaType::typeName(d->property.propertyType())) +
-                                        QLatin1String(" ") + d->property.name());
-
-            } else if (result->IsFunction()) {
-
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign a function to a property."));
-
-            } else if (d->property.object() &&
-                       !QDeclarativePropertyPrivate::write(d->property, value, flags)) {
-
-                if (wasDeleted) {
-                    ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                    return;
+                    d->error.setUrl(url);
+                    d->error.setLine(line);
+                    d->error.setColumn(-1);
                 }
 
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
+                if (d->error.isValid()) {
+                    if (!d->addError(ep)) ep->warning(this->error());
+                } else {
+                    d->removeError();
+                }
 
-                const char *valueType = 0;
-                if (value.userType() == QVariant::Invalid) valueType = "null";
-                else valueType = QMetaType::typeName(value.userType());
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign ") +
-                                        QLatin1String(valueType) +
-                                        QLatin1String(" to ") +
-                                        QLatin1String(QMetaType::typeName(d->property.propertyType())));
             }
 
-            if (wasDeleted) {
-                ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                return;
-            }
-
-            if (d->error.isValid()) {
-               if (!d->addError(ep)) ep->warning(this->error());
-            } else {
-                d->removeError();
-            }
-
-            // at this point, the binding has been evaluated.  If any scarce
-            // resources were copied during the evaluation of the binding,
-            // we need to release those copies.
-            ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
+            ep->dereferenceScarceResources(); 
         }
 
-        d->updating = false;
-        d->deleted = 0;
+        if (!watcher.wasDeleted())
+            d->updating = false;
     } else {
         qmlInfo(d->property.object()) << tr("Binding loop detected for property \"%1\"").arg(d->property.name());
     }
