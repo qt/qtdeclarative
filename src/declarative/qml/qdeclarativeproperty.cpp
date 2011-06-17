@@ -420,8 +420,9 @@ bool QDeclarativeProperty::operator==(const QDeclarativeProperty &other) const
     // category is intentially omitted here as it is generated 
     // from the other members
     return d->object == other.d->object &&
-           d->core == other.d->core &&
-           d->valueType == other.d->valueType;
+           d->core.coreIndex == other.d->core.coreIndex &&
+           d->valueType.valueTypeCoreIdx == other.d->valueType.valueTypeCoreIdx &&
+           d->valueType.valueTypePropType == other.d->valueType.valueTypePropType;
 }
 
 /*!
