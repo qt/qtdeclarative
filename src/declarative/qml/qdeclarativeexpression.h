@@ -98,8 +98,8 @@ protected:
                            QDeclarativeExpressionPrivate &dd);
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, void *, 
                            QDeclarativeExpressionPrivate &dd);
-    QDeclarativeExpression(QDeclarativeContextData *, void *, QDeclarativeRefCount *rc, 
-                           QObject *me, const QString &, int, QDeclarativeExpressionPrivate &dd);
+    QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &, bool,
+                           const QString &, int, QDeclarativeExpressionPrivate &dd);
 
 private:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &);

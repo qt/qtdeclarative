@@ -14,6 +14,7 @@ HEADERS += \
     $$PWD/qv8valuetypewrapper_p.h \
     $$PWD/qv8include_p.h \
     $$PWD/qv8worker_p.h \
+    $$PWD/qv8bindings_p.h \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.h \
 
 SOURCES += \
@@ -28,5 +29,6 @@ SOURCES += \
     $$PWD/qv8valuetypewrapper.cpp \
     $$PWD/qv8include.cpp \
     $$PWD/qv8worker.cpp \
+    $$PWD/qv8bindings.cpp \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.cpp \
 

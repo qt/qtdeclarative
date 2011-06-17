@@ -708,6 +708,14 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
         init.init.compiledBinding = output->indexForByteArray(compileState.compiledBindingData);
     output->addInstruction(init);
 
+    if (!compileState.v8BindingProgram.isEmpty()) {
+        QDeclarativeInstruction bindings;
+        bindings.setType(QDeclarativeInstruction::InitV8Bindings);
+        bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
+        bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
+        output->addInstruction(bindings);
+    }
+
     genObject(tree);
 
     QDeclarativeInstruction def;
@@ -1207,6 +1215,14 @@ void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
     else
         init.init.compiledBinding = output->indexForByteArray(compileState.compiledBindingData);
     output->addInstruction(init);
+
+    if (!compileState.v8BindingProgram.isEmpty()) {
+        QDeclarativeInstruction bindings;
+        bindings.setType(QDeclarativeInstruction::InitV8Bindings);
+        bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
+        bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
+        output->addInstruction(bindings);
+    }
 
     genObject(root);
 
@@ -2311,33 +2327,15 @@ const QMetaObject *QDeclarativeCompiler::resolveType(const QByteArray& name) con
 }
 
 // similar to logic of completeComponentBuild, but also sticks data
-// into datas at the end
+// into primitives at the end
 int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QByteArray& name)
 {
     QDeclarativeRewrite::RewriteBinding rewriteBinding;
     rewriteBinding.setName('$' + name.mid(name.lastIndexOf('.') + 1));
-    bool isSharable = false;
-    QString rewrite = rewriteBinding(expression, 0, &isSharable);
 
-    quint32 length = rewrite.length();
-    quint32 pc;
+    QString rewrite = rewriteBinding(expression, 0, 0);
 
-    if (isSharable) {
-        pc = output->cachedClosures.count();
-        pc |= 0x80000000;
-        output->cachedClosures.append(0);
-    } else {
-        pc = output->cachedPrograms.length();
-        output->cachedPrograms.append(0);
-    }
-
-    QByteArray compiledData =
-        QByteArray((const char *)&pc, sizeof(quint32)) +
-        QByteArray((const char *)&length, sizeof(quint32)) +
-        QByteArray((const char *)rewrite.constData(),
-                   rewrite.length() * sizeof(QChar));
-
-    return output->indexForByteArray(compiledData);
+    return output->indexForString(rewrite);
 }
 
 // Ensures that the dynamic meta specification on obj is valid
@@ -2841,9 +2839,9 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeParser::Value *bindi
     Q_ASSERT(compileState.bindings.contains(binding));
 
     const BindingReference &ref = compileState.bindings.value(binding);
-    if (ref.dataType == BindingReference::Experimental) {
+    if (ref.dataType == BindingReference::V4) {
         QDeclarativeInstruction store;
-        store.setType(QDeclarativeInstruction::StoreCompiledBinding);
+        store.setType(QDeclarativeInstruction::StoreV4Binding);
         store.assignBinding.value = ref.compiledIndex;
         store.assignBinding.context = ref.bindingContext.stack;
         store.assignBinding.owner = ref.bindingContext.owner;
@@ -2855,28 +2853,43 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeParser::Value *bindi
             store.assignBinding.property = prop->index;
         store.assignBinding.line = binding->location.start.line;
         output->addInstruction(store);
-        return;
-    }
+    } else if (ref.dataType == BindingReference::V8) {
+        QDeclarativeInstruction store;
+        store.setType(QDeclarativeInstruction::StoreV8Binding);
+        store.assignBinding.value = ref.compiledIndex;
+        store.assignBinding.context = ref.bindingContext.stack;
+        store.assignBinding.owner = ref.bindingContext.owner;
+        store.assignBinding.line = binding->location.start.line;
 
-    QDeclarativeInstruction store;
-    if (!prop->isAlias)
-        store.setType(QDeclarativeInstruction::StoreBinding);
-    else
-        store.setType(QDeclarativeInstruction::StoreBindingOnAlias);
-    store.assignBinding.value = output->indexForByteArray(ref.compiledData);
-    store.assignBinding.context = ref.bindingContext.stack;
-    store.assignBinding.owner = ref.bindingContext.owner;
-    store.assignBinding.line = binding->location.start.line;
+        Q_ASSERT(ref.bindingContext.owner == 0 ||
+                 (ref.bindingContext.owner != 0 && valueTypeProperty));
+        if (ref.bindingContext.owner) {
+            store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
+        } else {
+            store.assignBinding.property = genPropertyData(prop);
+        }
 
-    Q_ASSERT(ref.bindingContext.owner == 0 ||
-             (ref.bindingContext.owner != 0 && valueTypeProperty));
-    if (ref.bindingContext.owner) {
-        store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
+        output->addInstruction(store);
     } else {
-        store.assignBinding.property = genPropertyData(prop);
-    }
+        QDeclarativeInstruction store;
+        if (!prop->isAlias)
+            store.setType(QDeclarativeInstruction::StoreBinding);
+        else
+            store.setType(QDeclarativeInstruction::StoreBindingOnAlias);
+        store.assignBinding.value = output->indexForString(ref.rewrittenExpression);
+        store.assignBinding.context = ref.bindingContext.stack;
+        store.assignBinding.owner = ref.bindingContext.owner;
+        store.assignBinding.line = binding->location.start.line;
 
-    output->addInstruction(store);
+        Q_ASSERT(ref.bindingContext.owner == 0 ||
+                 (ref.bindingContext.owner != 0 && valueTypeProperty));
+        if (ref.bindingContext.owner) {
+            store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
+        } else {
+            store.assignBinding.property = genPropertyData(prop);
+        }
+        output->addInstruction(store);
+    }
 }
 
 int QDeclarativeCompiler::genContextCache()
@@ -2929,6 +2942,8 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
     QDeclarativeV4Compiler bindingCompiler;
 
+    QList<BindingReference*> sharedBindings;
+
     for (QHash<QDeclarativeParser::Value*,BindingReference>::Iterator iter = compileState.bindings.begin(); 
          iter != compileState.bindings.end(); ++iter) {
 
@@ -2943,14 +2958,12 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
             int index = bindingCompiler.compile(expr, enginePrivate);
             if (index != -1) {
-                binding.dataType = BindingReference::Experimental;
+                binding.dataType = BindingReference::V4;
                 binding.compiledIndex = index;
                 componentStat.optimizedBindings.append(iter.key()->location);
                 continue;
             } 
         }
-
-        binding.dataType = BindingReference::QtScript;
 
         // Pre-rewrite the expression
         QString expression = binding.expression.asScript();
@@ -2958,27 +2971,52 @@ bool QDeclarativeCompiler::completeComponentBuild()
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
         rewriteBinding.setName('$'+binding.property->name);
         bool isSharable = false;
-        expression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
+        binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
-        quint32 length = expression.length();
-        quint32 pc; 
-        
-        if (isSharable) {
-            pc = output->cachedClosures.count();
-            pc |= 0x80000000;
-            output->cachedClosures.append(0);
+        if (isSharable && !binding.property->isAlias /* See above re alias */ &&
+            binding.property->type != qMetaTypeId<QDeclarativeBinding*>()) {
+            binding.dataType = BindingReference::V8;
+            sharedBindings.append(&iter.value());
         } else {
-            pc = output->cachedPrograms.length();
-            output->cachedPrograms.append(0);
+            binding.dataType = BindingReference::QtScript;
         }
 
-        binding.compiledData =
-            QByteArray((const char *)&pc, sizeof(quint32)) +
-            QByteArray((const char *)&length, sizeof(quint32)) +
-            QByteArray((const char *)expression.constData(), 
-                       expression.length() * sizeof(QChar));
-
         componentStat.scriptBindings.append(iter.key()->location);
+    }
+
+    if (!sharedBindings.isEmpty()) {
+        struct Sort {
+            static bool lt(const BindingReference *lhs, const BindingReference *rhs)
+            {
+                return lhs->value->location.start.line < rhs->value->location.start.line;
+            }
+        };
+
+        qSort(sharedBindings.begin(), sharedBindings.end(), Sort::lt);
+
+        int startLineNumber = sharedBindings.at(0)->value->location.start.line;
+        int lineNumber = startLineNumber;
+
+        QString functionArray(QLatin1String("["));
+        for (int ii = 0; ii < sharedBindings.count(); ++ii) {
+            BindingReference *reference = sharedBindings.at(ii);
+            QDeclarativeParser::Value *value = reference->value;
+            const QString &expression = reference->rewrittenExpression;
+
+            if (ii != 0) functionArray += QLatin1String(",");
+
+            while (lineNumber < value->location.start.line) {
+                lineNumber++;
+                functionArray += QLatin1String("\n");
+            }
+
+            functionArray += expression;
+            reference->compiledIndex = ii;
+        }
+        functionArray += QLatin1String("]");
+
+        compileState.v8BindingProgram = functionArray;
+        compileState.v8BindingProgramLine = startLineNumber;
     }
 
     if (bindingCompiler.isValid()) 

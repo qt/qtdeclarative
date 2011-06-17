@@ -315,6 +315,7 @@ void QDeclarativeV4BindingsPrivate::Binding::destroy()
     enabled = false;
     removeFromObject();
     clear();
+    removeError();
     parent->q_func()->release();
 }
 

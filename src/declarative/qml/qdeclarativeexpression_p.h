@@ -193,7 +193,7 @@ public:
 
     void init(QDeclarativeContextData *, const QString &, QObject *);
     void init(QDeclarativeContextData *, v8::Handle<v8::Function>, QObject *);
-    void init(QDeclarativeContextData *, void *, QDeclarativeRefCount *, QObject *, const QString &, int);
+    void init(QDeclarativeContextData *, const QString &, bool, QObject *, const QString &, int);
 
     QVariant value(QObject *secondaryScope = 0, bool *isUndefined = 0);
 

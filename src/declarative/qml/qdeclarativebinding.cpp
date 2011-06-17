@@ -226,15 +226,6 @@ QDeclarativeBindingPrivate::~QDeclarativeBindingPrivate()
 {
 }
 
-QDeclarativeBinding::QDeclarativeBinding(void *data, QDeclarativeRefCount *rc, QObject *obj, 
-                                         QDeclarativeContextData *ctxt, const QString &url, int lineNumber, 
-                                         QObject *parent)
-: QDeclarativeExpression(ctxt, data, rc, obj, url, lineNumber, *new QDeclarativeBindingPrivate)
-{
-    setParent(parent);
-    setNotifyOnValueChanged(true);
-}
-
 QDeclarativeBinding *
 QDeclarativeBinding::createBinding(Identifier id, QObject *obj, QDeclarativeContext *ctxt,
                                    const QString &url, int lineNumber, QObject *parent)
@@ -251,7 +242,7 @@ QDeclarativeBinding::createBinding(Identifier id, QObject *obj, QDeclarativeCont
         typeData = engine->typeLoader.get(ctxtdata->url);
         cdata = typeData->compiledData();
     }
-    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding((void*)cdata->datas.at(id).constData(), cdata, obj, ctxtdata, url, lineNumber, parent) : 0;
+    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, parent) : 0;
     if (typeData)
         typeData->release();
     return rv;
@@ -268,6 +259,15 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, QObject *obj, QDecl
 QDeclarativeBinding::QDeclarativeBinding(const QString &str, QObject *obj, QDeclarativeContextData *ctxt, 
                                          QObject *parent)
 : QDeclarativeExpression(ctxt, obj, str, *new QDeclarativeBindingPrivate)
+{
+    setParent(parent);
+    setNotifyOnValueChanged(true);
+}
+
+QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, QObject *obj, 
+                                         QDeclarativeContextData *ctxt, 
+                                         const QString &url, int lineNumber, QObject *parent)
+: QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, *new QDeclarativeBindingPrivate)
 {
     setParent(parent);
     setNotifyOnValueChanged(true);
@@ -413,19 +413,17 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 
         } else {
             QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->context()->engine);
-            ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
+            ep->referenceScarceResources(); 
 
             bool isUndefined = false;
-            QVariant value;
 
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(ep->v8engine.context());
             v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
             bool needsErrorData = false;
-            if (!watcher.wasDeleted() && !d->error.isValid()) {
+            if (!watcher.wasDeleted() && !d->error.isValid()) 
                 needsErrorData = !d->writeBindingResult(d, d->property, result, isUndefined, flags);
-            }
 
             if (!watcher.wasDeleted()) {
                
@@ -453,8 +451,13 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         if (!watcher.wasDeleted())
             d->updating = false;
     } else {
-        qmlInfo(d->property.object()) << tr("Binding loop detected for property \"%1\"").arg(d->property.name());
+        QDeclarativeBindingPrivate::printBindingLoopError(d->property);
     }
+}
+
+void QDeclarativeBindingPrivate::printBindingLoopError(QDeclarativeProperty &prop)
+{
+    qmlInfo(prop.object()) << QDeclarativeBinding::tr("Binding loop detected for property \"%1\"").arg(prop.name());
 }
 
 void QDeclarativeBindingPrivate::emitValueChanged()

@@ -73,6 +73,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QV8Bindings;
 class QDeclarativeContext;
 class QDeclarativeExpression;
 class QDeclarativeEngine;
@@ -192,15 +193,16 @@ public:
     void setIdProperty(int, QObject *);
     void setIdPropertyData(QDeclarativeIntegerCache *);
 
-    // Optimized binding pointer
-    QDeclarativeV4Bindings *optimizedBindings;
-
     // Linked contexts. this owns linkedContext.
     QDeclarativeContextData *linkedContext;
 
     // Linked list of uses of the Component attached property in this
     // context
     QDeclarativeComponentAttached *componentAttached;
+
+    // Optimized binding objects.  Needed for deferred properties.
+    QDeclarativeV4Bindings *v4bindings;
+    QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.
     QString findObjectId(const QObject *obj) const;

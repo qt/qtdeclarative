@@ -58,6 +58,7 @@
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativev4bindings_p.h"
+#include "private/qv8bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativescriptstring_p.h"
@@ -191,8 +192,10 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 parserStatus = QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus>(instr.parserStatusSize);
             if (instr.contextCache != -1) 
                 ctxt->setIdPropertyData(comp->contextCaches.at(instr.contextCache));
-            if (instr.compiledBinding != -1) 
-                    ctxt->optimizedBindings = new QDeclarativeV4Bindings(datas.at(instr.compiledBinding).constData(), ctxt);
+            if (instr.compiledBinding != -1) {
+                const char *v4data = datas.at(instr.compiledBinding).constData();
+                ctxt->v4bindings = new QDeclarativeV4Bindings(v4data, ctxt);
+            }
         QML_END_INSTR(Init)
 
         QML_BEGIN_INSTR(Done)
@@ -657,6 +660,10 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             status->classBegin();
         QML_END_INSTR(BeginObject)
 
+        QML_BEGIN_INSTR(InitV8Bindings)
+            ctxt->v8bindings = new QV8Bindings(primitives.at(instr.program), instr.line, comp, ctxt);
+        QML_END_INSTR(InitV8Bindings)
+
         QML_BEGIN_INSTR(StoreBinding)
             QObject *target = 
                 stack.at(stack.count() - 1 - instr.owner);
@@ -671,7 +678,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
                 break;
 
-            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true, 
+                                                                context, ctxt, comp->name, instr.line);
             bindValues.append(bind);
             bind->m_mePtr = &bindValues.values[bindValues.count - 1];
             bind->setTarget(mp);
@@ -693,7 +701,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
                 break;
 
-            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true,
+                                                                context, ctxt, comp->name, instr.line);
             bindValues.append(bind);
             bind->m_mePtr = &bindValues.values[bindValues.count - 1];
             bind->setTarget(mp);
@@ -702,7 +711,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if (old) { old->destroy(); }
         QML_END_INSTR(StoreBindingOnAlias)
 
-        QML_BEGIN_INSTR(StoreCompiledBinding)
+        QML_BEGIN_INSTR(StoreV4Binding)
             QObject *target = 
                 stack.at(stack.count() - 1 - instr.owner);
             QObject *scope = 
@@ -713,11 +722,32 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 break;
 
             QDeclarativeAbstractBinding *binding = 
-                ctxt->optimizedBindings->configBinding(instr.value, target, scope, property);
+                ctxt->v4bindings->configBinding(instr.value, target, scope, property);
             bindValues.append(binding);
             binding->m_mePtr = &bindValues.values[bindValues.count - 1];
             binding->addToObject(target, property);
-        QML_END_INSTR(StoreCompiledBinding)
+        QML_END_INSTR(StoreV4Binding)
+
+        QML_BEGIN_INSTR(StoreV8Binding)
+            QObject *target = 
+                stack.at(stack.count() - 1 - instr.owner);
+            QObject *scope = 
+                stack.at(stack.count() - 1 - instr.context);
+
+            QDeclarativeProperty mp = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+
+            int coreIndex = mp.index();
+
+            if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex))
+                break;
+
+            QDeclarativeAbstractBinding *binding = 
+                ctxt->v8bindings->configBinding(instr.value, target, scope, mp, instr.line);
+            bindValues.append(binding);
+            binding->m_mePtr = &bindValues.values[bindValues.count - 1];
+            binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
+        QML_END_INSTR(StoreV8Binding)
 
         QML_BEGIN_INSTR(StoreValueSource)
             QObject *obj = stack.pop();

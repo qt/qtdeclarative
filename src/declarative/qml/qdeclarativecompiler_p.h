@@ -55,6 +55,7 @@
 
 #include "qdeclarative.h"
 #include "qdeclarativeerror.h"
+#include "private/qv8_p.h"
 #include "private/qdeclarativeinstruction_p.h"
 #include "private/qdeclarativeparser_p.h"
 #include "private/qdeclarativeengine_p.h"
@@ -102,6 +103,8 @@ public:
         QDeclarativePropertyCache *createPropertyCache(QDeclarativeEngine *);
     };
     QList<TypeReference> types;
+
+    v8::Persistent<v8::Array> v8bindings;
 
     const QMetaObject *root;
     QAbstractDynamicMetaObject rootData;
@@ -283,12 +286,12 @@ private:
         QDeclarativeParser::Property *property;
         QDeclarativeParser::Value *value;
 
-        enum DataType { QtScript, Experimental };
+        enum DataType { QtScript, V4, V8 };
         DataType dataType;
 
         int compiledIndex;
 
-        QByteArray compiledData;
+        QString rewrittenExpression;
         BindingContext bindingContext;
     };
     void addBindingReference(const BindingReference &);
@@ -296,7 +299,7 @@ private:
     struct ComponentCompileState
     {
         ComponentCompileState() 
-            : parserStatusCount(0), pushedProperties(0), nested(false), root(0) {}
+            : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
         QHash<QString, QDeclarativeParser::Object *> ids;
         QHash<int, QDeclarativeParser::Object *> idIndexes;
         int parserStatusCount;
@@ -304,6 +307,8 @@ private:
         bool nested;
 
         QByteArray compiledBindingData;
+        QString v8BindingProgram;
+        int v8BindingProgramLine;
 
         QHash<QDeclarativeParser::Value *, BindingReference> bindings;
         QHash<QDeclarativeParser::Value *, BindingContext> signalExpressions;

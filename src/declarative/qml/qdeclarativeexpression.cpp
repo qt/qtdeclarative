@@ -113,32 +113,20 @@ void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, v8::Hand
     extractExpressionFromFunction = true;
 }
 
-void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, void *expr, 
-                                         QDeclarativeRefCount *rc, 
+void QDeclarativeExpressionPrivate::init(QDeclarativeContextData *ctxt, const QString &expr, bool isRewritten,
                                          QObject *me, const QString &srcUrl, int lineNumber)
 {
     url = srcUrl;
     line = lineNumber;
 
-    Q_ASSERT(!dataRef);
+    expression = expr;
 
-    dataRef = rc;
-    if (dataRef) dataRef->addref();
-
-    quint32 *exprData = (quint32 *)expr;
-    QDeclarativeCompiledData *dd = (QDeclarativeCompiledData *)rc;
-
-    expression = QString::fromRawData((QChar *)(exprData + 2), exprData[1]);
-
-    int progIdx = *(exprData);
-    bool isSharedProgram = progIdx & 0x80000000;
-    progIdx &= 0x7FFFFFFF;
-
-    v8function = evalFunction(ctxt, me, expression, url, line, &v8qmlscope);
-
-    setUseSharedContext(false);
-
-    expressionFunctionValid = true;
+    if (!isRewritten) {
+        expressionFunctionValid = false;
+    } else {
+        v8function = evalFunction(ctxt, me, expression, url, line, &v8qmlscope);
+        expressionFunctionValid = true;
+    }
 
     QDeclarativeAbstractExpression::setContext(ctxt);
     setScopeObject(me);
@@ -214,14 +202,14 @@ QDeclarativeExpression::QDeclarativeExpression()
 }
 
 /*!  \internal */
-QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, void *expr,
-                                               QDeclarativeRefCount *rc, QObject *me, 
-                                               const QString &url, int lineNumber,
+QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, 
+                                               QObject *object, const QString &expr, bool isRewritten,
+                                               const QString &url, int lineNumber, 
                                                QDeclarativeExpressionPrivate &dd)
 : QObject(dd, 0)
 {
     Q_D(QDeclarativeExpression);
-    d->init(ctxt, expr, rc, me, url, lineNumber);
+    d->init(ctxt, expr, isRewritten, object, url, lineNumber);
 
     if (QDeclarativeExpression_notifyIdx == -1) 
         QDeclarativeExpression_notifyIdx = QDeclarativeExpression::staticMetaObject.indexOfMethod("_q_notify()");
@@ -263,7 +251,7 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
         }
 
         if (cdata)
-            d->init(ctxtdata, (void*)cdata->datas.at(id).constData(), cdata, script.scopeObject(),
+            d->init(ctxtdata, cdata->primitives.at(id), cdata, script.scopeObject(),
                     cdata->name, script.d.data()->lineNumber);
         else
            defaultConstruction = true;
@@ -338,7 +326,7 @@ QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QO
         new QDeclarativeExpression(ctxt, scope, &function, ...);
  */
 QDeclarativeExpression::QDeclarativeExpression(QDeclarativeContextData *ctxt, QObject *scope, void *functionPtr,
-                       QDeclarativeExpressionPrivate &dd)
+                                               QDeclarativeExpressionPrivate &dd)
 : QObject(dd, 0)
 {
     v8::Handle<v8::Function> function = *(v8::Handle<v8::Function> *)functionPtr;
@@ -476,7 +464,9 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
     bool lastCaptureProperties = ep->captureProperties;
     QPODVector<QDeclarativeEnginePrivate::CapturedProperty> lastCapturedProperties;
     ep->captureProperties = notifyOnValueChanged();
-    ep->capturedProperties.copyAndClear(lastCapturedProperties);
+
+    if (ep->capturedProperties.count())
+        ep->capturedProperties.copyAndClear(lastCapturedProperties);
 
     QDeclarativeContextData *lastSharedContext = 0;
     QObject *lastSharedScope = 0;
@@ -532,7 +522,11 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
                                ep->capturedProperties);
     }
 
-    lastCapturedProperties.copyAndClear(ep->capturedProperties);
+    if (lastCapturedProperties.count())
+        lastCapturedProperties.copyAndClear(ep->capturedProperties);
+    else
+        ep->capturedProperties.clear();
+
     ep->captureProperties = lastCaptureProperties;
 
     return result;
