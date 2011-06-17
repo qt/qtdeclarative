@@ -186,7 +186,8 @@ void tst_binding::creation()
     COMPONENT(file, binding);
 
     QBENCHMARK {
-        c.create();
+        QObject *o = c.create();
+        delete o;
     }
 }
 
