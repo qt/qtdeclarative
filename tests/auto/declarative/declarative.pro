@@ -34,6 +34,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativebehaviors \
            qdeclarativebinding \
            qdeclarativeborderimage \
+           qdeclarativechangeset \
            qdeclarativeconnection \
            qdeclarativedebug \
            qdeclarativedebugclient \
