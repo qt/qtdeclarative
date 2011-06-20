@@ -63,6 +63,7 @@ class FlatListModel;
 class NestedListModel;
 class QDeclarativeListModelWorkerAgent;
 struct ModelNode;
+class ModelCompositor;
 class FlatListScriptClass;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeListModel : public QListModelInterface
 {
@@ -88,6 +89,13 @@ public:
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
 
+    Q_INVOKABLE void append(const QVariant &model, int start, int count);
+    Q_INVOKABLE void insert(int index, const QVariant &model, int start, int count);
+
+    Q_INVOKABLE void appendModel(const QVariant &model);
+    Q_INVOKABLE void insertModel(int index, const QVariant &model);
+    Q_INVOKABLE void removeModel(const QVariant &model);
+
     QDeclarativeListModelWorkerAgent *agent();
 
 Q_SIGNALS:
@@ -99,6 +107,7 @@ private:
     friend class FlatListModel;
     friend class FlatListScriptClass;
     friend struct ModelNode;
+    friend class ModelCompositor;
 
     // Constructs a flat list model for a worker agent
     QDeclarativeListModel(const QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *parent);
@@ -114,6 +123,7 @@ private:
     QDeclarativeListModelWorkerAgent *m_agent;
     NestedListModel *m_nested;
     FlatListModel *m_flat;
+    ModelCompositor *m_compositor;
 };
 
 // ### FIXME

@@ -51,6 +51,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
+#include <QtCore/qabstractitemmodel.h>
 #include <QXmlStreamReader>
 #include <QtScript/qscriptvalueiterator.h>
 
@@ -217,12 +218,12 @@ QDeclarativeListModelParser::ListInstruction *QDeclarativeListModelParser::ListM
 */
 
 QDeclarativeListModel::QDeclarativeListModel(QObject *parent)
-: QListModelInterface(parent), m_agent(0), m_nested(new NestedListModel(this)), m_flat(0)
+    : QListModelInterface(parent), m_agent(0), m_nested(new NestedListModel(this)), m_flat(0), m_compositor(0)
 {
 }
 
 QDeclarativeListModel::QDeclarativeListModel(const QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *parent)
-: QListModelInterface(parent), m_agent(0), m_nested(0), m_flat(0)
+    : QListModelInterface(parent), m_agent(0), m_nested(0), m_flat(0), m_compositor(0)
 {
     m_flat = new FlatListModel(this);
     m_flat->m_parentAgent = parent;
@@ -243,6 +244,7 @@ QDeclarativeListModel::~QDeclarativeListModel()
     if (m_agent)
         m_agent->release();
 
+    delete m_compositor;
     delete m_nested;
     delete m_flat;
 }
@@ -251,6 +253,9 @@ bool QDeclarativeListModel::flatten()
 {
     if (m_flat)
         return true;
+
+    if (m_compositor)
+        return false;
 
     QList<int> roles = m_nested->roles();
 
@@ -302,11 +307,15 @@ QDeclarativeListModelWorkerAgent *QDeclarativeListModel::agent()
 
 QList<int> QDeclarativeListModel::roles() const
 {
+    if (m_compositor)
+        return m_compositor->roles.keys();
     return m_flat ? m_flat->roles() : m_nested->roles();
 }
 
 QString QDeclarativeListModel::toString(int role) const
 {
+    if (m_compositor)
+        return m_compositor->roles.value(role);
     return m_flat ? m_flat->toString(role) : m_nested->toString(role);
 }
 
@@ -315,7 +324,16 @@ QVariant QDeclarativeListModel::data(int index, int role) const
     if (index >= count() || index < 0)
         return QVariant();
 
-    return m_flat ? m_flat->data(index, role) : m_nested->data(index, role);
+    if (m_compositor) {
+        int modelIndex = 0;
+        int internalIndex = 0;
+        QDeclarativeCompositeRange range = m_compositor->at(index, &modelIndex, &internalIndex);
+        return range.list
+                ? static_cast<ModelCompositorList *>(range.list)->data(modelIndex, role)
+                : m_nested->data(internalIndex, role);
+    } else {
+        return m_flat ? m_flat->data(index, role) : m_nested->data(index, role);
+    }
 }
 
 /*!
@@ -324,7 +342,7 @@ QVariant QDeclarativeListModel::data(int index, int role) const
 */
 int QDeclarativeListModel::count() const
 {
-    return m_flat ? m_flat->count() : m_nested->count();
+    return m_flat ? m_flat->count() : (m_compositor ? m_compositor->count() : m_nested->count());
 }
 
 /*!
@@ -337,10 +355,15 @@ int QDeclarativeListModel::count() const
 void QDeclarativeListModel::clear()
 {
     int cleared = count();
-    if (m_flat)
-        m_flat->clear();
-    else
+
+    if (m_compositor) {
+        m_compositor->clear();
         m_nested->clear();
+    } else if (m_flat) {
+        m_flat->clear();
+    } else {
+        m_nested->clear();
+    }
 
     if (!inWorkerThread()) {
         emit itemsRemoved(0, cleared);
@@ -393,7 +416,9 @@ void QDeclarativeListModel::remove(int index)
         return;
     }
 
-    if (m_flat)
+    if (m_compositor)
+        m_compositor->removeAt(index, 1);
+    else if (m_flat)
         m_flat->remove(index);
     else
         m_nested->remove(index);
@@ -431,7 +456,9 @@ void QDeclarativeListModel::insert(int index, const QScriptValue& valuemap)
         return;
     }
 
-    bool ok = m_flat ?  m_flat->insert(index, valuemap) : m_nested->insert(index, valuemap);
+    bool ok = m_compositor
+            ? m_compositor->insertData(index, &valuemap)
+            : (m_flat ?  m_flat->insert(index, valuemap) : m_nested->insert(index, valuemap));
     if (ok && !inWorkerThread()) {
         emit itemsInserted(index, 1);
         emit countChanged();
@@ -464,20 +491,24 @@ void QDeclarativeListModel::move(int from, int to, int n)
     int origfrom = from;
     int origto = to;
     int orign = n;
-    if (from > to) {
-        // Only move forwards - flip if backwards moving
-        int tfrom = from;
-        int tto = to;
-        from = tto;
-        to = tto+n;
-        n = tfrom-tto;
+
+    if (m_compositor) {
+        m_compositor->move(from, to, n);
+    } else {
+        if (from > to) {
+            // Only move forwards - flip if backwards moving
+            int tfrom = from;
+            int tto = to;
+            from = tto;
+            to = tto+n;
+            n = tfrom-tto;
+        }
+
+        if (m_flat)
+            m_flat->move(from, to, n);
+        else
+            m_nested->move(from, to, n);
     }
-
-    if (m_flat)
-        m_flat->move(from, to, n);
-    else
-        m_nested->move(from, to, n);
-
     if (!inWorkerThread())
         emit itemsMoved(origfrom, origto, orign);
 }
@@ -538,7 +569,16 @@ void QDeclarativeListModel::append(const QScriptValue& valuemap)
 QScriptValue QDeclarativeListModel::get(int index) const
 {
     // the internal flat/nested class checks for bad index
-    return m_flat ? m_flat->get(index) : m_nested->get(index);
+    if (m_compositor) {
+        int modelIndex = 0;
+        int internalIndex = 0;
+        QDeclarativeCompositeRange range = m_compositor->at(index, &modelIndex, &internalIndex);
+        return range.list
+                ? static_cast<ModelCompositorList *>(range.list)->get(modelIndex)
+                : m_nested->get(internalIndex);
+    } else {
+        return m_flat ? m_flat->get(index) : m_nested->get(index);
+    }
 }
 
 /*!
@@ -618,6 +658,117 @@ void QDeclarativeListModel::setProperty(int index, const QString& property, cons
         m_flat->setProperty(index, property, value, roles);
     else
         m_nested->setProperty(index, property, value, roles);
+}
+
+void QDeclarativeListModel::append(const QVariant &model, int start, int count)
+{
+    if (m_flat) {
+        qmlInfo(this) << tr("append: nested models cannot be used with worker threads");
+        return;
+    }
+
+    if (!m_compositor)
+        m_compositor = new ModelCompositor(this);
+
+    ModelCompositorList *list = m_compositor->listForModel(model);
+
+    if (!list) {
+        qmlInfo(this) << tr("append: model type not supported");
+        return;
+    }
+
+    if (m_compositor->roles.isEmpty())
+        m_compositor->roles = list->roles;
+
+    const int index = m_compositor->count();
+    m_compositor->appendList(list, start, count, false);
+    emit itemsInserted(index, count);
+}
+
+void QDeclarativeListModel::insert(int index, const QVariant &model, int start, int count)
+{
+    if (m_flat) {
+        qmlInfo(this) << tr("insert: nested models cannot be used with worker threads");
+        return;
+    }
+
+    if (!m_compositor)
+        m_compositor = new ModelCompositor(this);
+
+    ModelCompositorList *list = m_compositor->listForModel(model);
+
+    if (!list) {
+        qmlInfo(this) << tr("insert: model type not supported");
+        return;
+    }
+
+    if (m_compositor->roles.isEmpty())
+        m_compositor->roles = list->roles;
+    m_compositor->insertList(index, list, start, count, false);
+    emit itemsInserted(index, count);
+}
+
+void QDeclarativeListModel::appendModel(const QVariant &model)
+{
+    if (m_flat) {
+        qmlInfo(this) << tr("appendModel: nested models cannot be used with worker threads");
+        return;
+    }
+
+    if (!m_compositor)
+        m_compositor = new ModelCompositor(this);
+
+    ModelCompositorList *list = m_compositor->listForModel(model);
+
+    if (!list) {
+        qmlInfo(this) << tr("appendModel: model type not supported");
+        return;
+    }
+
+    if (m_compositor->roles.isEmpty())
+        m_compositor->roles = list->roles;
+
+    const int index = m_compositor->count();
+    m_compositor->appendList(list, 0, list->modelCount, true);
+    emit itemsInserted(index, list->modelCount);
+}
+
+void QDeclarativeListModel::insertModel(int index, const QVariant &model)
+{
+    if (m_flat) {
+        qmlInfo(this) << tr("insertModel: nested models cannot be used with worker threads");
+        return;
+    }
+
+    if (!m_compositor)
+        m_compositor = new ModelCompositor(this);
+
+    ModelCompositorList *list = m_compositor->listForModel(model);
+
+    if (!list) {
+        qmlInfo(this) << tr("insertModel: model type not supported");
+        return;
+    }
+
+    if (m_compositor->roles.isEmpty())
+        m_compositor->roles = list->roles;
+    m_compositor->insertList(index, list, 0, list->modelCount, true);
+
+    emit itemsInserted(index, list->modelCount);
+}
+
+void QDeclarativeListModel::removeModel(const QVariant &model)
+{
+    if (!m_compositor)
+        return;
+
+    ModelCompositorList *list = m_compositor->listForModel(model, false);
+    if (!list)
+        return;
+
+    QVector<QDeclarativeChangeSet::Remove> changes;
+    m_compositor->removeList(list, &changes);
+    m_compositor->emitChanges(changes);
 }
 
 /*!
@@ -1623,5 +1774,336 @@ void ModelNodeMetaObject::propertyWritten(int index)
         m_obj->m_node->changedProperty(propName);
 }
 
+ModelCompositorListModelInterface::ModelCompositorListModelInterface(
+        const QVariant &modelVariant, QListModelInterface *model, ModelCompositor *compositor)
+    : ModelCompositorList(modelVariant, model->count()), model(model), compositor(compositor)
+{
+    if (!model->parent())
+        model->setParent(this);
+
+    connect(model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
+    connect(model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
+    connect(model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
+    connect(model, SIGNAL(itemsChanged(int,int,QList<int>)),
+            this, SLOT(itemsChanged(int,int,QList<int>)));
+
+    foreach (int role, model->roles())
+        roles.insert(role, model->toString(role));
+}
+
+QVariant ModelCompositorListModelInterface::data(int index, int role) const
+{
+    //role = mappedRoles.value(role, -1);
+    return role != -1 ? model->data(index, role) : QVariant();
+}
+
+QScriptValue ModelCompositorListModelInterface::get(int index) const
+{
+    return QScriptValue();
+}
+
+void ModelCompositorListModelInterface::set(int index, const QScriptValue&)
+{
+}
+
+void ModelCompositorListModelInterface::setProperty(int index, const QString& property, const QVariant& value)
+{
+}
+
+void ModelCompositorListModelInterface::itemsInserted(int index, int count)
+{
+    qDebug() << Q_FUNC_INFO;
+    modelCount += count;
+    QVector<QDeclarativeChangeSet::Insert> changes;
+    compositor->listItemsInserted(static_cast<ModelCompositorList *>(this), index, index + count, &changes);
+    compositor->emitChanges(changes);
+}
+
+void ModelCompositorListModelInterface::itemsRemoved(int index, int count)
+{
+    qDebug() << Q_FUNC_INFO;
+    modelCount -= count;
+    QVector<QDeclarativeChangeSet::Remove> changes;
+    compositor->listItemsRemoved(static_cast<ModelCompositorList *>(this), index, index + count, &changes);
+    compositor->emitChanges(changes);
+}
+
+void ModelCompositorListModelInterface::itemsMoved(int from, int to, int count)
+{
+    if (from == to || count == 0)
+        return;
+    QVector<QDeclarativeChangeSet::Move> changes;
+    compositor->listItemsMoved(static_cast<ModelCompositorList *>(this), from, from + count, to, &changes);
+    compositor->emitChanges(changes);
+}
+
+void ModelCompositorListModelInterface::itemsChanged(int index, int count, const QList<int> &roles)
+{
+    QVector<QDeclarativeChangeSet::Change> changes;
+    compositor->listItemsChanged(static_cast<ModelCompositorList *>(this), index, index + count, &changes);
+    compositor->emitChanges(changes);
+}
+
+ModelCompositorDeclarativeListModel::ModelCompositorDeclarativeListModel(
+        const QVariant &modelVariant, QDeclarativeListModel *model, ModelCompositor *compositor)
+    : ModelCompositorListModelInterface(modelVariant, model, compositor)
+{
+}
+
+QScriptValue ModelCompositorDeclarativeListModel::get(int index) const
+{
+    return static_cast<const QDeclarativeListModel *>(model)->get(index);
+}
+
+void ModelCompositorDeclarativeListModel::set(int index, const QScriptValue &value)
+{
+    static_cast<QDeclarativeListModel *>(model)->set(index, value);
+}
+
+void ModelCompositorDeclarativeListModel::setProperty(int index, const QString& property, const QVariant& value)
+{
+    static_cast<QDeclarativeListModel *>(model)->setProperty(index, property, value);
+}
+
+ModelCompositorAbstractModel::ModelCompositorAbstractModel(
+        const QVariant &modelVariant, QAbstractItemModel *model, ModelCompositor *compositor)
+    : ModelCompositorList(modelVariant, model->rowCount()), model(model), compositor(compositor)
+{
+    if (!model->parent())
+        model->setParent(this);
+
+    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)),
+            this, SLOT(rowsInserted(QModelIndex,int,int)));
+    connect(model, SIGNAL(rowsRemoved(QModelIndex,int,int)),
+            this, SLOT(rowsRemoved(QModelIndex,int,int)));
+    connect(model, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
+            this, SLOT(rowsMoved(QModelIndex,int,int,QModelIndex,int)));
+    connect(model, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+            this, SLOT(dataChanged(QModelIndex,QModelIndex)));
+    connect(model, SIGNAL(layoutChanged()), this, SLOT(layoutChanged()));
+    connect(model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+
+    // map roles.
+}
+
+QVariant ModelCompositorAbstractModel::data(int index, int role) const
+{
+    //role = mappedRoles.value(role, -1);
+    return role != -1 ? model->index(index, 0).data(role) : QVariant();
+}
+
+QScriptValue ModelCompositorAbstractModel::get(int index) const
+{
+    return QScriptValue();
+}
+
+void ModelCompositorAbstractModel::set(int index, const QScriptValue&)
+{
+
+}
+
+void ModelCompositorAbstractModel::setProperty(int index, const QString& property, const QVariant& value)
+{
+
+}
+
+void ModelCompositorAbstractModel::rowsInserted(const QModelIndex &parent,int start, int end)
+{
+    if (!parent.isValid()) {
+        QVector<QDeclarativeChangeSet::Insert> changes;
+        modelCount = model->rowCount();
+        compositor->listItemsInserted(static_cast<ModelCompositorList *>(this), start, end - start + 1, &changes);
+        compositor->emitChanges(changes);
+    }
+}
+
+void ModelCompositorAbstractModel::rowsRemoved(const QModelIndex &parent, int start, int end)
+{
+    if (!parent.isValid()) {
+        QVector<QDeclarativeChangeSet::Remove> changes;
+        modelCount = model->rowCount();
+        compositor->listItemsRemoved(static_cast<ModelCompositorList *>(this), start, end + 1, &changes);
+        compositor->emitChanges(changes);
+    }
+}
+
+void ModelCompositorAbstractModel::rowsMoved(
+        const QModelIndex &sourceParent,
+        int sourceStart,
+        int sourceEnd,
+        const QModelIndex &destinationParent,
+        int destinationStart)
+{
+
+    if (sourceParent == destinationParent && !sourceParent.isValid()) {      
+        QVector<QDeclarativeChangeSet::Move> changes;
+        compositor->listItemsMoved(static_cast<ModelCompositorList *>(this), sourceStart, sourceEnd + 1, destinationStart, &changes);
+        compositor->emitChanges(changes);
+    } else if (!sourceParent.isValid()) {
+        QVector<QDeclarativeChangeSet::Remove> changes;
+        compositor->listItemsRemoved(static_cast<ModelCompositorList *>(this), sourceStart, sourceEnd + 1, &changes);
+        compositor->emitChanges(changes);
+    } else if (!destinationParent.isValid()) {
+        QVector<QDeclarativeChangeSet::Insert> changes;
+        compositor->listItemsInserted(static_cast<ModelCompositorList *>(this), destinationStart, destinationStart + sourceEnd - sourceStart + 1, &changes);
+        compositor->emitChanges(changes);
+    }
+}
+
+void ModelCompositorAbstractModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight)
+{
+    if (topLeft.parent() == bottomRight.parent() && !topLeft.parent().isValid()) {
+        QVector<QDeclarativeChangeSet::Change> changes;
+        compositor->listItemsChanged(
+                static_cast<ModelCompositorList *>(this), topLeft.row(), bottomRight.row() + 1, &changes);
+        compositor->emitChanges(changes);
+    }
+}
+
+void ModelCompositorAbstractModel::layoutChanged()
+{
+    if (modelCount > 0) {
+        QVector<QDeclarativeChangeSet::Remove> removes;
+        QVector<QDeclarativeChangeSet::Insert> inserts;
+
+        compositor->listItemsRemoved(static_cast<ModelCompositorList *>(this), 0, modelCount, &removes);
+        compositor->listItemsInserted(static_cast<ModelCompositorList *>(this), 0, modelCount, &inserts);
+        compositor->emitChanges(removes);
+        compositor->emitChanges(inserts);
+    }
+}
+
+void ModelCompositorAbstractModel::modelReset()
+{
+    QVector<QDeclarativeChangeSet::Remove> removes;
+    QVector<QDeclarativeChangeSet::Insert> inserts;
+    if (modelCount > 0)
+        compositor->listItemsRemoved(static_cast<ModelCompositorList *>(this), 0, modelCount, &removes);
+    modelCount = model->rowCount();
+    if (modelCount > 0)
+        compositor->listItemsInserted(static_cast<ModelCompositorList *>(this), 0, modelCount, &inserts);
+    compositor->emitChanges(removes);
+    compositor->emitChanges(inserts);
+}
+
+ModelCompositor::ModelCompositor(QDeclarativeListModel *model)
+    : QDeclarativeListCompositor(model->m_nested->count()), model(model)
+{
+}
+
+ModelCompositor::~ModelCompositor()
+{
+    while (ModelCompositorList *list = lists.first())
+        delete list;
+}
+
+ModelCompositorList *ModelCompositor::listForModel(const QVariant &modelVariant, bool create)
+{
+    for (ListIterator it = lists.begin(); it != lists.end(); ++it) {
+        if (it->model == modelVariant)
+            return *it;
+    }
+
+    if (!create)
+        return 0;
+
+    if (QDeclarativeListModel *model = qvariant_cast<QDeclarativeListModel *>(modelVariant)) {
+        ModelCompositorDeclarativeListModel *list = new ModelCompositorDeclarativeListModel(
+                modelVariant, model, this);
+        lists.insert(list);
+        return list;
+    } else if (QObject *object = qvariant_cast<QObject *>(modelVariant)) {
+        if (QDeclarativeListModel *model = qobject_cast<QDeclarativeListModel *>(object)) {
+            ModelCompositorDeclarativeListModel *list = new ModelCompositorDeclarativeListModel(
+                    modelVariant, model, this);
+            lists.insert(list);
+            return list;
+        } else if (QListModelInterface *model = qobject_cast<QListModelInterface *>(object)) {
+            ModelCompositorListModelInterface *list = new ModelCompositorListModelInterface(
+                    modelVariant, model, this);
+            lists.insert(list);
+            return list;
+        } else if (QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(object)) {
+            ModelCompositorAbstractModel *list = new ModelCompositorAbstractModel(
+                    modelVariant, model, this);
+            lists.insert(list);
+            return list;
+        }
+    }
+    return 0;
+}
+
+void ModelCompositor::emitChanges(const QVector<QDeclarativeChangeSet::Insert> &changes)
+{
+    foreach (const QDeclarativeChangeSet::Insert &change, changes)
+        emit model->itemsInserted(change.start, change.count());
+}
+
+void ModelCompositor::emitChanges(const QVector<QDeclarativeChangeSet::Remove> &changes)
+{
+    foreach (const QDeclarativeChangeSet::Remove &change, changes)
+        emit model->itemsRemoved(change.start, change.count());
+}
+
+void ModelCompositor::emitChanges(const QVector<QDeclarativeChangeSet::Move> &changes)
+{
+    foreach (const QDeclarativeChangeSet::Move &change, changes)
+        emit model->itemsMoved(change.start, change.to, change.count());
+}
+
+void ModelCompositor::emitChanges(const QVector<QDeclarativeChangeSet::Change> &changes, const QList<int> roles)
+{
+    foreach (const QDeclarativeChangeSet::Change &change, changes)
+        emit model->itemsChanged(change.start, change.count(), roles);
+}
+
+void ModelCompositor::rangeCreated(void *list)
+{
+    ModelCompositorList *compositorList = static_cast<ModelCompositorList *>(list);
+    compositorList->ref += 1;
+    // reference count and destroy lists when no longer in use.  Just need to be careful of a move
+    // deleting the last range for a list before creating a new one.
+}
+
+void ModelCompositor::rangeDestroyed(void *list)
+{
+    ModelCompositorList *compositorList = static_cast<ModelCompositorList *>(list);
+    compositorList->ref -= 1;
+}
+
+bool ModelCompositor::insertInternalData(int index, const void *data)
+{
+    return model->m_nested->insert(index, *static_cast<const QScriptValue *>(data));
+}
+
+void ModelCompositor::removeInternalData(int index, int count)
+{
+    if (index == 0 && count == model->m_nested->count()) {
+        model->m_nested->clear();
+    } else {
+        for (int i = 0; i < count; ++i)
+            model->m_nested->remove(index);
+    }
+}
+
+void ModelCompositor::moveInternalData(int from, int to, int count)
+{
+    if (from > to) {
+        // Only move forwards - flip if backwards moving
+        int tfrom = from;
+        int tto = to;
+        from = tto;
+        to = tto+count;
+        count = tfrom-tto;
+    }
+
+    model->m_nested->move(from, to, count);
+}
+
+void ModelCompositor::replaceInternalData(int index, const void *data)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(data);
+}
 
 QT_END_NAMESPACE

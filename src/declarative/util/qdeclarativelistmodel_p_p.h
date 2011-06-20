@@ -56,7 +56,12 @@
 #include "private/qdeclarativelistmodel_p.h"
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativeopenmetaobject_p.h"
+#include "private/qdeclarativechangeset_p.h"
+#include "private/qdeclarativelistcompositor_p.h"
+
+#include "private/qintrusivelist_p.h"
 #include "qdeclarative.h"
+
 
 #include <private/qscriptdeclarativeclass_p.h>
 
@@ -270,6 +275,123 @@ struct ModelNode
     int listIndex;  // only used for top-level nodes within a list
 };
 
+class ModelCompositor;
+class ModelCompositorList : public QObject
+{
+public:
+    ModelCompositorList(const QVariant &model, int modelCount)
+        : model(model), ref(0), modelCount(modelCount) {}
+
+    const QVariant model;
+    QHash<int, QString> roles;
+    QIntrusiveListNode node;
+    int ref;
+    int modelCount;
+
+    virtual QVariant data(int index, int role) const = 0;
+
+    virtual QScriptValue get(int index) const = 0;
+    virtual void set(int index, const QScriptValue&) = 0;
+    virtual void setProperty(int index, const QString& property, const QVariant& value) = 0;
+};
+
+class ModelCompositorListModelInterface : public ModelCompositorList
+{
+    Q_OBJECT
+public:
+    ModelCompositorListModelInterface(
+        const QVariant &modelVariant, QListModelInterface *model, ModelCompositor *compositor);
+
+    QVariant data(int index, int role) const;
+
+    QScriptValue get(int index) const;
+    void set(int index, const QScriptValue&);
+    void setProperty(int index, const QString& property, const QVariant& value);
+
+private Q_SLOTS:
+    void itemsInserted(int index, int count);
+    void itemsRemoved(int index, int count);
+    void itemsMoved(int from, int to, int count);
+    void itemsChanged(int index, int count, const QList<int> &roles);
+
+protected:
+    QListModelInterface *model;
+    ModelCompositor *compositor;
+};
+
+class ModelCompositorDeclarativeListModel : public ModelCompositorListModelInterface
+{
+    Q_OBJECT
+public:
+    ModelCompositorDeclarativeListModel(
+        const QVariant &modelVariant, QDeclarativeListModel *model, ModelCompositor *compositor);
+
+    QScriptValue get(int index) const;
+    void set(int index, const QScriptValue&);
+    void setProperty(int index, const QString& property, const QVariant& value);
+};
+
+
+class QAbstractItemModel;
+class QModelIndex;
+class ModelCompositorAbstractModel : public ModelCompositorList
+{
+    Q_OBJECT
+public:
+    ModelCompositorAbstractModel(
+        const QVariant &modelVariant, QAbstractItemModel *model, ModelCompositor *compositor);
+
+    QVariant data(int index, int role) const;
+
+    QScriptValue get(int index) const;
+    void set(int index, const QScriptValue&);
+    void setProperty(int index, const QString& property, const QVariant& value);
+
+private Q_SLOTS:
+
+    void rowsInserted(const QModelIndex &,int,int);
+    void rowsRemoved(const QModelIndex &,int,int);
+    void rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
+    void dataChanged(const QModelIndex&,const QModelIndex&);
+    void layoutChanged();
+    void modelReset();
+
+private:
+    QAbstractItemModel *model;
+    ModelCompositor *compositor;
+};
+
+class ModelCompositor : public QDeclarativeListCompositor
+{
+public:
+    ModelCompositor(QDeclarativeListModel *model);
+    ~ModelCompositor();
+
+    QDeclarativeListModel *model;
+
+    QHash<int, QString> roles;
+
+    ModelCompositorList *listForModel(const QVariant &model, bool create = true);
+
+    void emitChanges(const QVector<QDeclarativeChangeSet::Insert> &changes);
+    void emitChanges(const QVector<QDeclarativeChangeSet::Remove> &changes);
+    void emitChanges(const QVector<QDeclarativeChangeSet::Move> &changes);
+    void emitChanges(const QVector<QDeclarativeChangeSet::Change> &changes, const QList<int> roles = QList<int>());
+
+protected:
+    void rangeCreated(void *list);
+    void rangeDestroyed(void *list);
+
+    bool insertInternalData(int index, const void *data);
+    void removeInternalData(int index, int count);
+    void moveInternalData(int from, int to, int count);
+    void replaceInternalData(int index, const void *data);
+
+private:
+    typedef QIntrusiveList<ModelCompositorList, &ModelCompositorList::node>::iterator ListIterator;
+    QIntrusiveList<ModelCompositorList, &ModelCompositorList::node> lists;
+
+};
 
 QT_END_NAMESPACE
 
