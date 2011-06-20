@@ -187,7 +187,8 @@ union QDeclarativeInstruction
     struct instr_initV8Bindings {
         QML_INSTR_HEADER
         int program;
-        int line;
+        ushort programIndex;
+        ushort line;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER

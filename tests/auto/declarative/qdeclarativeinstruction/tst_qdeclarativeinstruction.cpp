@@ -366,7 +366,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreCompiledBinding);
+        i.setType(QDeclarativeInstruction::StoreV4Binding);
         i.assignBinding.property = 27;
         i.assignBinding.value = 2;
         i.assignBinding.context = 4;

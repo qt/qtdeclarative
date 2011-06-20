@@ -712,6 +712,7 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
         QDeclarativeInstruction bindings;
         bindings.setType(QDeclarativeInstruction::InitV8Bindings);
         bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
+        bindings.initV8Bindings.programIndex = compileState.v8BindingProgramIndex;
         bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
         output->addInstruction(bindings);
     }
@@ -1220,6 +1221,7 @@ void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
         QDeclarativeInstruction bindings;
         bindings.setType(QDeclarativeInstruction::InitV8Bindings);
         bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
+        bindings.initV8Bindings.programIndex = compileState.v8BindingProgramIndex;
         bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
         output->addInstruction(bindings);
     }
@@ -2973,7 +2975,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
-        if (0 && isSharable && !binding.property->isAlias /* See above re alias */ &&
+        if (isSharable && !binding.property->isAlias /* See above re alias */ &&
             binding.property->type != qMetaTypeId<QDeclarativeBinding*>()) {
             binding.dataType = BindingReference::V8;
             sharedBindings.append(&iter.value());
@@ -3017,6 +3019,8 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
         compileState.v8BindingProgram = functionArray;
         compileState.v8BindingProgramLine = startLineNumber;
+        compileState.v8BindingProgramIndex = output->v8bindings.count();
+        output->v8bindings.append(v8::Persistent<v8::Array>());
     }
 
     if (bindingCompiler.isValid()) 

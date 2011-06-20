@@ -69,7 +69,7 @@ class QV8Bindings : public QObject,
                     public QDeclarativeRefCount
 {
 public:
-    QV8Bindings(const QString &program, int line,
+    QV8Bindings(const QString &program, int index, int line,
                 QDeclarativeCompiledData *compiled,
                 QDeclarativeContextData *context);
     virtual ~QV8Bindings();

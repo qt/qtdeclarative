@@ -104,7 +104,7 @@ public:
     };
     QList<TypeReference> types;
 
-    v8::Persistent<v8::Array> v8bindings;
+    QList<v8::Persistent<v8::Array> > v8bindings;
 
     const QMetaObject *root;
     QAbstractDynamicMetaObject rootData;
@@ -309,6 +309,7 @@ private:
         QByteArray compiledBindingData;
         QString v8BindingProgram;
         int v8BindingProgramLine;
+        int v8BindingProgramIndex;
 
         QHash<QDeclarativeParser::Value *, BindingReference> bindings;
         QHash<QDeclarativeParser::Value *, BindingContext> signalExpressions;

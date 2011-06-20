@@ -162,7 +162,7 @@ void QV8BindingsPrivate::Binding::destroy()
     parent->q_func()->release();
 }
 
-QV8Bindings::QV8Bindings(const QString &program, int line,
+QV8Bindings::QV8Bindings(const QString &program, int index, int line,
                          QDeclarativeCompiledData *compiled, 
                          QDeclarativeContextData *context)
 : QObject(*(new QV8BindingsPrivate))
@@ -171,7 +171,7 @@ QV8Bindings::QV8Bindings(const QString &program, int line,
 
     QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(context->engine);
 
-    if (compiled->v8bindings.IsEmpty()) {
+    if (compiled->v8bindings[index].IsEmpty()) {
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(engine->context());
 
@@ -179,11 +179,11 @@ QV8Bindings::QV8Bindings(const QString &program, int line,
         v8::Local<v8::Value> result = script->Run(engine->contextWrapper()->sharedContext());
 
         if (result->IsArray()) 
-            compiled->v8bindings = qPersistentNew(v8::Local<v8::Array>::Cast(result));
+            compiled->v8bindings[index] = qPersistentNew(v8::Local<v8::Array>::Cast(result));
     }
 
     d->url = compiled->url;
-    d->functions = qPersistentNew(compiled->v8bindings);
+    d->functions = qPersistentNew(compiled->v8bindings[index]);
     d->bindingsCount = d->functions->Length();
     d->bindings = new QV8BindingsPrivate::Binding[d->bindingsCount];
     

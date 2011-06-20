@@ -661,7 +661,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
         QML_END_INSTR(BeginObject)
 
         QML_BEGIN_INSTR(InitV8Bindings)
-            ctxt->v8bindings = new QV8Bindings(primitives.at(instr.program), instr.line, comp, ctxt);
+            ctxt->v8bindings = new QV8Bindings(primitives.at(instr.program), instr.programIndex, 
+                                               instr.line, comp, ctxt);
         QML_END_INSTR(InitV8Bindings)
 
         QML_BEGIN_INSTR(StoreBinding)
