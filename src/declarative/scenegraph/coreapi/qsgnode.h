@@ -152,16 +152,11 @@ public:
 protected:
     QSGNode(NodeType type);
 
-    // When a node is destroyed, it will detach from the scene graph and the renderer will be
-    // notified about the change. If the node is detached in the base node's destructor, the
-    // renderer can't safely cast the node to its original type, since at this point it has been
-    // partly destroyed already. To solve this problem, all the node destructors must call a common
-    // destroy method.
-
-    void destroy();
-
 private:
+    friend class QSGRootNode;
+
     void init();
+    void destroy();
 
     QSGNode *m_parent;
     NodeType m_type;

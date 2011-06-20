@@ -293,6 +293,14 @@ void QSGRenderer::setClearColor(const QColor &color)
     m_clear_color = color;
 }
 
+/*!
+    Updates internal data structures and emits the sceneGraphChanged() signal.
+
+    If \a flags contains the QSGNode::DirtyNodeRemoved flag, the node might be
+    in the process of being destroyed. It is then not safe to downcast the node
+    pointer.
+*/
+
 void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
 {
     Q_UNUSED(node);
