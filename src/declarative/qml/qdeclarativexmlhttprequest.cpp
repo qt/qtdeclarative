@@ -1163,10 +1163,12 @@ void QDeclarativeXMLHttpRequest::requestFromUrl(const QUrl &url)
         m_network = networkAccessManager()->get(request);
     else if (m_method == QLatin1String("HEAD"))
         m_network = networkAccessManager()->head(request);
-    else if(m_method == QLatin1String("POST"))
+    else if (m_method == QLatin1String("POST"))
         m_network = networkAccessManager()->post(request, m_data);
-    else if(m_method == QLatin1String("PUT"))
+    else if (m_method == QLatin1String("PUT"))
         m_network = networkAccessManager()->put(request, m_data);
+    else if (m_method == QLatin1String("DELETE"))
+        m_network = networkAccessManager()->deleteResource(request);
 
     QObject::connect(m_network, SIGNAL(downloadProgress(qint64,qint64)), 
                      this, SLOT(downloadProgress(qint64)));
@@ -1447,7 +1449,8 @@ static QScriptValue qmlxmlhttprequest_open(QScriptContext *context, QScriptEngin
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
-        method != QLatin1String("POST"))
+        method != QLatin1String("POST") &&
+        method != QLatin1String("DELETE"))
         THROW_DOM(SYNTAX_ERR, "Unsupported HTTP method type");
 
 
