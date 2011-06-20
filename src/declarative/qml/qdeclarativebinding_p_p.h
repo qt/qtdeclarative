@@ -69,9 +69,6 @@ public:
 
     virtual void emitValueChanged();
 
-    static bool writeBindingResult(QDeclarativeJavaScriptExpression *expression,
-                                   QDeclarativeProperty &prop, v8::Handle<v8::Value> value, bool isUndefined,
-                                   QDeclarativePropertyPrivate::WriteFlags flags);
     static void printBindingLoopError(QDeclarativeProperty &prop);
 
 protected:

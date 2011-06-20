@@ -44,6 +44,7 @@
 #include <private/qv8_p.h>
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativecompiler_p.h>
+#include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativebinding_p_p.h>
 #include <private/qdeclarativeexpression_p.h>
 #include <private/qobject_p.h>
@@ -123,8 +124,7 @@ void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags
 
         bool needsErrorData = false;
         if (!watcher.wasDeleted() && !error.isValid()) 
-            needsErrorData = !QDeclarativeBindingPrivate::writeBindingResult(this, property, result, 
-                                                                             isUndefined, flags);
+            needsErrorData = !QDeclarativePropertyPrivate::writeBinding(property, this, result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
 

@@ -54,6 +54,7 @@
 #include "private/qdeclarativelist_p.h"
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativevmemetaobject_p.h"
+#include "private/qdeclarativeexpression_p.h"
 
 #include <QStringList>
 #include <QtCore/qdebug.h>
@@ -1246,6 +1247,92 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
     return true;
 }
 
+// Returns true if successful, false if an error description was set on expression
+bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that, 
+                                               QDeclarativeJavaScriptExpression *expression, 
+                                               v8::Handle<v8::Value> result, bool isUndefined,
+                                               WriteFlags flags)
+{
+    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(expression->context()->engine);
+
+    QDeclarativePropertyPrivate *pp = that.d;
+
+    if (!pp)
+        return true;
+    
+    QObject *object = that.object();
+    int type = that.propertyType();
+
+#define QUICK_STORE(cpptype, metatype, test, conversion) \
+    case QMetaType:: metatype: \
+        if (test) { \
+            cpptype o = (conversion); \
+            int status = -1; \
+            void *argv[] = { &o, 0, &status, &flags }; \
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, pp->core.coreIndex, argv); \
+            return true; \
+        } \
+        break;
+
+
+    if (object && pp->valueType.valueTypeCoreIdx == -1) {
+        switch (type) {
+        QUICK_STORE(int, Int, result->IsNumber(), result->Int32Value());
+        QUICK_STORE(double, Double, result->IsNumber(), result->NumberValue());
+        QUICK_STORE(float, Float, result->IsNumber(), result->NumberValue());
+        QUICK_STORE(QString, QString, result->IsString(), engine->toString(result));
+        default:
+            break;
+        }
+    }
+#undef QUICK_STORE
+
+    QDeclarativeDeleteWatcher watcher(expression);
+
+    QVariant value;
+
+    if (isUndefined) {
+    } else if (that.propertyTypeCategory() == QDeclarativeProperty::List) {
+        value = engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
+    } else if (result->IsNull() && that.propertyTypeCategory() == QDeclarativeProperty::Object) {
+        value = QVariant::fromValue((QObject *)0);
+    } else {
+        value = engine->toVariant(result, type);
+    }
+
+    if (expression->error.isValid()) {
+        return false;
+    } else if (isUndefined && that.isResettable()) {
+        that.reset();
+    } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
+        QDeclarativePropertyPrivate::write(that, QVariant(), flags);
+    } else if (isUndefined) {
+        expression->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
+                                         QLatin1String(QMetaType::typeName(type)) +
+                                         QLatin1String(" ") + that.name());
+        return false;
+    } else if (result->IsFunction()) {
+        expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
+        return false;
+    } else if (object && !QDeclarativePropertyPrivate::write(that, value, flags)) {
+
+        if (watcher.wasDeleted()) 
+            return true;
+
+        const char *valueType = 0;
+        if (value.userType() == QVariant::Invalid) valueType = "null";
+        else valueType = QMetaType::typeName(value.userType());
+
+        expression->error.setDescription(QLatin1String("Unable to assign ") +
+                                         QLatin1String(valueType) +
+                                         QLatin1String(" to ") +
+                                         QLatin1String(QMetaType::typeName(type)));
+        return false;
+    }
+
+    return true;
+}
+
 const QMetaObject *QDeclarativePropertyPrivate::rawMetaObjectForType(QDeclarativeEnginePrivate *engine, int userType)
 {
     if (engine) {
@@ -1335,7 +1422,7 @@ bool QDeclarativeProperty::reset() const
 }
 
 bool QDeclarativePropertyPrivate::write(const QDeclarativeProperty &that,
-                                            const QVariant &value, WriteFlags flags) 
+                                        const QVariant &value, WriteFlags flags) 
 {
     if (!that.d)
         return false;

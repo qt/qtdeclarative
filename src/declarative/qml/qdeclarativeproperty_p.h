@@ -63,8 +63,9 @@
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeContext;
-class QDeclarativeEnginePrivate;
 class QDeclarativeExpression;
+class QDeclarativeEnginePrivate;
+class QDeclarativeJavaScriptExpression;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativePropertyPrivate : public QDeclarativeRefCount
 {
 public:
@@ -131,6 +132,10 @@ public:
     static QDeclarativeExpression *setSignalExpression(const QDeclarativeProperty &that, 
                                                        QDeclarativeExpression *) ;
     static bool write(const QDeclarativeProperty &that, const QVariant &, WriteFlags);
+    static bool writeBinding(const QDeclarativeProperty &that, 
+                             QDeclarativeJavaScriptExpression *expression, 
+                             v8::Handle<v8::Value> result, bool isUndefined,
+                             WriteFlags flags);
     static int valueTypeCoreIndex(const QDeclarativeProperty &that);
     static int bindingIndex(const QDeclarativeProperty &that);
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);

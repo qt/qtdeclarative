@@ -335,57 +335,6 @@ public:
     }
 };
 
-bool QDeclarativeBindingPrivate::writeBindingResult(QDeclarativeJavaScriptExpression *expression,
-                                                    QDeclarativeProperty &prop, v8::Handle<v8::Value> result, 
-                                                    bool isUndefined, QDeclarativePropertyPrivate::WriteFlags flags)
-{
-    QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(expression->context()->engine);
-    QDeclarativeDeleteWatcher watcher(expression);
-
-    QVariant value;
-
-    if (isUndefined) {
-    } else if (prop.propertyTypeCategory() == QDeclarativeProperty::List) {
-        value = engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
-    } else if (result->IsNull() && prop.propertyTypeCategory() == QDeclarativeProperty::Object) {
-        value = QVariant::fromValue((QObject *)0);
-    } else {
-        value = engine->toVariant(result, prop.propertyType());
-    }
-
-    if (expression->error.isValid()) {
-        return false;
-    } else if (isUndefined && prop.isResettable()) {
-        prop.reset();
-    } else if (isUndefined && prop.propertyType() == qMetaTypeId<QVariant>()) {
-        QDeclarativePropertyPrivate::write(prop, QVariant(), flags);
-    } else if (isUndefined) {
-        expression->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
-                                         QLatin1String(QMetaType::typeName(prop.propertyType())) +
-                                         QLatin1String(" ") + prop.name());
-        return false;
-    } else if (result->IsFunction()) {
-        expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
-        return false;
-    } else if (prop.object() && !QDeclarativePropertyPrivate::write(prop, value, flags)) {
-
-        if (watcher.wasDeleted()) 
-            return true;
-
-        const char *valueType = 0;
-        if (value.userType() == QVariant::Invalid) valueType = "null";
-        else valueType = QMetaType::typeName(value.userType());
-
-        expression->error.setDescription(QLatin1String("Unable to assign ") +
-                                         QLatin1String(valueType) +
-                                         QLatin1String(" to ") +
-                                         QLatin1String(QMetaType::typeName(prop.propertyType())));
-        return false;
-    }
-
-    return true;
-}
-
 void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     Q_D(QDeclarativeBinding);
@@ -423,7 +372,8 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 
             bool needsErrorData = false;
             if (!watcher.wasDeleted() && !d->error.isValid()) 
-                needsErrorData = !d->writeBindingResult(d, d->property, result, isUndefined, flags);
+                needsErrorData = !QDeclarativePropertyPrivate::writeBinding(d->property, d, result, 
+                                                                            isUndefined, flags);
 
             if (!watcher.wasDeleted()) {
                
