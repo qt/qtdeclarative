@@ -941,7 +941,7 @@ void QSGDistanceFieldGlyphCache::updateCache()
             QFile file(key);
             if (file.open(QFile::ReadOnly)) {
                 int fileSize = file.size();
-                int dim = sqrt(fileSize);
+                int dim = sqrt(float(fileSize));
                 QByteArray blob = file.readAll();
                 glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, dim, dim, GL_ALPHA, GL_UNSIGNED_BYTE, blob.constData());
                 continue;
