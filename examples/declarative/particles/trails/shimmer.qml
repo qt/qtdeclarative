@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     width: 360
@@ -53,21 +53,21 @@ Rectangle{
         id: particles 
         running: false
     }
-    ColoredParticle{
+    ImageParticle{
         anchors.fill: parent
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
         sizeTable: "content/sparkleSize.png"
         alpha: 0
         colorVariation: 0.6
     }
-    TrailEmitter{
+    Emitter{
         anchors.fill: parent
         system: particles
-        particlesPerSecond: 2000
-        particleDuration: 2000
+        emitRate: 2000
+        lifeSpan: 2000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
+        size: 30
+        sizeVariation: 10
     }
 }

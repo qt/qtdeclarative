@@ -3,7 +3,7 @@ load(qt_module)
 TARGET = qmldbg_tcp
 QT       += declarative-private network
 
-include($$QT_SOURCE_TREE/src/plugins/qpluginbase.pri)
+load(qt_plugin)
 
 DESTDIR = $$QT.declarative.plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"

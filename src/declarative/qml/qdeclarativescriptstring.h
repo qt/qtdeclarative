@@ -75,6 +75,9 @@ public:
 
 private:
     QSharedDataPointer<QDeclarativeScriptStringPrivate> d;
+
+    friend class QDeclarativeVME;
+    friend class QDeclarativeExpression;
 };
 
 QT_END_NAMESPACE

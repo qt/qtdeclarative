@@ -650,6 +650,7 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
             out->dumpInstructions();
         if (compilerStatDump())
             dumpStats();
+        Q_ASSERT(out->rootPropertyCache);
     } else {
         reset(out);
     }
@@ -1012,12 +1013,14 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 {
     typedef QPair<Property *, int> PropPair;
     foreach(const PropPair &prop, obj->scriptStringProperties) {
+        const QString &script = prop.first->values.at(0)->value.asScript();
         QDeclarativeInstruction ss;
         ss.setType(QDeclarativeInstruction::StoreScriptString);
         ss.storeScriptString.propertyIndex = prop.first->index;
-        ss.storeScriptString.value = 
-            output->indexForString(prop.first->values.at(0)->value.asScript());
+        ss.storeScriptString.value = output->indexForString(script);
         ss.storeScriptString.scope = prop.second;
+        ss.storeScriptString.bindingId = rewriteBinding(script, prop.first->name);
+        ss.storeScriptString.line = prop.first->location.start.line;
         output->addInstruction(ss);
     }
 
@@ -1227,6 +1230,11 @@ void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
         id.setId.value = output->indexForString(obj->id);
         id.setId.index = obj->idIndex;
         output->addInstruction(id);
+    }
+
+    if (obj == unitRoot) {
+        output->rootPropertyCache = output->types[obj->type].createPropertyCache(engine);
+        output->rootPropertyCache->addref();
     }
 }
 

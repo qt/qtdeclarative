@@ -56,6 +56,7 @@ class QSGCanvasItemPrivate : public QSGPaintedItemPrivate
 {
 public:
     QSGCanvasItemPrivate();
+    ~QSGCanvasItemPrivate();
     QSGContext2D* context;
 };
 
@@ -66,6 +67,10 @@ public:
 QSGCanvasItemPrivate::QSGCanvasItemPrivate()
     : QSGPaintedItemPrivate()
     , context(0)
+{
+}
+
+QSGCanvasItemPrivate::~QSGCanvasItemPrivate()
 {
 }
 
@@ -94,24 +99,24 @@ void QSGCanvasItem::paint(QPainter *painter)
     }
 }
 
-
-QSGContext2D* QSGCanvasItem::getContext(const QString &contextId)
+QScriptValue QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
+    QScriptEngine* e = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
     if (contextId == QLatin1String("2d")) {
         if (!d->context) {
             d->context = new QSGContext2D(this);
+            d->context->setScriptEngine(e);
             connect(d->context, SIGNAL(changed()), this, SLOT(requestPaint()));
         }
-        return d->context;
+        return d->context->scriptValue();
     }
     qDebug("Canvas:requesting unsupported context");
-    return 0;
+    return e->undefinedValue();
 }
 
 void QSGCanvasItem::requestPaint()
 {
-    Q_D(QSGCanvasItem);
     //TODO:update(d->context->dirtyRect());
     update();
 }
@@ -140,19 +145,19 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
         QString mime = mimeType;
         QString type;
         if (mimeType == QLatin1String("image/bmp"))
-            type = "BMP";
+            type = QLatin1String("BMP");
         else if (mimeType == QLatin1String("image/jpeg"))
-            type = "JPEG";
+            type = QLatin1String("JPEG");
         else if (mimeType == QLatin1String("image/x-portable-pixmap"))
-            type = "PPM";
+            type = QLatin1String("PPM");
         else if (mimeType == QLatin1String("image/tiff"))
-            type = "TIFF";
+            type = QLatin1String("TIFF");
         else if (mimeType == QLatin1String("image/xbm"))
-            type = "XBM";
+            type = QLatin1String("XBM");
         else if (mimeType == QLatin1String("image/xpm"))
-            type = "XPM";
+            type = QLatin1String("XPM");
         else {
-            type = "PNG";
+            type = QLatin1String("PNG");
             mime = QLatin1String("image/png");
         }
         image.save(&buffer, type.toAscii());
@@ -162,280 +167,5 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
     }
     return QLatin1String("data:,");
 }
-//CanvasItemTextureProvider::CanvasItemTextureProvider(QObject *parent)
-//    : QSGTextureProvider(parent)
-//    , m_ctx2d(0)
-//    , m_fbo(0)
-//    , m_multisampledFbo(0)
-//    , m_dirtyTexture(true)
-//    , m_multisamplingSupportChecked(false)
-//    , m_multisampling(false)
-//{
-//}
-
-//CanvasItemTextureProvider::~CanvasItemTextureProvider()
-//{
-//    delete m_fbo;
-//    delete m_multisampledFbo;
-//}
-
-//void CanvasItemTextureProvider::updateTexture()
-//{
-//    if (m_dirtyTexture) {
-//        if (!m_ctx2d->isDirty())
-//            return;
-//        if (m_size.isEmpty()) {
-//            m_texture = QSGTextureRef();
-//            delete m_fbo;
-//            delete m_multisampledFbo;
-//            m_multisampledFbo = m_fbo = 0;
-//            return;
-//        }
-
-//#ifndef QSGCANVASITEM_PAINTING_ON_IMAGE
-//        //create texture
-//        if (!m_fbo || m_fbo->size() != m_size )
-//        {
-//            const QGLContext *ctx = QSGContext::current->glContext();
-//            if (!m_multisamplingSupportChecked) {
-//                QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
-//                m_multisampling = extensions.contains("GL_EXT_framebuffer_multisample")
-//                                && extensions.contains("GL_EXT_framebuffer_blit");
-//                m_multisamplingSupportChecked = true;
-//            }
-
-//            if (ctx->format().sampleBuffers() && m_multisampling) {
-//                delete m_fbo;
-//                delete m_multisampledFbo;
-//                QGLFramebufferObjectFormat format;
-
-//                format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
-//                format.setSamples(ctx->format().samples());
-//                m_multisampledFbo = new QGLFramebufferObject(m_size, format);
-//                {
-//                    QGLFramebufferObjectFormat format;
-//                    format.setAttachment(QGLFramebufferObject::NoAttachment);
-//                    m_fbo = new QGLFramebufferObject(m_size, format);
-//                }
-
-//                QSGPlainTexture *tex = new QSGPlainTexture;
-//                tex->setTextureId(m_fbo->texture());
-//                tex->setOwnsTexture(false);
-//                tex->setHasAlphaChannel(true);
-//                setOpaque(!tex->hasAlphaChannel());
-//                m_texture = QSGTextureRef(tex);
-//            } else {
-//                delete m_fbo;
-//                QGLFramebufferObjectFormat format;
-//                format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
-//                m_fbo = new QGLFramebufferObject(m_size, format);
-//                QSGPlainTexture *tex = new QSGPlainTexture;
-//                tex->setTextureId(m_fbo->texture());
-//                tex->setOwnsTexture(false);
-//                tex->setHasAlphaChannel(true);
-//                setOpaque(!tex->hasAlphaChannel());
-//                m_texture = QSGTextureRef(tex);
-//            }
-//        }
-//#endif
-
-//#ifdef QSGCANVASITEM_DEBUG
-//        qDebug() << "painting interval:" << m_elapsedTimer.nsecsElapsed();
-//        m_elapsedTimer.restart();
-//#endif
-//        //paint 2d
-//        if (m_ctx2d) {
-//            QPainter p;
-//#ifndef QSGCANVASITEM_PAINTING_ON_IMAGE
-//            if (m_multisampledFbo)
-//                p.begin(m_multisampledFbo);
-//            else if (m_fbo)
-//                p.begin(m_fbo);
-//            else
-//                return;
-//            // move the origin of coordinates to the down left corner and
-//            // scale coordinates and turn y-axis up
-//            QSize size = m_ctx2d->size();
-//            p.translate( 0, size.height());
-//            p.scale(1, -1);
-
-//            m_ctx2d->paint(&p);
-
-//            p.end();
-
-//            if (m_multisampledFbo) {
-//                QRect r(0, 0, m_fbo->width(), m_fbo->height());
-//                QGLFramebufferObject::blitFramebuffer(m_fbo, r, m_multisampledFbo, r);
-//            }
-
-//            if (m_ctx2d->requireCachedImage())
-//                m_ctx2d->setCachedImage(m_fbo->toImage());
-
-//#else
-//            m_painter.begin(m_ctx2d->paintDevice());
-//            m_ctx2d->paint(&m_painter);
-//            m_painter.end();
-
-//            if (m_texture.isNull()) {
-//                m_texture = QSGContext::current->createTexture(m_ctx2d->toImage());
-//            } else {
-//                QSGPlainTexture* t =static_cast<QSGPlainTexture*>(m_texture.texture());
-//                t->setImage(m_ctx2d->toImage());
-//            }
-//            m_ctx2d->setCachedImage(m_ctx2d->toImage());
-
-//#endif
-
-//#ifdef QSGCANVASITEM_DEBUG
-//            qDebug() << "painting time:" << m_elapsedTimer.nsecsElapsed();
-//            m_elapsedTimer.restart();
-//#endif
-//            emit painted();
-//        }
-//    }
-//}
-
-//QSGTextureRef CanvasItemTextureProvider::texture()
-//{
-//    return m_texture;
-//}
-//void CanvasItemTextureProvider::setContext2D(QSGContext2D *ctx2d)
-//{
-//    if (ctx2d && m_ctx2d != ctx2d) {
-//        m_ctx2d = ctx2d;
-//        connect(this, SIGNAL(painted()), m_ctx2d, SIGNAL(painted()));
-//    }
-//}
-//void CanvasItemTextureProvider::setRect(const QRectF &rect)
-//{
-//    if (rect == m_rect)
-//        return;
-//    m_rect = rect;
-//    markDirtyTexture();
-//}
-
-//void CanvasItemTextureProvider::setSize(const QSize &size)
-//{
-//    if (size == m_size)
-//        return;
-//    m_size = size;
-//    markDirtyTexture();
-//}
-
-//void CanvasItemTextureProvider::markDirtyTexture()
-//{
-//    m_dirtyTexture = true;
-//    emit textureChanged();
-//}
-//QSGCanvasItem::QSGCanvasItem(QSGItem *parent)
-//    : TextureItem(parent)
-//    , m_textureProvider(0)
-//    , m_context2dChanged(false)
-//    , m_context2d( new QSGContext2D(this))
-//    , m_fillMode(QSGCanvasItem::Stretch)
-//    , m_color(Qt::white)
-//{
-//    m_textureProvider = new CanvasItemTextureProvider(this);
-//    m_textureProvider->setContext2D(m_context2d);
-//    setTextureProvider(m_textureProvider, true);
-//    setFlag(QSGItem::ItemHasContents, true);
-//}
-
-//QSGCanvasItem::~QSGCanvasItem()
-//{
-//}
-
-//void QSGCanvasItem::componentComplete()
-//{
-//    m_context2d->setSize(width(), height());
-//    qDebug() << "m_context2d.size:" << m_context2d->size();
-//    connect(m_context2d, SIGNAL(changed()), this, SLOT(requestPaint()));
-//    QScriptEngine* scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
-//    if (scriptEngine != m_context2d->scriptEngine())
-//        m_context2d->setScriptEngine(scriptEngine);
-//    QSGItem::componentComplete();
-//}
-
-
-//void QSGCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-//{
-//    if (width() == 0 && height()
-//        && newGeometry.width() > 0 && newGeometry.height() > 0) {
-//        m_context2d->setSize(width(), height());
-//    }
-//    TextureItem::geometryChanged(newGeometry, oldGeometry);
-//}
-
-//void QSGCanvasItem::setFillMode(FillMode mode)
-//{
-//    if (m_fillMode == mode)
-//        return;
-
-//    m_fillMode = mode;
-//    update();
-//    emit fillModeChanged();
-//}
-
-//QColor QSGCanvasItem::color()
-//{
-//    return m_color;
-//}
-
-//void QSGCanvasItem::setColor(const QColor &color)
-//{
-//    if (m_color !=color) {
-//        m_color = color;
-//        colorChanged();
-//    }
-//}
-
-//QSGCanvasItem::FillMode QSGCanvasItem::fillMode() const
-//{
-//    return m_fillMode;
-//}
-
-
-
-//Node *QSGCanvasItem::updatePaintNode(Node *oldNode, UpdatePaintNodeData *data)
-//{
-//    if (width() <= 0 || height() <= 0) {
-//        delete oldNode;
-//        return 0;
-//    }
-
-//    TextureNodeInterface *node = static_cast<TextureNodeInterface *>(oldNode);
-
-//    if (node && m_context2d->isDirty()) {
-//        QRectF bounds = boundingRect();
-
-//        if (m_textureProvider) {
-//            m_textureProvider->setRect(QRectF(bounds.x(), bounds.y(), width(), height()));
-
-//            m_textureProvider->setSize(QSize(width(), height()));
-//            //m_textureProvider->setOpaque(true);
-//            m_textureProvider->setHorizontalWrapMode(QSGTextureProvider::ClampToEdge);
-//            m_textureProvider->setVerticalWrapMode(QSGTextureProvider::ClampToEdge);
-//            node->setTargetRect(bounds);
-//            node->setSourceRect(QRectF(0, 0, 1, 1));
-//            //            node->setTargetRect(image.rect());
-////            node->setSourceRect(QRectF(0, 0, 1, 1));
-////            d->textureProvider->setHorizontalWrapMode(QSGTextureProvider::ClampToEdge);
-////            d->textureProvider->setVerticalWrapMode(QSGTextureProvider::ClampToEdge);
-////            d->textureProvider->setFiltering(d->smooth ? QSGTextureProvider::Linear : QSGTextureProvider::Nearest);
-//        }
-
-//        if (m_context2dChanged) {
-//            //force textnode update the content
-//            node->setTexture(0);
-//            node->setTexture(m_textureProvider);
-//            m_context2dChanged = false;
-//        }
-//    } else {
-//        if (m_context2d->requireCachedImage())
-//            m_context2d->setCachedImage(QImage(width(), height(), QImage::Format_ARGB32_Premultiplied));
-//    }
-
-//    return TextureItem::updatePaintNode(oldNode, data);
-//}
 
 QT_END_NAMESPACE

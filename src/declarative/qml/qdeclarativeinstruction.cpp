@@ -160,7 +160,7 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "STORE_IMPORTED_SCRIPT\t" << instr->storeScript.value;
         break;
     case QDeclarativeInstruction::StoreScriptString:
-        qWarning().nospace() << idx << "\t\t" << "STORE_SCRIPT_STRING\t" << instr->storeScriptString.propertyIndex << "\t" << instr->storeScriptString.value << "\t" << instr->storeScriptString.scope;
+        qWarning().nospace() << idx << "\t\t" << "STORE_SCRIPT_STRING\t" << instr->storeScriptString.propertyIndex << "\t" << instr->storeScriptString.value << "\t" << instr->storeScriptString.scope << "\t" << instr->storeScriptString.bindingId;
         break;
     case QDeclarativeInstruction::AssignSignalObject:
         qWarning().nospace() << idx << "\t\t" << "ASSIGN_SIGNAL_OBJECT\t" << instr->assignSignalObject.signal << "\t\t\t" << datas.at(instr->assignSignalObject.signal);

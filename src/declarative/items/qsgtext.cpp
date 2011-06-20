@@ -103,10 +103,11 @@ QSGTextPrivate::QSGTextPrivate()
   lineHeightMode(QSGText::ProportionalHeight), lineCount(1), maximumLineCount(INT_MAX),
   maximumLineCountValid(false),
   texture(0),
-  imageCacheDirty(true), updateOnComponentComplete(true),
+  imageCacheDirty(false), updateOnComponentComplete(true),
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), naturalWidth(0), doc(0), layoutThread(0), nodeType(NodeIsNull)
+  layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
+  doc(0), layoutThread(0), nodeType(NodeIsNull)
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -290,6 +291,8 @@ void QSGTextPrivate::updateSize()
     int dy = q->height();
     QSize size(0, 0);
 
+    layoutThread = QThread::currentThread();
+
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
         QRect textRect = setupTextLayout();
@@ -377,8 +380,6 @@ QRect QSGTextPrivate::setupTextLayout()
 
     bool elideText = false;
     bool truncate = false;
-
-    layoutThread = QThread::currentThread();
 
     QFontMetrics fm(layout.font());
     elidePos = QPointF();
@@ -574,14 +575,15 @@ void QSGTextPrivate::invalidateImageCache()
 {
     Q_Q(QSGText);
 
-    if(cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && style != QSGText::Normal)){//If actually using the image cache
+    if(richTextAsImage || cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && style != QSGText::Normal)){//If actually using the image cache
         if (imageCacheDirty)
             return;
 
         imageCacheDirty = true;
-        imageCache = QPixmap();
-    }
-    if (q->isComponentComplete())
+
+        if (q->isComponentComplete())
+            QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+    } else if (q->isComponentComplete())
         q->update();
 }
 
@@ -590,6 +592,8 @@ void QSGTextPrivate::invalidateImageCache()
 */
 void QSGTextPrivate::checkImageCache()
 {
+    Q_Q(QSGText);
+
     if (!imageCacheDirty)
         return;
 
@@ -630,6 +634,8 @@ void QSGTextPrivate::checkImageCache()
     }
 
     imageCacheDirty = false;
+    textureImageCacheDirty = true;
+    q->update();
 }
 
 /*!
@@ -749,6 +755,7 @@ void QSGText::setText(const QString &n)
             d->ensureDoc();
             d->doc->setText(n);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -988,6 +995,7 @@ void QSGText::setTextFormat(TextFormat format)
     if (!wasRich && d->richText && isComponentComplete()) {
         d->ensureDoc();
         d->doc->setText(d->text);
+        d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
     }
 
     d->updateLayout();
@@ -1064,10 +1072,9 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     Q_UNUSED(data);
     Q_D(QSGText);
 
-    bool richTextAsImage = false;
-    if (d->richText) {
-        d->ensureDoc();
-        richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
+    if (d->text.isEmpty()) {
+        delete oldNode;
+        return 0;
     }
 
     QRectF bounds = boundingRect();
@@ -1077,10 +1084,9 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         d->updateLayout();
 
     // XXX todo - some styled text can be done by the QSGTextNode
-    if (richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
-        bool wasDirty = d->imageCacheDirty;
-
-        d->checkImageCache();
+    if (d->richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
+        bool wasDirty = d->textureImageCacheDirty;
+        d->textureImageCacheDirty = false;
 
         if (d->imageCache.isNull()) {
             delete oldNode;
@@ -1137,6 +1143,17 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         }
 
         return node;
+    }
+}
+
+bool QSGText::event(QEvent *e)
+{
+    Q_D(QSGText);
+    if (e->type() == QEvent::User) {
+        d->checkImageCache();
+        return true;
+    } else {
+        return QSGImplicitSizeItem::event(e);
     }
 }
 
@@ -1208,6 +1225,7 @@ void QSGText::componentComplete()
             d->ensureDoc();
             d->doc->setText(d->text);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
+            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }

@@ -39,44 +39,44 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "black"
     width: 360
     height: 540
     ParticleSystem{ id: sys }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         id: cp
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "#00FFFFFF"
         colorVariation: 0.4
     }
-    TrailEmitter{
+    Emitter{
     //burst on click
         id: bursty
         system: sys
         emitting: false
-        particlesPerSecond: 2000
-        particleDuration: 500
-        acceleration: AngleVector{ angle: 90; angleVariation: 360; magnitude: 640; }
-        particleSize: 8
-        particleEndSize: 16
-        particleSizeVariation: 4
+        emitRate: 2000
+        lifeSpan: 500
+        acceleration: AngledDirection{ angle: 90; angleVariation: 360; magnitude: 640; }
+        size: 8
+        endSize: 16
+        sizeVariation: 4
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         speedFromMovement: 4.0
         emitting: ma.pressed
         x: ma.mouseX
         y: ma.mouseY
-        particlesPerSecond: 400
-        particleDuration: 2000
-        acceleration: AngleVector{ angle: 90; angleVariation: 22; magnitude: 32; }
-        particleSize: 8
-        particleEndSize: 16
-        particleSizeVariation: 8
+        emitRate: 400
+        lifeSpan: 2000
+        acceleration: AngledDirection{ angle: 90; angleVariation: 22; magnitude: 32; }
+        size: 8
+        endSize: 16
+        sizeVariation: 8
     }
     MouseArea{
         id: ma

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     id: root
@@ -65,41 +65,42 @@ Rectangle{
         }
     }
 
-    TrailEmitter{
+    Emitter{
         particle: "stars"
         system: particles
-        particlesPerSecond: 40
-        particleDuration: 4000
+        emitRate: 40
+        lifeSpan: 4000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
-        speed: PointVector{ x: 220; xVariation: 40 }
+        size: 30
+        sizeVariation: 10
+        speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
-    TrailEmitter{
+    Emitter{
         particle: "roids"
         system: particles
-        particlesPerSecond: 10
-        particleDuration: 4000
+        emitRate: 10
+        lifeSpan: 4000
         emitting: true
-        particleSize: 30
-        particleSizeVariation: 10
-        speed: PointVector{ x: 220; xVariation: 40 }
+        size: 30
+        sizeVariation: 10
+        speed: PointDirection{ x: 220; xVariation: 40 }
         height: parent.height
     }
     ParticleSystem{
         id: particles
         anchors.fill: parent
     }
-    ColoredParticle{
+    ImageParticle{
         id: stars
         particles: ["stars"]
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
         color: "white"
         colorVariation: 0.1
+        alpha: 0
     }
-    SpriteParticle{
+    ImageParticle{
         id: roids
         particles: ["roids"]
         system: particles
@@ -112,20 +113,20 @@ Rectangle{
             speedModifiesDuration: -0.1
         }
     }
-    ColoredParticle{
+    ImageParticle{
         id: shot
         particles: ["shot"]
         system: particles
-        image: "content/star.png"
+        source: "content/star.png"
 
         color: "#0FF06600"
         colorVariation: 0.3
     }
-    ColoredParticle{
+    ImageParticle{
         id: engine
         particles: ["engine"]
         system: particles
-        image: "content/particle4.png"
+        source: "content/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {
@@ -144,9 +145,11 @@ Rectangle{
 
         colorVariation: 0.2
     }
-    GravitationalSingularity{
+    PointAttractor{
         id: gs; x: root.width/2; y: root.height/2; strength: 4000000;
         system: particles
+        physics: PointAttractor.Acceleration
+        proportionalToDistance: PointAttractor.Quadratic
     }
     Kill{
         system: particles
@@ -166,27 +169,27 @@ Rectangle{
             drag.axis: Drag.XandYAxis
             drag.target: ship
         }
-        TrailEmitter{
+        Emitter{
             particle: "engine"
             system: particles
-            particlesPerSecond: 200
-            particleDuration: 1000
+            emitRate: 200
+            lifeSpan: 1000
             emitting: true
-            particleSize: 10
-            particleEndSize: 4
-            particleSizeVariation: 4
-            speed: PointVector{ x: -128; xVariation: 32 }
+            size: 10
+            endSize: 4
+            sizeVariation: 4
+            speed: PointDirection{ x: -128; xVariation: 32 }
             height: parent.height
             width: 20
         }
-        TrailEmitter{
+        Emitter{
             particle: "shot"
             system: particles
-            particlesPerSecond: 32
-            particleDuration: 2000
+            emitRate: 32
+            lifeSpan: 2000
             emitting: spacePressed
-            particleSize: 40
-            speed: PointVector{ x: 256; }
+            size: 40
+            speed: PointDirection{ x: 256; }
             x: parent.width
             y: parent.height/2
         }

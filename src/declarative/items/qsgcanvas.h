@@ -75,6 +75,11 @@ public:
 
     QSGEngine *sceneGraphEngine() const;
 
+    void setVSyncAnimations(bool enabled);
+    bool vsyncAnimations() const;
+
+    QImage grabFrameBuffer();
+
 Q_SIGNALS:
     void sceneGraphInitialized();
 
@@ -109,8 +114,6 @@ private Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(QSGCanvas)
-    Q_PRIVATE_SLOT(d_func(), void _q_animationStarted())
-    Q_PRIVATE_SLOT(d_func(), void _q_animationStopped())
 };
 
 QT_END_NAMESPACE

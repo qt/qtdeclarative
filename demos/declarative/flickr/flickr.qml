@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content"
 
 Item {
@@ -56,21 +56,21 @@ Item {
             id: bgParticles
             startTime: 16000
         }
-        ColoredParticle {
+        ImageParticle {
             particles: ["trail"]
-            image: "content/images/particle.png"
+            source: "content/images/particle.png"
             color: "#1A1A6F"
             alpha: 0.1
             colorVariation: 0.01
             blueVariation: 0.8
             system: bgParticles
         }
-        TrailEmitter {
+        Emitter {
             particle: "drops"
             width: parent.width
-            particlesPerSecond: 0.5
-            particleDuration: 20000
-            speed: PointVector{
+            emitRate: 0.5
+            lifeSpan: 20000
+            speed: PointDirection{
                 y: {screen.height/18} 
             }
             system: bgParticles
@@ -78,16 +78,16 @@ Item {
         FollowEmitter {
             follow: "drops"
             particle: "trail"
-            particlesPerParticlePerSecond: 18
-            particleSize: 32
-            particleEndSize: 0
-            particleSizeVariation: 4
-            particleDuration: 1200
+            emitRatePerParticle: 18
+            size: 32
+            endSize: 0
+            sizeVariation: 4
+            lifeSpan: 1200
             system: bgParticles
             anchors.fill: parent
-            emissionWidth: 16
-            emissionHeight: 16
-            emissionShape: Ellipse{}
+            emitWidth: 16
+            emitHeight: 16
+            emitShape: EllipseShape{}
         }
 
         VisualDataModel{

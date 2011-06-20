@@ -206,10 +206,7 @@ void QSGRenderer::renderScene()
     class B : public Bindable
     {
     public:
-        B() : m_ctx(const_cast<QGLContext *>(QGLContext::currentContext())) { }
         void bind() const { QGLFramebufferObject::bindDefault(); }
-    private:
-        QGLContext *m_ctx;
     } b;
     renderScene(b);
 }
@@ -230,6 +227,21 @@ void QSGRenderer::renderScene(const Bindable &bindable)
     bindable.bind();
 #ifdef QSG_RENDERER_TIMING
     int bindTime = frameTimer.elapsed();
+#endif
+
+#ifndef QT_NO_DEBUG
+    // Sanity check that attribute registers are disabled
+    {
+        GLint count;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
+        GLint enabled;
+        for (int i=0; i<count; ++i) {
+            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+            if (enabled) {
+                qWarning("QSGRenderer: attribute %d is enabled, this can lead to memory corruption and crashes.", i);
+            }
+        }
+    }
 #endif
 
     render();

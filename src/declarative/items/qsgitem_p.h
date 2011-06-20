@@ -324,6 +324,7 @@ public:
     void deliverWheelEvent(QGraphicsSceneWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QGraphicsSceneHoverEvent *);
+    void deliverDragEvent(QSGDragEvent *);
 
     bool calcEffectiveVisible() const;
     void setEffectiveVisibleRecur(bool);

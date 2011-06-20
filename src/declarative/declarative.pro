@@ -19,7 +19,7 @@ exists("qdeclarative_enable_gcov") {
     LIBS += -lgcov
 }
 
-include($$QT_SOURCE_TREE/src/qbase.pri)
+load(qt_module_config)
 
 HEADERS += qtdeclarativeversion.h
 
@@ -33,6 +33,7 @@ include(qml/qml.pri)
 include(debugger/debugger.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
+include(particles/particles.pri)
 
 symbian: {
     TARGET.UID3=0x2001E623

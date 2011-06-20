@@ -1,7 +1,7 @@
 TARGET = qmldbg_ost
 QT       += declarative network
 
-include(../../qpluginbase.pri)
+load(qt_plugin)
 
 QTDIR_build:DESTDIR  = $$QT_BUILD_TREE/plugins/qmltooling
 QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"

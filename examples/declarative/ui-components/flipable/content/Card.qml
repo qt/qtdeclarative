@@ -43,7 +43,7 @@ import QtQuick 1.0
 Flipable {
     id: container
 
-    property alias image: frontImage.source
+    property alias source: frontImage.source
     property bool flipped: true
     property int xAxis: 0
     property int yAxis: 0

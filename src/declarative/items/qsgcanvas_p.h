@@ -55,6 +55,7 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
+#include "qsgevent.h"
 #include <private/qdeclarativeguard_p.h>
 
 #include <private/qsgcontext_p.h>
@@ -78,6 +79,8 @@ public:
 class QSGCanvasPrivate;
 
 class QTouchEvent;
+class QSGCanvasRenderThread;
+
 class QSGCanvasPrivate : public QGLWidgetPrivate
 {
 public:
@@ -114,8 +117,8 @@ public:
     bool deliverHoverEvent(QSGItem *, QGraphicsSceneHoverEvent *);
     void sendHoverEvent(QEvent::Type, QSGItem *, QGraphicsSceneHoverEvent *);
     void clearHover();
-
-    void stopRenderingThread();
+    void deliverDragEvent(QSGDragEvent *);
+    bool deliverDragEvent(QSGItem *item, QSGDragEvent *);
 
     QDeclarativeGuard<QSGItem> hoverItem;
     enum FocusOption {
@@ -135,11 +138,7 @@ public:
     void initializeSceneGraph();
     void polishItems();
     void syncSceneGraph();
-    void renderSceneGraph();
-    void runThread();
-
-    void _q_animationStarted();
-    void _q_animationStopped();
+    void renderSceneGraph(const QSize &size);
 
     QSGItem::UpdatePaintNodeData updatePaintNodeData;
 
@@ -156,24 +155,14 @@ public:
 
     QSGContext *context;
 
-    uint contextInThread : 1;
+    uint contextFailed : 1;
     uint threadedRendering : 1;
-    uint exitThread : 1;
     uint animationRunning: 1;
-    uint idle : 1;              // Set to true when render thread sees no change and enters a wait()
-    uint needsRepaint : 1;      // Set by callback from render if scene needs repainting.
     uint renderThreadAwakened : 1;
-    uint inSync: 1;
 
-    struct MyThread : public QThread {
-        MyThread(QSGCanvasPrivate *r) : renderer(r) {}
-        virtual void run() { renderer->runThread(); }
-        static void doWait() { QThread::msleep(16); }
-        QSGCanvasPrivate *renderer;
-    };
-    MyThread *thread;
-    QMutex mutex;
-    QWaitCondition wait;
+    uint vsyncAnimations : 1;
+
+    QSGCanvasRenderThread *thread;
     QSize widgetSize;
     QSize viewportSize;
 
@@ -181,6 +170,75 @@ public:
 
     QHash<int, QSGItem *> itemForTouchPointId;
 };
+
+
+
+class QSGCanvasRenderThread : public QThread
+{
+    Q_OBJECT
+public:
+    QSGCanvasRenderThread()
+        : mutex(QMutex::NonRecursive)
+        , isGuiBlocked(0)
+        , isPaintCompleted(false)
+        , isGuiBlockPending(false)
+        , isRenderBlocked(false)
+        , isExternalUpdatePending(false)
+        , syncAlreadyHappened(false)
+        , inSync(false)
+        , doGrab(false)
+        , shouldExit(false)
+        , hasExited(false)
+    {}
+
+    inline void lock() { mutex.lock(); }
+    inline void unlock() { mutex.unlock(); }
+    inline void wait() { condition.wait(&mutex); }
+    inline void wake() { condition.wakeOne(); }
+
+    void lockInGui();
+    void unlockInGui();
+
+    void paint();
+    void resize(const QSize &size);
+    void startRenderThread();
+    void stopRenderThread();
+    void exhaustSyncEvent();
+    void sync(bool guiAlreadyLocked);
+
+    QImage grab();
+
+public slots:
+    void animationStarted();
+    void animationStopped();
+
+public:
+    QMutex mutex;
+    QWaitCondition condition;
+
+    QSize windowSize;
+    QSize renderedSize;
+
+    QSGCanvas *renderer;
+    QSGCanvasPrivate *d;
+
+    int isGuiBlocked;
+    uint isPaintCompleted : 1;
+    uint isGuiBlockPending : 1;
+    uint isRenderBlocked : 1;
+    uint isExternalUpdatePending : 1;
+    uint syncAlreadyHappened : 1;
+    uint inSync : 1;
+
+    uint doGrab : 1;
+    uint shouldExit : 1;
+    uint hasExited : 1;
+
+    QImage grabContent;
+
+    void run();
+};
+
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGCanvasPrivate::FocusOptions)
 

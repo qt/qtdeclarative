@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 
-import Qt.labs.particles 2.0
-import Qt.labs.particles 2.0 as Qlp
+import QtQuick.Particles 2.0
+import QtQuick.Particles 2.0 as Qlp
 import QtQuick 2.0
 
 Item {
@@ -65,42 +65,42 @@ Item {
         }
 
     }
-    ColoredParticle {
+    ImageParticle {
         system: sys
         particles: ["starfield"]
-        image: "content/star.png"
+        source: "content/star.png"
         colorVariation: 0.3
         color: "white"
     }
-    TrailEmitter {
+    Emitter {
         id: starField
         system: sys
         particle: "starfield"
 
-        particlesPerSecond: 80
-        particleDuration: 2500
+        emitRate: 80
+        lifeSpan: 2500
 
         anchors.centerIn: parent
 
-        //acceleration: AngleVector{angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent speed?
-        acceleration: PointVector{ xVariation: 200; yVariation: 200; }
+        //acceleration: AngledDirection{angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent speed?
+        acceleration: PointDirection{ xVariation: 200; yVariation: 200; }
 
-        particleSize: 0
-        particleEndSize: 80
-        particleSizeVariation: 10
+        size: 0
+        endSize: 80
+        sizeVariation: 10
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         particle: "meteor"
-        particlesPerSecond: 12
-        particleDuration: 5000
+        emitRate: 12
+        lifeSpan: 5000
         emitting: true
-        acceleration: PointVector{ xVariation: 80; yVariation: 80; }
-        particleSize: 15
-        particleEndSize: 300
+        acceleration: PointDirection{ xVariation: 80; yVariation: 80; }
+        size: 15
+        endSize: 300
         anchors.centerIn: parent
      }
-    SpriteParticle{
+    ImageParticle{
         system: sys
         particles: ["meteor"]
         sprites:[Sprite{
@@ -168,11 +168,11 @@ Item {
 
         }
     }
-    ColoredParticle{
+    ImageParticle{
         z:0 
         system: sys
         particles: ["exhaust"]
-        image: "content/particle4.png"
+        source: "content/particle4.png"
 
         color: "orange"
         SequentialAnimation on color {
@@ -191,23 +191,23 @@ Item {
 
         colorVariation: 0.2
     }
-    TrailEmitter{
+    Emitter{
         id: trailsNormal2
         system: sys
         particle: "exhaust"
 
-        particlesPerSecond: 300
-        particleDuration: 500
+        emitRate: 300
+        lifeSpan: 500
 
         y: holder.y
         x: holder.x 
 
-        speed: PointVector{ xVariation: 40; yVariation: 40; }
+        speed: PointDirection{ xVariation: 40; yVariation: 40; }
         speedFromMovement: 16
 
-        acceleration: PointVector{ xVariation: 10; yVariation: 10; }
+        acceleration: PointDirection{ xVariation: 10; yVariation: 10; }
 
-        particleSize: 4
-        particleSizeVariation: 4
+        size: 4
+        sizeVariation: 4
     }
 }
