@@ -60,11 +60,11 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
     qreal ds = 0;
     switch(m_proportionalToDistance){
     case Quadratic:
-        ds = (m_strength / qMax(1.,r*r)) * dt;
+        ds = (m_strength / qMax<qreal>(1.,r*r)) * dt;
         break;
     case Linear://also default
     default:
-        ds = (m_strength / qMax(1.,r)) * dt;
+        ds = (m_strength / qMax<qreal>(1.,r)) * dt;
     }
     dx = ds * cos(theta);
     dy = ds * sin(theta);
