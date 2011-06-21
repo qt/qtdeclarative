@@ -114,11 +114,6 @@ class Q_DECLARATIVE_EXPORT QSGVisualItemModel : public QSGVisualModel
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
-    enum CachePolicy {
-        Persist,
-        Reclaim
-    };
-
     QSGVisualItemModel(QObject *parent=0);
     virtual ~QSGVisualItemModel() {}
 
@@ -136,10 +131,14 @@ public:
     Q_INVOKABLE QScriptValue getItemInfo(int index) const;
 
     Q_INVOKABLE void append(QSGItem *item);
+    Q_INVOKABLE void append(QSGVisualItemModel *sourceModel, int sourceIndex, int count);
     Q_INVOKABLE void insert(int index, QSGItem *item);
+    Q_INVOKABLE void insert(int destinationIndex, QSGVisualItemModel *sourceModel, int sourceIndex, int count);
     Q_INVOKABLE void remove(int index, int count);
     Q_INVOKABLE void move(int from, int to, int count);
-    Q_INVOKABLE void replace(int index, QSGItem *item, QSGVisualItemModel::CachePolicy policy = Persist);
+    Q_INVOKABLE void replace(int index, QSGItem *item);
+    Q_INVOKABLE void replace(int destinationIndex, QSGVisualItemModel *sourceModel, int sourceIndex, int count);
+
 
     QDeclarativeListProperty<QObject> children();
 

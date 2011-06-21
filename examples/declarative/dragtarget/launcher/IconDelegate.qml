@@ -7,6 +7,15 @@ Item {
 
     width: 64; height: 64
 
+    Rectangle {
+        anchors.fill: parent
+        opacity: dragArea.drag.active ? 0.5 : 0.0
+        color: "lightgrey"
+        radius: 12
+
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+    }
+
     MouseArea {
         id: dragArea
 
@@ -17,6 +26,7 @@ Item {
         anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
 
         drag.target: dragArea
+        drag.data: index
 
         Binding {
             target: dragArea
