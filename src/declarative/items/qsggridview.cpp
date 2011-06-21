@@ -607,6 +607,8 @@ FxGridItemSG *QSGGridViewPrivate::createItem(int modelIndex)
                 listItem->item->setParentItem(q->contentItem());
                 model->completeItem();
             } else {
+                if (item->parentItem())
+                    item->setPos(q->contentItem()->mapFromItem(item->parentItem(), item->pos()));
                 listItem->item->setParentItem(q->contentItem());
             }
             unrequestedItems.remove(listItem->item);

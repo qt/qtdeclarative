@@ -14,7 +14,6 @@ Rectangle {
         messageBubble.sending = true
         visualModel.insert(visualModel.count, messageBubble)
         messageBubble = bubbleComponent.createObject(composer, { "messageId": ++messageCounter } )
-        messageInput.text = "";
     }
 
     width: 480; height: 640
@@ -36,6 +35,11 @@ Rectangle {
         id: messageView
         anchors { left: parent.left; top: parent.top; right: parent.right; bottom: composer.top; margins: 2 }
         spacing: 5
+
+        add: Transition {
+            NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 1500 }
+        }
+
         model: VisualItemModel {
             id: visualModel
 
@@ -45,13 +49,12 @@ Rectangle {
                 }
 
                 delegate: Bubble {
+                    y: -height
                     outbound: model.outbound
                     sender: model.sender
                     message:  model.message
                 }
             }
-
-            onCountChanged: messageView.positionViewAtEnd()
 
             onItemDataInserted: {
                 for (var i = 0; i < indexes.length; ++i) {
@@ -70,13 +73,8 @@ Rectangle {
 
                 }
             }
-        }
-    }
 
-    Binding {
-        target: messageBubble
-        property: "message"
-        value: messageInput.text
+        }
     }
 
     Timer {
@@ -107,22 +105,11 @@ Rectangle {
             messageId: 0
         }
 
-        TextInput {
-            id: messageInput
-
-            anchors.fill: messageBubble
-
-            focus: true
-            opacity: 0.0
-
-            onAccepted: root.send()
-        }
-
         Rectangle {
             id: sendButton
 
             anchors {
-                left: messageInput.right; right: parent.right; top: parent.top; bottom: parent.bottom
+                left: messageBubble.right; right: parent.right; top: parent.top; bottom: parent.bottom
                 leftMargin: 2; rightMargin: 1; bottomMargin: 1
             }
             radius: 6
