@@ -151,7 +151,8 @@ QPointF QSGParentAnimationPrivate::computeTransformOrigin(QSGItem::TransformOrig
 
 void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                        const QObjectList &)
 {
     Q_D(QSGParentAnimation);
 
@@ -209,7 +210,6 @@ void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
         QDeclarativeAction &action = actions[i];
         if (action.event && action.event->typeName() == QLatin1String("ParentChange")
             && (!d->target || static_cast<QSGParentChange*>(action.event)->object() == d->target)) {
-
             QSGParentChange *pc = static_cast<QSGParentChange*>(action.event);
             QDeclarativeAction myAction = action;
             data->reverse = action.reverseEvent;
@@ -406,7 +406,8 @@ void QSGAnchorAnimation::setEasing(const QEasingCurve &e)
 
 void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
-                        TransitionDirection direction)
+                        TransitionDirection direction,
+                        const QObjectList &)
 {
     Q_UNUSED(modified);
     Q_D(QSGAnchorAnimation);

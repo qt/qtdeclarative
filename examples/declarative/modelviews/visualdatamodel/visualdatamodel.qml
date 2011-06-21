@@ -37,7 +37,10 @@ Rectangle {
         spacing: 5
 
         add: Transition {
-            NumberAnimation { properties: "y"; easing.type: Easing.InOutQuad; duration: 1500 }
+            ParentAnimation {
+                via: root
+                NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad; duration: 1500 }
+            }
         }
 
         model: VisualItemModel {

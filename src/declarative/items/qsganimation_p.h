@@ -86,7 +86,8 @@ Q_SIGNALS:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 
@@ -118,7 +119,8 @@ Q_SIGNALS:
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+                            TransitionDirection direction,
+                            const QObjectList &defaultTargets = QObjectList());
     virtual QAbstractAnimation *qtAnimation();
 };
 

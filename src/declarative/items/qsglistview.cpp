@@ -54,6 +54,7 @@
 #include <private/qdeclarativesmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include <private/qdeclarativetransitionmanager_p_p.h>
+#include <private/qsgstateoperations_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -227,13 +228,13 @@ class ListViewTransitionManager : public QDeclarativeTransitionManager
 public:
     ~ListViewTransitionManager();
 
-    void addItem(FxListItemSG *item, const QPointF &pos);
+    void addItem(FxListItemSG *item, const QPointF &pos, QSGItem *parentItem);
     void startTransition();
 
     bool isActive() const;
     void itemReleased(FxListItemSG *);
 
-    static ListViewTransitionManager *getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent);
+    static ListViewTransitionManager *getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent, QDeclarativeContext *context);
 
 protected:
     virtual void finished();
@@ -751,9 +752,8 @@ FxListItemSG *QSGListViewPrivate::createItem(int modelIndex)
             listItem->item->setParentItem(q->contentItem());
             model->completeItem();
         } else {
-            if (item->parentItem())
-                item->setPos(q->contentItem()->mapFromItem(item->parentItem(), item->pos()));
-            listItem->item->setParentItem(q->contentItem());
+            if (!item->parentItem())
+                listItem->item->setParentItem(q->contentItem());
         }
         QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
         itemPrivate->addItemChangeListener(this, QSGItemPrivate::Geometry);
@@ -1649,12 +1649,21 @@ bool ListViewTransitionManager::isActive() const
     return listItems.count() > 0;
 }
 
-void ListViewTransitionManager::addItem(FxListItemSG *item, const QPointF &pos)
+void ListViewTransitionManager::addItem(FxListItemSG *item, const QPointF &pos, QSGItem *parentItem)
 {
     item->posTransition = this;
     item->posAfterTransition = pos;
     listItems << item;
 
+    if (item->item->parentItem() != parentItem) {
+        QSGParentChange *pc = new QSGParentChange(item->item);
+        pc->setObject(item->item);
+        pc->setParent(parentItem);
+        QDeclarativeAction pcAction;
+        pcAction.specifiedObject = item->item;
+        pcAction.event = pc;
+        actions << pcAction;
+    }
     actions << QDeclarativeAction(item->item, QLatin1String("x"), QVariant(pos.x()));
     actions << QDeclarativeAction(item->item, QLatin1String("y"), QVariant(pos.y()));
 
@@ -1692,18 +1701,23 @@ void ListViewTransitionManager::finished()
         delete this;
 }
 
-ListViewTransitionManager *ListViewTransitionManager::getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent)
+ListViewTransitionManager *ListViewTransitionManager::getManager(QSGListViewPrivate *p, QDeclarativeComponent *transitionComponent, QDeclarativeContext *context)
 {
     static ListViewTransitionManager *defaultManager = 0;
     if (!defaultManager) {
-        defaultManager = new ListViewTransitionManager(p, false,
-                qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+        QDeclarativeContext *c = new QDeclarativeContext(context);
+        QDeclarativeTransition *transition = qobject_cast<QDeclarativeTransition*>(transitionComponent->create(c));
+        defaultManager = new ListViewTransitionManager(p, false, transition);
+        c->setParent(transition);
     }
 
     if (!defaultManager->isActive())
         return defaultManager;
 
-    return new ListViewTransitionManager(p, true, qobject_cast<QDeclarativeTransition*>(transitionComponent->create()));
+    QDeclarativeContext *c = new QDeclarativeContext(context);
+    QDeclarativeTransition *transition = qobject_cast<QDeclarativeTransition*>(transitionComponent->create(c));
+    c->setParent(transition);
+    return new ListViewTransitionManager(p, true, transition);
 }
 
 
@@ -2898,7 +2912,7 @@ void QSGListView::itemsInserted(int modelIndex, int count)
     int diff = 0;
     QList<FxListItemSG*> added;
     ListViewTransitionManager *transition = d->addTransitionComponent ?
-        ListViewTransitionManager::getManager(d, d->addTransitionComponent) : 0;
+            ListViewTransitionManager::getManager(d, d->addTransitionComponent, qmlContext(this)) : 0;
     bool addedVisible = false;
     FxListItemSG *firstVisible = d->firstVisibleItem();
     if (firstVisible && pos < firstVisible->position()) {
@@ -2944,7 +2958,7 @@ void QSGListView::itemsInserted(int modelIndex, int count)
             FxListItemSG *item = d->createItem(modelIndex + i);
             d->visibleItems.insert(index, item);
             if (transition) {
-                transition->addItem(item, item->positionIfMovedTo(pos, true));
+                transition->addItem(item, item->positionIfMovedTo(pos, true), contentItem());
                 d->indexesInTransition.insert(item->index);
             } else {
                 item->setPosition(pos);
