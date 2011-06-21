@@ -63,8 +63,6 @@ public:
     bool fade() const { return m_fade; }
 
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    virtual void load(QSGParticleData*);
-    virtual void reload(QSGParticleData*);
 
     static QSGItemParticleAttached *qmlAttachedProperties(QObject *object);
     QDeclarativeComponent* delegate() const
@@ -95,7 +93,8 @@ public slots:
 
 protected:
     virtual void reset();
-    virtual void resize(int oldCount, int newCount);
+    virtual void reload(int idx);
+    virtual void initialize(int idx);
     void prepareNextFrame();
 private slots:
     void tick();
@@ -105,9 +104,6 @@ private:
     bool m_fade;
 
     QList<QSGItem*> m_pendingItems;
-    QVector<QSGItem*> m_items;
-    QVector<QSGParticleData*> m_data;
-    QVector<int> m_idx;
     QList<int> m_available;
     QSet<QSGItem*> m_stasis;
     qreal m_lastT;

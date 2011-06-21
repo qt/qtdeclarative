@@ -70,17 +70,17 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
     dy = ds * sin(theta);
     switch(m_physics){
     case Position:
-        d->pv.x = (d->pv.x + dx);
-        d->pv.y = (d->pv.y + dy);
+        d->x = (d->x + dx);
+        d->y = (d->y + dy);
         break;
     case Acceleration:
-        d->setInstantaneousAX(d->pv.ax + dx);
-        d->setInstantaneousAY(d->pv.ay + dy);
+        d->setInstantaneousAX(d->ax + dx);
+        d->setInstantaneousAY(d->ay + dy);
         break;
     case Velocity: //also default
     default:
-        d->setInstantaneousSX(d->pv.sx + dx);
-        d->setInstantaneousSY(d->pv.sy + dy);
+        d->setInstantaneousSX(d->sx + dx);
+        d->setInstantaneousSY(d->sy + dy);
     }
 
     return true;

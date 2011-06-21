@@ -62,8 +62,6 @@ class QSGCustomParticle : public QSGParticlePainter
 
 public:
     explicit QSGCustomParticle(QSGItem* parent=0);
-    virtual void load(QSGParticleData*);
-    virtual void reload(QSGParticleData*);
 
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
     void setFragmentShader(const QByteArray &code);
@@ -77,6 +75,9 @@ Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
 protected:
+    virtual void initialize(int idx);
+    virtual void reload(int idx);
+
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
     void setSource(const QVariant &var, int index);
@@ -108,9 +109,6 @@ private:
     QSGShaderEffectNode* m_node;
     qreal m_lastTime;
 
-    bool m_resizePending;
-    QVector<PlainVertices*> m_pendingResizeVector;
-    PlainVertices* m_defaultVertices;
 };
 
 QT_END_NAMESPACE

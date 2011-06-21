@@ -64,11 +64,11 @@ bool QSGGravityAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
     bool changed = false;
-    if(d->pv.ax != m_xAcc){
+    if(d->ax != m_xAcc){
         d->setInstantaneousAX(m_xAcc);
         changed = true;
     }
-    if(d->pv.ay != m_yAcc){
+    if(d->ay != m_yAcc){
         d->setInstantaneousAY(m_yAcc);
         changed = true;
     }

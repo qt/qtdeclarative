@@ -61,8 +61,9 @@ class QSGParticlePainter : public QSGItem
 
 public:
     explicit QSGParticlePainter(QSGItem *parent = 0);
-    virtual void load(QSGParticleData*);
-    virtual void reload(QSGParticleData*);
+    //Data Interface to system
+    void load(QSGParticleData*);
+    void reload(QSGParticleData*);
     void setCount(int c);
     int count();
     QSGParticleSystem* system() const
@@ -94,68 +95,38 @@ void setParticles(QStringList arg)
 }
 private slots:
     void calcSystemOffset();
-    void updateParticleStarts();
 
 protected:
+    /* Reset resets all your internal data structures. But anything attached to a particle should
+       be in attached data. So reset + reloads should have no visible effect.
+       ###Hunt down all cases where we do a complete reset for convenience and be more targeted
+    */
     virtual void reset();
-    virtual void componentComplete();
 
+    virtual void componentComplete();
+    //Data interface to painters
+    QVector<QSGParticleData*> m_data; //Actually stored in arbitrary order,
+    QVector<QObject*> m_attachedData; //This data will be moved along with m_data in resizes (but you own it)
+    virtual void initialize(int){}
+    virtual void reload(int){}//If you need to do something on size changed, check m_data size in this? Or we reset you every time?
 
     QSGParticleSystem* m_system;
     friend class QSGParticleSystem;
     int m_count;
     bool m_pleaseReset;
     QStringList m_particles;
-    QHash<int,QPair<int, int> > m_particleStarts; //Group, size, idx
-    int m_lastStart;
     QPointF m_systemOffset;
 
-    template <typename VertexStruct>//just convenience
-    void vertexCopy(VertexStruct &b, const ParticleVertex& a)
-    {
-        b.x = a.x - m_systemOffset.x();
-        b.y = a.y - m_systemOffset.y();
-        b.t = a.t;
-        b.lifeSpan = a.lifeSpan;
-        b.size = a.size;
-        b.endSize = a.endSize;
-        b.sx = a.sx;
-        b.sy = a.sy;
-        b.ax = a.ax;
-        b.ay = a.ay;
-    }
-
-    //###Abstracted primarily for code reuse. Demote to subclasses?
-    int particleTypeIndex(QSGParticleData*);
-    virtual void resize(int oldCount, int newCount);
-    template <typename T>
-    void groupShuffle(QVector<T> &v, const T& zero)//Must be called inside resize
-    {
-        //TODO: In place shuffling because it's faster
-        QVector<T> v0(v);
-        v.clear();
-        v.resize(m_count);
-        int lastStart = 0;
-        QList<int> particleList;
-        if(m_particles.isEmpty())
-            particleList << 0;
-        foreach(const QString &s, m_particles)
-            particleList << m_system->m_groupIds[s];
-
-        foreach(int gIdx, particleList){
-            QSGParticleGroupData *gd = m_system->m_groupData[gIdx];
-            for(int i=0; i<gd->data.size(); i++){//TODO: When group didn't exist before
-                int newIdx = lastStart + i;//Have to make the same way as in updateParticleStarts
-                if(i >= m_particleStarts[gIdx].first || v0.size() <= m_particleStarts[gIdx].second + i)
-                    v[newIdx] = zero;
-                else
-                    v[newIdx] = v0[m_particleStarts[gIdx].second + i];
-            }
-            lastStart += gd->size;
-        }
-    }
 
 private:
+    int m_lastStart;
+    QHash<int, QPair<int, int> > m_particleStarts;
+    int particleTypeIndex(QSGParticleData* d);//Now private
+    void resize(int, int);
+
+    QSGParticleData* m_sentinel;
+    //QVector<QSGParticleData*> m_shadowData;//For when we implement overwrite: false
+    bool m_inResize;
 };
 
 QT_END_NAMESPACE

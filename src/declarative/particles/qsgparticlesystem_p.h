@@ -173,27 +173,17 @@ private:
     QSignalMapper m_emitterMapper;
 };
 
-//TODO: Clean up all this into ParticleData
-
-struct ParticleVertex {
-    float x;
-    float y;
-    float t;
-    float lifeSpan;
-    float size;
-    float endSize;
-    float sx;
-    float sy;
-    float ax;
-    float ay;
-    //TODO: Need opacity over life control. More variable size over life?
+struct Color4ub {
+    uchar r;
+    uchar g;
+    uchar b;
+    uchar a;
 };
 
 class QSGParticleData{
 public:
+    //TODO: QObject like memory management (without the cost, just attached to system)
     QSGParticleData();
-
-    ParticleVertex pv;
 
     //Convenience functions for working backwards, because parameters are from the start of particle life
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
@@ -221,6 +211,35 @@ public:
     QSGParticleEmitter* e;//### Needed?
     QSGParticleSystem* system;
     int index;
+
+    //General Position Stuff
+    float x;
+    float y;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float sx;
+    float sy;
+    float ax;
+    float ay;
+
+    //Other stuff, now universally shared
+    Color4ub color;
+    float xx;
+    float xy;
+    float yx;
+    float yy;
+    float rotation;
+    float rotationSpeed;
+    float autoRotate;//Assume that GPUs prefer floats to bools
+    float animIdx;
+    float frameDuration;
+    float frameCount;
+    float animT;
+    float r;
+    QSGItem* delegate;
+    int modelIndex;
 
     void debugDump();
     bool stillAlive();

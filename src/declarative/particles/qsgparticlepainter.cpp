@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
-    m_system(0), m_count(0), m_lastStart(0)
+    m_system(0), m_count(0), m_lastStart(0), m_sentinel(new QSGParticleData)
 {
     connect(this, SIGNAL(xChanged()),
             this, SLOT(calcSystemOffset()));
@@ -78,46 +78,34 @@ void QSGParticlePainter::setSystem(QSGParticleSystem *arg)
     }
 }
 
-void QSGParticlePainter::load(QSGParticleData*)
+void QSGParticlePainter::load(QSGParticleData* d)
 {
+    int idx = particleTypeIndex(d);
+    m_data[idx] = d;
+    initialize(idx);
+    reload(idx);
 }
 
-void QSGParticlePainter::reload(QSGParticleData*)
+void QSGParticlePainter::reload(QSGParticleData* d)
 {
+    reload(particleTypeIndex(d));
 }
 
 void QSGParticlePainter::reset()
 {
     //Have to every time because what it's emitting may have changed and that affects particleTypeIndex
-    if(m_system)
-        updateParticleStarts();
+    if(m_system && !m_inResize)
+        resize(0,1);//###Fix this by making resize take sensible arguments
+    //###This also means double resets. Make reset not virtual?
 }
 
-void QSGParticlePainter::resize(int, int)
+void QSGParticlePainter::resize(int oldSize, int newSize)
 {
-}
-
-
-void QSGParticlePainter::setCount(int c)
-{
-    Q_ASSERT(c >= 0); //XXX
-    if(c == m_count)
+    if(newSize == oldSize)//TODO: What if particles switched so indices change but total count is the same?
         return;
-    int lastCount = m_count;
-    m_count = c;
-    resize(lastCount, m_count);//### is virtual needed? Or should I just use the signal?
-    updateParticleStarts();
-    emit countChanged();
-}
 
-int QSGParticlePainter::count()
-{
-    return m_count;
-}
-
-
-void QSGParticlePainter::updateParticleStarts()
-{
+    QHash<int, QPair<int, int> > oldStarts(m_particleStarts);
+    //Update particle starts datastore
     m_particleStarts.clear();
     m_lastStart = 0;
     QList<int> particleList;
@@ -130,6 +118,47 @@ void QSGParticlePainter::updateParticleStarts()
         m_particleStarts.insert(gIdx, qMakePair<int, int>(gd->size, m_lastStart));
         m_lastStart += gd->size;
     }
+
+    //Shuffle stuff around
+    //TODO: In place shuffling because it's faster
+    QVector<QSGParticleData*> oldData(m_data);
+    QVector<QObject*> oldAttached(m_attachedData);
+    m_data.clear();
+    m_data.resize(m_count);
+    m_attachedData.resize(m_count);
+    foreach(int gIdx, particleList){
+        QSGParticleGroupData *gd = m_system->m_groupData[gIdx];
+        for(int i=0; i<gd->data.size(); i++){//TODO: When group didn't exist before
+            int newIdx = m_particleStarts[gIdx].second + i;
+            int oldIdx = oldStarts[gIdx].second + i;
+            if(i >= oldStarts[gIdx].first || oldData.size() <= oldIdx){
+                m_data[newIdx] = m_sentinel;
+            }else{
+                m_data[newIdx] = oldData[oldIdx];
+                m_attachedData[newIdx] = oldAttached[oldIdx];
+            }
+        }
+    }
+    m_inResize = true;
+    reset();
+    m_inResize = false;
+}
+
+
+void QSGParticlePainter::setCount(int c)
+{
+    Q_ASSERT(c >= 0); //XXX
+    if(c == m_count)
+        return;
+    int lastCount = m_count;
+    m_count = c;
+    resize(lastCount, m_count);
+    emit countChanged();
+}
+
+int QSGParticlePainter::count()
+{
+    return m_count;
 }
 
 int QSGParticlePainter::particleTypeIndex(QSGParticleData* d)

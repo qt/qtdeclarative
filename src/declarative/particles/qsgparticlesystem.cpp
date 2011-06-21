@@ -54,15 +54,33 @@ QSGParticleData::QSGParticleData()
     , e(0)
     , index(0)
 {
-    pv.x = 0;
-    pv.y = 0;
-    pv.t = -1;
-    pv.size = 0;
-    pv.endSize = 0;
-    pv.sx = 0;
-    pv.sy = 0;
-    pv.ax = 0;
-    pv.ay = 0;
+    x = 0;
+    y = 0;
+    t = -1;
+    size = 0;
+    endSize = 0;
+    sx = 0;
+    sy = 0;
+    ax = 0;
+    ay = 0;
+    xx = 1;
+    xy = 0;
+    yx = 0;
+    yy = 1;
+    rotation = 0;
+    rotationSpeed = 0;
+    autoRotate = 0;
+    animIdx = -1;
+    frameDuration = 1;
+    frameCount = 0;
+    animT = -1;
+    color.r = 255;
+    color.g = 255;
+    color.b = 255;
+    color.a = 255;
+    r = 0;
+    delegate = 0;
+    modelIndex = -1;
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
@@ -275,8 +293,8 @@ void QSGParticleSystem::emitParticle(QSGParticleData* pd)
     //Account for relative emitter position
     QPointF offset = this->mapFromItem(pd->e, QPointF(0, 0));
     if(!offset.isNull()){
-        pd->pv.x += offset.x();
-        pd->pv.y += offset.y();
+        pd->x += offset.x();
+        pd->y += offset.y();
     }
 
     foreach(QSGParticleAffector *a, m_affectors)
@@ -323,107 +341,107 @@ qint64 QSGParticleSystem::systemSync(QSGParticlePainter* p)
 //sets the x accleration without affecting the instantaneous x velocity or position
 void QSGParticleData::setInstantaneousAX(qreal ax)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    qreal sx = (pv.sx + t*pv.ax) - t*ax;
-    qreal ex = pv.x + pv.sx * t + 0.5 * pv.ax * t * t;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal sx = (this->sx + t*this->ax) - t*ax;
+    qreal ex = this->x + this->sx * t + 0.5 * this->ax * t * t;
     qreal x = ex - t*sx - 0.5 * t*t*ax;
 
-    pv.ax = ax;
-    pv.sx = sx;
-    pv.x = x;
+    this->ax = ax;
+    this->sx = sx;
+    this->x = x;
 }
 
 //sets the x velocity without affecting the instantaneous x postion
 void QSGParticleData::setInstantaneousSX(qreal vx)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    qreal sx = vx - t*pv.ax;
-    qreal ex = pv.x + pv.sx * t + 0.5 * pv.ax * t * t;
-    qreal x = ex - t*sx - 0.5 * t*t*pv.ax;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal sx = vx - t*this->ax;
+    qreal ex = this->x + this->sx * t + 0.5 * this->ax * t * t;
+    qreal x = ex - t*sx - 0.5 * t*t*this->ax;
 
-    pv.sx = sx;
-    pv.x = x;
+    this->sx = sx;
+    this->x = x;
 }
 
 //sets the instantaneous x postion
 void QSGParticleData::setInstantaneousX(qreal x)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    pv.x = x - t*pv.sx - 0.5 * t*t*pv.ax;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    this->x = x - t*this->sx - 0.5 * t*t*this->ax;
 }
 
 //sets the y accleration without affecting the instantaneous y velocity or position
 void QSGParticleData::setInstantaneousAY(qreal ay)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    qreal sy = (pv.sy + t*pv.ay) - t*ay;
-    qreal ey = pv.y + pv.sy * t + 0.5 * pv.ay * t * t;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal sy = (this->sy + t*this->ay) - t*ay;
+    qreal ey = this->y + this->sy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*sy - 0.5 * t*t*ay;
 
-    pv.ay = ay;
-    pv.sy = sy;
-    pv.y = y;
+    this->ay = ay;
+    this->sy = sy;
+    this->y = y;
 }
 
 //sets the y velocity without affecting the instantaneous y position
 void QSGParticleData::setInstantaneousSY(qreal vy)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    //qDebug() << t << (system->m_timeInt/1000.0) << pv.x << pv.sx << pv.ax << pv.x + pv.sx * t + 0.5 * pv.ax * t * t;
-    qreal sy = vy - t*pv.ay;
-    qreal ey = pv.y + pv.sy * t + 0.5 * pv.ay * t * t;
-    qreal y = ey - t*sy - 0.5 * t*t*pv.ay;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    //qDebug() << t << (system->m_timeInt/1000.0) << this->x << this->sx << this->ax << this->x + this->sx * t + 0.5 * this->ax * t * t;
+    qreal sy = vy - t*this->ay;
+    qreal ey = this->y + this->sy * t + 0.5 * this->ay * t * t;
+    qreal y = ey - t*sy - 0.5 * t*t*this->ay;
 
-    pv.sy = sy;
-    pv.y = y;
+    this->sy = sy;
+    this->y = y;
 }
 
 //sets the instantaneous Y position
 void QSGParticleData::setInstantaneousY(qreal y)
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    pv.y = y - t*pv.sy - 0.5 * t*t*pv.ay;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    this->y = y - t*this->sy - 0.5 * t*t*this->ay;
 }
 
 qreal QSGParticleData::curX() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    return pv.x + pv.sx * t + 0.5 * pv.ax * t * t;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    return this->x + this->sx * t + 0.5 * this->ax * t * t;
 }
 
 qreal QSGParticleData::curSX() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    return pv.sx + t*pv.ax;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    return this->sx + t*this->ax;
 }
 
 qreal QSGParticleData::curY() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    return pv.y + pv.sy * t + 0.5 * pv.ay * t * t;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    return y + sy * t + 0.5 * ay * t * t;
 }
 
 qreal QSGParticleData::curSY() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - pv.t;
-    return pv.sy + t*pv.ay;
+    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    return sy + t*ay;
 }
 
 void QSGParticleData::debugDump()
 {
     qDebug() << "Particle" << group
-             << "Pos: " << pv.x << "," << pv.y
-             << "Vel: " << pv.sx << "," << pv.sy
-             << "Acc: " << pv.ax << "," << pv.ay
-             << "Size: " << pv.size << "," << pv.endSize
-             << "Time: " << pv.t << "," <<pv.lifeSpan;
+             << "Pos: " << x << "," << y
+             << "Vel: " << sx << "," << sy
+             << "Acc: " << ax << "," << ay
+             << "Size: " << size << "," << endSize
+             << "Time: " << t << "," <<lifeSpan;
 }
 
 bool QSGParticleData::stillAlive()
 {
     if(!system)
         return false;
-    return (pv.t + pv.lifeSpan) > (system->m_timeInt/1000.0);
+    return (t + lifeSpan) > (system->m_timeInt/1000.0);
 }
 
 QT_END_NAMESPACE

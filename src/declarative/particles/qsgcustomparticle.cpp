@@ -123,36 +123,8 @@ QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_pleaseReset(true)
     , m_dirtyData(true)
-    , m_resizePending(false)
 {
     setFlag(QSGItem::ItemHasContents);
-    m_defaultVertices = new PlainVertices;
-    PlainVertex* vertices = (PlainVertex*) m_defaultVertices;
-    for (int i=0; i<4; ++i) {
-        vertices[i].x = 0;
-        vertices[i].y = 0;
-        vertices[i].t = -1;
-        vertices[i].lifeSpan = 0;
-        vertices[i].size = 0;
-        vertices[i].endSize = 0;
-        vertices[i].sx = 0;
-        vertices[i].sy = 0;
-        vertices[i].ax = 0;
-        vertices[i].ay = 0;
-        vertices[i].r = 0;
-    }
-
-    vertices[0].tx = 0;
-    vertices[0].ty = 0;
-
-    vertices[1].tx = 1;
-    vertices[1].ty = 0;
-
-    vertices[2].tx = 0;
-    vertices[2].ty = 1;
-
-    vertices[3].tx = 1;
-    vertices[3].ty = 1;
 }
 
 void QSGCustomParticle::componentComplete()
@@ -200,19 +172,6 @@ void QSGCustomParticle::setVertexShader(const QByteArray &code)
         reset();
     }
     emit vertexShaderChanged();
-}
-
-void QSGCustomParticle::resize(int oldCount, int newCount)
-{
-    if(!m_node)
-        return;
-    if(!m_resizePending){
-        m_pendingResizeVector.resize(oldCount);
-        PlainVertices *particles = (PlainVertices *) m_node->geometry()->vertexData();
-        for(int i=0; i<oldCount; i++)
-            m_pendingResizeVector[i] = &particles[i];
-    }
-    groupShuffle(m_pendingResizeVector, m_defaultVertices);
 }
 
 void QSGCustomParticle::reset()
@@ -411,8 +370,6 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         m_pleaseReset = false;
         m_dirtyData = false;
     }
-    if(m_resizePending)
-        performPendingResize();
 
     if(m_system && m_system->isRunning())
         prepareNextFrame();
@@ -437,32 +394,6 @@ void QSGCustomParticle::prepareNextFrame(){
         buildData();
 }
 
-void QSGCustomParticle::performPendingResize()
-{
-    m_resizePending = false;
-    if(!m_node)
-        return;
-    Q_ASSERT(m_pendingResizeVector.size() == m_count);//XXX
-    PlainVertices tmp[m_count];//###More vast memcpys that will decrease performance
-    for(int i=0; i<m_count; i++)
-        tmp[i] = *m_pendingResizeVector[i];
-    m_node->setFlag(QSGNode::OwnsGeometry, false);
-    m_node->geometry()->allocate(m_count*4, m_count*6);
-    memcpy(m_node->geometry()->vertexData(), tmp, sizeof(PlainVertices) * m_count);
-    quint16 *indices = m_node->geometry()->indexDataAsUShort();
-    for (int i=0; i<m_count; ++i) {
-        int o = i * 4;
-        indices[0] = o;
-        indices[1] = o + 1;
-        indices[2] = o + 2;
-        indices[3] = o + 1;
-        indices[4] = o + 3;
-        indices[5] = o + 2;
-        indices += 6;
-    }
-    m_node->setFlag(QSGNode::OwnsGeometry, true);
-}
-
 QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
 {
     if (m_count * 4 > 0xffff) {
@@ -475,8 +406,6 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
         return 0;
     }
 
-    m_resizePending = false;//reset resizes as well.
-
     //Create Particle Geometry
     int vCount = m_count * 4;
     int iCount = m_count * 6;
@@ -484,10 +413,18 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
     g->setDrawingMode(GL_TRIANGLES);
     PlainVertex *vertices = (PlainVertex *) g->vertexData();
     for (int p=0; p<m_count; ++p) {
-        double r = rand()/(double)RAND_MAX;//TODO: Seed?
-        memcpy(vertices, m_defaultVertices, sizeof(PlainVertices));
-        for(int i=0; i<4; i++)
-            vertices[i].r = r;
+        reload(p);
+        vertices[0].tx = 0;
+        vertices[0].ty = 0;
+
+        vertices[1].tx = 1;
+        vertices[1].ty = 0;
+
+        vertices[2].tx = 0;
+        vertices[2].ty = 1;
+
+        vertices[3].tx = 1;
+        vertices[3].ty = 1;
         vertices += 4;
     }
     quint16 *indices = g->indexDataAsUShort();
@@ -553,28 +490,31 @@ void QSGCustomParticle::buildData()
     m_dirtyData = false;
 }
 
-void QSGCustomParticle::load(QSGParticleData *d)
+void QSGCustomParticle::initialize(int idx)
 {
-    reload(d);//We don't do anything special in C++ here.
+    m_data[idx]->r = rand()/(qreal)RAND_MAX;
 }
 
-void QSGCustomParticle::reload(QSGParticleData *d)
+void QSGCustomParticle::reload(int idx)
 {
     if (m_node == 0)
         return;
 
     PlainVertices *particles = (PlainVertices *) m_node->geometry()->vertexData();
-
-    int pos = particleTypeIndex(d);
-
-    PlainVertices &p = particles[pos];
-
-    //Perhaps we could be more efficient?
-    vertexCopy(p.v1, d->pv);
-    vertexCopy(p.v2, d->pv);
-    vertexCopy(p.v3, d->pv);
-    vertexCopy(p.v4, d->pv);
-
+    PlainVertex *vertices = (PlainVertex *)&particles[idx];
+    for (int i=0; i<4; ++i) {
+        vertices[i].x = m_data[idx]->x - m_systemOffset.x();
+        vertices[i].y = m_data[idx]->y - m_systemOffset.y();
+        vertices[i].t = m_data[idx]->t;
+        vertices[i].lifeSpan = m_data[idx]->lifeSpan;
+        vertices[i].size = m_data[idx]->size;
+        vertices[i].endSize = m_data[idx]->endSize;
+        vertices[i].sx = m_data[idx]->sx;
+        vertices[i].sy = m_data[idx]->sy;
+        vertices[i].ax = m_data[idx]->ax;
+        vertices[i].ay = m_data[idx]->ay;
+        vertices[i].r = m_data[idx]->r;
+    }
 }
 
 QT_END_NAMESPACE
