@@ -39,71 +39,59 @@
 **
 ****************************************************************************/
 
-#ifndef QSGVIEWINSPECTOR_H
-#define QSGVIEWINSPECTOR_H
-
-#include "abstractviewinspector.h"
+#ifndef SGHIGHLIGHT_H
+#define SGHIGHLIGHT_H
 
 #include <QtCore/QWeakPointer>
-#include <QtCore/QHash>
-
-QT_BEGIN_NAMESPACE
-class QSGView;
-class QSGItem;
-QT_END_NAMESPACE
+#include <QtDeclarative/QSGPaintedItem>
 
 namespace QmlJSDebugger {
 
-class SGSelectionTool;
-class SGSelectionHighlight;
-
-class SGViewInspector : public AbstractViewInspector
+class SGHighlight : public QSGPaintedItem
 {
     Q_OBJECT
+
 public:
-    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
+    SGHighlight(QSGItem *parent) : QSGPaintedItem(parent) {}
+    SGHighlight(QSGItem *item, QSGItem *parent);
 
-    // AbstractViewInspector
-    void changeCurrentObjects(const QList<QObject*> &objects);
-    void reloadView();
-    void reparentQmlObject(QObject *object, QObject *newParent);
-    void changeTool(InspectorProtocol::Tool tool);
-    QWidget *viewWidget() const;
-    QDeclarativeEngine *declarativeEngine() const;
-
-    QSGView *view() const { return m_view; }
-    QSGItem *overlay() const { return m_overlay; }
-
-    QSGItem *topVisibleItemAt(const QPointF &pos) const;
-    QList<QSGItem *> itemsAt(const QPointF &pos) const;
-
-    QList<QSGItem *> selectedItems() const;
-    void setSelectedItems(const QList<QSGItem*> &items);
-
-    QString titleForItem(QSGItem *item) const;
-
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
-
-    bool mouseMoveEvent(QMouseEvent *);
+    void setItem(QSGItem *item);
 
 private slots:
-    void removeFromSelectedItems(QObject *);
+    void adjust();
 
 private:
-    bool syncSelectedItems(const QList<QSGItem*> &items);
+    QWeakPointer<QSGItem> m_item;
+};
 
-    QSGView *m_view;
-    QSGItem *m_overlay;
+/**
+ * A highlight suitable for indicating selection.
+ */
+class SGSelectionHighlight : public SGHighlight
+{
+public:
+    SGSelectionHighlight(QSGItem *item, QSGItem *parent)
+        : SGHighlight(item, parent)
+    {}
 
-    SGSelectionTool *m_selectionTool;
+    void paint(QPainter *painter);
+};
 
-    QList<QWeakPointer<QSGItem> > m_selectedItems;
-    QHash<QSGItem*, SGSelectionHighlight*> m_highlightItems;
+/**
+ * A highlight suitable for indicating hover.
+ */
+class SGHoverHighlight : public SGHighlight
+{
+public:
+    SGHoverHighlight(QSGItem *parent)
+        : SGHighlight(parent)
+    {
+        setZ(1); // hover highlight on top of selection highlight
+    }
 
-    bool m_designMode;
+    void paint(QPainter *painter);
 };
 
 } // namespace QmlJSDebugger
 
-#endif // QSGVIEWINSPECTOR_H
+#endif // SGHIGHLIGHT_H

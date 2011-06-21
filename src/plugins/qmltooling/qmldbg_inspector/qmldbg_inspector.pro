@@ -27,7 +27,8 @@ SOURCES += \
     editor/toolbarcolorbox.cpp \
     abstracttool.cpp \
     sgviewinspector.cpp \
-    sgselectiontool.cpp
+    sgselectiontool.cpp \
+    sghighlight.cpp
 
 HEADERS += \
     abstractviewinspector.h \
@@ -51,7 +52,8 @@ HEADERS += \
     editor/toolbarcolorbox.h \
     abstracttool.h \
     sgviewinspector.h \
-    sgselectiontool.h
+    sgselectiontool.h \
+    sghighlight.h
 
 RESOURCES += editor/editor.qrc
 

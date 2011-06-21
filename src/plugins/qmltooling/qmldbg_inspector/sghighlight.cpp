@@ -39,71 +39,60 @@
 **
 ****************************************************************************/
 
-#ifndef QSGVIEWINSPECTOR_H
-#define QSGVIEWINSPECTOR_H
+#include "sghighlight.h"
 
-#include "abstractviewinspector.h"
-
-#include <QtCore/QWeakPointer>
-#include <QtCore/QHash>
-
-QT_BEGIN_NAMESPACE
-class QSGView;
-class QSGItem;
-QT_END_NAMESPACE
+#include <QtGui/QPainter>
 
 namespace QmlJSDebugger {
 
-class SGSelectionTool;
-class SGSelectionHighlight;
-
-class SGViewInspector : public AbstractViewInspector
+SGHighlight::SGHighlight(QSGItem *item, QSGItem *parent)
+    : QSGPaintedItem(parent)
 {
-    Q_OBJECT
-public:
-    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
+    setItem(item);
+}
 
-    // AbstractViewInspector
-    void changeCurrentObjects(const QList<QObject*> &objects);
-    void reloadView();
-    void reparentQmlObject(QObject *object, QObject *newParent);
-    void changeTool(InspectorProtocol::Tool tool);
-    QWidget *viewWidget() const;
-    QDeclarativeEngine *declarativeEngine() const;
+void SGHighlight::setItem(QSGItem *item)
+{
+    if (m_item)
+        m_item.data()->disconnect(this);
 
-    QSGView *view() const { return m_view; }
-    QSGItem *overlay() const { return m_overlay; }
+    if (item) {
+        connect(item, SIGNAL(xChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(yChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(widthChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(heightChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(rotationChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
+                SLOT(adjust()));
+    }
 
-    QSGItem *topVisibleItemAt(const QPointF &pos) const;
-    QList<QSGItem *> itemsAt(const QPointF &pos) const;
+    m_item = item;
+    adjust();
+}
 
-    QList<QSGItem *> selectedItems() const;
-    void setSelectedItems(const QList<QSGItem*> &items);
+void SGHighlight::adjust()
+{
+    const QSGItem *item = m_item.data();
+    setSize(QSizeF(item->width(), item->height()));
+    setPos(parentItem()->mapFromItem(item->parentItem(), item->pos()));
+    setRotation(item->rotation());
+    setTransformOrigin(item->transformOrigin());
+}
 
-    QString titleForItem(QSGItem *item) const;
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+void SGSelectionHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QColor(108, 141, 221));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
-    bool mouseMoveEvent(QMouseEvent *);
 
-private slots:
-    void removeFromSelectedItems(QObject *);
-
-private:
-    bool syncSelectedItems(const QList<QSGItem*> &items);
-
-    QSGView *m_view;
-    QSGItem *m_overlay;
-
-    SGSelectionTool *m_selectionTool;
-
-    QList<QWeakPointer<QSGItem> > m_selectedItems;
-    QHash<QSGItem*, SGSelectionHighlight*> m_highlightItems;
-
-    bool m_designMode;
-};
+void SGHoverHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QPen(QColor(0, 22, 159)));
+    painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
+    painter->setPen(QColor(158, 199, 255));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
 } // namespace QmlJSDebugger
-
-#endif // QSGVIEWINSPECTOR_H

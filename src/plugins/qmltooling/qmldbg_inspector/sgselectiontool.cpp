@@ -41,40 +41,15 @@
 
 #include "sgselectiontool.h"
 
+#include "sghighlight.h"
 #include "sgviewinspector.h"
 
 #include <QtGui/QMenu>
 #include <QtGui/QMouseEvent>
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
-#include <QtDeclarative/QSGPaintedItem>
 
 namespace QmlJSDebugger {
-
-class SGHoverHighlight : public QSGPaintedItem
-{
-public:
-    SGHoverHighlight(QSGItem *parent) : QSGPaintedItem(parent)
-    {
-        setZ(1); // hover highlight on top of selection indicator
-    }
-
-    void setItem(QSGItem *item)
-    {
-        setSize(QSizeF(item->width(), item->height()));
-        setPos(parentItem()->mapFromItem(item, QPointF()));
-        setVisible(true);
-    }
-
-    void paint(QPainter *painter)
-    {
-        painter->setPen(QPen(QColor(0, 22, 159)));
-        painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
-        painter->setPen(QColor(158, 199, 255));
-        painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
-    }
-};
-
 
 SGSelectionTool::SGSelectionTool(SGViewInspector *inspector) :
     AbstractTool(inspector),
@@ -101,10 +76,12 @@ void SGSelectionTool::mousePressEvent(QMouseEvent *event)
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
 {
     QSGItem *item = inspector()->topVisibleItemAt(event->pos());
-    if (!item)
+    if (!item) {
         m_hoverHighlight->setVisible(false);
-    else
+    } else {
         m_hoverHighlight->setItem(item);
+        m_hoverHighlight->setVisible(true);
+    }
 }
 
 void SGSelectionTool::createContextMenu(const QList<QSGItem *> &items, QPoint pos)

@@ -42,6 +42,7 @@
 #include "sgviewinspector.h"
 
 #include "qdeclarativeinspectorprotocol.h"
+#include "sghighlight.h"
 #include "sgselectiontool.h"
 
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
@@ -50,7 +51,6 @@
 
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>
-#include <QtDeclarative/QSGPaintedItem>
 #include <QtGui/QMouseEvent>
 
 #include <cfloat>
@@ -115,20 +115,6 @@ static QSGItem *itemAt(QSGItem *item, const QPointF &pos, QSGItem *overlay)
 
     return item;
 }
-
-
-class SGSelectionHighlight : public QSGPaintedItem
-{
-public:
-    SGSelectionHighlight(QSGItem *parent) : QSGPaintedItem(parent)
-    { }
-
-    void paint(QPainter *painter)
-    {
-        painter->setPen(QColor(108, 141, 221));
-        painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
-    }
-};
 
 
 SGViewInspector::SGViewInspector(QSGView *view, QObject *parent) :
@@ -271,14 +257,8 @@ bool SGViewInspector::syncSelectedItems(const QList<QSGItem *> &items)
 
         selectionChanged = true;
         connect(item, SIGNAL(destroyed(QObject*)), this, SLOT(removeFromSelectedItems(QObject*)));
-        connect(item, SIGNAL(xChanged()), this, SLOT(adjustSelectionHighlight()));
-        connect(item, SIGNAL(yChanged()), this, SLOT(adjustSelectionHighlight()));
-        connect(item, SIGNAL(widthChanged()), this, SLOT(adjustSelectionHighlight()));
-        connect(item, SIGNAL(heightChanged()), this, SLOT(adjustSelectionHighlight()));
-        connect(item, SIGNAL(rotationChanged()), this, SLOT(adjustSelectionHighlight()));
         m_selectedItems.append(item);
-        m_highlightItems.insert(item, new SGSelectionHighlight(m_overlay));
-        adjustSelectionHighlight(item);
+        m_highlightItems.insert(item, new SGSelectionHighlight(item, m_overlay));
     }
 
     return selectionChanged;
@@ -290,17 +270,6 @@ void SGViewInspector::removeFromSelectedItems(QObject *object)
         if (m_selectedItems.removeOne(item))
             delete m_highlightItems.take(item);
     }
-}
-
-void SGViewInspector::adjustSelectionHighlight(QSGItem *item)
-{
-    if (!item)
-        item = static_cast<QSGItem*>(sender());
-
-    SGSelectionHighlight *highlight = m_highlightItems.value(item);
-
-    highlight->setSize(QSizeF(item->width(), item->height()));
-    highlight->setPos(m_overlay->mapFromItem(item->parentItem(), item->pos()));
 }
 
 bool SGViewInspector::eventFilter(QObject *obj, QEvent *event)
