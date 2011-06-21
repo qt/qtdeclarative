@@ -501,9 +501,11 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         setHovered(true);
 
     if (d->drag && d->drag->target()) {
+
         if (!d->moved) {
-            d->startX = drag()->target()->x();
-            d->startY = drag()->target()->y();
+            d->targetStartPos = d->drag->target()->parentItem()
+                    ? d->drag->target()->parentItem()->mapToScene(d->drag->target()->pos())
+                    : d->drag->target()->pos();
         }
 
         QPointF startLocalPos;
@@ -539,8 +541,12 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             }
         }
 
+        QPointF startPos = d->drag->target()->parentItem()
+                ? d->drag->target()->parentItem()->mapFromScene(d->targetStartPos)
+                : d->targetStartPos;
+
         if (d->dragX && d->drag->active()) {
-            qreal x = (curLocalPos.x() - startLocalPos.x()) + d->startX;
+            qreal x = (curLocalPos.x() - startLocalPos.x()) + startPos.x();
             if (x < drag()->xmin())
                 x = drag()->xmin();
             else if (x > drag()->xmax())
@@ -548,7 +554,7 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
             drag()->target()->setX(x);
         }
         if (d->dragY && d->drag->active()) {
-            qreal y = (curLocalPos.y() - startLocalPos.y()) + d->startY;
+            qreal y = (curLocalPos.y() - startLocalPos.y()) + startPos.y();
             if (y < drag()->ymin())
                 y = drag()->ymin();
             else if (y > drag()->ymax())

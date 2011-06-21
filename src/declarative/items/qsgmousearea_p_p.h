@@ -99,8 +99,7 @@ public:
     bool dragRejected : 1;
     QSGDrag *drag;
     QPointF startScene;
-    qreal startX;
-    qreal startY;
+    QPointF targetStartPos;
     QPointF lastPos;
     QDeclarativeNullableValue<QPointF> lastScenePos;
     Qt::MouseButton lastButton;
