@@ -2001,7 +2001,9 @@ QImage QSGCanvas::grabFrameBuffer()
 
 void QSGCanvasRenderThread::run()
 {
+#ifdef THREAD_DEBUG
     qDebug("QML Rendering Thread Started");
+#endif
 
     renderer->makeCurrent();
 
