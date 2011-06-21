@@ -331,7 +331,7 @@ void QSGMaterialShader::compile()
 float QSGMaterialShader::RenderState::opacity() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->renderOpacity();
+    return static_cast<const QSGRenderer *>(m_data)->currentOpacity();
 }
 
 
@@ -343,7 +343,7 @@ float QSGMaterialShader::RenderState::opacity() const
 QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->combinedMatrix();
+    return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix();
 }
 
 
@@ -355,7 +355,7 @@ QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
 QMatrix4x4 QSGMaterialShader::RenderState::modelViewMatrix() const
 {
     Q_ASSERT(m_data);
-    return const_cast<QSGRenderer *>(static_cast<const QSGRenderer *>(m_data))->modelViewMatrix().top();
+    return static_cast<const QSGRenderer *>(m_data)->currentModelViewMatrix();
 }
 
 

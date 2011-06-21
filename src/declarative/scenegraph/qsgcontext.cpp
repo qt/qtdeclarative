@@ -63,7 +63,7 @@
 DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
 
-/*!
+/*
     Comments about this class from Gunnar:
 
     The QSGContext class is right now two things.. The first is the
@@ -78,8 +78,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
     If we ever move the scene graph core API into its own thing, this class
     needs to be split in two. Right now its one because we're lazy when it comes
     to defining plugin interfaces..
-
- */
+*/
 
 
 QT_BEGIN_NAMESPACE
@@ -308,7 +307,7 @@ QSGRenderer *QSGContext::createRenderer()
 {
     // ### Do something with this before release...
     static bool doFrontToBack = qApp->arguments().contains(QLatin1String("--opaque-front-to-back"));
-    QMLRenderer *renderer = new QMLRenderer(this);
+    QSGDefaultRenderer *renderer = new QSGDefaultRenderer(this);
     if (doFrontToBack) {
         printf("QSGContext: Sorting opaque nodes front to back...\n");
         renderer->setSortFrontToBackEnabled(true);
@@ -400,7 +399,7 @@ QSGMaterialShader *QSGContext::prepareMaterial(QSGMaterial *material)
 
 
 /*!
-    Sets weither the scene graph should render with flashing update rectangles or not
+    Sets whether the scene graph should render with flashing update rectangles or not
   */
 
 void QSGContext::setFlashModeEnabled(bool enabled)

@@ -51,6 +51,7 @@
 #include <qglfunctions.h>
 #include <qglyphrun.h>
 #include <qrawfont.h>
+#include <qdir.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -344,10 +345,8 @@ static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfSca
     bool isShortData = polys.indices.type() == QVertexIndexVector::UnsignedShort;
     const void *indices = polys.indices.data();
     int index = 0;
-    QVector<DFPoint> normals;
-    QVector<DFVertex> vertices;
-    normals.reserve(polys.vertices.count());
-    vertices.reserve(polys.vertices.count());
+    QVarLengthArray<DFPoint> normals(polys.vertices.count());
+    QVarLengthArray<DFVertex> vertices(polys.vertices.count());
 
     while (index < polys.indices.size()) {
         normals.clear();
@@ -386,7 +385,7 @@ static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfSca
             vertices.append(v);
         }
 
-        QVector<bool> isConvex(normals.count());
+        QVarLengthArray<bool> isConvex(normals.count());
         for (int next = 0, prev = normals.count() - 1; next < normals.count(); prev = next++)
             isConvex[prev] = (normals.at(prev).x * normals.at(next).y - normals.at(prev).y * normals.at(next).x > 0);
 
@@ -473,11 +472,14 @@ static void convert_to_Format_Alpha(QImage *image)
     const int width = image->width();
     const int height = image->height();
     uchar *data = image->bits();
+    const uint *src = (const uint *) data;
+    int stride = image->bytesPerLine() / sizeof(uint);
 
     for (int i = 0; i < height; ++i) {
         uchar *o = data + i * width;
         for (int x = 0; x < width; ++x)
-            o[x] = (uchar)qAlpha(image->pixel(x, i));
+            o[x] = (uchar)qAlpha(src[x]);
+        src += stride;
     }
 }
 
@@ -910,16 +912,44 @@ void QSGDistanceFieldGlyphCache::updateCache()
     if (m_textureData->pendingGlyphs.isEmpty())
         return;
 
-    int requiredWidth = m_textureData->currY == 0 ? m_textureData->currX : maxTextureSize();
-    int requiredHeight = qMin(maxTextureSize(), m_textureData->currY + QT_DISTANCEFIELD_TILESIZE);
+    int requiredWidth = maxTextureSize();
+    int rows = 128 / (requiredWidth / QT_DISTANCEFIELD_TILESIZE); // Enough rows to fill the latin1 set by default..
+    int requiredHeight = qMin(maxTextureSize(), qMax(m_textureData->currY + QT_DISTANCEFIELD_TILESIZE, QT_DISTANCEFIELD_TILESIZE * rows));
 
     resizeTexture((requiredWidth), (requiredHeight));
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
 
+    // ### Remove before final release
+    static bool cacheDistanceFields = QApplication::arguments().contains("--cache-distance-fields");
+
+    QString tmpPath = QString::fromLatin1("%1/.qt/").arg(QDir::tempPath());
+    QString keyBase = QString::fromLatin1("%1%2%3_%4_%5_%6.fontblob")
+            .arg(tmpPath)
+            .arg(m_font.familyName())
+            .arg(m_font.styleName())
+            .arg(m_font.weight())
+            .arg(m_font.style());
+
+    if (cacheDistanceFields && !QFile::exists(tmpPath))
+        QDir(tmpPath).mkpath(tmpPath);
+
     for (int i = 0; i < m_textureData->pendingGlyphs.size(); ++i) {
         glyph_t glyphIndex = m_textureData->pendingGlyphs.at(i);
-        QImage glyph = renderDistanceFieldGlyph(glyphIndex);
         TexCoord c = m_textureData->texCoords.value(glyphIndex);
+
+        if (cacheDistanceFields) {
+            QString key = keyBase.arg(glyphIndex);
+            QFile file(key);
+            if (file.open(QFile::ReadOnly)) {
+                int fileSize = file.size();
+                int dim = sqrt(float(fileSize));
+                QByteArray blob = file.readAll();
+                glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, dim, dim, GL_ALPHA, GL_UNSIGNED_BYTE, blob.constData());
+                continue;
+            }
+        }
+
+        QImage glyph = renderDistanceFieldGlyph(glyphIndex);
 
         if (ctx->d_ptr->workaround_brokenFBOReadBack) {
             QPainter p(&m_textureData->image);
@@ -930,6 +960,13 @@ void QSGDistanceFieldGlyphCache::updateCache()
 
         convert_to_Format_Alpha(&glyph);
         glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
+
+        if (cacheDistanceFields) {
+            QString key = keyBase.arg(glyphIndex);
+            QFile file(key);
+            file.open(QFile::WriteOnly);
+            file.write((const char *) glyph.constBits(), glyph.width() * glyph.height());
+        }
     }
     m_textureData->pendingGlyphs.reset();
 }

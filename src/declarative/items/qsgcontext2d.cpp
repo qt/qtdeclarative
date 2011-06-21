@@ -786,12 +786,15 @@ static QScriptValue ctx2d_isPointInPath(QScriptContext *c, QScriptEngine *e)
 // text
 static QScriptValue ctx2d_font(QScriptContext *c, QScriptEngine *e)
 {
+    return QScriptValue();
 }
 static QScriptValue ctx2d_textAlign(QScriptContext *c, QScriptEngine *e)
 {
+    return QScriptValue();
 }
 static QScriptValue ctx2d_textBaseline(QScriptContext *c, QScriptEngine *e)
 {
+    return QScriptValue();
 }
 static QScriptValue ctx2d_fillText(QScriptContext *c, QScriptEngine *e)
 {
@@ -846,53 +849,61 @@ static QScriptValue ctx2d_drawImage(QScriptContext *c, QScriptEngine *e)
 static QScriptValue ctx2d_createImageData(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 static QScriptValue ctx2d_getImageData(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 static QScriptValue ctx2d_putImageData(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 
 //Image Data Interface
 static QScriptValue ctx2d_imageData_data(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 static QScriptValue ctx2d_imageData_height(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 static QScriptValue ctx2d_imageData_width(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 
 //CanvasPixelArray interface
 static QScriptValue ctx2d_pixelArray_length(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 //getter/setter by index how to?
 static QScriptValue ctx2d_pixelArray(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
+    return QScriptValue();
 }
 
 //CanvasGradient interface
 static QScriptValue ctx2d_gradient_addColorStop(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
-
+    return QScriptValue();
 }
 
 //TextMetrics
 static QScriptValue ctx2d_textMetrics_width(QScriptContext *c, QScriptEngine *e)
 {
     //#TODO
-
+    return QScriptValue();
 }
 
 
