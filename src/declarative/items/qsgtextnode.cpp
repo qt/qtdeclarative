@@ -195,7 +195,8 @@ void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout
     QFont font = textLayout->font();
     QRawFont rawFont = QRawFont::fromFont(font);
     if (font.strikeOut() || font.underline() || font.overline()) {
-        addTextDecorations(position, rawFont, color, textLayout->boundingRect().width(),
+        addTextDecorations(position + QPointF(0, rawFont.ascent()),
+                           rawFont, color, textLayout->boundingRect().width(),
                            font.overline(), font.strikeOut(), font.underline());
     }
 }
