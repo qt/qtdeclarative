@@ -408,10 +408,7 @@ void tst_qsgtextedit::alignments()
     ob->setProperty("horizontalAlignment",hAlign);
     ob->setProperty("verticalAlignment",vAlign);
     QTRY_COMPARE(ob->property("running").toBool(),false);
-    QImage actual(canvas.width(), canvas.height(), QImage::Format_RGB32);
-    actual.fill(qRgb(255,255,255));
-    QPainter p(&actual);
-    canvas.render(&p);
+    QImage actual = canvas.grabFrameBuffer();
 
     expectfile = createExpectedFileIfNotFound(expectfile, actual);
 
