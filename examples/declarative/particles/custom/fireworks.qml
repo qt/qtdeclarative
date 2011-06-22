@@ -45,22 +45,6 @@ Rectangle{
     width: 360
     height: 600
     color: "black"
-    ParticleSystem{
-        id: otherSys
-        anchors.fill: parent
-        Emitter{
-            id: emitter
-            emitting: false
-            emitRate: 100
-            lifeSpan: 1000
-            emitCap: 1000
-            speed: AngledDirection{angleVariation:180; magnitudeVariation: 60}
-        }
-
-        ImageParticle{
-            source: "content/particle.png"
-        }
-    }
     Component{
         id: firework
         Item{
@@ -79,14 +63,28 @@ Rectangle{
                 repeat: false
                 onTriggered: {
                     img.visible = false;
-                    emitter.burst(100, container.x+24, container.y+24);
+                    emitter.burst(100);
                 }
+            }
+            Emitter{
+                anchors.centerIn: parent
+                id: emitter
+                system: syssy
+                particle: "works"
+                emitting: false
+                emitRate: 100
+                lifeSpan: 1000
+                //speed: AngledDirection{angle: 270; angleVariation:60; magnitudeVariation: 60; magnitude: 20}
+                speed: PointDirection{y:-60; yVariation: 80; xVariation: 80}
+                acceleration: PointDirection{y:100; yVariation: 20}
             }
         }
     }
     ParticleSystem{
         anchors.fill: parent
+        id: syssy
         Emitter{
+            particle: "fire"
             width: parent.width
             y: parent.height
             emitRate: 2
@@ -94,7 +92,12 @@ Rectangle{
             speed: PointDirection{y:-100}
         }
         ItemParticle{
+            particles: ["fire"]
             delegate: firework
+        }
+        ImageParticle{
+            particles: ["works"]
+            source: "content/particle.png"
         }
     }
 }

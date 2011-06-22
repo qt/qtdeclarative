@@ -60,7 +60,7 @@ static void qt_print_node_count()
 
 /*!
     \class QSGNode
-    \bried The QSGNode class is the base class for all nodes in the scene graph.
+    \brief The QSGNode class is the base class for all nodes in the scene graph.
 
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
@@ -84,8 +84,13 @@ static void qt_print_node_count()
 QSGNode::QSGNode()
     : m_parent(0)
     , m_type(BasicNodeType)
+    , m_subtreeGeometryCount(0)
     , m_nodeFlags(OwnedByParent)
     , m_flags(0)
+    , m_firstChild(0)
+    , m_lastChild(0)
+    , m_nextSibling(0)
+    , m_previousSibling(0)
 {
     init();
 }
@@ -93,8 +98,13 @@ QSGNode::QSGNode()
 QSGNode::QSGNode(NodeType type)
     : m_parent(0)
     , m_type(type)
+    , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
     , m_flags(0)
+    , m_firstChild(0)
+    , m_lastChild(0)
+    , m_nextSibling(0)
+    , m_previousSibling(0)
 {
     init();
 }
@@ -150,8 +160,6 @@ QSGNode::~QSGNode()
 
 
 /*!
-    \fn bool QSGNode::isSubtreeBlocked() const
-
     Returns whether this node and its subtree is available for use.
 
     Blocked subtrees will not get their dirty states updated and they
@@ -161,6 +169,22 @@ QSGNode::~QSGNode()
     is 0, for instance.
  */
 
+bool QSGNode::isSubtreeBlocked() const
+{
+    return m_subtreeGeometryCount == 0;
+}
+
+/*!
+    \internal
+    Detaches the node from the scene graph and deletes any children it owns.
+
+    This function is called from QSGNode's and QSGRootNode's destructor. It
+    should not be called explicitly in user code. QSGRootNode needs to call
+    destroy() because destroy() calls removeChildNode() which in turn calls
+    markDirty() which type-casts the node to QSGRootNode. This type-cast is not
+    valid at the time QSGNode's destructor is called because the node will
+    already be partially destroyed at that point.
+*/
 
 void QSGNode::destroy()
 {
@@ -168,14 +192,15 @@ void QSGNode::destroy()
         m_parent->removeChildNode(this);
         Q_ASSERT(m_parent == 0);
     }
-    for (int ii = m_children.count() - 1; ii >= 0; --ii) {
-        QSGNode *child = m_children.at(ii);
+    while (m_firstChild) {
+        QSGNode *child = m_firstChild;
         removeChildNode(child);
         Q_ASSERT(child->m_parent == 0);
         if (child->flags() & OwnedByParent)
             delete child;
     }
-    Q_ASSERT(m_children.isEmpty());
+
+    Q_ASSERT(m_firstChild == 0 && m_lastChild == 0);
 }
 
 
@@ -188,7 +213,7 @@ void QSGNode::destroy()
 
 void QSGNode::prependChildNode(QSGNode *node)
 {
-    Q_ASSERT_X(!m_children.contains(node), "QSGNode::prependChildNode", "QSGNode is already a child!");
+    //Q_ASSERT_X(!m_children.contains(node), "QSGNode::prependChildNode", "QSGNode is already a child!");
     Q_ASSERT_X(!node->m_parent, "QSGNode::prependChildNode", "QSGNode already has a parent");
 
 #ifndef QT_NO_DEBUG
@@ -199,7 +224,12 @@ void QSGNode::prependChildNode(QSGNode *node)
     }
 #endif
 
-    m_children.prepend(node);
+    if (m_firstChild)
+        m_firstChild->m_previousSibling = node;
+    else
+        m_lastChild = node;
+    node->m_nextSibling = m_firstChild;
+    m_firstChild = node;
     node->m_parent = this;
 
     node->markDirty(DirtyNodeAdded);
@@ -214,7 +244,7 @@ void QSGNode::prependChildNode(QSGNode *node)
 
 void QSGNode::appendChildNode(QSGNode *node)
 {
-    Q_ASSERT_X(!m_children.contains(node), "QSGNode::appendChildNode", "QSGNode is already a child!");
+    //Q_ASSERT_X(!m_children.contains(node), "QSGNode::appendChildNode", "QSGNode is already a child!");
     Q_ASSERT_X(!node->m_parent, "QSGNode::appendChildNode", "QSGNode already has a parent");
 
 #ifndef QT_NO_DEBUG
@@ -225,7 +255,12 @@ void QSGNode::appendChildNode(QSGNode *node)
     }
 #endif
 
-    m_children.append(node);
+    if (m_lastChild)
+        m_lastChild->m_nextSibling = node;
+    else
+        m_firstChild = node;
+    node->m_previousSibling = m_lastChild;
+    m_lastChild = node;
     node->m_parent = this;
 
     node->markDirty(DirtyNodeAdded);
@@ -242,9 +277,9 @@ void QSGNode::appendChildNode(QSGNode *node)
 
 void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)
 {
-    Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeBefore", "QSGNode is already a child!");
+    //Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeBefore", "QSGNode is already a child!");
     Q_ASSERT_X(!node->m_parent, "QSGNode::insertChildNodeBefore", "QSGNode already has a parent");
-    Q_ASSERT_X(node->type() != RootNodeType, "QSGNode::insertChildNodeBefore", "RootNodes cannot be children of other nodes");
+    Q_ASSERT_X(before && before->m_parent == this, "QSGNode::insertChildNodeBefore", "The parent of \'before\' is wrong");
 
 #ifndef QT_NO_DEBUG
     if (node->type() == QSGNode::GeometryNodeType) {
@@ -254,11 +289,14 @@ void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)
     }
 #endif
 
-    int idx = before?m_children.indexOf(before):-1;
-    if (idx == -1)
-        m_children.append(node);
+    QSGNode *previous = before->m_previousSibling;
+    if (previous)
+        previous->m_nextSibling = node;
     else
-        m_children.insert(idx, node);
+        m_firstChild = node;
+    node->m_previousSibling = previous;
+    node->m_nextSibling = before;
+    before->m_previousSibling = node;
     node->m_parent = this;
 
     node->markDirty(DirtyNodeAdded);
@@ -275,9 +313,9 @@ void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)
 
 void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 {
-    Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeAfter", "QSGNode is already a child!");
+    //Q_ASSERT_X(!m_children.contains(node), "QSGNode::insertChildNodeAfter", "QSGNode is already a child!");
     Q_ASSERT_X(!node->m_parent, "QSGNode::insertChildNodeAfter", "QSGNode already has a parent");
-    Q_ASSERT_X(node->type() != RootNodeType, "QSGNode::insertChildNodeAfter", "RootNodes cannot be children of other nodes");
+    Q_ASSERT_X(after && after->m_parent == this, "QSGNode::insertChildNodeBefore", "The parent of \'before\' is wrong");
 
 #ifndef QT_NO_DEBUG
     if (node->type() == QSGNode::GeometryNodeType) {
@@ -287,11 +325,14 @@ void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
     }
 #endif
 
-    int idx = after?m_children.indexOf(after):-1;
-    if (idx == -1)
-        m_children.append(node);
+    QSGNode *next = after->m_nextSibling;
+    if (next)
+        next->m_previousSibling = node;
     else
-        m_children.insert(idx + 1, node);
+        m_lastChild = node;
+    node->m_nextSibling = next;
+    node->m_previousSibling = after;
+    after->m_nextSibling = node;
     node->m_parent = this;
 
     node->markDirty(DirtyNodeAdded);
@@ -300,18 +341,72 @@ void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)
 
 
 /*!
-    Removes \a node fromt his node's list of children.
+    Removes \a node from this node's list of children.
  */
 
 void QSGNode::removeChildNode(QSGNode *node)
 {
-    Q_ASSERT(m_children.contains(node));
+    //Q_ASSERT(m_children.contains(node));
     Q_ASSERT(node->parent() == this);
 
-    m_children.removeOne(node);
+    QSGNode *previous = node->m_previousSibling;
+    QSGNode *next = node->m_nextSibling;
+    if (previous)
+        previous->m_nextSibling = next;
+    else
+        m_firstChild = next;
+    if (next)
+        next->m_previousSibling = previous;
+    else
+        m_lastChild = previous;
+    node->m_previousSibling = 0;
+    node->m_nextSibling = 0;
 
     node->markDirty(DirtyNodeRemoved);
     node->m_parent = 0;
+}
+
+
+/*!
+    Removes all child nodes from this node's list of children.
+ */
+
+void QSGNode::removeAllChildNodes()
+{
+    while (m_firstChild) {
+        QSGNode *node = m_firstChild;
+        m_firstChild = node->m_nextSibling;
+        node->m_nextSibling = 0;
+        if (m_firstChild)
+            m_firstChild->m_previousSibling = 0;
+        else
+            m_lastChild = 0;
+        node->markDirty(DirtyNodeRemoved);
+        node->m_parent = 0;
+    }
+}
+
+
+int QSGNode::childCount() const
+{
+    int count = 0;
+    QSGNode *n = m_firstChild;
+    while (n) {
+        ++count;
+        n = n->m_nextSibling;
+    }
+    return count;
+}
+
+
+QSGNode *QSGNode::childAtIndex(int i) const
+{
+    QSGNode *n = m_firstChild;
+    while (i && n) {
+        --i;
+        n = n->m_nextSibling;
+    }
+    return n;
 }
 
 
@@ -360,9 +455,17 @@ void QSGNode::markDirty(DirtyFlags flags)
     m_flags |= (flags & DirtyPropagationMask);
 
     DirtyFlags subtreeFlags = DirtyFlags((flags & DirtyPropagationMask) << 16);
+
+    int geometryCountDiff = 0;
+    if (flags & DirtyNodeAdded)
+        geometryCountDiff = m_subtreeGeometryCount;
+    if (flags & DirtyNodeRemoved)
+        geometryCountDiff = -m_subtreeGeometryCount;
+
     QSGNode *p = m_parent;
     while (p) {
         p->m_flags |= subtreeFlags;
+        p->m_subtreeGeometryCount += geometryCountDiff;
         if (p->type() == RootNodeType)
             static_cast<QSGRootNode *>(p)->notifyNodeChange(this, flags);
         p = p->m_parent;
@@ -401,7 +504,6 @@ QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
 
 QSGBasicGeometryNode::~QSGBasicGeometryNode()
 {
-    destroy();
     if (flags() & OwnsGeometry)
         delete m_geometry;
 }
@@ -477,7 +579,6 @@ QSGGeometryNode::QSGGeometryNode()
 
 QSGGeometryNode::~QSGGeometryNode()
 {
-    destroy();
     if (flags() & OwnsMaterial)
         delete m_material;
     if (flags() & OwnsOpaqueMaterial)
@@ -639,7 +740,6 @@ QSGClipNode::QSGClipNode()
 
 QSGClipNode::~QSGClipNode()
 {
-    destroy();
 }
 
 
@@ -715,7 +815,6 @@ QSGTransformNode::QSGTransformNode()
 
 QSGTransformNode::~QSGTransformNode()
 {
-    destroy();
 }
 
 
@@ -789,7 +888,7 @@ QSGRootNode::~QSGRootNode()
 {
     while (!m_renderers.isEmpty())
         m_renderers.last()->setRootNode(0);
-    destroy();
+    destroy(); // Must call destroy() here because markDirty() casts this to QSGRootNode.
 }
 
 
@@ -848,7 +947,6 @@ QSGOpacityNode::QSGOpacityNode()
 
 QSGOpacityNode::~QSGOpacityNode()
 {
-    destroy();
 }
 
 
@@ -912,22 +1010,21 @@ void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 
 
 /*!
-    For performance reasons, we block the subtree when the nested opacity
-    gets below a certain threshold.
+    For performance reasons, we block the subtree when the opacity
+    is below a certain threshold.
 
     \internal
  */
 
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
-    return m_combined_opacity < 0.001;
+    return QSGNode::isSubtreeBlocked() || m_opacity < 0.001;
 }
-
 
 
 /*!
     \class QSGNodeVisitor
-    \bried The QSGNodeVisitor class is a helper class for traversing the scene graph.
+    \brief The QSGNodeVisitor class is a helper class for traversing the scene graph.
 
     \internal
  */
@@ -973,10 +1070,8 @@ void QSGNodeVisitor::visitNode(QSGNode *n)
 
 void QSGNodeVisitor::visitChildren(QSGNode *n)
 {
-    int count = n->childCount();
-    for (int i=0; i<count; ++i) {
-        visitNode(n->childAtIndex(i));
-    }
+    for (QSGNode *c = n->firstChild(); c; c = c->nextSibling())
+        visitNode(c);
 }
 
 

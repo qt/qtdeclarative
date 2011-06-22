@@ -124,7 +124,6 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
         QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle]);
         if(datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
-            ParticleVertex &p = datum->pv;
             qreal t = 1 - (pt - opt) / dt;
             qreal vx =
               - 2 * ax * (1 - t)
@@ -137,8 +136,8 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 
 
             // Particle timestamp
-            p.t = pt;
-            p.lifeSpan = //TODO:Promote to base class?
+            datum->t = pt;
+            datum->lifeSpan = //TODO:Promote to base class?
                     (m_particleDuration
                      + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
                     / 1000.0;
@@ -153,20 +152,20 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
                               , width(), height());
             }
             QPointF newPos = effectiveExtruder()->extrude(boundsRect);
-            p.x = newPos.x();
-            p.y = newPos.y();
+            datum->x = newPos.x();
+            datum->y = newPos.y();
 
             // Particle speed
             const QPointF &speed = m_speed->sample(newPos);
-            p.sx = speed.x()
+            datum->sx = speed.x()
                     + m_speed_from_movement * vx;
-            p.sy = speed.y()
+            datum->sy = speed.y()
                     + m_speed_from_movement * vy;
 
             // Particle acceleration
             const QPointF &accel = m_acceleration->sample(newPos);
-            p.ax = accel.x();
-            p.ay = accel.y();
+            datum->ax = accel.x();
+            datum->ay = accel.y();
 
             // Particle size
             float sizeVariation = -m_particleSizeVariation
@@ -175,8 +174,8 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
             float size = qMax((qreal)0.0 , m_particleSize + sizeVariation);
             float endSize = qMax((qreal)0.0 , sizeAtEnd + sizeVariation);
 
-            p.size = size;// * float(m_emitting);
-            p.endSize = endSize;// * float(m_emitting);
+            datum->size = size;// * float(m_emitting);
+            datum->endSize = endSize;// * float(m_emitting);
 
             m_system->emitParticle(datum);
         }

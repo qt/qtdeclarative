@@ -81,8 +81,7 @@ void QSGTextNode::setColor(const QColor &color)
     if (m_usePixmapCache) {
         setUpdateFlag(UpdateNodes);
     } else {
-        for (int i=0; i<childCount(); ++i) {
-            QSGNode *childNode = childAtIndex(i);
+        for (QSGNode *childNode = firstChild(); childNode; childNode = childNode->nextSibling()) {
             if (childNode->subType() == GlyphNodeSubType) {
                 QSGGlyphNode *glyphNode = static_cast<QSGGlyphNode *>(childNode);
                 if (glyphNode->color() == m_color)
@@ -103,8 +102,7 @@ void QSGTextNode::setStyleColor(const QColor &styleColor)
         if (m_usePixmapCache) {
             setUpdateFlag(UpdateNodes);
         } else {
-            for (int i=0; i<childCount(); ++i) {
-                QSGNode *childNode = childAtIndex(i);
+            for (QSGNode *childNode = firstChild(); childNode; childNode = childNode->nextSibling()) {
                 if (childNode->subType() == GlyphNodeSubType) {
                     QSGGlyphNode *glyphNode = static_cast<QSGGlyphNode *>(childNode);
                     if (glyphNode->color() == m_styleColor)
@@ -371,8 +369,8 @@ void QSGTextNode::addTextBlock(const QPointF &position, QTextDocument *textDocum
 
 void QSGTextNode::deleteContent()
 {
-    while (childCount() > 0)
-        delete childAtIndex(0);
+    while (firstChild() > 0)
+        delete firstChild();
 }
 
 #if 0

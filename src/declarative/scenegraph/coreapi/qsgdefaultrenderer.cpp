@@ -111,55 +111,54 @@ static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
     return a->matrix() < b->matrix();
 }
 
-// Minimum heap.
-template <typename T, int prealloc = 256>
-class Heap
-{
-public:
-    void insert(const T &x);
-    const T &top() const { return v[0]; }
-    T pop();
-    bool isEmpty() const { return v.isEmpty(); }
-private:
-    static int parent(int i) { return (i - 1) >> 1; }
-    static int left(int i) { return (i << 1) | 1; }
-    static int right(int i) { return (i + 1) << 1; }
-    QVarLengthArray<T, prealloc> v;
-};
 
-template <typename T, int prealloc>
-void Heap<T, prealloc>::insert(const T &x)
+IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
+    : QPair<int, QSGGeometryNode *>(i, node)
+{
+}
+
+bool IndexGeometryNodePair::operator < (const IndexGeometryNodePair &other) const
+{
+    return nodeLessThan(second, other.second);
+}
+
+
+IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
+    : v(64)
+{
+}
+
+void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
 {
     int i = v.size();
-    v.append(x);
-    while (i != 0 && v[i] < v[parent(i)]) {
-        qSwap(v[parent(i)], v[i]);
+    v.add(x);
+    while (i != 0 && v.at(i) < v.at(parent(i))) {
+        qSwap(v.at(parent(i)), v.at(i));
         i = parent(i);
     }
 }
 
-template <typename T, int prealloc>
-T Heap<T, prealloc>::pop()
+IndexGeometryNodePair IndexGeometryNodePairHeap::pop()
 {
-    T x = top();
+    IndexGeometryNodePair x = top();
     if (v.size() > 1)
-        qSwap(v[0], v[v.size() - 1]);
-    v.resize(v.size() - 1);
+        qSwap(v.first(), v.last());
+    v.pop_back();
     int i = 0;
     while (left(i) < v.size()) {
         int low = left(i);
-        if (right(i) < v.size() && v[right(i)] < v[low])
+        if (right(i) < v.size() && v.at(right(i)) < v.at(low))
             low = right(i);
-        if (!(v[low] < v[i]))
+        if (!(v.at(low) < v.at(i)))
             break;
-        qSwap(v[i], v[low]);
+        qSwap(v.at(i), v.at(low));
         i = low;
     }
     return x;
 }
 
 
-QMLRenderer::QMLRenderer(QSGContext *context)
+QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     : QSGRenderer(context)
     , m_opaqueNodes(64)
     , m_transparentNodes(64)
@@ -176,7 +175,7 @@ QMLRenderer::QMLRenderer(QSGContext *context)
 #endif
 }
 
-void QMLRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
+void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
 {
     QSGRenderer::nodeChanged(node, flags);
 
@@ -191,7 +190,7 @@ void QMLRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
         m_needs_sorting = true;
 }
 
-void QMLRenderer::render()
+void QSGDefaultRenderer::render()
 {
 #if defined (QML_RUNTIME_TESTING)
     static bool dumpTree = qApp->arguments().contains(QLatin1String("--dump-tree"));
@@ -238,9 +237,8 @@ void QMLRenderer::render()
 
     QRect r = viewportRect();
     glViewport(r.x(), deviceRect().bottom() - r.bottom(), r.width(), r.height());
-    m_projectionMatrix = projectMatrix();
-    m_projectionMatrix.push();
-    m_modelViewMatrix.setToIdentity();
+    m_current_projection_matrix = projectionMatrix();
+    m_current_model_view_matrix.setToIdentity();
 
     m_currentClip = 0;
     glDisable(GL_STENCIL_TEST);
@@ -319,8 +317,6 @@ void QMLRenderer::render()
     if (m_currentProgram)
         m_currentProgram->deactivate();
 
-    m_projectionMatrix.pop();
-
 #ifdef RENDERER_DEBUG
     if (debugTimer.elapsed() > DEBUG_THRESHOLD) {
         printf(" --- Renderer breakdown:\n"
@@ -340,26 +336,18 @@ void QMLRenderer::render()
 
 }
 
-class Foo : public QPair<int, QSGGeometryNode *>
-{
-public:
-    Foo() { }
-    Foo(int i, QSGGeometryNode *n) : QPair<int, QSGGeometryNode *>(i, n) { }
-    bool operator < (const Foo &other) const { return nodeLessThan(second, other.second); }
-};
-
-void QMLRenderer::setSortFrontToBackEnabled(bool sort)
+void QSGDefaultRenderer::setSortFrontToBackEnabled(bool sort)
 {
     printf("setting sorting to... %d\n", sort);
     m_sort_front_to_back = sort;
 }
 
-bool QMLRenderer::isSortFrontToBackEnabled() const
+bool QSGDefaultRenderer::isSortFrontToBackEnabled() const
 {
     return m_sort_front_to_back;
 }
 
-void QMLRenderer::buildLists(QSGNode *node)
+void QSGDefaultRenderer::buildLists(QSGNode *node)
 {
     if (node->isSubtreeBlocked())
         return;
@@ -383,8 +371,7 @@ void QMLRenderer::buildLists(QSGNode *node)
         }
     }
 
-    int count = node->childCount();
-    if (!count)
+    if (!node->firstChild())
         return;
 
 #ifdef FORCE_NO_REORDER
@@ -393,33 +380,34 @@ void QMLRenderer::buildLists(QSGNode *node)
     static bool reorder = !qApp->arguments().contains(QLatin1String("--no-reorder"));
 #endif
 
-    if (reorder && count > 1 && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
-        QVarLengthArray<int, 16> beginIndices(count);
-        QVarLengthArray<int, 16> endIndices(count);
+    if (reorder && node->firstChild() != node->lastChild() && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
+        QVarLengthArray<int, 16> beginIndices;
+        QVarLengthArray<int, 16> endIndices;
         int baseCount = m_transparentNodes.size();
-        for (int i = 0; i < count; ++i) {
-            beginIndices[i] = m_transparentNodes.size();
-            buildLists(node->childAtIndex(i));
-            endIndices[i] = m_transparentNodes.size();
+        int count = 0;
+        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling()) {
+            beginIndices.append(m_transparentNodes.size());
+            buildLists(c);
+            endIndices.append(m_transparentNodes.size());
+            ++count;
         }
 
         int childNodeCount = m_transparentNodes.size() - baseCount;
         if (childNodeCount) {
-            Heap<Foo, 16> heap;
             m_tempNodes.reset();
             m_tempNodes.reserve(childNodeCount);
             while (childNodeCount) {
                 for (int i = 0; i < count; ++i) {
                     if (beginIndices[i] != endIndices[i])
-                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
-                while (!heap.isEmpty()) {
-                    Foo foo = heap.pop();
-                    m_tempNodes.add(foo.second);
+                while (!m_heap.isEmpty()) {
+                    IndexGeometryNodePair pair = m_heap.pop();
+                    m_tempNodes.add(pair.second);
                     --childNodeCount;
-                    int i = foo.first;
-                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), foo.second))
-                        heap.insert(Foo(i, m_transparentNodes.at(beginIndices[i]++)));
+                    int i = pair.first;
+                    if (beginIndices[i] != endIndices[i] && !nodeLessThan(m_transparentNodes.at(beginIndices[i]), pair.second))
+                        m_heap.insert(IndexGeometryNodePair(i, m_transparentNodes.at(beginIndices[i]++)));
                 }
             }
             Q_ASSERT(m_tempNodes.size() == m_transparentNodes.size() - baseCount);
@@ -427,16 +415,17 @@ void QMLRenderer::buildLists(QSGNode *node)
             qMemCopy(&m_transparentNodes.at(baseCount), &m_tempNodes.at(0), m_tempNodes.size() * sizeof(QSGGeometryNode *));
         }
     } else {
-        for (int i = 0; i < count; ++i)
-            buildLists(node->childAtIndex(i));
+        for (QSGNode *c = node->firstChild(); c; c = c->nextSibling())
+            buildLists(c);
     }
 }
 
-void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
+void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
 {
     const float scale = 1.0f / m_currentRenderOrder;
     int count = list.size();
     int currentRenderOrder = 0x80000000;
+    m_current_projection_matrix.setColumn(2, scale * projectionMatrix().column(2));
 
     //int clipChangeCount = 0;
     //int programChangeCount = 0;
@@ -458,18 +447,17 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         if (changeMatrix) {
             m_currentMatrix = geomNode->matrix();
             if (m_currentMatrix)
-                m_modelViewMatrix = *m_currentMatrix;
+                m_current_model_view_matrix = *m_currentMatrix;
             else
-                m_modelViewMatrix.setToIdentity();
+                m_current_model_view_matrix.setToIdentity();
             updates |= QSGMaterialShader::RenderState::DirtyMatrix;
         }
 
-        bool changeOpacity = m_render_opacity != geomNode->inheritedOpacity();
+        bool changeOpacity = m_current_opacity != geomNode->inheritedOpacity();
         if (changeOpacity) {
             updates |= QSGMaterialShader::RenderState::DirtyOpacity;
-            m_render_opacity = geomNode->inheritedOpacity();
+            m_current_opacity = geomNode->inheritedOpacity();
         }
-
 
         Q_ASSERT(geomNode->activeMaterial());
 
@@ -485,7 +473,7 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
 #ifdef FORCE_NO_REORDER
             glDepthMask(false);
 #else
-            glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_render_opacity == 1);
+            glDepthMask((material->flags() & QSGMaterial::Blending) == 0 && m_current_opacity == 1);
 #endif
             //++clipChangeCount;
         }
@@ -507,10 +495,9 @@ void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         bool changeRenderOrder = currentRenderOrder != geomNode->renderOrder();
         if (changeRenderOrder) {
             currentRenderOrder = geomNode->renderOrder();
-            m_renderOrderMatrix(2, 3) = currentRenderOrder * scale;
-            m_projectionMatrix.pop();
-            m_projectionMatrix.push();
-            m_projectionMatrix *= m_renderOrderMatrix;
+            m_current_projection_matrix.setColumn(3, projectionMatrix().column(3)
+                                                  + currentRenderOrder
+                                                  * m_current_projection_matrix.column(2));
             updates |= QSGMaterialShader::RenderState::DirtyMatrix;
         }
 

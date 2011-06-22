@@ -61,10 +61,11 @@ class QSGParticlePainter : public QSGItem
 
 public:
     explicit QSGParticlePainter(QSGItem *parent = 0);
-    virtual void load(QSGParticleData*);
-    virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
-    virtual int count();
+    //Data Interface to system
+    void load(QSGParticleData*);
+    void reload(QSGParticleData*);
+    void setCount(int c);
+    int count();
     QSGParticleSystem* system() const
     {
         return m_system;
@@ -76,7 +77,6 @@ public:
         return m_particles;
     }
 
-    int particleTypeIndex(QSGParticleData*);
 signals:
     void countChanged();
     void systemChanged(QSGParticleSystem* arg);
@@ -95,40 +95,38 @@ void setParticles(QStringList arg)
 }
 private slots:
     void calcSystemOffset();
-protected:
-    virtual void reset();
-    virtual void componentComplete();
 
-//    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *){
-//        qDebug() << "Shouldn't be here..." << this;
-//        return 0;
-//    }
+protected:
+    /* Reset resets all your internal data structures. But anything attached to a particle should
+       be in attached data. So reset + reloads should have no visible effect.
+       ###Hunt down all cases where we do a complete reset for convenience and be more targeted
+    */
+    virtual void reset();
+
+    virtual void componentComplete();
+    //Data interface to painters
+    QVector<QSGParticleData*> m_data; //Actually stored in arbitrary order,
+    QVector<QObject*> m_attachedData; //This data will be moved along with m_data in resizes (but you own it)
+    virtual void initialize(int){}
+    virtual void reload(int){}//If you need to do something on size changed, check m_data size in this? Or we reset you every time?
 
     QSGParticleSystem* m_system;
     friend class QSGParticleSystem;
     int m_count;
     bool m_pleaseReset;
     QStringList m_particles;
-    QHash<int,int> m_particleStarts;
-    int m_lastStart;
     QPointF m_systemOffset;
 
-    template <typename VertexStruct>
-    void vertexCopy(VertexStruct &b, const ParticleVertex& a)
-    {
-        b.x = a.x - m_systemOffset.x();
-        b.y = a.y - m_systemOffset.y();
-        b.t = a.t;
-        b.lifeSpan = a.lifeSpan;
-        b.size = a.size;
-        b.endSize = a.endSize;
-        b.sx = a.sx;
-        b.sy = a.sy;
-        b.ax = a.ax;
-        b.ay = a.ay;
-    }
 
 private:
+    int m_lastStart;
+    QHash<int, QPair<int, int> > m_particleStarts;
+    int particleTypeIndex(QSGParticleData* d);//Now private
+    void resize(int, int);
+
+    QSGParticleData* m_sentinel;
+    //QVector<QSGParticleData*> m_shadowData;//For when we implement overwrite: false
+    bool m_inResize;
 };
 
 QT_END_NAMESPACE

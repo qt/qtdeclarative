@@ -128,30 +128,34 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
         m_lastT += period;
     }
 
-    foreach(QSGParticleData *d, m_system->m_data){
-        if(!d || !activeGroup(d->group))
+    foreach(QSGParticleGroupData *gd, m_system->m_groupData){
+        if(!activeGroup(m_system->m_groupData.key(gd)))//TODO: Surely this can be done better
             return;
-        qreal fx = 0.0;
-        qreal fy = 0.0;
-        QPointF pos = QPointF(d->curX() - x(), d->curY() - y());//TODO: Offset
-        QPointF nodePos = QPointF(pos.x() / m_spacing.x(), pos.y() / m_spacing.y());
-        QSet<QPair<int, int> > nodes;
-        nodes << qMakePair((int)ceil(nodePos.x()), (int)ceil(nodePos.y()));
-        nodes << qMakePair((int)ceil(nodePos.x()), (int)floor(nodePos.y()));
-        nodes << qMakePair((int)floor(nodePos.x()), (int)ceil(nodePos.y()));
-        nodes << qMakePair((int)floor(nodePos.x()), (int)floor(nodePos.y()));
-        typedef QPair<int, int> intPair;
-        foreach(const intPair &p, nodes){
-            if(!QRect(0,0,m_gridSize-1,m_gridSize-1).contains(QPoint(p.first, p.second)))
-                continue;
-            qreal dist = magnitude(pos.x() - p.first*m_spacing.x(), pos.y() - p.second*m_spacing.y());//TODO: Mathematically valid
-            fx += m_field[p.first][p.second].x() * ((m_magSum - dist)/m_magSum);//Proportionally weight nodes
-            fy += m_field[p.first][p.second].y() * ((m_magSum - dist)/m_magSum);
-        }
-        if(fx || fy){
-            d->setInstantaneousSX(d->curSX()+ fx * dt);
-            d->setInstantaneousSY(d->curSY()+ fy * dt);
-            m_system->m_needsReset << d;
+        foreach(QSGParticleData *d, gd->data){
+            if(!d || !activeGroup(d->group))
+                return;
+            qreal fx = 0.0;
+            qreal fy = 0.0;
+            QPointF pos = QPointF(d->curX() - x(), d->curY() - y());//TODO: Offset
+            QPointF nodePos = QPointF(pos.x() / m_spacing.x(), pos.y() / m_spacing.y());
+            QSet<QPair<int, int> > nodes;
+            nodes << qMakePair((int)ceil(nodePos.x()), (int)ceil(nodePos.y()));
+            nodes << qMakePair((int)ceil(nodePos.x()), (int)floor(nodePos.y()));
+            nodes << qMakePair((int)floor(nodePos.x()), (int)ceil(nodePos.y()));
+            nodes << qMakePair((int)floor(nodePos.x()), (int)floor(nodePos.y()));
+            typedef QPair<int, int> intPair;
+            foreach(const intPair &p, nodes){
+                if(!QRect(0,0,m_gridSize-1,m_gridSize-1).contains(QPoint(p.first, p.second)))
+                    continue;
+                qreal dist = magnitude(pos.x() - p.first*m_spacing.x(), pos.y() - p.second*m_spacing.y());//TODO: Mathematically valid
+                fx += m_field[p.first][p.second].x() * ((m_magSum - dist)/m_magSum);//Proportionally weight nodes
+                fy += m_field[p.first][p.second].y() * ((m_magSum - dist)/m_magSum);
+            }
+            if(fx || fy){
+                d->setInstantaneousSX(d->curSX()+ fx * dt);
+                d->setInstantaneousSY(d->curSY()+ fy * dt);
+                m_system->m_needsReset << d;
+            }
         }
     }
 }

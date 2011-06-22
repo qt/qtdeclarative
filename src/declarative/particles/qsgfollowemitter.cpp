@@ -54,6 +54,7 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
   , m_emissionExtruder(0)
   , m_defaultEmissionExtruder(new QSGParticleExtruder(this))
 {
+    //TODO: If followed increased their size
     connect(this, SIGNAL(followChanged(QString)),
             this, SLOT(recalcParticlesPerSecond()));
     connect(this, SIGNAL(particleDurationChanged(int)),
@@ -67,7 +68,7 @@ void QSGFollowEmitter::recalcParticlesPerSecond(){
         return;
     m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size;
     if(!m_followCount){
-        setParticlesPerSecond(1000);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
+        setParticlesPerSecond(1);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
         setParticlesPerSecond(m_particlesPerParticlePerSecond * m_followCount);
         m_lastEmission.resize(m_followCount);
@@ -111,61 +112,59 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
     int gId = m_system->m_groupIds[m_follow];
     int gId2 = m_system->m_groupIds[m_particle];
-    for(int i=0; i<m_system->m_groupData[gId]->size; i++){
-        pt = m_lastEmission[i];
-        QSGParticleData* d = m_system->m_data[i + m_system->m_groupData[gId]->start];
+    foreach(QSGParticleData *d, m_system->m_groupData[gId]->data){
         if(!d || !d->stillAlive())
             continue;
-        if(pt < d->pv.t)
-            pt = d->pv.t;
+        pt = m_lastEmission[d->index];
+        if(pt < d->t)
+            pt = d->t;
 
         if(!effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
-            m_lastEmission[i] = time;//jump over this time period without emitting, because it's outside
+            m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
             continue;
         }
         while(pt < time || !m_burstQueue.isEmpty()){
             QSGParticleData* datum = m_system->newDatum(gId2);
             if(datum){//else, skip this emission
                 datum->e = this;//###useful?
-                ParticleVertex &p = datum->pv;
 
                 // Particle timestamp
-                p.t = pt;
-                p.lifeSpan =
+                datum->t = pt;
+                datum->lifeSpan =
                         (m_particleDuration
                          + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
                         / 1000.0;
 
                 // Particle position
                 // Note that burst location doesn't get used for follow emitter
-                qreal followT =  pt - d->pv.t;
+                qreal followT =  pt - d->t;
                 qreal followT2 = followT * followT * 0.5;
-                qreal sizeOffset = d->pv.size/2;//TODO: Current size? As an option
+                qreal sizeOffset = d->size/2;//TODO: Current size? As an option
                 //TODO: Set variations
                 //Subtract offset, because PS expects this in emitter coordinates
-                QRectF boundsRect(d->pv.x - offset.x() + d->pv.sx * followT + d->pv.ax * followT2 - m_emitterXVariation/2,
-                                  d->pv.y - offset.y() + d->pv.sy * followT + d->pv.ay * followT2 - m_emitterYVariation/2,
+                QRectF boundsRect(d->x - offset.x() + d->sx * followT + d->ax * followT2 - m_emitterXVariation/2,
+                                  d->y - offset.y() + d->sy * followT + d->ay * followT2 - m_emitterYVariation/2,
                                   m_emitterXVariation,
                                   m_emitterYVariation);
-    //            QRectF boundsRect(d->pv.x + d->pv.sx * followT + d->pv.ax * followT2 + offset.x() - sizeOffset,
-    //                              d->pv.y + d->pv.sy * followT + d->pv.ay * followT2 + offset.y() - sizeOffset,
+    //            QRectF boundsRect(d->x + d->sx * followT + d->ax * followT2 + offset.x() - sizeOffset,
+    //                              d->y + d->sy * followT + d->ay * followT2 + offset.y() - sizeOffset,
     //                              sizeOffset*2,
     //                              sizeOffset*2);
 
                 QSGParticleExtruder* effectiveEmissionExtruder = m_emissionExtruder ? m_emissionExtruder : m_defaultEmissionExtruder;
                 const QPointF &newPos = effectiveEmissionExtruder->extrude(boundsRect);
-                p.x = newPos.x();
-                p.y = newPos.y();
+                datum->x = newPos.x();
+                datum->y = newPos.y();
 
                 // Particle speed
                 const QPointF &speed = m_speed->sample(newPos);
-                p.sx = speed.x();
-                p.sy = speed.y();
+                datum->sx = speed.x();
+                datum->sy = speed.y();
 
                 // Particle acceleration
                 const QPointF &accel = m_acceleration->sample(newPos);
-                p.ax = accel.x();
-                p.ay = accel.y();
+                datum->ax = accel.x();
+                datum->ay = accel.y();
 
                 // Particle size
                 float sizeVariation = -m_particleSizeVariation
@@ -174,8 +173,8 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 float size = qMax((qreal)0.0, m_particleSize + sizeVariation);
                 float endSize = qMax((qreal)0.0, sizeAtEnd + sizeVariation);
 
-                p.size = size * float(m_emitting);
-                p.endSize = endSize * float(m_emitting);
+                datum->size = size * float(m_emitting);
+                datum->endSize = endSize * float(m_emitting);
 
                 m_system->emitParticle(datum);
             }
@@ -187,7 +186,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 pt += particleRatio;
             }
         }
-        m_lastEmission[i] = pt;
+        m_lastEmission[d->index] = pt;
     }
 
     m_lastTimeStamp = time;

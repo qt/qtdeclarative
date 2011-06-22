@@ -46,10 +46,14 @@ QT_BEGIN_NAMESPACE
 // #define QSG_UPDATER_DEBUG
 
 QSGNodeUpdater::QSGNodeUpdater()
-    : m_current_clip(0)
+    : m_matrix_stack(64)
+    , m_combined_matrix_stack(64)
+    , m_opacity_stack(64)
+    , m_current_clip(0)
     , m_force_update(0)
 {
-    m_opacity_stack.push(1);
+    m_opacity_stack.add(1);
+    m_matrix_stack.add(QMatrix4x4());
 }
 
 void QSGNodeUpdater::updateStates(QSGNode *n)
@@ -58,7 +62,6 @@ void QSGNodeUpdater::updateStates(QSGNode *n)
     m_force_update = 0;
 
     Q_ASSERT(m_opacity_stack.size() == 1); // The one we added in the constructr...
-    // Q_ASSERT(m_matrix_stack.isEmpty()); ### no such function?
     Q_ASSERT(m_combined_matrix_stack.isEmpty());
 
     visitNode(n);
@@ -121,13 +124,11 @@ void QSGNodeUpdater::enterTransformNode(QSGTransformNode *t)
 #endif
 
     if (!t->matrix().isIdentity()) {
-        m_combined_matrix_stack.push(&t->combinedMatrix());
-
-        m_matrix_stack.push();
-        m_matrix_stack *= t->matrix();
+        m_combined_matrix_stack.add(&t->combinedMatrix());
+        m_matrix_stack.add(m_matrix_stack.last() * t->matrix());
     }
 
-    t->setCombinedMatrix(m_matrix_stack.top());
+    t->setCombinedMatrix(m_matrix_stack.last());
 }
 
 
@@ -141,8 +142,8 @@ void QSGNodeUpdater::leaveTransformNode(QSGTransformNode *t)
         --m_force_update;
 
     if (!t->matrix().isIdentity()) {
-        m_matrix_stack.pop();
-        m_combined_matrix_stack.pop();
+        m_matrix_stack.pop_back();
+        m_combined_matrix_stack.pop_back();
     }
 
 }
@@ -154,11 +155,10 @@ void QSGNodeUpdater::enterClipNode(QSGClipNode *c)
     qDebug() << "enter clip:" << c;
 #endif
 
-    if (c->dirtyFlags() & QSGNode::DirtyClipList) {
+    if (c->dirtyFlags() & QSGNode::DirtyClipList)
         ++m_force_update;
-    }
 
-    c->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.top();
+    c->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
     c->m_clip_list = m_current_clip;
     m_current_clip = c;
 }
@@ -170,9 +170,8 @@ void QSGNodeUpdater::leaveClipNode(QSGClipNode *c)
     qDebug() << "leave clip:" << c;
 #endif
 
-    if (c->dirtyFlags() & QSGNode::DirtyClipList) {
+    if (c->dirtyFlags() & QSGNode::DirtyClipList)
         --m_force_update;
-    }
 
     m_current_clip = c->m_clip_list;
 }
@@ -184,9 +183,16 @@ void QSGNodeUpdater::enterGeometryNode(QSGGeometryNode *g)
     qDebug() << "enter geometry:" << g;
 #endif
 
-    g->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.top();
+    g->m_matrix = m_combined_matrix_stack.isEmpty() ? 0 : m_combined_matrix_stack.last();
     g->m_clip_list = m_current_clip;
-    g->setInheritedOpacity(m_opacity_stack.top());
+    g->setInheritedOpacity(m_opacity_stack.last());
+}
+
+void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
+{
+#ifdef QSG_UPDATER_DEBUG
+    qDebug() << "leave geometry" << g;
+#endif
 }
 
 void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
@@ -194,9 +200,9 @@ void QSGNodeUpdater::enterOpacityNode(QSGOpacityNode *o)
     if (o->dirtyFlags() & QSGNode::DirtyOpacity)
         ++m_force_update;
 
-    qreal opacity = m_opacity_stack.top() * o->opacity();
+    qreal opacity = m_opacity_stack.last() * o->opacity();
     o->setCombinedOpacity(opacity);
-    m_opacity_stack.push(opacity);
+    m_opacity_stack.add(opacity);
 
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "enter opacity" << o;
@@ -211,13 +217,13 @@ void QSGNodeUpdater::leaveOpacityNode(QSGOpacityNode *o)
     if (o->flags() & QSGNode::DirtyOpacity)
         --m_force_update;
 
-    m_opacity_stack.pop();
+    m_opacity_stack.pop_back();
 }
 
 void QSGNodeUpdater::visitChildren(QSGNode *n)
 {
-    if (!n->isSubtreeBlocked())
-        QSGNodeVisitor::visitChildren(n);
+    for (QSGNode *c = n->firstChild(); c; c = c->nextSibling())
+        visitNode(c);
 }
 
 void QSGNodeUpdater::visitNode(QSGNode *n)
@@ -226,18 +232,49 @@ void QSGNodeUpdater::visitNode(QSGNode *n)
     qDebug() << "enter:" << n;
 #endif
 
-    if (n->dirtyFlags() || m_force_update) {
-        bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
-        if (forceUpdate)
-            ++m_force_update;
+    if (!n->dirtyFlags() && !m_force_update)
+        return;
+    if (n->isSubtreeBlocked())
+        return;
 
-        QSGNodeVisitor::visitNode(n);
+    bool forceUpdate = n->dirtyFlags() & (QSGNode::DirtyNodeAdded | QSGNode::DirtyForceUpdate);
+    if (forceUpdate)
+        ++m_force_update;
 
-        if (forceUpdate)
-            --m_force_update;
-
-        n->clearDirty();
+    switch (n->type()) {
+    case QSGNode::TransformNodeType: {
+        QSGTransformNode *t = static_cast<QSGTransformNode *>(n);
+        enterTransformNode(t);
+        visitChildren(t);
+        leaveTransformNode(t);
+        break; }
+    case QSGNode::GeometryNodeType: {
+        QSGGeometryNode *g = static_cast<QSGGeometryNode *>(n);
+        enterGeometryNode(g);
+        visitChildren(g);
+        leaveGeometryNode(g);
+        break; }
+    case QSGNode::ClipNodeType: {
+        QSGClipNode *c = static_cast<QSGClipNode *>(n);
+        enterClipNode(c);
+        visitChildren(c);
+        leaveClipNode(c);
+        break; }
+    case QSGNode::OpacityNodeType: {
+        QSGOpacityNode *o = static_cast<QSGOpacityNode *>(n);
+        enterOpacityNode(o);
+        visitChildren(o);
+        leaveOpacityNode(o);
+        break; }
+    default:
+        visitChildren(n);
+        break;
     }
+
+    if (forceUpdate)
+        --m_force_update;
+
+    n->clearDirty();
 }
 
 QT_END_NAMESPACE

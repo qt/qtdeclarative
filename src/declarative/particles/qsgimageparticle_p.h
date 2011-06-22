@@ -57,13 +57,6 @@ class QSGGeometryNode;
 class QSGSprite;
 class QSGSpriteEngine;
 
-struct Color4ub {
-    uchar r;
-    uchar g;
-    uchar b;
-    uchar a;
-};
-
 struct SimpleVertex {
     float x;
     float y;
@@ -165,9 +158,6 @@ public:
     explicit QSGImageParticle(QSGItem *parent = 0);
     virtual ~QSGImageParticle(){}
 
-    virtual void load(QSGParticleData*);
-    virtual void reload(QSGParticleData*);
-    virtual void setCount(int c);
 
     QDeclarativeListProperty<QSGSprite> sprites();
     QSGSpriteEngine* spriteEngine() {return m_spriteEngine;}
@@ -175,7 +165,7 @@ public:
     enum PerformanceLevel{//TODO: Expose?
         Unknown = 0,
         Simple,
-        Coloured,
+        Colored,
         Deformable,
         Tabled,
         Sprites
@@ -293,8 +283,11 @@ public slots:
     void setBloat(bool arg);
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void reset();
+    virtual void initialize(int idx);
+    virtual void reload(int idx);
+
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNode();
     QSGGeometryNode* buildSimpleParticleNode();
@@ -303,8 +296,6 @@ private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
 private:
-    //void vertexCopy(UltraVertex &b,const ParticleVertex& a);
-    IntermediateVertices* fetchIntermediateVertices(int pos);
     bool m_do_reset;
 
     QUrl m_image_name;
@@ -345,6 +336,7 @@ private:
 
     PerformanceLevel m_lastLevel;
     void* m_lastData;
+    int m_lastCount;
 };
 
 QT_END_NAMESPACE

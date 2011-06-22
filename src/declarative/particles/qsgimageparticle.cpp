@@ -355,7 +355,7 @@ void QSGImageParticle::setColor(const QColor &color)
         return;
     m_color = color;
     emit colorChanged();
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -365,7 +365,7 @@ void QSGImageParticle::setColorVariation(qreal var)
         return;
     m_color_variation = var;
     emit colorVariationChanged();
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -375,7 +375,7 @@ void QSGImageParticle::setAlphaVariation(qreal arg)
         m_alphaVariation = arg;
         emit alphaVariationChanged(arg);
     }
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -385,7 +385,7 @@ void QSGImageParticle::setAlpha(qreal arg)
         m_alpha = arg;
         emit alphaChanged(arg);
     }
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -395,7 +395,7 @@ void QSGImageParticle::setRedVariation(qreal arg)
         m_redVariation = arg;
         emit redVariationChanged(arg);
     }
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -405,7 +405,7 @@ void QSGImageParticle::setGreenVariation(qreal arg)
         m_greenVariation = arg;
         emit greenVariationChanged(arg);
     }
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -415,7 +415,7 @@ void QSGImageParticle::setBlueVariation(qreal arg)
         m_blueVariation = arg;
         emit blueVariationChanged(arg);
     }
-    if(perfLevel < Coloured)
+    if(perfLevel < Colored)
         reset();
 }
 
@@ -498,11 +498,6 @@ void QSGImageParticle::setBloat(bool arg)
     if(perfLevel < 9999)
         reset();
 }
-void QSGImageParticle::setCount(int c)
-{
-    QSGParticlePainter::setCount(c);
-    m_pleaseReset = true;
-}
 
 void QSGImageParticle::reset()
 {
@@ -569,20 +564,19 @@ QSGGeometryNode* QSGImageParticle::buildSimpleParticleNode()
     g->setDrawingMode(GL_TRIANGLES);
 
     SimpleVertex *vertices = (SimpleVertex *) g->vertexData();
-    for (int p=0; p<m_count; ++p) {
-        for (int i=0; i<4; ++i) {
-            vertices[i].x = 0;
-            vertices[i].y = 0;
-            vertices[i].t = -1;
-            vertices[i].lifeSpan = 0;
-            vertices[i].size = 0;
-            vertices[i].endSize = 0;
-            vertices[i].sx = 0;
-            vertices[i].sy = 0;
-            vertices[i].ax = 0;
-            vertices[i].ay = 0;
+    for (int p=0; p<m_count; ++p){
+        for(int i=0; i<4; i++){
+            vertices[i].x = m_data[p]->x;
+            vertices[i].y = m_data[p]->y;
+            vertices[i].t = m_data[p]->t;
+            vertices[i].size = m_data[p]->size;
+            vertices[i].endSize = m_data[p]->endSize;
+            vertices[i].sx = m_data[p]->sx;
+            vertices[i].sy = m_data[p]->sy;
+            vertices[i].ax = m_data[p]->ax;
+            vertices[i].ay = m_data[p]->ay;
         }
-
+        //reload(p);
         vertices[0].tx = 0;
         vertices[0].ty = 0;
 
@@ -610,6 +604,9 @@ QSGGeometryNode* QSGImageParticle::buildSimpleParticleNode()
         indices += 6;
     }
 
+    m_node = new QSGGeometryNode();
+    m_node->setGeometry(g);
+
     if (m_material) {
         delete m_material;
         m_material = 0;
@@ -619,24 +616,21 @@ QSGGeometryNode* QSGImageParticle::buildSimpleParticleNode()
     m_material->texture = sceneGraphEngine()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
     m_material->framecount = 1;
-    m_node = new QSGGeometryNode();
-    m_node->setGeometry(g);
     m_node->setMaterial(m_material);
 
     m_last_particle = 0;
-
     return m_node;
 }
 
 QSGGeometryNode* QSGImageParticle::buildParticleNode()
 {
     if (m_count * 4 > 0xffff) {
-        printf("UltraParticle: Too many particles... \n");//####Why is this here?
+        printf("UltraParticle: Too many particles... \n");//### Why is this here?
         return 0;
     }
 
     if(m_count <= 0) {
-        printf("UltraParticle: Too few particles... \n");
+        qDebug() << "UltraParticle: Too few particles... \n";//XXX: Is now a vaild intermediate state...
         return 0;
     }
 
@@ -679,70 +673,12 @@ QSGGeometryNode* QSGImageParticle::buildParticleNode()
 
     QSGGeometry *g = new QSGGeometry(UltraParticle_AttributeSet, vCount, iCount);
     g->setDrawingMode(GL_TRIANGLES);
+    m_node = new QSGGeometryNode();
+    m_node->setGeometry(g);
 
     UltraVertex *vertices = (UltraVertex *) g->vertexData();
-    SimpleVertex *oldSimple = (SimpleVertex *) m_lastData;//TODO: Other levels
-    if(m_lastLevel == 1)
-        qDebug() << "Theta" << m_lastLevel << oldSimple[0].x << oldSimple[0].y << oldSimple[0].t;
     for (int p=0; p<m_count; ++p) {
-
-        if (m_lastLevel == 1) {//Transplant/IntermediateVertices?
-            for (int i=0; i<4; ++i) {
-                vertices[i].x = oldSimple[i].x;
-                vertices[i].y = oldSimple[i].y;
-                vertices[i].t = oldSimple[i].t;
-                vertices[i].lifeSpan = oldSimple[i].lifeSpan;
-                vertices[i].size = oldSimple[i].size;
-                vertices[i].endSize = oldSimple[i].endSize;
-                vertices[i].sx = oldSimple[i].sx;
-                vertices[i].sy = oldSimple[i].sy;
-                vertices[i].ax = oldSimple[i].ax;
-                vertices[i].ay = oldSimple[i].ay;
-                vertices[i].xx = 1;
-                vertices[i].xy = 0;
-                vertices[i].yx = 0;
-                vertices[i].yy = 1;
-                vertices[i].rotation = 0;
-                vertices[i].rotationSpeed = 0;
-                vertices[i].autoRotate = 0;
-                vertices[i].animIdx = 0;
-                vertices[i].frameDuration = oldSimple[i].lifeSpan;
-                vertices[i].frameCount = 1;
-                vertices[i].animT = oldSimple[i].t;
-                vertices[i].color.r = 255;
-                vertices[i].color.g = 255;
-                vertices[i].color.b = 255;
-                vertices[i].color.a = 255;
-            }
-        } else {
-            for (int i=0; i<4; ++i) {
-                vertices[i].x = 0;
-                vertices[i].y = 0;
-                vertices[i].t = -1;
-                vertices[i].lifeSpan = 0;
-                vertices[i].size = 0;
-                vertices[i].endSize = 0;
-                vertices[i].sx = 0;
-                vertices[i].sy = 0;
-                vertices[i].ax = 0;
-                vertices[i].ay = 0;
-                vertices[i].xx = 1;
-                vertices[i].xy = 0;
-                vertices[i].yx = 0;
-                vertices[i].yy = 1;
-                vertices[i].rotation = 0;
-                vertices[i].rotationSpeed = 0;
-                vertices[i].autoRotate = 0;
-                vertices[i].animIdx = -1;
-                vertices[i].frameDuration = 1;
-                vertices[i].frameCount = 0;
-                vertices[i].animT = -1;
-                vertices[i].color.r = 0;//TODO:Some things never get used uninitialized. Consider dropping them here?
-                vertices[i].color.g = 0;
-                vertices[i].color.b = 0;
-                vertices[i].color.a = 0;
-            }
-        }
+        reload(p);//reload gets geometry from node
 
         vertices[0].tx = 0;
         vertices[0].ty = 0;
@@ -757,10 +693,9 @@ QSGGeometryNode* QSGImageParticle::buildParticleNode()
         vertices[3].ty = 1;
 
         vertices += 4;
-        oldSimple += 4;
     }
 
-    quint16 *indices = g->indexDataAsUShort();//TODO: Speed gains by copying this over if count unchanged?
+    quint16 *indices = g->indexDataAsUShort();
     for (int i=0; i<m_count; ++i) {
         int o = i * 4;
         indices[0] = o;
@@ -804,8 +739,6 @@ QSGGeometryNode* QSGImageParticle::buildParticleNode()
         m_spriteEngine->setCount(m_count);
     }
 
-    m_node = new QSGGeometryNode();
-    m_node->setGeometry(g);
     m_node->setMaterial(m_material);
 
     m_last_particle = 0;
@@ -818,9 +751,9 @@ QSGNode *QSGImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
     if(m_pleaseReset){
         if(m_node){
             if(perfLevel == 1){
-                qDebug() << "Beta";
-                m_lastData = qMalloc(m_count*sizeof(SimpleVertices));//TODO: Account for count_changed possibility
-                memcpy(m_lastData, m_node->geometry()->vertexData(), m_count * sizeof(SimpleVertices));//TODO: Multiple levels
+                m_lastCount = m_node->geometry()->vertexCount() / 4;
+                m_lastData = qMalloc(m_lastCount*sizeof(SimpleVertices));
+                memcpy(m_lastData, m_node->geometry()->vertexData(), m_lastCount * sizeof(SimpleVertices));//TODO: Multiple levels
             }
             m_lastLevel = perfLevel;
             delete m_node;
@@ -845,7 +778,7 @@ QSGNode *QSGImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 
 void QSGImageParticle::prepareNextFrame()
 {
-    if (m_node == 0){    //TODO: Staggered loading (as emitted)
+    if (m_node == 0){//TODO: Staggered loading (as emitted)
         m_node = buildParticleNode();
         if(m_node == 0)
             return;
@@ -876,67 +809,14 @@ void QSGImageParticle::prepareNextFrame()
     }
 }
 
-template <typename VT>
-IntermediateVertices* transplant(IntermediateVertices* iv, VT &v)
-{//Deliberate typemangling cast
-    iv->v1 = (UltraVertex*)&(v.v1);
-    iv->v2 = (UltraVertex*)&(v.v2);
-    iv->v3 = (UltraVertex*)&(v.v3);
-    iv->v4 = (UltraVertex*)&(v.v4);
-    return iv;
-}
-
-IntermediateVertices* QSGImageParticle::fetchIntermediateVertices(int pos)
-{
-    //Note that this class ruins typesafety for you. Maybe even thread safety.
-    //TODO: Something better, possibly with templates or inheritance
-    static IntermediateVertices iv;
-    SimpleVertices *sv;
-    UltraVertices *uv;
-    switch(perfLevel){
-        case Simple:
-            sv = (SimpleVertices *) m_node->geometry()->vertexData();
-            return transplant(&iv, sv[pos]);
-        case Coloured:
-        case Deformable:
-        case Tabled:
-        case Sprites:
-        default:
-            uv = (UltraVertices *) m_node->geometry()->vertexData();
-            return transplant(&iv,uv[pos]);
-    }
-}
-
 void QSGImageParticle::reloadColor(const Color4ub &c, QSGParticleData* d)
 {
-    UltraVertices *particles = (UltraVertices *) m_node->geometry()->vertexData();
-    int pos = particleTypeIndex(d);
-    UltraVertices &p = particles[pos];
-    p.v1.color = p.v2.color = p.v3.color = p.v4.color = c;
+    d->color = c;
+    //TODO: get index for reload - or make function take an index
 }
 
-void QSGImageParticle::reload(QSGParticleData *d)
+void QSGImageParticle::initialize(int idx)
 {
-    if (m_node == 0)
-        return;
-
-    int pos = particleTypeIndex(d);
-    IntermediateVertices* p = fetchIntermediateVertices(pos);
-
-    //Perhaps we could be more efficient?
-    vertexCopy(*p->v1, d->pv);
-    vertexCopy(*p->v2, d->pv);
-    vertexCopy(*p->v3, d->pv);
-    vertexCopy(*p->v4, d->pv);
-}
-
-void QSGImageParticle::load(QSGParticleData *d)
-{
-    if (m_node == 0)
-        return;
-
-    int pos = particleTypeIndex(d);
-    IntermediateVertices* p = fetchIntermediateVertices(pos);//Remember this removes typesafety!
     Color4ub color;
     qreal redVariation = m_color_variation + m_redVariation;
     qreal greenVariation = m_color_variation + m_greenVariation;
@@ -944,50 +824,111 @@ void QSGImageParticle::load(QSGParticleData *d)
     switch(perfLevel){//Fall-through is intended on all of them
         case Sprites:
             // Initial Sprite State
-            p->v1->animT = p->v2->animT = p->v3->animT = p->v4->animT = p->v1->t;
-            p->v1->animIdx = p->v2->animIdx = p->v3->animIdx = p->v4->animIdx = 0;
+            m_data[idx]->animT = m_data[idx]->t;
+            m_data[idx]->animIdx = 0;
             if(m_spriteEngine){
-                m_spriteEngine->startSprite(pos);
-                p->v1->frameCount = p->v2->frameCount = p->v3->frameCount = p->v4->frameCount = m_spriteEngine->spriteFrames(pos);
-                p->v1->frameDuration = p->v2->frameDuration = p->v3->frameDuration = p->v4->frameDuration = m_spriteEngine->spriteDuration(pos);
+                m_spriteEngine->startSprite(idx);
+                m_data[idx]->frameCount = m_spriteEngine->spriteFrames(idx);
+                m_data[idx]->frameDuration = m_spriteEngine->spriteDuration(idx);
             }else{
-                p->v1->frameCount = p->v2->frameCount = p->v3->frameCount = p->v4->frameCount = 1;
-                p->v1->frameDuration = p->v2->frameDuration = p->v3->frameDuration = p->v4->frameDuration = 9999;
+                m_data[idx]->frameCount = 1;
+                m_data[idx]->frameDuration = 9999;
             }
         case Tabled:
         case Deformable:
             //Initial Rotation
             if(m_xVector){
-                const QPointF &ret = m_xVector->sample(QPointF(d->pv.x, d->pv.y));
-                p->v1->xx = p->v2->xx = p->v3->xx = p->v4->xx = ret.x();
-                p->v1->xy = p->v2->xy = p->v3->xy = p->v4->xy = ret.y();
+                const QPointF &ret = m_xVector->sample(QPointF(m_data[idx]->x, m_data[idx]->y));
+                m_data[idx]->xx = ret.x();
+                m_data[idx]->xy = ret.y();
             }
             if(m_yVector){
-                const QPointF &ret = m_yVector->sample(QPointF(d->pv.x, d->pv.y));
-                p->v1->yx = p->v2->yx = p->v3->yx = p->v4->yx = ret.x();
-                p->v1->yy = p->v2->yy = p->v3->yy = p->v4->yy = ret.y();
+                const QPointF &ret = m_yVector->sample(QPointF(m_data[idx]->x, m_data[idx]->y));
+                m_data[idx]->yx = ret.x();
+                m_data[idx]->yy = ret.y();
             }
-            p->v1->rotation = p->v2->rotation = p->v3->rotation = p->v4->rotation =
+            m_data[idx]->rotation =
                     (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
-            p->v1->rotationSpeed = p->v2->rotationSpeed = p->v3->rotationSpeed = p->v4->rotationSpeed =
+            m_data[idx]->rotationSpeed =
                     (m_rotationSpeed + (m_rotationSpeedVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationSpeedVariation) ) * CONV;
-            p->v1->autoRotate = p->v2->autoRotate = p->v3->autoRotate = p->v4->autoRotate = m_autoRotation?1.0:0.0;
-        case Coloured:
+            m_data[idx]->autoRotate = m_autoRotation?1.0:0.0;
+        case Colored:
             //Color initialization
             // Particle color
             color.r = m_color.red() * (1 - redVariation) + rand() % 256 * redVariation;
             color.g = m_color.green() * (1 - greenVariation) + rand() % 256 * greenVariation;
             color.b = m_color.blue() * (1 - blueVariation) + rand() % 256 * blueVariation;
             color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + rand() % 256 * m_alphaVariation;
-            p->v1->color = p->v2->color = p->v3->color = p->v4->color = color;
+            m_data[idx]->color = color;
         default:
             break;
     }
-
-    vertexCopy(*p->v1, d->pv);
-    vertexCopy(*p->v2, d->pv);
-    vertexCopy(*p->v3, d->pv);
-    vertexCopy(*p->v4, d->pv);
 }
+
+void QSGImageParticle::reload(int idx)
+{
+    if(!m_node)
+        return;
+
+    m_node->setFlag(QSGNode::OwnsGeometry, false);
+    UltraVertex *ultraVertices = (UltraVertex *) m_node->geometry()->vertexData();
+    SimpleVertex *simpleVertices = (SimpleVertex *) m_node->geometry()->vertexData();
+    switch(perfLevel){
+    case Sprites:
+        ultraVertices += idx*4;
+        for(int i=0; i<4; i++){
+            ultraVertices[i].x = m_data[idx]->x  - m_systemOffset.x();
+            ultraVertices[i].y = m_data[idx]->y  - m_systemOffset.y();
+            ultraVertices[i].t = m_data[idx]->t;
+            ultraVertices[i].lifeSpan = m_data[idx]->lifeSpan;
+            ultraVertices[i].size = m_data[idx]->size;
+            ultraVertices[i].endSize = m_data[idx]->endSize;
+            ultraVertices[i].sx = m_data[idx]->sx;
+            ultraVertices[i].sy = m_data[idx]->sy;
+            ultraVertices[i].ax = m_data[idx]->ax;
+            ultraVertices[i].ay = m_data[idx]->ay;
+            ultraVertices[i].xx = m_data[idx]->xx;
+            ultraVertices[i].xy = m_data[idx]->xy;
+            ultraVertices[i].yx = m_data[idx]->yx;
+            ultraVertices[i].yy = m_data[idx]->yy;
+            ultraVertices[i].rotation = m_data[idx]->rotation;
+            ultraVertices[i].rotationSpeed = m_data[idx]->rotationSpeed;
+            ultraVertices[i].autoRotate = m_data[idx]->autoRotate;
+            ultraVertices[i].animIdx = m_data[idx]->animIdx;
+            ultraVertices[i].frameDuration = m_data[idx]->frameDuration;
+            ultraVertices[i].frameCount = m_data[idx]->frameCount;
+            ultraVertices[i].animT = m_data[idx]->animT;
+            ultraVertices[i].color.r = m_data[idx]->color.r;
+            ultraVertices[i].color.g = m_data[idx]->color.g;
+            ultraVertices[i].color.b = m_data[idx]->color.b;
+            ultraVertices[i].color.a = m_data[idx]->color.a;
+        }
+        break;
+    case Tabled://TODO: Us
+    case Deformable:
+    case Colored:
+    case Simple:
+        simpleVertices += idx*4;
+        for(int i=0; i<4; i++){
+            simpleVertices[i].x = m_data[idx]->x - m_systemOffset.x();
+            simpleVertices[i].y = m_data[idx]->y - m_systemOffset.y();
+            simpleVertices[i].t = m_data[idx]->t;
+            simpleVertices[i].lifeSpan = m_data[idx]->lifeSpan;
+            simpleVertices[i].size = m_data[idx]->size;
+            simpleVertices[i].endSize = m_data[idx]->endSize;
+            simpleVertices[i].sx = m_data[idx]->sx;
+            simpleVertices[i].sy = m_data[idx]->sy;
+            simpleVertices[i].ax = m_data[idx]->ax;
+            simpleVertices[i].ay = m_data[idx]->ay;
+        }
+        break;
+    default:
+        break;
+    }
+
+    m_node->setFlag(QSGNode::OwnsGeometry, true);
+}
+
+
 
 QT_END_NAMESPACE
