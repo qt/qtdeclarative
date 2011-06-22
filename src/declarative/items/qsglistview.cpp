@@ -2960,6 +2960,8 @@ void QSGListView::itemsInserted(int modelIndex, int count)
                 transition->addItem(item, item->positionIfMovedTo(pos, true), contentItem());
                 d->indexesInTransition.insert(item->index);
             } else {
+                if (item->item->parentItem() != contentItem())
+                    item->item->setParentItem(contentItem());
                 item->setPosition(pos);
             }
             added.append(item);
