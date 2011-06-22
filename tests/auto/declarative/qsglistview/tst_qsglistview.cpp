@@ -1186,6 +1186,8 @@ void tst_QSGListView::sectionsDelegate()
 
 void tst_QSGListView::currentIndex()
 {
+    QSKIP("QTBUG-20020", SkipAll);
+
     TestModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), QString::number(i));
