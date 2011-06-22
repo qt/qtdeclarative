@@ -7,13 +7,11 @@ Item {
 
     width: 64; height: 64
 
-    Rectangle {
-        anchors.fill: parent
-        opacity: dragArea.drag.active ? 0.5 : 0.0
-        color: "lightgrey"
-        radius: 12
-
-        Behavior on opacity { NumberAnimation { duration: 300 } }
+    Shadow {
+        anchors.centerIn: parent
+        sourceItem: iconImage
+        width: iconImage.width
+        height: iconImage.height
     }
 
     MouseArea {
@@ -57,10 +55,6 @@ Item {
                 anchors { horizontalCenter: undefined; verticalCenter: undefined }
             }
             ParentChange { target: dragArea; parent: root; x: dragArea.rootX; y:dragArea.rootY }
-            AnchorChanges {
-                target: iconImage;
-                anchors { verticalCenter: undefined; bottom: dragArea.verticalCenter }
-            }
         }
 
         transitions: Transition {

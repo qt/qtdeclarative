@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
 ListModel {
-    ListElement { messageId: -1; outbound: false; sender: "Jack"; message: "Hello" }
-    ListElement { messageId: -1; outbound: false; sender: "Jill"; message: "Hi" }
+    ListElement { sender: "Jack"; message: "Hello"; avatar: "" }
+    ListElement { sender: "Jill"; message: "Hi"; avatar: "" }
 }

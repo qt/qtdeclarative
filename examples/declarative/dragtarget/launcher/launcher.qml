@@ -71,8 +71,8 @@ Rectangle {
                 destinationIndex = index
             }
         }
-        onDropped: applicationsModel.move(sourceIndex, destinationIndex, 1)
-        onExited: applicationsModel.move(destinationIndex, sourceIndex, 1)
+//        onDropped: applicationsModel.move(sourceIndex, destinationIndex, 1)
+//        onExited: applicationsModel.move(destinationIndex, sourceIndex, 1)
     }
 
     DragTarget {
@@ -171,8 +171,8 @@ Rectangle {
                     destinationIndex = index
                 }
             }
-            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
-            onExited:  favoritesVisualModel.move(destinationIndex, sourceIndex, 1)
+//            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
+//            onExited:  favoritesVisualModel.move(destinationIndex, sourceIndex, 1)
         }
 
         DragTarget {
@@ -200,8 +200,8 @@ Rectangle {
                     destinationIndex = index
                 }
             }
-    //        onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
-    //        onExited: favoritesModel.move(destinationIndex, sourceIndex, 1)
+//            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
+//            onExited: favoritesModel.move(destinationIndex, sourceIndex, 1)
         }
     }
 }
