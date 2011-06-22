@@ -52,7 +52,7 @@ bool QSGKillAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
     if(d->stillAlive()){
-        d->pv.t -= d->pv.lifeSpan + 1;
+        d->t -= d->lifeSpan + 1;
         return true;
     }
 }

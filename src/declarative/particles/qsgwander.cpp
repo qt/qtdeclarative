@@ -116,10 +116,10 @@ bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
     case Position:
         newX = data->curX() + dx;
         if(m_xVariance > qAbs(newX) )
-            data->pv.x += dx;
+            data->x += dx;
         newY = data->curY() + dy;
         if(m_yVariance > qAbs(newY) )
-            data->pv.y += dy;
+            data->y += dy;
         break;
     default:
     case Velocity:
@@ -131,10 +131,10 @@ bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
             data->setInstantaneousSY(newY);
         break;
     case Acceleration:
-        newX = data->pv.ax + dx;
+        newX = data->ax + dx;
         if(m_xVariance > qAbs(newX) )
             data->setInstantaneousAX(newX);
-        newY = data->pv.ay + dy;
+        newY = data->ay + dy;
         if(m_yVariance > qAbs(newY) )
             data->setInstantaneousAY(newY);
         break;

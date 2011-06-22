@@ -45,8 +45,6 @@
 #include <qset.h>
 #include <qhash.h>
 
-#include "qsgmatrix4x4stack.h"
-
 #include <qglfunctions.h>
 #include <qglshaderprogram.h>
 
@@ -103,17 +101,17 @@ public:
     inline void setViewportRect(const QSize &size) { setViewportRect(QRect(QPoint(), size)); }
     QRect viewportRect() const { return m_viewport_rect; }
 
-    QSGMatrix4x4Stack &projectionMatrix() { return m_projectionMatrix; }
-    QSGMatrix4x4Stack &modelViewMatrix() { return m_modelViewMatrix; }
-    QMatrix4x4 combinedMatrix() const { return m_projectionMatrix.top() * m_modelViewMatrix.top(); }
+    // Accessed by QSGMaterialShader::RenderState.
+    QMatrix4x4 currentProjectionMatrix() const { return m_current_projection_matrix; }
+    QMatrix4x4 currentModelViewMatrix() const { return m_current_model_view_matrix; }
+    QMatrix4x4 currentCombinedMatrix() const { return m_current_projection_matrix * m_current_model_view_matrix; }
+    qreal currentOpacity() const { return m_current_opacity; }
 
-    void setProjectMatrixToDeviceRect();
-    void setProjectMatrixToRect(const QRectF &rect);
-    void setProjectMatrix(const QMatrix4x4 &matrix);
-    QMatrix4x4 projectMatrix() const { return m_projection_matrix; }
+    void setProjectionMatrixToDeviceRect();
+    void setProjectionMatrixToRect(const QRectF &rect);
+    void setProjectionMatrix(const QMatrix4x4 &matrix);
+    QMatrix4x4 projectionMatrix() const { return m_projection_matrix; }
     bool isMirrored() const { return m_mirrored; }
-
-    qreal renderOpacity() const { return m_render_opacity; }
 
     void setClearColor(const QColor &color);
     QColor clearColor() const { return m_clear_color; }
@@ -155,9 +153,9 @@ protected:
 
     QColor m_clear_color;
     ClearMode m_clear_mode;
-    QSGMatrix4x4Stack m_projectionMatrix;
-    QSGMatrix4x4Stack m_modelViewMatrix;
-    qreal m_render_opacity;
+    QMatrix4x4 m_current_projection_matrix;
+    QMatrix4x4 m_current_model_view_matrix;
+    qreal m_current_opacity;
 
     QSGContext *m_context;
 

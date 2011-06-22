@@ -43,12 +43,11 @@
 #define NODEUPDATER_P_H
 
 #include "qsgnode.h"
-#include "qsgmatrix4x4stack.h"
-#include <qstack.h>
+#include <QtGui/private/qdatabuffer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_DECLARATIVE_EXPORT QSGNodeUpdater : public QSGNodeVisitor
+class Q_DECLARATIVE_EXPORT QSGNodeUpdater
 {
 public:
     QSGNodeUpdater();
@@ -56,25 +55,26 @@ public:
     virtual void updateStates(QSGNode *n);
     virtual bool isNodeBlocked(QSGNode *n, QSGNode *root) const;
 
-    void setToplevelOpacity(qreal alpha) { m_opacity_stack.top() = alpha; }
-    qreal toplevelOpacity() const { return m_opacity_stack.top(); }
+    void setToplevelOpacity(qreal alpha) { m_opacity_stack.last() = alpha; }
+    qreal toplevelOpacity() const { return m_opacity_stack.last(); }
 
 protected:
-    void enterTransformNode(QSGTransformNode *);
-    void leaveTransformNode(QSGTransformNode *);
+    virtual void enterTransformNode(QSGTransformNode *);
+    virtual void leaveTransformNode(QSGTransformNode *);
     void enterClipNode(QSGClipNode *c);
     void leaveClipNode(QSGClipNode *c);
     void enterOpacityNode(QSGOpacityNode *o);
     void leaveOpacityNode(QSGOpacityNode *o);
     void enterGeometryNode(QSGGeometryNode *);
+    void leaveGeometryNode(QSGGeometryNode *);
 
     void visitNode(QSGNode *n);
     void visitChildren(QSGNode *n);
 
 
-    QSGMatrix4x4Stack m_matrix_stack;
-    QStack<const QMatrix4x4 *> m_combined_matrix_stack;
-    QStack<qreal> m_opacity_stack;
+    QDataBuffer<QMatrix4x4> m_matrix_stack;
+    QDataBuffer<const QMatrix4x4 *> m_combined_matrix_stack;
+    QDataBuffer<qreal> m_opacity_stack;
     const QSGClipNode *m_current_clip;
 
     int m_force_update;

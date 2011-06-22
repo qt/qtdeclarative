@@ -214,8 +214,8 @@ void QSGShaderEffectTexture::grab()
         return;
     }
     QSGNode *root = m_item;
-    while (root->childCount() && root->type() != QSGNode::RootNodeType)
-        root = root->childAtIndex(0);
+    while (root->firstChild() && root->type() != QSGNode::RootNodeType)
+        root = root->firstChild();
     if (root->type() != QSGNode::RootNodeType)
         return;
 
@@ -310,7 +310,7 @@ void QSGShaderEffectTexture::grab()
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
-    m_renderer->setProjectMatrixToRect(mirrored);
+    m_renderer->setProjectionMatrixToRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {
@@ -391,6 +391,7 @@ void QSGShaderEffectTexture::grab()
        rather than each element individually.
     \endlist
 
+    \table
     \row
     \o \image declarative-shadereffectsource.png
     \o \qml
@@ -420,6 +421,7 @@ void QSGShaderEffectTexture::grab()
         }
         \endqml
     \endrow
+    \endtable
 
     The ShaderEffectSource element does not redirect any mouse or keyboard
     input to \l sourceItem. If you hide the \l sourceItem by setting

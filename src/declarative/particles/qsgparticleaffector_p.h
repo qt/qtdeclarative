@@ -65,7 +65,7 @@ class QSGParticleAffector : public QSGItem
 public:
     explicit QSGParticleAffector(QSGItem *parent = 0);
     virtual void affectSystem(qreal dt);
-    virtual void reset(int systemIdx);//As some store their own data per idx?
+    virtual void reset(QSGParticleData*);//As some store their own data per particle?
     QSGParticleSystem* system() const
     {
         return m_system;
@@ -108,7 +108,7 @@ signals:
 
     void shapeChanged(QSGParticleExtruder* arg);
 
-    void affected(qreal x, qreal y);//###Idx too?
+    void affected(qreal x, qreal y);
     void signalChanged(bool arg);
 
 public slots:
@@ -174,7 +174,7 @@ protected:
     QPointF m_offset;
 private:
     QSet<int> m_groups;
-    QSet<int> m_onceOffed;
+    QSet<QPair<int, int> > m_onceOffed;
     bool m_updateIntSet;
 
     bool m_onceOff;

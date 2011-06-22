@@ -1,4 +1,3 @@
-// Commit: c44be8c0b27756a2025ebad1945632f3f7e4bebc
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -1181,7 +1180,7 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
     rootNode = 0;
     groupNode = 0;
     paintNode = 0;
-    paintNodeIndex = 0;
+    beforePaintNode = 0;
 
     InitializationState _dummy;
     InitializationState *childState = state;
@@ -1286,7 +1285,7 @@ QSGItemPrivate::QSGItemPrivate()
   dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
 
   itemNodeInstance(0), opacityNode(0), clipNode(0), rootNode(0), groupNode(0), paintNode(0)
-  , paintNodeIndex(0), effectRefCount(0), hideRefCount(0)
+  , beforePaintNode(0), effectRefCount(0), hideRefCount(0)
 {
 }
 
