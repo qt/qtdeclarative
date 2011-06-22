@@ -2316,6 +2316,13 @@ void QSGCanvasRenderThread::stopRenderThread()
     }
 
     unlockInGui();
+
+#ifdef THREAD_DEBUG
+    printf("GUI: waiting for render thread to terminate..\n");
+#endif
+    // Actually wait for the thread to terminate.  Otherwise we can delete it
+    // too early and crash.
+    QThread::wait();
 }
 
 
