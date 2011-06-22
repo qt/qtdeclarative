@@ -44,9 +44,12 @@
 #define QSGVISUALITEMMODEL_P_H
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtDeclarative/qsgitem.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qabstractitemmodel.h>
 #include <QtScript/qscriptvalue.h>
+
+#include <private/qdeclarativeguard_p.h>
 
 QT_BEGIN_HEADER
 
@@ -157,7 +160,6 @@ private Q_SLOTS:
 private:
     Q_DISABLE_COPY(QSGVisualItemModel)
 };
-
 
 class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
 {
@@ -287,13 +289,19 @@ public:
     }
 
     Q_PROPERTY(int index READ index NOTIFY indexChanged)
-    int index() const { return m_index; }
+    int index() {
+        if (m_index == -1 && m_model)
+            m_index = m_model->indexOf(qobject_cast<QSGItem *>(parent()), 0);
+        return m_index;
+    }
     void setIndex(int idx) {
         if (m_index != idx) {
             m_index = idx;
             emit indexChanged();
         }
     }
+
+    void setModel(QSGVisualItemModel *model) { m_model = model; }
 
     static QSGVisualItemModelAttached *properties(QObject *obj) {
         QSGVisualItemModelAttached *rv = attachedProperties.value(obj);
@@ -309,6 +317,7 @@ Q_SIGNALS:
 
 public:
     int m_index;
+    QDeclarativeGuard<QSGVisualItemModel> m_model;
 
     static QHash<QObject*, QSGVisualItemModelAttached*> attachedProperties;
 };

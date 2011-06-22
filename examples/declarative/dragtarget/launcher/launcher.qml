@@ -59,20 +59,19 @@ Rectangle {
         keys: [ "applications" ]
 
         onEntered: {
-            sourceIndex = applicationsView.indexAt(drag.x, drag.y)
-            destinationIndex = sourceIndex
-            if (destinationIndex == -1)
-                drag.accepted = false
+            sourceIndex = drag.data
+            destinationIndex = applicationsView.indexAt(drag.x, drag.y)
         }
         onPositionChanged: {
             var index = applicationsView.indexAt(drag.x, drag.y)
             if (index != -1) {
-                applicationsVisualModel.move(destinationIndex, index, 1)
+                if (destinationIndex != -1)
+                    applicationsVisualModel.move(destinationIndex, index, 1)
                 destinationIndex = index
             }
         }
-//        onDropped: applicationsModel.move(sourceIndex, destinationIndex, 1)
-//        onExited: applicationsModel.move(destinationIndex, sourceIndex, 1)
+        onDropped: applicationsModel.move(sourceIndex, destinationIndex, 1)
+        onExited: applicationsVisualModel.move(destinationIndex, sourceIndex, 1)
     }
 
     DragTarget {
@@ -85,16 +84,16 @@ Rectangle {
         onEntered: {
             sourceIndex = drag.data
             destinationIndex = applicationsView.indexAt(drag.x, drag.y)
-            if (destinationIndex == -1) {
-                drag.accepted = false
-            } else {
+            if (destinationIndex != -1)
                 applicationsVisualModel.insert(destinationIndex, favoritesVisualModel, sourceIndex, 1)
-            }
         }
         onPositionChanged: {
             var index = applicationsView.indexAt(drag.x, drag.y)
             if (index != -1) {
-                applicationsVisualModel.move(destinationIndex, index, 1)
+                if (destinationIndex != -1)
+                    applicationsVisualModel.move(destinationIndex, index, 1)
+                else
+                    applicationsVisualModel.insert(index, favoritesVisualModel, sourceIndex, 1)
                 destinationIndex = index
             }
         }
@@ -159,20 +158,19 @@ Rectangle {
             keys: [ "favorites" ]
 
             onEntered: {
-                sourceIndex = favoritesView.indexAt(drag.x, drag.y)
-                destinationIndex = sourceIndex
-                if (destinationIndex == -1)
-                    drag.accepted = false
+                sourceIndex = drag.data
+                destinationIndex = favoritesView.indexAt(drag.x, drag.y)
             }
             onPositionChanged: {
                 var index = favoritesView.indexAt(drag.x, drag.y)
                 if (index != -1) {
-                    favoritesVisualModel.move(destinationIndex, index, 1)
+                    if (destinationIndex != -1)
+                        favoritesVisualModel.move(destinationIndex, index, 1)
                     destinationIndex = index
                 }
             }
-//            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
-//            onExited:  favoritesVisualModel.move(destinationIndex, sourceIndex, 1)
+            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
+            onExited: favoritesVisualModel.move(destinationIndex, sourceIndex, 1)
         }
 
         DragTarget {
@@ -187,16 +185,16 @@ Rectangle {
             onEntered: {
                 sourceIndex = drag.data
                 destinationIndex = favoritesView.indexAt(drag.x, drag.y)
-                if (destinationIndex == -1) {
-                    drag.accepted = false
-                } else {
+                if (destinationIndex != -1)
                     favoritesVisualModel.insert(destinationIndex, applicationsVisualModel, sourceIndex, 1)
-                }
             }
             onPositionChanged: {
                 var index = favoritesView.indexAt(drag.x, drag.y)
                 if (index != -1) {
-                    favoritesVisualModel.move(destinationIndex, index, 1)
+                    if (destinationIndex != -1)
+                        favoritesVisualModel.move(destinationIndex, index, 1)
+                    else
+                        favoritesVisualModel.insert(index, applicationsVisualModel, sourceIndex, 1)
                     destinationIndex = index
                 }
             }

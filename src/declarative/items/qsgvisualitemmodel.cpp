@@ -109,6 +109,7 @@ public:
     void itemAppended() {
         Q_Q(QSGVisualItemModel);
         QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(children.last().item);
+        attached->setModel(q);
         attached->setIndex(count()-1);
         emit q->itemsInserted(count()-1, 1);
         emit q->countChanged();
@@ -135,6 +136,19 @@ public:
         foreach (const QDeclarativeChangeSet::Move &move, transactionChanges.moves())
             emit q->itemsMoved(move.start, move.to, move.count());
         transactionChanges.clear();
+    }
+
+    void invalidateIndexes(int start, int end = INT_MAX) {
+        foreach (const Item &item, children) {
+            QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(item.item);
+            if (attached->m_index >= start && attached->m_index < end)
+                attached->setIndex(-1);
+        }
+        for (QHash<QSGItem *, QSGVisualDataModel *>::iterator it = itemModels.begin(); it != itemModels.end(); ++it) {
+            QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(it.key());
+            if (attached->m_index >= start && attached->m_index < end)
+                attached->setIndex(-1);
+        }
     }
 
     class Item {
@@ -257,6 +271,9 @@ QSGItem *QSGVisualItemModel::item(int index, bool complete)
     if (!range.internal()) {
         QSGVisualDataModel *model = static_cast<QSGVisualDataModel *>(range.list);
         QSGItem *item = model->item(range.index + offset, complete);
+        QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(item);
+        attached->setModel(this);
+        attached->setIndex(index);
         d->itemModels.insert(item, model);
         if (model->completePending())
             d->pendingModel = model;
@@ -358,6 +375,9 @@ void QSGVisualItemModel::append(QSGItem *item)
     Q_D(QSGVisualItemModel);
     int index = d->count();
     if (d->appendData(item)) {
+        QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(item);
+        attached->setModel(this);
+        attached->setIndex(count() - 1);
         if (d->transaction) {
             d->transactionChanges.insertInsert(index, index + 1);
         } else {
@@ -403,6 +423,10 @@ void QSGVisualItemModel::insert(int index, QSGItem *item)
     qDebug() << Q_FUNC_INFO << index;
     Q_D(QSGVisualItemModel);
     if (d->insertData(index, item)) {
+        QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(item);
+        attached->setModel(this);
+        attached->setIndex(index);
+        d->invalidateIndexes(index);
         if (d->transaction) {
             d->transactionChanges.insertInsert(index, index + 1);
         } else {
@@ -436,9 +460,11 @@ void QSGVisualItemModel::insert(int destinationIndex, QSGVisualItemModel *source
         }
     }
 
+    d->invalidateIndexes(destinationIndex);
     emit itemsInserted(destinationIndex, count);
 
     sourceModel->d_func()->removeAt(sourceIndex, count);
+    sourceModel->d_func()->invalidateIndexes(sourceIndex);
     emit sourceModel->itemsRemoved(sourceIndex, count);
     emit sourceModel->countChanged();
 }
@@ -449,6 +475,7 @@ void QSGVisualItemModel::remove(int index, int count)
     if (!d->transaction)
         d->childrenChanged = false;
     d->removeAt(index, count);
+    d->invalidateIndexes(index);
     if (d->transaction) {
         d->transactionChanges.insertRemove(index, index + count);
     } else {      
@@ -467,6 +494,7 @@ void QSGVisualItemModel::move(int from, int to, int count)
     if (!d->transaction)
         d->childrenChanged = false;
     d->move(from, to, count);
+    d->invalidateIndexes(qMin(from, to), qMax(from, to) + count);
     if (d->transaction) {
         d->transactionChanges.insertMove(from, from + count, to);
     } else {
@@ -491,12 +519,16 @@ void QSGVisualItemModel::replace(int index, QSGItem *item)
             if (from != index)
                 d->transactionChanges.insertMove(from, from + 1, index);
 
+            d->invalidateIndexes(index);
             if (!d->transaction)
                 d->emitTransactionChanges();
         }
     } else {
         d->replaceAt(index, item);
     }
+    QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(item);
+    attached->setModel(this);
+    attached->setIndex(index);
 }
 
 void QSGVisualItemModel::replace(int destinationIndex, QSGVisualItemModel *sourceModel, int sourceIndex, int count)
@@ -520,6 +552,7 @@ void QSGVisualItemModel::replace(int destinationIndex, QSGVisualItemModel *sourc
             }
         }
         sourceModel->d_func()->removeAt(sourceIndex, count);
+        sourceModel->d_func()->invalidateIndexes(sourceIndex);
         emit sourceModel->itemsRemoved(sourceIndex, count);
         emit sourceModel->countChanged();
     }
@@ -534,6 +567,7 @@ void QSGVisualItemModel::_q_itemsInserted(int index, int count)
     d->listItemsInserted(static_cast<QSGVisualDataModel *>(sender()), index, index + count, &inserts);
 
     if (inserts.count() > 0) {
+        d->invalidateIndexes(index);
         QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
         QScriptValue insertIndexes = engine->newArray(inserts.count());
         for (int i = 0; i < inserts.count(); ++i) {
@@ -562,6 +596,7 @@ void QSGVisualItemModel::_q_itemsRemoved(int index, int count)
     d->childrenChanged = false;
     d->listItemsRemoved(static_cast<QSGVisualDataModel *>(sender()), index, index + count, &removes);
     d->transactionChanges.append(removes);
+    d->invalidateIndexes(index);
     d->emitTransactionChanges();
     emit countChanged();
     if (d->childrenChanged)
@@ -575,6 +610,7 @@ void QSGVisualItemModel::_q_itemsMoved(int from, int to, int count)
     d->childrenChanged = false;
     d->listItemsMoved(static_cast<QSGVisualDataModel *>(sender()), from, from + count, to, &moves);
     d->transactionChanges.append(moves);
+    d->invalidateIndexes(qMin(from, to), qMax(from, to) + count);
     d->emitTransactionChanges();
     if (d->childrenChanged)
         emit childrenChanged();

@@ -72,7 +72,7 @@ Rectangle {
                             if (item.messageId != message.messageId)
                                 continue
                             visualModel.replace(j, item)
-                            // visualModel.move(item.visualIndex, j + 1
+                            // visualModel.move(item.VisualItemModel.index, j + 1
                             // visualModel.replace(j + 1, j)
                             break
                         }

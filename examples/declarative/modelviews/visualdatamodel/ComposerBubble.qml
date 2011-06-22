@@ -81,11 +81,17 @@ Rectangle {
         Rectangle {
             anchors { fill: parent; rightMargin: 1; bottomMargin: 1 }
 
-            color:  "#000000"
+            color:  "#202020"
 
             opacity: sendArea.pressed ? 0.5 : (composer.sending || composer.sent ? 0.0 : 1.0)
 
             Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: "#080808"
+            }
 
             Text {
                 id: sendText
