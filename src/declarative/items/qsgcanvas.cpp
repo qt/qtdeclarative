@@ -2096,7 +2096,7 @@ void QSGCanvasRenderThread::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit) {
+        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
@@ -2335,7 +2335,7 @@ QImage QSGCanvasRenderThread::grab()
     doGrab = true;
     isPaintCompleted = false;
     while (isRunning() && !isPaintCompleted) {
-        if (!isRenderBlocked)
+        if (isRenderBlocked)
             wake();
         wait();
     }
