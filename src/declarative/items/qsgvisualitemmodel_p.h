@@ -147,7 +147,7 @@ public:
 Q_SIGNALS:
     void childrenChanged();
 
-    void itemDataInserted(const QScriptValue &indexes);
+    void updated(const QScriptValue &inserts);
 
 private Q_SLOTS:
     void _q_itemsInserted(int index, int count);

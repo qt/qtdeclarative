@@ -130,10 +130,8 @@ public:
         Q_Q(QSGVisualItemModel);
         foreach (const QDeclarativeChangeSet::Remove &remove, transactionChanges.removes())
             emit q->itemsRemoved(remove.start, remove.count());
-        foreach (const QDeclarativeChangeSet::Insert &insert, transactionChanges.inserts()) {
-            qDebug() << "Insert" << insert.start << insert.end;
+        foreach (const QDeclarativeChangeSet::Insert &insert, transactionChanges.inserts())
             emit q->itemsInserted(insert.start, insert.count());
-        }
         foreach (const QDeclarativeChangeSet::Move &move, transactionChanges.moves())
             emit q->itemsMoved(move.start, move.to, move.count());
         transactionChanges.clear();
@@ -253,12 +251,12 @@ bool QSGVisualItemModel::isValid() const
 QSGItem *QSGVisualItemModel::item(int index, bool complete)
 {
     Q_D(QSGVisualItemModel);
-    int modelIndex = 0;
+    int offset = 0;
     int internalIndex = 0;
-    QDeclarativeCompositeRange range = d->at(index, &modelIndex, &internalIndex);
+    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
     if (!range.internal()) {
         QSGVisualDataModel *model = static_cast<QSGVisualDataModel *>(range.list);
-        QSGItem *item = model->item(modelIndex, complete);
+        QSGItem *item = model->item(range.index + offset, complete);
         d->itemModels.insert(item, model);
         if (model->completePending())
             d->pendingModel = model;
@@ -340,18 +338,17 @@ QScriptValue QSGVisualItemModel::getItemInfo(int index) const
     QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
     QScriptValue info = engine->newObject();
 
-    int modelIndex = 0;
+    int offset = 0;
     int internalIndex = 0;
-    QDeclarativeCompositeRange range = d->at(index, &modelIndex, &internalIndex);
+    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
 
     if (!range.internal()) {
-        info.setProperty(QLatin1String("modelItem"), true);
         info.setProperty(QLatin1String("model"), engine->newVariant(static_cast<QSGVisualDataModel *>(range.list)->model()));
-        info.setProperty(QLatin1String("index"), modelIndex);
+        info.setProperty(QLatin1String("index"), range.index + offset);
         info.setProperty(QLatin1String("start"), range.index);
         info.setProperty(QLatin1String("end"), range.index + range.count);
     } else {
-        info.setProperty(QLatin1String("modelItem"), false);
+        info.setProperty(QLatin1String("model"), engine->nullValue());
     }
     return info;
 }
@@ -381,16 +378,16 @@ void QSGVisualItemModel::append(QSGVisualItemModel *sourceModel, int sourceIndex
     }
 
     for (int i = 0, difference = 0; i < count; i += difference) {
-        int modelIndex = 0;
+        int offset = 0;
         int internalIndex = 0;
-        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &modelIndex, &internalIndex);
-        difference = range.index + range.count - modelIndex;
+        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
+        difference = range.count - offset;
 
         if (range.internal()) {
-            for (int j = 0; j < range.count; ++j)
+            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
                 d->appendData(sourceModel->d_func()->children.at(internalIndex + j).item);
         } else {
-            d->appendList(range.list, modelIndex, qMin(count - i, range.count), false);
+            d->appendList(range.list, range.index + offset, qMin(count - i, range.count - offset), false);
         }
     }
 
@@ -398,6 +395,7 @@ void QSGVisualItemModel::append(QSGVisualItemModel *sourceModel, int sourceIndex
 
     sourceModel->d_func()->removeAt(sourceIndex, count);
     emit sourceModel->itemsRemoved(sourceIndex, count);
+    emit sourceModel->countChanged();
 }
 
 void QSGVisualItemModel::insert(int index, QSGItem *item)
@@ -425,16 +423,16 @@ void QSGVisualItemModel::insert(int destinationIndex, QSGVisualItemModel *source
     }
 
     for (int i = 0, difference = 0; i < count; i += difference) {
-        int modelIndex = 0;
+        int offset = 0;
         int internalIndex = 0;
-        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &modelIndex, &internalIndex);
-        difference = range.index + range.count - modelIndex;
+        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
+        difference = range.count - offset;
 
         if (range.internal()) {
-            for (int j = 0; j < range.count; ++j)
+            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
                 d->insertData(destinationIndex + i + j, sourceModel->d_func()->children.at(internalIndex + j).item);
         } else {
-            d->insertList(destinationIndex + i, range.list, modelIndex, qMin(count - i, range.count), false);
+            d->insertList(destinationIndex + i, range.list, range.index + offset, qMin(count - i, range.count - offset), false);
         }
     }
 
@@ -442,6 +440,7 @@ void QSGVisualItemModel::insert(int destinationIndex, QSGVisualItemModel *source
 
     sourceModel->d_func()->removeAt(sourceIndex, count);
     emit sourceModel->itemsRemoved(sourceIndex, count);
+    emit sourceModel->countChanged();
 }
 
 void QSGVisualItemModel::remove(int index, int count)
@@ -508,18 +507,21 @@ void QSGVisualItemModel::replace(int destinationIndex, QSGVisualItemModel *sourc
     } else {
         d->removeAt(destinationIndex, count);
         for (int i = 0, difference = 0; i < count; i += difference) {
-            int modelIndex = 0;
+            int offset = 0;
             int internalIndex = 0;
-            QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &modelIndex, &internalIndex);
-            difference = range.index + range.count - modelIndex;
+            QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
+            difference = range.count - offset;
 
             if (range.internal()) {
-                for (int j = 0; j < range.count; ++j)
+                for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
                     d->insertData(destinationIndex + i + j, sourceModel->d_func()->children.at(internalIndex + j).item);
             } else {
-                d->insertList(destinationIndex + i, range.list, modelIndex, qMin(count - i, range.count), false);
+                d->insertList(destinationIndex + i, range.list, range.index + offset, qMin(count - i, range.count - offset), false);
             }
         }
+        sourceModel->d_func()->removeAt(sourceIndex, count);
+        emit sourceModel->itemsRemoved(sourceIndex, count);
+        emit sourceModel->countChanged();
     }
 }
 
@@ -533,16 +535,16 @@ void QSGVisualItemModel::_q_itemsInserted(int index, int count)
 
     if (inserts.count() > 0) {
         QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
-        QScriptValue indexes = engine->newArray(inserts.count());
+        QScriptValue insertIndexes = engine->newArray(inserts.count());
         for (int i = 0; i < inserts.count(); ++i) {
             QScriptValue range = engine->newObject();
             range.setProperty(QLatin1String("start"), inserts.at(i).start);
             range.setProperty(QLatin1String("end"), inserts.at(i).end);
-            indexes.setProperty(i, range);
+            insertIndexes.setProperty(i, range);
         }
         d->transaction = true;
         d->transactionChanges.append(inserts);
-        emit itemDataInserted(indexes);
+        emit updated(insertIndexes);
         d->transaction = false;
 
         d->emitTransactionChanges();

@@ -325,11 +325,11 @@ QVariant QDeclarativeListModel::data(int index, int role) const
         return QVariant();
 
     if (m_compositor) {
-        int modelIndex = 0;
+        int offset = 0;
         int internalIndex = 0;
-        QDeclarativeCompositeRange range = m_compositor->at(index, &modelIndex, &internalIndex);
+        QDeclarativeCompositeRange range = m_compositor->at(index, &offset, &internalIndex);
         return range.list
-                ? static_cast<ModelCompositorList *>(range.list)->data(modelIndex, role)
+                ? static_cast<ModelCompositorList *>(range.list)->data(range.index + offset, role)
                 : m_nested->data(internalIndex, role);
     } else {
         return m_flat ? m_flat->data(index, role) : m_nested->data(index, role);
@@ -570,11 +570,11 @@ QScriptValue QDeclarativeListModel::get(int index) const
 {
     // the internal flat/nested class checks for bad index
     if (m_compositor) {
-        int modelIndex = 0;
+        int offset = 0;
         int internalIndex = 0;
-        QDeclarativeCompositeRange range = m_compositor->at(index, &modelIndex, &internalIndex);
+        QDeclarativeCompositeRange range = m_compositor->at(index, &offset, &internalIndex);
         return range.list
-                ? static_cast<ModelCompositorList *>(range.list)->get(modelIndex)
+                ? static_cast<ModelCompositorList *>(range.list)->get(range.index + offset)
                 : m_nested->get(internalIndex);
     } else {
         return m_flat ? m_flat->get(index) : m_nested->get(index);

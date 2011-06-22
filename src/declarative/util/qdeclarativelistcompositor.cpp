@@ -43,6 +43,39 @@
 
 #include <QtCore/qvarlengtharray.h>
 
+bool qt_verifyIntegrity(const QLinkedList<QDeclarativeCompositeRange> &ranges, int absoluteCount, int internalCount)
+{
+    bool valid = true;
+    int actualAbsoluteCount = 0;
+    int actualInternalCount = 0;
+
+    int index = 0;
+    foreach (const QDeclarativeCompositeRange &range, ranges) {
+        if (range.null()) {
+            if (range.internal()) {
+                qWarning() << index << "Null Internal Range";
+                valid = false;
+            }
+        } else {
+            actualAbsoluteCount += range.count;
+            if (range.internal())
+                actualInternalCount += range.count;
+        }
+        ++index;
+    }
+
+    if (actualAbsoluteCount != absoluteCount) {
+        qWarning() << "Absolute count invalid" << absoluteCount << actualAbsoluteCount;
+        valid = false;
+    }
+    if (actualInternalCount != internalCount) {
+        qWarning() << "Internal count invalid" << internalCount << actualInternalCount;
+        valid = false;
+    }
+
+    return valid;
+}
+
 QDeclarativeListCompositor::QDeclarativeListCompositor(int internalCount)
     : absoluteCount(internalCount)
     , internalCount(internalCount)
@@ -70,7 +103,7 @@ int QDeclarativeListCompositor::count() const
     return absoluteCount;
 }
 
-QDeclarativeCompositeRange QDeclarativeListCompositor::at(int index, int *modelIndex, int *internalIndex) const
+QDeclarativeCompositeRange QDeclarativeListCompositor::at(int index, int *offset, int *internalIndex) const
 {
     Q_ASSERT(index >=0 && index < absoluteCount);
     *internalIndex = 0;
@@ -78,7 +111,7 @@ QDeclarativeCompositeRange QDeclarativeListCompositor::at(int index, int *modelI
         if (range->null())
             continue;
         if (index < range->count) {
-            *modelIndex = range->index + index;
+            *offset = index;
             if (range->internal())
                 *internalIndex += index;
             return *range;
@@ -356,6 +389,7 @@ void QDeclarativeListCompositor::forwardToBackwardMove(int &from, int &to, int &
 
 void QDeclarativeListCompositor::move(int from, int to, int count)
 {
+    qDebug() << Q_FUNC_INFO << from << to << count;
     Q_ASSERT(from != to || count == 0);
     Q_ASSERT(from >=0 && from + count <= absoluteCount);
     Q_ASSERT(to >=0 && to <= absoluteCount);
@@ -374,7 +408,7 @@ void QDeclarativeListCompositor::move(int from, int to, int count)
             if (relativeTo < range->count || (relativeTo == range->count && range->append())) {
                 if (relativeTo > 0) {
                     range = insert(range, QDeclarativeCompositeRange(
-                            range->list, range->index, relativeTo, Null | Prepend));
+                            range->list, range->index, relativeTo, range->flags & ~Append));
                     range->index += relativeTo;
                     range->count -= relativeTo;
                     if (range->internal())
@@ -477,6 +511,10 @@ void QDeclarativeListCompositor::move(int from, int to, int count)
 
     for (int i = 0; i < movedRanges.count(); ++i)
         insertPos = ++ranges.insert(insertPos, movedRanges.at(i));
+
+    qDebug() <<  *this;
+
+    Q_ASSERT(qt_verifyIntegrity(ranges, absoluteCount, internalCount));
 }
 
 bool QDeclarativeListCompositor::merge(int from, int to)
@@ -830,6 +868,9 @@ void QDeclarativeListCompositor::listItemsMoved(
 {
     int from = start;
     int count = end - start;
+
+    qDebug() << Q_FUNC_INFO << from << to << count;
+
     Q_ASSERT(from != to);
     Q_ASSERT(count != 0);
 
@@ -858,6 +899,10 @@ void QDeclarativeListCompositor::listItemsMoved(
             *it = QDeclarativeChangeSet::Move(from, from + count, to);
         }
     }
+
+    qDebug() <<  *this;
+
+    Q_ASSERT(qt_verifyIntegrity(ranges, absoluteCount, internalCount));
 }
 
 void QDeclarativeListCompositor::listItemsChanged(void *list, int start, int end, QVector<QDeclarativeChangeSet::Change> *changes)
@@ -888,10 +933,12 @@ void QDeclarativeListCompositor::compress()
 
 QDebug operator <<(QDebug debug, const QDeclarativeListCompositor &list)
 {
+    int index = 0;
+    int internalIndex = 0;
     debug.nospace() << "QDeclarativeListCompositor(" << list.absoluteCount;
     foreach (const QDeclarativeCompositeRange &range, list.ranges) {
-        ((debug.nospace()
-                << "\n\t("
+        (((debug.space()
+                << "\n" << index << internalIndex << "\t(").nospace()
                 << range.list).space()
                 << range.index
                 << range.count
@@ -899,6 +946,11 @@ QDebug operator <<(QDebug debug, const QDeclarativeListCompositor &list)
                 << "prepend:" << range.prepend()
                 << "append:" << range.append()
                 << "internal:").nospace() << range.internal() << ")";
+        if (!range.null()) {
+            index += range.count;
+            if (range.internal())
+                internalIndex += range.count;
+        }
     }
     return (debug.nospace() << ")").maybeSpace();
 }

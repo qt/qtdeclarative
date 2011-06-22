@@ -96,7 +96,7 @@ public:
     ~QDeclarativeListCompositor();
 
     int count() const;
-    QDeclarativeCompositeRange at(int index, int *modelIndex, int *internalIndex) const;
+    QDeclarativeCompositeRange at(int index, int *offset, int *internalIndex) const;
 
     void appendList(void *list, int start, int count, bool grow);
     bool appendData(const void *data);
