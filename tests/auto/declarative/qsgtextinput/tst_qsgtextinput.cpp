@@ -1053,6 +1053,7 @@ void tst_qsgtextinput::horizontalAlignment()
 
 void tst_qsgtextinput::horizontalAlignment_RightToLeft()
 {
+    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
     QSGTextInput *textInput = canvas.rootObject()->findChild<QSGTextInput*>("text");
     QVERIFY(textInput != 0);
@@ -1446,6 +1447,7 @@ void tst_qsgtextinput::navigation()
 
 void tst_qsgtextinput::navigation_RTL()
 {
+    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
     canvas.setFocus();

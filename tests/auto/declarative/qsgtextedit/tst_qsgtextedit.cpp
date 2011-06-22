@@ -458,6 +458,7 @@ void tst_qsgtextedit::hAlign()
 
 void tst_qsgtextedit::hAlign_RightToLeft()
 {
+    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
     QSGTextEdit *textEdit = canvas.rootObject()->findChild<QSGTextEdit*>("text");
     QVERIFY(textEdit != 0);
