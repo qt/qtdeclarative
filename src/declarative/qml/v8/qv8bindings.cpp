@@ -61,10 +61,13 @@ public:
                      public QDeclarativeAbstractBinding {
         Binding();
 
+        void update() { QDeclarativeAbstractBinding::update(); }
+
         // Inherited from QDeclarativeAbstractBinding
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void destroy();
+        virtual void refresh();
 
         int index:30;
         bool enabled:1;
@@ -97,6 +100,11 @@ void QV8BindingsPrivate::Binding::setEnabled(bool e, QDeclarativePropertyPrivate
 
         if (e) update(flags);
     }
+}
+
+void QV8BindingsPrivate::Binding::refresh()
+{
+    update();
 }
 
 void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
