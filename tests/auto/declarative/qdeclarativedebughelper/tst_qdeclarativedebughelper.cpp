@@ -77,7 +77,7 @@ void tst_qdeclarativedebughelper::setAnimationSlowDownFactor()
     // first check whether setup works
     QCOMPARE(animation.updateCalled, 0);
     animation.start();
-    QTest::qWait(animation.totalDuration() + 50);
+    QTest::qWait(animation.totalDuration() + 150);
 #ifdef Q_OS_WIN
     if (animation.state() != QAbstractAnimation::Stopped)
         QEXPECT_FAIL("", "On windows, consistent timing is not working properly due to bad timer resolution", Abort);
@@ -89,14 +89,14 @@ void tst_qdeclarativedebughelper::setAnimationSlowDownFactor()
     animation.updateCalled = 0;
     QDeclarativeDebugHelper::setAnimationSlowDownFactor(0.0);
     animation.start();
-    QTest::qWait(animation.totalDuration() + 50);
+    QTest::qWait(animation.totalDuration() + 150);
     QVERIFY(animation.updateCalled <= 1); // updateCurrentTime seems to be called at  least once
 
     // now run them again
     animation.updateCalled = 0;
     QDeclarativeDebugHelper::setAnimationSlowDownFactor(2.0);
     animation.start();
-    QTest::qWait(animation.totalDuration() + 50);
+    QTest::qWait(animation.totalDuration() + 150);
     QVERIFY(animation.updateCalled > 1);
 }
 
