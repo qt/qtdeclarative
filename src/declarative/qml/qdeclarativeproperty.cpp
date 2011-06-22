@@ -1263,28 +1263,41 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
     QObject *object = that.object();
     int type = that.propertyType();
 
-#define QUICK_STORE(cpptype, metatype, test, conversion) \
-    case QMetaType:: metatype: \
-        if (test) { \
+#define QUICK_STORE(cpptype, conversion) \
+        { \
             cpptype o = (conversion); \
             int status = -1; \
             void *argv[] = { &o, 0, &status, &flags }; \
             QMetaObject::metacall(object, QMetaObject::WriteProperty, pp->core.coreIndex, argv); \
             return true; \
         } \
-        break;
 
 
     if (object && pp->valueType.valueTypeCoreIdx == -1) {
         switch (type) {
-        QUICK_STORE(int, Int, result->IsNumber(), result->Int32Value());
-        QUICK_STORE(double, Double, result->IsNumber(), result->NumberValue());
-        QUICK_STORE(float, Float, result->IsNumber(), result->NumberValue());
-        QUICK_STORE(QString, QString, result->IsString(), engine->toString(result));
+        case QMetaType::Int:
+            if (result->IsInt32()) 
+                QUICK_STORE(int, result->Int32Value())
+            else if (result->IsNumber())
+                QUICK_STORE(int, qRound(result->NumberValue()))
+            break;
+        case QMetaType::Double:
+            if (result->IsNumber())
+                QUICK_STORE(double, result->NumberValue())
+            break;
+        case QMetaType::Float:
+            if (result->IsNumber())
+                QUICK_STORE(float, result->NumberValue())
+            break;
+        case QMetaType::QString:
+            if (result->IsString())
+                QUICK_STORE(QString, engine->toString(result))
+            break;
         default:
             break;
         }
     }
+
 #undef QUICK_STORE
 
     QDeclarativeDeleteWatcher watcher(expression);
