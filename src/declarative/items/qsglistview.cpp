@@ -500,7 +500,7 @@ public:
     }
 
     bool isValid() const {
-        return model && model->count() && model->isValid();
+        return model && model->count();
     }
 
     qreal snapPosAt(qreal pos) {
@@ -626,6 +626,7 @@ public:
 
     QDeclarativeGuard<QSGVisualModel> model;
     QVariant modelVariant;
+    QByteArray viewId;
     QList<FxListItemSG*> visibleItems;
     QHash<QSGItem*,int> unrequestedItems;
     FxListItemSG *currentItem;
@@ -725,7 +726,7 @@ FxListItemSG *QSGListViewPrivate::createItem(int modelIndex)
     // create object
     requestedIndex = modelIndex;
     FxListItemSG *listItem = 0;
-    if (QSGItem *item = model->item(modelIndex, false)) {
+    if (QSGItem *item = model->item(modelIndex, viewId, false)) {
         listItem = new FxListItemSG(item, q);
         listItem->index = modelIndex;
         // initialise attached properties
@@ -1765,6 +1766,12 @@ void QSGListView::setModel(const QVariant &model)
     d->setPosition(0);
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
+    if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
+        d->viewId = partModel->part().toUtf8();
+        object = partModel->model();
+    } else {
+        d->viewId = QByteArray();
+    }
     QSGVisualModel *vim = 0;
     if (object && (vim = qobject_cast<QSGVisualModel *>(object))) {
         if (d->ownModel) {

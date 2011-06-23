@@ -49,7 +49,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
-class QSGVisualDataModel;
+class QSGVisualModel;
 class QSGModelParticleAttached;
 
 class QSGModelParticle : public QSGParticlePainter
@@ -98,8 +98,9 @@ private slots:
 private:
     bool m_ownModel;
     QDeclarativeComponent* m_comp;
-    QSGVisualDataModel *m_model;
+    QSGVisualModel *m_model;
     QVariant m_dataSource;
+    QByteArray m_viewId;
     QList<QSGItem*> m_deletables;
     QList< int > m_requests;
     bool m_fade;

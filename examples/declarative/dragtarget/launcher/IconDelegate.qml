@@ -24,7 +24,7 @@ Item {
         anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
 
         drag.target: dragArea
-        drag.data: iconDelegate.VisualItemModel.index
+        drag.data: iconDelegate.VisualModel.index
 
         Binding {
             target: dragArea

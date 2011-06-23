@@ -115,7 +115,7 @@ QSGItem *QSGPathViewPrivate::getItem(int modelIndex)
 {
     Q_Q(QSGPathView);
     requestedIndex = modelIndex;
-    QSGItem *item = model->item(modelIndex, false);
+    QSGItem *item = model->item(modelIndex, viewId, false);
     if (item) {
         if (!attType) {
             // pre-create one metatype to share with all attached objects
@@ -389,6 +389,12 @@ void QSGPathView::setModel(const QVariant &model)
 
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
+    if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
+        d->viewId = partModel->part().toUtf8();
+        object = partModel->model();
+    } else {
+        d->viewId = QByteArray();
+    }
     QSGVisualModel *vim = 0;
     if (object && (vim = qobject_cast<QSGVisualModel *>(object))) {
         if (d->ownModel) {
@@ -1176,7 +1182,7 @@ void QSGPathView::itemsRemoved(int modelIndex, int count)
 {
     //XXX support animated removal
     Q_D(QSGPathView);
-    if (!d->model || !d->modelCount || !d->model->isValid() || !d->path || !isComponentComplete())
+    if (!d->model || !d->modelCount || !d->path || !isComponentComplete())
         return;
 
     // fix current

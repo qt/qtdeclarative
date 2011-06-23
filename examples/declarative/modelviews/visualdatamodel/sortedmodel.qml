@@ -33,28 +33,26 @@ Rectangle {
             right: parent.right; bottom: button.top
             leftMargin: 1; topMargin: 2; rightMargin: 2; bottomMargin: 2
         }
-        model: VisualItemModel {
-            VisualDataModel {
-                model: unsortedModel
-                delegate: numberDelegate
-            }
+        model: VisualDataModel {
+            model: unsortedModel
+            delegate: numberDelegate
 
-            onItemDataInserted: {
-                for (var i = 0; i < indexes.length; ++i) {
-                    for (var j = indexes[i].start; j < indexes[i].end; ++j) {
+            onUpdated: {
+                for (var i = 0; i < inserts.length; ++i) {
+                    for (var j = inserts[i].start; j < inserts[i].end; ++j) {
                         console.log(j)
                         var number = unsortedModel.get(getItemInfo(j).index).number
                         var k = 0;
                         for (var l = 0; l < unsortedModel.count; ++l) {
-                            if (l == indexes[k].start) {
-                                l = indexes[k].end - 1
+                            if (l == inserts[k].start) {
+                                l = inserts[k].end - 1
                                 ++k
                             } else if (number < unsortedModel.get(getItemInfo(l).index).number) {
                                 move(j, l, 1)
                                 break
                             }
                         }
-                        indexes[i].start += 1;
+                        inserts[i].start += 1;
                     }
                 }
             }

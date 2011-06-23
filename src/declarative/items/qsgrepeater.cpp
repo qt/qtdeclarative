@@ -94,6 +94,12 @@ void QSGRepeater::setModel(const QVariant &model)
     }
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
+    if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
+        d->viewId = partModel->part().toUtf8();
+        object = partModel->model();
+    } else {
+        d->viewId = QByteArray();
+    }
     QSGVisualModel *vim = 0;
     if (object && (vim = qobject_cast<QSGVisualModel *>(object))) {
         if (d->ownModel) {
@@ -207,11 +213,11 @@ void QSGRepeater::regenerate()
 
     clear();
 
-    if (!d->model || !d->model->count() || !d->model->isValid() || !parentItem() || !isComponentComplete())
+    if (!d->model || !d->model->count() || !parentItem() || !isComponentComplete())
         return;
 
     for (int ii = 0; ii < count(); ++ii) {
-        QSGItem *item = d->model->item(ii);
+        QSGItem *item = d->model->item(ii, d->viewId);
         if (item) {
             QDeclarative_setParent_noEvent(item, parentItem());
             item->setParentItem(parentItem());
@@ -229,7 +235,7 @@ void QSGRepeater::itemsInserted(int index, int count)
         return;
     for (int i = 0; i < count; ++i) {
         int modelIndex = index + i;
-        QSGItem *item = d->model->item(modelIndex);
+        QSGItem *item = d->model->item(modelIndex, d->viewId);
         if (item) {
             QDeclarative_setParent_noEvent(item, parentItem());
             item->setParentItem(parentItem());

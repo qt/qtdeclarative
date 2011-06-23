@@ -64,30 +64,59 @@ class QDeclarativeComponent;
 class QDeclarativePackage;
 class QSGVisualDataModelPrivate;
 
+class QSGVisualData;
+class QSGVisualModelAttached;
+class QSGVisualModelPrivate;
 class Q_DECLARATIVE_EXPORT QSGVisualModel : public QObject
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QSGVisualModel)
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QDeclarativeListProperty<QObject> data READ data DESIGNABLE false)
+    Q_PROPERTY(QDeclarativeListProperty<QSGItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
+    Q_PROPERTY(QObject *parts READ parts CONSTANT)
+
+    Q_CLASSINFO("DefaultProperty", "data")
 
 public:
-    virtual ~QSGVisualModel() {}
-
     enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02 };
     Q_DECLARE_FLAGS(ReleaseFlags, ReleaseFlag)
 
-    virtual int count() const = 0;
-    virtual bool isValid() const = 0;
-    virtual QSGItem *item(int index, bool complete=true) = 0;
-    virtual ReleaseFlags release(QSGItem *item) = 0;
-    virtual bool completePending() const = 0;
-    virtual void completeItem() = 0;
-    virtual QString stringValue(int, const QString &) = 0;
-    virtual void setWatchedRoles(QList<QByteArray> roles) = 0;
+    QSGVisualModel(QObject *parent=0);
+    virtual ~QSGVisualModel() {}
 
-    virtual int indexOf(QSGItem *item, QObject *objectContext) const = 0;
+    int count() const;
+    QSGItem *item(int index, const QByteArray &, bool complete=true);
+    ReleaseFlags release(QSGItem *item);
+    bool completePending() const;
+    void completeItem();
+    QString stringValue(int index, const QString &role);
+    void setWatchedRoles(QList<QByteArray>) {}
+
+    virtual int indexOf(QSGItem *item, QObject *objectContext) const;
+
+    Q_INVOKABLE QScriptValue getItemInfo(int index) const;
+
+    QDeclarativeListProperty<QObject> data();
+    QDeclarativeListProperty<QSGItem> children();
+
+    QObject *parts();
+
+    static QSGVisualModelAttached *qmlAttachedProperties(QObject *obj);
+
+public Q_SLOTS:
+    void append(QSGItem *item);
+    void append(QSGVisualModel *sourceModel, int sourceIndex, int count);
+    void insert(int index, QSGItem *item);
+    void insert(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count);
+    void remove(int index, int count);
+    void move(int from, int to, int count);
+    void replace(int index, QSGItem *item);
+    void replace(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count);
 
 Q_SIGNALS:
+    void childrenChanged();
     void countChanged();
     void itemsInserted(int index, int count);
     void itemsRemoved(int index, int count);
@@ -97,88 +126,42 @@ Q_SIGNALS:
     void createdItem(int index, QSGItem *item);
     void destroyingItem(QSGItem *item);
 
+    void createdPackage(int index, QDeclarativePackage *package);
+    void destroyingPackage(QDeclarativePackage *package);
+
+    void updated(const QScriptValue &inserts);
+
 protected:
-    QSGVisualModel(QObjectPrivate &dd, QObject *parent = 0)
-        : QObject(dd, parent) {}
+    QSGVisualModel(QSGVisualModelPrivate &dd, QObject *parent);
+
+private Q_SLOTS:
+    void _q_itemsInserted(QSGVisualData *model, int index, int count);
+    void _q_itemsRemoved(QSGVisualData *model, int index, int count);
+    void _q_itemsMoved(QSGVisualData *model, int from, int to, int count);
+    void _q_createdPackage(QSGVisualData *model, int index, QDeclarativePackage *package);
+    void _q_destroyingPackage(QDeclarativePackage *package);
 
 private:
     Q_DISABLE_COPY(QSGVisualModel)
 };
 
-class QSGVisualDataModel;
-class QSGVisualItemModelAttached;
-class QSGVisualItemModelPrivate;
-class Q_DECLARATIVE_EXPORT QSGVisualItemModel : public QSGVisualModel
+class QSGVisualDataPrivate;
+class Q_DECLARATIVE_EXPORT QSGVisualData : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGVisualItemModel)
-
-    Q_PROPERTY(QDeclarativeListProperty<QObject> children READ children NOTIFY childrenChanged DESIGNABLE false)
-    Q_CLASSINFO("DefaultProperty", "children")
-
-public:
-    QSGVisualItemModel(QObject *parent=0);
-    virtual ~QSGVisualItemModel() {}
-
-    virtual int count() const;
-    virtual bool isValid() const;
-    virtual QSGItem *item(int index, bool complete=true);
-    virtual ReleaseFlags release(QSGItem *item);
-    virtual bool completePending() const;
-    virtual void completeItem();
-    virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(QList<QByteArray>) {}
-
-    virtual int indexOf(QSGItem *item, QObject *objectContext) const;
-
-    Q_INVOKABLE QScriptValue getItemInfo(int index) const;
-
-    Q_INVOKABLE void append(QSGItem *item);
-    Q_INVOKABLE void append(QSGVisualItemModel *sourceModel, int sourceIndex, int count);
-    Q_INVOKABLE void insert(int index, QSGItem *item);
-    Q_INVOKABLE void insert(int destinationIndex, QSGVisualItemModel *sourceModel, int sourceIndex, int count);
-    Q_INVOKABLE void remove(int index, int count);
-    Q_INVOKABLE void move(int from, int to, int count);
-    Q_INVOKABLE void replace(int index, QSGItem *item);
-    Q_INVOKABLE void replace(int destinationIndex, QSGVisualItemModel *sourceModel, int sourceIndex, int count);
-
-
-    QDeclarativeListProperty<QObject> children();
-
-    static QSGVisualItemModelAttached *qmlAttachedProperties(QObject *obj);
-
-Q_SIGNALS:
-    void childrenChanged();
-
-    void updated(const QScriptValue &inserts);
-
-private Q_SLOTS:
-    void _q_itemsInserted(int index, int count);
-    void _q_itemsRemoved(int index, int count);
-    void _q_itemsMoved(int from, int to, int count);
-
-private:
-    Q_DISABLE_COPY(QSGVisualItemModel)
-};
-
-class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGVisualDataModel)
+    Q_DECLARE_PRIVATE(QSGVisualData)
 
     Q_PROPERTY(QVariant model READ model WRITE setModel)
     Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
-    Q_PROPERTY(QString part READ part WRITE setPart)
-    Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
 public:
-    QSGVisualDataModel();
-    QSGVisualDataModel(QDeclarativeContext *, QObject *parent=0);
-    virtual ~QSGVisualDataModel();
+    QSGVisualData(QObject *parent = 0);
+    QSGVisualData(QDeclarativeContext *, QObject *parent=0);
+    virtual ~QSGVisualData();
 
-    virtual QVariant model() const;
-    virtual void setModel(const QVariant &);
+    QVariant model() const;
+    void setModel(const QVariant &);
 
     QDeclarativeComponent *delegate() const;
     void setDelegate(QDeclarativeComponent *);
@@ -189,33 +172,26 @@ public:
     Q_INVOKABLE QVariant modelIndex(int idx) const;
     Q_INVOKABLE QVariant parentModelIndex() const;
 
-    QString part() const;
-    void setPart(const QString &);
-
     int count() const;
-    bool isValid() const { return delegate() != 0; }
-    QSGItem *item(int index, bool complete=true);
     QSGItem *item(int index, const QByteArray &, bool complete=true);
-    ReleaseFlags release(QSGItem *item);
+    QSGVisualModel::ReleaseFlags release(QSGItem *item);
     bool completePending() const;
     void completeItem();
-    virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(QList<QByteArray> roles);
+    QString stringValue(int index, const QString &role);
+    void setWatchedRoles(QList<QByteArray> roles);
 
     int indexOf(QSGItem *item, QObject *objectContext) const;
 
-    QObject *parts();
 
 Q_SIGNALS:
-    void createdPackage(int index, QDeclarativePackage *package);
+    void itemsInserted(QSGVisualData *data, int index, int count);
+    void itemsRemoved(QSGVisualData *data, int index, int count);
+    void itemsMoved(QSGVisualData *data, int from, int to, int count);
+    void itemsChanged(QSGVisualData *data, int index, int count);
+
+    void createdPackage(QSGVisualData *model, int index, QDeclarativePackage *package);
     void destroyingPackage(QDeclarativePackage *package);
     void rootIndexChanged();
-
-protected:
-    QSGVisualDataModel(QSGVisualDataModelPrivate &dd, QObject *parent = 0);
-    void insertItems(int index, const QList<QSGItem *> &items);
-    QSGItem *takeItem(int index);
-    virtual void insertChangeComplete(int) {}
 
 private Q_SLOTS:
     void _q_itemsChanged(int, int, const QList<int> &);
@@ -228,63 +204,19 @@ private Q_SLOTS:
     void _q_dataChanged(const QModelIndex&,const QModelIndex&);
     void _q_layoutChanged();
     void _q_modelReset();
-    void _q_createdPackage(int index, QDeclarativePackage *package);
-    void _q_destroyingPackage(QDeclarativePackage *package);
 
 private:
-    Q_DISABLE_COPY(QSGVisualDataModel)
+    Q_DISABLE_COPY(QSGVisualData)
 };
 
-class QSGVisualListModelPrivate;
-class QSGVisualListModelAttached;
-class Q_AUTOTEST_EXPORT QSGVisualListModel : public QSGVisualDataModel
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGVisualListModel)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
-
-public:
-    QSGVisualListModel(QObject *parent = 0);
-    ~QSGVisualListModel();
-
-    virtual void setModel(const QVariant &model);
-    virtual QVariant model() const;
-
-    // XXX Q_INVOKABLE void insert(int index, QSGItem *item, const QScriptValue &sv);
-
-
-    Q_INVOKABLE QSGItem *get(int index);
-
-    Q_INVOKABLE void remove(int index);
-    Q_INVOKABLE void move(int from, int to, int count);
-
-    Q_INVOKABLE void transfer(int fromIndex, int count, QSGVisualListModel *dest, int toIndex, QSGItem *newParent);
-    Q_INVOKABLE void transfer(const QVariantList &sourceIndexes, QSGVisualListModel *dest, const QVariantList &destIndexes, QSGItem *newParent);
-
-    virtual int count() const;
-
-protected:
-    virtual ReleaseFlags release(QSGItem *item);
-    virtual void insertChangeComplete(int index);
-
-private:
-    Q_DISABLE_COPY(QSGVisualListModel)
-
-    typedef QPair<QSGItem *, QHash<int, QVariant> > QSGVisualItemData;
-
-    void transfer(const QList<int> &sourceIndexes, QSGVisualListModel *dest, const QList<int> &destIndexes, QSGItem *newParent);
-    void insertItems(const QList<QSGVisualItemData> &itemData, const QList<int> &destIndexes, QSGItem *newParent);
-};
-
-
-class QSGVisualItemModelAttached : public QObject
+class QSGVisualModelAttached : public QObject
 {
     Q_OBJECT
 
 public:
-    QSGVisualItemModelAttached(QObject *parent)
-        : QObject(parent), m_index(0) {}
-    ~QSGVisualItemModelAttached() {
+    QSGVisualModelAttached(QObject *parent)
+        : QObject(parent), m_index(-1) {}
+    ~QSGVisualModelAttached() {
         attachedProperties.remove(parent());
     }
 
@@ -301,12 +233,12 @@ public:
         }
     }
 
-    void setModel(QSGVisualItemModel *model) { m_model = model; }
+    void setModel(QSGVisualModel *model) { m_model = model; }
 
-    static QSGVisualItemModelAttached *properties(QObject *obj) {
-        QSGVisualItemModelAttached *rv = attachedProperties.value(obj);
+    static QSGVisualModelAttached *properties(QObject *obj) {
+        QSGVisualModelAttached *rv = attachedProperties.value(obj);
         if (!rv) {
-            rv = new QSGVisualItemModelAttached(obj);
+            rv = new QSGVisualModelAttached(obj);
             attachedProperties.insert(obj, rv);
         }
         return rv;
@@ -317,19 +249,81 @@ Q_SIGNALS:
 
 public:
     int m_index;
-    QDeclarativeGuard<QSGVisualItemModel> m_model;
+    QDeclarativeGuard<QSGVisualModel> m_model;
 
-    static QHash<QObject*, QSGVisualItemModelAttached*> attachedProperties;
+    static QHash<QObject*, QSGVisualModelAttached*> attachedProperties;
 };
 
+class Q_DECLARATIVE_EXPORT QSGVisualItemModel : public QSGVisualModel
+{
+    Q_OBJECT
+    Q_CLASSINFO("DefaultProperty", "children")
+public:
+    QSGVisualItemModel(QObject *parent = 0);
+    ~QSGVisualItemModel();
+
+private:
+    Q_DISABLE_COPY(QSGVisualItemModel)
+};
+
+class QSGVisualDataModelPrivate;
+class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QSGVisualDataModel)
+
+    Q_PROPERTY(QVariant model READ model WRITE setModel)
+    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
+    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
+    Q_CLASSINFO("DefaultProperty", "delegate")
+public:
+    QSGVisualDataModel();
+    QSGVisualDataModel(QDeclarativeContext *, QObject *parent=0);
+    virtual ~QSGVisualDataModel();
+
+    QVariant model() const;
+    void setModel(const QVariant &);
+
+    QDeclarativeComponent *delegate() const;
+    void setDelegate(QDeclarativeComponent *);
+
+    QVariant rootIndex() const;
+    void setRootIndex(const QVariant &root);
+
+    Q_INVOKABLE QVariant modelIndex(int idx) const;
+    Q_INVOKABLE QVariant parentModelIndex() const;
+
+Q_SIGNALS:
+    void rootIndexChanged();
+
+private:
+    Q_DISABLE_COPY(QSGVisualDataModel)
+};
+
+class Q_DECLARATIVE_EXPORT QSGVisualPartModel : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString part READ part CONSTANT)
+public:
+    QSGVisualPartModel(QSGVisualModel *model, const QString &part, QObject *parent = 0)
+      : QObject(parent), m_model(model), m_part(part) {}
+
+    QSGVisualModel *model() const { return m_model; }
+    QString part() const { return m_part; }
+
+private:
+    QSGVisualModel *m_model;
+    QString m_part;
+};
 
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QSGVisualModel)
+QML_DECLARE_TYPEINFO(QSGVisualModel, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QSGVisualData)
 QML_DECLARE_TYPE(QSGVisualItemModel)
 QML_DECLARE_TYPEINFO(QSGVisualItemModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGVisualDataModel)
-QML_DECLARE_TYPE(QSGVisualListModel)
 
 QT_END_HEADER
 

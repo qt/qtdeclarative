@@ -121,7 +121,7 @@ public:
     void updateHighlight();
     void setHighlightPosition(qreal pos);
     bool isValid() const {
-        return model && model->count() > 0 && model->isValid() && path;
+        return model && model->count() > 0 && path;
     }
 
     void handleMousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -172,6 +172,7 @@ public:
     QList<QSGItem *> itemCache;
     QDeclarativeGuard<QSGVisualModel> model;
     QVariant modelVariant;
+    QByteArray viewId;
     enum MovementReason { Other, SetIndex, Mouse };
     MovementReason moveReason;
     enum MovementDirection { Shortest, Negative, Positive };

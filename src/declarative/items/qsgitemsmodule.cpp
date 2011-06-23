@@ -141,9 +141,10 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGTextEdit>(uri,major,minor,"TextEdit");
     qmlRegisterType<QSGTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QSGViewSection>(uri,major,minor,"ViewSection");
+    qmlRegisterType<QSGVisualModel>(uri,major,minor,"VisualModel");
+    qmlRegisterType<QSGVisualData>(uri,major,minor,"VisualData");
     qmlRegisterType<QSGVisualDataModel>(uri,major,minor,"VisualDataModel");
     qmlRegisterType<QSGVisualItemModel>(uri,major,minor,"VisualItemModel");
-    qmlRegisterType<QSGVisualListModel>(uri,major,minor,"VisualListModel");
 
     qmlRegisterType<QSGAnchors>();
     qmlRegisterType<QSGKeyEvent>();
@@ -155,7 +156,6 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
 #ifndef QT_NO_VALIDATOR
     qmlRegisterType<QValidator>();
 #endif
-    qmlRegisterType<QSGVisualModel>();
 #ifndef QT_NO_ACTION
     qmlRegisterType<QAction>();
 #endif

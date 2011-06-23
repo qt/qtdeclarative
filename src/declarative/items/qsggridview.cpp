@@ -309,7 +309,7 @@ public:
     }
 
     bool isValid() const {
-        return model && model->count() && model->isValid();
+        return model && model->count();
     }
 
     int rowSize() const {
@@ -499,6 +499,7 @@ public:
 
     QDeclarativeGuard<QSGVisualModel> model;
     QVariant modelVariant;
+    QByteArray viewId;
     QList<FxGridItemSG*> visibleItems;
     QHash<QSGItem*,int> unrequestedItems;
     FxGridItemSG *currentItem;
@@ -597,7 +598,7 @@ FxGridItemSG *QSGGridViewPrivate::createItem(int modelIndex)
     }
 
     if (!listItem) {
-        if (QSGItem *item = model->item(modelIndex, false)) {
+        if (QSGItem *item = model->item(modelIndex, viewId, false)) {
             listItem = new FxGridItemSG(item, q);
             listItem->index = modelIndex;
             if (model->completePending()) {
@@ -1529,6 +1530,12 @@ void QSGGridView::setModel(const QVariant &model)
     d->clear();
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
+    if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
+        d->viewId = partModel->part().toUtf8();
+        object = partModel->model();
+    } else {
+        d->viewId = QByteArray();
+    }
     QSGVisualModel *vim = 0;
     if (object && (vim = qobject_cast<QSGVisualModel *>(object))) {
         if (d->ownModel) {

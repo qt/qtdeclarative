@@ -25,28 +25,26 @@ Rectangle {
             NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad }
         }
 
-        model: VisualItemModel {
+        model: VisualDataModel {
             id: applicationsVisualModel
-            VisualDataModel {
-                delegate: IconDelegate { drag.keys: [ "applications" ] }
-                model: ListModel {
-                    id: applicationsModel
+            delegate: IconDelegate { drag.keys: [ "applications" ] }
+            model: ListModel {
+                id: applicationsModel
 
-                    ListElement { icon: "images/AudioPlayer_48.png" }
-                    ListElement { icon: "images/EMail_48.png" }
-                    ListElement { icon: "images/Camera_48.png" }
-                    ListElement { icon: "images/VideoPlayer_48.png" }
-                    ListElement { icon: "images/AddressBook_48.png" }
-                    ListElement { icon: "images/DateBook_48.png" }
-                    ListElement { icon: "images/TodoList_48.png" }
-                    ListElement { icon: "images/AudioPlayer_48.png" }
-                    ListElement { icon: "images/EMail_48.png" }
-                    ListElement { icon: "images/Camera_48.png" }
-                    ListElement { icon: "images/VideoPlayer_48.png" }
-                    ListElement { icon: "images/AddressBook_48.png" }
-                    ListElement { icon: "images/DateBook_48.png" }
-                    ListElement { icon: "images/TodoList_48.png" }
-                }
+                ListElement { icon: "images/AudioPlayer_48.png" }
+                ListElement { icon: "images/EMail_48.png" }
+                ListElement { icon: "images/Camera_48.png" }
+                ListElement { icon: "images/VideoPlayer_48.png" }
+                ListElement { icon: "images/AddressBook_48.png" }
+                ListElement { icon: "images/DateBook_48.png" }
+                ListElement { icon: "images/TodoList_48.png" }
+                ListElement { icon: "images/AudioPlayer_48.png" }
+                ListElement { icon: "images/EMail_48.png" }
+                ListElement { icon: "images/Camera_48.png" }
+                ListElement { icon: "images/VideoPlayer_48.png" }
+                ListElement { icon: "images/AddressBook_48.png" }
+                ListElement { icon: "images/DateBook_48.png" }
+                ListElement { icon: "images/TodoList_48.png" }
             }
         }
     }
@@ -135,17 +133,15 @@ Rectangle {
                 NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad }
             }
 
-            model: VisualItemModel {
+            model: VisualDataModel {
                 id: favoritesVisualModel
-                VisualDataModel {
-                    delegate: IconDelegate { drag.keys: [ "favorites" ] }
-                    model: ListModel {
-                        id: favoritesModel
-                        ListElement { icon: "images/AudioPlayer_48.png" }
-                        ListElement { icon: "images/EMail_48.png" }
-                        ListElement { icon: "images/Camera_48.png" }
-                        ListElement { icon: "images/VideoPlayer_48.png" }
-                    }
+                delegate: IconDelegate { drag.keys: [ "favorites" ] }
+                model: ListModel {
+                    id: favoritesModel
+                    ListElement { icon: "images/AudioPlayer_48.png" }
+                    ListElement { icon: "images/EMail_48.png" }
+                    ListElement { icon: "images/Camera_48.png" }
+                    ListElement { icon: "images/VideoPlayer_48.png" }
                 }
             }
         }

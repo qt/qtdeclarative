@@ -48,17 +48,15 @@ Rectangle {
 
         cacheBuffer: 256
 
-        model: VisualItemModel {
+        model: VisualDataModel {
             id: visualModel
 
-            VisualDataModel {
-                model: ListModel {
-                    id: messageModel
-                }
+            model: ListModel {
+                id: messageModel
+            }
 
-                delegate: Bubble {
-                    y: -height
-                }
+            delegate: Bubble {
+                y: -height
             }
 
             onUpdated: {
@@ -72,7 +70,7 @@ Rectangle {
                             if (item.messageId != message.messageId)
                                 continue
                             visualModel.replace(j, item)
-                            // visualModel.move(item.VisualItemModel.index, j + 1
+                            // visualModel.move(item.VisualModel.index, j + 1
                             // visualModel.replace(j + 1, j)
                             break
                         }

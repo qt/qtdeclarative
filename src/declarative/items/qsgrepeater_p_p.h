@@ -73,6 +73,7 @@ public:
 
     QSGVisualModel *model;
     QVariant dataSource;
+    QByteArray viewId;
     bool ownModel;
 
     QList<QPointer<QSGItem> > deletables;

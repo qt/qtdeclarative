@@ -69,19 +69,27 @@ void QSGModelParticle::setModel(const QVariant &arg)
     if(arg == m_dataSource)
         return;
     m_dataSource = arg;
-    if(qobject_cast<QSGVisualDataModel*>(arg.value<QObject*>())) {
+
+    QObject *object = arg.value<QObject*>();
+    if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
+        m_viewId = partModel->part().toUtf8();
+        object = partModel->model();
+    } else {
+        m_viewId = QByteArray();
+    }
+    if(qobject_cast<QSGVisualModel*>(object)) {
         if(m_ownModel && m_model)
             delete m_model;
-        m_model = qobject_cast<QSGVisualDataModel*>(arg.value<QObject*>());
+        m_model = qobject_cast<QSGVisualModel*>(object);
         m_ownModel = false;
     }else{
         if(!m_model || !m_ownModel)
             m_model = new QSGVisualDataModel(qmlContext(this));
-        m_model->setModel(m_dataSource);
+        static_cast<QSGVisualDataModel *>(m_model)->setModel(m_dataSource);
+        if(m_comp)
+            static_cast<QSGVisualDataModel *>(m_model)->setDelegate(m_comp);
         m_ownModel = true;
     }
-    if(m_comp)
-        m_model->setDelegate(m_comp);
     emit modelChanged();
     emit modelCountChanged();
     connect(m_model, SIGNAL(countChanged()),
@@ -114,19 +122,21 @@ void QSGModelParticle::updateCount()
 
 QDeclarativeComponent *QSGModelParticle::delegate() const
 {
-    if(m_model)
-        return m_model->delegate();
+    if (QSGVisualDataModel *model = qobject_cast<QSGVisualDataModel *>(m_model))
+        return model->delegate();
     return 0;
 }
 
 void QSGModelParticle::setDelegate(QDeclarativeComponent *comp)
 {
-    if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(m_model))
+    QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel *>(m_model);
+    if (dataModel) {
         if (comp == dataModel->delegate())
             return;
+    }
     m_comp = comp;
-    if(m_model)
-        m_model->setDelegate(comp);
+    if(dataModel)
+        dataModel->setDelegate(comp);
     emit delegateChanged();
 }
 
@@ -181,7 +191,7 @@ void QSGModelParticle::processPending()
         }
 
         if(!m_available.isEmpty()){
-            m_data[pos]->delegate = m_model->item(m_available.first());
+            m_data[pos]->delegate = m_model->item(m_available.first(), m_viewId);
             m_data[pos]->modelIndex = m_available.first();
             m_available.pop_front();
             QSGModelParticleAttached* mpa = qobject_cast<QSGModelParticleAttached*>(qmlAttachedPropertiesObject<QSGModelParticle>(m_data[pos]->delegate));
