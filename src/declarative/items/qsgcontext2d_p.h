@@ -291,6 +291,10 @@ public slots:
     void clip();
     bool isPointInPath(qreal x, qreal y) const;
 
+    //path string parser
+    //implement the W3C SVG path spec:
+    //http://www.w3.org/TR/SVG/paths.html
+    void setPathString(const QString& path);
 
     QSGImage *createImage(const QString &url);
 
