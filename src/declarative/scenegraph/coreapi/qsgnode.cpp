@@ -458,9 +458,9 @@ void QSGNode::markDirty(DirtyFlags flags)
 
     int geometryCountDiff = 0;
     if (flags & DirtyNodeAdded)
-        geometryCountDiff = m_subtreeGeometryCount;
+        geometryCountDiff += m_subtreeGeometryCount;
     if (flags & DirtyNodeRemoved)
-        geometryCountDiff = -m_subtreeGeometryCount;
+        geometryCountDiff -= m_subtreeGeometryCount;
 
     QSGNode *p = m_parent;
     while (p) {

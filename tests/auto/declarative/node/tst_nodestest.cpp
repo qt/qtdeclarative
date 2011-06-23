@@ -196,14 +196,14 @@ public:
 
         if (renderer->rootNode()->parent()) {
             // Mark the root dirty to build a clean state from the root and down
-            renderer->rootNode()->markDirty(QSGNode::DirtyAll);
+            renderer->rootNode()->markDirty(QSGNode::DirtyForceUpdate);
         }
 
         renderer->renderScene();
 
         if (renderer->rootNode()->parent()) {
             // Mark the parent of the root dirty to force the root and down to be updated.
-            renderer->rootNode()->parent()->markDirty(QSGNode::DirtyAll);
+            renderer->rootNode()->parent()->markDirty(QSGNode::DirtyForceUpdate);
         }
     }
 
