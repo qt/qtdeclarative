@@ -988,6 +988,7 @@ QScriptValue QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarat
             ctxt->imports = script->importCache;
         } else {
             ctxt->imports = parentCtxt->imports;
+            ctxt->importedScripts = parentCtxt->importedScripts;
         }
 
         if (ctxt->imports) {
