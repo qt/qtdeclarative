@@ -1078,6 +1078,19 @@ static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
     return v8::Boolean::New(pointInPath);
 }
 
+static v8::Handle<v8::Value> ctx2d_setPathString(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context)
+        V8THROW_ERROR("Not a Context2D object");
+
+    QV8Engine *engine = V8ENGINE();
+    if (args.Length() == 1) {
+        r->context->setPathString(engine->toString(args[0]));
+    }
+    return v8::Undefined();
+}
+
 // text
 v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -3148,6 +3161,7 @@ QSGContext2DEngineData::QSGContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("rect"), V8FUNCTION(ctx2d_rect, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("stroke"), V8FUNCTION(ctx2d_stroke, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("isPointInPath"), V8FUNCTION(ctx2d_isPointInPath, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("setPathString"), V8FUNCTION(ctx2d_setPathString, engine));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("font"), ctx2d_font, ctx2d_font_set, v8::External::Wrap(engine));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("textAlign"), ctx2d_textAlign, ctx2d_textAlign_set, v8::External::Wrap(engine));
     ft->InstanceTemplate()->SetAccessor(v8::String::New("textBaseline"), ctx2d_textBaseline, ctx2d_textBaseline_set, v8::External::Wrap(engine));
