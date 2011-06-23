@@ -69,7 +69,7 @@ Item {
     // Property that is set to true when the main window is shown.
     // We need to set the property value in an odd way to handle
     // both qmlviewer and the QtQuickTest module test wrapper.
-    property bool windowShown: util.wrapper ? util.windowShown : false
+    property bool windowShown: util.wrapper ? qtest.windowShown : false
 
     // Internal private state.  Identifiers prefixed with qtest are reserved.
     property bool qtest_prevWhen: true
