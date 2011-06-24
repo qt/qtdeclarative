@@ -4,7 +4,7 @@ import "tiger.js" as Tiger
 Canvas {
   id:canvas
   width:1900
-  height:1150
+  height:1100
   property int frame:0    
 
   Timer {
