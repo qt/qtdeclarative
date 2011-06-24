@@ -728,7 +728,6 @@ function draw(ctx, frame)
 
   if (frame > totalPaths)
     return;
-   console.log(frame);
    ctx.reset();
    ctx.globalCompositeOperation = "source-over";
    ctx.fillStyle = "rgba(0,0,0,0)";
