@@ -82,11 +82,9 @@ public:
         DirtyNodeAdded              = 0x0004,
         DirtyNodeRemoved            = 0x0008,
         DirtyGeometry               = 0x0010,
-        DirtyRenderOrder            = 0x0020,
         DirtyMaterial               = 0x0040,
         DirtyOpacity                = 0x0080,
         DirtyForceUpdate            = 0x0100,
-        DirtyAll                    = 0xffff,
 
         DirtyPropagationMask        = DirtyMatrix
                                       | DirtyClipList
@@ -152,16 +150,11 @@ public:
 protected:
     QSGNode(NodeType type);
 
-    // When a node is destroyed, it will detach from the scene graph and the renderer will be
-    // notified about the change. If the node is detached in the base node's destructor, the
-    // renderer can't safely cast the node to its original type, since at this point it has been
-    // partly destroyed already. To solve this problem, all the node destructors must call a common
-    // destroy method.
-
-    void destroy();
-
 private:
+    friend class QSGRootNode;
+
     void init();
+    void destroy();
 
     QSGNode *m_parent;
     NodeType m_type;

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "white"
@@ -48,7 +48,7 @@ Rectangle{
     ParticleSystem{ 
         id: sys 
     }
-    UltraParticle{
+    ImageParticle{
         sprites: [
             Sprite{
                 name: "licking"
@@ -80,16 +80,16 @@ Rectangle{
         factor: 0.1
         system: sys
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         anchors.centerIn: parent
         id: particles
-        particlesPerSecond: 200
-        particleDuration: 6000
+        emitRate: 200
+        lifeSpan: 6000
         emitting: true
-        speed: AngleVector{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
-        particleSize: 40
-        particleEndSize: 80
+        speed: AngledDirection{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+        size: 40
+        endSize: 80
     }
     Text{
         x: 16

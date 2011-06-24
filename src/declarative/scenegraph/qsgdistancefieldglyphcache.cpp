@@ -912,8 +912,9 @@ void QSGDistanceFieldGlyphCache::updateCache()
     if (m_textureData->pendingGlyphs.isEmpty())
         return;
 
-    int requiredWidth = m_textureData->currY == 0 ? m_textureData->currX : maxTextureSize();
-    int requiredHeight = qMin(maxTextureSize(), m_textureData->currY + QT_DISTANCEFIELD_TILESIZE);
+    int requiredWidth = maxTextureSize();
+    int rows = 128 / (requiredWidth / QT_DISTANCEFIELD_TILESIZE); // Enough rows to fill the latin1 set by default..
+    int requiredHeight = qMin(maxTextureSize(), qMax(m_textureData->currY + QT_DISTANCEFIELD_TILESIZE, QT_DISTANCEFIELD_TILESIZE * rows));
 
     resizeTexture((requiredWidth), (requiredHeight));
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
@@ -941,7 +942,7 @@ void QSGDistanceFieldGlyphCache::updateCache()
             QFile file(key);
             if (file.open(QFile::ReadOnly)) {
                 int fileSize = file.size();
-                int dim = sqrt(fileSize);
+                int dim = sqrt(float(fileSize));
                 QByteArray blob = file.readAll();
                 glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, dim, dim, GL_ALPHA, GL_UNSIGNED_BYTE, blob.constData());
                 continue;

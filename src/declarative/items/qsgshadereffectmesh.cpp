@@ -135,11 +135,6 @@ QSGGeometry *QSGGridMesh::updateGeometry(QSGGeometry *geometry, const QVector<QB
             break;
         }
 
-        if (error) {
-            delete geometry;
-            return 0;
-        }
-
         geometry = new QSGGeometry(attrCount == 1
                                    ? QSGGeometry::defaultAttributes_Point2D()
                                    : QSGGeometry::defaultAttributes_TexturedPoint2D(),
@@ -203,7 +198,6 @@ void QSGGridMesh::setResolution(const QSize &res)
     if (res == m_resolution)
         return;
     if (res.width() < 1 || res.height() < 1) {
-        qWarning("QSGGridMesh: Resolution must be at least 1x1");
         return;
     }
     m_resolution = res;

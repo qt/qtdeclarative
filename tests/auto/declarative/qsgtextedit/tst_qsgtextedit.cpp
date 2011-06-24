@@ -408,10 +408,7 @@ void tst_qsgtextedit::alignments()
     ob->setProperty("horizontalAlignment",hAlign);
     ob->setProperty("verticalAlignment",vAlign);
     QTRY_COMPARE(ob->property("running").toBool(),false);
-    QImage actual(canvas.width(), canvas.height(), QImage::Format_RGB32);
-    actual.fill(qRgb(255,255,255));
-    QPainter p(&actual);
-    canvas.render(&p);
+    QImage actual = canvas.grabFrameBuffer();
 
     expectfile = createExpectedFileIfNotFound(expectfile, actual);
 
@@ -458,6 +455,7 @@ void tst_qsgtextedit::hAlign()
 
 void tst_qsgtextedit::hAlign_RightToLeft()
 {
+    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
     QSGTextEdit *textEdit = canvas.rootObject()->findChild<QSGTextEdit*>("text");
     QVERIFY(textEdit != 0);

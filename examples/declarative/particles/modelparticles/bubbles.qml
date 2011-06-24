@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "../../modelviews/listview/content" as OtherDemo
 import "content/script.js" as Script
 import "content"
@@ -56,21 +56,22 @@ Item{
     ParticleSystem{ 
         id: sys;
     }
-    TrailEmitter{
+    Emitter{
         system: sys
         particle: "A"
         width: parent.width/2
         x: parent.width/4
         y:parent.height
-        speed: PointVector{ y: -64; yVariation: 16 }
-        particlesPerSecond: 1
-        particleDuration: 8000
+        speed: PointDirection{ y: -64; yVariation: 16 }
+        emitRate: 1
+        lifeSpan: 8000
     }
-    Drift{
+    Wander{
         system: sys
-        xDrift: 200
+        xVariance: 400
+        pace: 200
     }
-    DataParticle{
+    ModelParticle{
         id: mp
         z: 0
         system: sys

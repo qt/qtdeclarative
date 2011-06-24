@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     width: 360
@@ -66,32 +66,32 @@ Rectangle{
         frequency: 64
         gridSize: 16
     }
-    ColoredParticle{
+    ImageParticle{
         particles: ["smoke"]
         system: ps
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "#11111111"
         colorVariation: 0
     }
-    ColoredParticle{
+    ImageParticle{
         particles: ["flame"]
         system: ps
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "#11ff400f"
         colorVariation: 0.1
         }
-    TrailEmitter{
+    Emitter{
         anchors.centerIn: parent
         system: ps
         particle: "flame"
         
-        particlesPerSecond: 120
-        particleDuration: 1200
-        particleSize: 20
-        particleEndSize: 10
-        particleSizeVariation: 10
-        acceleration: PointVector{ y: -40 }
-        speed: AngleVector{ angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
+        emitRate: 120
+        lifeSpan: 1200
+        size: 20
+        endSize: 10
+        sizeVariation: 10
+        acceleration: PointDirection{ y: -40 }
+        speed: AngledDirection{ angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
     }
     FollowEmitter{
         id: smoke1
@@ -101,14 +101,14 @@ Rectangle{
         particle: "smoke"
         follow: "flame"
 
-        particlesPerParticlePerSecond: 4
-        particleDuration: 2400
-        particleDurationVariation: 400
-        particleSize: 16
-        particleEndSize: 8
-        particleSizeVariation: 8
-        acceleration: PointVector{ y: -40 }
-        speed: AngleVector{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        emitRatePerParticle: 4
+        lifeSpan: 2400
+        lifeSpanVariation: 400
+        size: 16
+        endSize: 8
+        sizeVariation: 8
+        acceleration: PointDirection{ y: -40 }
+        speed: AngledDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
     FollowEmitter{
         id: smoke2
@@ -118,12 +118,12 @@ Rectangle{
         particle: "smoke"
         follow: "flame"
         
-        particlesPerParticlePerSecond: 1
-        particleDuration: 2400
-        particleSize: 36
-        particleEndSize: 24
-        particleSizeVariation: 8
-        acceleration: PointVector{ y: -40 }
-        speed: AngleVector{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        emitRatePerParticle: 1
+        lifeSpan: 2400
+        size: 36
+        endSize: 24
+        sizeVariation: 8
+        acceleration: PointDirection{ y: -40 }
+        speed: AngledDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
 }

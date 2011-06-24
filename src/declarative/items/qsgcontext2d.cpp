@@ -366,6 +366,547 @@ static QString compositeOperatorToString(QPainter::CompositionMode op)
     return QString();
 }
 
+
+ #include <QScriptEngine>
+
+//static QtScript functions
+static QScriptValue ctx2d_sync(QScriptContext *c, QScriptEngine* e)
+{
+  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+  ctx2d->sync();
+  return e->nullValue();
+}
+
+
+// back-reference to the canvas, getter
+static QScriptValue ctx2d_canvas(QScriptContext *c, QScriptEngine* e)
+{
+  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+  return e->newQObject(ctx2d->canvas());
+}
+
+// state
+static QScriptValue ctx2d_restore(QScriptContext *c, QScriptEngine *e)
+{
+  QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+  ctx2d->restore();
+  return e->nullValue();
+}
+
+static QScriptValue ctx2d_save(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->save();
+    return e->nullValue();
+}
+
+// transformations
+static QScriptValue ctx2d_rotate(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {
+        ctx2d->rotate(c->argument(0).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_scale(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 2) {
+        ctx2d->scale(c->argument(0).toNumber(), c->argument(1).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_setTransform(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 6) {
+        ctx2d->setTransform(c->argument(0).toNumber()
+                          , c->argument(1).toNumber()
+                          , c->argument(2).toNumber()
+                          , c->argument(3).toNumber()
+                          , c->argument(4).toNumber()
+                          , c->argument(5).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_transform(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 6) {
+        ctx2d->transform(c->argument(0).toNumber()
+                       , c->argument(1).toNumber()
+                       , c->argument(2).toNumber()
+                       , c->argument(3).toNumber()
+                       , c->argument(4).toNumber()
+                       , c->argument(5).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_translate(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 2) {
+        ctx2d->translate(c->argument(0).toNumber()
+                       , c->argument(1).toNumber());
+    }
+    return e->nullValue();
+}
+
+// compositing
+// float getter/setter default 1.0
+static QScriptValue ctx2d_globalAlpha(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setGlobalAlpha(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->globalAlpha());
+}
+
+// string getter/setter default "source-over"
+static QScriptValue ctx2d_globalCompositeOperation(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (ctx2d) {
+        if (c->argumentCount() == 1) {//setter
+            ctx2d->setGlobalCompositeOperation(c->argument(0).toString());
+        }
+        return e->toScriptValue(ctx2d->globalCompositeOperation());
+    }
+    return e->nullValue();
+}
+
+// colors and styles
+// getter/setter
+static QScriptValue ctx2d_fillStyle(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setFillStyle(c->argument(0).toVariant());
+    }
+    return e->toScriptValue(ctx2d->fillStyle());
+}
+
+// colors and styles
+// getter/setter
+static QScriptValue ctx2d_fillColor(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setFillColor(c->argument(0).toVariant().value<QColor>());
+    }
+    return e->toScriptValue(ctx2d->fillColor());
+}
+
+
+//getter/setter
+static QScriptValue ctx2d_strokeStyle(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setStrokeStyle(c->argument(0).toVariant());
+    }
+    return e->toScriptValue(ctx2d->strokeStyle());
+}
+
+// colors and styles
+// getter/setter
+static QScriptValue ctx2d_strokeColor(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setStrokeColor(c->argument(0).toVariant().value<QColor>());
+    }
+    return e->toScriptValue(ctx2d->strokeColor());
+}
+
+static QScriptValue ctx2d_createLinearGradient(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        QObject* gradient = ctx2d->createLinearGradient( c->argument(0).toNumber()
+                                                        ,c->argument(1).toNumber()
+                                                        ,c->argument(2).toNumber()
+                                                        ,c->argument(3).toNumber());
+        return e->toScriptValue(gradient);
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_createRadialGradient(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 6) {
+        QObject* gradient = ctx2d->createRadialGradient( c->argument(0).toNumber()
+                                                        ,c->argument(1).toNumber()
+                                                        ,c->argument(2).toNumber()
+                                                        ,c->argument(3).toNumber()
+                                                        ,c->argument(4).toNumber()
+                                                        ,c->argument(5).toNumber());
+        return e->toScriptValue(gradient);
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_createPattern(QScriptContext *c, QScriptEngine *e)
+{
+    //TODO
+    return e->nullValue();
+}
+
+// line styles
+// string getter/setter
+static QScriptValue ctx2d_lineCap(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setLineCap(c->argument(0).toString());
+    }
+    return e->toScriptValue(ctx2d->lineCap());
+}
+
+// string getter/setter
+static QScriptValue ctx2d_lineJoin(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setLineJoin(c->argument(0).toString());
+    }
+    return e->toScriptValue(ctx2d->lineJoin());
+}
+// float getter/setter
+static QScriptValue ctx2d_lineWidth(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setLineWidth(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->lineWidth());
+}
+// float getter/setter
+static QScriptValue ctx2d_miterLimit(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setMiterLimit(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->miterLimit());
+}
+
+// shadows
+// float getter/setter
+static QScriptValue ctx2d_shadowBlur(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setShadowBlur(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->shadowBlur());
+}
+static QScriptValue ctx2d_shadowColor(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setShadowColor(c->argument(0).toString());
+    }
+    return e->toScriptValue(ctx2d->shadowColor());
+}
+static QScriptValue ctx2d_shadowOffsetX(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setShadowOffsetX(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->shadowOffsetX());
+}
+
+static QScriptValue ctx2d_shadowOffsetY(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 1) {//setter
+        ctx2d->setShadowOffsetY(c->argument(0).toNumber());
+    }
+    return e->toScriptValue(ctx2d->shadowOffsetY());
+}
+
+//rects
+static QScriptValue ctx2d_clearRect(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        ctx2d->clearRect(c->argument(0).toNumber()
+                        ,c->argument(1).toNumber()
+                        ,c->argument(2).toNumber()
+                        ,c->argument(3).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_fillRect(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        ctx2d->fillRect(c->argument(0).toNumber()
+                       ,c->argument(1).toNumber()
+                       ,c->argument(2).toNumber()
+                       ,c->argument(3).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_strokeRect(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        ctx2d->strokeRect(c->argument(0).toNumber()
+                         ,c->argument(1).toNumber()
+                         ,c->argument(2).toNumber()
+                         ,c->argument(3).toNumber());
+    }
+    return e->nullValue();
+}
+
+// Complex shapes (paths) API
+static QScriptValue ctx2d_arc(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 6) {
+        ctx2d->arc(c->argument(0).toNumber()
+                  ,c->argument(1).toNumber()
+                  ,c->argument(2).toNumber()
+                  ,c->argument(3).toNumber()
+                  ,c->argument(4).toNumber()
+                  ,c->argument(5).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_arcTo(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 5) {
+        ctx2d->arcTo(c->argument(0).toNumber()
+                    ,c->argument(1).toNumber()
+                    ,c->argument(2).toNumber()
+                    ,c->argument(3).toNumber()
+                    ,c->argument(4).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_beginPath(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->beginPath();
+    return e->nullValue();
+}
+static QScriptValue ctx2d_bezierCurveTo(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 5) {
+        ctx2d->bezierCurveTo(c->argument(0).toNumber()
+                            ,c->argument(1).toNumber()
+                            ,c->argument(2).toNumber()
+                            ,c->argument(3).toNumber()
+                            ,c->argument(4).toNumber()
+                            ,c->argument(5).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_clip(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->clip();
+    return e->nullValue();
+}
+static QScriptValue ctx2d_closePath(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->closePath();
+    return e->nullValue();
+}
+static QScriptValue ctx2d_fill(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->fill();
+    return e->nullValue();
+}
+static QScriptValue ctx2d_lineTo(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 2) {
+        ctx2d->lineTo(c->argument(0).toNumber()
+                     ,c->argument(1).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_moveTo(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 2) {
+        ctx2d->moveTo(c->argument(0).toNumber()
+                     ,c->argument(1).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_quadraticCurveTo(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        ctx2d->quadraticCurveTo(c->argument(0).toNumber()
+                               ,c->argument(1).toNumber()
+                               ,c->argument(2).toNumber()
+                               ,c->argument(3).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_rect(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 4) {
+        ctx2d->rect(c->argument(0).toNumber()
+                   ,c->argument(1).toNumber()
+                   ,c->argument(2).toNumber()
+                   ,c->argument(3).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_stroke(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    ctx2d->stroke();
+    return e->nullValue();
+}
+static QScriptValue ctx2d_isPointInPath(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    bool pointInPath = false;
+    if (c->argumentCount() == 2) {
+        pointInPath = ctx2d->isPointInPath(c->argument(0).toNumber()
+                                          ,c->argument(1).toNumber());
+    }
+    return e->toScriptValue(pointInPath);
+}
+
+// text
+static QScriptValue ctx2d_font(QScriptContext *c, QScriptEngine *e)
+{
+    return QScriptValue();
+}
+static QScriptValue ctx2d_textAlign(QScriptContext *c, QScriptEngine *e)
+{
+    return QScriptValue();
+}
+static QScriptValue ctx2d_textBaseline(QScriptContext *c, QScriptEngine *e)
+{
+    return QScriptValue();
+}
+static QScriptValue ctx2d_fillText(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 3) {
+        ctx2d->fillText(c->argument(0).toString()
+                       ,c->argument(1).toNumber()
+                       ,c->argument(2).toNumber());
+    }
+    return e->nullValue();
+}
+static QScriptValue ctx2d_strokeText(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 3) {
+        ctx2d->strokeText(c->argument(0).toString()
+                         ,c->argument(1).toNumber()
+                         ,c->argument(2).toNumber());
+    }
+    return e->nullValue();
+}
+
+// drawing images
+static QScriptValue ctx2d_drawImage(QScriptContext *c, QScriptEngine *e)
+{
+    QSGContext2D* ctx2d = qscriptvalue_cast<QSGContext2D*>(c->thisObject().data());
+    if (c->argumentCount() == 3) {
+        ctx2d->drawImage(c->argument(0).toString()
+                        ,c->argument(1).toNumber()
+                        ,c->argument(2).toNumber());
+    } else if (c->argumentCount() == 5) {
+        ctx2d->drawImage(c->argument(0).toString()
+                        ,c->argument(1).toNumber()
+                        ,c->argument(2).toNumber()
+                        ,c->argument(3).toNumber()
+                        ,c->argument(4).toNumber());
+    } else if (c->argumentCount() == 9) {
+        ctx2d->drawImage(c->argument(0).toString()
+                        ,c->argument(1).toNumber()
+                        ,c->argument(2).toNumber()
+                        ,c->argument(3).toNumber()
+                        ,c->argument(4).toNumber()
+                        ,c->argument(5).toNumber()
+                        ,c->argument(6).toNumber()
+                        ,c->argument(7).toNumber()
+                        ,c->argument(8).toNumber());
+    }
+    return e->nullValue();
+}
+
+// pixel manipulation
+static QScriptValue ctx2d_createImageData(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+static QScriptValue ctx2d_getImageData(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+static QScriptValue ctx2d_putImageData(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+
+//Image Data Interface
+static QScriptValue ctx2d_imageData_data(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+static QScriptValue ctx2d_imageData_height(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+static QScriptValue ctx2d_imageData_width(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+
+//CanvasPixelArray interface
+static QScriptValue ctx2d_pixelArray_length(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+//getter/setter by index how to?
+static QScriptValue ctx2d_pixelArray(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+
+//CanvasGradient interface
+static QScriptValue ctx2d_gradient_addColorStop(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+
+//TextMetrics
+static QScriptValue ctx2d_textMetrics_width(QScriptContext *c, QScriptEngine *e)
+{
+    //#TODO
+    return QScriptValue();
+}
+
+
 bool QSGContext2DPrivate::hasShadow() const
 {
     return state.shadowColor.isValid()
@@ -1623,6 +2164,11 @@ QSGContext2D::QSGContext2D(QSGContext2D *orig, QSGContext2DWorkerAgent* agentDat
     d->canvas = qobject_cast<QSGCanvasItem*>(orig);
 }
 
+QSGCanvasItem*  QSGContext2D::canvas() const
+{
+    Q_D(const QSGContext2D);
+    return d->canvas;
+}
 QSGContext2D::~QSGContext2D()
 {
     Q_D(QSGContext2D);
@@ -1649,24 +2195,60 @@ void QSGContext2D::setScriptEngine(QScriptEngine *eng)
     Q_D(QSGContext2D);
     if (d->scriptEngine != eng) {
         d->scriptEngine = eng;
-//        QScriptValue agent = d->scriptEngine->globalObject().property(QLatin1String("Context2DAgent"));
-//        if (!agent.isValid()) {
-//            d->scriptEngine->evaluate(QLatin1String(
-//                "(function CanvasImageData(w, h, d) {"
-//                "     this.widht = w;"
-//                "     this.height = h;"
-//                "     this.data = d;"
-//                "  })"));
-//            d->scriptEngine->evaluate(agentScript());
-//            agent = d->scriptEngine->globalObject().property(QLatin1String("Context2DAgent"));
-//            if (!agent.isValid()) {
-//                qWarning() << "QSGContext2D:error when evaluating context2d script value!";
-//                d->scriptValue = QScriptValue();
-//                return;
-//            }
-//        }
-//        QScriptValue o = d->scriptEngine->newQObject(this);
-//        d->scriptValue = agent.construct(QScriptValueList() << o);
+        d->scriptValue = eng->newObject();
+        d->scriptValue.setData(eng->toScriptValue(this));
+        d->scriptValue.setProperty(QLatin1String("sync"), eng->newFunction(ctx2d_sync));
+        d->scriptValue.setProperty(QLatin1String("canvas"), eng->newFunction(ctx2d_canvas),QScriptValue::PropertyGetter);
+        d->scriptValue.setProperty(QLatin1String("restore"), eng->newFunction(ctx2d_restore));
+        d->scriptValue.setProperty(QLatin1String("save"), eng->newFunction(ctx2d_save));
+        d->scriptValue.setProperty(QLatin1String("rotate"), eng->newFunction(ctx2d_rotate, 1));
+        d->scriptValue.setProperty(QLatin1String("scale"), eng->newFunction(ctx2d_scale, 2));
+        d->scriptValue.setProperty(QLatin1String("setTransform"), eng->newFunction(ctx2d_setTransform, 6));
+        d->scriptValue.setProperty(QLatin1String("transform"), eng->newFunction(ctx2d_transform, 6));
+        d->scriptValue.setProperty(QLatin1String("translate"), eng->newFunction(ctx2d_translate, 2));
+        d->scriptValue.setProperty(QLatin1String("globalAlpha"), eng->newFunction(ctx2d_globalAlpha), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("globalCompositeOperation"), eng->newFunction(ctx2d_globalCompositeOperation), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("fillStyle"), eng->newFunction(ctx2d_fillStyle), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("strokeStyle"), eng->newFunction(ctx2d_strokeStyle),  QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("fillColor"), eng->newFunction(ctx2d_fillColor), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("strokeColor"), eng->newFunction(ctx2d_strokeColor),  QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("createLinearGradient"), eng->newFunction(ctx2d_createLinearGradient, 4));
+        d->scriptValue.setProperty(QLatin1String("createRadialGradient"), eng->newFunction(ctx2d_createRadialGradient, 6));
+        d->scriptValue.setProperty(QLatin1String("createPattern"), eng->newFunction(ctx2d_createPattern, 2));
+        d->scriptValue.setProperty(QLatin1String("lineCap"), eng->newFunction(ctx2d_lineCap), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("lineJoin"), eng->newFunction(ctx2d_lineJoin), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("lineWidth"), eng->newFunction(ctx2d_lineWidth), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("miterLimit"), eng->newFunction(ctx2d_miterLimit), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("shadowBlur"), eng->newFunction(ctx2d_shadowBlur), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("shadowColor"), eng->newFunction(ctx2d_shadowColor), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("shadowOffsetX"), eng->newFunction(ctx2d_shadowOffsetX), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("shadowOffsetY"), eng->newFunction(ctx2d_shadowOffsetY), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("clearRect"), eng->newFunction(ctx2d_clearRect, 4));
+        d->scriptValue.setProperty(QLatin1String("fillRect"), eng->newFunction(ctx2d_fillRect, 4));
+        d->scriptValue.setProperty(QLatin1String("strokeRect"), eng->newFunction(ctx2d_strokeRect, 4));
+        d->scriptValue.setProperty(QLatin1String("arc"), eng->newFunction(ctx2d_arc, 6));
+        d->scriptValue.setProperty(QLatin1String("arcTo"), eng->newFunction(ctx2d_arcTo, 5));
+        d->scriptValue.setProperty(QLatin1String("beginPath"), eng->newFunction(ctx2d_beginPath));
+        d->scriptValue.setProperty(QLatin1String("bezierCurveTo"), eng->newFunction(ctx2d_bezierCurveTo, 6));
+        d->scriptValue.setProperty(QLatin1String("clip"), eng->newFunction(ctx2d_clip));
+        d->scriptValue.setProperty(QLatin1String("closePath"), eng->newFunction(ctx2d_closePath));
+        d->scriptValue.setProperty(QLatin1String("fill"), eng->newFunction(ctx2d_fill));
+        d->scriptValue.setProperty(QLatin1String("lineTo"), eng->newFunction(ctx2d_lineTo, 2));
+        d->scriptValue.setProperty(QLatin1String("moveTo"), eng->newFunction(ctx2d_moveTo, 2));
+        d->scriptValue.setProperty(QLatin1String("quadraticCurveTo"), eng->newFunction(ctx2d_quadraticCurveTo, 4));
+        d->scriptValue.setProperty(QLatin1String("rect"), eng->newFunction(ctx2d_rect, 4));
+        d->scriptValue.setProperty(QLatin1String("stroke"), eng->newFunction(ctx2d_stroke));
+        d->scriptValue.setProperty(QLatin1String("isPointInPath"), eng->newFunction(ctx2d_isPointInPath, 2));
+        d->scriptValue.setProperty(QLatin1String("font"), eng->newFunction(ctx2d_font), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("textAlign"), eng->newFunction(ctx2d_textAlign), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("textBaseline"), eng->newFunction(ctx2d_textBaseline), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+        d->scriptValue.setProperty(QLatin1String("fillText"), eng->newFunction(ctx2d_fillText, 4));
+        //d->scriptValue.setProperty(QLatin1String("measureText"), eng->newFunction(ctx2d_measureText, 1));
+        d->scriptValue.setProperty(QLatin1String("strokeText"), eng->newFunction(ctx2d_strokeText, 4));
+        d->scriptValue.setProperty(QLatin1String("drawImage"), eng->newFunction(ctx2d_drawImage, 9));
+        d->scriptValue.setProperty(QLatin1String("createImageData"), eng->newFunction(ctx2d_createImageData, 2));
+        d->scriptValue.setProperty(QLatin1String("getImageData"), eng->newFunction(ctx2d_getImageData, 4));
+        d->scriptValue.setProperty(QLatin1String("putImageData"), eng->newFunction(ctx2d_putImageData, 7));
     }
 }
 
@@ -2380,6 +2962,7 @@ void QSGContext2D::paint(QPainter* p)
                 qreal y = d->reals[real_idx++];
                 qreal w = d->reals[real_idx++];
                 qreal h = d->reals[real_idx++];
+//                qDebug() << "fillRect(" << x << y << w << h << ")";
                 if (d->hasShadow())
                     d->fillRectShadow(p, QRectF(x, y, w, h));
                 else

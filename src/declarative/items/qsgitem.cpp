@@ -44,6 +44,7 @@
 #include "qsgcanvas.h"
 #include <QtScript/qscriptengine.h>
 #include "qsgcanvas_p.h"
+#include "qsgevent.h"
 
 #include "qsgevents_p_p.h"
 
@@ -1688,6 +1689,26 @@ void QSGItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
     Q_UNUSED(event);
 }
 
+void QSGItem::dragMoveEvent(QSGDragEvent *event)
+{
+    event->setAccepted(false);
+}
+
+void QSGItem::dragEnterEvent(QSGDragEvent *event)
+{
+    event->setAccepted(false);
+}
+
+void QSGItem::dragExitEvent(QSGDragEvent *event)
+{
+    event->setAccepted(false);
+}
+
+void QSGItem::dragDropEvent(QSGDragEvent *event)
+{
+    event->setAccepted(false);
+}
+
 bool QSGItem::childMouseEventFilter(QSGItem *, QEvent *)
 {
     return false;
@@ -2145,6 +2166,27 @@ void QSGItemPrivate::deliverHoverEvent(QGraphicsSceneHoverEvent *e)
         break;
     case QEvent::GraphicsSceneHoverMove:
         q->hoverMoveEvent(e);
+        break;
+    }
+}
+
+void QSGItemPrivate::deliverDragEvent(QSGDragEvent *e)
+{
+    Q_Q(QSGItem);
+    switch (e->type()) {
+    default:
+        Q_ASSERT(!"Unknown event type");
+    case QSGEvent::SGDragEnter:
+        q->dragEnterEvent(e);
+        break;
+    case QSGEvent::SGDragExit:
+        q->dragExitEvent(e);
+        break;
+    case QSGEvent::SGDragMove:
+        q->dragMoveEvent(e);
+        break;
+    case QSGEvent::SGDragDrop:
+        q->dragDropEvent(e);
         break;
     }
 }

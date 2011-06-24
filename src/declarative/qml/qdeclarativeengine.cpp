@@ -106,6 +106,7 @@
 #include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qsgitemsmodule_p.h>
+#include <private/qsgparticlesmodule_p.h>
 #include <qsgtexture.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
@@ -362,6 +363,7 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
         QDeclarativeUtilModule::defineModule();
         QDeclarativeEnginePrivate::defineModule();
         QSGItemsModule::defineModule();
+        QSGParticlesModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
     globalClass = new QDeclarativeGlobalScriptClass(&scriptEngine);

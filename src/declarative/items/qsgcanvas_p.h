@@ -55,6 +55,7 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
+#include "qsgevent.h"
 #include <private/qdeclarativeguard_p.h>
 
 #include <private/qsgcontext_p.h>
@@ -116,6 +117,8 @@ public:
     bool deliverHoverEvent(QSGItem *, QGraphicsSceneHoverEvent *);
     void sendHoverEvent(QEvent::Type, QSGItem *, QGraphicsSceneHoverEvent *);
     void clearHover();
+    void deliverDragEvent(QSGDragEvent *);
+    bool deliverDragEvent(QSGItem *item, QSGDragEvent *);
 
     QDeclarativeGuard<QSGItem> hoverItem;
     enum FocusOption {
@@ -152,10 +155,12 @@ public:
 
     QSGContext *context;
 
-    uint contextInThread : 1;
+    uint contextFailed : 1;
     uint threadedRendering : 1;
     uint animationRunning: 1;
     uint renderThreadAwakened : 1;
+
+    uint vsyncAnimations : 1;
 
     QSGCanvasRenderThread *thread;
     QSize widgetSize;

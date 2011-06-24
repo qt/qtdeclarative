@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     id: root
@@ -49,26 +49,26 @@ Rectangle{
     ParticleSystem{
         id: sys
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
-        image: "content/particle.png"
+        source: "content/particle.png"
         color: "white"
         colorVariation: 1.0
         alpha: 0.1
     }
     Component{
         id: emitterComp
-        TrailEmitter{
+        Emitter{
             id: container
-            TrailEmitter{
+            Emitter{
                 id: emitMore
                 system: sys
                 emitting: true
-                particlesPerSecond: 128
-                particleDuration: 600
-                particleSize: 16
-                particleEndSize: 8
-                speed: AngleVector{angleVariation:360; magnitude: 60}
+                emitRate: 128
+                lifeSpan: 600
+                size: 16
+                endSize: 8
+                speed: AngledDirection{angleVariation:360; magnitude: 60}
             }
 
             property int life: 2600
@@ -81,10 +81,10 @@ Rectangle{
             }
             system: sys
             emitting: true
-            particlesPerSecond: 64
-            particleDuration: 600
-            particleSize: 24
-            particleEndSize: 8
+            emitRate: 32
+            lifeSpan: 600
+            size: 24
+            endSize: 8
             NumberAnimation on x{
                 id: xAnim;
                 to: targetX
@@ -107,12 +107,12 @@ Rectangle{
     MouseArea{
         anchors.fill: parent
         onClicked:{
-            for(var i=0; i<16; i++){
+            for(var i=0; i<8; i++){
                 var obj = emitterComp.createObject(root);
                 obj.x = mouse.x
                 obj.y = mouse.y
-                obj.targetX = Math.random() * 640
-                obj.targetY = Math.random() * 480
+                obj.targetX = Math.random() * 240 - 120 + obj.x
+                obj.targetY = Math.random() * 240 - 120 + obj.y
                 obj.life = Math.round(Math.random() * 2400) + 200
                 obj.go();
             }

@@ -89,6 +89,7 @@ class QSGKeyEvent;
 class QSGAnchors;
 class QSGItemPrivate;
 class QSGCanvas;
+class QSGDragEvent;
 class QSGEngine;
 class QTouchEvent;
 class QSGNode;
@@ -363,6 +364,10 @@ protected:
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+    virtual void dragMoveEvent(QSGDragEvent *event);
+    virtual void dragEnterEvent(QSGDragEvent *event);
+    virtual void dragExitEvent(QSGDragEvent *event);
+    virtual void dragDropEvent(QSGDragEvent *event);
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);
 
     virtual void geometryChanged(const QRectF &newGeometry,

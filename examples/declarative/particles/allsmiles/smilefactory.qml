@@ -39,27 +39,27 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Rectangle{
     color: "goldenrod"
     width: 400
     height: 400
     ParticleSystem{id:sys}
-    DeformableParticle{
+    ImageParticle{
         system: sys
         particles: ["goingLeft", "goingRight"]
-        image: "content/singlesmile.png"
+        source: "content/singlesmile.png"
         rotation: 90
         rotationSpeed: 90
         autoRotation: true
     }
-    DeformableParticle{
+    ImageParticle{
         system: sys
         particles: ["goingDown"]
-        image: "content/squarefacespriteXX.png"
+        source: "content/squarefacespriteXX.png"
         rotation: 180
-        yVector: PointVector{ y: 0.5; yVariation: 0.25; xVariation: 0.25; }
+        yVector: PointDirection{ y: 0.5; yVariation: 0.25; xVariation: 0.25; }
     }
     Timer{
         running: true
@@ -79,40 +79,40 @@ Rectangle{
         interval: 8400
         onTriggered: emitC.emitting = true;
     }
-    TrailEmitter{
+    Emitter{
         id: emitA
         x: 0
         y: 120
         system: sys
         emitting: false
         particle: "goingRight"
-        speed: PointVector{ x: 100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        speed: PointDirection{ x: 100 }
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
-    TrailEmitter{
+    Emitter{
         id: emitB
         x: 400
         y: 240
         system: sys
         emitting: false
         particle: "goingLeft"
-        speed: PointVector{ x: -100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        speed: PointDirection{ x: -100 }
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
-    TrailEmitter{
+    Emitter{
         id: emitC
         x: 0
         y: 360
         system: sys
         emitting: false
         particle: "goingDown"
-        speed: PointVector{ x: 100 }
-        particleDuration: 4000
-        particlesPerSecond: 2
-        particleSize: 32
+        speed: PointDirection{ x: 100 }
+        lifeSpan: 4000
+        emitRate: 2
+        size: 32
     }
 }

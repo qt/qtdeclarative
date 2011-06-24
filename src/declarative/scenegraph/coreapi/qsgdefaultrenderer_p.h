@@ -77,11 +77,11 @@ private:
 };
 
 
-class QMLRenderer : public QSGRenderer
+class QSGDefaultRenderer : public QSGRenderer
 {
     Q_OBJECT
 public:
-    QMLRenderer(QSGContext *context);
+    QSGDefaultRenderer(QSGContext *context);
 
     void render();
 

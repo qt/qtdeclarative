@@ -39,15 +39,17 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
+import "content"
+import "../launcherContent" as UI
 
 Rectangle{
     width: 360
     height: 540
     ParticleSystem { id: particles }
-    SpriteParticle {
+    ImageParticle {
         system: particles
-        Sprite{
+        sprites: Sprite{
             name: "snow"
             source: "content/flake-01.png"
             frames: 51
@@ -55,21 +57,38 @@ Rectangle{
         }
     }
     Wander { 
+        id: wanderer
         system: particles
         anchors.fill: parent
-        xVariance: 40;
-        pace: 40;
+        xVariance: 360/(wanderer.physics+1);
+        pace: 100*(wanderer.physics+1);
     }
-    TrailEmitter {
+    Emitter {
         system: particles
-        particlesPerSecond: 20
-        particleDuration: 7000
+        emitRate: 20
+        lifeSpan: 7000
         emitting: true
-        speed: PointVector{ y:80; yVariation: 40; }
-        acceleration: PointVector{ y: 4 }
-        particleSize: 20
-        particleSizeVariation: 10
+        speed: PointDirection{ y:80; yVariation: 40; }
+        acceleration: PointDirection{ y: 4 }
+        size: 20
+        sizeVariation: 10
         width: parent.width
         height: 100
+    }
+    Row{
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        UI.Button{
+            text:"dx/dt"
+            onClicked: wanderer.physics = Wander.Position;
+        }
+        UI.Button{
+            text:"dv/dt"
+            onClicked: wanderer.physics = Wander.Velocity;
+        }
+        UI.Button{
+            text:"da/dt"
+            onClicked: wanderer.physics = Wander.Acceleration;
+        }
     }
 }

@@ -74,6 +74,9 @@
 //#include "private/qsgpincharea_p.h"
 #include "qsgcanvasitem_p.h"
 #include "qsgcontext2d_p.h"
+#include "qsgsprite_p.h"
+#include "qsgspriteimage_p.h"
+#include "qsgdragtarget_p.h"
 
 static QDeclarativePrivate::AutoParentResult qsgitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -178,12 +181,17 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGContext2D>();
     qmlRegisterType<QSGCanvasGradient>();
 
+    qmlRegisterType<QSGSprite>("QtQuick", 2, 0, "Sprite");
+    qmlRegisterType<QSGSpriteImage>("QtQuick", 2, 0, "SpriteImage");
 
     qmlRegisterType<QSGParentChange>(uri, major, minor,"ParentChange");
     qmlRegisterType<QSGAnchorChanges>(uri, major, minor,"AnchorChanges");
     qmlRegisterType<QSGAnchorSet>();
     qmlRegisterType<QSGAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QSGParentAnimation>(uri, major, minor,"ParentAnimation");
+
+    qmlRegisterType<QSGDragTarget>("QtQuick", 2, 0, "DragTarget");
+    qmlRegisterType<QSGDragTargetEvent>();
 }
 
 void QSGItemsModule::defineModule()

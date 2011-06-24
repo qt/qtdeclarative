@@ -45,6 +45,8 @@
 #include "qsgitem.h"
 #include "qsgitem_p.h"
 
+#include "qsgevent.h"
+
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
@@ -172,7 +174,7 @@ void QSGCanvas::paintEvent(QPaintEvent *)
         int lastFrame = frameTimer.restart();
 #endif
 
-        if (d->animationDriver->isRunning())
+        if (d->animationDriver && d->animationDriver->isRunning())
             d->animationDriver->advance();
 
 #ifdef FRAME_TIMING
@@ -220,7 +222,7 @@ void QSGCanvas::paintEvent(QPaintEvent *)
 
         QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Painting);
 
-        if (d->animationDriver->isRunning())
+        if (d->animationDriver && d->animationDriver->isRunning())
             update();
     } else {
         if (updatesEnabled()) {
@@ -248,25 +250,32 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
     QGLWidget::showEvent(e);
 
-    if (d->threadedRendering) {
-        if (!d->animationDriver) {
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
-            connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
-        }
-        d->animationDriver->install();
-        d->thread->startRenderThread();
-        setUpdatesEnabled(true);
-    } else {
-        makeCurrent();
+    if (!d->contextFailed) {
+        if (d->threadedRendering) {
+            if (d->vsyncAnimations) {
+                if (!d->animationDriver) {
+                    d->animationDriver = d->context->createAnimationDriver(this);
+                    connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
+                    connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
+                }
+                d->animationDriver->install();
+            }
+            d->thread->startRenderThread();
+            setUpdatesEnabled(true);
+        } else {
+            makeCurrent();
 
-        if (!d->context || !d->context->isReady()) {
-            d->initializeSceneGraph();
-            d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
-        }
+            if (!d->context || !d->context->isReady()) {
+                d->initializeSceneGraph();
+                if (d->vsyncAnimations) {
+                    d->animationDriver = d->context->createAnimationDriver(this);
+                    connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
+                }
+            }
 
-        d->animationDriver->install();
+            if (d->animationDriver)
+                d->animationDriver->install();
+        }
     }
 }
 
@@ -274,14 +283,56 @@ void QSGCanvas::hideEvent(QHideEvent *e)
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering) {
-        d->thread->stopRenderThread();
-    }
+    if (!d->contextFailed) {
+        if (d->threadedRendering) {
+            d->thread->stopRenderThread();
+        }
 
-    d->animationDriver->uninstall();
+        if (d->animationDriver)
+            d->animationDriver->uninstall();
+    }
 
     QGLWidget::hideEvent(e);
 }
+
+
+
+/*!
+    Sets weither this canvas should use vsync driven animations.
+
+    This option can only be set on one single QSGCanvas, and that it's
+    vsync signal will then be used to drive all animations in the
+    process.
+
+    This feature is primarily useful for single QSGCanvas, QML-only
+    applications.
+
+    \warning Enabling vsync on multiple QSGCanvas instances has
+    undefined behavior.
+ */
+void QSGCanvas::setVSyncAnimations(bool enabled)
+{
+    Q_D(QSGCanvas);
+    if (isVisible()) {
+        qWarning("QSGCanvas::setVSyncAnimations: Cannot be changed when widget is shown");
+        return;
+    }
+    d->vsyncAnimations = enabled;
+}
+
+
+
+/*!
+    Returns true if this canvas should use vsync driven animations;
+    otherwise returns false.
+ */
+bool QSGCanvas::vsyncAnimations() const
+{
+    Q_D(const QSGCanvas);
+    return d->vsyncAnimations;
+}
+
+
 
 void QSGCanvas::focusOutEvent(QFocusEvent *event)
 {
@@ -374,9 +425,11 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , hoverItem(0)
     , dirtyItemList(0)
     , context(0)
+    , contextFailed(false)
     , threadedRendering(false)
     , animationRunning(false)
     , renderThreadAwakened(false)
+    , vsyncAnimations(false)
     , thread(0)
     , animationDriver(0)
 {
@@ -390,6 +443,11 @@ QSGCanvasPrivate::~QSGCanvasPrivate()
 void QSGCanvasPrivate::init(QSGCanvas *c)
 {
     QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+
+    if (!c->context() || !c->context()->isValid()) {
+        contextFailed = true;
+        qWarning("QSGCanvas: Couldn't acquire a GL context.");
+    }
 
     q_ptr = c;
 
@@ -877,18 +935,20 @@ QSGCanvas::~QSGCanvas()
     d->cleanupNodes();
 
 
-    // We need to remove all references to textures pointing to "our" QSGContext
-    // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
-    // part of those cache entries.
-    // To "play nice" with other GL apps that are potentially running in the GUI thread,
-    // We get the current context and only temporarily make our own current
-    QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
-    makeCurrent();
-    extern void qt_declarative_pixmapstore_clean(QSGContext *context);
-    qt_declarative_pixmapstore_clean(d->context);
-    delete d->context;
-    if (currentContext)
-        currentContext->makeCurrent();
+    if (!d->contextFailed) {
+        // We need to remove all references to textures pointing to "our" QSGContext
+        // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
+        // part of those cache entries.
+        // To "play nice" with other GL apps that are potentially running in the GUI thread,
+        // We get the current context and only temporarily make our own current
+        QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
+        makeCurrent();
+        extern void qt_declarative_pixmapstore_clean(QSGContext *context);
+        qt_declarative_pixmapstore_clean(d->context);
+        delete d->context;
+        if (currentContext)
+            currentContext->makeCurrent();
+    }
 }
 
 QSGItem *QSGCanvas::rootItem() const
@@ -944,7 +1004,7 @@ bool QSGCanvas::event(QEvent *e)
 
         d->thread->syncAlreadyHappened = false;
 
-        if (d->animationRunning) {
+        if (d->animationRunning && d->animationDriver) {
 #ifdef THREAD_DEBUG
             qDebug("GUI: Advancing animations...\n");
 #endif
@@ -974,6 +1034,12 @@ bool QSGCanvas::event(QEvent *e)
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPoint();
+        break;
+    case QSGEvent::SGDragEnter:
+    case QSGEvent::SGDragExit:
+    case QSGEvent::SGDragMove:
+    case QSGEvent::SGDragDrop:
+        d->deliverDragEvent(static_cast<QSGDragEvent *>(e));
         break;
     default:
         break;
@@ -1434,6 +1500,78 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
     return false;
 }
 
+void QSGCanvasPrivate::deliverDragEvent(QSGDragEvent *event)
+{
+    Q_Q(QSGCanvas);
+    if (event->type() == QSGEvent::SGDragExit || event->type() == QSGEvent::SGDragDrop) {
+        if (QSGItem *grabItem = event->grabItem()) {
+            event->setPosition(grabItem->mapFromScene(event->scenePosition()));
+            q->sendEvent(grabItem, event);
+        }
+    } else if (!deliverDragEvent(rootItem, event)) {
+        if (QSGItem *grabItem = event->grabItem()) {
+            QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
+            exitEvent.setPosition(grabItem->mapFromScene(event->scenePosition()));
+            q->sendEvent(grabItem, &exitEvent);
+            event->setDropItem(0);
+            event->setGrabItem(0);
+        }
+        event->setAccepted(false);
+    }
+}
+
+bool QSGCanvasPrivate::deliverDragEvent(QSGItem *item, QSGDragEvent *event)
+{
+    Q_Q(QSGCanvas);
+    QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
+    if (itemPrivate->opacity == 0.0)
+        return false;
+
+    if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
+        QPointF p = item->mapFromScene(event->scenePosition());
+        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
+            return false;
+    }
+
+    QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        QSGItem *child = children.at(ii);
+        if (!child->isVisible() || !child->isEnabled())
+            continue;
+        if (deliverDragEvent(child, event))
+            return true;
+    }
+
+    QPointF p = item->mapFromScene(event->scenePosition());
+    if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
+        event->setPosition(p);
+
+        if (event->type() == QSGEvent::SGDragMove && item != event->grabItem()) {
+            QSGDragEvent enterEvent(QSGEvent::SGDragEnter, *event);
+            q->sendEvent(item, &enterEvent);
+            if (enterEvent.isAccepted()) {
+                if (QSGItem *grabItem = event->grabItem()) {
+                    QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
+                    q->sendEvent(grabItem, &exitEvent);
+                }
+                event->setDropItem(enterEvent.dropItem());
+                event->setGrabItem(item);
+            } else {
+                return false;
+            }
+        }
+
+        q->sendEvent(item, event);
+        if (event->isAccepted()) {
+            event->setGrabItem(item);
+            return true;
+        }
+        event->setAccepted(true);
+    }
+
+    return false;
+}
+
 bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QGraphicsSceneMouseEvent *event)
 {
     if (!target)
@@ -1508,6 +1646,12 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         QSGItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
+        break;
+    case QSGEvent::SGDragEnter:
+    case QSGEvent::SGDragExit:
+    case QSGEvent::SGDragMove:
+    case QSGEvent::SGDragDrop:
+        QSGItemPrivate::get(item)->deliverDragEvent(static_cast<QSGDragEvent *>(e));
         break;
     default:
         break;
@@ -1857,7 +2001,9 @@ QImage QSGCanvas::grabFrameBuffer()
 
 void QSGCanvasRenderThread::run()
 {
+#ifdef THREAD_DEBUG
     qDebug("QML Rendering Thread Started");
+#endif
 
     renderer->makeCurrent();
 
@@ -1950,7 +2096,7 @@ void QSGCanvasRenderThread::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!d->animationRunning && !isExternalUpdatePending) {
+        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
@@ -2170,6 +2316,13 @@ void QSGCanvasRenderThread::stopRenderThread()
     }
 
     unlockInGui();
+
+#ifdef THREAD_DEBUG
+    printf("GUI: waiting for render thread to terminate..\n");
+#endif
+    // Actually wait for the thread to terminate.  Otherwise we can delete it
+    // too early and crash.
+    QThread::wait();
 }
 
 
@@ -2189,7 +2342,7 @@ QImage QSGCanvasRenderThread::grab()
     doGrab = true;
     isPaintCompleted = false;
     while (isRunning() && !isPaintCompleted) {
-        if (!isRenderBlocked)
+        if (isRenderBlocked)
             wake();
         wait();
     }

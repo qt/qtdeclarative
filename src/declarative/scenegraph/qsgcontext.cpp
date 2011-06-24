@@ -307,7 +307,7 @@ QSGRenderer *QSGContext::createRenderer()
 {
     // ### Do something with this before release...
     static bool doFrontToBack = qApp->arguments().contains(QLatin1String("--opaque-front-to-back"));
-    QMLRenderer *renderer = new QMLRenderer(this);
+    QSGDefaultRenderer *renderer = new QSGDefaultRenderer(this);
     if (doFrontToBack) {
         printf("QSGContext: Sorting opaque nodes front to back...\n");
         renderer->setSortFrontToBackEnabled(true);

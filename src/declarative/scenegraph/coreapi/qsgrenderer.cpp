@@ -229,6 +229,21 @@ void QSGRenderer::renderScene(const Bindable &bindable)
     int bindTime = frameTimer.elapsed();
 #endif
 
+#ifndef QT_NO_DEBUG
+    // Sanity check that attribute registers are disabled
+    {
+        GLint count;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
+        GLint enabled;
+        for (int i=0; i<count; ++i) {
+            glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+            if (enabled) {
+                qWarning("QSGRenderer: attribute %d is enabled, this can lead to memory corruption and crashes.", i);
+            }
+        }
+    }
+#endif
+
     render();
 #ifdef QSG_RENDERER_TIMING
     int renderTime = frameTimer.elapsed();
@@ -277,6 +292,14 @@ void QSGRenderer::setClearColor(const QColor &color)
 {
     m_clear_color = color;
 }
+
+/*!
+    Updates internal data structures and emits the sceneGraphChanged() signal.
+
+    If \a flags contains the QSGNode::DirtyNodeRemoved flag, the node might be
+    in the process of being destroyed. It is then not safe to downcast the node
+    pointer.
+*/
 
 void QSGRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
 {

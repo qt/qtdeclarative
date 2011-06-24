@@ -44,7 +44,7 @@ Image {
     id: sun
 
     property bool created: false
-    property string image: "../images/sun.png"
+    property string source: "../images/sun.png"
 
     source: image
 

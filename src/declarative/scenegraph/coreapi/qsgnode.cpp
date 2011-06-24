@@ -174,6 +174,17 @@ bool QSGNode::isSubtreeBlocked() const
     return m_subtreeGeometryCount == 0;
 }
 
+/*!
+    \internal
+    Detaches the node from the scene graph and deletes any children it owns.
+
+    This function is called from QSGNode's and QSGRootNode's destructor. It
+    should not be called explicitly in user code. QSGRootNode needs to call
+    destroy() because destroy() calls removeChildNode() which in turn calls
+    markDirty() which type-casts the node to QSGRootNode. This type-cast is not
+    valid at the time QSGNode's destructor is called because the node will
+    already be partially destroyed at that point.
+*/
 
 void QSGNode::destroy()
 {
@@ -447,9 +458,9 @@ void QSGNode::markDirty(DirtyFlags flags)
 
     int geometryCountDiff = 0;
     if (flags & DirtyNodeAdded)
-        geometryCountDiff = m_subtreeGeometryCount;
+        geometryCountDiff += m_subtreeGeometryCount;
     if (flags & DirtyNodeRemoved)
-        geometryCountDiff = -m_subtreeGeometryCount;
+        geometryCountDiff -= m_subtreeGeometryCount;
 
     QSGNode *p = m_parent;
     while (p) {
@@ -493,7 +504,6 @@ QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
 
 QSGBasicGeometryNode::~QSGBasicGeometryNode()
 {
-    destroy();
     if (flags() & OwnsGeometry)
         delete m_geometry;
 }
@@ -569,7 +579,6 @@ QSGGeometryNode::QSGGeometryNode()
 
 QSGGeometryNode::~QSGGeometryNode()
 {
-    destroy();
     if (flags() & OwnsMaterial)
         delete m_material;
     if (flags() & OwnsOpaqueMaterial)
@@ -731,7 +740,6 @@ QSGClipNode::QSGClipNode()
 
 QSGClipNode::~QSGClipNode()
 {
-    destroy();
 }
 
 
@@ -807,7 +815,6 @@ QSGTransformNode::QSGTransformNode()
 
 QSGTransformNode::~QSGTransformNode()
 {
-    destroy();
 }
 
 
@@ -881,7 +888,7 @@ QSGRootNode::~QSGRootNode()
 {
     while (!m_renderers.isEmpty())
         m_renderers.last()->setRootNode(0);
-    destroy();
+    destroy(); // Must call destroy() here because markDirty() casts this to QSGRootNode.
 }
 
 
@@ -940,7 +947,6 @@ QSGOpacityNode::QSGOpacityNode()
 
 QSGOpacityNode::~QSGOpacityNode()
 {
-    destroy();
 }
 
 

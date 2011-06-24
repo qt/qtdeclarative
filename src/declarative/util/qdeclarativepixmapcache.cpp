@@ -855,8 +855,8 @@ bool QDeclarativePixmapReply::event(QEvent *event)
                 if (de->texture) {
                     data->texture = de->texture;
                     data->context = de->context;
-                } else
-                    data->pixmap = QPixmap::fromImage(de->image);
+                }
+                data->pixmap = QPixmap::fromImage(de->image);
                 data->implicitSize = de->implicitSize;
             } else {
                 data->errorString = de->errorString;
@@ -1119,6 +1119,7 @@ QSGTexture *QDeclarativePixmap::texture(QSGContext *context) const
             return d->texture;
         else if (d->pixmapStatus == Ready) {
             d->texture = context->createTexture(d->pixmap.toImage());
+            d->context = context;
             return d->texture;
         }
     }

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 import "content/script.js" as Script
 import "content"
 
@@ -68,15 +68,15 @@ Item{
         overwrite: false
         startTime: 12000//Doesn't actually work with the loading time though...
     }
-    TrailEmitter{
+    Emitter{
         id: emitter
         system: sys
         height: parent.height - 132/2
         x: -132/2
         y: 132/2
-        speed: PointVector{ x: 32; xVariation: 8 }
-        particlesPerSecond: 0.5
-        particleDuration: 120000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
+        speed: PointDirection{ x: 32; xVariation: 8 }
+        emitRate: 0.5
+        lifeSpan: 120000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
         particle: "photos"
     }
     Kill{
@@ -85,10 +85,10 @@ Item{
         height: parent.height
         width: 1000
     }
-    ColoredParticle{
+    ImageParticle{
         system: sys
         particles: ["fireworks"]
-        image: "../trails/content/star.png"
+        source: "../trails/content/star.png"
         color: "lightsteelblue"
         alpha: 0
         colorVariation: 0
@@ -125,7 +125,7 @@ Item{
     }
     property Item alertItem;
     function alert(){
-        resetter.active = false
+        //resetter.active = false
         force.active = true;
         alertItem = alertDelegate.createObject(root);
         alertItem.x = root.width/2 - alertItem.width/2
@@ -142,34 +142,30 @@ Item{
         interval: 800
         onTriggered: {
             force.active = false
-            resetter.active = true;
+            //resetter.active = true;
             mp.take(alertItem, true);
             centerEmitter.burst(1);
         }
     }
-    Attractor{
+    PointAttractor{
         id: force
         system: sys
         x: root.width/2
         y: root.height/2
-        strength: -30000
+        strength: -10000
         active: false
         anchors.centerIn: parent
         width: parent.width/2
         height: parent.height/2
         particles:["photos"]
+        physics: PointAttractor.Position
     }
-    Reset{
-        id: resetter
-        system: sys
-        particles:["photos"]
-    }
-    TrailEmitter{
+    Emitter{
         id: centerEmitter
-        speed: PointVector{ x: 32; xVariation: 8;}
-        particlesPerSecond: 0.5
-        particleDuration: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
-        maxParticles: 20
+        speed: PointDirection{ x: 32; xVariation: 8;}
+        emitRate: 0.5
+        lifeSpan: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
+        emitCap: 20
         particle: "photos"
         system: sys
         anchors.centerIn: parent
@@ -177,22 +173,22 @@ Item{
 
         //TODO: Zoom in effect
     }
-    TrailEmitter{
+    Emitter{
         id: spawnFireworks
         particle: "fireworks"
         system: sys
-        maxParticles: 400
-        particlesPerSecond: 400
-        particleDuration: 2800
+        emitCap: 400
+        emitRate: 400
+        lifeSpan: 2800
         x: parent.width/2
         y: parent.height/2 - 64
         width: 8
         height: 8
         emitting: false
-        particleSize: 32
-        particleEndSize: 8
-        speed: AngleVector{ magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
-        acceleration: PointVector{ y: 160 }
+        size: 32
+        endSize: 8
+        speed: AngledDirection{ magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
+        acceleration: PointDirection{ y: 160 }
     }
     Item{ x: -1000; y: -1000 //offscreen
         Repeater{//Load them here, add to system on completed

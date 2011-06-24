@@ -332,6 +332,7 @@ void tst_qdeclarativeinstruction::dump()
         i.storeScriptString.propertyIndex = 24;
         i.storeScriptString.value = 3;
         i.storeScriptString.scope = 1;
+        i.storeScriptString.bindingId = 3;
         data->addInstruction(i);
     }
 

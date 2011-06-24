@@ -158,7 +158,7 @@ IndexGeometryNodePair IndexGeometryNodePairHeap::pop()
 }
 
 
-QMLRenderer::QMLRenderer(QSGContext *context)
+QSGDefaultRenderer::QSGDefaultRenderer(QSGContext *context)
     : QSGRenderer(context)
     , m_opaqueNodes(64)
     , m_transparentNodes(64)
@@ -175,7 +175,7 @@ QMLRenderer::QMLRenderer(QSGContext *context)
 #endif
 }
 
-void QMLRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
+void QSGDefaultRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
 {
     QSGRenderer::nodeChanged(node, flags);
 
@@ -190,7 +190,7 @@ void QMLRenderer::nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags)
         m_needs_sorting = true;
 }
 
-void QMLRenderer::render()
+void QSGDefaultRenderer::render()
 {
 #if defined (QML_RUNTIME_TESTING)
     static bool dumpTree = qApp->arguments().contains(QLatin1String("--dump-tree"));
@@ -336,18 +336,18 @@ void QMLRenderer::render()
 
 }
 
-void QMLRenderer::setSortFrontToBackEnabled(bool sort)
+void QSGDefaultRenderer::setSortFrontToBackEnabled(bool sort)
 {
     printf("setting sorting to... %d\n", sort);
     m_sort_front_to_back = sort;
 }
 
-bool QMLRenderer::isSortFrontToBackEnabled() const
+bool QSGDefaultRenderer::isSortFrontToBackEnabled() const
 {
     return m_sort_front_to_back;
 }
 
-void QMLRenderer::buildLists(QSGNode *node)
+void QSGDefaultRenderer::buildLists(QSGNode *node)
 {
     if (node->isSubtreeBlocked())
         return;
@@ -420,7 +420,7 @@ void QMLRenderer::buildLists(QSGNode *node)
     }
 }
 
-void QMLRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
+void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
 {
     const float scale = 1.0f / m_currentRenderOrder;
     int count = list.size();

@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import Qt.labs.particles 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: container
@@ -55,23 +55,23 @@ Item {
     property int gunType: 0
     width: 128
     height: 128
-    TrailEmitter{
+    Emitter{
         id: emitter
         //TODO: Cooler would be an 'orbiting' affector
         //TODO: On the subject, opacity and size should be grouped type 'overLife' if we can cram that in the particles
         system: container.system
         particle: container.shipParticle
-        shape: Ellipse{}
+        shape: EllipseShape{}
 
-        particlesPerSecond: hp > 0 ?  hp + 20 : 0 
-        particleDuration: blinkInterval
-        maxParticles: (maxHP + 20)
+        emitRate: hp > 0 ?  hp + 20 : 0 
+        lifeSpan: blinkInterval
+        emitCap: (maxHP + 20)
 
-        acceleration: AngleVector{angleVariation: 360; magnitude: 8}
+        acceleration: AngledDirection{angleVariation: 360; magnitude: 8}
 
-        particleSize: 24
-        particleEndSize: 4
-        particleSizeVariation: 8
+        size: 24
+        endSize: 4
+        sizeVariation: 8
         width: 16
         height: 16
         x: 64
