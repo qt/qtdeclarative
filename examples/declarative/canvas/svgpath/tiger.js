@@ -728,15 +728,19 @@ function draw(ctx, frame)
 
   if (frame > totalPaths)
     return;
-  
-  ctx.globalCompositeOperation = "source-over";
-  ctx.clearRect(0, 0, 800, 800);
+   console.log(frame);
+   ctx.reset();
+   ctx.globalCompositeOperation = "source-over";
+   ctx.fillStyle = "rgba(0,0,0,0)";
+   //ctx.fillRect(0, 0, 600, 600);
+   ctx.fillRect(0, 0, 1900, 1200);
 
-  ctx.strokeColor = Qt.rgba(133, 133, 133,1);
-  ctx.lineWidth = 1;
-
+   ctx.strokeColor = Qt.rgba(133, 133, 133,1);
+   ctx.lineWidth = 1;
+   //ctx.translate(200, 200);
+   ctx.translate(750, 350);
+   ctx.scale(2,2); 
   for (var i = 0; i < frame; i++) {
-  console.log("draw frame:" + i + " fill:" + tiger[i].fill + " stroke:" + tiger[i].stroke + " path:" + tiger[i].path + " width:" + tiger[i].width); 
     if (tiger[i].width != undefined)
       ctx.lineWidth = tiger[i].width;
 
@@ -748,12 +752,11 @@ function draw(ctx, frame)
       ctx.fill();
     }
 
-    //if (tiger[i].stroke != undefined) {
-    //  ctx.strokeStyle = tiger[i].stroke;
+    if (tiger[i].stroke != undefined) {
+      ctx.strokeStyle = tiger[i].stroke;
       ctx.stroke();
-   // }
-
-  }
+    }
+ }
 }
 
 
