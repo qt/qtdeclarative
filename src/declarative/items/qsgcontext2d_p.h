@@ -339,11 +339,6 @@ public:
         Sync() : QEvent(QEvent::User) {}
         QSGContext2DWorkerAgent *data;
     };
-    inline bool inWorkerThread() const;
-    QSGContext2D *agent();
-    const QString& agentScript() const;
-
-
     struct State {
         QMatrix matrix;
         QPainterPath clipPath;

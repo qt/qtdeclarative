@@ -412,6 +412,17 @@ static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
   return v8::Undefined();
 }
 
+static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
+{
+    QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
+    if (!r || !r->context)
+        V8THROW_ERROR("Not a Context2D object");
+
+  r->context->reset();
+
+  return v8::Undefined();
+}
+
 static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
@@ -3122,6 +3133,7 @@ QSGContext2DEngineData::QSGContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("sync"), V8FUNCTION(ctx2d_sync, engine));
     ft->PrototypeTemplate()->SetAccessor(v8::String::New("canvas"), ctx2d_canvas, 0, v8::External::Wrap(engine));
     ft->PrototypeTemplate()->Set(v8::String::New("restore"), V8FUNCTION(ctx2d_restore, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("reset"), V8FUNCTION(ctx2d_reset, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("save"), V8FUNCTION(ctx2d_save, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("rotate"), V8FUNCTION(ctx2d_rotate, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("scale"), V8FUNCTION(ctx2d_scale, engine));
@@ -3218,353 +3230,6 @@ void QSGContext2D::release()
     }
 }
 
-
-bool QSGContext2D::inWorkerThread() const
-{
-    Q_D(const QSGContext2D);
-    return d->agentData != 0;
-}
-const QString& QSGContext2D::agentScript() const
-{
-    static QString script;
-    if (script.isEmpty()) {
-        script = QString::fromLatin1(
-        "function CanvasImageData(w, h, d) {"
-        "     this.width = w;"
-        "     this.height = h;"
-        "     this.data = d;"
-        "}"
-        "function Context2DAgent(_ctx2d) {"
-        "  this._ctx = _ctx2d;"
-        "  this._fillColor = '#000000';"
-        "  this._fillStyle = '#000000';"
-        "  this._strokeColor = '#000000';"
-        "  this._strokeStyle = '#000000';"
-        "  this._globalCompositeOperation = \"source-over\";"
-        "  this._commands = [];"
-        "  this.createImageData = function() {"
-        "    var d = null;"
-        "    if (arguments.length == 1 && arguments[0] instanceof CanvasImageData) {"
-        "      d = new CanvasImageData(arguments[0].width,"
-        "                              arguments[0].height,"
-        "                              new Array(arguments[0].width * arguments[0].height * 4));"
-        "    } else if (arguments.length == 2) {"
-        "      d = new CanvasImageData(arguments[0], arguments[1], new Array(arguments[0] * arguments[1] * 4));"
-        "    }"
-        "    if (d)"
-        "      for (var i=0; i<d.data.length; i++)"
-        "        d.data[i] = 255;"
-        "    return d;"
-        "  };"
-        "  this.getImageData = function(sx, sy, sw, sh) {"
-        "    var imageData = new CanvasImageData(sw, sh, this._ctx.getImageData(sx, sy, sw, sh));"
-        "    return imageData;"
-        "  };"
-        "  this.sync = function() {"
-        "    this._ctx.processCommands(this._commands);"
-        "    this._commands.length = 0;"
-        "  };");
-
-        script.append(QString::fromLatin1(
-                        "this.save = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(Save));
-
-        script.append(QString::fromLatin1(
-                        "this.restore = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(Restore));
-
-        script.append(QString::fromLatin1(
-                        "this.scale = function(x, y) {"
-                        "  this._commands.push([%1, x, y]);"
-                        "};").arg(Scale));
-
-        script.append(QString::fromLatin1(
-                        "this.createImage = function(url) {"
-                          "  return this._ctx.createImage(url);"
-                        "};"));
-
-        script.append(QString::fromLatin1(
-                        "this.rotate = function(x) {"
-                        "  this._commands.push([%1, x]);"
-                        "};").arg(Rotate));
-
-        script.append(QString::fromLatin1(
-                        "this.translate = function(x, y) {"
-                        "  this._commands.push([%1, x, y]);"
-                        "};").arg(Translate));
-
-        script.append(QString::fromLatin1(
-                        "this.transform = function(a1, a2, a3, a4, a5, a6) {"
-                        "  this._commands.push([%1, a1, a2, a3, a4, a5, a6]);"
-                        "};").arg(Transform));
-
-        script.append(QString::fromLatin1(
-                        "this.setTransform = function(a1, a2, a3, a4, a5, a6) {"
-                        "  this._commands.push([%1, a1, a2, a3, a4, a5, a6]);"
-                        "};").arg(SetTransform));
-
-        script.append(QString::fromLatin1(
-                        "this.clearRect = function(x, y, w, h) {"
-                        "  this._commands.push([%1, x, y, w, h]);"
-                        "};").arg(ClearRect));
-
-        script.append(QString::fromLatin1(
-                        "this.fillRect = function(x, y, w, h) {"
-                        "  this._commands.push([%1, x, y, w, h]);"
-                        "};").arg(FillRect));
-
-        script.append(QString::fromLatin1(
-                        "this.strokeRect = function(x, y, w, h) {"
-                        "  this._commands.push([%1, x, y, w, h]);"
-                        "};").arg(StrokeRect));
-
-        script.append(QString::fromLatin1(
-                        "this.beginPath = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(BeginPath));
-
-        script.append(QString::fromLatin1(
-                        "this.closePath = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(ClosePath));
-
-        script.append(QString::fromLatin1(
-                        "this.moveTo = function(x, y) {"
-                        "  this._commands.push([%1, x, y]);"
-                        "};").arg(MoveTo));
-
-        script.append(QString::fromLatin1(
-                        "this.lineTo = function(x, y) {"
-                        "  this._commands.push([%1, x, y]);"
-                        "};").arg(LineTo));
-
-        script.append(QString::fromLatin1(
-                        "this.quadraticCurveTo = function(a1, a2, a3, a4) {"
-                        "  this._commands.push([%1, a1, a2, a3, a4]);"
-                        "};").arg(QuadraticCurveTo));
-
-        script.append(QString::fromLatin1(
-                        "this.bezierCurveTo = function(a1, a2, a3, a4, a5, a6) {"
-                        "  this._commands.push([%1, a1, a2, a3, a4, a5, a6]);"
-                        "};").arg(BezierCurveTo));
-
-        script.append(QString::fromLatin1(
-                        "this.arcTo = function(x1, y1, x2, y2, radius) {"
-                        "  this._commands.push([%1, x1, y1, x2, y2, radius]);"
-                        "};").arg(ArcTo));
-
-        script.append(QString::fromLatin1(
-                        "this.rect = function(x, y, w, h) {"
-                        "  this._commands.push([%1, x, y, w, h]);"
-                        "};").arg(Rect));
-
-        script.append(QString::fromLatin1(
-                        "this.rect = function(x, y, radius, startAngle, endAngle, anticlockwise) {"
-                        "  this._commands.push([%1, x, y, radius, startAngle, endAngle, anticlockwise]);"
-                        "};").arg(Arc));
-
-        script.append(QString::fromLatin1(
-                        "this.fill = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(Fill));
-
-        script.append(QString::fromLatin1(
-                        "this.stroke = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(Stroke));
-
-        script.append(QString::fromLatin1(
-                        "this.clip = function() {"
-                        "  this._commands.push([%1]);"
-                        "};").arg(Clip));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"globalAlpha\", function() {"
-        "    return this._globalAlpha;"
-        "  });"
-        "  this.__defineSetter__(\"globalAlpha\", function(v) {"
-        "    this._globalAlpha = v;"
-        "    this._commands.push([%1, v]);"
-        "  });").arg(GlobalAlpha));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"globalCompositeOperation\", function() {"
-        "    return this._globalCompositeOperation;"
-        "  });"
-        "  this.__defineSetter__(\"globalCompositeOperation\", function(v) {"
-        "    this._globalCompositeOperation = v;"
-        "    this._commands.push([%1, v]);"
-        "  });").arg(GlobalCompositeOperation));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"strokeStyle\", function() {return this._strokeStyle; });"
-        "  this.__defineSetter__(\"strokeStyle\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._strokeStyle = v;"
-        "  });").arg(StrokeStyle));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"fillStyle\", function() {return this._fillStyle; });"
-        "  this.__defineSetter__(\"fillStyle\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._fillStyle = v;"
-        "  });").arg(FillStyle));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"strokeColor\", function() {return this._strokeColor; });"
-        "  this.__defineSetter__(\"strokeColor\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._strokeColor = v;"
-        "  });").arg(StrokeColor));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"fillColor\", function() {return this._fillColor; });"
-        "  this.__defineSetter__(\"fillColor\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._fillColor = v;"
-        "  });").arg(FillColor));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"lineWidth\", function() {return this._lineWidth; });"
-        "  this.__defineSetter__(\"lineWidth\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._lineWidth = v;"
-        "  });").arg(LineWidth));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"lineCap\", function() {return this._lineCap; });"
-        "  this.__defineSetter__(\"lineCap\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._lineCap = v;"
-        "  });").arg(LineCap));
-
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"lineJoin\", function() {return this._lineJoin; });"
-        "  this.__defineSetter__(\"lineJoin\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._lineJoin = v;"
-        "  });").arg(LineJoin));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"miterLimit\", function() {return this._miterLimit; });"
-        "  this.__defineSetter__(\"miterLimit\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._miterLimit = v;"
-        "  });").arg(MiterLimit));
-
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"shadowOffsetX\", function() {return this._shadowOffsetX; });"
-        "  this.__defineSetter__(\"shadowOffsetX\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._shadowOffsetX = v;"
-        "  });").arg(ShadowOffsetX));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"shadowOffsetY\", function() {return this._shadowOffsetY; });"
-        "  this.__defineSetter__(\"shadowOffsetY\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._shadowOffsetY = v;"
-        "  });").arg(ShadowOffsetY));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"shadowBlur\", function() {return this._shadowBlur; });"
-        "  this.__defineSetter__(\"shadowBlur\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._shadowBlur = v;"
-        "  });").arg(ShadowBlur));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"shadowColor\", function() {return this._shadowColor; });"
-        "  this.__defineSetter__(\"shadowColor\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._shadowColor = v;"
-        "  });").arg(ShadowColor));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"font\", function() {return this._font; });"
-        "  this.__defineSetter__(\"font\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._font = v;"
-        "  });").arg(Font));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"textBaseline\", function() {return this._textBaseline; });"
-        "  this.__defineSetter__(\"textBaseline\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._textBaseline = v;"
-        "  });").arg(TextBaseline));
-
-        script.append(QString::fromLatin1(
-        "  this.__defineGetter__(\"textAlign\", function() {return this._textAlign; });"
-        "  this.__defineSetter__(\"textAlign\", function(v) {"
-        "    this._commands.push([%1, v]);"
-        "    this._textAlign = v;"
-        "  });").arg(TextAlign));
-
-        script.append(QString::fromLatin1(
-                        "this.fillText = function(text, x, y) {"
-                        "  this._commands.push([%1, text, x, y]);"
-                        "};").arg(FillText));
-
-        script.append(QString::fromLatin1(
-                        "this.strokeText = function(text, x, y) {"
-                        "  this._commands.push([%1, text, x, y]);"
-                        "};").arg(StrokeText));
-
-        script.append(QString::fromLatin1(
-                        "this.drawImage = function() {"
-                          "  if (arguments.length == 3) {"
-                          "     this._commands.push([%1, arguments[0], arguments[1], arguments[2]]);"
-                          "  } else if (arguments.length == 5) {"
-                          "     this._commands.push([%2, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4]]);"
-                          "  } else if (arguments.length == 9) {"
-                          "     this._commands.push([%3, arguments[0], arguments[1], arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7], arguments[8]]);}"
-                        "};").arg(DrawImage1).arg(DrawImage2).arg(DrawImage3));
-
-        script.append(QString::fromLatin1(
-                        "this.putImageData = function() {"
-                          "  var dx = arguments[1];"
-                          "  var dy = arguments[2];"
-                          "  if (arguments.length == 3) {"
-                          "     this._commands.push([%1, arguments[0].data, dx, dy, arguments[0].width, arguments[0].height]);"
-                          "  } else if (arguments.length == 7) {"
-                          "     var dirtyX = arguments[3];"
-                          "     var dirtyY = arguments[4];"
-                          "     var dirtyWidth = arguments[5];"
-                          "     var dirtyHeight = arguments[6];"
-                          "     var width = arguments[0].width;"
-                          "     var height = arguments[0].heigh;"
-                          "     var filteredData = arguments[0].data.filter(function(element, index, array){"
-                          "                                            var x=index/width;"
-                          "                                            var y=index%width-1;"
-                          "                                            return x >= dirtyX && x < dirtyX+dirtyWidth"
-                          "                                                && y >= dirtyY && y < dirtyY+dirtyHeight;"
-                          "                                           });"
-                          "     this._commands.push([%2, filteredData, dx, dy, dirtyWidth, dirtyHeight]);"
-                          "  }"
-                        "};").arg(PutImageData).arg(PutImageData));
-        script.append(QString::fromLatin1("}"));
-    }
-    return script;
-}
-
-QSGContext2D *QSGContext2D::agent()
-{
-    Q_D(QSGContext2D);
-
-    if (d->agent)
-        return d->agent;
-
-    d->agent = new QSGContext2D(this, new QSGContext2DWorkerAgent);
-    connect(this, SIGNAL(painted()), d->agent, SIGNAL(painted()));
-    d->agent->setSize(size());
-    return d->agent;
-
-}
 void QSGContext2D::processCommands(const QScriptValue& commands)
 {
 #ifdef QSGCANVASITEM_DEBUG
@@ -3885,10 +3550,8 @@ void QSGContext2D::paint(QPainter* p)
             switch (cmd) {
             case UpdateMatrix:
             {
-//                qDebug() << "update matrix from " << d->state.matrix << " to " << d->matrixes[matrix_idx];
-                //p->setWorldTransform(transform * QTransform(d->matrixes[matrix_idx++]), false);
-                //p->setMatrix(d->matrixes[matrix_idx++]);
                 d->state.matrix = d->matrixes[matrix_idx++];
+                p->setMatrix(d->state.matrix);
                 break;
             }
             case ClearRect:
@@ -3906,7 +3569,6 @@ void QSGContext2D::paint(QPainter* p)
                 qreal y = d->reals[real_idx++];
                 qreal w = d->reals[real_idx++];
                 qreal h = d->reals[real_idx++];
-//                qDebug() << "fillRect(" << x << y << w << h << ")";
                 if (d->hasShadow())
                     d->fillRectShadow(p, QRectF(x, y, w, h));
                 else
@@ -3940,6 +3602,7 @@ void QSGContext2D::paint(QPainter* p)
             case Fill:
             {
                 QPainterPath path = d->pathes[path_idx++];
+                //qDebug() << "fill path:" << path.elementCount();
                 if (d->hasShadow())
                     d->fillShadowPath(p,path);
                 else
@@ -3948,8 +3611,10 @@ void QSGContext2D::paint(QPainter* p)
             }
             case Stroke:
             {
-                p->setMatrix(d->state.matrix);
-                QPainterPath path = d->state.matrix.inverted().map(d->pathes[path_idx++]);
+                //p->setMatrix(d->state.matrix);
+                //QPainterPath path = d->state.matrix.inverted().map(d->pathes[path_idx++]);
+                //qDebug() << "stroke path:" << path.elementCount();
+                QPainterPath path = d->pathes[path_idx++];
                 if (d->hasShadow())
                     d->strokeShadowPath(p,path);
                 else
@@ -4173,9 +3838,6 @@ void QSGContext2D::setCachedImage(const QImage& image)
         d->waitingForPainting = false;
     }
 #endif
-    if (inWorkerThread()) {
-        d->agent->setCachedImage(image);
-    }
 }
 
 void QSGContext2D::clear()

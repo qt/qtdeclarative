@@ -65,8 +65,10 @@ public:
     QSGCanvasItem(QSGItem *parent = 0);
     ~QSGCanvasItem();
 
-signals:
+Q_SIGNALS:
     void canvasUpdated();
+    void drawRegion(QDeclarativeV8Handle context, const QRect &region);
+
 public Q_SLOTS:
     QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QDeclarativeV8Handle getContext(const QString & = QLatin1String("2d"));
@@ -77,6 +79,7 @@ public Q_SLOTS:
 
 protected:
     void paint(QPainter *painter);
+    virtual void componentComplete();
 private:
     Q_DECLARE_PRIVATE(QSGCanvasItem)
     friend class QSGContext2D;

@@ -94,10 +94,25 @@ void QSGCanvasItem::paint(QPainter *painter)
     Q_D(QSGCanvasItem);
 
     if (d->context) {
+        emit drawRegion(getContext(), QRect(0, 0, width(), height()));
         d->context->paint(painter);
         emit canvasUpdated();
     }
 }
+
+void QSGCanvasItem::componentComplete()
+{
+    const QMetaObject *metaObject = this->metaObject();
+    int propertyCount = metaObject->propertyCount();
+    int requestPaintMethod = metaObject->indexOfMethod("requestPaint()");
+    for (int ii = QSGCanvasItem::staticMetaObject.propertyCount(); ii < propertyCount; ++ii) {
+        QMetaProperty p = metaObject->property(ii);
+        if (p.hasNotifySignal())
+            QMetaObject::connect(this, p.notifySignalIndex(), this, requestPaintMethod, 0, 0);
+    }
+    QSGPaintedItem::componentComplete();
+}
+
 
 QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
