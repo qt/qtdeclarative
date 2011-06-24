@@ -3,32 +3,45 @@ import QtQuick 2.0
 Rectangle {
     id: root
 
-    property Bubble messageBubble: initialBubble
+    property Item messageBubble
     property ListModel script: Conversation {}
     property int scriptIndex: 0
     property string sender: "Me"
     property int messageCounter: 0
 
-    function send() {
+    function send(message) {
+
         messageView.positionViewAtEnd()
-        visualModel.insert(visualModel.count, messageBubble)
-        messageBubble = bubbleComponent.createObject(composer, { "messageId": ++messageCounter } )
-        messageView.positionViewAtEnd()
+        messageModel.set(messageModel.count - 1, {
+             "sender": root.sender,
+             "message": message,
+             "avatar": "",
+             "outbound": true,
+             "time": Qt.formatTime(Date.now()),
+             "delegateState": ""
+        })
+        newMessage()
     }
+
+    function newMessage() {
+        messageModel.append({
+            "sender": root.sender,
+            "message": "",
+            "avatar": "",
+            "outbound": true,
+            "time": "",
+            "delegateState": "composing"
+        })
+        messageBubble = visualModel.item(visualModel.count - 1)
+    }
+
+    Component.onCompleted: newMessage()
 
     width: 480; height: 640
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: "#000000" }
         GradientStop { position: 1.0; color: "#080808" }
-    }
-
-    Component {
-        id: bubbleComponent
-
-        ComposerBubble {
-            sender: root.sender
-        }
     }
 
     ListView {
@@ -39,44 +52,13 @@ Rectangle {
         }
         spacing: 2
 
-        add: Transition {
-            ParentAnimation {
-                via: root
-                NumberAnimation { properties: "x,y"; easing.type: Easing.InOutQuad; duration: 1500 }
-            }
-        }
-
         cacheBuffer: 256
 
         model: VisualDataModel {
             id: visualModel
 
-            model: ListModel {
-                id: messageModel
-            }
-
-            delegate: Bubble {
-                y: -height
-            }
-
-            onUpdated: {
-                for (var i = 0; i < inserts.length; ++i) {
-                    for (var j = inserts[i].start; j < inserts[i].end; ++j) {
-                        var message = messageModel.get(visualModel.getItemInfo(j).index)
-                        if (!message.outbound)
-                            continue
-                        for (var k = 0; k < visualModel.children.length; ++k) {
-                            var item = visualModel.children[k]
-                            if (item.messageId != message.messageId)
-                                continue
-                            visualModel.replace(j, item)
-                            // visualModel.move(item.VisualModel.index, j + 1
-                            // visualModel.replace(j + 1, j)
-                            break
-                        }
-                    }
-                }
-            }
+            model: ListModel { id: messageModel }
+            delegate: Bubble {}
         }
     }
 
@@ -87,13 +69,13 @@ Rectangle {
         onTriggered: {
             var message = script.get(scriptIndex);
 
-            messageModel.append({
+            messageModel.insert(messageModel.count - 1, {
                 "sender": message.sender,
                 "message": message.message,
                 "avatar": message.avatar,
                 "outbound": false,
-                "messageId": -1,
-                "time": Qt.formatTime(Date.now())
+                "time": Qt.formatTime(Date.now()),
+                "delegateState": ""
             })
 
             scriptIndex = (scriptIndex + 1) % script.count
@@ -104,14 +86,7 @@ Rectangle {
     Item {
         id: composer
 
-        height: messageBubble.height - messageBubble.margin
+        height: messageBubble != undefined ? messageBubble.contentHeight : 0
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-
-        ComposerBubble {
-            id: initialBubble
-
-            sender: root.sender
-            messageId: 0
-        }
     }
 }

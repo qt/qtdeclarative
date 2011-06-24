@@ -105,6 +105,8 @@ public:
 
     static QSGVisualModelAttached *qmlAttachedProperties(QObject *obj);
 
+    Q_INVOKABLE QSGItem *item(int index);
+
 public Q_SLOTS:
     void append(QSGItem *item);
     void append(QSGVisualModel *sourceModel, int sourceIndex, int count);
@@ -112,8 +114,6 @@ public Q_SLOTS:
     void insert(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count);
     void remove(int index, int count);
     void move(int from, int to, int count);
-    void replace(int index, QSGItem *item);
-    void replace(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count);
 
 Q_SIGNALS:
     void childrenChanged();
@@ -303,17 +303,18 @@ private:
 class Q_DECLARATIVE_EXPORT QSGVisualPartModel : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString part READ part CONSTANT)
 public:
-    QSGVisualPartModel(QSGVisualModel *model, const QString &part, QObject *parent = 0)
+    QSGVisualPartModel(QSGVisualModel *model, const QByteArray &part, QObject *parent = 0)
       : QObject(parent), m_model(model), m_part(part) {}
 
     QSGVisualModel *model() const { return m_model; }
-    QString part() const { return m_part; }
+    QByteArray part() const { return m_part; }
+
+    Q_INVOKABLE QSGItem *item(int index) { return m_model->item(index, m_part); }
 
 private:
     QSGVisualModel *m_model;
-    QString m_part;
+    QByteArray m_part;
 };
 
 QT_END_NAMESPACE
@@ -321,6 +322,7 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QSGVisualModel)
 QML_DECLARE_TYPEINFO(QSGVisualModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGVisualData)
+QML_DECLARE_TYPEINFO(QSGVisualDataModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGVisualItemModel)
 QML_DECLARE_TYPEINFO(QSGVisualItemModel, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGVisualDataModel)

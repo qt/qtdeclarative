@@ -58,13 +58,12 @@ Rectangle {
 
         onEntered: {
             sourceIndex = drag.data
-            destinationIndex = applicationsView.indexAt(drag.x, drag.y)
+            destinationIndex = sourceIndex
         }
         onPositionChanged: {
             var index = applicationsView.indexAt(drag.x, drag.y)
             if (index != -1) {
-                if (destinationIndex != -1)
-                    applicationsVisualModel.move(destinationIndex, index, 1)
+                applicationsVisualModel.move(destinationIndex, index, 1)
                 destinationIndex = index
             }
         }
@@ -97,6 +96,7 @@ Rectangle {
         }
 //        onDropped: applicationsModel.move(sourceIndex, destinationIndex, 1)
 //        onExited: applicationsModel.move(destinationIndex, sourceIndex, 1)
+        onExited: applicationsVisualModel.insert(sourceIndex, favoritesVisualModel, destinationIndex, 1)
     }
 
     Rectangle {
@@ -155,7 +155,7 @@ Rectangle {
 
             onEntered: {
                 sourceIndex = drag.data
-                destinationIndex = favoritesView.indexAt(drag.x, drag.y)
+                destinationIndex = sourceIndex
             }
             onPositionChanged: {
                 var index = favoritesView.indexAt(drag.x, drag.y)
@@ -195,7 +195,7 @@ Rectangle {
                 }
             }
 //            onDropped: favoritesModel.move(sourceIndex, destinationIndex, 1)
-//            onExited: favoritesModel.move(destinationIndex, sourceIndex, 1)
+            onExited: favoritesVisualModel.insert(sourceIndex, applicationsVisualModel, destinationIndex, 1)
         }
     }
 }

@@ -72,7 +72,7 @@ void QSGModelParticle::setModel(const QVariant &arg)
 
     QObject *object = arg.value<QObject*>();
     if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
-        m_viewId = partModel->part().toUtf8();
+        m_viewId = partModel->part();
         object = partModel->model();
     } else {
         m_viewId = QByteArray();

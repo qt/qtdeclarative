@@ -389,7 +389,6 @@ void QDeclarativeListCompositor::forwardToBackwardMove(int &from, int &to, int &
 
 void QDeclarativeListCompositor::move(int from, int to, int count)
 {
-    qDebug() << Q_FUNC_INFO << from << to << count;
     Q_ASSERT(from != to || count == 0);
     Q_ASSERT(from >=0 && from + count <= absoluteCount);
     Q_ASSERT(to >=0 && to <= absoluteCount);
@@ -511,8 +510,6 @@ void QDeclarativeListCompositor::move(int from, int to, int count)
 
     for (int i = 0; i < movedRanges.count(); ++i)
         insertPos = ++ranges.insert(insertPos, movedRanges.at(i));
-
-    qDebug() <<  *this;
 
     Q_ASSERT(qt_verifyIntegrity(ranges, absoluteCount, internalCount));
 }
@@ -869,8 +866,6 @@ void QDeclarativeListCompositor::listItemsMoved(
     int from = start;
     int count = end - start;
 
-    qDebug() << Q_FUNC_INFO << from << to << count;
-
     Q_ASSERT(from != to);
     Q_ASSERT(count != 0);
 
@@ -899,8 +894,6 @@ void QDeclarativeListCompositor::listItemsMoved(
             *it = QDeclarativeChangeSet::Move(from, from + count, to);
         }
     }
-
-    qDebug() <<  *this;
 
     Q_ASSERT(qt_verifyIntegrity(ranges, absoluteCount, internalCount));
 }

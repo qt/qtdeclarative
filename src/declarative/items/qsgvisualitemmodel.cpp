@@ -99,9 +99,7 @@ void QSGVisualModelPartsMetaObject::propertyCreated(int, QMetaPropertyBuilder &p
 QVariant QSGVisualModelPartsMetaObject::initialValue(int id)
 {
     QSGVisualPartModel *m = new QSGVisualPartModel(
-            static_cast<QSGVisualModelParts *>(object())->model,
-            QString::fromUtf8(name(id)),
-            object());
+            static_cast<QSGVisualModelParts *>(object())->model, name(id), object());
 
     QVariant var = QVariant::fromValue(static_cast<QObject *>(m));
     return var;
@@ -367,6 +365,11 @@ QSGItem *QSGVisualModel::item(int index, const QByteArray &viewId, bool complete
     }
 }
 
+QSGItem *QSGVisualModel::item(int index)
+{
+    return item(index, QByteArray());
+}
+
 QSGVisualModel::ReleaseFlags QSGVisualModel::release(QSGItem *item)
 {
     Q_D(QSGVisualModel);
@@ -588,64 +591,8 @@ void QSGVisualModel::move(int from, int to, int count)
     }
 }
 
-void QSGVisualModel::replace(int index, QSGItem *item)
-{
-    Q_D(QSGVisualModel);
-    const int internalIndex = d->indexOf(item);
-    if (internalIndex != -1) {
-        int from = d->absoluteIndexOf(internalIndex);
-        if (d->merge(from, index)) {
-            d->transactionChanges.insertRemove(index, index + 1);
-            if (from > index)
-                from -= 1;
-            else
-                index -= 1;
-            if (from != index)
-                d->transactionChanges.insertMove(from, from + 1, index);
-
-            d->invalidateIndexes(index);
-            if (!d->transaction)
-                d->emitTransactionChanges();
-        }
-    } else {
-        d->replaceAt(index, item);
-    }
-    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-    attached->setModel(this);
-    attached->setIndex(index);
-}
-
-void QSGVisualModel::replace(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count)
-{
-    Q_D(QSGVisualModel);
-    if (sourceModel == this) {
-        return;
-    } else {
-        d->removeAt(destinationIndex, count);
-        for (int i = 0, difference = 0; i < count; i += difference) {
-            int offset = 0;
-            int internalIndex = 0;
-            QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
-            difference = range.count - offset;
-
-            if (range.internal()) {
-                for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
-                    d->insertData(destinationIndex + i + j, sourceModel->d_func()->children.at(internalIndex + j).item);
-            } else {
-                d->insertList(destinationIndex + i, range.list, range.index + offset, qMin(count - i, range.count - offset), false);
-                d->connectModel(static_cast<QSGVisualData *>(range.list));
-            }
-        }
-        sourceModel->d_func()->removeAt(sourceIndex, count);
-        sourceModel->d_func()->invalidateIndexes(sourceIndex);
-        emit sourceModel->itemsRemoved(sourceIndex, count);
-        emit sourceModel->countChanged();
-    }
-}
-
 void QSGVisualModel::_q_itemsInserted(QSGVisualData *model, int index, int count)
 {
-    qDebug() << Q_FUNC_INFO << model << index << count;
     Q_D(QSGVisualModel);
 
     Q_ASSERT(count >= 0);
@@ -653,9 +600,6 @@ void QSGVisualModel::_q_itemsInserted(QSGVisualData *model, int index, int count
     QVector<QDeclarativeChangeSet::Insert> inserts;
     d->childrenChanged = false;
     d->listItemsInserted(model, index, index + count, &inserts);
-
-
-    qDebug() << *d;
 
     if (inserts.count() > 0) {
         d->invalidateIndexes(index);

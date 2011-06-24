@@ -1767,7 +1767,7 @@ void QSGListView::setModel(const QVariant &model)
     d->modelVariant = model;
     QObject *object = qvariant_cast<QObject*>(model);
     if (QSGVisualPartModel *partModel = qobject_cast<QSGVisualPartModel *>(object)) {
-        d->viewId = partModel->part().toUtf8();
+        d->viewId = partModel->part();
         object = partModel->model();
     } else {
         d->viewId = QByteArray();
