@@ -301,7 +301,11 @@ void QDeclarativeListCompositor::removeAt(int index, int count)
                 internalCount -= removeCount;
 
             if (range->count == 0) {
-                if (range->prepend()) {
+                if (range->append()) {
+                    range = insert(range, QDeclarativeCompositeRange(
+                            range->list, range->index, removeCount, (range->flags & ~Append) | Null));
+                    range->index += removeCount;
+                } else if (range->prepend()) {
                     range->flags |= Null;
                     range->count = removeCount;
                 } else {
