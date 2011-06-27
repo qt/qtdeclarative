@@ -63,6 +63,7 @@
 #include "private/qdeclarativestyledtext_p.h"
 #include "private/qdeclarativesystempalette_p.h"
 #include "private/qdeclarativetimeline_p_p.h"
+#include "private/qdeclarativetextdocument_p.h"
 #include "private/qdeclarativetimer_p.h"
 #include "private/qdeclarativetransitionmanager_p_p.h"
 #include "private/qdeclarativetransition_p.h"
@@ -78,6 +79,7 @@ void QDeclarativeUtilModule::defineModule()
 {
     qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",1,1,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
 
+    qmlRegisterType<QDeclarativeTextDocument>("QtQuick",2,0,"TextLayout");
     qmlRegisterType<QDeclarativeAnchorAnimation>("QtQuick",1,0,"AnchorAnimation");
     qmlRegisterType<QDeclarativeAnchorChanges>("QtQuick",1,0,"AnchorChanges");
     qmlRegisterType<QDeclarativeBehavior>("QtQuick",1,0,"Behavior");

@@ -29,7 +29,8 @@ SOURCES += \
     $$PWD/qdeclarativestyledtext.cpp \
     $$PWD/qdeclarativelistmodelworkeragent.cpp \
     $$PWD/qdeclarativechangeset.cpp \
-    $$PWD/qlistmodelinterface.cpp
+    $$PWD/qlistmodelinterface.cpp \
+    $$PWD/qdeclarativetextdocument.cpp
 
 HEADERS += \
     $$PWD/qdeclarativeapplication_p.h \
@@ -65,7 +66,8 @@ HEADERS += \
     $$PWD/qdeclarativestyledtext_p.h \
     $$PWD/qdeclarativelistmodelworkeragent_p.h \
     $$PWD/qdeclarativechangeset_p.h \
-    $$PWD/qlistmodelinterface_p.h
+    $$PWD/qlistmodelinterface_p.h \
+    $$PWD/qdeclarativetextdocument_p.h
 
 contains(QT_CONFIG, xmlpatterns) {
     QT+=xmlpatterns

@@ -60,6 +60,7 @@
 
 #include <private/qdeclarativestyledtext_p.h>
 #include <private/qdeclarativepixmapcache_p.h>
+#include <private/qdeclarativetextdocument_p.h>
 
 #include <qmath.h>
 #include <limits.h>
@@ -106,7 +107,7 @@ QSGTextPrivate::QSGTextPrivate()
   richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
-  doc(0), layoutThread(0), nodeType(NodeIsNull)
+  doc(0), layoutThread(0), textLayout(0), nodeType(NodeIsNull)
 {
     cacheAllTextAsImage = enableImageCache();
 }
@@ -1071,7 +1072,7 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
     Q_UNUSED(data);
     Q_D(QSGText);
 
-    if (d->text.isEmpty()) {
+    if (d->text.isEmpty() && !d->textLayout) {
         delete oldNode;
         return 0;
     }
@@ -1138,7 +1139,10 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
             node->addTextDocument(bounds.topLeft(), d->doc, QColor(), d->style, d->styleColor);
 
         } else {
-            node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
+            if (d->textLayout)
+                node->addTextLayout(QPoint(0, bounds.y()), d->textLayout->layout(), d->color, d->style, d->styleColor);
+            else
+                node->addTextLayout(QPoint(0, bounds.y()), &d->layout, d->color, d->style, d->styleColor);
         }
 
         return node;
@@ -1265,6 +1269,26 @@ void QSGText::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     if (!event->isAccepted())
         QSGItem::mouseReleaseEvent(event);
+}
+
+QDeclarativeTextDocument *QSGText::layout() const
+{
+    Q_D(const QSGText);
+    return d->textLayout;
+}
+
+void QSGText::setLayout(QDeclarativeTextDocument* l)
+{
+    Q_D(QSGText);
+    d->textLayout = l;
+    QObject::connect(d->textLayout, SIGNAL(textLayoutChanged()), this, SLOT(textLayoutHasChanged()));
+}
+
+void QSGText::textLayoutHasChanged()
+{
+    Q_D(QSGText);
+    d->updateLayout();
+    update();
 }
 
 QT_END_NAMESPACE

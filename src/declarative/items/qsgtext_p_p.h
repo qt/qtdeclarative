@@ -65,6 +65,7 @@
 QT_BEGIN_NAMESPACE
 
 class QTextLayout;
+class QDeclarativeTextDocument;
 class QSGTextDocumentWithImageResources;
 class QSGPlainTexture;
 
@@ -137,6 +138,7 @@ public:
     void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
     QTextLayout layout;
     QThread *layoutThread;
+    QDeclarativeTextDocument *textLayout;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource, int yOffset);

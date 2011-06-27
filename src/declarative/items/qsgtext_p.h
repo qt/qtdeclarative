@@ -46,6 +46,7 @@
 #include "qsgimplicitsizeitem_p.h"
 
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativetextdocument_p.h>
 
 #include <QtGui/qtextoption.h>
 
@@ -85,6 +86,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QSGText : public QSGImplicitSizeItem
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedSizeChanged)
     Q_PROPERTY(qreal lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
     Q_PROPERTY(LineHeightMode lineHeightMode READ lineHeightMode WRITE setLineHeightMode NOTIFY lineHeightModeChanged)
+    Q_PROPERTY(QDeclarativeTextDocument *layout READ layout WRITE setLayout NOTIFY layoutChanged)
 
 public:
     QSGText(QSGItem *parent=0);
@@ -173,6 +175,9 @@ public:
 
     QRectF boundingRect() const;
 
+    QDeclarativeTextDocument *layout() const;
+    void setLayout(QDeclarativeTextDocument*);
+
 Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
@@ -192,6 +197,10 @@ Q_SIGNALS:
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
     void effectiveHorizontalAlignmentChanged();
+    void layoutChanged();
+
+private Q_SLOTS:
+    void textLayoutHasChanged();
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
