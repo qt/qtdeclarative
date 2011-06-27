@@ -653,27 +653,29 @@ void QSGMouseArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGMouseArea::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void QSGMouseArea::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QSGMouseArea);
     if (!d->absorb) {
         QSGItem::hoverEnterEvent(event);
     } else {
-        d->lastPos = event->pos();
+        d->lastPos = event->posF();
+        d->lastModifiers = event->modifiers();
         setHovered(true);
-        QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, event->modifiers(), false, false);
+        QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
         emit mousePositionChanged(&me);
     }
 }
 
-void QSGMouseArea::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+void QSGMouseArea::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QSGMouseArea);
     if (!d->absorb) {
         QSGItem::hoverMoveEvent(event);
     } else {
-        d->lastPos = event->pos();
-        QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, event->modifiers(), false, false);
+        d->lastPos = event->posF();
+        d->lastModifiers = event->modifiers();
+        QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
         emit mousePositionChanged(&me);
         me.setX(d->lastPos.x());
         me.setY(d->lastPos.y());
@@ -681,7 +683,7 @@ void QSGMouseArea::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
     }
 }
 
-void QSGMouseArea::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+void QSGMouseArea::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QSGMouseArea);
     if (!d->absorb)

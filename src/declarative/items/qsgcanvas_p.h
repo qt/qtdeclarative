@@ -114,9 +114,9 @@ public:
     bool deliverTouchPoints(QSGItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QSGItem *, QList<QTouchEvent::TouchPoint> > *);
     bool deliverTouchEvent(QTouchEvent *);
-    void sceneHoverEventFromMouseEvent(QGraphicsSceneHoverEvent &, QMouseEvent *);
-    bool deliverHoverEvent(QSGItem *, QGraphicsSceneHoverEvent *);
-    void sendHoverEvent(QEvent::Type, QSGItem *, QGraphicsSceneHoverEvent *);
+    bool deliverHoverEvent(QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
+    bool sendHoverEvent(QEvent::Type, QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos,
+                        Qt::KeyboardModifiers modifiers, bool accepted);
     void clearHover();
     void deliverDragEvent(QSGDragEvent *);
     bool deliverDragEvent(QSGItem *item, QSGDragEvent *);

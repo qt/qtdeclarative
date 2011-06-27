@@ -567,25 +567,6 @@ void QSGCanvasPrivate::sceneMouseEventFromMouseEvent(QGraphicsSceneMouseEvent &s
 }
 
 /*!
-Fill in the data in \a hoverEvent based on \a mouseEvent.  This method leaves the item local positions in
-\a hoverEvent untouched (these are filled in later).
-*/
-void QSGCanvasPrivate::sceneHoverEventFromMouseEvent(QGraphicsSceneHoverEvent &hoverEvent, QMouseEvent *mouseEvent)
-{
-    Q_Q(QSGCanvas);
-    hoverEvent.setWidget(q);
-    hoverEvent.setScenePos(mouseEvent->pos());
-    hoverEvent.setScreenPos(mouseEvent->globalPos());
-    if (lastMousePosition.isNull()) lastMousePosition = mouseEvent->pos();
-    hoverEvent.setLastScenePos(lastMousePosition);
-    hoverEvent.setLastScreenPos(q->mapToGlobal(lastMousePosition));
-    hoverEvent.setModifiers(mouseEvent->modifiers());
-    hoverEvent.setAccepted(mouseEvent->isAccepted());
-
-    lastMousePosition = mouseEvent->pos();
-}
-
-/*!
 Translates the data in \a touchEvent to this canvas.  This method leaves the item local positions in
 \a touchEvent untouched (these are filled in later).
 */
@@ -980,18 +961,11 @@ void QSGCanvasPrivate::clearHover()
     if (!hoverItem)
         return;
 
-    QGraphicsSceneHoverEvent hoverEvent;
-    hoverEvent.setWidget(q);
-
-    QPoint cursorPos = QCursor::pos();
-    hoverEvent.setScenePos(q->mapFromGlobal(cursorPos));
-    hoverEvent.setLastScenePos(hoverEvent.scenePos());
-    hoverEvent.setScreenPos(cursorPos);
-    hoverEvent.setLastScreenPos(hoverEvent.screenPos());
+    QPointF pos = q->mapFromGlobal(QCursor::pos());
 
     QSGItem *item = hoverItem;
     hoverItem = 0;
-    sendHoverEvent(QEvent::GraphicsSceneHoverLeave, item, &hoverEvent);
+    sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true);
 }
 
 
@@ -1197,25 +1171,20 @@ void QSGCanvas::mouseDoubleClickEvent(QMouseEvent *event)
     event->setAccepted(sceneEvent.isAccepted());
 }
 
-void QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
-                                      QGraphicsSceneHoverEvent *event)
+bool QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
+                                      const QPointF &scenePos, const QPointF &lastScenePos,
+                                      Qt::KeyboardModifiers modifiers, bool accepted)
 {
     Q_Q(QSGCanvas);
     const QTransform transform = QSGItemPrivate::get(item)->canvasToItemTransform();
 
     //create copy of event
-    QGraphicsSceneHoverEvent hoverEvent(type);
-    hoverEvent.setWidget(event->widget());
-    hoverEvent.setPos(transform.map(event->scenePos()));
-    hoverEvent.setScenePos(event->scenePos());
-    hoverEvent.setScreenPos(event->screenPos());
-    hoverEvent.setLastPos(transform.map(event->lastScenePos()));
-    hoverEvent.setLastScenePos(event->lastScenePos());
-    hoverEvent.setLastScreenPos(event->lastScreenPos());
-    hoverEvent.setModifiers(event->modifiers());
-    hoverEvent.setAccepted(event->isAccepted());
+    QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
+    hoverEvent.setAccepted(accepted);
 
     q->sendEvent(item, &hoverEvent);
+
+    return hoverEvent.isAccepted();
 }
 
 void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
@@ -1227,19 +1196,22 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
 #endif
 
     if (!d->mouseGrabberItem) {
-        QGraphicsSceneHoverEvent hoverEvent;
-        d->sceneHoverEventFromMouseEvent(hoverEvent, event);
+        if (d->lastMousePosition.isNull())
+            d->lastMousePosition = event->pos();
+        QPointF last = d->lastMousePosition;
+        d->lastMousePosition = event->pos();
 
-        bool delivered = d->deliverHoverEvent(d->rootItem, &hoverEvent);
+        bool accepted = event->isAccepted();
+        bool delivered = d->deliverHoverEvent(d->rootItem, event->pos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
             if (d->hoverItem) {
                 QSGItem *item = d->hoverItem;
                 d->hoverItem = 0;
-                d->sendHoverEvent(QEvent::GraphicsSceneHoverLeave, item, &hoverEvent);
+                accepted = d->sendHoverEvent(QEvent::HoverLeave, item, event->pos(), last, event->modifiers(), accepted);
             }
         }
-        event->setAccepted(hoverEvent.isAccepted());
+        event->setAccepted(accepted);
         return;
     }
 
@@ -1250,14 +1222,15 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
     event->setAccepted(sceneEvent.isAccepted());
 }
 
-bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, QGraphicsSceneHoverEvent *event)
+bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
+                                         Qt::KeyboardModifiers modifiers, bool &accepted)
 {
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
     if (itemPrivate->opacity == 0.0)
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(scenePos);
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1267,27 +1240,27 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, QGraphicsSceneHoverEvent
         QSGItem *child = children.at(ii);
         if (!child->isEnabled())
             continue;
-        if (deliverHoverEvent(child, event))
+        if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
             return true;
     }
 
     if (itemPrivate->hoverEnabled) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(scenePos);
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
             if (hoverItem == item) {
                 //move
-                sendHoverEvent(QEvent::GraphicsSceneHoverMove, item, event);
+                accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
             } else {
                 //exit from previous
                 if (hoverItem) {
                     QSGItem *item = hoverItem;
                     hoverItem = 0;
-                    sendHoverEvent(QEvent::GraphicsSceneHoverLeave, item, event);
+                    accepted = sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, accepted);
                 }
 
                 //enter new item
                 hoverItem = item;
-                sendHoverEvent(QEvent::GraphicsSceneHoverEnter, item, event);
+                accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
             }
             return true;
         }
@@ -1630,10 +1603,10 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::Wheel:
         QSGItemPrivate::get(item)->deliverWheelEvent(static_cast<QWheelEvent *>(e));
         break;
-    case QEvent::GraphicsSceneHoverEnter:
-    case QEvent::GraphicsSceneHoverLeave:
-    case QEvent::GraphicsSceneHoverMove:
-        QSGItemPrivate::get(item)->deliverHoverEvent(static_cast<QGraphicsSceneHoverEvent *>(e));
+    case QEvent::HoverEnter:
+    case QEvent::HoverLeave:
+    case QEvent::HoverMove:
+        QSGItemPrivate::get(item)->deliverHoverEvent(static_cast<QHoverEvent *>(e));
         break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:

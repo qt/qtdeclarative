@@ -361,9 +361,9 @@ protected:
     virtual void mouseUngrabEvent(); // XXX todo - params?
     virtual void wheelEvent(QWheelEvent *event);
     virtual void touchEvent(QTouchEvent *event);
-    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+    virtual void hoverEnterEvent(QHoverEvent *event);
+    virtual void hoverMoveEvent(QHoverEvent *event);
+    virtual void hoverLeaveEvent(QHoverEvent *event);
     virtual void dragMoveEvent(QSGDragEvent *event);
     virtual void dragEnterEvent(QSGDragEvent *event);
     virtual void dragExitEvent(QSGDragEvent *event);

@@ -1674,17 +1674,17 @@ void QSGItem::touchEvent(QTouchEvent *event)
     event->ignore();
 }
 
-void QSGItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void QSGItem::hoverEnterEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
 
-void QSGItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+void QSGItem::hoverMoveEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
 
-void QSGItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+void QSGItem::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_UNUSED(event);
 }
@@ -2152,19 +2152,19 @@ void QSGItemPrivate::deliverTouchEvent(QTouchEvent *e)
     q->touchEvent(e);
 }
 
-void QSGItemPrivate::deliverHoverEvent(QGraphicsSceneHoverEvent *e)
+void QSGItemPrivate::deliverHoverEvent(QHoverEvent *e)
 {
     Q_Q(QSGItem);
     switch(e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
-    case QEvent::GraphicsSceneHoverEnter:
+    case QEvent::HoverEnter:
         q->hoverEnterEvent(e);
         break;
-    case QEvent::GraphicsSceneHoverLeave:
+    case QEvent::HoverLeave:
         q->hoverLeaveEvent(e);
         break;
-    case QEvent::GraphicsSceneHoverMove:
+    case QEvent::HoverMove:
         q->hoverMoveEvent(e);
         break;
     }

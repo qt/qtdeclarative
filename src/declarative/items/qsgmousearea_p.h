@@ -220,9 +220,9 @@ protected:
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseUngrabEvent();
-    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+    virtual void hoverEnterEvent(QHoverEvent *event);
+    virtual void hoverMoveEvent(QHoverEvent *event);
+    virtual void hoverLeaveEvent(QHoverEvent *event);
     virtual bool childMouseEventFilter(QSGItem *i, QEvent *e);
     virtual void timerEvent(QTimerEvent *event);
 

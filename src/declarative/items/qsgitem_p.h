@@ -323,7 +323,7 @@ public:
     void deliverMouseEvent(QGraphicsSceneMouseEvent *);
     void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
-    void deliverHoverEvent(QGraphicsSceneHoverEvent *);
+    void deliverHoverEvent(QHoverEvent *);
     void deliverDragEvent(QSGDragEvent *);
 
     bool calcEffectiveVisible() const;
