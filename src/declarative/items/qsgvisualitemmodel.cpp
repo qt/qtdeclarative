@@ -205,15 +205,25 @@ public:
     }
 
     void invalidateIndexes(int start, int end = INT_MAX) {
-        foreach (const Item &item, children) {
-            QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item.item);
-            if (attached->m_index >= start && attached->m_index < end)
-                attached->setIndex(-1);
+        for (QSGVisualModelAttached::List::iterator it = attachedItems.begin(); it != attachedItems.end(); ++it) {
+            if (it->m_index >= start && it->m_index < end)
+                it->setIndex(-1);
         }
-        for (QHash<QSGItem *, QSGVisualData *>::iterator it = itemModels.begin(); it != itemModels.end(); ++it) {
-            QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(it.key());
-            if (attached->m_index >= start && attached->m_index < end)
-                attached->setIndex(-1);
+    }
+
+    void removeIndexes(int start, int count) {
+        for (QSGVisualModelAttached::List::iterator it = attachedItems.begin(); it != attachedItems.end();) {
+            if (it->m_index >= start) {
+                it->setIndex(-1);
+                if (it->m_index < start + count) {
+                    it->setModel(0);
+                    it = it.erase();
+                } else {
+                    ++it;
+                }
+            } else {
+                ++it;
+            }
         }
     }
 
@@ -229,9 +239,10 @@ public:
     };
 
     QList<Item> children;
-    QHash<QSGItem *, QSGVisualData *> itemModels;
     QHash<QSGItem *, int> removedItems;
+    QSGVisualModelAttached::List attachedItems;
     QDeclarativeChangeSet transactionChanges;
+
     QDeclarativeGuard<QDeclarativeContext> context;
     QSGVisualData *pendingModel;
     QSGVisualModelParts *parts;
@@ -353,8 +364,9 @@ QSGItem *QSGVisualModel::item(int index, const QByteArray &viewId, bool complete
         QSGItem *item = model->item(range.index + offset, viewId, complete);
         QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
         attached->setModel(this);
+        attached->setData(model);
         attached->setIndex(index);
-        d->itemModels.insert(item, model);
+        d->attachedItems.insert(attached);
         if (model->completePending())
             d->pendingModel = model;
         return item;
@@ -370,14 +382,22 @@ QSGItem *QSGVisualModel::item(int index)
     return item(index, QByteArray());
 }
 
+QSGItem *QSGVisualModel::take(int index, QSGItem *parent)
+{
+    Q_D(QSGVisualModel);
+    QSGItem *i = item(index);
+    remove(index, 1);
+    i->setParentItem(parent);
+
+    return i;
+}
+
 QSGVisualModel::ReleaseFlags QSGVisualModel::release(QSGItem *item)
 {
     Q_D(QSGVisualModel);
-    if (QSGVisualData *model = d->itemModels.value(item)) {
-        ReleaseFlags flags = model->release(item);
-        if (flags)
-            d->itemModels.remove(item);
-        return flags;
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    if (QSGVisualData *model = attached->m_data) {
+        return model->release(item);
     } else {
         int idx = d->indexOf(item);
         if (idx >= 0) {
@@ -425,7 +445,8 @@ QString QSGVisualModel::stringValue(int index, const QString &name)
 int QSGVisualModel::indexOf(QSGItem *item, QObject *context) const
 {
     Q_D(const QSGVisualModel);
-    if (QSGVisualData *model = d->itemModels.value(item)) {
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    if (QSGVisualData *model = attached->m_data) {
         int modelIndex = model->indexOf(item, context);
         return modelIndex != -1 ? d->absoluteIndexOf(model, modelIndex) : modelIndex;
     } else {
@@ -460,7 +481,21 @@ void QSGVisualModel::append(QSGItem *item)
 {
     Q_D(QSGVisualModel);
     int index = d->count();
-    if (d->appendData(item)) {
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    bool inserted = false;
+    if (attached->m_data) {
+        QSGVisualData *model = attached->m_data;
+        int modelIndex = model->indexOf(item, 0);
+        if (modelIndex != -1) {
+            d->appendList(model, modelIndex, 1, false);
+            d->connectModel(model);
+            inserted = true;
+        }
+    } else if (d->appendData(item)) {
+        d->attachedItems.insert(attached);
+        inserted = true;
+    }
+    if (inserted) {
         QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
         attached->setModel(this);
         attached->setIndex(count() - 1);
@@ -508,8 +543,21 @@ void QSGVisualModel::append(QSGVisualModel *sourceModel, int sourceIndex, int co
 void QSGVisualModel::insert(int index, QSGItem *item)
 {
     Q_D(QSGVisualModel);
-    if (d->insertData(index, item)) {
-        QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    bool inserted = false;
+    if (attached->m_data) {
+        QSGVisualData *model = attached->m_data;
+        int modelIndex = model->indexOf(item, 0);
+        if (modelIndex != -1) {
+            d->insertList(index, model, modelIndex, 1, false);
+            d->connectModel(model);
+            inserted = true;
+        }
+    } else if (d->insertData(index, item)) {
+        d->attachedItems.insert(attached);
+        inserted = true;
+    }
+    if (inserted) {
         attached->setModel(this);
         attached->setIndex(index);
         d->invalidateIndexes(index);
@@ -562,7 +610,7 @@ void QSGVisualModel::remove(int index, int count)
     if (!d->transaction)
         d->childrenChanged = false;
     d->removeAt(index, count);
-    d->invalidateIndexes(index);
+    d->removeIndexes(index, count);
     if (d->transaction) {
         d->transactionChanges.insertRemove(index, index + count);
     } else {      
@@ -1668,6 +1716,34 @@ QVariant QSGVisualDataModel::parentModelIndex() const
 {
     Q_D(const QSGVisualDataModel);
     return d->data->parentModelIndex();
+}
+
+QSGVisualPartModel::QSGVisualPartModel(QSGVisualModel *model, const QByteArray &part, QObject *parent)
+  : QObject(parent), m_model(model), m_part(part)
+{
+}
+
+QSGVisualModel *QSGVisualPartModel::model() const
+{
+    return m_model;
+}
+
+QByteArray QSGVisualPartModel::part() const
+{
+    return m_part;
+}
+
+QSGItem *QSGVisualPartModel::item(int index)
+{
+    return m_model->item(index, m_part);
+}
+
+QSGItem *QSGVisualPartModel::take(int index, QSGItem *parent)
+{
+    QSGItem *item = m_model->item(index, m_part);
+    m_model->remove(index, 1);
+    item->setParentItem(parent);
+    return item;
 }
 
 QT_END_NAMESPACE

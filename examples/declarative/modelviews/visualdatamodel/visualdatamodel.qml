@@ -10,8 +10,6 @@ Rectangle {
     property int messageCounter: 0
 
     function send(message) {
-
-        messageView.positionViewAtEnd()
         messageModel.set(messageModel.count - 1, {
              "sender": root.sender,
              "message": message,
@@ -20,7 +18,9 @@ Rectangle {
              "time": Qt.formatTime(Date.now()),
              "delegateState": ""
         })
+        visualModel.insert(visualModel.count, messageBubble)
         newMessage()
+        messageView.positionViewAtEnd()
     }
 
     function newMessage() {
@@ -32,7 +32,9 @@ Rectangle {
             "time": "",
             "delegateState": "composing"
         })
-        messageBubble = visualModel.item(visualModel.count - 1)
+        var bubble = visualModel.take(visualModel.count - 1, composer)
+        messageBubble = bubble
+        messageBubble.y = 0     // Override the position set by the view.
     }
 
     Component.onCompleted: newMessage()
@@ -60,6 +62,13 @@ Rectangle {
             model: ListModel { id: messageModel }
             delegate: Bubble {}
         }
+
+        add: Transition {
+            ParentAnimation {
+                via: root
+                NumberAnimation { properties: "y"; duration: 3000; easing.type: Easing.InOutQuad }
+            }
+        }
     }
 
     Timer {
@@ -86,7 +95,7 @@ Rectangle {
     Item {
         id: composer
 
-        height: messageBubble != undefined ? messageBubble.contentHeight : 0
+        height: messageBubble != undefined ? messageBubble.contentHeight : 48
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
     }
 }

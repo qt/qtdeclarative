@@ -751,9 +751,8 @@ FxListItemSG *QSGListViewPrivate::createItem(int modelIndex)
             listItem->item->setZ(1);
             listItem->item->setParentItem(q->contentItem());
             model->completeItem();
-        } else {
-            if (!item->parentItem())
-                listItem->item->setParentItem(q->contentItem());
+        } else if (!addTransitionComponent || !item->parentItem()) {
+            listItem->item->setParentItem(q->contentItem());
         }
         QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
         itemPrivate->addItemChangeListener(this, QSGItemPrivate::Geometry);
@@ -2967,8 +2966,6 @@ void QSGListView::itemsInserted(int modelIndex, int count)
                 transition->addItem(item, item->positionIfMovedTo(pos, true), contentItem());
                 d->indexesInTransition.insert(item->index);
             } else {
-                if (item->item->parentItem() != contentItem())
-                    item->item->setParentItem(contentItem());
                 item->setPosition(pos);
             }
             added.append(item);

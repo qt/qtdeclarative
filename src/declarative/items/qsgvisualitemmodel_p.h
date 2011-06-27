@@ -50,6 +50,7 @@
 #include <QtScript/qscriptvalue.h>
 
 #include <private/qdeclarativeguard_p.h>
+#include <private/qintrusivelist_p.h>
 
 QT_BEGIN_HEADER
 
@@ -106,6 +107,7 @@ public:
     static QSGVisualModelAttached *qmlAttachedProperties(QObject *obj);
 
     Q_INVOKABLE QSGItem *item(int index);
+    Q_INVOKABLE QSGItem *take(int index, QSGItem *parent = 0);
 
 public Q_SLOTS:
     void append(QSGItem *item);
@@ -234,6 +236,7 @@ public:
     }
 
     void setModel(QSGVisualModel *model) { m_model = model; }
+    void setData(QSGVisualData *data) { m_data = data; }
 
     static QSGVisualModelAttached *properties(QObject *obj) {
         QSGVisualModelAttached *rv = attachedProperties.value(obj);
@@ -250,6 +253,10 @@ Q_SIGNALS:
 public:
     int m_index;
     QDeclarativeGuard<QSGVisualModel> m_model;
+    QDeclarativeGuard<QSGVisualData> m_data;
+    QIntrusiveListNode m_node;
+
+    typedef QIntrusiveList<QSGVisualModelAttached, &QSGVisualModelAttached::m_node> List;
 
     static QHash<QObject*, QSGVisualModelAttached*> attachedProperties;
 };
@@ -304,13 +311,13 @@ class Q_DECLARATIVE_EXPORT QSGVisualPartModel : public QObject
 {
     Q_OBJECT
 public:
-    QSGVisualPartModel(QSGVisualModel *model, const QByteArray &part, QObject *parent = 0)
-      : QObject(parent), m_model(model), m_part(part) {}
+    QSGVisualPartModel(QSGVisualModel *model, const QByteArray &part, QObject *parent = 0);
 
-    QSGVisualModel *model() const { return m_model; }
-    QByteArray part() const { return m_part; }
+    QSGVisualModel *model() const;
+    QByteArray part() const;
 
-    Q_INVOKABLE QSGItem *item(int index) { return m_model->item(index, m_part); }
+    Q_INVOKABLE QSGItem *item(int index);
+    Q_INVOKABLE QSGItem *take(int index, QSGItem *parent = 0);
 
 private:
     QSGVisualModel *m_model;
