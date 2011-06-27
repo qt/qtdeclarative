@@ -119,32 +119,26 @@ void QSGTextNode::setStyleColor(const QColor &styleColor)
 }
 #endif
 
-void QSGTextNode::addTextDecorations(const QPointF &position, const QRawFont &font, const QColor &color,
-                                     qreal width, bool hasOverline, bool hasStrikeOut, bool hasUnderline)
+void QSGTextNode::addTextDecorations(Decoration decorations, const QPointF &position,
+                                     const QColor &color, qreal width, qreal lineThickness,
+                                     qreal underlinePos, qreal ascent)
 {
-    Q_ASSERT(font.isValid());
-    QRawFontPrivate *dptrFont = QRawFontPrivate::get(font);
-    QFontEngine *fontEngine = dptrFont->fontEngine;
-
-    qreal lineThickness = fontEngine->lineThickness().toReal();
-
     QRectF line(position.x(), position.y() - lineThickness / 2.0, width, lineThickness);
 
-    if (hasUnderline) {
-        int underlinePosition = fontEngine->underlinePosition().ceil().toInt();
+    if (decorations & Underline) {
+        int underlinePosition = qCeil(underlinePos);
         QRectF underline(line);
         underline.translate(0.0, underlinePosition);
         appendChildNode(new QSGSimpleRectNode(underline, color));
     }
 
-    qreal ascent = font.ascent();
-    if (hasOverline) {
+    if (decorations & Overline) {
         QRectF overline(line);
         overline.translate(0.0, -ascent);
         appendChildNode(new QSGSimpleRectNode(overline, color));
     }
 
-    if (hasStrikeOut) {
+    if (decorations & StrikeOut) {
         QRectF strikeOut(line);
         strikeOut.translate(0.0, ascent / -3.0);
         appendChildNode(new QSGSimpleRectNode(strikeOut, color));
@@ -171,14 +165,6 @@ QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &g
         appendChildNode(node);
     }
 
-
-    if (glyphs.overline() || glyphs.strikeOut() || glyphs.underline()) {
-        QPointF baseLine = node->baseLine();
-        qreal width = node->boundingRect().width();
-        addTextDecorations(baseLine, glyphs.rawFont(), color, width,
-                           glyphs.overline(), glyphs.strikeOut(), glyphs.underline());
-    }
-
     return node;
 }
 
@@ -203,18 +189,45 @@ void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout
 
     QSGGlyphNode *prevNode = 0;
 
+    QFont font = textLayout->font();
+    qreal underlinePosition, ascent, lineThickness;
+    int decorations = NoDecoration;
+    decorations |= (font.underline() ? Underline : 0);
+    decorations |= (font.overline()  ? Overline  : 0);
+    decorations |= (font.strikeOut() ? StrikeOut : 0);
+
+    underlinePosition = ascent = lineThickness = 0;
     for (int i=0; i<glyphsList.size(); ++i) {
         QGlyphRun glyphs = glyphsList.at(i);
-        QRawFont font = glyphs.rawFont();
-        addGlyphs(position + QPointF(0, font.ascent()), glyphs, color, style, styleColor);
+        QRawFont rawfont = glyphs.rawFont();
+        prevNode = addGlyphs(position + QPointF(0, rawfont.ascent()), glyphs, color, style, styleColor);
+
+        if (decorations) {
+            qreal rawAscent = rawfont.ascent();
+            if (decorations & Underline) {
+                ascent = qMax(ascent, rawAscent);
+                qreal pos = rawfont.underlinePosition();
+                if (pos > underlinePosition) {
+                    underlinePosition = pos;
+                    // take line thickness from the rawfont with maximum underline
+                    // position in this case
+                    lineThickness = rawfont.lineThickness();
+                }
+            } else {
+                // otherwise it's strike out or overline, we take line thickness
+                // from the rawfont with maximum ascent
+                if (rawAscent > ascent) {
+                    ascent = rawAscent;
+                    lineThickness = rawfont.lineThickness();
+                }
+            }
+        }
     }
 
-    QFont font = textLayout->font();
-    QRawFont rawFont = QRawFont::fromFont(font);
-    if (font.strikeOut() || font.underline() || font.overline()) {
-        addTextDecorations(position + QPointF(0, rawFont.ascent()),
-                           rawFont, color, textLayout->boundingRect().width(),
-                           font.overline(), font.strikeOut(), font.underline());
+    if (decorations) {
+        addTextDecorations(Decoration(decorations), position + QPointF(0, ascent), color,
+                           textLayout->boundingRect().width(),
+                           lineThickness, underlinePosition, ascent);
     }
 }
 
@@ -376,8 +389,17 @@ void QSGTextNode::addTextBlock(const QPointF &position, QTextDocument *textDocum
             for (int i=0; i<glyphsList.size(); ++i) {
                 QGlyphRun glyphs = glyphsList.at(i);
                 QRawFont font = glyphs.rawFont();
-                addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
-                          glyphs, color, style, styleColor);
+                QSGGlyphNode *glyphNode = addGlyphs(position + blockPosition + QPointF(0, font.ascent()),
+                                                    glyphs, color, style, styleColor);
+                int decorations = (glyphs.overline() ? Overline : 0) |
+                                  (glyphs.strikeOut() ? StrikeOut : 0) |
+                                  (glyphs.underline() ? Underline : 0);
+                if (decorations) {
+                    QPointF baseLine = glyphNode->baseLine();
+                    qreal width = glyphNode->boundingRect().width();
+                    addTextDecorations(Decoration(decorations), baseLine, color, width,
+                                       font.lineThickness(), font.underlinePosition(), font.ascent());
+                }
             }
         }
 

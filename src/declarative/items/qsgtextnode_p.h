@@ -70,13 +70,20 @@ public:
                          QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
 
 private:
+    enum Decoration {
+        NoDecoration = 0x0,
+        Underline    = 0x1,
+        Overline     = 0x2,
+        StrikeOut    = 0x4
+    };
+
     void addTextBlock(const QPointF &position, QTextDocument *textDocument, const QTextBlock &block,
                       const QColor &overrideColor, QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor());
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                                   QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
                             QSGGlyphNode *node = 0);
-    void addTextDecorations(const QPointF &position, const QRawFont &font, const QColor &color,
-                            qreal width, bool hasOverline, bool hasStrikeOut, bool hasUnderline);
+    void addTextDecorations(Decoration decorations, const QPointF &position, const QColor &color,
+                            qreal width, qreal lineThickness, qreal underlinePosition, qreal ascent);
     QSGContext *m_context;
 };
 
