@@ -2365,6 +2365,8 @@ public:
     {
       if (binding)
           return binding->lastSourceLocation();
+      if (statement)
+          return statement->lastSourceLocation();
 
       return semicolonToken;
     }
