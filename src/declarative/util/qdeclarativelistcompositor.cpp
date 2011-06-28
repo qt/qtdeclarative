@@ -222,7 +222,7 @@ bool QDeclarativeListCompositor::insertData(int index, const void *data)
     return true;
 }
 
-bool QDeclarativeListCompositor::replaceAt(int index, const void *data)
+int QDeclarativeListCompositor::replaceAt(int index, const void *data)
 {
     Q_ASSERT(index >=0 && index < absoluteCount);
     int internalIndex = 0;
@@ -238,9 +238,9 @@ bool QDeclarativeListCompositor::replaceAt(int index, const void *data)
 
             if (range->internal()) {
                 replaceInternalData(internalIndex, data);
-                return true;
+                return internalIndex;
             } else if (!insertInternalData(internalIndex, data)) {
-                return false;
+                return -1;
             }
 
             range->count -= 1;
@@ -248,7 +248,7 @@ bool QDeclarativeListCompositor::replaceAt(int index, const void *data)
 
             int removeIndex = range->index + relativeIndex;
 
-            if (range->count == 0) {
+            if (range->count == 0 && !range->append()) {
                 range->flags |= Internal;
                 range->count = 1;
             } else {
@@ -267,15 +267,16 @@ bool QDeclarativeListCompositor::replaceAt(int index, const void *data)
                 }
                 range = insert(range, QDeclarativeCompositeRange(
                         range->list, removeIndex, 1, (range->flags | Internal) & ~Append));
+                range->index += 1;
             }
-            return true;
+            return internalIndex;
         }
         relativeIndex -= range->count;
         if (range->internal())
             internalIndex += range->count;
         ++range;
     }
-    return false;
+    return -1;
 }
 
 void QDeclarativeListCompositor::removeAt(int index, int count)
@@ -297,8 +298,10 @@ void QDeclarativeListCompositor::removeAt(int index, int count)
             absoluteCount -= removeCount;
 
             int removeIndex = range->index + relativeIndex;
-            if (range->internal())
+            if (range->internal()) {
                 internalCount -= removeCount;
+                internalRemoveCount += removeCount;
+            }
 
             if (range->count == 0) {
                 if (range->append()) {
@@ -614,6 +617,64 @@ void QDeclarativeListCompositor::clear()
     removeInternalData(0, internalCount);
     absoluteCount = 0;
     internalCount = 0;
+}
+
+void QDeclarativeListCompositor::clearData(int internalIndex, int count)
+{
+    Q_ASSERT(internalIndex >=0 && internalIndex + count <= internalCount);
+
+    int relativeIndex = internalIndex;
+    iterator range = ranges.begin();
+    while (range != ranges.end() && count > 0) {
+        if (!range->internal()) {
+            ++range;
+            continue;
+        }
+        if (relativeIndex < range->count) {
+            int removeCount = qMin(count, range->count - relativeIndex);
+            count -= removeCount;
+            if (!range->list) {
+                internalIndex += removeCount;
+                relativeIndex = 0;
+                continue;
+            }
+
+            range->count -= removeCount;
+            internalCount -= removeCount;
+
+            int removeIndex = range->index + relativeIndex;
+            if (range->count == 0) {
+                range->flags &= ~Internal;
+                range->count = removeCount;
+                // ### Merge with neighbouring nodes if appropriate.
+            } else {
+                if (relativeIndex > 0) {
+                    int splitOffset = relativeIndex;
+                    if (range->list)
+                        splitOffset += removeCount;
+                    if (splitOffset < range->count) {
+                        Q_ASSERT(count == 0);
+                        range = insert(range, QDeclarativeCompositeRange(
+                                range->list, range->index, relativeIndex, range->flags & ~Append));
+                        range->index += splitOffset;
+                        range->count -= splitOffset;
+                    } else {
+                        range->index += relativeIndex;
+                        relativeIndex = 0;
+                    }
+                } else {
+                    range->index += removeCount;
+                }
+                range = insert(range, QDeclarativeCompositeRange(
+                        range->list, removeIndex, removeCount, range->flags & ~Internal));
+            }
+            removeInternalData(internalIndex, removeCount);
+            ++range;
+            continue;
+        }
+        relativeIndex -= range->count;
+        ++range;
+    }
 }
 
 int QDeclarativeListCompositor::absoluteIndexOf(int internalIndex) const

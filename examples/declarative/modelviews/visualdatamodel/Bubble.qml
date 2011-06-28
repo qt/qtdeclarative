@@ -3,7 +3,7 @@ import QtQuick 2.0
 Rectangle {
     id: content
 
-    property int contentHeight: height - senderText.implicitHeight + 2
+    property int contentHeight: height - senderText.implicitHeight - 2
 
     x: 1;
     width: 477

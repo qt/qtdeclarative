@@ -10,28 +10,13 @@ Rectangle {
     property int messageCounter: 0
 
     function send(message) {
-        messageModel.set(messageModel.count - 1, {
-             "sender": root.sender,
-             "message": message,
-             "avatar": "",
-             "outbound": true,
-             "time": Qt.formatTime(Date.now()),
-             "delegateState": ""
-        })
         visualModel.insert(visualModel.count, messageBubble)
         newMessage()
         messageView.positionViewAtEnd()
     }
 
     function newMessage() {
-        messageModel.append({
-            "sender": root.sender,
-            "message": "",
-            "avatar": "",
-            "outbound": true,
-            "time": "",
-            "delegateState": "composing"
-        })
+        visualModel.appendData({})
         var bubble = visualModel.take(visualModel.count - 1, composer)
         messageBubble = bubble
         messageBubble.y = 0     // Override the position set by the view.
@@ -59,16 +44,25 @@ Rectangle {
         model: VisualDataModel {
             id: visualModel
 
+            roles: [
+                VisualRole { name: "sender"; defaultValue: root.sender },
+                VisualRole { name: "message"; defaultValue: "" },
+                VisualRole { name: "avatar"; defaultValue: "" },
+                VisualRole { name: "outbound"; defaultValue: true },
+                VisualRole { name: "time"; defaultValue: "" },
+                VisualRole { name: "delegateState"; defaultValue: "composing" }
+            ]
+
             model: ListModel { id: messageModel }
             delegate: Bubble {}
         }
 
-        add: Transition {
-            ParentAnimation {
-                via: root
-                NumberAnimation { properties: "y"; duration: 3000; easing.type: Easing.InOutQuad }
-            }
-        }
+//        add: Transition {
+//            ParentAnimation {
+//                via: root
+//                NumberAnimation { properties: "y"; duration: 3000; easing.type: Easing.InOutQuad }
+//            }
+//        }
     }
 
     Timer {
@@ -78,7 +72,7 @@ Rectangle {
         onTriggered: {
             var message = script.get(scriptIndex);
 
-            messageModel.insert(messageModel.count - 1, {
+            messageModel.append({
                 "sender": message.sender,
                 "message": message.message,
                 "avatar": message.avatar,
@@ -88,7 +82,7 @@ Rectangle {
             })
 
             scriptIndex = (scriptIndex + 1) % script.count
-            interval = Math.random() * 30000
+            //interval = Math.random() * 30000
         }
     }
 

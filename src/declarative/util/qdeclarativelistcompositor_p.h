@@ -102,12 +102,13 @@ public:
     bool appendData(const void *data);
     void insertList(int index, void *list, int start, int count, bool grow);
     bool insertData(int index, const void *data);
-    bool replaceAt(int index, const void *data);
+    int replaceAt(int index, const void *data);
     void removeAt(int index, int count);
     void removeList(void *list, QVector<QDeclarativeChangeSet::Remove> *changes);
     void move(int from, int to, int count);
     bool merge(int from, int to);
     void clear();
+    void clearData(int internalIndex, int count);
 
     int absoluteIndexOf(int internalIndex) const;
     int absoluteIndexOf(void *list, int index, int from = 0) const;

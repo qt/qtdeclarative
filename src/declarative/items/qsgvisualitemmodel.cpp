@@ -64,11 +64,21 @@
 
 #include <QtCore/qhash.h>
 #include <QtCore/qlist.h>
+#include <QtScript/qscriptvalue.h>
 
 QT_BEGIN_NAMESPACE
 
 QHash<QObject*, QSGVisualModelAttached*> QSGVisualModelAttached::attachedProperties;
 
+class VDMDelegateDataType : public QDeclarativeOpenMetaObjectType
+{
+public:
+    VDMDelegateDataType(const QMetaObject *base, QDeclarativeEngine *engine) : QDeclarativeOpenMetaObjectType(base, engine) {}
+
+    void propertyCreated(int, QMetaPropertyBuilder &prop) {
+        prop.setWritable(false);
+    }
+};
 
 class QSGVisualModelPartsMetaObject : public QDeclarativeOpenMetaObject
 {
@@ -111,14 +121,19 @@ QSGVisualModelParts::QSGVisualModelParts(QSGVisualModel *parent)
     new QSGVisualModelPartsMetaObject(this);
 }
 
-
+class QSGVisualModelData;
 class QSGVisualModelPrivate : public QObjectPrivate, public QDeclarativeListCompositor
 {
     Q_DECLARE_PUBLIC(QSGVisualModel)
 public:
     QSGVisualModelPrivate(QDeclarativeContext *context = 0)
-        : QObjectPrivate(), QDeclarativeListCompositor(0),context(context), pendingModel(0), parts(0)
+        : QObjectPrivate(), QDeclarativeListCompositor(0),context(context), delegateDataType(0)
+        , pendingModel(0), pendingComponent(0), parts(0)
         , childrenChanged(false), transaction(false) {}
+
+    static QSGVisualModelPrivate *get(QSGVisualModel *m) {
+        return static_cast<QSGVisualModelPrivate *>(QObjectPrivate::get(m));
+    }
 
     static void data_append(QDeclarativeListProperty<QObject> *prop, QObject *data) {
         QSGVisualModelPrivate *d = static_cast<QSGVisualModelPrivate *>(prop->data);
@@ -144,7 +159,12 @@ public:
     }
 
     static QSGItem *children_at(QDeclarativeListProperty<QSGItem> *prop, int index) {
-        return static_cast<QSGVisualModelPrivate *>(prop->data)->children.at(index).item;
+        return qobject_cast<QSGItem *>(static_cast<QSGVisualModelPrivate *>(prop->data)->children.at(index).item);
+    }
+
+    static void roles_append(QDeclarativeListProperty<QSGVisualModelRole> *prop, QSGVisualModelRole *role) {
+        QSGVisualModelPrivate *d = static_cast<QSGVisualModelPrivate *>(prop->data);
+        d->roles.append(role);
     }
 
     void appendModel(QSGVisualData *model) {
@@ -166,10 +186,6 @@ public:
                 q, SLOT(_q_itemsRemoved(QSGVisualData*,int,int)), Qt::UniqueConnection);
         QObject::connect(model, SIGNAL(itemsMoved(QSGVisualData*,int,int,int)),
                 q, SLOT(_q_itemsMoved(QSGVisualData*,int,int,int)), Qt::UniqueConnection);
-        QObject::connect(model, SIGNAL(createdPackage(QSGVisualData*,int,QDeclarativePackage*)),
-                q, SLOT(_q_createdPackage(QSGVisualData*,int,QDeclarativePackage*)), Qt::UniqueConnection);
-        QObject::connect(model, SIGNAL(destroyingPackage(QDeclarativePackage*)),
-                q, SLOT(_q_destroyingPackage(QDeclarativePackage*)), Qt::UniqueConnection);
     }
 
     void itemAppended() {
@@ -186,7 +202,7 @@ public:
         emit q->childrenChanged();
     }
 
-    int indexOf(QSGItem *item) const {
+    int indexOf(QObject *item) const {
         for (int i = 0; i < children.count(); ++i)
             if (children.at(i).item == item)
                 return i;
@@ -197,8 +213,9 @@ public:
         Q_Q(QSGVisualModel);
         foreach (const QDeclarativeChangeSet::Remove &remove, transactionChanges.removes())
             emit q->itemsRemoved(remove.start, remove.count());
-        foreach (const QDeclarativeChangeSet::Insert &insert, transactionChanges.inserts())
+        foreach (const QDeclarativeChangeSet::Insert &insert, transactionChanges.inserts()) {
             emit q->itemsInserted(insert.start, insert.count());
+        }
         foreach (const QDeclarativeChangeSet::Move &move, transactionChanges.moves())
             emit q->itemsMoved(move.start, move.to, move.count());
         transactionChanges.clear();
@@ -227,24 +244,34 @@ public:
         }
     }
 
+    QSGVisualModelData *createScriptData(QDeclarativeComponent *delegate, const QScriptValue &value);
+
     class Item {
     public:
-        Item(QSGItem *i) : item(i), ref(0) {}
+        Item(QObject *i, QSGVisualModelData *data) : item(i), data(data), ref(0) {}
 
         void addRef() { ++ref; }
         bool deref() { return --ref == 0; }
 
-        QSGItem *item;
+        QObject *item;
+        QDeclarativeGuard<QSGVisualModelData> data;
         int ref;
     };
 
+    struct ItemData {
+        QObject *object;
+        QSGVisualModelData *data;
+    };
+
     QList<Item> children;
-    QHash<QSGItem *, int> removedItems;
+    QList<QSGVisualModelRole *> roles;
+    QHash<QObject *, int> removedItems;
     QSGVisualModelAttached::List attachedItems;
     QDeclarativeChangeSet transactionChanges;
-
     QDeclarativeGuard<QDeclarativeContext> context;
+    VDMDelegateDataType *delegateDataType;
     QSGVisualData *pendingModel;
+    QDeclarativeComponent *pendingComponent;
     QSGVisualModelParts *parts;
     bool childrenChanged;
     bool transaction;
@@ -256,18 +283,20 @@ protected:
     bool insertInternalData(int index, const void *data)
     {
         childrenChanged = true;
-        QSGItem *item = static_cast<QSGItem *>(const_cast<void *>(data));
-        children.insert(index, Item(item));
+        const ItemData *itemData = static_cast<const ItemData *>(data);
+        children.insert(index, Item(itemData->object, itemData->data));
         return true;
     }
 
     void replaceInternalData(int index, const void *data)
     {
         childrenChanged = true;
+        const ItemData *itemData = static_cast<const ItemData *>(data);
         QSGVisualModelPrivate::Item &item = children[index];
         if (item.ref > 0)
             removedItems.insert(item.item, item.ref);
-        item.item = static_cast<QSGItem *>(const_cast<void *>(data));
+        item.item = itemData->object;
+        item.data = itemData->data;
         item.ref = 0;
     }
 
@@ -280,7 +309,7 @@ protected:
                 removedItems.insert(item.item, item.ref);
         }
         QList<Item>::iterator first = children.begin() + index;
-        QList<Item>::iterator last = first + count - 1;
+        QList<Item>::iterator last = first + count;
         children.erase(first, last);
     }
 
@@ -313,420 +342,6 @@ protected:
             for (; f != replaced.end(); ++f, ++t)
                 *t = *f;
         }
-    }
-};
-
-QSGVisualModel::QSGVisualModel(QObject *parent)
-    : QObject(*(new QSGVisualModelPrivate), parent)
-{
-}
-
-QSGVisualModel::QSGVisualModel(QSGVisualModelPrivate &dd, QObject *parent)
-    : QObject(dd, parent)
-{
-}
-
-QDeclarativeListProperty<QObject> QSGVisualModel::data()
-{
-    Q_D(QSGVisualModel);
-    return QDeclarativeListProperty<QObject>(this, d, d->data_append);
-}
-
-QDeclarativeListProperty<QSGItem> QSGVisualModel::children()
-{
-    Q_D(QSGVisualModel);
-    return QDeclarativeListProperty<QSGItem>(this, d, d->children_append,
-                                                      d->children_count, d->children_at);
-}
-
-QObject *QSGVisualModel::parts()
-{
-    Q_D(QSGVisualModel);
-    if (!d->parts)
-        d->parts = new QSGVisualModelParts(this);
-    return d->parts;
-}
-
-int QSGVisualModel::count() const
-{
-    Q_D(const QSGVisualModel);
-    return d->count();
-}
-
-QSGItem *QSGVisualModel::item(int index, const QByteArray &viewId, bool complete)
-{
-    Q_D(QSGVisualModel);
-    int offset = 0;
-    int internalIndex = 0;
-    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
-    if (!range.internal()) {
-        QSGVisualData *model = static_cast<QSGVisualData *>(range.list);
-        QSGItem *item = model->item(range.index + offset, viewId, complete);
-        QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-        attached->setModel(this);
-        attached->setData(model);
-        attached->setIndex(index);
-        d->attachedItems.insert(attached);
-        if (model->completePending())
-            d->pendingModel = model;
-        return item;
-    } else {
-        QSGVisualModelPrivate::Item &item = d->children[internalIndex];
-        item.addRef();
-        return item.item;
-    }
-}
-
-QSGItem *QSGVisualModel::item(int index)
-{
-    return item(index, QByteArray());
-}
-
-QSGItem *QSGVisualModel::take(int index, QSGItem *parent)
-{
-    Q_D(QSGVisualModel);
-    QSGItem *i = item(index);
-    remove(index, 1);
-    i->setParentItem(parent);
-
-    return i;
-}
-
-QSGVisualModel::ReleaseFlags QSGVisualModel::release(QSGItem *item)
-{
-    Q_D(QSGVisualModel);
-    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-    if (QSGVisualData *model = attached->m_data) {
-        return model->release(item);
-    } else {
-        int idx = d->indexOf(item);
-        if (idx >= 0) {
-            if (d->children[idx].deref()) {
-                // XXX todo - the original did item->scene()->removeItem().  Why?
-                item->setParentItem(0);
-                QDeclarative_setParent_noEvent(item, this);
-            }
-        } else {
-            QHash<QSGItem *, int>::iterator it = d->removedItems.find(item);
-            if (it != d->removedItems.end()) {
-                if (--(*it) == 0) {
-                    delete it.key();
-                    d->removedItems.erase(it);
-                }
-            }
-        }
-    }
-    return 0;
-}
-
-bool QSGVisualModel::completePending() const
-{
-    Q_D(const QSGVisualModel);
-    return d->pendingModel;
-}
-
-void QSGVisualModel::completeItem()
-{
-    Q_D(QSGVisualModel);
-    if (d->pendingModel) {
-        d->pendingModel->completeItem();
-        d->pendingModel = 0;
-    }
-}
-
-QString QSGVisualModel::stringValue(int index, const QString &name)
-{
-    Q_D(QSGVisualModel);
-    if (index < 0 || index >= d->children.count())
-        return QString();
-    return QDeclarativeEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
-}
-
-int QSGVisualModel::indexOf(QSGItem *item, QObject *context) const
-{
-    Q_D(const QSGVisualModel);
-    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-    if (QSGVisualData *model = attached->m_data) {
-        int modelIndex = model->indexOf(item, context);
-        return modelIndex != -1 ? d->absoluteIndexOf(model, modelIndex) : modelIndex;
-    } else {
-        int childIndex = d->indexOf(item);
-        return childIndex != -1 ? d->absoluteIndexOf(childIndex) : childIndex;
-    }
-}
-
-QScriptValue QSGVisualModel::getItemInfo(int index) const
-{
-    Q_D(const QSGVisualModel);
-    QDeclarativeEngine *dengine = d->context ? d->context->engine() : qmlEngine(this);
-    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(dengine);
-    QScriptValue info = engine->newObject();
-
-    int offset = 0;
-    int internalIndex = 0;
-    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
-
-    if (!range.internal()) {
-        info.setProperty(QLatin1String("model"), engine->newVariant(static_cast<QSGVisualData *>(range.list)->model()));
-        info.setProperty(QLatin1String("index"), range.index + offset);
-        info.setProperty(QLatin1String("start"), range.index);
-        info.setProperty(QLatin1String("end"), range.index + range.count);
-    } else {
-        info.setProperty(QLatin1String("model"), engine->nullValue());
-    }
-    return info;
-}
-
-void QSGVisualModel::append(QSGItem *item)
-{
-    Q_D(QSGVisualModel);
-    int index = d->count();
-    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-    bool inserted = false;
-    if (attached->m_data) {
-        QSGVisualData *model = attached->m_data;
-        int modelIndex = model->indexOf(item, 0);
-        if (modelIndex != -1) {
-            d->appendList(model, modelIndex, 1, false);
-            d->connectModel(model);
-            inserted = true;
-        }
-    } else if (d->appendData(item)) {
-        d->attachedItems.insert(attached);
-        inserted = true;
-    }
-    if (inserted) {
-        QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-        attached->setModel(this);
-        attached->setIndex(count() - 1);
-        if (d->transaction) {
-            d->transactionChanges.insertInsert(index, index + 1);
-        } else {
-            emit itemsInserted(index, 1);
-            emit childrenChanged();
-            emit countChanged();
-        }
-    }
-}
-
-void QSGVisualModel::append(QSGVisualModel *sourceModel, int sourceIndex, int count)
-{
-    Q_D(QSGVisualModel);
-    int destinationIndex = d->count();
-
-    if (sourceModel == this) {
-        return;
-    }
-
-    for (int i = 0, difference = 0; i < count; i += difference) {
-        int offset = 0;
-        int internalIndex = 0;
-        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
-        difference = range.count - offset;
-
-        if (range.internal()) {
-            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
-                d->appendData(sourceModel->d_func()->children.at(internalIndex + j).item);
-        } else {
-            d->appendList(range.list, range.index + offset, qMin(count - i, range.count - offset), false);
-            d->connectModel(static_cast<QSGVisualData *>(range.list));
-        }
-    }
-
-    emit itemsInserted(destinationIndex, count);
-
-    sourceModel->d_func()->removeAt(sourceIndex, count);
-    emit sourceModel->itemsRemoved(sourceIndex, count);
-    emit sourceModel->countChanged();
-}
-
-void QSGVisualModel::insert(int index, QSGItem *item)
-{
-    Q_D(QSGVisualModel);
-    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
-    bool inserted = false;
-    if (attached->m_data) {
-        QSGVisualData *model = attached->m_data;
-        int modelIndex = model->indexOf(item, 0);
-        if (modelIndex != -1) {
-            d->insertList(index, model, modelIndex, 1, false);
-            d->connectModel(model);
-            inserted = true;
-        }
-    } else if (d->insertData(index, item)) {
-        d->attachedItems.insert(attached);
-        inserted = true;
-    }
-    if (inserted) {
-        attached->setModel(this);
-        attached->setIndex(index);
-        d->invalidateIndexes(index);
-        if (d->transaction) {
-            d->transactionChanges.insertInsert(index, index + 1);
-        } else {
-            emit itemsInserted(index, 1);
-            emit childrenChanged();
-            emit countChanged();
-        }
-    }
-}
-
-void QSGVisualModel::insert(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count)
-{
-    Q_D(QSGVisualModel);
-
-    if (sourceModel == this) {
-        move(sourceIndex, destinationIndex, count);
-        return;
-    }
-
-    for (int i = 0, difference = 0; i < count; i += difference) {
-        int offset = 0;
-        int internalIndex = 0;
-        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
-        difference = range.count - offset;
-
-        if (range.internal()) {
-            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
-                d->insertData(destinationIndex + i + j, sourceModel->d_func()->children.at(internalIndex + j).item);
-        } else {
-            d->insertList(destinationIndex + i, range.list, range.index + offset, qMin(count - i, range.count - offset), false);
-            d->connectModel(static_cast<QSGVisualData *>(range.list));
-        }
-    }
-
-    d->invalidateIndexes(destinationIndex);
-    emit itemsInserted(destinationIndex, count);
-
-    sourceModel->d_func()->removeAt(sourceIndex, count);
-    sourceModel->d_func()->invalidateIndexes(sourceIndex);
-    emit sourceModel->itemsRemoved(sourceIndex, count);
-    emit sourceModel->countChanged();
-}
-
-void QSGVisualModel::remove(int index, int count)
-{
-    Q_D(QSGVisualModel);
-    if (!d->transaction)
-        d->childrenChanged = false;
-    d->removeAt(index, count);
-    d->removeIndexes(index, count);
-    if (d->transaction) {
-        d->transactionChanges.insertRemove(index, index + count);
-    } else {      
-        emit itemsRemoved(index, count);
-        emit countChanged();
-        if (d->childrenChanged)
-            emit childrenChanged();
-    }
-}
-
-void QSGVisualModel::move(int from, int to, int count)
-{
-    Q_D(QSGVisualModel);
-    if (from == to || count == 0)
-        return;
-    if (!d->transaction)
-        d->childrenChanged = false;
-    d->move(from, to, count);
-    d->invalidateIndexes(qMin(from, to), qMax(from, to) + count);
-    if (d->transaction) {
-        d->transactionChanges.insertMove(from, from + count, to);
-    } else {
-        emit itemsMoved(from, to, count);
-        if (d->childrenChanged)
-            emit childrenChanged();
-    }
-}
-
-void QSGVisualModel::_q_itemsInserted(QSGVisualData *model, int index, int count)
-{
-    Q_D(QSGVisualModel);
-
-    Q_ASSERT(count >= 0);
-
-    QVector<QDeclarativeChangeSet::Insert> inserts;
-    d->childrenChanged = false;
-    d->listItemsInserted(model, index, index + count, &inserts);
-
-    if (inserts.count() > 0) {
-        d->invalidateIndexes(index);
-        QDeclarativeEngine *dengine = d->context ? d->context->engine() : qmlEngine(this);
-        QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(dengine);
-        QScriptValue insertIndexes = engine->newArray(inserts.count());
-        for (int i = 0; i < inserts.count(); ++i) {
-            QScriptValue range = engine->newObject();
-            range.setProperty(QLatin1String("start"), inserts.at(i).start);
-            range.setProperty(QLatin1String("end"), inserts.at(i).end);
-            insertIndexes.setProperty(i, range);
-        }
-        d->transaction = true;
-        d->transactionChanges.append(inserts);
-        emit updated(insertIndexes);
-        d->transaction = false;
-
-        d->emitTransactionChanges();
-        emit countChanged();
-        if (d->childrenChanged)
-            emit childrenChanged();
-    }
-}
-
-void QSGVisualModel::_q_itemsRemoved(QSGVisualData *model, int index, int count)
-{
-    Q_D(QSGVisualModel);
-
-    QVector<QDeclarativeChangeSet::Remove> removes;
-    d->childrenChanged = false;
-    d->listItemsRemoved(model, index, index + count, &removes);
-    d->transactionChanges.append(removes);
-    d->invalidateIndexes(index);
-    d->emitTransactionChanges();
-    emit countChanged();
-    if (d->childrenChanged)
-        emit childrenChanged();
-}
-
-void QSGVisualModel::_q_itemsMoved(QSGVisualData *model, int from, int to, int count)
-{
-    Q_D(QSGVisualModel);
-    QVector<QDeclarativeChangeSet::Move> moves;
-    d->childrenChanged = false;
-    d->listItemsMoved(model, from, from + count, to, &moves);
-    d->transactionChanges.append(moves);
-    d->invalidateIndexes(qMin(from, to), qMax(from, to) + count);
-    d->emitTransactionChanges();
-    if (d->childrenChanged)
-        emit childrenChanged();
-}
-
-void QSGVisualModel::_q_createdPackage(QSGVisualData *model, int index, QDeclarativePackage *package)
-{
-    Q_D(QSGVisualModel);
-    int absoluteIndex = d->absoluteIndexOf(model, index);
-    if (absoluteIndex != -1)
-        emit createdPackage(absoluteIndex, package);
-}
-
-void QSGVisualModel::_q_destroyingPackage(QDeclarativePackage *package)
-{
-    emit destroyingPackage(package);
-}
-
-QSGVisualModelAttached *QSGVisualModel::qmlAttachedProperties(QObject *obj)
-{
-    return QSGVisualModelAttached::properties(obj);
-}
-
-//============================================================================
-
-class VDMDelegateDataType : public QDeclarativeOpenMetaObjectType
-{
-public:
-    VDMDelegateDataType(const QMetaObject *base, QDeclarativeEngine *engine) : QDeclarativeOpenMetaObjectType(base, engine) {}
-
-    void propertyCreated(int, QMetaPropertyBuilder &prop) {
-        prop.setWritable(false);
     }
 };
 
@@ -783,9 +398,22 @@ public:
     void createMetaData() {
         if (!m_metaDataCreated) {
             ensureRoles();
+            QHash<QByteArray, int> roleNames = m_roleNames;
+            QSGVisualModelPrivate *parent = QSGVisualModelPrivate::get(static_cast<QSGVisualModel *>(q_ptr->parent()));
+            for (QList<QSGVisualModelRole *>::iterator it = parent->roles.begin(); it != parent->roles.end(); ++it) {
+                QByteArray name = (*it)->name().toUtf8();
+                int propId = m_delegateDataType->createProperty(name) - m_delegateDataType->propertyOffset();
+                QHash<QByteArray, int>::iterator it = roleNames.find(name);
+                if (it != roleNames.end()) {
+                    m_roleToPropId.insert(*it, propId);
+                    roleNames.erase(it);
+                }
+            }
+
+
             if (m_roleNames.count()) {
-                QHash<QByteArray, int>::const_iterator it = m_roleNames.begin();
-                while (it != m_roleNames.end()) {
+                QHash<QByteArray, int>::const_iterator it = roleNames.begin();
+                while (it != roleNames.end()) {
                     int propId = m_delegateDataType->createProperty(it.key()) - m_delegateDataType->propertyOffset();
                     m_roleToPropId.insert(*it, propId);
                     ++it;
@@ -798,48 +426,6 @@ public:
         }
     }
 
-    struct ObjectRef {
-        ObjectRef(QObject *object=0) : obj(object), ref(1) {}
-        QObject *obj;
-        int ref;
-    };
-    class Cache : public QHash<int, ObjectRef> {
-    public:
-        QObject *getItem(int index) {
-            QObject *item = 0;
-            QHash<int,ObjectRef>::iterator it = find(index);
-            if (it != end()) {
-                (*it).ref++;
-                item = (*it).obj;
-            }
-            return item;
-        }
-        QObject *item(int index) {
-            QObject *item = 0;
-            QHash<int, ObjectRef>::const_iterator it = find(index);
-            if (it != end())
-                item = (*it).obj;
-            return item;
-        }
-        void insertItem(int index, QObject *obj) {
-            insert(index, ObjectRef(obj));
-        }
-        bool releaseItem(QObject *obj) {
-            QHash<int, ObjectRef>::iterator it = begin();
-            for (; it != end(); ++it) {
-                ObjectRef &objRef = *it;
-                if (objRef.obj == obj) {
-                    if (--objRef.ref == 0) {
-                        erase(it);
-                        return true;
-                    }
-                    break;
-                }
-            }
-            return false;
-        }
-    };
-
     int modelCount() const {
         if (m_listModelInterface)
             return qMax(0, m_listModelInterface->count());
@@ -849,9 +435,6 @@ public:
             return m_listAccessor->count();
         return 0;
     }
-
-    Cache m_cache;
-    QHash<QObject *, QDeclarativePackage*> m_packaged;
 
     VDMDelegateDataType *m_delegateDataType;
     friend class QSGVisualModelData;
@@ -868,6 +451,7 @@ public:
     QModelIndex m_root;
     QList<QByteArray> watchedRoles;
     QList<int> watchedRoleIds;
+    QList<int> changedRoles;
 };
 
 class QSGVisualModelDataMetaObject : public QDeclarativeOpenMetaObject
@@ -883,11 +467,13 @@ private:
     friend class QSGVisualModelData;
 };
 
+class QSGVisualModelDataMetaObject;
 class QSGVisualModelData : public QObject
 {
 Q_OBJECT
 public:
     QSGVisualModelData(int index, QSGVisualData *model);
+    QSGVisualModelData(QDeclarativeComponent *delegate, VDMDelegateDataType *dataType);
     ~QSGVisualModelData();
 
     Q_PROPERTY(int index READ index NOTIFY indexChanged)
@@ -905,6 +491,9 @@ public:
         return m_meta->hasValue(id);
     }
 
+    QSGVisualData *model() const { return m_model; }
+    QDeclarativeComponent *delegate() const { return m_delegate; }
+
     void ensureProperties();
 
 Q_SIGNALS:
@@ -914,9 +503,612 @@ private:
     friend class QSGVisualModelDataMetaObject;
     int m_index;
     QDeclarativeGuard<QSGVisualData> m_model;
+    QDeclarativeGuard<QDeclarativeComponent> m_delegate;
     QSGVisualModelDataMetaObject *m_meta;
 };
 
+QSGVisualModelData *QSGVisualModelPrivate::createScriptData(QDeclarativeComponent *delegate, const QScriptValue &value)
+{
+    Q_Q(QSGVisualModel);
+    if (!delegateDataType) {
+        delegateDataType = new VDMDelegateDataType(
+                    &QSGVisualModelData::staticMetaObject,
+                    context ? context->engine() : qmlEngine(q));
+        for (QList<QSGVisualModelRole *>::iterator it = roles.begin(); it != roles.end(); ++it)
+            delegateDataType->createProperty((*it)->name().toUtf8());
+    }
+    QSGVisualModelData *data = new QSGVisualModelData(delegate, delegateDataType);
+    for (int i = 0; i < roles.count(); ++i) {
+        QScriptValue property = value.property(roles.at(i)->name());
+        data->setValue(i, property.isValid() ? property.toVariant() : roles.at(i)->defaultValue());
+    }
+    QDeclarative_setParent_noEvent(data, q);
+    return data;
+}
+
+QSGVisualModel::QSGVisualModel(QObject *parent)
+    : QObject(*(new QSGVisualModelPrivate), parent)
+{
+}
+
+QSGVisualModel::QSGVisualModel(QSGVisualModelPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+}
+
+QDeclarativeListProperty<QObject> QSGVisualModel::data()
+{
+    Q_D(QSGVisualModel);
+    return QDeclarativeListProperty<QObject>(this, d, d->data_append);
+}
+
+QDeclarativeListProperty<QSGItem> QSGVisualModel::children()
+{
+    Q_D(QSGVisualModel);
+    return QDeclarativeListProperty<QSGItem>(this, d, d->children_append,
+                                                      d->children_count, d->children_at);
+}
+
+QDeclarativeListProperty<QSGVisualModelRole> QSGVisualModel::roles()
+{
+    Q_D(QSGVisualModel);
+    return QDeclarativeListProperty<QSGVisualModelRole>(this, d, d->roles_append);
+}
+
+QObject *QSGVisualModel::parts()
+{
+    Q_D(QSGVisualModel);
+    if (!d->parts)
+        d->parts = new QSGVisualModelParts(this);
+    return d->parts;
+}
+
+int QSGVisualModel::count() const
+{
+    Q_D(const QSGVisualModel);
+    return d->count();
+}
+
+QObject *QSGVisualModel::object(int index, bool complete)
+{
+    Q_D(QSGVisualModel);
+    int offset = 0;
+    int internalIndex = 0;
+    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
+    if (!range.internal()) {
+        QSGVisualData *model = static_cast<QSGVisualData *>(range.list);
+        QObject *item = model->object(range.index + offset, complete);
+        QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+        attached->setModel(this);
+        attached->setData(model);
+        attached->setIndex(index);
+        d->attachedItems.insert(attached);
+        if (model->completePending())
+            d->pendingModel = model;
+        QSGVisualModelPrivate::ItemData itemData = { item, item->findChild<QSGVisualModelData *>() };
+        internalIndex = d->replaceAt(index, &itemData);
+        Q_ASSERT(internalIndex != -1);
+        // createdObject() instead?
+        if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(item))
+            emit createdPackage(index, package);
+    }
+    QSGVisualModelPrivate::Item &item = d->children[internalIndex];
+    if (!item.item) {
+        if (!item.data || !item.data->delegate()) {
+            qmlInfo(this) << "No delegate for item";
+            return 0;
+        }
+        QDeclarativeComponent *delegate = item.data->delegate();
+        QDeclarativeContext *ccontext = d->context;
+        if (!ccontext) ccontext = qmlContext(this);
+        QDeclarativeContext *ctxt = new QDeclarativeContext(ccontext);
+        ctxt->setContextProperty(QLatin1String("model"), item.data);
+        ctxt->setContextObject(item.data);
+        item.item = delegate->beginCreate(ctxt);
+        if (complete) {
+            delegate->completeCreate();
+        } else {
+            d->pendingComponent = delegate;
+        }
+        if (item.item) {
+            QDeclarative_setParent_noEvent(ctxt, item.item);
+            QDeclarative_setParent_noEvent(item.data, item.item);
+        } else {
+            delete ctxt;
+            qmlInfo(this, delegate->errors()) << "Error creating delegate";
+            return 0;
+        }
+    }
+    item.addRef();
+    return item.item;
+}
+
+QSGItem *QSGVisualModel::item(int index, bool complete)
+{
+    QObject *obj = object(index, complete);
+    if (QSGItem *item = qobject_cast<QSGItem *>(obj))
+        return item;
+    release(obj);
+    return 0;
+}
+
+QSGItem *QSGVisualModel::item(int index, const QByteArray &viewId, bool complete)
+{
+    QObject *pobj = object(index, complete);
+    if (QSGItem *item = qobject_cast<QSGItem *>(pobj)) {
+        return item;
+    } else if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(pobj)) {
+        QObject *iobj = package->part(QString::fromUtf8(viewId));
+        if (QSGItem *item = qobject_cast<QSGItem *>(iobj))
+            return item;
+    }
+    if (pobj)
+        release(pobj);
+    return 0;
+}
+
+QSGItem *QSGVisualModel::take(int index, QSGItem *parent)
+{
+    QSGItem *i = item(index);
+    remove(index, 1);
+    i->setParentItem(parent);
+    return i;
+}
+
+QSGVisualModel::ReleaseFlags QSGVisualModel::release(QObject *object)
+{
+    Q_D(QSGVisualModel);
+    QSGVisualModel::ReleaseFlags stat = 0;
+
+    int idx = d->indexOf(object);
+    if (idx >= 0) {
+        if (d->children[idx].deref()) {
+            if (QSGVisualData *model = d->children[idx].data->model()) {
+                d->children[idx].item = 0;  // Clearing the data should delete this node.
+                d->children[idx].data = 0;
+                d->clearData(idx, 1);
+                if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(object))
+                    emit destroyingPackage(package);
+                model->release(object);
+                stat |= Destroyed;
+            } else {
+                if (QSGItem *item = qobject_cast<QSGItem *>(object))
+                    item->setParentItem(0);
+                if (d->children[idx].data) {
+                    d->children[idx].item = 0;
+                    QDeclarative_setParent_noEvent(d->children[idx].data, this);
+                    object->deleteLater();
+                    stat |= Destroyed;
+                } else {
+                    QDeclarative_setParent_noEvent(object, this);
+                    stat |= Referenced;
+                }
+            }
+        } else {
+            stat |= Referenced;
+        }
+    } else {
+        QHash<QObject *, int>::iterator it = d->removedItems.find(object);
+        if (it != d->removedItems.end()) {
+            if (--(*it) == 0) {
+                if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(object))
+                    emit destroyingPackage(package);
+                it.key()->deleteLater();
+                d->removedItems.erase(it);
+                return Destroyed;
+            } else {
+                stat |= Referenced;
+            }
+        }
+    }
+    return stat;
+}
+
+bool QSGVisualModel::completePending() const
+{
+    Q_D(const QSGVisualModel);
+    return d->pendingModel || d->pendingComponent;
+}
+
+void QSGVisualModel::completeItem()
+{
+    Q_D(QSGVisualModel);
+    if (d->pendingModel) {
+        d->pendingModel->completeItem();
+        d->pendingModel = 0;
+    } else if (d->pendingComponent) {
+        d->pendingComponent->completeCreate();
+        d->pendingComponent = 0;
+    }
+}
+
+QString QSGVisualModel::stringValue(int index, const QString &name)
+{
+    Q_D(QSGVisualModel);
+    if (index < 0 || index >= d->children.count())
+        return QString();
+    return QDeclarativeEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
+}
+
+int QSGVisualModel::indexOf(QObject *item, QObject *context) const
+{
+    Q_D(const QSGVisualModel);
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    if (QSGVisualData *model = attached->m_data) {
+        int modelIndex = model->indexOf(item, context);
+        return modelIndex != -1 ? d->absoluteIndexOf(model, modelIndex) : modelIndex;
+    } else {
+        int childIndex = d->indexOf(item);
+        return childIndex != -1 ? d->absoluteIndexOf(childIndex) : childIndex;
+    }
+}
+
+QScriptValue QSGVisualModel::getItemInfo(int index) const
+{
+    Q_D(const QSGVisualModel);
+    QDeclarativeEngine *dengine = d->context ? d->context->engine() : qmlEngine(this);
+    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(dengine);
+    QScriptValue info = engine->newObject();
+
+    int offset = 0;
+    int internalIndex = 0;
+    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
+
+    if (!range.internal()) {
+        info.setProperty(QLatin1String("model"), engine->newVariant(static_cast<QSGVisualData *>(range.list)->model()));
+        info.setProperty(QLatin1String("index"), range.index + offset);
+        info.setProperty(QLatin1String("start"), range.index);
+        info.setProperty(QLatin1String("end"), range.index + range.count);
+    } else {
+        info.setProperty(QLatin1String("model"), engine->nullValue());
+    }
+    return info;
+}
+
+void QSGVisualModel::append(QSGItem *item)
+{
+    Q_D(QSGVisualModel);
+    int index = d->count();
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    bool inserted = false;
+    if (attached->m_data) {
+        QSGVisualData *model = attached->m_data;
+        int modelIndex = model->indexOf(item, 0);
+        if (modelIndex != -1) {
+            d->appendList(model, modelIndex, 1, false);
+            d->connectModel(model);
+            inserted = true;
+        }
+    } else {
+        QSGVisualModelPrivate::ItemData itemData = { item, item->findChild<QSGVisualModelData *>() };
+        if (d->appendData(&itemData)) {
+            d->attachedItems.insert(attached);
+            inserted = true;
+        }
+    }
+    if (inserted) {
+        QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+        attached->setModel(this);
+        attached->setIndex(count() - 1);
+        if (d->transaction) {
+            d->transactionChanges.insertInsert(index, index + 1);
+        } else {
+            emit itemsInserted(index, 1);
+            emit childrenChanged();
+            emit countChanged();
+        }
+    }
+}
+
+void QSGVisualModel::append(QSGVisualModel *sourceModel, int sourceIndex, int count)
+{
+    Q_D(QSGVisualModel);
+    int destinationIndex = d->count();
+
+    if (sourceModel == this) {
+        return;
+    }
+
+    for (int i = 0, difference = 0; i < count; i += difference) {
+        int offset = 0;
+        int internalIndex = 0;
+        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
+        difference = range.count - offset;
+
+        if (range.internal()) {
+            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
+                d->appendData(sourceModel->d_func()->children.at(internalIndex + j).item);
+        } else {
+            d->appendList(range.list, range.index + offset, qMin(count - i, range.count - offset), false);
+            d->connectModel(static_cast<QSGVisualData *>(range.list));
+        }
+    }
+
+    emit itemsInserted(destinationIndex, count);
+
+    sourceModel->d_func()->removeAt(sourceIndex, count);
+    emit sourceModel->itemsRemoved(sourceIndex, count);
+    emit sourceModel->countChanged();
+}
+
+void QSGVisualModel::append(QDeclarativeComponent *delegate, const QVariant &model, int sourceIndex, int count)
+{
+    Q_D(QSGVisualModel);
+    int destinationIndex = d->count();
+
+    QSGVisualData *data = new QSGVisualData(d->context ? d->context.data() : qmlContext(this), this);
+    data->setDelegate(delegate);
+    data->setModel(model);
+
+    d->connectModel(data);
+    d->appendList(data, sourceIndex, count, false);
+
+    emit itemsInserted(destinationIndex, count);
+}
+
+void QSGVisualModel::append(QDeclarativeComponent *delegate, const QScriptValue &value)
+{
+    Q_D(QSGVisualModel);
+
+    int destinationIndex = d->count();
+
+    QSGVisualModelData *data = d->createScriptData(delegate, value);
+    QSGVisualModelPrivate::ItemData itemData = { 0, data };
+    if (d->appendData(&itemData))
+        emit itemsInserted(destinationIndex, 1);
+    else
+        delete data;
+}
+
+void QSGVisualModel::insert(int index, QSGItem *item)
+{
+    Q_D(QSGVisualModel);
+    QSGVisualModelAttached *attached = QSGVisualModelAttached::properties(item);
+    bool inserted = false;
+    if (attached->m_data) {
+        QSGVisualData *model = attached->m_data;
+        int modelIndex = model->indexOf(item, 0);
+        if (modelIndex != -1) {
+            d->insertList(index, model, modelIndex, 1, false);
+            d->connectModel(model);
+            inserted = true;
+        }
+    } else {
+        QSGVisualModelPrivate::ItemData itemData = { item, item->findChild<QSGVisualModelData *>() };
+        if (d->insertData(index, &itemData)) {
+            d->attachedItems.insert(attached);
+            inserted = true;
+        }
+    }
+    if (inserted) {
+        attached->setModel(this);
+        attached->setIndex(index);
+        d->invalidateIndexes(index);
+        if (d->transaction) {
+            d->transactionChanges.insertInsert(index, index + 1);
+        } else {
+            emit itemsInserted(index, 1);
+            emit childrenChanged();
+            emit countChanged();
+        }
+    }
+}
+
+void QSGVisualModel::insert(int destinationIndex, QSGVisualModel *sourceModel, int sourceIndex, int count)
+{
+    Q_D(QSGVisualModel);
+
+    if (sourceModel == this) {
+        move(sourceIndex, destinationIndex, count);
+        return;
+    }
+
+    for (int i = 0, difference = 0; i < count; i += difference) {
+        int offset = 0;
+        int internalIndex = 0;
+        QDeclarativeCompositeRange range = sourceModel->d_func()->at(sourceIndex, &offset, &internalIndex);
+        difference = range.count - offset;
+
+        if (range.internal()) {
+            for (int j = 0; j < qMin(count - i, range.count - offset); ++j)
+                d->insertData(destinationIndex + i + j, sourceModel->d_func()->children.at(internalIndex + j).item);
+        } else {
+            d->insertList(destinationIndex + i, range.list, range.index + offset, qMin(count - i, range.count - offset), false);
+            d->connectModel(static_cast<QSGVisualData *>(range.list));
+        }
+    }
+
+    d->invalidateIndexes(destinationIndex);
+    emit itemsInserted(destinationIndex, count);
+
+    sourceModel->d_func()->removeAt(sourceIndex, count);
+    sourceModel->d_func()->invalidateIndexes(sourceIndex);
+    emit sourceModel->itemsRemoved(sourceIndex, count);
+    emit sourceModel->countChanged();
+}
+
+void QSGVisualModel::insert(int destinationIndex, QDeclarativeComponent *delegate, const QVariant &model, int sourceIndex, int count)
+{
+    Q_D(QSGVisualModel);
+
+    QSGVisualData *data = new QSGVisualData(d->context ? d->context.data() : qmlContext(this), this);
+    data->setDelegate(delegate);
+    data->setModel(model);
+
+    d->connectModel(data);
+    d->insertList(destinationIndex, data, sourceIndex, count, false);
+
+    emit itemsInserted(destinationIndex, count);
+}
+
+void QSGVisualModel::insert(int index, QDeclarativeComponent *delegate, const QScriptValue &value)
+{
+    Q_D(QSGVisualModel);
+
+    QSGVisualModelData *data = d->createScriptData(delegate, value);
+    QSGVisualModelPrivate::ItemData itemData = { 0, data };
+
+    if (d->appendData(&itemData))
+        emit itemsInserted(index, 1);
+    else
+        delete data;
+}
+
+void QSGVisualModel::remove(int index, int count)
+{
+    Q_D(QSGVisualModel);
+    if (!d->transaction)
+        d->childrenChanged = false;
+    d->removeAt(index, count);
+    d->removeIndexes(index, count);
+    if (d->transaction) {
+        d->transactionChanges.insertRemove(index, index + count);
+    } else {      
+        emit itemsRemoved(index, count);
+        emit countChanged();
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::move(int from, int to, int count)
+{
+    Q_D(QSGVisualModel);
+    if (from == to || count == 0)
+        return;
+    if (!d->transaction)
+        d->childrenChanged = false;
+    d->move(from, to, count);
+    d->invalidateIndexes(qMin(from, to), qMax(from, to) + count);
+    if (d->transaction) {
+        d->transactionChanges.insertMove(from, from + count, to);
+    } else {
+        emit itemsMoved(from, to, count);
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::_q_itemsInserted(QSGVisualData *model, int index, int count)
+{
+    Q_D(QSGVisualModel);
+
+    Q_ASSERT(count >= 0);
+
+    QVector<QDeclarativeChangeSet::Insert> inserts;
+    d->childrenChanged = false;
+    d->listItemsInserted(model, index, index + count, &inserts);
+
+    if (inserts.count() > 0) {
+        for (int i = 0; i < d->children.count(); ++i) {
+            QSGVisualModelPrivate::Item &item = d->children[i];
+            if (item.data && item.data->model() == model) {
+                if (item.data->index() >= index)
+                    item.data->setIndex(item.data->index() + count);
+            }
+        }
+        d->invalidateIndexes(inserts.first().start);
+        QDeclarativeEngine *dengine = d->context ? d->context->engine() : qmlEngine(this);
+        QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(dengine);
+        QScriptValue insertIndexes = engine->newArray(inserts.count());
+        for (int i = 0; i < inserts.count(); ++i) {
+            QScriptValue range = engine->newObject();
+            range.setProperty(QLatin1String("start"), inserts.at(i).start);
+            range.setProperty(QLatin1String("end"), inserts.at(i).end);
+            insertIndexes.setProperty(i, range);
+        }
+        d->transaction = true;
+        d->transactionChanges.append(inserts);
+        emit updated(insertIndexes);
+        d->transaction = false;
+
+        d->emitTransactionChanges();
+        emit countChanged();
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::_q_itemsRemoved(QSGVisualData *model, int index, int count)
+{
+    Q_D(QSGVisualModel);
+
+    QVector<QDeclarativeChangeSet::Remove> removes;
+    d->childrenChanged = false;
+    d->listItemsRemoved(model, index, index + count, &removes);
+    if (!removes.isEmpty()) {
+        d->transactionChanges.append(removes);
+        d->invalidateIndexes(removes.first().start);
+        for (int i = 0; i < d->children.count(); ++i) {
+            QSGVisualModelPrivate::Item &item = d->children[i];
+            if (item.data && item.data->model() == model) {
+                if (item.data->index() >= index + count)
+                    item.data->setIndex(item.data->index() - count);
+            }
+        }
+        d->emitTransactionChanges();
+        emit countChanged();
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::_q_itemsMoved(QSGVisualData *model, int from, int to, int count)
+{
+    Q_D(QSGVisualModel);
+    QVector<QDeclarativeChangeSet::Move> moves;
+    d->childrenChanged = false;
+    d->listItemsMoved(model, from, from + count, to, &moves);
+    if (!moves.isEmpty()) {
+        d->transactionChanges.append(moves);
+        const int min = qMin(from, to);
+        const int max = qMax(from, to) + count;
+        const int diff = from > to ? count : -count;
+        for (int i = 0; i < d->children.count(); ++i) {
+            QSGVisualModelPrivate::Item &item = d->children[i];
+            if (item.data && item.data->model() == model) {
+                if (item.data->index() >= from && item.data->index() < from + count)
+                    item.data->setIndex(item.data->index() - from + to);
+                else if (item.data->index() >= min && item.data->index() < max)
+                    item.data->setIndex(item.data->index() + diff);
+            }
+        }
+        d->invalidateIndexes(0);
+        for (int i = 0; i < d->children.count(); ++i) {
+            QSGVisualModelPrivate::Item &item = d->children[i];
+            if (item.data && item.data->model() == model) {
+                model->updateData(item.data->index(), item.item);
+            }
+        }
+        d->emitTransactionChanges();
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::_q_itemsChanged(QSGVisualData *model, int index, int count)
+{
+    Q_D(QSGVisualModel);
+    QVector<QDeclarativeChangeSet::Change> changes;
+    d->listItemsChanged(model, index, index + count, &changes);
+
+    if (!changes.isEmpty()) {
+        d->transactionChanges.append(changes);
+        for (int i = 0; i < d->children.count(); ++i) {
+            QSGVisualModelPrivate::Item &item = d->children[i];
+            if (item.data && item.data->model() == model)
+                model->updateData(item.data->index(), item.item);
+        }
+        d->emitTransactionChanges();
+    }
+}
+
+QSGVisualModelAttached *QSGVisualModel::qmlAttachedProperties(QObject *obj)
+{
+    return QSGVisualModelAttached::properties(obj);
+}
+
+//============================================================================
 int QSGVisualModelData::propForRole(int id) const
 {
     QSGVisualDataPrivate *model = QSGVisualDataPrivate::get(m_model);
@@ -1001,8 +1193,9 @@ QVariant QSGVisualModelDataMetaObject::initialValue(int propId)
             }
         }
     }
-    Q_ASSERT(!"Can never be reached");
-    return QVariant();
+
+    QSGVisualModelPrivate *visualModel = QSGVisualModelPrivate::get(static_cast<QSGVisualModel *>(data->m_model->parent()));
+    return visualModel->roles.at(propId)->defaultValue();
 }
 
 QSGVisualModelData::QSGVisualModelData(int index,
@@ -1011,6 +1204,12 @@ QSGVisualModelData::QSGVisualModelData(int index,
 m_meta(new QSGVisualModelDataMetaObject(this, QSGVisualDataPrivate::get(model)->m_delegateDataType))
 {
     ensureProperties();
+}
+
+QSGVisualModelData::QSGVisualModelData(QDeclarativeComponent *delegate, VDMDelegateDataType *dataType)
+    : m_index(-1), m_delegate(delegate), m_meta(new QSGVisualModelDataMetaObject(this, dataType))
+{
+    m_meta->setCached(true);
 }
 
 QSGVisualModelData::~QSGVisualModelData()
@@ -1231,109 +1430,59 @@ int QSGVisualData::count() const
 /*
   Returns ReleaseStatus flags.
 */
-QSGVisualModel::ReleaseFlags QSGVisualData::release(QSGItem *item)
+void QSGVisualData::release(QObject *obj)
 {
-    Q_D(QSGVisualData);
-    QSGVisualModel::ReleaseFlags stat = 0;
-    QObject *obj = item;
-    bool inPackage = false;
+    // Remove any bindings to avoid warnings due to parent change.
+    QObjectPrivate *p = QObjectPrivate::get(obj);
+    Q_ASSERT(p->declarativeData);
+    QDeclarativeData *d = static_cast<QDeclarativeData*>(p->declarativeData);
+    if (d->ownContext && d->context)
+        d->context->clearContext();
 
-    QHash<QObject*,QDeclarativePackage*>::iterator it = d->m_packaged.find(item);
-    if (it != d->m_packaged.end()) {
-        QDeclarativePackage *package = *it;
-        d->m_packaged.erase(it);
-        if (d->m_packaged.contains(item))
-            stat |= QSGVisualModel::Referenced;
-        inPackage = true;
-        obj = package; // fall through and delete
-    }
-
-    if (d->m_cache.releaseItem(obj)) {
-        // Remove any bindings to avoid warnings due to parent change.
-        QObjectPrivate *p = QObjectPrivate::get(obj);
-        Q_ASSERT(p->declarativeData);
-        QDeclarativeData *d = static_cast<QDeclarativeData*>(p->declarativeData);
-        if (d->ownContext && d->context)
-            d->context->clearContext();
-
-        if (inPackage) {
-            emit destroyingPackage(qobject_cast<QDeclarativePackage*>(obj));
-        } else {
-            // XXX todo - the original did item->scene()->removeItem().  Why?
-            item->setParentItem(0);
-        }
-        stat |= QSGVisualModel::Destroyed;
-        obj->deleteLater();
-    } else if (!inPackage) {
-        stat |= QSGVisualModel::Referenced;
-    }
-
-    return stat;
+    // XXX todo - the original did item->scene()->removeItem().  Why?
+    if (QSGItem *item = qobject_cast<QSGItem *>(obj))
+        item->setParentItem(0);
+    obj->deleteLater();
 }
 
-QSGItem *QSGVisualData::item(int index, const QByteArray &viewId, bool complete)
+QObject *QSGVisualData::object(int index, bool complete)
 {
     Q_D(QSGVisualData);
     if (d->modelCount() <= 0 || !d->m_delegate)
         return 0;
-    QObject *nobj = d->m_cache.getItem(index);
     bool needComplete = false;
-    if (!nobj) {
-        QDeclarativeContext *ccontext = d->m_context;
-        if (!ccontext) ccontext = qmlContext(this);
-        if (!ccontext) ccontext = qmlContext(parent());
-        QDeclarativeContext *ctxt = new QDeclarativeContext(ccontext);
-        QSGVisualModelData *data = new QSGVisualModelData(index, this);
-        if ((!d->m_listModelInterface || !d->m_abstractItemModel) && d->m_listAccessor
-            && d->m_listAccessor->type() == QDeclarativeListAccessor::ListProperty) {
-            ctxt->setContextObject(d->m_listAccessor->at(index).value<QObject*>());
-            ctxt = new QDeclarativeContext(ctxt, ctxt);
-        }
-        ctxt->setContextProperty(QLatin1String("model"), data);
-        ctxt->setContextObject(data);
-        d->m_completePending = false;
-        nobj = d->m_delegate->beginCreate(ctxt);
-        if (complete) {
-            d->m_delegate->completeCreate();
-        } else {
-            d->m_completePending = true;
-            needComplete = true;
-        }
-        if (nobj) {
-            QDeclarative_setParent_noEvent(ctxt, nobj);
-            QDeclarative_setParent_noEvent(data, nobj);
-            d->m_cache.insertItem(index, nobj);
-            if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(nobj))
-                emit createdPackage(this, index, package);
-        } else {
-            delete data;
-            delete ctxt;
-            qmlInfo(this, d->m_delegate->errors()) << "Error creating delegate";
-        }
+    QDeclarativeContext *ccontext = d->m_context;
+    if (!ccontext) ccontext = qmlContext(this);
+    if (!ccontext) ccontext = qmlContext(parent());
+    QDeclarativeContext *ctxt = new QDeclarativeContext(ccontext);
+    QSGVisualModelData *data = new QSGVisualModelData(index, this);
+    if ((!d->m_listModelInterface || !d->m_abstractItemModel) && d->m_listAccessor
+        && d->m_listAccessor->type() == QDeclarativeListAccessor::ListProperty) {
+        ctxt->setContextObject(d->m_listAccessor->at(index).value<QObject*>());
+        ctxt = new QDeclarativeContext(ctxt, ctxt);
     }
-    QSGItem *item = qobject_cast<QSGItem *>(nobj);
-    if (!item) {
-        QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(nobj);
-        if (package) {
-            QObject *o = package->part(QString::fromUtf8(viewId));
-            item = qobject_cast<QSGItem *>(o);
-            if (item)
-                d->m_packaged.insertMulti(item, package);
-        }
+    ctxt->setContextProperty(QLatin1String("model"), data);
+    ctxt->setContextObject(data);
+    d->m_completePending = false;
+    QObject *nobj = d->m_delegate->beginCreate(ctxt);
+    if (complete) {
+        d->m_delegate->completeCreate();
+    } else {
+        d->m_completePending = true;
+        needComplete = true;
     }
-    if (!item) {
-        if (needComplete)
-            d->m_delegate->completeCreate();
-        d->m_cache.releaseItem(nobj);
-        if (!d->m_delegateValidated) {
-            qmlInfo(d->m_delegate) << QSGVisualData::tr("Delegate component must be Item type.");
-            d->m_delegateValidated = true;
-        }
+    if (nobj) {
+        QDeclarative_setParent_noEvent(ctxt, nobj);
+        QDeclarative_setParent_noEvent(data, nobj);
+    } else {
+        delete data;
+        delete ctxt;
+        qmlInfo(this, d->m_delegate->errors()) << "Error creating delegate";
     }
     if (d->modelCount()-1 == index && d->m_abstractItemModel && d->m_abstractItemModel->canFetchMore(d->m_root))
         d->m_abstractItemModel->fetchMore(d->m_root);
 
-    return item;
+    return nobj;
 }
 
 bool QSGVisualData::completePending() const
@@ -1349,7 +1498,7 @@ void QSGVisualData::completeItem()
     d->m_completePending = false;
 }
 
-QString QSGVisualData::stringValue(int index, const QString &name)
+QString QSGVisualData::stringValue(int index, QObject *nobj, const QString &name)
 {
     Q_D(QSGVisualData);
     if ((!d->m_listModelInterface || !d->m_abstractItemModel) && d->m_listAccessor) {
@@ -1364,7 +1513,7 @@ QString QSGVisualData::stringValue(int index, const QString &name)
     QObject *data = 0;
     bool tempData = false;
 
-    if (QObject *nobj = d->m_cache.item(index))
+    if (nobj)
         data = d->data(nobj);
     if (!data) {
         data = new QSGVisualModelData(index, this);
@@ -1397,9 +1546,9 @@ QString QSGVisualData::stringValue(int index, const QString &name)
     return val;
 }
 
-int QSGVisualData::indexOf(QSGItem *item, QObject *) const
+int QSGVisualData::indexOf(QObject *object, QObject *) const
 {
-    QVariant val = QDeclarativeEngine::contextForObject(item)->contextProperty(QLatin1String("index"));
+    QVariant val = QDeclarativeEngine::contextForObject(object)->contextProperty(QLatin1String("index"));
         return val.toInt();
     return -1;
 }
@@ -1411,11 +1560,53 @@ void QSGVisualData::setWatchedRoles(QList<QByteArray> roles)
     d->watchedRoleIds.clear();
 }
 
-void QSGVisualData::_q_itemsChanged(int index, int count,
-                                         const QList<int> &roles)
+bool QSGVisualData::updateData(int idx, QObject *object)
 {
     Q_D(QSGVisualData);
     bool changed = false;
+    QSGVisualModelData *data = d->data(object);
+    for (int roleIdx = 0; roleIdx < d->changedRoles.count(); ++roleIdx) {
+        int role = d->changedRoles.at(roleIdx);
+        if (!changed && !d->watchedRoleIds.isEmpty() && d->watchedRoleIds.contains(role))
+            changed = true;
+        int propId = data->propForRole(role);
+        if (propId != -1) {
+            if (data->hasValue(propId)) {
+                if (d->m_listModelInterface) {
+                    data->setValue(propId, d->m_listModelInterface->data(idx, role));
+                } else if (d->m_abstractItemModel) {
+                    QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
+                    data->setValue(propId, d->m_abstractItemModel->data(index, role));
+                }
+            }
+        } else {
+            QString roleName;
+            if (d->m_listModelInterface)
+                roleName = d->m_listModelInterface->toString(role);
+            else if (d->m_abstractItemModel)
+                roleName = QString::fromUtf8(d->m_abstractItemModel->roleNames().value(role));
+            qmlInfo(this) << "Changing role not present in item: " << roleName;
+        }
+    }
+    if (d->changedRoles.count() == 1) {
+        // Handle the modelData role we add if there is just one role.
+        int propId = data->modelDataPropertyId();
+        if (data->hasValue(propId)) {
+            int role = d->changedRoles.at(0);
+            if (d->m_listModelInterface) {
+                data->setValue(propId, d->m_listModelInterface->data(idx, role));
+            } else if (d->m_abstractItemModel) {
+                QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
+                data->setValue(propId, d->m_abstractItemModel->data(index, role));
+            }
+        }
+    }
+    return changed;
+}
+
+void QSGVisualData::_q_itemsChanged(int index, int count, const QList<int> &roles)
+{
+    Q_D(QSGVisualData);
     if (!d->watchedRoles.isEmpty() && d->watchedRoleIds.isEmpty()) {
         foreach (QByteArray r, d->watchedRoles) {
             if (d->m_roleNames.contains(r))
@@ -1423,154 +1614,28 @@ void QSGVisualData::_q_itemsChanged(int index, int count,
         }
     }
 
-    for (QHash<int,QSGVisualDataPrivate::ObjectRef>::ConstIterator iter = d->m_cache.begin();
-        iter != d->m_cache.end(); ++iter) {
-        const int idx = iter.key();
-
-        if (idx >= index && idx < index+count) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            QSGVisualModelData *data = d->data(objRef.obj);
-            for (int roleIdx = 0; roleIdx < roles.count(); ++roleIdx) {
-                int role = roles.at(roleIdx);
-                if (!changed && !d->watchedRoleIds.isEmpty() && d->watchedRoleIds.contains(role))
-                    changed = true;
-                int propId = data->propForRole(role);
-                if (propId != -1) {
-                    if (data->hasValue(propId)) {
-                        if (d->m_listModelInterface) {
-                            data->setValue(propId, d->m_listModelInterface->data(idx, role));
-                        } else if (d->m_abstractItemModel) {
-                            QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
-                            data->setValue(propId, d->m_abstractItemModel->data(index, role));
-                        }
-                    }
-                } else {
-                    QString roleName;
-                    if (d->m_listModelInterface)
-                        roleName = d->m_listModelInterface->toString(role);
-                    else if (d->m_abstractItemModel)
-                        roleName = QString::fromUtf8(d->m_abstractItemModel->roleNames().value(role));
-                    qmlInfo(this) << "Changing role not present in item: " << roleName;
-                }
-            }
-            if (d->m_roles.count() == 1) {
-                // Handle the modelData role we add if there is just one role.
-                int propId = data->modelDataPropertyId();
-                if (data->hasValue(propId)) {
-                    int role = d->m_roles.at(0);
-                    if (d->m_listModelInterface) {
-                        data->setValue(propId, d->m_listModelInterface->data(idx, role));
-                    } else if (d->m_abstractItemModel) {
-                        QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
-                        data->setValue(propId, d->m_abstractItemModel->data(index, role));
-                    }
-                }
-            }
-        }
-    }
-    if (changed)
-        emit itemsChanged(this, index, count);
+    d->changedRoles = roles;
+    emit itemsChanged(this, index, count);
 }
 
 void QSGVisualData::_q_itemsInserted(int index, int count)
 {
-    Q_D(QSGVisualData);
     if (!count)
         return;
-    // XXX - highly inefficient
-    QHash<int,QSGVisualDataPrivate::ObjectRef> items;
-    for (QHash<int,QSGVisualDataPrivate::ObjectRef>::Iterator iter = d->m_cache.begin();
-        iter != d->m_cache.end(); ) {
-
-        if (iter.key() >= index) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            int index = iter.key() + count;
-            iter = d->m_cache.erase(iter);
-
-            items.insert(index, objRef);
-
-            QSGVisualModelData *data = d->data(objRef.obj);
-            data->setIndex(index);
-        } else {
-            ++iter;
-        }
-    }
-    d->m_cache.unite(items);
-
     emit itemsInserted(this, index, count);
 }
 
 void QSGVisualData::_q_itemsRemoved(int index, int count)
 {
-    Q_D(QSGVisualData);
     if (!count)
         return;
-    // XXX - highly inefficient
-    QHash<int, QSGVisualDataPrivate::ObjectRef> items;
-    for (QHash<int, QSGVisualDataPrivate::ObjectRef>::Iterator iter = d->m_cache.begin();
-        iter != d->m_cache.end(); ) {
-        if (iter.key() >= index && iter.key() < index + count) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            iter = d->m_cache.erase(iter);
-            items.insertMulti(-1, objRef); //XXX perhaps better to maintain separately
-            QSGVisualModelData *data = d->data(objRef.obj);
-            data->setIndex(-1);
-        } else if (iter.key() >= index + count) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            int index = iter.key() - count;
-            iter = d->m_cache.erase(iter);
-            items.insert(index, objRef);
-            QSGVisualModelData *data = d->data(objRef.obj);
-            data->setIndex(index);
-        } else {
-            ++iter;
-        }
-    }
-
-    d->m_cache.unite(items);
     emit itemsRemoved(this, index, count);
 }
 
 void QSGVisualData::_q_itemsMoved(int from, int to, int count)
 {
-    Q_D(QSGVisualData);
-    // XXX - highly inefficient
-    QHash<int,QSGVisualDataPrivate::ObjectRef> items;
-    for (QHash<int,QSGVisualDataPrivate::ObjectRef>::Iterator iter = d->m_cache.begin();
-        iter != d->m_cache.end(); ) {
-
-        if (iter.key() >= from && iter.key() < from + count) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            int index = iter.key() - from + to;
-            iter = d->m_cache.erase(iter);
-
-            items.insert(index, objRef);
-
-            QSGVisualModelData *data = d->data(objRef.obj);
-            data->setIndex(index);
-        } else {
-            ++iter;
-        }
-    }
-    for (QHash<int,QSGVisualDataPrivate::ObjectRef>::Iterator iter = d->m_cache.begin();
-        iter != d->m_cache.end(); ) {
-
-        int diff = from > to ? count : -count;
-        if (iter.key() >= qMin(from,to) && iter.key() < qMax(from+count,to+count)) {
-            QSGVisualDataPrivate::ObjectRef objRef = *iter;
-            int index = iter.key() + diff;
-            iter = d->m_cache.erase(iter);
-
-            items.insert(index, objRef);
-
-            QSGVisualModelData *data = d->data(objRef.obj);
-            data->setIndex(index);
-        } else {
-            ++iter;
-        }
-    }
-    d->m_cache.unite(items);
-
+    if (!count || from == to)
+        return;
     emit itemsMoved(this, from, to, count);
 }
 
@@ -1709,13 +1774,26 @@ void QSGVisualDataModel::setRootIndex(const QVariant &root)
 QVariant QSGVisualDataModel::modelIndex(int idx) const
 {
     Q_D(const QSGVisualDataModel);
-    return d->data->modelIndex(idx);
+    int offset = 0;
+    int internalIndex = 0;
+    QDeclarativeCompositeRange range = d->at(idx, &offset, &internalIndex);
+    return range.list == d->data ? d->data->modelIndex(range.index + offset) : QVariant();
 }
 
 QVariant QSGVisualDataModel::parentModelIndex() const
 {
     Q_D(const QSGVisualDataModel);
     return d->data->parentModelIndex();
+}
+
+void QSGVisualDataModel::appendData(const QScriptValue &value)
+{
+    append(delegate(), value);
+}
+
+void QSGVisualDataModel::insertData(int index, const QScriptValue &value)
+{
+    insert(index, delegate(), value);
 }
 
 QSGVisualPartModel::QSGVisualPartModel(QSGVisualModel *model, const QByteArray &part, QObject *parent)
