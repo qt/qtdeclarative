@@ -214,10 +214,10 @@ Color4ub operator +(Color4ub a, Color4ub b) {  a.a += b.a; a.r += b.r; a.g += b.
 
 static inline Color4ub colorToColor4ub(const QColor &c)
 {
-    Color4ub color = { c.redF() * c.alphaF() * 255,
-                       c.greenF() * c.alphaF() * 255,
-                       c.blueF() * c.alphaF() * 255,
-                       c.alphaF() * 255
+    Color4ub color = { uchar(c.redF() * c.alphaF() * 255),
+                       uchar(c.greenF() * c.alphaF() * 255),
+                       uchar(c.blueF() * c.alphaF() * 255),
+                       uchar(c.alphaF() * 255)
                      };
     return color;
 }
