@@ -419,7 +419,7 @@ void QDeclarativeBasePositioner::finishApplyTransitions()
         move: Transition {
             NumberAnimation {
                 properties: "y"
-                easing.type: Easing.OutBounce
+                duration: 1000
             }
         }
     }
@@ -561,7 +561,7 @@ void QDeclarativeColumn::reportConflictingAnchors()
         move: Transition {
             NumberAnimation {
                 properties: "x"
-                ease: "easeOutBounce"
+                duration: 1000
             }
         }
     }
@@ -790,7 +790,7 @@ void QDeclarativeRow::reportConflictingAnchors()
         move: Transition {
             NumberAnimation {
                 properties: "x,y"
-                ease: "easeOutBounce"
+                duration: 1000
             }
         }
     }
