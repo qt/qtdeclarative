@@ -6,7 +6,8 @@ Rectangle {
     property int contentHeight: height - senderText.implicitHeight - 2
 
     function send() {
-        state = "sending"
+        message = editorLoader.item.text
+        delegateState = "sending"
         root.sending()
     }
 

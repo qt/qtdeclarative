@@ -70,6 +70,7 @@ QT_BEGIN_NAMESPACE
 
 QHash<QObject*, QSGVisualModelAttached*> QSGVisualModelAttached::attachedProperties;
 
+namespace {
 class VDMDelegateDataType : public QDeclarativeOpenMetaObjectType
 {
 public:
@@ -81,6 +82,7 @@ public:
 
     bool m_caching;
 };
+}
 
 class QSGVisualModelPartsMetaObject : public QDeclarativeOpenMetaObject
 {
