@@ -9,14 +9,26 @@ Rectangle {
     property string sender: "Me"
     property int messageCounter: 0
 
-    function send(message) {
+    function sending() {
         visualModel.insert(visualModel.count, messageBubble)
         newMessage()
         messageView.positionViewAtEnd()
     }
 
+    function sent(messageId, sender, message, avatar) {
+        messageModel.append({
+            "messageId": messageId,
+            "sender": sender,
+            "message": message,
+            "avatar": avatar,
+            "outbound": true,
+            "time": Qt.formatTime(Date.now()),
+            "delegateState": ""
+        })
+    }
+
     function newMessage() {
-        visualModel.appendData({})
+        visualModel.appendData({ "messageId": ++messageCounter })
         var bubble = visualModel.take(visualModel.count - 1, composer)
         messageBubble = bubble
         messageBubble.y = 0     // Override the position set by the view.
@@ -45,6 +57,7 @@ Rectangle {
             id: visualModel
 
             roles: [
+                VisualRole { name: "messageId"; },
                 VisualRole { name: "sender"; defaultValue: root.sender },
                 VisualRole { name: "message"; defaultValue: "" },
                 VisualRole { name: "avatar"; defaultValue: "" },
@@ -55,6 +68,28 @@ Rectangle {
 
             model: ListModel { id: messageModel }
             delegate: Bubble {}
+
+            onUpdated: {
+                var delta = 0
+                for (var i = 0; i < inserts.length; ++i) {
+                    for (var j = inserts[i].start - delta; j < inserts[i].end - delta; ++j) {
+                        var message = visualModel.get(j)
+                        if (!message.outbound)
+                            continue;
+                        for (var k = inserts[i].start - 1 - delta; k >= 0; ++k) {
+                            var existing = visualModel.get(k);
+                            if (!existing.outbound)
+                                continue;
+                            if (message.messageId == existing.messageId) {
+                                visualModel.merge(j, k)
+                                ++delta
+                                --j
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
 //        add: Transition {
@@ -73,6 +108,7 @@ Rectangle {
             var message = script.get(scriptIndex);
 
             messageModel.append({
+                "messageId": -1,
                 "sender": message.sender,
                 "message": message.message,
                 "avatar": message.avatar,

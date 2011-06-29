@@ -109,6 +109,7 @@ public:
 
     static QSGVisualModelAttached *qmlAttachedProperties(QObject *obj);
 
+    Q_INVOKABLE QScriptValue get(int index);
     Q_INVOKABLE QSGItem *item(int index, bool complete = true);
     Q_INVOKABLE QSGItem *item(int index, const QByteArray &viewId, bool complete = true);
     Q_INVOKABLE QSGItem *take(int index, QSGItem *parent = 0);
@@ -124,6 +125,7 @@ public Q_SLOTS:
     void insert(int index, QDeclarativeComponent *delegate, const QScriptValue &data);
     void remove(int index, int count);
     void move(int from, int to, int count);
+    void merge(int from, int to);
 
 Q_SIGNALS:
     void childrenChanged();

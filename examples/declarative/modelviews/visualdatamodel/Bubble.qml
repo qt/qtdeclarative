@@ -5,6 +5,11 @@ Rectangle {
 
     property int contentHeight: height - senderText.implicitHeight - 2
 
+    function send() {
+        state = "sending"
+        root.sending()
+    }
+
     x: 1;
     width: 477
     height: Math.max(messageText.implicitHeight, 48) + senderText.implicitHeight + 6
@@ -14,6 +19,12 @@ Rectangle {
     color: outbound ? "#202020" : "#313131"
 
     state: delegateState
+
+    Timer {
+        id: sendTimer
+        interval: 1000
+        onTriggered: root.sent(messageId, sender, message, avatar)
+    }
 
     Item {
         id: avatarItem
@@ -70,7 +81,7 @@ Rectangle {
 
                     anchors.fill: parent
 
-                    onClicked:  root.send(editorLoader.item.text)
+                    onClicked: content.send()
                 }
             }
         }
@@ -103,8 +114,10 @@ Rectangle {
             wrapMode: Text.WordWrap
             focus: true
 
-            Keys.onReturnPressed: root.send(text)
-            Keys.onEnterPressed: root.send(text)
+            text: message
+
+            Keys.onReturnPressed: content.send()
+            Keys.onEnterPressed: content.send()
         }
     }
 
@@ -129,12 +142,19 @@ Rectangle {
         text: time
     }
 
-    states: State {
-        name: "composing"
+    states: [
+        State {
+            name: "composing"
+            PropertyChanges { target: editorLoader; sourceComponent: editorComponent }
+            PropertyChanges { target: sendLoader; sourceComponent: sendComponent }
+        },
+        State {
+            name: "sending"
+            PropertyChanges { target: editorLoader; sourceComponent: editorComponent }
+            PropertyChanges { target: sendTimer; running: true }
+        }
 
-        PropertyChanges { target: editorLoader; sourceComponent: editorComponent }
-        PropertyChanges { target: sendLoader; sourceComponent: sendComponent }
-    }
+    ]
 
     transitions: Transition {
         from: "composing"

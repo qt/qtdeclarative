@@ -73,11 +73,13 @@ QHash<QObject*, QSGVisualModelAttached*> QSGVisualModelAttached::attachedPropert
 class VDMDelegateDataType : public QDeclarativeOpenMetaObjectType
 {
 public:
-    VDMDelegateDataType(const QMetaObject *base, QDeclarativeEngine *engine) : QDeclarativeOpenMetaObjectType(base, engine) {}
+    VDMDelegateDataType(const QMetaObject *base, QDeclarativeEngine *engine) : QDeclarativeOpenMetaObjectType(base, engine), m_caching(false) {}
 
     void propertyCreated(int, QMetaPropertyBuilder &prop) {
-        prop.setWritable(false);
+        prop.setWritable(m_caching);
     }
+
+    bool m_caching;
 };
 
 class QSGVisualModelPartsMetaObject : public QDeclarativeOpenMetaObject
@@ -400,6 +402,7 @@ public:
             ensureRoles();
             QHash<QByteArray, int> roleNames = m_roleNames;
             QSGVisualModelPrivate *parent = QSGVisualModelPrivate::get(static_cast<QSGVisualModel *>(q_ptr->parent()));
+            m_delegateDataType->m_caching = true;
             for (QList<QSGVisualModelRole *>::iterator it = parent->roles.begin(); it != parent->roles.end(); ++it) {
                 QByteArray name = (*it)->name().toUtf8();
                 int propId = m_delegateDataType->createProperty(name) - m_delegateDataType->propertyOffset();
@@ -409,7 +412,7 @@ public:
                     roleNames.erase(it);
                 }
             }
-
+            m_delegateDataType->m_caching = false;
 
             if (m_roleNames.count()) {
                 QHash<QByteArray, int>::const_iterator it = roleNames.begin();
@@ -514,6 +517,7 @@ QSGVisualModelData *QSGVisualModelPrivate::createScriptData(QDeclarativeComponen
         delegateDataType = new VDMDelegateDataType(
                     &QSGVisualModelData::staticMetaObject,
                     context ? context->engine() : qmlEngine(q));
+        delegateDataType->m_caching = true;
         for (QList<QSGVisualModelRole *>::iterator it = roles.begin(); it != roles.end(); ++it)
             delegateDataType->createProperty((*it)->name().toUtf8());
     }
@@ -653,6 +657,23 @@ QSGItem *QSGVisualModel::take(int index, QSGItem *parent)
     remove(index, 1);
     i->setParentItem(parent);
     return i;
+}
+
+QScriptValue QSGVisualModel::get(int index)
+{
+    Q_D(QSGVisualModel);
+    QDeclarativeEngine *dengine = d->context ? d->context->engine() : qmlEngine(this);
+    QScriptEngine *engine = QDeclarativeEnginePrivate::getScriptEngine(dengine);
+    int offset = 0;
+    int internalIndex = 0;
+    QDeclarativeCompositeRange range = d->at(index, &offset, &internalIndex);
+    if (range.internal()) {
+        return engine->newQObject(d->children[internalIndex].data);
+    } else {
+        return engine->newQObject(
+                new QSGVisualModelData(range.index + offset, static_cast<QSGVisualData *>(range.list)),
+                QScriptEngine::ScriptOwnership);
+    }
 }
 
 QSGVisualModel::ReleaseFlags QSGVisualModel::release(QObject *object)
@@ -984,6 +1005,24 @@ void QSGVisualModel::move(int from, int to, int count)
         d->transactionChanges.insertMove(from, from + count, to);
     } else {
         emit itemsMoved(from, to, count);
+        if (d->childrenChanged)
+            emit childrenChanged();
+    }
+}
+
+void QSGVisualModel::merge(int from, int to)
+{
+    Q_D(QSGVisualModel);
+    if (from == to)
+        return;
+    if (!d->transaction)
+        d->childrenChanged = false;
+    if (!d->merge(from, to)) {
+        qmlInfo(this) << "Items cannot be merged" << from << to;
+    } else if (d->transaction) {
+        d->transactionChanges.insertRemove(from, 1);
+    } else {
+        emit itemsRemoved(from, 1);
         if (d->childrenChanged)
             emit childrenChanged();
     }
