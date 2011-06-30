@@ -183,7 +183,7 @@ protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void wheelEvent(QGraphicsSceneWheelEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
     virtual void timerEvent(QTimerEvent *event);
 
     QSGFlickableVisibleArea *visibleArea();

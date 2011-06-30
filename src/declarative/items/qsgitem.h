@@ -359,7 +359,7 @@ protected:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
     virtual void mouseUngrabEvent(); // XXX todo - params?
-    virtual void wheelEvent(QGraphicsSceneWheelEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
     virtual void touchEvent(QTouchEvent *event);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);

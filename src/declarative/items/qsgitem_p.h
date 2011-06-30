@@ -321,7 +321,7 @@ public:
     void deliverInputMethodEvent(QInputMethodEvent *);
     void deliverFocusEvent(QFocusEvent *);
     void deliverMouseEvent(QGraphicsSceneMouseEvent *);
-    void deliverWheelEvent(QGraphicsSceneWheelEvent *);
+    void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QGraphicsSceneHoverEvent *);
     void deliverDragEvent(QSGDragEvent *);

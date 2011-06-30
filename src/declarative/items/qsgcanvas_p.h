@@ -110,7 +110,7 @@ public:
     bool deliverInitialMousePressEvent(QSGItem *, QGraphicsSceneMouseEvent *);
     bool deliverMouseEvent(QGraphicsSceneMouseEvent *);
     bool sendFilteredMouseEvent(QSGItem *, QSGItem *, QGraphicsSceneMouseEvent *);
-    bool deliverWheelEvent(QSGItem *, QGraphicsSceneWheelEvent *);
+    bool deliverWheelEvent(QSGItem *, QWheelEvent *);
     bool deliverTouchPoints(QSGItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QSGItem *, QList<QTouchEvent::TouchPoint> > *);
     bool deliverTouchEvent(QTouchEvent *);

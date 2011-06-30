@@ -794,7 +794,7 @@ void QSGFlickable::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGFlickable::wheelEvent(QGraphicsSceneWheelEvent *event)
+void QSGFlickable::wheelEvent(QWheelEvent *event)
 {
     Q_D(QSGFlickable);
     if (!d->interactive) {

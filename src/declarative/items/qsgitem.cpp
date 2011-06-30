@@ -1664,7 +1664,7 @@ void QSGItem::mouseUngrabEvent()
     // XXX todo
 }
 
-void QSGItem::wheelEvent(QGraphicsSceneWheelEvent *event)
+void QSGItem::wheelEvent(QWheelEvent *event)
 {
     event->ignore();
 }
@@ -2140,7 +2140,7 @@ void QSGItemPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *e)
     }
 }
 
-void QSGItemPrivate::deliverWheelEvent(QGraphicsSceneWheelEvent *e)
+void QSGItemPrivate::deliverWheelEvent(QWheelEvent *e)
 {
     Q_Q(QSGItem);
     q->wheelEvent(e);

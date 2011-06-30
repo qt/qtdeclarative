@@ -1296,7 +1296,7 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, QGraphicsSceneHoverEvent
     return false;
 }
 
-bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QGraphicsSceneWheelEvent *event)
+bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
 {
     Q_Q(QSGCanvas);
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
@@ -1304,7 +1304,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QGraphicsSceneWheelEvent
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(event->pos());
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1318,13 +1318,15 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QGraphicsSceneWheelEvent
             return true;
     }
 
-    QPointF p = item->mapFromScene(event->scenePos());
+    QPointF p = item->mapFromScene(event->pos());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-        event->setPos(itemPrivate->canvasToItemTransform().map(event->scenePos()));
-        event->accept();
-        q->sendEvent(item, event);
-        if (event->isAccepted())
+        QWheelEvent wheel(p, event->delta(), event->buttons(), event->modifiers(), event->orientation());
+        wheel.accept();
+        q->sendEvent(item, &wheel);
+        if (wheel.isAccepted()) {
+            event->accept();
             return true;
+        }
     }
 
     return false;
@@ -1337,18 +1339,8 @@ void QSGCanvas::wheelEvent(QWheelEvent *event)
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::wheelEvent()" << event->pos() << event->delta() << event->orientation();
 #endif
-    QGraphicsSceneWheelEvent wheelEvent(QEvent::GraphicsSceneWheel);
-    wheelEvent.setWidget(this);
-    wheelEvent.setScenePos(event->pos());
-    wheelEvent.setScreenPos(event->globalPos());
-    wheelEvent.setButtons(event->buttons());
-    wheelEvent.setModifiers(event->modifiers());
-    wheelEvent.setDelta(event->delta());
-    wheelEvent.setOrientation(event->orientation());
-    wheelEvent.setAccepted(false);
-
-    d->deliverWheelEvent(d->rootItem, &wheelEvent);
-    event->setAccepted(wheelEvent.isAccepted());
+    event->ignore();
+    d->deliverWheelEvent(d->rootItem, event);
 }
 #endif // QT_NO_WHEELEVENT
 
@@ -1635,8 +1627,8 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
             }
         }
         break;
-    case QEvent::GraphicsSceneWheel:
-        QSGItemPrivate::get(item)->deliverWheelEvent(static_cast<QGraphicsSceneWheelEvent *>(e));
+    case QEvent::Wheel:
+        QSGItemPrivate::get(item)->deliverWheelEvent(static_cast<QWheelEvent *>(e));
         break;
     case QEvent::GraphicsSceneHoverEnter:
     case QEvent::GraphicsSceneHoverLeave:
