@@ -347,6 +347,9 @@ protected:
                 *t = *f;
         }
     }
+
+    bool mergeInternalData(int from, int to);
+    bool mergeInternalData(int internalIndex, void *list, int index);
 };
 
 class QSGVisualDataParts;
@@ -497,6 +500,7 @@ public:
     }
 
     QSGVisualData *model() const { return m_model; }
+    void setModel(QSGVisualData *model, int index);
     QDeclarativeComponent *delegate() const { return m_delegate; }
 
     void ensureProperties();
@@ -530,6 +534,23 @@ QSGVisualModelData *QSGVisualModelPrivate::createScriptData(QDeclarativeComponen
     }
     QDeclarative_setParent_noEvent(data, q);
     return data;
+}
+
+
+bool QSGVisualModelPrivate::mergeInternalData(int internalIndex, void *list, int index)
+{
+    if (children[internalIndex].data)
+        children[internalIndex].data->setModel(static_cast<QSGVisualData *>(list), index);
+    return true;
+}
+
+bool QSGVisualModelPrivate::mergeInternalData(int from, int to)
+{
+    Q_UNUSED(to);
+    if (children[to].data && children[from].data)
+        children[to].data->setModel(children[from].data->model(), children[from].data->index());
+    removeInternalData(from, 1);
+    return true;
 }
 
 QSGVisualModel::QSGVisualModel(QObject *parent)
@@ -1019,14 +1040,17 @@ void QSGVisualModel::merge(int from, int to)
         return;
     if (!d->transaction)
         d->childrenChanged = false;
-    if (!d->merge(from, to)) {
+    int internalIndex = d->merge(from, to);
+    if (internalIndex == -1) {
         qmlInfo(this) << "Items cannot be merged" << from << to;
-    } else if (d->transaction) {
-        d->transactionChanges.insertRemove(from, 1);
     } else {
-        emit itemsRemoved(from, 1);
-        if (d->childrenChanged)
-            emit childrenChanged();
+        if (d->transaction) {
+            d->transactionChanges.insertRemove(from, from + 1);
+        } else {
+            emit itemsRemoved(from, 1);
+            if (d->childrenChanged)
+                emit childrenChanged();
+        }
     }
 }
 
@@ -1280,6 +1304,12 @@ void QSGVisualModelData::setIndex(int index)
     emit indexChanged();
 }
 
+void QSGVisualModelData::setModel(QSGVisualData *model, int index)
+{
+    m_model = model;
+    m_index = index;
+    emit indexChanged();
+}
 
 //---------------------------------------------------------------------------
 

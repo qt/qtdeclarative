@@ -106,7 +106,7 @@ public:
     void removeAt(int index, int count);
     void removeList(void *list, QVector<QDeclarativeChangeSet::Remove> *changes);
     void move(int from, int to, int count);
-    bool merge(int from, int to);
+    int merge(int from, int to);
     void clear();
     void clearData(int internalIndex, int count);
 
@@ -128,7 +128,8 @@ protected:
     virtual void replaceInternalData(int index, const void *data) = 0;
     virtual void removeInternalData(int index, int count) = 0;
     virtual void moveInternalData(int from, int to, int count) = 0;
-
+    virtual bool mergeInternalData(int from, int to);
+    virtual bool mergeInternalData(int internalIndex, void *list, int range);
 
 private:
     int absoluteCount;

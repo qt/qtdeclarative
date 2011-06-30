@@ -76,7 +76,7 @@ Rectangle {
                         var message = visualModel.get(j)
                         if (!message.outbound)
                             continue;
-                        for (var k = inserts[i].start - 1 - delta; k >= 0; ++k) {
+                        for (var k = inserts[i].start - 1 - delta; k >= 0; --k) {
                             var existing = visualModel.get(k);
                             if (!existing.outbound)
                                 continue;

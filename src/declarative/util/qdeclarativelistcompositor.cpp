@@ -521,7 +521,7 @@ void QDeclarativeListCompositor::move(int from, int to, int count)
     Q_ASSERT(qt_verifyIntegrity(ranges, absoluteCount, internalCount));
 }
 
-bool QDeclarativeListCompositor::merge(int from, int to)
+int QDeclarativeListCompositor::merge(int from, int to)
 {
     int internalIndex = 0;
     int internalFrom = 0;
@@ -544,8 +544,10 @@ bool QDeclarativeListCompositor::merge(int from, int to)
             internalFrom = internalIndex;
             if (range->internal())
                 internalFrom += relativeFrom;
-            relativeTo -= from - relativeFrom;
-            internalIndex -= 1;
+            if (from > to)
+                relativeTo -= to - relativeFrom;
+            else
+                relativeTo -= from - relativeFrom;
             break;
         }
         if (range->internal())
@@ -575,16 +577,44 @@ bool QDeclarativeListCompositor::merge(int from, int to)
 
     if (fromRange == ranges.end()
             || toRange == ranges.end()
-            || fromRange->list
-            || !toRange->list
-            || toRange->internal()) {
-        return false;
+            || (!fromRange->internal() && !toRange->internal())
+            || (fromRange->list && toRange->list)) {
+        return -1;
+    } else if (fromRange->internal() && toRange->internal()) {
+        if (!mergeInternalData(internalFrom, internalTo))
+            return -1;
+    } else if (fromRange->internal()) {
+        if (!mergeInternalData(internalTo, toRange->list, toRange->index + relativeTo))
+            return -1;
+    } else if (toRange->internal()) {
+        if (!mergeInternalData(internalTo, fromRange->list, fromRange->index + relativeFrom))
+            return -1;
     }
 
-    fromRange->count -= 1;
+    void *toList = fromRange->list;
+    int toIndex = fromRange->index + relativeFrom;
 
-    if (fromRange->count == 0)
-        ranges.erase(fromRange);
+    fromRange->count -= 1;
+    int removeFrom = fromRange->index + relativeFrom;
+    if (relativeFrom > 0) {
+        int splitOffset = relativeFrom;
+        if (fromRange->list)
+            splitOffset += 1;
+        if (splitOffset < fromRange->count) {
+            fromRange = insert(fromRange, QDeclarativeCompositeRange(
+                    fromRange->list, fromRange->index, relativeFrom, fromRange->flags & ~Append));
+            fromRange->index += splitOffset;
+            fromRange->count -= splitOffset;
+        } else {
+            fromRange->index += relativeFrom;
+        }
+    } else if (fromRange->list) {
+        fromRange->index += 1;
+    }
+    if (fromRange->prepend()) {
+        fromRange = insert(fromRange, QDeclarativeCompositeRange(
+                fromRange->list, removeFrom, 1, Null | Prepend));
+    }
 
     if (relativeTo > 0) {
         toRange = ++ranges.insert(toRange, QDeclarativeCompositeRange(
@@ -595,19 +625,25 @@ bool QDeclarativeListCompositor::merge(int from, int to)
 
     if (toRange->count == 1 && !toRange->append()) {
         toRange->flags |= Internal;
+        if (!toRange->list) {
+            toRange->list = toList;
+            toRange->index = toIndex;
+        }
     } else {
-        toRange = ++ranges.insert(toRange, QDeclarativeCompositeRange(
-                toRange->list, toRange->index, 1, (toRange->flags | Internal) & ~Append));
+        if (toRange->list) {
+            toRange = ++ranges.insert(toRange, QDeclarativeCompositeRange(
+                    toRange->list, toRange->index, 1, (toRange->flags | Internal) & ~Append));
+        } else {
+            toRange = ++ranges.insert(toRange, QDeclarativeCompositeRange(
+                    toList, toIndex, 1, Internal));
+        }
         toRange->index += 1;
         toRange->count -= 1;
     }
 
-    if (internalFrom != internalTo)
-        moveInternalData(internalFrom, internalTo, 1);
-
     absoluteCount -= 1;
 
-    return true;
+    return internalTo;
 }
 
 void QDeclarativeListCompositor::clear()
@@ -983,6 +1019,16 @@ void QDeclarativeListCompositor::listItemsChanged(void *list, int start, int end
         }
         absoluteIndex += range.count;
     }
+}
+
+bool QDeclarativeListCompositor::mergeInternalData(int, int)
+{
+    return false;
+}
+
+bool QDeclarativeListCompositor::mergeInternalData(int, void *, int)
+{
+    return false;
 }
 
 void QDeclarativeListCompositor::compress()
