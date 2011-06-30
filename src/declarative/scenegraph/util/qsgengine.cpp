@@ -113,6 +113,10 @@ QSGEngine::~QSGEngine()
 
     The GL context used for rendering the scene graph will be bound
     at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
+
 */
 
 /*!
@@ -124,6 +128,9 @@ QSGEngine::~QSGEngine()
     or to do screen scraping of the current frame buffer.
 
     The GL context used for rendering the scene graph will be bound at this point.
+
+    Since this signal is emitted from the scene graph rendering thread, the receiver should
+    be on the scene graph thread or the connection should be Qt::DirectConnection.
  */
 
 
