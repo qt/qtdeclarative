@@ -76,6 +76,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
                                         m_toString, v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
@@ -87,6 +88,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("preserve"), PreserveGetter, 0, 
                                         m_preserve, v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));

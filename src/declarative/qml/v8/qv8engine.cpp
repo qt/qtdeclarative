@@ -66,6 +66,34 @@
 // QDeclarativeEngine is not available
 QT_BEGIN_NAMESPACE
 
+static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Object> rhs)
+{
+    if (lhs == rhs)
+        return true;
+
+    QV8ObjectResource *lhsr = static_cast<QV8ObjectResource*>(lhs->GetExternalResource());
+    QV8ObjectResource *rhsr = static_cast<QV8ObjectResource*>(rhs->GetExternalResource());
+
+    Q_ASSERT(lhsr->engine == rhsr->engine);
+
+    if (lhsr && rhsr) {
+        QV8ObjectResource::ResourceType lhst = lhsr->resourceType();
+        QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
+
+        switch (lhst) {
+        case QV8ObjectResource::VariantType:
+            if (rhst == QV8ObjectResource::VariantType)
+                return lhsr->engine->variantWrapper()->toVariant(lhsr) == 
+                       lhsr->engine->variantWrapper()->toVariant(rhsr);
+            break;
+        default:
+            break;
+        }
+    }
+
+    return false;
+}
+
 QV8Engine::QV8Engine()
 : m_xmlHttpRequestData(0), m_sqlDatabaseData(0), m_listModelData(0)
 {
@@ -108,6 +136,8 @@ void QV8Engine::init(QDeclarativeEngine *engine)
     m_context = v8::Context::New();
     qPersistentRegister(m_context);
     v8::Context::Scope context_scope(m_context);
+
+    v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
 
     m_stringWrapper.init();
     m_contextWrapper.init(this);
@@ -658,6 +688,7 @@ void QV8Engine::setExtensionData(int index, Deletable *data)
 
 v8::Handle<v8::Value> QV8Engine::gc(const v8::Arguments &args)
 {
+    Q_UNUSED(args);
     gc();
     return v8::Undefined();
 }

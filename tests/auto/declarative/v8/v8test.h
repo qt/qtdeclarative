@@ -45,6 +45,7 @@
 #include "../../../../src/3rdparty/v8/include/v8.h"
 
 bool v8test_eval();
+bool v8test_userobjectcompare();
 
 #endif // V8TEST_H
 

@@ -54,11 +54,17 @@ private slots:
     void cleanupTestCase() {}
 
     void eval();
+    void userobjectcompare();
 };
 
 void tst_v8::eval()
 {
     QVERIFY(v8test_eval());
+}
+
+void tst_v8::userobjectcompare()
+{
+    QVERIFY(v8test_userobjectcompare());
 }
 
 int main(int argc, char *argv[]) 
