@@ -1,7 +1,7 @@
-From 7ccd4af88f3323405ef834acabee15e1e6748474 Mon Sep 17 00:00:00 2001
+From 5adbbff4a7f09a02d5c2d9b4e15dde89080e2405 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 16:21:02 +1000
-Subject: [PATCH 3/7] Add a "fallback" mode for named property interceptors
+Subject: [PATCH 3/8] Add a "fallback" mode for named property interceptors
 
 By default interceptors are called before the normal property
 resolution on objects.  When an interceptor is installed as a
@@ -24,10 +24,10 @@ declarations.
  9 files changed, 99 insertions(+), 18 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index bd48503..94da79c 100644
+index 626f34c..06085ec 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -2145,6 +2145,7 @@ class V8EXPORT FunctionTemplate : public Template {
+@@ -2168,6 +2168,7 @@ class V8EXPORT FunctionTemplate : public Template {
                                         NamedPropertyQuery query,
                                         NamedPropertyDeleter remover,
                                         NamedPropertyEnumerator enumerator,
@@ -35,7 +35,7 @@ index bd48503..94da79c 100644
                                         Handle<Value> data);
    void SetIndexedInstancePropertyHandler(IndexedPropertyGetter getter,
                                           IndexedPropertySetter setter,
-@@ -2229,6 +2230,13 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2252,6 +2253,13 @@ class V8EXPORT ObjectTemplate : public Template {
                                 NamedPropertyEnumerator enumerator = 0,
                                 Handle<Value> data = Handle<Value>());
  
@@ -50,7 +50,7 @@ index bd48503..94da79c 100644
     * Sets an indexed property handler on the object template.
     *
 diff --git a/src/api.cc b/src/api.cc
-index f509673..2ac4395 100644
+index 0d860bd..c20b062 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -981,6 +981,7 @@ void FunctionTemplate::SetNamedInstancePropertyHandler(
@@ -151,10 +151,10 @@ index 3839f37..4b42506 100644
  Handle<Object> SetProperty(Handle<Object> object,
                             Handle<Object> key,
 diff --git a/src/objects-inl.h b/src/objects-inl.h
-index bbe05f6..0c09e84 100644
+index cce3edd..6aaca2f 100644
 --- a/src/objects-inl.h
 +++ b/src/objects-inl.h
-@@ -2520,6 +2520,21 @@ bool Map::is_shared() {
+@@ -2521,6 +2521,21 @@ bool Map::is_shared() {
  }
  
  
@@ -176,7 +176,7 @@ index bbe05f6..0c09e84 100644
  JSFunction* Map::unchecked_constructor() {
    return reinterpret_cast<JSFunction*>(READ_FIELD(this, kConstructorOffset));
  }
-@@ -2969,6 +2984,7 @@ ACCESSORS(InterceptorInfo, query, Object, kQueryOffset)
+@@ -2970,6 +2985,7 @@ ACCESSORS(InterceptorInfo, query, Object, kQueryOffset)
  ACCESSORS(InterceptorInfo, deleter, Object, kDeleterOffset)
  ACCESSORS(InterceptorInfo, enumerator, Object, kEnumeratorOffset)
  ACCESSORS(InterceptorInfo, data, Object, kDataOffset)
@@ -185,7 +185,7 @@ index bbe05f6..0c09e84 100644
  ACCESSORS(CallHandlerInfo, callback, Object, kCallbackOffset)
  ACCESSORS(CallHandlerInfo, data, Object, kDataOffset)
 diff --git a/src/objects.cc b/src/objects.cc
-index 92ab958..08d130e 100644
+index 2409ea3..f1e4c8c 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -1712,9 +1712,10 @@ MaybeObject* JSObject::SetPropertyWithInterceptor(
@@ -246,7 +246,7 @@ index 92ab958..08d130e 100644
    }
    result->NotFound();
 diff --git a/src/objects.h b/src/objects.h
-index a61733e..3fdc69f 100644
+index 07e1089..a209cd0 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -1405,7 +1405,8 @@ class JSObject: public HeapObject {
@@ -291,7 +291,7 @@ index a61733e..3fdc69f 100644
  
    // Layout of the default cache. It holds alternating name and code objects.
    static const int kCodeCacheEntrySize = 2;
-@@ -6268,6 +6276,7 @@ class InterceptorInfo: public Struct {
+@@ -6276,6 +6284,7 @@ class InterceptorInfo: public Struct {
    DECL_ACCESSORS(deleter, Object)
    DECL_ACCESSORS(enumerator, Object)
    DECL_ACCESSORS(data, Object)
@@ -299,7 +299,7 @@ index a61733e..3fdc69f 100644
  
    static inline InterceptorInfo* cast(Object* obj);
  
-@@ -6287,7 +6296,8 @@ class InterceptorInfo: public Struct {
+@@ -6295,7 +6304,8 @@ class InterceptorInfo: public Struct {
    static const int kDeleterOffset = kQueryOffset + kPointerSize;
    static const int kEnumeratorOffset = kDeleterOffset + kPointerSize;
    static const int kDataOffset = kEnumeratorOffset + kPointerSize;

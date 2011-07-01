@@ -1,7 +1,7 @@
-From 2762e881e1990169c3d9d9f02d5db56d79de79ba Mon Sep 17 00:00:00 2001
+From de8b6a719219677dc8e34248de7836369bf1034d Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 18:26:19 +1000
-Subject: [PATCH 5/7] Introduce a QML compilation mode
+Subject: [PATCH 5/8] Introduce a QML compilation mode
 
 In QML mode, there is a second global object - known as the QML
 global object.  During property resolution, if a property is not
@@ -15,43 +15,55 @@ closures etc. created during the run will retain a reference to this
 object, so different objects can be passed in different script
 runs.
 ---
- include/v8.h                    |   18 ++++++++--
- src/api.cc                      |   52 ++++++++++++++++++++++++-----
- src/arm/code-stubs-arm.cc       |    4 ++
- src/arm/full-codegen-arm.cc     |   21 +++++++-----
- src/arm/macro-assembler-arm.h   |    5 +++
- src/ast-inl.h                   |    5 +++
- src/ast.h                       |    1 +
- src/compiler.cc                 |   15 +++++++-
- src/compiler.h                  |   24 +++++++++++---
- src/contexts.cc                 |   23 +++++++++++++
- src/contexts.h                  |    4 ++
- src/execution.cc                |   28 ++++++++++++++--
- src/execution.h                 |    6 +++
- src/full-codegen.cc             |    3 +-
- src/full-codegen.h              |    1 +
- src/heap.cc                     |    2 +
- src/ia32/code-stubs-ia32.cc     |    7 ++++
- src/ia32/full-codegen-ia32.cc   |   21 +++++++-----
- src/ia32/macro-assembler-ia32.h |    5 +++
- src/objects-inl.h               |   12 +++++++
- src/objects.h                   |    5 +++
- src/parser.cc                   |   27 +++++++++++++--
- src/parser.h                    |    4 ++-
- src/prettyprinter.cc            |    3 ++
- src/runtime.cc                  |   68 +++++++++++++++++++++++++--------------
- src/runtime.h                   |    8 ++--
- src/scopes.cc                   |   16 +++++++++
- src/scopes.h                    |    7 ++++
- src/variables.cc                |    3 +-
- src/variables.h                 |    5 +++
- src/x64/code-stubs-x64.cc       |    4 ++
- src/x64/full-codegen-x64.cc     |   21 +++++++-----
- src/x64/macro-assembler-x64.h   |    5 +++
- 33 files changed, 347 insertions(+), 86 deletions(-)
+ include/v8.h                     |   18 ++++++++--
+ src/api.cc                       |   52 ++++++++++++++++++++++++-----
+ src/arm/code-stubs-arm.cc        |    4 ++
+ src/arm/full-codegen-arm.cc      |   26 ++++++++------
+ src/arm/lithium-arm.cc           |    2 +-
+ src/arm/lithium-arm.h            |    6 +++-
+ src/arm/lithium-codegen-arm.cc   |    7 ++--
+ src/arm/macro-assembler-arm.h    |    5 +++
+ src/ast-inl.h                    |    5 +++
+ src/ast.h                        |    1 +
+ src/code-stubs.h                 |    2 +-
+ src/compiler.cc                  |   15 +++++++-
+ src/compiler.h                   |   22 ++++++++++--
+ src/contexts.cc                  |   23 +++++++++++++
+ src/contexts.h                   |    4 ++
+ src/execution.cc                 |   28 +++++++++++++--
+ src/execution.h                  |    6 +++
+ src/full-codegen.cc              |    3 +-
+ src/full-codegen.h               |    1 +
+ src/heap.cc                      |    2 +
+ src/hydrogen-instructions.h      |   10 ++++-
+ src/hydrogen.cc                  |    2 +
+ src/ia32/code-stubs-ia32.cc      |    7 ++++
+ src/ia32/full-codegen-ia32.cc    |   26 ++++++++------
+ src/ia32/lithium-codegen-ia32.cc |    7 ++--
+ src/ia32/lithium-ia32.cc         |    2 +-
+ src/ia32/lithium-ia32.h          |    6 +++-
+ src/ia32/macro-assembler-ia32.h  |    5 +++
+ src/objects-inl.h                |   12 +++++++
+ src/objects.h                    |    5 +++
+ src/parser.cc                    |   27 +++++++++++++--
+ src/parser.h                     |    4 ++-
+ src/prettyprinter.cc             |    3 ++
+ src/runtime.cc                   |   68 ++++++++++++++++++++++++-------------
+ src/runtime.h                    |    8 ++--
+ src/scopes.cc                    |   10 +++++
+ src/scopes.h                     |    7 ++++
+ src/variables.cc                 |    3 +-
+ src/variables.h                  |    5 +++
+ src/x64/code-stubs-x64.cc        |    4 ++
+ src/x64/full-codegen-x64.cc      |   26 ++++++++------
+ src/x64/lithium-codegen-x64.cc   |    7 ++--
+ src/x64/lithium-x64.cc           |    2 +-
+ src/x64/lithium-x64.h            |    6 +++
+ src/x64/macro-assembler-x64.h    |    5 +++
+ 45 files changed, 391 insertions(+), 108 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index b377c53..a67feb2 100644
+index 9740251..d04b73e 100644
 --- a/include/v8.h
 +++ b/include/v8.h
 @@ -577,6 +577,10 @@ class ScriptOrigin {
@@ -113,7 +125,7 @@ index b377c53..a67feb2 100644
  
    /**
     * Returns the script id value.
-@@ -3302,6 +3311,7 @@ class V8EXPORT Context {
+@@ -3325,6 +3334,7 @@ class V8EXPORT Context {
     * JavaScript frames an empty handle is returned.
     */
    static Local<Context> GetCalling();
@@ -122,7 +134,7 @@ index b377c53..a67feb2 100644
    /**
     * Sets the security token for the context.  To access an object in
 diff --git a/src/api.cc b/src/api.cc
-index 3137d6c..61ed79e 100644
+index d81ece8..0635f34 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -1372,7 +1372,8 @@ ScriptData* ScriptData::New(const char* data, int length) {
@@ -207,7 +219,7 @@ index 3137d6c..61ed79e 100644
      EXCEPTION_BAILOUT_CHECK(isolate, Local<Value>());
      raw_result = *result;
    }
-@@ -3928,6 +3938,30 @@ v8::Local<v8::Context> Context::GetCalling() {
+@@ -3939,6 +3949,30 @@ v8::Local<v8::Context> Context::GetCalling() {
  }
  
  
@@ -254,10 +266,26 @@ index 8c147f9..a2626bf 100644
    __ LoadRoot(r1, Heap::kUndefinedValueRootIndex);
    for (int i = Context::MIN_CONTEXT_SLOTS; i < length; i++) {
 diff --git a/src/arm/full-codegen-arm.cc b/src/arm/full-codegen-arm.cc
-index 871b453..f132de6 100644
+index 871b453..a69f10d 100644
 --- a/src/arm/full-codegen-arm.cc
 +++ b/src/arm/full-codegen-arm.cc
-@@ -1247,9 +1247,9 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
+@@ -154,12 +154,13 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 ||
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment cmnt(masm_, "[ Allocate local context");
+     // Argument to NewContext is the function, which is in r1.
+     __ push(r1);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -1247,9 +1248,9 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
      __ bind(&fast);
    }
  
@@ -269,7 +297,7 @@ index 871b453..f132de6 100644
        ? RelocInfo::CODE_TARGET
        : RelocInfo::CODE_TARGET_CONTEXT;
    Handle<Code> ic = isolate()->builtins()->LoadIC_Initialize();
-@@ -1268,10 +1268,10 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
+@@ -1268,10 +1269,10 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
      Comment cmnt(masm_, "Global variable");
      // Use inline caching. Variable name is passed in r2 and the global
      // object (receiver) in r0.
@@ -282,7 +310,7 @@ index 871b453..f132de6 100644
      context()->Plug(r0);
  
    } else if (slot != NULL && slot->type() == Slot::LOOKUP) {
-@@ -1893,11 +1893,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
+@@ -1893,11 +1894,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
      // assignment.  Right-hand-side value is passed in r0, variable name in
      // r2, and the global object in r1.
      __ mov(r2, Operand(var->name()));
@@ -296,7 +324,7 @@ index 871b453..f132de6 100644
  
    } else if (op == Token::INIT_CONST) {
      // Like var declarations, const declarations are hoisted to function
-@@ -2184,10 +2184,13 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
+@@ -2184,10 +2185,13 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
    // Push the strict mode flag.
    __ mov(r1, Operand(Smi::FromInt(strict_mode_flag())));
    __ push(r1);
@@ -311,7 +339,7 @@ index 871b453..f132de6 100644
  }
  
  
-@@ -2263,9 +2266,9 @@ void FullCodeGenerator::VisitCall(Call* expr) {
+@@ -2263,9 +2267,9 @@ void FullCodeGenerator::VisitCall(Call* expr) {
      context()->DropAndPlug(1, r0);
    } else if (var != NULL && !var->is_this() && var->is_global()) {
      // Push global object as receiver for the call IC.
@@ -323,6 +351,71 @@ index 871b453..f132de6 100644
    } else if (var != NULL && var->AsSlot() != NULL &&
               var->AsSlot()->type() == Slot::LOOKUP) {
      // Call to a lookup slot (dynamically introduced variable).
+diff --git a/src/arm/lithium-arm.cc b/src/arm/lithium-arm.cc
+index 3f1d15b..8406a96 100644
+--- a/src/arm/lithium-arm.cc
++++ b/src/arm/lithium-arm.cc
+@@ -1195,7 +1195,7 @@ LInstruction* LChunkBuilder::DoOuterContext(HOuterContext* instr) {
+ 
+ LInstruction* LChunkBuilder::DoGlobalObject(HGlobalObject* instr) {
+   LOperand* context = UseRegisterAtStart(instr->value());
+-  return DefineAsRegister(new LGlobalObject(context));
++  return DefineAsRegister(new LGlobalObject(context, instr->qml_global()));
+ }
+ 
+ 
+diff --git a/src/arm/lithium-arm.h b/src/arm/lithium-arm.h
+index 6da7c86..10b901f 100644
+--- a/src/arm/lithium-arm.h
++++ b/src/arm/lithium-arm.h
+@@ -1378,13 +1378,17 @@ class LOuterContext: public LTemplateInstruction<1, 1, 0> {
+ 
+ class LGlobalObject: public LTemplateInstruction<1, 1, 0> {
+  public:
+-  explicit LGlobalObject(LOperand* context) {
++  explicit LGlobalObject(LOperand* context, bool qml_global) {
+     inputs_[0] = context;
++    qml_global_ = qml_global;
+   }
+ 
+   DECLARE_CONCRETE_INSTRUCTION(GlobalObject, "global-object")
+ 
+   LOperand* context() { return InputAt(0); }
++  bool qml_global() { return qml_global_; }
++ private:
++  bool qml_global_;
+ };
+ 
+ 
+diff --git a/src/arm/lithium-codegen-arm.cc b/src/arm/lithium-codegen-arm.cc
+index 4912449..db114ea 100644
+--- a/src/arm/lithium-codegen-arm.cc
++++ b/src/arm/lithium-codegen-arm.cc
+@@ -166,12 +166,13 @@ bool LCodeGen::GeneratePrologue() {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 ||
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment(";;; Allocate local context");
+     // Argument to NewContext is the function, which is in r1.
+     __ push(r1);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -2664,7 +2665,7 @@ void LCodeGen::DoOuterContext(LOuterContext* instr) {
+ void LCodeGen::DoGlobalObject(LGlobalObject* instr) {
+   Register context = ToRegister(instr->context());
+   Register result = ToRegister(instr->result());
+-  __ ldr(result, ContextOperand(cp, Context::GLOBAL_INDEX));
++  __ ldr(result, ContextOperand(cp, instr->qml_global()?Context::QML_GLOBAL_INDEX:Context::GLOBAL_INDEX));
+ }
+ 
+ 
 diff --git a/src/arm/macro-assembler-arm.h b/src/arm/macro-assembler-arm.h
 index ab5efb0..d40cdbc 100644
 --- a/src/arm/macro-assembler-arm.h
@@ -367,6 +460,19 @@ index 65a25a9..f790dc0 100644
  
    int materialized_literal_count() { return materialized_literal_count_; }
    int expected_property_count() { return expected_property_count_; }
+diff --git a/src/code-stubs.h b/src/code-stubs.h
+index 56ef072..37e5383 100644
+--- a/src/code-stubs.h
++++ b/src/code-stubs.h
+@@ -303,7 +303,7 @@ class FastNewContextStub : public CodeStub {
+   static const int kMaximumSlots = 64;
+ 
+   explicit FastNewContextStub(int slots) : slots_(slots) {
+-    ASSERT(slots_ > 0 && slots <= kMaximumSlots);
++    ASSERT(slots_ >= 0 && slots <= kMaximumSlots);
+   }
+ 
+   void Generate(MacroAssembler* masm);
 diff --git a/src/compiler.cc b/src/compiler.cc
 index 86d5de3..d2191b9 100755
 --- a/src/compiler.cc
@@ -429,7 +535,7 @@ index 86d5de3..d2191b9 100755
  
  
 diff --git a/src/compiler.h b/src/compiler.h
-index e75e869..ca4b62d 100644
+index e75e869..17cd369 100644
 --- a/src/compiler.h
 +++ b/src/compiler.h
 @@ -54,6 +54,7 @@ class CompilationInfo BASE_EMBEDDED {
@@ -450,16 +556,14 @@ index e75e869..ca4b62d 100644
    void MarkAsAllowingNativesSyntax() {
      flags_ |= IsNativesSyntaxAllowed::encode(true);
    }
-@@ -141,7 +145,8 @@ class CompilationInfo BASE_EMBEDDED {
+@@ -141,6 +145,7 @@ class CompilationInfo BASE_EMBEDDED {
  
    // Determine whether or not we can adaptively optimize.
    bool AllowOptimize() {
--    return V8::UseCrankshaft() && !closure_.is_null();
 +    // XXX - fix qml mode optimizations
-+    return V8::UseCrankshaft() && !closure_.is_null() && !is_qml_mode();
+     return V8::UseCrankshaft() && !closure_.is_null();
    }
  
-  private:
 @@ -163,8 +168,13 @@ class CompilationInfo BASE_EMBEDDED {
  
    void Initialize(Mode mode) {
@@ -697,10 +801,10 @@ index d6ed1b9..e3241aa 100644
    Scope* scope() { return info_->scope(); }
  
 diff --git a/src/heap.cc b/src/heap.cc
-index 46df787..6e02262 100644
+index bf2940e..da958c2 100644
 --- a/src/heap.cc
 +++ b/src/heap.cc
-@@ -3792,6 +3792,7 @@ MaybeObject* Heap::AllocateFunctionContext(int length, JSFunction* function) {
+@@ -3795,6 +3795,7 @@ MaybeObject* Heap::AllocateFunctionContext(int length, JSFunction* function) {
    context->set_previous(NULL);
    context->set_extension(NULL);
    context->set_global(function->context()->global());
@@ -708,7 +812,7 @@ index 46df787..6e02262 100644
    ASSERT(!context->IsGlobalContext());
    ASSERT(context->is_function_context());
    ASSERT(result->IsContext());
-@@ -3814,6 +3815,7 @@ MaybeObject* Heap::AllocateWithContext(Context* previous,
+@@ -3817,6 +3818,7 @@ MaybeObject* Heap::AllocateWithContext(Context* previous,
    context->set_previous(previous);
    context->set_extension(extension);
    context->set_global(previous->global());
@@ -716,6 +820,63 @@ index 46df787..6e02262 100644
    ASSERT(!context->IsGlobalContext());
    ASSERT(!context->is_function_context());
    ASSERT(result->IsContext());
+diff --git a/src/hydrogen-instructions.h b/src/hydrogen-instructions.h
+index a623775..52455bc 100644
+--- a/src/hydrogen-instructions.h
++++ b/src/hydrogen-instructions.h
+@@ -1148,7 +1148,7 @@ class HOuterContext: public HUnaryOperation {
+ 
+ class HGlobalObject: public HUnaryOperation {
+  public:
+-  explicit HGlobalObject(HValue* context) : HUnaryOperation(context) {
++  explicit HGlobalObject(HValue* context) : HUnaryOperation(context), qml_global_(false) {
+     set_representation(Representation::Tagged());
+     SetFlag(kUseGVN);
+   }
+@@ -1159,8 +1159,14 @@ class HGlobalObject: public HUnaryOperation {
+     return Representation::Tagged();
+   }
+ 
++  bool qml_global() { return qml_global_; }
++  void set_qml_global(bool v) { qml_global_ = v; }
++
+  protected:
+   virtual bool DataEquals(HValue* other) { return true; }
++
++ private:
++  bool qml_global_;
+ };
+ 
+ 
+@@ -1177,7 +1183,7 @@ class HGlobalReceiver: public HUnaryOperation {
+   virtual Representation RequiredInputRepresentation(int index) const {
+     return Representation::Tagged();
+   }
+-
++  
+  protected:
+   virtual bool DataEquals(HValue* other) { return true; }
+ };
+diff --git a/src/hydrogen.cc b/src/hydrogen.cc
+index 73ea97d..d17e304 100644
+--- a/src/hydrogen.cc
++++ b/src/hydrogen.cc
+@@ -2918,6 +2918,7 @@ void HGraphBuilder::VisitVariableProxy(VariableProxy* expr) {
+       HContext* context = new(zone()) HContext;
+       AddInstruction(context);
+       HGlobalObject* global_object = new(zone()) HGlobalObject(context);
++      if (variable->is_qml_global()) global_object->set_qml_global(true);
+       AddInstruction(global_object);
+       HLoadGlobalGeneric* instr =
+           new(zone()) HLoadGlobalGeneric(context,
+@@ -3307,6 +3308,7 @@ void HGraphBuilder::HandleGlobalVariableAssignment(Variable* var,
+     HContext* context = new(zone()) HContext;
+     AddInstruction(context);
+     HGlobalObject* global_object = new(zone()) HGlobalObject(context);
++    if (var->is_qml_global()) global_object->set_qml_global(true);
+     AddInstruction(global_object);
+     HStoreGlobalGeneric* instr =
+         new(zone()) HStoreGlobalGeneric(context,
 diff --git a/src/ia32/code-stubs-ia32.cc b/src/ia32/code-stubs-ia32.cc
 index 5d32095..afa599e 100644
 --- a/src/ia32/code-stubs-ia32.cc
@@ -735,10 +896,26 @@ index 5d32095..afa599e 100644
    __ mov(ebx, factory->undefined_value());
    for (int i = Context::MIN_CONTEXT_SLOTS; i < length; i++) {
 diff --git a/src/ia32/full-codegen-ia32.cc b/src/ia32/full-codegen-ia32.cc
-index 5d153a8..28b78ba 100644
+index 5d153a8..0ddcde2 100644
 --- a/src/ia32/full-codegen-ia32.cc
 +++ b/src/ia32/full-codegen-ia32.cc
-@@ -1107,10 +1107,10 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
+@@ -142,12 +142,13 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 ||
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment cmnt(masm_, "[ Allocate local context");
+     // Argument to NewContext is the function, which is still in edi.
+     __ push(edi);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -1107,10 +1108,10 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
  
    // All extension objects were empty and it is safe to use a global
    // load IC call.
@@ -751,7 +928,7 @@ index 5d153a8..28b78ba 100644
        ? RelocInfo::CODE_TARGET
        : RelocInfo::CODE_TARGET_CONTEXT;
    EmitCallIC(ic, mode);
-@@ -1214,10 +1214,10 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
+@@ -1214,10 +1215,10 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
      Comment cmnt(masm_, "Global variable");
      // Use inline caching. Variable name is passed in ecx and the global
      // object on the stack.
@@ -764,7 +941,7 @@ index 5d153a8..28b78ba 100644
      context()->Plug(eax);
  
    } else if (slot != NULL && slot->type() == Slot::LOOKUP) {
-@@ -1837,11 +1837,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
+@@ -1837,11 +1838,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
      // assignment.  Right-hand-side value is passed in eax, variable name in
      // ecx, and the global object on the stack.
      __ mov(ecx, var->name());
@@ -778,7 +955,7 @@ index 5d153a8..28b78ba 100644
  
    } else if (op == Token::INIT_CONST) {
      // Like var declarations, const declarations are hoisted to function
-@@ -2113,9 +2113,12 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
+@@ -2113,9 +2114,12 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
    // Push the strict mode flag.
    __ push(Immediate(Smi::FromInt(strict_mode_flag())));
  
@@ -792,7 +969,7 @@ index 5d153a8..28b78ba 100644
  }
  
  
-@@ -2188,8 +2191,8 @@ void FullCodeGenerator::VisitCall(Call* expr) {
+@@ -2188,8 +2192,8 @@ void FullCodeGenerator::VisitCall(Call* expr) {
      context()->DropAndPlug(1, eax);
    } else if (var != NULL && !var->is_this() && var->is_global()) {
      // Push global object as receiver for the call IC.
@@ -803,6 +980,71 @@ index 5d153a8..28b78ba 100644
    } else if (var != NULL && var->AsSlot() != NULL &&
               var->AsSlot()->type() == Slot::LOOKUP) {
      // Call to a lookup slot (dynamically introduced variable).
+diff --git a/src/ia32/lithium-codegen-ia32.cc b/src/ia32/lithium-codegen-ia32.cc
+index 0f96f78..c1da075 100644
+--- a/src/ia32/lithium-codegen-ia32.cc
++++ b/src/ia32/lithium-codegen-ia32.cc
+@@ -159,12 +159,13 @@ bool LCodeGen::GeneratePrologue() {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 ||
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment(";;; Allocate local context");
+     // Argument to NewContext is the function, which is still in edi.
+     __ push(edi);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -2525,7 +2526,7 @@ void LCodeGen::DoOuterContext(LOuterContext* instr) {
+ void LCodeGen::DoGlobalObject(LGlobalObject* instr) {
+   Register context = ToRegister(instr->context());
+   Register result = ToRegister(instr->result());
+-  __ mov(result, Operand(context, Context::SlotOffset(Context::GLOBAL_INDEX)));
++  __ mov(result, Operand(context, Context::SlotOffset(instr->qml_global()?Context::QML_GLOBAL_INDEX:Context::GLOBAL_INDEX)));
+ }
+ 
+ 
+diff --git a/src/ia32/lithium-ia32.cc b/src/ia32/lithium-ia32.cc
+index 9ccd189..8e98b73 100644
+--- a/src/ia32/lithium-ia32.cc
++++ b/src/ia32/lithium-ia32.cc
+@@ -1205,7 +1205,7 @@ LInstruction* LChunkBuilder::DoOuterContext(HOuterContext* instr) {
+ 
+ LInstruction* LChunkBuilder::DoGlobalObject(HGlobalObject* instr) {
+   LOperand* context = UseRegisterAtStart(instr->value());
+-  return DefineAsRegister(new LGlobalObject(context));
++  return DefineAsRegister(new LGlobalObject(context, instr->qml_global()));
+ }
+ 
+ 
+diff --git a/src/ia32/lithium-ia32.h b/src/ia32/lithium-ia32.h
+index 9ace8f8..95ed001 100644
+--- a/src/ia32/lithium-ia32.h
++++ b/src/ia32/lithium-ia32.h
+@@ -1416,13 +1416,17 @@ class LOuterContext: public LTemplateInstruction<1, 1, 0> {
+ 
+ class LGlobalObject: public LTemplateInstruction<1, 1, 0> {
+  public:
+-  explicit LGlobalObject(LOperand* context) {
++  explicit LGlobalObject(LOperand* context, bool qml_global) {
+     inputs_[0] = context;
++    qml_global_ = qml_global;
+   }
+ 
+   DECLARE_CONCRETE_INSTRUCTION(GlobalObject, "global-object")
+ 
+   LOperand* context() { return InputAt(0); }
++  bool qml_global() { return qml_global_; }
++ private:
++  bool qml_global_;
+ };
+ 
+ 
 diff --git a/src/ia32/macro-assembler-ia32.h b/src/ia32/macro-assembler-ia32.h
 index b986264..f8479ae 100644
 --- a/src/ia32/macro-assembler-ia32.h
@@ -820,10 +1062,10 @@ index b986264..f8479ae 100644
  Operand ApiParameterOperand(int index);
  
 diff --git a/src/objects-inl.h b/src/objects-inl.h
-index a205f02..8c0c2d0 100644
+index 231b835..1c7f83e 100644
 --- a/src/objects-inl.h
 +++ b/src/objects-inl.h
-@@ -3241,6 +3241,18 @@ void SharedFunctionInfo::set_strict_mode(bool value) {
+@@ -3242,6 +3242,18 @@ void SharedFunctionInfo::set_strict_mode(bool value) {
  }
  
  
@@ -843,7 +1085,7 @@ index a205f02..8c0c2d0 100644
  ACCESSORS(CodeCache, normal_type_cache, Object, kNormalTypeCacheOffset)
  
 diff --git a/src/objects.h b/src/objects.h
-index 439ad1e..918ab61 100644
+index 1bdb5c7..edbc47a 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -4331,6 +4331,10 @@ class SharedFunctionInfo: public HeapObject {
@@ -1245,7 +1487,7 @@ index bf1ba68..5e97173 100644
    F(OptimizeObjectForAddingMultipleProperties, 2, 1) \
    \
 diff --git a/src/scopes.cc b/src/scopes.cc
-index 8df93c5..e34e762 100644
+index 8df93c5..734a217 100644
 --- a/src/scopes.cc
 +++ b/src/scopes.cc
 @@ -198,6 +198,7 @@ void Scope::SetDefaults(Type type,
@@ -1256,15 +1498,7 @@ index 8df93c5..e34e762 100644
    outer_scope_calls_eval_ = false;
    inner_scope_calls_eval_ = false;
    outer_scope_is_eval_scope_ = false;
-@@ -516,6 +517,7 @@ bool Scope::HasTrivialContext() const {
-     if (scope->is_eval_scope()) return false;
-     if (scope->scope_inside_with_) return false;
-     if (scope->num_heap_slots_ > 0) return false;
-+    if (scope->qml_mode_ && is_global_scope() && inner_scopes_.length()) return false;
-   }
-   return true;
- }
-@@ -796,6 +798,10 @@ void Scope::ResolveVariable(Scope* global_scope,
+@@ -796,6 +797,10 @@ void Scope::ResolveVariable(Scope* global_scope,
          ASSERT(global_scope != NULL);
          var = global_scope->DeclareGlobal(proxy->name());
  
@@ -1275,7 +1509,7 @@ index 8df93c5..e34e762 100644
        } else if (scope_inside_with_) {
          // If we are inside a with statement we give up and look up
          // the variable at runtime.
-@@ -816,6 +822,8 @@ void Scope::ResolveVariable(Scope* global_scope,
+@@ -816,6 +821,8 @@ void Scope::ResolveVariable(Scope* global_scope,
          // variables.
          if (context->GlobalIfNotShadowedByEval(proxy->name())) {
            var = NonLocal(proxy->name(), Variable::DYNAMIC_GLOBAL);
@@ -1284,7 +1518,7 @@ index 8df93c5..e34e762 100644
  
          } else {
            var = NonLocal(proxy->name(), Variable::DYNAMIC);
-@@ -827,6 +835,9 @@ void Scope::ResolveVariable(Scope* global_scope,
+@@ -827,6 +834,9 @@ void Scope::ResolveVariable(Scope* global_scope,
          // variable is global unless it is shadowed by eval-introduced
          // variables.
          var = NonLocal(proxy->name(), Variable::DYNAMIC_GLOBAL);
@@ -1294,18 +1528,6 @@ index 8df93c5..e34e762 100644
        }
      }
    }
-@@ -1112,6 +1123,11 @@ void Scope::AllocateVariablesRecursively() {
-     must_have_local_context = is_function_scope();
-   }
- 
-+  if (qml_mode_ && is_global_scope() && inner_scopes_.length()) {
-+      must_have_local_context = true;
-+      num_heap_slots_++; // This is a hack to force a context to be allocated to save the QML global
-+  }
-+
-   // If we didn't allocate any locals in the local context, then we only
-   // need the minimal number of slots if we must have a local context.
-   if (num_heap_slots_ == Context::MIN_CONTEXT_SLOTS &&
 diff --git a/src/scopes.h b/src/scopes.h
 index a0e56a4..6dd3f65 100644
 --- a/src/scopes.h
@@ -1391,10 +1613,26 @@ index c365385..d923494 100644
    __ LoadRoot(rbx, Heap::kUndefinedValueRootIndex);
    for (int i = Context::MIN_CONTEXT_SLOTS; i < length; i++) {
 diff --git a/src/x64/full-codegen-x64.cc b/src/x64/full-codegen-x64.cc
-index 97168cd..342fe9b 100644
+index 97168cd..c45cdb6 100644
 --- a/src/x64/full-codegen-x64.cc
 +++ b/src/x64/full-codegen-x64.cc
-@@ -1119,10 +1119,10 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
+@@ -141,12 +141,13 @@ void FullCodeGenerator::Generate(CompilationInfo* info) {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 || 
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment cmnt(masm_, "[ Allocate local context");
+     // Argument to NewContext is the function, which is still in rdi.
+     __ push(rdi);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -1119,10 +1120,10 @@ void FullCodeGenerator::EmitLoadGlobalSlotCheckExtensions(
  
    // All extension objects were empty and it is safe to use a global
    // load IC call.
@@ -1407,7 +1645,7 @@ index 97168cd..342fe9b 100644
        ? RelocInfo::CODE_TARGET
        : RelocInfo::CODE_TARGET_CONTEXT;
    EmitCallIC(ic, mode);
-@@ -1227,9 +1227,9 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
+@@ -1227,9 +1228,9 @@ void FullCodeGenerator::EmitVariableLoad(Variable* var) {
      // Use inline caching. Variable name is passed in rcx and the global
      // object on the stack.
      __ Move(rcx, var->name());
@@ -1419,7 +1657,7 @@ index 97168cd..342fe9b 100644
      context()->Plug(rax);
  
    } else if (slot != NULL && slot->type() == Slot::LOOKUP) {
-@@ -1806,11 +1806,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
+@@ -1806,11 +1807,11 @@ void FullCodeGenerator::EmitVariableAssignment(Variable* var,
      // assignment.  Right-hand-side value is passed in rax, variable name in
      // rcx, and the global object on the stack.
      __ Move(rcx, var->name());
@@ -1433,7 +1671,7 @@ index 97168cd..342fe9b 100644
  
    } else if (op == Token::INIT_CONST) {
      // Like var declarations, const declarations are hoisted to function
-@@ -2085,9 +2085,12 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
+@@ -2085,9 +2086,12 @@ void FullCodeGenerator::EmitResolvePossiblyDirectEval(ResolveEvalFlag flag,
    // Push the strict mode flag.
    __ Push(Smi::FromInt(strict_mode_flag()));
  
@@ -1447,7 +1685,7 @@ index 97168cd..342fe9b 100644
  }
  
  
-@@ -2160,8 +2163,8 @@ void FullCodeGenerator::VisitCall(Call* expr) {
+@@ -2160,8 +2164,8 @@ void FullCodeGenerator::VisitCall(Call* expr) {
    } else if (var != NULL && !var->is_this() && var->is_global()) {
      // Call to a global variable.
      // Push global object as receiver for the call IC lookup.
@@ -1458,6 +1696,66 @@ index 97168cd..342fe9b 100644
    } else if (var != NULL && var->AsSlot() != NULL &&
               var->AsSlot()->type() == Slot::LOOKUP) {
      // Call to a lookup slot (dynamically introduced variable).
+diff --git a/src/x64/lithium-codegen-x64.cc b/src/x64/lithium-codegen-x64.cc
+index 202e7a2..45acbdf 100644
+--- a/src/x64/lithium-codegen-x64.cc
++++ b/src/x64/lithium-codegen-x64.cc
+@@ -174,12 +174,13 @@ bool LCodeGen::GeneratePrologue() {
+ 
+   // Possibly allocate a local context.
+   int heap_slots = scope()->num_heap_slots() - Context::MIN_CONTEXT_SLOTS;
+-  if (heap_slots > 0) {
++  if (heap_slots > 0 ||
++      (scope()->is_qml_mode() && scope()->is_global_scope())) {
+     Comment(";;; Allocate local context");
+     // Argument to NewContext is the function, which is still in rdi.
+     __ push(rdi);
+     if (heap_slots <= FastNewContextStub::kMaximumSlots) {
+-      FastNewContextStub stub(heap_slots);
++      FastNewContextStub stub((heap_slots < 0)?0:heap_slots);
+       __ CallStub(&stub);
+     } else {
+       __ CallRuntime(Runtime::kNewContext, 1);
+@@ -2540,7 +2541,7 @@ void LCodeGen::DoOuterContext(LOuterContext* instr) {
+ 
+ void LCodeGen::DoGlobalObject(LGlobalObject* instr) {
+   Register result = ToRegister(instr->result());
+-  __ movq(result, GlobalObjectOperand());
++  __ movq(result, instr->qml_global()?QmlGlobalObjectOperand():GlobalObjectOperand());
+ }
+ 
+ 
+diff --git a/src/x64/lithium-x64.cc b/src/x64/lithium-x64.cc
+index 07ca3a5..00feeac 100644
+--- a/src/x64/lithium-x64.cc
++++ b/src/x64/lithium-x64.cc
+@@ -1194,7 +1194,7 @@ LInstruction* LChunkBuilder::DoOuterContext(HOuterContext* instr) {
+ 
+ 
+ LInstruction* LChunkBuilder::DoGlobalObject(HGlobalObject* instr) {
+-  return DefineAsRegister(new LGlobalObject);
++  return DefineAsRegister(new LGlobalObject(instr->qml_global()));
+ }
+ 
+ 
+diff --git a/src/x64/lithium-x64.h b/src/x64/lithium-x64.h
+index 15bb894..16f754c 100644
+--- a/src/x64/lithium-x64.h
++++ b/src/x64/lithium-x64.h
+@@ -1365,7 +1365,13 @@ class LOuterContext: public LTemplateInstruction<1, 1, 0> {
+ 
+ class LGlobalObject: public LTemplateInstruction<1, 0, 0> {
+  public:
++  explicit LGlobalObject(bool qml_global) : qml_global_(qml_global) {}
++
+   DECLARE_CONCRETE_INSTRUCTION(GlobalObject, "global-object")
++  
++  bool qml_global() { return qml_global_; }
++ private:
++  bool qml_global_;
+ };
+ 
+ 
 diff --git a/src/x64/macro-assembler-x64.h b/src/x64/macro-assembler-x64.h
 index 4c17720..aa284ed 100644
 --- a/src/x64/macro-assembler-x64.h

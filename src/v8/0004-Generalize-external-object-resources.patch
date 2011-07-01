@@ -1,7 +1,7 @@
-From a9108d655fcd8ffa45a32257160cc10eaf0256ee Mon Sep 17 00:00:00 2001
+From 8f640251aeac30f08ddb7bc4c0fe6ba6ff7eabdd Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 16:55:35 +1000
-Subject: [PATCH 4/7] Generalize external object resources
+Subject: [PATCH 4/8] Generalize external object resources
 
 V8 was already able to manage and finalize an external string
 resource.  This change generalizes that mechanism to handle a
@@ -31,10 +31,10 @@ object space.
  11 files changed, 280 insertions(+), 115 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index 94da79c..b377c53 100644
+index 06085ec..9740251 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -1606,6 +1606,25 @@ class Object : public Value {
+@@ -1629,6 +1629,25 @@ class Object : public Value {
    /** Sets a native pointer in an internal field. */
    V8EXPORT void SetPointerInInternalField(int index, void* value);
  
@@ -60,7 +60,7 @@ index 94da79c..b377c53 100644
    // Testers for local properties.
    V8EXPORT bool HasRealNamedProperty(Handle<String> key);
    V8EXPORT bool HasRealIndexedProperty(uint32_t index);
-@@ -2307,6 +2326,12 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2330,6 +2349,12 @@ class V8EXPORT ObjectTemplate : public Template {
     */
    void SetInternalFieldCount(int value);
  
@@ -74,7 +74,7 @@ index 94da79c..b377c53 100644
    ObjectTemplate();
    static Local<ObjectTemplate> New(Handle<FunctionTemplate> constructor);
 diff --git a/src/api.cc b/src/api.cc
-index 2ac4395..3137d6c 100644
+index c20b062..d81ece8 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -1294,6 +1294,34 @@ void ObjectTemplate::SetInternalFieldCount(int value) {
@@ -112,7 +112,7 @@ index 2ac4395..3137d6c 100644
  // --- S c r i p t D a t a ---
  
  
-@@ -3637,6 +3665,34 @@ void v8::Object::SetPointerInInternalField(int index, void* value) {
+@@ -3648,6 +3676,34 @@ void v8::Object::SetPointerInInternalField(int index, void* value) {
  }
  
  
@@ -147,7 +147,7 @@ index 2ac4395..3137d6c 100644
  // --- E n v i r o n m e n t ---
  
  
-@@ -4129,7 +4185,7 @@ Local<String> v8::String::NewExternal(
+@@ -4140,7 +4196,7 @@ Local<String> v8::String::NewExternal(
    LOG_API(isolate, "String::NewExternal");
    ENTER_V8(isolate);
    i::Handle<i::String> result = NewExternalStringHandle(isolate, resource);
@@ -156,7 +156,7 @@ index 2ac4395..3137d6c 100644
    return Utils::ToLocal(result);
  }
  
-@@ -4147,7 +4203,7 @@ bool v8::String::MakeExternal(v8::String::ExternalStringResource* resource) {
+@@ -4158,7 +4214,7 @@ bool v8::String::MakeExternal(v8::String::ExternalStringResource* resource) {
    }
    bool result = obj->MakeExternal(resource);
    if (result && !obj->IsSymbol()) {
@@ -165,7 +165,7 @@ index 2ac4395..3137d6c 100644
    }
    return result;
  }
-@@ -4160,7 +4216,7 @@ Local<String> v8::String::NewExternal(
+@@ -4171,7 +4227,7 @@ Local<String> v8::String::NewExternal(
    LOG_API(isolate, "String::NewExternal");
    ENTER_V8(isolate);
    i::Handle<i::String> result = NewExternalAsciiStringHandle(isolate, resource);
@@ -174,7 +174,7 @@ index 2ac4395..3137d6c 100644
    return Utils::ToLocal(result);
  }
  
-@@ -4179,7 +4235,7 @@ bool v8::String::MakeExternal(
+@@ -4190,7 +4246,7 @@ bool v8::String::MakeExternal(
    }
    bool result = obj->MakeExternal(resource);
    if (result && !obj->IsSymbol()) {
@@ -244,10 +244,10 @@ index dcdc645..d530a75 100644
    if (obj->undetectable()) {
      map->set_is_undetectable();
 diff --git a/src/heap-inl.h b/src/heap-inl.h
-index 99737ed..84f8b39 100644
+index f4fce7b..58e7adf 100644
 --- a/src/heap-inl.h
 +++ b/src/heap-inl.h
-@@ -203,21 +203,36 @@ MaybeObject* Heap::NumberFromUint32(uint32_t value) {
+@@ -205,21 +205,36 @@ MaybeObject* Heap::NumberFromUint32(uint32_t value) {
  }
  
  
@@ -298,7 +298,7 @@ index 99737ed..84f8b39 100644
  }
  
  
-@@ -554,53 +569,63 @@ inline bool Heap::allow_allocation(bool new_state) {
+@@ -556,53 +571,63 @@ inline bool Heap::allow_allocation(bool new_state) {
  #endif
  
  
@@ -387,7 +387,7 @@ index 99737ed..84f8b39 100644
  }
  
 diff --git a/src/heap.cc b/src/heap.cc
-index 4a58bf6..46df787 100644
+index 900f462..bf2940e 100644
 --- a/src/heap.cc
 +++ b/src/heap.cc
 @@ -155,7 +155,7 @@ Heap::Heap()
@@ -476,7 +476,7 @@ index 4a58bf6..46df787 100644
  }
  
  
-@@ -4465,7 +4465,7 @@ void Heap::IterateWeakRoots(ObjectVisitor* v, VisitMode mode) {
+@@ -4468,7 +4468,7 @@ void Heap::IterateWeakRoots(ObjectVisitor* v, VisitMode mode) {
    v->Synchronize("symbol_table");
    if (mode != VISIT_ALL_IN_SCAVENGE) {
      // Scavenge collections have special processing for this.
@@ -485,7 +485,7 @@ index 4a58bf6..46df787 100644
    }
    v->Synchronize("external_string_table");
  }
-@@ -4967,7 +4967,7 @@ void Heap::TearDown() {
+@@ -4970,7 +4970,7 @@ void Heap::TearDown() {
  
    isolate_->global_handles()->TearDown();
  
@@ -494,7 +494,7 @@ index 4a58bf6..46df787 100644
  
    new_space_.TearDown();
  
-@@ -5832,31 +5832,31 @@ void TranscendentalCache::Clear() {
+@@ -5835,31 +5835,31 @@ void TranscendentalCache::Clear() {
  }
  
  
@@ -747,7 +747,7 @@ index 68a5062..1b1e361 100644
    // All pointers were updated. Update auxiliary allocation info.
    heap->IncrementYoungSurvivorsCounter(survivors_size);
 diff --git a/src/objects-inl.h b/src/objects-inl.h
-index 0c09e84..a205f02 100644
+index 6aaca2f..231b835 100644
 --- a/src/objects-inl.h
 +++ b/src/objects-inl.h
 @@ -1392,13 +1392,13 @@ int JSObject::GetInternalFieldCount() {
@@ -806,7 +806,7 @@ index 0c09e84..a205f02 100644
  // Access fast-case object properties at index. The use of these routines
  // is needed to correctly distinguish between properties stored in-object and
  // properties stored in the properties array.
-@@ -2520,6 +2537,20 @@ bool Map::is_shared() {
+@@ -2521,6 +2538,20 @@ bool Map::is_shared() {
  }
  
  
@@ -827,7 +827,7 @@ index 0c09e84..a205f02 100644
  void Map::set_named_interceptor_is_fallback(bool value)
  {
    if (value) {
-@@ -3016,6 +3047,8 @@ ACCESSORS(FunctionTemplateInfo, flag, Smi, kFlagOffset)
+@@ -3017,6 +3048,8 @@ ACCESSORS(FunctionTemplateInfo, flag, Smi, kFlagOffset)
  ACCESSORS(ObjectTemplateInfo, constructor, Object, kConstructorOffset)
  ACCESSORS(ObjectTemplateInfo, internal_field_count, Object,
            kInternalFieldCountOffset)
@@ -837,7 +837,7 @@ index 0c09e84..a205f02 100644
  ACCESSORS(SignatureInfo, receiver, Object, kReceiverOffset)
  ACCESSORS(SignatureInfo, args, Object, kArgsOffset)
 diff --git a/src/objects.h b/src/objects.h
-index 3fdc69f..439ad1e 100644
+index a209cd0..1bdb5c7 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -1636,6 +1636,9 @@ class JSObject: public HeapObject {
@@ -871,7 +871,7 @@ index 3fdc69f..439ad1e 100644
  
    // Layout of the default cache. It holds alternating name and code objects.
    static const int kCodeCacheEntrySize = 2;
-@@ -6418,6 +6428,7 @@ class ObjectTemplateInfo: public TemplateInfo {
+@@ -6426,6 +6436,7 @@ class ObjectTemplateInfo: public TemplateInfo {
   public:
    DECL_ACCESSORS(constructor, Object)
    DECL_ACCESSORS(internal_field_count, Object)
@@ -879,7 +879,7 @@ index 3fdc69f..439ad1e 100644
  
    static inline ObjectTemplateInfo* cast(Object* obj);
  
-@@ -6434,7 +6445,8 @@ class ObjectTemplateInfo: public TemplateInfo {
+@@ -6442,7 +6453,8 @@ class ObjectTemplateInfo: public TemplateInfo {
    static const int kConstructorOffset = TemplateInfo::kHeaderSize;
    static const int kInternalFieldCountOffset =
        kConstructorOffset + kPointerSize;

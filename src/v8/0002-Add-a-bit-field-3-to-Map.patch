@@ -1,7 +1,7 @@
-From f2d11bae75512a1173da7b9f9edfaeeb1a1e73ce Mon Sep 17 00:00:00 2001
+From 4ce6693b28f0a699acd91c0ae88ae917cc273e9a Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 15:55:26 +1000
-Subject: [PATCH 2/7] Add a bit field 3 to Map
+Subject: [PATCH 2/8] Add a bit field 3 to Map
 
 Bit field 3 will be used to add QML specific map flags.
 ---
@@ -12,7 +12,7 @@ Bit field 3 will be used to add QML specific map flags.
  4 files changed, 22 insertions(+), 1 deletions(-)
 
 diff --git a/src/heap.cc b/src/heap.cc
-index 2b6c11f..4a58bf6 100644
+index 930c97b..900f462 100644
 --- a/src/heap.cc
 +++ b/src/heap.cc
 @@ -1573,6 +1573,7 @@ MaybeObject* Heap::AllocatePartialMap(InstanceType instance_type,
@@ -32,10 +32,10 @@ index 2b6c11f..4a58bf6 100644
    // If the map object is aligned fill the padding area with Smi 0 objects.
    if (Map::kPadStart < Map::kSize) {
 diff --git a/src/objects-inl.h b/src/objects-inl.h
-index 65aec5d..bbe05f6 100644
+index c82080d..cce3edd 100644
 --- a/src/objects-inl.h
 +++ b/src/objects-inl.h
-@@ -2429,6 +2429,16 @@ void Map::set_bit_field2(byte value) {
+@@ -2430,6 +2430,16 @@ void Map::set_bit_field2(byte value) {
  }
  
  
@@ -53,7 +53,7 @@ index 65aec5d..bbe05f6 100644
    if (value) {
      set_bit_field(bit_field() | (1 << kHasNonInstancePrototype));
 diff --git a/src/objects.cc b/src/objects.cc
-index 5bd7f95..92ab958 100644
+index 877da3d..2409ea3 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -3614,6 +3614,7 @@ MaybeObject* Map::CopyDropDescriptors() {
@@ -73,7 +73,7 @@ index 5bd7f95..92ab958 100644
    Map::cast(result)->set_is_shared(sharing == SHARED_NORMALIZED_MAP);
  
 diff --git a/src/objects.h b/src/objects.h
-index f4c27d2..a61733e 100644
+index 6e26f57..07e1089 100644
 --- a/src/objects.h
 +++ b/src/objects.h
 @@ -3597,6 +3597,10 @@ class Map: public HeapObject {
