@@ -95,11 +95,12 @@ public:
 
     inline quint32 hash() const;
     inline int length() const; 
+    inline quint32 symbolId() const;
+
     inline v8::Handle<v8::String> string() const;
 
 private:
-    quint32 m_hash;
-    int m_length;
+    v8::String::CompleteHashData m_hash;
     v8::Handle<v8::String> m_string;
 };
 
@@ -137,7 +138,7 @@ class QStringHashNode
 {
 public:
     QStringHashNode(const QHashedString &key)
-    : nlist(0), next(0), key(key) {
+    : nlist(0), next(0), key(key), symbolId(0) {
         if (isAscii()) ascii = key.toAscii();
     }
 
@@ -145,6 +146,7 @@ public:
     QStringHashNode *next;
     QHashedString key;
     QByteArray ascii;
+    quint32 symbolId;
 
     inline bool equals(v8::Handle<v8::String> string) {
         return !ascii.isEmpty() && string->Equals((char*)ascii.constData(), ascii.length()) ||
@@ -188,6 +190,7 @@ private:
 
     inline Node *findNode(const QHashedStringRef &) const;
     inline Node *findNode(const QHashedV8String &) const;
+    inline Node *findSymbolNode(const QHashedV8String &) const;
     Node *createNode(const QHashedString &, const T &);
 
 public:
@@ -393,6 +396,27 @@ typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedV8String &s
 }
 
 template<class T>
+typename QStringHash<T>::Node *QStringHash<T>::findSymbolNode(const QHashedV8String &string) const
+{
+    Q_ASSERT(string.symbolId() != 0);
+
+    QStringHashNode *node = 0;
+    if (data.numBuckets) {
+        quint32 hash = string.hash();
+        quint32 symbolId = string.symbolId();
+        node = data.buckets[hash % data.numBuckets];
+        int length = string.length();
+        while (node && (length != node->key.length() || hash != node->key.hash() || 
+               !(node->symbolId == symbolId || node->equals(string.string()))))
+            node = node->next;
+        if (node)
+            node->symbolId = symbolId;
+    } 
+
+    return (Node *)node;
+}
+
+template<class T>
 T *QStringHash<T>::value(const QString &key) const
 {
     Node *n = findNode(key);
@@ -416,7 +440,7 @@ T *QStringHash<T>::value(const QHashedStringRef &key) const
 template<class T>
 T *QStringHash<T>::value(const QHashedV8String &string) const
 {
-    Node *n = findNode(string);
+    Node *n = string.symbolId()?findSymbolNode(string):findNode(string);
     return n?&n->value:0;
 }
 
@@ -532,44 +556,47 @@ bool QHashedString::isUpper(const QChar &qc)
 }
 
 QHashedV8String::QHashedV8String()
-: m_hash(0)
 {
 }
 
 QHashedV8String::QHashedV8String(v8::Handle<v8::String> string)
-: m_hash(string->Hash()), m_length(string->Length()), m_string(string)
+: m_hash(string->CompleteHash()), m_string(string)
 {
     Q_ASSERT(!m_string.IsEmpty());
 }
 
 QHashedV8String::QHashedV8String(const QHashedV8String &string)
-: m_hash(string.m_hash), m_length(string.m_length), m_string(string.m_string)
+: m_hash(string.m_hash), m_string(string.m_string)
 {
 }
 
 QHashedV8String &QHashedV8String::operator=(const QHashedV8String &other)
 {
     m_hash = other.m_hash;
-    m_length = other.m_length;
     m_string = other.m_string;
     return *this;
 }
 
 bool QHashedV8String::operator==(const QHashedV8String &string)
 {
-    return m_hash == string.m_hash && m_length == string.m_length &&
+    return m_hash.hash == string.m_hash.hash && m_hash.length == string.m_hash.length &&
            m_string.IsEmpty() == m_string.IsEmpty() && 
            (m_string.IsEmpty() || m_string->StrictEquals(string.m_string));
 }
 
 quint32 QHashedV8String::hash() const
 {
-    return m_hash;
+    return m_hash.hash;
 }
 
 int QHashedV8String::length() const
 {
-    return m_length;
+    return m_hash.length;
+}
+
+quint32 QHashedV8String::symbolId() const
+{
+    return m_hash.symbol_id;
 }
 
 v8::Handle<v8::String> QHashedV8String::string() const
