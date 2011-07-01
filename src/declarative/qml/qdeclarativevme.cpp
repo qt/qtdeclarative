@@ -1025,6 +1025,9 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
         ctxt->imports = script->importCache;
     } else if (effectiveCtxt) {
         ctxt->imports = effectiveCtxt->imports;
+        ctxt->importedScripts = effectiveCtxt->importedScripts;
+        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
+            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
     }
 
     if (ctxt->imports) {

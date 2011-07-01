@@ -39,33 +39,59 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORPLUGIN_H
-#define QDECLARATIVEINSPECTORPLUGIN_H
+#ifndef SGHIGHLIGHT_H
+#define SGHIGHLIGHT_H
 
-#include <QtCore/QPointer>
-#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
+#include <QtCore/QWeakPointer>
+#include <QtDeclarative/QSGPaintedItem>
 
 namespace QmlJSDebugger {
 
-class AbstractViewInspector;
-
-class QDeclarativeInspectorPlugin : public QObject, public QDeclarativeInspectorInterface
+class SGHighlight : public QSGPaintedItem
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QDeclarativeInspectorPlugin)
-    Q_INTERFACES(QDeclarativeInspectorInterface)
 
 public:
-    QDeclarativeInspectorPlugin();
-    ~QDeclarativeInspectorPlugin();
+    SGHighlight(QSGItem *parent) : QSGPaintedItem(parent) {}
+    SGHighlight(QSGItem *item, QSGItem *parent);
 
-    void activate();
-    void deactivate();
+    void setItem(QSGItem *item);
+
+private slots:
+    void adjust();
 
 private:
-    QPointer<AbstractViewInspector> m_inspector;
+    QWeakPointer<QSGItem> m_item;
+};
+
+/**
+ * A highlight suitable for indicating selection.
+ */
+class SGSelectionHighlight : public SGHighlight
+{
+public:
+    SGSelectionHighlight(QSGItem *item, QSGItem *parent)
+        : SGHighlight(item, parent)
+    {}
+
+    void paint(QPainter *painter);
+};
+
+/**
+ * A highlight suitable for indicating hover.
+ */
+class SGHoverHighlight : public SGHighlight
+{
+public:
+    SGHoverHighlight(QSGItem *parent)
+        : SGHighlight(parent)
+    {
+        setZ(1); // hover highlight on top of selection highlight
+    }
+
+    void paint(QPainter *painter);
 };
 
 } // namespace QmlJSDebugger
 
-#endif // QDECLARATIVEINSPECTORPLUGIN_H
+#endif // SGHIGHLIGHT_H

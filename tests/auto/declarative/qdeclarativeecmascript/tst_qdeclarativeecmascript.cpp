@@ -107,6 +107,7 @@ private slots:
     void aliasPropertyAndBinding();
     void nonExistentAttachedObject();
     void scope();
+    void importScope();
     void signalParameterTypes();
     void objectsCompareAsEqual();
     void dynamicCreation_data();
@@ -955,6 +956,19 @@ void tst_qdeclarativeecmascript::scope()
 
         delete object;
     }
+}
+
+// In 4.7, non-library javascript files that had no imports shared the imports of their
+// importing context
+void tst_qdeclarativeecmascript::importScope()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("importScope.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(o->property("test").toInt(), 240);
+
+    delete o;
 }
 
 /*

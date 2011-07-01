@@ -39,33 +39,58 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORPLUGIN_H
-#define QDECLARATIVEINSPECTORPLUGIN_H
+#ifndef RUBBERBANDSELECTIONMANIPULATOR_H
+#define RUBBERBANDSELECTIONMANIPULATOR_H
 
-#include <QtCore/QPointer>
-#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
+#include "liveselectionrectangle.h"
+
+#include <QtCore/QPointF>
+
+QT_FORWARD_DECLARE_CLASS(QGraphicsItem)
 
 namespace QmlJSDebugger {
 
-class AbstractViewInspector;
+class QDeclarativeViewInspector;
 
-class QDeclarativeInspectorPlugin : public QObject, public QDeclarativeInspectorInterface
+class LiveRubberBandSelectionManipulator
 {
-    Q_OBJECT
-    Q_DISABLE_COPY(QDeclarativeInspectorPlugin)
-    Q_INTERFACES(QDeclarativeInspectorInterface)
-
 public:
-    QDeclarativeInspectorPlugin();
-    ~QDeclarativeInspectorPlugin();
+    enum SelectionType {
+        ReplaceSelection,
+        AddToSelection,
+        RemoveFromSelection
+    };
 
-    void activate();
-    void deactivate();
+    LiveRubberBandSelectionManipulator(QGraphicsObject *layerItem,
+                                       QDeclarativeViewInspector *editorView);
+
+    void setItems(const QList<QGraphicsItem*> &itemList);
+
+    void begin(const QPointF& beginPoint);
+    void update(const QPointF& updatePoint);
+    void end();
+
+    void clear();
+
+    void select(SelectionType selectionType);
+
+    QPointF beginPoint() const;
+
+    bool isActive() const;
+
+protected:
+    QGraphicsItem *topFormEditorItem(const QList<QGraphicsItem*> &itemList);
 
 private:
-    QPointer<AbstractViewInspector> m_inspector;
+    QList<QGraphicsItem*> m_itemList;
+    QList<QGraphicsItem*> m_oldSelectionList;
+    LiveSelectionRectangle m_selectionRectangleElement;
+    QPointF m_beginPoint;
+    QDeclarativeViewInspector *m_editorView;
+    QGraphicsItem *m_beginFormEditorItem;
+    bool m_isActive;
 };
 
-} // namespace QmlJSDebugger
+}
 
-#endif // QDECLARATIVEINSPECTORPLUGIN_H
+#endif // RUBBERBANDSELECTIONMANIPULATOR_H

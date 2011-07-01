@@ -51,11 +51,11 @@
 
     \section1 TextBalloon Class Declaration
 
-    The \c TextBalloon class inherits from QSGPaintedItem. QSGPaintedItem class
+    The \c TextBalloon class inherits from QSGPaintedItem. QSGPaintedItem
     is the base class for all QPainter based items in the QML Scene Graph
     framework.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoonplugin/textballoon.h 0
+    \snippet examples/declarative/painteditem/textballoons/textballoon.h 0
 
     To implement a QSGPaintedItem you must implement QSGPaintedIem's pure
     virtual function \l {QSGPaintedItem::}{paint()} which implements the
@@ -66,13 +66,13 @@
     We have to be sure to initialize the rightAligned property for a
     TextBalloon item.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoonplugin/textballoon.cpp 0
+    \snippet examples/declarative/painteditem/textballoons/textballoon.cpp 0
 
     Then we implement the \c paint() function which is automatically called by
     the Scenegraph framework to paint the contents of the item. The function
     paints the item in local coordinates.
 
-    \snippet examples/declarative/painteditem/textballoons/textballoonplugin/textballoon.cpp 1
+    \snippet examples/declarative/painteditem/textballoons/textballoon.cpp 1
 
     We start with setting the pen and brush on the item to define the look of
     the item. After that we start drawing. Note that the \l {QSGPaintedItem::}{boundingRect()}

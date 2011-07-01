@@ -39,61 +39,60 @@
 **
 ****************************************************************************/
 
-#ifndef COLORPICKERTOOL_H
-#define COLORPICKERTOOL_H
+#include "sghighlight.h"
 
-#include "abstractliveedittool_p.h"
+#include <QtGui/QPainter>
 
-#include <QtGui/QColor>
+namespace QmlJSDebugger {
 
-QT_FORWARD_DECLARE_CLASS(QPoint)
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class ColorPickerTool : public AbstractLiveEditTool
+SGHighlight::SGHighlight(QSGItem *item, QSGItem *parent)
+    : QSGPaintedItem(parent)
 {
-    Q_OBJECT
-public:
-    explicit ColorPickerTool(QDeclarativeViewInspector *view);
+    setItem(item);
+}
 
-    virtual ~ColorPickerTool();
+void SGHighlight::setItem(QSGItem *item)
+{
+    if (m_item)
+        m_item.data()->disconnect(this);
 
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseDoubleClickEvent(QMouseEvent *event);
+    if (item) {
+        connect(item, SIGNAL(xChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(yChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(widthChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(heightChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(rotationChanged()), SLOT(adjust()));
+        connect(item, SIGNAL(transformOriginChanged(TransformOrigin)),
+                SLOT(adjust()));
+    }
 
-    void hoverMoveEvent(QMouseEvent *event);
+    m_item = item;
+    adjust();
+}
 
-    void keyPressEvent(QKeyEvent *event);
-    void keyReleaseEvent(QKeyEvent *keyEvent);
+void SGHighlight::adjust()
+{
+    const QSGItem *item = m_item.data();
+    setSize(QSizeF(item->width(), item->height()));
+    setPos(parentItem()->mapFromItem(item->parentItem(), item->pos()));
+    setRotation(item->rotation());
+    setTransformOrigin(item->transformOrigin());
+}
 
-    void wheelEvent(QWheelEvent *event);
 
-    void itemsAboutToRemoved(const QList<QGraphicsItem*> &itemList);
+void SGSelectionHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QColor(108, 141, 221));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
-    void clear();
 
-signals:
-    void selectedColorChanged(const QColor &color);
+void SGHoverHighlight::paint(QPainter *painter)
+{
+    painter->setPen(QPen(QColor(0, 22, 159)));
+    painter->drawRect(QRect(1, 1, width() - 3, height() - 3));
+    painter->setPen(QColor(158, 199, 255));
+    painter->drawRect(QRect(0, 0, width() - 1, height() - 1));
+}
 
-protected:
-
-    void selectedItemsChanged(const QList<QGraphicsItem*> &itemList);
-
-private:
-    void pickColor(const QPoint &pos);
-
-private:
-    QColor m_selectedColor;
-};
-
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // COLORPICKERTOOL_H
+} // namespace QmlJSDebugger

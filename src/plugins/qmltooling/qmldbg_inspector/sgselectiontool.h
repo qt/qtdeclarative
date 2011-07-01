@@ -39,33 +39,53 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORPLUGIN_H
-#define QDECLARATIVEINSPECTORPLUGIN_H
+#ifndef SGSELECTIONTOOL_H
+#define SGSELECTIONTOOL_H
 
-#include <QtCore/QPointer>
-#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
+#include "abstracttool.h"
+
+#include <QtCore/QList>
+#include <QtCore/QPoint>
+
+QT_FORWARD_DECLARE_CLASS(QAction)
+QT_FORWARD_DECLARE_CLASS(QSGItem)
 
 namespace QmlJSDebugger {
 
-class AbstractViewInspector;
+class SGViewInspector;
+class SGHoverHighlight;
 
-class QDeclarativeInspectorPlugin : public QObject, public QDeclarativeInspectorInterface
+class SGSelectionTool : public AbstractTool
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QDeclarativeInspectorPlugin)
-    Q_INTERFACES(QDeclarativeInspectorInterface)
-
 public:
-    QDeclarativeInspectorPlugin();
-    ~QDeclarativeInspectorPlugin();
+    explicit SGSelectionTool(SGViewInspector *inspector);
 
-    void activate();
-    void deactivate();
+    void leaveEvent(QEvent *);
+
+    void mousePressEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *) {}
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
+
+    void hoverMoveEvent(QMouseEvent *);
+    void wheelEvent(QWheelEvent *) {}
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
+
+private slots:
+    void contextMenuElementHovered(QAction *action);
+    void contextMenuElementSelected();
 
 private:
-    QPointer<AbstractViewInspector> m_inspector;
+    void createContextMenu(const QList<QSGItem*> &items, QPoint pos);
+
+    SGViewInspector *inspector() const;
+
+    SGHoverHighlight *m_hoverHighlight;
 };
 
 } // namespace QmlJSDebugger
 
-#endif // QDECLARATIVEINSPECTORPLUGIN_H
+#endif // SGSELECTIONTOOL_H

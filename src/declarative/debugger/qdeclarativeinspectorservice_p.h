@@ -53,7 +53,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeView;
 class QDeclarativeInspectorInterface;
 
 class Q_DECLARATIVE_EXPORT QDeclarativeInspectorService : public QDeclarativeDebugService
@@ -64,9 +63,9 @@ public:
     QDeclarativeInspectorService();
     static QDeclarativeInspectorService *instance();
 
-    void addView(QDeclarativeView *);
-    void removeView(QDeclarativeView *);
-    QList<QDeclarativeView*> views() const { return m_views; }
+    void addView(QObject *);
+    void removeView(QObject *);
+    QList<QObject*> views() const { return m_views; }
 
     void sendMessage(const QByteArray &message);
 
@@ -80,7 +79,7 @@ protected:
 private:
     static QDeclarativeInspectorInterface *loadInspectorPlugin();
 
-    QList<QDeclarativeView*> m_views;
+    QList<QObject*> m_views;
     QDeclarativeInspectorInterface *m_inspectorPlugin;
 };
 

@@ -368,13 +368,8 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         int propertyIndex;
         struct QPoint {
-#if defined(Q_OS_MAC)
-            int yp;
-            int xp;
-#else
             int xp;
             int yp;
-#endif
         } point;
     };
     struct instr_storePointF {

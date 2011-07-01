@@ -82,11 +82,9 @@ public:
         DirtyNodeAdded              = 0x0004,
         DirtyNodeRemoved            = 0x0008,
         DirtyGeometry               = 0x0010,
-        DirtyRenderOrder            = 0x0020,
         DirtyMaterial               = 0x0040,
         DirtyOpacity                = 0x0080,
         DirtyForceUpdate            = 0x0100,
-        DirtyAll                    = 0xffff,
 
         DirtyPropagationMask        = DirtyMatrix
                                       | DirtyClipList

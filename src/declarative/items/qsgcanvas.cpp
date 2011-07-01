@@ -1973,7 +1973,7 @@ void QSGCanvas::maybeUpdate()
 QSGEngine *QSGCanvas::sceneGraphEngine() const
 {
     Q_D(const QSGCanvas);
-    if (d->context->isReady())
+    if (d->context && d->context->isReady())
         return d->context->engine();
     return 0;
 }

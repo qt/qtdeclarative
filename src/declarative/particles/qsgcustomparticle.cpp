@@ -452,8 +452,6 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
     if (s.vertexCode.isEmpty())
         s.vertexCode = qt_particles_default_vertex_code;
     m_material.setProgramSource(s);
-    node->markDirty(QSGNode::DirtyMaterial);
-    node->markDirty(QSGNode::DirtyAll);
     return node;
 }
 

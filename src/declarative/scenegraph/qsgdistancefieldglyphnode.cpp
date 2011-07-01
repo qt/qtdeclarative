@@ -124,9 +124,32 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     m_glyph_cache->populate(glyphIndexes.count(), glyphIndexes.constData());
 
     Q_ASSERT(g->indexType() == GL_UNSIGNED_SHORT);
-    g->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
-    QVector4D *vp = (QVector4D *)g->vertexData();
-    ushort *ip = g->indexDataAsUShort();
+
+    int oldVertexCount = g->vertexCount();
+    int oldIndexCount = g->indexCount();
+
+    // We could potentially move the realloc part into the QSGGeometry object as a
+    // grow() function...
+
+    void *data = 0;
+    if (oldVertexCount && oldIndexCount) {
+        int byteSize = oldVertexCount * sizeof(QSGGeometry::TexturedPoint2D)
+                     + oldIndexCount * sizeof(quint16);
+        data = qMalloc(byteSize);
+        memcpy(data, g->vertexData(), byteSize);
+    }
+
+    g->allocate(oldVertexCount + glyphIndexes.size() * 4, oldIndexCount + glyphIndexes.size() * 6);
+
+    if (data) {
+        memcpy(g->vertexData(), data, oldVertexCount * sizeof(QSGGeometry::TexturedPoint2D));
+        memcpy(g->indexData(), ((char *) data) + oldVertexCount * sizeof(QSGGeometry::TexturedPoint2D),
+               oldIndexCount * sizeof(quint16));
+        qFree(data);
+    }
+
+    QSGGeometry::TexturedPoint2D *vp = g->vertexDataAsTexturedPoint2D() + oldVertexCount;
+    ushort *ip = g->indexDataAsUShort() + oldIndexCount;
 
     QPointF margins(2, 2);
     QPointF texMargins = margins / m_glyph_cache->fontScale();
@@ -167,12 +190,12 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
             m_baseLine = glyphPosition;
 
         int vi = i & 1 ? (glyphIndexes.size() + 1) / 2 + i / 2 : i / 2;
-        vp[4 * vi + 0] = QVector4D(cx1, cy1, tx1, ty1);
-        vp[4 * vi + 1] = QVector4D(cx2, cy1, tx2, ty1);
-        vp[4 * vi + 2] = QVector4D(cx1, cy2, tx1, ty2);
-        vp[4 * vi + 3] = QVector4D(cx2, cy2, tx2, ty2);
+        vp[4 * vi + 0].set(cx1, cy1, tx1, ty1);
+        vp[4 * vi + 1].set(cx2, cy1, tx2, ty1);
+        vp[4 * vi + 2].set(cx1, cy2, tx1, ty2);
+        vp[4 * vi + 3].set(cx2, cy2, tx2, ty2);
 
-        int o = i * 4;
+        int o = i * 4 + oldVertexCount;
         ip[6 * i + 0] = o + 0;
         ip[6 * i + 1] = o + 2;
         ip[6 * i + 2] = o + 3;
@@ -180,6 +203,25 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         ip[6 * i + 4] = o + 1;
         ip[6 * i + 5] = o + 0;
     }
+
+//    printf("Vertices:\n");
+//    for (int v=0; v<g->vertexCount(); ++v) {
+//        QSGGeometry::TexturedPoint2D *t = g->vertexDataAsTexturedPoint2D() + v;
+//        printf(" - %d -- %f %f  --  %.3f %.3f\n", v, t->x, t->y, t->tx, t->ty);
+//    }
+
+//    printf("Indices:\n");
+//    for (int i=0; i<g->indexCount();) {
+
+//        printf(" - %[ ", i);
+//        printf("%d, ", g->indexDataAsUShort()[i++]);
+//        printf("%d, ", g->indexDataAsUShort()[i++]);
+//        printf("%d, ", g->indexDataAsUShort()[i++]);
+//        printf("%d, ", g->indexDataAsUShort()[i++]);
+//        printf("%d, ", g->indexDataAsUShort()[i++]);
+//        printf("%d",   g->indexDataAsUShort()[i++]);
+//        printf(" ]\n");
+//    }
 
     setBoundingRect(boundingRect);
     markDirty(DirtyGeometry);

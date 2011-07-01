@@ -39,57 +39,71 @@
 **
 ****************************************************************************/
 
-#ifndef LIVESINGLESELECTIONMANIPULATOR_H
-#define LIVESINGLESELECTIONMANIPULATOR_H
+#ifndef QSGVIEWINSPECTOR_H
+#define QSGVIEWINSPECTOR_H
 
-#include <QtCore/QPointF>
-#include <QtCore/QList>
+#include "abstractviewinspector.h"
 
-QT_FORWARD_DECLARE_CLASS(QGraphicsItem)
-
-QT_BEGIN_HEADER
+#include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeViewInspector;
-
-class LiveSingleSelectionManipulator
-{
-public:
-    LiveSingleSelectionManipulator(QDeclarativeViewInspector *editorView);
-
-    enum SelectionType {
-        ReplaceSelection,
-        AddToSelection,
-        RemoveFromSelection,
-        InvertSelection
-    };
-
-    void begin(const QPointF& beginPoint);
-    void update(const QPointF& updatePoint);
-    void end(const QPointF& updatePoint);
-
-    void select(SelectionType selectionType, const QList<QGraphicsItem*> &items,
-                bool selectOnlyContentItems);
-    void select(SelectionType selectionType, bool selectOnlyContentItems);
-
-    void clear();
-
-    QPointF beginPoint() const;
-
-    bool isActive() const;
-
-private:
-    QList<QGraphicsItem*> m_oldSelectionList;
-    QPointF m_beginPoint;
-    QDeclarativeViewInspector *m_editorView;
-    bool m_isActive;
-};
-
+class QSGView;
+class QSGItem;
 QT_END_NAMESPACE
 
-QT_END_HEADER
+namespace QmlJSDebugger {
 
-#endif // LIVESINGLESELECTIONMANIPULATOR_H
+class SGSelectionTool;
+class SGSelectionHighlight;
+
+class SGViewInspector : public AbstractViewInspector
+{
+    Q_OBJECT
+public:
+    explicit SGViewInspector(QSGView *view, QObject *parent = 0);
+
+    // AbstractViewInspector
+    void changeCurrentObjects(const QList<QObject*> &objects);
+    void reloadView();
+    void reparentQmlObject(QObject *object, QObject *newParent);
+    void changeTool(InspectorProtocol::Tool tool);
+    QWidget *viewWidget() const;
+    QDeclarativeEngine *declarativeEngine() const;
+
+    QSGView *view() const { return m_view; }
+    QSGItem *overlay() const { return m_overlay; }
+
+    QSGItem *topVisibleItemAt(const QPointF &pos) const;
+    QList<QSGItem *> itemsAt(const QPointF &pos) const;
+
+    QList<QSGItem *> selectedItems() const;
+    void setSelectedItems(const QList<QSGItem*> &items);
+
+    QString titleForItem(QSGItem *item) const;
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
+
+    bool mouseMoveEvent(QMouseEvent *);
+
+private slots:
+    void removeFromSelectedItems(QObject *);
+
+private:
+    bool syncSelectedItems(const QList<QSGItem*> &items);
+
+    QSGView *m_view;
+    QSGItem *m_overlay;
+
+    SGSelectionTool *m_selectionTool;
+
+    QList<QWeakPointer<QSGItem> > m_selectedItems;
+    QHash<QSGItem*, SGSelectionHighlight*> m_highlightItems;
+
+    bool m_designMode;
+};
+
+} // namespace QmlJSDebugger
+
+#endif // QSGVIEWINSPECTOR_H

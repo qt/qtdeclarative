@@ -42,7 +42,7 @@
 #ifndef BOUNDINGRECTHIGHLIGHTER_H
 #define BOUNDINGRECTHIGHLIGHTER_H
 
-#include "livelayeritem_p.h"
+#include "livelayeritem.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QWeakPointer>
@@ -53,11 +53,7 @@ QT_FORWARD_DECLARE_CLASS(QWidget)
 QT_FORWARD_DECLARE_CLASS(QStyleOptionGraphicsItem)
 QT_FORWARD_DECLARE_CLASS(QTimer)
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
+namespace QmlJSDebugger {
 
 class QDeclarativeViewInspector;
 class BoundingBox;
@@ -114,8 +110,6 @@ public:
     int type() const;
 };
 
-QT_END_NAMESPACE
-
-QT_END_HEADER
+} // namespace QmlJSDebugger
 
 #endif // BOUNDINGRECTHIGHLIGHTER_H

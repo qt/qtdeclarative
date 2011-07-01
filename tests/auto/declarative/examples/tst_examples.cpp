@@ -126,17 +126,18 @@ void tst_examples::namingConvention(const QDir &d)
             namingConvention(sub);
         }
     } else if(!seenLowercase) {
-        QTest::qFail(QString("Directory " + d.absolutePath() + " violates naming convention").toLatin1().constData(), __FILE__, __LINE__);
+        QFAIL(qPrintable(QString(
+            "Directory %1 violates naming convention; expected at least one qml file "
+            "starting with lower case, got: %2"
+        ).arg(d.absolutePath()).arg(files.join(","))));
     }
 }
 
 void tst_examples::namingConvention()
 {
     QString examples = QLibraryInfo::location(QLibraryInfo::ExamplesPath);
-    QString demos = QLibraryInfo::location(QLibraryInfo::DemosPath);
 
     namingConvention(QDir(examples));
-    namingConvention(QDir(demos));
 }
 
 QStringList tst_examples::findQmlFiles(const QDir &d)

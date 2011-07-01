@@ -39,64 +39,39 @@
 **
 ****************************************************************************/
 
-#ifndef RUBBERBANDSELECTIONMANIPULATOR_H
-#define RUBBERBANDSELECTIONMANIPULATOR_H
+#ifndef QMLINSPECTORCONSTANTS_H
+#define QMLINSPECTORCONSTANTS_H
 
-#include "liveselectionrectangle_p.h"
+#include <QtDeclarative/private/qdeclarativeglobal_p.h>
 
-#include <QtCore/QPointF>
+namespace QmlJSDebugger {
+namespace Constants {
 
-QT_FORWARD_DECLARE_CLASS(QGraphicsItem)
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeViewInspector;
-
-class LiveRubberBandSelectionManipulator
-{
-public:
-    enum SelectionType {
-        ReplaceSelection,
-        AddToSelection,
-        RemoveFromSelection
-    };
-
-    LiveRubberBandSelectionManipulator(QGraphicsObject *layerItem,
-                                       QDeclarativeViewInspector *editorView);
-
-    void setItems(const QList<QGraphicsItem*> &itemList);
-
-    void begin(const QPointF& beginPoint);
-    void update(const QPointF& updatePoint);
-    void end();
-
-    void clear();
-
-    void select(SelectionType selectionType);
-
-    QPointF beginPoint() const;
-
-    bool isActive() const;
-
-protected:
-    QGraphicsItem *topFormEditorItem(const QList<QGraphicsItem*> &itemList);
-
-private:
-    QList<QGraphicsItem*> m_itemList;
-    QList<QGraphicsItem*> m_oldSelectionList;
-    LiveSelectionRectangle m_selectionRectangleElement;
-    QPointF m_beginPoint;
-    QDeclarativeViewInspector *m_editorView;
-    QGraphicsItem *m_beginFormEditorItem;
-    bool m_isActive;
+enum DesignTool {
+    NoTool = 0,
+    SelectionToolMode = 1,
+    MarqueeSelectionToolMode = 2,
+    MoveToolMode = 3,
+    ResizeToolMode = 4,
+    ColorPickerMode = 5,
+    ZoomMode = 6
 };
 
-QT_END_NAMESPACE
+static const int DragStartTime = 50;
 
-QT_END_HEADER
+static const int DragStartDistance = 20;
 
-#endif // RUBBERBANDSELECTIONMANIPULATOR_H
+static const double ZoomSnapDelta = 0.04;
+
+static const int EditorItemDataKey = 1000;
+
+enum GraphicsItemTypes {
+    EditorItemType = 0xEAAA,
+    ResizeHandleItemType = 0xEAEA
+};
+
+
+} // namespace Constants
+} // namespace QmlJSDebugger
+
+#endif // QMLINSPECTORCONSTANTS_H

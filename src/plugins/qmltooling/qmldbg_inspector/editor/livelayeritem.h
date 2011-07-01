@@ -39,45 +39,29 @@
 **
 ****************************************************************************/
 
-#ifndef LIVESELECTIONRECTANGLE_H
-#define LIVESELECTIONRECTANGLE_H
+#ifndef LIVELAYERITEM_H
+#define LIVELAYERITEM_H
 
-#include <QtCore/QWeakPointer>
+#include <QtGui/QGraphicsObject>
 
-QT_FORWARD_DECLARE_CLASS(QGraphicsObject)
-QT_FORWARD_DECLARE_CLASS(QGraphicsRectItem)
-QT_FORWARD_DECLARE_CLASS(QPointF)
-QT_FORWARD_DECLARE_CLASS(QRectF)
+namespace QmlJSDebugger {
 
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class LiveSelectionRectangle
+class LiveLayerItem : public QGraphicsObject
 {
 public:
-    LiveSelectionRectangle(QGraphicsObject *layerItem);
-    ~LiveSelectionRectangle();
+    LiveLayerItem(QGraphicsScene *scene);
+    ~LiveLayerItem();
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+                QWidget *widget = 0);
+    QRectF boundingRect() const;
+    int type() const;
 
-    void show();
-    void hide();
+    QList<QGraphicsItem*> findAllChildItems() const;
 
-    void clear();
-
-    void setRect(const QPointF &firstPoint,
-                 const QPointF &secondPoint);
-
-    QRectF rect() const;
-
-private:
-    QGraphicsRectItem *m_controlShape;
-    QWeakPointer<QGraphicsObject> m_layerItem;
+protected:
+    QList<QGraphicsItem*> findAllChildItems(const QGraphicsItem *item) const;
 };
 
-QT_END_NAMESPACE
+}
 
-QT_END_HEADER
-
-#endif // LIVESELECTIONRECTANGLE_H
+#endif // LIVELAYERITEM_H

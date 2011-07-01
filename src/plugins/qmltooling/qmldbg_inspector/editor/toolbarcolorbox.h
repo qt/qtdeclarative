@@ -39,48 +39,43 @@
 **
 ****************************************************************************/
 
-#ifndef LIVESELECTIONINDICATOR_H
-#define LIVESELECTIONINDICATOR_H
+#ifndef TOOLBARCOLORBOX_H
+#define TOOLBARCOLORBOX_H
 
-#include <QtCore/QWeakPointer>
-#include <QtCore/QHash>
+#include <QtGui/QLabel>
+#include <QtGui/QColor>
+#include <QtCore/QPoint>
 
-QT_BEGIN_NAMESPACE
-class QGraphicsObject;
-class QGraphicsRectItem;
-class QGraphicsItem;
-class QPolygonF;
-QT_END_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QContextMenuEvent)
+QT_FORWARD_DECLARE_CLASS(QAction)
 
-QT_BEGIN_HEADER
+namespace QmlJSDebugger {
 
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QDeclarativeViewInspector;
-
-class LiveSelectionIndicator
+class ToolBarColorBox : public QLabel
 {
+    Q_OBJECT
+
 public:
-    LiveSelectionIndicator(QDeclarativeViewInspector *viewInspector, QGraphicsObject *layerItem);
-    ~LiveSelectionIndicator();
+    explicit ToolBarColorBox(QWidget *parent = 0);
+    void setColor(const QColor &color);
 
-    void show();
-    void hide();
-
-    void clear();
-
-    void setItems(const QList<QWeakPointer<QGraphicsObject> > &itemList);
+protected:
+    void contextMenuEvent(QContextMenuEvent *ev);
+    void mousePressEvent(QMouseEvent *ev);
+    void mouseMoveEvent(QMouseEvent *ev);
+private slots:
+    void copyColorToClipboard();
 
 private:
-    QHash<QGraphicsItem*, QGraphicsRectItem *> m_indicatorShapeHash;
-    QWeakPointer<QGraphicsObject> m_layerItem;
-    QDeclarativeViewInspector *m_view;
+    QPixmap createDragPixmap(int size = 24) const;
+
+private:
+    bool m_dragStarted;
+    QPoint m_dragBeginPoint;
+    QAction *m_copyHexColor;
+    QColor m_color;
 };
 
-QT_END_NAMESPACE
+} // namespace QmlJSDebugger
 
-QT_END_HEADER
-
-#endif // LIVESELECTIONINDICATOR_H
+#endif // TOOLBARCOLORBOX_H

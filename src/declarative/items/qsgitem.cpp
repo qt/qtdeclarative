@@ -1926,13 +1926,12 @@ QSGItem *QSGItem::childAt(qreal x, qreal y) const
     // XXX todo - should this include transform etc.?
     const QList<QSGItem *> children = childItems();
     for (int i = children.count()-1; i >= 0; --i) {
-        if (QSGItem *child = qobject_cast<QSGItem *>(children.at(i))) {
-            if (child->isVisible() && child->x() <= x
+        QSGItem *child = children.at(i);
+        if (child->isVisible() && child->x() <= x
                 && child->x() + child->width() >= x
                 && child->y() <= y
                 && child->y() + child->height() >= y)
-                return child;
-        }
+            return child;
     }
     return 0;
 }

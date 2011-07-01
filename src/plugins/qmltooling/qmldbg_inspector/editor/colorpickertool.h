@@ -39,33 +39,54 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINSPECTORPLUGIN_H
-#define QDECLARATIVEINSPECTORPLUGIN_H
+#ifndef COLORPICKERTOOL_H
+#define COLORPICKERTOOL_H
 
-#include <QtCore/QPointer>
-#include <QtDeclarative/private/qdeclarativeinspectorinterface_p.h>
+#include "abstractliveedittool.h"
+
+#include <QtGui/QColor>
+
+QT_FORWARD_DECLARE_CLASS(QPoint)
 
 namespace QmlJSDebugger {
 
-class AbstractViewInspector;
-
-class QDeclarativeInspectorPlugin : public QObject, public QDeclarativeInspectorInterface
+class ColorPickerTool : public AbstractLiveEditTool
 {
     Q_OBJECT
-    Q_DISABLE_COPY(QDeclarativeInspectorPlugin)
-    Q_INTERFACES(QDeclarativeInspectorInterface)
-
 public:
-    QDeclarativeInspectorPlugin();
-    ~QDeclarativeInspectorPlugin();
+    explicit ColorPickerTool(QDeclarativeViewInspector *view);
 
-    void activate();
-    void deactivate();
+    virtual ~ColorPickerTool();
+
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *) {}
+    void mouseDoubleClickEvent(QMouseEvent *) {}
+
+    void hoverMoveEvent(QMouseEvent *) {}
+
+    void keyPressEvent(QKeyEvent *) {}
+    void keyReleaseEvent(QKeyEvent *) {}
+
+    void wheelEvent(QWheelEvent *) {}
+
+    void itemsAboutToRemoved(const QList<QGraphicsItem*> &) {}
+
+    void clear();
+
+signals:
+    void selectedColorChanged(const QColor &color);
+
+protected:
+    void selectedItemsChanged(const QList<QGraphicsItem*> &) {}
 
 private:
-    QPointer<AbstractViewInspector> m_inspector;
+    void pickColor(const QPoint &pos);
+
+private:
+    QColor m_selectedColor;
 };
 
 } // namespace QmlJSDebugger
 
-#endif // QDECLARATIVEINSPECTORPLUGIN_H
+#endif // COLORPICKERTOOL_H

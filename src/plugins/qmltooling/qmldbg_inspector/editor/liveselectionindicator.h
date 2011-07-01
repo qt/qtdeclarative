@@ -39,35 +39,42 @@
 **
 ****************************************************************************/
 
-#ifndef LIVELAYERITEM_H
-#define LIVELAYERITEM_H
+#ifndef LIVESELECTIONINDICATOR_H
+#define LIVESELECTIONINDICATOR_H
 
-#include <QtGui/QGraphicsObject>
-
-QT_BEGIN_HEADER
+#include <QtCore/QWeakPointer>
+#include <QtCore/QHash>
 
 QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class LiveLayerItem : public QGraphicsObject
-{
-public:
-    LiveLayerItem(QGraphicsScene *scene);
-    ~LiveLayerItem();
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-                QWidget *widget = 0);
-    QRectF boundingRect() const;
-    int type() const;
-
-    QList<QGraphicsItem*> findAllChildItems() const;
-
-protected:
-    QList<QGraphicsItem*> findAllChildItems(const QGraphicsItem *item) const;
-};
-
+class QGraphicsObject;
+class QGraphicsRectItem;
+class QGraphicsItem;
+class QPolygonF;
 QT_END_NAMESPACE
 
-QT_END_HEADER
+namespace QmlJSDebugger {
 
-#endif // LIVELAYERITEM_H
+class QDeclarativeViewInspector;
+
+class LiveSelectionIndicator
+{
+public:
+    LiveSelectionIndicator(QDeclarativeViewInspector *viewInspector, QGraphicsObject *layerItem);
+    ~LiveSelectionIndicator();
+
+    void show();
+    void hide();
+
+    void clear();
+
+    void setItems(const QList<QWeakPointer<QGraphicsObject> > &itemList);
+
+private:
+    QHash<QGraphicsItem*, QGraphicsRectItem *> m_indicatorShapeHash;
+    QWeakPointer<QGraphicsObject> m_layerItem;
+    QDeclarativeViewInspector *m_view;
+};
+
+}
+
+#endif // LIVESELECTIONINDICATOR_H
