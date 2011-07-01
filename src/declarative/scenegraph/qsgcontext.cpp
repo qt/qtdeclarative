@@ -246,14 +246,20 @@ bool QSGContext::isReady() const
 }
 
 
-void QSGContext::renderNextFrame()
+void QSGContext::renderNextFrame(QGLFramebufferObject *fbo)
 {
     Q_D(QSGContext);
 
     emit d->engine.beforeRendering();
 
     cleanupTextures();
-    d->renderer->renderScene();
+
+    if (fbo) {
+        BindableFbo bindable(fbo);
+        d->renderer->renderScene(bindable);
+    } else {
+        d->renderer->renderScene();
+    }
 
     emit d->engine.afterRendering();
 

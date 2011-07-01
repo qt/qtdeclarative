@@ -393,10 +393,10 @@ void QSGCanvasPrivate::syncSceneGraph()
 void QSGCanvasPrivate::renderSceneGraph(const QSize &size)
 {
     context->renderer()->setDeviceRect(QRect(QPoint(0, 0), size));
-    context->renderer()->setViewportRect(QRect(QPoint(0, 0), size));
+    context->renderer()->setViewportRect(QRect(QPoint(0, 0), renderTarget ? renderTarget->size() : size));
     context->renderer()->setProjectionMatrixToDeviceRect();
 
-    context->renderNextFrame();
+    context->renderNextFrame(renderTarget);
 
 #ifdef FRAME_TIMING
     sceneGraphRenderTime = frameTimer.elapsed();
@@ -432,6 +432,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , vsyncAnimations(false)
     , thread(0)
     , animationDriver(0)
+    , renderTarget(0)
 {
     threadedRendering = !qmlNoThreadedRenderer();
 }
@@ -1979,6 +1980,44 @@ QSGEngine *QSGCanvas::sceneGraphEngine() const
 }
 
 
+
+/*!
+    Sets the render target for this canvas to be \a fbo.
+
+    The specified fbo must be created in the context of the canvas
+    or one that shares with it.
+
+    \warning
+    This function can only be called from the thread doing
+    the rendering.
+ */
+
+void QSGCanvas::setRenderTarget(QGLFramebufferObject *fbo)
+{
+    Q_D(QSGCanvas);
+    if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
+        qWarning("QSGCanvas::setRenderThread: Cannot set render target from outside the rendering thread");
+        return;
+    }
+
+    d->renderTarget = fbo;
+}
+
+
+
+/*!
+    Returns the render target for this canvas.
+
+    The default is to render to the surface of the canvas, in which
+    case the render target is 0.
+ */
+QGLFramebufferObject *QSGCanvas::renderTarget() const
+{
+    Q_D(const QSGCanvas);
+    return d->renderTarget;
+}
+
+
 /*!
     Grabs the contents of the framebuffer and returns it as an image.
 
@@ -2081,6 +2120,7 @@ void QSGCanvasRenderThread::run()
 #endif
 
         renderer->swapBuffers();
+
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
 #endif

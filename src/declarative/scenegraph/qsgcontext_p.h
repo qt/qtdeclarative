@@ -65,6 +65,7 @@ class QSGMaterialShader;
 class QSGEngine;
 
 class QGLContext;
+class QGLFramebufferObject;
 
 class Q_DECLARATIVE_EXPORT QSGContext : public QObject
 {
@@ -89,7 +90,7 @@ public:
 
     QSGMaterialShader *prepareMaterial(QSGMaterial *material);
 
-    virtual void renderNextFrame();
+    virtual void renderNextFrame(QGLFramebufferObject *fbo = 0);
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

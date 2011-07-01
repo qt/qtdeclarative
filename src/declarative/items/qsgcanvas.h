@@ -55,6 +55,8 @@ QT_MODULE(Declarative)
 class QSGItem;
 class QSGEngine;
 class QSGCanvasPrivate;
+class QGLFramebufferObject;
+
 class Q_DECLARATIVE_EXPORT QSGCanvas : public QGLWidget
 {
 Q_OBJECT
@@ -79,6 +81,9 @@ public:
     bool vsyncAnimations() const;
 
     QImage grabFrameBuffer();
+
+    void setRenderTarget(QGLFramebufferObject *fbo);
+    QGLFramebufferObject *renderTarget() const;
 
 Q_SIGNALS:
     void sceneGraphInitialized();

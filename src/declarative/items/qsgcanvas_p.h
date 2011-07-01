@@ -65,6 +65,7 @@
 #include <QtCore/qwaitcondition.h>
 #include <private/qwidget_p.h>
 #include <private/qgl_p.h>
+#include <QtOpenGL/qglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -167,6 +168,8 @@ public:
     QSize viewportSize;
 
     QAnimationDriver *animationDriver;
+
+    QGLFramebufferObject *renderTarget;
 
     QHash<int, QSGItem *> itemForTouchPointId;
 };
