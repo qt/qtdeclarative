@@ -52,6 +52,7 @@ Rectangle{
             Sprite{
                 name: "fire"
                 duration: 2000
+                durationVariation: 2000
                 to: {"splode":1}
             },
             Sprite{
@@ -78,13 +79,22 @@ Rectangle{
                 }
             }
         ]
+        Timer{
+            interval: 6000
+            running: true
+            triggeredOnStart: true
+            repeat: true
+            onTriggered:startingEmitter.pulse(0.1);
+        }
         Emitter{
+            id: startingEmitter
             particle: "fire"
             width: parent.width
             y: parent.height
-            emitRate: 2
+            emitting: false
+            emitRate: 80
             lifeSpan: 6000
-            speed: PointDirection{y:-100; yVariation: 40}
+            speed: PointDirection{y:-100;}
             size: 32
         }
         Emitter{

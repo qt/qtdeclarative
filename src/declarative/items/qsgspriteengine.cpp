@@ -83,13 +83,14 @@ int QSGSpriteEngine::maxFrames()
    Therefore the below functions abstract sprite from the viewpoint of classes that pass the details onto shaders
    But States maintain their listed index for internal structures
 TODO: All these calculations should be pre-calculated and cached during initialization for a significant performance boost
+TODO: Above idea needs to have the varying duration offset added to it
 */
 int QSGSpriteEngine::spriteState(int sprite)
 {
     int state = m_sprites[sprite];
     if (!m_states[state]->m_generatedCount)
         return state;
-    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     return state + extra;
 }
@@ -99,7 +100,7 @@ int QSGSpriteEngine::spriteStart(int sprite)
     int state = m_sprites[sprite];
     if (!m_states[state]->m_generatedCount)
         return m_startTimes[sprite];
-    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     return state + extra*rowDuration;
 }
@@ -109,7 +110,7 @@ int QSGSpriteEngine::spriteFrames(int sprite)
     int state = m_sprites[sprite];
     if (!m_states[state]->m_generatedCount)
         return m_states[state]->frames();
-    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     if (extra == m_states[state]->m_generatedCount - 1)//last state
         return m_states[state]->frames() % m_states[state]->m_framesPerRow;
@@ -121,11 +122,11 @@ int QSGSpriteEngine::spriteDuration(int sprite)
 {
     int state = m_sprites[sprite];
     if (!m_states[state]->m_generatedCount)
-        return m_states[state]->duration();
-    int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
+        return m_duration[sprite];
+    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     if (extra == m_states[state]->m_generatedCount - 1)//last state
-        return (m_states[state]->duration() * m_states[state]->frames()) % rowDuration;
+        return (m_duration[sprite] * m_states[state]->frames()) % rowDuration;
     else
         return rowDuration;
 }
@@ -147,6 +148,7 @@ void QSGSpriteEngine::setGoal(int state, int sprite, bool jump)
     if (m_sprites[sprite] == state)
         return;//Already there
     m_sprites[sprite] = state;
+    m_duration[sprite] = m_states[state]->variedDuration();
     m_goals[sprite] = -1;
     restartSprite(sprite);
     emit stateChanged(sprite);
@@ -273,6 +275,7 @@ void QSGSpriteEngine::setCount(int c)
 {
     m_sprites.resize(c);
     m_goals.resize(c);
+    m_duration.resize(c);
     m_startTimes.resize(c);
 }
 
@@ -281,6 +284,7 @@ void QSGSpriteEngine::startSprite(int index, int state)
     if (index >= m_sprites.count())
         return;
     m_sprites[index] = state;
+    m_duration[index] = m_states[state]->variedDuration();
     m_goals[index] = -1;
     restartSprite(index);
 }
@@ -297,7 +301,7 @@ void QSGSpriteEngine::stopSprite(int index)
 void QSGSpriteEngine::restartSprite(int index)
 {
     m_startTimes[index] = m_timeOffset + m_advanceTime.elapsed();
-    int time = m_states[m_sprites[index]]->duration() * m_states[m_sprites[index]]->frames() + m_startTimes[index];
+    int time = m_duration[index] * m_states[m_sprites[index]]->frames() + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
     addToUpdateList(time, index);
@@ -344,12 +348,13 @@ uint QSGSpriteEngine::updateSprites(uint time)//### would returning a list of ch
                 nextIdx = stateIdx;
 
             m_sprites[idx] = nextIdx;
+            m_duration[idx] = m_states[nextIdx]->variedDuration();
             m_startTimes[idx] = time;
             if (nextIdx != stateIdx){
                 changedIndexes << idx;
                 emit m_states[nextIdx]->entered();
             }
-            addToUpdateList((m_states[nextIdx]->duration() * m_states[nextIdx]->frames()) + time, idx);
+            addToUpdateList((m_duration[idx] * m_states[nextIdx]->frames()) + time, idx);
         }
         m_stateUpdates.pop_front();
     }

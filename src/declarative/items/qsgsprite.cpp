@@ -62,12 +62,20 @@ void redirectError(QDeclarativeListProperty<QObject> *prop, QObject *value)
     qWarning() << "Could not add " << value << " to state" << prop->object << "as it is not associated with a particle system.";
 }
 
-QDeclarativeListProperty<QObject> QSGSprite::particleChildren(){
+QDeclarativeListProperty<QObject> QSGSprite::particleChildren()
+{
     QSGParticleSystem* system = qobject_cast<QSGParticleSystem*>(parent());
     if (system)
         return QDeclarativeListProperty<QObject>(this, 0, &QSGParticleSystem::stateRedirect);
     else
         return QDeclarativeListProperty<QObject>(this, 0, &redirectError);
+}
+
+int QSGSprite::variedDuration() const
+{
+    return m_duration
+            + (m_durationVariance * ((qreal)qrand()/RAND_MAX) * 2)
+            - m_durationVariance;
 }
 
 QT_END_NAMESPACE

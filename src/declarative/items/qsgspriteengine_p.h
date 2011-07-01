@@ -122,8 +122,10 @@ private:
     void addToUpdateList(uint t, int idx);
     int goalSeek(int curState, int spriteIdx, int dist=-1);
     QList<QSGSprite*> m_states;
+    //### Consider struct or class for the four data variables?
     QVector<int> m_sprites;//int is the index in m_states of the current state
     QVector<int> m_goals;
+    QVector<int> m_duration;
     QVector<int> m_startTimes;
     QList<QPair<uint, QList<int> > > m_stateUpdates;//### This could be done faster - priority queue?
 

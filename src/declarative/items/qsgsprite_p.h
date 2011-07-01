@@ -121,6 +121,8 @@ public:
         return m_durationVariance;
     }
 
+    int variedDuration() const;
+
 signals:
 
     void sourceChanged(QUrl arg);
