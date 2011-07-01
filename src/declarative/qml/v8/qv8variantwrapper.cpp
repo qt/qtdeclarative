@@ -70,10 +70,15 @@ QV8VariantWrapper::~QV8VariantWrapper()
 void QV8VariantWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
+    m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
+
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
-    ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
+    ft->InstanceTemplate()->SetFallbackPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
+                                        m_toString, v8::DEFAULT, 
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
     {
@@ -88,6 +93,9 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("destroy"), DestroyGetter, 0, 
                                         m_destroy, v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
+                                        m_toString, v8::DEFAULT, 
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_scarceConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 
@@ -95,6 +103,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
 
 void QV8VariantWrapper::destroy()
 {
+    qPersistentDispose(m_toString);
     qPersistentDispose(m_destroy);
     qPersistentDispose(m_preserve);
     qPersistentDispose(m_scarceConstructor);
@@ -167,6 +176,13 @@ v8::Handle<v8::Value> QV8VariantWrapper::DestroyGetter(v8::Local<v8::String> pro
     return info.Data();
 }
 
+v8::Handle<v8::Value> QV8VariantWrapper::ToStringGetter(v8::Local<v8::String> property, 
+                                                        const v8::AccessorInfo &info)
+{
+    Q_UNUSED(property);
+    return info.Data();
+}
+
 v8::Handle<v8::Value> QV8VariantWrapper::Preserve(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
@@ -184,6 +200,19 @@ v8::Handle<v8::Value> QV8VariantWrapper::Destroy(const v8::Arguments &args)
         resource->node.remove();
     }
     return v8::Undefined();
+}
+
+v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
+{
+    QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
+    if (resource) {
+        QString result = resource->data.toString();
+        if (result.isEmpty() && !resource->data.canConvert(QVariant::String))
+            result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(resource->data.typeName()));
+        return resource->engine->toString(result);
+    } else {
+        return v8::Undefined();
+    }
 }
 
 QT_END_NAMESPACE
