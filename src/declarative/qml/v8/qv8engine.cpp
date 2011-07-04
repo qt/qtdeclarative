@@ -562,7 +562,12 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
         qt->Set(v8::String::New("createComponent"), V8FUNCTION(createComponent, this));
     }
 
-    // XXX TODO - Implement translator functions
+    global->Set(v8::String::New("qsTranslate"), V8FUNCTION(qsTranslate, this));
+    global->Set(v8::String::New("QT_TRANSLATE_NOOP"), V8FUNCTION(qsTranslateNoOp, this));
+    global->Set(v8::String::New("qsTr"), V8FUNCTION(qsTr, this));
+    global->Set(v8::String::New("QT_TR_NOOP"), V8FUNCTION(qsTrNoOp, this));
+    global->Set(v8::String::New("qsTrId"), V8FUNCTION(qsTrId, this));
+    global->Set(v8::String::New("QT_TRID_NOOP"), V8FUNCTION(qsTrIdNoOp, this));
 
     global->Set(v8::String::New("print"), printFn);
     global->Set(v8::String::New("console"), console);
@@ -1512,6 +1517,117 @@ v8::Handle<v8::Value> QV8Engine::createComponent(const v8::Arguments &args)
     QDeclarativeComponentPrivate::get(c)->creationContext = effectiveContext;
     QDeclarativeData::get(c, true)->setImplicitDestructible();
     return v8engine->newQObject(c);
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTranslate(const v8::Arguments &args)
+{
+    if (args.Length() < 2)
+        V8THROW_ERROR("qsTranslate() requires at least two arguments");
+    if (!args[0]->IsString())
+        V8THROW_ERROR("qsTranslate(): first argument (context) must be a string");
+    if (!args[1]->IsString())
+        V8THROW_ERROR("qsTranslate(): second argument (text) must be a string");
+    if ((args.Length() > 2) && !args[2]->IsString())
+        V8THROW_ERROR("qsTranslate(): third argument (comment) must be a string");
+    if ((args.Length() > 3) && !args[3]->IsString())
+        V8THROW_ERROR("qsTranslate(): fourth argument (encoding) must be a string");
+
+    QV8Engine *v8engine = V8ENGINE();
+    QString context = v8engine->toString(args[0]);
+    QString text = v8engine->toString(args[1]);
+    QString comment;
+    if (args.Length() > 2) comment = v8engine->toString(args[2]);
+
+    QCoreApplication::Encoding encoding = QCoreApplication::UnicodeUTF8;
+    if (args.Length() > 3) {
+        QString encStr = v8engine->toString(args[3]);
+        if (encStr == QLatin1String("CodecForTr")) {
+            encoding = QCoreApplication::CodecForTr;
+        } else if (encStr == QLatin1String("UnicodeUTF8")) {
+            encoding = QCoreApplication::UnicodeUTF8;
+        } else {
+            QString msg = QString::fromLatin1("qsTranslate(): invalid encoding '%0'").arg(encStr);
+            V8THROW_ERROR((uint16_t *)msg.constData());
+        }
+    }
+
+    int n = -1;
+    if (args.Length() > 4)
+        n = args[4]->Int32Value();
+
+    QString result = QCoreApplication::translate(context.toUtf8().constData(),
+                                                 text.toUtf8().constData(),
+                                                 comment.toUtf8().constData(),
+                                                 encoding, n);
+
+    return v8engine->toString(result);
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTranslateNoOp(const v8::Arguments &args)
+{
+    if (args.Length() < 2)
+        return v8::Undefined();
+    return args[1];
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTr(const v8::Arguments &args)
+{
+    if (args.Length() < 1)
+        V8THROW_ERROR("qsTr() requires at least one argument");
+    if (!args[0]->IsString())
+        V8THROW_ERROR("qsTr(): first argument (text) must be a string");
+    if ((args.Length() > 1) && !args[1]->IsString())
+        V8THROW_ERROR("qsTr(): second argument (comment) must be a string");
+    if ((args.Length() > 2) && !args[2]->IsNumber())
+        V8THROW_ERROR("qsTr(): third argument (n) must be a number");
+
+    QV8Engine *v8engine = V8ENGINE();
+    QDeclarativeContextData *ctxt = v8engine->callingContext();
+
+    QString context = ctxt->url.toString();
+    QString text = v8engine->toString(args[0]);
+    QString comment;
+    if (args.Length() > 1)
+        comment = v8engine->toString(args[1]);
+    int n = -1;
+    if (args.Length() > 2)
+        n = args[2]->Int32Value();
+
+    QString result = QCoreApplication::translate(context.toUtf8().constData(), text.toUtf8().constData(),
+                                                 comment.toUtf8().constData(), QCoreApplication::UnicodeUTF8, n);
+
+    return v8engine->toString(result);
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTrNoOp(const v8::Arguments &args)
+{
+    if (args.Length() < 1)
+        return v8::Undefined();
+    return args[0];
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTrId(const v8::Arguments &args)
+{
+    if (args.Length() < 1)
+        V8THROW_ERROR("qsTrId() requires at least one argument");
+    if (!args[0]->IsString())
+        V8THROW_TYPE("qsTrId(): first argument (id) must be a string");
+    if (args.Length() > 1 && !args[1]->IsNumber())
+        V8THROW_TYPE("qsTrId(): second argument (n) must be a number");
+
+    int n = -1;
+    if (args.Length() > 1)
+        n = args[1]->Int32Value();
+
+    QV8Engine *v8engine = V8ENGINE();
+    return v8engine->toString(qtTrId(v8engine->toString(args[0]).toUtf8().constData(), n));
+}
+
+v8::Handle<v8::Value> QV8Engine::qsTrIdNoOp(const v8::Arguments &args)
+{
+    if (args.Length() < 1)
+        return v8::Undefined();
+    return args[0];
 }
 
 QT_END_NAMESPACE

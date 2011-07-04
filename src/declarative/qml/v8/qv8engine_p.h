@@ -90,6 +90,10 @@ private:
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
 }
+#define V8THROW_TYPE(string) { \
+    v8::ThrowException(v8::Exception::TypeError(v8::String::New(string))); \
+    return v8::Handle<v8::Value>(); \
+}
 #define V8ENGINE_ACCESSOR() ((QV8Engine *)v8::External::Unwrap(info.Data()));
 #define V8THROW_ERROR_SETTER(string) { \
     v8::ThrowException(v8::Exception::Error(v8::String::New(string))); \
@@ -341,6 +345,12 @@ private:
     static v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args);
     static v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args);
     static v8::Handle<v8::Value> createComponent(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTr(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
+    static v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
 
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
