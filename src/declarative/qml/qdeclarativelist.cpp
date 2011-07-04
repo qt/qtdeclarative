@@ -139,7 +139,7 @@ QDeclarativeListReference::QDeclarativeListReference(QObject *object, const char
     QDeclarativePropertyCache::Data *data = 
         QDeclarativePropertyCache::property(engine, object, QLatin1String(property), local);
 
-    if (!data || !(data->flags & QDeclarativePropertyCache::Data::IsQList)) return;
+    if (!data || !data->isQList()) return;
 
     QDeclarativeEnginePrivate *p = engine?QDeclarativeEnginePrivate::get(engine):0;
 

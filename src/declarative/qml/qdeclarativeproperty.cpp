@@ -255,7 +255,7 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
                 QDeclarativePropertyCache::property(engine, obj, pathName, local);
 
             if (!property) return; // Not a property
-            if (property->flags & QDeclarativePropertyCache::Data::IsFunction) 
+            if (property->isFunction())
                 return; // Not an object property 
 
             if (ii == (path.count() - 2) && QDeclarativeValueTypeFactory::isValueType(property->propType)) {
@@ -277,7 +277,7 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
 
                 return; 
             } else {
-                if (!(property->flags & QDeclarativePropertyCache::Data::IsQObjectDerived)) 
+                if (!property->isQObject())
                     return; // Not an object property
 
                 void *args[] = { &currentObject, 0 };
@@ -311,7 +311,7 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
     QDeclarativePropertyCache::Data local;
     QDeclarativePropertyCache::Data *property = 
         QDeclarativePropertyCache::property(engine, currentObject, terminal, local);
-    if (property && !(property->flags & QDeclarativePropertyCache::Data::IsFunction)) {
+    if (property && !property->isFunction()) {
         object = currentObject;
         core = *property;
         nameCache = terminal;
@@ -371,9 +371,9 @@ QDeclarativePropertyPrivate::propertyTypeCategory() const
             return QDeclarativeProperty::InvalidCategory;
         else if (QDeclarativeValueTypeFactory::isValueType((uint)type))
             return QDeclarativeProperty::Normal;
-        else if (core.flags & QDeclarativePropertyCache::Data::IsQObjectDerived)
+        else if (core.isQObject())
             return QDeclarativeProperty::Object;
-        else if (core.flags & QDeclarativePropertyCache::Data::IsQList)
+        else if (core.isQList())
             return QDeclarativeProperty::List;
         else 
             return QDeclarativeProperty::Normal;
@@ -457,7 +457,7 @@ int QDeclarativePropertyPrivate::propertyType() const
 
 QDeclarativeProperty::Type QDeclarativePropertyPrivate::type() const
 {
-    if (core.flags & QDeclarativePropertyCache::Data::IsFunction)
+    if (core.isFunction())
         return QDeclarativeProperty::SignalProperty;
     else if (core.isValid())
         return QDeclarativeProperty::Property;
@@ -520,12 +520,12 @@ bool QDeclarativeProperty::isWritable() const
         return false;
     if (!d->object)
         return false;
-    if (d->core.flags & QDeclarativePropertyCache::Data::IsQList)           //list
+    if (d->core.isQList())           //list
         return true;
-    else if (d->core.flags & QDeclarativePropertyCache::Data::IsFunction)   //signal handler
+    else if (d->core.isFunction())   //signal handler
         return false;
-    else if (d->core.isValid())                                             //normal property
-        return d->core.flags & QDeclarativePropertyCache::Data::IsWritable;
+    else if (d->core.isValid())      //normal property
+        return d->core.isWritable();
     else
         return false;
 }
@@ -551,7 +551,7 @@ bool QDeclarativeProperty::isResettable() const
     if (!d)
         return false;
     if (type() & Property && d->core.isValid() && d->object)
-        return d->core.flags & QDeclarativePropertyCache::Data::IsResettable;
+        return d->core.isResettable();
     else
         return false;
 }
@@ -682,7 +682,7 @@ QDeclarativePropertyPrivate::binding(QObject *object, int coreIndex, int valueTy
 
     QDeclarativePropertyCache::Data *propertyData = 
         data->propertyCache?data->propertyCache->property(coreIndex):0;
-    if (propertyData && propertyData->flags & QDeclarativePropertyCache::Data::IsAlias) {
+    if (propertyData && propertyData->isAlias()) {
         const QDeclarativeVMEMetaObject *vme = 
             static_cast<const QDeclarativeVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
 
@@ -723,7 +723,7 @@ void QDeclarativePropertyPrivate::findAliasTarget(QObject *object, int bindingIn
     if (data) {
         QDeclarativePropertyCache::Data *propertyData = 
             data->propertyCache?data->propertyCache->property(coreIndex):0;
-        if (propertyData && propertyData->flags & QDeclarativePropertyCache::Data::IsAlias) {
+        if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
                 static_cast<const QDeclarativeVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
             QObject *aObject = 0; int aCoreIndex = -1; int aValueTypeIndex = -1;
@@ -757,7 +757,7 @@ QDeclarativePropertyPrivate::setBinding(QObject *object, int coreIndex, int valu
     if (data) {
         QDeclarativePropertyCache::Data *propertyData = 
             data->propertyCache?data->propertyCache->property(coreIndex):0;
-        if (propertyData && propertyData->flags & QDeclarativePropertyCache::Data::IsAlias) {
+        if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
                 static_cast<const QDeclarativeVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
 
@@ -811,7 +811,7 @@ QDeclarativePropertyPrivate::setBindingNoEnable(QObject *object, int coreIndex, 
     if (data) {
         QDeclarativePropertyCache::Data *propertyData = 
             data->propertyCache?data->propertyCache->property(coreIndex):0;
-        if (propertyData && propertyData->flags & QDeclarativePropertyCache::Data::IsAlias) {
+        if (propertyData && propertyData->isAlias()) {
             const QDeclarativeVMEMetaObject *vme = 
                 static_cast<const QDeclarativeVMEMetaObject *>(metaObjectForProperty(object->metaObject(), coreIndex));
 
@@ -994,14 +994,14 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
         if (!ep) delete valueType;
         return rv;
 
-    } else if (core.flags & QDeclarativePropertyCache::Data::IsQList) {
+    } else if (core.isQList()) {
 
         QDeclarativeListProperty<QObject> prop;
         void *args[] = { &prop, 0 };
         QMetaObject::metacall(object, QMetaObject::ReadProperty, core.coreIndex, args);
         return QVariant::fromValue(QDeclarativeListReferencePrivate::init(prop, core.propType, engine)); 
 
-    } else if (core.flags & QDeclarativePropertyCache::Data::IsQObjectDerived) {
+    } else if (core.isQObject()) {
 
         QObject *rv = 0;
         void *args[] = { &rv, 0 };
@@ -1077,7 +1077,7 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
         writeBack->read(object, core.coreIndex);
 
         QDeclarativePropertyCache::Data data = core;
-        data.flags = valueType.flags;
+        data.setFlags(valueType.flags);
         data.coreIndex = valueType.valueTypeCoreIdx;
         data.propType = valueType.valueTypePropType;
         rv = write(writeBack, data, value, context, flags);
@@ -1101,7 +1101,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
     int coreIdx = property.coreIndex;
     int status = -1;    //for dbus
 
-    if (property.flags & QDeclarativePropertyCache::Data::IsEnumType) {
+    if (property.isEnum()) {
         QMetaProperty prop = object->metaObject()->property(property.coreIndex);
         QVariant v = value;
         // Enum values come through the script engine as doubles
@@ -1153,7 +1153,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
         void *a[] = { (void *)&value, 0, &status, &flags };
         QMetaObject::metacall(object, QMetaObject::WriteProperty, coreIdx, a);
 
-    } else if (property.flags & QDeclarativePropertyCache::Data::IsQObjectDerived) {
+    } else if (property.isQObject()) {
 
         const QMetaObject *valMo = rawMetaObjectForType(enginePriv, value.userType());
         
@@ -1180,7 +1180,7 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
             return false;
         }
 
-    } else if (property.flags & QDeclarativePropertyCache::Data::IsQList) {
+    } else if (property.isQList()) {
 
         const QMetaObject *listType = 0;
         if (enginePriv) {
@@ -1703,7 +1703,7 @@ static inline void flush_vme_signal(const QObject *object, int index)
     if (data && data->propertyCache) {
         QDeclarativePropertyCache::Data *property = data->propertyCache->method(index);
 
-        if (property && property->flags & QDeclarativePropertyCache::Data::IsVMESignal) {
+        if (property && property->isVMESignal()) {
             const QMetaObject *metaObject = object->metaObject();
             int methodOffset = metaObject->methodOffset();
 

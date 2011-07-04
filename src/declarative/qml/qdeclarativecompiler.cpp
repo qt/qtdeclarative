@@ -981,7 +981,8 @@ void QDeclarativeCompiler::genObject(QDeclarativeParser::Object *obj)
                 reinterpret_cast<const QDeclarativeVMEMetaData *>(obj->synthdata.constData());
             for (int ii = 0; ii < vmeMetaData->aliasCount; ++ii) {
                 int index = obj->metaObject()->propertyOffset() + vmeMetaData->propertyCount + ii;
-                propertyCache->property(index)->flags |= QDeclarativePropertyCache::Data::IsAlias;
+                QDeclarativePropertyCache::Data *data = propertyCache->property(index);
+                data->setFlags(data->getFlags() | QDeclarativePropertyCache::Data::IsAlias);
             }
         }
 
@@ -1546,8 +1547,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
             output->types.at(prop->parent->type).component) {
 
             QDeclarativePropertyCache *cache = output->types.at(prop->parent->type).component->rootPropertyCache;
-            if (cache && cache->property(prop->index) && 
-                cache->property(prop->index)->flags & QDeclarativePropertyCache::Data::IsAlias)
+            if (cache && cache->property(prop->index) && cache->property(prop->index)->isAlias())
                 prop->isAlias = true;
         }
 
@@ -3138,7 +3138,7 @@ int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, cons
         QDeclarativePropertyCache::Data *d = cache->property(strName);
         if (notInRevision) *notInRevision = false;
 
-        while (d && !(d->flags & QDeclarativePropertyCache::Data::IsFunction))
+        while (d && !(d->isFunction()))
             d = cache->overrideData(d);
 
         if (d && !cache->isAllowedInRevision(d)) {
@@ -3178,7 +3178,7 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, co
 
         QDeclarativePropertyCache::Data *d = cache->property(strName);
         // Find the first property
-        while (d && d->flags & QDeclarativePropertyCache::Data::IsFunction) 
+        while (d && d->isFunction())
             d = cache->overrideData(d);
 
         if (d && !cache->isAllowedInRevision(d)) {

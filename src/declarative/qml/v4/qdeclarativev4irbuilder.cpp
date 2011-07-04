@@ -472,7 +472,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 return false;
             }
 
-            if (data && !(data->flags & QDeclarativePropertyCache::Data::IsFunction)) {
+            if (data && !data->isFunction()) {
                 IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
                 _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
                 found = true;
@@ -493,7 +493,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
                 return false;
             }
 
-            if (data && !(data->flags & QDeclarativePropertyCache::Data::IsFunction)) {
+            if (data && !data->isFunction()) {
                 IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
                 _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
                 found = true;
@@ -611,10 +611,10 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     QDeclarativePropertyCache *cache = m_engine->cache(attachedMeta);
                     QDeclarativePropertyCache::Data *data = cache->property(name);
 
-                    if (!data || data->flags & QDeclarativePropertyCache::Data::IsFunction)
+                    if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
 
-                    if(!(data->flags & QDeclarativePropertyCache::Data::IsFinal)) {
+                    if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
                                        << (baseName->id + QLatin1String(".") + ast->name->asString());
@@ -633,7 +633,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                 QDeclarativePropertyCache::Data *data = cache->property(name);
 
-                if (!data || data->flags & QDeclarativePropertyCache::Data::IsFunction)
+                if (!data || data->isFunction())
                     return false; // Don't support methods (or non-existing properties ;)
 
                 if (data->revision != 0) {
@@ -657,10 +657,10 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     QDeclarativePropertyCache::Data *data = cache->property(name);
 
-                    if (!data || data->flags & QDeclarativePropertyCache::Data::IsFunction)
+                    if (!data || data->isFunction())
                         return false; // Don't support methods (or non-existing properties ;)
 
-                    if(!(data->flags & QDeclarativePropertyCache::Data::IsFinal)) {
+                    if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final property access:"
                                 << (baseName->id + QLatin1String(".") + ast->name->asString());

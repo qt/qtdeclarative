@@ -678,7 +678,7 @@ void QDeclarativeEngineDebugServer::setMethodBody(int objectId, const QString &m
     QDeclarativePropertyCache::Data *prop = 
         QDeclarativePropertyCache::property(context->engine(), object, method, dummy);
 
-    if (!prop || !(prop->flags & QDeclarativePropertyCache::Data::IsVMEFunction))
+    if (!prop || !prop->isVMEFunction())
         return;
 
     QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex);

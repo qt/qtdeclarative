@@ -231,7 +231,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Setter(v8::Local<v8::String> property
             v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
 
             QDeclarativePropertyCache::Data cacheData;
-            cacheData.flags = QDeclarativePropertyCache::Data::IsWritable;
+            cacheData.setFlags(QDeclarativePropertyCache::Data::IsWritable);
             cacheData.propType = reference->object->metaObject()->property(reference->property).userType();
             cacheData.coreIndex = reference->property;
 

@@ -104,11 +104,18 @@ public:
                     HasArguments      = 0x00004000, // Function takes arguments
                     IsSignal          = 0x00008000, // Function is a signal
                     IsVMESignal       = 0x00010000, // Signal was added by QML
-                    IsV8Function      = 0x00020000  // Function takes QDeclarativeV8Function* args
+                    IsV8Function      = 0x00020000, // Function takes QDeclarativeV8Function* args
+
+                    // Internal QDeclarativePropertyCache flags
+                    NotFullyResolved  = 0x00040000  // True if the type data is to be lazily resolved 
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
+        Flags getFlags() const { return flags; }
+        void setFlags(Flags f) { flags = f; }
+
         bool isValid() const { return coreIndex != -1; } 
+
         bool isConstant() const { return flags & IsConstant; }
         bool isWritable() const { return flags & IsWritable; }
         bool isResettable() const { return flags & IsResettable; }
@@ -122,9 +129,16 @@ public:
         bool isQmlBinding() const { return flags & IsQmlBinding; }
         bool isQScriptValue() const { return flags & IsQScriptValue; }
         bool isV8Handle() const { return flags & IsV8Handle; }
+        bool isVMEFunction() const { return flags & IsVMEFunction; }
+        bool hasArguments() const { return flags & HasArguments; }
+        bool isSignal() const { return flags & IsSignal; }
+        bool isVMESignal() const { return flags & IsVMESignal; }
+        bool isV8Function() const { return flags & IsV8Function; }
 
-        Flags flags;
-        int propType;
+        union {
+            int propType;             // When !NotFullyResolved
+            const char *propTypeName; // When NotFullyResolved
+        };
         int coreIndex;
         union {
             int notifyIndex; // When !IsFunction
@@ -140,6 +154,13 @@ public:
         void load(const QMetaMethod &);
         QString name(QObject *);
         QString name(const QMetaObject *);
+
+    private:
+        void lazyLoad(const QMetaProperty &, QDeclarativeEngine *engine = 0);
+        void lazyLoad(const QMetaMethod &);
+        bool notFullyResolved() const { return flags & NotFullyResolved; }
+        friend class QDeclarativePropertyCache;
+        Flags flags;
     };
 
     struct ValueTypeData {
@@ -152,7 +173,7 @@ public:
 
     void update(QDeclarativeEngine *, const QMetaObject *);
 
-    QDeclarativePropertyCache *copy() const;
+    QDeclarativePropertyCache *copy();
     void append(QDeclarativeEngine *, const QMetaObject *, Data::Flag propertyFlags = Data::NoFlags,
                 Data::Flag methodFlags = Data::NoFlags, Data::Flag signalFlags = Data::NoFlags);
     void append(QDeclarativeEngine *, const QMetaObject *, int revision, Data::Flag propertyFlags = Data::NoFlags,
@@ -184,18 +205,20 @@ private:
     // Implemented in v8/qv8qobjectwrapper.cpp
     v8::Local<v8::Object> newQObject(QObject *, QV8Engine *);
 
-    // XXX is this worth it anymore?
-    struct RData : public Data, public QDeclarativeRefCount { 
-    };
-
-    typedef QVector<RData *> IndexCache;
-    typedef QStringHash<RData *> StringCache;
+    typedef QVector<Data> IndexCache;
+    typedef QStringHash<Data *> StringCache;
     typedef QVector<int> AllowedRevisionCache;
 
+    void resolve(Data *) const;
     void updateRecur(QDeclarativeEngine *, const QMetaObject *);
 
     QDeclarativeEngine *engine;
-    IndexCache indexCache;
+    
+    QDeclarativePropertyCache *parent;
+    int propertyIndexCacheStart;
+    int methodIndexCacheStart;
+
+    IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
@@ -204,8 +227,8 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativePropertyCache::Data::Flags);
   
 QDeclarativePropertyCache::Data::Data()
-: flags(0), propType(0), coreIndex(-1), notifyIndex(-1), overrideIndexIsProperty(false), overrideIndex(-1),
-  revision(0), metaObjectOffset(-1)
+: propType(0), coreIndex(-1), notifyIndex(-1), overrideIndexIsProperty(false), overrideIndex(-1),
+  revision(0), metaObjectOffset(-1), flags(0)
 {
 }
 
@@ -225,9 +248,9 @@ QDeclarativePropertyCache::overrideData(Data *data) const
         return 0;
 
     if (data->overrideIndexIsProperty)
-        return indexCache.at(data->overrideIndex);
+        return property(data->overrideIndex);
     else
-        return methodIndexCache.at(data->overrideIndex);
+        return method(data->overrideIndex);
 }
 
 QDeclarativePropertyCache::ValueTypeData::ValueTypeData()
@@ -255,7 +278,8 @@ QDeclarativeEngine *QDeclarativePropertyCache::qmlEngine() const
 
 QDeclarativePropertyCache::Data *QDeclarativePropertyCache::property(const QHashedV8String &str) const
 {
-    QDeclarativePropertyCache::RData **rv = stringCache.value(str);
+    QDeclarativePropertyCache::Data **rv = stringCache.value(str);
+    if (rv && (*rv)->notFullyResolved()) resolve(*rv);
     return rv?*rv:0;
 }
 

@@ -436,9 +436,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
     typedef QDeclarativeEnginePrivate::CapturedProperty CapturedProperty;
 
     if (result->isFunction()) {
-        if (result->flags & QDeclarativePropertyCache::Data::IsVMEFunction) {
+        if (result->isVMEFunction()) {
             return ((QDeclarativeVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
-        } else if (result->flags & QDeclarativePropertyCache::Data::IsV8Function) {
+        } else if (result->isV8Function()) {
             return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
         } else {
             return MethodClosure::create(engine, object, objectHandle, result->coreIndex);
@@ -1558,7 +1558,7 @@ static const QDeclarativePropertyCache::Data * RelatedMethod(QObject *object,
 static v8::Handle<v8::Value> CallPrecise(QObject *object, const QDeclarativePropertyCache::Data &data, 
                                          QV8Engine *engine, CallArgs &callArgs)
 {
-    if (data.flags & QDeclarativePropertyCache::Data::HasArguments) {
+    if (data.hasArguments()) {
 
         QMetaMethod m = object->metaObject()->method(data.coreIndex);
         QList<QByteArray> argTypeNames = m.parameterTypes();
@@ -1620,7 +1620,7 @@ static v8::Handle<v8::Value> CallOverloaded(QObject *object, const QDeclarativeP
     do {
         QList<QByteArray> methodArgTypeNames;
 
-        if (attempt->flags & QDeclarativePropertyCache::Data::HasArguments)
+        if (attempt->hasArguments())
             methodArgTypeNames = object->metaObject()->method(attempt->coreIndex).parameterTypes();
 
         int methodArgumentCount = methodArgTypeNames.count();
@@ -1780,7 +1780,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
             return v8::Undefined();
     }
 
-    if (method.flags & QDeclarativePropertyCache::Data::IsV8Function) {
+    if (method.isV8Function()) {
         v8::Handle<v8::Value> rv;
         v8::Handle<v8::Object> qmlglobal = args[2]->ToObject();
 
