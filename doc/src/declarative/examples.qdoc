@@ -27,33 +27,37 @@
 
 /*!
   \page qdeclarativeexamples.html
-  \title QML Examples and Demos
+  \title QML Examples
   \brief Building UIs with QML
   \ingroup all-examples
 
 
-Qt includes a set of examples and demos that show how to use various aspects
-of QML. The examples are small demonstrations of particular QML components, 
-while the demos contain more complete and functional applications.
+Qt includes a set of examples that show how to use various aspects
+of QML. The examples are demonstrations of particular QML components,
+some are small code snippets, while others contain more complete and
+functional applications.
 
-To run the examples and demos, open them in Qt Creator or use the included
+To run the examples, open them in Qt Creator or use the included
 \l {QML Viewer} tool. The \l {QML Viewer} can be run from the command line:
 
 \code
-    qmlviewer $QTDIR/demos/declarative/samegame/samegame.qml
+    qmlviewer $QTDIR/examples/declarative/samegame/samegame.qml
 \endcode
 
 On Mac OS X, you can run the included "QMLViewer" application from the
 Finder, or use the command line:
 
 \code
-    QMLViewer.app/Contents/MacOS/QMLViewer $QTDIR/demos/declarative/samegame/samegame.qml
+    QMLViewer.app/Contents/MacOS/QMLViewer $QTDIR/examples/declarative/samegame/samegame.qml
 \endcode
 
 
-\section1 Demos
+The examples can be found in Qt's \c examples/declarative directory.
 
-The QML demos integrate a variety of features to demonstrate how QML
+
+\section1 Functional Applications
+
+These QML examples integrate a variety of features to demonstrate how QML
 can be used to produce sophisticated interfaces and applications:
 
 
@@ -61,58 +65,54 @@ can be used to produce sophisticated interfaces and applications:
 \row
 
 \o 
-\l{demos/declarative/calculator}{Calculator}
+\l{declarative/calculator}{Calculator}
 \image qml-calculator-example-small.png
 
 \o 
-\l{demos/declarative/flickr}{Flickr Mobile}
+\l{declarative/flickr}{Flickr Mobile}
 \image qml-flickr-demo-small.png
 
 \o 
-\l{demos/declarative/minehunt}{Minehunt}
+\l{declarative/minehunt}{Minehunt}
 \image qml-minehunt-demo-small.png
 
 \row
 
 \o 
-\l{demos/declarative/photoviewer}{Photo Viewer}
+\l{declarative/photoviewer}{Photo Viewer}
 \image qml-photoviewer-demo-small.png
 
 \o 
-\l{demos/declarative/rssnews}{RSS News Reader}
+\l{declarative/rssnews}{RSS News Reader}
 \image qml-rssnews-demo-small.png
 
 \o 
-\l{demos/declarative/samegame}{Same Game}
+\l{declarative/samegame}{Same Game}
 \image qml-samegame-demo-small.png
 
 \row
 
 \o 
-\l{demos/declarative/snake}{Snake}
+\l{declarative/snake}{Snake}
 \image qml-snake-demo-small.png
 
 \o 
-\l{demos/declarative/twitter}{Twitter}
+\l{declarative/twitter}{Twitter}
 \image qml-twitter-demo-small.png
 
 \o 
-\l{demos/declarative/webbrowser}{Web Browser}
+\l{declarative/webbrowser}{Web Browser}
 \image qml-webbrowser-demo-small.png
 
 \endtable
 
-The demos can be found in Qt's \c demos/declarative directory.
 
+\section1 Code Snippets
 
-\section1 Examples
-
-The QML examples are small, simple applications that show how to use a particular
+These QML examples are small, simple applications that show how to use a particular
 QML component or feature. If you are new
 to QML, you may also find the \l{QML Tutorial}{Hello World} and 
 \l {QML Advanced Tutorial}{Same Game} tutorials useful.
-
-The examples can be found in Qt's \c examples/declarative directory.
 
 \section2 Animation
 \list

@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet examples/declarative/modelviews/package/view.qml 0
 
-    \sa {declarative/modelviews/package}{Package example}, {demos/declarative/photoviewer}{Photo Viewer demo}, QtDeclarative
+    \sa {declarative/modelviews/package}{Package example}, {declarative/photoviewer}{Photo Viewer example}, QtDeclarative
 */
 
 /*!

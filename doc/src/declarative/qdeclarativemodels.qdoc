@@ -125,7 +125,7 @@ XmlListModel {
 }
 \endqml
 
-The \l{demos/declarative/rssnews}{RSS News demo} shows how XmlListModel can
+The \l{declarative/rssnews}{RSS News demo} shows how XmlListModel can
 be used to display an RSS feed.
 
 

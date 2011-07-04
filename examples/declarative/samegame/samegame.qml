@@ -47,7 +47,7 @@ import "SamegameCore/samegame.js" as Logic
 Rectangle {
     id: screen
     width: 360; height: 640
-    property bool inAnotherDemo: false //Samegame often is just plonked straight into other demos
+    property bool inAnotherDemo: false //Samegame often is just plonked straight into other examples
 
     SystemPalette { id: activePalette }
 

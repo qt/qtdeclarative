@@ -82,20 +82,20 @@ tst_examples::tst_examples()
 
 #ifdef QT_NO_WEBKIT
     excludedDirs << "examples/declarative/modelviews/webview";
-    excludedDirs << "demos/declarative/webbrowser";
+    excludedDirs << "examples/declarative/webbrowser";
     excludedDirs << "doc/src/snippets/declarative/webview";
 #endif
 
 #ifdef QT_NO_XMLPATTERNS
     excludedDirs << "examples/declarative/xml/xmldata";
-    excludedDirs << "demos/declarative/twitter";
-    excludedDirs << "demos/declarative/flickr";
-    excludedDirs << "demos/declarative/photoviewer";
+    excludedDirs << "examples/declarative/twitter";
+    excludedDirs << "examples/declarative/flickr";
+    excludedDirs << "examples/declarative/photoviewer";
 #endif
 }
 
 /*
-This tests that the demos and examples follow the naming convention required
+This tests that the examples follow the naming convention required
 to have them tested by the examples() test.
 */
 void tst_examples::namingConvention(const QDir &d)
@@ -176,20 +176,18 @@ QStringList tst_examples::findQmlFiles(const QDir &d)
 This test runs all the examples in the declarative UI source tree and ensures
 that they start and exit cleanly.
 
-Examples are any .qml files under the examples/ or demos/ directory that start
+Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
 void tst_examples::examples_data()
 {
     QTest::addColumn<QString>("file");
 
-    QString examples = QLatin1String(SRCDIR) + "/../../../../demos/declarative/";
-    QString demos = QLatin1String(SRCDIR) + "/../../../../examples/declarative/";
+    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/declarative/";
     QString snippets = QLatin1String(SRCDIR) + "/../../../../doc/src/snippets/";
 
     QStringList files;
     files << findQmlFiles(QDir(examples));
-    files << findQmlFiles(QDir(demos));
     files << findQmlFiles(QDir(snippets));
 
     foreach (const QString &file, files)

@@ -70,7 +70,7 @@ Rectangle {
                 anchors { top: parent.top; topMargin: 10; horizontalCenter: parent.horizontalCenter }
                 width: 300; height: 400
                 clip: true; 
-                source: "../../../../demos/declarative/samegame/samegame.qml"
+                source: "../../samegame/samegame.qml"
                 Component.onCompleted: item.inAnotherDemo = true;
             }
         }

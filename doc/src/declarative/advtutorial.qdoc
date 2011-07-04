@@ -36,7 +36,7 @@ It assumes that you already know the basics of QML (for example, from reading th
 \l{QML Tutorial}{simple tutorial}). 
 
 In this tutorial we write a game, \e {Same Game}, based on the Same Game application
-included in the declarative \c demos directory, which looks like this:
+included in the declarative \c examples directory, which looks like this:
 
 \image declarative-samegame.png
 
@@ -461,5 +461,5 @@ By following this tutorial you've seen how you can write a fully functional appl
 \endlist
 
 There is so much more to learn about QML that we haven't been able to cover in this tutorial. Check out all the
-demos and examples and the \l {Qt Quick}{documentation} to see all the things you can do with QML!
+examples and the \l {Qt Quick}{documentation} to see all the things you can do with QML!
 */

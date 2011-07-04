@@ -52,7 +52,7 @@ Rectangle{
         id: shell
         anchors.fill: parent
     }
-    VisualDataModel{//TODO: Transitions
+    VisualDataModel{//TODO: Transitions between modes
         id: vdm
         model: [
             "../spaceexplorer/spaceexplorer.qml",
@@ -60,8 +60,6 @@ Rectangle{
             "../asteroid/asteroid.qml",
             "../asteroid/blackhole.qml",
             "../custom/blurparticles.qml",
-            "../custom/shader.qml",
-            "../custom/delegates.qml",
             "../modelparticles/bubbles.qml",
             "../modelparticles/gridsplosion.qml",
             "../modelparticles/package.qml",
@@ -83,11 +81,9 @@ Rectangle{
             "../trails/layered.qml",
             "../trails/shimmer.qml",
             "../trails/turbulence.qml",
-            "../trails/combustion.qml",
-            "../trails/fireworks.qml",
-            "../../../../demos/declarative/samegame/samegame.qml",
-            "../../../../demos/declarative/plasmapatrol/plasmapatrol.qml",
-            "../../../../demos/declarative/flickr/flickr.qml"
+            "../../samegame/samegame.qml",
+            "../../plasmapatrol/plasmapatrol.qml",
+            "../../flickr/flickr.qml"
         ]
         delegate: Rectangle{
             color: "white"

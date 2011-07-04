@@ -114,7 +114,7 @@ content by URLs that can then be used directly in QML. For example, using these 
 to access an on-line photography service would provide the QML application with URLs to
 photographs, which can be directly set on an \l Image \c source property.
 
-See the \tt demos/declarative/flickr for a real demonstration of this.
+See the \tt examples/declarative/flickr for a real demonstration of this.
 
 
 \section1 Configuring the Network Access Manager
