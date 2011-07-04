@@ -139,26 +139,15 @@ class QStringHashNode
 public:
     QStringHashNode(const QHashedString &key)
     : nlist(0), next(0), key(key), symbolId(0) {
-        if (isAscii()) ascii = key.toAscii();
     }
 
     QStringHashNode *nlist;
     QStringHashNode *next;
     QHashedString key;
-    QByteArray ascii;
     quint32 symbolId;
 
     inline bool equals(v8::Handle<v8::String> string) {
-        return !ascii.isEmpty() && string->Equals((char*)ascii.constData(), ascii.length()) ||
-               ascii.isEmpty() && string->Equals((uint16_t*)key.constData(), key.length());
-    }
-private:
-    bool isAscii() const {
-        for (int ii = 0; ii < key.length(); ++ii) {
-            if (key.at(ii) > 127)
-                return false;
-        }
-        return true;
+        return string->Equals((uint16_t*)key.constData(), key.length());
     }
 };
 
