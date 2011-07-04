@@ -172,7 +172,7 @@ int QSGParticlePainter::particleTypeIndex(QSGParticleData* d)
 
 void QSGParticlePainter::calcSystemOffset()
 {
-    if(!m_system)
+    if (!m_system || !parentItem())
         return;
     QPointF lastOffset = m_systemOffset;
     m_systemOffset = -1 * this->mapFromItem(m_system, QPointF());
