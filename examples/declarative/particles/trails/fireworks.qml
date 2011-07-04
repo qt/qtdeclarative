@@ -40,56 +40,71 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "content"
-import "../launcherContent" as UI
 
 Rectangle{
     width: 360
-    height: 540
-    ParticleSystem { id: particles }
-    ImageParticle {
-        system: particles
-        sprites: Sprite{
-            name: "snow"
-            source: "content/flake-01.png"
-            frames: 51
-            duration: 40
-            durationVariation: 8
-        }
-    }
-    Wander { 
-        id: wanderer
-        system: particles
+    height: 600
+    color: "black"
+    ParticleSystem{
         anchors.fill: parent
-        xVariance: 360/(wanderer.physics+1);
-        pace: 100*(wanderer.physics+1);
-    }
-    Emitter {
-        system: particles
-        emitRate: 20
-        lifeSpan: 7000
-        emitting: true
-        speed: PointDirection{ y:80; yVariation: 40; }
-        acceleration: PointDirection{ y: 4 }
-        size: 20
-        sizeVariation: 10
-        width: parent.width
-        height: 100
-    }
-    Row{
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        UI.Button{
-            text:"dx/dt"
-            onClicked: wanderer.physics = Wander.Position;
+        id: syssy
+        particleStates:[
+            Sprite{
+                name: "fire"
+                duration: 2000
+                to: {"splode":1}
+            },
+            Sprite{
+                name: "splode"
+                duration: 400
+                to: {"dead":1}
+                FollowEmitter{
+                    particle: "works"
+                    emitRatePerParticle: 100
+                    lifeSpan: 1000
+                    emitCap: 1200
+                    size: 8
+                    speed: AngledDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
+                    acceleration: PointDirection{y:100; yVariation: 20}
+                }
+            },
+            Sprite{
+                name: "dead"
+                duration: 1000
+                Affector{
+                    onceOff: true
+                    signal: true
+                    onAffected: worksEmitter.burst(400,x,y)
+                }
+            }
+        ]
+        Emitter{
+            particle: "fire"
+            width: parent.width
+            y: parent.height
+            emitRate: 2
+            lifeSpan: 6000
+            speed: PointDirection{y:-100; yVariation: 40}
+            size: 32
         }
-        UI.Button{
-            text:"dv/dt"
-            onClicked: wanderer.physics = Wander.Velocity;
+        Emitter{
+            id: worksEmitter
+            particle: "works"
+            emitting: false
+            emitRate: 100
+            lifeSpan: 1600
+            emitCap: 6400
+            size: 8
+            speed: CumulativeDirection{
+                PointDirection{y:-100}
+                AngledDirection{angleVariation: 360; magnitudeVariation: 80;}
+            }
+            acceleration: PointDirection{y:100; yVariation: 20}
         }
-        UI.Button{
-            text:"da/dt"
-            onClicked: wanderer.physics = Wander.Acceleration;
+        ImageParticle{
+            particles: ["works", "fire", "splode"]
+            source: "content/particle.png"
         }
     }
 }
+

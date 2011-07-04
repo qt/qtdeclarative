@@ -48,20 +48,24 @@
 QT_BEGIN_NAMESPACE
 
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false)
+    QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false), m_systemStates(false), m_lastEngine(0), m_notUsingEngine(false)
 {
 }
 
 void QSGSpriteGoalAffector::updateStateIndex(QSGSpriteEngine* e)
 {
-    m_lastEngine = e;
-    for(int i=0; i<e->stateCount(); i++){
-        if(e->state(i)->name() == m_goalState){
-            m_goalIdx = i;
-            return;
+    if (m_systemStates){
+        m_goalIdx = m_system->m_groupIds[m_goalState];
+    }else{
+        m_lastEngine = e;
+        for (int i=0; i<e->stateCount(); i++){
+            if (e->state(i)->name() == m_goalState){
+                m_goalIdx = i;
+                return;
+            }
         }
+        m_goalIdx = -1;//Can't find it
     }
-    m_goalIdx = -1;//Can't find it
 }
 
 void QSGSpriteGoalAffector::setGoalState(QString arg)
@@ -69,7 +73,7 @@ void QSGSpriteGoalAffector::setGoalState(QString arg)
     if (m_goalState != arg) {
         m_goalState = arg;
         emit goalStateChanged(arg);
-        if(m_goalState.isEmpty())
+        if (m_goalState.isEmpty())
             m_goalIdx = -1;
         else
             m_goalIdx = -2;
@@ -79,18 +83,30 @@ void QSGSpriteGoalAffector::setGoalState(QString arg)
 bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    //TODO: Affect all engines
     QSGSpriteEngine *engine = 0;
-    foreach(QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
-        if(qobject_cast<QSGImageParticle*>(p))
-            engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
-    if(!engine)
+    if (!m_systemStates){
+        //TODO: Affect all engines
+        foreach (QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
+            if (qobject_cast<QSGImageParticle*>(p))
+                engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
+    }else{
+        engine = m_system->m_spriteEngine;
+        if (!engine)
+            m_notUsingEngine = true;
+    }
+    if (!engine && !m_notUsingEngine)
         return false;
 
-    if(m_goalIdx == -2 || engine != m_lastEngine)
+    if (m_goalIdx == -2 || engine != m_lastEngine)
         updateStateIndex(engine);
-    if(engine->spriteState(d->index) != m_goalIdx){
-        engine->setGoal(m_goalIdx, d->index, m_jump);
+    int index = d->index;
+    if (m_systemStates)
+        index = d->systemIndex;
+    if (m_notUsingEngine){//systemStates && no stochastic states defined. So cut out the engine
+        //TODO: It's possible to move to a group that is intermediate and not used by painters or emitters - but right now that will redirect to the default group
+        m_system->moveGroups(d, m_goalIdx);
+    }else if (engine->spriteState(index) != m_goalIdx){
+        engine->setGoal(m_goalIdx, index, m_jump);
         emit affected(QPointF(d->curX(), d->curY()));//###Expensive if unconnected? Move to Affector?
         return true; //Doesn't affect particle data, but necessary for onceOff
     }

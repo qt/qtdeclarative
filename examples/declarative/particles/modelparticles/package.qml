@@ -83,7 +83,7 @@ Rectangle {
     Emitter{
         system: sys
         width: 100
-        x: 50
+        x: 250
         speed: PointDirection{ y: 40 }
         lifeSpan: 5000
         emitRate: 1.6

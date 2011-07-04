@@ -48,6 +48,7 @@
 #include <QHash>
 #include <QPointer>
 #include <QSignalMapper>
+#include <QtDeclarative/private/qsgsprite_p.h>
 
 QT_BEGIN_HEADER
 
@@ -55,122 +56,75 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
+class QSGParticleSystem;
 class QSGParticleAffector;
 class QSGParticleEmitter;
 class QSGParticlePainter;
 class QSGParticleData;
+class QSGSpriteEngine;
+class QSGSprite;
 
+struct QSGParticleDataHeapNode{
+    int time;//in ms
+    QSet<QSGParticleData*> data;//Set ptrs instead?
+};
+
+class QSGParticleDataHeap {
+    //Idea is to do a binary heap, but which also stores a set of int,Node* so that if the int already exists, you can
+    //add it to the data* list. Pops return the whole list at once.
+public:
+    QSGParticleDataHeap();
+    void insert(QSGParticleData* data);
+
+    int top();
+
+    QSet<QSGParticleData*> pop();
+
+    void clear();
+
+    bool contains(QSGParticleData*);//O(n), for debugging purposes only
+private:
+    void grow();
+    void swap(int, int);
+    void bubbleUp(int);
+    void bubbleDown(int);
+    int m_size;
+    int m_end;
+    QSGParticleDataHeapNode m_tmp;
+    QVector<QSGParticleDataHeapNode> m_data;
+    QHash<int,int> m_lookups;
+};
 
 class QSGParticleGroupData{
 public:
-    QSGParticleGroupData():size(0),nextIdx(0)
-    {}
-    int size;
-    int nextIdx;
+    QSGParticleGroupData(int id, QSGParticleSystem* sys);
+    ~QSGParticleGroupData();
+
+    int size();
+    QString name();
+
+    void setSize(int newSize);
+
+    int index;
     QSet<QSGParticlePainter*> painters;
+
+    //TODO: Refactor particle data list out into a separate class
     QVector<QSGParticleData*> data;
-};
+    QSGParticleDataHeap dataHeap;
+    QSet<int> reusableIndexes;
 
-class QSGParticleSystem : public QSGItem
-{
-    Q_OBJECT
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
-    Q_PROPERTY(bool overwrite READ overwrite WRITE setOverwrite NOTIFY overwriteChanged)//XXX: Should just be an implementation detail, but I can't decide which way
-    /* The problem is that it ought to be false (usually) for stasis effects like model particles,
-       but it ought to be true (usually) for burst effects where you want it to burst, and forget the old stuff
-       Ideally burst never overflows? But that leads to crappy behaviour from crappy users...
-    */
+    void initList();
+    void kill(QSGParticleData* d);
 
-public:
-    explicit QSGParticleSystem(QSGItem *parent = 0);
+    //After calling this, initialize, then call prepareRecycler(d)
+    QSGParticleData* newDatum(bool respectsLimits);
 
-bool isRunning() const
-{
-    return m_running;
-}
+    //TODO: Find and clean up those that don't get added to the recycler (currently they get lost)
+    void prepareRecycler(QSGParticleData* d);
 
-int startTime() const
-{
-    return m_startTime;
-}
-
-int count(){ return m_particle_count; }
-
-signals:
-
-void systemInitialized();
-void runningChanged(bool arg);
-
-void startTimeChanged(int arg);
-
-
-void overwriteChanged(bool arg);
-
-public slots:
-void reset();
-void setRunning(bool arg);
-
-
-void setStartTime(int arg)
-{
-    m_startTime = arg;
-}
-
-void setOverwrite(bool arg)
-{
-    if (m_overwrite != arg) {
-    m_overwrite = arg;
-emit overwriteChanged(arg);
-}
-}
-
-void fastForward(int ms)
-{
-    m_startTime += ms;
-}
-
-protected:
-    void componentComplete();
-
-private slots:
-    void emittersChanged();
-    void loadPainter(QObject* p);
-public://but only really for related class usage. Perhaps we should all be friends?
-    void emitParticle(QSGParticleData* p);
-    QSGParticleData* newDatum(int groupId);
-    qint64 systemSync(QSGParticlePainter* p);
-    QElapsedTimer m_timestamp;
-    QSet<QSGParticleData*> m_needsReset;
-    QHash<QString, int> m_groupIds;
-    QHash<int, QSGParticleGroupData*> m_groupData;
-    qint64 m_timeInt;
-    bool m_initialized;
-
-    void registerParticlePainter(QSGParticlePainter* p);
-    void registerParticleEmitter(QSGParticleEmitter* e);
-    void registerParticleAffector(QSGParticleAffector* a);
-    bool overwrite() const
-    {
-        return m_overwrite;
-    }
-
-    int m_particle_count;
 private:
-    void initializeSystem();
-    bool m_running;
-    QList<QPointer<QSGParticleEmitter> > m_emitters;
-    QList<QPointer<QSGParticleAffector> > m_affectors;
-    QList<QPointer<QSGParticlePainter> > m_particlePainters;
-    QList<QPointer<QSGParticlePainter> > m_syncList;
-    qint64 m_startTime;
-    int m_nextGroupId;
-    bool m_overwrite;
-    bool m_componentComplete;
-
-    QSignalMapper m_painterMapper;
-    QSignalMapper m_emitterMapper;
+    int m_size;
+    QSGParticleSystem* m_system;
 };
 
 struct Color4ub {
@@ -183,7 +137,7 @@ struct Color4ub {
 class QSGParticleData{
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
-    QSGParticleData();
+    QSGParticleData(QSGParticleSystem* sys);
 
     //Convenience functions for working backwards, because parameters are from the start of particle life
     //If setting multiple parameters at once, doing the conversion yourself will be faster.
@@ -211,6 +165,7 @@ public:
     QSGParticleEmitter* e;//### Needed?
     QSGParticleSystem* system;
     int index;
+    int systemIndex;
 
     //General Position Stuff
     float x;
@@ -243,7 +198,113 @@ public:
 
     void debugDump();
     bool stillAlive();
+    float lifeLeft();
+    float curSize();
+    void clone(const QSGParticleData& other);//Not =, leaves meta-data like index
 };
+
+class QSGParticleSystem : public QSGItem
+{
+    Q_OBJECT
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
+
+    Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
+
+public:
+    explicit QSGParticleSystem(QSGItem *parent = 0);
+    ~QSGParticleSystem();
+    QDeclarativeListProperty<QSGSprite> particleStates();
+
+bool isRunning() const
+{
+    return m_running;
+}
+
+int startTime() const
+{
+    return m_startTime;
+}
+
+int count(){ return m_particle_count; }
+
+signals:
+
+void systemInitialized();
+void runningChanged(bool arg);
+
+void startTimeChanged(int arg);
+
+
+public slots:
+void reset();
+void setRunning(bool arg);
+
+
+void setStartTime(int arg)
+{
+    m_startTime = arg;
+}
+
+void fastForward(int ms)
+{
+    m_startTime += ms;
+}
+
+protected:
+    void componentComplete();
+
+private slots:
+    void emittersChanged();
+    void loadPainter(QObject* p);
+    void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
+    void particleStateChange(int idx);
+
+public://###but only really for related class usage. Perhaps we should all be friends?
+    //These can be called multiple times per frame, performance critical
+    void emitParticle(QSGParticleData* p);
+    QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);//TODO: implement respectLimits in emitters (which means interacting with maxCount?)
+    void finishNewDatum(QSGParticleData*);
+    void moveGroups(QSGParticleData *d, int newGIdx);
+    int nextSystemIndex();
+
+    //This one only once per frame (effectively)
+    qint64 systemSync(QSGParticlePainter* p);
+
+    QElapsedTimer m_timestamp;
+    QSet<QSGParticleData*> m_needsReset;
+    QVector<QSGParticleData*> m_bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
+    QHash<QString, int> m_groupIds;
+    QHash<int, QSGParticleGroupData*> m_groupData;
+    QSGSpriteEngine* m_spriteEngine;
+
+    qint64 m_timeInt;
+    bool m_initialized;
+
+    void registerParticlePainter(QSGParticlePainter* p);
+    void registerParticleEmitter(QSGParticleEmitter* e);
+    void registerParticleAffector(QSGParticleAffector* a);
+
+    int m_particle_count;
+    static void stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);//From QSGSprite
+private:
+    void initializeSystem();
+    bool m_running;
+    QList<QPointer<QSGParticleEmitter> > m_emitters;
+    QList<QPointer<QSGParticleAffector> > m_affectors;
+    QList<QPointer<QSGParticlePainter> > m_particlePainters;
+    QList<QPointer<QSGParticlePainter> > m_syncList;
+    qint64 m_startTime;
+    int m_nextGroupId;
+    int m_nextIndex;
+    QSet<int> m_reusableIndexes;
+    bool m_componentComplete;
+    QList<QSGSprite*> m_states;
+
+    QSignalMapper m_painterMapper;
+    QSignalMapper m_emitterMapper;
+};
+
 
 QT_END_NAMESPACE
 

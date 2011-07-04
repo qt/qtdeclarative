@@ -86,11 +86,11 @@ public slots:
     void freeze(QSGItem* item);
     void unfreeze(QSGItem* item);
 
-    void setFade(bool arg){if(arg == m_fade) return; m_fade = arg; emit fadeChanged();}
+    void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; emit fadeChanged();}
 protected:
     virtual void reset();
-    virtual void reload(int idx);
-    virtual void initialize(int idx);
+    virtual void commit(int gIdx, int pIdx);
+    virtual void initialize(int gIdx, int pIdx);
     void prepareNextFrame();
 private slots:
     void updateCount();
@@ -101,7 +101,7 @@ private:
     QSGVisualDataModel *m_model;
     QVariant m_dataSource;
     QList<QSGItem*> m_deletables;
-    QList< int > m_requests;
+    QList< QSGParticleData* > m_requests;
     bool m_fade;
 
     QList<QSGItem*> m_pendingItems;
@@ -115,7 +115,7 @@ private:
 class QSGModelParticleAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QSGModelParticle* particle READ particle CONSTANT);
+    Q_PROPERTY(QSGModelParticle* particle READ particle CONSTANT)
 public:
     QSGModelParticleAttached(QObject* parent)
         : QObject(parent), m_mp(0)

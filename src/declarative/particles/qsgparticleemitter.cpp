@@ -70,15 +70,15 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
 
 QSGParticleEmitter::~QSGParticleEmitter()
 {
-    if(m_defaultExtruder)
+    if (m_defaultExtruder)
         delete m_defaultExtruder;
 }
 
 void QSGParticleEmitter::componentComplete()
 {
-    if(!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
+    if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    if(!m_system)
+    if (!m_system)
         qWarning() << "Emitter created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
@@ -99,31 +99,31 @@ void QSGParticleEmitter::setEmitting(bool arg)
 
 QSGParticleExtruder* QSGParticleEmitter::effectiveExtruder()
 {
-    if(m_extruder)
+    if (m_extruder)
         return m_extruder;
-    if(!m_defaultExtruder)
+    if (!m_defaultExtruder)
         m_defaultExtruder = new QSGParticleExtruder;
     return m_defaultExtruder;
 }
 
 void QSGParticleEmitter::pulse(qreal seconds)
 {
-    if(!particleCount())
+    if (!particleCount())
         qWarning() << "pulse called on an emitter with a particle count of zero";
-    if(!m_emitting)
+    if (!m_emitting)
         m_burstLeft = seconds*1000.0;//TODO: Change name to match
 }
 
 void QSGParticleEmitter::burst(int num)
 {
-    if(!particleCount())
+    if (!particleCount())
         qWarning() << "burst called on an emitter with a particle count of zero";
     m_burstQueue << qMakePair(num, QPointF(x(), y()));
 }
 
 void QSGParticleEmitter::burst(int num, qreal x, qreal y)
 {
-    if(!particleCount())
+    if (!particleCount())
         qWarning() << "burst called on an emitter with a particle count of zero";
     m_burstQueue << qMakePair(num, QPointF(x, y));
 }
@@ -131,12 +131,12 @@ void QSGParticleEmitter::burst(int num, qreal x, qreal y)
 void QSGParticleEmitter::setMaxParticleCount(int arg)
 {
     if (m_maxParticleCount != arg) {
-        if(arg < 0 && m_maxParticleCount >= 0){
+        if (arg < 0 && m_maxParticleCount >= 0){
             connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
                     this, SIGNAL(particleCountChanged()));
             connect(this, SIGNAL(particleDurationChanged(int)),
                     this, SIGNAL(particleCountChanged()));
-        }else if(arg >= 0 && m_maxParticleCount < 0){
+        }else if (arg >= 0 && m_maxParticleCount < 0){
             disconnect(this, SIGNAL(particlesPerSecondChanged(qreal)),
                     this, SIGNAL(particleCountChanged()));
             disconnect(this, SIGNAL(particleDurationChanged(int)),
@@ -149,7 +149,7 @@ void QSGParticleEmitter::setMaxParticleCount(int arg)
 
 int QSGParticleEmitter::particleCount() const
 {
-    if(m_maxParticleCount >= 0)
+    if (m_maxParticleCount >= 0)
         return m_maxParticleCount;
     return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
 }

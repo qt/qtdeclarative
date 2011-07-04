@@ -92,7 +92,8 @@ public:
     void setGoal(int state, int sprite=0, bool jump=false);
     QImage assembledImage();
 
-    void startSprite(int index=0);
+    void startSprite(int index=0, int state=0);
+    void stopSprite(int index=0);
 
 private://Nothing outside should use this?
     friend class QSGSpriteGoalAffector;//XXX: Fix interface
@@ -102,6 +103,7 @@ private://Nothing outside should use this?
 signals:
 
     void globalGoalChanged(QString arg);
+    void stateChanged(int idx);
 
 public slots:
     void setGlobalGoal(QString arg)
@@ -115,6 +117,7 @@ public slots:
     uint updateSprites(uint time);
 
 private:
+    friend class QSGParticleSystem;
     void restartSprite(int sprite);
     void addToUpdateList(uint t, int idx);
     int goalSeek(int curState, int spriteIdx, int dist=-1);
@@ -122,7 +125,7 @@ private:
     QVector<int> m_sprites;//int is the index in m_states of the current state
     QVector<int> m_goals;
     QVector<int> m_startTimes;
-    QList<QPair<uint, QList<int> > > m_stateUpdates;//### This could be done faster
+    QList<QPair<uint, QList<int> > > m_stateUpdates;//### This could be done faster - priority queue?
 
     QTime m_advanceTime;
     uint m_timeOffset;

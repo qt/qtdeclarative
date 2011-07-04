@@ -114,6 +114,7 @@ Rectangle{
                 obj.targetX = Math.random() * 240 - 120 + obj.x
                 obj.targetY = Math.random() * 240 - 120 + obj.y
                 obj.life = Math.round(Math.random() * 2400) + 200
+                obj.emitRate = Math.round(Math.random() * 32) + 32
                 obj.go();
             }
         }

@@ -57,10 +57,11 @@ class QSGParticleAffector : public QSGItem
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QStringList particles READ particles WRITE setParticles NOTIFY particlesChanged)
+    Q_PROPERTY(QStringList collisionParticles READ collisionParticles WRITE setCollisionParticles NOTIFY collisionParticlesChanged)
     Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(bool onceOff READ onceOff WRITE setOnceOff NOTIFY onceOffChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
-    Q_PROPERTY(bool signal READ signal WRITE setSignal NOTIFY signalChanged)
+    Q_PROPERTY(bool signal READ signal WRITE setSignal NOTIFY signalChanged)//TODO: Determine by whether it's connected
 
 public:
     explicit QSGParticleAffector(QSGItem *parent = 0);
@@ -96,6 +97,11 @@ public:
         return m_signal;
     }
 
+    QStringList collisionParticles() const
+    {
+        return m_collisionParticles;
+    }
+
 signals:
 
     void systemChanged(QSGParticleSystem* arg);
@@ -110,6 +116,8 @@ signals:
 
     void affected(qreal x, qreal y);
     void signalChanged(bool arg);
+
+    void collisionParticlesChanged(QStringList arg);
 
 public slots:
 void setSystem(QSGParticleSystem* arg)
@@ -142,6 +150,7 @@ void setOnceOff(bool arg)
 {
     if (m_onceOff != arg) {
         m_onceOff = arg;
+        m_needsReset = true;
         emit onceOffChanged(arg);
     }
 }
@@ -159,6 +168,14 @@ void setSignal(bool arg)
     if (m_signal != arg) {
         m_signal = arg;
         emit signalChanged(arg);
+    }
+}
+
+void setCollisionParticles(QStringList arg)
+{
+    if (m_collisionParticles != arg) {
+        m_collisionParticles = arg;
+        emit collisionParticlesChanged(arg);
     }
 }
 
@@ -183,6 +200,9 @@ private:
 
     bool m_signal;
 
+    QStringList m_collisionParticles;
+
+    bool isColliding(QSGParticleData* d);
 private slots:
     void updateOffsets();
 };

@@ -284,13 +284,13 @@ public slots:
 
 protected:
     void reset();
-    virtual void initialize(int idx);
-    virtual void reload(int idx);
+    virtual void initialize(int gIdx, int pIdx);
+    virtual void commit(int gIdx, int pIdx);
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
-    QSGGeometryNode* buildParticleNode();
-    QSGGeometryNode* buildSimpleParticleNode();
+    QSGGeometryNode* buildParticleNodes();
+    QSGGeometryNode* buildSimpleParticleNodes();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
@@ -308,11 +308,13 @@ private:
     qreal m_color_variation;
     qreal m_particleDuration;
 
-    QSGGeometryNode *m_node;
+    QSGGeometryNode *m_rootNode;
+    QHash<int, QSGGeometryNode *> m_nodes;
+    QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
+    int m_lastIdxStart;
     UltraMaterial *m_material;
 
     // derived values...
-    int m_last_particle;
 
     qreal m_render_opacity;
     qreal m_alphaVariation;
@@ -335,8 +337,6 @@ private:
     PerformanceLevel perfLevel;
 
     PerformanceLevel m_lastLevel;
-    void* m_lastData;
-    int m_lastCount;
 };
 
 QT_END_NAMESPACE

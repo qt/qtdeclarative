@@ -41,7 +41,6 @@
 
 #include "qsgemitter_p.h"
 #include "qsgparticlesystem_p.h"
-#include "qsgparticlepainter_p.h"//TODO: What was this for again?
 QT_BEGIN_NAMESPACE
 
 QSGBasicEmitter::QSGBasicEmitter(QSGItem* parent)
@@ -72,7 +71,7 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
+    if ((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
         m_reset_last = true;
         return;
     }
@@ -84,10 +83,10 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
         m_reset_last = false;
     }
 
-    if(m_burstLeft){
+    if (m_burstLeft){
         m_burstLeft -= timeStamp - m_last_timestamp * 1000.;
-        if(m_burstLeft < 0){
-            if(!m_emitting)
+        if (m_burstLeft < 0){
+            if (!m_emitting)
                 timeStamp += m_burstLeft;
             m_burstLeft = 0;
         }
@@ -100,7 +99,7 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 
     qreal opt = pt; // original particle time
     qreal dt = time - m_last_timestamp; // timestamp delta...
-    if(!dt)
+    if (!dt)
         dt = 0.000001;
 
     // emitter difference since last...
@@ -117,12 +116,12 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
     qreal emitter_x_offset = m_last_emitter.x() - x();
     qreal emitter_y_offset = m_last_emitter.y() - y();
-    if(!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
+    if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
         pt = time;
     while (pt < time || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
         QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle]);
-        if(datum){//actually emit(otherwise we've been asked to skip this one)
+        if (datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;
             qreal vx =
@@ -144,7 +143,7 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 
             // Particle position
             QRectF boundsRect;
-            if(!m_burstQueue.isEmpty()){
+            if (!m_burstQueue.isEmpty()){
                 boundsRect = QRectF(m_burstQueue.first().second.x() - x(), m_burstQueue.first().second.y() - y(),
                         width(), height());
             } else {
@@ -179,11 +178,11 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 
             m_system->emitParticle(datum);
         }
-        if(m_burstQueue.isEmpty()){
+        if (m_burstQueue.isEmpty()){
             pt += particleRatio;
         }else{
             m_burstQueue.first().first--;
-            if(m_burstQueue.first().first <= 0)
+            if (m_burstQueue.first().first <= 0)
                 m_burstQueue.pop_front();
         }
     }

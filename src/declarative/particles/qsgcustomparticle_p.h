@@ -75,8 +75,8 @@ Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
 protected:
-    virtual void initialize(int idx);
-    virtual void reload(int idx);
+    virtual void initialize(int gIdx, int pIdx);
+    virtual void commit(int gIdx, int pIdx);
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
@@ -88,7 +88,7 @@ protected:
     void updateProperties();
     void lookThroughShaderCode(const QByteArray &code);
     virtual void componentComplete();
-    QSGShaderEffectNode *buildCustomNode();
+    QSGShaderEffectNode *buildCustomNodes();
     void performPendingResize();
 
 private:
@@ -106,7 +106,8 @@ private:
     };
     QVector<SourceData> m_sources;
     QSGShaderEffectMaterial m_material;
-    QSGShaderEffectNode* m_node;
+    QSGShaderEffectNode* m_rootNode;
+    QHash<int, QSGShaderEffectNode*> m_nodes;
     qreal m_lastTime;
 
 };

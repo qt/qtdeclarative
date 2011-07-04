@@ -64,15 +64,15 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
 }
 
 void QSGFollowEmitter::recalcParticlesPerSecond(){
-    if(!m_system)
+    if (!m_system)
         return;
-    m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size;
-    if(!m_followCount){
+    m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size();
+    if (!m_followCount){
         setParticlesPerSecond(1);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
         setParticlesPerSecond(m_particlesPerParticlePerSecond * m_followCount);
         m_lastEmission.resize(m_followCount);
-        m_lastEmission.fill(0);
+        m_lastEmission.fill(m_lastTimeStamp);
     }
 }
 
@@ -85,18 +85,18 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if(!m_emitting && !m_burstLeft && m_burstQueue.isEmpty())
+    if (!m_emitting && !m_burstLeft && m_burstQueue.isEmpty())
         return;
-    if(m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size){
+    if (m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size()){
         qreal oldPPS = m_particlesPerSecond;
         recalcParticlesPerSecond();
-        if(m_particlesPerSecond != oldPPS)
+        if (m_particlesPerSecond != oldPPS)
             return;//system may need to update
     }
 
-    if(m_burstLeft){
+    if (m_burstLeft){
         m_burstLeft -= timeStamp - m_lastTimeStamp * 1000.;
-        if(m_burstLeft < 0){
+        if (m_burstLeft < 0){
             timeStamp += m_burstLeft;
             m_burstLeft = 0;
         }
@@ -112,20 +112,22 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
     int gId = m_system->m_groupIds[m_follow];
     int gId2 = m_system->m_groupIds[m_particle];
-    foreach(QSGParticleData *d, m_system->m_groupData[gId]->data){
-        if(!d || !d->stillAlive())
+    foreach (QSGParticleData *d, m_system->m_groupData[gId]->data){
+        if (!d || !d->stillAlive()){
+            m_lastEmission[d->index] = time; //Should only start emitting when it returns to life
             continue;
+        }
         pt = m_lastEmission[d->index];
-        if(pt < d->t)
+        if (pt < d->t)
             pt = d->t;
 
-        if(!effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
+        if ((width() || height()) && !effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
             m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
             continue;
         }
-        while(pt < time || !m_burstQueue.isEmpty()){
+        while (pt < time || !m_burstQueue.isEmpty()){
             QSGParticleData* datum = m_system->newDatum(gId2);
-            if(datum){//else, skip this emission
+            if (datum){//else, skip this emission
                 datum->e = this;//###useful?
 
                 // Particle timestamp
@@ -178,9 +180,9 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 m_system->emitParticle(datum);
             }
-            if(!m_burstQueue.isEmpty()){
+            if (!m_burstQueue.isEmpty()){
                 m_burstQueue.first().first--;
-                if(m_burstQueue.first().first <= 0)
+                if (m_burstQueue.first().first <= 0)
                     m_burstQueue.pop_front();
             }else{
                 pt += particleRatio;

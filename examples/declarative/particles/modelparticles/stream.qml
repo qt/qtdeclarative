@@ -65,7 +65,6 @@ Item{
     ParticleSystem{ 
         id: sys;
         running: true
-        overwrite: false
         startTime: 12000//Doesn't actually work with the loading time though...
     }
     Emitter{

@@ -65,6 +65,8 @@
 #include "qsgtargeteddirection_p.h"
 #include "qsgturbulence_p.h"
 #include "qsgwander_p.h"
+#include "qsgtargetaffector_p.h"
+#include "qsgcumulativedirection_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -95,8 +97,9 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGPointDirection>(uri, 2, 0, "PointDirection");
     qmlRegisterType<QSGAngledDirection>(uri, 2, 0, "AngledDirection");
     qmlRegisterType<QSGTargetedDirection>(uri, 2, 0, "TargetedDirection");
+    qmlRegisterType<QSGCumulativeDirection>(uri, 2, 0, "CumulativeDirection");
 
-    qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector");//if it has a triggered signal, it's useful
+    qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "Affector");//for the triggered signal
     qmlRegisterType<QSGWanderAffector>(uri, 2, 0, "Wander");
     qmlRegisterType<QSGFrictionAffector>(uri, 2, 0, "Friction");
     qmlRegisterType<QSGPointAttractorAffector>(uri, 2, 0, "PointAttractor");
@@ -104,8 +107,8 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGKillAffector>(uri, 2, 0, "Kill");
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
+    qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
 }
 
 QT_END_NAMESPACE
 
-//Q_EXPORT_PLUGIN2(Particles, QT_PREPEND_NAMESPACE(ParticlesModule))

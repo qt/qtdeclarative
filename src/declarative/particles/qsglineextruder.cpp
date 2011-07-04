@@ -49,16 +49,16 @@ QSGLineExtruder::QSGLineExtruder(QObject *parent) :
 QPointF QSGLineExtruder::extrude(const QRectF &r)
 {
     qreal x,y;
-    if(!r.height()){
+    if (!r.height()){
         x = r.width() * ((qreal)rand())/RAND_MAX;
         y = 0;
     }else{
         y = r.height() * ((qreal)rand())/RAND_MAX;
-        if(!r.width()){
+        if (!r.width()){
             x = 0;
         }else{
             x = r.width()/r.height() * y;
-            if(m_mirrored)
+            if (m_mirrored)
                 x = r.width() - x;
         }
     }

@@ -94,7 +94,7 @@ void setParticles(QStringList arg)
     }
 }
 private slots:
-    void calcSystemOffset();
+    void calcSystemOffset(bool resetPending = false);
 
 protected:
     /* Reset resets all your internal data structures. But anything attached to a particle should
@@ -104,11 +104,15 @@ protected:
     virtual void reset();
 
     virtual void componentComplete();
-    //Data interface to painters
-    QVector<QSGParticleData*> m_data; //Actually stored in arbitrary order,
-    QVector<QObject*> m_attachedData; //This data will be moved along with m_data in resizes (but you own it)
-    virtual void initialize(int){}
-    virtual void reload(int){}//If you need to do something on size changed, check m_data size in this? Or we reset you every time?
+    virtual void initialize(int gIdx, int pIdx){
+        Q_UNUSED(gIdx);
+        Q_UNUSED(pIdx);
+    }
+    virtual void commit(int gIdx, int pIdx){
+        //###If you need to do something on size changed, check m_data size in this? Or we reset you every time?
+        Q_UNUSED(gIdx);
+        Q_UNUSED(pIdx);
+    }
 
     QSGParticleSystem* m_system;
     friend class QSGParticleSystem;
@@ -117,16 +121,9 @@ protected:
     QStringList m_particles;
     QPointF m_systemOffset;
 
-
 private:
-    int m_lastStart;
-    QHash<int, QPair<int, int> > m_particleStarts;
-    int particleTypeIndex(QSGParticleData* d);//Now private
-    void resize(int, int);
-
     QSGParticleData* m_sentinel;
     //QVector<QSGParticleData*> m_shadowData;//For when we implement overwrite: false
-    bool m_inResize;
 };
 
 QT_END_NAMESPACE

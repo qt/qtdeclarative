@@ -42,63 +42,48 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle{
+    id: root;
     width: 360
     height: 600
-    color: "black"
-    Component{
-        id: firework
-        Item{
-            id: container
-            width: 48
-            height: 48
-            Image{
-                width: 48
-                height: 48
-                id: img
-                source: "content/particle.png"
-            }
-            Timer{
-                interval: 1000 + 4000*Math.random()
-                running: true
-                repeat: false
-                onTriggered: {
-                    img.visible = false;
-                    emitter.burst(100);
-                }
-            }
-            Emitter{
-                anchors.centerIn: parent
-                id: emitter
-                system: syssy
-                particle: "works"
-                emitting: false
-                emitRate: 100
-                lifeSpan: 1000
-                //speed: AngledDirection{angle: 270; angleVariation:60; magnitudeVariation: 60; magnitude: 20}
-                speed: PointDirection{y:-60; yVariation: 80; xVariation: 80}
-                acceleration: PointDirection{y:100; yVariation: 20}
-            }
+    function newPithySaying(){
+        switch (Math.floor(Math.random()*16)){
+            case 0: return "Hello World";
+            case 1: return "G'day Mate";
+            case 2: return "Code Less";
+            case 3: return "Create More";
+            case 4: return "Deploy Everywhere";
+            case 5: return "Qt Meta-object Language";
+            case 6: return "Qt Magic Language";
+            case 7: return "Fluid UIs";
+            case 8: return "Touchable";
+            case 9: return "How's it going?";
+            case 10: return "Do you like text?";
+            case 11: return "Enjoy!";
+            case 12: return "ERROR: Out of pith";
+            case 13: return "Punctuation Failure";
+            case 14: return "I can go faster";
+            case 15: return "I can go slower";
+            default: return "OMGWTFBBQ";
         }
     }
+    color: "black"
     ParticleSystem{
         anchors.fill: parent
         id: syssy
         Emitter{
-            particle: "fire"
-            width: parent.width
-            y: parent.height
-            emitRate: 2
-            lifeSpan: 6000
-            speed: PointDirection{y:-100}
+            anchors.centerIn: parent
+            emitRate: 1
+            lifeSpan: 4800
+            lifeSpanVariation: 1600
+            speed: AngledDirection{angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
         }
         ItemParticle{
-            particles: ["fire"]
-            delegate: firework
-        }
-        ImageParticle{
-            particles: ["works"]
-            source: "content/particle.png"
+            delegate: Text{
+                text: root.newPithySaying();
+                color: "white"
+                font.pixelSize: 18
+                font.bold: true
+            }
         }
     }
 }
-

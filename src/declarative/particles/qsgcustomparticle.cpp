@@ -123,6 +123,7 @@ QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_pleaseReset(true)
     , m_dirtyData(true)
+    , m_rootNode(0)
 {
     setFlag(QSGItem::ItemHasContents);
 }
@@ -194,6 +195,7 @@ void QSGCustomParticle::reset()
 
     QSGParticlePainter::reset();
     m_pleaseReset = true;
+    update();
 }
 
 
@@ -334,7 +336,7 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
         QByteArray name = re.cap(3).toLatin1(); // variable name
 
         if (decl == "attribute") {
-            if(!m_source.attributeNames.contains(name))//TODO: Can they add custom attributes?
+            if (!m_source.attributeNames.contains(name))//TODO: Can they add custom attributes?
                 qWarning() << "Custom Particle: Unknown attribute " << name;
         } else {
             Q_ASSERT(decl == "uniform");//TODO: Shouldn't assert
@@ -361,90 +363,53 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
 
 QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    if(m_pleaseReset){
-        if(m_node)
-            delete m_node;
+    if (m_pleaseReset){
+
         //delete m_material;//Shader effect item doesn't regen material?
 
-        m_node = 0;
+        delete m_rootNode;//Automatically deletes children
+        m_rootNode = 0;
+        m_nodes.clear();
         m_pleaseReset = false;
         m_dirtyData = false;
     }
 
-    if(m_system && m_system->isRunning())
+    if (m_system && m_system->isRunning())
         prepareNextFrame();
-    if (m_node){
-        if(oldNode)
-            Q_ASSERT(oldNode == m_node);
+    if (m_rootNode){
         update();
-        m_node->markDirty(QSGNode::DirtyMaterial); //done in buildData?
+        //### Should I be using dirty geometry too/instead?
+        foreach (QSGShaderEffectNode* node, m_nodes)
+            node->markDirty(QSGNode::DirtyMaterial); //done in buildData?
     }
 
-    return m_node;
+    return m_rootNode;
 }
 
 void QSGCustomParticle::prepareNextFrame(){
-    if(!m_node)
-        m_node = buildCustomNode();
-    if(!m_node)
+    if (!m_rootNode)
+        m_rootNode = buildCustomNodes();
+    if (!m_rootNode)
         return;
 
     m_lastTime = m_system->systemSync(this) / 1000.;
-    if(m_dirtyData || true)//Currently this is how we update timestamp... potentially over expensive.
+    if (m_dirtyData || true)//Currently this is how we update timestamp... potentially over expensive.
         buildData();
 }
 
-QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
+QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
 {
     if (m_count * 4 > 0xffff) {
         printf("CustomParticle: Too many particles... \n");//####Why is this here?
         return 0;
     }
 
-    if(m_count <= 0) {
+    if (m_count <= 0) {
         printf("CustomParticle: Too few particles... \n");
         return 0;
     }
 
-    //Create Particle Geometry
-    int vCount = m_count * 4;
-    int iCount = m_count * 6;
-    QSGGeometry *g = new QSGGeometry(PlainParticle_AttributeSet, vCount, iCount);
-    g->setDrawingMode(GL_TRIANGLES);
-    PlainVertex *vertices = (PlainVertex *) g->vertexData();
-    for (int p=0; p<m_count; ++p) {
-        reload(p);
-        vertices[0].tx = 0;
-        vertices[0].ty = 0;
-
-        vertices[1].tx = 1;
-        vertices[1].ty = 0;
-
-        vertices[2].tx = 0;
-        vertices[2].ty = 1;
-
-        vertices[3].tx = 1;
-        vertices[3].ty = 1;
-        vertices += 4;
-    }
-    quint16 *indices = g->indexDataAsUShort();
-    for (int i=0; i<m_count; ++i) {
-        int o = i * 4;
-        indices[0] = o;
-        indices[1] = o + 1;
-        indices[2] = o + 2;
-        indices[3] = o + 1;
-        indices[4] = o + 3;
-        indices[5] = o + 2;
-        indices += 6;
-    }
-
     updateProperties();
-    QSGShaderEffectNode* node = new QSGShaderEffectNode();
-
-
-    node->setGeometry(g);
-    node->setMaterial(&m_material);
 
     QSGShaderEffectProgram s = m_source;
     if (s.fragmentCode.isEmpty())
@@ -452,66 +417,120 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNode()
     if (s.vertexCode.isEmpty())
         s.vertexCode = qt_particles_default_vertex_code;
     m_material.setProgramSource(s);
-    return node;
+    foreach (const QString &str, m_particles){
+        int gIdx = m_system->m_groupIds[str];
+        int count = m_system->m_groupData[gIdx]->size();
+        //Create Particle Geometry
+        int vCount = count * 4;
+        int iCount = count * 6;
+        QSGGeometry *g = new QSGGeometry(PlainParticle_AttributeSet, vCount, iCount);
+        g->setDrawingMode(GL_TRIANGLES);
+        PlainVertex *vertices = (PlainVertex *) g->vertexData();
+        for (int p=0; p < count; ++p) {
+            commit(gIdx, p);
+            vertices[0].tx = 0;
+            vertices[0].ty = 0;
+
+            vertices[1].tx = 1;
+            vertices[1].ty = 0;
+
+            vertices[2].tx = 0;
+            vertices[2].ty = 1;
+
+            vertices[3].tx = 1;
+            vertices[3].ty = 1;
+            vertices += 4;
+        }
+        quint16 *indices = g->indexDataAsUShort();
+        for (int i=0; i < count; ++i) {
+            int o = i * 4;
+            indices[0] = o;
+            indices[1] = o + 1;
+            indices[2] = o + 2;
+            indices[3] = o + 1;
+            indices[4] = o + 3;
+            indices[5] = o + 2;
+            indices += 6;
+        }
+
+        QSGShaderEffectNode* node = new QSGShaderEffectNode();
+
+        node->setGeometry(g);
+        node->setMaterial(&m_material);
+        node->markDirty(QSGNode::DirtyMaterial);
+
+        m_nodes.insert(gIdx, node);
+    }
+    foreach (QSGShaderEffectNode* node, m_nodes){
+        if (node == *(m_nodes.begin()))
+                continue;
+        (*(m_nodes.begin()))->appendChildNode(node);
+    }
+
+    return *(m_nodes.begin());
 }
 
 static const QByteArray timestampName("timestamp");
 
 void QSGCustomParticle::buildData()
 {
-    if(!m_node)//Operates on m_node
+    if (!m_rootNode)
         return;
     QVector<QPair<QByteArray, QVariant> > values;
     QVector<QPair<QByteArray, QPointer<QSGItem> > > textures;
     const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = m_material.textureProviders();
-
-    for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
-         it != m_source.uniformNames.end(); ++it) {
-        values.append(qMakePair(*it, property(*it)));
-    }
     for (int i = 0; i < oldTextures.size(); ++i) {
         QSGTextureProvider *oldSource = QSGTextureProvider::from(oldTextures.at(i).second);
         if (oldSource && oldSource->textureChangedSignal())
-            disconnect(oldTextures.at(i).second, oldSource->textureChangedSignal(), m_node, SLOT(markDirtyTexture()));
+            foreach (QSGShaderEffectNode* node, m_nodes)
+                disconnect(oldTextures.at(i).second, oldSource->textureChangedSignal(), node, SLOT(markDirtyTexture()));
     }
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
         textures.append(qMakePair(source.name, source.item));
         QSGTextureProvider *t = QSGTextureProvider::from(source.item);
         if (t && t->textureChangedSignal())
-            connect(source.item, t->textureChangedSignal(), m_node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+            foreach (QSGShaderEffectNode* node, m_nodes)
+                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+    }
+    for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
+         it != m_source.uniformNames.end(); ++it) {
+        values.append(qMakePair(*it, property(*it)));
     }
     values.append(qMakePair(timestampName, QVariant(m_lastTime)));
     m_material.setUniforms(values);
     m_material.setTextureProviders(textures);
-    m_node->markDirty(QSGNode::DirtyMaterial);
     m_dirtyData = false;
+    foreach (QSGShaderEffectNode* node, m_nodes)
+        node->markDirty(QSGNode::DirtyMaterial);
 }
 
-void QSGCustomParticle::initialize(int idx)
+void QSGCustomParticle::initialize(int gIdx, int pIdx)
 {
-    m_data[idx]->r = rand()/(qreal)RAND_MAX;
+    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    datum->r = rand()/(qreal)RAND_MAX;
 }
 
-void QSGCustomParticle::reload(int idx)
+void QSGCustomParticle::commit(int gIdx, int pIdx)
 {
-    if (m_node == 0)
+    if (m_nodes[gIdx] == 0)
         return;
 
-    PlainVertices *particles = (PlainVertices *) m_node->geometry()->vertexData();
-    PlainVertex *vertices = (PlainVertex *)&particles[idx];
+    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    PlainVertices *particles = (PlainVertices *) m_nodes[gIdx]->geometry()->vertexData();
+    PlainVertex *vertices = (PlainVertex *)&particles[pIdx];
     for (int i=0; i<4; ++i) {
-        vertices[i].x = m_data[idx]->x - m_systemOffset.x();
-        vertices[i].y = m_data[idx]->y - m_systemOffset.y();
-        vertices[i].t = m_data[idx]->t;
-        vertices[i].lifeSpan = m_data[idx]->lifeSpan;
-        vertices[i].size = m_data[idx]->size;
-        vertices[i].endSize = m_data[idx]->endSize;
-        vertices[i].sx = m_data[idx]->sx;
-        vertices[i].sy = m_data[idx]->sy;
-        vertices[i].ax = m_data[idx]->ax;
-        vertices[i].ay = m_data[idx]->ay;
-        vertices[i].r = m_data[idx]->r;
+        vertices[i].x = datum->x - m_systemOffset.x();
+        vertices[i].y = datum->y - m_systemOffset.y();
+        vertices[i].t = datum->t;
+        vertices[i].lifeSpan = datum->lifeSpan;
+        vertices[i].size = datum->size;
+        vertices[i].endSize = datum->endSize;
+        vertices[i].sx = datum->sx;
+        vertices[i].sy = datum->sy;
+        vertices[i].ax = datum->ax;
+        vertices[i].ay = datum->ay;
+        vertices[i].r = datum->r;
     }
 }
 

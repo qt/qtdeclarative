@@ -82,7 +82,7 @@ public slots:
     void take(QSGItem* item,bool prioritize=false);//take by modelparticle
     void give(QSGItem* item);//give from modelparticle
 
-    void setFade(bool arg){if(arg == m_fade) return; m_fade = arg; emit fadeChanged();}
+    void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; emit fadeChanged();}
     void setDelegate(QDeclarativeComponent* arg)
     {
         if (m_delegate != arg) {
@@ -93,14 +93,14 @@ public slots:
 
 protected:
     virtual void reset();
-    virtual void reload(int idx);
-    virtual void initialize(int idx);
+    virtual void commit(int gIdx, int pIdx);
+    virtual void initialize(int gIdx, int pIdx);
     void prepareNextFrame();
 private slots:
     void tick();
 private:
     QList<QSGItem* > m_deletables;
-    QList< int > m_loadables;
+    QList< QSGParticleData* > m_loadables;
     bool m_fade;
 
     QList<QSGItem*> m_pendingItems;

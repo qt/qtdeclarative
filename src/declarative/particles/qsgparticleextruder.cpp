@@ -50,11 +50,11 @@ QSGParticleExtruder::QSGParticleExtruder(QObject *parent) :
 
 QPointF QSGParticleExtruder::extrude(const QRectF &rect)
 {
-    if(m_fill)
+    if (m_fill)
         return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
                        ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
     int side = rand() % 4;
-    switch(side){//TODO: Doesn't this overlap the corners?
+    switch (side){//TODO: Doesn't this overlap the corners?
     case 0:
         return QPointF(rect.x(),
                        ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());

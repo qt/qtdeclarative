@@ -48,6 +48,11 @@
 
 QT_BEGIN_NAMESPACE
 
+/* TODO: Split out image logic from stochastic state logic
+   Also make sharable
+   Also solve the state data initialization/transfer issue so as to not need to make friends
+*/
+
 QSGSpriteEngine::QSGSpriteEngine(QObject *parent) :
     QObject(parent), m_timeOffset(0)
 {
@@ -82,7 +87,7 @@ TODO: All these calculations should be pre-calculated and cached during initiali
 int QSGSpriteEngine::spriteState(int sprite)
 {
     int state = m_sprites[sprite];
-    if(!m_states[state]->m_generatedCount)
+    if (!m_states[state]->m_generatedCount)
         return state;
     int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
@@ -92,7 +97,7 @@ int QSGSpriteEngine::spriteState(int sprite)
 int QSGSpriteEngine::spriteStart(int sprite)
 {
     int state = m_sprites[sprite];
-    if(!m_states[state]->m_generatedCount)
+    if (!m_states[state]->m_generatedCount)
         return m_startTimes[sprite];
     int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
@@ -102,11 +107,11 @@ int QSGSpriteEngine::spriteStart(int sprite)
 int QSGSpriteEngine::spriteFrames(int sprite)
 {
     int state = m_sprites[sprite];
-    if(!m_states[state]->m_generatedCount)
+    if (!m_states[state]->m_generatedCount)
         return m_states[state]->frames();
     int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    if(extra == m_states[state]->m_generatedCount - 1)//last state
+    if (extra == m_states[state]->m_generatedCount - 1)//last state
         return m_states[state]->frames() % m_states[state]->m_framesPerRow;
     else
         return m_states[state]->m_framesPerRow;
@@ -115,11 +120,11 @@ int QSGSpriteEngine::spriteFrames(int sprite)
 int QSGSpriteEngine::spriteDuration(int sprite)
 {
     int state = m_sprites[sprite];
-    if(!m_states[state]->m_generatedCount)
+    if (!m_states[state]->m_generatedCount)
         return m_states[state]->duration();
     int rowDuration = m_states[state]->duration() * m_states[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    if(extra == m_states[state]->m_generatedCount - 1)//last state
+    if (extra == m_states[state]->m_generatedCount - 1)//last state
         return (m_states[state]->duration() * m_states[state]->frames()) % rowDuration;
     else
         return rowDuration;
@@ -132,18 +137,20 @@ int QSGSpriteEngine::spriteCount()//TODO: Actually image state count, need to re
 
 void QSGSpriteEngine::setGoal(int state, int sprite, bool jump)
 {
-    if(sprite >= m_sprites.count() || state >= m_states.count())
+    if (sprite >= m_sprites.count() || state >= m_states.count())
         return;
-    if(!jump){
+    if (!jump){
         m_goals[sprite] = state;
         return;
     }
 
-    if(m_sprites[sprite] == state)
+    if (m_sprites[sprite] == state)
         return;//Already there
     m_sprites[sprite] = state;
     m_goals[sprite] = -1;
     restartSprite(sprite);
+    emit stateChanged(sprite);
+    emit m_states[state]->entered();
     return;
 }
 
@@ -157,8 +164,8 @@ QImage QSGSpriteEngine::assembledImage()
     int maxSize;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
 
-    foreach(QSGSprite* state, m_states){
-        if(state->frames() > m_maxFrames)
+    foreach (QSGSprite* state, m_states){
+        if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
 
         QImage img(state->source().toLocalFile());
@@ -169,10 +176,10 @@ QImage QSGSpriteEngine::assembledImage()
 
         //Check that the frame sizes are the same within one engine
         int imgWidth = state->frameWidth();
-        if(!imgWidth)
+        if (!imgWidth)
             imgWidth = img.width() / state->frames();
-        if(frameWidth){
-            if(imgWidth != frameWidth){
+        if (frameWidth){
+            if (imgWidth != frameWidth){
                 qWarning() << "SpriteEngine: Irregular frame width..." << state->source().toLocalFile();
                 return QImage();
             }
@@ -181,10 +188,10 @@ QImage QSGSpriteEngine::assembledImage()
         }
 
         int imgHeight = state->frameHeight();
-        if(!imgHeight)
+        if (!imgHeight)
             imgHeight = img.height();
-        if(frameHeight){
-            if(imgHeight!=frameHeight){
+        if (frameHeight){
+            if (imgHeight!=frameHeight){
                 qWarning() << "SpriteEngine: Irregular frame height..." << state->source().toLocalFile();
                 return QImage();
             }
@@ -192,12 +199,12 @@ QImage QSGSpriteEngine::assembledImage()
             frameHeight = imgHeight;
         }
 
-        if(state->frames() * frameWidth > maxSize){
+        if (state->frames() * frameWidth > maxSize){
             struct helper{
                 static int divRoundUp(int a, int b){return (a+b-1)/b;}
             };
             int rowsNeeded = helper::divRoundUp(state->frames(), helper::divRoundUp(maxSize, frameWidth));
-            if(rowsNeeded * frameHeight > maxSize){
+            if (rowsNeeded * frameHeight > maxSize){
                 qWarning() << "SpriteEngine: Animation too large to fit in one texture..." << state->source().toLocalFile();
                 qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
             }
@@ -209,15 +216,15 @@ QImage QSGSpriteEngine::assembledImage()
     }
 
     //maxFrames is max number in a line of the texture
-    if(m_maxFrames * frameWidth > maxSize)
+    if (m_maxFrames * frameWidth > maxSize)
         m_maxFrames = maxSize/frameWidth;
     QImage image(frameWidth * m_maxFrames, frameHeight * m_imageStateCount, QImage::Format_ARGB32);
     image.fill(0);
     QPainter p(&image);
     int y = 0;
-    foreach(QSGSprite* state, m_states){
+    foreach (QSGSprite* state, m_states){
         QImage img(state->source().toLocalFile());
-        if(img.height() == frameHeight && img.width() <  maxSize){//Simple case
+        if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
             p.drawImage(0,y,img);
             y += frameHeight;
         }else{
@@ -226,8 +233,8 @@ QImage QSGSpriteEngine::assembledImage()
             int curX = 0;
             int curY = 0;
             int framesLeft = state->frames();
-            while(framesLeft > 0){
-                if(image.width() - x + curX <= img.width()){//finish a row in image (dest)
+            while (framesLeft > 0){
+                if (image.width() - x + curX <= img.width()){//finish a row in image (dest)
                     int copied = image.width() - x;
                     Q_ASSERT(!(copied % frameWidth));//XXX: Just checking
                     framesLeft -= copied/frameWidth;
@@ -235,7 +242,7 @@ QImage QSGSpriteEngine::assembledImage()
                     y += frameHeight;
                     curX += copied;
                     x = 0;
-                    if(curX == img.width()){
+                    if (curX == img.width()){
                         curX = 0;
                         curY += frameHeight;
                     }
@@ -249,12 +256,12 @@ QImage QSGSpriteEngine::assembledImage()
                     curX = 0;
                 }
             }
-            if(x)
+            if (x)
                 y += frameHeight;
         }
     }
 
-    if(image.height() > maxSize){
+    if (image.height() > maxSize){
         qWarning() << "SpriteEngine: Too many animations to fit in one texture...";
         qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
         return QImage();
@@ -269,53 +276,63 @@ void QSGSpriteEngine::setCount(int c)
     m_startTimes.resize(c);
 }
 
-void QSGSpriteEngine::startSprite(int index)
+void QSGSpriteEngine::startSprite(int index, int state)
 {
-    if(index >= m_sprites.count())
+    if (index >= m_sprites.count())
         return;
-    m_sprites[index] = 0;
+    m_sprites[index] = state;
     m_goals[index] = -1;
     restartSprite(index);
+}
+
+void QSGSpriteEngine::stopSprite(int index)
+{
+    if (index >= m_sprites.count())
+        return;
+    //Will never change until start is called again with a new state - this is not a 'pause'
+    for (int i=0; i<m_stateUpdates.count(); i++)
+        m_stateUpdates[i].second.removeAll(index);
 }
 
 void QSGSpriteEngine::restartSprite(int index)
 {
     m_startTimes[index] = m_timeOffset + m_advanceTime.elapsed();
     int time = m_states[m_sprites[index]]->duration() * m_states[m_sprites[index]]->frames() + m_startTimes[index];
-    for(int i=0; i<m_stateUpdates.count(); i++)
+    for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
     addToUpdateList(time, index);
 }
 
-uint QSGSpriteEngine::updateSprites(uint time)
+uint QSGSpriteEngine::updateSprites(uint time)//### would returning a list of changed idxs be faster than signals?
 {
     //Sprite State Update;
-    while(!m_stateUpdates.isEmpty() && time >= m_stateUpdates.first().first){
-        foreach(int idx, m_stateUpdates.first().second){
-            if(idx >= m_sprites.count())
+    QSet<int> changedIndexes;
+    while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.first().first){
+        foreach (int idx, m_stateUpdates.first().second){
+            if (idx >= m_sprites.count())
                 continue;//TODO: Proper fix(because this does happen and I'm just ignoring it)
             int stateIdx = m_sprites[idx];
             int nextIdx = -1;
             int goalPath = goalSeek(stateIdx, idx);
-            if(goalPath == -1){//Random
+            if (goalPath == -1){//Random
                 qreal r =(qreal) qrand() / (qreal) RAND_MAX;
                 qreal total = 0.0;
-                for(QVariantMap::const_iterator iter=m_states[stateIdx]->m_to.constBegin();
+                for (QVariantMap::const_iterator iter=m_states[stateIdx]->m_to.constBegin();
                     iter!=m_states[stateIdx]->m_to.constEnd(); iter++)
                     total += (*iter).toReal();
                 r*=total;
-                for(QVariantMap::const_iterator iter= m_states[stateIdx]->m_to.constBegin();
+                for (QVariantMap::const_iterator iter= m_states[stateIdx]->m_to.constBegin();
                         iter!=m_states[stateIdx]->m_to.constEnd(); iter++){
-                    if(r < (*iter).toReal()){
+                    if (r < (*iter).toReal()){
                         bool superBreak = false;
-                        for(int i=0; i<m_states.count(); i++){
-                            if(m_states[i]->name() == iter.key()){
+                        for (int i=0; i<m_states.count(); i++){
+                            if (m_states[i]->name() == iter.key()){
                                 nextIdx = i;
                                 superBreak = true;
                                 break;
                             }
                         }
-                        if(superBreak)
+                        if (superBreak)
                             break;
                     }
                     r -= (*iter).toReal();
@@ -323,12 +340,15 @@ uint QSGSpriteEngine::updateSprites(uint time)
             }else{//Random out of shortest paths to goal
                 nextIdx = goalPath;
             }
-            if(nextIdx == -1)//No to states means stay here
+            if (nextIdx == -1)//No to states means stay here
                 nextIdx = stateIdx;
 
             m_sprites[idx] = nextIdx;
             m_startTimes[idx] = time;
-            //TODO: emit something? Remember to emit this when a psuedostate changes too
+            if (nextIdx != stateIdx){
+                changedIndexes << idx;
+                emit m_states[nextIdx]->entered();
+            }
             addToUpdateList((m_states[nextIdx]->duration() * m_states[nextIdx]->frames()) + time, idx);
         }
         m_stateUpdates.pop_front();
@@ -336,7 +356,11 @@ uint QSGSpriteEngine::updateSprites(uint time)
 
     m_timeOffset = time;
     m_advanceTime.start();
-    if(m_stateUpdates.isEmpty())
+    //TODO: emit this when a psuedostate changes too
+    foreach (int idx, changedIndexes){//Batched so that update list doesn't change midway
+        emit stateChanged(idx);
+    }
+    if (m_stateUpdates.isEmpty())
         return -1;
     return m_stateUpdates.first().first;
 }
@@ -344,68 +368,68 @@ uint QSGSpriteEngine::updateSprites(uint time)
 int QSGSpriteEngine::goalSeek(int curIdx, int spriteIdx, int dist)
 {
     QString goalName;
-    if(m_goals[spriteIdx] != -1)
+    if (m_goals[spriteIdx] != -1)
         goalName = m_states[m_goals[spriteIdx]]->name();
     else
         goalName = m_globalGoal;
-    if(goalName.isEmpty())
+    if (goalName.isEmpty())
         return -1;
     //TODO: caching instead of excessively redoing iterative deepening (which was chosen arbitarily anyways)
     // Paraphrased - implement in an *efficient* manner
-    for(int i=0; i<m_states.count(); i++)
-        if(m_states[curIdx]->name() == goalName)
+    for (int i=0; i<m_states.count(); i++)
+        if (m_states[curIdx]->name() == goalName)
             return curIdx;
-    if(dist < 0)
+    if (dist < 0)
         dist = m_states.count();
     QSGSprite* curState = m_states[curIdx];
-    for(QVariantMap::const_iterator iter = curState->m_to.constBegin();
+    for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
         iter!=curState->m_to.constEnd(); iter++){
-        if(iter.key() == goalName)
-            for(int i=0; i<m_states.count(); i++)
-                if(m_states[i]->name() == goalName)
+        if (iter.key() == goalName)
+            for (int i=0; i<m_states.count(); i++)
+                if (m_states[i]->name() == goalName)
                     return i;
     }
     QSet<int> options;
-    for(int i=1; i<dist; i++){
-        for(QVariantMap::const_iterator iter = curState->m_to.constBegin();
+    for (int i=1; i<dist; i++){
+        for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
             iter!=curState->m_to.constEnd(); iter++){
             int option = -1;
-            for(int j=0; j<m_states.count(); j++)//One place that could be a lot more efficient...
-                if(m_states[j]->name() == iter.key())
-                    if(goalSeek(j, spriteIdx, i) != -1)
+            for (int j=0; j<m_states.count(); j++)//One place that could be a lot more efficient...
+                if (m_states[j]->name() == iter.key())
+                    if (goalSeek(j, spriteIdx, i) != -1)
                         option = j;
-            if(option != -1)
+            if (option != -1)
                 options << option;
         }
-        if(!options.isEmpty()){
-            if(options.count()==1)
+        if (!options.isEmpty()){
+            if (options.count()==1)
                 return *(options.begin());
             int option = -1;
             qreal r =(qreal) qrand() / (qreal) RAND_MAX;
             qreal total;
-            for(QSet<int>::const_iterator iter=options.constBegin();
+            for (QSet<int>::const_iterator iter=options.constBegin();
                 iter!=options.constEnd(); iter++)
                 total += curState->m_to.value(m_states[(*iter)]->name()).toReal();
             r *= total;
-            for(QVariantMap::const_iterator iter = curState->m_to.constBegin();
+            for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
                 iter!=curState->m_to.constEnd(); iter++){
                 bool superContinue = true;
-                for(int j=0; j<m_states.count(); j++)
-                    if(m_states[j]->name() == iter.key())
-                        if(options.contains(j))
+                for (int j=0; j<m_states.count(); j++)
+                    if (m_states[j]->name() == iter.key())
+                        if (options.contains(j))
                             superContinue = false;
-                if(superContinue)
+                if (superContinue)
                     continue;
-                if(r < (*iter).toReal()){
+                if (r < (*iter).toReal()){
                     bool superBreak = false;
-                    for(int j=0; j<m_states.count(); j++){
-                        if(m_states[j]->name() == iter.key()){
+                    for (int j=0; j<m_states.count(); j++){
+                        if (m_states[j]->name() == iter.key()){
                             option = j;
                             superBreak = true;
                             break;
                         }
                     }
-                    if(superBreak)
+                    if (superBreak)
                         break;
                 }
                 r-=(*iter).toReal();
@@ -418,11 +442,11 @@ int QSGSpriteEngine::goalSeek(int curIdx, int spriteIdx, int dist)
 
 void QSGSpriteEngine::addToUpdateList(uint t, int idx)
 {
-    for(int i=0; i<m_stateUpdates.count(); i++){
-        if(m_stateUpdates[i].first==t){
+    for (int i=0; i<m_stateUpdates.count(); i++){
+        if (m_stateUpdates[i].first==t){
             m_stateUpdates[i].second << idx;
             return;
-        }else if(m_stateUpdates[i].first > t){
+        }else if (m_stateUpdates[i].first > t){
             QList<int> tmpList;
             tmpList << idx;
             m_stateUpdates.insert(i, qMakePair(t, tmpList));

@@ -51,14 +51,14 @@ QSGPointAttractorAffector::QSGPointAttractorAffector(QSGItem *parent) :
 
 bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
-    if(m_strength == 0.0)
+    if (m_strength == 0.0)
         return false;
     qreal dx = m_y - d->curX();
     qreal dy = m_x - d->curY();
     qreal r = sqrt((dx*dx) + (dy*dy));
     qreal theta = atan2(dy,dx);
     qreal ds = 0;
-    switch(m_proportionalToDistance){
+    switch (m_proportionalToDistance){
     case Quadratic:
         ds = (m_strength / qMax<qreal>(1.,r*r)) * dt;
         break;
@@ -68,7 +68,7 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
     }
     dx = ds * cos(theta);
     dy = ds * sin(theta);
-    switch(m_physics){
+    switch (m_physics){
     case Position:
         d->x = (d->x + dx);
         d->y = (d->y + dy);

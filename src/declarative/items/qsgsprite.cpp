@@ -40,6 +40,9 @@
 ****************************************************************************/
 
 #include "qsgsprite_p.h"
+//TODO: Split out particle system dependency
+#include "qsgparticlesystem_p.h"
+#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,6 +55,19 @@ QSGSprite::QSGSprite(QObject *parent) :
     , m_frameWidth(0)
     , m_duration(1000)
 {
+}
+
+void redirectError(QDeclarativeListProperty<QObject> *prop, QObject *value)
+{
+    qWarning() << "Could not add " << value << " to state" << prop->object << "as it is not associated with a particle system.";
+}
+
+QDeclarativeListProperty<QObject> QSGSprite::particleChildren(){
+    QSGParticleSystem* system = qobject_cast<QSGParticleSystem*>(parent());
+    if (system)
+        return QDeclarativeListProperty<QObject>(this, 0, &QSGParticleSystem::stateRedirect);
+    else
+        return QDeclarativeListProperty<QObject>(this, 0, &redirectError);
 }
 
 QT_END_NAMESPACE

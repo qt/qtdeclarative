@@ -56,6 +56,7 @@ class QSGSpriteGoalAffector : public QSGParticleAffector
     Q_OBJECT
     Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
+    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
 public:
     explicit QSGSpriteGoalAffector(QSGItem *parent = 0);
 
@@ -68,6 +69,11 @@ public:
     {
         return m_jump;
     }
+    bool systemStates() const
+    {
+        return m_systemStates;
+    }
+
 protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
 signals:
@@ -77,6 +83,8 @@ signals:
     void jumpChanged(bool arg);
 
     void affected(const QPointF &pos);
+    void systemStatesChanged(bool arg);
+
 public slots:
 
 void setGoalState(QString arg);
@@ -89,12 +97,23 @@ void setJump(bool arg)
     }
 }
 
+void setSystemStates(bool arg)
+{
+    if (m_systemStates != arg) {
+        m_systemStates = arg;
+        emit systemStatesChanged(arg);
+    }
+}
+
 private:
     void updateStateIndex(QSGSpriteEngine* e);
     QString m_goalState;
     int m_goalIdx;
     QSGSpriteEngine* m_lastEngine;
     bool m_jump;
+    bool m_systemStates;
+
+    bool m_notUsingEngine;
 };
 
 QT_END_NAMESPACE

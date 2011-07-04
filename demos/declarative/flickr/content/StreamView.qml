@@ -50,7 +50,6 @@ Item{
     ParticleSystem{ 
         id: sys 
         anchors.fill:parent
-        overwrite: false
     }
     ModelParticle{
         id: mp

@@ -62,11 +62,11 @@ const QPointF &QSGTargetedDirection::sample(const QPointF &from)
     //###This approach loses interpolating the last position of the target (like we could with the emitter) is it worthwhile?
     qreal targetX;
     qreal targetY;
-    if(m_targetItem){
+    if (m_targetItem){
         QSGParticleEmitter* parentEmitter = qobject_cast<QSGParticleEmitter*>(parent());
         targetX = m_targetItem->width()/2;
         targetY = m_targetItem->height()/2;
-        if(!parentEmitter){
+        if (!parentEmitter){
             qWarning() << "Directed vector is not a child of the emitter. Mapping of target item coordinates may fail.";
             targetX += m_targetItem->x();
             targetY += m_targetItem->y();
@@ -83,7 +83,7 @@ const QPointF &QSGTargetedDirection::sample(const QPointF &from)
     targetY += 0 - from.y() - m_targetVariation + rand()/(float)RAND_MAX * m_targetVariation*2;
     qreal theta = atan2(targetY, targetX);
     qreal mag = m_magnitude + rand()/(float)RAND_MAX * m_magnitudeVariation * 2 - m_magnitudeVariation;
-    if(m_proportionalMagnitude)
+    if (m_proportionalMagnitude)
         mag *= sqrt(targetX * targetX + targetY * targetY);
     m_ret.setX(mag * cos(theta));
     m_ret.setY(mag * sin(theta));

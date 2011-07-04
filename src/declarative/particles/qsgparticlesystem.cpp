@@ -44,19 +44,232 @@
 #include "qsgparticleemitter_p.h"
 #include "qsgparticleaffector_p.h"
 #include "qsgparticlepainter_p.h"
+#include "qsgspriteengine_p.h"
+#include "qsgsprite_p.h"
+
+#include "qsgfollowemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
 #include <cmath>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
-QSGParticleData::QSGParticleData()
+const qreal EPSILON = 0.001;
+//Utility functions for when within 1ms is close enough
+bool timeEqualOrGreater(qreal a, qreal b){
+    return (a+EPSILON >= b);
+}
+
+bool timeLess(qreal a, qreal b){
+    return (a-EPSILON < b);
+}
+
+bool timeEqual(qreal a, qreal b){
+    return (a+EPSILON > b) && (a-EPSILON < b);
+}
+
+int roundedTime(qreal a){// in ms
+    return (int)qRound(a*1000.0);
+}
+
+QSGParticleDataHeap::QSGParticleDataHeap()
+    : m_data(0)
+{
+    m_data.reserve(1000);
+    clear();
+}
+
+void QSGParticleDataHeap::grow() //###Consider automatic growth vs resize() calls from GroupData
+{
+    m_data.resize(1 << ++m_size);
+}
+
+void QSGParticleDataHeap::insert(QSGParticleData* data)
+{
+    int time = roundedTime(data->t + data->lifeSpan);
+    if (m_lookups.contains(time)){
+        m_data[m_lookups[time]].data << data;
+        return;
+    }
+    if (m_end == (1 << m_size))
+        grow();
+    m_data[m_end].time = time;
+    m_data[m_end].data.clear();
+    m_data[m_end].data.insert(data);
+    m_lookups.insert(time, m_end);
+    bubbleUp(m_end++);
+}
+
+int QSGParticleDataHeap::top()
+{
+    if (m_end == 0)
+        return 1e24;
+    return m_data[0].time;
+}
+
+QSet<QSGParticleData*> QSGParticleDataHeap::pop()
+{
+    if (!m_end)
+        return QSet<QSGParticleData*> ();
+    QSet<QSGParticleData*> ret = m_data[0].data;
+    m_lookups.remove(m_data[0].time);
+    if (m_end == 1){
+        --m_end;
+    }else{
+        m_data[0] = m_data[--m_end];
+        bubbleDown(0);
+    }
+    return ret;
+}
+
+void QSGParticleDataHeap::clear()
+{
+    m_size = 0;
+    m_end = 0;
+    //m_size is in powers of two. So to start at 0 we have one allocated
+    m_data.resize(1);
+    m_lookups.clear();
+}
+
+bool QSGParticleDataHeap::contains(QSGParticleData* d)
+{
+    for (int i=0; i<m_end; i++)
+        if (m_data[i].data.contains(d))
+            return true;
+    return false;
+}
+
+void QSGParticleDataHeap::swap(int a, int b)
+{
+    m_tmp = m_data[a];
+    m_data[a] = m_data[b];
+    m_data[b] = m_tmp;
+    m_lookups[m_data[a].time] = a;
+    m_lookups[m_data[b].time] = b;
+}
+
+void QSGParticleDataHeap::bubbleUp(int idx)//tends to be called once
+{
+    if (!idx)
+        return;
+    int parent = (idx-1)/2;
+    if (m_data[idx].time < m_data[parent].time){
+        swap(idx, parent);
+        bubbleUp(parent);
+    }
+}
+
+void QSGParticleDataHeap::bubbleDown(int idx)//tends to be called log n times
+{
+    int left = idx*2 + 1;
+    if (left >= m_end)
+        return;
+    int lesser = left;
+    int right = idx*2 + 2;
+    if (right < m_end){
+        if (m_data[left].time > m_data[right].time)
+            lesser = right;
+    }
+    if (m_data[idx].time > m_data[lesser].time){
+        swap(idx, lesser);
+        bubbleDown(lesser);
+    }
+}
+
+QSGParticleGroupData::QSGParticleGroupData(int id, QSGParticleSystem* sys):index(id),m_size(0),m_system(sys)
+{
+    initList();
+}
+
+QSGParticleGroupData::~QSGParticleGroupData()
+{
+    foreach (QSGParticleData* d, data)
+        delete d;
+}
+
+int QSGParticleGroupData::size()
+{
+    return m_size;
+}
+
+QString QSGParticleGroupData::name()//### Worth caching as well?
+{
+    return m_system->m_groupIds.key(index);
+}
+
+void QSGParticleGroupData::setSize(int newSize){
+    if (newSize == m_size)
+        return;
+    Q_ASSERT(newSize > m_size);//XXX allow shrinking
+    data.resize(newSize);
+    for (int i=m_size; i<newSize; i++){
+        data[i] = new QSGParticleData(m_system);
+        data[i]->group = index;
+        data[i]->index = i;
+        reusableIndexes << i;
+    }
+    int delta = newSize - m_size;
+    m_size = newSize;
+    foreach (QSGParticlePainter* p, painters)
+        p->setCount(p->count() + delta);
+}
+
+void QSGParticleGroupData::initList()
+{
+    dataHeap.clear();
+}
+
+void QSGParticleGroupData::kill(QSGParticleData* d){
+    Q_ASSERT(d->group == index);
+    d->lifeSpan = 0;//Kill off
+    foreach (QSGParticlePainter* p, painters)
+        p->reload(d);
+    reusableIndexes << d->index;
+}
+
+QSGParticleData* QSGParticleGroupData::newDatum(bool respectsLimits){
+    while (dataHeap.top() <= m_system->m_timeInt){
+        foreach (QSGParticleData* datum, dataHeap.pop()){
+            if (!datum->stillAlive()){
+                reusableIndexes << datum->index;
+            }else{
+                prepareRecycler(datum); //ttl has been altered mid-way, put it back
+            }
+        }
+    }
+
+    while (!reusableIndexes.empty()){
+        int idx = *(reusableIndexes.begin());
+        reusableIndexes.remove(idx);
+        if (data[idx]->stillAlive()){// ### This means resurrection of dead particles. Is that allowed?
+            prepareRecycler(data[idx]);
+            continue;
+        }
+        return data[idx];
+    }
+    if (respectsLimits)
+        return 0;
+
+    int oldSize = m_size;
+    setSize(oldSize + 10);//###+1,10%,+10? Choose something non-arbitrarily
+    reusableIndexes.remove(oldSize);
+    return data[oldSize];
+}
+
+void QSGParticleGroupData::prepareRecycler(QSGParticleData* d){
+    dataHeap.insert(d);
+}
+
+QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     : group(0)
     , e(0)
+    , system(sys)
     , index(0)
+    , systemIndex(-1)
 {
     x = 0;
     y = 0;
     t = -1;
+    lifeSpan = 0;
     size = 0;
     endSize = 0;
     sx = 0;
@@ -70,9 +283,9 @@ QSGParticleData::QSGParticleData()
     rotation = 0;
     rotationSpeed = 0;
     autoRotate = 0;
-    animIdx = -1;
+    animIdx = 0;
     frameDuration = 1;
-    frameCount = 0;
+    frameCount = 1;
     animT = -1;
     color.r = 255;
     color.g = 255;
@@ -83,259 +296,36 @@ QSGParticleData::QSGParticleData()
     modelIndex = -1;
 }
 
-QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent), m_particle_count(0), m_running(true)
-  , m_startTime(0), m_overwrite(false)
-  , m_componentComplete(false)
+void QSGParticleData::clone(const QSGParticleData& other)
 {
-    QSGParticleGroupData* gd = new QSGParticleGroupData;//Default group
-    m_groupData.insert(0,gd);
-    m_groupIds.insert("",0);
-    m_nextGroupId = 1;
-
-    connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
-            this, SLOT(loadPainter(QObject*)));
-}
-
-void QSGParticleSystem::registerParticlePainter(QSGParticlePainter* p)
-{
-    //TODO: a way to Unregister emitters, painters and affectors
-    m_particlePainters << QPointer<QSGParticlePainter>(p);//###Set or uniqueness checking?
-    connect(p, SIGNAL(particlesChanged(QStringList)),
-            &m_painterMapper, SLOT(map()));
-    loadPainter(p);
-    p->update();//###Initial update here?
-}
-
-void QSGParticleSystem::registerParticleEmitter(QSGParticleEmitter* e)
-{
-    m_emitters << QPointer<QSGParticleEmitter>(e);//###How to get them out?
-    connect(e, SIGNAL(particleCountChanged()),
-            this, SLOT(emittersChanged()));
-    connect(e, SIGNAL(particleChanged(QString)),
-            this, SLOT(emittersChanged()));
-    emittersChanged();
-    e->reset();//Start, so that starttime factors appropriately
-}
-
-void QSGParticleSystem::registerParticleAffector(QSGParticleAffector* a)
-{
-    m_affectors << QPointer<QSGParticleAffector>(a);
-}
-
-void QSGParticleSystem::loadPainter(QObject *p)
-{
-    if(!m_componentComplete)
-        return;
-
-    QSGParticlePainter* painter = qobject_cast<QSGParticlePainter*>(p);
-    Q_ASSERT(painter);//XXX
-    foreach(QSGParticleGroupData* sg, m_groupData)
-        sg->painters.remove(painter);
-    int particleCount = 0;
-    if(painter->particles().isEmpty()){//Uses default particle
-        particleCount += m_groupData[0]->size;
-        m_groupData[0]->painters << painter;
-    }else{
-        foreach(const QString &group, painter->particles()){
-            particleCount += m_groupData[m_groupIds[group]]->size;
-            m_groupData[m_groupIds[group]]->painters << painter;
-        }
-    }
-    painter->setCount(particleCount);
-    painter->update();//###Initial update here?
-    return;
-}
-
-void QSGParticleSystem::emittersChanged()
-{
-    if(!m_componentComplete)
-        return;
-
-    m_emitters.removeAll(0);
-
-    //Recalculate all counts, as emitter 'particle' may have changed as well
-    //### Worth tracking previous 'particle' per emitter to do partial recalculations?
-    m_particle_count = 0;
-
-    int previousGroups = m_nextGroupId;
-    QVector<int> previousSizes;
-    previousSizes.resize(previousGroups);
-    for(int i=0; i<previousGroups; i++)
-        previousSizes[i] = m_groupData[i]->size;
-    for(int i=0; i<previousGroups; i++)
-        m_groupData[i]->size = 0;
-
-    foreach(QSGParticleEmitter* e, m_emitters){//Populate groups and set sizes.
-        if(!m_groupIds.contains(e->particle())
-                || (!e->particle().isEmpty() && !m_groupIds[e->particle()])){//or it was accidentally inserted by a failed lookup earlier
-            QSGParticleGroupData* gd = new QSGParticleGroupData;
-            int id = m_nextGroupId++;
-            m_groupIds.insert(e->particle(), id);
-            m_groupData.insert(id, gd);
-        }
-        m_groupData[m_groupIds[e->particle()]]->size += e->particleCount();
-        m_particle_count += e->particleCount();
-        //###: Cull emptied groups?
-    }
-
-    foreach(QSGParticleGroupData* gd, m_groupData){//resize groups and update painters
-        int id = m_groupData.key(gd);
-
-        //TODO: Shrink back down! (but it has the problem of trying to remove the dead particles while maintaining integrity)
-        gd->size = qMax(gd->size, id < previousGroups?previousSizes[id]:0);
-
-        gd->data.resize(gd->size);
-        if(id < previousGroups){
-            for(int i=previousSizes[id]; i<gd->size; i++)
-                gd->data[i] = 0;
-            /*TODO:Consider salvaging partial updates, but have to batch changes to a single painter
-            int delta = 0;
-            delta = gd->size - previousSizes[id];
-            foreach(QSGParticlePainter* painter, gd->painters){
-                if(!painter->count() && delta){
-                    painter->reset();
-                    painter->update();
-                }
-                qDebug() << "Phi" << painter << painter->count() << delta;
-                painter->setCount(painter->count() + delta);
-            }
-            */
-        }
-    }
-    foreach(QSGParticlePainter *p, m_particlePainters)
-        loadPainter(p);
-
-    if(m_particle_count > 16000)//###Investigate if these limits are worth warning about?
-        qWarning() << "Particle system arbitarily believes it has a vast number of particles (>16000). Expect poor performance";
-}
-
-void QSGParticleSystem::setRunning(bool arg)
-{
-    if (m_running != arg) {
-        m_running = arg;
-        emit runningChanged(arg);
-        reset();
-    }
-}
-
-void QSGParticleSystem::componentComplete()
-{
-    QSGItem::componentComplete();
-    m_componentComplete = true;
-    //if(!m_emitters.isEmpty() && !m_particlePainters.isEmpty())
-    reset();
-}
-
-void QSGParticleSystem::reset()//TODO: Needed?
-{
-    if(!m_componentComplete)
-        return;
-
-    //Clear guarded pointers which have been deleted
-    int cleared = 0;
-    cleared += m_emitters.removeAll(0);
-    cleared += m_particlePainters.removeAll(0);
-    cleared += m_affectors.removeAll(0);
-    //qDebug() << "Reset" << m_emitters.count() << m_particles.count() << "Cleared" << cleared;
-
-    emittersChanged();
-
-    //TODO: Reset data
-//    foreach(QSGParticlePainter* p, m_particlePainters)
-//        p->reset();
-//    foreach(QSGParticleEmitter* e, m_emitters)
-//        e->reset();
-    //### Do affectors need reset too?
-
-    if(!m_running)
-        return;
-
-    foreach(QSGParticlePainter *p, m_particlePainters){
-        loadPainter(p);
-        p->reset();
-    }
-
-    m_timestamp.start();//TODO: Better placement
-    m_initialized = true;
-}
-
-QSGParticleData* QSGParticleSystem::newDatum(int groupId)
-{
-
-    Q_ASSERT(groupId < m_groupData.count());//XXX shouldn't really be an assert
-    Q_ASSERT(m_groupData[groupId]->size);
-
-    if( m_groupData[groupId]->nextIdx >= m_groupData[groupId]->size)
-        m_groupData[groupId]->nextIdx = 0;
-    int nextIdx = m_groupData[groupId]->nextIdx++;
-
-    Q_ASSERT(nextIdx < m_groupData[groupId]->size);
-    QSGParticleData* ret;
-    if(m_groupData[groupId]->data[nextIdx]){//Recycle, it's faster.
-        ret = m_groupData[groupId]->data[nextIdx];
-        if(!m_overwrite && ret->stillAlive()){
-            return 0;//Artificial longevity (or too fast emission) means this guy hasn't died. To maintain count, don't emit a new one
-        }//###Reset?
-    }else{
-        ret = new QSGParticleData;
-        m_groupData[groupId]->data[nextIdx] = ret;
-    }
-
-    ret->system = this;
-    ret->index = nextIdx;
-    ret->group = groupId;
-    return ret;
-}
-
-void QSGParticleSystem::emitParticle(QSGParticleData* pd)
-{// called from prepareNextFrame()->emitWindow - enforce?
-    //Account for relative emitter position
-    QPointF offset = this->mapFromItem(pd->e, QPointF(0, 0));
-    if(!offset.isNull()){
-        pd->x += offset.x();
-        pd->y += offset.y();
-    }
-
-    foreach(QSGParticleAffector *a, m_affectors)
-        if(a && a->m_needsReset)
-            a->reset(pd);
-    foreach(QSGParticlePainter* p, m_groupData[pd->group]->painters)
-        if(p)
-            p->load(pd);
-}
-
-
-
-qint64 QSGParticleSystem::systemSync(QSGParticlePainter* p)
-{
-    if (!m_running)
-        return 0;
-    if (!m_initialized)
-        return 0;//error in initialization
-
-    if(m_syncList.isEmpty() || m_syncList.contains(p)){//Need to advance the simulation
-        m_syncList.clear();
-
-        //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
-        qreal dt = m_timeInt / 1000.;
-        m_timeInt = m_timestamp.elapsed() + m_startTime;
-        qreal time =  m_timeInt / 1000.;
-        dt = time - dt;
-        m_needsReset.clear();
-        foreach(QSGParticleEmitter* emitter, m_emitters)
-            if(emitter)
-                emitter->emitWindow(m_timeInt);
-        foreach(QSGParticleAffector* a, m_affectors)
-            if(a)
-                a->affectSystem(dt);
-        foreach(QSGParticleData* d, m_needsReset)
-            foreach(QSGParticlePainter* p, m_groupData[d->group]->painters)
-                if(p && d)
-                    p->reload(d);
-    }
-    m_syncList << p;
-    return m_timeInt;
+    x = other.x;
+    y = other.y;
+    t = other.t;
+    lifeSpan = other.lifeSpan;
+    size = other.size;
+    endSize = other.endSize;
+    sx = other.sx;
+    sy = other.sy;
+    ax = other.ax;
+    ay = other.ay;
+    xx = other.xx;
+    xy = other.xy;
+    yx = other.yx;
+    yy = other.yy;
+    rotation = other.rotation;
+    rotationSpeed = other.rotationSpeed;
+    autoRotate = other.autoRotate;
+    animIdx = other.animIdx;
+    frameDuration = other.frameDuration;
+    frameCount = other.frameCount;
+    animT = other.animT;
+    color.r = other.color.r;
+    color.g = other.color.g;
+    color.b = other.color.b;
+    color.a = other.color.a;
+    r = other.r;
+    delegate = other.delegate;
+    modelIndex = other.modelIndex;
 }
 
 //sets the x accleration without affecting the instantaneous x velocity or position
@@ -387,7 +377,6 @@ void QSGParticleData::setInstantaneousAY(qreal ay)
 void QSGParticleData::setInstantaneousSY(qreal vy)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    //qDebug() << t << (system->m_timeInt/1000.0) << this->x << this->sx << this->ax << this->x + this->sx * t + 0.5 * this->ax * t * t;
     qreal sy = vy - t*this->ay;
     qreal ey = this->y + this->sy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*sy - 0.5 * t*t*this->ay;
@@ -429,19 +418,416 @@ qreal QSGParticleData::curSY() const
 
 void QSGParticleData::debugDump()
 {
-    qDebug() << "Particle" << group
+    qDebug() << "Particle" << systemIndex << group << "/" << index << stillAlive()
              << "Pos: " << x << "," << y
-             << "Vel: " << sx << "," << sy
-             << "Acc: " << ax << "," << ay
+             //<< "Vel: " << sx << "," << sy
+             //<< "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
-             << "Time: " << t << "," <<lifeSpan;
+             << "Time: " << t << "," <<lifeSpan << ";" << (system->m_timeInt / 1000.0) ;
 }
 
 bool QSGParticleData::stillAlive()
 {
-    if(!system)
+    if (!system)
         return false;
-    return (t + lifeSpan) > (system->m_timeInt/1000.0);
+    //fprintf(stderr, "%.9lf %.9lf\n",((qreal)system->m_timeInt/1000.0), (t+lifeSpan));
+    return (t + lifeSpan - EPSILON) > ((qreal)system->m_timeInt/1000.0);
 }
+
+float QSGParticleData::curSize()
+{
+    if (!system || !lifeSpan)
+        return 0.0f;
+    return size + (endSize - size) * (lifeLeft() / lifeSpan);
+}
+
+float QSGParticleData::lifeLeft()
+{
+    if (!system)
+        return 0.0f;
+    return (t + lifeSpan) - (system->m_timeInt/1000.0);
+}
+
+QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
+    QSGItem(parent), m_particle_count(0), m_running(true)
+  , m_startTime(0), m_nextIndex(0), m_componentComplete(false), m_spriteEngine(0)
+{
+    QSGParticleGroupData* gd = new QSGParticleGroupData(0, this);//Default group
+    m_groupData.insert(0,gd);
+    m_groupIds.insert("",0);
+    m_nextGroupId = 1;
+
+    connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
+            this, SLOT(loadPainter(QObject*)));
+}
+
+QSGParticleSystem::~QSGParticleSystem()
+{
+    foreach (QSGParticleGroupData* gd, m_groupData)
+        delete gd;
+}
+
+QDeclarativeListProperty<QSGSprite> QSGParticleSystem::particleStates()
+{
+    return QDeclarativeListProperty<QSGSprite>(this, &m_states, spriteAppend, spriteCount, spriteAt, spriteClear);
+}
+
+void QSGParticleSystem::registerParticlePainter(QSGParticlePainter* p)
+{
+    //TODO: a way to Unregister emitters, painters and affectors
+    m_particlePainters << QPointer<QSGParticlePainter>(p);//###Set or uniqueness checking?
+    connect(p, SIGNAL(particlesChanged(QStringList)),
+            &m_painterMapper, SLOT(map()));
+    loadPainter(p);
+    p->update();//###Initial update here?
+}
+
+void QSGParticleSystem::registerParticleEmitter(QSGParticleEmitter* e)
+{
+    m_emitters << QPointer<QSGParticleEmitter>(e);//###How to get them out?
+    connect(e, SIGNAL(particleCountChanged()),
+            this, SLOT(emittersChanged()));
+    connect(e, SIGNAL(particleChanged(QString)),
+            this, SLOT(emittersChanged()));
+    emittersChanged();
+    e->reset();//Start, so that starttime factors appropriately
+}
+
+void QSGParticleSystem::registerParticleAffector(QSGParticleAffector* a)
+{
+    m_affectors << QPointer<QSGParticleAffector>(a);
+}
+
+void QSGParticleSystem::loadPainter(QObject *p)
+{
+    if (!m_componentComplete)
+        return;
+
+    QSGParticlePainter* painter = qobject_cast<QSGParticlePainter*>(p);
+    Q_ASSERT(painter);//XXX
+    foreach (QSGParticleGroupData* sg, m_groupData)
+        sg->painters.remove(painter);
+    int particleCount = 0;
+    if (painter->particles().isEmpty()){//Uses default particle
+        QStringList def;
+        def << "";
+        painter->setParticles(def);
+        particleCount += m_groupData[0]->size();
+        m_groupData[0]->painters << painter;
+    }else{
+        foreach (const QString &group, painter->particles()){
+            if (group != QLatin1String("") && !m_groupIds[group]){//new group
+                int id = m_nextGroupId++;
+                QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
+                m_groupIds.insert(group, id);
+                m_groupData.insert(id, gd);
+            }
+            particleCount += m_groupData[m_groupIds[group]]->size();
+            m_groupData[m_groupIds[group]]->painters << painter;
+        }
+    }
+    painter->setCount(particleCount);
+    painter->update();//###Initial update here?
+    return;
+}
+
+void QSGParticleSystem::emittersChanged()
+{
+    if (!m_componentComplete)
+        return;
+
+    m_emitters.removeAll(0);
+
+
+    QList<int> previousSizes;
+    QList<int> newSizes;
+    for (int i=0; i<m_nextGroupId; i++){
+        previousSizes << m_groupData[i]->size();
+        newSizes << 0;
+    }
+
+    foreach (QSGParticleEmitter* e, m_emitters){//Populate groups and set sizes.
+        if (!m_groupIds.contains(e->particle())
+                || (!e->particle().isEmpty() && !m_groupIds[e->particle()])){//or it was accidentally inserted by a failed lookup earlier
+            int id = m_nextGroupId++;
+            QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
+            m_groupIds.insert(e->particle(), id);
+            m_groupData.insert(id, gd);
+            previousSizes << 0;
+            newSizes << 0;
+        }
+        newSizes[m_groupIds[e->particle()]] += e->particleCount();
+        //###: Cull emptied groups?
+    }
+
+    //TODO: Garbage collection?
+    m_particle_count = 0;
+    for (int i=0; i<m_nextGroupId; i++){
+        m_groupData[i]->setSize(qMax(newSizes[i], previousSizes[i]));
+        m_particle_count += m_groupData[i]->size();
+    }
+
+    Q_ASSERT(m_particle_count >= m_bySysIdx.size());//XXX when GC done right
+    m_bySysIdx.resize(m_particle_count);
+
+    foreach (QSGParticlePainter *p, m_particlePainters)
+        loadPainter(p);
+
+    if (!m_states.isEmpty())
+        createEngine();
+
+    if (m_particle_count > 16000)//###Investigate if these limits are worth warning about?
+        qWarning() << "Particle system arbitarily believes it has a vast number of particles (>16000). Expect poor performance";
+}
+
+void QSGParticleSystem::setRunning(bool arg)
+{
+    if (m_running != arg) {
+        m_running = arg;
+        emit runningChanged(arg);
+        reset();
+    }
+}
+
+void QSGParticleSystem::stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
+{
+    //Hooks up automatic state-associated stuff
+    QSGParticleSystem* sys = qobject_cast<QSGParticleSystem*>(prop->object->parent());
+    QSGSprite* sprite = qobject_cast<QSGSprite*>(prop->object);
+    if (!sprite || !sys)
+        return;
+    QStringList list;
+    list << sprite->name();
+    QSGParticleAffector* a = qobject_cast<QSGParticleAffector*>(value);
+    if (a){
+        a->setParentItem(sys);
+        a->setParticles(list);
+        a->setSystem(sys);
+        return;
+    }
+    QSGFollowEmitter* e = qobject_cast<QSGFollowEmitter*>(value);
+    if (e){
+        e->setParentItem(sys);
+        e->setFollow(sprite->name());
+        e->setSystem(sys);
+        return;
+    }
+    QSGParticlePainter* p = qobject_cast<QSGParticlePainter*>(value);
+    if (p){
+        p->setParentItem(sys);
+        p->setParticles(list);
+        p->setSystem(sys);
+        return;
+    }
+    qWarning() << value << " was placed inside a particle system state but cannot be taken into the particle system. It will be lost.";
+}
+
+void QSGParticleSystem::componentComplete()
+
+{
+    QSGItem::componentComplete();
+    m_componentComplete = true;
+    //if (!m_emitters.isEmpty() && !m_particlePainters.isEmpty())
+    reset();
+}
+
+void QSGParticleSystem::reset()//TODO: Needed? Or just in component complete?
+{
+    if (!m_componentComplete)
+        return;
+
+    //Clear guarded pointers which have been deleted
+    int cleared = 0;
+    cleared += m_emitters.removeAll(0);
+    cleared += m_particlePainters.removeAll(0);
+    cleared += m_affectors.removeAll(0);
+
+    emittersChanged();
+
+    //TODO: Reset data
+//    foreach (QSGParticlePainter* p, m_particlePainters)
+//        p->reset();
+//    foreach (QSGParticleEmitter* e, m_emitters)
+//        e->reset();
+    //### Do affectors need reset too?
+
+    if (!m_running)
+        return;
+
+    foreach (QSGParticlePainter *p, m_particlePainters){
+        loadPainter(p);
+        p->reset();
+    }
+
+    m_timeInt = 0;
+    m_timestamp.restart();//TODO: Better placement
+    m_initialized = true;
+}
+
+void QSGParticleSystem::createEngine()
+{
+    if (!m_componentComplete)
+        return;
+    //### Solve the losses if size/states go down
+    foreach (QSGSprite* sprite, m_states){
+        bool exists = false;
+        foreach (const QString &name, m_groupIds.keys())
+            if (sprite->name() == name)
+                exists = true;
+        if (!exists){
+            int id = m_nextGroupId++;
+            QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
+            m_groupIds.insert(sprite->name(), id);
+            m_groupData.insert(id, gd);
+        }
+    }
+
+    if (m_states.count()){
+        //Reorder Sprite List so as to have the same order as groups
+        QList<QSGSprite*> newList;
+        for (int i=0; i<m_nextGroupId; i++){
+            bool exists = false;
+            QString name = m_groupData[i]->name();
+            foreach (QSGSprite* existing, m_states){
+                if (existing->name() == name){
+                    newList << existing;
+                    exists = true;
+                }
+            }
+            if (!exists){
+                newList << new QSGSprite(this);
+                newList.back()->setName(name);
+            }
+        }
+        m_states = newList;
+
+        if (!m_spriteEngine)
+            m_spriteEngine = new QSGSpriteEngine(this);
+        m_spriteEngine->setCount(m_particle_count);
+        m_spriteEngine->m_states = m_states;
+
+        connect(m_spriteEngine, SIGNAL(stateChanged(int)),
+                this, SLOT(particleStateChange(int)));
+
+    }else{
+        if (m_spriteEngine)
+            delete m_spriteEngine;
+        m_spriteEngine = 0;
+    }
+
+}
+
+void QSGParticleSystem::particleStateChange(int idx)
+{
+    moveGroups(m_bySysIdx[idx], m_spriteEngine->spriteState(idx));
+}
+
+void QSGParticleSystem::moveGroups(QSGParticleData *d, int newGIdx)
+{
+    QSGParticleData* pd = newDatum(newGIdx, false, d->systemIndex);
+    pd->clone(*d);
+    finishNewDatum(pd);
+
+    d->systemIndex = -1;
+    m_groupData[d->group]->kill(d);
+}
+
+int QSGParticleSystem::nextSystemIndex()
+{
+    if (!m_reusableIndexes.isEmpty()){
+        int ret = *(m_reusableIndexes.begin());
+        m_reusableIndexes.remove(ret);
+        return ret;
+    }
+    if (m_nextIndex >= m_bySysIdx.size())
+        m_bySysIdx.resize(m_bySysIdx.size() < 10 ? 10 : m_bySysIdx.size()*1.1);//###+1,10%,+10? Choose something non-arbitrarily
+    return m_nextIndex++;
+}
+
+QSGParticleData* QSGParticleSystem::newDatum(int groupId, bool respectLimits, int sysIndex)
+{
+    Q_ASSERT(groupId < m_groupData.count());//XXX shouldn't really be an assert
+
+    QSGParticleData* ret = m_groupData[groupId]->newDatum(respectLimits);
+    if (!ret){
+        return 0;
+    }
+    if (sysIndex == -1){
+        if (ret->systemIndex == -1)
+            ret->systemIndex = nextSystemIndex();
+    }else{
+        if (ret->systemIndex != -1){
+            if (m_spriteEngine)
+                m_spriteEngine->stopSprite(ret->systemIndex);
+            m_reusableIndexes << ret->systemIndex;
+            m_bySysIdx[ret->systemIndex] = 0;
+        }
+        ret->systemIndex = sysIndex;
+    }
+    m_bySysIdx[ret->systemIndex] = ret;
+
+    if (m_spriteEngine)
+        m_spriteEngine->startSprite(ret->systemIndex, ret->group);
+
+    return ret;
+}
+
+void QSGParticleSystem::emitParticle(QSGParticleData* pd)
+{// called from prepareNextFrame()->emitWindow - enforce?
+    //Account for relative emitter position
+    QPointF offset = this->mapFromItem(pd->e, QPointF(0, 0));
+    if (!offset.isNull()){
+        pd->x += offset.x();
+        pd->y += offset.y();
+    }
+
+    finishNewDatum(pd);
+}
+
+void QSGParticleSystem::finishNewDatum(QSGParticleData *pd){
+    m_groupData[pd->group]->prepareRecycler(pd);
+
+    foreach (QSGParticleAffector *a, m_affectors)
+        if (a && a->m_needsReset)
+            a->reset(pd);
+    foreach (QSGParticlePainter* p, m_groupData[pd->group]->painters)
+        if (p)
+            p->load(pd);
+}
+
+qint64 QSGParticleSystem::systemSync(QSGParticlePainter* p)
+{
+    if (!m_running)
+        return 0;
+    if (!m_initialized)
+        return 0;//error in initialization
+
+    if (m_syncList.isEmpty() || m_syncList.contains(p)){//Need to advance the simulation
+        m_syncList.clear();
+
+        //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
+        qreal dt = m_timeInt / 1000.;
+        m_timeInt = m_timestamp.elapsed() + m_startTime;
+        qreal time =  m_timeInt / 1000.;
+        dt = time - dt;
+        m_needsReset.clear();
+        if (m_spriteEngine)
+            m_spriteEngine->updateSprites(m_timeInt);
+
+        foreach (QSGParticleEmitter* emitter, m_emitters)
+            if (emitter)
+                emitter->emitWindow(m_timeInt);
+        foreach (QSGParticleAffector* a, m_affectors)
+            if (a)
+                a->affectSystem(dt);
+        foreach (QSGParticleData* d, m_needsReset)
+            foreach (QSGParticlePainter* p, m_groupData[d->group]->painters)
+                if (p && d)
+                    p->reload(d);
+    }
+    m_syncList << p;
+    return m_timeInt;
+}
+
 
 QT_END_NAMESPACE

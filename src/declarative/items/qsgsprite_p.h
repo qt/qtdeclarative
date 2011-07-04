@@ -45,6 +45,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QVariantMap>
+#include <QDeclarativeListProperty>
 
 QT_BEGIN_HEADER
 
@@ -64,12 +65,16 @@ class QSGSprite : public QObject
     Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
     Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariance READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
+    Q_PROPERTY(int durationVariation READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
     Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
     Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
 
+    Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
+    Q_CLASSINFO("DefaultProperty", "particleChildren")
 public:
     explicit QSGSprite(QObject *parent = 0);
+
+    QDeclarativeListProperty<QObject> particleChildren();
 
     QUrl source() const
     {
@@ -135,6 +140,8 @@ signals:
     void speedModifierChanged(qreal arg);
 
     void durationVarianceChanged(int arg);
+
+    void entered();//### Just playing around - don't expect full state API
 
 public slots:
 
@@ -224,6 +231,7 @@ private:
     QVariantMap m_to;
     qreal m_speedModifier;
     int m_durationVariance;
+
 };
 
 QT_END_NAMESPACE

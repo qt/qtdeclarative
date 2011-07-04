@@ -52,14 +52,14 @@ QSGWanderAffector::QSGWanderAffector(QSGItem *parent) :
 
 QSGWanderAffector::~QSGWanderAffector()
 {
-    for(QHash<int, WanderData*>::const_iterator iter=m_wanderData.constBegin();
+    for (QHash<int, WanderData*>::const_iterator iter=m_wanderData.constBegin();
         iter != m_wanderData.constEnd(); iter++)
         delete (*iter);
 }
 
 WanderData* QSGWanderAffector::getData(int idx)
 {
-    if(m_wanderData.contains(idx))
+    if (m_wanderData.contains(idx))
         return m_wanderData[idx];
     WanderData* d = new WanderData;
     d->x_vel = 0;
@@ -75,7 +75,7 @@ WanderData* QSGWanderAffector::getData(int idx)
 
 void QSGWanderAffector::reset(int systemIdx)
 {
-    if(m_wanderData.contains(systemIdx))
+    if (m_wanderData.contains(systemIdx))
         delete m_wanderData[systemIdx];
     m_wanderData.remove(systemIdx);
 }
@@ -112,30 +112,30 @@ bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
     qreal dx = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
     qreal dy = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
     qreal newX, newY;
-    switch(m_physics){
+    switch (m_physics){
     case Position:
         newX = data->curX() + dx;
-        if(m_xVariance > qAbs(newX) )
+        if (m_xVariance > qAbs(newX) )
             data->x += dx;
         newY = data->curY() + dy;
-        if(m_yVariance > qAbs(newY) )
+        if (m_yVariance > qAbs(newY) )
             data->y += dy;
         break;
     default:
     case Velocity:
         newX = data->curSX() + dx;
-        if(m_xVariance > qAbs(newX) )
+        if (m_xVariance > qAbs(newX) )
             data->setInstantaneousSX(newX);
         newY = data->curSY() + dy;
-        if(m_yVariance > qAbs(newY) )
+        if (m_yVariance > qAbs(newY) )
             data->setInstantaneousSY(newY);
         break;
     case Acceleration:
         newX = data->ax + dx;
-        if(m_xVariance > qAbs(newX) )
+        if (m_xVariance > qAbs(newX) )
             data->setInstantaneousAX(newX);
         newY = data->ay + dy;
-        if(m_yVariance > qAbs(newY) )
+        if (m_yVariance > qAbs(newY) )
             data->setInstantaneousAY(newY);
         break;
     }

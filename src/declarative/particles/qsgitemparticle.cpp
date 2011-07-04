@@ -74,7 +74,7 @@ void QSGItemParticle::unfreeze(QSGItem* item)
 
 void QSGItemParticle::take(QSGItem *item, bool prioritize)
 {
-    if(prioritize)
+    if (prioritize)
         m_pendingItems.push_front(item);
     else
         m_pendingItems.push_back(item);
@@ -85,54 +85,54 @@ void QSGItemParticle::give(QSGItem *item)
     //TODO: This
 }
 
-void QSGItemParticle::initialize(int idx)
+void QSGItemParticle::initialize(int gIdx, int pIdx)
 {
-    m_loadables << idx;//defer to other thread
+    m_loadables << m_system->m_groupData[gIdx]->data[pIdx];//defer to other thread
 }
 
-void QSGItemParticle::reload(int idx)
+void QSGItemParticle::commit(int, int)
 {
 }
 
 void QSGItemParticle::tick()
 {
-    foreach(QSGItem* item, m_deletables){
-        if(m_fade)
+    foreach (QSGItem* item, m_deletables){
+        if (m_fade)
             item->setOpacity(0.);
         QSGItemParticleAttached* mpa;
-        if((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(item))))
+        if ((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(item))))
             mpa->detach();//reparent as well?
         //TODO: Delete iff we created it
         m_activeCount--;
     }
     m_deletables.clear();
 
-    foreach(int pos, m_loadables){
-        if(m_stasis.contains(m_data[pos]->delegate))
+    foreach (QSGParticleData* d, m_loadables){
+        if (m_stasis.contains(d->delegate))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
-        if(m_data[pos]->delegate){
-            m_deletables << m_data[pos]->delegate;
+        if (d->delegate){
+            m_deletables << d->delegate;
             m_activeCount--;
         }
-        m_data[pos]->delegate = 0;
-        if(!m_pendingItems.isEmpty()){
-            m_data[pos]->delegate = m_pendingItems.front();
+        d->delegate = 0;
+        if (!m_pendingItems.isEmpty()){
+            d->delegate = m_pendingItems.front();
             m_pendingItems.pop_front();
-        }else if(m_delegate){
-            m_data[pos]->delegate = qobject_cast<QSGItem*>(m_delegate->create(qmlContext(this)));
+        }else if (m_delegate){
+            d->delegate = qobject_cast<QSGItem*>(m_delegate->create(qmlContext(this)));
         }
-        if(m_data[pos]->delegate && m_data[pos]){//###Data can be zero if creating an item leads to a reset - this screws things up.
-            m_data[pos]->delegate->setX(m_data[pos]->curX() - m_data[pos]->delegate->width()/2);//TODO: adjust for system?
-            m_data[pos]->delegate->setY(m_data[pos]->curY() - m_data[pos]->delegate->height()/2);
-            QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(m_data[pos]->delegate));
-            if(mpa){
+        if (d->delegate && d){//###Data can be zero if creating an item leads to a reset - this screws things up.
+            d->delegate->setX(d->curX() - d->delegate->width()/2);//TODO: adjust for system?
+            d->delegate->setY(d->curY() - d->delegate->height()/2);
+            QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(d->delegate));
+            if (mpa){
                 mpa->m_mp = this;
                 mpa->attach();
             }
-            m_data[pos]->delegate->setParentItem(this);
-            if(m_fade)
-                m_data[pos]->delegate->setOpacity(0.);
+            d->delegate->setParentItem(this);
+            if (m_fade)
+                d->delegate->setOpacity(0.);
             m_activeCount++;
         }
     }
@@ -151,14 +151,14 @@ void QSGItemParticle::reset()
 QSGNode* QSGItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 {
     //Dummy update just to get painting tick
-    if(m_pleaseReset){
+    if (m_pleaseReset){
         m_pleaseReset = false;
         reset();
     }
     prepareNextFrame();
 
     update();//Get called again
-    if(n)
+    if (n)
         n->markDirty(QSGNode::DirtyMaterial);
     return QSGItem::updatePaintNode(n,d);
 }
@@ -169,38 +169,43 @@ void QSGItemParticle::prepareNextFrame()
     qreal curT = timeStamp/1000.0;
     qreal dt = curT - m_lastT;
     m_lastT = curT;
-    if(!m_activeCount)
+    if (!m_activeCount)
         return;
 
     //TODO: Size, better fade?
-    for(int i=0; i<count(); i++){
-        QSGParticleData* data = m_data[i];
-        QSGItem* item = data->delegate;
-        if(!item)
-            continue;
-        qreal t = ((timeStamp/1000.0) - data->t) / data->lifeSpan;
-        if(m_stasis.contains(item)) {
-            m_data[i]->t += dt;//Stasis effect
-            continue;
-        }
-        if(t >= 1.0){//Usually happens from load
-            m_deletables << item;
-            m_data[i]->delegate = 0;
-            m_activeCount--;
-        }else{//Fade
-            if(m_fade){
-                qreal o = 1.;
-                if(t<0.2)
-                    o = t*5;
-                if(t>0.8)
-                    o = (1-t)*5;
-                item->setOpacity(o);
-            }else{
-                item->setOpacity(1.);//###Without fade, it's just a binary toggle - if we turn it off we have to turn it back on
+    foreach (const QString &str, m_particles){
+        int gIdx = m_system->m_groupIds[str];
+        int count = m_system->m_groupData[gIdx]->size();
+
+        for (int i=0; i<count; i++){
+            QSGParticleData* data = m_system->m_groupData[gIdx]->data[i];
+            QSGItem* item = data->delegate;
+            if (!item)
+                continue;
+            qreal t = ((timeStamp/1000.0) - data->t) / data->lifeSpan;
+            if (m_stasis.contains(item)) {
+                data->t += dt;//Stasis effect
+                continue;
             }
+            if (t >= 1.0){//Usually happens from load
+                m_deletables << item;
+                data->delegate = 0;
+                m_activeCount--;
+            }else{//Fade
+                if (m_fade){
+                    qreal o = 1.;
+                    if (t<0.2)
+                        o = t*5;
+                    if (t>0.8)
+                        o = (1-t)*5;
+                    item->setOpacity(o);
+                }else{
+                    item->setOpacity(1.);//###Without fade, it's just a binary toggle - if we turn it off we have to turn it back on
+                }
+            }
+            item->setX(data->curX() - item->width()/2 - m_systemOffset.x());
+            item->setY(data->curY() - item->height()/2 - m_systemOffset.y());
         }
-        item->setX(data->curX() - item->width()/2 - m_systemOffset.x());
-        item->setY(data->curY() - item->height()/2 - m_systemOffset.y());
     }
 }
 

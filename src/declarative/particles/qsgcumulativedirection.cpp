@@ -39,21 +39,24 @@
 **
 ****************************************************************************/
 
-#include "qsgfriction_p.h"
+#include "qsgcumulativedirection_p.h"
 QT_BEGIN_NAMESPACE
-QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_factor(0.0)
+
+QSGCumulativeDirection::QSGCumulativeDirection(QObject *parent):QSGStochasticDirection(parent)
 {
 }
 
-bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
+QDeclarativeListProperty<QSGStochasticDirection> QSGCumulativeDirection::directions()
 {
-    if (!m_factor)
-        return false;
-    qreal curSX = d->curSX();
-    qreal curSY = d->curSY();
-    d->setInstantaneousSX(curSX + (curSX * m_factor * -1 * dt));
-    d->setInstantaneousSY(curSY + (curSY * m_factor * -1 * dt));
-    return true;
+    return QDeclarativeListProperty<QSGStochasticDirection>(this, m_directions);//TODO: Proper list property
 }
+
+const QPointF &QSGCumulativeDirection::sample(const QPointF &from)
+{
+    QPointF ret;
+    foreach (QSGStochasticDirection* dir, m_directions)
+        ret += dir->sample(from);
+    return ret;
+}
+
 QT_END_NAMESPACE
