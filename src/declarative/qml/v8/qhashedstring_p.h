@@ -475,7 +475,7 @@ T &QStringHash<T>::operator[](const QHashedString &key)
 {
     Node *n = findNode(key);
     if (n) return n->value;
-    else return createNode(key)->value;
+    else return createNode(key, T())->value;
 }
 
 template<class T>
@@ -483,7 +483,7 @@ T &QStringHash<T>::operator[](const QHashedStringRef &key)
 {
     Node *n = findNode(key);
     if (n) return n->value;
-    else return createNode(key)->value;
+    else return createNode(key, T())->value;
 }
 
 inline uint qHash(const QHashedString &string) 
