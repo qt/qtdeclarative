@@ -1053,11 +1053,6 @@ void QDeclarativeTypeData::resolveTypes()
         if (ref.type) {
             ref.majorVersion = majorVersion;
             ref.minorVersion = minorVersion;
-            foreach (QDeclarativeParser::Object *obj, parserRef->refObjects) {
-               // store namespace for DOM
-               obj->majorVersion = majorVersion;
-               obj->minorVersion = minorVersion;
-            }
         } else {
             ref.typeData = typeLoader()->get(url);
             addDependency(ref.typeData);

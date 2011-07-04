@@ -740,19 +740,6 @@ bool ProcessAST::visit(AST::UiScriptBinding *node)
     return false;
 }
 
-static QList<int> collectCommas(AST::UiArrayMemberList *members)
-{
-    QList<int> commas;
-
-    if (members) {
-        for (AST::UiArrayMemberList *it = members->next; it; it = it->next) {
-            commas.append(it->commaToken.offset);
-        }
-    }
-
-    return commas;
-}
-
 // UiObjectMember: UiQualifiedId T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET ;
 bool ProcessAST::visit(AST::UiArrayBinding *node)
 {
@@ -780,9 +767,6 @@ bool ProcessAST::visit(AST::UiArrayBinding *node)
     // For the DOM, store the position of the T_LBRACKET upto the T_RBRACKET as the range:
     prop->listValueRange.offset = node->lbracketToken.offset;
     prop->listValueRange.length = node->rbracketToken.offset + node->rbracketToken.length - node->lbracketToken.offset;
-
-    // Store the positions of the comma token too, again for the DOM to be able to retrieve it.
-    prop->listCommaPositions = collectCommas(node->members);
 
     while (propertyCount--)
         _stateStack.pop();

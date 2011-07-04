@@ -755,8 +755,6 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
         output->types.at(obj->type);
     obj->metatype = tr.metaObject();
 
-    if (tr.component)
-        obj->url = tr.component->url;
     if (tr.type)
         obj->typeName = tr.type->qmlTypeName();
     obj->className = tr.className;
@@ -819,7 +817,6 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
                 defaultProperty->isDefault = true;
                 defaultProperty->location = obj->defaultProperty->location;
                 defaultProperty->listValueRange = obj->defaultProperty->listValueRange;
-                defaultProperty->listCommaPositions = obj->defaultProperty->listCommaPositions;
 
                 defaultProperty->values  = obj->defaultProperty->values;
                 defaultProperty->values += explicitProperty->values;
