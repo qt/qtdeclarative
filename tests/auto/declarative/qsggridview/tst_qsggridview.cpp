@@ -1236,7 +1236,7 @@ void tst_QSGGridView::positionViewAtIndex()
     // Position on an item that would leave empty space if positioned at the top
     gridview->positionViewAtIndex(31, QSGGridView::Beginning);
     QTRY_COMPARE(gridview->indexAt(120, 630), 31);
-    QTRY_COMPARE(gridview->contentY(), 520.);
+    QTRY_COMPARE(gridview->contentY(), 521.);   // 520 then +1 so bottom edge of last item is visible
 
     // Confirm items positioned correctly
     itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
@@ -1354,7 +1354,7 @@ void tst_QSGGridView::positionViewAtIndex()
 
     // positionViewAtEnd
     gridview->positionViewAtEnd();
-    QTRY_COMPARE(gridview->contentX(), 430.);
+    QTRY_COMPARE(gridview->contentX(), 400.);   // 8*80 - 240   (8 columns)
 
     gridview->setContentX(80);
     canvas->rootObject()->setProperty("showFooter", true);

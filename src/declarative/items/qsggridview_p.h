@@ -43,7 +43,7 @@
 #ifndef QSGGRIDVIEW_P_H
 #define QSGGRIDVIEW_P_H
 
-#include "qsgflickable_p.h"
+#include "qsgitemview_p.h"
 
 #include <private/qdeclarativeguard_p.h>
 
@@ -55,97 +55,31 @@ QT_MODULE(Declarative)
 class QSGVisualModel;
 class QSGGridViewAttached;
 class QSGGridViewPrivate;
-class Q_AUTOTEST_EXPORT QSGGridView : public QSGFlickable
+class Q_AUTOTEST_EXPORT QSGGridView : public QSGItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGGridView)
 
-    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
-    Q_PROPERTY(QSGItem *currentItem READ currentItem NOTIFY currentIndexChanged)
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
-
-    Q_PROPERTY(QDeclarativeComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
-    Q_PROPERTY(QSGItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
-    Q_PROPERTY(bool highlightFollowsCurrentItem READ highlightFollowsCurrentItem WRITE setHighlightFollowsCurrentItem)
-    Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
-
-    Q_PROPERTY(qreal preferredHighlightBegin READ preferredHighlightBegin WRITE setPreferredHighlightBegin NOTIFY preferredHighlightBeginChanged RESET resetPreferredHighlightBegin)
-    Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged RESET resetPreferredHighlightEnd)
-    Q_PROPERTY(HighlightRangeMode highlightRangeMode READ highlightRangeMode WRITE setHighlightRangeMode NOTIFY highlightRangeModeChanged)
-
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
-    Q_PROPERTY(bool keyNavigationWraps READ isWrapEnabled WRITE setWrapEnabled NOTIFY keyNavigationWrapsChanged)
-    Q_PROPERTY(int cacheBuffer READ cacheBuffer WRITE setCacheBuffer NOTIFY cacheBufferChanged)
     Q_PROPERTY(int cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
     Q_PROPERTY(int cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
-    Q_PROPERTY(QDeclarativeComponent *header READ header WRITE setHeader NOTIFY headerChanged)
-    Q_PROPERTY(QDeclarativeComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
-
-    Q_ENUMS(HighlightRangeMode)
     Q_ENUMS(SnapMode)
     Q_ENUMS(Flow)
-    Q_ENUMS(PositionMode)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
     QSGGridView(QSGItem *parent=0);
     ~QSGGridView();
 
-    QVariant model() const;
-    int modelCount() const;
-    void setModel(const QVariant &);
-
-    QDeclarativeComponent *delegate() const;
-    void setDelegate(QDeclarativeComponent *);
-
-    int currentIndex() const;
-    void setCurrentIndex(int idx);
-
-    QSGItem *currentItem();
-    QSGItem *highlightItem();
-    int count() const;
-
-    QDeclarativeComponent *highlight() const;
-    void setHighlight(QDeclarativeComponent *highlight);
-
-    bool highlightFollowsCurrentItem() const;
-    void setHighlightFollowsCurrentItem(bool);
-
-    int highlightMoveDuration() const;
-    void setHighlightMoveDuration(int);
-
-    enum HighlightRangeMode { NoHighlightRange, ApplyRange, StrictlyEnforceRange };
-    HighlightRangeMode highlightRangeMode() const;
-    void setHighlightRangeMode(HighlightRangeMode mode);
-
-    qreal preferredHighlightBegin() const;
-    void setPreferredHighlightBegin(qreal);
-    void resetPreferredHighlightBegin();
-
-    qreal preferredHighlightEnd() const;
-    void setPreferredHighlightEnd(qreal);
-    void resetPreferredHighlightEnd();
-
-    Qt::LayoutDirection layoutDirection() const;
-    void setLayoutDirection(Qt::LayoutDirection);
-    Qt::LayoutDirection effectiveLayoutDirection() const;
+    virtual void setHighlightFollowsCurrentItem(bool);
+    virtual void setHighlightMoveDuration(int);
 
     enum Flow { LeftToRight, TopToBottom };
     Flow flow() const;
     void setFlow(Flow);
-
-    bool isWrapEnabled() const;
-    void setWrapEnabled(bool);
-
-    int cacheBuffer() const;
-    void setCacheBuffer(int);
 
     int cellWidth() const;
     void setCellWidth(int);
@@ -157,22 +91,6 @@ public:
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
-    QDeclarativeComponent *footer() const;
-    void setFooter(QDeclarativeComponent *);
-
-    QDeclarativeComponent *header() const;
-    void setHeader(QDeclarativeComponent *);
-
-    virtual void setContentX(qreal pos);
-    virtual void setContentY(qreal pos);
-
-    enum PositionMode { Beginning, Center, End, Visible, Contain };
-
-    Q_INVOKABLE void positionViewAtIndex(int index, int mode);
-    Q_INVOKABLE int indexAt(qreal x, qreal y) const;
-    Q_INVOKABLE void positionViewAtBeginning();
-    Q_INVOKABLE void positionViewAtEnd();
-
     static QSGGridViewAttached *qmlAttachedProperties(QObject *);
 
 public Q_SLOTS:
@@ -182,58 +100,28 @@ public Q_SLOTS:
     void moveCurrentIndexRight();
 
 Q_SIGNALS:
-    void countChanged();
-    void currentIndexChanged();
     void cellWidthChanged();
     void cellHeightChanged();
-    void highlightChanged();
-    void highlightItemChanged();
-    void preferredHighlightBeginChanged();
-    void preferredHighlightEndChanged();
-    void highlightRangeModeChanged();
     void highlightMoveDurationChanged();
-    void modelChanged();
-    void delegateChanged();
     void flowChanged();
-    void layoutDirectionChanged();
-    void effectiveLayoutDirectionChanged();
-    void keyNavigationWrapsChanged();
-    void cacheBufferChanged();
     void snapModeChanged();
-    void headerChanged();
-    void footerChanged();
 
 protected:
-    virtual void updatePolish();
     virtual void viewportMoved();
-    virtual qreal minYExtent() const;
-    virtual qreal maxYExtent() const;
-    virtual qreal minXExtent() const;
-    virtual qreal maxXExtent() const;
     virtual void keyPressEvent(QKeyEvent *);
-    virtual void componentComplete();
 
 private Q_SLOTS:
-    void trackedPositionChanged();
     void itemsInserted(int index, int count);
     void itemsRemoved(int index, int count);
     void itemsMoved(int from, int to, int count);
-    void modelReset();
-    void destroyRemoved();
-    void createdItem(int index, QSGItem *item);
-    void destroyingItem(QSGItem *item);
-    void animStopped();
-
-private:
-    void refill();
 };
 
-class QSGGridViewAttached : public QObject
+class QSGGridViewAttached : public QSGItemViewAttached
 {
     Q_OBJECT
 public:
     QSGGridViewAttached(QObject *parent)
-        : QObject(parent), m_view(0), m_isCurrent(false), m_delayRemove(false) {}
+        : QSGItemViewAttached(parent), m_view(0) {}
     ~QSGGridViewAttached() {}
 
     Q_PROPERTY(QSGGridView *view READ view NOTIFY viewChanged)
@@ -245,38 +133,11 @@ public:
         }
     }
 
-    Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY currentItemChanged)
-    bool isCurrentItem() const { return m_isCurrent; }
-    void setIsCurrentItem(bool c) {
-        if (m_isCurrent != c) {
-            m_isCurrent = c;
-            emit currentItemChanged();
-        }
-    }
-
-    Q_PROPERTY(bool delayRemove READ delayRemove WRITE setDelayRemove NOTIFY delayRemoveChanged)
-    bool delayRemove() const { return m_delayRemove; }
-    void setDelayRemove(bool delay) {
-        if (m_delayRemove != delay) {
-            m_delayRemove = delay;
-            emit delayRemoveChanged();
-        }
-    }
-
-    void emitAdd() { emit add(); }
-    void emitRemove() { emit remove(); }
-
 Q_SIGNALS:
-    void currentItemChanged();
-    void delayRemoveChanged();
-    void add();
-    void remove();
     void viewChanged();
 
 public:
     QDeclarativeGuard<QSGGridView> m_view;
-    bool m_isCurrent : 1;
-    bool m_delayRemove : 1;
 };
 
 
