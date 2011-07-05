@@ -80,7 +80,7 @@ static QDeclarativePropertyCache::Data::Flags flagsForPropertyType(int propType,
 {
     QDeclarativePropertyCache::Data::Flags flags;
 
-    if (propType < QMetaType::User) {
+    if (propType < QMetaType::User && propType != QMetaType::QObjectStar && propType != QMetaType::QWidgetStar) {
     } else if (propType == qMetaTypeId<QDeclarativeBinding *>()) {
         flags |= QDeclarativePropertyCache::Data::IsQmlBinding;
     } else if (propType == qMetaTypeId<QScriptValue>()) {
@@ -118,7 +118,10 @@ void QDeclarativePropertyCache::Data::lazyLoad(const QMetaProperty &p, QDeclarat
     flags = fastFlagsForProperty(p);
 
     int type = p.type();
-    if (type == QVariant::UserType || type == -1) {
+    if (type == QMetaType::QObjectStar || type == QMetaType::QWidgetStar) {
+        propType = type;
+        flags |= QDeclarativePropertyCache::Data::IsQObjectDerived;
+    } else if (type == QVariant::UserType || type == -1) {
         propTypeName = p.typeName();
         flags |= QDeclarativePropertyCache::Data::NotFullyResolved;
     } else {
