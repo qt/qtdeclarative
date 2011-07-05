@@ -739,8 +739,12 @@ int QSGParticleSystem::nextSystemIndex()
         m_reusableIndexes.remove(ret);
         return ret;
     }
-    if (m_nextIndex >= m_bySysIdx.size())
+    if (m_nextIndex >= m_bySysIdx.size()){
         m_bySysIdx.resize(m_bySysIdx.size() < 10 ? 10 : m_bySysIdx.size()*1.1);//###+1,10%,+10? Choose something non-arbitrarily
+        if (m_spriteEngine)
+            m_spriteEngine->setCount(m_bySysIdx.size());
+
+    }
     return m_nextIndex++;
 }
 
