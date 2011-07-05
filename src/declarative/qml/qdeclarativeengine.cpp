@@ -442,6 +442,7 @@ void QDeclarativeEnginePrivate::init()
     qRegisterMetaType<QDeclarativeComponent::Status>("QDeclarativeComponent::Status");
     qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
     qRegisterMetaType<QList<int> >("QList<int>");
+    qRegisterMetaType<QDeclarativeV8Handle>("QDeclarativeV8Handle");
 
     QDeclarativeData::init();
 
