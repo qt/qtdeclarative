@@ -46,6 +46,7 @@
 #include <private/qsgadaptationlayer_p.h>
 
 #include <QtGui/qpainter.h>
+#include <qmath.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,8 @@ QSGImagePrivate::QSGImagePrivate()
     , paintedWidth(0)
     , paintedHeight(0)
     , pixmapChanged(false)
+    , hAlign(QSGImage::AlignHCenter)
+    , vAlign(QSGImage::AlignVCenter)
 {
 }
 
@@ -155,6 +158,9 @@ void QSGImage::updatePaintedGeometry()
 
         d->paintedHeight = heightScale * qreal(d->pix.height());
         d->paintedWidth = widthScale * qreal(d->pix.width());
+    } else if (d->fillMode == Pad) {
+        d->paintedWidth = d->pix.width();
+        d->paintedHeight = d->pix.height();
     } else {
         d->paintedWidth = width();
         d->paintedHeight = height();
@@ -218,6 +224,21 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     QSGTexture::WrapMode hWrap = QSGTexture::ClampToEdge;
     QSGTexture::WrapMode vWrap = QSGTexture::ClampToEdge;
 
+    qreal pixWidth = (d->fillMode == PreserveAspectFit) ? d->paintedWidth : d->pix.width();
+    qreal pixHeight = (d->fillMode == PreserveAspectFit) ? d->paintedHeight : d->pix.height();
+
+    int xOffset = 0;
+    if (d->hAlign == QSGImage::AlignHCenter)
+        xOffset = qCeil((width() - pixWidth) / 2.);
+    else if (d->hAlign == QSGImage::AlignRight)
+        xOffset = qCeil(width() - pixWidth);
+
+    int yOffset = 0;
+    if (d->vAlign == QSGImage::AlignVCenter)
+        yOffset = qCeil((height() - pixHeight) / 2.);
+    else if (d->vAlign == QSGImage::AlignBottom)
+        yOffset = qCeil(height() - pixHeight);
+
     switch (d->fillMode) {
     default:
     case Stretch:
@@ -226,8 +247,7 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         break;
 
     case PreserveAspectFit:
-        targetRect = QRectF((width() - d->paintedWidth) / 2., (height() - d->paintedHeight) / 2.,
-                            d->paintedWidth, d->paintedHeight);
+        targetRect = QRectF(xOffset, yOffset, d->paintedWidth, d->paintedHeight);
         sourceRect = d->pix.rect();
         break;
 
@@ -238,33 +258,52 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
         if (wscale > hscale) {
             int src = (hscale / wscale) * qreal(d->pix.height());
-            sourceRect = QRectF(0, (d->pix.height() - src) / 2, d->pix.width(), src);
+            int y = 0;
+            if (d->vAlign == QSGImage::AlignVCenter)
+                y = qCeil((d->pix.height() - src) / 2.);
+            else if (d->vAlign == QSGImage::AlignBottom)
+                y = qCeil(d->pix.height() - src);
+            sourceRect = QRectF(0, y, d->pix.width(), src);
+
         } else {
             int src = (wscale / hscale) * qreal(d->pix.width());
-            sourceRect = QRectF((d->pix.width() - src) / 2, 0, src, d->pix.height());
+            int x = 0;
+            if (d->hAlign == QSGImage::AlignHCenter)
+                x = qCeil((d->pix.width() - src) / 2.);
+            else if (d->hAlign == QSGImage::AlignRight)
+                x = qCeil(d->pix.width() - src);
+            sourceRect = QRectF(x, 0, src, d->pix.height());
         }
-    }
+        }
         break;
 
     case Tile:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = QRectF(0, 0, width(), height());
+        sourceRect = QRectF(-xOffset, -yOffset, width(), height());
         hWrap = QSGTexture::Repeat;
         vWrap = QSGTexture::Repeat;
         break;
 
     case TileHorizontally:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = QRectF(0, 0, width(), d->pix.height());
+        sourceRect = QRectF(-xOffset, 0, width(), d->pix.height());
         hWrap = QSGTexture::Repeat;
         break;
 
     case TileVertically:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = QRectF(0, 0, d->pix.width(), height());
+        sourceRect = QRectF(0, -yOffset, d->pix.width(), height());
         vWrap = QSGTexture::Repeat;
         break;
 
+    case Pad:
+        qreal w = qMin(qreal(d->pix.width()), width());
+        qreal h = qMin(qreal(d->pix.height()), height());
+        qreal x = (d->pix.width() > width()) ? -xOffset : 0;
+        qreal y = (d->pix.height() > height()) ? -yOffset : 0;
+        targetRect = QRectF(x + xOffset, y + yOffset, w, h);
+        sourceRect = QRectF(x, y, w, h);
+        break;
     };
 
     QRectF nsrect(sourceRect.x() / d->pix.width(),
@@ -300,6 +339,42 @@ void QSGImage::pixmapChange()
         QSGImageBase::pixmapChange();
     updatePaintedGeometry();
     d->pixmapChanged = true;
+}
+
+QSGImage::VAlignment QSGImage::verticalAlignment() const
+{
+    Q_D(const QSGImage);
+    return d->vAlign;
+}
+
+void QSGImage::setVerticalAlignment(VAlignment align)
+{
+    Q_D(QSGImage);
+    if (d->vAlign == align)
+        return;
+
+    d->vAlign = align;
+    update();
+    updatePaintedGeometry();
+    emit verticalAlignmentChanged(align);
+}
+
+QSGImage::HAlignment QSGImage::horizontalAlignment() const
+{
+    Q_D(const QSGImage);
+    return d->hAlign;
+}
+
+void QSGImage::setHorizontalAlignment(HAlignment align)
+{
+    Q_D(QSGImage);
+    if (d->hAlign == align)
+        return;
+
+    d->hAlign = align;
+    update();
+    updatePaintedGeometry();
+    emit horizontalAlignmentChanged(align);
 }
 
 QT_END_NAMESPACE

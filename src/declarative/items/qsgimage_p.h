@@ -57,11 +57,15 @@ class Q_AUTOTEST_EXPORT QSGImage : public QSGImageBase, public QSGTextureProvide
 {
     Q_OBJECT
     Q_ENUMS(FillMode)
+    Q_ENUMS(HAlignment)
+    Q_ENUMS(VAlignment)
 
     Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
     Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedGeometryChanged)
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged)
     Q_PROPERTY(QSGTexture *texture READ texture)
+    Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged)
+    Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
 
     Q_INTERFACES(QSGTextureProvider)
 
@@ -69,7 +73,15 @@ public:
     QSGImage(QSGItem *parent=0);
     ~QSGImage();
 
-    enum FillMode { Stretch, PreserveAspectFit, PreserveAspectCrop, Tile, TileVertically, TileHorizontally };
+    enum HAlignment { AlignLeft = Qt::AlignLeft,
+                       AlignRight = Qt::AlignRight,
+                       AlignHCenter = Qt::AlignHCenter };
+    enum VAlignment { AlignTop = Qt::AlignTop,
+                       AlignBottom = Qt::AlignBottom,
+                       AlignVCenter = Qt::AlignVCenter };
+
+    enum FillMode { Stretch, PreserveAspectFit, PreserveAspectCrop, Tile, TileVertically, TileHorizontally, Pad };
+
     FillMode fillMode() const;
     void setFillMode(FillMode);
 
@@ -80,9 +92,17 @@ public:
 
     virtual QSGTexture *texture() const;
 
+    HAlignment horizontalAlignment() const;
+    void setHorizontalAlignment(HAlignment align);
+
+    VAlignment verticalAlignment() const;
+    void setVerticalAlignment(VAlignment align);
+
 Q_SIGNALS:
     void fillModeChanged();
     void paintedGeometryChanged();
+    void horizontalAlignmentChanged(HAlignment alignment);
+    void verticalAlignmentChanged(VAlignment alignment);
 
 protected:
     QSGImage(QSGImagePrivate &dd, QSGItem *parent);

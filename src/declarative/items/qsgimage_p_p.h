@@ -74,6 +74,8 @@ public:
     void setPixmap(const QPixmap &pix);
 
     bool pixmapChanged : 1;
+    QSGImage::HAlignment hAlign;
+    QSGImage::VAlignment vAlign;
 };
 
 QT_END_NAMESPACE
