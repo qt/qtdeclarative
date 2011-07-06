@@ -230,16 +230,18 @@ void tst_qsgborderimage::mirror()
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
     QSGBorderImage *image = qobject_cast<QSGBorderImage*>(canvas->rootObject());
     QVERIFY(image != 0);
+    canvas->show();
 
-    int width = image->property("width").toInt();
+    QImage screenshot = canvas->grabFrameBuffer();
 
-    QPixmap screenshot = canvas->renderPixmap();
+    QImage srcPixmap(screenshot);
+    QTransform transform;
+    transform.translate(image->width(), 0).scale(-1, 1.0);
+    srcPixmap = srcPixmap.transformed(transform);
 
     image->setProperty("mirror", true);
-    QPixmap mirrored;
-
-    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
-    QCOMPARE(screenshot, mirrored);
+    screenshot = canvas->grabFrameBuffer();
+    QCOMPARE(screenshot, srcPixmap);
 
     delete canvas;
 }

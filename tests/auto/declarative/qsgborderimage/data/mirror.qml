@@ -1,8 +1,7 @@
 import QtQuick 2.0
 
 BorderImage {
-    source: "heart200.png"
-    smooth: true
+    source: "colors-mirror.png"
     width: 300; height: 300
-    border { top: 50; right: 50; bottom: 50; left: 50 }
+    border { top: 30; right: 30; bottom: 30; left: 30 }
 }
