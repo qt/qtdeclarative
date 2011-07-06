@@ -6,6 +6,6 @@ Rectangle {
     Image {
         objectName: "image"
         anchors.fill: parent
-        source: "heart200.png"
+        source: "pattern.png"
     }
 }

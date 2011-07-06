@@ -80,7 +80,6 @@ private slots:
     void preserveAspectRatio();
     void smooth();
     void mirror();
-    void mirror_data();
     void svg();
     void geometry();
     void geometry_data();
@@ -278,40 +277,47 @@ void tst_qsgimage::smooth()
 
 void tst_qsgimage::mirror()
 {
-    QFETCH(int, fillMode);
+    QMap<QSGImage::FillMode, QImage> screenshots;
+    QList<QSGImage::FillMode> fillModes;
+    fillModes << QSGImage::Stretch << QSGImage::PreserveAspectFit << QSGImage::PreserveAspectCrop
+              << QSGImage::Tile << QSGImage::TileVertically << QSGImage::TileHorizontally;
 
     qreal width = 300;
     qreal height = 250;
 
-    QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
+    foreach (QSGImage::FillMode fillMode, fillModes) {
+        QSGView *canvas = new QSGView;
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
 
-    QSGImage *obj = canvas->rootObject()->findChild<QSGImage*>("image");
-    QVERIFY(obj != 0);
+        QSGImage *obj = canvas->rootObject()->findChild<QSGImage*>("image");
+        QVERIFY(obj != 0);
 
-    obj->setFillMode((QSGImage::FillMode)fillMode);
-    obj->setProperty("mirror", true);
+        obj->setFillMode(fillMode);
+        obj->setProperty("mirror", true);
+        canvas->show();
 
-    canvas->show();
+        QImage screenshot = canvas->grabFrameBuffer();
+        screenshots[fillMode] = screenshot;
+        delete canvas;
+    }
 
-    QPixmap screenshot = canvas->renderPixmap();
+    foreach (QSGImage::FillMode fillMode, fillModes) {
+        QPixmap srcPixmap;
+        QVERIFY(srcPixmap.load(SRCDIR "/data/pattern.png"));
 
-    QPixmap srcPixmap;
-    QVERIFY(srcPixmap.load(SRCDIR "/data/heart200.png"));
+        QPixmap expected(width, height);
+        expected.fill();
+        QPainter p_e(&expected);
+        QTransform transform;
+        transform.translate(width, 0).scale(-1, 1.0);
+        p_e.setTransform(transform);
 
-    QPixmap expected(width, height);
-    expected.fill();
-    QPainter p_e(&expected);
-    QTransform transform;
-    transform.translate(width, 0).scale(-1, 1.0);
-    p_e.setTransform(transform);
-
-    switch (fillMode) {
+        switch (fillMode) {
         case QSGImage::Stretch:
             p_e.drawPixmap(QRect(0, 0, width, height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QSGImage::PreserveAspectFit:
-            p_e.drawPixmap(QRect(25, 0, width / (width/height), height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
+            p_e.drawPixmap(QRect(25, 0, height, height), srcPixmap, QRect(0, 0, srcPixmap.width(), srcPixmap.height()));
             break;
         case QSGImage::PreserveAspectCrop:
         {
@@ -334,24 +340,11 @@ void tst_qsgimage::mirror()
             p_e.setTransform(transform);
             p_e.drawTiledPixmap(QRect(0, 0, width, height), srcPixmap);
             break;
+        }
+
+        QImage img = expected.toImage();
+        QCOMPARE(screenshots[fillMode], img);
     }
-
-    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
-    QCOMPARE(screenshot, expected);
-
-    delete canvas;
-}
-
-void tst_qsgimage::mirror_data()
-{
-    QTest::addColumn<int>("fillMode");
-
-    QTest::newRow("Stretch") << int(QSGImage::Stretch);
-    QTest::newRow("PreserveAspectFit") << int(QSGImage::PreserveAspectFit);
-    QTest::newRow("PreserveAspectCrop") << int(QSGImage::PreserveAspectCrop);
-    QTest::newRow("Tile") << int(QSGImage::Tile);
-    QTest::newRow("TileVertically") << int(QSGImage::TileVertically);
-    QTest::newRow("TileHorizontally") << int(QSGImage::TileHorizontally);
 }
 
 void tst_qsgimage::svg()
@@ -473,11 +466,9 @@ void tst_qsgimage::tiling_QTBUG_6716()
     QSGImage *tiling = findItem<QSGImage>(canvas->rootObject(), "tiling");
 
     QVERIFY(tiling != 0);
-    QPixmap pm = canvas->renderPixmap();
-    QImage img = pm.toImage();
+    QImage img = canvas->grabFrameBuffer();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
-            QEXPECT_FAIL("", "QTBUG-19351", Abort);
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
