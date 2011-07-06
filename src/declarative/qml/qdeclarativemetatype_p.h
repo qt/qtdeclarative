@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeType;
 class QDeclarativeCustomParser;
 class QDeclarativeTypePrivate;
+class QDeclarativeTypeModule;
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeMetaType
 {
@@ -104,8 +105,9 @@ public:
     static void registerCustomStringConverter(int, StringConverter);
     static StringConverter customStringConverter(int);
 
-    static bool isAnyModule(const QByteArray &module);
+    static bool isAnyModule(const QByteArray &uri);
     static bool isModule(const QByteArray &module, int versionMajor, int versionMinor);
+    static QDeclarativeTypeModule *typeModule(const QByteArray &uri, int majorVersion);
 
     static QList<QDeclarativePrivate::AutoParentFunction> parentFunctions();
 
@@ -129,11 +131,14 @@ public:
     static ModuleApi moduleApi(const QByteArray &, int, int);
 };
 
+class QHashedStringRef;
+class QHashedV8String;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeType
 {
 public:
     QByteArray typeName() const;
     QByteArray qmlTypeName() const;
+    const QString &elementName() const;
 
     QByteArray module() const;
     int majorVersion() const;
@@ -176,6 +181,8 @@ public:
 
     int index() const;
 
+    int enumValue(const QHashedStringRef &) const;
+    int enumValue(const QHashedV8String &) const;
 private:
     QDeclarativeType *superType() const;
     friend class QDeclarativeTypePrivate;
@@ -189,8 +196,49 @@ private:
     QDeclarativeTypePrivate *d;
 };
 
+class QDeclarativeTypeModulePrivate;
+class QDeclarativeTypeModule
+{
+public:
+    QByteArray module() const;
+    int majorVersion() const;
+
+    int minimumMinorVersion() const;
+    int maximumMinorVersion() const;
+
+    QList<QDeclarativeType *> types();
+    QList<QDeclarativeType *> type(const QString &);
+
+    QDeclarativeType *type(const QHashedStringRef &, int);
+    QDeclarativeType *type(const QHashedV8String &, int);
+
+private:
+    friend int registerType(const QDeclarativePrivate::RegisterType &);
+    QDeclarativeTypeModule();
+    ~QDeclarativeTypeModule();
+    QDeclarativeTypeModulePrivate *d;
+};
+
+class QDeclarativeTypeModuleVersion 
+{
+public:
+    QDeclarativeTypeModuleVersion();
+    QDeclarativeTypeModuleVersion(QDeclarativeTypeModule *, int);
+    QDeclarativeTypeModuleVersion(const QDeclarativeTypeModuleVersion &);
+    QDeclarativeTypeModuleVersion &operator=(const QDeclarativeTypeModuleVersion &);
+
+    QDeclarativeTypeModule *module() const;
+    int minorVersion() const;
+
+    QDeclarativeType *type(const QHashedStringRef &) const;
+    QDeclarativeType *type(const QHashedV8String &) const;
+
+private:
+    QDeclarativeTypeModule *m_module;
+    int m_minor;
+};
+
 QDeclarativeMetaType::ModuleApi::ModuleApi()
-//    : major(0), minor(0), script(0), qobject(0)
 {
     major = 0;
     minor = 0;

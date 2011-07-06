@@ -282,19 +282,19 @@ v8::Handle<v8::Value> QV8ContextWrapper::Getter(v8::Local<v8::String> property,
 
     if (context->imports && QV8Engine::startsWithUpper(property)) {
         // Search for attached properties, enums and imported scripts
-        QDeclarativeTypeNameCache::Data *data = context->imports->data(propertystring);
-
-        if (data) {
-            if (data->importedScriptIndex != -1) {
-                int index = data->importedScriptIndex;
+        QDeclarativeTypeNameCache::Result r = context->imports->query(propertystring);
+        
+        if (r.isValid()) { 
+            if (r.scriptIndex != -1) {
+                int index = r.scriptIndex;
                 if (index < context->importedScripts.count())
                     return context->importedScripts.at(index);
                 else
                     return v8::Undefined();
-            } else if (data->type) {
-                return engine->typeWrapper()->newObject(scopeObject, data->type);
-            } else if (data->typeNamespace) {
-                return engine->typeWrapper()->newObject(scopeObject, data->typeNamespace);
+            } else if (r.type) {
+                return engine->typeWrapper()->newObject(scopeObject, r.type);
+            } else if (r.importNamespace) {
+                return engine->typeWrapper()->newObject(scopeObject, context->imports, r.importNamespace);
             }
             Q_ASSERT(!"Unreachable");
         }

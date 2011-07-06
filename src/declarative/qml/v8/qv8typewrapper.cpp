@@ -61,12 +61,14 @@ public:
     QV8TypeWrapper::TypeNameMode mode;
 
     QDeclarativeGuard<QObject> object;
+
     QDeclarativeType *type;
     QDeclarativeTypeNameCache *typeNamespace;
+    const void *importNamespace;
 };
 
 QV8TypeResource::QV8TypeResource(QV8Engine *engine)
-: QV8ObjectResource(engine), mode(QV8TypeWrapper::IncludeEnums), type(0), typeNamespace(0)
+: QV8ObjectResource(engine), mode(QV8TypeWrapper::IncludeEnums), type(0), typeNamespace(0), importNamespace(0)
 {
 }
 
@@ -98,6 +100,7 @@ void QV8TypeWrapper::init(QV8Engine *engine)
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
+// Returns a type wrapper for type t on o.  This allows access of enums, and attached properties.
 v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeType *t, TypeNameMode mode)
 {
     Q_ASSERT(t);
@@ -109,14 +112,18 @@ v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeType *t,
     return rv;
 }
 
-v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeTypeNameCache *t, TypeNameMode mode)
+// Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a 
+// namespace.
+v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeTypeNameCache *t, 
+                                                const void *importNamespace, TypeNameMode mode)
 {
     Q_ASSERT(t);
+    Q_ASSERT(importNamespace);
     // XXX NewInstance() should be optimized
     v8::Local<v8::Object> rv = m_constructor->NewInstance(); 
     QV8TypeResource *r = new QV8TypeResource(m_engine);
     t->addref();
-    r->mode = mode; r->object = o; r->typeNamespace = t;
+    r->mode = mode; r->object = o; r->typeNamespace = t; r->importNamespace = importNamespace;
     rv->SetExternalResource(r);
     return rv;
 }
@@ -139,19 +146,9 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         QDeclarativeType *type = resource->type;
 
         if (QV8Engine::startsWithUpper(property)) {
-            if (resource->mode == IncludeEnums) {
-                QString name = v8engine->toString(property);
-
-                // ### Optimize
-                QByteArray enumName = name.toUtf8();
-                const QMetaObject *metaObject = type->baseMetaObject();
-                for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
-                    QMetaEnum e = metaObject->enumerator(ii);
-                    int value = e.keyToValue(enumName.constData());
-                    if (value != -1) 
-                        return v8::Integer::New(value);
-                }
-            } 
+            int value = type->enumValue(propertystring);
+            if (-1 != value)
+                return v8::Integer::New(value);
 
             // Fall through to return empty handle
 
@@ -167,14 +164,15 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         // Fall through to return empty handle
 
     } else if (resource->typeNamespace) {
+        Q_ASSERT(resource->importNamespace);
+        QDeclarativeTypeNameCache::Result r = resource->typeNamespace->query(propertystring,
+                                                                             resource->importNamespace);
 
-        QDeclarativeTypeNameCache *typeNamespace = resource->typeNamespace;
-        QDeclarativeTypeNameCache::Data *d = typeNamespace->data(propertystring);
-        Q_ASSERT(!d || !d->typeNamespace); // Nested namespaces not supported
+        if (r.isValid()) {
+            Q_ASSERT(r.type);
 
-        if (d && d->type) {
-            return v8engine->typeWrapper()->newObject(object, d->type, resource->mode);
-        } else if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = typeNamespace->moduleApi()) {
+            return v8engine->typeWrapper()->newObject(object, r.type, resource->mode);
+        } else if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi(resource->importNamespace)) {
 
             if (moduleApi->scriptCallback) {
                 moduleApi->scriptApi = moduleApi->scriptCallback(v8engine->engine(), v8engine->engine());

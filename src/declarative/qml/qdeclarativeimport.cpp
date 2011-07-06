@@ -161,22 +161,32 @@ QUrl QDeclarativeImports::baseUrl() const
     return d->base;
 }
 
-static QDeclarativeTypeNameCache *
-cacheForNamespace(QDeclarativeEngine *engine, const QDeclarativeImportedNamespace &set, 
-                  QDeclarativeTypeNameCache *cache, bool importWasQualified)
+void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDeclarativeEngine *engine) const
 {
-    if (!cache)
-        cache = new QDeclarativeTypeNameCache(engine);
+    const QDeclarativeImportedNamespace &set = d->unqualifiedset;
 
-    QList<QDeclarativeType *> types = QDeclarativeMetaType::qmlTypes();
+    for (int ii = set.uris.count() - 1; ii >= 0; --ii) {
+        const QByteArray uri = set.uris.at(ii).toUtf8(); // XXX sigh
+        int majversion = set.majversions.at(ii);
+        int minversion = set.minversions.at(ii);
+        QDeclarativeTypeModule *module = QDeclarativeMetaType::typeModule(uri, majversion);
+        if (module) cache->m_anonymousImports.append(QDeclarativeTypeModuleVersion(module, minversion));
+    }
 
-    for (int ii = 0; ii < set.uris.count(); ++ii) {
-        QByteArray uri = set.uris.at(ii).toUtf8();
-        int major = set.majversions.at(ii);
-        int minor = set.minversions.at(ii);
+    for (QHash<QString,QDeclarativeImportedNamespace* >::ConstIterator iter = d->set.begin();
+         iter != d->set.end(); 
+         ++iter) {
 
-        if (importWasQualified) {
-            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(uri, major, minor);
+        const QDeclarativeImportedNamespace &set = *iter.value();
+        QDeclarativeTypeNameCache::Import &import = cache->m_namedImports[iter.key()];
+        for (int ii = set.uris.count() - 1; ii >= 0; --ii) {
+            const QByteArray uri = set.uris.at(ii).toUtf8(); // XXX sigh
+            int majversion = set.majversions.at(ii);
+            int minversion = set.minversions.at(ii);
+            QDeclarativeTypeModule *module = QDeclarativeMetaType::typeModule(uri, majversion);
+            if (module) import.modules.append(QDeclarativeTypeModuleVersion(module, minversion));
+
+            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(uri, majversion, minversion);
             if (moduleApi.script || moduleApi.qobject) {
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
                 QDeclarativeMetaType::ModuleApiInstance *a = ep->moduleApiInstances.value(moduleApi);
@@ -186,46 +196,12 @@ cacheForNamespace(QDeclarativeEngine *engine, const QDeclarativeImportedNamespac
                     a->qobjectCallback = moduleApi.qobject;
                     ep->moduleApiInstances.insert(moduleApi, a);
                 }
-                cache->setModuleApi(a);
-            }
-        }
-
-        QByteArray base = uri + '/';
-
-        foreach (QDeclarativeType *type, types) {
-            if (type->qmlTypeName().startsWith(base) &&
-                type->qmlTypeName().lastIndexOf('/') == (base.length() - 1) &&
-                (major < 0 || type->availableInVersion(major,minor)))
-            {
-                QString name = QString::fromUtf8(type->qmlTypeName().mid(base.length()));
-
-                cache->add(name, type);
+                import.moduleApi = a;
             }
         }
     }
 
-    return cache;
-}
 
-void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDeclarativeEngine *engine) const
-{
-    const QDeclarativeImportedNamespace &set = d->unqualifiedset;
-
-    for (QHash<QString,QDeclarativeImportedNamespace* >::ConstIterator iter = d->set.begin();
-         iter != d->set.end(); ++iter) {
-
-        QDeclarativeTypeNameCache::Data *d = cache->data(iter.key());
-        if (d) {
-            if (!d->typeNamespace)
-                cacheForNamespace(engine, *(*iter), d->typeNamespace, true);
-        } else {
-            QDeclarativeTypeNameCache *nc = cacheForNamespace(engine, *(*iter), 0, true);
-            cache->add(iter.key(), nc);
-            nc->release();
-        }
-    }
-
-    cacheForNamespace(engine, set, cache, false);
 }
 
 /*!
@@ -513,10 +489,10 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
         bool found = false;
         QString dir;
 
-
         // step 1: search for extension with fully encoded version number
-        foreach (const QString &p, database->fileImportPath) {
-            dir = p+QLatin1Char('/')+url;
+        if (!found) {
+            foreach (const QString &p, database->fileImportPath) {
+                dir = p+QLatin1Char('/')+url;
 
             QFileInfo fi(dir+QString(QLatin1String(".%1.%2")).arg(vmaj).arg(vmin)+QLatin1String("/qmldir"));
             const QString absoluteFilePath = fi.absoluteFilePath();
@@ -533,8 +509,9 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
         }
 
         // step 2: search for extension with encoded version major
-        foreach (const QString &p, database->fileImportPath) {
-            dir = p+QLatin1Char('/')+url;
+        if (!found) {
+            foreach (const QString &p, database->fileImportPath) {
+                dir = p+QLatin1Char('/')+url;
 
             QFileInfo fi(dir+QString(QLatin1String(".%1")).arg(vmaj)+QLatin1String("/qmldir"));
             const QString absoluteFilePath = fi.absoluteFilePath();
@@ -577,9 +554,8 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
 
         if (!versionFound && qmldircomponents.isEmpty()) {
             if (errors) {
-                bool anyversion = QDeclarativeMetaType::isAnyModule(uri.toUtf8());
                 QDeclarativeError error; // we don't set the url or line or column as these will be set by the loader.
-                if (anyversion)
+                if (QDeclarativeMetaType::isAnyModule(uri.toUtf8()))
                     error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri_arg).arg(vmaj).arg(vmin));
                 else
                     error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" is not installed").arg(uri_arg));

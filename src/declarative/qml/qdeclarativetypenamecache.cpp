@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 QDeclarativeTypeNameCache::QDeclarativeTypeNameCache(QDeclarativeEngine *e)
-: QDeclarativeCleanup(e), engine(e), m_moduleApi(0)
+: QDeclarativeCleanup(e), engine(e)
 {
 }
 
@@ -57,52 +57,93 @@ QDeclarativeTypeNameCache::~QDeclarativeTypeNameCache()
 
 void QDeclarativeTypeNameCache::clear()
 {
-    stringCache.clear();
-    m_moduleApi = 0;
+    m_namedImports.clear();
+    m_anonymousImports.clear();
     engine = 0;
 }
 
-void QDeclarativeTypeNameCache::add(const QString &name, int importedScriptIndex)
+void QDeclarativeTypeNameCache::add(const QHashedString &name, int importedScriptIndex)
 {
-    if (stringCache.contains(name))
+    if (m_namedImports.contains(name))
         return;
 
-    Data data;
-    data.importedScriptIndex = importedScriptIndex;
-    stringCache.insert(name, data);
+    Import import;
+    import.scriptIndex = importedScriptIndex;
+    m_namedImports.insert(name, import);
 }
 
-void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeType *type)
+QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedStringRef &name)
 {
-    if (stringCache.contains(name))
-        return;
+    Import *i = m_namedImports.value(name);
+    if (i) {
+        if (i->scriptIndex != -1)
+            return Result(i->scriptIndex);
+        else
+            return Result((const void *)i);
+    }
 
-    Data data;
-    data.type = type;
-    stringCache.insert(name, data);
+    for (int ii = 0; ii < m_anonymousImports.count(); ++ii) {
+        if (QDeclarativeType *type = m_anonymousImports.at(ii).type(name))
+            return Result(type);
+    }
+
+    return Result();
 }
 
-void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeTypeNameCache *typeNamespace)
+QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedStringRef &name, 
+                                                                   const void *importNamespace)
 {
-    if (stringCache.contains(name))
-        return;
+    Q_ASSERT(importNamespace);
+    Import *i = (Import *)importNamespace;
+    Q_ASSERT(i->scriptIndex == -1);
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-
-    Data data;
-    typeNamespace->addref();
-    data.typeNamespace = typeNamespace;
-    stringCache.insert(name, data);
+    for (int ii = 0; ii < i->modules.count(); ++ii) {
+        if (QDeclarativeType *type = i->modules.at(ii).type(name))
+            return Result(type);
+    }
+    
+    return Result();
 }
 
-QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(const QString &id) const
+QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedV8String &name)
 {
-    return stringCache.value(id);
+    Import *i = m_namedImports.value(name);
+    if (i) {
+        if (i->scriptIndex != -1)
+            return Result(i->scriptIndex);
+        else
+            return Result((const void *)i);
+    }
+
+    for (int ii = 0; ii < m_anonymousImports.count(); ++ii) {
+        if (QDeclarativeType *type = m_anonymousImports.at(ii).type(name))
+            return Result(type);
+    }
+
+    return Result();
 }
 
-void QDeclarativeTypeNameCache::setModuleApi(QDeclarativeMetaType::ModuleApiInstance *api)
+QDeclarativeTypeNameCache::Result QDeclarativeTypeNameCache::query(const QHashedV8String &name, const void *importNamespace)
 {
-    m_moduleApi = api;
+    Q_ASSERT(importNamespace);
+    Import *i = (Import *)importNamespace;
+    Q_ASSERT(i->scriptIndex == -1);
+
+    for (int ii = 0; ii < i->modules.count(); ++ii) {
+        if (QDeclarativeType *type = i->modules.at(ii).type(name))
+            return Result(type);
+    }
+    
+    return Result();
+}
+
+QDeclarativeMetaType::ModuleApiInstance *QDeclarativeTypeNameCache::moduleApi(const void *importNamespace)
+{
+    Q_ASSERT(importNamespace);
+    Import *i = (Import *)importNamespace;
+    Q_ASSERT(i->scriptIndex == -1);
+
+    return i->moduleApi;
 }
 
 QT_END_NAMESPACE

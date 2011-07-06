@@ -444,64 +444,63 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
         if (obj == m_expression->component)
             code->storage = IR::Name::RootStorage;
         _expr.code = code;
-    } else if (QDeclarativeTypeNameCache::Data *typeNameData = m_expression->importCache->data(name)) {
-        if (typeNameData->importedScriptIndex != -1) {
-            // We don't support invoking imported scripts
-        } else if (typeNameData->type) {
-            _expr.code = _block->ATTACH_TYPE(name, typeNameData->type, IR::Name::ScopeStorage, line, column);
-        } else if (typeNameData->typeNamespace) {
-            // We don't support namespaces
-        } else {
-            Q_ASSERT(!"Unreachable");
-        }
     } else {
-        bool found = false;
 
-        if (m_expression->context != m_expression->component) {
-            // RootStorage is more efficient than ScopeStorage, so prefer that if they are the same
-            QDeclarativePropertyCache *cache = m_expression->context->synthCache;
-            const QMetaObject *metaObject = m_expression->context->metaObject();
-            if (!cache) cache = m_engine->cache(metaObject);
+        QDeclarativeTypeNameCache::Result r = m_expression->importCache->query(name);
+        if (r.isValid()) {
+            if (r.type) {
+                _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
+            }
+            // We don't support anything else
+        } else {
+            bool found = false;
 
-            QDeclarativePropertyCache::Data *data = cache->property(name);
+            if (m_expression->context != m_expression->component) {
+                // RootStorage is more efficient than ScopeStorage, so prefer that if they are the same
+                QDeclarativePropertyCache *cache = m_expression->context->synthCache;
+                const QMetaObject *metaObject = m_expression->context->metaObject();
+                if (!cache) cache = m_engine->cache(metaObject);
 
-            if (data && data->revision != 0) {
-                if (qmlVerboseCompiler()) 
-                    qWarning() << "*** versioned symbol:" << name;
-                discard();
-                return false;
+                QDeclarativePropertyCache::Data *data = cache->property(name);
+
+                if (data && data->revision != 0) {
+                    if (qmlVerboseCompiler()) 
+                        qWarning() << "*** versioned symbol:" << name;
+                    discard();
+                    return false;
+                }
+
+                if (data && !data->isFunction()) {
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
+                    found = true;
+                } 
             }
 
-            if (data && !data->isFunction()) {
-                IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
-                found = true;
-            } 
-        }
+            if (!found) {
+                QDeclarativePropertyCache *cache = m_expression->component->synthCache;
+                const QMetaObject *metaObject = m_expression->component->metaObject();
+                if (!cache) cache = m_engine->cache(metaObject);
 
-        if (!found) {
-            QDeclarativePropertyCache *cache = m_expression->component->synthCache;
-            const QMetaObject *metaObject = m_expression->component->metaObject();
-            if (!cache) cache = m_engine->cache(metaObject);
+                QDeclarativePropertyCache::Data *data = cache->property(name);
 
-            QDeclarativePropertyCache::Data *data = cache->property(name);
+                if (data && data->revision != 0) {
+                    if (qmlVerboseCompiler()) 
+                        qWarning() << "*** versioned symbol:" << name;
+                    discard();
+                    return false;
+                }
 
-            if (data && data->revision != 0) {
-                if (qmlVerboseCompiler()) 
-                    qWarning() << "*** versioned symbol:" << name;
-                discard();
-                return false;
+                if (data && !data->isFunction()) {
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
+                    found = true;
+                } 
             }
 
-            if (data && !data->isFunction()) {
-                IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
-                found = true;
-            } 
+            if (!found && qmlVerboseCompiler())
+                qWarning() << "*** unknown symbol:" << name;
         }
-
-        if (!found && qmlVerboseCompiler())
-            qWarning() << "*** unknown symbol:" << name;
     }
 
     if (_expr.code && _expr.hint == ExprResult::cx) {

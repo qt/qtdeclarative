@@ -618,14 +618,20 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
     if (QV8Engine::startsWithUpper(property)) {
         // Check for attached properties
         QDeclarativeContextData *context = v8engine->callingContext();
-        QDeclarativeTypeNameCache::Data *data = 
-            context && (context->imports)?context->imports->data(propertystring):0;
 
-        if (data) {
-            if (data->type) {
-                return v8engine->typeWrapper()->newObject(object, data->type, QV8TypeWrapper::ExcludeEnums);
-            } else if (data->typeNamespace) {
-                return v8engine->typeWrapper()->newObject(object, data->typeNamespace, QV8TypeWrapper::ExcludeEnums);
+        if (context && context->imports) {
+            QDeclarativeTypeNameCache::Result r = context->imports->query(propertystring);
+
+            if (r.isValid()) {
+                if (r.scriptIndex != -1) {
+                    return v8::Undefined();
+                } else if (r.type) {
+                    return v8engine->typeWrapper()->newObject(object, r.type, QV8TypeWrapper::ExcludeEnums);
+                } else if (r.importNamespace) {
+                    return v8engine->typeWrapper()->newObject(object, context->imports, r.importNamespace, 
+                                                              QV8TypeWrapper::ExcludeEnums);
+                }
+                Q_ASSERT(!"Unreachable");
             }
         }
     } 
