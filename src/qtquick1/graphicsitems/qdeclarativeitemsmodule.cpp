@@ -74,10 +74,6 @@
 #include "QtQuick1/private/qdeclarativetextinput_p.h"
 #include "QtQuick1/private/qdeclarativevisualitemmodel_p.h"
 #include "QtQuick1/private/qdeclarativegraphicswidget_p.h"
-#ifdef QT_WEBKIT_LIB
-#include "QtQuick1/private/qdeclarativewebview_p.h"
-#include "QtQuick1/private/qdeclarativewebview_p_p.h"
-#endif
 #include "QtQuick1/private/qdeclarativeanchors_p.h"
 #include "QtQuick1/private/qdeclarativepincharea_p.h"
 
