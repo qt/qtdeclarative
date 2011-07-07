@@ -1,6 +1,6 @@
 TEMPLATE = app
 CONFIG += qt uic console
-DESTDIR = ../../bin
+!isEmpty(QT_BUILD_TREE):DESTDIR = $$QT_BUILD_TREE/bin
 
 QT += declarative declarative-private core-private
 
