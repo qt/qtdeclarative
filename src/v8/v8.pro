@@ -10,7 +10,7 @@ macx:CONFIG(debug, debug|release) {
    TARGET = v8_debug
 }
 
-equals(QT_ARCH, "x64")|contains(CONFIG, x86_64):CONFIG += arch_x86_64
+equals(QT_ARCH, x86_64)|contains(CONFIG, x86_64):CONFIG += arch_x86_64
 else:equals(QT_ARCH, "i386"):CONFIG += arch_i386
 else:equals(QT_ARCH, "arm"):CONFIG += arch_arm
 
