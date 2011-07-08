@@ -107,6 +107,8 @@ public:
     bool outputWarningsToStandardError() const;
     void setOutputWarningsToStandardError(bool);
 
+    void collectGarbage();
+    
     static QDeclarativeContext *contextForObject(const QObject *);
     static void setContextForObject(QObject *, QDeclarativeContext *);
 

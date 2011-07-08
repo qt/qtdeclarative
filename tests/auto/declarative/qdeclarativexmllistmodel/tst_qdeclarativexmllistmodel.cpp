@@ -520,40 +520,17 @@ void tst_qdeclarativexmllistmodel::data()
 
 void tst_qdeclarativexmllistmodel::get()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/get.qml"));
     QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());    
     QVERIFY(model != 0);
-    QVERIFY(model->get(0).isUndefined());
+
+    QVERIFY(QMetaObject::invokeMethod(model, "runPreTest"));
+    QCOMPARE(model->property("preTest").toBool(), true);
 
     QTRY_COMPARE(model->count(), 9);
-    QVERIFY(model->get(-1).isUndefined());
 
-    QScriptValue sv = model->get(0);
-    QCOMPARE(sv.property("name").toString(), QLatin1String("Polly"));
-    QCOMPARE(sv.property("type").toString(), QLatin1String("Parrot"));
-    QCOMPARE(sv.property("age").toNumber(), qsreal(12));
-    QCOMPARE(sv.property("size").toString(), QLatin1String("Small"));
-
-    sv = model->get(1);
-    QCOMPARE(sv.property("name").toString(), QLatin1String("Penny"));
-    QCOMPARE(sv.property("type").toString(), QLatin1String("Turtle"));
-    QCOMPARE(sv.property("age").toNumber(), qsreal(4));
-    QCOMPARE(sv.property("size").toString(), QLatin1String("Small"));
-
-    sv = model->get(7);
-    QCOMPARE(sv.property("name").toString(), QLatin1String("Rover"));
-    QCOMPARE(sv.property("type").toString(), QLatin1String("Dog"));
-    QCOMPARE(sv.property("age").toNumber(), qsreal(0));
-    QCOMPARE(sv.property("size").toString(), QLatin1String("Large"));
-
-    sv = model->get(8);
-    QCOMPARE(sv.property("name").toString(), QLatin1String("Tiny"));
-    QCOMPARE(sv.property("type").toString(), QLatin1String("Elephant"));
-    QCOMPARE(sv.property("age").toNumber(), qsreal(15));
-    QCOMPARE(sv.property("size").toString(), QLatin1String("Large"));
-
-    sv = model->get(9);
-    QVERIFY(sv.isUndefined());
+    QVERIFY(QMetaObject::invokeMethod(model, "runPostTest"));
+    QCOMPARE(model->property("postTest").toBool(), true);
 
     delete model;
 }

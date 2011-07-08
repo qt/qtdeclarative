@@ -332,7 +332,7 @@ void tst_qdeclarativeinstruction::dump()
         i.storeScriptString.propertyIndex = 24;
         i.storeScriptString.value = 3;
         i.storeScriptString.scope = 1;
-        i.storeScriptString.bindingId = 3;
+        i.storeScriptString.bindingId = 4;
         data->addInstruction(i);
     }
 
@@ -366,7 +366,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreCompiledBinding);
+        i.setType(QDeclarativeInstruction::StoreV4Binding);
         i.assignBinding.property = 27;
         i.assignBinding.value = 2;
         i.assignBinding.context = 4;
@@ -536,7 +536,7 @@ void tst_qdeclarativeinstruction::dump()
         << "25\t\tSTORE_VARIANT_OBJECT\t22"
         << "26\t\tSTORE_INTERFACE\t\t23"
         << "27\t\tSTORE_SIGNAL\t\t2\t3\t\t\"console.log(1921)\""
-        << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1\t3"
+        << "28\t\tSTORE_SCRIPT_STRING\t24\t3\t1\t4"
         << "29\t\tASSIGN_SIGNAL_OBJECT\t0\t\t\t\"mySignal\""
         << "30\t\tASSIGN_CUSTOMTYPE\t25\t6\t9"
         << "31\t\tSTORE_BINDING\t26\t3\t2"

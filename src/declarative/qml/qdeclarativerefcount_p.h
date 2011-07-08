@@ -73,6 +73,73 @@ private:
     int refCount;
 };
 
+template<class T>
+class QDeclarativeRefPointer
+{
+public:
+    inline QDeclarativeRefPointer();
+    inline QDeclarativeRefPointer(T *);
+    inline QDeclarativeRefPointer(const QDeclarativeRefPointer<T> &);
+    inline ~QDeclarativeRefPointer();
+
+    inline QDeclarativeRefPointer<T> &operator=(const QDeclarativeRefPointer<T> &o);
+    inline QDeclarativeRefPointer<T> &operator=(T *);
+    
+    inline bool isNull() const { return !o; }
+
+    inline T* operator->() const { return o; }
+    inline T& operator*() const { return *o; }
+    inline operator T*() const { return o; }
+    inline T* data() const { return o; }
+
+private:
+    T *o;
+};
+
+template<class T>
+QDeclarativeRefPointer<T>::QDeclarativeRefPointer()
+: o(0) 
+{
+}
+
+template<class T>
+QDeclarativeRefPointer<T>::QDeclarativeRefPointer(T *o)
+: o(o) 
+{
+    if (o) o->addref();
+}
+
+template<class T>
+QDeclarativeRefPointer<T>::QDeclarativeRefPointer(const QDeclarativeRefPointer<T> &other)
+: o(other.o)
+{
+    if (o) o->addref();
+}
+
+template<class T>
+QDeclarativeRefPointer<T>::~QDeclarativeRefPointer()
+{
+    if (o) o->release();
+}
+
+template<class T>
+QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::operator=(const QDeclarativeRefPointer<T> &other)
+{
+    if (other.o) other.o->addref();
+    if (o) o->release();
+    o = other.o;
+    return *this;
+}
+
+template<class T>
+QDeclarativeRefPointer<T> &QDeclarativeRefPointer<T>::operator=(T *other)
+{
+    if (other) other->addref();
+    if (o) o->release();
+    o = other;
+    return *this;
+}
+
 QT_END_NAMESPACE
 
 QT_END_HEADER

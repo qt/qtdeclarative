@@ -41,6 +41,8 @@
 
 #include "private/qdeclarativexmlhttprequest_p.h"
 
+#include <private/qv8engine_p.h>
+
 #include "qdeclarativeengine.h"
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativerefcount_p.h"
@@ -82,17 +84,17 @@
 #define VALIDATION_ERR 16
 #define TYPE_MISMATCH_ERR 17
 
-#define THROW_DOM(error, desc) \
-{ \
-    QScriptValue errorValue = context->throwError(QLatin1String(desc)); \
-    errorValue.setProperty(QLatin1String("code"), error); \
-    return errorValue; \
-} 
+#define V8THROW_DOM(error, string) { \
+    v8::Local<v8::Value> v = v8::Exception::Error(v8::String::New(string)); \
+    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
+    v8::ThrowException(v); \
+    return v8::Handle<v8::Value>(); \
+}
 
-#define THROW_SYNTAX(desc) \
-    return context->throwError(QScriptContext::SyntaxError, QLatin1String(desc));
-#define THROW_REFERENCE(desc) \
-    return context->throwError(QScriptContext::ReferenceError, QLatin1String(desc));
+#define V8THROW_REFERENCE(string) { \
+    v8::ThrowException(v8::Exception::ReferenceError(v8::String::New(string))); \
+    return v8::Handle<v8::Value>(); \
+}
 
 #define D(arg) (arg)->release()
 #define A(arg) (arg)->addref()
@@ -100,6 +102,59 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(xhrDump, QML_XHR_DUMP);
+
+struct QDeclarativeXMLHttpRequestData {
+    QDeclarativeXMLHttpRequestData();
+    ~QDeclarativeXMLHttpRequestData();
+
+    v8::Persistent<v8::Function> nodeFunction;
+
+    v8::Persistent<v8::Object> namedNodeMapPrototype;
+    v8::Persistent<v8::Object> nodeListPrototype;
+    v8::Persistent<v8::Object> nodePrototype;
+    v8::Persistent<v8::Object> elementPrototype;
+    v8::Persistent<v8::Object> attrPrototype;
+    v8::Persistent<v8::Object> characterDataPrototype;
+    v8::Persistent<v8::Object> textPrototype;
+    v8::Persistent<v8::Object> cdataPrototype;
+    v8::Persistent<v8::Object> documentPrototype;
+
+    v8::Local<v8::Object> newNode();
+};
+
+static inline QDeclarativeXMLHttpRequestData *xhrdata(QV8Engine *engine)
+{
+    return (QDeclarativeXMLHttpRequestData *)engine->xmlHttpRequestData();
+}
+
+QDeclarativeXMLHttpRequestData::QDeclarativeXMLHttpRequestData()
+{
+}
+
+QDeclarativeXMLHttpRequestData::~QDeclarativeXMLHttpRequestData()
+{
+    qPersistentDispose(nodeFunction);
+    qPersistentDispose(namedNodeMapPrototype);
+    qPersistentDispose(nodeListPrototype);
+    qPersistentDispose(nodePrototype);
+    qPersistentDispose(elementPrototype);
+    qPersistentDispose(attrPrototype);
+    qPersistentDispose(characterDataPrototype);
+    qPersistentDispose(textPrototype);
+    qPersistentDispose(cdataPrototype);
+    qPersistentDispose(documentPrototype);
+}
+
+v8::Local<v8::Object> QDeclarativeXMLHttpRequestData::newNode()
+{
+    if (nodeFunction.IsEmpty()) {
+        v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+        ft->InstanceTemplate()->SetHasExternalResource(true);
+        nodeFunction = qPersistentNew<v8::Function>(ft->GetFunction());
+    }
+
+    return nodeFunction->NewInstance();
+}
 
 namespace {
 
@@ -169,86 +224,53 @@ class NamedNodeMap
 {
 public:
     // JS API
-    static QScriptValue length(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> length(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> indexed(uint32_t index, const v8::AccessorInfo& info);
+    static v8::Handle<v8::Value> named(v8::Local<v8::String> property, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
-    static QScriptValue create(QScriptEngine *, NodeImpl *, QList<NodeImpl *> *);
-
-    NamedNodeMap();
-    NamedNodeMap(const NamedNodeMap &);
-    ~NamedNodeMap();
-    bool isNull();
-
-    NodeImpl *d;
-    QList<NodeImpl *> *list;
-private:
-    NamedNodeMap &operator=(const NamedNodeMap &);
-};
-
-class NamedNodeMapClass : public QScriptClass
-{
-public:
-    NamedNodeMapClass(QScriptEngine *engine) : QScriptClass(engine) {}
-
-    virtual QueryFlags queryProperty(const QScriptValue &object, const QScriptString &name, QueryFlags flags, uint *id);
-    virtual QScriptValue property(const QScriptValue &object, const QScriptString &name, uint id);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *, QList<NodeImpl *> *);
 };
 
 class NodeList 
 {
 public:
     // JS API
-    static QScriptValue length(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> length(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> indexed(uint32_t index, const v8::AccessorInfo& info);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
-    static QScriptValue create(QScriptEngine *, NodeImpl *);
-
-    NodeList();
-    NodeList(const NodeList &);
-    ~NodeList();
-    bool isNull();
-
-    NodeImpl *d;
-private:
-    NodeList &operator=(const NodeList &);
-};
-
-class NodeListClass : public QScriptClass
-{
-public:
-    NodeListClass(QScriptEngine *engine) : QScriptClass(engine) {}
-    virtual QueryFlags queryProperty(const QScriptValue &object, const QScriptString &name, QueryFlags flags, uint *id);
-    virtual QScriptValue property(const QScriptValue &object, const QScriptString &name, uint id);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *);
 };
 
 class Node
 {
 public:
     // JS API
-    static QScriptValue nodeName(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue nodeValue(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue nodeType(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> nodeName(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> nodeValue(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> nodeType(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
-    static QScriptValue parentNode(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue childNodes(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue firstChild(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue lastChild(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue previousSibling(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue nextSibling(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue attributes(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> parentNode(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> childNodes(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> firstChild(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> lastChild(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> previousSibling(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> nextSibling(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> attributes(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
-    //static QScriptValue ownerDocument(QScriptContext *context, QScriptEngine *engine);
-    //static QScriptValue namespaceURI(QScriptContext *context, QScriptEngine *engine);
-    //static QScriptValue prefix(QScriptContext *context, QScriptEngine *engine);
-    //static QScriptValue localName(QScriptContext *context, QScriptEngine *engine);
-    //static QScriptValue baseURI(QScriptContext *context, QScriptEngine *engine);
-    //static QScriptValue textContent(QScriptContext *context, QScriptEngine *engine);
+    //static v8::Handle<v8::Value> ownerDocument(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    //static v8::Handle<v8::Value> namespaceURI(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    //static v8::Handle<v8::Value> prefix(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    //static v8::Handle<v8::Value> localName(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    //static v8::Handle<v8::Value> baseURI(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    //static v8::Handle<v8::Value> textContent(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
-    static QScriptValue create(QScriptEngine *, NodeImpl *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static v8::Handle<v8::Value> create(QV8Engine *, NodeImpl *);
 
     Node();
     Node(const Node &o);
@@ -265,66 +287,80 @@ class Element : public Node
 {
 public:
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
 };
 
 class Attr : public Node
 {
 public:
     // JS API
-    static QScriptValue name(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue specified(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue value(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue ownerElement(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue schemaTypeInfo(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue isId(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> name(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> specified(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> value(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> ownerElement(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> schemaTypeInfo(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> isId(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
 };
 
 class CharacterData : public Node
 {
 public:
     // JS API
-    static QScriptValue length(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> length(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
 };
 
 class Text : public CharacterData
 {
 public:
     // JS API
-    static QScriptValue isElementContentWhitespace(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue wholeText(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> isElementContentWhitespace(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> wholeText(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
 };
 
 class CDATA : public Text
 {
 public:
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
 };
 
 class Document : public Node
 {
 public:
     // JS API
-    static QScriptValue xmlVersion(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue xmlEncoding(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue xmlStandalone(QScriptContext *context, QScriptEngine *engine);
-    static QScriptValue documentElement(QScriptContext *context, QScriptEngine *engine);
+    static v8::Handle<v8::Value> xmlVersion(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> xmlEncoding(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> xmlStandalone(v8::Local<v8::String>, const v8::AccessorInfo& args);
+    static v8::Handle<v8::Value> documentElement(v8::Local<v8::String>, const v8::AccessorInfo& args);
 
     // C++ API
-    static QScriptValue prototype(QScriptEngine *);
-    static QScriptValue load(QScriptEngine *engine, const QByteArray &data);
+    static v8::Handle<v8::Object> prototype(QV8Engine *);
+    static v8::Handle<v8::Value> load(QV8Engine *engine, const QByteArray &data);
 };
 
+}
+
+class QDeclarativeDOMNodeResource : public QV8ObjectResource, public Node
+{
+    V8_RESOURCE_TYPE(DOMNodeType);
+public:
+    QDeclarativeDOMNodeResource(QV8Engine *e);
+
+    QList<NodeImpl *> *list; // Only used in NamedNodeMap
+};
+
+QDeclarativeDOMNodeResource::QDeclarativeDOMNodeResource(QV8Engine *e)
+: QV8ObjectResource(e), list(0)
+{
 }
 
 QT_END_NAMESPACE
@@ -345,152 +381,174 @@ void NodeImpl::release()
     D(document);
 }
 
-QScriptValue Node::nodeName(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::nodeName(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    switch (node.d->type) {
+    switch (r->d->type) {
     case NodeImpl::Document:
-        return QScriptValue(QLatin1String("#document"));
+        return v8::String::New("#document");
     case NodeImpl::CDATA:
-        return QScriptValue(QLatin1String("#cdata-section"));
+        return v8::String::New("#cdata-section");
     case NodeImpl::Text:
-        return QScriptValue(QLatin1String("#text"));
+        return v8::String::New("#text");
     default:
-        return QScriptValue(node.d->name);
+        return engine->toString(r->d->name);
     }
 }
 
-QScriptValue Node::nodeValue(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::nodeValue(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (node.d->type == NodeImpl::Document ||
-        node.d->type == NodeImpl::DocumentFragment ||
-        node.d->type == NodeImpl::DocumentType ||
-        node.d->type == NodeImpl::Element ||
-        node.d->type == NodeImpl::Entity ||
-        node.d->type == NodeImpl::EntityReference ||
-        node.d->type == NodeImpl::Notation)
-        return engine->nullValue();
+    if (r->d->type == NodeImpl::Document ||
+        r->d->type == NodeImpl::DocumentFragment ||
+        r->d->type == NodeImpl::DocumentType ||
+        r->d->type == NodeImpl::Element ||
+        r->d->type == NodeImpl::Entity ||
+        r->d->type == NodeImpl::EntityReference ||
+        r->d->type == NodeImpl::Notation)
+        return v8::Null();
 
-    return QScriptValue(node.d->data);
+    return engine->toString(r->d->data);
 }
 
-QScriptValue Node::nodeType(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::nodeType(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
-    return QScriptValue(node.d->type);
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    return v8::Integer::New(r->d->type);
 }
 
-QScriptValue Node::parentNode(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::parentNode(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (node.d->parent) return Node::create(engine, node.d->parent);
-    else return engine->nullValue();
+    if (r->d->parent) return Node::create(engine, r->d->parent);
+    else return v8::Null();
 }
 
-QScriptValue Node::childNodes(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::childNodes(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return NodeList::create(engine, node.d);
+    return NodeList::create(engine, r->d);
 }
 
-QScriptValue Node::firstChild(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::firstChild(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (node.d->children.isEmpty()) return engine->nullValue();
-    else return Node::create(engine, node.d->children.first());
+    if (r->d->children.isEmpty()) return v8::Null();
+    else return Node::create(engine, r->d->children.first());
 }
 
-QScriptValue Node::lastChild(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::lastChild(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (node.d->children.isEmpty()) return engine->nullValue();
-    else return Node::create(engine, node.d->children.last());
+    if (r->d->children.isEmpty()) return v8::Null();
+    else return Node::create(engine, r->d->children.last());
 }
 
-QScriptValue Node::previousSibling(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::previousSibling(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (!node.d->parent) return engine->nullValue();
+    if (!r->d->parent) return v8::Null();
 
-    for (int ii = 0; ii < node.d->parent->children.count(); ++ii) {
-        if (node.d->parent->children.at(ii) == node.d) {
-            if (ii == 0) return engine->nullValue();
-            else return Node::create(engine, node.d->parent->children.at(ii - 1));
+    for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
+        if (r->d->parent->children.at(ii) == r->d) {
+            if (ii == 0) return v8::Null();
+            else return Node::create(engine, r->d->parent->children.at(ii - 1));
         }
     }
 
-    return engine->nullValue();
+    return v8::Null();
 }
 
-QScriptValue Node::nextSibling(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::nextSibling(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (!node.d->parent) return engine->nullValue();
+    if (!r->d->parent) return v8::Null();
 
-    for (int ii = 0; ii < node.d->parent->children.count(); ++ii) {
-        if (node.d->parent->children.at(ii) == node.d) {
-            if ((ii + 1) == node.d->parent->children.count()) return engine->nullValue();
-            else return Node::create(engine, node.d->parent->children.at(ii + 1)); 
+    for (int ii = 0; ii < r->d->parent->children.count(); ++ii) {
+        if (r->d->parent->children.at(ii) == r->d) {
+            if ((ii + 1) == r->d->parent->children.count()) return v8::Null();
+            else return Node::create(engine, r->d->parent->children.at(ii + 1)); 
         }
     }
 
-    return engine->nullValue();
+    return v8::Null();
 }
 
-QScriptValue Node::attributes(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Node::attributes(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    if (node.d->type != NodeImpl::Element)
-        return engine->nullValue();
+    if (r->d->type != NodeImpl::Element)
+        return v8::Null();
     else
-        return NamedNodeMap::create(engine, node.d, &node.d->attributes);
+        return NamedNodeMap::create(engine, r->d, &r->d->attributes);
 }
 
-QScriptValue Node::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> Node::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-
-    proto.setProperty(QLatin1String("nodeName"), engine->newFunction(nodeName), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("nodeValue"), engine->newFunction(nodeValue), QScriptValue::ReadOnly | QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-    proto.setProperty(QLatin1String("nodeType"), engine->newFunction(nodeType), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("parentNode"), engine->newFunction(parentNode), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("childNodes"), engine->newFunction(childNodes), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("firstChild"), engine->newFunction(firstChild), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("lastChild"), engine->newFunction(lastChild), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("previousSibling"), engine->newFunction(previousSibling), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("nextSibling"), engine->newFunction(nextSibling), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("attributes"), engine->newFunction(attributes), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->nodePrototype.IsEmpty()) {
+        d->nodePrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->nodePrototype->SetAccessor(v8::String::New("nodeName"), nodeName,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("nodeValue"), nodeValue,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("nodeType"), nodeType,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("parentNode"), parentNode,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("childNodes"), childNodes,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("firstChild"), firstChild,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("lastChild"), lastChild,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("previousSibling"), previousSibling,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("nextSibling"), nextSibling,
+                                      0, v8::External::Wrap(engine));
+        d->nodePrototype->SetAccessor(v8::String::New("attributes"), attributes,
+                                      0, v8::External::Wrap(engine));
+        engine->freezeObject(d->nodePrototype);
+    }
+    return d->nodePrototype;
 }
 
-QScriptValue Node::create(QScriptEngine *engine, NodeImpl *data)
+v8::Handle<v8::Value> Node::create(QV8Engine *engine, NodeImpl *data)
 {
-    QScriptValue instance = engine->newObject();
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    v8::Local<v8::Object> instance = d->newNode();
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance.setPrototype(Attr::prototype(engine));
+        instance->SetPrototype(Attr::prototype(engine));
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -500,138 +558,171 @@ QScriptValue Node::create(QScriptEngine *engine, NodeImpl *data)
     case NodeImpl::EntityReference:
     case NodeImpl::Notation:
     case NodeImpl::ProcessingInstruction:
-        return QScriptValue();
+        return v8::Undefined();
     case NodeImpl::CDATA:
-        instance.setPrototype(CDATA::prototype(engine));
+        instance->SetPrototype(CDATA::prototype(engine));
         break;
     case NodeImpl::Text:
-        instance.setPrototype(Text::prototype(engine));
+        instance->SetPrototype(Text::prototype(engine));
         break;
     case NodeImpl::Element:
-        instance.setPrototype(Element::prototype(engine));
+        instance->SetPrototype(Element::prototype(engine));
         break;
     }
 
-    Node node;
-    node.d = data;
+    QDeclarativeDOMNodeResource *r = new QDeclarativeDOMNodeResource(engine);
+    r->d = data;
     if (data) A(data);
+    instance->SetExternalResource(r);
 
-    return engine->newVariant(instance, QVariant::fromValue(node));
+    return instance;
 }
 
-QScriptValue Element::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> Element::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(Node::prototype(engine));
-
-    proto.setProperty(QLatin1String("tagName"), engine->newFunction(nodeName), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->elementPrototype.IsEmpty()) {
+        d->elementPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->elementPrototype->SetPrototype(Node::prototype(engine));
+        d->elementPrototype->SetAccessor(v8::String::New("tagName"), nodeName,
+                                         0, v8::External::Wrap(engine));
+        engine->freezeObject(d->elementPrototype);
+    }
+    return d->elementPrototype;
 }
 
-QScriptValue Attr::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> Attr::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(Node::prototype(engine));
-
-    proto.setProperty(QLatin1String("name"), engine->newFunction(name), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("value"), engine->newFunction(value), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("ownerElement"), engine->newFunction(ownerElement), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->attrPrototype.IsEmpty()) {
+        d->attrPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->attrPrototype->SetPrototype(Node::prototype(engine));
+        d->attrPrototype->SetAccessor(v8::String::New("name"), name,
+                                      0, v8::External::Wrap(engine));
+        d->attrPrototype->SetAccessor(v8::String::New("value"), value,
+                                      0, v8::External::Wrap(engine));
+        d->attrPrototype->SetAccessor(v8::String::New("ownerElement"), ownerElement,
+                                      0, v8::External::Wrap(engine));
+        engine->freezeObject(d->attrPrototype);
+    }
+    return d->attrPrototype;
 }
 
-QScriptValue Attr::name(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Attr::name(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return QScriptValue(node.d->name);
+    return engine->toString(r->d->name);
 }
 
-QScriptValue Attr::value(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Attr::value(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return QScriptValue(node.d->data);
+    return engine->toString(r->d->data);
 }
 
-QScriptValue Attr::ownerElement(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Attr::ownerElement(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return Node::create(engine, node.d->parent);
+    return Node::create(engine, r->d->parent);
 }
 
-QScriptValue CharacterData::length(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> CharacterData::length(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return QScriptValue(node.d->data.length());
+    return v8::Integer::New(r->d->data.length());
 }
 
-QScriptValue CharacterData::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> CharacterData::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(Node::prototype(engine));
-
-    proto.setProperty(QLatin1String("data"), engine->newFunction(nodeValue), QScriptValue::ReadOnly | QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-    proto.setProperty(QLatin1String("length"), engine->newFunction(length), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->characterDataPrototype.IsEmpty()) {
+        d->characterDataPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->characterDataPrototype->SetPrototype(Node::prototype(engine));
+        d->characterDataPrototype->SetAccessor(v8::String::New("data"), nodeValue,
+                                               0, v8::External::Wrap(engine));
+        d->characterDataPrototype->SetAccessor(v8::String::New("length"), length,
+                                               0, v8::External::Wrap(engine));
+        engine->freezeObject(d->characterDataPrototype);
+    }
+    return d->characterDataPrototype;
 }
 
-QScriptValue Text::isElementContentWhitespace(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return node.d->data.trimmed().isEmpty();
+    return v8::Boolean::New(r->d->data.trimmed().isEmpty());
 }
 
-QScriptValue Text::wholeText(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Text::wholeText(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    Node node = qscriptvalue_cast<Node>(context->thisObject());
-    if (node.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return node.d->data;
+    return engine->toString(r->d->data);
 }
 
-QScriptValue Text::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> Text::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(CharacterData::prototype(engine));
-
-    proto.setProperty(QLatin1String("isElementContentWhitespace"), engine->newFunction(isElementContentWhitespace), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    proto.setProperty(QLatin1String("wholeText"), engine->newFunction(wholeText), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->textPrototype.IsEmpty()) {
+        d->textPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->textPrototype->SetPrototype(CharacterData::prototype(engine));
+        d->textPrototype->SetAccessor(v8::String::New("isElementContentWhitespace"), isElementContentWhitespace,
+                                               0, v8::External::Wrap(engine));
+        d->textPrototype->SetAccessor(v8::String::New("wholeText"), wholeText,
+                                               0, v8::External::Wrap(engine));
+        engine->freezeObject(d->textPrototype);
+    }
+    return d->textPrototype;
 }
 
-QScriptValue CDATA::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> CDATA::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(Text::prototype(engine));
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->cdataPrototype.IsEmpty()) {
+        d->cdataPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->cdataPrototype->SetPrototype(Text::prototype(engine));
+        engine->freezeObject(d->cdataPrototype);
+    }
+    return d->cdataPrototype;
 }
 
-QScriptValue Document::prototype(QScriptEngine *engine)
+v8::Handle<v8::Object> Document::prototype(QV8Engine *engine)
 {
-    QScriptValue proto = engine->newObject();
-    proto.setPrototype(Node::prototype(engine));
-
-    proto.setProperty(QLatin1String("xmlVersion"), engine->newFunction(xmlVersion), QScriptValue::ReadOnly | QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-    proto.setProperty(QLatin1String("xmlEncoding"), engine->newFunction(xmlEncoding), QScriptValue::ReadOnly | QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-    proto.setProperty(QLatin1String("xmlStandalone"), engine->newFunction(xmlStandalone), QScriptValue::ReadOnly | QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
-    proto.setProperty(QLatin1String("documentElement"), engine->newFunction(documentElement), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->documentPrototype.IsEmpty()) {
+        d->documentPrototype = qPersistentNew<v8::Object>(v8::Object::New());
+        d->documentPrototype->SetPrototype(Node::prototype(engine));
+        d->documentPrototype->SetAccessor(v8::String::New("xmlVersion"), xmlVersion, 
+                                          0, v8::External::Wrap(engine));
+        d->documentPrototype->SetAccessor(v8::String::New("xmlEncoding"), xmlEncoding, 
+                                          0, v8::External::Wrap(engine));
+        d->documentPrototype->SetAccessor(v8::String::New("xmlStandalone"), xmlStandalone, 
+                                          0, v8::External::Wrap(engine));
+        d->documentPrototype->SetAccessor(v8::String::New("documentElement"), documentElement, 
+                                          0, v8::External::Wrap(engine));
+        engine->freezeObject(d->documentPrototype);
+    }
+    return d->documentPrototype;
 }
 
-QScriptValue Document::load(QScriptEngine *engine, const QByteArray &data)
+v8::Handle<v8::Value> Document::load(QV8Engine *engine, const QByteArray &data)
 {
     Q_ASSERT(engine);
 
@@ -709,14 +800,15 @@ QScriptValue Document::load(QScriptEngine *engine, const QByteArray &data)
 
     if (!document || reader.hasError()) {
         if (document) D(document);
-        return engine->nullValue();
+        return v8::Null();
     }
 
-    QScriptValue instance = engine->newObject();
-    instance.setPrototype(Document::prototype(engine));
-    Node documentNode;
-    documentNode.d = document;
-    return engine->newVariant(instance, QVariant::fromValue(documentNode));
+    v8::Local<v8::Object> instance = xhrdata(engine)->newNode();
+    QDeclarativeDOMNodeResource *r = new QDeclarativeDOMNodeResource(engine);
+    r->d = document;
+    instance->SetExternalResource(r);
+    instance->SetPrototype(Document::prototype(engine));
+    return instance;
 }
 
 Node::Node()
@@ -740,221 +832,164 @@ bool Node::isNull() const
     return d == 0;
 }
 
-QScriptValue NamedNodeMap::length(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> NamedNodeMap::length(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
-    NamedNodeMap map = qscriptvalue_cast<NamedNodeMap>(context->thisObject().data());
-    if (map.isNull()) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return QScriptValue(map.list->count());
+    return v8::Integer::New(r->list->count());
 }
 
-QScriptValue NamedNodeMap::prototype(QScriptEngine *engine)
+v8::Handle<v8::Value> NamedNodeMap::indexed(uint32_t index, const v8::AccessorInfo& args)
 {
-    QScriptValue proto = engine->newObject();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || !r->list) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    proto.setProperty(QLatin1String("length"), engine->newFunction(length), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
-}
-
-QScriptValue NamedNodeMap::create(QScriptEngine *engine, NodeImpl *data, QList<NodeImpl *> *list)
-{
-    QScriptValue instance = engine->newObject();
-    instance.setPrototype(NamedNodeMap::prototype(engine));
-
-    NamedNodeMap map;
-    map.d = data;
-    map.list = list;
-    if (data) A(data);
-
-    instance.setData(engine->newVariant(QVariant::fromValue(map)));
-
-    if (!QDeclarativeScriptEngine::get(engine)->namedNodeMapClass)
-        QDeclarativeScriptEngine::get(engine)->namedNodeMapClass= new NamedNodeMapClass(engine);
-
-    instance.setScriptClass(QDeclarativeScriptEngine::get(engine)->namedNodeMapClass);
-
-    return instance;
-}
-
-NamedNodeMap::NamedNodeMap()
-: d(0), list(0)
-{
-}
-
-NamedNodeMap::NamedNodeMap(const NamedNodeMap &o)
-: d(o.d), list(o.list)
-{
-    if (d) A(d);
-}
-
-NamedNodeMap::~NamedNodeMap()
-{
-    if (d) D(d);
-}
-
-bool NamedNodeMap::isNull()
-{
-    return d == 0;
-}
-
-QScriptValue NodeList::length(QScriptContext *context, QScriptEngine *engine)
-{
-    NodeList list = qscriptvalue_cast<NodeList>(context->thisObject().data());
-    if (list.isNull()) return engine->undefinedValue();
-
-    return QScriptValue(list.d->children.count());
-}
-
-QScriptValue NodeList::prototype(QScriptEngine *engine)
-{
-    QScriptValue proto = engine->newObject();
-
-    proto.setProperty(QLatin1String("length"), engine->newFunction(length), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-
-    return proto;
-}
-
-QScriptValue NodeList::create(QScriptEngine *engine, NodeImpl *data)
-{
-    QScriptValue instance = engine->newObject();
-    instance.setPrototype(NodeList::prototype(engine));
-
-    NodeList list;
-    list.d = data;
-    if (data) A(data);
-
-    instance.setData(engine->newVariant(QVariant::fromValue(list)));
-
-    if (!QDeclarativeScriptEngine::get(engine)->nodeListClass)
-        QDeclarativeScriptEngine::get(engine)->nodeListClass= new NodeListClass(engine);
-
-    instance.setScriptClass(QDeclarativeScriptEngine::get(engine)->nodeListClass);
-
-    return instance;
-}
-
-NodeList::NodeList()
-: d(0)
-{
-}
-
-NodeList::NodeList(const NodeList &o)
-: d(o.d)
-{
-    if (d) A(d);
-}
-
-NodeList::~NodeList()
-{
-    if (d) D(d);
-}
-
-bool NodeList::isNull()
-{
-    return d == 0;
-}
-
-NamedNodeMapClass::QueryFlags NamedNodeMapClass::queryProperty(const QScriptValue &object, const QScriptString &name, QueryFlags flags, uint *id)
-{
-    if (!(flags & HandlesReadAccess))
-        return 0;
-
-    NamedNodeMap map = qscriptvalue_cast<NamedNodeMap>(object.data());
-    Q_ASSERT(!map.isNull());
-
-    bool ok = false;
-    QString nameString = name.toString();
-    uint index = nameString.toUInt(&ok);
-    if (ok) {
-        if ((uint)map.list->count() <= index)
-            return 0;
-
-        *id = index;
-        return HandlesReadAccess;
+    if (index < r->list->count()) {
+        return Node::create(engine, r->list->at(index));
     } else {
-        for (int ii = 0; ii < map.list->count(); ++ii) {
-            if (map.list->at(ii) && map.list->at(ii)->name == nameString) {
-                *id = ii;
-                return HandlesReadAccess;
-            }
+        return v8::Undefined();
+    }
+}
+
+v8::Handle<v8::Value> NamedNodeMap::named(v8::Local<v8::String> property, const v8::AccessorInfo& args)
+{
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || !r->list) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
+
+    QString str = engine->toString(property);
+    for (int ii = 0; ii < r->list->count(); ++ii) {
+        if (r->list->at(ii)->name == str) {
+            return Node::create(engine, r->list->at(ii));
         }
     }
 
-    return 0;
+    return v8::Undefined();
 }
 
-QScriptValue NamedNodeMapClass::property(const QScriptValue &object, const QScriptString &, uint id)
+v8::Handle<v8::Object> NamedNodeMap::prototype(QV8Engine *engine)
 {
-    NamedNodeMap map = qscriptvalue_cast<NamedNodeMap>(object.data());
-    return Node::create(engine(), map.list->at(id));
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->namedNodeMapPrototype.IsEmpty()) {
+        v8::Local<v8::ObjectTemplate> ot = v8::ObjectTemplate::New();
+        ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::Wrap(engine));
+        ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
+        ot->SetFallbackPropertyHandler(named, 0, 0, 0, 0, v8::External::Wrap(engine));
+        d->namedNodeMapPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
+        engine->freezeObject(d->namedNodeMapPrototype);
+    }
+    return d->namedNodeMapPrototype;
 }
 
-NodeListClass::QueryFlags NodeListClass::queryProperty(const QScriptValue &object, const QScriptString &name, QueryFlags flags, uint *id)
+v8::Handle<v8::Value> NamedNodeMap::create(QV8Engine *engine, NodeImpl *data, QList<NodeImpl *> *list)
 {
-    if (!(flags & HandlesReadAccess))
-        return 0;
-
-    bool ok = false;
-    uint index = name.toString().toUInt(&ok);
-    if (!ok)
-        return 0;
-
-    NodeList list = qscriptvalue_cast<NodeList>(object.data());
-    if (list.isNull() || (uint)list.d->children.count() <= index)
-        return 0; // ### I think we're meant to raise an exception
-
-    *id = index;
-    return HandlesReadAccess;
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    v8::Local<v8::Object> instance = d->newNode();
+    instance->SetPrototype(NamedNodeMap::prototype(engine));
+    QDeclarativeDOMNodeResource *r = new QDeclarativeDOMNodeResource(engine);
+    r->d = data;
+    r->list = list;
+    if (data) A(data);
+    instance->SetExternalResource(r);
+    return instance;
 }
 
-QScriptValue NodeListClass::property(const QScriptValue &object, const QScriptString &, uint id)
+v8::Handle<v8::Value> NodeList::indexed(uint32_t index, const v8::AccessorInfo& args)
 {
-    NodeList list = qscriptvalue_cast<NodeList>(object.data());
-    return Node::create(engine(), list.d->children.at(id));
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
+
+    if (index < r->d->children.count()) {
+        return Node::create(engine, r->d->children.at(index));
+    } else {
+        return v8::Undefined();
+    }
 }
 
-QScriptValue Document::documentElement(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> NodeList::length(v8::Local<v8::String>, const v8::AccessorInfo& args)
 {
-    Node document = qscriptvalue_cast<Node>(context->thisObject());
-    if (document.isNull() || document.d->type != NodeImpl::Document) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return Node::create(engine, static_cast<DocumentImpl *>(document.d)->root);
+    return v8::Integer::New(r->d->children.count());
 }
 
-QScriptValue Document::xmlStandalone(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Object> NodeList::prototype(QV8Engine *engine)
 {
-    Node document = qscriptvalue_cast<Node>(context->thisObject());
-    if (document.isNull() || document.d->type != NodeImpl::Document) return engine->undefinedValue();
-
-    return QScriptValue(static_cast<DocumentImpl *>(document.d)->isStandalone);
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    if (d->nodeListPrototype.IsEmpty()) {
+        v8::Local<v8::ObjectTemplate> ot = v8::ObjectTemplate::New();
+        ot->SetAccessor(v8::String::New("length"), length, 0, v8::External::Wrap(engine));
+        ot->SetIndexedPropertyHandler(indexed, 0, 0, 0, 0, v8::External::Wrap(engine));
+        d->nodeListPrototype = qPersistentNew<v8::Object>(ot->NewInstance());
+        engine->freezeObject(d->nodeListPrototype);
+    }
+    return d->nodeListPrototype;
 }
 
-QScriptValue Document::xmlVersion(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> NodeList::create(QV8Engine *engine, NodeImpl *data)
 {
-    Node document = qscriptvalue_cast<Node>(context->thisObject());
-    if (document.isNull() || document.d->type != NodeImpl::Document) return engine->undefinedValue();
-
-    return QScriptValue(static_cast<DocumentImpl *>(document.d)->version);
+    QDeclarativeXMLHttpRequestData *d = xhrdata(engine);
+    v8::Local<v8::Object> instance = d->newNode();
+    instance->SetPrototype(NodeList::prototype(engine));
+    QDeclarativeDOMNodeResource *r = new QDeclarativeDOMNodeResource(engine);
+    r->d = data;
+    if (data) A(data);
+    instance->SetExternalResource(r);
+    return instance;
 }
 
-QScriptValue Document::xmlEncoding(QScriptContext *context, QScriptEngine *engine)
+v8::Handle<v8::Value> Document::documentElement(v8::Local<v8::String>, const v8::AccessorInfo& args)
 {
-    Node document = qscriptvalue_cast<Node>(context->thisObject());
-    if (document.isNull() || document.d->type != NodeImpl::Document) return engine->undefinedValue();
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
 
-    return QScriptValue(static_cast<DocumentImpl *>(document.d)->encoding);
+    return Node::create(engine, static_cast<DocumentImpl *>(r->d)->root);
 }
 
-class QDeclarativeXMLHttpRequest : public QObject
+v8::Handle<v8::Value> Document::xmlStandalone(v8::Local<v8::String>, const v8::AccessorInfo& args)
+{
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
+
+    return v8::Boolean::New(static_cast<DocumentImpl *>(r->d)->isStandalone);
+}
+
+v8::Handle<v8::Value> Document::xmlVersion(v8::Local<v8::String>, const v8::AccessorInfo& args)
+{
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
+
+    return engine->toString(static_cast<DocumentImpl *>(r->d)->version);
+}
+
+v8::Handle<v8::Value> Document::xmlEncoding(v8::Local<v8::String>, const v8::AccessorInfo& args)
+{
+    QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
+    if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
+    QV8Engine *engine = V8ENGINE();
+
+    return engine->toString(static_cast<DocumentImpl *>(r->d)->encoding);
+}
+
+class QDeclarativeXMLHttpRequest : public QObject, public QV8ObjectResource
 {
 Q_OBJECT
+V8_RESOURCE_TYPE(XMLHttpRequestType)
 public:
     enum State { Unsent = 0, 
                  Opened = 1, HeadersReceived = 2,
                  Loading = 3, Done = 4 };
 
-    QDeclarativeXMLHttpRequest(QNetworkAccessManager *manager);
+    QDeclarativeXMLHttpRequest(QV8Engine *engine, QNetworkAccessManager *manager);
     virtual ~QDeclarativeXMLHttpRequest();
 
     bool sendFlag() const;
@@ -963,13 +998,14 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    QScriptValue open(QScriptValue *me, const QString &, const QUrl &);
+    v8::Handle<v8::Value> open(v8::Handle<v8::Object> me, const QString &, const QUrl &);
+    v8::Handle<v8::Value> send(v8::Handle<v8::Object> me, const QByteArray &);
+    v8::Handle<v8::Value> abort(v8::Handle<v8::Object> me);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name);
     QString headers();
-    QScriptValue send(QScriptValue *me, const QByteArray &);
-    QScriptValue abort(QScriptValue *me);
+
 
     QString responseBody();
     const QByteArray & rawResponseBody() const;
@@ -1005,10 +1041,12 @@ private:
 #endif
     void readEncoding();
 
-    QScriptValue m_me; // Set to the data object while a send() is ongoing (to access the callback)
+    v8::Handle<v8::Object> getMe() const;
+    void setMe(v8::Handle<v8::Object> me);
+    v8::Persistent<v8::Object> m_me;
 
-    QScriptValue dispatchCallback(QScriptValue *me);
-    void printError(const QScriptValue&);
+    void dispatchCallback(v8::Handle<v8::Object> me);
+    void printError(v8::Handle<v8::Message>);
 
     int m_status;
     QString m_statusText;
@@ -1020,8 +1058,8 @@ private:
     QNetworkAccessManager *networkAccessManager() { return m_nam; }
 };
 
-QDeclarativeXMLHttpRequest::QDeclarativeXMLHttpRequest(QNetworkAccessManager *manager)
-: m_state(Unsent), m_errorFlag(false), m_sendFlag(false),
+QDeclarativeXMLHttpRequest::QDeclarativeXMLHttpRequest(QV8Engine *engine, QNetworkAccessManager *manager)
+: QV8ObjectResource(engine), m_state(Unsent), m_errorFlag(false), m_sendFlag(false),
   m_redirectCount(0), m_gotXml(false), m_textCodec(0), m_network(0), m_nam(manager)
 {
 }
@@ -1056,7 +1094,8 @@ QString QDeclarativeXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-QScriptValue QDeclarativeXMLHttpRequest::open(QScriptValue *me, const QString &method, const QUrl &url)
+v8::Handle<v8::Value> QDeclarativeXMLHttpRequest::open(v8::Handle<v8::Object> me, const QString &method, 
+                                                       const QUrl &url)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1065,7 +1104,8 @@ QScriptValue QDeclarativeXMLHttpRequest::open(QScriptValue *me, const QString &m
     m_method = method;
     m_url = url;
     m_state = Opened;
-    return dispatchCallback(me);
+    dispatchCallback(me);
+    return v8::Undefined();
 }
 
 void QDeclarativeXMLHttpRequest::addHeader(const QString &name, const QString &value)
@@ -1178,20 +1218,21 @@ void QDeclarativeXMLHttpRequest::requestFromUrl(const QUrl &url)
                      this, SLOT(finished()));
 }
 
-QScriptValue QDeclarativeXMLHttpRequest::send(QScriptValue *me, const QByteArray &data)
+v8::Handle<v8::Value> QDeclarativeXMLHttpRequest::send(v8::Handle<v8::Object> me, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
     m_redirectCount = 0;
     m_data = data;
-    m_me = *me;
+
+    setMe(me);
 
     requestFromUrl(m_url);
 
-    return QScriptValue();
+    return v8::Undefined();
 }
 
-QScriptValue QDeclarativeXMLHttpRequest::abort(QScriptValue *me)
+v8::Handle<v8::Value> QDeclarativeXMLHttpRequest::abort(v8::Handle<v8::Object> me)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1204,16 +1245,31 @@ QScriptValue QDeclarativeXMLHttpRequest::abort(QScriptValue *me)
 
         m_state = Done;
         m_sendFlag = false;
-        QScriptValue cbv = dispatchCallback(me);
-        if (cbv.isError()) return cbv;
+        dispatchCallback(me);
     }
 
     m_state = Unsent;
-    return QScriptValue();
+
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Object> QDeclarativeXMLHttpRequest::getMe() const
+{
+    return m_me;
+}
+
+void QDeclarativeXMLHttpRequest::setMe(v8::Handle<v8::Object> me)
+{
+    qPersistentDispose(m_me);
+
+    if (!me.IsEmpty()) 
+        m_me = qPersistentNew<v8::Object>(me);
 }
 
 void QDeclarativeXMLHttpRequest::downloadProgress(qint64 bytes)
 {
+    v8::HandleScope handle_scope;
+
     Q_UNUSED(bytes)
     m_status = 
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1224,16 +1280,18 @@ void QDeclarativeXMLHttpRequest::downloadProgress(qint64 bytes)
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        QScriptValue cbv = dispatchCallback(&m_me);
-        if (cbv.isError()) printError(cbv);
+        v8::TryCatch tc;
+        dispatchCallback(m_me);
+        if (tc.HasCaught()) printError(tc.Message());
     }
 
     bool wasEmpty = m_responseEntityBody.isEmpty();
     m_responseEntityBody.append(m_network->readAll());
     if (wasEmpty && !m_responseEntityBody.isEmpty()) {
         m_state = Loading;
-        QScriptValue cbv = dispatchCallback(&m_me);
-        if (cbv.isError()) printError(cbv);
+        v8::TryCatch tc;
+        dispatchCallback(m_me);
+        if (tc.HasCaught()) printError(tc.Message());
     }
 }
 
@@ -1251,6 +1309,8 @@ static const char *errorToString(QNetworkReply::NetworkError error)
 
 void QDeclarativeXMLHttpRequest::error(QNetworkReply::NetworkError error)
 {
+    v8::HandleScope handle_scope;
+
     Q_UNUSED(error)
     m_status =
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1274,20 +1334,25 @@ void QDeclarativeXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::AuthenticationRequiredError ||
         error == QNetworkReply::ContentReSendError) {
         m_state = Loading;
-        QScriptValue cbv = dispatchCallback(&m_me);
-        if (cbv.isError()) printError(cbv);
+        v8::TryCatch tc;
+        dispatchCallback(m_me);
+        if (tc.HasCaught()) printError(tc.Message());
     } else {
         m_errorFlag = true;
     } 
 
     m_state = Done;
-    QScriptValue cbv = dispatchCallback(&m_me);
-    if (cbv.isError()) printError(cbv);
+
+    v8::TryCatch tc;
+    dispatchCallback(m_me);
+    if (tc.HasCaught()) printError(tc.Message());
 }
 
 #define XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION 15
 void QDeclarativeXMLHttpRequest::finished()
 {
+    v8::HandleScope handle_scope;
+
     m_redirectCount++;
     if (m_redirectCount < XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION) {
         QVariant redirect = m_network->attribute(QNetworkRequest::RedirectionTargetAttribute);
@@ -1307,8 +1372,9 @@ void QDeclarativeXMLHttpRequest::finished()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        QScriptValue cbv = dispatchCallback(&m_me);
-        if (cbv.isError()) printError(cbv);
+        v8::TryCatch tc;
+        dispatchCallback(m_me);
+        if (tc.HasCaught()) printError(tc.Message());
     }
     m_responseEntityBody.append(m_network->readAll());
     readEncoding();
@@ -1326,14 +1392,17 @@ void QDeclarativeXMLHttpRequest::finished()
     destroyNetwork();
     if (m_state < Loading) {
         m_state = Loading;
-        QScriptValue cbv = dispatchCallback(&m_me);
-        if (cbv.isError()) printError(cbv);
+        v8::TryCatch tc;
+        dispatchCallback(m_me);
+        if (tc.HasCaught()) printError(tc.Message());
     }
     m_state = Done;
-    QScriptValue cbv = dispatchCallback(&m_me);
-    if (cbv.isError()) printError(cbv);
 
-    m_me = QScriptValue();
+    v8::TryCatch tc;
+    dispatchCallback(m_me);
+    if (tc.HasCaught()) printError(tc.Message());
+
+    setMe(v8::Handle<v8::Object>());
 }
 
 
@@ -1411,17 +1480,25 @@ const QByteArray &QDeclarativeXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-QScriptValue QDeclarativeXMLHttpRequest::dispatchCallback(QScriptValue *me)
+// Requires a TryCatch scope
+void QDeclarativeXMLHttpRequest::dispatchCallback(v8::Handle<v8::Object> me)
 {
-    QScriptValue v = me->property(QLatin1String("callback"));
-    return v.call();
+    v8::Local<v8::Value> callback = me->Get(v8::String::New("onreadystatechange"));
+    if (callback->IsFunction()) {
+        v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
+
+        f->Call(me, 0, 0);
+    }
 }
 
-void QDeclarativeXMLHttpRequest::printError(const QScriptValue& sv)
+// Must have a handle scope
+void QDeclarativeXMLHttpRequest::printError(v8::Handle<v8::Message> message)
 {
+    v8::Context::Scope scope(engine->context());
+
     QDeclarativeError error;
-    QDeclarativeExpressionPrivate::exceptionToError(sv.engine(), error);
-    QDeclarativeEnginePrivate::warning(QDeclarativeEnginePrivate::get(sv.engine()), error);
+    QDeclarativeExpressionPrivate::exceptionToError(message, error);
+    QDeclarativeEnginePrivate::warning(QDeclarativeEnginePrivate::get(engine->engine()), error);
 }
 
 void QDeclarativeXMLHttpRequest::destroyNetwork()
@@ -1434,72 +1511,69 @@ void QDeclarativeXMLHttpRequest::destroyNetwork()
 }
 
 // XMLHttpRequest methods
-static QScriptValue qmlxmlhttprequest_open(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
 {
-    QScriptValue dataObject = context->thisObject().data();
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(dataObject.toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (context->argumentCount() < 2 || context->argumentCount() > 5)
-        THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+    if (args.Length() < 2 || args.Length() > 5)
+        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+
+    QV8Engine *engine = r->engine;
 
     // Argument 0 - Method
-    QString method = context->argument(0).toString().toUpper();
+    QString method = engine->toString(args[0]).toUpper();
     if (method != QLatin1String("GET") && 
         method != QLatin1String("PUT") &&
         method != QLatin1String("HEAD") &&
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE"))
-        THROW_DOM(SYNTAX_ERR, "Unsupported HTTP method type");
-
+        V8THROW_DOM(SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
-    QUrl url = QUrl::fromEncoded(context->argument(1).toString().toUtf8());
+    QUrl url = QUrl::fromEncoded(engine->toString(args[1]).toUtf8());
 
-    if (url.isRelative()) {
-        url = QDeclarativeScriptEngine::get(engine)->resolvedUrl(context,url);
-    }
+    if (url.isRelative()) 
+        url = engine->callingContext()->resolvedUrl(url);
 
     // Argument 2 - async (optional)
-    if (context->argumentCount() > 2 && !context->argument(2).toBoolean())
-        THROW_DOM(NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
-
+    if (args.Length() > 2 && !args[2]->BooleanValue())
+        V8THROW_DOM(NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
-    if (context->argumentCount() > 3)
-        username = context->argument(3).toString();
-    if (context->argumentCount() > 4)
-        password = context->argument(4).toString();
-
+    if (args.Length() > 3)
+        username = engine->toString(args[3]);
+    if (args.Length() > 4)
+        password = engine->toString(args[4]);
 
     // Clear the fragment (if any)
     url.setFragment(QString());
+
     // Set username/password
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return request->open(&dataObject, method, url);
+    return r->open(args.This(), method, url);
 }
 
-static QScriptValue qmlxmlhttprequest_setRequestHeader(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Arguments &args)
 {
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (context->argumentCount() != 2)
-        THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+    if (args.Length() != 2)
+        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
 
+    if (r->readyState() != QDeclarativeXMLHttpRequest::Opened || r->sendFlag())
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
 
-    if (request->readyState() != QDeclarativeXMLHttpRequest::Opened ||
-        request->sendFlag())
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    QV8Engine *engine = r->engine;
 
-
-    QString name = context->argument(0).toString();
-    QString value = context->argument(1).toString();
+    QString name = engine->toString(args[0]);
+    QString value = engine->toString(args[1]);
 
     // ### Check that name and value are well formed
 
@@ -1524,237 +1598,243 @@ static QScriptValue qmlxmlhttprequest_setRequestHeader(QScriptContext *context, 
         nameUpper == QLatin1String("VIA") ||
         nameUpper.startsWith(QLatin1String("PROXY-")) ||
         nameUpper.startsWith(QLatin1String("SEC-"))) 
-        return engine->undefinedValue();
+        return v8::Undefined();
 
-    request->addHeader(nameUpper, value);
+    r->addHeader(nameUpper, value);
 
-    return engine->undefinedValue();
+    return v8::Undefined();
 }
 
-static QScriptValue qmlxmlhttprequest_send(QScriptContext *context, QScriptEngine *)
+static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
 {
-    QScriptValue dataObject = context->thisObject().data();
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(dataObject.toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (request->readyState() != QDeclarativeXMLHttpRequest::Opened)
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    QV8Engine *engine = r->engine;
 
-    if (request->sendFlag())
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    if (r->readyState() != QDeclarativeXMLHttpRequest::Opened ||
+        r->sendFlag())
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
-    if (context->argumentCount() > 0)
-        data = context->argument(0).toString().toUtf8();
+    if (args.Length() > 0)
+        data = engine->toString(args[0]).toUtf8();
 
-    return request->send(&dataObject, data);
+    return r->send(args.This(), data);
 }
 
-static QScriptValue qmlxmlhttprequest_abort(QScriptContext *context, QScriptEngine *)
+static v8::Handle<v8::Value> qmlxmlhttprequest_abort(const v8::Arguments &args)
 {
-    QScriptValue dataObject = context->thisObject().data();
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(dataObject.toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    return request->abort(&dataObject);
+    return r->abort(args.This());
 }
 
-static QScriptValue qmlxmlhttprequest_getResponseHeader(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_getResponseHeader(const v8::Arguments &args)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (context->argumentCount() != 1)
-        THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+    QV8Engine *engine = r->engine;
 
-    if (request->readyState() != QDeclarativeXMLHttpRequest::Loading &&
-        request->readyState() != QDeclarativeXMLHttpRequest::Done &&
-        request->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    if (args.Length() != 1)
+        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
 
-    QString headerName = context->argument(0).toString();
+    if (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
+        r->readyState() != QDeclarativeXMLHttpRequest::Done &&
+        r->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
 
-    return QScriptValue(request->header(headerName));
+    return engine->toString(r->header(engine->toString(args[0])));
 }
 
-static QScriptValue qmlxmlhttprequest_getAllResponseHeaders(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_getAllResponseHeaders(const v8::Arguments &args)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(args.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (context->argumentCount() != 0)
-        THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+    QV8Engine *engine = r->engine;
 
-    if (request->readyState() != QDeclarativeXMLHttpRequest::Loading &&
-        request->readyState() != QDeclarativeXMLHttpRequest::Done &&
-        request->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    if (args.Length() != 0) 
+        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
 
-    return QScriptValue(request->headers());
+    if (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
+        r->readyState() != QDeclarativeXMLHttpRequest::Done &&
+        r->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+
+    return engine->toString(r->headers());
 }
 
 // XMLHttpRequest properties
-static QScriptValue qmlxmlhttprequest_readyState(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_readyState(v8::Local<v8::String> property,
+                                                          const v8::AccessorInfo& info)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    return QScriptValue(request->readyState());
+    return v8::Integer::NewFromUnsigned(r->readyState());
 }
 
-static QScriptValue qmlxmlhttprequest_status(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Local<v8::String> property,
+                                                      const v8::AccessorInfo& info)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (request->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
-        request->readyState() == QDeclarativeXMLHttpRequest::Opened)
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    if (r->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
+        r->readyState() == QDeclarativeXMLHttpRequest::Opened)
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
 
-    if (request->errorFlag())
-        return QScriptValue(0);
+    if (r->errorFlag())
+        return v8::Integer::New(0);
     else
-        return QScriptValue(request->replyStatus());
+        return v8::Integer::New(r->replyStatus());
 }
 
-static QScriptValue qmlxmlhttprequest_statusText(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Local<v8::String> property,
+                                                          const v8::AccessorInfo& info)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (request->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
-        request->readyState() == QDeclarativeXMLHttpRequest::Opened)
-        THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+    QV8Engine *engine = r->engine;
 
-    if (request->errorFlag())
-        return QScriptValue(0);
+    if (r->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
+        r->readyState() == QDeclarativeXMLHttpRequest::Opened)
+        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+
+    if (r->errorFlag())
+        return engine->toString(QString());
     else
-        return QScriptValue(request->replyStatusText());
+        return engine->toString(r->replyStatusText());
 }
 
-static QScriptValue qmlxmlhttprequest_responseText(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_responseText(v8::Local<v8::String> property,
+                                                            const v8::AccessorInfo& info)
 {
-    Q_UNUSED(engine)
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (request->readyState() != QDeclarativeXMLHttpRequest::Loading &&
-        request->readyState() != QDeclarativeXMLHttpRequest::Done)
-        return QScriptValue(QString());
+    QV8Engine *engine = r->engine;
+
+    if (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
+        r->readyState() != QDeclarativeXMLHttpRequest::Done)
+        return engine->toString(QString());
     else 
-        return QScriptValue(request->responseBody());
+        return engine->toString(r->responseBody());
 }
 
-static QScriptValue qmlxmlhttprequest_responseXML(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_responseXML(v8::Local<v8::String> property,
+                                                            const v8::AccessorInfo& info)
 {
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(context->thisObject().data().toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
+    QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
+    if (!r)
+        V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
-    if (!request->receivedXml() ||
-        (request->readyState() != QDeclarativeXMLHttpRequest::Loading &&
-         request->readyState() != QDeclarativeXMLHttpRequest::Done))
-        return engine->nullValue();
-    else  
-        return Document::load(engine, request->rawResponseBody());
-}
-
-static QScriptValue qmlxmlhttprequest_onreadystatechange(QScriptContext *context, QScriptEngine *engine)
-{
-    Q_UNUSED(engine);
-    QScriptValue dataObject = context->thisObject().data();
-    QDeclarativeXMLHttpRequest *request = qobject_cast<QDeclarativeXMLHttpRequest *>(dataObject.toQObject());
-    if (!request) 
-        THROW_REFERENCE("Not an XMLHttpRequest object");
-
-    if (context->argumentCount()) {
-        QScriptValue v = context->argument(0);
-        dataObject.setProperty(QLatin1String("callback"), v);
-        return v;
+    if (!r->receivedXml() ||
+        (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
+         r->readyState() != QDeclarativeXMLHttpRequest::Done)) {
+        return v8::Null();
     } else {
-        return dataObject.property(QLatin1String("callback"));
+        return Document::load(r->engine, r->rawResponseBody());
     }
 }
 
-// Constructor
-static QScriptValue qmlxmlhttprequest_new(QScriptContext *context, QScriptEngine *engine)
+static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
 {
-    if (context->isCalledAsConstructor()) {
-        context->thisObject().setData(engine->newQObject(new QDeclarativeXMLHttpRequest(QDeclarativeScriptEngine::get(engine)->networkAccessManager()), QScriptEngine::ScriptOwnership));
+    if (args.IsConstructCall()) {
+        QV8Engine *engine = V8ENGINE();
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
+
+        QDeclarativeXMLHttpRequest *r = new QDeclarativeXMLHttpRequest(engine, engine->networkAccessManager());
+        args.This()->SetExternalResource(r);
+
+        return args.This();
+    } else {
+        return v8::Undefined();
     }
-    return engine->undefinedValue();
 }
 
-void qt_add_qmlxmlhttprequest(QScriptEngine *engine)
+#define NEWFUNCTION(function) v8::FunctionTemplate::New(function)->GetFunction()
+
+void qt_rem_qmlxmlhttprequest(QV8Engine *engine, void *d)
 {
-    QScriptValue prototype = engine->newObject();
+    QDeclarativeXMLHttpRequestData *data = (QDeclarativeXMLHttpRequestData *)d;
+    delete data;
+}
+
+void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
+{
+    v8::PropertyAttribute attributes = (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum | v8::DontDelete);
+
+    // XMLHttpRequest
+    v8::Local<v8::FunctionTemplate> xmlhttprequest = v8::FunctionTemplate::New(qmlxmlhttprequest_new, 
+                                                                               v8::External::Wrap(engine));
+    xmlhttprequest->InstanceTemplate()->SetHasExternalResource(true);
 
     // Methods
-    prototype.setProperty(QLatin1String("open"), engine->newFunction(qmlxmlhttprequest_open, 2));
-    prototype.setProperty(QLatin1String("setRequestHeader"), engine->newFunction(qmlxmlhttprequest_setRequestHeader, 2));
-    prototype.setProperty(QLatin1String("send"), engine->newFunction(qmlxmlhttprequest_send));
-    prototype.setProperty(QLatin1String("abort"), engine->newFunction(qmlxmlhttprequest_abort));
-    prototype.setProperty(QLatin1String("getResponseHeader"), engine->newFunction(qmlxmlhttprequest_getResponseHeader, 1));
-    prototype.setProperty(QLatin1String("getAllResponseHeaders"), engine->newFunction(qmlxmlhttprequest_getAllResponseHeaders));
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("open"), NEWFUNCTION(qmlxmlhttprequest_open), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("setRequestHeader"), NEWFUNCTION(qmlxmlhttprequest_setRequestHeader), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("send"), NEWFUNCTION(qmlxmlhttprequest_send), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("abort"), NEWFUNCTION(qmlxmlhttprequest_abort), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("getResponseHeader"), NEWFUNCTION(qmlxmlhttprequest_getResponseHeader), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("getAllResponseHeaders"), NEWFUNCTION(qmlxmlhttprequest_getAllResponseHeaders), attributes);
 
     // Read-only properties
-    prototype.setProperty(QLatin1String("readyState"), engine->newFunction(qmlxmlhttprequest_readyState), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    prototype.setProperty(QLatin1String("status"), engine->newFunction(qmlxmlhttprequest_status), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    prototype.setProperty(QLatin1String("statusText"), engine->newFunction(qmlxmlhttprequest_statusText), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    prototype.setProperty(QLatin1String("responseText"), engine->newFunction(qmlxmlhttprequest_responseText), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    prototype.setProperty(QLatin1String("responseXML"), engine->newFunction(qmlxmlhttprequest_responseXML), QScriptValue::ReadOnly | QScriptValue::PropertyGetter);
-    prototype.setProperty(QLatin1String("onreadystatechange"), engine->newFunction(qmlxmlhttprequest_onreadystatechange), QScriptValue::PropertyGetter | QScriptValue::PropertySetter);
+    xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("readyState"), qmlxmlhttprequest_readyState, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
+    xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("status"),qmlxmlhttprequest_status, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
+    xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("statusText"),qmlxmlhttprequest_statusText, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
+    xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("responseText"),qmlxmlhttprequest_responseText, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
+    xmlhttprequest->PrototypeTemplate()->SetAccessor(v8::String::New("responseXML"),qmlxmlhttprequest_responseXML, 0, v8::Handle<v8::Value>(), v8::DEFAULT, attributes);
 
     // State values
-    prototype.setProperty(QLatin1String("UNSENT"), 0, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    prototype.setProperty(QLatin1String("OPENED"), 1, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    prototype.setProperty(QLatin1String("HEADERS_RECEIVED"), 2, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    prototype.setProperty(QLatin1String("LOADING"), 3, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    prototype.setProperty(QLatin1String("DONE"), 4, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("UNSENT"), v8::Integer::New(0), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("OPENED"), v8::Integer::New(1), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("HEADERS_RECEIVED"), v8::Integer::New(2), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
+    xmlhttprequest->PrototypeTemplate()->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
 
     // Constructor
-    QScriptValue constructor = engine->newFunction(qmlxmlhttprequest_new, prototype);
-    constructor.setProperty(QLatin1String("UNSENT"), 0, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    constructor.setProperty(QLatin1String("OPENED"), 1, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    constructor.setProperty(QLatin1String("HEADERS_RECEIVED"), 2, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    constructor.setProperty(QLatin1String("LOADING"), 3, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    constructor.setProperty(QLatin1String("DONE"), 4, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    engine->globalObject().setProperty(QLatin1String("XMLHttpRequest"), constructor);
+    xmlhttprequest->Set(v8::String::New("UNSENT"), v8::Integer::New(0), attributes);
+    xmlhttprequest->Set(v8::String::New("OPENED"), v8::Integer::New(1), attributes);
+    xmlhttprequest->Set(v8::String::New("HEADERS_RECEIVED"), v8::Integer::New(2), attributes);
+    xmlhttprequest->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
+    xmlhttprequest->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
+    engine->global()->Set(v8::String::New("XMLHttpRequest"), xmlhttprequest->GetFunction());
 
     // DOM Exception
-    QScriptValue domExceptionPrototype = engine->newObject();
-    domExceptionPrototype.setProperty(QLatin1String("INDEX_SIZE_ERR"), INDEX_SIZE_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("DOMSTRING_SIZE_ERR"), DOMSTRING_SIZE_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("HIERARCHY_REQUEST_ERR"), HIERARCHY_REQUEST_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("WRONG_DOCUMENT_ERR"), WRONG_DOCUMENT_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("INVALID_CHARACTER_ERR"), INVALID_CHARACTER_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("NO_DATA_ALLOWED_ERR"), NO_DATA_ALLOWED_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("NO_MODIFICATION_ALLOWED_ERR"), NO_MODIFICATION_ALLOWED_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("NOT_FOUND_ERR"), NOT_FOUND_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("NOT_SUPPORTED_ERR"), NOT_SUPPORTED_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("INUSE_ATTRIBUTE_ERR"), INUSE_ATTRIBUTE_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("INVALID_STATE_ERR"), INVALID_STATE_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("SYNTAX_ERR"), SYNTAX_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("INVALID_MODIFICATION_ERR"), INVALID_MODIFICATION_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("NAMESPACE_ERR"), NAMESPACE_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("INVALID_ACCESS_ERR"), INVALID_ACCESS_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("VALIDATION_ERR"), VALIDATION_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
-    domExceptionPrototype.setProperty(QLatin1String("TYPE_MISMATCH_ERR"), TYPE_MISMATCH_ERR, QScriptValue::ReadOnly | QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
+    v8::Local<v8::Object> domexception = v8::Object::New();
+    domexception->Set(v8::String::New("INDEX_SIZE_ERR"), v8::Integer::New(INDEX_SIZE_ERR), attributes);
+    domexception->Set(v8::String::New("DOMSTRING_SIZE_ERR"), v8::Integer::New(DOMSTRING_SIZE_ERR), attributes);
+    domexception->Set(v8::String::New("HIERARCHY_REQUEST_ERR"), v8::Integer::New(HIERARCHY_REQUEST_ERR), attributes);
+    domexception->Set(v8::String::New("WRONG_DOCUMENT_ERR"), v8::Integer::New(WRONG_DOCUMENT_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_CHARACTER_ERR"), v8::Integer::New(INVALID_CHARACTER_ERR), attributes);
+    domexception->Set(v8::String::New("NO_DATA_ALLOWED_ERR"), v8::Integer::New(NO_DATA_ALLOWED_ERR), attributes);
+    domexception->Set(v8::String::New("NO_MODIFICATION_ALLOWED_ERR"), v8::Integer::New(NO_MODIFICATION_ALLOWED_ERR), attributes);
+    domexception->Set(v8::String::New("NOT_FOUND_ERR"), v8::Integer::New(NOT_FOUND_ERR), attributes);
+    domexception->Set(v8::String::New("NOT_SUPPORTED_ERR"), v8::Integer::New(NOT_SUPPORTED_ERR), attributes);
+    domexception->Set(v8::String::New("INUSE_ATTRIBUTE_ERR"), v8::Integer::New(INUSE_ATTRIBUTE_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_STATE_ERR"), v8::Integer::New(INVALID_STATE_ERR), attributes);
+    domexception->Set(v8::String::New("SYNTAX_ERR"), v8::Integer::New(SYNTAX_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_MODIFICATION_ERR"), v8::Integer::New(INVALID_MODIFICATION_ERR), attributes);
+    domexception->Set(v8::String::New("NAMESPACE_ERR"), v8::Integer::New(NAMESPACE_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_ACCESS_ERR"), v8::Integer::New(INVALID_ACCESS_ERR), attributes);
+    domexception->Set(v8::String::New("VALIDATION_ERR"), v8::Integer::New(VALIDATION_ERR), attributes);
+    domexception->Set(v8::String::New("TYPE_MISMATCH_ERR"), v8::Integer::New(TYPE_MISMATCH_ERR), attributes);
+    engine->global()->Set(v8::String::New("DOMException"), domexception);
 
-    engine->globalObject().setProperty(QLatin1String("DOMException"), domExceptionPrototype);
+    QDeclarativeXMLHttpRequestData *data = new QDeclarativeXMLHttpRequestData;
+    return data;
 }
 
 QT_END_NAMESPACE

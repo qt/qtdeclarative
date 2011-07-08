@@ -55,10 +55,11 @@
 
 #include "qdeclarative.h"
 
-#include <QtScript/qscriptvalue.h>
 #include <QtGui/qevent.h>
 #include <QMutex>
 #include <QWaitCondition>
+
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
 
@@ -67,7 +68,6 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeListModel;
-class FlatListScriptClass;
 
 class QDeclarativeListModelWorkerAgent : public QObject
 {
@@ -78,8 +78,8 @@ public:
     QDeclarativeListModelWorkerAgent(QDeclarativeListModel *);
     ~QDeclarativeListModelWorkerAgent();
 
-    void setScriptEngine(QScriptEngine *eng);
-    QScriptEngine *scriptEngine() const;
+    void setV8Engine(QV8Engine *eng);
+    QV8Engine *v8engine() const;
 
     void addref();
     void release();
@@ -88,10 +88,10 @@ public:
 
     Q_INVOKABLE void clear();
     Q_INVOKABLE void remove(int index);
-    Q_INVOKABLE void append(const QScriptValue &);
-    Q_INVOKABLE void insert(int index, const QScriptValue&);
-    Q_INVOKABLE QScriptValue get(int index) const;
-    Q_INVOKABLE void set(int index, const QScriptValue &);
+    Q_INVOKABLE void append(const QDeclarativeV8Handle &);
+    Q_INVOKABLE void insert(int index, const QDeclarativeV8Handle &);
+    Q_INVOKABLE QDeclarativeV8Handle get(int index) const;
+    Q_INVOKABLE void set(int index, const QDeclarativeV8Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
@@ -116,8 +116,8 @@ protected:
 
 private:
     friend class QDeclarativeWorkerScriptEnginePrivate;
-    friend class FlatListScriptClass;
-    QScriptEngine *m_engine;
+    friend class QDeclarativeListModelV8Data;
+    QV8Engine *m_engine;
 
     struct Change {
         enum { Inserted, Removed, Moved, Changed } type;

@@ -47,9 +47,9 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qstringlist.h>
-#include <QtScript/qscriptvalue.h>
 
 #include <private/qlistmodelinterface_p.h>
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
 
@@ -110,7 +110,7 @@ public:
     QString namespaceDeclarations() const;
     void setNamespaceDeclarations(const QString&);
 
-    Q_INVOKABLE QScriptValue get(int index) const;
+    Q_INVOKABLE QDeclarativeV8Handle get(int index) const;
 
     enum Status { Null, Ready, Loading, Error };
     Status status() const;

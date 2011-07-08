@@ -660,49 +660,50 @@ QDeclarativeComponent::QDeclarativeComponent(QDeclarativeComponentPrivate &dd, Q
     Sets graphics object parent because forgetting to do this is a frequent
     and serious problem.
 */
-QScriptValue QDeclarativeComponent::createObject(QObject* parent)
+void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
 {
-    Q_D(QDeclarativeComponent);
-    return d->createObject(parent, QScriptValue(QScriptValue::NullValue));
-}
+    Q_ASSERT(args);
 
-/*!
-    \internal
-    Overloadable method allows properties to be set during creation
-*/
-QScriptValue QDeclarativeComponent::createObject(QObject* parent, const QScriptValue& valuemap)
-{
+#define RETURN(result) { args->returnValue((result)); return; }
+
     Q_D(QDeclarativeComponent);
 
-    if (!valuemap.isObject() || valuemap.isArray()) {
-        qmlInfo(this) << tr("createObject: value is not an object");
-        return QScriptValue(QScriptValue::NullValue);
+    Q_ASSERT(d->engine);
+
+    QDeclarativeEngine *engine = d->engine;
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+    QV8Engine *v8engine = &ep->v8engine;
+
+    QDeclarativeContext *ctxt = creationContext();
+    if (!ctxt) ctxt = engine->rootContext();
+
+    v8::Local<v8::Object> valuemap;
+    if (args->Length() >= 2) {
+        v8::Local<v8::Value> v = (*args)[1];
+        if (!v->IsObject() || v->IsArray()) {
+            qmlInfo(this) << tr("createObject: value is not an object");
+            RETURN(v8::Null());
+        }
+        valuemap = v8::Local<v8::Object>::Cast(v);
     }
-    return d->createObject(parent, valuemap);
-}
 
-QScriptValue QDeclarativeComponentPrivate::createObject(QObject *publicParent, const QScriptValue valuemap)
-{
-    Q_Q(QDeclarativeComponent);
-    QDeclarativeContext* ctxt = q->creationContext();
-    if(!ctxt && engine)
-        ctxt = engine->rootContext();
-    if (!ctxt)
-        return QScriptValue(QScriptValue::NullValue);
-    QObject* ret = q->beginCreate(ctxt);
+    QObject *parent = args->Length()?v8engine->toQObject((*args)[0]):0;
+
+    QObject *ret = beginCreate(ctxt);
     if (!ret) {
-        q->completeCreate();
-        return QScriptValue(QScriptValue::NullValue);
+        completeCreate();
+        RETURN(v8::Null());
     }
 
-    if (publicParent) {
-        ret->setParent(publicParent);
+    if (parent) {
+        ret->setParent(parent);
+
         QList<QDeclarativePrivate::AutoParentFunction> functions = QDeclarativeMetaType::parentFunctions();
 
         bool needParent = false;
 
         for (int ii = 0; ii < functions.count(); ++ii) {
-            QDeclarativePrivate::AutoParentResult res = functions.at(ii)(ret, publicParent);
+            QDeclarativePrivate::AutoParentResult res = functions.at(ii)(ret, parent);
             if (res == QDeclarativePrivate::Parented) {
                 needParent = false;
                 break;
@@ -715,37 +716,41 @@ QScriptValue QDeclarativeComponentPrivate::createObject(QObject *publicParent, c
             qWarning("QDeclarativeComponent: Created graphical object was not placed in the graphics scene.");
     }
 
-    QDeclarativeEnginePrivate *priv = QDeclarativeEnginePrivate::get(engine);
-    QDeclarativeData::get(ret, true)->setImplicitDestructible();
-    QScriptValue newObject = priv->objectClass->newQObject(ret, QMetaType::QObjectStar);
+    v8::Handle<v8::Value> ov = v8engine->newQObject(ret);
+    Q_ASSERT(ov->IsObject());
+    v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
 
-    if (valuemap.isObject() && !valuemap.isArray()) {
-        //Iterate through and assign properties
-        QScriptValueIterator it(valuemap);
-        while (it.hasNext()) {
-            it.next();
-            QScriptValue prop = newObject;
-            QString propName = it.name();
-            int index = propName.indexOf(QLatin1Char('.'));
-            if (index > 0) {
-                QString subProp = propName;
-                int lastIndex = 0;
-                while (index > 0) {
-                    subProp = propName.mid(lastIndex, index - lastIndex);
-                    prop = prop.property(subProp);
-                    lastIndex = index + 1;
-                    index = propName.indexOf(QLatin1Char('.'), index + 1);
-                }
-                prop.setProperty(propName.mid(propName.lastIndexOf(QLatin1Char('.')) + 1), it.value());
-            } else {
-                newObject.setProperty(propName, it.value());
-            }
-        }
+    if (!valuemap.IsEmpty()) {
+
+#define SET_ARGS_SOURCE \
+        "(function(object, values) {"\
+            "try {"\
+                "for(var property in values) {"\
+                    "try {"\
+                        "var properties = property.split(\".\");"\
+                        "var o = object;"\
+                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
+                            "o = o[properties[ii]];"\
+                        "}"\
+                        "o[properties[properties.length - 1]] = values[property];"\
+                    "} catch(e) {}"\
+                "}"\
+            "} catch(e) {}"\
+        "})"
+
+        v8::Local<v8::Script> script = v8engine->qmlModeCompile(SET_ARGS_SOURCE);
+        v8::Local<v8::Function> function = v8::Local<v8::Function>::Cast(script->Run(args->qmlGlobal()));
+
+        // Try catch isn't needed as the function itself is loaded with try/catch
+        v8::Handle<v8::Value> args[] = { object, valuemap };
+        function->Call(v8engine->global(), 2, args);
     }
 
-    q->completeCreate();
+    completeCreate();
+    
+    RETURN(object);
 
-    return newObject;
+#undef RETURN
 }
 
 /*!
@@ -884,8 +889,11 @@ QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentCon
     ctxt->imports = component->importCache;
 
     // Nested global imports
-    if (componentCreationContext && start != -1) 
+    if (componentCreationContext && start != -1) {
         ctxt->importedScripts = componentCreationContext->importedScripts;
+        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
+            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
+    }
 
     component->importCache->addref();
     ctxt->setParent(parentContext);
@@ -974,7 +982,6 @@ void QDeclarativeComponentPrivate::complete(QDeclarativeEnginePrivate *enginePri
                 state->bindValues.at(ii);
             for (int jj = 0; jj < bv.count; ++jj) {
                 if(bv.at(jj)) {
-                    // XXX akennedy
                     bv.at(jj)->m_mePtr = 0;
                     bv.at(jj)->setEnabled(true, QDeclarativePropertyPrivate::BypassInterceptor | 
                                                 QDeclarativePropertyPrivate::DontRemoveBinding);

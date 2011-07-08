@@ -52,3 +52,12 @@ linux-g++-maemo:DEFINES += QDECLARATIVEVIEW_NOBACKGROUND
 DEFINES += QT_NO_OPENTYPE
 INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
 
+
+macx:CONFIG(debug, debug|release) {
+    LIBS += -L../v8/ -lv8_debug 
+} else {
+    LIBS += -L../v8/ -lv8 
+}
+
+# Prevent qmake adding v8 as a dependency
+CONFIG -= explicitlib

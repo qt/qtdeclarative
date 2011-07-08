@@ -218,22 +218,12 @@ void QDeclarativeBindingPrivate::refresh()
 }
 
 QDeclarativeBindingPrivate::QDeclarativeBindingPrivate()
-: updating(false), enabled(false), deleted(0)
+: updating(false), enabled(false)
 {
 }
 
 QDeclarativeBindingPrivate::~QDeclarativeBindingPrivate()
 {
-    if (deleted) *deleted = true;
-}
-
-QDeclarativeBinding::QDeclarativeBinding(void *data, QDeclarativeRefCount *rc, QObject *obj, 
-                                         QDeclarativeContextData *ctxt, const QString &url, int lineNumber, 
-                                         QObject *parent)
-: QDeclarativeExpression(ctxt, data, rc, obj, url, lineNumber, *new QDeclarativeBindingPrivate)
-{
-    setParent(parent);
-    setNotifyOnValueChanged(true);
 }
 
 QDeclarativeBinding *
@@ -252,7 +242,7 @@ QDeclarativeBinding::createBinding(Identifier id, QObject *obj, QDeclarativeCont
         typeData = engine->typeLoader.get(ctxtdata->url);
         cdata = typeData->compiledData();
     }
-    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding((void*)cdata->datas.at(id).constData(), cdata, obj, ctxtdata, url, lineNumber, parent) : 0;
+    QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, parent) : 0;
     if (typeData)
         typeData->release();
     return rv;
@@ -274,8 +264,26 @@ QDeclarativeBinding::QDeclarativeBinding(const QString &str, QObject *obj, QDecl
     setNotifyOnValueChanged(true);
 }
 
-QDeclarativeBinding::QDeclarativeBinding(const QScriptValue &func, QObject *obj, QDeclarativeContextData *ctxt, QObject *parent)
-: QDeclarativeExpression(ctxt, obj, func, *new QDeclarativeBindingPrivate)
+QDeclarativeBinding::QDeclarativeBinding(const QString &str, bool isRewritten, QObject *obj, 
+                                         QDeclarativeContextData *ctxt, 
+                                         const QString &url, int lineNumber, QObject *parent)
+: QDeclarativeExpression(ctxt, obj, str, isRewritten, url, lineNumber, *new QDeclarativeBindingPrivate)
+{
+    setParent(parent);
+    setNotifyOnValueChanged(true);
+}
+
+/*!  
+    \internal 
+
+    To avoid exposing v8 in the public API, functionPtr must be a pointer to a v8::Handle<v8::Function>.  
+    For example:
+        v8::Handle<v8::Function> function;
+        new QDeclarativeBInding(&function, scope, ctxt);
+ */
+QDeclarativeBinding::QDeclarativeBinding(void *functionPtr, QObject *obj, QDeclarativeContextData *ctxt, 
+                                         QObject *parent)
+: QDeclarativeExpression(ctxt, obj, functionPtr, *new QDeclarativeBindingPrivate)
 {
     setParent(parent);
     setNotifyOnValueChanged(true);
@@ -302,13 +310,13 @@ QDeclarativeProperty QDeclarativeBinding::property() const
 void QDeclarativeBinding::setEvaluateFlags(EvaluateFlags flags)
 {
     Q_D(QDeclarativeBinding);
-    d->setEvaluateFlags(QDeclarativeQtScriptExpression::EvaluateFlags(static_cast<int>(flags)));
+    d->setRequiresThisObject(flags & RequiresThisObject);
 }
 
 QDeclarativeBinding::EvaluateFlags QDeclarativeBinding::evaluateFlags() const
 {
     Q_D(const QDeclarativeBinding);
-    return QDeclarativeBinding::EvaluateFlags(static_cast<int>(d->evaluateFlags()));
+    return d->requiresThisObject()?RequiresThisObject:None;
 }
 
 
@@ -337,8 +345,8 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
     if (!d->updating) {
         QDeclarativeBindingProfiler prof(this);
         d->updating = true;
-        bool wasDeleted = false;
-        d->deleted = &wasDeleted;
+
+        QDeclarativeDeleteWatcher watcher(d);
 
         if (d->property.propertyType() == qMetaTypeId<QDeclarativeBinding *>()) {
 
@@ -352,122 +360,54 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                                   QMetaObject::WriteProperty,
                                   idx, a);
 
-            if (wasDeleted)
-                return;
-
         } else {
             QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->context()->engine);
-            ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
+            ep->referenceScarceResources(); 
 
             bool isUndefined = false;
-            QVariant value;
 
-            QScriptValue scriptValue = d->scriptValue(0, &isUndefined);
+            v8::HandleScope handle_scope;
+            v8::Context::Scope scope(ep->v8engine.context());
+            v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
-            if (wasDeleted) {
-                ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                return;
-            }
+            bool needsErrorData = false;
+            if (!watcher.wasDeleted() && !d->error.isValid()) 
+                needsErrorData = !QDeclarativePropertyPrivate::writeBinding(d->property, d, result, 
+                                                                            isUndefined, flags);
 
-            if (d->property.propertyTypeCategory() == QDeclarativeProperty::List) {
-                value = ep->scriptValueToVariant(scriptValue, qMetaTypeId<QList<QObject *> >());
-            } else if (scriptValue.isNull() && 
-                       d->property.propertyTypeCategory() == QDeclarativeProperty::Object) {
-                value = QVariant::fromValue((QObject *)0);
-            } else {
-                value = ep->scriptValueToVariant(scriptValue, d->property.propertyType());
-                if (value.userType() == QMetaType::QObjectStar && !qvariant_cast<QObject*>(value)) {
-                    // If the object is null, we extract the predicted type.  While this isn't
-                    // 100% reliable, in many cases it gives us better error messages if we
-                    // assign this null-object to an incompatible property
-                    int type = ep->objectClass->objectType(scriptValue);
-                    QObject *o = 0;
-                    value = QVariant(type, (void *)&o);
-                }
-            }
+            if (!watcher.wasDeleted()) {
+               
+                if (needsErrorData) {
+                    QUrl url = QUrl(d->url);
+                    int line = d->line;
+                    if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
 
-
-            if (d->error.isValid()) {
-
-            } else if (isUndefined && d->property.isResettable()) {
-
-                d->property.reset();
-
-            } else if (isUndefined && d->property.propertyType() == qMetaTypeId<QVariant>()) {
-
-                QDeclarativePropertyPrivate::write(d->property, QVariant(), flags);
-
-            } else if (isUndefined) {
-
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign [undefined] to ") +
-                                        QLatin1String(QMetaType::typeName(d->property.propertyType())) +
-                                        QLatin1String(" ") + d->property.name());
-
-            } else if (!scriptValue.isRegExp() && scriptValue.isFunction()) {
-
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign a function to a property."));
-
-            } else if (d->property.object() &&
-                       !QDeclarativePropertyPrivate::write(d->property, value, flags)) {
-
-                if (wasDeleted) {
-                    ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                    return;
+                    d->error.setUrl(url);
+                    d->error.setLine(line);
+                    d->error.setColumn(-1);
                 }
 
-                QUrl url = QUrl(d->url);
-                int line = d->line;
-                if (url.isEmpty()) url = QUrl(QLatin1String("<Unknown File>"));
+                if (d->error.isValid()) {
+                    if (!d->addError(ep)) ep->warning(this->error());
+                } else {
+                    d->removeError();
+                }
 
-                const char *valueType = 0;
-                if (value.userType() == QVariant::Invalid) valueType = "null";
-                else valueType = QMetaType::typeName(value.userType());
-
-                d->error.setUrl(url);
-                d->error.setLine(line);
-                d->error.setColumn(-1);
-                d->error.setDescription(QLatin1String("Unable to assign ") +
-                                        QLatin1String(valueType) +
-                                        QLatin1String(" to ") +
-                                        QLatin1String(QMetaType::typeName(d->property.propertyType())));
             }
 
-            if (wasDeleted) {
-                ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-                return;
-            }
-
-            if (d->error.isValid()) {
-               if (!d->addError(ep)) ep->warning(this->error());
-            } else {
-                d->removeError();
-            }
-
-            // at this point, the binding has been evaluated.  If any scarce
-            // resources were copied during the evaluation of the binding,
-            // we need to release those copies.
-            ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
+            ep->dereferenceScarceResources(); 
         }
 
-        d->updating = false;
-        d->deleted = 0;
+        if (!watcher.wasDeleted())
+            d->updating = false;
     } else {
-        qmlInfo(d->property.object()) << tr("Binding loop detected for property \"%1\"").arg(d->property.name());
+        QDeclarativeBindingPrivate::printBindingLoopError(d->property);
     }
+}
+
+void QDeclarativeBindingPrivate::printBindingLoopError(QDeclarativeProperty &prop)
+{
+    qmlInfo(prop.object()) << QDeclarativeBinding::tr("Binding loop detected for property \"%1\"").arg(prop.name());
 }
 
 void QDeclarativeBindingPrivate::emitValueChanged()

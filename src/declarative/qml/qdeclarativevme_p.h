@@ -59,6 +59,8 @@
 #include <QtCore/QString>
 #include <QtCore/QStack>
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -103,7 +105,6 @@ public:
 
     QObject *run(QDeclarativeContextData *, QDeclarativeCompiledData *, 
                  int start = -1, const QBitField & = QBitField());
-    QScriptValue run(QDeclarativeContextData *, QDeclarativeScriptData *);
 
     void runDeferred(QObject *);
 
@@ -111,6 +112,8 @@ public:
     QList<QDeclarativeError> errors() const;
 
 private:
+    v8::Persistent<v8::Object> run(QDeclarativeContextData *, QDeclarativeScriptData *);
+
     QObject *run(QDeclarativeVMEStack<QObject *> &, 
                  QDeclarativeContextData *, QDeclarativeCompiledData *, 
                  int start, const QBitField &);

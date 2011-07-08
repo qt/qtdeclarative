@@ -19,4 +19,8 @@ Item {
             item.done = true
         }
     }
+
+    function runEval(js) {
+        eval(js);
+    }
 }

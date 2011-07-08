@@ -58,8 +58,8 @@
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativev4bindings_p.h"
+#include "private/qv8bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativeglobalscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativescriptstring_p.h"
 
@@ -192,8 +192,10 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 parserStatus = QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus>(instr.parserStatusSize);
             if (instr.contextCache != -1) 
                 ctxt->setIdPropertyData(comp->contextCaches.at(instr.contextCache));
-            if (instr.compiledBinding != -1) 
-                    ctxt->optimizedBindings = new QDeclarativeV4Bindings(datas.at(instr.compiledBinding).constData(), ctxt);
+            if (instr.compiledBinding != -1) {
+                const char *v4data = datas.at(instr.compiledBinding).constData();
+                ctxt->v4bindings = new QDeclarativeV4Bindings(v4data, ctxt);
+            }
         QML_END_INSTR(Init)
 
         QML_BEGIN_INSTR(Done)
@@ -658,6 +660,11 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             status->classBegin();
         QML_END_INSTR(BeginObject)
 
+        QML_BEGIN_INSTR(InitV8Bindings)
+            ctxt->v8bindings = new QV8Bindings(primitives.at(instr.program), instr.programIndex, 
+                                               instr.line, comp, ctxt);
+        QML_END_INSTR(InitV8Bindings)
+
         QML_BEGIN_INSTR(StoreBinding)
             QObject *target = 
                 stack.at(stack.count() - 1 - instr.owner);
@@ -672,7 +679,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
                 break;
 
-            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true, 
+                                                                context, ctxt, comp->name, instr.line);
             bindValues.append(bind);
             bind->m_mePtr = &bindValues.values[bindValues.count - 1];
             bind->setTarget(mp);
@@ -694,7 +702,8 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
                 break;
 
-            QDeclarativeBinding *bind = new QDeclarativeBinding((void *)datas.at(instr.value).constData(), comp, context, ctxt, comp->name, instr.line, 0);
+            QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true,
+                                                                context, ctxt, comp->name, instr.line);
             bindValues.append(bind);
             bind->m_mePtr = &bindValues.values[bindValues.count - 1];
             bind->setTarget(mp);
@@ -703,7 +712,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
             if (old) { old->destroy(); }
         QML_END_INSTR(StoreBindingOnAlias)
 
-        QML_BEGIN_INSTR(StoreCompiledBinding)
+        QML_BEGIN_INSTR(StoreV4Binding)
             QObject *target = 
                 stack.at(stack.count() - 1 - instr.owner);
             QObject *scope = 
@@ -714,11 +723,32 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack,
                 break;
 
             QDeclarativeAbstractBinding *binding = 
-                ctxt->optimizedBindings->configBinding(instr.value, target, scope, property);
+                ctxt->v4bindings->configBinding(instr.value, target, scope, property);
             bindValues.append(binding);
             binding->m_mePtr = &bindValues.values[bindValues.count - 1];
             binding->addToObject(target, property);
-        QML_END_INSTR(StoreCompiledBinding)
+        QML_END_INSTR(StoreV4Binding)
+
+        QML_BEGIN_INSTR(StoreV8Binding)
+            QObject *target = 
+                stack.at(stack.count() - 1 - instr.owner);
+            QObject *scope = 
+                stack.at(stack.count() - 1 - instr.context);
+
+            QDeclarativeProperty mp = 
+                QDeclarativePropertyPrivate::restore(datas.at(instr.property), target, ctxt);
+
+            int coreIndex = mp.index();
+
+            if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex))
+                break;
+
+            QDeclarativeAbstractBinding *binding = 
+                ctxt->v8bindings->configBinding(instr.value, target, scope, mp, instr.line);
+            bindValues.append(binding);
+            binding->m_mePtr = &bindValues.values[bindValues.count - 1];
+            binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
+        QML_END_INSTR(StoreV8Binding)
 
         QML_BEGIN_INSTR(StoreValueSource)
             QObject *obj = stack.pop();
@@ -965,69 +995,78 @@ QDeclarativeCompiledData::TypeReference::createInstance(QDeclarativeContextData 
     } 
 }
 
-QScriptValue QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
+v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentCtxt, QDeclarativeScriptData *script)
 {
     if (script->m_loaded)
-        return script->m_value;
+        return qPersistentNew<v8::Object>(script->m_value);
 
-    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(parentCtxt->engine);
-    QScriptEngine *scriptEngine = QDeclarativeEnginePrivate::getScriptEngine(parentCtxt->engine);
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
+    QV8Engine *v8engine = &ep->v8engine;
 
     bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
 
+    QDeclarativeContextData *effectiveCtxt = parentCtxt;
+    if (shared)
+        effectiveCtxt = 0;
+
     // Create the script context if required
-    QDeclarativeContextData *ctxt = 0;
-    if (!shared) {
-        ctxt = new QDeclarativeContextData;
-        ctxt->isInternal = true;
-        ctxt->url = script->url;
+    QDeclarativeContextData *ctxt = new QDeclarativeContextData;
+    ctxt->isInternal = true;
+    ctxt->isJSContext = true;
+    if (shared)
+        ctxt->isPragmaLibraryContext = true;
+    else
+        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
+    ctxt->url = script->url;
 
-        // For backward compatibility, if there are no imports, we need to use the
-        // imports from the parent context.  See QTBUG-17518.
-        if (!script->importCache->isEmpty()) {
-            ctxt->imports = script->importCache;
-        } else {
-            ctxt->imports = parentCtxt->imports;
-            ctxt->importedScripts = parentCtxt->importedScripts;
+    // For backward compatibility, if there are no imports, we need to use the
+    // imports from the parent context.  See QTBUG-17518.
+    if (!script->importCache->isEmpty()) {
+        ctxt->imports = script->importCache;
+    } else if (effectiveCtxt) {
+        ctxt->imports = effectiveCtxt->imports;
+        ctxt->importedScripts = effectiveCtxt->importedScripts;
+        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
+            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
+    }
+
+    if (ctxt->imports) {
+        ctxt->imports->addref();
+    }
+
+    if (effectiveCtxt)
+        ctxt->setParent(effectiveCtxt, true);
+
+    for (int ii = 0; ii < script->scripts.count(); ++ii) {
+        ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
+    }
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(v8engine->context());
+
+    v8::Local<v8::Object> qmlglobal = v8engine->qmlScope(ctxt, 0);
+
+    v8::TryCatch try_catch;
+    script->m_program->Run(qmlglobal);
+
+    v8::Persistent<v8::Object> rv;
+    
+    if (try_catch.HasCaught()) {
+        v8::Local<v8::Message> message = try_catch.Message();
+        if (!message.IsEmpty()) {
+            QDeclarativeError error;
+            QDeclarativeExpressionPrivate::exceptionToError(message, error);
+            ep->warning(error);
         }
+    } 
 
-        if (ctxt->imports) {
-            ctxt->imports->addref();
-        }
-
-        ctxt->setParent(parentCtxt, true);
-
-        for (int ii = 0; ii < script->scripts.count(); ++ii)
-            ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());
-    }
-
-    QScriptContext *scriptContext = QScriptDeclarativeClass::pushCleanContext(scriptEngine);
+    rv = qPersistentNew<v8::Object>(qmlglobal);
     if (shared) {
-        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(script->url.toString())); // XXX toString()?
-    } else {
-        scriptContext->pushScope(enginePriv->contextClass->newUrlContext(ctxt, 0, script->url.toString()));
-    }
-
-    scriptContext->pushScope(enginePriv->globalClass->staticGlobalObject());
-    QScriptValue scope = QScriptDeclarativeClass::newStaticScopeObject(scriptEngine);
-    scriptContext->pushScope(scope);
-
-    scriptEngine->evaluate(script->m_program);
-
-    if (scriptEngine->hasUncaughtException()) {
-        QDeclarativeError error;
-        QDeclarativeExpressionPrivate::exceptionToError(scriptEngine, error);
-        enginePriv->warning(error);
-    }
-
-    scriptEngine->popContext();
-
-    if (shared) {
+        script->m_value = qPersistentNew<v8::Object>(qmlglobal);
         script->m_loaded = true;
-        script->m_value = scope;
     }
 
-    return scope;
+    return rv;
 }
 
 QT_END_NAMESPACE

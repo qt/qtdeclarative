@@ -66,7 +66,7 @@ Item {
             i += 50
         }
         var success = (count >= expected)
-        if (!qtest_results.verify(success, "wait for signal " + signalName, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.verify(success, "wait for signal " + signalName, QtTest.qtest_caller_file(), QtTest.qtest_caller_line()))
             throw new Error("QtQuickTest::fail")
     }
 

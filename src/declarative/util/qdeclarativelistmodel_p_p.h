@@ -58,8 +58,6 @@
 #include "private/qdeclarativeopenmetaobject_p.h"
 #include "qdeclarative.h"
 
-#include <private/qscriptdeclarativeclass_p.h>
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -67,10 +65,8 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeOpenMetaObject;
-class QScriptEngine;
 class QDeclarativeListModelWorkerAgent;
 struct ModelNode;
-class FlatListScriptClass;
 class FlatNodeData;
 
 class FlatListModel
@@ -87,58 +83,39 @@ public:
     int count() const;
     void clear();
     void remove(int index);
-    bool insert(int index, const QScriptValue&);
-    QScriptValue get(int index) const;
-    void set(int index, const QScriptValue&, QList<int> *roles);
+    bool insert(int index, v8::Handle<v8::Value>);
+    v8::Handle<v8::Value> get(int index) const;
+    void set(int index, v8::Handle<v8::Value>, QList<int> *roles);
     void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
     void move(int from, int to, int count);
 
 private:    
     friend class QDeclarativeListModelWorkerAgent;
     friend class QDeclarativeListModel;
-    friend class FlatListScriptClass;
+    friend class QDeclarativeListModelV8Data;
     friend class FlatNodeData;
 
-    bool addValue(const QScriptValue &value, QHash<int, QVariant> *row, QList<int> *roles);
+    bool addValue(v8::Handle<v8::Value> value, QHash<int, QVariant> *row, QList<int> *roles);
     void insertedNode(int index);
     void removedNode(int index);
     void moveNodes(int from, int to, int n);
 
-    QScriptEngine *m_scriptEngine;
+    QV8Engine *engine() const;
+    QV8Engine *m_engine;
     QHash<int, QString> m_roles;
     QHash<QString, int> m_strings;
     QList<QHash<int, QVariant> > m_values;
     QDeclarativeListModel *m_listModel;
 
-    FlatListScriptClass *m_scriptClass;
     QList<FlatNodeData *> m_nodeData;
     QDeclarativeListModelWorkerAgent *m_parentAgent;
-};
-
-
-/*
-    Created when get() is called on a FlatListModel. This allows changes to the
-    object returned by get() to be tracked, and passed onto the model.
-*/
-class FlatListScriptClass : public QScriptDeclarativeClass
-{
-public:
-    FlatListScriptClass(FlatListModel *model, QScriptEngine *seng);
-
-    Value property(Object *, const Identifier &);
-    void setProperty(Object *, const Identifier &name, const QScriptValue &);
-    QScriptClass::QueryFlags queryProperty(Object *, const Identifier &, QScriptClass::QueryFlags flags);
-    bool compare(Object *, Object *);
-
-private:
-    FlatListModel *m_model;
 };
 
 /*
     FlatNodeData and FlatNodeObjectData allow objects returned by get() to still
     point to the correct list index if move(), insert() or remove() are called.
 */
-struct FlatNodeObjectData;
+class QV8ListModelResource;
 class FlatNodeData
 {
 public:
@@ -147,30 +124,25 @@ public:
 
     ~FlatNodeData();
 
-    void addData(FlatNodeObjectData *data);
-    void removeData(FlatNodeObjectData *data);
+    void addData(QV8ListModelResource *data);
+    void removeData(QV8ListModelResource *data);
 
     int index;
 
 private:
-    QSet<FlatNodeObjectData*> objects;
+    QSet<QV8ListModelResource*> objects;
 };
 
-struct FlatNodeObjectData : public QScriptDeclarativeClass::Object
+class QV8ListModelResource : public QV8ObjectResource
 {
-    FlatNodeObjectData(FlatNodeData *data) : nodeData(data) {
-        nodeData->addData(this);
-    }
+    V8_RESOURCE_TYPE(ListModelType);
+public:
+    QV8ListModelResource(FlatListModel *model, FlatNodeData *data, QV8Engine *engine);
+    ~QV8ListModelResource();
 
-    ~FlatNodeObjectData() {
-        if (nodeData)
-            nodeData->removeData(this);
-    }
-
+    FlatListModel *model;
     FlatNodeData *nodeData;
 };
-
-
 
 class NestedListModel
 {
@@ -187,9 +159,9 @@ public:
     int count() const;
     void clear();
     void remove(int index);
-    bool insert(int index, const QScriptValue&);
-    QScriptValue get(int index) const;
-    void set(int index, const QScriptValue&, QList<int> *roles);
+    bool insert(int index, v8::Handle<v8::Value>);
+    v8::Handle<v8::Value> get(int index) const;
+    void set(int index, v8::Handle<v8::Value>, QList<int> *roles);
     void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
     void move(int from, int to, int count);
 
@@ -200,6 +172,7 @@ public:
     bool m_ownsRoot;
     QDeclarativeListModel *m_listModel;
 
+    QV8Engine *engine() const;
 private:
     friend struct ModelNode;
     mutable QStringList roleStrings;
@@ -212,7 +185,7 @@ class ModelObject : public QObject
 {
     Q_OBJECT
 public:
-    ModelObject(ModelNode *node, NestedListModel *model, QScriptEngine *seng);
+    ModelObject(ModelNode *node, NestedListModel *model, QV8Engine *eng);
     void setValue(const QByteArray &name, const QVariant &val);
     void setNodeUpdatesEnabled(bool enable);
 
@@ -226,7 +199,7 @@ private:
 class ModelNodeMetaObject : public QDeclarativeOpenMetaObject
 {
 public:
-    ModelNodeMetaObject(QScriptEngine *seng, ModelObject *object);
+    ModelNodeMetaObject(QV8Engine *eng, ModelObject *object);
 
     bool m_enabled;
 
@@ -234,10 +207,9 @@ protected:
     void propertyWritten(int index);
 
 private:
-    QScriptEngine *m_seng;
+    QV8Engine *m_engine;
     ModelObject *m_obj;
 };
-
 
 /*
     A ModelNode is created for each item in a NestedListModel.
@@ -255,8 +227,8 @@ struct ModelNode
     QDeclarativeListModel *model(const NestedListModel *model);
     ModelObject *object(const NestedListModel *model);
 
-    bool setObjectValue(const QScriptValue& valuemap, bool writeToCache = true);
-    void setListValue(const QScriptValue& valuelist);
+    bool setObjectValue(v8::Handle<v8::Value> valuemap, bool writeToCache = true);
+    void setListValue(v8::Handle<v8::Value> valuelist);
     bool setProperty(const QString& prop, const QVariant& val);
     void changedProperty(const QString &name) const;
     void updateListIndexes();

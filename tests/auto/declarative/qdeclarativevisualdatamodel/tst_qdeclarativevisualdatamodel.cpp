@@ -451,9 +451,9 @@ void tst_qdeclarativevisualdatamodel::modelProperties()
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":9: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":9: ReferenceError: Can't find variable: modelData");
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":9: ReferenceError: Can't find variable: modelData");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Result of expression 'model.modelData' [undefined] is not an object.");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Result of expression 'model.modelData' [undefined] is not an object.");
-        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Result of expression 'model.modelData' [undefined] is not an object.");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Cannot read property 'display' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Cannot read property 'display' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":15: TypeError: Cannot read property 'display' of undefined");
 
         view.setSource(source);
 

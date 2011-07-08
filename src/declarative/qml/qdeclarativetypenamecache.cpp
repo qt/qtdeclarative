@@ -57,9 +57,7 @@ QDeclarativeTypeNameCache::~QDeclarativeTypeNameCache()
 
 void QDeclarativeTypeNameCache::clear()
 {
-    qDeleteAll(stringCache);
     stringCache.clear();
-    identifierCache.clear();
     m_moduleApi = 0;
     engine = 0;
 }
@@ -69,14 +67,9 @@ void QDeclarativeTypeNameCache::add(const QString &name, int importedScriptIndex
     if (stringCache.contains(name))
         return;
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-
-    RData *data = new RData;
-    // ### Use typename class
-    data->identifier = ep->objectClass->createPersistentIdentifier(name);
-    data->importedScriptIndex = importedScriptIndex;
+    Data data;
+    data.importedScriptIndex = importedScriptIndex;
     stringCache.insert(name, data);
-    identifierCache.insert(data->identifier.identifier, data);
 }
 
 void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeType *type)
@@ -84,14 +77,9 @@ void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeType *type)
     if (stringCache.contains(name))
         return;
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-
-    RData *data = new RData;
-    // ### Use typename class
-    data->identifier = ep->objectClass->createPersistentIdentifier(name);
-    data->type = type;
+    Data data;
+    data.type = type;
     stringCache.insert(name, data);
-    identifierCache.insert(data->identifier.identifier, data);
 }
 
 void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeTypeNameCache *typeNamespace)
@@ -101,13 +89,10 @@ void QDeclarativeTypeNameCache::add(const QString &name, QDeclarativeTypeNameCac
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
-    RData *data = new RData;
-    // ### Use typename class
-    data->identifier = ep->objectClass->createPersistentIdentifier(name);
-    data->typeNamespace = typeNamespace;
-    stringCache.insert(name, data);
-    identifierCache.insert(data->identifier.identifier, data);
+    Data data;
     typeNamespace->addref();
+    data.typeNamespace = typeNamespace;
+    stringCache.insert(name, data);
 }
 
 QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(const QString &id) const

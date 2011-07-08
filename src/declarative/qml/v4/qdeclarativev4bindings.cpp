@@ -315,6 +315,7 @@ void QDeclarativeV4BindingsPrivate::Binding::destroy()
     enabled = false;
     removeFromObject();
     clear();
+    removeError();
     parent->q_func()->release();
 }
 
@@ -1492,7 +1493,8 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
             QString str = QString::fromRawData(strdata, len);
 
-            identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
+            // XXX not applicable in v8
+            // identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
         }
     QML_V4_END_INSTR(InitString, initstring)
 

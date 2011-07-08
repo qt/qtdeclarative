@@ -52,11 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QScriptEngine *QDeclarativeDebugHelper::getScriptEngine(QDeclarativeEngine *engine)
-{
-    return QDeclarativeEnginePrivate::getScriptEngine(engine);
-}
-
 void QDeclarativeDebugHelper::setAnimationSlowDownFactor(qreal factor)
 {
     QUnifiedTimer *timer = QUnifiedTimer::instance();

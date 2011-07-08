@@ -135,7 +135,7 @@ QString RewriteBinding::operator()(QDeclarativeJS::AST::Node *node, const QStrin
 
     if (rewriteDump()) {
         qWarning() << "To:";
-        qWarning() << qPrintable(code);
+        qWarning() << qPrintable(codeCopy);
         qWarning() << "=============================================================";
     }
 

@@ -69,8 +69,11 @@
 #include <private/qobject_p.h>
 #include "private/qdeclarativeguard_p.h"
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
+class QV8Bindings;
 class QDeclarativeContext;
 class QDeclarativeExpression;
 class QDeclarativeEngine;
@@ -137,7 +140,9 @@ public:
     QDeclarativeContextPrivate *asQDeclarativeContextPrivate();
     quint32 isInternal:1;
     quint32 ownedByParent:1; // unrelated to isInternal; parent context deletes children if true.
-    quint32 dummy:30;
+    quint32 isJSContext:1;
+    quint32 isPragmaLibraryContext:1;
+    quint32 dummy:28;
     QDeclarativeContext *publicContext;
 
     // Property name cache
@@ -147,7 +152,7 @@ public:
     QObject *contextObject;
 
     // Any script blocks that exist on this context
-    QList<QScriptValue> importedScripts;
+    QList<v8::Persistent<v8::Object> > importedScripts;
 
     // Context base url
     QUrl url;
@@ -188,15 +193,16 @@ public:
     void setIdProperty(int, QObject *);
     void setIdPropertyData(QDeclarativeIntegerCache *);
 
-    // Optimized binding pointer
-    QDeclarativeV4Bindings *optimizedBindings;
-
     // Linked contexts. this owns linkedContext.
     QDeclarativeContextData *linkedContext;
 
     // Linked list of uses of the Component attached property in this
     // context
     QDeclarativeComponentAttached *componentAttached;
+
+    // Optimized binding objects.  Needed for deferred properties.
+    QDeclarativeV4Bindings *v4bindings;
+    QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.
     QString findObjectId(const QObject *obj) const;
@@ -216,9 +222,10 @@ public:
     inline QDeclarativeGuardedContextData(QDeclarativeContextData *);
     inline ~QDeclarativeGuardedContextData();
 
+    inline QDeclarativeContextData *contextData();
     inline void setContextData(QDeclarativeContextData *);
 
-    inline QDeclarativeContextData *contextData();
+    inline bool isNull() const { return !m_contextData; }
 
     inline operator QDeclarativeContextData*() const { return m_contextData; }
     inline QDeclarativeContextData* operator->() const { return m_contextData; }

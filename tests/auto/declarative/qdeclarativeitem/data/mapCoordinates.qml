@@ -33,11 +33,11 @@ Item {
 
     function checkMapAToInvalid(x, y) {
         var pos = itemA.mapToItem(1122, x, y)
-        return pos.x == undefined && pos.y == undefined
+        return pos == undefined;
     }
 
     function checkMapAFromInvalid(x, y) {
         var pos = itemA.mapFromItem(1122, x, y)
-        return pos.x == undefined && pos.y == undefined
+        return pos == undefined;
     }
 }

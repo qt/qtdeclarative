@@ -69,6 +69,8 @@ public:
 
     virtual void emitValueChanged();
 
+    static void printBindingLoopError(QDeclarativeProperty &prop);
+
 protected:
     virtual void refresh();
 
@@ -76,8 +78,6 @@ private:
     bool updating:1;
     bool enabled:1;
     QDeclarativeProperty property; 
-
-    bool *deleted;
 };
 
 QT_END_NAMESPACE

@@ -41,34 +41,21 @@
 
 #include "private/qdeclarativeintegercache_p.h"
 
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativemetatype_p.h"
-
 QT_BEGIN_NAMESPACE
 
-QDeclarativeIntegerCache::QDeclarativeIntegerCache(QDeclarativeEngine *e)
-: QDeclarativeCleanup(e), engine(e)
+QDeclarativeIntegerCache::QDeclarativeIntegerCache()
 {
 }
 
 QDeclarativeIntegerCache::~QDeclarativeIntegerCache()
 {
-    clear();
-}
-
-void QDeclarativeIntegerCache::clear()
-{
-    qDeleteAll(stringCache);
-    stringCache.clear();
-    identifierCache.clear();
-    engine = 0;
 }
 
 QString QDeclarativeIntegerCache::findId(int value) const
 {
     for (StringCache::ConstIterator iter = stringCache.begin();
             iter != stringCache.end(); ++iter) {
-        if (iter.value() && iter.value()->value == value)
+        if (iter.value() == value)
             return iter.key();
     }
     return QString();
@@ -78,19 +65,13 @@ void QDeclarativeIntegerCache::add(const QString &id, int value)
 {
     Q_ASSERT(!stringCache.contains(id));
 
-    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
-
-    // ### use contextClass
-    Data *d = new Data(enginePriv->objectClass->createPersistentIdentifier(id), value);
-
-    stringCache.insert(id, d);
-    identifierCache.insert(d->identifier, d);
+    stringCache.insert(id, value);
 }
 
 int QDeclarativeIntegerCache::value(const QString &id)
 {
-    Data *d = stringCache.value(id);
-    return d?d->value:-1;
+    int *rv = stringCache.value(id);
+    return rv?*rv:-1;
 }
 
 QT_END_NAMESPACE

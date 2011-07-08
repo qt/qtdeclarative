@@ -238,7 +238,7 @@ QJSDebuggerAgent::QJSDebuggerAgent(QScriptEngine *engine, QObject *parent)
 
 QJSDebuggerAgent::QJSDebuggerAgent(QDeclarativeEngine *engine, QObject *parent)
     : QObject(parent)
-    , QScriptEngineAgent(QDeclarativeDebugHelper::getScriptEngine(engine))
+    , QScriptEngineAgent(0)
     , d(new QJSDebuggerAgentPrivate(this))
 {
     QJSDebuggerAgent::engine()->setAgent(this);

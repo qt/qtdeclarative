@@ -147,14 +147,14 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBinding : public QDeclarativeExpr
 {
 Q_OBJECT
 public:
-    enum EvaluateFlag { RequiresThisObject = 0x01 };
+    enum EvaluateFlag { None = 0x00, RequiresThisObject = 0x01 };
     Q_DECLARE_FLAGS(EvaluateFlags, EvaluateFlag)
 
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContext *, QObject *parent=0);
     QDeclarativeBinding(const QString &, QObject *, QDeclarativeContextData *, QObject *parent=0);
-    QDeclarativeBinding(void *, QDeclarativeRefCount *, QObject *, QDeclarativeContextData *, 
-                        const QString &, int, QObject *parent);
-    QDeclarativeBinding(const QScriptValue &, QObject *, QDeclarativeContextData *, QObject *parent=0);
+    QDeclarativeBinding(const QString &, bool isRewritten, QObject *, QDeclarativeContextData *, 
+                        const QString &url, int lineNumber, QObject *parent=0);
+    QDeclarativeBinding(void *, QObject *, QDeclarativeContextData *, QObject *parent=0);
 
     void setTarget(const QDeclarativeProperty &);
     QDeclarativeProperty property() const;

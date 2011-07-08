@@ -65,6 +65,7 @@ public:
     inline QIntrusiveList();
     inline ~QIntrusiveList();
 
+    inline bool isEmpty() const;
     inline void insert(N *n);
     inline void remove(N *n);
 
@@ -173,6 +174,12 @@ template<class N, QIntrusiveListNode N::*member>
 QIntrusiveList<N, member>::~QIntrusiveList()
 {
     while (__first) __first->remove();
+}
+
+template<class N, QIntrusiveListNode N::*member>
+bool QIntrusiveList<N, member>::isEmpty() const
+{
+    return __first == 0;
 }
 
 template<class N, QIntrusiveListNode N::*member>

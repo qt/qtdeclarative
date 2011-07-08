@@ -780,18 +780,22 @@ void QDeclarativeXmlListModel::setNamespaceDeclarations(const QString &declarati
     var title = model.get(0).title;
     \endjs
 */
-QScriptValue QDeclarativeXmlListModel::get(int index) const
+QDeclarativeV8Handle QDeclarativeXmlListModel::get(int index) const
 {
+    // Must be called with a context and handle scope
     Q_D(const QDeclarativeXmlListModel);
 
-    QScriptEngine *sengine = QDeclarativeEnginePrivate::getScriptEngine(qmlContext(this)->engine());
     if (index < 0 || index >= count())
-        return sengine->undefinedValue();
+        return QDeclarativeV8Handle::fromHandle(v8::Undefined());
 
-    QScriptValue sv = sengine->newObject();
-    for (int i=0; i<d->roleObjects.count(); i++) 
-        sv.setProperty(d->roleObjects[i]->name(), sengine->toScriptValue(d->data.value(i).value(index)));
-    return sv;    
+    QDeclarativeEngine *engine = qmlContext(this)->engine();
+    QV8Engine *v8engine = QDeclarativeEnginePrivate::getV8Engine(engine);
+    v8::Local<v8::Object> rv = v8::Object::New();
+    for (int ii = 0; ii < d->roleObjects.count(); ++ii) 
+        rv->Set(v8engine->toString(d->roleObjects[ii]->name()), 
+                v8engine->fromVariant(d->data.value(ii).value(index)));
+
+    return QDeclarativeV8Handle::fromHandle(rv);
 }
 
 /*!

@@ -128,6 +128,9 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
 
     qDeleteAll(cachedPrograms);
     qDeleteAll(cachedClosures);
+
+    for (int ii = 0; ii < v8bindings.count(); ++ii)
+        qPersistentDispose(v8bindings[ii]);
 }
 
 void QDeclarativeCompiledData::clear()

@@ -44,7 +44,6 @@
 
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativeglobalscriptclass_p.h"
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativeexpression.h"
@@ -55,9 +54,6 @@
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativexmlhttprequest_p.h"
 #include "private/qdeclarativesqldatabase_p.h"
-#include "private/qdeclarativescarceresourcescriptclass_p.h"
-#include "private/qdeclarativetypenamescriptclass_p.h"
-#include "private/qdeclarativelistscriptclass_p.h"
 #include "qdeclarativescriptstring.h"
 #include "private/qdeclarativeglobal_p.h"
 #include "private/qdeclarativeworkerscript_p.h"
@@ -68,14 +64,12 @@
 #include "qdeclarativeextensioninterface.h"
 #include "private/qdeclarativelist_p.h"
 #include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativeinclude_p.h"
 #include "private/qdeclarativenotifier_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeapplication_p.h"
 #include "private/qjsdebugservice_p.h"
 
 #include <QtCore/qmetaobject.h>
-#include <QScriptClass>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
@@ -101,7 +95,6 @@
 #include <QtCore/qcryptographichash.h>
 
 #include <private/qobject_p.h>
-#include <private/qscriptdeclarativeclass_p.h>
 
 #include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
@@ -345,16 +338,16 @@ The \c status property will be updated as the operation progresses.
 If provided, \a callback is invoked when the operation completes.  The callback is passed
 the same object as is returned from the Qt.include() call.
 */
-// Qt.include() is implemented in qdeclarativeinclude.cpp
+// Qt.include() is implemented in qv8include.cpp
 
 
 QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 : captureProperties(false), rootContext(0), isDebugging(false),
-  outputWarningsToStdErr(true), contextClass(0), sharedContext(0), sharedScope(0),
-  objectClass(0), valueTypeClass(0), globalClass(0), cleanup(0), erroredBindings(0),
-  inProgressCreations(0), scriptEngine(this), workerScriptEngine(0), componentAttached(0),
-  inBeginCreate(false), networkAccessManager(0), networkAccessManagerFactory(0),
-  scarceResources(0), scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
+  outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
+  cleanup(0), erroredBindings(0), inProgressCreations(0), 
+  workerScriptEngine(0), componentAttached(0), inBeginCreate(false), 
+  networkAccessManager(0), networkAccessManagerFactory(0),
+  scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
   sgContext(0)
 {
     if (!qt_QmlQtModule_registered) {
@@ -366,124 +359,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
         QSGParticlesModule::defineModule();
         QDeclarativeValueTypeFactory::registerValueTypes();
     }
-    globalClass = new QDeclarativeGlobalScriptClass(&scriptEngine);
-}
-
-/*!
-  \qmlmethod url Qt::resolvedUrl(url url)
-  Returns \a url resolved relative to the URL of the caller.
-*/
-QUrl QDeclarativeScriptEngine::resolvedUrl(QScriptContext *context, const QUrl& url)
-{
-    if (p) {
-        QDeclarativeContextData *ctxt = p->getContext(context);
-        if (ctxt)
-            return ctxt->resolvedUrl(url);
-        else
-            return p->getUrl(context).resolved(url);
-    }
-    return baseUrl.resolved(url);
-}
-
-QDeclarativeScriptEngine::QDeclarativeScriptEngine(QDeclarativeEnginePrivate *priv)
-: p(priv), sqlQueryClass(0), namedNodeMapClass(0), nodeListClass(0)
-{
-    // Note that all documentation for stuff put on the global object goes in
-    // doc/src/declarative/globalobject.qdoc
-
-    bool mainthread = priv != 0;
-
-    QScriptValue qtObject =
-        newQMetaObject(StaticQtMetaObject::get());
-    globalObject().setProperty(QLatin1String("Qt"), qtObject);
-
-#ifndef QT_NO_DESKTOPSERVICES
-    offlineStoragePath = QDesktopServices::storageLocation(QDesktopServices::DataLocation).replace(QLatin1Char('/'), QDir::separator())
-        + QDir::separator() + QLatin1String("QML")
-        + QDir::separator() + QLatin1String("OfflineStorage");
-#endif
-
-#ifndef QT_NO_XMLSTREAMREADER
-    qt_add_qmlxmlhttprequest(this);
-#endif
-    qt_add_qmlsqldatabase(this);
-    // XXX A Multimedia "Qt.Sound" class also needs to be made available,
-    // XXX but we don't want a dependency in that cirection.
-    // XXX When the above a done some better way, that way should also be
-    // XXX used to add Qt.Sound class.
-
-    //types
-    if (mainthread)
-        qtObject.setProperty(QLatin1String("include"), newFunction(QDeclarativeInclude::include, 2));
-    else
-        qtObject.setProperty(QLatin1String("include"), newFunction(QDeclarativeInclude::worker_include, 2));
-
-    qtObject.setProperty(QLatin1String("isQtObject"), newFunction(QDeclarativeEnginePrivate::isQtObject, 1));
-    qtObject.setProperty(QLatin1String("rgba"), newFunction(QDeclarativeEnginePrivate::rgba, 4));
-    qtObject.setProperty(QLatin1String("hsla"), newFunction(QDeclarativeEnginePrivate::hsla, 4));
-    qtObject.setProperty(QLatin1String("rect"), newFunction(QDeclarativeEnginePrivate::rect, 4));
-    qtObject.setProperty(QLatin1String("point"), newFunction(QDeclarativeEnginePrivate::point, 2));
-    qtObject.setProperty(QLatin1String("size"), newFunction(QDeclarativeEnginePrivate::size, 2));
-    qtObject.setProperty(QLatin1String("vector3d"), newFunction(QDeclarativeEnginePrivate::vector3d, 3));
-
-    if (mainthread) {
-        //color helpers
-        qtObject.setProperty(QLatin1String("lighter"), newFunction(QDeclarativeEnginePrivate::lighter, 1));
-        qtObject.setProperty(QLatin1String("darker"), newFunction(QDeclarativeEnginePrivate::darker, 1));
-        qtObject.setProperty(QLatin1String("tint"), newFunction(QDeclarativeEnginePrivate::tint, 2));
-    }
-
-#ifndef QT_NO_DATESTRING
-    //date/time formatting
-    qtObject.setProperty(QLatin1String("formatDate"),newFunction(QDeclarativeEnginePrivate::formatDate, 2));
-    qtObject.setProperty(QLatin1String("formatTime"),newFunction(QDeclarativeEnginePrivate::formatTime, 2));
-    qtObject.setProperty(QLatin1String("formatDateTime"),newFunction(QDeclarativeEnginePrivate::formatDateTime, 2));
-#endif
-
-    //misc methods
-    qtObject.setProperty(QLatin1String("openUrlExternally"),newFunction(QDeclarativeEnginePrivate::desktopOpenUrl, 1));
-    qtObject.setProperty(QLatin1String("fontFamilies"),newFunction(QDeclarativeEnginePrivate::fontFamilies, 0));
-    qtObject.setProperty(QLatin1String("md5"),newFunction(QDeclarativeEnginePrivate::md5, 1));
-    qtObject.setProperty(QLatin1String("btoa"),newFunction(QDeclarativeEnginePrivate::btoa, 1));
-    qtObject.setProperty(QLatin1String("atob"),newFunction(QDeclarativeEnginePrivate::atob, 1));
-    qtObject.setProperty(QLatin1String("quit"), newFunction(QDeclarativeEnginePrivate::quit, 0));
-    qtObject.setProperty(QLatin1String("resolvedUrl"),newFunction(QDeclarativeScriptEngine::resolvedUrl, 1));
-
-    if (mainthread) {
-        qtObject.setProperty(QLatin1String("createQmlObject"),
-                newFunction(QDeclarativeEnginePrivate::createQmlObject, 1));
-        qtObject.setProperty(QLatin1String("createComponent"),
-                newFunction(QDeclarativeEnginePrivate::createComponent, 1));
-    }
-
-    //firebug/webkit compat
-    QScriptValue consoleObject = newObject();
-    consoleObject.setProperty(QLatin1String("log"),newFunction(QDeclarativeEnginePrivate::consoleLog, 1));
-    consoleObject.setProperty(QLatin1String("debug"),newFunction(QDeclarativeEnginePrivate::consoleLog, 1));
-    globalObject().setProperty(QLatin1String("console"), consoleObject);
-
-    // translation functions need to be installed
-    // before the global script class is constructed (QTBUG-6437)
-    installTranslatorFunctions();
-}
-
-QDeclarativeScriptEngine::~QDeclarativeScriptEngine()
-{
-    delete sqlQueryClass;
-    delete nodeListClass;
-    delete namedNodeMapClass;
-}
-
-QScriptValue QDeclarativeScriptEngine::resolvedUrl(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    QString arg = ctxt->argument(0).toString();
-    QUrl r = QDeclarativeScriptEngine::get(engine)->resolvedUrl(ctxt,QUrl(arg));
-    return QScriptValue(r.toString());
-}
-
-QNetworkAccessManager *QDeclarativeScriptEngine::networkAccessManager()
-{
-    return p->getNetworkAccessManager();
 }
 
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
@@ -503,20 +378,6 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
 
     delete rootContext;
     rootContext = 0;
-    delete contextClass;
-    contextClass = 0;
-    delete objectClass;
-    objectClass = 0;
-    delete scarceResourceClass;
-    scarceResourceClass = 0;
-    delete valueTypeClass;
-    valueTypeClass = 0;
-    delete typeNameClass;
-    typeNameClass = 0;
-    delete listClass;
-    listClass = 0;
-    delete globalClass;
-    globalClass = 0;
 
     for(QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.constBegin(); iter != m_compositeTypes.constEnd(); ++iter)
         (*iter)->release();
@@ -579,19 +440,16 @@ void QDeclarativeEnginePrivate::init()
     qRegisterMetaType<QDeclarativeScriptString>("QDeclarativeScriptString");
     qRegisterMetaType<QScriptValue>("QScriptValue");
     qRegisterMetaType<QDeclarativeComponent::Status>("QDeclarativeComponent::Status");
+    qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
+    qRegisterMetaType<QList<int> >("QList<int>");
+    qRegisterMetaType<QDeclarativeV8Handle>("QDeclarativeV8Handle");
 
     QDeclarativeData::init();
 
-    contextClass = new QDeclarativeContextScriptClass(q);
-    objectClass = new QDeclarativeObjectScriptClass(q);
-    scarceResourceClass = new QDeclarativeScarceResourceScriptClass(q);
-    valueTypeClass = new QDeclarativeValueTypeScriptClass(q);
-    typeNameClass = new QDeclarativeTypeNameScriptClass(q);
-    listClass = new QDeclarativeListScriptClass(q);
-    rootContext = new QDeclarativeContext(q,true);
+    // Init V8 data
+    v8engine.init(q);
 
-    QScriptValue applicationObject = objectClass->newQObject(new QDeclarativeApplication(q));
-    scriptEngine.globalObject().property(QLatin1String("Qt")).setProperty(QLatin1String("application"), applicationObject);
+    rootContext = new QDeclarativeContext(q,true);
 
     if (QCoreApplication::instance()->thread() == q->thread() &&
         QDeclarativeEngineDebugServer::isDebuggingEnabled()) {
@@ -939,6 +797,14 @@ void QDeclarativeEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
+  Attempt to free unused memory.
+*/
+void QDeclarativeEngine::collectGarbage()
+{
+    QV8Engine::gc();
+}
+
+/*!
   Returns the QDeclarativeContext for the \a object, or 0 if no
   context has been set.
 
@@ -1187,19 +1053,19 @@ void QDeclarativeData::destroyed(QObject *object)
         guard->objectDestroyed(object);
     }
 
-    if (scriptValue)
-        delete scriptValue;
-
     if (extendedData)
         delete extendedData;
+
+    v8object.Clear(); // The WeakReference handler will clean the actual handle
 
     if (ownMemory)
         delete this;
 }
 
-void QDeclarativeData::parentChanged(QObject *, QObject *parent)
+void QDeclarativeData::parentChanged(QObject *object, QObject *parent)
 {
-    if (!parent && scriptValue) { delete scriptValue; scriptValue = 0; }
+    Q_UNUSED(object);
+    Q_UNUSED(parent);
 }
 
 void QDeclarativeData::objectNameChanged(QObject *)
@@ -1243,44 +1109,6 @@ void QDeclarativeData::setBindingBit(QObject *obj, int bit)
     bindingBits[bit / 32] |= (1 << (bit % 32));
 }
 
-/*!
-    Creates a QScriptValue allowing you to use \a object in QML script.
-    \a engine is the QDeclarativeEngine it is to be created in.
-
-    The QScriptValue returned is a QtScript Object, not a QtScript QObject, due
-    to the special needs of QML requiring more functionality than a standard
-    QtScript QObject.
-*/
-QScriptValue QDeclarativeEnginePrivate::qmlScriptObject(QObject* object,
-                                               QDeclarativeEngine* engine)
-{
-    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
-    return enginePriv->objectClass->newQObject(object);
-}
-
-/*!
-    Returns the QDeclarativeContext for the executing QScript \a ctxt.
-*/
-QDeclarativeContextData *QDeclarativeEnginePrivate::getContext(QScriptContext *ctxt)
-{
-    QScriptValue scopeNode = QScriptDeclarativeClass::scopeChainValue(ctxt, -3);
-    Q_ASSERT(scopeNode.isValid());
-    Q_ASSERT(QScriptDeclarativeClass::scriptClass(scopeNode) == contextClass);
-    return contextClass->contextFromValue(scopeNode);
-}
-
-/*!
-    Returns the QUrl associated with the script \a ctxt for the case that there is
-    no QDeclarativeContext.
-*/
-QUrl QDeclarativeEnginePrivate::getUrl(QScriptContext *ctxt)
-{
-    QScriptValue scopeNode = QScriptDeclarativeClass::scopeChainValue(ctxt, -3);
-    Q_ASSERT(scopeNode.isValid());
-    Q_ASSERT(QScriptDeclarativeClass::scriptClass(scopeNode) == contextClass);
-    return contextClass->urlFromValue(scopeNode);
-}
-
 QString QDeclarativeEnginePrivate::urlToLocalFileOrQrc(const QUrl& url)
 {
     if (url.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) == 0) {
@@ -1289,651 +1117,6 @@ QString QDeclarativeEnginePrivate::urlToLocalFileOrQrc(const QUrl& url)
         return QString();
     }
     return url.toLocalFile();
-}
-
-/*!
-\qmlmethod object Qt::createComponent(url)
-
-Returns a \l Component object created using the QML file at the specified \a url,
-or \c null if an empty string was given.
-
-The returned component's \l Component::status property indicates whether the
-component was successfully created. If the status is \c Component.Error,
-see \l Component::errorString() for an error description.
-
-Call \l {Component::createObject()}{Component.createObject()} on the returned
-component to create an object instance of the component.
-
-For example:
-
-\snippet doc/src/snippets/declarative/createComponent-simple.qml 0
-
-See \l {Dynamic Object Management in QML} for more information on using this function.
-
-To create a QML object from an arbitrary string of QML (instead of a file),
-use \l{QML:Qt::createQmlObject()}{Qt.createQmlObject()}.
-*/
-
-QScriptValue QDeclarativeEnginePrivate::createComponent(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    QDeclarativeEnginePrivate *activeEnginePriv =
-        static_cast<QDeclarativeScriptEngine*>(engine)->p;
-    QDeclarativeEngine* activeEngine = activeEnginePriv->q_func();
-
-    if(ctxt->argumentCount() != 1) {
-        return ctxt->throwError(QLatin1String("Qt.createComponent(): Invalid arguments"));
-    } else {
-
-        QString arg = ctxt->argument(0).toString();
-        if (arg.isEmpty())
-            return engine->nullValue();
-        QUrl url = QDeclarativeScriptEngine::get(engine)->resolvedUrl(ctxt, QUrl(arg));
-        QDeclarativeContextData* context = activeEnginePriv->getContext(ctxt);
-        QDeclarativeComponent *c = new QDeclarativeComponent(activeEngine, url, activeEngine);
-        QDeclarativeComponentPrivate::get(c)->creationContext = context;
-        QDeclarativeData::get(c, true)->setImplicitDestructible();
-        return activeEnginePriv->objectClass->newQObject(c, qMetaTypeId<QDeclarativeComponent*>());
-    }
-}
-
-/*!
-\qmlmethod object Qt::createQmlObject(string qml, object parent, string filepath)
-
-Returns a new object created from the given \a string of QML which will have the specified \a parent,
-or \c null if there was an error in creating the object.
-
-If \a filepath is specified, it will be used for error reporting for the created object.
-
-Example (where \c parentItem is the id of an existing QML item):
-
-\snippet doc/src/snippets/declarative/createQmlObject.qml 0
-
-In the case of an error, a QtScript Error object is thrown. This object has an additional property,
-\c qmlErrors, which is an array of the errors encountered.
-Each object in this array has the members \c lineNumber, \c columnNumber, \c fileName and \c message.
-For example, if the above snippet had misspelled color as 'colro' then the array would contain an object like the following:
-{ "lineNumber" : 1, "columnNumber" : 32, "fileName" : "dynamicSnippet1", "message" : "Cannot assign to non-existent property \"colro\""}.
-
-Note that this function returns immediately, and therefore may not work if
-the \a qml string loads new components (that is, external QML files that have not yet been loaded).
-If this is the case, consider using \l{QML:Qt::createComponent()}{Qt.createComponent()} instead.
-
-See \l {Dynamic Object Management in QML} for more information on using this function.
-*/
-
-QScriptValue QDeclarativeEnginePrivate::createQmlObject(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    QDeclarativeEnginePrivate *activeEnginePriv =
-        static_cast<QDeclarativeScriptEngine*>(engine)->p;
-    QDeclarativeEngine* activeEngine = activeEnginePriv->q_func();
-
-    if(ctxt->argumentCount() < 2 || ctxt->argumentCount() > 3)
-        return ctxt->throwError(QLatin1String("Qt.createQmlObject(): Invalid arguments"));
-
-    QDeclarativeContextData* context = activeEnginePriv->getContext(ctxt);
-    Q_ASSERT(context);
-
-    QString qml = ctxt->argument(0).toString();
-    if (qml.isEmpty())
-        return engine->nullValue();
-
-    QUrl url;
-    if(ctxt->argumentCount() > 2)
-        url = QUrl(ctxt->argument(2).toString());
-    else
-        url = QUrl(QLatin1String("inline"));
-
-    if (url.isValid() && url.isRelative())
-        url = context->resolvedUrl(url);
-
-    QObject *parentArg = activeEnginePriv->objectClass->toQObject(ctxt->argument(1));
-    if(!parentArg)
-        return ctxt->throwError(QLatin1String("Qt.createQmlObject(): Missing parent object"));
-
-    QDeclarativeComponent component(activeEngine);
-    component.setData(qml.toUtf8(), url);
-
-    if(component.isError()) {
-        QList<QDeclarativeError> errors = component.errors();
-        QString errstr = QLatin1String("Qt.createQmlObject() failed to create object: ");
-        QScriptValue arr = ctxt->engine()->newArray(errors.length());
-        int i = 0;
-        foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("\n    ") + error.toString();
-            QScriptValue qmlErrObject = ctxt->engine()->newObject();
-            qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
-            qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
-            qmlErrObject.setProperty(QLatin1String("fileName"), QScriptValue(error.url().toString()));
-            qmlErrObject.setProperty(QLatin1String("message"), QScriptValue(error.description()));
-            arr.setProperty(i++, qmlErrObject);
-        }
-        QScriptValue err = ctxt->throwError(errstr);
-        err.setProperty(QLatin1String("qmlErrors"),arr);
-        return err;
-    }
-
-    if (!component.isReady())
-        return ctxt->throwError(QLatin1String("Qt.createQmlObject(): Component is not ready"));
-
-    QObject *obj = component.beginCreate(context->asQDeclarativeContext());
-    if(obj)
-        QDeclarativeData::get(obj, true)->setImplicitDestructible();
-    component.completeCreate();
-
-    if(component.isError()) {
-        QList<QDeclarativeError> errors = component.errors();
-        QString errstr = QLatin1String("Qt.createQmlObject() failed to create object: ");
-        QScriptValue arr = ctxt->engine()->newArray(errors.length());
-        int i = 0;
-        foreach (const QDeclarativeError &error, errors){
-            errstr += QLatin1String("\n    ") + error.toString();
-            QScriptValue qmlErrObject = ctxt->engine()->newObject();
-            qmlErrObject.setProperty(QLatin1String("lineNumber"), QScriptValue(error.line()));
-            qmlErrObject.setProperty(QLatin1String("columnNumber"), QScriptValue(error.column()));
-            qmlErrObject.setProperty(QLatin1String("fileName"), QScriptValue(error.url().toString()));
-            qmlErrObject.setProperty(QLatin1String("message"), QScriptValue(error.description()));
-            arr.setProperty(i++, qmlErrObject);
-        }
-        QScriptValue err = ctxt->throwError(errstr);
-        err.setProperty(QLatin1String("qmlErrors"),arr);
-        return err;
-    }
-
-    Q_ASSERT(obj);
-
-    obj->setParent(parentArg);
-
-    QList<QDeclarativePrivate::AutoParentFunction> functions = QDeclarativeMetaType::parentFunctions();
-    for (int ii = 0; ii < functions.count(); ++ii) {
-        if (QDeclarativePrivate::Parented == functions.at(ii)(obj, parentArg))
-            break;
-    }
-
-    QDeclarativeData::get(obj, true)->setImplicitDestructible();
-    return activeEnginePriv->objectClass->newQObject(obj, QMetaType::QObjectStar);
-}
-
-/*!
-\qmlmethod bool Qt::isQtObject(object)
-Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.
-*/
-QScriptValue QDeclarativeEnginePrivate::isQtObject(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if (ctxt->argumentCount() == 0)
-        return QScriptValue(engine, false);
-
-    return QScriptValue(engine, 0 != ctxt->argument(0).toQObject());
-}
-
-/*!
-\qmlmethod Qt::vector3d(real x, real y, real z)
-Returns a Vector3D with the specified \c x, \c y and \c z.
-*/
-QScriptValue QDeclarativeEnginePrivate::vector3d(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 3)
-        return ctxt->throwError(QLatin1String("Qt.vector(): Invalid arguments"));
-    qsreal x = ctxt->argument(0).toNumber();
-    qsreal y = ctxt->argument(1).toNumber();
-    qsreal z = ctxt->argument(2).toNumber();
-    return QDeclarativeEnginePrivate::get(engine)->scriptValueFromVariant(QVariant::fromValue(QVector3D(x, y, z)));
-}
-
-/*!
-\qmlmethod string Qt::formatDate(datetime date, variant format)
-
-Returns a string representation of \c date, optionally formatted according
-to \c format.
-
-The \a date parameter may be a JavaScript \c Date object, a \l{date}{date}
-property, a QDate, or QDateTime value. The \a format parameter may be any of
-the possible format values as described for
-\l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
-
-If \a format is not specified, \a date is formatted using
-\l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
-*/
-#ifndef QT_NO_DATESTRING
-QScriptValue QDeclarativeEnginePrivate::formatDate(QScriptContext*ctxt, QScriptEngine*engine)
-{
-    int argCount = ctxt->argumentCount();
-    if(argCount == 0 || argCount > 2)
-        return ctxt->throwError(QLatin1String("Qt.formatDate(): Invalid arguments"));
-
-    QDate date = ctxt->argument(0).toDateTime().date();
-    Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    if (argCount == 2) {
-        QScriptValue formatArg = ctxt->argument(1);
-        if (formatArg.isString()) {
-            QString format = formatArg.toString();
-            return engine->newVariant(QVariant::fromValue(date.toString(format)));
-        } else if (formatArg.isNumber()) {
-            enumFormat = Qt::DateFormat(formatArg.toUInt32());
-        } else {
-            return ctxt->throwError(QLatin1String("Qt.formatDate(): Invalid date format"));
-        }
-    }
-    return engine->newVariant(QVariant::fromValue(date.toString(enumFormat)));
-}
-
-/*!
-\qmlmethod string Qt::formatTime(datetime time, variant format)
-
-Returns a string representation of \c time, optionally formatted according to
-\c format.
-
-The \a time parameter may be a JavaScript \c Date object, a QTime, or QDateTime
-value. The \a format parameter may be any of the possible format values as
-described for \l{QML:Qt::formatDateTime()}{Qt.formatDateTime()}.
-
-If \a format is not specified, \a time is formatted using
-\l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}.
-*/
-QScriptValue QDeclarativeEnginePrivate::formatTime(QScriptContext*ctxt, QScriptEngine*engine)
-{
-    int argCount = ctxt->argumentCount();
-    if(argCount == 0 || argCount > 2)
-        return ctxt->throwError(QLatin1String("Qt.formatTime(): Invalid arguments"));
-
-    QTime time;
-    QScriptValue sv = ctxt->argument(0);
-    if (sv.isDate())
-        time = sv.toDateTime().time();
-    else if (sv.toVariant().type() == QVariant::Time)
-        time = sv.toVariant().toTime();
-
-    Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    if (argCount == 2) {
-        QScriptValue formatArg = ctxt->argument(1);
-        if (formatArg.isString()) {
-            QString format = formatArg.toString();
-            return engine->newVariant(QVariant::fromValue(time.toString(format)));
-        } else if (formatArg.isNumber()) {
-            enumFormat = Qt::DateFormat(formatArg.toUInt32());
-        } else {
-            return ctxt->throwError(QLatin1String("Qt.formatTime(): Invalid time format"));
-        }
-    }
-    return engine->newVariant(QVariant::fromValue(time.toString(enumFormat)));
-}
-
-/*!
-\qmlmethod string Qt::formatDateTime(datetime dateTime, variant format)
-
-Returns a string representation of \c datetime, optionally formatted according to
-\c format.
-
-The \a date parameter may be a JavaScript \c Date object, a \l{date}{date}
-property, a QDate, QTime, or QDateTime value.
-
-If \a format is not provided, \a dateTime is formatted using
-\l {Qt::DefaultLocaleShortDate}{Qt.DefaultLocaleShortDate}. Otherwise,
-\a format should be either.
-
-\list
-\o One of the Qt::DateFormat enumeration values, such as
-   \c Qt.DefaultLocaleShortDate or \c Qt.ISODate
-\o A string that specifies the format of the returned string, as detailed below.
-\endlist
-
-If \a format specifies a format string, it should use the following expressions
-to specify the date:
-
-    \table
-    \header \i Expression \i Output
-    \row \i d \i the day as number without a leading zero (1 to 31)
-    \row \i dd \i the day as number with a leading zero (01 to 31)
-    \row \i ddd
-            \i the abbreviated localized day name (e.g. 'Mon' to 'Sun').
-            Uses QDate::shortDayName().
-    \row \i dddd
-            \i the long localized day name (e.g. 'Monday' to 'Qt::Sunday').
-            Uses QDate::longDayName().
-    \row \i M \i the month as number without a leading zero (1-12)
-    \row \i MM \i the month as number with a leading zero (01-12)
-    \row \i MMM
-            \i the abbreviated localized month name (e.g. 'Jan' to 'Dec').
-            Uses QDate::shortMonthName().
-    \row \i MMMM
-            \i the long localized month name (e.g. 'January' to 'December').
-            Uses QDate::longMonthName().
-    \row \i yy \i the year as two digit number (00-99)
-    \row \i yyyy \i the year as four digit number
-    \endtable
-
-In addition the following expressions can be used to specify the time:
-
-    \table
-    \header \i Expression \i Output
-    \row \i h
-         \i the hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)
-    \row \i hh
-         \i the hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)
-    \row \i m \i the minute without a leading zero (0 to 59)
-    \row \i mm \i the minute with a leading zero (00 to 59)
-    \row \i s \i the second without a leading zero (0 to 59)
-    \row \i ss \i the second with a leading zero (00 to 59)
-    \row \i z \i the milliseconds without leading zeroes (0 to 999)
-    \row \i zzz \i the milliseconds with leading zeroes (000 to 999)
-    \row \i AP
-            \i use AM/PM display. \e AP will be replaced by either "AM" or "PM".
-    \row \i ap
-            \i use am/pm display. \e ap will be replaced by either "am" or "pm".
-    \endtable
-
-    All other input characters will be ignored. Any sequence of characters that
-    are enclosed in single quotes will be treated as text and not be used as an
-    expression. Two consecutive single quotes ("''") are replaced by a single quote
-    in the output.
-
-For example, if the following date/time value was specified:
-
-    \code
-    // 21 May 2001 14:13:09
-    var dateTime = new Date(2001, 5, 21, 14, 13, 09)
-    \endcode
-
-This \a dateTime value could be passed to \c Qt.formatDateTime(),
-\l {QML:Qt::formatDate()}{Qt.formatDate()} or \l {QML:Qt::formatTime()}{Qt.formatTime()}
-with the \a format values below to produce the following results:
-
-    \table
-    \header \i Format \i Result
-    \row \i "dd.MM.yyyy"      \i 21.05.2001
-    \row \i "ddd MMMM d yy"   \i Tue May 21 01
-    \row \i "hh:mm:ss.zzz"    \i 14:13:09.042
-    \row \i "h:m:s ap"        \i 2:13:9 pm
-    \endtable
-*/
-QScriptValue QDeclarativeEnginePrivate::formatDateTime(QScriptContext*ctxt, QScriptEngine*engine)
-{
-    int argCount = ctxt->argumentCount();
-    if(argCount == 0 || argCount > 2)
-        return ctxt->throwError(QLatin1String("Qt.formatDateTime(): Invalid arguments"));
-
-    QDateTime date = ctxt->argument(0).toDateTime();
-    Qt::DateFormat enumFormat = Qt::DefaultLocaleShortDate;
-    if (argCount == 2) {
-        QScriptValue formatArg = ctxt->argument(1);
-        if (formatArg.isString()) {
-            QString format = formatArg.toString();
-            return engine->newVariant(QVariant::fromValue(date.toString(format)));
-        } else if (formatArg.isNumber()) {
-            enumFormat = Qt::DateFormat(formatArg.toUInt32());
-        } else {
-            return ctxt->throwError(QLatin1String("Qt.formatDateTime(): Invalid datetime format"));
-        }
-    }
-    return engine->newVariant(QVariant::fromValue(date.toString(enumFormat)));
-}
-#endif // QT_NO_DATESTRING
-
-/*!
-\qmlmethod color Qt::rgba(real red, real green, real blue, real alpha)
-
-Returns a color with the specified \c red, \c green, \c blue and \c alpha components.
-All components should be in the range 0-1 inclusive.
-*/
-QScriptValue QDeclarativeEnginePrivate::rgba(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    int argCount = ctxt->argumentCount();
-    if(argCount < 3 || argCount > 4)
-        return ctxt->throwError(QLatin1String("Qt.rgba(): Invalid arguments"));
-    qsreal r = ctxt->argument(0).toNumber();
-    qsreal g = ctxt->argument(1).toNumber();
-    qsreal b = ctxt->argument(2).toNumber();
-    qsreal a = (argCount == 4) ? ctxt->argument(3).toNumber() : 1;
-
-    if (r < 0.0) r=0.0;
-    if (r > 1.0) r=1.0;
-    if (g < 0.0) g=0.0;
-    if (g > 1.0) g=1.0;
-    if (b < 0.0) b=0.0;
-    if (b > 1.0) b=1.0;
-    if (a < 0.0) a=0.0;
-    if (a > 1.0) a=1.0;
-
-    return engine->toScriptValue(QVariant::fromValue(QColor::fromRgbF(r, g, b, a)));
-}
-
-/*!
-\qmlmethod color Qt::hsla(real hue, real saturation, real lightness, real alpha)
-
-Returns a color with the specified \c hue, \c saturation, \c lightness and \c alpha components.
-All components should be in the range 0-1 inclusive.
-*/
-QScriptValue QDeclarativeEnginePrivate::hsla(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    int argCount = ctxt->argumentCount();
-    if(argCount < 3 || argCount > 4)
-        return ctxt->throwError(QLatin1String("Qt.hsla(): Invalid arguments"));
-    qsreal h = ctxt->argument(0).toNumber();
-    qsreal s = ctxt->argument(1).toNumber();
-    qsreal l = ctxt->argument(2).toNumber();
-    qsreal a = (argCount == 4) ? ctxt->argument(3).toNumber() : 1;
-
-    if (h < 0.0) h=0.0;
-    if (h > 1.0) h=1.0;
-    if (s < 0.0) s=0.0;
-    if (s > 1.0) s=1.0;
-    if (l < 0.0) l=0.0;
-    if (l > 1.0) l=1.0;
-    if (a < 0.0) a=0.0;
-    if (a > 1.0) a=1.0;
-
-    return engine->toScriptValue(QVariant::fromValue(QColor::fromHslF(h, s, l, a)));
-}
-
-/*!
-\qmlmethod rect Qt::rect(int x, int y, int width, int height)
-
-Returns a \c rect with the top-left corner at \c x, \c y and the specified \c width and \c height.
-
-The returned object has \c x, \c y, \c width and \c height attributes with the given values.
-*/
-QScriptValue QDeclarativeEnginePrivate::rect(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 4)
-        return ctxt->throwError(QLatin1String("Qt.rect(): Invalid arguments"));
-
-    qsreal x = ctxt->argument(0).toNumber();
-    qsreal y = ctxt->argument(1).toNumber();
-    qsreal w = ctxt->argument(2).toNumber();
-    qsreal h = ctxt->argument(3).toNumber();
-
-    return QDeclarativeEnginePrivate::get(engine)->scriptValueFromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
-}
-
-/*!
-\qmlmethod point Qt::point(int x, int y)
-Returns a Point with the specified \c x and \c y coordinates.
-*/
-QScriptValue QDeclarativeEnginePrivate::point(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 2)
-        return ctxt->throwError(QLatin1String("Qt.point(): Invalid arguments"));
-    qsreal x = ctxt->argument(0).toNumber();
-    qsreal y = ctxt->argument(1).toNumber();
-    return QDeclarativeEnginePrivate::get(engine)->scriptValueFromVariant(QVariant::fromValue(QPointF(x, y)));
-}
-
-/*!
-\qmlmethod Qt::size(int width, int height)
-Returns a Size with the specified \c width and \c height.
-*/
-QScriptValue QDeclarativeEnginePrivate::size(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 2)
-        return ctxt->throwError(QLatin1String("Qt.size(): Invalid arguments"));
-    qsreal w = ctxt->argument(0).toNumber();
-    qsreal h = ctxt->argument(1).toNumber();
-    return QDeclarativeEnginePrivate::get(engine)->scriptValueFromVariant(QVariant::fromValue(QSizeF(w, h)));
-}
-
-/*!
-\qmlmethod color Qt::lighter(color baseColor, real factor)
-Returns a color lighter than \c baseColor by the \c factor provided.
-
-If the factor is greater than 1.0, this functions returns a lighter color.
-Setting factor to 1.5 returns a color that is 50% brighter. If the factor is less than 1.0,
-the return color is darker, but we recommend using the Qt.darker() function for this purpose.
-If the factor is 0 or negative, the return value is unspecified.
-
-The function converts the current RGB color to HSV, multiplies the value (V) component
-by factor and converts the color back to RGB.
-
-If \c factor is not supplied, returns a color 50% lighter than \c baseColor (factor 1.5).
-*/
-QScriptValue QDeclarativeEnginePrivate::lighter(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 1 && ctxt->argumentCount() != 2)
-        return ctxt->throwError(QLatin1String("Qt.lighter(): Invalid arguments"));
-    QVariant v = ctxt->argument(0).toVariant();
-    QColor color;
-    if (v.userType() == QVariant::Color)
-        color = v.value<QColor>();
-    else if (v.userType() == QVariant::String) {
-        bool ok;
-        color = QDeclarativeStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok)
-            return engine->nullValue();
-    } else
-        return engine->nullValue();
-    qsreal factor = 1.5;
-    if (ctxt->argumentCount() == 2)
-        factor = ctxt->argument(1).toNumber();
-    color = color.lighter(int(qRound(factor*100.)));
-    return engine->toScriptValue(QVariant::fromValue(color));
-}
-
-/*!
-\qmlmethod color Qt::darker(color baseColor, real factor)
-Returns a color darker than \c baseColor by the \c factor provided.
-
-If the factor is greater than 1.0, this function returns a darker color.
-Setting factor to 3.0 returns a color that has one-third the brightness.
-If the factor is less than 1.0, the return color is lighter, but we recommend using
-the Qt.lighter() function for this purpose. If the factor is 0 or negative, the return
-value is unspecified.
-
-The function converts the current RGB color to HSV, divides the value (V) component
-by factor and converts the color back to RGB.
-
-If \c factor is not supplied, returns a color 50% darker than \c baseColor (factor 2.0).
-*/
-QScriptValue QDeclarativeEnginePrivate::darker(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 1 && ctxt->argumentCount() != 2)
-        return ctxt->throwError(QLatin1String("Qt.darker(): Invalid arguments"));
-    QVariant v = ctxt->argument(0).toVariant();
-    QColor color;
-    if (v.userType() == QVariant::Color)
-        color = v.value<QColor>();
-    else if (v.userType() == QVariant::String) {
-        bool ok;
-        color = QDeclarativeStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok)
-            return engine->nullValue();
-    } else
-        return engine->nullValue();
-    qsreal factor = 2.0;
-    if (ctxt->argumentCount() == 2)
-        factor = ctxt->argument(1).toNumber();
-    color = color.darker(int(qRound(factor*100.)));
-    return engine->toScriptValue(QVariant::fromValue(color));
-}
-
-/*!
-\qmlmethod bool Qt::openUrlExternally(url target)
-Attempts to open the specified \c target url in an external application, based on the user's desktop preferences. Returns true if it succeeds, and false otherwise.
-*/
-QScriptValue QDeclarativeEnginePrivate::desktopOpenUrl(QScriptContext *ctxt, QScriptEngine *e)
-{
-    if(ctxt->argumentCount() < 1)
-        return QScriptValue(e, false);
-    bool ret = false;
-#ifndef QT_NO_DESKTOPSERVICES
-    ret = QDesktopServices::openUrl(QDeclarativeScriptEngine::get(e)->resolvedUrl(ctxt, QUrl(ctxt->argument(0).toString())));
-#endif
-    return QScriptValue(e, ret);
-}
-
-/*!
-\qmlmethod list<string> Qt::fontFamilies()
-Returns a list of the font families available to the application.
-*/
-
-QScriptValue QDeclarativeEnginePrivate::fontFamilies(QScriptContext *ctxt, QScriptEngine *e)
-{
-    if(ctxt->argumentCount() != 0)
-        return ctxt->throwError(QLatin1String("Qt.fontFamilies(): Invalid arguments"));
-
-    QDeclarativeEnginePrivate *p = QDeclarativeEnginePrivate::get(e);
-    QFontDatabase database;
-    return p->scriptValueFromVariant(database.families());
-}
-
-/*!
-\qmlmethod string Qt::md5(data)
-Returns a hex string of the md5 hash of \c data.
-*/
-QScriptValue QDeclarativeEnginePrivate::md5(QScriptContext *ctxt, QScriptEngine *)
-{
-    if (ctxt->argumentCount() != 1)
-        return ctxt->throwError(QLatin1String("Qt.md5(): Invalid arguments"));
-
-    QByteArray data = ctxt->argument(0).toString().toUtf8();
-    QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
-
-    return QScriptValue(QLatin1String(result.toHex()));
-}
-
-/*!
-\qmlmethod string Qt::btoa(data)
-Binary to ASCII - this function returns a base64 encoding of \c data.
-*/
-QScriptValue QDeclarativeEnginePrivate::btoa(QScriptContext *ctxt, QScriptEngine *)
-{
-    if (ctxt->argumentCount() != 1)
-        return ctxt->throwError(QLatin1String("Qt.btoa(): Invalid arguments"));
-
-    QByteArray data = ctxt->argument(0).toString().toUtf8();
-
-    return QScriptValue(QLatin1String(data.toBase64()));
-}
-
-/*!
-\qmlmethod string Qt::atob(data)
-ASCII to binary - this function returns a base64 decoding of \c data.
-*/
-
-QScriptValue QDeclarativeEnginePrivate::atob(QScriptContext *ctxt, QScriptEngine *)
-{
-    if (ctxt->argumentCount() != 1)
-        return ctxt->throwError(QLatin1String("Qt.atob(): Invalid arguments"));
-
-    QByteArray data = ctxt->argument(0).toString().toUtf8();
-
-    return QScriptValue(QLatin1String(QByteArray::fromBase64(data)));
-}
-
-QScriptValue QDeclarativeEnginePrivate::consoleLog(QScriptContext *ctxt, QScriptEngine *e)
-{
-    if(ctxt->argumentCount() < 1)
-        return e->newVariant(QVariant(false));
-
-    QByteArray msg;
-
-    for (int i=0; i<ctxt->argumentCount(); ++i) {
-        if (!msg.isEmpty()) msg += ' ';
-        msg += ctxt->argument(i).toString().toLocal8Bit();
-        // does not support firebug "%[a-z]" formatting, since firebug really
-        // does just ignore the format letter, which makes it pointless.
-    }
-
-    qDebug("%s",msg.constData());
-
-    return e->newVariant(QVariant(true));
 }
 
 void QDeclarativeEnginePrivate::sendQuit()
@@ -2004,145 +1187,6 @@ void QDeclarativeEnginePrivate::warning(QDeclarativeEnginePrivate *engine, const
         dumpwarning(error);
 }
 
-/*!
-\qmlmethod Qt::quit()
-This function causes the QDeclarativeEngine::quit() signal to be emitted.
-Within the \l {QML Viewer}, this causes the launcher application to exit;
-to quit a C++ application when this method is called, connect the
-QDeclarativeEngine::quit() signal to the QCoreApplication::quit() slot.
-*/
-
-QScriptValue QDeclarativeEnginePrivate::quit(QScriptContext * /*ctxt*/, QScriptEngine *e)
-{
-    QDeclarativeEnginePrivate *qe = get (e);
-    qe->sendQuit();
-    return QScriptValue();
-}
-
-/*!
-    \qmlmethod color Qt::tint(color baseColor, color tintColor)
-    This function allows tinting one color with another.
-
-    The tint color should usually be mostly transparent, or you will not be
-    able to see the underlying color. The below example provides a slight red
-    tint by having the tint color be pure red which is only 1/16th opaque.
-
-    \qml
-    Item {
-        Rectangle {
-            x: 0; width: 80; height: 80
-            color: "lightsteelblue"
-        }
-        Rectangle {
-            x: 100; width: 80; height: 80
-            color: Qt.tint("lightsteelblue", "#10FF0000")
-        }
-    }
-    \endqml
-    \image declarative-rect_tint.png
-
-    Tint is most useful when a subtle change is intended to be conveyed due to some event; you can then use tinting to more effectively tune the visible color.
-*/
-QScriptValue QDeclarativeEnginePrivate::tint(QScriptContext *ctxt, QScriptEngine *engine)
-{
-    if(ctxt->argumentCount() != 2)
-        return ctxt->throwError(QLatin1String("Qt.tint(): Invalid arguments"));
-    //get color
-    QVariant v = ctxt->argument(0).toVariant();
-    QColor color;
-    if (v.userType() == QVariant::Color)
-        color = v.value<QColor>();
-    else if (v.userType() == QVariant::String) {
-        bool ok;
-        color = QDeclarativeStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok)
-            return engine->nullValue();
-    } else
-        return engine->nullValue();
-
-    //get tint color
-    v = ctxt->argument(1).toVariant();
-    QColor tintColor;
-    if (v.userType() == QVariant::Color)
-        tintColor = v.value<QColor>();
-    else if (v.userType() == QVariant::String) {
-        bool ok;
-        tintColor = QDeclarativeStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok)
-            return engine->nullValue();
-    } else
-        return engine->nullValue();
-
-    //tint
-    QColor finalColor;
-    int a = tintColor.alpha();
-    if (a == 0xFF)
-        finalColor = tintColor;
-    else if (a == 0x00)
-        finalColor = color;
-    else {
-        qreal a = tintColor.alphaF();
-        qreal inv_a = 1.0 - a;
-
-        finalColor.setRgbF(tintColor.redF() * a + color.redF() * inv_a,
-                           tintColor.greenF() * a + color.greenF() * inv_a,
-                           tintColor.blueF() * a + color.blueF() * inv_a,
-                           a + inv_a * color.alphaF());
-    }
-
-    return engine->toScriptValue(QVariant::fromValue(finalColor));
-}
-
-QScriptValue QDeclarativeEnginePrivate::scriptValueFromVariant(const QVariant &val)
-{
-    if (variantIsScarceResource(val)) {
-        return scarceResourceClass->newScarceResource(val);
-    } else if (val.userType() == qMetaTypeId<QDeclarativeListReference>()) {
-        QDeclarativeListReferencePrivate *p =
-            QDeclarativeListReferencePrivate::get((QDeclarativeListReference*)val.constData());
-        if (p->object) {
-            return listClass->newList(p->property, p->propertyType);
-        } else {
-            return scriptEngine.nullValue();
-        }
-    } else if (val.userType() == qMetaTypeId<QList<QObject *> >()) {
-        const QList<QObject *> &list = *(QList<QObject *>*)val.constData();
-        QScriptValue rv = scriptEngine.newArray(list.count());
-        for (int ii = 0; ii < list.count(); ++ii) {
-            QObject *object = list.at(ii);
-            rv.setProperty(ii, objectClass->newQObject(object));
-        }
-        return rv;
-    } else if (QDeclarativeValueType *vt = valueTypes[val.userType()]) {
-        return valueTypeClass->newObject(val, vt);
-    }
-
-    bool objOk;
-    QObject *obj = QDeclarativeMetaType::toQObject(val, &objOk);
-    if (objOk) {
-        return objectClass->newQObject(obj);
-    } else {
-        return scriptEngine.toScriptValue(val);
-    }
-}
-
-/*
-   If the variant is a scarce resource (consumes a large amount of memory, or
-   only a limited number of them can be held in memory at any given time without
-   exhausting supply for future use) we need to release the scarce resource
-   after evaluation of the javascript binding is complete.
- */
-bool QDeclarativeEnginePrivate::variantIsScarceResource(const QVariant& val)
-{
-    if (val.type() == QVariant::Pixmap) {
-        return true;
-    } else if (val.type() == QVariant::Image) {
-        return true;
-    }
-
-    return false;
-}
-
 /*
    This function should be called prior to evaluation of any js expression,
    so that scarce resources are not freed prematurely (eg, if there is a
@@ -2170,43 +1214,11 @@ void QDeclarativeEnginePrivate::dereferenceScarceResources()
         // note that the actual SRD is owned by the JS engine,
         // so we cannot delete the SRD; but we can free the
         // memory used by the variant in the SRD.
-        ScarceResourceData *srd = 0;
-        while (scarceResources) {
-            srd = scarceResources; // srd points to the "old" (current) head of the list
-            scarceResources = srd->next; // srd->next is the "new" head of the list
-            if (srd->next) srd->next->prev = &scarceResources; // newHead->prev = listptr.
-            srd->next = 0;
-            srd->prev = 0;
-            srd->releaseResource(); // release the old head node.
+        while (ScarceResourceData *sr = scarceResources.first()) {
+            sr->data = QVariant();
+            scarceResources.remove(sr);
         }
     }
-}
-
-QVariant QDeclarativeEnginePrivate::scriptValueToVariant(const QScriptValue &val, int hint)
-{
-    QScriptDeclarativeClass *dc = QScriptDeclarativeClass::scriptClass(val);
-    if (dc == objectClass)
-        return QVariant::fromValue(objectClass->toQObject(val));
-    else if (dc == scarceResourceClass)
-        return scarceResourceClass->toVariant(val);
-    else if (dc == valueTypeClass)
-        return valueTypeClass->toVariant(val);
-    else if (dc == contextClass)
-        return QVariant();
-
-    // Convert to a QList<QObject*> only if val is an array and we were explicitly hinted
-    if (hint == qMetaTypeId<QList<QObject *> >() && val.isArray()) {
-        QList<QObject *> list;
-        int length = val.property(QLatin1String("length")).toInt32();
-        for (int ii = 0; ii < length; ++ii) {
-            QScriptValue arrayItem = val.property(ii);
-            QObject *d = arrayItem.toQObject();
-            list << d;
-        }
-        return QVariant::fromValue(list);
-    }
-
-    return val.toVariant();
 }
 
 /*!
@@ -2312,7 +1324,6 @@ void QDeclarativeEngine::setPluginPathList(const QStringList &paths)
     d->importDatabase.setPluginPathList(paths);
 }
 
-
 /*!
   Imports the plugin named \a filePath with the \a uri provided.
   Returns true if the plugin was successfully imported; otherwise returns false.
@@ -2372,13 +1383,13 @@ bool QDeclarativeEngine::importPlugin(const QString &filePath, const QString &ur
 void QDeclarativeEngine::setOfflineStoragePath(const QString& dir)
 {
     Q_D(QDeclarativeEngine);
-    d->scriptEngine.offlineStoragePath = dir;
+    qt_qmlsqldatabase_setOfflineStoragePath(&d->v8engine, dir);
 }
 
 QString QDeclarativeEngine::offlineStoragePath() const
 {
     Q_D(const QDeclarativeEngine);
-    return d->scriptEngine.offlineStoragePath;
+    return qt_qmlsqldatabase_getOfflineStoragePath(&d->v8engine);
 }
 
 static void voidptr_destructor(void *v)

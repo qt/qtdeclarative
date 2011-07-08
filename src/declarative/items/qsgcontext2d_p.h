@@ -56,6 +56,7 @@
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qvariant.h>
 #include <QtScript/qscriptvalue.h>
+#include <private/qv8engine_p.h>
 #include <QMutex>
 #include <QWaitCondition>
 #include "qsgimage_p.h"
@@ -290,6 +291,10 @@ public slots:
     void clip();
     bool isPointInPath(qreal x, qreal y) const;
 
+    //path string parser
+    //implement the W3C SVG path spec:
+    //http://www.w3.org/TR/SVG/paths.html
+    void setPathString(const QString& path);
 
     QSGImage *createImage(const QString &url);
 
@@ -309,9 +314,8 @@ signals:
     void painted();
 public:
     bool isDirty() const;
-    QScriptValue scriptValue() const;
-    void setScriptEngine(QScriptEngine *eng);
-    QScriptEngine *scriptEngine() const;
+    v8::Handle<v8::Object> v8value() const;
+    void setV8Engine(QV8Engine *eng);
 
     void addref();
     void release();
@@ -335,11 +339,6 @@ public:
         Sync() : QEvent(QEvent::User) {}
         QSGContext2DWorkerAgent *data;
     };
-    inline bool inWorkerThread() const;
-    QSGContext2D *agent();
-    const QString& agentScript() const;
-
-
     struct State {
         QMatrix matrix;
         QPainterPath clipPath;

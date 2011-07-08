@@ -94,25 +94,40 @@ void QSGCanvasItem::paint(QPainter *painter)
     Q_D(QSGCanvasItem);
 
     if (d->context) {
+        emit drawRegion(getContext(), QRect(0, 0, width(), height()));
         d->context->paint(painter);
         emit canvasUpdated();
     }
 }
 
-QScriptValue QSGCanvasItem::getContext(const QString &contextId)
+void QSGCanvasItem::componentComplete()
+{
+    const QMetaObject *metaObject = this->metaObject();
+    int propertyCount = metaObject->propertyCount();
+    int requestPaintMethod = metaObject->indexOfMethod("requestPaint()");
+    for (int ii = QSGCanvasItem::staticMetaObject.propertyCount(); ii < propertyCount; ++ii) {
+        QMetaProperty p = metaObject->property(ii);
+        if (p.hasNotifySignal())
+            QMetaObject::connect(this, p.notifySignalIndex(), this, requestPaintMethod, 0, 0);
+    }
+    QSGPaintedItem::componentComplete();
+}
+
+
+QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
-    QScriptEngine* e = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this));
+
     if (contextId == QLatin1String("2d")) {
         if (!d->context) {
+            QV8Engine *e = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
             d->context = new QSGContext2D(this);
-            d->context->setScriptEngine(e);
+            d->context->setV8Engine(e);
             connect(d->context, SIGNAL(changed()), this, SLOT(requestPaint()));
         }
-        return d->context->scriptValue();
+        return QDeclarativeV8Handle::fromHandle(d->context->v8value());
     }
-    qDebug("Canvas:requesting unsupported context");
-    return e->undefinedValue();
+    return QDeclarativeV8Handle::fromHandle(v8::Undefined());
 }
 
 void QSGCanvasItem::requestPaint()

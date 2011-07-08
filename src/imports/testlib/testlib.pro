@@ -21,7 +21,7 @@ symbian {
 
 }
 
-QT += declarative script qmltest qmltest-private
+QT += declarative script qmltest qmltest-private declarative-private script-private core-private
 
 SOURCES += main.cpp
 HEADERS +=

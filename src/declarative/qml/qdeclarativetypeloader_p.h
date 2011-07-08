@@ -64,6 +64,8 @@
 #include <private/qdeclarativedirparser_p.h>
 #include <private/qdeclarativeimport_p.h>
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeScriptData;
@@ -307,8 +309,10 @@ private:
     friend class QDeclarativeScriptBlob;
 
     bool m_loaded;
-    QScriptProgram m_program;
-    QScriptValue m_value;
+    v8::Persistent<v8::Script> m_program;
+    v8::Persistent<v8::Object> m_value;
+//    QScriptProgram m_program;
+//    QScriptValue m_value;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativeScriptBlob : public QDeclarativeDataBlob

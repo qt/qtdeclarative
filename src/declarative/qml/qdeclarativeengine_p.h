@@ -66,24 +66,19 @@
 #include "qdeclarativeimageprovider.h"
 #include "private/qdeclarativeproperty_p.h"
 #include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativeobjectscriptclass_p.h"
-#include "private/qdeclarativescarceresourcescriptclass_p.h"
-#include "private/qdeclarativecontextscriptclass_p.h"
-#include "private/qdeclarativevaluetypescriptclass_p.h"
 #include "private/qdeclarativemetatype_p.h"
 #include "private/qdeclarativedirparser_p.h"
+#include "private/qintrusivelist_p.h"
 
-#include <QtScript/QScriptClass>
-#include <QtScript/QScriptValue>
-#include <QtScript/QScriptString>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qmutex.h>
-#include <QtScript/qscriptengine.h>
 
 #include <private/qobject_p.h>
+
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,55 +86,20 @@ class QDeclarativeContext;
 class QDeclarativeEngine;
 class QDeclarativeContextPrivate;
 class QDeclarativeExpression;
-class QDeclarativeContextScriptClass;
 class QDeclarativeImportDatabase;
-class QDeclarativeObjectScriptClass;
-class QDeclarativeScarceResourceScriptClass;
 class ScarceResourceData;
-class QDeclarativeTypeNameScriptClass;
-class QDeclarativeValueTypeScriptClass;
 class QNetworkReply;
 class QNetworkAccessManager;
 class QDeclarativeNetworkAccessManagerFactory;
 class QDeclarativeAbstractBinding;
-class QScriptDeclarativeClass;
-class QDeclarativeTypeNameScriptClass;
 class QDeclarativeTypeNameCache;
 class QDeclarativeComponentAttached;
-class QDeclarativeListScriptClass;
 class QDeclarativeCleanup;
 class QDeclarativeDelayedError;
 class QDeclarativeWorkerScriptEngine;
-class QDeclarativeGlobalScriptClass;
 class QDir;
 class QSGTexture;
 class QSGContext;
-
-class QDeclarativeScriptEngine : public QScriptEngine
-{
-public:
-    QDeclarativeScriptEngine(QDeclarativeEnginePrivate *priv);
-    virtual ~QDeclarativeScriptEngine();
-
-    QUrl resolvedUrl(QScriptContext *context, const QUrl& url); // resolved against p's context, or baseUrl if no p
-    static QScriptValue resolvedUrl(QScriptContext *ctxt, QScriptEngine *engine);
-
-    static QDeclarativeScriptEngine *get(QScriptEngine* e) { return static_cast<QDeclarativeScriptEngine*>(e); }
-
-    QDeclarativeEnginePrivate *p;
-
-    // User by SQL API
-    QScriptClass *sqlQueryClass;
-    QString offlineStoragePath;
-
-    // Used by DOM Core 3 API
-    QScriptClass *namedNodeMapClass;
-    QScriptClass *nodeListClass;
-
-    QUrl baseUrl;
-
-    virtual QNetworkAccessManager *networkAccessManager();
-};
 
 class Q_AUTOTEST_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
 {
@@ -169,16 +129,8 @@ public:
 
     bool outputWarningsToStdErr;
 
-    QDeclarativeContextScriptClass *contextClass;
     QDeclarativeContextData *sharedContext;
     QObject *sharedScope;
-    QDeclarativeObjectScriptClass *objectClass;
-    QDeclarativeScarceResourceScriptClass *scarceResourceClass;
-    QDeclarativeValueTypeScriptClass *valueTypeClass;
-    QDeclarativeTypeNameScriptClass *typeNameClass;
-    QDeclarativeListScriptClass *listClass;
-    // Global script class
-    QDeclarativeGlobalScriptClass *globalClass;
 
     // Registered cleanup handlers
     QDeclarativeCleanup *cleanup;
@@ -187,7 +139,8 @@ public:
     QDeclarativeDelayedError *erroredBindings;
     int inProgressCreations;
 
-    QDeclarativeScriptEngine scriptEngine;
+    // V8 Engine
+    QV8Engine v8engine;
 
     QDeclarativeWorkerScriptEngine *getWorkerScriptEngine();
     QDeclarativeWorkerScriptEngine *workerScriptEngine;
@@ -242,15 +195,20 @@ public:
     QImage getImageFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
     QPixmap getPixmapFromProvider(const QUrl &url, QSize *size, const QSize& req_size);
 
-    /*
-       A scarce resource (like a large pixmap or texture) will be cached in a
-       JavaScript wrapper object when accessed in a binding or other js expression.
-       We need some way to automatically release that scarce resource prior to normal
-       garbage collection (unless the user explicitly preserves the resource).
-     */
-    ScarceResourceData* scarceResources;
+    // Scarce resources are "exceptionally high cost" QVariant types where allowing the
+    // normal JavaScript GC to clean them up is likely to lead to out-of-memory or other
+    // out-of-resource situations.  When such a resource is passed into JavaScript we
+    // add it to the scarceResources list and it is destroyed when we return from the
+    // JavaScript execution that created it.  The user can prevent this behavior by
+    // calling preserve() on the object which removes it from this scarceResource list.
+    class ScarceResourceData {
+    public:
+        ScarceResourceData(const QVariant &data) : data(data) {}
+        QVariant data;
+        QIntrusiveListNode node;
+    };
+    QIntrusiveList<ScarceResourceData, &ScarceResourceData::node> scarceResources;
     int scarceResourcesRefCount;
-    static bool variantIsScarceResource(const QVariant& val);
     void referenceScarceResources();
     void dereferenceScarceResources();
 
@@ -290,9 +248,6 @@ public:
     QHash<int, int> m_qmlLists;
     QHash<int, QDeclarativeCompiledData *> m_compositeTypes;
 
-    QScriptValue scriptValueFromVariant(const QVariant &);
-    QVariant scriptValueToVariant(const QScriptValue &, int hint = QVariant::Invalid);
-
     void sendQuit();
     void warning(const QDeclarativeError &);
     void warning(const QList<QDeclarativeError> &);
@@ -301,44 +256,11 @@ public:
     static void warning(QDeclarativeEnginePrivate *, const QDeclarativeError &);
     static void warning(QDeclarativeEnginePrivate *, const QList<QDeclarativeError> &);
 
-    static QScriptValue qmlScriptObject(QObject*, QDeclarativeEngine*);
-
-    static QScriptValue createComponent(QScriptContext*, QScriptEngine*);
-    static QScriptValue createQmlObject(QScriptContext*, QScriptEngine*);
-    static QScriptValue isQtObject(QScriptContext*, QScriptEngine*);
-    static QScriptValue vector3d(QScriptContext*, QScriptEngine*);
-    static QScriptValue rgba(QScriptContext*, QScriptEngine*);
-    static QScriptValue hsla(QScriptContext*, QScriptEngine*);
-    static QScriptValue point(QScriptContext*, QScriptEngine*);
-    static QScriptValue size(QScriptContext*, QScriptEngine*);
-    static QScriptValue rect(QScriptContext*, QScriptEngine*);
-
-    static QScriptValue lighter(QScriptContext*, QScriptEngine*);
-    static QScriptValue darker(QScriptContext*, QScriptEngine*);
-    static QScriptValue tint(QScriptContext*, QScriptEngine*);
-
-    static QScriptValue desktopOpenUrl(QScriptContext*, QScriptEngine*);
-    static QScriptValue fontFamilies(QScriptContext*, QScriptEngine*);
-    static QScriptValue md5(QScriptContext*, QScriptEngine*);
-    static QScriptValue btoa(QScriptContext*, QScriptEngine*);
-    static QScriptValue atob(QScriptContext*, QScriptEngine*);
-    static QScriptValue consoleLog(QScriptContext*, QScriptEngine*);
-    static QScriptValue quit(QScriptContext*, QScriptEngine*);
-
-#ifndef QT_NO_DATESTRING
-    static QScriptValue formatDate(QScriptContext*, QScriptEngine*);
-    static QScriptValue formatTime(QScriptContext*, QScriptEngine*);
-    static QScriptValue formatDateTime(QScriptContext*, QScriptEngine*);
-#endif
-    static QScriptEngine *getScriptEngine(QDeclarativeEngine *e) { return &e->d_func()->scriptEngine; }
-    static QDeclarativeEngine *getEngine(QScriptEngine *e) { return static_cast<QDeclarativeScriptEngine*>(e)->p->q_func(); }
+    static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return &e->d_func()->v8engine; }
     static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e) { return e->d_func(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeContext *c) { return (c && c->engine()) ? QDeclarativeEnginePrivate::get(c->engine()) : 0; }
     static QDeclarativeEnginePrivate *get(QDeclarativeContextData *c) { return (c && c->engine) ? QDeclarativeEnginePrivate::get(c->engine) : 0; }
-    static QDeclarativeEnginePrivate *get(QScriptEngine *e) { return static_cast<QDeclarativeScriptEngine*>(e)->p; }
     static QDeclarativeEngine *get(QDeclarativeEnginePrivate *p) { return p->q_func(); }
-    QDeclarativeContextData *getContext(QScriptContext *);
-    QUrl getUrl(QScriptContext *);
 
     static QString urlToLocalFileOrQrc(const QUrl& url);
 

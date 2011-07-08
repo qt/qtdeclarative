@@ -1099,8 +1099,10 @@ QT_END_NAMESPACE
 #include <QtGui/qvector3d.h>
 #include <QtGui/qvector4d.h>
 #include <QtGui/qquaternion.h>
+#include <private/qv8engine_p.h>
 
 Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 QT_BEGIN_NAMESPACE
 
@@ -1181,6 +1183,7 @@ bool QDeclarativeMetaType::canCopy(int type)
     default:
         if (type == qMetaTypeId<QVariant>() ||
             type == qMetaTypeId<QScriptValue>() ||
+            type == qMetaTypeId<QDeclarativeV8Handle>() ||
             typeCategory(type) != Unknown) {
             return true;
         }
@@ -1403,6 +1406,9 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             } else if (type == qMetaTypeId<QScriptValue>()) {
                 *static_cast<NS(QScriptValue) *>(data) = *static_cast<const NS(QScriptValue)*>(copy);
                 return true;
+            } else if (type == qMetaTypeId<QDeclarativeV8Handle>()) {
+                *static_cast<NS(QDeclarativeV8Handle) *>(data) = *static_cast<const NS(QDeclarativeV8Handle)*>(copy);
+                return true;
             } else if (typeCategory(type) != Unknown) {
                 *static_cast<void **>(data) = *static_cast<void* const *>(copy);
                 return true;
@@ -1609,6 +1615,9 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
                 return true;
             } else if (type == qMetaTypeId<QScriptValue>()) {
                 *static_cast<NS(QScriptValue) *>(data) = NS(QScriptValue)();
+                return true;
+            } else if (type == qMetaTypeId<QDeclarativeV8Handle>()) {
+                *static_cast<NS(QDeclarativeV8Handle) *>(data) = NS(QDeclarativeV8Handle)();
                 return true;
             } else if (typeCategory(type) != Unknown) {
                 *static_cast<void **>(data) = 0;

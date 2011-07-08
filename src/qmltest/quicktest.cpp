@@ -189,15 +189,6 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                              &eventLoop, SLOT(quit()));
             view.rootContext()->setContextProperty
                 (QLatin1String("qtest"), &rootobj);
-            QScriptEngine *engine;
-            engine = QDeclarativeDebugHelper::getScriptEngine(view.engine());
-            QScriptValue qtObject
-                = engine->globalObject().property(QLatin1String("Qt"));
-            qtObject.setProperty
-                (QLatin1String("qtest_wrapper"), QScriptValue(true));
-            qtObject.setProperty
-                (QLatin1String("qtest_printAvailableFunctions"),
-                 QScriptValue(QTest::printAvailableFunctions));
             foreach (QString path, imports)
                 view.engine()->addImportPath(path);
             QString path = fi.absoluteFilePath();
@@ -254,15 +245,6 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 view.setViewport((*createViewport)());
             view.rootContext()->setContextProperty
                 (QLatin1String("qtest"), &rootobj);
-            QScriptEngine *engine;
-            engine = QDeclarativeDebugHelper::getScriptEngine(view.engine());
-            QScriptValue qtObject
-                = engine->globalObject().property(QLatin1String("Qt"));
-            qtObject.setProperty
-                (QLatin1String("qtest_wrapper"), QScriptValue(true));
-            qtObject.setProperty
-                (QLatin1String("qtest_printAvailableFunctions"),
-                 QScriptValue(QTest::printAvailableFunctions));
             foreach (QString path, imports)
                 view.engine()->addImportPath(path);
             QString path = fi.absoluteFilePath();

@@ -1053,11 +1053,6 @@ void QDeclarativeTypeData::resolveTypes()
         if (ref.type) {
             ref.majorVersion = majorVersion;
             ref.minorVersion = minorVersion;
-            foreach (QDeclarativeParser::Object *obj, parserRef->refObjects) {
-               // store namespace for DOM
-               obj->majorVersion = majorVersion;
-               obj->minorVersion = minorVersion;
-            }
         } else {
             ref.typeData = typeLoader()->get(url);
             addDependency(ref.typeData);
@@ -1100,6 +1095,9 @@ void QDeclarativeScriptData::clear()
     for (int ii = 0; ii < scripts.count(); ++ii)
         scripts.at(ii)->release();
     scripts.clear();
+
+    qPersistentDispose(m_program);
+    qPersistentDispose(m_value);
 }
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
@@ -1228,7 +1226,13 @@ void QDeclarativeScriptBlob::done()
     m_imports.populateCache(m_scriptData->importCache, engine);
 
     m_scriptData->pragmas = m_pragmas;
-    m_scriptData->m_program = QScriptProgram(m_source, finalUrl().toString());
+
+    // XXX TODO: Handle errors that occur duing the script compile
+    QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(v8engine->context());
+    v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_source, finalUrl().toString(), 1);
+    m_scriptData->m_program = qPersistentNew<v8::Script>(program);
 }
 
 QDeclarativeQmldirData::QDeclarativeQmldirData(const QUrl &url)

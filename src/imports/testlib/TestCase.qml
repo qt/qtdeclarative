@@ -46,6 +46,9 @@ import "testlogger.js" as TestLogger
 Item {
     id: testCase
     visible: false
+    TestUtil {
+        id:util
+    }
 
     // Name of the test case to prefix the function name in messages.
     property string name
@@ -66,7 +69,7 @@ Item {
     // Property that is set to true when the main window is shown.
     // We need to set the property value in an odd way to handle
     // both qmlviewer and the QtQuickTest module test wrapper.
-    property bool windowShown: Qt.qtest_wrapper ? qtest.windowShown : false
+    property bool windowShown: util.wrapper ? qtest.windowShown : false
 
     // Internal private state.  Identifiers prefixed with qtest are reserved.
     property bool qtest_prevWhen: true
@@ -80,21 +83,21 @@ Item {
     function fail(msg) {
         if (msg === undefined)
             msg = "";
-        qtest_results.fail(msg, Qt.qtest_caller_file(), Qt.qtest_caller_line())
+        qtest_results.fail(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::fail")
     }
 
     function qtest_fail(msg, frame) {
         if (msg === undefined)
             msg = "";
-        qtest_results.fail(msg, Qt.qtest_caller_file(frame), Qt.qtest_caller_line(frame))
+        qtest_results.fail(msg, util.callerFile(frame), util.callerLine(frame))
         throw new Error("QtQuickTest::fail")
     }
 
     function verify(cond, msg) {
         if (msg === undefined)
             msg = "";
-        if (!qtest_results.verify(cond, msg, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.verify(cond, msg, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
 
@@ -279,7 +282,7 @@ Item {
             else
                 msg = "Compared values are not the same"
         }
-        if (!qtest_results.compare(success, msg, act, exp, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
 
@@ -297,21 +300,21 @@ Item {
         var act = qtest_formatValue(actual)
         var exp = qtest_formatValue(value)
         var success = qtest_compareInternal(actual, value)
-        if (!qtest_results.compare(success, "property " + prop, act, exp, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.compare(success, "property " + prop, act, exp, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::fail")
     }
 
     function skip(msg) {
         if (msg === undefined)
             msg = ""
-        qtest_results.skipSingle(msg, Qt.qtest_caller_file(), Qt.qtest_caller_line())
+        qtest_results.skipSingle(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 
     function skipAll(msg) {
         if (msg === undefined)
             msg = ""
-        qtest_results.skipAll(msg, Qt.qtest_caller_file(), Qt.qtest_caller_line())
+        qtest_results.skipAll(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 
@@ -324,7 +327,7 @@ Item {
             warn("message argument missing from expectFail()")
             msg = ""
         }
-        if (!qtest_results.expectFail(tag, msg, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.expectFail(tag, msg, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::expectFail")
     }
 
@@ -337,7 +340,7 @@ Item {
             warn("message argument missing from expectFailContinue()")
             msg = ""
         }
-        if (!qtest_results.expectFailContinue(tag, msg, Qt.qtest_caller_file(), Qt.qtest_caller_line()))
+        if (!qtest_results.expectFailContinue(tag, msg, util.callerFile(), util.callerLine()))
             throw new Error("QtQuickTest::expectFail")
     }
 
@@ -505,7 +508,7 @@ Item {
     }
 
     function qtest_run() {
-        if (Qt.qtest_printAvailableFunctions) {
+        if (util.printAvailableFunctions) {
             completed = true
             return
         }
@@ -650,7 +653,7 @@ Item {
         }
     }
 
-    // The test framework will set qtest.windowShown when the
+    // The test framework will set util.windowShown when the
     // window is actually shown.  If we are running with qmlviewer,
     // then this won't happen.  So we use a timer instead.
     Timer {
@@ -661,7 +664,7 @@ Item {
     }
 
     Component.onCompleted: {
-        if (Qt.qtest_printAvailableFunctions) {
+        if (util.printAvailableFunctions) {
             var testList = []
             for (var prop in testCase) {
                 if (prop.indexOf("test_") != 0 && prop.indexOf("benchmark_") != 0)
@@ -683,7 +686,7 @@ Item {
         if (optional)
             TestLogger.log_optional_test(qtest_testId)
         qtest_prevWhen = when
-        var isQmlViewer = Qt.qtest_wrapper ? false : true
+        var isQmlViewer = util.wrapper ? false : true
         if (isQmlViewer)
             qtest_windowShowTimer.running = true
         if (when && !completed && !running)

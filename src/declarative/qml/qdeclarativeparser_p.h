@@ -77,13 +77,13 @@ namespace QDeclarativeJS { namespace AST { class Node; } }
 /*
     XXX
 
-    These types are created (and owned) by the QDeclarativeXmlParser and consumed by the 
+    These types are created (and owned) by the QDeclarativeScriptParser and consumed by the 
     QDeclarativeCompiler.  During the compilation phase the compiler will update some of
-    the fields for both its own use and for the use of the upcoming QDeclarativeDom API.
+    the fields for its own use.
 
     The types are part of the generic sounding "QDeclarativeParser" namespace for legacy 
     reasons (there used to be more in this namespace) and will be cleaned up and
-    migrated into a more appropriate location shortly.
+    migrated into a more appropriate location eventually.
 */
 namespace QDeclarativeParser
 {
@@ -124,12 +124,6 @@ namespace QDeclarativeParser
         // QDeclarativeCompiledData::types array, or -1 if the object is a property
         // group.
         int type;
-        // The url of this object if it is an external type.  Used by the DOM
-        QUrl url;
-
-        // version information if type is defined in library or C++
-        int majorVersion;
-        int minorVersion;
 
         // The fully-qualified name of this type
         QByteArray typeName;
@@ -366,7 +360,6 @@ namespace QDeclarativeParser
 
         LocationSpan location;
         LocationRange listValueRange;
-        QList<int> listCommaPositions;
     };
 }
 

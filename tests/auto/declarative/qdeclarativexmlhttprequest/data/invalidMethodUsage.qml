@@ -1,7 +1,6 @@
 import QtQuick 1.0 
 
 QtObject {
-    property bool onreadystatechange: false
     property bool readyState: false
     property bool status: false
     property bool statusText: false
@@ -18,17 +17,6 @@ QtObject {
     Component.onCompleted: {
         var o = 10;
 
-        try {
-            XMLHttpRequest.prototype.onreadystatechange
-        } catch (e) {
-            if (!(e instanceof ReferenceError))
-                return;
-
-            if (e.message != "Not an XMLHttpRequest object")
-                return;
-
-            onreadystatechange = true;
-        }
         try {
             XMLHttpRequest.prototype.readyState
         } catch (e) {

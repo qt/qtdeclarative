@@ -63,6 +63,8 @@
 #include <QtGui/qgraphicstransform.h>
 #include <qlistmodelinterface_p.h>
 
+#include <private/qv8engine_p.h>
+
 #include <float.h>
 
 QT_BEGIN_NAMESPACE
@@ -2653,31 +2655,33 @@ void QDeclarativeItem::setKeepMouseGrab(bool keep)
     If \a item is a \c null value, this maps the point from the coordinate
     system of the root QML view.
 */
-
-/*!
-    Maps the point (\a x, \a y), which is in \a item's coordinate system, to
-    this item's coordinate system, and returns a script value with \c x and \c y
-    properties matching the mapped cooordinate.
-
-    If \a item is a \c null value, this maps the point from the coordinate
-    system of the root QML view.
-
-    \sa Item::mapFromItem()
-*/
-QScriptValue QDeclarativeItem::mapFromItem(const QScriptValue &item, qreal x, qreal y) const
+void QDeclarativeItem::mapFromItem(QDeclarativeV8Function *args) const
 {
-    QScriptValue sv = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this))->newObject();
-    QDeclarativeItem *itemObj = qobject_cast<QDeclarativeItem*>(item.toQObject());
-    if (!itemObj && !item.isNull()) {
-        qmlInfo(this) << "mapFromItem() given argument \"" << item.toString() << "\" which is neither null nor an Item";
-        return 0;
-    }
+    if (args->Length() != 0) {
+        v8::Local<v8::Value> item = (*args)[0];
+        QV8Engine *engine = args->engine();
 
-    // If QGraphicsItem::mapFromItem() is called with 0, behaves the same as mapFromScene()
-    QPointF p = qobject_cast<QGraphicsItem*>(this)->mapFromItem(itemObj, x, y);
-    sv.setProperty(QLatin1String("x"), p.x());
-    sv.setProperty(QLatin1String("y"), p.y());
-    return sv;
+        QDeclarativeItem *itemObj = 0;
+        if (!item->IsNull())
+            itemObj = qobject_cast<QDeclarativeItem*>(engine->toQObject(item));
+
+        if (!itemObj && !item->IsNull()) {
+            qmlInfo(this) << "mapFromItem() given argument \"" << engine->toString(item->ToString())
+                          << "\" which is neither null nor an Item";
+            return;
+        }
+
+        v8::Local<v8::Object> rv = v8::Object::New();
+        args->returnValue(rv);
+
+        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
+        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+
+        QPointF p = QGraphicsItem::mapFromItem(itemObj, x, y);
+
+        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+    }
 }
 
 /*!
@@ -2690,31 +2694,33 @@ QScriptValue QDeclarativeItem::mapFromItem(const QScriptValue &item, qreal x, qr
     If \a item is a \c null value, this maps \a x and \a y to the coordinate
     system of the root QML view.
 */
-
-/*!
-    Maps the point (\a x, \a y), which is in this item's coordinate system, to
-    \a item's coordinate system, and returns a script value with \c x and \c y
-    properties matching the mapped cooordinate.
-
-    If \a item is a \c null value, this maps \a x and \a y to the coordinate
-    system of the root QML view.
-
-    \sa Item::mapToItem()
-*/
-QScriptValue QDeclarativeItem::mapToItem(const QScriptValue &item, qreal x, qreal y) const
+void QDeclarativeItem::mapToItem(QDeclarativeV8Function *args) const
 {
-    QScriptValue sv = QDeclarativeEnginePrivate::getScriptEngine(qmlEngine(this))->newObject();
-    QDeclarativeItem *itemObj = qobject_cast<QDeclarativeItem*>(item.toQObject());
-    if (!itemObj && !item.isNull()) {
-        qmlInfo(this) << "mapToItem() given argument \"" << item.toString() << "\" which is neither null nor an Item";
-        return 0;
-    }
+    if (args->Length() != 0) {
+        v8::Local<v8::Value> item = (*args)[0];
+        QV8Engine *engine = args->engine();
 
-    // If QGraphicsItem::mapToItem() is called with 0, behaves the same as mapToScene()
-    QPointF p = qobject_cast<QGraphicsItem*>(this)->mapToItem(itemObj, x, y);
-    sv.setProperty(QLatin1String("x"), p.x());
-    sv.setProperty(QLatin1String("y"), p.y());
-    return sv;
+        QDeclarativeItem *itemObj = 0;
+        if (!item->IsNull())
+            itemObj = qobject_cast<QDeclarativeItem*>(engine->toQObject(item));
+
+        if (!itemObj && !item->IsNull()) {
+            qmlInfo(this) << "mapToItem() given argument \"" << engine->toString(item->ToString())
+                          << "\" which is neither null nor an Item";
+            return;
+        }
+
+        v8::Local<v8::Object> rv = v8::Object::New();
+        args->returnValue(rv);
+
+        qreal x = (args->Length() > 1)?(*args)[1]->NumberValue():0;
+        qreal y = (args->Length() > 2)?(*args)[2]->NumberValue():0;
+
+        QPointF p = QGraphicsItem::mapToItem(itemObj, x, y);
+
+        rv->Set(v8::String::New("x"), v8::Number::New(p.x()));
+        rv->Set(v8::String::New("y"), v8::Number::New(p.y()));
+    }
 }
 
 /*!

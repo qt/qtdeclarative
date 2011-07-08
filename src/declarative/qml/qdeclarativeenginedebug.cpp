@@ -678,7 +678,7 @@ void QDeclarativeEngineDebugServer::setMethodBody(int objectId, const QString &m
     QDeclarativePropertyCache::Data *prop = 
         QDeclarativePropertyCache::property(context->engine(), object, method, dummy);
 
-    if (!prop || !(prop->flags & QDeclarativePropertyCache::Data::IsVMEFunction))
+    if (!prop || !prop->isVMEFunction())
         return;
 
     QMetaMethod metaMethod = object->metaObject()->method(prop->coreIndex);
@@ -700,7 +700,7 @@ void QDeclarativeEngineDebugServer::setMethodBody(int objectId, const QString &m
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);
-    vmeMetaObject->setVmeMethod(prop->coreIndex, QDeclarativeExpressionPrivate::evalInObjectScope(contextData, object, jsfunction, contextData->url.toString(), lineNumber, 0));
+    vmeMetaObject->setVmeMethod(prop->coreIndex, QDeclarativeExpressionPrivate::evalFunction(contextData, object, jsfunction, contextData->url.toString(), lineNumber));
 }
 
 void QDeclarativeEngineDebugServer::propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value)

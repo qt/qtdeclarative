@@ -95,9 +95,11 @@ QT_BEGIN_NAMESPACE
     F(StoreImportedScript, storeScript) \
     F(StoreScriptString, storeScriptString) \
     F(BeginObject, begin) \
+    F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
     F(StoreBindingOnAlias, assignBinding) \
-    F(StoreCompiledBinding, assignBinding) \
+    F(StoreV4Binding, assignBinding) \
+    F(StoreV8Binding, assignBinding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \
@@ -181,6 +183,12 @@ union QDeclarativeInstruction
         int property;
         int owner;
         int castValue;
+    };
+    struct instr_initV8Bindings {
+        QML_INSTR_HEADER
+        int program;
+        ushort programIndex;
+        ushort line;
     };
     struct instr_assignBinding {
         QML_INSTR_HEADER
@@ -360,13 +368,8 @@ union QDeclarativeInstruction
         QML_INSTR_HEADER
         int propertyIndex;
         struct QPoint {
-#if defined(Q_OS_MAC)
-            int yp;
-            int xp;
-#else
             int xp;
             int yp;
-#endif
         } point;
     };
     struct instr_storePointF {
@@ -411,6 +414,7 @@ union QDeclarativeInstruction
     instr_setId setId;
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
+    instr_initV8Bindings initV8Bindings;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;

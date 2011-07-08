@@ -43,6 +43,7 @@
 #define QSGCANVASITEM_P_H
 
 #include "qsgpainteditem.h"
+#include <private/qv8engine_p.h>
 
 #define QSGCANVASITEM_DEBUG //enable this for just DEBUG purpose!
 
@@ -55,7 +56,6 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
-class QScriptValue;
 class QSGContext2D;
 class QSGCanvasItemPrivate;
 class QSGCanvasItem : public QSGPaintedItem
@@ -65,11 +65,13 @@ public:
     QSGCanvasItem(QSGItem *parent = 0);
     ~QSGCanvasItem();
 
-signals:
+Q_SIGNALS:
     void canvasUpdated();
+    void drawRegion(QDeclarativeV8Handle context, const QRect &region);
+
 public Q_SLOTS:
     QString toDataURL(const QString& type = QLatin1String("image/png")) const;
-    QScriptValue getContext(const QString & = QLatin1String("2d"));
+    QDeclarativeV8Handle getContext(const QString & = QLatin1String("2d"));
     void requestPaint();
 
     // Save current canvas to disk
@@ -77,6 +79,7 @@ public Q_SLOTS:
 
 protected:
     void paint(QPainter *painter);
+    virtual void componentComplete();
 private:
     Q_DECLARE_PRIVATE(QSGCanvasItem)
     friend class QSGContext2D;

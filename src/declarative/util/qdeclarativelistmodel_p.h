@@ -51,7 +51,8 @@
 #include <QtCore/QList>
 #include <QtCore/QVariant>
 #include <private/qlistmodelinterface_p.h>
-#include <QtScript/qscriptvalue.h>
+
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
 
@@ -63,7 +64,6 @@ class FlatListModel;
 class NestedListModel;
 class QDeclarativeListModelWorkerAgent;
 struct ModelNode;
-class FlatListScriptClass;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeListModel : public QListModelInterface
 {
     Q_OBJECT
@@ -80,10 +80,10 @@ public:
 
     Q_INVOKABLE void clear();
     Q_INVOKABLE void remove(int index);
-    Q_INVOKABLE void append(const QScriptValue&);
-    Q_INVOKABLE void insert(int index, const QScriptValue&);
-    Q_INVOKABLE QScriptValue get(int index) const;
-    Q_INVOKABLE void set(int index, const QScriptValue&);
+    Q_INVOKABLE void append(const QDeclarativeV8Handle &);
+    Q_INVOKABLE void insert(int index, const QDeclarativeV8Handle &);
+    Q_INVOKABLE QDeclarativeV8Handle get(int index) const;
+    Q_INVOKABLE void set(int index, const QDeclarativeV8Handle &);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
     Q_INVOKABLE void move(int from, int to, int count);
     Q_INVOKABLE void sync();
@@ -97,13 +97,13 @@ private:
     friend class QDeclarativeListModelParser;
     friend class QDeclarativeListModelWorkerAgent;
     friend class FlatListModel;
-    friend class FlatListScriptClass;
+    friend class QDeclarativeListModelV8Data;
     friend struct ModelNode;
 
     // Constructs a flat list model for a worker agent
     QDeclarativeListModel(const QDeclarativeListModel *orig, QDeclarativeListModelWorkerAgent *parent);
 
-    void set(int index, const QScriptValue&, QList<int> *roles);
+    void set(int index, const QDeclarativeV8Handle &, QList<int> *roles);
     void setProperty(int index, const QString& property, const QVariant& value, QList<int> *roles);
 
     bool flatten();

@@ -60,7 +60,6 @@ class QDeclarativeEngine;
 class QDeclarativeContext;
 class QDeclarativeExpressionPrivate;
 class QDeclarativeContextData;
-class QScriptValue;
 class Q_DECLARATIVE_EXPORT QDeclarativeExpression : public QObject
 {
     Q_OBJECT
@@ -97,10 +96,10 @@ Q_SIGNALS:
 protected:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &,
                            QDeclarativeExpressionPrivate &dd);
-    QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QScriptValue &,
+    QDeclarativeExpression(QDeclarativeContextData *, QObject *, void *, 
                            QDeclarativeExpressionPrivate &dd);
-    QDeclarativeExpression(QDeclarativeContextData *, void *, QDeclarativeRefCount *rc, 
-                           QObject *me, const QString &, int, QDeclarativeExpressionPrivate &dd);
+    QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &, bool,
+                           const QString &, int, QDeclarativeExpressionPrivate &dd);
 
 private:
     QDeclarativeExpression(QDeclarativeContextData *, QObject *, const QString &);

@@ -69,6 +69,8 @@
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativecontext_p.h"
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 #define QML_ALIAS_FLAG_PTR 0x00000001
@@ -140,11 +142,13 @@ public:
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     void registerInterceptor(int index, int valueIndex, QDeclarativePropertyValueInterceptor *interceptor);
-    QScriptValue vmeMethod(int index);
+    v8::Handle<v8::Function> vmeMethod(int index);
     int vmeMethodLineNumber(int index);
-    void setVmeMethod(int index, const QScriptValue &);
+    void setVmeMethod(int index, v8::Persistent<v8::Function>);
+#if 0
     QScriptValue vmeProperty(int index);
     void setVMEProperty(int index, const QScriptValue &);
+#endif
 
     void connectAliasSignal(int index);
 
@@ -167,12 +171,14 @@ private:
     QBitArray aInterceptors;
     QHash<int, QPair<int, QDeclarativePropertyValueInterceptor*> > interceptors;
 
-    QScriptValue *methods;
-    QScriptValue method(int);
+    v8::Persistent<v8::Function> *v8methods;
+    v8::Handle<v8::Function> method(int);
 
+#if 0
     QScriptValue readVarProperty(int);
-    QVariant readVarPropertyAsVariant(int);
     void writeVarProperty(int, const QScriptValue &);
+#endif
+    QVariant readVarPropertyAsVariant(int);
     void writeVarProperty(int, const QVariant &);
 
     QAbstractDynamicMetaObject *parent;

@@ -47,56 +47,63 @@
 #include <QtScript/qscriptengine.h>
 #include "QtQuickTest/private/quicktestresult_p.h"
 #include "QtQuickTest/private/quicktestevent_p.h"
+#include "private/qtestoptions_p.h"
+#include "QtDeclarative/qsgitem.h"
+#include <QtDeclarative/private/qdeclarativeengine_p.h>
 QT_BEGIN_NAMESPACE
 
 QML_DECLARE_TYPE(QuickTestResult)
 QML_DECLARE_TYPE(QuickTestEvent)
 
-// Copied from qdeclarativedebughelper_p.h in Qt, to avoid a dependency
-// on a private header from Qt.
-class Q_DECLARATIVE_EXPORT QDeclarativeDebugHelper
+#include <QtDebug>
+
+class QuickTestUtil : public QObject
 {
+    Q_OBJECT
+    Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions)
+    Q_PROPERTY(bool wrapper READ wrapper)
 public:
-    static QScriptEngine *getScriptEngine(QDeclarativeEngine *engine);
-    static void setAnimationSlowDownFactor(qreal factor);
-    static void enableDebugging();
+    QuickTestUtil(QObject *parent = 0)
+        :QObject(parent)
+    {}
+
+    ~QuickTestUtil()
+    {}
+    bool printAvailableFunctions() const
+    {
+        return QTest::printAvailableFunctions;
+    }
+    bool wrapper() const
+    {
+        return true;
+    }
+
+public Q_SLOTS:
+    QDeclarativeV8Handle callerFile(int frameIndex = 0) const
+    {
+        v8::HandleScope scope;
+
+        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
+        int count = stacks->GetFrameCount();
+        if (count >= frameIndex + 2) {
+            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 2);
+            return QDeclarativeV8Handle::fromHandle(frame->GetScriptNameOrSourceURL());
+        }
+        return QDeclarativeV8Handle();
+    }
+    int callerLine(int frameIndex = 0) const
+    {
+        v8::HandleScope scope;
+        v8::Local<v8::StackTrace> stacks = v8::StackTrace::CurrentStackTrace(10, v8::StackTrace::kDetailed);
+        int count = stacks->GetFrameCount();
+        if (count >= frameIndex + 2) {
+            v8::Local<v8::StackFrame> frame = stacks->GetFrame(frameIndex + 2);
+            return frame->GetLineNumber();
+        }
+        return -1;
+    }
 };
-
-static QScriptContext *qtest_find_frame(QScriptContext *ctx)
-{
-    qint32 frame = 1;
-    if (ctx->argumentCount() > 0)
-        frame = ctx->argument(0).toInt32();
-    ++frame;    // Exclude the native function; start at its caller.
-    while (ctx) {
-        if (frame-- <= 0)
-            break;
-        ctx = ctx->parentContext();
-    }
-    return ctx;
-}
-
-static QScriptValue qtest_caller_file
-    (QScriptContext *ctx, QScriptEngine *engine)
-{
-    ctx = qtest_find_frame(ctx);
-    if (ctx) {
-        QScriptContextInfo info(ctx);
-        return engine->newVariant(info.fileName());
-    }
-    return engine->newVariant(QLatin1String(""));
-}
-
-static QScriptValue qtest_caller_line
-    (QScriptContext *ctx, QScriptEngine *engine)
-{
-    ctx = qtest_find_frame(ctx);
-    if (ctx) {
-        QScriptContextInfo info(ctx);
-        return engine->newVariant(info.lineNumber());
-    }
-    return engine->newVariant(qint32(0));
-}
+QML_DECLARE_TYPE(QuickTestUtil)
 
 class QTestQmlModule : public QDeclarativeExtensionPlugin
 {
@@ -107,22 +114,11 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
         qmlRegisterType<QuickTestResult>(uri,1,0,"TestResult");
         qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
+        qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
     }
+
     void initializeEngine(QDeclarativeEngine *engine, const char *)
     {
-        // Install some helper functions in the global "Qt" object
-        // for walking the stack and finding a caller's location.
-        // Normally we would use an exception's backtrace, but JSC
-        // only provides the top-most frame in the backtrace.
-        QScriptEngine *eng = QDeclarativeDebugHelper::getScriptEngine(engine);
-        QScriptValue qtObject
-            = eng->globalObject().property(QLatin1String("Qt"));
-        qtObject.setProperty
-            (QLatin1String("qtest_caller_file"),
-             eng->newFunction(qtest_caller_file));
-        qtObject.setProperty
-            (QLatin1String("qtest_caller_line"),
-             eng->newFunction(qtest_caller_line));
     }
 };
 
