@@ -122,17 +122,15 @@ public:
         UltraMaterial *m = static_cast<UltraMaterial *>(newEffect);
         state.context()->functions()->glActiveTexture(GL_TEXTURE1);
         m->colortable->bind();
-        program()->setUniformValue(m_colortable_id, 1);
 
         state.context()->functions()->glActiveTexture(GL_TEXTURE2);
         m->sizetable->bind();
-        program()->setUniformValue(m_sizetable_id, 2);
 
         state.context()->functions()->glActiveTexture(GL_TEXTURE3);
         m->opacitytable->bind();
-        program()->setUniformValue(m_opacitytable_id, 3);
 
-        state.context()->functions()->glActiveTexture(GL_TEXTURE0);//Investigate why this screws up Text{} if placed before 1
+        // make sure we end by setting GL_TEXTURE0 as active texture
+        state.context()->functions()->glActiveTexture(GL_TEXTURE0);
         m->texture->bind();
 
         program()->setUniformValue(m_opacity_id, state.opacity());
@@ -145,9 +143,11 @@ public:
     }
 
     virtual void initialize() {
-        m_colortable_id = program()->uniformLocation("colortable");
-        m_sizetable_id = program()->uniformLocation("sizetable");
-        m_opacitytable_id = program()->uniformLocation("opacitytable");
+        program()->bind();
+        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("colortable", 1);
+        program()->setUniformValue("sizetable", 2);
+        program()->setUniformValue("opacitytable", 3);
         m_matrix_id = program()->uniformLocation("matrix");
         m_opacity_id = program()->uniformLocation("opacity");
         m_timestamp_id = program()->uniformLocation("timestamp");
@@ -178,9 +178,6 @@ public:
     int m_matrix_id;
     int m_opacity_id;
     int m_timestamp_id;
-    int m_colortable_id;
-    int m_sizetable_id;
-    int m_opacitytable_id;
     int m_framecount_id;
     int m_animcount_id;
 
