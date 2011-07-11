@@ -52,6 +52,37 @@
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass ParticleSystem QSGParticleSystem
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \brief The ParticleSystem brings together ParticlePainter, Emitter and Affector elements.
+
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::ParticleSystem::running
+
+    If running is set to false, the particle system will not advance the simulation.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::ParticleSystem::startTime
+
+    If start time is specified, then the system will simulate up to this time
+    before the system starts playing. This allows you to appear to start with a
+    fully populated particle system, instead of starting with no particles visible.
+*/
+/*!
+    \qmlproperty list<Sprite> QtQuick.Particles2::ParticleSystem::particleStates
+
+    You can define a sub-set of particle groups in this property in order to provide them
+    with stochastic state transitions.
+
+    Each QtQuick2::Sprite in this list is interpreted as corresponding to the particle group
+    with ths same name. Any transitions defined in these sprites will take effect on the particle
+    groups as well. Additionally FollowEmitters, Affectors and ParticlePainters definined
+    inside one of these sprites are automatically associated with the corresponding particle group.
+*/
 
 const qreal EPSILON = 0.001;
 //Utility functions for when within 1ms is close enough

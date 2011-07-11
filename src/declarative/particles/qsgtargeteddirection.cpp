@@ -45,6 +45,44 @@
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass TargetedDirection QSGTargetedDirection
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits StochasticDirection
+    \brief The TargetedDirection element allows you to specify a direction towards the target point
+
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetX
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetY
+*/
+/*!
+    \qmlproperty Item QtQuick.Particles2::TargetedDirection::targetItem
+    If specified, this will take precedence over targetX and targetY.
+    The targeted point will be the center of the specified Item
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::TargetedDirection::magnitude
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::TargetedDirection::magnitudeVariation
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::TargetedDirection::proportionalMagnitude
+
+    If true, then the value of magnitude and magnitudeVariation shall be interpreted as multiples
+    of the distance between the source point and the target point, per second.
+
+    If false(default), then the value of magnitude and magnitudeVariation shall be interpreted as
+    pixels per second.
+*/
+
 QSGTargetedDirection::QSGTargetedDirection(QObject *parent) :
     QSGStochasticDirection(parent)
   , m_targetX(0)

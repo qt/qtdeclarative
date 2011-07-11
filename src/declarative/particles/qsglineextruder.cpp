@@ -41,6 +41,25 @@
 #include "qsglineextruder_p.h"
 #include <cmath>
 
+/*!
+    \qmlclass LineShape QSGLineExtruder
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Shape
+    \brief The LineShape represents a line to Affectors and Emitter
+
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::LineShape::mirrored
+
+    By default, the line goes from (0,0) to (width, height) of the item that
+    this shape is being applied to.
+
+    If mirrored is set to true, this will be mirrored along the y axis.
+    The line will then go from (0,height) to (width, 0).
+*/
+
 QSGLineExtruder::QSGLineExtruder(QObject *parent) :
     QSGParticleExtruder(parent), m_mirrored(false)
 {

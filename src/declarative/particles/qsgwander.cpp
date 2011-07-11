@@ -42,6 +42,14 @@
 #include "qsgwander_p.h"
 #include "qsgparticlesystem_p.h"//for ParticlesVertices
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass Wander QSGWanderAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The Wander affector allows particles to randomly vary their trajectory.
+
+*/
 
 QSGWanderAffector::QSGWanderAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_xVariance(0), m_yVariance(0), m_pace(0)

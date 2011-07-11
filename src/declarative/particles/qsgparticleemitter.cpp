@@ -41,6 +41,7 @@
 
 #include "qsgparticleemitter_p.h"
 QT_BEGIN_NAMESPACE
+//Not visible from QML, so not documented. Document subclasses.
 QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
     QSGItem(parent)
   , m_particlesPerSecond(10)

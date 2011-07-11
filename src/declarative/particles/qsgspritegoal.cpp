@@ -47,6 +47,28 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass SpriteGoal QSGSpriteGoalAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The SpriteGoal Affector allows you to change the state of a sprite or group of a particle.
+
+*/
+/*!
+    \qmlproperty string QtQuick.Particles2::SpriteGoal::goalState
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::SpriteGoal::jump
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::SpriteGoal::systemStates
+*/
+
+    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
+    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
+    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
+
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false), m_systemStates(false), m_lastEngine(0), m_notUsingEngine(false)
 {

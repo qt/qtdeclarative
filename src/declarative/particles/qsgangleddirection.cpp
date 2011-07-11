@@ -43,6 +43,56 @@
 #include <cmath>
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292519943295;
+/*!
+    \qmlclass AngledDirection QSGAngledDirection
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits StochasticDirection
+    \brief The AngledDirection element allows you to specify a direction that varies in angle
+
+    The AngledDirection element allows both the specification of a direction by angle and magnitude,
+    as well as varying the parameters by angle or magnitude.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::AngledDirection::angle
+    This property specifies the base angle for the direction.
+    The angle of this direction will vary by no more than angleVariation
+    from this angle.
+
+    Angle is specified by degrees clockwise from straight right.
+
+    The default value is zero.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::AngledDirection::magnitude
+    This property specifies the base magnitude for the direction.
+    The magnitude of this direction will vary by no more than magnitudeVariation
+    from this magnitude.
+
+    Magnitude is specified in units of pixels per second.
+
+    The default value is zero.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::AngledDirection::angleVariation
+    This property specifies the maximum angle variation for the direction.
+    The angle of the direction will vary by up to angleVariation clockwise
+    and anticlockwise from the value specified in angle.
+
+    Angle is specified by degrees clockwise from straight right.
+
+    The default value is zero.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::AngledDirection::magnitudeVariation
+    This property specifies the base magnitude for the direction.
+    The magnitude of this direction will vary by no more than magnitudeVariation
+    from the base magnitude.
+
+    Magnitude is specified in units of pixels per second.
+
+    The default value is zero.
+*/
 QSGAngledDirection::QSGAngledDirection(QObject *parent) :
     QSGStochasticDirection(parent)
   , m_angle(0)

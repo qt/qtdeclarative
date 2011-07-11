@@ -46,6 +46,15 @@
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass ModelParticle QSGModelParticle
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits ParticlePainter
+    \brief The ModelParticle element allows you to specify a model and delegate pair to paint particles.
+
+*/
+
 
 QSGModelParticle::QSGModelParticle(QSGItem *parent) :
     QSGParticlePainter(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true), m_modelCount(0)

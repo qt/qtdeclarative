@@ -42,6 +42,15 @@
 #include "qsgcumulativedirection_p.h"
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass CumulativeDirection QSGCumulativeDirection
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits StochasticDirection
+    \brief The CumulativeDirection element allows you to specify a direction made of other directions
+
+    The CumulativeDirection element will act as a direction that sums the directions within it.
+*/
 QSGCumulativeDirection::QSGCumulativeDirection(QObject *parent):QSGStochasticDirection(parent)
 {
 }

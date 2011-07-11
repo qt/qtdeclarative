@@ -278,6 +278,78 @@ QSGMaterialShader *SimpleMaterial::createShader() const {
     return new SimpleMaterialData;
 }
 
+/*!
+    \qmlclass ImageParticle QSGImageParticle
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits ParticlePainter
+    \brief The ImageParticle element visualizes logical particles using an image
+
+    This element renders a logical particle as an image. The image can be
+        - colorized
+        - roatated
+        - deformed
+        - a sprite-based animation
+*/
+/*!
+    \qmlproperty url QtQuick.Particles2::ImageParticle::source
+*/
+/*!
+    \qmlproperty url QtQuick.Particles2::ImageParticle::colorTable
+*/
+/*!
+    \qmlproperty url QtQuick.Particles2::ImageParticle::sizeTable
+*/
+/*!
+    \qmlproperty url QtQuick.Particles2::ImageParticle::opacityTable
+*/
+/*!
+    \qmlproperty color QtQuick.Particles2::ImageParticle::color
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::colorVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::redVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::greenVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::blueVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::alpha
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::alphaVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationVariation
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationSpeed
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::ImageParticle::rotationSpeedVariation
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::ImageParticle::autoRotation
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::ImageParticle::xVector
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::ImageParticle::yVector
+*/
+/*!
+    \qmlproperty list<Sprite> QtQuick.Particles2::ImageParticle::sprites
+*/
+
+
 QSGImageParticle::QSGImageParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_do_reset(false)

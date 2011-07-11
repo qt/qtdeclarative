@@ -42,6 +42,28 @@
 #include "qsgparticlepainter_p.h"
 #include <QDebug>
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass ParticlePainter QSGParticlePainter
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits ParticlePainter
+    \brief ParticlePainter elements allow you to specify how to paint particles.
+
+    The default implementation paints nothing. See the subclasses if you want to
+    paint something visible.
+
+*/
+/*!
+    \qmlproperty ParticleSystem QtQuick.Particles2::ParticlePainter::system
+    This is the system whose particles can be painted by the element.
+    If the ParticlePainter is a direct child of a ParticleSystem, it will automatically be associated with it.
+*/
+/*!
+    \qmlproperty list<string> QtQuick.Particles2::ParticlePainter::particles
+    Which logical particle groups will be painted.
+
+    If empty, it will paint the default particle ("").
+*/
 QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
     m_system(0), m_count(0), m_sentinel(new QSGParticleData(0))

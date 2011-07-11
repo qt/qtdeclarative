@@ -41,6 +41,19 @@
 
 #include "qsgfriction_p.h"
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass Friction QSGFrictionAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The Friction affector slows down movement proportional to the particle's current speed.
+
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Friction::factor
+*/
+
 QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_factor(0.0)
 {

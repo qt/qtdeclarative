@@ -119,6 +119,15 @@ struct PlainVertices {
     PlainVertex v4;
 };
 
+/*!
+    \qmlclass CustomParticle QSGCustomParticle
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits ParticlePainter
+    \brief The CustomParticle element allows you to specify your own shader to paint particles.
+
+*/
+
 QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_pleaseReset(true)
@@ -137,7 +146,7 @@ void QSGCustomParticle::componentComplete()
 
 //Trying to keep the shader conventions the same as in qsgshadereffectitem
 /*!
-    \qmlproperty string CustomParticle::fragmentShader
+    \qmlproperty string QtQuick.Particles2::CustomParticle::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
     The default shader passes the texture coordinate along to the fragment
@@ -156,7 +165,7 @@ void QSGCustomParticle::setFragmentShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty string CustomParticle::vertexShader
+    \qmlproperty string QtQuick.Particles2::CustomParticle::vertexShader
 
     This property holds the vertex shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the

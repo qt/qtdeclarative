@@ -44,6 +44,23 @@
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass Emitter QSGBasicEmitter
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \brief The Emitter element allows you to emit logical particles.
+
+    This element emits logical particles into the ParticleSystem, with the
+    given starting attributes.
+
+    Note that logical particles are not
+    automatically rendered, you will need to have one or more
+    ParticlePainter elements visualizing them.
+
+    Note that the given starting attributes can be modified at any point
+    in the particle's lifetime by any Affector element in the same
+    ParticleSystem. This includes attributes like lifespan.
+*/
 QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
     QSGParticleEmitter(parent)
   , m_particlesPerParticlePerSecond(0)
@@ -62,6 +79,65 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
     connect(this, SIGNAL(particlesPerParticlePerSecondChanged(int)),
             this, SLOT(recalcParticlesPerSecond()));
 }
+
+
+/*!
+    \qmlproperty ParticleSystem QtQuick.Particles2::FollowEmitter::system
+
+    This is the Particle system that the FollowEmitter will emit into.
+    This can be omitted if the FollowEmitter is a direct child of the ParticleSystem
+*/
+/*!
+    \qmlproperty string QtQuick.Particles2::FollowEmitter::particle
+*/
+/*!
+    \qmlproperty string QtQuick.Particles2::FollowEmitter::follow
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::FollowEmitter::shape
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::FollowEmitter::emitShape
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitWidth
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitHeight
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::FollowEmitter::emitting
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitRatePerParticle
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::FollowEmitter::lifeSpan
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::FollowEmitter::lifeSpanVariation
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::FollowEmitter::emitCap
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::size
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::endSize
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::FollowEmitter::sizeVariation
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::FollowEmitter::speed
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::FollowEmitter::acceleration
+*/
+/*!
+    \qmlproperty qreal QtQuick.Particles2::FollowEmitter::speedFromMovement
+*/
 
 void QSGFollowEmitter::recalcParticlesPerSecond(){
     if (!m_system)

@@ -42,11 +42,28 @@
 #include "qsgellipseextruder_p.h"
 #include <cmath>
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass EllipseShape QSGEllipseExtruder
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Shape
+    \brief The EllipseShape represents an ellipse to other particle system elements
+
+    This shape can be used by Emitter subclasses and Affector subclasses to have
+    them act upon an ellipse shaped area.
+*/
 QSGEllipseExtruder::QSGEllipseExtruder(QObject *parent) :
     QSGParticleExtruder(parent)
   , m_fill(true)
 {
 }
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::EllipseShape::fill
+    If fill is true the ellipse is filled; otherwise it is just a border.
+
+    Default is true.
+*/
 
 QPointF QSGEllipseExtruder::extrude(const QRectF & r)
 {

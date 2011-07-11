@@ -48,6 +48,15 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass ItemParticle QSGItemParticle
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits ParticlePainter
+    \brief The ItemParticle element allows you to specify your own delegate to paint particles.
+
+*/
+
 QSGItemParticle::QSGItemParticle(QSGItem *parent) :
     QSGParticlePainter(parent), m_fade(true), m_delegate(0)
 {

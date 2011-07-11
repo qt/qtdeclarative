@@ -43,6 +43,24 @@
 #include "qsgparticlesystem_p.h"
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass Emitter QSGBasicEmitter
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \brief The Emitter element allows you to emit logical particles.
+
+    This element emits logical particles into the ParticleSystem, with the
+    given starting attributes.
+
+    Note that logical particles are not
+    automatically rendered, you will need to have one or more
+    ParticlePainter elements visualizing them.
+
+    Note that the given starting attributes can be modified at any point
+    in the particle's lifetime by any Affector element in the same
+    ParticleSystem. This includes attributes like lifespan.
+*/
+
 QSGBasicEmitter::QSGBasicEmitter(QSGItem* parent)
     : QSGParticleEmitter(parent)
     , m_speed_from_movement(0)
@@ -53,6 +71,52 @@ QSGBasicEmitter::QSGBasicEmitter(QSGItem* parent)
 {
 //    setFlag(ItemHasContents);
 }
+
+/*!
+    \qmlproperty ParticleSystem QtQuick.Particles2::Emitter::system
+
+    This is the Particle system that the Emitter will emit into.
+    This can be omitted if the Emitter is a direct child of the ParticleSystem
+*/
+/*!
+    \qmlproperty string QtQuick.Particles2::Emitter::particle
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::Emitter::shape
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Emitter::emitting
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::emitRate
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpan
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpanVariation
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::emitCap
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::size
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::endSize
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::sizeVariation
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::speed
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::acceleration
+*/
+/*!
+    \qmlproperty qreal QtQuick.Particles2::Emitter::speedFromMovement
+*/
 
 void QSGBasicEmitter::setSpeedFromMovement(qreal t)
 {

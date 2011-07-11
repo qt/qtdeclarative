@@ -60,7 +60,6 @@ QT_MODULE(Declarative)
 class QSGParticleEmitter : public QSGItem
 {
     Q_OBJECT
-    //###currently goes in emitters OR sets system. Pick one?
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QString particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)

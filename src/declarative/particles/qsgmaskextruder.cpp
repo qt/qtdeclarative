@@ -43,6 +43,19 @@
 #include <QImage>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass MaskShape QSGMaskExtruder
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Shape
+    \brief The MaskShape element allows you to represent an image as a shape to affectors and emitters.
+
+*/
+/*!
+    \qmlproperty url QtQuick.Particles2::MaskShape::source
+*/
+
+
 QSGMaskExtruder::QSGMaskExtruder(QObject *parent) :
     QSGParticleExtruder(parent)
   , m_lastWidth(-1)

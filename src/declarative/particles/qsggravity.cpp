@@ -43,6 +43,25 @@
 #include <cmath>
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292520444443;
+/*!
+    \qmlclass Gravity QSGGravityAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The Gravity element allows you to set a constant accleration in an angle
+
+    This element will set the acceleration of all affected particles to a vector of
+    the specified magnitude in the specified angle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Gravity::acceleration
+
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Gravity::angle
+*/
+
 QSGGravityAffector::QSGGravityAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_acceleration(-10), m_angle(90), m_xAcc(0), m_yAcc(0)
 {

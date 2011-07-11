@@ -46,6 +46,27 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass Turbulence QSGTurbulenceAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The TurbulenceAffector is a bit of a hack and probably shouldn't be used yet.
+
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Turbulence::strength
+    Maximum magnitude of a point in the vector field.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Turbulence::frequency
+    Times per second vector field is perturbed.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Turbulence::gridSize
+    Square root of the number of points in the vector field simulcrum.
+*/
+
 QSGTurbulenceAffector::QSGTurbulenceAffector(QSGItem *parent) :
     QSGParticleAffector(parent),
     m_strength(10), m_lastT(0), m_frequency(64), m_gridSize(10), m_field(0), m_inited(false)

@@ -42,6 +42,64 @@
 #include "qsgparticleaffector_p.h"
 #include <QDebug>
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass Affector QSGParticleAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \brief Affector elements can alter the attributes of logical particles at any point in their lifetime.
+
+    The base Affector does not alter any attributes, but can be used to emit a signal
+    when a particle meets certain conditions.
+
+    If an affector has a defined size, then it will only affect particles within its size and position on screen.
+*/
+/*!
+    \qmlproperty ParticleSystem QtQuick.Particles2::Affector::system
+    This is the system which will be affected by the element.
+    If the Affector is a direct child of a ParticleSystem, it will automatically be associated with it.
+*/
+/*!
+    \qmlproperty list<string> QtQuick.Particles2::Affector::particles
+    Which logical particle groups will be affected.
+
+    If empty, it will affect all particles.
+*/
+/*!
+    \qmlproperty list<string> QtQuick.Particles2::Affector::collisionParticles
+    If any logical particle groups are specified here, then the affector
+    will only be triggered if the particle being examined intersects with
+    a particle of one of these groups.
+
+    By default, no groups are specified.
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Affector::active
+    If active is set to false, this affector will not affect any particles.
+
+    Usually this is used to conditionally turn an affector on or off.
+
+    Default value is true.
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Affector::onceOff
+    If onceOff is set to true, this affector will only affect each particle
+    once in their lifetimes.
+
+    Default value is false.
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::Affector::shape
+    If a size has been defined, the shape property can be used to affect a
+    non-rectangular area.
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Affector::signal
+    If this is set to true, then an affected(x,y) signal will be emitted each
+    time this affector affects a particle.
+
+    Default value is false.
+*/
+
 QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
     QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
   , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this)), m_signal(false)

@@ -43,6 +43,19 @@
 #include <cmath>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass PointAttractor QSGPointAttractorAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The PointAttractor allows you to attract particles towards a specific point.
+
+    Note that the size and position of this element affects which particles it affects.
+    The size of the point attracted to is always 0x0, and the location of that point
+    is specified by the x and y properties that badly need renaming.
+
+*/
+
 QSGPointAttractorAffector::QSGPointAttractorAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_strength(0.0), m_x(0), m_y(0)
   , m_physics(Velocity), m_proportionalToDistance(Linear)
