@@ -1,5 +1,5 @@
 import Test 1.0
-import QtQuick 1.0
+import QtQuick 2.0
 
 BindingsSpliceCorrectlyType4 {
     property bool test: false

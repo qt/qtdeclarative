@@ -89,6 +89,7 @@ public:
     static bool isValueType(int);
     static QDeclarativeValueType *valueType(int);
 
+    static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void registerValueTypes();
 
     QDeclarativeValueType *operator[](int idx) const {

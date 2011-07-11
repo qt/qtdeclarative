@@ -195,7 +195,7 @@ cacheForNamespace(QDeclarativeEngine *engine, const QDeclarativeImportedNamespac
         foreach (QDeclarativeType *type, types) {
             if (type->qmlTypeName().startsWith(base) &&
                 type->qmlTypeName().lastIndexOf('/') == (base.length() - 1) &&
-                type->availableInVersion(major,minor))
+                (major < 0 || type->availableInVersion(major,minor)))
             {
                 QString name = QString::fromUtf8(type->qmlTypeName().mid(base.length()));
 
@@ -295,17 +295,19 @@ bool QDeclarativeImportedNamespace::find_helper(int i, const QByteArray& type, i
     int vmaj = majversions.at(i);
     int vmin = minversions.at(i);
 
-    QByteArray qt = uris.at(i).toUtf8();
-    qt += '/';
-    qt += type;
+    if (vmaj >= 0 && vmin >= 0) {
+        QByteArray qt = uris.at(i).toUtf8();
+        qt += '/';
+        qt += type;
 
-    QDeclarativeType *t = QDeclarativeMetaType::qmlType(qt,vmaj,vmin);
-    if (t) {
-        if (vmajor) *vmajor = vmaj;
-        if (vminor) *vminor = vmin;
-        if (type_return)
-            *type_return = t;
-        return true;
+        QDeclarativeType *t = QDeclarativeMetaType::qmlType(qt,vmaj,vmin);
+        if (t) {
+            if (vmajor) *vmajor = vmaj;
+            if (vminor) *vminor = vmin;
+            if (type_return)
+                *type_return = t;
+            return true;
+        }
     }
 
     QUrl url = QUrl(urls.at(i) + QLatin1Char('/') + QString::fromUtf8(type) + QLatin1String(".qml"));
@@ -319,7 +321,7 @@ bool QDeclarativeImportedNamespace::find_helper(int i, const QByteArray& type, i
                 typeWasDeclaredInQmldir = true;
 
                 // importing version -1 means import ALL versions
-                if ((vmaj == -1) || (c.majorVersion < vmaj || (c.majorVersion == vmaj && vmin >= c.minorVersion))) {
+                if ((vmaj == -1) || (c.majorVersion == vmaj && vmin >= c.minorVersion)) {
                     QUrl candidate = url.resolved(QUrl(c.fileName));
                     if (c.internal && base) {
                         if (base->resolved(QUrl(c.fileName)) != candidate)
@@ -501,53 +503,53 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
         if (!s)
             set.insert(prefix,(s=new QDeclarativeImportedNamespace));
     }
-
     QString url = uri;
     bool versionFound = false;
     if (importType == QDeclarativeScriptParser::Import::Library) {
+
+        Q_ASSERT(vmaj >= 0 && vmin >= 0); // Versions are always specified for libraries
+
         url.replace(QLatin1Char('.'), QLatin1Char('/'));
         bool found = false;
         QString dir;
 
 
         // step 1: search for extension with fully encoded version number
-        if (vmaj >= 0 && vmin >= 0) {
-            foreach (const QString &p, database->fileImportPath) {
-                dir = p+QLatin1Char('/')+url;
+        foreach (const QString &p, database->fileImportPath) {
+            dir = p+QLatin1Char('/')+url;
 
-                QFileInfo fi(dir+QString(QLatin1String(".%1.%2")).arg(vmaj).arg(vmin)+QLatin1String("/qmldir"));
-                const QString absoluteFilePath = fi.absoluteFilePath();
+            QFileInfo fi(dir+QString(QLatin1String(".%1.%2")).arg(vmaj).arg(vmin)+QLatin1String("/qmldir"));
+            const QString absoluteFilePath = fi.absoluteFilePath();
 
-                if (fi.isFile()) {
-                    found = true;
+            if (fi.isFile()) {
+                found = true;
 
-                    url = QUrl::fromLocalFile(fi.absolutePath()).toString();
-                    uri = resolvedUri(dir, database);
-                    if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
-                        return false;
-                    break;
-                }
+                url = QUrl::fromLocalFile(fi.absolutePath()).toString();
+                uri = resolvedUri(dir, database);
+                if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
+                    return false;
+                break;
             }
         }
+
         // step 2: search for extension with encoded version major
-        if (vmaj >= 0 && vmin >= 0) {
-            foreach (const QString &p, database->fileImportPath) {
-                dir = p+QLatin1Char('/')+url;
+        foreach (const QString &p, database->fileImportPath) {
+            dir = p+QLatin1Char('/')+url;
 
-                QFileInfo fi(dir+QString(QLatin1String(".%1")).arg(vmaj)+QLatin1String("/qmldir"));
-                const QString absoluteFilePath = fi.absoluteFilePath();
+            QFileInfo fi(dir+QString(QLatin1String(".%1")).arg(vmaj)+QLatin1String("/qmldir"));
+            const QString absoluteFilePath = fi.absoluteFilePath();
 
-                if (fi.isFile()) {
-                    found = true;
+            if (fi.isFile()) {
+                found = true;
 
-                    url = QUrl::fromLocalFile(fi.absolutePath()).toString();
-                    uri = resolvedUri(dir, database);
-                    if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
-                        return false;
-                    break;
-                }
+                url = QUrl::fromLocalFile(fi.absolutePath()).toString();
+                uri = resolvedUri(dir, database);
+                if (!importExtension(absoluteFilePath, uri, database, &qmldircomponents, errors))
+                    return false;
+                break;
             }
         }
+
         if (!found) {
             // step 3: search for extension without version number
 
@@ -569,12 +571,13 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
             }
         }
 
-        if (QDeclarativeMetaType::isModule(uri.toUtf8(), vmaj, vmin))
+        if (QDeclarativeMetaType::isModule(uri.toUtf8(), vmaj, vmin)) {
             versionFound = true;
+        }
 
         if (!versionFound && qmldircomponents.isEmpty()) {
             if (errors) {
-                bool anyversion = QDeclarativeMetaType::isModule(uri.toUtf8(), -1, -1);
+                bool anyversion = QDeclarativeMetaType::isAnyModule(uri.toUtf8());
                 QDeclarativeError error; // we don't set the url or line or column as these will be set by the loader.
                 if (anyversion)
                     error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri_arg).arg(vmaj).arg(vmin));
@@ -636,23 +639,15 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
 
     if (!versionFound && vmaj > -1 && vmin > -1 && !qmldircomponents.isEmpty()) {
         QList<QDeclarativeDirParser::Component>::ConstIterator it = qmldircomponents.begin();
-        int lowest_maj = INT_MAX;
         int lowest_min = INT_MAX;
-        int highest_maj = INT_MIN;
         int highest_min = INT_MIN;
         for (; it != qmldircomponents.end(); ++it) {
-            if (it->majorVersion > highest_maj || (it->majorVersion == highest_maj && it->minorVersion > highest_min)) {
-                highest_maj = it->majorVersion;
-                highest_min = it->minorVersion;
-            }
-            if (it->majorVersion < lowest_maj || (it->majorVersion == lowest_maj && it->minorVersion < lowest_min)) {
-                lowest_maj = it->majorVersion;
-                lowest_min = it->minorVersion;
+            if (it->majorVersion == vmaj) {
+                lowest_min = qMin(lowest_min, it->minorVersion);
+                highest_min = qMax(highest_min, it->minorVersion);
             }
         }
-        if (lowest_maj > vmaj || (lowest_maj == vmaj && lowest_min > vmin)
-            || highest_maj < vmaj || (highest_maj == vmaj && highest_min < vmin))
-        {
+        if (lowest_min > vmin || highest_min < vmin) {
             if (errors) {
                 QDeclarativeError error; // we don't set the url or line or column information, as these will be set by the loader.
                 error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri_arg).arg(vmaj).arg(vmin));

@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 QtObject {
     property int test1: Qt.Key_Escape

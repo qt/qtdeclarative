@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 QtObject {
     property variant test1: Qt.point(19, 34);

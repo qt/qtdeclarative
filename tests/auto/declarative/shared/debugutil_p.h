@@ -49,7 +49,6 @@
 
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
-#include <private/qdeclarativeitem_p.h>
 
 class QDeclarativeDebugTest
 {

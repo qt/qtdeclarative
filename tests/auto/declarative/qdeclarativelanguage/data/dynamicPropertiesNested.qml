@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 DynamicPropertiesNestedType {
     property int a: 13

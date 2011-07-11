@@ -43,9 +43,8 @@
 #include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativeitem.h>
-#include <QtGui/qgraphicsview.h>
-#include <QtGui/qgraphicsscene.h>
+#include <QtDeclarative/qsgitem.h>
+#include <QtDeclarative/qsgview.h>
 
 class tst_qdeclarativeapplication : public QObject
 {
@@ -68,12 +67,11 @@ tst_qdeclarativeapplication::tst_qdeclarativeapplication()
 void tst_qdeclarativeapplication::active()
 {
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
-    QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(component.create());
+    component.setData("import QtQuick 2.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
+    QSGItem *item = qobject_cast<QSGItem *>(component.create());
     QVERIFY(item);
-    QGraphicsScene scene;
-    QGraphicsView view(&scene);
-    scene.addItem(item);
+    QSGView view;
+    item->setParentItem(view.rootObject());
 
     // not active
     QVERIFY(!item->property("active").toBool());
@@ -99,12 +97,11 @@ void tst_qdeclarativeapplication::active()
 void tst_qdeclarativeapplication::layoutDirection()
 {
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0; Item { property bool layoutDirection: Qt.application.layoutDirection }", QUrl::fromLocalFile(""));
-    QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(component.create());
+    component.setData("import QtQuick 2.0; Item { property bool layoutDirection: Qt.application.layoutDirection }", QUrl::fromLocalFile(""));
+    QSGItem *item = qobject_cast<QSGItem *>(component.create());
     QVERIFY(item);
-    QGraphicsScene scene;
-    QGraphicsView view(&scene);
-    scene.addItem(item);
+    QSGView view;
+    item->setParentItem(view.rootObject());
 
     // not mirrored
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::LeftToRight);

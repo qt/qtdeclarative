@@ -68,7 +68,7 @@ class QMetaProperty;
 class QV8Engine;
 class QV8QObjectWrapper;
 
-class Q_AUTOTEST_EXPORT QDeclarativePropertyCache : public QDeclarativeRefCount, public QDeclarativeCleanup
+class Q_DECLARATIVE_EXPORT QDeclarativePropertyCache : public QDeclarativeRefCount, public QDeclarativeCleanup
 {
 public:
     QDeclarativePropertyCache(QDeclarativeEngine *);

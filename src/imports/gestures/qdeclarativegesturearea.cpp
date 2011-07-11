@@ -46,7 +46,7 @@
 #include <qdeclarativeinfo.h>
 
 #include <private/qdeclarativeproperty_p.h>
-#include <private/qdeclarativeitem_p.h>
+#include <QtQuick1/private/qdeclarativeitem_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>

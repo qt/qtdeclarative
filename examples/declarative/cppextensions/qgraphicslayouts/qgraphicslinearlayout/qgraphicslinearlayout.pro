@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET  = qgraphicslinearlayout
-QT += declarative
+QT += declarative qtquick1
 
 SOURCES += \
     linearlayout.cpp \

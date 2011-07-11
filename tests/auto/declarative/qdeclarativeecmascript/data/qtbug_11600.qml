@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 import "qtbug_11600.js" as Test
 
 QtObject {

@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 import Qt.test 1.0 as QtTest                                    // module API installed into existing uri
 import Qt.test.scriptApi 1.0 as QtTestScriptApi                 // script module API installed into new uri

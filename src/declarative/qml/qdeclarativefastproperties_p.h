@@ -44,6 +44,7 @@
 
 #include <QtCore/qvector.h>
 #include <QtCore/qhash.h>
+#include <QtCore/QReadWriteLock>
 
 QT_BEGIN_HEADER
 
@@ -51,21 +52,23 @@ QT_BEGIN_NAMESPACE
 
 class QObject;
 class QDeclarativeNotifierEndpoint;
-class QDeclarativeFastProperties
+class Q_DECLARATIVE_EXPORT QDeclarativeFastProperties
 {
 public:
     typedef void (*Accessor)(QObject *object, void *output, QDeclarativeNotifierEndpoint *endpoint);
-
     QDeclarativeFastProperties();
 
-    Accessor accessor(int index) const { return m_accessors.at(index); }
+    Accessor accessor(int index) const { QReadLocker lock(&m_lock); return m_accessors.at(index); }
     int accessorIndexForProperty(const QMetaObject *, int);
 
-private:
     void add(const QMetaObject *, int, Accessor);
 
+    static QDeclarativeFastProperties *instance();
+
+private:
     QHash<QPair<const QMetaObject *, int>, int> m_index;
     QVector<Accessor> m_accessors;
+    mutable QReadWriteLock m_lock;
 };
 
 QT_END_NAMESPACE

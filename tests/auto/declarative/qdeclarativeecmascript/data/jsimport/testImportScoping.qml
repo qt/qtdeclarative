@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 // For backward compatibility, importing a script which has no imports,
 // should run the script in the parent context.  See QTBUG-17518.

@@ -42,7 +42,6 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativebind_p.h>
-#include <private/qdeclarativerectangle_p.h>
 #include <private/qsgrectangle_p.h>
 #include "../../../shared/util.h"
 
@@ -75,7 +74,7 @@ void tst_qdeclarativebinding::binding()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-binding.qml"));
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle*>(c.create());
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 
     QDeclarativeBind *binding3 = qobject_cast<QDeclarativeBind*>(rect->findChild<QDeclarativeBind*>("binding3"));
@@ -103,7 +102,7 @@ void tst_qdeclarativebinding::whenAfterValue()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-binding2.qml"));
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle*>(c.create());
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
 
     QVERIFY(rect != 0);
     QCOMPARE(rect->color(), QColor("yellow"));

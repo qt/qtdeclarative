@@ -43,6 +43,19 @@ set binding when its \e when clause becomes false.
 QDeclarativeExpression can now be directly (and more efficiently) constructed from a
 QDeclarativeScriptString.
 
+\section2 QtQuick 1 is now a separate library and module
+
+Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
+requires adding the "qtquick1" module to the .pro file, e.g. QT += declarative qtquick1
+
+QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i.e.
+#include <QtQuick1/QDeclarativeView>
+#include <QtQuick1/QDeclarativeItem>
+
+"import QtQuick 1.0" loads the module dynamically.  To deploy QtQuick 1 applications
+the library (lib/libQtQuick1*) and plugin (imports/QtQuick/) must be installed.
+
+
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
 QtQuick 1.1 is a minor feature update.  \e {import QtQuick 1.1} to use the new

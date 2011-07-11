@@ -42,9 +42,9 @@
 #include "qdeclarativeparticles_p.h"
 
 #include <qdeclarativeinfo.h>
-#include <private/qdeclarativeitem_p.h>
+#include <QtQuick1/private/qdeclarativeitem_p.h>
 
-#include <private/qdeclarativepixmapcache_p.h>
+#include <QtQuick1/private/qdeclarativepixmapcache_p.h>
 #include <QtCore/QAbstractAnimation>
 
 #include <QPainter>
@@ -446,7 +446,7 @@ public:
     void updateOpacity(QDeclarativeParticle &p, int age);
 
     QUrl url;
-    QDeclarativePixmap image;
+    QDeclarative1Pixmap image;
     int count;
     int emissionRate;
     qreal emissionVariance;

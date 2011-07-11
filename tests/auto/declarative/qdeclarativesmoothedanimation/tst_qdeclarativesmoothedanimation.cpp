@@ -42,7 +42,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativesmoothedanimation_p.h>
-#include <private/qdeclarativerectangle_p.h>
+#include <private/qsgrectangle_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include "../../../shared/util.h"
 
@@ -125,7 +125,7 @@ void tst_qdeclarativesmoothedanimation::disabled()
 
 void tst_qdeclarativesmoothedanimation::simpleAnimation()
 {
-    QDeclarativeRectangle rect;
+    QSGRectangle rect;
     QDeclarativeSmoothedAnimation animation;
     animation.setTarget(&rect);
     animation.setProperty("x");
@@ -155,10 +155,10 @@ void tst_qdeclarativesmoothedanimation::valueSource()
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/smoothedanimationValueSource.qml"));
 
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle*>(c.create());
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect);
 
-    QDeclarativeRectangle *theRect = rect->findChild<QDeclarativeRectangle*>("theRect");
+    QSGRectangle *theRect = rect->findChild<QSGRectangle*>("theRect");
     QVERIFY(theRect);
 
     QDeclarativeSmoothedAnimation *easeX = rect->findChild<QDeclarativeSmoothedAnimation*>("easeX");
@@ -187,10 +187,10 @@ void tst_qdeclarativesmoothedanimation::behavior()
 
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/smoothedanimationBehavior.qml"));
 
-    QDeclarativeRectangle *rect = qobject_cast<QDeclarativeRectangle*>(c.create());
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect);
 
-    QDeclarativeRectangle *theRect = rect->findChild<QDeclarativeRectangle*>("theRect");
+    QSGRectangle *theRect = rect->findChild<QSGRectangle*>("theRect");
     QVERIFY(theRect);
 
     QDeclarativeSmoothedAnimation *easeX = rect->findChild<QDeclarativeSmoothedAnimation*>("easeX");

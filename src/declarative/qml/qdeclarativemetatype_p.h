@@ -104,6 +104,7 @@ public:
     static void registerCustomStringConverter(int, StringConverter);
     static StringConverter customStringConverter(int);
 
+    static bool isAnyModule(const QByteArray &module);
     static bool isModule(const QByteArray &module, int versionMajor, int versionMinor);
 
     static QList<QDeclarativePrivate::AutoParentFunction> parentFunctions();

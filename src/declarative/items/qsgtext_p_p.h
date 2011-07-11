@@ -60,8 +60,6 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtGui/qtextlayout.h>
 
-#include <private/qdeclarativetextlayout_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QTextLayout;

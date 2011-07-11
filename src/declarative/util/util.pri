@@ -3,7 +3,6 @@ INCLUDEPATH += $$PWD
 SOURCES += \
     $$PWD/qdeclarativeapplication.cpp \
     $$PWD/qdeclarativeutilmodule.cpp\
-    $$PWD/qdeclarativeview.cpp \
     $$PWD/qdeclarativeconnections.cpp \
     $$PWD/qdeclarativepackage.cpp \
     $$PWD/qdeclarativeanimation.cpp \
@@ -28,13 +27,13 @@ SOURCES += \
     $$PWD/qdeclarativefontloader.cpp \
     $$PWD/qdeclarativestyledtext.cpp \
     $$PWD/qdeclarativelistmodelworkeragent.cpp \
+    $$PWD/qdeclarativepath.cpp \
     $$PWD/qdeclarativechangeset.cpp \
     $$PWD/qlistmodelinterface.cpp
 
 HEADERS += \
     $$PWD/qdeclarativeapplication_p.h \
     $$PWD/qdeclarativeutilmodule_p.h\
-    $$PWD/qdeclarativeview.h \
     $$PWD/qdeclarativeconnections_p.h \
     $$PWD/qdeclarativepackage_p.h \
     $$PWD/qdeclarativeanimation_p.h \
@@ -54,7 +53,6 @@ HEADERS += \
     $$PWD/qdeclarativelistmodel_p_p.h\
     $$PWD/qdeclarativelistaccessor_p.h \
     $$PWD/qdeclarativeopenmetaobject_p.h \
-    $$PWD/qdeclarativenullablevalue_p_p.h \
     $$PWD/qdeclarativetimeline_p_p.h \
     $$PWD/qdeclarativetimer_p.h \
     $$PWD/qdeclarativebind_p.h \
@@ -64,6 +62,8 @@ HEADERS += \
     $$PWD/qdeclarativefontloader_p.h \
     $$PWD/qdeclarativestyledtext_p.h \
     $$PWD/qdeclarativelistmodelworkeragent_p.h \
+    $$PWD/qdeclarativepath_p.h \
+    $$PWD/qdeclarativepath_p_p.h \
     $$PWD/qdeclarativechangeset_p.h \
     $$PWD/qlistmodelinterface_p.h
 

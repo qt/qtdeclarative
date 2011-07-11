@@ -44,10 +44,10 @@
 #include "private/qdeclarativev4bindings_p.h"
 #include "private/qdeclarativev4program_p.h"
 #include "private/qdeclarativev4compiler_p.h"
+#include "private/qdeclarativev4compiler_p_p.h"
 
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
-#include <private/qdeclarativeanchors_p_p.h> // For AnchorLine
 #include <private/qsganchors_p_p.h> // For AnchorLine
 
 #include <QtDeclarative/qdeclarativeinfo.h>
@@ -534,10 +534,10 @@ static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
     }
 
     int type = qtscript.userType();
-    
-    if (type == qMetaTypeId<QDeclarativeAnchorLine>()) {
-        QDeclarativeAnchorLine la = qvariant_cast<QDeclarativeAnchorLine>(qtscript);
-        QDeclarativeAnchorLine ra = qvariant_cast<QDeclarativeAnchorLine>(v4);
+
+    if (type == qMetaTypeId<QDeclarative1AnchorLine>()) {
+        QDeclarative1AnchorLine la = qvariant_cast<QDeclarative1AnchorLine>(qtscript);
+        QDeclarative1AnchorLine ra = qvariant_cast<QDeclarative1AnchorLine>(v4);
 
         return la == ra;
     } else if (type == qMetaTypeId<QSGAnchorLine>()) {
@@ -623,8 +623,8 @@ static void testBindingResult(const QString &binding, int line, int column,
             v4value = result.getqreal();
             break;
         default:
-            if (resultType == qMetaTypeId<QDeclarativeAnchorLine>()) {
-                v4value = qVariantFromValue<QDeclarativeAnchorLine>(*(QDeclarativeAnchorLine *)result.typeDataPtr());
+            if (resultType == qMetaTypeId<QDeclarative1AnchorLine>()) {
+                v4value = qVariantFromValue<QDeclarative1AnchorLine>(*(QDeclarative1AnchorLine *)result.typeDataPtr());
             } else if (resultType == qMetaTypeId<QSGAnchorLine>()) {
                 v4value = qVariantFromValue<QSGAnchorLine>(*(QSGAnchorLine *)result.typeDataPtr());
             } else {
@@ -852,7 +852,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             reg.init((Register::Type)instr->fetchAndSubscribe.valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)
                 MARK_REGISTER(instr->fetchAndSubscribe.reg);
-            QDeclarativeV4Compiler::fastPropertyAccessor()->accessor(instr->fetchAndSubscribe.function)(object, reg.typeDataPtr(), sub);
+            QDeclarativeFastProperties::instance()->accessor(instr->fetchAndSubscribe.function)(object, reg.typeDataPtr(), sub);
         }
     }
     QML_V4_END_INSTR(FetchAndSubscribe, fetchAndSubscribe)

@@ -42,7 +42,7 @@
 #include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qdeclarativetext_p.h>
+#include <private/qsgtext_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <QtCore/qcryptographichash.h>
 /*
@@ -203,7 +203,7 @@ void tst_qdeclarativesqldatabase::testQml()
     QFETCH(QString, jsfile);
 
     QString qml=
-        "import QtQuick 1.0\n"
+        "import QtQuick 2.0\n"
         "import \""+jsfile+"\" as JS\n"
         "Text { text: JS.test() }";
 
@@ -211,7 +211,7 @@ void tst_qdeclarativesqldatabase::testQml()
     QDeclarativeComponent component(engine);
     component.setData(qml.toUtf8(), QUrl::fromLocalFile(SRCDIR "/empty.qml")); // just a file for relative local imports
     QVERIFY(!component.isError());
-    QDeclarativeText *text = qobject_cast<QDeclarativeText*>(component.create());
+    QSGText *text = qobject_cast<QSGText*>(component.create());
     QVERIFY(text != 0);
     QCOMPARE(text->text(),QString("passed"));
 }

@@ -110,7 +110,7 @@ public:
 
 class QDeclarativeComponentAttached;
 class QDeclarativeGuardedContextData;
-class Q_AUTOTEST_EXPORT QDeclarativeContextData
+class Q_DECLARATIVE_EXPORT QDeclarativeContextData
 {
 public:
     QDeclarativeContextData();

@@ -44,6 +44,8 @@
 
 #include "qdeclarativeviewinspector.h"
 
+#include <QtCore/QScopedPointer>
+#include <QtQuick1/QDeclarativeView>
 #include <QtCore/QWeakPointer>
 #include <QtCore/QPointF>
 

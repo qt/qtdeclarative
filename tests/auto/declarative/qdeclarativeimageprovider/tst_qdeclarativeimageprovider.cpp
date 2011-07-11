@@ -42,7 +42,7 @@
 #include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeimageprovider.h>
-#include <private/qdeclarativeimage_p.h>
+#include <private/qsgimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
 #include "../../../shared/util.h"
@@ -229,24 +229,24 @@ void tst_qdeclarativeimageprovider::runTest(bool async, QDeclarativeImageProvide
     engine.addImageProvider("test", provider);
     QVERIFY(engine.imageProvider("test") != 0);
 
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" + source + "\"; " 
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + source + "\"; " 
             + (async ? "asynchronous: true; " : "")
             + properties + " }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QDeclarativeImage *obj = qobject_cast<QDeclarativeImage*>(component.create());
+    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
     QVERIFY(obj != 0);
 
     if (async) 
-        QTRY_VERIFY(obj->status() == QDeclarativeImage::Loading);
+        QTRY_VERIFY(obj->status() == QSGImage::Loading);
 
     QCOMPARE(obj->source(), QUrl(source));
 
     if (error.isEmpty()) {
         if (async)
-            QTRY_VERIFY(obj->status() == QDeclarativeImage::Ready);
+            QTRY_VERIFY(obj->status() == QSGImage::Ready);
         else
-            QVERIFY(obj->status() == QDeclarativeImage::Ready);
+            QVERIFY(obj->status() == QSGImage::Ready);
         if (QByteArray(QTest::currentDataTag()).startsWith("qimage"))
             QCOMPARE(static_cast<TestQImageProvider*>(provider)->lastImageId, imageId);
         else
@@ -254,15 +254,13 @@ void tst_qdeclarativeimageprovider::runTest(bool async, QDeclarativeImageProvide
 
         QCOMPARE(obj->width(), qreal(size.width()));
         QCOMPARE(obj->height(), qreal(size.height()));
-        QCOMPARE(obj->pixmap().width(), size.width());
-        QCOMPARE(obj->pixmap().height(), size.height());
-        QCOMPARE(obj->fillMode(), QDeclarativeImage::Stretch);
+        QCOMPARE(obj->fillMode(), QSGImage::Stretch);
         QCOMPARE(obj->progress(), 1.0);
     } else {
         if (async)
-            QTRY_VERIFY(obj->status() == QDeclarativeImage::Error);
+            QTRY_VERIFY(obj->status() == QSGImage::Error);
         else
-            QVERIFY(obj->status() == QDeclarativeImage::Error);
+            QVERIFY(obj->status() == QSGImage::Error);
     }
 
     delete obj;
@@ -313,10 +311,10 @@ void tst_qdeclarativeimageprovider::requestPixmap_async()
     QVERIFY(engine.imageProvider("test") != 0);
 
     // pixmaps are loaded synchronously regardless of 'asynchronous' value
-    QString componentStr = "import QtQuick 1.0\nImage { asynchronous: true; source: \"image://test/pixmap-async-test.png\" }";
+    QString componentStr = "import QtQuick 2.0\nImage { asynchronous: true; source: \"image://test/pixmap-async-test.png\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QDeclarativeImage *obj = qobject_cast<QDeclarativeImage*>(component.create());
+    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
     QVERIFY(obj != 0);
 
     delete obj;
@@ -340,13 +338,13 @@ void tst_qdeclarativeimageprovider::removeProvider()
     QVERIFY(engine.imageProvider("test") != 0);
 
     // add provider, confirm it works
-    QString componentStr = "import QtQuick 1.0\nImage { source: \"" + newImageFileName() + "\" }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + newImageFileName() + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QDeclarativeImage *obj = qobject_cast<QDeclarativeImage*>(component.create());
+    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
     QVERIFY(obj != 0);
 
-    QCOMPARE(obj->status(), QDeclarativeImage::Ready);
+    QCOMPARE(obj->status(), QSGImage::Ready);
 
     // remove the provider and confirm
     QString fileName = newImageFileName();
@@ -356,7 +354,7 @@ void tst_qdeclarativeimageprovider::removeProvider()
     engine.removeImageProvider("test");
 
     obj->setSource(QUrl(fileName));
-    QCOMPARE(obj->status(), QDeclarativeImage::Error);
+    QCOMPARE(obj->status(), QSGImage::Error);
 
     delete obj;
 }
@@ -401,7 +399,7 @@ void tst_qdeclarativeimageprovider::threadTest()
     engine.addImageProvider("test_thread", provider);
     QVERIFY(engine.imageProvider("test_thread") != 0);
 
-    QString componentStr = "import QtQuick 1.0\nItem { \n"
+    QString componentStr = "import QtQuick 2.0\nItem { \n"
             "Image { source: \"image://test_thread/blue\";  asynchronous: true; }\n"
             "Image { source: \"image://test_thread/red\";  asynchronous: true; }\n"
             "Image { source: \"image://test_thread/green\";  asynchronous: true; }\n"
@@ -412,17 +410,17 @@ void tst_qdeclarativeimageprovider::threadTest()
     QObject *obj = component.create();
     //MUST not deadlock
     QVERIFY(obj != 0);
-    QList<QDeclarativeImage *> images = obj->findChildren<QDeclarativeImage *>();
+    QList<QSGImage *> images = obj->findChildren<QSGImage *>();
     QCOMPARE(images.count(), 4);
     QTest::qWait(100);
-    foreach(QDeclarativeImage *img, images) {
-        QCOMPARE(img->status(), QDeclarativeImage::Loading);
+    foreach(QSGImage *img, images) {
+        QCOMPARE(img->status(), QSGImage::Loading);
     }
     provider->ok = true;
     provider->cond.wakeAll();
     QTest::qWait(250);
-    foreach(QDeclarativeImage *img, images) {
-        QTRY_VERIFY(img->status() == QDeclarativeImage::Ready);
+    foreach(QSGImage *img, images) {
+        QTRY_VERIFY(img->status() == QSGImage::Ready);
     }
 }
 

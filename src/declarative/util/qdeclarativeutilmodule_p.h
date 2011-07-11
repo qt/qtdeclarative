@@ -53,6 +53,7 @@ QT_MODULE(Declarative)
 class QDeclarativeUtilModule
 {
 public:
+    static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void defineModule();
 };
 

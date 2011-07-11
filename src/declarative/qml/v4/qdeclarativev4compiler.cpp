@@ -48,7 +48,6 @@
 #include <private/qdeclarativejsast_p.h>
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativejsengine_p.h>
-#include <private/qdeclarativeanchors_p_p.h> // For AnchorLine
 #include <private/qsganchors_p_p.h> // For AnchorLine
 
 QT_BEGIN_NAMESPACE
@@ -58,8 +57,6 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableOptimizer, QML_DISABLE_OPTIMIZER)
 DEFINE_BOOL_CONFIG_OPTION(qmlExperimental, QML_EXPERIMENTAL)
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 DEFINE_BOOL_CONFIG_OPTION(qmlBindingsTestEnv, QML_BINDINGS_TEST)
-
-Q_GLOBAL_STATIC(QDeclarativeFastProperties, fastProperties)
 
 static bool qmlBindingsTest = false;
 
@@ -312,7 +309,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
         _subscribeName << e->id;
 
         QMetaProperty prop = e->meta->property(e->index);
-        int fastFetchIndex = fastProperties()->accessorIndexForProperty(e->meta, e->index);
+        int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->index);
 
         const int propTy = prop.userType();
         QDeclarativeRegisterType regType;
@@ -332,7 +329,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
             break;
 
         default:
-            if (propTy == qMetaTypeId<QDeclarativeAnchorLine>()) {
+            if (propTy == qMetaTypeId<QDeclarative1AnchorLine>()) {
                 regType = PODValueType;
             } else if (propTy == qMetaTypeId<QSGAnchorLine>()) {
                 regType = PODValueType;
@@ -925,7 +922,7 @@ void QDeclarativeV4CompilerPrivate::visitRet(IR::Ret *s)
             test.storetest.regType = QMetaType::QUrl;
             break;
         case IR::AnchorLineType:
-            test.storetest.regType = qMetaTypeId<QDeclarativeAnchorLine>();
+            test.storetest.regType = qMetaTypeId<QDeclarative1AnchorLine>();
             break;
         case IR::SGAnchorLineType:
             test.storetest.regType = qMetaTypeId<QSGAnchorLine>();
@@ -976,11 +973,6 @@ void QDeclarativeV4Compiler::dump(const QByteArray &programData)
         instr->dump(code - start);
         code += instr->size();
     }
-}
-
-QDeclarativeFastProperties *QDeclarativeV4Compiler::fastPropertyAccessor()
-{
-    return fastProperties();
 }
 
 /*!

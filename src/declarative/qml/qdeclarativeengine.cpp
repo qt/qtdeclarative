@@ -96,7 +96,6 @@
 
 #include <private/qobject_p.h>
 
-#include <private/qdeclarativeitemsmodule_p.h>
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qsgitemsmodule_p.h>
 #include <private/qsgparticlesmodule_p.h>
@@ -113,6 +112,13 @@
 Q_DECLARE_METATYPE(QDeclarativeProperty)
 
 QT_BEGIN_NAMESPACE
+
+void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
+{
+    QDeclarativeEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
+    QDeclarativeValueTypeFactory::registerBaseTypes(uri, versionMajor, versionMinor);
+    QDeclarativeUtilModule::registerBaseTypes(uri, versionMajor, versionMinor);
+}
 
 /*!
   \qmlclass QtObject QObject
@@ -178,18 +184,16 @@ struct StaticQtMetaObject : public QObject
 static bool qt_QmlQtModule_registered = false;
 bool QDeclarativeEnginePrivate::qml_debugging_enabled = false;
 
+void QDeclarativeEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
+{
+    qmlRegisterType<QDeclarativeComponent>(uri,versionMajor,versionMinor,"Component");
+    qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
+    qmlRegisterType<QDeclarativeWorkerScript>(uri,versionMajor,versionMinor,"WorkerScript");
+}
+
 void QDeclarativeEnginePrivate::defineModule()
 {
-    qmlRegisterType<QDeclarativeComponent>("QtQuick",1,0,"Component");
-    qmlRegisterType<QObject>("QtQuick",1,0,"QtObject");
-    qmlRegisterType<QDeclarativeWorkerScript>("QtQuick",1,0,"WorkerScript");
-
-#ifndef QT_NO_IMPORT_QT47_QML
-    qmlRegisterType<QDeclarativeComponent>("Qt",4,7,"Component");
-    qmlRegisterType<QObject>("Qt",4,7,"QtObject");
-    qmlRegisterType<QDeclarativeWorkerScript>("Qt",4,7,"WorkerScript");
-#endif
-
+    registerBaseTypes("QtQuick", 2, 0);
     qmlRegisterType<QDeclarativeBinding>();
 }
 
@@ -352,7 +356,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
-        QDeclarativeItemModule::defineModule();
         QDeclarativeUtilModule::defineModule();
         QDeclarativeEnginePrivate::defineModule();
         QSGItemsModule::defineModule();

@@ -28,7 +28,6 @@ HEADERS += qtdeclarativeversion.h
 
 #modules
 include(util/util.pri)
-include(graphicsitems/graphicsitems.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
 include(scenegraph/scenegraph.pri)

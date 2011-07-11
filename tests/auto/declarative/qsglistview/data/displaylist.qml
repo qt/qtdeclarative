@@ -13,7 +13,7 @@ Rectangle {
                 id: wrapper
                 objectName: "wrapper"
                 height: root.delegateHeight
-                Behavior on height { NumberAnimation {} }
+                Behavior on height { NumberAnimation { duration: 200} }
                 width: 240
                 Text {
                     text: index

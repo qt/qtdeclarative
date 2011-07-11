@@ -1389,7 +1389,7 @@ void tst_qdeclarativelanguage::reservedWords()
 {
     QFETCH(QByteArray, word);
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nQtObject { property string " + word + " }", QUrl());
+    component.setData("import QtQuick 2.0\nQtObject { property string " + word + " }", QUrl());
     QCOMPARE(component.errorString(), QLatin1String(":2 Expected token `identifier'\n"));
 }
 
@@ -1568,17 +1568,17 @@ void tst_qdeclarativelanguage::importsLocal_data()
     QTest::newRow("local import")
         << "import \"subdir\"\n" // QT-613
            "Test {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("local import second")
-        << "import QtQuick 1.0\nimport \"subdir\"\n"
+        << "import QtQuick 2.0\nimport \"subdir\"\n"
            "Test {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("local import subsubdir")
-        << "import QtQuick 1.0\nimport \"subdir/subsubdir\"\n"
+        << "import QtQuick 2.0\nimport \"subdir/subsubdir\"\n"
            "SubTest {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("local import QTBUG-7721 A")
         << "subdir.Test {}" // no longer allowed (QTBUG-7721)
@@ -1592,7 +1592,7 @@ void tst_qdeclarativelanguage::importsLocal_data()
     QTest::newRow("local import as")
         << "import \"subdir\" as T\n"
            "T.Test {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("wrong local import as")
         << "import \"subdir\" as T\n"
@@ -1658,11 +1658,11 @@ void tst_qdeclarativelanguage::importsRemote_data()
 
     QString serverdir = "http://127.0.0.1:14447/qtest/declarative/qmllanguage";
 
-    QTest::newRow("remote import") << "import \""+serverdir+"\"\nTest {}" << "QDeclarativeRectangle"
+    QTest::newRow("remote import") << "import \""+serverdir+"\"\nTest {}" << "QSGRectangle"
         << "";
-    QTest::newRow("remote import with subdir") << "import \""+serverdir+"\"\nTestSubDir {}" << "QDeclarativeText"
+    QTest::newRow("remote import with subdir") << "import \""+serverdir+"\"\nTestSubDir {}" << "QSGText"
         << "";
-    QTest::newRow("remote import with local") << "import \""+serverdir+"\"\nTestLocal {}" << "QDeclarativeImage"
+    QTest::newRow("remote import with local") << "import \""+serverdir+"\"\nTestLocal {}" << "QSGImage"
         << "";
     QTest::newRow("wrong remote import with undeclared local") << "import \""+serverdir+"\"\nWrongTestLocal {}" << ""
         << "WrongTestLocal is not a type";
@@ -1696,27 +1696,27 @@ void tst_qdeclarativelanguage::importsInstalled_data()
     QTest::newRow("installed import 0")
         << "import com.nokia.installedtest0 0.0\n"
            "InstalledTestTP {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("installed import 0 as TP")
         << "import com.nokia.installedtest0 0.0 as TP\n"
            "TP.InstalledTestTP {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("installed import 1")
         << "import com.nokia.installedtest 1.0\n"
            "InstalledTest {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("installed import 2")
         << "import com.nokia.installedtest 1.3\n"
            "InstalledTest {}"
-        << "QDeclarativeRectangle"
+        << "QSGRectangle"
         << "";
     QTest::newRow("installed import 3")
         << "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
-        << "QDeclarativeText"
+        << "QSGText"
         << "";
     QTest::newRow("installed import minor version not available") // QTBUG-11936
         << "import com.nokia.installedtest 0.1\n"
@@ -1759,26 +1759,26 @@ void tst_qdeclarativelanguage::importsOrder_data()
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
-           << (!qmlCheckTypes()?"QDeclarativeText":"")
+           << (!qmlCheckTypes()?"QSGText":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.4");
     QTest::newRow("installed import overrides 1") <<
            "import com.nokia.installedtest 1.0\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
-           << (!qmlCheckTypes()?"QDeclarativeText":"")
+           << (!qmlCheckTypes()?"QSGText":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.0");
     QTest::newRow("installed import overrides 2") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
            "InstalledTest {}"
-           << (!qmlCheckTypes()?"QDeclarativeRectangle":"")
+           << (!qmlCheckTypes()?"QSGRectangle":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.0 and 1.4");
     QTest::newRow("installed import re-overrides 1") <<
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
            "import com.nokia.installedtest 1.4\n"
            "InstalledTest {}"
-           << (!qmlCheckTypes()?"QDeclarativeText":"")
+           << (!qmlCheckTypes()?"QSGText":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.4 and 1.0");
     QTest::newRow("installed import re-overrides 2") <<
            "import com.nokia.installedtest 1.4\n"
@@ -1786,41 +1786,41 @@ void tst_qdeclarativelanguage::importsOrder_data()
            "import com.nokia.installedtest 1.4\n"
            "import com.nokia.installedtest 1.0\n"
            "InstalledTest {}"
-           << (!qmlCheckTypes()?"QDeclarativeRectangle":"")
+           << (!qmlCheckTypes()?"QSGRectangle":"")
            << (!qmlCheckTypes()?"":"InstalledTest is ambiguous. Found in lib/com/nokia/installedtest in version 1.0 and 1.4");
 
     QTest::newRow("installed import versus builtin 1") <<
            "import com.nokia.installedtest 1.5\n"
-           "import QtQuick 1.0\n"
+           "import QtQuick 2.0\n"
            "Rectangle {}"
-           << (!qmlCheckTypes()?"QDeclarativeRectangle":"")
+           << (!qmlCheckTypes()?"QSGRectangle":"")
            << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in Qt and in lib/com/nokia/installedtest");
     QTest::newRow("installed import versus builtin 2") <<
-           "import QtQuick 1.0\n"
+           "import QtQuick 2.0\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle {}"
-           << (!qmlCheckTypes()?"QDeclarativeText":"")
+           << (!qmlCheckTypes()?"QSGText":"")
            << (!qmlCheckTypes()?"":"Rectangle is ambiguous. Found in lib/com/nokia/installedtest and in Qt");
     QTest::newRow("namespaces cannot be overridden by types 1") <<
-           "import QtQuick 1.0 as Rectangle\n"
+           "import QtQuick 2.0 as Rectangle\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle {}"
         << ""
         << "Namespace Rectangle cannot be used as a type";
     QTest::newRow("namespaces cannot be overridden by types 2") <<
-           "import QtQuick 1.0 as Rectangle\n"
+           "import QtQuick 2.0 as Rectangle\n"
            "import com.nokia.installedtest 1.5\n"
            "Rectangle.Image {}"
-        << "QDeclarativeImage"
+        << "QSGImage"
         << "";
     QTest::newRow("local last 1") <<
            "LocalLast {}"
-        << "QDeclarativeText"
+        << "QSGText"
         << "";
     QTest::newRow("local last 2") <<
            "import com.nokia.installedtest 1.0\n"
            "LocalLast {}"
-           << (!qmlCheckTypes()?"QDeclarativeRectangle":"")// i.e. from com.nokia.installedtest, not data/LocalLast.qml
+           << (!qmlCheckTypes()?"QSGRectangle":"")// i.e. from com.nokia.installedtest, not data/LocalLast.qml
            << (!qmlCheckTypes()?"":"LocalLast is ambiguous. Found in lib/com/nokia/installedtest and in local directory");
 }
 
@@ -1879,7 +1879,7 @@ void tst_qdeclarativelanguage::qmlAttachedPropertiesObjectMethod()
 void tst_qdeclarativelanguage::crash1()
 {
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nComponent {}", QUrl());
+    component.setData("import QtQuick 2.0\nComponent {}", QUrl());
 }
 
 void tst_qdeclarativelanguage::crash2()

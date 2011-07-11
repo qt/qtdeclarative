@@ -48,9 +48,7 @@
 
 #include "qsgevents_p_p.h"
 
-#include <QtDeclarative/qdeclarativeitem.h>
 #include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qdeclarativeview.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qgraphicstransform.h>
@@ -1311,7 +1309,7 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
     // This test is measurably (albeit only slightly) faster than qobject_cast<>()
     const QMetaObject *mo = o->metaObject();
     while (mo && mo != &QSGItem::staticMetaObject) {
-        if (mo == &QDeclarativeItem::staticMetaObject) 
+        if (mo == &QGraphicsObject::staticMetaObject) 
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         mo = mo->d.superdata;
     }

@@ -101,7 +101,7 @@ class QDir;
 class QSGTexture;
 class QSGContext;
 
-class Q_AUTOTEST_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
+class Q_DECLARATIVE_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeEngine)
 public:
@@ -264,6 +264,7 @@ public:
 
     static QString urlToLocalFileOrQrc(const QUrl& url);
 
+    static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void defineModule();
 
     static bool qml_debugging_enabled;

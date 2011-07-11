@@ -60,7 +60,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeFastProperties;
 class QDeclarativeTypeNameCache;
 class QDeclarativeV4CompilerPrivate;
 class Q_AUTOTEST_EXPORT QDeclarativeV4Compiler
@@ -90,7 +89,6 @@ public:
     QByteArray program() const;
 
     static void dump(const QByteArray &);
-    static QDeclarativeFastProperties *fastPropertyAccessor();
     static void enableBindingsTest(bool);
 private:
     QDeclarativeV4CompilerPrivate *d;

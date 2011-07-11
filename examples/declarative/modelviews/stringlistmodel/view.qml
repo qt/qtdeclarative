@@ -38,12 +38,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 //![0]
 
 ListView {
     width: 100; height: 100
-    anchors.fill: parent
 
     model: myModel
     delegate: Rectangle {

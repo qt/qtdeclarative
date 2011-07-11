@@ -1,6 +1,6 @@
 import Test 1.0
-import QtQuick 1.0
-import QtQuick 1.0 as Qt47
+import QtQuick 2.0
+import QtQuick 2.0 as Qt47
 
 QtObject {
     property QtObject objectProperty

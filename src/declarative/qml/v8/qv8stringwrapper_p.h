@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QV8StringWrapper 
+class Q_DECLARATIVE_EXPORT QV8StringWrapper
 {
 public:
     QV8StringWrapper();

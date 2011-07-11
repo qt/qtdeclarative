@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG += qt uic
 DESTDIR = ../../bin
+QT += declarative qtquick1 qtquick1-private
 
 include(qml.pri)
 

@@ -72,7 +72,7 @@ class QDeclarativeDataExtended;
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QDeclarativeInstruction::CreateSimpleObject instruction.
 // Don't change anything here without first considering that case!
-class Q_AUTOTEST_EXPORT QDeclarativeData : public QAbstractDeclarativeData
+class Q_DECLARATIVE_EXPORT QDeclarativeData : public QAbstractDeclarativeData
 {
 public:
     QDeclarativeData()

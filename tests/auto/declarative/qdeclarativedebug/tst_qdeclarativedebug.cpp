@@ -50,13 +50,13 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
+#include <QtDeclarative/qsgitem.h>
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativedebug_p.h>
 #include <private/qdeclarativeenginedebug_p.h>
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
-#include <private/qdeclarativerectangle_p.h>
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativedebughelper_p.h>
@@ -84,7 +84,7 @@ private:
     QDeclarativeDebugConnection *m_conn;
     QDeclarativeEngineDebug *m_dbg;
     QDeclarativeEngine *m_engine;
-    QDeclarativeItem *m_rootItem;
+    QSGItem *m_rootItem;
 
     QObjectList m_components;
 
@@ -228,7 +228,7 @@ void tst_QDeclarativeDebug::recursiveObjectTest(QObject *o, const QDeclarativeDe
             QCOMPARE(p.value(), pmeta.read(o));
 
         if (p.name() == "parent")
-            QVERIFY(p.valueTypeName() == "QGraphicsObject*" || p.valueTypeName() == "QDeclarativeItem*");
+            QVERIFY(p.valueTypeName() == "QGraphicsObject*" || p.valueTypeName() == "QSGItem*");
         else
             QCOMPARE(p.valueTypeName(), QString::fromUtf8(pmeta.typeName()));
 
@@ -303,7 +303,7 @@ void tst_QDeclarativeDebug::initTestCase()
     m_engine = new QDeclarativeEngine(this);
 
     QList<QByteArray> qml;
-    qml << "import QtQuick 1.0\n"
+    qml << "import QtQuick 2.0\n"
            "import Test 1.0\n"
            "Item {"
                 "id: root\n"
@@ -326,11 +326,11 @@ void tst_QDeclarativeDebug::initTestCase()
             "}";
 
     // add second component to test multiple root contexts
-    qml << "import QtQuick 1.0\n"
+    qml << "import QtQuick 2.0\n"
             "Item {}";
 
     // and a third to test methods
-    qml << "import QtQuick 1.0\n"
+    qml << "import QtQuick 2.0\n"
             "Item {"
                 "function myMethodNoArgs() { return 3; }\n"
                 "function myMethod(a) { return a + 9; }\n"
@@ -338,7 +338,7 @@ void tst_QDeclarativeDebug::initTestCase()
             "}";
 
     // and a fourth to test states
-    qml << "import QtQuick 1.0\n"
+    qml << "import QtQuick 2.0\n"
            "Rectangle {\n"
                 "id:rootRect\n"
                 "width:100\n"
@@ -369,9 +369,9 @@ void tst_QDeclarativeDebug::initTestCase()
         QDeclarativeComponent component(m_engine);
         component.setData(qml[i], QUrl::fromLocalFile(""));
         QVERIFY(component.isReady());  // fails if bad syntax
-        m_components << qobject_cast<QDeclarativeItem*>(component.create());
+        m_components << qobject_cast<QSGItem*>(component.create());
     }
-    m_rootItem = qobject_cast<QDeclarativeItem*>(m_components.first());
+    m_rootItem = qobject_cast<QSGItem*>(m_components.first());
 
     // add an extra context to test for multiple contexts
     QDeclarativeContext *context = new QDeclarativeContext(m_engine->rootContext(), this);

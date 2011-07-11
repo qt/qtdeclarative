@@ -42,7 +42,6 @@
 #include <QtDeclarative/QtDeclarative>
 #include <QtDeclarative/private/qdeclarativemetatype_p.h>
 #include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
-#include <QtDeclarative/QDeclarativeView>
 
 #include <QtGui/QApplication>
 
@@ -537,19 +536,18 @@ int main(int argc, char *argv[])
         }
     }
 
-    QDeclarativeView view;
-    QDeclarativeEngine *engine = view.engine();
+    QDeclarativeEngine engine;
     if (!pluginImportPath.isEmpty()) {
         QDir cur = QDir::current();
         cur.cd(pluginImportPath);
         pluginImportPath = cur.absolutePath();
         QDir::setCurrent(pluginImportPath);
-        engine->addImportPath(pluginImportPath);
+        engine.addImportPath(pluginImportPath);
     }
 
     // find all QMetaObjects reachable from the builtin module
     QByteArray importCode("import QtQuick 2.0\n");
-    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(importCode, engine);
+    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(importCode, &engine);
 
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;
@@ -570,7 +568,7 @@ int main(int argc, char *argv[])
         {
             QByteArray code = importCode;
             code += "QtObject {}";
-            QDeclarativeComponent c(engine);
+            QDeclarativeComponent c(&engine);
 
             c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/typelist.qml"));
             c.create();
@@ -581,7 +579,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(importCode, engine);
+        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(importCode, &engine);
         candidates.subtract(defaultReachable);
 
         // Also eliminate meta objects with the same classname.

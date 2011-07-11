@@ -61,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeAbstractBoundSignal : public QObject
+class Q_DECLARATIVE_EXPORT QDeclarativeAbstractBoundSignal : public QObject
 {
     Q_OBJECT
 public:
@@ -70,7 +70,7 @@ public:
 };
 
 class QDeclarativeBoundSignalParameters;
-class QDeclarativeBoundSignal : public QDeclarativeAbstractBoundSignal
+class Q_DECLARATIVE_EXPORT QDeclarativeBoundSignal : public QDeclarativeAbstractBoundSignal
 {
 public:
     QDeclarativeBoundSignal(QObject *scope, const QMetaMethod &signal, QObject *parent);

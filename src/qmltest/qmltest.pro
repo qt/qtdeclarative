@@ -7,7 +7,7 @@ CONFIG += module
 CONFIG += dll warn_on
 MODULE_PRI += ../../modules/qt_qmltest.pri
 
-QT += testlib-private declarative script testlib
+QT += testlib-private declarative script testlib qtquick1
 DEFINES += QT_BUILD_QUICK_TEST_LIB QT_NO_URL_CAST_FROM_STRING
 
 

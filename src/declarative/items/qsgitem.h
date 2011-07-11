@@ -82,6 +82,7 @@ private:
     Q_DECLARE_PRIVATE(QSGTransform);
 };
 
+class QDeclarativeV8Function;
 class QDeclarativeState;
 class QSGAnchorLine;
 class QDeclarativeTransition;

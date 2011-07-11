@@ -42,7 +42,7 @@
 #include <qdeclarativetester.h>
 #include <QDebug>
 #include <QApplication>
-#include <qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeview.h>
 #include <QFile>
 #include <QDeclarativeComponent>
 #include <QDir>
@@ -50,7 +50,7 @@
 #include <private/qabstractanimation_p.h>
 #include <QGraphicsObject>
 #ifndef Q_OS_SYMBIAN
-#include <private/qdeclarativeitem_p.h>
+#include <QtQuick1/private/qdeclarativeitem_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE

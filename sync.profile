@@ -1,5 +1,6 @@
 %modules = ( # path to module name map
     "QtDeclarative" => "$basedir/src/declarative",
+    "QtQuick1" => "$basedir/src/qtquick1",
     "QtQuickTest" => "$basedir/src/qmltest",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
@@ -15,6 +16,7 @@
 );
 %modulepris = (
     "QtDeclarative" => "$basedir/modules/qt_declarative.pri",
+    "QtQuick1" => "$basedir/modules/qt_qtquick1.pri",
     "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
 );
 # Module dependencies.

@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeNotifierEndpoint;
-class QDeclarativeNotifier
+class Q_DECLARATIVE_EXPORT QDeclarativeNotifier
 {
 public:
     inline QDeclarativeNotifier();

@@ -43,7 +43,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativepropertymap.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qdeclarativetext_p.h>
+#include <private/qsgtext_p.h>
 #include <QSignalSpy>
 
 class tst_QDeclarativePropertyMap : public QObject
@@ -172,10 +172,10 @@ void tst_QDeclarativePropertyMap::changed()
     QDeclarativeContext *ctxt = engine.rootContext();
     ctxt->setContextProperty(QLatin1String("testdata"), &map);
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0\nText { text: { testdata.key1 = 'Hello World'; 'X' } }",
+    component.setData("import QtQuick 2.0\nText { text: { testdata.key1 = 'Hello World'; 'X' } }",
             QUrl::fromLocalFile(""));
     QVERIFY(component.isReady());
-    QDeclarativeText *txt = qobject_cast<QDeclarativeText*>(component.create());
+    QSGText *txt = qobject_cast<QSGText*>(component.create());
     QVERIFY(txt);
     QCOMPARE(txt->text(), QString('X'));
     QCOMPARE(spy.count(), 1);
@@ -213,7 +213,7 @@ void tst_QDeclarativePropertyMap::crashBug()
     context.setContextProperty("map", &map);
 
     QDeclarativeComponent c(&engine);
-    c.setData("import QtQuick 1.0\nBinding { target: map; property: \"myProp\"; value: 10 + 23 }",QUrl());
+    c.setData("import QtQuick 2.0\nBinding { target: map; property: \"myProp\"; value: 10 + 23 }",QUrl());
     QObject *obj = c.create(&context);
     delete obj;
 }

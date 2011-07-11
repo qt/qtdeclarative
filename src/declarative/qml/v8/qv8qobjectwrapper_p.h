@@ -71,7 +71,7 @@ class QV8ObjectResource;
 class QV8QObjectInstance;
 class QV8QObjectConnectionList;
 class QDeclarativePropertyCache;
-class Q_AUTOTEST_EXPORT QV8QObjectWrapper 
+class Q_DECLARATIVE_EXPORT QV8QObjectWrapper
 {
 public:
     QV8QObjectWrapper();

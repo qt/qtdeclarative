@@ -1,4 +1,4 @@
-import QtQuick 1.0
-import QtQuick 1.0 as qt
+import QtQuick 2.0
+import QtQuick 2.0 as qt
 
 QtObject {}

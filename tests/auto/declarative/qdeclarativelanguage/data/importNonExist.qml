@@ -1,5 +1,5 @@
 // imports...
 import "will-not-be-found"
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle { }

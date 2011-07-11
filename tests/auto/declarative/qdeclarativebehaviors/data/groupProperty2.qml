@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 Rectangle {
     width: 400
     height: 400
@@ -6,7 +6,7 @@ Rectangle {
         id: rect
         objectName: "MyRect"
         width: 100; height: 100; color: "green"
-        Behavior on pos.x { NumberAnimation { duration: 500; } }
+        Behavior on border.width { NumberAnimation { duration: 500; } }
     }
     MouseArea {
         id: clicker
@@ -17,7 +17,7 @@ Rectangle {
         when: clicker.pressed
         PropertyChanges {
             target: rect
-            pos.x: 200;
+            border.width: 4;
         }
     }
 }

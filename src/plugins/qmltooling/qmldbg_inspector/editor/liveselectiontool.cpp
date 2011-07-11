@@ -52,7 +52,7 @@
 #include <QtGui/QAction>
 #include <QtGui/QGraphicsObject>
 
-#include <QtDeclarative/QDeclarativeItem>
+#include <QtQuick1/QDeclarativeItem>
 #include <QtDeclarative/QDeclarativeEngine>
 
 #include <QtCore/QDebug>

@@ -1761,7 +1761,7 @@ void tst_QSGListView::modelChanges()
     listView->setModel(QVariant());
     QTRY_COMPARE(modelSpy.count(),2);
 
-//    delete canvas;
+    delete canvas;
 }
 
 void tst_QSGListView::QTBUG_9791()
@@ -2232,12 +2232,12 @@ void tst_QSGListView::resizeDelegate()
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
-    QTRY_VERIFY(listview != 0);
+    QVERIFY(listview != 0);
 
     QSGItem *contentItem = listview->contentItem();
-    QTRY_VERIFY(contentItem != 0);
+    QVERIFY(contentItem != 0);
 
-    QTRY_COMPARE(listview->count(), model.rowCount());
+    QCOMPARE(listview->count(), model.rowCount());
 
     listview->setCurrentIndex(25);
     listview->setContentY(0);
@@ -2252,7 +2252,7 @@ void tst_QSGListView::resizeDelegate()
     QTRY_COMPARE(listview->highlightItem()->y(), 500.0);
 
     canvas->rootObject()->setProperty("delegateHeight", 30);
-    qApp->processEvents();
+    QTest::qWait(300);
 
     for (int i = 0; i < 11; ++i) {
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
@@ -2277,7 +2277,7 @@ void tst_QSGListView::resizeDelegate()
     QTRY_COMPARE(listview->highlightItem()->y(), 30.0);
 
     canvas->rootObject()->setProperty("delegateHeight", 20);
-    qApp->processEvents();
+    QTest::qWait(300);
 
     for (int i = 5; i < 11; ++i) {
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);

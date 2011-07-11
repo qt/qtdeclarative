@@ -45,7 +45,7 @@
 #include "qtestoptions_p.h"
 #include <QApplication>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeview.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000

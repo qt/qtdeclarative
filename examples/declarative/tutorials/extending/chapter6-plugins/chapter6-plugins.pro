@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt plugin
-QT += declarative
+QT += declarative qtquick1
 
 DESTDIR = lib
 OBJECTS_DIR = tmp

@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET  = minehunt
-QT += declarative
+QT += declarative qtquick1
 
 # Input
 HEADERS += minehunt.h

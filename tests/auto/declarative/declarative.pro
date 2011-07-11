@@ -15,51 +15,29 @@ PUBLICTESTS += \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
     qdeclarativeinfo \
-    qdeclarativelayoutitem \
     qdeclarativelistreference \
     qdeclarativemoduleplugin \
-    qdeclarativeparticles \
     qdeclarativepixmapcache \
     qdeclarativeqt \
-    qdeclarativeview \
-    qdeclarativeviewer \
-    qdeclarativexmlhttprequest \
-    moduleqt47
+    qdeclarativexmlhttprequest
 
 PRIVATETESTS += \
-    qdeclarativeanchors \
-    qdeclarativeanimatedimage \
     qdeclarativeanimations \
     qdeclarativeapplication \
     qdeclarativebehaviors \
     qdeclarativebinding \
-    qdeclarativeborderimage \
     qdeclarativeconnection \
     qdeclarativedebug \
     qdeclarativedebugclient \
     qdeclarativedebughelper \
     qdeclarativedebugservice \
     qdeclarativeecmascript \
-    qdeclarativeflickable \
-    qdeclarativeflipable \
-    qdeclarativefocusscope \
-    qdeclarativefontloader \
-    qdeclarativegridview \
-    qdeclarativeimage \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
-    qdeclarativeitem \
     qdeclarativelanguage \
     qdeclarativelistmodel \
-    qdeclarativelistview \
-    qdeclarativeloader \
-    qdeclarativemousearea \
-    qdeclarativepathview \
-    qdeclarativepincharea \
-    qdeclarativepositioners \
     qdeclarativeproperty \
     qdeclarativepropertymap \
-    qdeclarativerepeater \
     # qdeclarativescriptdebugging \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
@@ -67,12 +45,8 @@ PRIVATETESTS += \
     qdeclarativesqldatabase \
     qdeclarativestates \
     qdeclarativesystempalette \
-    qdeclarativetext \
-    qdeclarativetextedit \
-    qdeclarativetextinput \
     qdeclarativetimer \
     qdeclarativevaluetypes \
-    qdeclarativevisualdatamodel \
     qdeclarativeworkerscript \
     qdeclarativexmllistmodel \
     qpacketprotocol \

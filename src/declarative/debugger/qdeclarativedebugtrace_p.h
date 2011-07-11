@@ -63,7 +63,7 @@ struct QDeclarativeDebugData
 };
 
 class QUrl;
-class Q_AUTOTEST_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
+class Q_DECLARATIVE_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
 {
 public:
     enum Message {

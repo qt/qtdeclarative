@@ -50,7 +50,7 @@
 #include <QDir>
 #include <QVector3D>
 #include <QCryptographicHash>
-#include <QDeclarativeItem>
+#include <QSGItem>
 #include <QSignalSpy>
 
 #ifdef Q_OS_SYMBIAN
@@ -434,7 +434,7 @@ void tst_qdeclarativeqt::createQmlObject()
     QCOMPARE(object->property("emptyArg").toBool(), true);
     QCOMPARE(object->property("success").toBool(), true);
 
-    QDeclarativeItem *item = qobject_cast<QDeclarativeItem *>(object);
+    QSGItem *item = qobject_cast<QSGItem *>(object);
     QVERIFY(item != 0);
     QVERIFY(item->childItems().count() == 1);
 

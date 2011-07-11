@@ -42,8 +42,8 @@
 #include "quicktestevent_p.h"
 #include <QtTest/qtestkeyboard.h>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qdeclarativeitem.h>
-#include <QtDeclarative/qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeitem.h>
+#include <QtQuick1/qdeclarativeview.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
 #include <QtDeclarative/qsgitem.h>
 #include <QtDeclarative/qsgcanvas.h>

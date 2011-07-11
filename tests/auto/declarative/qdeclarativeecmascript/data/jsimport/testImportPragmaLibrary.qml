@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 // We use the components specified in SpecialRectangleOne.qml and SpecialRectangleTwo.qml
 

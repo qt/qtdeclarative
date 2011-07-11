@@ -41,7 +41,8 @@
 
 #include "private/qdeclarativefastproperties_p.h"
 
-#include <private/qdeclarativeitem_p.h>
+#include <private/qdeclarativedata_p.h>
+#include <private/qdeclarativenotifier_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,6 +51,13 @@ QT_BEGIN_NAMESPACE
 // importantly, subscribe to properties directly.  Any property that is
 // primarily read from bindings is a candidate for inclusion as a fast 
 // property.
+
+Q_GLOBAL_STATIC(QDeclarativeFastProperties, fastProperties)
+
+QDeclarativeFastProperties *QDeclarativeFastProperties::instance()
+{
+    return fastProperties();
+}
 
 static void QObject_objectName(QObject *object, void *output, QDeclarativeNotifierEndpoint *endpoint)
 {
@@ -60,8 +68,6 @@ static void QObject_objectName(QObject *object, void *output, QDeclarativeNotifi
 
 QDeclarativeFastProperties::QDeclarativeFastProperties()
 {
-    add(&QDeclarativeItem::staticMetaObject, QDeclarativeItem::staticMetaObject.indexOfProperty("parent"),
-        QDeclarativeItemPrivate::parentProperty);
     add(&QObject::staticMetaObject, QObject::staticMetaObject.indexOfProperty("objectName"),
         QObject_objectName);    
 }
@@ -75,6 +81,7 @@ int QDeclarativeFastProperties::accessorIndexForProperty(const QMetaObject *meta
     while (metaObject->propertyOffset() > propertyIndex) 
         metaObject = metaObject->superClass();
 
+    QReadLocker lock(&m_lock);
     QHash<QPair<const QMetaObject *, int>, int>::Iterator iter = 
         m_index.find(qMakePair(metaObject, propertyIndex));
     if (iter != m_index.end())
@@ -93,6 +100,7 @@ void QDeclarativeFastProperties::add(const QMetaObject *metaObject, int property
         metaObject = metaObject->superClass();
 
     QPair<const QMetaObject *, int> data = qMakePair(metaObject, propertyIndex);
+    QWriteLocker lock(&m_lock);
     int accessorIndex = m_accessors.count();
     m_accessors.append(accessor);
     m_index.insert(data, accessorIndex);

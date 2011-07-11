@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include <qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeview.h>
 
 #ifdef hz
 #undef hz

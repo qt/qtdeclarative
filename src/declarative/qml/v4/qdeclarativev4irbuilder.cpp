@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qdeclarativev4irbuilder_p.h"
+#include "qdeclarativev4compiler_p_p.h"
 
-#include <private/qdeclarativeanchors_p_p.h> // For AnchorLine
 #include <private/qsganchors_p_p.h> // For AnchorLine
 #include <private/qdeclarativetypenamecache_p.h>
 
@@ -70,7 +70,7 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
         return IR::UrlType;
 
     default:
-        if (t == qMetaTypeId<QDeclarativeAnchorLine>())
+        if (t == qMetaTypeId<QDeclarative1AnchorLine>())
             return IR::AnchorLineType;
         else if (t == qMetaTypeId<QSGAnchorLine>())
             return IR::SGAnchorLineType;

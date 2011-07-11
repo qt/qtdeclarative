@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 QtObject {
     property color test1: Qt.hsla(1, 0, 0, 0.8);

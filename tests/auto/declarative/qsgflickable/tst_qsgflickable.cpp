@@ -72,7 +72,6 @@ private slots:
     void maximumFlickVelocity();
     void flickDeceleration();
     void pressDelay();
-    void disabledContent();
     void nestedPressDelay();
     void flickableDirection();
     void resizeContent();
@@ -259,44 +258,6 @@ void tst_qsgflickable::pressDelay()
     flickable->setPressDelay(200);
     QCOMPARE(spy.count(),1);
 }
-
-// QT-4677
-void tst_qsgflickable::disabledContent()
-{
-    QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/disabledcontent.qml"));
-    canvas->show();
-    canvas->setFocus();
-    QVERIFY(canvas->rootObject() != 0);
-
-    QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
-    QVERIFY(flickable != 0);
-
-    QVERIFY(flickable->contentX() == 0);
-    QVERIFY(flickable->contentY() == 0);
-
-    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 50));
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(70,70), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
-    }
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(90,90), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
-    }
-    {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(100,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
-        QApplication::sendEvent(canvas, &mv);
-    }
-
-    QVERIFY(flickable->contentX() < 0);
-    QVERIFY(flickable->contentY() < 0);
-
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(90, 90));
-
-    delete canvas;
-}
-
 
 // QTBUG-17361
 void tst_qsgflickable::nestedPressDelay()

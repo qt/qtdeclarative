@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET  = qgraphicsgridlayout
-QT += declarative
+QT += declarative qtquick1
 
 SOURCES += \
     gridlayout.cpp \

@@ -45,7 +45,7 @@
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qdeclarativeview.h>
+#include <QtQuick1/qdeclarativeview.h>
 #include <QtCore/qdir.h>
 #include <QtGui/QFormLayout>
 #include <QtGui/QComboBox>
@@ -55,7 +55,6 @@
 #include <QtGui/QFileDialog>
 #include <QtGui/QGraphicsView>
 
-#include <QtDeclarative/qdeclarativeitem.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <private/qdeclarativedebughelper_p.h>
 

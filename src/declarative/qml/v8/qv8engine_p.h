@@ -206,7 +206,7 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
-class Q_AUTOTEST_EXPORT QV8Engine 
+class Q_DECLARATIVE_EXPORT QV8Engine
 {
 public:
     QV8Engine();

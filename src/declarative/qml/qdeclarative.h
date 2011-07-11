@@ -410,6 +410,9 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
     return qmlAttachedPropertiesObject(&idx, obj, &T::staticMetaObject, create);
 }
 
+// For the use of QtQuick1 module
+Q_DECLARATIVE_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor);
+
 /*!
    This function may be used to register a module API provider \a callback in a particular \a uri
    with a version specified in \a versionMajor and \a versionMinor.

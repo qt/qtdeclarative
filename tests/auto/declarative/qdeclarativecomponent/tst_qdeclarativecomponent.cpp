@@ -41,10 +41,9 @@
 #include <qtest.h>
 #include <QDebug>
 
-#include <QtGui/qgraphicsitem.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qdeclarativeitem.h>
+#include <QtDeclarative/qsgitem.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <qcolor.h>
 
@@ -111,21 +110,14 @@ void tst_qdeclarativecomponent::qmlCreateObject()
     QObject *testObject2 = object->property("declarativeitem").value<QObject*>();
     QVERIFY(testObject2);
     QVERIFY(testObject2->parent() == object);
-    QCOMPARE(testObject2->metaObject()->className(), "QDeclarativeItem");
-
-    //Note that QGraphicsObjects are not exposed to QML for instantiation, and so can't be used in a component directly
-    //Also this is actually the extended type QDeclarativeGraphicsWidget, but it still doesn't inherit QDeclarativeItem
-    QGraphicsObject *testObject3 = qobject_cast<QGraphicsObject*>(object->property("graphicswidget").value<QObject*>());
-    QVERIFY(testObject3);
-    QVERIFY(testObject3->parent() == object);
-    QVERIFY(testObject3->parentItem() == qobject_cast<QGraphicsObject*>(object));
-    QCOMPARE(testObject3->metaObject()->className(), "QDeclarativeGraphicsWidget");
+    QCOMPARE(testObject2->metaObject()->className(), "QSGItem");
 }
 
 void tst_qdeclarativecomponent::qmlCreateObjectWithProperties()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/createObjectWithScript.qml"));
+    qDebug() << component.errorString();
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
     QVERIFY(object != 0);

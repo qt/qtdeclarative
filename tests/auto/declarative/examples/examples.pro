@@ -1,5 +1,5 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+contains(QT_CONFIG,declarative): QT += declarative qtquick1
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_examples.cpp 
@@ -18,4 +18,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private qtquick1-private

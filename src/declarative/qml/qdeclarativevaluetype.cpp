@@ -97,14 +97,15 @@ bool QDeclarativeValueTypeFactory::isValueType(int idx)
     return false;
 }
 
+void QDeclarativeValueTypeFactory::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
+{
+    qmlRegisterValueTypeEnums<QDeclarativeEasingValueType>(uri, versionMajor, versionMinor, "Easing");
+    qmlRegisterValueTypeEnums<QDeclarativeFontValueType>(uri, versionMajor, versionMinor, "Font");
+}
+
 void QDeclarativeValueTypeFactory::registerValueTypes()
 {
-    qmlRegisterValueTypeEnums<QDeclarativeEasingValueType>("QtQuick",1,0,"Easing");
-    qmlRegisterValueTypeEnums<QDeclarativeFontValueType>("QtQuick",1,0,"Font");
-#ifndef QT_NO_IMPORT_QT47_QML
-    qmlRegisterValueTypeEnums<QDeclarativeEasingValueType>("Qt",4,7,"Easing");
-    qmlRegisterValueTypeEnums<QDeclarativeFontValueType>("Qt",4,7,"Font");
-#endif
+    registerBaseTypes("QtQuick", 2, 0);
 }
 
 QDeclarativeValueType *QDeclarativeValueTypeFactory::valueType(int t)

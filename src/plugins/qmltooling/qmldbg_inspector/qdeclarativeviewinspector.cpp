@@ -48,7 +48,10 @@
 #include "editor/livelayeritem.h"
 #include "editor/boundingrecthighlighter.h"
 
-#include <QtDeclarative/QDeclarativeItem>
+#include <QtQuick1/QDeclarativeItem>
+#include <QtDeclarative/QDeclarativeEngine>
+#include <QtDeclarative/QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeExpression>
 #include <QtGui/QWidget>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QGraphicsObject>

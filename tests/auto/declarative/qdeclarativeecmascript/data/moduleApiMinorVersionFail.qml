@@ -1,4 +1,4 @@
-import QtQuick 1.0
+import QtQuick 2.0
 
 // this qml file attempts to import an invalid version of a qobject module API.
 

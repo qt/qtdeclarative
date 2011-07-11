@@ -59,7 +59,6 @@
 #include "private/qdeclarativetimeline_p_p.h"
 
 #include <qdeclarative.h>
-#include <qdeclarativeitem.h>
 #include <qdeclarativecontext.h>
 
 #include <QtCore/QPauseAnimation>
@@ -342,38 +341,6 @@ public:
     QDeclarativeRotationAnimationPrivate() : direction(QDeclarativeRotationAnimation::Numerical) {}
 
     QDeclarativeRotationAnimation::RotationDirection direction;
-};
-
-class QDeclarativeParentAnimationPrivate : public QDeclarativeAnimationGroupPrivate
-{
-    Q_DECLARE_PUBLIC(QDeclarativeParentAnimation)
-public:
-    QDeclarativeParentAnimationPrivate()
-    : QDeclarativeAnimationGroupPrivate(), target(0), newParent(0),
-       via(0), topLevelGroup(0), startAction(0), endAction(0) {}
-
-    QDeclarativeItem *target;
-    QDeclarativeItem *newParent;
-    QDeclarativeItem *via;
-
-    QSequentialAnimationGroup *topLevelGroup;
-    QActionAnimation *startAction;
-    QActionAnimation *endAction;
-
-    QPointF computeTransformOrigin(QDeclarativeItem::TransformOrigin origin, qreal width, qreal height) const;
-};
-
-class QDeclarativeAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
-{
-    Q_DECLARE_PUBLIC(QDeclarativeAnchorAnimation)
-public:
-    QDeclarativeAnchorAnimationPrivate() : rangeIsSet(false), va(0),
-        interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
-
-    bool rangeIsSet;
-    QDeclarativeBulkValueAnimator *va;
-    QVariantAnimation::Interpolator interpolator;
-    QList<QDeclarativeItem*> targets;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativeAnimationPropertyUpdater : public QDeclarativeBulkValueUpdater
