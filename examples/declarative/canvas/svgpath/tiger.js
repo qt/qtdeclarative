@@ -724,6 +724,7 @@ var tiger = [
 
 function draw(ctx, frame)
 {
+ var startTime = new Date();
   var totalPaths = tiger.length;
 
   if (frame > totalPaths)
@@ -731,14 +732,12 @@ function draw(ctx, frame)
    ctx.reset();
    ctx.globalCompositeOperation = "source-over";
    ctx.fillStyle = "rgba(0,0,0,0)";
-   //ctx.fillRect(0, 0, 600, 600);
    ctx.fillRect(0, 0, 1900, 1200);
 
    ctx.strokeColor = Qt.rgba(133, 133, 133,1);
    ctx.lineWidth = 1;
-   //ctx.translate(200, 200);
    ctx.translate(750, 350);
-   ctx.scale(2,2); 
+   ctx.scale(5,5);
   for (var i = 0; i < frame; i++) {
     if (tiger[i].width != undefined)
       ctx.lineWidth = tiger[i].width;
@@ -756,6 +755,9 @@ function draw(ctx, frame)
       ctx.stroke();
     }
  }
+ var endTime = new Date();
+ console.log("Javascript time:" + (endTime.valueOf() - startTime.valueOf()));
+
 }
 
 

@@ -58,6 +58,10 @@ public:
     QSGCanvasItemPrivate();
     ~QSGCanvasItemPrivate();
     QSGContext2D* context;
+    QList<QRect> dirtyRegions;
+    QRect unitedDirtyRegion;
+    qreal canvasX;
+    qreal canvasY;
 };
 
 
@@ -67,11 +71,48 @@ public:
 QSGCanvasItemPrivate::QSGCanvasItemPrivate()
     : QSGPaintedItemPrivate()
     , context(0)
+    , unitedDirtyRegion()
+    , canvasX(0.)
+    , canvasY(0.)
 {
 }
 
 QSGCanvasItemPrivate::~QSGCanvasItemPrivate()
 {
+}
+
+
+void QSGCanvasItem::setCanvasX(qreal x)
+{
+    Q_D(QSGCanvasItem);
+    if (d->canvasX != x) {
+        d->canvasX = x;
+        emit canvasXChanged();
+    }
+}
+void QSGCanvasItem::setCanvasY(qreal y)
+{
+    Q_D(QSGCanvasItem);
+    if (d->canvasY != y) {
+        d->canvasY = y;
+        emit canvasYChanged();
+    }
+}
+
+qreal QSGCanvasItem::canvasX() const
+{
+    Q_D(const QSGCanvasItem);
+    return d->canvasX;
+}
+qreal QSGCanvasItem::canvasY() const
+{
+    Q_D(const QSGCanvasItem);
+    return d->canvasY;
+}
+QPointF QSGCanvasItem::canvasPos() const
+{
+    Q_D(const QSGCanvasItem);
+    return QPointF(d->canvasX, d->canvasY);
 }
 
 /*!
@@ -92,11 +133,13 @@ QSGCanvasItem::~QSGCanvasItem()
 void QSGCanvasItem::paint(QPainter *painter)
 {
     Q_D(QSGCanvasItem);
+    if (d->context && d->context->isDirty()) {
+        painter->setWindow(-d->canvasX, -d->canvasY, d->width, d->height);
+        painter->setViewport(0, 0, d->width, d->height);
+        painter->scale(d->contentsScale, d->contentsScale);
 
-    if (d->context) {
-        emit drawRegion(getContext(), QRect(0, 0, width(), height()));
         d->context->paint(painter);
-        emit canvasUpdated();
+        emit painted();
     }
 }
 
@@ -104,36 +147,59 @@ void QSGCanvasItem::componentComplete()
 {
     const QMetaObject *metaObject = this->metaObject();
     int propertyCount = metaObject->propertyCount();
-    int requestPaintMethod = metaObject->indexOfMethod("requestPaint()");
+    int requestPaintMethod = metaObject->indexOfMethod("requestPaint(const QRect&)");
     for (int ii = QSGCanvasItem::staticMetaObject.propertyCount(); ii < propertyCount; ++ii) {
         QMetaProperty p = metaObject->property(ii);
         if (p.hasNotifySignal())
             QMetaObject::connect(this, p.notifySignalIndex(), this, requestPaintMethod, 0, 0);
     }
+
+    createContext();
+
     QSGPaintedItem::componentComplete();
 }
 
+void QSGCanvasItem::createContext()
+{
+    Q_D(QSGCanvasItem);
+
+    delete d->context;
+
+    d->context = new QSGContext2D(this);
+
+    QV8Engine *e = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
+    d->context->setV8Engine(e);
+}
 
 QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
+    Q_UNUSED(contextId);
 
-    if (contextId == QLatin1String("2d")) {
-        if (!d->context) {
-            QV8Engine *e = QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this));
-            d->context = new QSGContext2D(this);
-            d->context->setV8Engine(e);
-            connect(d->context, SIGNAL(changed()), this, SLOT(requestPaint()));
-        }
-        return QDeclarativeV8Handle::fromHandle(d->context->v8value());
-    }
+    if (d->context)
+       return QDeclarativeV8Handle::fromHandle(d->context->v8value());
     return QDeclarativeV8Handle::fromHandle(v8::Undefined());
 }
 
-void QSGCanvasItem::requestPaint()
+void QSGCanvasItem::requestPaint(const QRect& r)
 {
-    //TODO:update(d->context->dirtyRect());
-    update();
+    Q_D(QSGCanvasItem);
+
+    QRect  region;
+    if (!r.isValid())
+        region = QRect(d->canvasX, d->canvasY, d->width, d->height);
+    else
+        region = r;
+
+    foreach (const QRect& rect, d->dirtyRegions) {
+        if (rect.contains(region))
+            return;
+    }
+
+    d->unitedDirtyRegion = d->unitedDirtyRegion.unite(region);
+    d->dirtyRegions.append(region);
+    polish();
+    update(d->unitedDirtyRegion);
 }
 
 bool QSGCanvasItem::save(const QString &filename) const
@@ -145,6 +211,26 @@ bool QSGCanvasItem::save(const QString &filename) const
         image.save(filename);
     }
     return false;
+}
+
+void QSGCanvasItem::updatePolish()
+{
+    Q_D(QSGCanvasItem);
+    QDeclarativeV8Handle context = QDeclarativeV8Handle::fromHandle(d->context->v8value());
+
+    d->context->setValid(true);
+
+   // d->context->setTileRect(QRectF(d->canvasX, d->canvasY, d->width, d->height).intersected(QRectF(0, 0, d->width, d->height)));
+   // d->context->setTileRect(QRectF(d->canvasX, d->canvasY, d->width, d->height));
+
+    foreach (const QRect& region, d->dirtyRegions) {
+        emit paint(context, region);
+    }
+    d->dirtyRegions.clear();
+
+    d->context->setValid(false);
+
+    QSGPaintedItem::updatePolish();
 }
 
 QString QSGCanvasItem::toDataURL(const QString& mimeType) const
@@ -182,5 +268,4 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
     }
     return QLatin1String("data:,");
 }
-
 QT_END_NAMESPACE

@@ -82,6 +82,7 @@ public:
         , cachedImage(1,1, QImage::Format_ARGB32)
         , canvas(0)
         , waitingForPainting(false)
+        , valid(false)
     {
     }
     ~QSGContext2DPrivate() 
@@ -180,6 +181,7 @@ public:
 
     void clearCommands()
     {
+        qDebug() << "painting commands:" << commands.size();
         commands.remove(0, commands.size());
         variants.remove(0, variants.size());
         pens.remove(0, pens.size());
@@ -227,6 +229,8 @@ public:
     QImage cachedImage;
     QSGCanvasItem* canvas;
     bool waitingForPainting;
+    bool valid;
+    QRectF tileRect;
 };
 
 QT_END_NAMESPACE

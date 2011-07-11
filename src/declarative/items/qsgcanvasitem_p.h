@@ -61,26 +61,36 @@ class QSGCanvasItemPrivate;
 class QSGCanvasItem : public QSGPaintedItem
 {
     Q_OBJECT
+    Q_PROPERTY(QPointF canvasPos READ canvasPos FINAL)
+    Q_PROPERTY(qreal canvasX READ canvasX WRITE setCanvasX NOTIFY canvasXChanged FINAL)
+    Q_PROPERTY(qreal canvasY READ canvasY WRITE setCanvasY NOTIFY canvasYChanged FINAL)
 public:
     QSGCanvasItem(QSGItem *parent = 0);
     ~QSGCanvasItem();
-
+    void setCanvasX(qreal x);
+    void setCanvasY(qreal y);
+    qreal canvasX() const;
+    qreal canvasY() const;
+    QPointF canvasPos() const;
 Q_SIGNALS:
-    void canvasUpdated();
-    void drawRegion(QDeclarativeV8Handle context, const QRect &region);
-
+    void painted();
+    void paint(QDeclarativeV8Handle context, const QRect &region);
+    void canvasXChanged();
+    void canvasYChanged();
 public Q_SLOTS:
     QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QDeclarativeV8Handle getContext(const QString & = QLatin1String("2d"));
-    void requestPaint();
+    void requestPaint(const QRect& region = QRect());
 
     // Save current canvas to disk
     bool save(const QString& filename) const;
 
 protected:
+    void updatePolish();
     void paint(QPainter *painter);
     virtual void componentComplete();
 private:
+    void createContext();
     Q_DECLARE_PRIVATE(QSGCanvasItem)
     friend class QSGContext2D;
 };

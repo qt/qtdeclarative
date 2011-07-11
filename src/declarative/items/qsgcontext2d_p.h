@@ -86,6 +86,16 @@ public:
 Q_DECLARE_METATYPE(QSGCanvasGradient*)
 
 
+class QSGCanvasPath : QObject
+{
+    Q_OBJECT
+public:
+    QSGCanvasPath(const QPainterPath& path, QObject* parent = 0) :  QObject(parent), m_path(path) {}
+
+    QPainterPath m_path;
+};
+Q_DECLARE_METATYPE(QSGCanvasPath*)
+
 class QSGContext2DWorkerAgent;
 class QSGContext2DPrivate;
 class QSGCanvasItem;
@@ -113,6 +123,8 @@ class QSGContext2D : public QObject
     Q_PROPERTY(QString font READ font WRITE setFont)
     Q_PROPERTY(QString textBaseline READ textBaseline WRITE setTextBaseline)
     Q_PROPERTY(QString textAlign READ textAlign WRITE setTextAlign)
+
+    Q_PROPERTY(QSGCanvasPath* path READ path WRITE setPath)
     Q_ENUMS(PaintCommand)
 public:
     enum TextBaseLineType { Alphabetic=0, Top, Middle, Bottom, Hanging};
@@ -245,6 +257,8 @@ public:
     void setShadowBlur(qreal b);
     void setShadowColor(const QString &str);
 
+    QSGCanvasPath* path();
+    void setPath(QSGCanvasPath* path);
 public slots:
     void save(); // push state on state stack
     void restore(); // pop state stack and restore state
@@ -295,6 +309,7 @@ public slots:
     //implement the W3C SVG path spec:
     //http://www.w3.org/TR/SVG/paths.html
     void setPathString(const QString& path);
+    QSGCanvasPath* createPath(const QString& pathString);
 
     QSGImage *createImage(const QString &url);
 
@@ -315,8 +330,12 @@ signals:
 public:
     bool isDirty() const;
     v8::Handle<v8::Object> v8value() const;
+    QV8Engine* v8Engine() const;
     void setV8Engine(QV8Engine *eng);
 
+    bool valid() const;
+    void setValid(bool valid);
+    void setTileRect(const QRectF& region);
     void addref();
     void release();
 
