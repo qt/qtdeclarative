@@ -81,6 +81,11 @@ DEFINE_BOOL_CONFIG_OPTION(compilerStatDump, QML_COMPILER_STATS);
 
 using namespace QDeclarativeParser;
 
+static QString id_string(QLatin1String("id"));
+static QString on_string(QLatin1String("on"));
+static QString Changed_string(QLatin1String("Changed"));
+static QString Component_string(QLatin1String("Component"));
+
 /*!
     Instantiate a new QDeclarativeCompiler.
 */
@@ -113,7 +118,7 @@ QList<QDeclarativeError> QDeclarativeCompiler::errors() const
 
     Attached property names are those that start with a capital letter.
 */
-bool QDeclarativeCompiler::isAttachedPropertyName(const QByteArray &name)
+bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
 {
     return !name.isEmpty() && name.at(0) >= 'A' && name.at(0) <= 'Z';
 }
@@ -129,15 +134,15 @@ bool QDeclarativeCompiler::isAttachedPropertyName(const QByteArray &name)
     character codes in property names, for simplicity and performance reasons
     QML only supports letters, numbers and underscores.
 */
-bool QDeclarativeCompiler::isSignalPropertyName(const QByteArray &name)
+bool QDeclarativeCompiler::isSignalPropertyName(const QString &name)
 {
     if (name.length() < 3) return false;
-    if (!name.startsWith("on")) return false;
+    if (!name.startsWith(on_string)) return false;
     int ns = name.size();
     for (int i = 2; i < ns; ++i) {
-        char curr = name.at(i);
-        if (curr == '_') continue;
-        if (curr >= 'A' && curr <= 'Z') return true;
+        QChar curr = name.at(i);
+        if (curr == QLatin1Char('_')) continue;
+        if (curr >= QLatin1Char('A') && curr <= QLatin1Char('Z')) return true;
         return false;
     }
     return false; // consists solely of underscores - invalid.
@@ -155,7 +160,7 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QByteArray &name)
     For example:
 
     \code
-    COMPILE_EXCEPTION(property, tr("Error for property \"%1\"").arg(QString::fromUtf8(property->name)));
+    COMPILE_EXCEPTION(property, tr("Error for property \"%1\"").arg(property->name));
     \endcode
 */
 #define COMPILE_EXCEPTION(token, desc) \
@@ -188,7 +193,7 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QByteArray &name)
     made here, must have a corresponding action in genLiteralAssigment().
 */
 bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
-                                        QDeclarativeParser::Value *v)
+                                                 QDeclarativeParser::Value *v)
 {
     QString string = v->value.asString();
 
@@ -339,7 +344,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
     a corresponding action in this method.
 */
 void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
-                                       QDeclarativeParser::Value *v)
+                                                QDeclarativeParser::Value *v)
 {
     QDeclarativeInstruction instr;
     if (prop.isEnumType()) {
@@ -652,7 +657,7 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
         } else if (tref.typeData) {
             ref.component = tref.typeData->compiledData();
         }
-        ref.className = parserRef->name.toUtf8();
+        ref.className = parserRef->name;
         out->types << ref;
     }
 
@@ -776,9 +781,8 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
         output->types.at(obj->type);
     obj->metatype = tr.metaObject();
 
-    if (tr.type)
+    if (tr.type) 
         obj->typeName = tr.type->qmlTypeName();
-    obj->className = tr.className;
 
     // This object is a "Component" element
     if (tr.type && obj->metatype == &QDeclarativeComponent::staticMetaObject) {
@@ -815,7 +819,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
     // id reference created matches the order in which the objects are
     // instantiated
     foreach(Property *prop, obj->properties) {
-        if (prop->name == "id") {
+        if (prop->name == id_string) {
             COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
             break;
         }
@@ -864,7 +868,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
 
         if (prop == skipProperty)
             continue;
-        if (prop->name == "id")
+        if (prop->name == id_string)
             continue;
 
         bool canDefer = false;
@@ -891,8 +895,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
             }
         }
 
-        if (canDefer && !deferredList.isEmpty() &&
-            deferredList.contains(QString::fromUtf8(prop->name)))
+        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name))
             prop->isDeferred = true;
 
     }
@@ -916,8 +919,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
             canDefer = ids == compileState.ids.count();
         }
 
-        if (canDefer && !deferredList.isEmpty() &&
-            deferredList.contains(QString::fromUtf8(prop->name)))
+        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name))
             prop->isDeferred = true;
     }
 
@@ -1103,7 +1105,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
             assign.setType(QDeclarativeInstruction::AssignSignalObject);
             assign.assignSignalObject.line = v->location.start.line;
             assign.assignSignalObject.signal =
-                output->indexForByteArray(prop->name);
+                output->indexForString(prop->name);
             output->addInstruction(assign);
 
         } else if (v->type == Value::SignalExpression) {
@@ -1116,7 +1118,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
             store.storeSignal.value =
                 output->indexForString(v->value.asScript().trimmed());
             store.storeSignal.context = ctxt.stack;
-            store.storeSignal.name = output->indexForByteArray(prop->name);
+            store.storeSignal.name = output->indexForByteArray(prop->name.toUtf8());
             store.storeSignal.line = v->location.start.line;
             output->addInstruction(store);
 
@@ -1286,7 +1288,7 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
     // Find, check and set the "id" property (if any)
     Property *idProp = 0;
     if (obj->properties.count() > 1 ||
-       (obj->properties.count() == 1 && obj->properties.begin().key() != "id"))
+       (obj->properties.count() == 1 && obj->properties.begin().key() != id_string))
         COMPILE_EXCEPTION(*obj->properties.begin(), tr("Component elements may not contain properties other than id"));
        
     if (obj->properties.count())
@@ -1386,7 +1388,7 @@ int QDeclarativeCompiler::componentTypeRef()
             return ii;
     }
     QDeclarativeCompiledData::TypeReference ref;
-    ref.className = "Component";
+    ref.className = Component_string;
     ref.type = t;
     output->types << ref;
     return output->types.count() - 1;
@@ -1397,15 +1399,15 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 {
     Q_ASSERT(obj->metaObject());
 
-    QByteArray name = prop->name;
-    Q_ASSERT(name.startsWith("on"));
+    QString name = prop->name;
+    Q_ASSERT(name.startsWith(on_string));
     name = name.mid(2);
 
     // Note that the property name could start with any alpha or '_' or '$' character,
     // so we need to do the lower-casing of the first alpha character.
     for (int firstAlphaIndex = 0; firstAlphaIndex < name.size(); ++firstAlphaIndex) {
-        if (name[firstAlphaIndex] >= 'A' && name[firstAlphaIndex] <= 'Z') {
-            name[firstAlphaIndex] = name[firstAlphaIndex] - 'A' + 'a';
+        if (name.at(firstAlphaIndex) >= QLatin1Char('A') && name.at(firstAlphaIndex) <= QLatin1Char('Z')) {
+            name[firstAlphaIndex] = name.at(firstAlphaIndex).toLower();
             break;
         }
     }
@@ -1420,9 +1422,9 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
             if (type.type) {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(QString::fromUtf8(obj->className)).arg(QString::fromUtf8(prop->name)).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
             } else {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(QString::fromUtf8(obj->className)).arg(QString::fromUtf8(prop->name)));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name));
             }
         }
 
@@ -1465,7 +1467,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 bool QDeclarativeCompiler::doesPropertyExist(QDeclarativeParser::Property *prop,
                                              QDeclarativeParser::Object *obj)
 {
-    if(isAttachedPropertyName(prop->name) || prop->name == "id")
+    if(isAttachedPropertyName(prop->name) || prop->name == id_string)
         return true;
 
     const QMetaObject *mo = obj->metaObject();
@@ -1504,7 +1506,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
         QDeclarativeType *type = 0;
         QDeclarativeImportedNamespace *typeNamespace = 0;
-        unit->imports().resolveType(prop->name, &type, 0, 0, 0, &typeNamespace);
+        unit->imports().resolveType(prop->name.toUtf8(), &type, 0, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
             COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj, 
@@ -1529,7 +1531,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
             if (p.name()) {
                 prop->index = p.propertyIndex();
-                prop->name = p.name();
+                prop->name = QString::fromLatin1(p.name());
             }
 
         } else {
@@ -1539,9 +1541,9 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
                 const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
                 const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
                 if (type.type) {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(QString::fromUtf8(obj->className)).arg(QString::fromUtf8(prop->name)).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
                 } else {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(QString::fromUtf8(obj->className)).arg(QString::fromUtf8(prop->name)));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name));
                 }
             }
 
@@ -1576,7 +1578,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
             prop->parent->setBindingBit(prop->index);
     }
 
-    if (!prop->isDefault && prop->name == "id" && !ctxt.isSubContext()) {
+    if (!prop->isDefault && prop->name == id_string && !ctxt.isSubContext()) {
 
         // The magic "id" behavior doesn't apply when "id" is resolved as a
         // default property or to sub-objects (which are always in binding
@@ -1595,7 +1597,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         if (prop->isDefault) {
             COMPILE_EXCEPTION(prop->values.first(), tr("Cannot assign to non-existent default property"));
         } else {
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(QString::fromUtf8(prop->name)));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
         }
 
     } else if (prop->value) {
@@ -1635,7 +1637,7 @@ bool QDeclarativeCompiler::buildPropertyInNamespace(QDeclarativeImportedNamespac
         // Setup attached property data
 
         QDeclarativeType *type = 0;
-        unit->imports().resolveType(ns, prop->name, &type, 0, 0, 0);
+        unit->imports().resolveType(ns, prop->name.toUtf8(), &type, 0, 0, 0);
 
         if (!type || !type->attachedPropertiesType()) 
             COMPILE_EXCEPTION(prop, tr("Non-existent attached object"));
@@ -1901,7 +1903,7 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeParser::Property *pr
             }
 
             if (!obj->metaObject()->property(prop->index).isWritable()) {
-                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop->name)));
+                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
             }
 
 
@@ -1944,12 +1946,12 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
     obj->metatype = type->metaObject();
 
     foreach (Property *prop, obj->properties) {
-        int idx = type->metaObject()->indexOfProperty(prop->name.constData());
+        int idx = type->metaObject()->indexOfProperty(prop->name.toUtf8().constData());
         if (idx == -1)
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(QString::fromUtf8(prop->name)));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
         QMetaProperty p = type->metaObject()->property(idx);
         if (!p.isScriptable())
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(QString::fromUtf8(prop->name)));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
         prop->index = idx;
         prop->type = p.userType();
         prop->isValueTypeSubProperty = true;
@@ -2106,7 +2108,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeParser::Pro
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop->name)));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
 
     if (QDeclarativeMetaType::isInterface(prop->type)) {
 
@@ -2187,7 +2189,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop->name)));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
 
 
     // Normally buildObject() will set this up, but we need the static
@@ -2214,7 +2216,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
             buildDynamicMeta(baseObj, ForceCreation);
         v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
     } else {
-        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(QString::fromUtf8(prop->name.constData())));
+        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name));
     }
 
     return true;
@@ -2358,10 +2360,10 @@ const QMetaObject *QDeclarativeCompiler::resolveType(const QByteArray& name) con
 
 // similar to logic of completeComponentBuild, but also sticks data
 // into primitives at the end
-int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QByteArray& name)
+int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QString& name)
 {
     QDeclarativeRewrite::RewriteBinding rewriteBinding;
-    rewriteBinding.setName('$' + name.mid(name.lastIndexOf('.') + 1));
+    rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf('.') + 1));
 
     QString rewrite = rewriteBinding(expression, 0, 0);
 
@@ -2845,7 +2847,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
 
     QMetaProperty mp = prop->parent->metaObject()->property(prop->index);
     if (!mp.isWritable() && !QDeclarativeMetaType::isList(prop->type))
-        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop->name)));
+        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
 
     BindingReference reference;
     reference.expression = value->value;
@@ -2998,7 +3000,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
         QString expression = binding.expression.asScript();
 
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
-        rewriteBinding.setName('$'+binding.property->name);
+        rewriteBinding.setName(QLatin1Char('$')+binding.property->name);
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
@@ -3125,6 +3127,19 @@ bool QDeclarativeCompiler::canCoerce(int to, QDeclarativeParser::Object *from)
     return false;
 }
 
+/*!
+    Returns the element name, as written in the QML file, for o.
+*/
+QString QDeclarativeCompiler::elementName(QDeclarativeParser::Object *o)
+{
+    Q_ASSERT(o);
+    if (o->type != -1) {
+        return output->types.at(o->type).className;
+    } else {
+        return QString();
+    }
+}
+
 QDeclarativeType *QDeclarativeCompiler::toQmlType(QDeclarativeParser::Object *from)
 {
     // ### Optimize
@@ -3151,18 +3166,16 @@ QStringList QDeclarativeCompiler::deferredProperties(QDeclarativeParser::Object 
 }
 
 // This code must match the semantics of QDeclarativePropertyPrivate::findSignalByName
-int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, const QByteArray &name, 
+int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, const QString &name, 
                                         bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
 
     if (object->synthCache || (object->type != -1 && output->types.at(object->type).propertyCache())) {
-        // XXX fromUtf8
-        QString strName(QString::fromUtf8(name));
         QDeclarativePropertyCache *cache = 
             object->synthCache?object->synthCache:output->types.at(object->type).propertyCache();
 
-        QDeclarativePropertyCache::Data *d = cache->property(strName);
+        QDeclarativePropertyCache::Data *d = cache->property(name);
         if (notInRevision) *notInRevision = false;
 
         while (d && !(d->isFunction()))
@@ -3175,8 +3188,8 @@ int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, cons
             return d->coreIndex;
         }
 
-        if (name.endsWith("Changed")) {
-            QByteArray propName = name.mid(0, name.length() - 7);
+        if (name.endsWith(Changed_string)) {
+            QString propName = name.mid(0, name.length() - 7);
 
             int propIndex = indexOfProperty(object, propName, notInRevision);
             if (propIndex != -1) {
@@ -3187,23 +3200,21 @@ int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, cons
 
         return -1;
     } else {
-        return QDeclarativePropertyPrivate::findSignalByName(object->metaObject(), name).methodIndex();
+        return QDeclarativePropertyPrivate::findSignalByName(object->metaObject(), name.toUtf8()).methodIndex();
     }
 
 }
 
-int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QByteArray &name, 
+int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QString &name, 
                                           bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
 
     if (object->synthCache || (object->type != -1 && output->types.at(object->type).propertyCache())) {
-        // XXX fromUtf8
-        QString strName(QString::fromUtf8(name));
         QDeclarativePropertyCache *cache = 
             object->synthCache?object->synthCache:output->types.at(object->type).propertyCache();
 
-        QDeclarativePropertyCache::Data *d = cache->property(strName);
+        QDeclarativePropertyCache::Data *d = cache->property(name);
         // Find the first property
         while (d && d->isFunction())
             d = cache->overrideData(d);
@@ -3216,7 +3227,7 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, co
         }
     } else {
         const QMetaObject *mo = object->metaObject();
-        return mo->indexOfProperty(name.constData());
+        return mo->indexOfProperty(name.toUtf8().constData());
     }
 }
 

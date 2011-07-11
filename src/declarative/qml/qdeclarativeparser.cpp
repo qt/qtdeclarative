@@ -156,7 +156,7 @@ void QDeclarativeParser::Object::addScriptStringProperty(Property *p, int stack)
 }
 
 
-Property *QDeclarativeParser::Object::getProperty(const QByteArray &name, bool create)
+Property *QDeclarativeParser::Object::getProperty(const QString &name, bool create)
 {
     if (!properties.contains(name)) {
         if (create) {
@@ -210,7 +210,7 @@ QDeclarativeParser::Property::Property()
 {
 }
 
-QDeclarativeParser::Property::Property(const QByteArray &n)
+QDeclarativeParser::Property::Property(const QString &n)
 : parent(0), type(0), index(-1), value(0), name(n), isDefault(false), 
   isDeferred(false), isValueTypeSubProperty(false), isAlias(false)
 {

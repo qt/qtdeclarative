@@ -240,7 +240,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
                 types.at(instr.type).createInstance(ctxt, bindings, &vmeErrors);
 
             if (!o) {
-                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(QString::fromLatin1(types.at(instr.type).className)), instr.line);
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Unable to create object of type %1").arg(types.at(instr.type).className), instr.line);
             }
 
             QDeclarativeData *ddata = QDeclarativeData::get(o);
@@ -631,9 +631,9 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             QObject *assign = stack.pop();
             QObject *target = stack.top();
             int sigIdx = instr.signal;
-            const QByteArray &pr = datas.at(sigIdx);
+            const QString &pr = primitives.at(sigIdx);
 
-            QDeclarativeProperty prop(target, QString::fromUtf8(pr));
+            QDeclarativeProperty prop(target, pr);
             if (prop.type() & QDeclarativeProperty::SignalProperty) {
 
                 QMetaMethod method = QDeclarativeMetaType::defaultMethod(assign);
@@ -646,7 +646,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
                 QDeclarativePropertyPrivate::connect(target, prop.index(), assign, method.methodIndex());
 
             } else {
-                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(QString::fromUtf8(pr)), instr.line);
+                VME_EXCEPTION(QCoreApplication::translate("QDeclarativeVME","Cannot assign an object to signal property %1").arg(pr), instr.line);
             }
 
 

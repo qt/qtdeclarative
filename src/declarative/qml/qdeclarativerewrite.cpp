@@ -118,7 +118,7 @@ QString RewriteBinding::operator()(QDeclarativeJS::AST::Node *node, const QStrin
     unsigned startOfStatement = 0;
     unsigned endOfStatement = (expression ? expression->lastSourceLocation().end() : statement->lastSourceLocation().end()) - _position;
 
-    QString startString = QLatin1String("(function ") + QString::fromUtf8(_name) + QLatin1String("() { ");
+    QString startString = QLatin1String("(function ") + _name + QLatin1String("() { ");
     if (expression)
         startString += QLatin1String("return ");
     _writer->replace(startOfStatement, 0, startString);
@@ -160,7 +160,7 @@ QString RewriteBinding::rewrite(QString code, unsigned position,
     unsigned startOfStatement = node->firstSourceLocation().begin() - _position;
     unsigned endOfStatement = node->lastSourceLocation().end() - _position;
 
-    _writer->replace(startOfStatement, 0, QLatin1String("(function ") + QString::fromUtf8(_name) + QLatin1String("() { "));
+    _writer->replace(startOfStatement, 0, QLatin1String("(function ") + _name + QLatin1String("() { "));
     _writer->replace(endOfStatement, 0, QLatin1String(" })"));
 
     if (rewriteDump()) {

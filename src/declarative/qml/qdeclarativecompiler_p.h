@@ -91,7 +91,7 @@ public:
         TypeReference()
         : type(0), typePropertyCache(0), component(0) {}
 
-        QByteArray className;
+        QString className;
         QDeclarativeType *type;
         QDeclarativePropertyCache *typePropertyCache;
         QDeclarativeCompiledData *component;
@@ -151,12 +151,12 @@ public:
     bool isError() const;
     QList<QDeclarativeError> errors() const;
 
-    static bool isAttachedPropertyName(const QByteArray &);
-    static bool isSignalPropertyName(const QByteArray &);
+    static bool isAttachedPropertyName(const QString &);
+    static bool isSignalPropertyName(const QString &);
 
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QByteArray& name) const; // for QDeclarativeCustomParser::resolveType
-    int rewriteBinding(const QString& expression, const QByteArray& name); // for QDeclarativeCustomParser::rewriteBinding
+    int rewriteBinding(const QString& expression, const QString& name); // for QDeclarativeCustomParser::rewriteBinding
 
 private:
     static void reset(QDeclarativeCompiledData *);
@@ -271,9 +271,11 @@ private:
     static QDeclarativeType *toQmlType(QDeclarativeParser::Object *from);
     bool canCoerce(int to, QDeclarativeParser::Object *from);
 
+    QString elementName(QDeclarativeParser::Object *);
+
     QStringList deferredProperties(QDeclarativeParser::Object *);
-    int indexOfProperty(QDeclarativeParser::Object *, const QByteArray &, bool *notInRevision = 0);
-    int indexOfSignal(QDeclarativeParser::Object *, const QByteArray &, bool *notInRevision = 0);
+    int indexOfProperty(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
+    int indexOfSignal(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
 
     void addId(const QString &, QDeclarativeParser::Object *);
 

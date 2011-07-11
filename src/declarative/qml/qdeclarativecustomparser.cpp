@@ -101,7 +101,7 @@ QDeclarativeCustomParserNodePrivate::fromObject(QDeclarativeParser::Object *root
     rootNode.d->name = root->typeName;
     rootNode.d->location = root->location.start;
 
-    for(QHash<QByteArray, Property *>::Iterator iter = root->properties.begin();
+    for(QHash<QString, Property *>::Iterator iter = root->properties.begin();
         iter != root->properties.end();
         ++iter) {
 
@@ -120,7 +120,7 @@ QDeclarativeCustomParserProperty
 QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeParser::Property *p)
 {
     QDeclarativeCustomParserProperty prop;
-    prop.d->name = p->name;
+    prop.d->name = p->name.toUtf8();
     prop.d->isList = (p->values.count() > 1);
     prop.d->location = p->location.start;
 
