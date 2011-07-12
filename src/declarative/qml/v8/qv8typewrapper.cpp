@@ -172,10 +172,24 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
         if (d && d->type) {
             return v8engine->typeWrapper()->newObject(object, d->type, resource->mode);
         } else if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = typeNamespace->moduleApi()) {
-            // XXX TODO: Currently module APIs are implemented against QScriptValues.  Consequently we
-            // can't do anything here until the QtScript/V8 binding is complete.
-            return v8::Undefined();
 
+            // XXX TODO: Currently module APIs are implemented against QScriptValues.  Consequently we
+            // can't do anything for script module apis here until the QtScript/V8 binding is complete.
+            if (moduleApi->qobjectCallback) {
+                moduleApi->qobjectApi = moduleApi->qobjectCallback(v8engine->engine(), 0);
+                moduleApi->scriptCallback = 0;
+                moduleApi->qobjectCallback = 0;
+            }
+
+            if (moduleApi->qobjectApi) {
+                v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(moduleApi->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
+                if (rv.IsEmpty())
+                    return v8::Undefined();
+                else 
+                    return rv;
+            } else {
+                return v8::Undefined();
+            }
         }
 
         // Fall through to undefined
@@ -209,6 +223,20 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
         if (ao) 
             v8engine->qobjectWrapper()->setProperty(ao, propertystring, value, 
                                                     QV8QObjectWrapper::IgnoreRevision);
+    } else if (resource->typeNamespace) {
+        if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi()) {
+            // XXX TODO: Currently module APIs are implemented against QScriptValues.  Consequently we
+            // can't do anything for script module apis here until the QtScript/V8 binding is complete.
+            if (moduleApi->qobjectCallback) {
+                moduleApi->qobjectApi = moduleApi->qobjectCallback(v8engine->engine(), 0);
+                moduleApi->scriptCallback = 0;
+                moduleApi->qobjectCallback = 0;
+            }
+
+            if (moduleApi->qobjectApi) 
+                v8engine->qobjectWrapper()->setProperty(moduleApi->qobjectApi, propertystring, value, 
+                                                        QV8QObjectWrapper::IgnoreRevision);
+        }
     }
 
     return value;

@@ -2585,12 +2585,12 @@ void tst_qdeclarativeecmascript::signalWithUnknownTypes()
 
 void tst_qdeclarativeecmascript::moduleApi()
 {
-    QSKIP("Module API not supported with V8", SkipAll);
-
     QDeclarativeComponent component(&engine, TEST_FILE("moduleApi.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("existingUriTest").toInt(), 20);
+
+    QEXPECT_FAIL("", "QTBUG-17318", Continue);
     QCOMPARE(object->property("scriptTest").toInt(), 13);
     QCOMPARE(object->property("qobjectTest").toInt(), 20);
     QCOMPARE(object->property("qobjectMethodTest").toInt(), 1); // first call of method, so count = 1.
@@ -2604,6 +2604,7 @@ void tst_qdeclarativeecmascript::moduleApi()
     object = componentTwo.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("existingUriTest").toInt(), 20);
+    QEXPECT_FAIL("", "QTBUG-17318", Continue);
     QCOMPARE(object->property("scriptTest").toInt(), 13);            // shouldn't have incremented.
     QCOMPARE(object->property("qobjectParentedTest").toInt(), 26);   // shouldn't have incremented.
     delete object;
