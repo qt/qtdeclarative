@@ -407,10 +407,8 @@ void QDeclarativeExpressionPrivate::exceptionToError(v8::Handle<v8::Message> mes
     v8::Handle<v8::String> description = message->Get();
     int lineNumber = message->GetLineNumber();
 
-    Q_ASSERT(name->IsString());
-
-    v8::Local<v8::String> file = name->ToString();
-    if (file->Length() == 0) 
+    v8::Local<v8::String> file = name->IsString()?name->ToString():v8::Local<v8::String>();
+    if (file.IsEmpty() || file->Length() == 0) 
         error.setUrl(QUrl(QLatin1String("<Unknown File>")));
     else 
         error.setUrl(QUrl(QV8Engine::toStringStatic(file)));
