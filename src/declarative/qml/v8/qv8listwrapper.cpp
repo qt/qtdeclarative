@@ -135,7 +135,7 @@ v8::Handle<v8::Value> QV8ListWrapper::Getter(v8::Local<v8::String> property,
 {
     Q_UNUSED(property);
     Q_UNUSED(info);
-    return v8::Undefined();
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8ListWrapper::Setter(v8::Local<v8::String> property, 

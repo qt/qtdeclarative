@@ -162,14 +162,14 @@ QVariant QV8VariantWrapper::toVariant(QV8ObjectResource *r)
 v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> property, 
                                                 const v8::AccessorInfo &info)
 {
-    return v8::Undefined();
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Local<v8::String> property, 
                                                 v8::Local<v8::Value> value,
                                                 const v8::AccessorInfo &info)
 {
-    return v8::Undefined();
+    return value;
 }
 
 v8::Handle<v8::Value> QV8VariantWrapper::PreserveGetter(v8::Local<v8::String> property, 

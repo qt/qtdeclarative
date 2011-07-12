@@ -150,7 +150,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 }
             } 
 
-            // Fall through to undefined
+            // Fall through to return empty handle
 
         } else if (resource->object) {
             QObject *ao = qmlAttachedPropertiesObjectById(type->attachedPropertiesId(), object);
@@ -158,10 +158,10 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                 return v8engine->qobjectWrapper()->getProperty(ao, propertystring, 
                                                                QV8QObjectWrapper::IgnoreRevision);
 
-            // Fall through to undefined
+            // Fall through to return empty handle
         }
 
-        // Fall through to undefined
+        // Fall through to return empty handle
 
     } else if (resource->typeNamespace) {
 
@@ -185,21 +185,19 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
 
             if (moduleApi->qobjectApi) {
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(moduleApi->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
-                if (rv.IsEmpty())
-                    return v8::Undefined();
-                else 
-                    return rv;
+                return rv;
             } else {
-                return v8::Undefined();
+                return v8::Handle<v8::Value>();
             }
         }
 
-        // Fall through to undefined
+        // Fall through to return empty handle
 
     } else {
         Q_ASSERT(!"Unreachable");
     }
-    return v8::Undefined(); 
+
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property, 

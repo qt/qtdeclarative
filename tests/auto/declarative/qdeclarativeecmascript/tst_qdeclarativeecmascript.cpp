@@ -113,6 +113,7 @@ private slots:
     void dynamicCreation();
     void dynamicDestruction();
     void objectToString();
+    void objectHasOwnProperty();
     void selfDeletingBinding();
     void extendedObjectPropertyLookup();
     void scriptErrors();
@@ -1136,6 +1137,55 @@ void tst_qdeclarativeecmascript::objectToString()
     QMetaObject::invokeMethod(object, "testToString");
     QVERIFY(object->stringProperty().startsWith("MyQmlObject_QML_"));
     QVERIFY(object->stringProperty().endsWith(", \"objName\")"));
+
+    delete object;
+}
+
+/*
+  tests that id.hasOwnProperty() works
+*/
+void tst_qdeclarativeecmascript::objectHasOwnProperty()
+{
+    QUrl url = TEST_FILE("declarativeHasOwnProperty.qml");
+    QString warning1 = url.toString() + ":59: TypeError: Cannot call method 'hasOwnProperty' of undefined";
+    QString warning2 = url.toString() + ":64: TypeError: Cannot call method 'hasOwnProperty' of undefined";
+    QString warning3 = url.toString() + ":69: TypeError: Cannot call method 'hasOwnProperty' of undefined";
+
+    QDeclarativeComponent component(&engine, url);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    // test QObjects in QML
+    QMetaObject::invokeMethod(object, "testHasOwnPropertySuccess");
+    QVERIFY(object->property("result").value<bool>() == true);
+    QMetaObject::invokeMethod(object, "testHasOwnPropertyFailure");
+    QVERIFY(object->property("result").value<bool>() == false);
+
+    // now test other types in QML
+    QObject *child = object->findChild<QObject*>("typeObj");
+    QVERIFY(child != 0);
+    QMetaObject::invokeMethod(child, "testHasOwnPropertySuccess");
+    QCOMPARE(child->property("valueTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("valueTypeHasOwnProperty2").toBool(), true);
+    QCOMPARE(child->property("variantTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("stringTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("listTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("emptyListTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("enumTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("typenameHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("typenameHasOwnProperty2").toBool(), true);
+    QCOMPARE(child->property("moduleApiTypeHasOwnProperty").toBool(), true);
+    QCOMPARE(child->property("moduleApiPropertyTypeHasOwnProperty").toBool(), true);
+
+    QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
+    QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureOne");
+    QCOMPARE(child->property("enumNonValueHasOwnProperty").toBool(), false);
+    QTest::ignoreMessage(QtWarningMsg, warning2.toLatin1().constData());
+    QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureTwo");
+    QCOMPARE(child->property("moduleApiNonPropertyHasOwnProperty").toBool(), false);
+    QTest::ignoreMessage(QtWarningMsg, warning3.toLatin1().constData());
+    QMetaObject::invokeMethod(child, "testHasOwnPropertyFailureThree");
+    QCOMPARE(child->property("listAtInvalidHasOwnProperty").toBool(), false);
 
     delete object;
 }

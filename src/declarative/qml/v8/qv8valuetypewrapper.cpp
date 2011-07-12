@@ -229,7 +229,7 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
                                                   const v8::AccessorInfo &info)
 {
     QV8ValueTypeResource *r =  v8_resource_cast<QV8ValueTypeResource>(info.This());
-    if (!r) return v8::Undefined();
+    if (!r) return v8::Handle<v8::Value>();
 
     // XXX This is horribly inefficient.  Sadly people seem to have taken a liking to 
     // value type properties, so we should probably try and optimize it a little.
@@ -242,13 +242,15 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
 
     int index = r->type->metaObject()->indexOfProperty(propName.constData());
     if (index == -1)
-        return v8::Undefined();
+        return v8::Handle<v8::Value>();
+
 
     if (r->objectType == QV8ValueTypeResource::Reference) {
         QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(r);
 
         if (!reference->object)
-            return v8::Undefined();
+            return v8::Handle<v8::Value>();
+
 
         r->type->read(reference->object, reference->property);
     } else {

@@ -600,7 +600,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
     QV8QObjectResource *resource = v8_resource_check<QV8QObjectResource>(info.This());
 
     if (resource->object.isNull()) 
-        return v8::Undefined();
+        return v8::Handle<v8::Value>();
 
     QObject *object = resource->object;
 
@@ -628,7 +628,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Getter(v8::Local<v8::String> property,
         }
     } 
 
-    return v8::Undefined();
+    return v8::Handle<v8::Value>();
 }
 
 v8::Handle<v8::Value> QV8QObjectWrapper::Setter(v8::Local<v8::String> property, 
