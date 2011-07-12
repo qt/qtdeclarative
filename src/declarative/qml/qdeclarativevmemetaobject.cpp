@@ -458,7 +458,7 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
             }
         }
     }
-    if(c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty) {
+    if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty) {
         if (id >= propOffset) {
             id -= propOffset;
 

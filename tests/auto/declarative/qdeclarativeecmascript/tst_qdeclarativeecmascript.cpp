@@ -104,6 +104,7 @@ private slots:
     void constantsOverrideBindings();
     void outerBindingOverridesInnerBinding();
     void aliasPropertyAndBinding();
+    void aliasPropertyReset();
     void nonExistentAttachedObject();
     void scope();
     void importScope();
@@ -1035,6 +1036,87 @@ void tst_qdeclarativeecmascript::aliasPropertyAndBinding()
     QCOMPARE(object->property("c2").toInt(), 19);
     QCOMPARE(object->property("c3").toInt(), 19);
 
+    delete object;
+}
+
+/*
+Ensure that we can write undefined value to an alias property,
+and that the aliased property is reset correctly if possible.
+*/
+void tst_qdeclarativeecmascript::aliasPropertyReset()
+{
+    QObject *object = 0;
+
+    // test that a manual write (of undefined) to a resettable aliased property succeeds
+    QDeclarativeComponent c1(&engine, TEST_FILE("aliasreset/aliasPropertyReset.1.qml"));
+    object = c1.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() != 0);
+    QCOMPARE(object->property("aliasIsUndefined"), QVariant(false));
+    QMetaObject::invokeMethod(object, "resetAliased");
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0);
+    QCOMPARE(object->property("aliasIsUndefined"), QVariant(true));
+    delete object;
+
+    // test that a manual write (of undefined) to a resettable alias property succeeds
+    QDeclarativeComponent c2(&engine, TEST_FILE("aliasreset/aliasPropertyReset.2.qml"));
+    object = c2.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() != 0);
+    QCOMPARE(object->property("loaderSourceComponentIsUndefined"), QVariant(false));
+    QMetaObject::invokeMethod(object, "resetAlias");
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0);
+    QCOMPARE(object->property("loaderSourceComponentIsUndefined"), QVariant(true));
+    delete object;
+
+    // test that an alias to a bound property works correctly
+    QDeclarativeComponent c3(&engine, TEST_FILE("aliasreset/aliasPropertyReset.3.qml"));
+    object = c3.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() != 0);
+    QCOMPARE(object->property("loaderOneSourceComponentIsUndefined"), QVariant(false));
+    QCOMPARE(object->property("loaderTwoSourceComponentIsUndefined"), QVariant(false));
+    QMetaObject::invokeMethod(object, "resetAlias");
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0);
+    QCOMPARE(object->property("loaderOneSourceComponentIsUndefined"), QVariant(true));
+    QCOMPARE(object->property("loaderTwoSourceComponentIsUndefined"), QVariant(false));
+    delete object;
+
+    // test that a manual write (of undefined) to a resettable alias property
+    // whose aliased property's object has been deleted, does not crash.
+    QDeclarativeComponent c4(&engine, TEST_FILE("aliasreset/aliasPropertyReset.4.qml"));
+    object = c4.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() != 0);
+    QObject *loader = object->findChild<QObject*>("loader");
+    QVERIFY(loader != 0);
+    delete loader;
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0); // deletion should have caused value unset.
+    QMetaObject::invokeMethod(object, "resetAlias"); // shouldn't crash.
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0);
+    QMetaObject::invokeMethod(object, "setAlias");   // shouldn't crash, and shouldn't change value (since it's no longer referencing anything).
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0);
+    delete object;
+
+    // test that binding an alias property to an undefined value works correctly
+    QDeclarativeComponent c5(&engine, TEST_FILE("aliasreset/aliasPropertyReset.5.qml"));
+    object = c5.create();
+    QVERIFY(object != 0);
+    QVERIFY(object->property("sourceComponentAlias").value<QDeclarativeComponent*>() == 0); // bound to undefined value.
+    delete object;
+
+    // test that a manual write (of undefined) to a non-resettable property fails properly
+    QUrl url = TEST_FILE("aliasreset/aliasPropertyReset.error.1.qml");
+    QString warning1 = url.toString() + QLatin1String(":15: Error: Cannot assign [undefined] to int");
+    QDeclarativeComponent e1(&engine, url);
+    object = e1.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("intAlias").value<int>(), 12);
+    QCOMPARE(object->property("aliasedIntIsUndefined"), QVariant(false));
+    QTest::ignoreMessage(QtWarningMsg, warning1.toLatin1().constData());
+    QMetaObject::invokeMethod(object, "resetAlias");
+    QCOMPARE(object->property("intAlias").value<int>(), 12);
+    QCOMPARE(object->property("aliasedIntIsUndefined"), QVariant(false));
     delete object;
 }
 

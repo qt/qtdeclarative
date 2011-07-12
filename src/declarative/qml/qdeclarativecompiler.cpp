@@ -2750,6 +2750,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     int propIdx = -1;
     int flags = 0;
     bool writable = false;
+    bool resettable = false;
     if (alias.count() == 2 || alias.count() == 3) {
         propIdx = indexOfProperty(idObject, alias.at(1).toUtf8());
 
@@ -2764,6 +2765,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
             COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
 
         writable = aliasProperty.isWritable();
+        resettable = aliasProperty.isResettable();
 
         if (alias.count() == 3) {
             QDeclarativeValueType *valueType = enginePrivate->valueTypes[aliasProperty.type()];
@@ -2808,6 +2810,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     QMetaPropertyBuilder propBuilder = 
         builder.addProperty(prop.name, typeName.constData(), builder.methodCount() - 1);
     propBuilder.setWritable(writable);
+    propBuilder.setResettable(resettable);
     return true;
 }
 
