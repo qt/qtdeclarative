@@ -187,13 +187,11 @@ public:
     virtual bool isContentFlowReversed() const;
     bool isRightToLeft() const;
 
-    virtual qreal startPosition() const;
     virtual qreal positionAt(int index) const;
-    virtual qreal endPosition() const;
     virtual qreal endPositionAt(int index) const;
+    virtual qreal originPosition() const;
     virtual qreal lastPosition() const;
 
-    qreal originPosition() const;
     FxViewItem *nextVisibleItem() const;
     FxViewItem *itemBefore(int modelIndex) const;
     QString sectionAt(int modelIndex);
@@ -362,19 +360,10 @@ qreal QSGListViewPrivate::lastPosition() const
         }
         pos = (*(--visibleItems.constEnd()))->endPosition() + invisibleCount * (averageSize + spacing);
     } else if (model && model->count()) {
-        pos = model->count() * averageSize + (model->count()-1) * spacing;
+        // endPosition() of items calculate -1 to get last edge pixel, so do that here as well
+        pos = (model->count() * averageSize + (model->count()-1) * spacing) - 1;
     }
     return pos;
-}
-
-qreal QSGListViewPrivate::startPosition() const
-{
-    return isRightToLeft() ? -lastPosition()-1 : originPosition();
-}
-
-qreal QSGListViewPrivate::endPosition() const
-{
-    return isRightToLeft() ? -originPosition()-1 : lastPosition();
 }
 
 qreal QSGListViewPrivate::positionAt(int modelIndex) const

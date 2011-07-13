@@ -85,6 +85,8 @@ public:
     bool isValid() const;
     qreal position() const;
     qreal size() const;
+    qreal startPosition() const;
+    qreal endPosition() const;
     int findLastVisibleIndex(int defaultValue = -1) const;
     FxViewItem *visibleItem(int modelIndex) const;
     FxViewItem *firstVisibleItem() const;
@@ -165,11 +167,10 @@ protected:
     virtual Qt::Orientation layoutOrientation() const = 0;
     virtual bool isContentFlowReversed() const = 0;
 
-    virtual qreal startPosition() const = 0;
     virtual qreal positionAt(int index) const = 0;
-    virtual qreal endPosition() const = 0;
     virtual qreal endPositionAt(int index) const = 0;
-    virtual qreal lastPosition() const  = 0;
+    virtual qreal originPosition() const = 0;
+    virtual qreal lastPosition() const = 0;
 
     virtual qreal headerSize() const = 0;
     virtual qreal footerSize() const = 0;

@@ -147,13 +147,11 @@ public:
     virtual bool isContentFlowReversed() const;
     bool isRightToLeftTopToBottom() const;
 
-    virtual qreal startPosition() const;
     virtual qreal positionAt(int index) const;
-    virtual qreal endPosition() const;
     virtual qreal endPositionAt(int index) const;
+    virtual qreal originPosition() const;
     virtual qreal lastPosition() const;
 
-    qreal originPosition() const;
     int rowSize() const;
     int colSize() const;
     qreal colPosAt(int modelIndex) const;
@@ -255,25 +253,17 @@ qreal QSGGridViewPrivate::originPosition() const
 qreal QSGGridViewPrivate::lastPosition() const
 {
     qreal pos = 0;
-    if (model && model->count())
-        pos = rowPosAt(model->count() - 1) + rowSize();
+    if (model && model->count()) {
+        // get end position of last item
+        // endPosition() of items calculate -1 to get last edge pixel, so do that here as well
+        pos = (rowPosAt(model->count() - 1) + rowSize()) - 1;
+    }
     return pos;
-}
-
-qreal QSGGridViewPrivate::startPosition() const
-{
-    return isRightToLeftTopToBottom() ? -lastPosition()+1 : originPosition();
 }
 
 qreal QSGGridViewPrivate::positionAt(int index) const
 {
     return rowPosAt(index);
-}
-
-qreal QSGGridViewPrivate::endPosition() const
-{
-    return isRightToLeftTopToBottom() ? -originPosition()+1 : lastPosition();
-
 }
 
 qreal QSGGridViewPrivate::endPositionAt(int index) const
@@ -524,8 +514,6 @@ bool QSGGridViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
 
 void QSGGridViewPrivate::visibleItemsChanged()
 {
-    Q_Q(QSGGridView);
-
     updateHeader();
     updateFooter();
     updateViewport();
@@ -680,7 +668,7 @@ void QSGGridViewPrivate::updateFooter()
             colOffset = gridItem->item->width()-cellWidth;
     }
     if (visibleItems.count()) {
-        qreal endPos = lastPosition();
+        qreal endPos = lastPosition() + 1;
         if (findLastVisibleIndex() == model->count()-1) {
             gridItem->setPosition(colOffset, endPos + rowOffset);
         } else {

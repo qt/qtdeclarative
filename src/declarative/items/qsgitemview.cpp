@@ -1012,6 +1012,16 @@ qreal QSGItemViewPrivate::size() const
     return layoutOrientation() == Qt::Vertical ? q->height() : q->width();
 }
 
+qreal QSGItemViewPrivate::startPosition() const
+{
+    return isContentFlowReversed() ? -lastPosition()-1 : originPosition();
+}
+
+qreal QSGItemViewPrivate::endPosition() const
+{
+    return isContentFlowReversed() ? -originPosition()-1 : lastPosition();
+}
+
 int QSGItemViewPrivate::findLastVisibleIndex(int defaultValue) const
 {
     if (visibleItems.count()) {
