@@ -80,6 +80,7 @@ DEFINE_BOOL_CONFIG_OPTION(compilerDump, QML_COMPILER_DUMP);
 DEFINE_BOOL_CONFIG_OPTION(compilerStatDump, QML_COMPILER_STATS);
 
 using namespace QDeclarativeParser;
+using namespace QDeclarativeCompilerTypes;
 
 static QString id_string(QLatin1String("id"));
 static QString on_string(QLatin1String("on"));
@@ -89,9 +90,11 @@ static QString Component_string(QLatin1String("Component"));
 /*!
     Instantiate a new QDeclarativeCompiler.
 */
-QDeclarativeCompiler::QDeclarativeCompiler()
-: output(0), engine(0), unitRoot(0), unit(0)
+QDeclarativeCompiler::QDeclarativeCompiler(QDeclarativePool *pool)
+: pool(pool), output(0), engine(0), unitRoot(0), unit(0), componentStats(0)
 {
+    if (compilerStatDump()) 
+        componentStats = pool->New<ComponentStats>();
 }
 
 /*!
@@ -195,18 +198,18 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QString &name)
 bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
                                                  QDeclarativeParser::Value *v)
 {
-    QString string = v->value.asString();
+    const QDeclarativeParser::Variant &value = v->value;
 
     if (!prop.isWritable())
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop.name())));
 
     if (prop.isEnumType()) {
-        int value;
+        int enumValue;
         if (prop.isFlagType()) {
-            value = prop.enumerator().keysToValue(string.toUtf8().constData());
+            enumValue = prop.enumerator().keysToValue(value.asString().toUtf8().constData());
         } else
-            value = prop.enumerator().keyToValue(string.toUtf8().constData());
-        if (value == -1)
+            enumValue = prop.enumerator().keyToValue(value.asString().toUtf8().constData());
+        if (enumValue == -1)
             COMPILE_EXCEPTION(v, tr("Invalid property assignment: unknown enumeration"));
         return true;
     }
@@ -254,7 +257,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Color:
             {
             bool ok;
-            QDeclarativeStringConverters::colorFromString(string, &ok);
+            QDeclarativeStringConverters::colorFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: color expected"));
             }
             break;
@@ -262,21 +265,21 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Date:
             {
             bool ok;
-            QDeclarativeStringConverters::dateFromString(string, &ok);
+            QDeclarativeStringConverters::dateFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: date expected"));
             }
             break;
         case QVariant::Time:
             {
             bool ok;
-            QDeclarativeStringConverters::timeFromString(string, &ok);
+            QDeclarativeStringConverters::timeFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: time expected"));
             }
             break;
         case QVariant::DateTime:
             {
             bool ok;
-            QDeclarativeStringConverters::dateTimeFromString(string, &ok);
+            QDeclarativeStringConverters::dateTimeFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: datetime expected"));
             }
             break;
@@ -285,7 +288,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::PointF:
             {
             bool ok;
-            QPointF point = QDeclarativeStringConverters::pointFFromString(string, &ok);
+            QPointF point = QDeclarativeStringConverters::pointFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: point expected"));
             }
             break;
@@ -293,7 +296,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::SizeF:
             {
             bool ok;
-            QSizeF size = QDeclarativeStringConverters::sizeFFromString(string, &ok);
+            QSizeF size = QDeclarativeStringConverters::sizeFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: size expected"));
             }
             break;
@@ -301,7 +304,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::RectF:
             {
             bool ok;
-            QRectF rect = QDeclarativeStringConverters::rectFFromString(string, &ok);
+            QRectF rect = QDeclarativeStringConverters::rectFFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: rect expected"));
             }
             break;
@@ -313,7 +316,7 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Vector3D:
             {
             bool ok;
-            QDeclarativeStringConverters::vector3DFromString(string, &ok);
+            QDeclarativeStringConverters::vector3DFromString(value.asString(), &ok);
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
             }
             break;
@@ -367,8 +370,6 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         return;
     }
 
-    QString string = v->value.asString();
-
     int type = prop.userType();
     switch(type) {
         case -1:
@@ -391,7 +392,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             } else {
                 instr.setType(QDeclarativeInstruction::StoreVariant);
                 instr.storeString.propertyIndex = prop.propertyIndex();
-                instr.storeString.value = output->indexForString(string);
+                instr.storeString.value = output->indexForString(v->value.asString());
             }
             }
             break;
@@ -399,19 +400,20 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             {
             instr.setType(QDeclarativeInstruction::StoreString);
             instr.storeString.propertyIndex = prop.propertyIndex();
-            instr.storeString.value = output->indexForString(string);
+            instr.storeString.value = output->indexForString(v->value.asString());
             }
             break;
         case QVariant::ByteArray:
             {
             instr.setType(QDeclarativeInstruction::StoreByteArray);
             instr.storeByteArray.propertyIndex = prop.propertyIndex();
-            instr.storeByteArray.value = output->indexForByteArray(string.toLatin1());
+            instr.storeByteArray.value = output->indexForByteArray(v->value.asString().toLatin1());
             }
             break;
         case QVariant::Url:
             {
             instr.setType(QDeclarativeInstruction::StoreUrl);
+            QString string = v->value.asString();
             QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
             instr.storeUrl.propertyIndex = prop.propertyIndex();
             instr.storeUrl.value = output->indexForUrl(u);
@@ -447,7 +449,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             break;
         case QVariant::Color:
             {
-            QColor c = QDeclarativeStringConverters::colorFromString(string);
+            QColor c = QDeclarativeStringConverters::colorFromString(v->value.asString());
             instr.setType(QDeclarativeInstruction::StoreColor);
             instr.storeColor.propertyIndex = prop.propertyIndex();
             instr.storeColor.value = c.rgba();
@@ -456,7 +458,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
 #ifndef QT_NO_DATESTRING
         case QVariant::Date:
             {
-            QDate d = QDeclarativeStringConverters::dateFromString(string);
+            QDate d = QDeclarativeStringConverters::dateFromString(v->value.asString());
             instr.setType(QDeclarativeInstruction::StoreDate);
             instr.storeDate.propertyIndex = prop.propertyIndex();
             instr.storeDate.value = d.toJulianDay();
@@ -464,7 +466,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             break;
         case QVariant::Time:
             {
-            QTime time = QDeclarativeStringConverters::timeFromString(string);
+            QTime time = QDeclarativeStringConverters::timeFromString(v->value.asString());
             instr.setType(QDeclarativeInstruction::StoreTime);
             instr.storeTime.propertyIndex = prop.propertyIndex();
             Q_ASSERT(sizeof(instr.storeTime.time) == sizeof(QTime));
@@ -473,7 +475,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             break;
         case QVariant::DateTime:
             {
-            QDateTime dateTime = QDeclarativeStringConverters::dateTimeFromString(string);
+            QDateTime dateTime = QDeclarativeStringConverters::dateTimeFromString(v->value.asString());
             QTime time = dateTime.time();
             instr.setType(QDeclarativeInstruction::StoreDateTime);
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
@@ -486,7 +488,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Point:
             {
             bool ok;
-            QPoint point = QDeclarativeStringConverters::pointFFromString(string, &ok).toPoint();
+            QPoint point = QDeclarativeStringConverters::pointFFromString(v->value.asString(), &ok).toPoint();
             instr.setType(QDeclarativeInstruction::StorePoint);
             instr.storePoint.propertyIndex = prop.propertyIndex();
             instr.storePoint.point.xp = point.x();
@@ -496,7 +498,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::PointF:
             {
             bool ok;
-            QPointF point = QDeclarativeStringConverters::pointFFromString(string, &ok);
+            QPointF point = QDeclarativeStringConverters::pointFFromString(v->value.asString(), &ok);
             instr.setType(QDeclarativeInstruction::StorePointF);
             instr.storePointF.propertyIndex = prop.propertyIndex();
             instr.storePointF.point.xp = point.x();
@@ -506,7 +508,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Size:
             {
             bool ok;
-            QSize size = QDeclarativeStringConverters::sizeFFromString(string, &ok).toSize();
+            QSize size = QDeclarativeStringConverters::sizeFFromString(v->value.asString(), &ok).toSize();
             instr.setType(QDeclarativeInstruction::StoreSize);
             instr.storeSize.propertyIndex = prop.propertyIndex();
             instr.storeSize.size.wd = size.width();
@@ -516,7 +518,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::SizeF:
             {
             bool ok;
-            QSizeF size = QDeclarativeStringConverters::sizeFFromString(string, &ok);
+            QSizeF size = QDeclarativeStringConverters::sizeFFromString(v->value.asString(), &ok);
             instr.setType(QDeclarativeInstruction::StoreSizeF);
             instr.storeSizeF.propertyIndex = prop.propertyIndex();
             instr.storeSizeF.size.wd = size.width();
@@ -526,7 +528,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Rect:
             {
             bool ok;
-            QRect rect = QDeclarativeStringConverters::rectFFromString(string, &ok).toRect();
+            QRect rect = QDeclarativeStringConverters::rectFFromString(v->value.asString(), &ok).toRect();
             instr.setType(QDeclarativeInstruction::StoreRect);
             instr.storeRect.propertyIndex = prop.propertyIndex();
             instr.storeRect.rect.x1 = rect.left();
@@ -538,7 +540,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::RectF:
             {
             bool ok;
-            QRectF rect = QDeclarativeStringConverters::rectFFromString(string, &ok);
+            QRectF rect = QDeclarativeStringConverters::rectFFromString(v->value.asString(), &ok);
             instr.setType(QDeclarativeInstruction::StoreRectF);
             instr.storeRectF.propertyIndex = prop.propertyIndex();
             instr.storeRectF.rect.xp = rect.left();
@@ -558,7 +560,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
         case QVariant::Vector3D:
             {
             bool ok;
-            QVector3D vector = QDeclarativeStringConverters::vector3DFromString(string, &ok);
+            QVector3D vector = QDeclarativeStringConverters::vector3DFromString(v->value.asString(), &ok);
             instr.setType(QDeclarativeInstruction::StoreVector3D);
             instr.storeVector3D.propertyIndex = prop.propertyIndex();
             instr.storeVector3D.vector.xp = vector.x();
@@ -583,7 +585,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             int t = prop.userType();
             instr.setType(QDeclarativeInstruction::AssignCustomType);
             instr.assignCustomType.propertyIndex = prop.propertyIndex();
-            instr.assignCustomType.primitive = output->indexForString(string);
+            instr.assignCustomType.primitive = output->indexForString(v->value.asString());
             instr.assignCustomType.type = t;
             }
             break;
@@ -673,15 +675,14 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
     if (!isError()) {
         if (compilerDump())
             out->dumpInstructions();
-        if (compilerStatDump())
+        if (componentStats)
             dumpStats();
         Q_ASSERT(out->rootPropertyCache);
     } else {
         reset(out);
     }
 
-    compileState = ComponentCompileState();
-    savedCompileStates.clear();
+    compileState = 0;
     output = 0;
     this->engine = 0;
     this->enginePrivate = 0;
@@ -693,8 +694,11 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
 
 void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
 {
-    compileState.root = tree;
-    componentStat.lineNumber = tree->location.start.line;
+    compileState = pool->New<ComponentCompileState>();
+
+    compileState->root = tree;
+    if (componentStats)
+        componentStats->componentStat.lineNumber = tree->location.start.line;
 
     // Build global import scripts
     QStringList importedScriptIndexes;
@@ -725,21 +729,21 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
 
     QDeclarativeInstruction init;
     init.setType(QDeclarativeInstruction::Init);
-    init.init.bindingsSize = compileState.bindings.count();
-    init.init.parserStatusSize = compileState.parserStatusCount;
+    init.init.bindingsSize = compileState->bindings.count();
+    init.init.parserStatusSize = compileState->parserStatusCount;
     init.init.contextCache = genContextCache();
-    if (compileState.compiledBindingData.isEmpty())
+    if (compileState->compiledBindingData.isEmpty())
         init.init.compiledBinding = -1;
     else
-        init.init.compiledBinding = output->indexForByteArray(compileState.compiledBindingData);
+        init.init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
 
-    if (!compileState.v8BindingProgram.isEmpty()) {
+    if (!compileState->v8BindingProgram.isEmpty()) {
         QDeclarativeInstruction bindings;
         bindings.setType(QDeclarativeInstruction::InitV8Bindings);
-        bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
-        bindings.initV8Bindings.programIndex = compileState.v8BindingProgramIndex;
-        bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
+        bindings.initV8Bindings.program = output->indexForString(compileState->v8BindingProgram);
+        bindings.initV8Bindings.programIndex = compileState->v8BindingProgramIndex;
+        bindings.initV8Bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
 
@@ -765,16 +769,10 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
         enginePrivate->registerCompositeType(output);
 }
 
-static bool ValuePtrLessThan(const QDeclarativeParser::Value *t1, const QDeclarativeParser::Value *t2)
-{
-    return t1->location.start.line < t2->location.start.line ||
-           (t1->location.start.line == t2->location.start.line &&
-            t1->location.start.column < t2->location.start.column);
-}
-
 bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const BindingContext &ctxt)
 {
-    componentStat.objects++;
+    if (componentStats)
+        componentStats->componentStat.objects++;
 
     Q_ASSERT (obj->type != -1);
     const QDeclarativeCompiledData::TypeReference &tr =
@@ -803,7 +801,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
     Q_ASSERT(type);
     obj->parserStatusCast = type->parserStatusCast();
     if (obj->parserStatusCast != -1)
-        compileState.parserStatusCount++;
+        compileState->parserStatusCount++;
 
     // Check if this is a custom parser type.  Custom parser types allow
     // assignments to non-existent properties.  These assignments are then
@@ -818,8 +816,8 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
     // Must do id property first.  This is to ensure that the id given to any
     // id reference created matches the order in which the objects are
     // instantiated
-    foreach(Property *prop, obj->properties) {
-        if (prop->name == id_string) {
+    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+        if (prop->name() == id_string) {
             COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
             break;
         }
@@ -829,33 +827,29 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
     Property *defaultProperty = 0;
     Property *skipProperty = 0;
     if (obj->defaultProperty) {
+        defaultProperty = obj->defaultProperty;
+
         const QMetaObject *metaObject = obj->metaObject();
         Q_ASSERT(metaObject);
         QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
         if (p.name()) {
-            Property *explicitProperty = obj->getProperty(p.name(), false);
-            if (explicitProperty && !explicitProperty->value) {
-                skipProperty = explicitProperty;
+            Property *explicitProperty = obj->getProperty(QString::fromUtf8(p.name()), false);
+            if (explicitProperty && !explicitProperty->value && !explicitProperty->values.isEmpty()) {
 
-                defaultProperty = new Property;
-                defaultProperty->parent = obj;
-                defaultProperty->isDefault = true;
-                defaultProperty->location = obj->defaultProperty->location;
-                defaultProperty->listValueRange = obj->defaultProperty->listValueRange;
+                skipProperty = explicitProperty; // We merge the values into defaultProperty
 
-                defaultProperty->values  = obj->defaultProperty->values;
-                defaultProperty->values += explicitProperty->values;
-                foreach(QDeclarativeParser::Value *value, defaultProperty->values)
-                    value->addref();
-                qSort(defaultProperty->values.begin(), defaultProperty->values.end(), ValuePtrLessThan);
+                // Find the correct insertion point
+                Value *insertPos = 0;
 
-            } else {
-                defaultProperty = obj->defaultProperty;
-                defaultProperty->addref();
-            }
-        } else {
-            defaultProperty = obj->defaultProperty;
-            defaultProperty->addref();
+                for (Value *v = defaultProperty->values.first(); v; v = Property::ValueList::next(v)) {
+                    if (!(v->location.start < explicitProperty->values.first()->location.start))
+                        break;
+                    insertPos = v;
+                }
+
+                defaultProperty->values.insertAfter(insertPos, explicitProperty->values);
+
+            } 
         }
     }
 
@@ -864,38 +858,38 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
         cp = output->types.at(obj->type).type->customParser();
 
     // Build all explicit properties specified
-    foreach(Property *prop, obj->properties) {
+    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
 
         if (prop == skipProperty)
             continue;
-        if (prop->name == id_string)
+        if (prop->name() == id_string)
             continue;
 
         bool canDefer = false;
         if (isCustomParser) {
-            if (doesPropertyExist(prop, obj) && 
+            if (doesPropertyExist(prop, obj) &&
                 (!(cp->flags() & QDeclarativeCustomParser::AcceptsAttachedProperties) ||
-                 !isAttachedPropertyName(prop->name))) {
-                int ids = compileState.ids.count();
+                 !isAttachedPropertyName(prop->name()))) {
+                int ids = compileState->ids.count();
                 COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
-                canDefer = ids == compileState.ids.count();
-            } else if (isSignalPropertyName(prop->name) && 
+                canDefer = ids == compileState->ids.count();
+            } else if (isSignalPropertyName(prop->name()) &&
                     (cp->flags() & QDeclarativeCustomParser::AcceptsSignalHandlers)) {
                 COMPILE_CHECK(buildSignal(prop,obj,objCtxt));
             } else {
                 customProps << QDeclarativeCustomParserNodePrivate::fromProperty(prop);
             }
         } else {
-            if (isSignalPropertyName(prop->name)) {
+            if (isSignalPropertyName(prop->name())) {
                 COMPILE_CHECK(buildSignal(prop,obj,objCtxt));
             } else {
-                int ids = compileState.ids.count();
+                int ids = compileState->ids.count();
                 COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
-                canDefer = ids == compileState.ids.count();
+                canDefer = ids == compileState->ids.count();
             }
         }
 
-        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name))
+        if (canDefer && !deferredList.isEmpty() && QStringList_contains(deferredList, prop->name()))
             prop->isDeferred = true;
 
     }
@@ -907,24 +901,21 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
         bool canDefer = false;
         if (isCustomParser) {
             if (doesPropertyExist(prop, obj)) {
-                int ids = compileState.ids.count();
+                int ids = compileState->ids.count();
                 COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
-                canDefer = ids == compileState.ids.count();
+                canDefer = ids == compileState->ids.count();
             } else {
                 customProps << QDeclarativeCustomParserNodePrivate::fromProperty(prop);
             }
         } else {
-            int ids = compileState.ids.count();
+            int ids = compileState->ids.count();
             COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
-            canDefer = ids == compileState.ids.count();
+            canDefer = ids == compileState->ids.count();
         }
 
-        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name))
+        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name()))
             prop->isDeferred = true;
     }
-
-    if (defaultProperty) 
-        defaultProperty->release();
 
     // Compile custom parser parts
     if (isCustomParser && !customProps.isEmpty()) {
@@ -953,7 +944,7 @@ void QDeclarativeCompiler::genObject(QDeclarativeParser::Object *obj)
 
     // Create the object
     if (obj->custom.isEmpty() && output->types.at(obj->type).type &&
-        !output->types.at(obj->type).type->isExtendedType() && obj != compileState.root) {
+        !output->types.at(obj->type).type->isExtendedType() && obj != compileState->root) {
 
         QDeclarativeInstruction create;
         create.setType(QDeclarativeInstruction::CreateSimpleObject);
@@ -1043,21 +1034,21 @@ void QDeclarativeCompiler::genObject(QDeclarativeParser::Object *obj)
 
 void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 {
-    typedef QPair<Property *, int> PropPair;
-    foreach(const PropPair &prop, obj->scriptStringProperties) {
-        const QString &script = prop.first->values.at(0)->value.asScript();
+    for (Property *prop = obj->scriptStringProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
+        Q_ASSERT(prop->scriptStringScope != -1);
+        const QString &script = prop->values.first()->value.asScript();
         QDeclarativeInstruction ss;
         ss.setType(QDeclarativeInstruction::StoreScriptString);
-        ss.storeScriptString.propertyIndex = prop.first->index;
+        ss.storeScriptString.propertyIndex = prop->index;
         ss.storeScriptString.value = output->indexForString(script);
-        ss.storeScriptString.scope = prop.second;
-        ss.storeScriptString.bindingId = rewriteBinding(script, prop.first->name);
-        ss.storeScriptString.line = prop.first->location.start.line;
+        ss.storeScriptString.scope = prop->scriptStringScope;
+        ss.storeScriptString.bindingId = rewriteBinding(script, prop->name());
+        ss.storeScriptString.line = prop->location.start.line;
         output->addInstruction(ss);
     }
 
     bool seenDefer = false;
-    foreach(Property *prop, obj->valueProperties) {
+    for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         if (prop->isDeferred) {
             seenDefer = true;
             continue;
@@ -1074,13 +1065,13 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 
         QDeclarativeInstruction init;
         init.setType(QDeclarativeInstruction::Init);
-        init.init.bindingsSize = compileState.bindings.count(); // XXX - bigger than necessary
-        init.init.parserStatusSize = compileState.parserStatusCount; // XXX - bigger than necessary
+        init.init.bindingsSize = compileState->bindings.count(); // XXX - bigger than necessary
+        init.init.parserStatusSize = compileState->parserStatusCount; // XXX - bigger than necessary
         init.init.contextCache = -1;
         init.init.compiledBinding = -1;
         output->addInstruction(init);
 
-        foreach(Property *prop, obj->valueProperties) {
+        for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
             if (!prop->isDeferred)
                 continue;
             genValueProperty(prop, obj);
@@ -1093,9 +1084,9 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
         output->instruction(deferIdx)->defer.deferCount = output->nextInstructionIndex() - nextInstructionIndex;
     }
 
-    foreach(Property *prop, obj->signalProperties) {
+    for (Property *prop = obj->signalProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
 
-        QDeclarativeParser::Value *v = prop->values.at(0);
+        QDeclarativeParser::Value *v = prop->values.first();
 
         if (v->type == Value::SignalObject) {
 
@@ -1105,12 +1096,12 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
             assign.setType(QDeclarativeInstruction::AssignSignalObject);
             assign.assignSignalObject.line = v->location.start.line;
             assign.assignSignalObject.signal =
-                output->indexForString(prop->name);
+                output->indexForString(prop->name());
             output->addInstruction(assign);
 
         } else if (v->type == Value::SignalExpression) {
 
-            BindingContext ctxt = compileState.signalExpressions.value(v);
+            BindingContext ctxt = compileState->signalExpressions.value(v);
 
             QDeclarativeInstruction store;
             store.setType(QDeclarativeInstruction::StoreSignal);
@@ -1118,7 +1109,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
             store.storeSignal.value =
                 output->indexForString(v->value.asScript().trimmed());
             store.storeSignal.context = ctxt.stack;
-            store.storeSignal.name = output->indexForByteArray(prop->name.toUtf8());
+            store.storeSignal.name = output->indexForByteArray(prop->name().toUtf8());
             store.storeSignal.line = v->location.start.line;
             output->addInstruction(store);
 
@@ -1126,7 +1117,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 
     }
 
-    foreach(Property *prop, obj->attachedProperties) {
+    for (Property *prop = obj->attachedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         QDeclarativeInstruction fetch;
         fetch.setType(QDeclarativeInstruction::FetchAttached);
         fetch.fetchAttached.id = prop->index;
@@ -1140,7 +1131,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
         output->addInstruction(pop);
     }
 
-    foreach(Property *prop, obj->groupedProperties) {
+    for (Property *prop = obj->groupedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         QDeclarativeInstruction fetch;
         fetch.setType(QDeclarativeInstruction::FetchObject);
         fetch.fetch.property = prop->index;
@@ -1163,19 +1154,19 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
         output->addInstruction(pop);
     }
 
-    foreach(Property *prop, obj->valueTypeProperties) {
+    for (Property *prop = obj->valueTypeProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         if (!prop->isAlias)
             genValueTypeProperty(obj, prop);
     }
 
-    foreach(Property *prop, obj->valueProperties) {
+    for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         if (prop->isDeferred) 
             continue;
         if (prop->isAlias)
             genValueProperty(prop, obj);
     }
 
-    foreach(Property *prop, obj->valueTypeProperties) {
+    for (Property *prop = obj->valueTypeProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         if (prop->isAlias)
             genValueTypeProperty(obj, prop);
     }
@@ -1192,7 +1183,7 @@ void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeParser::Object *obj,
     if (obj->type == -1 || output->types.at(obj->type).component) {
         // We only have to do this if this is a composite type.  If it is a builtin
         // type it can't possibly already have bindings that need to be cleared.
-        foreach(Property *vprop, prop->value->valueProperties) {
+        for (Property *vprop = prop->value->valueProperties.first(); vprop; vprop = Object::PropertyList::next(vprop)) {
             if (!vprop->values.isEmpty()) {
                 Q_ASSERT(vprop->index >= 0 && vprop->index < 32);
                 fetch.fetchValue.bindingSkipList |= (1 << vprop->index);
@@ -1202,7 +1193,7 @@ void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeParser::Object *obj,
 
     output->addInstruction(fetch);
 
-    foreach(Property *vprop, prop->value->valueProperties) {
+    for (Property *vprop = prop->value->valueProperties.first(); vprop; vprop = Object::PropertyList::next(vprop)) {
         genPropertyAssignment(vprop, prop->value, prop);
     }
 
@@ -1216,7 +1207,7 @@ void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeParser::Object *obj,
 
 void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
 {
-    QDeclarativeParser::Object *root = obj->defaultProperty->values.at(0)->object;
+    QDeclarativeParser::Object *root = obj->defaultProperty->values.first()->object;
     Q_ASSERT(root);
 
     QDeclarativeInstruction create;
@@ -1227,26 +1218,26 @@ void QDeclarativeCompiler::genComponent(QDeclarativeParser::Object *obj)
     int createInstruction = output->addInstruction(create);
     int nextInstructionIndex = output->nextInstructionIndex();
 
-    ComponentCompileState oldCompileState = compileState;
+    ComponentCompileState *oldCompileState = compileState;
     compileState = componentState(root);
 
     QDeclarativeInstruction init;
     init.setType(QDeclarativeInstruction::Init);
-    init.init.bindingsSize = compileState.bindings.count();
-    init.init.parserStatusSize = compileState.parserStatusCount;
+    init.init.bindingsSize = compileState->bindings.count();
+    init.init.parserStatusSize = compileState->parserStatusCount;
     init.init.contextCache = genContextCache();
-    if (compileState.compiledBindingData.isEmpty())
+    if (compileState->compiledBindingData.isEmpty())
         init.init.compiledBinding = -1;
     else
-        init.init.compiledBinding = output->indexForByteArray(compileState.compiledBindingData);
+        init.init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
 
-    if (!compileState.v8BindingProgram.isEmpty()) {
+    if (!compileState->v8BindingProgram.isEmpty()) {
         QDeclarativeInstruction bindings;
         bindings.setType(QDeclarativeInstruction::InitV8Bindings);
-        bindings.initV8Bindings.program = output->indexForString(compileState.v8BindingProgram);
-        bindings.initV8Bindings.programIndex = compileState.v8BindingProgramIndex;
-        bindings.initV8Bindings.line = compileState.v8BindingProgramLine;
+        bindings.initV8Bindings.program = output->indexForString(compileState->v8BindingProgram);
+        bindings.initV8Bindings.programIndex = compileState->v8BindingProgramIndex;
+        bindings.initV8Bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
 
@@ -1287,21 +1278,21 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
 
     // Find, check and set the "id" property (if any)
     Property *idProp = 0;
-    if (obj->properties.count() > 1 ||
-       (obj->properties.count() == 1 && obj->properties.begin().key() != id_string))
-        COMPILE_EXCEPTION(*obj->properties.begin(), tr("Component elements may not contain properties other than id"));
+    if (obj->properties.isMany() ||
+       (obj->properties.isOne() && obj->properties.first()->name() != id_string))
+        COMPILE_EXCEPTION(obj->properties.first(), tr("Component elements may not contain properties other than id"));
        
-    if (obj->properties.count())
-        idProp = *obj->properties.begin();
+    if (!obj->properties.isEmpty())
+        idProp = obj->properties.first();
 
     if (idProp) {
-       if (idProp->value || idProp->values.count() > 1 || idProp->values.at(0)->object) 
+       if (idProp->value || idProp->values.isMany() || idProp->values.first()->object) 
            COMPILE_EXCEPTION(idProp, tr("Invalid component id specification"));
        COMPILE_CHECK(checkValidId(idProp->values.first(), idProp->values.first()->primitive()))
 
         QString idVal = idProp->values.first()->primitive();
 
-        if (compileState.ids.contains(idVal))
+        if (compileState->ids.contains(idVal))
             COMPILE_EXCEPTION(idProp, tr("id is not unique"));
 
         obj->id = idVal;
@@ -1310,8 +1301,8 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
 
     // Check the Component tree is well formed
     if (obj->defaultProperty &&
-       (obj->defaultProperty->value || obj->defaultProperty->values.count() > 1 ||
-        (obj->defaultProperty->values.count() == 1 && !obj->defaultProperty->values.first()->object)))
+       (obj->defaultProperty->value || obj->defaultProperty->values.isMany() ||
+        (obj->defaultProperty->values.isOne() && !obj->defaultProperty->values.first()->object)))
         COMPILE_EXCEPTION(obj, tr("Invalid component body specification"));
 
     if (!obj->dynamicProperties.isEmpty())
@@ -1322,7 +1313,7 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
         COMPILE_EXCEPTION(obj, tr("Component objects cannot declare new functions."));
 
     QDeclarativeParser::Object *root = 0;
-    if (obj->defaultProperty && obj->defaultProperty->values.count())
+    if (obj->defaultProperty && !obj->defaultProperty->values.isEmpty())
         root = obj->defaultProperty->values.first()->object;
 
     if (!root)
@@ -1337,23 +1328,31 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
 bool QDeclarativeCompiler::buildComponentFromRoot(QDeclarativeParser::Object *obj,
                                          const BindingContext &ctxt)
 {
-    ComponentCompileState oldComponentCompileState = compileState;
-    ComponentStat oldComponentStat = componentStat;
+    ComponentCompileState *oldComponentCompileState = compileState;
+    compileState = pool->New<ComponentCompileState>();
+    compileState->root = obj;
+    compileState->nested = true;
 
-    compileState = ComponentCompileState();
-    compileState.root = obj;
-    compileState.nested = true;
+    if (componentStats) {
+        ComponentStat oldComponentStat = componentStats->componentStat;
 
-    componentStat = ComponentStat();
-    componentStat.lineNumber = obj->location.start.line;
+        componentStats->componentStat = ComponentStat();
+        componentStats->componentStat.lineNumber = obj->location.start.line;
 
-    if (obj)
-        COMPILE_CHECK(buildObject(obj, ctxt));
+        if (obj)
+            COMPILE_CHECK(buildObject(obj, ctxt));
 
-    COMPILE_CHECK(completeComponentBuild());
+        COMPILE_CHECK(completeComponentBuild());
+
+        componentStats->componentStat = oldComponentStat;
+    } else {
+        if (obj)
+            COMPILE_CHECK(buildObject(obj, ctxt));
+
+        COMPILE_CHECK(completeComponentBuild());
+    }
 
     compileState = oldComponentCompileState;
-    componentStat = oldComponentStat;
 
     return true;
 }
@@ -1369,8 +1368,8 @@ bool QDeclarativeCompiler::buildSubObject(QDeclarativeParser::Object *obj, const
     Q_ASSERT(ctxt.isSubContext()); // sub-objects must always be in a binding
                                    // sub-context
 
-    foreach(Property *prop, obj->properties) {
-        if (isSignalPropertyName(prop->name)) {
+    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+        if (isSignalPropertyName(prop->name())) {
             COMPILE_CHECK(buildSignal(prop, obj, ctxt));
         } else {
             COMPILE_CHECK(buildProperty(prop, obj, ctxt));
@@ -1399,7 +1398,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 {
     Q_ASSERT(obj->metaObject());
 
-    QString name = prop->name;
+    QString name = prop->name();
     Q_ASSERT(name.startsWith(on_string));
     name = name.mid(2);
 
@@ -1417,14 +1416,14 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 
     if (sigIdx == -1) {
 
-        if (notInRevision && -1 == indexOfProperty(obj, prop->name, 0)) {
+        if (notInRevision && -1 == indexOfProperty(obj, prop->name(), 0)) {
             Q_ASSERT(obj->type != -1);
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
             if (type.type) {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
             } else {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name()));
             }
         }
 
@@ -1434,26 +1433,26 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 
     }  else {
 
-        if (prop->value || prop->values.count() != 1)
+        if (prop->value || !prop->values.isOne())
             COMPILE_EXCEPTION(prop, tr("Incorrectly specified signal assignment"));
 
         prop->index = sigIdx;
         obj->addSignalProperty(prop);
 
-        if (prop->values.at(0)->object) {
-            COMPILE_CHECK(buildObject(prop->values.at(0)->object, ctxt));
-            prop->values.at(0)->type = Value::SignalObject;
+        if (prop->values.first()->object) {
+            COMPILE_CHECK(buildObject(prop->values.first()->object, ctxt));
+            prop->values.first()->type = Value::SignalObject;
         } else {
-            prop->values.at(0)->type = Value::SignalExpression;
+            prop->values.first()->type = Value::SignalExpression;
 
-            if (!prop->values.at(0)->value.isScript())
+            if (!prop->values.first()->value.isScript())
                 COMPILE_EXCEPTION(prop, tr("Cannot assign a value to a signal (expecting a script to be run)"));
 
-            QString script = prop->values.at(0)->value.asScript().trimmed();
+            QString script = prop->values.first()->value.asScript().trimmed();
             if (script.isEmpty())
                 COMPILE_EXCEPTION(prop, tr("Empty signal assignment"));
 
-            compileState.signalExpressions.insert(prop->values.at(0), ctxt);
+            compileState->signalExpressions.insert(prop->values.first(), ctxt);
         }
     }
 
@@ -1467,7 +1466,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 bool QDeclarativeCompiler::doesPropertyExist(QDeclarativeParser::Property *prop,
                                              QDeclarativeParser::Object *obj)
 {
-    if(isAttachedPropertyName(prop->name) || prop->name == id_string)
+    if(isAttachedPropertyName(prop->name()) || prop->name() == id_string)
         return true;
 
     const QMetaObject *mo = obj->metaObject();
@@ -1476,7 +1475,7 @@ bool QDeclarativeCompiler::doesPropertyExist(QDeclarativeParser::Property *prop,
             QMetaProperty p = QDeclarativeMetaType::defaultProperty(mo);
             return p.name() != 0;
         } else {
-            int idx = indexOfProperty(obj, prop->name);
+            int idx = indexOfProperty(obj, prop->name());
             return idx != -1 && mo->property(idx).isScriptable();
         }
     }
@@ -1485,16 +1484,16 @@ bool QDeclarativeCompiler::doesPropertyExist(QDeclarativeParser::Property *prop,
 }
 
 bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
-                                QDeclarativeParser::Object *obj,
-                                const BindingContext &ctxt)
+                                         QDeclarativeParser::Object *obj,
+                                         const BindingContext &ctxt)
 {
-    if (prop->isEmpty())
+    if (prop->isEmpty()) 
         COMPILE_EXCEPTION(prop, tr("Empty property assignment"));
 
     const QMetaObject *metaObject = obj->metaObject();
     Q_ASSERT(metaObject);
 
-    if (isAttachedPropertyName(prop->name)) {
+    if (isAttachedPropertyName(prop->name())) {
         // Setup attached property data
 
         if (ctxt.isSubContext()) {
@@ -1506,7 +1505,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
         QDeclarativeType *type = 0;
         QDeclarativeImportedNamespace *typeNamespace = 0;
-        unit->imports().resolveType(prop->name.toUtf8(), &type, 0, 0, 0, &typeNamespace);
+        unit->imports().resolveType(prop->name().toUtf8(), &type, 0, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
             COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj, 
@@ -1531,19 +1530,19 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
             if (p.name()) {
                 prop->index = p.propertyIndex();
-                prop->name = QString::fromLatin1(p.name());
+                prop->setName(QString::fromLatin1(p.name()));
             }
 
         } else {
             bool notInRevision = false;
-            prop->index = indexOfProperty(obj, prop->name, &notInRevision);
+            prop->index = indexOfProperty(obj, prop->name(), &notInRevision);
             if (prop->index == -1 && notInRevision) {
                 const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
                 const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
                 if (type.type) {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
                 } else {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name()));
                 }
             }
 
@@ -1578,17 +1577,17 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
             prop->parent->setBindingBit(prop->index);
     }
 
-    if (!prop->isDefault && prop->name == id_string && !ctxt.isSubContext()) {
+    if (!prop->isDefault && prop->name() == id_string && !ctxt.isSubContext()) {
 
         // The magic "id" behavior doesn't apply when "id" is resolved as a
         // default property or to sub-objects (which are always in binding
         // sub-contexts)
         COMPILE_CHECK(buildIdProperty(prop, obj));
         if (prop->type == QVariant::String &&
-            prop->values.at(0)->value.isString())
+            prop->values.first()->value.isString())
             COMPILE_CHECK(buildPropertyAssignment(prop, obj, ctxt));
 
-    } else if (isAttachedPropertyName(prop->name)) {
+    } else if (isAttachedPropertyName(prop->name())) {
 
         COMPILE_CHECK(buildAttachedProperty(prop, obj, ctxt));
 
@@ -1597,7 +1596,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         if (prop->isDefault) {
             COMPILE_EXCEPTION(prop->values.first(), tr("Cannot assign to non-existent default property"));
         } else {
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
         }
 
     } else if (prop->value) {
@@ -1629,15 +1628,15 @@ bool QDeclarativeCompiler::buildPropertyInNamespace(QDeclarativeImportedNamespac
     if (!nsProp->value)
         COMPILE_EXCEPTION(nsProp, tr("Invalid use of namespace"));
 
-    foreach (Property *prop, nsProp->value->properties) {
+    for (Property *prop = nsProp->value->properties.first(); prop; prop = nsProp->value->properties.next(prop)) {
 
-        if (!isAttachedPropertyName(prop->name))
+        if (!isAttachedPropertyName(prop->name()))
             COMPILE_EXCEPTION(prop, tr("Not an attached property name"));
 
         // Setup attached property data
 
         QDeclarativeType *type = 0;
-        unit->imports().resolveType(ns, prop->name.toUtf8(), &type, 0, 0, 0);
+        unit->imports().resolveType(ns, prop->name().toUtf8(), &type, 0, 0, 0);
 
         if (!type || !type->attachedPropertiesType()) 
             COMPILE_EXCEPTION(prop, tr("Non-existent attached object"));
@@ -1677,8 +1676,7 @@ void QDeclarativeCompiler::genListProperty(QDeclarativeParser::Property *prop,
     fetch.fetchQmlList.type = listType;
     output->addInstruction(fetch);
 
-    for (int ii = 0; ii < prop->values.count(); ++ii) {
-        QDeclarativeParser::Value *v = prop->values.at(ii);
+    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
 
         if (v->type == Value::CreatedObject) {
 
@@ -1711,8 +1709,7 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeParser::Property *p
                                         QDeclarativeParser::Object *obj,
                                         QDeclarativeParser::Property *valueTypeProperty)
 {
-    for (int ii = 0; ii < prop->values.count(); ++ii) {
-        QDeclarativeParser::Value *v = prop->values.at(ii);
+    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
 
         Q_ASSERT(v->type == Value::CreatedObject ||
                  v->type == Value::PropertyBinding ||
@@ -1760,9 +1757,7 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeParser::Property *p
 
     }
 
-    for (int ii = 0; ii < prop->onValues.count(); ++ii) {
-
-        QDeclarativeParser::Value *v = prop->onValues.at(ii);
+    for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
 
         Q_ASSERT(v->type == Value::ValueSource ||
                  v->type == Value::ValueInterceptor);
@@ -1807,19 +1802,19 @@ bool QDeclarativeCompiler::buildIdProperty(QDeclarativeParser::Property *prop,
                                   QDeclarativeParser::Object *obj)
 {
     if (prop->value ||
-        prop->values.count() > 1 ||
-        prop->values.at(0)->object)
+        prop->values.isMany() ||
+        prop->values.first()->object)
         COMPILE_EXCEPTION(prop, tr("Invalid use of id property"));
 
-    QDeclarativeParser::Value *idValue = prop->values.at(0);
+    QDeclarativeParser::Value *idValue = prop->values.first();
     QString val = idValue->primitive();
 
     COMPILE_CHECK(checkValidId(idValue, val));
 
-    if (compileState.ids.contains(val))
+    if (compileState->ids.contains(val))
         COMPILE_EXCEPTION(prop, tr("id is not unique"));
 
-    prop->values.at(0)->type = Value::Id;
+    prop->values.first()->type = Value::Id;
 
     obj->id = val;
     addId(val, obj);
@@ -1829,33 +1824,35 @@ bool QDeclarativeCompiler::buildIdProperty(QDeclarativeParser::Property *prop,
 
 void QDeclarativeCompiler::addId(const QString &id, QDeclarativeParser::Object *obj)
 {
-    Q_ASSERT(!compileState.ids.contains(id));
+    Q_ASSERT(!compileState->ids.contains(id));
     Q_ASSERT(obj->id == id);
-    obj->idIndex = compileState.ids.count();
-    compileState.ids.insert(id, obj);
-    compileState.idIndexes.insert(obj->idIndex, obj);
+    obj->idIndex = compileState->ids.count();
+    compileState->ids.insert(id, obj);
 }
 
-void QDeclarativeCompiler::addBindingReference(const BindingReference &ref)
+void QDeclarativeCompiler::addBindingReference(BindingReference *ref)
 {
-    Q_ASSERT(ref.value && !compileState.bindings.contains(ref.value));
-    compileState.bindings.insert(ref.value, ref);
+    Q_ASSERT(ref->value && !ref->value->bindingReference);
+    ref->value->bindingReference = ref;
+    compileState->bindings.prepend(ref);
 }
 
 void QDeclarativeCompiler::saveComponentState()
 {
-    Q_ASSERT(compileState.root);
-    Q_ASSERT(!savedCompileStates.contains(compileState.root));
+    Q_ASSERT(compileState->root);
+    Q_ASSERT(compileState->root->componentCompileState == 0);
 
-    savedCompileStates.insert(compileState.root, compileState);
-    savedComponentStats.append(componentStat);
+    compileState->root->componentCompileState = compileState;
+
+    if (componentStats) 
+        componentStats->savedComponentStats.append(componentStats->componentStat);
 }
 
-QDeclarativeCompiler::ComponentCompileState
+QDeclarativeCompilerTypes::ComponentCompileState *
 QDeclarativeCompiler::componentState(QDeclarativeParser::Object *obj)
 {
-    Q_ASSERT(savedCompileStates.contains(obj));
-    return savedCompileStates.value(obj);
+    Q_ASSERT(obj->componentCompileState);
+    return obj->componentCompileState;
 }
 
 // Build attached property object.  In this example,
@@ -1894,22 +1891,23 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeParser::Property *pr
     if (QDeclarativeValueTypeFactory::isValueType(prop->type)) {
         if (prop->type >= 0 /* QVariant == -1 */ && enginePrivate->valueTypes[prop->type]) {
 
-            if (prop->values.count()) {
-                if (prop->values.at(0)->location < prop->value->location) {
+            if (!prop->values.isEmpty()) {
+                if (prop->values.first()->location < prop->value->location) {
                     COMPILE_EXCEPTION(prop->value, tr( "Property has already been assigned a value"));
                 } else {
-                    COMPILE_EXCEPTION(prop->values.at(0), tr( "Property has already been assigned a value"));
+                    COMPILE_EXCEPTION(prop->values.first(), tr( "Property has already been assigned a value"));
                 }
             }
 
             if (!obj->metaObject()->property(prop->index).isWritable()) {
-                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
+                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
             }
 
 
             if (prop->isAlias) {
-                foreach (Property *vtProp, prop->value->properties)
+                for (Property *vtProp = prop->value->properties.first(); vtProp; vtProp = prop->value->properties.next(vtProp)) {
                     vtProp->isAlias = true;
+                }
             }
 
             COMPILE_CHECK(buildValueTypeProperty(enginePrivate->valueTypes[prop->type],
@@ -1925,8 +1923,8 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeParser::Property *pr
         if (!prop->value->metatype)
             COMPILE_EXCEPTION(prop, tr("Invalid grouped property access"));
 
-        if (prop->values.count()) 
-            COMPILE_EXCEPTION(prop->values.at(0), tr( "Cannot assign a value directly to a grouped property"));
+        if (!prop->values.isEmpty()) 
+            COMPILE_EXCEPTION(prop->values.first(), tr( "Cannot assign a value directly to a grouped property"));
 
         obj->addGroupedProperty(prop);
 
@@ -1945,13 +1943,13 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
         COMPILE_EXCEPTION(obj, tr("Invalid property use"));
     obj->metatype = type->metaObject();
 
-    foreach (Property *prop, obj->properties) {
-        int idx = type->metaObject()->indexOfProperty(prop->name.toUtf8().constData());
+    for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
+        int idx = type->metaObject()->indexOfProperty(prop->name().toUtf8().constData());
         if (idx == -1)
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
         QMetaProperty p = type->metaObject()->property(idx);
         if (!p.isScriptable())
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
         prop->index = idx;
         prop->type = p.userType();
         prop->isValueTypeSubProperty = true;
@@ -1959,10 +1957,10 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
         if (prop->value)
             COMPILE_EXCEPTION(prop, tr("Property assignment expected"));
 
-        if (prop->values.count() > 1) {
+        if (prop->values.isMany()) {
             COMPILE_EXCEPTION(prop, tr("Single property assignment expected"));
-        } else if (prop->values.count()) {
-            QDeclarativeParser::Value *value = prop->values.at(0);
+        } else if (!prop->values.isEmpty()) {
+            QDeclarativeParser::Value *value = prop->values.first();
 
             if (value->object) {
                 COMPILE_EXCEPTION(prop, tr("Unexpected object assignment"));
@@ -1975,12 +1973,12 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
                 if (isEnumAssignment) {
                     value->type = Value::Literal;
                 } else {
-                    BindingReference reference;
-                    reference.expression = value->value;
-                    reference.property = prop;
-                    reference.value = value;
-                    reference.bindingContext = ctxt;
-                    reference.bindingContext.owner++;
+                    BindingReference *reference = pool->New<BindingReference>();
+                    reference->expression = value->value;
+                    reference->property = prop;
+                    reference->value = value;
+                    reference->bindingContext = ctxt;
+                    reference->bindingContext.owner++;
                     addBindingReference(reference);
                     value->type = Value::PropertyBinding;
                 }
@@ -1990,8 +1988,7 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
             }
         }
 
-        for (int ii = 0; ii < prop->onValues.count(); ++ii) {
-            QDeclarativeParser::Value *v = prop->onValues.at(ii);
+        for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
             Q_ASSERT(v->object);
 
             COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, baseObj, v, ctxt)); 
@@ -2020,8 +2017,7 @@ bool QDeclarativeCompiler::buildListProperty(QDeclarativeParser::Property *prop,
     bool listTypeIsInterface = QDeclarativeMetaType::isInterface(listType);
 
     bool assignedBinding = false;
-    for (int ii = 0; ii < prop->values.count(); ++ii) {
-        QDeclarativeParser::Value *v = prop->values.at(ii);
+    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
         if (v->object) {
             v->type = Value::CreatedObject;
             COMPILE_CHECK(buildObject(v->object, ctxt));
@@ -2054,13 +2050,14 @@ bool QDeclarativeCompiler::buildScriptStringProperty(QDeclarativeParser::Propert
                                             QDeclarativeParser::Object *obj,
                                             const BindingContext &ctxt)
 {
-    if (prop->values.count() > 1) 
-        COMPILE_EXCEPTION(prop->values.at(1), tr( "Cannot assign multiple values to a script property"));
+    if (prop->values.isMany())
+        COMPILE_EXCEPTION(prop->values.first()->nextValue, tr( "Cannot assign multiple values to a script property"));
 
-    if (prop->values.at(0)->object)
-        COMPILE_EXCEPTION(prop->values.at(0), tr( "Invalid property assignment: script expected"));
+    if (prop->values.first()->object)
+        COMPILE_EXCEPTION(prop->values.first(), tr( "Invalid property assignment: script expected"));
 
-    obj->addScriptStringProperty(prop, ctxt.stack);
+    prop->scriptStringScope = ctxt.stack;
+    obj->addScriptStringProperty(prop);
 
     return true;
 }
@@ -2072,11 +2069,10 @@ bool QDeclarativeCompiler::buildPropertyAssignment(QDeclarativeParser::Property 
 {
     obj->addValueProperty(prop);
 
-    if (prop->values.count() > 1)
-        COMPILE_EXCEPTION(prop->values.at(0), tr( "Cannot assign multiple values to a singular property") );
+    if (prop->values.isMany())
+        COMPILE_EXCEPTION(prop->values.first(), tr( "Cannot assign multiple values to a singular property") );
 
-    for (int ii = 0; ii < prop->values.count(); ++ii) {
-        QDeclarativeParser::Value *v = prop->values.at(ii);
+    for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
         if (v->object) {
 
             COMPILE_CHECK(buildPropertyObjectAssignment(prop, obj, v, ctxt));
@@ -2088,9 +2084,7 @@ bool QDeclarativeCompiler::buildPropertyAssignment(QDeclarativeParser::Property 
         }
     }
 
-    for (int ii = 0; ii < prop->onValues.count(); ++ii) {
-        QDeclarativeParser::Value *v = prop->onValues.at(ii);
-
+    for (Value *v = prop->onValues.first(); v; v = Property::ValueList::next(v)) {
         Q_ASSERT(v->object);
         COMPILE_CHECK(buildPropertyOnAssignment(prop, obj, obj, v, ctxt));
     }
@@ -2108,7 +2102,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeParser::Pro
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
 
     if (QDeclarativeMetaType::isInterface(prop->type)) {
 
@@ -2155,12 +2149,12 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeParser::Pro
         } else if (propertyMetaObject == &QDeclarativeComponent::staticMetaObject) {
             // Automatic "Component" insertion
             QDeclarativeParser::Object *root = v->object;
-            QDeclarativeParser::Object *component = new QDeclarativeParser::Object;
+            QDeclarativeParser::Object *component = pool->New<Object>();
             component->type = componentTypeRef();
             component->typeName = "Qt/Component";
             component->metatype = &QDeclarativeComponent::staticMetaObject;
             component->location = root->location;
-            QDeclarativeParser::Value *componentValue = new QDeclarativeParser::Value;
+            QDeclarativeParser::Value *componentValue = pool->New<Value>();
             componentValue->object = root;
             component->getDefaultProperty()->addValue(componentValue);
             v->object = component;
@@ -2189,7 +2183,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
 
 
     // Normally buildObject() will set this up, but we need the static
@@ -2216,7 +2210,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
             buildDynamicMeta(baseObj, ForceCreation);
         v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
     } else {
-        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name));
+        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name()));
     }
 
     return true;
@@ -2449,11 +2443,7 @@ bool QDeclarativeCompiler::mergeDynamicMetaProperties(QDeclarativeParser::Object
         if (property->value)
             COMPILE_EXCEPTION(property, tr("Invalid property nesting"));
 
-        for (int ii = 0; ii < p.defaultValue->values.count(); ++ii) {
-            QDeclarativeParser::Value *v = p.defaultValue->values.at(ii);
-            v->addref();
-            property->values.append(v);
-        }
+        property->values.append(p.defaultValue->values);
     }
     return true;
 }
@@ -2477,7 +2467,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
     newClassName.append("_QML_");
     int idx = classIndexCounter()->fetchAndAddRelaxed(1);
     newClassName.append(QByteArray::number(idx));
-    if (compileState.root == obj && !compileState.nested) {
+    if (compileState->root == obj && !compileState->nested) {
         QString path = output->url.path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
@@ -2676,7 +2666,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
     builder.fromRelocatableData(&obj->extObject, obj->metatype, obj->metadata);
 
     if (mode == IgnoreAliases && hasAlias)
-        compileState.aliasingObjects << obj;
+        compileState->aliasingObjects << obj;
 
     obj->synthdata = dynamicData;
 
@@ -2749,12 +2739,12 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     if (!prop.defaultValue)
         COMPILE_EXCEPTION(obj, tr("No property alias location"));
 
-    if (prop.defaultValue->values.count() != 1 ||
-        prop.defaultValue->values.at(0)->object ||
-        !prop.defaultValue->values.at(0)->value.isScript())
+    if (!prop.defaultValue->values.isOne() ||
+        prop.defaultValue->values.first()->object ||
+        !prop.defaultValue->values.first()->value.isScript())
         COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
 
-    QDeclarativeJS::AST::Node *node = prop.defaultValue->values.at(0)->value.asAST();
+    QDeclarativeJS::AST::Node *node = prop.defaultValue->values.first()->value.asAST();
     if (!node)
         COMPILE_EXCEPTION(obj, tr("No property alias location")); // ### Can this happen?
 
@@ -2763,10 +2753,10 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     if (alias.count() < 1 || alias.count() > 3)
         COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
 
-    if (!compileState.ids.contains(alias.at(0)))
+    if (!compileState->ids.contains(alias.at(0)))
         COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias reference. Unable to find id \"%1\"").arg(alias.at(0)));
 
-    QDeclarativeParser::Object *idObject = compileState.ids[alias.at(0)];
+    QDeclarativeParser::Object *idObject = compileState->ids[alias.at(0)];
 
     QByteArray typeName;
 
@@ -2838,8 +2828,8 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
 }
 
 bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
-                               QDeclarativeParser::Property *prop,
-                               const BindingContext &ctxt)
+                                        QDeclarativeParser::Property *prop,
+                                        const BindingContext &ctxt)
 {
     Q_ASSERT(prop->index != -1);
     Q_ASSERT(prop->parent);
@@ -2847,13 +2837,13 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
 
     QMetaProperty mp = prop->parent->metaObject()->property(prop->index);
     if (!mp.isWritable() && !QDeclarativeMetaType::isList(prop->type))
-        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name));
+        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
 
-    BindingReference reference;
-    reference.expression = value->value;
-    reference.property = prop;
-    reference.value = value;
-    reference.bindingContext = ctxt;
+    BindingReference *reference = pool->New<BindingReference>();
+    reference->expression = value->value;
+    reference->property = prop;
+    reference->value = value;
+    reference->bindingContext = ctxt;
     addBindingReference(reference);
 
     return true;
@@ -2865,9 +2855,9 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeParser::Value *bindi
                                                 QDeclarativeParser::Property *valueTypeProperty)
 {
     Q_UNUSED(obj);
-    Q_ASSERT(compileState.bindings.contains(binding));
+    Q_ASSERT(binding->bindingReference);
 
-    const BindingReference &ref = compileState.bindings.value(binding);
+    const BindingReference &ref = *binding->bindingReference;
     if (ref.dataType == BindingReference::V4) {
         QDeclarativeInstruction store;
         store.setType(QDeclarativeInstruction::StoreV4Binding);
@@ -2923,13 +2913,13 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeParser::Value *bindi
 
 int QDeclarativeCompiler::genContextCache()
 {
-    if (compileState.ids.count() == 0)
+    if (compileState->ids.count() == 0)
         return -1;
 
     QDeclarativeIntegerCache *cache = new QDeclarativeIntegerCache();
 
-    for (QHash<QString, QDeclarativeParser::Object *>::ConstIterator iter = compileState.ids.begin();
-         iter != compileState.ids.end();
+    for (QHash<QString, QDeclarativeParser::Object *>::ConstIterator iter = compileState->ids.begin();
+         iter != compileState->ids.end();
          ++iter) 
         cache->add(iter.key(), (*iter)->idIndex);
 
@@ -2958,16 +2948,17 @@ int QDeclarativeCompiler::genPropertyData(QDeclarativeParser::Property *prop)
 
 bool QDeclarativeCompiler::completeComponentBuild()
 {
-    componentStat.ids = compileState.ids.count();
+    if (componentStats)
+        componentStats->componentStat.ids = compileState->ids.count();
 
-    for (int ii = 0; ii < compileState.aliasingObjects.count(); ++ii) {
-        QDeclarativeParser::Object *aliasObject = compileState.aliasingObjects.at(ii);
+    for (int ii = 0; ii < compileState->aliasingObjects.count(); ++ii) {
+        QDeclarativeParser::Object *aliasObject = compileState->aliasingObjects.at(ii);
         COMPILE_CHECK(buildDynamicMeta(aliasObject, ResolveAliases));
     }
 
     QDeclarativeV4Compiler::Expression expr;
-    expr.component = compileState.root;
-    expr.ids = compileState.ids;
+    expr.component = compileState->root;
+    expr.ids = compileState->ids;
     expr.importCache = output->importCache;
     expr.imports = unit->imports();
 
@@ -2975,10 +2966,9 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
     QList<BindingReference*> sharedBindings;
 
-    for (QHash<QDeclarativeParser::Value*,BindingReference>::Iterator iter = compileState.bindings.begin(); 
-         iter != compileState.bindings.end(); ++iter) {
+    for (BindingReference *b = compileState->bindings.first(); b; b = b->nextReference) {
 
-        BindingReference &binding = *iter;
+        BindingReference &binding = *b;
 
         // ### We don't currently optimize for bindings on alias's - because 
         // of the solution to QTBUG-13719
@@ -2991,7 +2981,8 @@ bool QDeclarativeCompiler::completeComponentBuild()
             if (index != -1) {
                 binding.dataType = BindingReference::V4;
                 binding.compiledIndex = index;
-                componentStat.optimizedBindings.append(iter.key()->location);
+                if (componentStats)
+                    componentStats->componentStat.optimizedBindings.append(b->value->location);
                 continue;
             } 
         }
@@ -3000,19 +2991,20 @@ bool QDeclarativeCompiler::completeComponentBuild()
         QString expression = binding.expression.asScript();
 
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
-        rewriteBinding.setName(QLatin1Char('$')+binding.property->name);
+        rewriteBinding.setName(QLatin1Char('$')+binding.property->name());
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
         if (isSharable && !binding.property->isAlias /* See above re alias */ &&
             binding.property->type != qMetaTypeId<QDeclarativeBinding*>()) {
             binding.dataType = BindingReference::V8;
-            sharedBindings.append(&iter.value());
+            sharedBindings.append(b);
         } else {
             binding.dataType = BindingReference::QtScript;
         }
 
-        componentStat.scriptBindings.append(iter.key()->location);
+        if (componentStats)
+            componentStats->componentStat.scriptBindings.append(b->value->location);
     }
 
     if (!sharedBindings.isEmpty()) {
@@ -3046,14 +3038,14 @@ bool QDeclarativeCompiler::completeComponentBuild()
         }
         functionArray += QLatin1String("]");
 
-        compileState.v8BindingProgram = functionArray;
-        compileState.v8BindingProgramLine = startLineNumber;
-        compileState.v8BindingProgramIndex = output->v8bindings.count();
+        compileState->v8BindingProgram = functionArray;
+        compileState->v8BindingProgramLine = startLineNumber;
+        compileState->v8BindingProgramIndex = output->v8bindings.count();
         output->v8bindings.append(v8::Persistent<v8::Array>());
     }
 
     if (bindingCompiler.isValid()) 
-        compileState.compiledBindingData = bindingCompiler.program();
+        compileState->compiledBindingData = bindingCompiler.program();
 
     saveComponentState();
 
@@ -3062,9 +3054,10 @@ bool QDeclarativeCompiler::completeComponentBuild()
 
 void QDeclarativeCompiler::dumpStats()
 {
+    Q_ASSERT(componentStats);
     qWarning().nospace() << "QML Document: " << output->url.toString();
-    for (int ii = 0; ii < savedComponentStats.count(); ++ii) {
-        const ComponentStat &stat = savedComponentStats.at(ii);
+    for (int ii = 0; ii < componentStats->savedComponentStats.count(); ++ii) {
+        const ComponentStat &stat = componentStats->savedComponentStats.at(ii);
         qWarning().nospace() << "    Component Line " << stat.lineNumber;
         qWarning().nospace() << "        Total Objects:      " << stat.objects;
         qWarning().nospace() << "        IDs Used:           " << stat.ids;
@@ -3210,24 +3203,25 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, co
 {
     if (notInRevision) *notInRevision = false;
 
-    if (object->synthCache || (object->type != -1 && output->types.at(object->type).propertyCache())) {
-        QDeclarativePropertyCache *cache = 
-            object->synthCache?object->synthCache:output->types.at(object->type).propertyCache();
+    QDeclarativePropertyCache *cache = 0;
 
-        QDeclarativePropertyCache::Data *d = cache->property(name);
-        // Find the first property
-        while (d && d->isFunction())
-            d = cache->overrideData(d);
+    if (object->synthCache)
+        cache = object->synthCache;
+    else if (object->type != -1)
+        cache = output->types[object->type].createPropertyCache(engine);
+    else
+        cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
-        if (d && !cache->isAllowedInRevision(d)) {
-            if (notInRevision) *notInRevision = true;
-            return -1;
-        } else {
-            return d?d->coreIndex:-1;
-        }
+    QDeclarativePropertyCache::Data *d = cache->property(name);
+    // Find the first property
+    while (d && d->isFunction())
+        d = cache->overrideData(d);
+
+    if (d && !cache->isAllowedInRevision(d)) {
+        if (notInRevision) *notInRevision = true;
+        return -1;
     } else {
-        const QMetaObject *mo = object->metaObject();
-        return mo->indexOfProperty(name.toUtf8().constData());
+        return d?d->coreIndex:-1;
     }
 }
 

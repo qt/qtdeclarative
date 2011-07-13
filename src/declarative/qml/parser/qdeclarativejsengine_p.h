@@ -71,7 +71,7 @@ public:
         : _text(u, s)
     { }
 
-    const QString asString() const
+    const QString &asString() const
     { return _text; }
 
     bool operator == (const NameId &other) const

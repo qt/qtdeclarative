@@ -139,12 +139,89 @@ private:
     int indexForUrl(const QUrl &);
 };
 
+namespace QDeclarativeCompilerTypes {
+    struct BindingContext 
+    {
+        BindingContext()
+            : stack(0), owner(0), object(0) {}
+        BindingContext(QDeclarativeParser::Object *o)
+            : stack(0), owner(0), object(o) {}
+        BindingContext incr() const {
+            BindingContext rv(object);
+            rv.stack = stack + 1;
+            return rv;
+        }
+        bool isSubContext() const { return stack != 0; }
+        int stack;
+        int owner;
+        QDeclarativeParser::Object *object;
+    };
+
+    struct BindingReference : public QDeclarativePool::Class 
+    {
+        BindingReference() : nextReference(0) {}
+
+        QDeclarativeParser::Variant expression;
+        QDeclarativeParser::Property *property;
+        QDeclarativeParser::Value *value;
+
+        enum DataType { QtScript, V4, V8 };
+        DataType dataType;
+
+        int compiledIndex;
+
+        QString rewrittenExpression;
+        BindingContext bindingContext;
+
+        BindingReference *nextReference;
+    };
+
+    // Contains all the incremental compiler state about a component.  As
+    // a single QML file can have multiple components defined, there may be
+    // more than one of these for each compile
+    struct ComponentCompileState : public QDeclarativePool::Class
+    {
+        ComponentCompileState() 
+            : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
+        QHash<QString, QDeclarativeParser::Object *> ids;
+        int parserStatusCount;
+        int pushedProperties;
+        bool nested;
+
+        QByteArray compiledBindingData;
+        QString v8BindingProgram;
+        int v8BindingProgramLine;
+        int v8BindingProgramIndex;
+
+        struct BindingReferenceList {
+            BindingReferenceList() : _count(0), _first(0) {}
+            QDeclarativeCompilerTypes::BindingReference *first() const { return _first; }
+            void prepend(QDeclarativeCompilerTypes::BindingReference *ref) {
+                Q_ASSERT(ref);
+                Q_ASSERT(0 == ref->nextReference);
+                ref->nextReference = _first;
+                _first = ref;
+                ++_count;
+            }
+            int count() const { return _count; }
+        private:
+            int _count;
+            QDeclarativeCompilerTypes::BindingReference *_first;
+        };
+
+        BindingReferenceList bindings;
+        QHash<QDeclarativeParser::Value *, QDeclarativeCompilerTypes::BindingContext> signalExpressions;
+        QList<QDeclarativeParser::Object *> aliasingObjects;
+        QDeclarativeParser::Object *root;
+    };
+};
+
 class QMetaObjectBuilder;
 class Q_AUTOTEST_EXPORT QDeclarativeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QDeclarativeCompiler)
 public:
-    QDeclarativeCompiler();
+    QDeclarativeCompiler(QDeclarativePool *);
 
     bool compile(QDeclarativeEngine *, QDeclarativeTypeData *, QDeclarativeCompiledData *);
 
@@ -161,69 +238,53 @@ public:
 private:
     static void reset(QDeclarativeCompiledData *);
 
-    struct BindingContext {
-        BindingContext()
-            : stack(0), owner(0), object(0) {}
-        BindingContext(QDeclarativeParser::Object *o)
-            : stack(0), owner(0), object(o) {}
-        BindingContext incr() const {
-            BindingContext rv(object);
-            rv.stack = stack + 1;
-            return rv;
-        }
-        bool isSubContext() const { return stack != 0; }
-        int stack;
-        int owner;
-        QDeclarativeParser::Object *object;
-    };
-
     void compileTree(QDeclarativeParser::Object *tree);
 
 
-    bool buildObject(QDeclarativeParser::Object *obj, const BindingContext &);
-    bool buildComponent(QDeclarativeParser::Object *obj, const BindingContext &);
-    bool buildSubObject(QDeclarativeParser::Object *obj, const BindingContext &);
+    bool buildObject(QDeclarativeParser::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
+    bool buildComponent(QDeclarativeParser::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
+    bool buildSubObject(QDeclarativeParser::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
     bool buildSignal(QDeclarativeParser::Property *prop, QDeclarativeParser::Object *obj, 
-                     const BindingContext &);
+                     const QDeclarativeCompilerTypes::BindingContext &);
     bool buildProperty(QDeclarativeParser::Property *prop, QDeclarativeParser::Object *obj, 
-                       const BindingContext &);
+                       const QDeclarativeCompilerTypes::BindingContext &);
     bool buildPropertyInNamespace(QDeclarativeImportedNamespace *ns,
                                   QDeclarativeParser::Property *prop, 
                                   QDeclarativeParser::Object *obj, 
-                                  const BindingContext &);
+                                  const QDeclarativeCompilerTypes::BindingContext &);
     bool buildIdProperty(QDeclarativeParser::Property *prop, QDeclarativeParser::Object *obj);
     bool buildAttachedProperty(QDeclarativeParser::Property *prop, 
                                QDeclarativeParser::Object *obj,
-                               const BindingContext &ctxt);
+                               const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildGroupedProperty(QDeclarativeParser::Property *prop,
                               QDeclarativeParser::Object *obj,
-                              const BindingContext &ctxt);
+                              const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildValueTypeProperty(QObject *type, 
                                 QDeclarativeParser::Object *obj, 
                                 QDeclarativeParser::Object *baseObj,
-                                const BindingContext &ctxt);
+                                const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildListProperty(QDeclarativeParser::Property *prop,
                            QDeclarativeParser::Object *obj,
-                           const BindingContext &ctxt);
+                           const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildScriptStringProperty(QDeclarativeParser::Property *prop,
                                    QDeclarativeParser::Object *obj,
-                                   const BindingContext &ctxt);
+                                   const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildPropertyAssignment(QDeclarativeParser::Property *prop,
                                  QDeclarativeParser::Object *obj,
-                                 const BindingContext &ctxt);
+                                 const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildPropertyObjectAssignment(QDeclarativeParser::Property *prop,
                                        QDeclarativeParser::Object *obj,
                                        QDeclarativeParser::Value *value,
-                                       const BindingContext &ctxt);
+                                       const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildPropertyOnAssignment(QDeclarativeParser::Property *prop,
                                    QDeclarativeParser::Object *obj,
                                    QDeclarativeParser::Object *baseObj,
                                    QDeclarativeParser::Value *value,
-                                   const BindingContext &ctxt);
+                                   const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildPropertyLiteralAssignment(QDeclarativeParser::Property *prop,
                                         QDeclarativeParser::Object *obj,
                                         QDeclarativeParser::Value *value,
-                                        const BindingContext &ctxt);
+                                        const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool doesPropertyExist(QDeclarativeParser::Property *prop, QDeclarativeParser::Object *obj);
     bool testLiteralAssignment(const QMetaProperty &prop, 
                                QDeclarativeParser::Value *value);
@@ -236,8 +297,8 @@ private:
     bool buildDynamicMeta(QDeclarativeParser::Object *obj, DynamicMetaMode mode);
     bool checkDynamicMeta(QDeclarativeParser::Object *obj);
     bool buildBinding(QDeclarativeParser::Value *, QDeclarativeParser::Property *prop,
-                      const BindingContext &ctxt);
-    bool buildComponentFromRoot(QDeclarativeParser::Object *obj, const BindingContext &);
+                      const QDeclarativeCompilerTypes::BindingContext &ctxt);
+    bool buildComponentFromRoot(QDeclarativeParser::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
     bool compileAlias(QMetaObjectBuilder &, 
                       QByteArray &data,
                       QDeclarativeParser::Object *obj, 
@@ -281,43 +342,24 @@ private:
 
     void dumpStats();
 
-    struct BindingReference {
-        QDeclarativeParser::Variant expression;
-        QDeclarativeParser::Property *property;
-        QDeclarativeParser::Value *value;
+    void addBindingReference(QDeclarativeCompilerTypes::BindingReference *);
 
-        enum DataType { QtScript, V4, V8 };
-        DataType dataType;
+    QDeclarativeCompilerTypes::ComponentCompileState *compileState;
 
-        int compiledIndex;
+    QDeclarativePool *pool;
 
-        QString rewrittenExpression;
-        BindingContext bindingContext;
-    };
-    void addBindingReference(const BindingReference &);
+    QDeclarativeCompilerTypes::ComponentCompileState *componentState(QDeclarativeParser::Object *);
+    void saveComponentState();
 
-    struct ComponentCompileState
-    {
-        ComponentCompileState() 
-            : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
-        QHash<QString, QDeclarativeParser::Object *> ids;
-        QHash<int, QDeclarativeParser::Object *> idIndexes;
-        int parserStatusCount;
-        int pushedProperties;
-        bool nested;
+    QList<QDeclarativeError> exceptions;
+    QDeclarativeCompiledData *output;
+    QDeclarativeEngine *engine;
+    QDeclarativeEnginePrivate *enginePrivate;
+    QDeclarativeParser::Object *unitRoot;
+    QDeclarativeTypeData *unit;
 
-        QByteArray compiledBindingData;
-        QString v8BindingProgram;
-        int v8BindingProgramLine;
-        int v8BindingProgramIndex;
 
-        QHash<QDeclarativeParser::Value *, BindingReference> bindings;
-        QHash<QDeclarativeParser::Value *, BindingContext> signalExpressions;
-        QList<QDeclarativeParser::Object *> aliasingObjects;
-        QDeclarativeParser::Object *root;
-    };
-    ComponentCompileState compileState;
-
+    // Compiler component statistics.  Only collected if QML_COMPILER_STATS=1
     struct ComponentStat
     {
         ComponentStat() : ids(0), objects(0) {}
@@ -329,21 +371,14 @@ private:
         QList<QDeclarativeParser::LocationSpan> optimizedBindings;
         int objects;
     };
-    ComponentStat componentStat;
-
-    void saveComponentState();
-
-    ComponentCompileState componentState(QDeclarativeParser::Object *);
-    QHash<QDeclarativeParser::Object *, ComponentCompileState> savedCompileStates;
-    QList<ComponentStat> savedComponentStats;
-
-    QList<QDeclarativeError> exceptions;
-    QDeclarativeCompiledData *output;
-    QDeclarativeEngine *engine;
-    QDeclarativeEnginePrivate *enginePrivate;
-    QDeclarativeParser::Object *unitRoot;
-    QDeclarativeTypeData *unit;
+    struct ComponentStats : public QDeclarativePool::Class
+    {
+        ComponentStat componentStat;
+        QList<ComponentStat> savedComponentStats;
+    };
+    ComponentStats *componentStats;
 };
+
 QT_END_NAMESPACE
 
 #endif // QDECLARATIVECOMPILER_P_H

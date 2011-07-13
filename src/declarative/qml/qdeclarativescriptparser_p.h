@@ -53,7 +53,9 @@
 //
 
 #include "qdeclarativeerror.h"
-#include "private/qdeclarativeparser_p.h"
+
+#include <private/qdeclarativeparser_p.h>
+#include <private/qdeclarativepool_p.h>
 
 #include <QtCore/QList>
 #include <QtCore/QUrl>
@@ -136,6 +138,7 @@ public:
 // ### private:
     QList<QDeclarativeError> _errors;
 
+    QDeclarativePool _pool;
     QDeclarativeParser::Object *root;
     QList<Import> _imports;
     QList<TypeReference*> _refTypes;

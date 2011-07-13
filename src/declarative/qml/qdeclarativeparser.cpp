@@ -66,31 +66,14 @@ using namespace QDeclarativeJS;
 using namespace QDeclarativeParser;
 
 QDeclarativeParser::Object::Object()
-: type(-1), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0), parserStatusCast(-1)
+: type(-1), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0), parserStatusCast(-1),
+  componentCompileState(0)
 {
 }
 
 QDeclarativeParser::Object::~Object() 
 { 
-    if (defaultProperty) defaultProperty->release();
     if (synthCache) synthCache->release();
-    foreach(Property *prop, properties)
-        prop->release();
-    foreach(Property *prop, valueProperties)
-        prop->release();
-    foreach(Property *prop, signalProperties)
-        prop->release();
-    foreach(Property *prop, attachedProperties)
-        prop->release();
-    foreach(Property *prop, groupedProperties)
-        prop->release();
-    foreach(Property *prop, valueTypeProperties)
-        prop->release();
-    typedef QPair<Property *, int> PropPair;
-    foreach(const PropPair &prop, scriptStringProperties)
-        prop.first->release();
-    foreach(const DynamicProperty &prop, dynamicProperties)
-        if (prop.defaultValue) prop.defaultValue->release();
 }
 
 void Object::setBindingBit(int b)
@@ -113,7 +96,7 @@ const QMetaObject *Object::metaObject() const
 QDeclarativeParser::Property *Object::getDefaultProperty()
 {
     if (!defaultProperty) {
-        defaultProperty = new Property;
+        defaultProperty = pool()->New<Property>();
         defaultProperty->parent = this;
     }
     return defaultProperty;
@@ -121,53 +104,70 @@ QDeclarativeParser::Property *Object::getDefaultProperty()
 
 void QDeclarativeParser::Object::addValueProperty(Property *p)
 {
-    p->addref();
-    valueProperties << p;
+    valueProperties.append(p);
 }
 
 void QDeclarativeParser::Object::addSignalProperty(Property *p)
 {
-    p->addref();
-    signalProperties << p;
+    signalProperties.append(p);
 }
 
 void QDeclarativeParser::Object::addAttachedProperty(Property *p)
 {
-    p->addref();
-    attachedProperties << p;
+    attachedProperties.append(p);
 }
 
 void QDeclarativeParser::Object::addGroupedProperty(Property *p)
 {
-    p->addref();
-    groupedProperties << p;
+    groupedProperties.append(p);
 }
 
 void QDeclarativeParser::Object::addValueTypeProperty(Property *p)
 {
-    p->addref();
-    valueTypeProperties << p;
+    valueTypeProperties.append(p);
 }
 
-void QDeclarativeParser::Object::addScriptStringProperty(Property *p, int stack)
+void QDeclarativeParser::Object::addScriptStringProperty(Property *p)
 {
-    p->addref();
-    scriptStringProperties << qMakePair(p, stack);
+    scriptStringProperties.append(p);
 }
 
+Property *QDeclarativeParser::Object::getProperty(const QString *name, bool create)
+{
+    for (Property *p = properties.first(); p; p = properties.next(p)) {
+        if (p->name() == *name)
+            return p;
+    }
+
+    if (create) {
+        Property *property = pool()->New<Property>();
+        property->parent = this;
+        property->_name = const_cast<QString *>(name);
+        property->isDefault = false;
+        properties.prepend(property);
+        return property;
+    } else {
+        return 0;
+    }
+}
 
 Property *QDeclarativeParser::Object::getProperty(const QString &name, bool create)
 {
-    if (!properties.contains(name)) {
-        if (create) {
-            Property *property = new Property(name);
-            property->parent = this;
-            properties.insert(name, property);
-        } else {
-            return 0;
-        }
+    for (Property *p = properties.first(); p; p = properties.next(p)) {
+        if (p->name() == name)
+            return p;
     }
-    return properties[name];
+
+    if (create) {
+        Property *property = pool()->New<Property>();
+        property->parent = this;
+        property->_name = pool()->NewString(name);
+        property->isDefault = false;
+        properties.prepend(property);
+        return property;
+    } else {
+        return 0;
+    }
 }
 
 QDeclarativeParser::Object::DynamicProperty::DynamicProperty()
@@ -205,40 +205,26 @@ QDeclarativeParser::Object::DynamicSlot::DynamicSlot(const DynamicSlot &o)
 }
 
 QDeclarativeParser::Property::Property()
-: parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false), 
-  isValueTypeSubProperty(false), isAlias(false)
+: parent(0), type(0), index(-1), value(0), _name(0), isDefault(true), isDeferred(false), 
+  isValueTypeSubProperty(false), isAlias(false), scriptStringScope(-1), nextProperty(0), 
+  nextMainProperty(0)
 {
-}
-
-QDeclarativeParser::Property::Property(const QString &n)
-: parent(0), type(0), index(-1), value(0), name(n), isDefault(false), 
-  isDeferred(false), isValueTypeSubProperty(false), isAlias(false)
-{
-}
-
-QDeclarativeParser::Property::~Property() 
-{ 
-    foreach(Value *value, values)
-        value->release();
-    foreach(Value *value, onValues)
-        value->release();
-    if (value) value->release(); 
 }
 
 QDeclarativeParser::Object *QDeclarativeParser::Property::getValue(const LocationSpan &l)
 {
-    if (!value) { value = new QDeclarativeParser::Object; value->location = l; }
+    if (!value) { value = pool()->New<Object>(); value->location = l; }
     return value;
 }
 
 void QDeclarativeParser::Property::addValue(Value *v)
 {
-    values << v;
+    values.append(v);
 }
 
 void QDeclarativeParser::Property::addOnValue(Value *v)
 {
-    onValues << v;
+    onValues.append(v);
 }
 
 bool QDeclarativeParser::Property::isEmpty() const
@@ -247,20 +233,17 @@ bool QDeclarativeParser::Property::isEmpty() const
 }
 
 QDeclarativeParser::Value::Value()
-: type(Unknown), object(0)
+: type(Unknown), object(0), bindingReference(0), nextValue(0)
 {
 }
 
-QDeclarativeParser::Value::~Value() 
-{ 
-    if (object) object->release();
+QDeclarativeParser::Variant::Variant()
+: t(Invalid)
+{
 }
 
-QDeclarativeParser::Variant::Variant()
-: t(Invalid) {}
-
 QDeclarativeParser::Variant::Variant(const Variant &o)
-: t(o.t), d(o.d), s(o.s)
+: t(o.t), d(o.d), asWritten(o.asWritten)
 {
 }
 
@@ -269,18 +252,18 @@ QDeclarativeParser::Variant::Variant(bool v)
 {
 }
 
-QDeclarativeParser::Variant::Variant(double v, const QString &asWritten)
-: t(Number), d(v), s(asWritten)
+QDeclarativeParser::Variant::Variant(double v, const QStringRef &asWritten)
+: t(Number), d(v), asWritten(asWritten)
 {
 }
 
-QDeclarativeParser::Variant::Variant(const QString &v)
-: t(String), s(v)
+QDeclarativeParser::Variant::Variant(QDeclarativeJS::AST::StringLiteral *v)
+: t(String), l(v)
 {
 }
 
-QDeclarativeParser::Variant::Variant(const QString &v, QDeclarativeJS::AST::Node *n)
-: t(Script), n(n), s(v)
+QDeclarativeParser::Variant::Variant(const QStringRef &asWritten, QDeclarativeJS::AST::Node *n)
+: t(Script), n(n), asWritten(asWritten)
 {
 }
 
@@ -288,7 +271,7 @@ QDeclarativeParser::Variant &QDeclarativeParser::Variant::operator=(const Varian
 {
     t = o.t;
     d = o.d;
-    s = o.s;
+    asWritten = o.asWritten;
     return *this;
 }
 
@@ -304,7 +287,11 @@ bool QDeclarativeParser::Variant::asBoolean() const
 
 QString QDeclarativeParser::Variant::asString() const
 {
-    return s;
+    if (t == String) {
+        return l->value->asString();
+    } else {
+        return asWritten.toString();
+    }
 }
 
 double QDeclarativeParser::Variant::asNumber() const
@@ -364,14 +351,17 @@ QString QDeclarativeParser::Variant::asScript() const
     case Boolean:
         return b?QLatin1String("true"):QLatin1String("false");
     case Number:
-        if (s.isEmpty())
+        if (asWritten.isEmpty())
             return QString::number(d);
-        else
-            return s;
+        else 
+            return asWritten.toString();
     case String:
-        return escapedString(s);
+        return escapedString(asString());
     case Script:
-        return s;
+        if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(n)) 
+            return i->name->asString();
+        else
+            return asWritten.toString();
     }
 }
 

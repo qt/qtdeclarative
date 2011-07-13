@@ -101,12 +101,7 @@ QDeclarativeCustomParserNodePrivate::fromObject(QDeclarativeParser::Object *root
     rootNode.d->name = root->typeName;
     rootNode.d->location = root->location.start;
 
-    for(QHash<QString, Property *>::Iterator iter = root->properties.begin();
-        iter != root->properties.end();
-        ++iter) {
-
-        Property *p = *iter;
-
+    for (Property *p = root->properties.first(); p; p = root->properties.next(p)) {
         rootNode.d->properties << fromProperty(p);
     }
 
@@ -120,8 +115,8 @@ QDeclarativeCustomParserProperty
 QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeParser::Property *p)
 {
     QDeclarativeCustomParserProperty prop;
-    prop.d->name = p->name.toUtf8();
-    prop.d->isList = (p->values.count() > 1);
+    prop.d->name = p->name().toUtf8();
+    prop.d->isList = p->values.isMany();
     prop.d->location = p->location.start;
 
     if (p->value) {
@@ -130,8 +125,7 @@ QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeParser::Property *
         for (int ii = 0; ii < props.count(); ++ii)
             prop.d->values << QVariant::fromValue(props.at(ii));
     } else {
-        for(int ii = 0; ii < p->values.count(); ++ii) {
-            QDeclarativeParser::Value *v = p->values.at(ii);
+        for (QDeclarativeParser::Value *v = p->values.first(); v; v = p->values.next(v)) {
             v->type = QDeclarativeParser::Value::Literal;
 
             if(v->object) {
