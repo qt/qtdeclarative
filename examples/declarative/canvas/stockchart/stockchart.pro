@@ -11,4 +11,5 @@ macx: CONFIG -= app_bundle
 CONFIG += console
 
 OTHER_FILES += \
-    stock.qml
+    stock.qml \
+    contents/Stocks.qml

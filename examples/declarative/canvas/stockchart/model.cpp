@@ -82,6 +82,15 @@ int StockModel::rowCount(const QModelIndex & parent) const {
     return _prices.count();
 }
 
+StockPrice* StockModel::stockPriceAtIndex(int idx) const
+{
+    if (idx >=0 && idx < _prices.size()) {
+        return _prices[idx];
+    }
+    return 0;
+}
+
+
 void StockModel::requestData()
 {
     if (!_updating) {
@@ -118,6 +127,11 @@ void StockModel::update(QNetworkReply *reply)
     if (reply) {
          if (reply->error() == QNetworkReply::NoError) {
             beginResetModel();
+
+            foreach (StockPrice* p, _prices) {
+                p->deleteLater();
+            }
+
             _prices.clear();
 
             while (!reply->atEnd()) {
@@ -127,14 +141,14 @@ void StockModel::update(QNetworkReply *reply)
                 //data format:Date,Open,High,Low,Close,Volume,Adjusted close price
                 //example: 2011-06-24,6.03,6.04,5.88,5.88,20465200,5.88
                 if (fields.size() == 7) {
-                    StockPrice price;
-                    price.date = QDate::fromString(fields[0], Qt::ISODate);
-                    price.openPrice = fields[1].toFloat();
-                    price.highPrice = fields[2].toFloat();
-                    price.lowPrice = fields[3].toFloat();
-                    price.closePrice = fields[4].toFloat();
-                    price.volume = fields[5].toInt();
-                    price.adjustedPrice = fields[6].toFloat();
+                    StockPrice* price = new StockPrice(this);
+                    price->setDate(QDate::fromString(fields[0], Qt::ISODate));
+                    price->setOpenPrice(fields[1].toFloat());
+                    price->setHighPrice(fields[2].toFloat());
+                    price->setLowPrice(fields[3].toFloat());
+                    price->setClosePrice(fields[4].toFloat());
+                    price->setVolume(fields[5].toInt());
+                    price->setAdjustedPrice(fields[6].toFloat());
                     _prices.prepend(price);
                 }
             }
@@ -144,6 +158,7 @@ void StockModel::update(QNetworkReply *reply)
          }
          reply->deleteLater();
          endResetModel();
+         emit dataChanged(QModelIndex(), QModelIndex());
     }
 }
 
@@ -151,23 +166,23 @@ QVariant StockModel::data(const QModelIndex & index, int role) const {
     if (index.row() < 0 || index.row() > _prices.count())
         return QVariant();
 
-    const StockPrice &price = _prices[index.row()];
+    const StockPrice* price = _prices[index.row()];
     if (role == StockModel::DateRole)
-        return price.date;
+        return price->date();
     else if (role == StockModel::OpenPriceRole)
-        return price.openPrice;
+        return price->openPrice();
     else if (role == StockModel::ClosePriceRole)
-        return price.closePrice;
+        return price->closePrice();
     else if (role == StockModel::HighPriceRole)
-        return price.highPrice;
+        return price->highPrice();
     else if (role == StockModel::LowPriceRole)
-        return price.lowPrice;
+        return price->lowPrice();
     else if (role == StockModel::AdjustedPriceRole)
-        return price.adjustedPrice;
+        return price->adjustedPrice();
     else if (role == StockModel::VolumeRole)
-        return price.volume;
+        return price->volume();
     else if (role == StockModel::SectionRole)
-        return price.date.year();
+        return price->date().year();
     return QVariant();
 }
 

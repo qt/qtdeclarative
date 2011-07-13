@@ -48,12 +48,12 @@ int main(int argc, char ** argv)
     QApplication app(argc, argv);
 
     qmlRegisterType<StockModel>("StockChart", 1, 0, "StockModel");
-
+    qmlRegisterType<StockPrice>("StockChart", 1, 0, "StockPrice");
     QSGView view;
-    view.setResizeMode(QSGView::SizeRootObjectToView);
+    view.setResizeMode(QSGView::SizeViewToRootObject);
     view.setSource(QUrl("qrc:stock.qml"));
 
-    view.show();
+    view.showFullScreen();
     view.raise();
 
     return app.exec();
