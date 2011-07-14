@@ -60,6 +60,9 @@
 #define SRCDIR "."
 #endif
 
+Q_DECLARE_METATYPE(Qt::LayoutDirection)
+Q_DECLARE_METATYPE(QSGListView::Orientation)
+
 class tst_QSGListView : public QObject
 {
     Q_OBJECT
@@ -105,7 +108,10 @@ private slots:
     void manualHighlight();
     void QTBUG_11105();
     void header();
+    void header_data();
+    void header_delayItemCreation();
     void footer();
+    void footer_data();
     void headerFooter();
     void resizeView();
     void sizeLessThan1();
@@ -1574,6 +1580,14 @@ void tst_QSGListView::positionViewAtIndex()
     listview->positionViewAtEnd();
     QTRY_COMPARE(listview->contentY(), 510.);
 
+    // set current item to outside visible view, position at beginning
+    // and ensure highlight moves to current item
+    listview->setCurrentIndex(1);
+    listview->positionViewAtBeginning();
+    QTRY_COMPARE(listview->contentY(), -30.);
+    QVERIFY(listview->highlightItem());
+    QCOMPARE(listview->highlightItem()->y(), 20.);
+
     delete canvas;
     delete testObject;
 }
@@ -1885,80 +1899,153 @@ void tst_QSGListView::QTBUG_11105()
 
 void tst_QSGListView::header()
 {
-    {
-        QSGView *canvas = createView();
+    QFETCH(QSGListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QPointF, initialHeaderPos);
+    QFETCH(QPointF, firstDelegatePos);
+    QFETCH(QPointF, initialContentPos);
+    QFETCH(QPointF, changedHeaderPos);
+    QFETCH(QPointF, changedContentPos);
 
-        TestModel model;
-        for (int i = 0; i < 30; i++)
-            model.addItem("Item" + QString::number(i), "");
+    QSGView *canvas = createView();
 
-        QDeclarativeContext *ctxt = canvas->rootContext();
-        ctxt->setContextProperty("testModel", &model);
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
 
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
-        qApp->processEvents();
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
 
-        QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
-        QTRY_VERIFY(listview != 0);
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+    qApp->processEvents();
 
-        QSGItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
 
-        QSGText *header = findItem<QSGText>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), 0.0);
-        QCOMPARE(header->height(), 20.0);
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
 
-        QCOMPARE(listview->contentY(), 0.0);
+    QSGText *header = findItem<QSGText>(contentItem, "header");
+    QVERIFY(header);
 
-        model.clear();
-        QTRY_COMPARE(header->y(), 0.0);
+    QCOMPARE(header->width(), 100.);
+    QCOMPARE(header->height(), 30.);
+    QCOMPARE(header->pos(), initialHeaderPos);
+    QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
-        for (int i = 0; i < 30; i++)
-            model.addItem("Item" + QString::number(i), "");
+    QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item);
+    QCOMPARE(item->pos(), firstDelegatePos);
 
-        QMetaObject::invokeMethod(canvas->rootObject(), "changeHeader");
+    model.clear();
+    QCOMPARE(header->pos(), initialHeaderPos); // header should stay where it is
 
-        header = findItem<QSGText>(contentItem, "header");
-        QVERIFY(!header);
-        header = findItem<QSGText>(contentItem, "header2");
-        QVERIFY(header);
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
 
-        QCOMPARE(header->y(), 10.0);
-        QCOMPARE(header->height(), 10.0);
-        QCOMPARE(listview->contentY(), 10.0);
+    QMetaObject::invokeMethod(canvas->rootObject(), "changeHeader");
 
-        delete canvas;
-    }
-    {
-        QSGView *canvas = createView();
+    header = findItem<QSGText>(contentItem, "header");
+    QVERIFY(!header);
+    header = findItem<QSGText>(contentItem, "header2");
+    QVERIFY(header);
 
-        TestModel model;
+    QCOMPARE(header->pos(), changedHeaderPos);
+    QCOMPARE(header->width(), 50.);
+    QCOMPARE(header->height(), 20.);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
+    QCOMPARE(item->pos(), firstDelegatePos);
 
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header1.qml"));
-        qApp->processEvents();
+    delete canvas;
+}
 
-        QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
-        QTRY_VERIFY(listview != 0);
+void tst_QSGListView::header_data()
+{
+    QTest::addColumn<QSGListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QPointF>("initialHeaderPos");
+    QTest::addColumn<QPointF>("changedHeaderPos");
+    QTest::addColumn<QPointF>("initialContentPos");
+    QTest::addColumn<QPointF>("changedContentPos");
+    QTest::addColumn<QPointF>("firstDelegatePos");
 
-        QSGItem *contentItem = listview->contentItem();
-        QTRY_VERIFY(contentItem != 0);
+    // header1 = 100 x 30
+    // header2 = 50 x 20
+    // delegates = 240 x 20
+    // view width = 240
 
-        QSGText *header = findItem<QSGText>(contentItem, "header");
-        QVERIFY(header);
-        QCOMPARE(header->y(), 0.0);
+    // header above items, top left
+    QTest::newRow("vertical, left to right") << QSGListView::Vertical << Qt::LeftToRight
+        << QPointF(0, -30)
+        << QPointF(0, -20)
+        << QPointF(0, -30)
+        << QPointF(0, -20)
+        << QPointF(0, 0);
 
-        QCOMPARE(listview->contentY(), 0.0);
+    // header above items, top right
+    QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
+        << QPointF(0, -30)
+        << QPointF(0, -20)
+        << QPointF(0, -30)
+        << QPointF(0, -20)
+        << QPointF(0, 0);
 
-        model.clear();
-        QTRY_COMPARE(header->y(), 0.0);
+    // header to left of items
+    QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
+        << QPointF(-100, 0)
+        << QPointF(-50, 0)
+        << QPointF(-100, 0)
+        << QPointF(-50, 0)
+        << QPointF(0, 0);
 
-        delete canvas;
-    }
+    // header to right of items
+    QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(-240 + 100, 0)
+        << QPointF(-240 + 50, 0)
+        << QPointF(-240, 0);
+}
+
+void tst_QSGListView::header_delayItemCreation()
+{
+    QSGView *canvas = createView();
+
+    TestModel model;
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header1.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QSGText *header = findItem<QSGText>(contentItem, "header");
+    QVERIFY(header);
+    QCOMPARE(header->y(), -header->height());
+
+    QCOMPARE(listview->contentY(), -header->height());
+
+    model.clear();
+    QTRY_COMPARE(header->y(), -header->height());
+
+    delete canvas;
 }
 
 void tst_QSGListView::footer()
 {
+    QFETCH(QSGListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(QPointF, initialFooterPos);
+    QFETCH(QPointF, firstDelegatePos);
+    QFETCH(QPointF, initialContentPos);
+    QFETCH(QPointF, changedFooterPos);
+    QFETCH(QPointF, changedContentPos);
+
     QSGView *canvas = createView();
 
     TestModel model;
@@ -1974,21 +2061,48 @@ void tst_QSGListView::footer()
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
 
     QSGItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
     QSGText *footer = findItem<QSGText>(contentItem, "footer");
     QVERIFY(footer);
-    QCOMPARE(footer->y(), 60.0);
-    QCOMPARE(footer->height(), 30.0);
 
+    QCOMPARE(footer->pos(), initialFooterPos);
+    QCOMPARE(footer->width(), 100.);
+    QCOMPARE(footer->height(), 30.);
+    QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
+
+    QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item);
+    QCOMPARE(item->pos(), firstDelegatePos);
+
+    // remove one item
     model.removeItem(1);
-    QTRY_COMPARE(footer->y(), 40.0);
 
+    if (orientation == QSGListView::Vertical) {
+        QTRY_COMPARE(footer->y(), initialFooterPos.y() - 20);   // delegate height = 20
+    } else {
+        QTRY_COMPARE(footer->x(), layoutDirection == Qt::LeftToRight ?
+                initialFooterPos.x() - 40 : initialFooterPos.x() + 40);  // delegate width = 40
+    }
+
+    // remove all items
     model.clear();
-    QTRY_COMPARE(footer->y(), 0.0);
 
+    QPointF posWhenNoItems(0, 0);
+    if (orientation == QSGListView::Horizontal && layoutDirection == Qt::RightToLeft)
+        posWhenNoItems.setX(-100);
+    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+
+    // if header is present, it's at a negative pos, so the footer should not move
+    canvas->rootObject()->setProperty("showHeader", true);
+    QTRY_COMPARE(footer->pos(), posWhenNoItems);
+    canvas->rootObject()->setProperty("showHeader", false);
+
+    // add 30 items
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
@@ -1999,11 +2113,64 @@ void tst_QSGListView::footer()
     footer = findItem<QSGText>(contentItem, "footer2");
     QVERIFY(footer);
 
-    QCOMPARE(footer->y(), 600.0);
-    QCOMPARE(footer->height(), 20.0);
-    QCOMPARE(listview->contentY(), 0.0);
+    QCOMPARE(footer->pos(), changedFooterPos);
+    QCOMPARE(footer->width(), 50.);
+    QCOMPARE(footer->height(), 20.);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
+
+    item = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item);
+    QCOMPARE(item->pos(), firstDelegatePos);
 
     delete canvas;
+}
+
+void tst_QSGListView::footer_data()
+{
+    QTest::addColumn<QSGListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<QPointF>("initialFooterPos");
+    QTest::addColumn<QPointF>("changedFooterPos");
+    QTest::addColumn<QPointF>("initialContentPos");
+    QTest::addColumn<QPointF>("changedContentPos");
+    QTest::addColumn<QPointF>("firstDelegatePos");
+
+    // footer1 = 100 x 30
+    // footer2 = 100 x 20
+    // delegates = 40 x 20
+    // view width = 240
+
+    // footer below items, bottom left
+    QTest::newRow("vertical, layout left to right") << QSGListView::Vertical << Qt::LeftToRight
+        << QPointF(0, 3 * 20)
+        << QPointF(0, 30 * 20)  // added 30 items
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(0, 0);
+
+    // footer below items, bottom right
+    QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
+        << QPointF(0, 3 * 20)
+        << QPointF(0, 30 * 20)
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(0, 0);
+
+    // footer to right of items
+    QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
+        << QPointF(40 * 3, 0)
+        << QPointF(40 * 30, 0)
+        << QPointF(0, 0)
+        << QPointF(0, 0)
+        << QPointF(0, 0);
+
+    // footer to left of items
+    QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
+        << QPointF(-(40 * 3) - 100, 0)
+        << QPointF(-(40 * 30) - 50, 0)     // 50 = new footer width
+        << QPointF(-240, 0)
+        << QPointF(-240, 0)
+        << QPointF(-40, 0);
 }
 
 class LVAccessor : public QSGListView
@@ -2036,11 +2203,11 @@ void tst_QSGListView::headerFooter()
 
         QSGItem *header = findItem<QSGItem>(contentItem, "header");
         QVERIFY(header);
-        QCOMPARE(header->y(), 0.0);
+        QCOMPARE(header->y(), -header->height());
 
         QSGItem *footer = findItem<QSGItem>(contentItem, "footer");
         QVERIFY(footer);
-        QCOMPARE(footer->y(), 20.0);
+        QCOMPARE(footer->y(), 0.);
 
         QVERIFY(static_cast<LVAccessor*>(listview)->minY() == 0);
         QVERIFY(static_cast<LVAccessor*>(listview)->maxY() == 0);
@@ -2067,11 +2234,11 @@ void tst_QSGListView::headerFooter()
 
         QSGItem *header = findItem<QSGItem>(contentItem, "header");
         QVERIFY(header);
-        QCOMPARE(header->x(), 0.0);
+        QCOMPARE(header->x(), -header->width());
 
         QSGItem *footer = findItem<QSGItem>(contentItem, "footer");
         QVERIFY(footer);
-        QCOMPARE(footer->x(), 20.0);
+        QCOMPARE(footer->x(), 0.);
 
         QVERIFY(static_cast<LVAccessor*>(listview)->minX() == 0);
         QVERIFY(static_cast<LVAccessor*>(listview)->maxX() == 0);
@@ -2099,11 +2266,11 @@ void tst_QSGListView::headerFooter()
 
         QSGItem *header = findItem<QSGItem>(contentItem, "header");
         QVERIFY(header);
-        QCOMPARE(header->x(), -20.0);
+        QCOMPARE(header->x(), 0.);
 
         QSGItem *footer = findItem<QSGItem>(contentItem, "footer");
         QVERIFY(footer);
-        QCOMPARE(footer->x(), -50.0);
+        QCOMPARE(footer->x(), -footer->width());
 
         QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240.);
         QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240.);

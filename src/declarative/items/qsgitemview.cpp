@@ -107,7 +107,7 @@ void QSGItemView::setModel(const QVariant &model)
     QSGVisualModel *oldModel = d->model;
 
     d->clear();
-    d->setPosition(0);
+    d->setPosition(d->contentStartPosition());
     d->model = 0;
     d->modelVariant = model;
 
@@ -955,6 +955,7 @@ void QSGItemView::componentComplete()
     d->updateHeader();
     d->updateFooter();
     d->updateViewport();
+    d->setPosition(d->contentStartPosition());
     if (d->isValid()) {
         d->refill();
         d->moveReason = QSGItemViewPrivate::SetIndex;
@@ -1020,6 +1021,11 @@ qreal QSGItemViewPrivate::startPosition() const
 qreal QSGItemViewPrivate::endPosition() const
 {
     return isContentFlowReversed() ? -originPosition()-1 : lastPosition();
+}
+
+qreal QSGItemViewPrivate::contentStartPosition() const
+{
+    return -headerSize();
 }
 
 int QSGItemViewPrivate::findLastVisibleIndex(int defaultValue) const
@@ -1209,7 +1215,7 @@ void QSGItemViewPrivate::regenerate()
         updateFooter();
         clear();
         updateViewport();
-        setPosition(0);
+        setPosition(contentStartPosition());
         refill();
         updateCurrent(currentIndex);
     }
@@ -1241,7 +1247,7 @@ void QSGItemViewPrivate::layout()
     layoutScheduled = false;
     if (!isValid() && !visibleItems.count()) {
         clear();
-        setPosition(0);
+        setPosition(contentStartPosition());
         return;
     }
 

@@ -292,10 +292,8 @@ qreal QSGGridViewPrivate::colPosAt(int modelIndex) const
             int count = columns - 1 - (modelIndex - visibleItems.last()->index - 1) % columns;
             return static_cast<FxGridItemSG*>(visibleItems.last())->colPos() - count * colSize();
         }
-    } else {
-        return (modelIndex % columns) * colSize();
     }
-    return 0;
+    return (modelIndex % columns) * colSize();
 }
 
 qreal QSGGridViewPrivate::rowPosAt(int modelIndex) const
@@ -316,13 +314,8 @@ qreal QSGGridViewPrivate::rowPosAt(int modelIndex) const
             int rows = col / (columns * colSize());
             return lastItem->rowPos() + rows * rowSize();
         }
-    } else {
-        qreal pos = (modelIndex / columns) * rowSize();
-        if (header)
-            pos += headerSize();
-        return pos;
     }
-    return 0;
+    return (modelIndex / columns) * rowSize();
 }
 
 
@@ -659,13 +652,12 @@ void QSGGridViewPrivate::updateFooter()
 
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(footer);
     qreal colOffset = 0;
-    qreal rowOffset;
-    if (isRightToLeftTopToBottom()) {
-        rowOffset = gridItem->item->width()-cellWidth;
-    } else {
-        rowOffset = 0;
-        if (q->effectiveLayoutDirection() == Qt::RightToLeft)
-            colOffset = gridItem->item->width()-cellWidth;
+    qreal rowOffset = 0;
+    if (q->effectiveLayoutDirection() == Qt::RightToLeft) {
+        if (flow == QSGGridView::TopToBottom)
+            rowOffset = gridItem->item->width() - cellWidth;
+        else
+            colOffset = gridItem->item->width() - cellWidth;
     }
     if (visibleItems.count()) {
         qreal endPos = lastPosition() + 1;
@@ -677,11 +669,7 @@ void QSGGridViewPrivate::updateFooter()
                 gridItem->setPosition(colOffset, endPos + rowOffset);
         }
     } else {
-        qreal endPos = 0;
-        if (header) {
-            endPos += headerSize();
-        }
-        gridItem->setPosition(colOffset, endPos);
+        gridItem->setPosition(colOffset, rowOffset);
     }
 }
 
@@ -699,12 +687,11 @@ void QSGGridViewPrivate::updateHeader()
 
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(header);
     qreal colOffset = 0;
-    qreal rowOffset;
-    if (isRightToLeftTopToBottom()) {
-        rowOffset = -cellWidth;
-    } else {
-        rowOffset = -headerSize();
-        if (q->effectiveLayoutDirection() == Qt::RightToLeft)
+    qreal rowOffset = -headerSize();
+    if (q->effectiveLayoutDirection() == Qt::RightToLeft) {
+        if (flow == QSGGridView::TopToBottom)
+            rowOffset += gridItem->item->width()-cellWidth;
+        else
             colOffset = gridItem->item->width()-cellWidth;
     }
     if (visibleItems.count()) {
@@ -718,7 +705,10 @@ void QSGGridViewPrivate::updateHeader()
                 gridItem->setPosition(colOffset, startPos + rowOffset);
         }
     } else {
-        gridItem->setPosition(colOffset, 0);
+        if (isRightToLeftTopToBottom())
+            gridItem->setPosition(colOffset, rowOffset);
+        else
+            gridItem->setPosition(colOffset, -headerSize());
     }
 }
 
@@ -1339,8 +1329,6 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
                 rowPos += d->rowSize();
             }
         }
-    } else if (d->itemCount == 0 && d->header) {
-        rowPos = d->headerSize();
     }
 
     // Update the indexes of the following visible items.
@@ -1479,7 +1467,7 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
     if (removedVisible && d->visibleItems.isEmpty()) {
         d->timeline.clear();
         if (d->itemCount == 0) {
-            d->setPosition(0);
+            d->setPosition(d->contentStartPosition());
             d->updateHeader();
             d->updateFooter();
         }

@@ -20,7 +20,7 @@ ListView {
         height: horizontal ? view.height : 30
         color: "blue"
     }
-//    model: testModel
+
     delegate: Text { width: 30; height: 30; text: index + "(" + x + ")" }
     layoutDirection: rtl ? Qt.RightToLeft : Qt.LeftToRight
 }

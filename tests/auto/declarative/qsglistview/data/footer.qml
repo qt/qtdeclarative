@@ -1,6 +1,8 @@
 import QtQuick 2.0
 
 Rectangle {
+    property bool showHeader: false
+
     function changeFooter() {
         list.footer = footer2
     }
@@ -13,13 +15,18 @@ Rectangle {
             id: wrapper
             objectName: "wrapper"
             height: 20
-            width: 240
+            width: 40
             Text {
-                text: index
+                text: index + " " + x + "," + y
             }
             color: ListView.isCurrentItem ? "lightsteelblue" : "white"
         }
     }
+    Component {
+        id: headerComponent
+        Text { objectName: "header"; text: "Header " + x + "," + y; width: 100; height: 30 }
+    }
+
     ListView {
         id: list
         objectName: "list"
@@ -28,11 +35,12 @@ Rectangle {
         height: 320
         model: testModel
         delegate: myDelegate
-        footer: Text { objectName: "footer"; text: "Footer"; height: 30 }
+        header: parent.showHeader ? headerComponent : null
+        footer: Text { objectName: "footer"; text: "Footer " + x + "," + y; width: 100; height: 30 }
     }
 
     Component {
         id: footer2
-        Text { objectName: "footer2"; text: "Footer 2"; height: 20 }
+        Text { objectName: "footer2"; text: "Footer 2 " + x + "," + y; width: 50; height: 20 }
     }
 }

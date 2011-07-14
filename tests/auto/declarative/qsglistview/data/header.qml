@@ -15,7 +15,7 @@ Rectangle {
             height: 30
             width: 240
             Text {
-                text: index
+                text: index + " " + x + "," + y
             }
             color: ListView.isCurrentItem ? "lightsteelblue" : "white"
         }
@@ -29,10 +29,11 @@ Rectangle {
         snapMode: ListView.SnapToItem
         model: testModel
         delegate: myDelegate
-        header: Text { objectName: "header"; text: "Header"; height: 20 }
+        header: Text { objectName: "header"; text: "Header " + x + "," + y; width: 100; height: 30 }
     }
     Component {
         id: header2
-        Text { objectName: "header2"; text: "Header 2"; height: 10 }
+        Text { objectName: "header2"; text: "Header " + x + "," + y; width: 50; height: 20 }
     }
+
 }

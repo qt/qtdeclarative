@@ -30,11 +30,11 @@ Rectangle {
         cellHeight: 60
         model: testModel
         delegate: myDelegate
-        header: Text { objectName: "header"; text: "Header"; height: 30 }
+        header: Text { objectName: "header"; text: "Header " + x + "," + y; width: 100; height: 30 }
     }
 
     Component {
         id: header2
-        Text { objectName: "header2"; text: "Header 2"; height: 20 }
+        Text { objectName: "header2"; text: "Header 2 " + x + "," + y; width: 50; height: 20 }
     }
 }

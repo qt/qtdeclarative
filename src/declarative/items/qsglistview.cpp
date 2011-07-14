@@ -465,7 +465,7 @@ void QSGListViewPrivate::clear()
         delete sectionCache[i];
         sectionCache[i] = 0;
     }
-    visiblePos = header ? headerSize() : 0;
+    visiblePos = 0;
     QSGItemViewPrivate::clear();
 }
 
@@ -963,9 +963,7 @@ void QSGListViewPrivate::updateHeader()
                     listItem->setPosition(startPos - headerSize());
             }
         } else {
-            if (itemCount == 0)
-                visiblePos = headerSize();
-            listItem->setPosition(0);
+            listItem->setPosition(-headerSize());
         }
     }
 }
@@ -1607,8 +1605,6 @@ void QSGListView::itemsInserted(int modelIndex, int count)
     if (d->visibleItems.count()) {
         pos = index < d->visibleItems.count() ? d->visibleItems.at(index)->position()
                                                 : d->visibleItems.last()->endPosition()+d->spacing+1;
-    } else if (d->itemCount == 0 && d->header) {
-        pos = d->headerSize();
     }
 
     int initialPos = pos;
@@ -1781,8 +1777,8 @@ void QSGListView::itemsRemoved(int modelIndex, int count)
         d->timeline.clear();
         if (removedVisible && d->itemCount == 0) {
             d->visibleIndex = 0;
-            d->visiblePos = d->header ? d->headerSize() : 0;
-            d->setPosition(0);
+            d->visiblePos = 0;
+            d->setPosition(d->contentStartPosition());
             d->updateHeader();
             d->updateFooter();
         } else {
