@@ -435,6 +435,7 @@ protected:
     static v8::Handle<v8::Value> point(const v8::Arguments &args);
     static v8::Handle<v8::Value> size(const v8::Arguments &args);
     static v8::Handle<v8::Value> vector3d(const v8::Arguments &args);
+    static v8::Handle<v8::Value> vector4d(const v8::Arguments &args);
     static v8::Handle<v8::Value> lighter(const v8::Arguments &args);
     static v8::Handle<v8::Value> darker(const v8::Arguments &args);
     static v8::Handle<v8::Value> tint(const v8::Arguments &args);

@@ -586,6 +586,16 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreVector3D)
 
+        QML_BEGIN_INSTR(StoreVector4D)
+            QObject *target = stack.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            QVector4D *v = (QVector4D *)&instr.vector;
+            void *a[] = { v, 0, &status, &flags };
+            QMetaObject::metacall(target, QMetaObject::WriteProperty,
+                                  instr.propertyIndex, a);
+        QML_END_INSTR(StoreVector4D)
+
         QML_BEGIN_INSTR(StoreObject)
             QObject *assignObj = stack.pop();
             QObject *target = stack.top();

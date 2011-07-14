@@ -312,6 +312,13 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
             }
             break;
+        case QVariant::Vector4D:
+            {
+            bool ok;
+            QDeclarativeStringConverters::vector4DFromString(string, &ok);
+            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
+            }
+            break;
         default:
             {
             int t = prop.userType();
@@ -552,6 +559,18 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.storeVector3D.vector.xp = vector.x();
             instr.storeVector3D.vector.yp = vector.y();
             instr.storeVector3D.vector.zp = vector.z();
+            }
+            break;
+    case QVariant::Vector4D:
+            {
+            bool ok;
+            QVector4D vector = QDeclarativeStringConverters::vector4DFromString(string, &ok);
+            instr.setType(QDeclarativeInstruction::StoreVector4D);
+            instr.storeVector4D.propertyIndex = prop.propertyIndex();
+            instr.storeVector4D.vector.xp = vector.x();
+            instr.storeVector4D.vector.yp = vector.y();
+            instr.storeVector4D.vector.zp = vector.z();
+            instr.storeVector4D.vector.wp = vector.w();
             }
             break;
         default:

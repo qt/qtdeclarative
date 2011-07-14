@@ -477,6 +477,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
 
 #include <QtGui/qvector3d.h>
+#include <QtGui/qvector4d.h>
 
 struct StaticQtMetaObject : public QObject
 {
@@ -511,6 +512,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("point"), V8FUNCTION(point, this));
     qt->Set(v8::String::New("size"), V8FUNCTION(size, this));
     qt->Set(v8::String::New("vector3d"), V8FUNCTION(vector3d, this));
+    qt->Set(v8::String::New("vector4d"), V8FUNCTION(vector4d, this));
 
     qt->Set(v8::String::New("formatDate"), V8FUNCTION(formatDate, this));
     qt->Set(v8::String::New("formatTime"), V8FUNCTION(formatTime, this));
@@ -843,6 +845,23 @@ v8::Handle<v8::Value> QV8Engine::vector3d(const v8::Arguments &args)
     double z = args[2]->ToNumber()->Value();
 
     return V8ENGINE()->fromVariant(QVariant::fromValue(QVector3D(x, y, z)));
+}
+
+/*!
+\qmlmethod Qt::vector4d(real x, real y, real z, real w)
+Returns a Vector4D with the specified \c x, \c y, \c z and \c w.
+*/
+v8::Handle<v8::Value> QV8Engine::vector4d(const v8::Arguments &args)
+{
+    if (args.Length() != 4)
+        V8THROW_ERROR("Qt.vector4d(): Invalid arguments");
+
+    double x = args[0]->NumberValue();
+    double y = args[1]->NumberValue();
+    double z = args[2]->NumberValue();
+    double w = args[3]->NumberValue();
+
+    return V8ENGINE()->fromVariant(QVariant::fromValue(QVector4D(x, y, z, w)));
 }
 
 /*!

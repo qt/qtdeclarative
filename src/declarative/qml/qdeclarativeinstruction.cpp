@@ -132,6 +132,9 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
     case QDeclarativeInstruction::StoreVector3D:
         qWarning().nospace() << idx << "\t\t" << "STORE_VECTOR3D\t\t" << instr->storeVector3D.propertyIndex << "\t" << instr->storeVector3D.vector.xp << "\t" << instr->storeVector3D.vector.yp << "\t" << instr->storeVector3D.vector.zp;
         break;
+    case QDeclarativeInstruction::StoreVector4D:
+        qWarning().nospace() << idx << "\t\t" << "STORE_VECTOR4D\t\t" << instr->storeVector4D.propertyIndex << "\t" << instr->storeVector4D.vector.xp << "\t" << instr->storeVector4D.vector.yp << "\t" << instr->storeVector4D.vector.zp << "\t" << instr->storeVector4D.vector.wp;
+        break;
     case QDeclarativeInstruction::StoreVariant:
         qWarning().nospace() << idx << "\t\t" << "STORE_VARIANT\t\t" << instr->storeString.propertyIndex << "\t" << instr->storeString.value << "\t\t" << primitives.at(instr->storeString.value);
         break;
