@@ -68,6 +68,7 @@ public:
 
     inline int count() const;
     void add(const QString &, int);
+    void reserve(int);
 
     int value(const QString &);
     inline int value(const QHashedV8String &);

@@ -53,8 +53,9 @@
 // We mean it.
 //
 
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativebinding_p.h"
+#include <private/qdeclarativeexpression_p.h>
+#include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativecompiler_p.h>
 
 QT_BEGIN_HEADER
 
@@ -77,7 +78,7 @@ public:
         QDeclarativeParser::Object *context;
         QDeclarativeParser::Property *property;
         QDeclarativeParser::Variant expression;
-        QHash<QString, QDeclarativeParser::Object *> ids;
+        QDeclarativeCompilerTypes::IdList *ids;
         QDeclarativeTypeNameCache *importCache;
         QDeclarativeImports imports;
     };

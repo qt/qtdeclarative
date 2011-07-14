@@ -176,14 +176,27 @@ namespace QDeclarativeCompilerTypes {
         BindingReference *nextReference;
     };
 
+    struct IdList : public QFieldList<QDeclarativeParser::Object, 
+                                      &QDeclarativeParser::Object::nextIdObject>
+    {
+        QDeclarativeParser::Object *value(const QString &id) const {
+            for (QDeclarativeParser::Object *o = first(); o; o = next(o)) {
+                if (o->id == id)
+                    return o;
+            }
+            return 0;
+        }
+    };
+
     // Contains all the incremental compiler state about a component.  As
     // a single QML file can have multiple components defined, there may be
     // more than one of these for each compile
     struct ComponentCompileState : public QDeclarativePool::Class
     {
         ComponentCompileState() 
-            : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
-        QHash<QString, QDeclarativeParser::Object *> ids;
+        : parserStatusCount(0), pushedProperties(0), nested(false), v8BindingProgramLine(-1), root(0) {}
+
+        IdList ids;
         int parserStatusCount;
         int pushedProperties;
         bool nested;
@@ -193,25 +206,12 @@ namespace QDeclarativeCompilerTypes {
         int v8BindingProgramLine;
         int v8BindingProgramIndex;
 
-        struct BindingReferenceList {
-            BindingReferenceList() : _count(0), _first(0) {}
-            QDeclarativeCompilerTypes::BindingReference *first() const { return _first; }
-            void prepend(QDeclarativeCompilerTypes::BindingReference *ref) {
-                Q_ASSERT(ref);
-                Q_ASSERT(0 == ref->nextReference);
-                ref->nextReference = _first;
-                _first = ref;
-                ++_count;
-            }
-            int count() const { return _count; }
-        private:
-            int _count;
-            QDeclarativeCompilerTypes::BindingReference *_first;
-        };
-
+        typedef QDeclarativeCompilerTypes::BindingReference B;
+        typedef QFieldList<B, &B::nextReference> BindingReferenceList;
         BindingReferenceList bindings;
-        QHash<QDeclarativeParser::Value *, QDeclarativeCompilerTypes::BindingContext> signalExpressions;
-        QList<QDeclarativeParser::Object *> aliasingObjects;
+        typedef QDeclarativeParser::Object O;
+        typedef QFieldList<O, &O::nextAliasingObject> AliasingObjectsList;
+        AliasingObjectsList aliasingObjects;
         QDeclarativeParser::Object *root;
     };
 };

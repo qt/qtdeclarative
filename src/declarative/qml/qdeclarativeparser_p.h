@@ -207,6 +207,7 @@ namespace QDeclarativeParser
 
         // Used by compiler
         QDeclarativeCompilerTypes::BindingReference *bindingReference;
+        int signalExpressionContextStack;
 
         // Used in Property::ValueList lists
         Value *nextValue;
@@ -396,6 +397,11 @@ namespace QDeclarativeParser
 
         // Used by compiler
         QDeclarativeCompilerTypes::ComponentCompileState *componentCompileState;
+
+        // Used by ComponentCompileState::AliasingObjectsList
+        Object *nextAliasingObject;
+        // Used by ComponentComppileState::IdList
+        Object *nextIdObject;
     };
 
 }

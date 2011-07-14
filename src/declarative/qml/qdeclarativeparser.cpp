@@ -67,7 +67,7 @@ using namespace QDeclarativeParser;
 
 QDeclarativeParser::Object::Object()
 : type(-1), idIndex(-1), metatype(0), synthCache(0), defaultProperty(0), parserStatusCast(-1),
-  componentCompileState(0)
+  componentCompileState(0), nextAliasingObject(0), nextIdObject(0)
 {
 }
 
@@ -233,7 +233,7 @@ bool QDeclarativeParser::Property::isEmpty() const
 }
 
 QDeclarativeParser::Value::Value()
-: type(Unknown), object(0), bindingReference(0), nextValue(0)
+: type(Unknown), object(0), bindingReference(0), signalExpressionContextStack(0), nextValue(0)
 {
 }
 

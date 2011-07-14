@@ -1101,14 +1101,12 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
 
         } else if (v->type == Value::SignalExpression) {
 
-            BindingContext ctxt = compileState->signalExpressions.value(v);
-
             QDeclarativeInstruction store;
             store.setType(QDeclarativeInstruction::StoreSignal);
             store.storeSignal.signalIndex = prop->index;
             store.storeSignal.value =
                 output->indexForString(v->value.asScript().trimmed());
-            store.storeSignal.context = ctxt.stack;
+            store.storeSignal.context = v->signalExpressionContextStack;
             store.storeSignal.name = output->indexForByteArray(prop->name().toUtf8());
             store.storeSignal.line = v->location.start.line;
             output->addInstruction(store);
@@ -1292,7 +1290,7 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeParser::Object *obj,
 
         QString idVal = idProp->values.first()->primitive();
 
-        if (compileState->ids.contains(idVal))
+        if (compileState->ids.value(idVal))
             COMPILE_EXCEPTION(idProp, tr("id is not unique"));
 
         obj->id = idVal;
@@ -1452,7 +1450,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
             if (script.isEmpty())
                 COMPILE_EXCEPTION(prop, tr("Empty signal assignment"));
 
-            compileState->signalExpressions.insert(prop->values.first(), ctxt);
+            prop->values.first()->signalExpressionContextStack = ctxt.stack;
         }
     }
 
@@ -1811,7 +1809,7 @@ bool QDeclarativeCompiler::buildIdProperty(QDeclarativeParser::Property *prop,
 
     COMPILE_CHECK(checkValidId(idValue, val));
 
-    if (compileState->ids.contains(val))
+    if (compileState->ids.value(val))
         COMPILE_EXCEPTION(prop, tr("id is not unique"));
 
     prop->values.first()->type = Value::Id;
@@ -1824,10 +1822,10 @@ bool QDeclarativeCompiler::buildIdProperty(QDeclarativeParser::Property *prop,
 
 void QDeclarativeCompiler::addId(const QString &id, QDeclarativeParser::Object *obj)
 {
-    Q_ASSERT(!compileState->ids.contains(id));
+    Q_ASSERT(!compileState->ids.value(id));
     Q_ASSERT(obj->id == id);
     obj->idIndex = compileState->ids.count();
-    compileState->ids.insert(id, obj);
+    compileState->ids.append(obj);
 }
 
 void QDeclarativeCompiler::addBindingReference(BindingReference *ref)
@@ -2665,8 +2663,8 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
     obj->metadata = builder.toRelocatableData();
     builder.fromRelocatableData(&obj->extObject, obj->metatype, obj->metadata);
 
-    if (mode == IgnoreAliases && hasAlias)
-        compileState->aliasingObjects << obj;
+    if (mode == IgnoreAliases && hasAlias) 
+        compileState->aliasingObjects.append(obj);
 
     obj->synthdata = dynamicData;
 
@@ -2753,10 +2751,9 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     if (alias.count() < 1 || alias.count() > 3)
         COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
 
-    if (!compileState->ids.contains(alias.at(0)))
+    QDeclarativeParser::Object *idObject = compileState->ids.value(alias.at(0));
+    if (!idObject)
         COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias reference. Unable to find id \"%1\"").arg(alias.at(0)));
-
-    QDeclarativeParser::Object *idObject = compileState->ids[alias.at(0)];
 
     QByteArray typeName;
 
@@ -2917,11 +2914,9 @@ int QDeclarativeCompiler::genContextCache()
         return -1;
 
     QDeclarativeIntegerCache *cache = new QDeclarativeIntegerCache();
-
-    for (QHash<QString, QDeclarativeParser::Object *>::ConstIterator iter = compileState->ids.begin();
-         iter != compileState->ids.end();
-         ++iter) 
-        cache->add(iter.key(), (*iter)->idIndex);
+    cache->reserve(compileState->ids.count());
+    for (Object *o = compileState->ids.first(); o; o = compileState->ids.next(o)) 
+        cache->add(o->id, o->idIndex);
 
     output->contextCaches.append(cache);
     return output->contextCaches.count() - 1;
@@ -2951,14 +2946,13 @@ bool QDeclarativeCompiler::completeComponentBuild()
     if (componentStats)
         componentStats->componentStat.ids = compileState->ids.count();
 
-    for (int ii = 0; ii < compileState->aliasingObjects.count(); ++ii) {
-        QDeclarativeParser::Object *aliasObject = compileState->aliasingObjects.at(ii);
+    for (Object *aliasObject = compileState->aliasingObjects.first(); aliasObject; 
+         aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMeta(aliasObject, ResolveAliases));
-    }
 
     QDeclarativeV4Compiler::Expression expr;
     expr.component = compileState->root;
-    expr.ids = compileState->ids;
+    expr.ids = &compileState->ids;
     expr.importCache = output->importCache;
     expr.imports = unit->imports();
 
