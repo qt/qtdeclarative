@@ -1,4 +1,4 @@
-From eb2dadf516823ec342e6d75a3a78b2af7b1dea85 Mon Sep 17 00:00:00 2001
+From bec11b8b7f89d135e7d9a823ac4fe98c70d017cf Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 27 Jun 2011 14:57:28 +1000
 Subject: [PATCH 8/8] Add custom object compare callback
@@ -28,10 +28,10 @@ instances.
  12 files changed, 218 insertions(+), 3 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index 255b90b..52a5839 100644
+index 8891dab..d5d6972 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -2364,6 +2364,12 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2365,6 +2365,12 @@ class V8EXPORT ObjectTemplate : public Template {
    bool HasExternalResource();
    void SetHasExternalResource(bool value);
  
@@ -44,7 +44,7 @@ index 255b90b..52a5839 100644
   private:
    ObjectTemplate();
    static Local<ObjectTemplate> New(Handle<FunctionTemplate> constructor);
-@@ -2564,6 +2570,10 @@ typedef void (*FailedAccessCheckCallback)(Local<Object> target,
+@@ -2565,6 +2571,10 @@ typedef void (*FailedAccessCheckCallback)(Local<Object> target,
                                            AccessType type,
                                            Local<Value> data);
  
@@ -55,7 +55,7 @@ index 255b90b..52a5839 100644
  // --- G a r b a g e C o l l e c t i o n  C a l l b a c k s
  
  /**
-@@ -2814,6 +2824,9 @@ class V8EXPORT V8 {
+@@ -2815,6 +2825,9 @@ class V8EXPORT V8 {
    /** Callback function for reporting failed access checks.*/
    static void SetFailedAccessCheckCallbackFunction(FailedAccessCheckCallback);
  
@@ -66,7 +66,7 @@ index 255b90b..52a5839 100644
     * Enables the host application to receive a notification before a
     * garbage collection.  Allocations are not allowed in the
 diff --git a/src/api.cc b/src/api.cc
-index ba487e8..930f338 100644
+index ff74efb..2436031 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -1321,6 +1321,16 @@ void ObjectTemplate::SetHasExternalResource(bool value)
@@ -86,7 +86,7 @@ index ba487e8..930f338 100644
  
  // --- S c r i p t D a t a ---
  
-@@ -4628,6 +4638,15 @@ void V8::SetFailedAccessCheckCallbackFunction(
+@@ -4632,6 +4642,15 @@ void V8::SetFailedAccessCheckCallbackFunction(
    isolate->SetFailedAccessCheckCallback(callback);
  }
  

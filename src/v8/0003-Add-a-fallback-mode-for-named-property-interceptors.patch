@@ -1,4 +1,4 @@
-From 5adbbff4a7f09a02d5c2d9b4e15dde89080e2405 Mon Sep 17 00:00:00 2001
+From ae8688b53d67044f2c9b0cce25fc282b078610c1 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 16:21:02 +1000
 Subject: [PATCH 3/8] Add a "fallback" mode for named property interceptors
@@ -24,10 +24,10 @@ declarations.
  9 files changed, 99 insertions(+), 18 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index 626f34c..06085ec 100644
+index bbd29e9..85452aa 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -2168,6 +2168,7 @@ class V8EXPORT FunctionTemplate : public Template {
+@@ -2169,6 +2169,7 @@ class V8EXPORT FunctionTemplate : public Template {
                                         NamedPropertyQuery query,
                                         NamedPropertyDeleter remover,
                                         NamedPropertyEnumerator enumerator,
@@ -35,7 +35,7 @@ index 626f34c..06085ec 100644
                                         Handle<Value> data);
    void SetIndexedInstancePropertyHandler(IndexedPropertyGetter getter,
                                           IndexedPropertySetter setter,
-@@ -2252,6 +2253,13 @@ class V8EXPORT ObjectTemplate : public Template {
+@@ -2253,6 +2254,13 @@ class V8EXPORT ObjectTemplate : public Template {
                                 NamedPropertyEnumerator enumerator = 0,
                                 Handle<Value> data = Handle<Value>());
  
@@ -50,7 +50,7 @@ index 626f34c..06085ec 100644
     * Sets an indexed property handler on the object template.
     *
 diff --git a/src/api.cc b/src/api.cc
-index 0d860bd..c20b062 100644
+index 381935b..8b0b32a 100644
 --- a/src/api.cc
 +++ b/src/api.cc
 @@ -981,6 +981,7 @@ void FunctionTemplate::SetNamedInstancePropertyHandler(
@@ -185,7 +185,7 @@ index cce3edd..6aaca2f 100644
  ACCESSORS(CallHandlerInfo, callback, Object, kCallbackOffset)
  ACCESSORS(CallHandlerInfo, data, Object, kDataOffset)
 diff --git a/src/objects.cc b/src/objects.cc
-index 2409ea3..f1e4c8c 100644
+index 79d7240..15e2cdb 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -1712,9 +1712,10 @@ MaybeObject* JSObject::SetPropertyWithInterceptor(

@@ -1,4 +1,4 @@
-From 4ce6693b28f0a699acd91c0ae88ae917cc273e9a Mon Sep 17 00:00:00 2001
+From 7c9cfff80b7864d5687432d424074e51712c4a07 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 15:55:26 +1000
 Subject: [PATCH 2/8] Add a bit field 3 to Map
@@ -53,7 +53,7 @@ index c82080d..cce3edd 100644
    if (value) {
      set_bit_field(bit_field() | (1 << kHasNonInstancePrototype));
 diff --git a/src/objects.cc b/src/objects.cc
-index 877da3d..2409ea3 100644
+index dc4b260..79d7240 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -3614,6 +3614,7 @@ MaybeObject* Map::CopyDropDescriptors() {

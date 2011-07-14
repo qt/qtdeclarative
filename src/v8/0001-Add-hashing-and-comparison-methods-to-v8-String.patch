@@ -1,4 +1,4 @@
-From 9a956953836844f1342ac012f4c2408405224fcd Mon Sep 17 00:00:00 2001
+From e13ce09287a56c920d5ffdc5d4662d49f1838f16 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Mon, 23 May 2011 15:47:20 +1000
 Subject: [PATCH 1/8] Add hashing and comparison methods to v8::String
@@ -6,20 +6,20 @@ Subject: [PATCH 1/8] Add hashing and comparison methods to v8::String
 This allows us to more rapidly search for a v8::String inside
 a hash of QStrings.
 ---
- include/v8.h      |   43 +++++++++++++++++++++++++++++
- src/api.cc        |   39 +++++++++++++++++++++++++++
+ include/v8.h      |   44 ++++++++++++++++++++++++++++++
+ src/api.cc        |   43 +++++++++++++++++++++++++++++
  src/heap-inl.h    |    2 +
  src/heap.cc       |    3 ++
  src/objects-inl.h |    1 +
  src/objects.cc    |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
  src/objects.h     |   15 +++++++++-
- 7 files changed, 177 insertions(+), 3 deletions(-)
+ 7 files changed, 182 insertions(+), 3 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index d15d024..626f34c 100644
+index d15d024..bbd29e9 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -994,6 +994,47 @@ class String : public Primitive {
+@@ -994,6 +994,48 @@ class String : public Primitive {
    V8EXPORT int Utf8Length() const;
  
    /**
@@ -55,6 +55,7 @@ index d15d024..626f34c 100644
 +   * data.
 +   */
 +  V8EXPORT static uint32_t ComputeHash(uint16_t *string, int length);
++  V8EXPORT static uint32_t ComputeHash(char *string, int length);
 +
 +  /**
 +   * Returns true if this string is equal to the external
@@ -67,7 +68,7 @@ index d15d024..626f34c 100644
     * Write the contents of the string to an external buffer.
     * If no arguments are given, expects the buffer to be large
     * enough to hold the entire string and NULL terminator. Copies
-@@ -1023,6 +1064,8 @@ class String : public Primitive {
+@@ -1023,6 +1065,8 @@ class String : public Primitive {
      HINT_MANY_WRITES_EXPECTED = 1
    };
  
@@ -77,10 +78,10 @@ index d15d024..626f34c 100644
                       int start = 0,
                       int length = -1,
 diff --git a/src/api.cc b/src/api.cc
-index a2373cd..0d860bd 100644
+index a2373cd..381935b 100644
 --- a/src/api.cc
 +++ b/src/api.cc
-@@ -3284,6 +3284,45 @@ int String::Utf8Length() const {
+@@ -3284,6 +3284,49 @@ int String::Utf8Length() const {
    return str->Utf8Length();
  }
  
@@ -103,6 +104,10 @@ index a2373cd..0d860bd 100644
 +
 +uint32_t String::ComputeHash(uint16_t *string, int length) {
 +  return i::HashSequentialString<i::uc16>(string, length) >> i::String::kHashShift;
++}
++
++uint32_t String::ComputeHash(char *string, int length) {
++  return i::HashSequentialString<char>(string, length) >> i::String::kHashShift;
 +}
 +
 +uint16_t String::GetCharacter(int index)
@@ -187,7 +192,7 @@ index 65aec5d..c82080d 100644
  
  uint32_t String::hash_field() {
 diff --git a/src/objects.cc b/src/objects.cc
-index df61956..877da3d 100644
+index df61956..dc4b260 100644
 --- a/src/objects.cc
 +++ b/src/objects.cc
 @@ -5346,6 +5346,66 @@ static inline bool CompareStringContentsPartial(Isolate* isolate,
@@ -268,8 +273,8 @@ index df61956..877da3d 100644
 +            Atomic32 my_symbol_id = next_symbol_id;
 +            if (my_symbol_id > Smi::kMaxValue)
 +                break;
-+            if (my_symbol_id ==NoBarrier_CompareAndSwap(&next_symbol_id, my_symbol_id, my_symbol_id + 1)) {
-+                SeqString::cast(result->ToObjectUnchecked())->set_symbol_id(next_symbol_id++);
++            if (my_symbol_id == NoBarrier_CompareAndSwap(&next_symbol_id, my_symbol_id, my_symbol_id + 1)) {
++                SeqString::cast(result->ToObjectUnchecked())->set_symbol_id(my_symbol_id);
 +                break;
 +            }
 +        }
