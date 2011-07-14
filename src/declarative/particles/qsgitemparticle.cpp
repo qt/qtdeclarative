@@ -165,6 +165,8 @@ QSGNode* QSGItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 
 void QSGItemParticle::prepareNextFrame()
 {
+    if (!m_system)
+        return;
     qint64 timeStamp = m_system->systemSync(this);
     qreal curT = timeStamp/1000.0;
     qreal dt = curT - m_lastT;
