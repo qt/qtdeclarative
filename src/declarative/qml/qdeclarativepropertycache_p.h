@@ -172,7 +172,7 @@ public:
 
     void update(QDeclarativeEngine *, const QMetaObject *);
 
-    QDeclarativePropertyCache *copy();
+    QDeclarativePropertyCache *copy(int reserve = 0);
     void append(QDeclarativeEngine *, const QMetaObject *, Data::Flag propertyFlags = Data::NoFlags,
                 Data::Flag methodFlags = Data::NoFlags, Data::Flag signalFlags = Data::NoFlags);
     void append(QDeclarativeEngine *, const QMetaObject *, int revision, Data::Flag propertyFlags = Data::NoFlags,

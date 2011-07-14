@@ -278,14 +278,14 @@ QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObj
     return rv;
 }
 
-QDeclarativePropertyCache *QDeclarativePropertyCache::copy() 
+QDeclarativePropertyCache *QDeclarativePropertyCache::copy(int reserve) 
 {
     QDeclarativePropertyCache *cache = new QDeclarativePropertyCache(engine);
     cache->parent = this;
     cache->parent->addref();
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
-    cache->stringCache = stringCache;
+    cache->stringCache.copyAndReserve(stringCache, reserve);
     cache->allowedRevisionCache = allowedRevisionCache;
 
     // We specifically do *NOT* copy the constructor
@@ -324,10 +324,8 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         // Extract method name
         const char *signature = m.signature();
         const char *cptr = signature;
-        while (*cptr != '(') { Q_ASSERT(*cptr != 0); ++cptr; }
-        QString str = dynamicMetaObject?QString::fromUtf8(signature, cptr - signature):
-                                        QString::fromLatin1(signature, cptr - signature);
-        QHashedString methodName(str);
+        bool utf8 = false;
+        while (*cptr != '(') { Q_ASSERT(*cptr != 0); utf8 |= *cptr & 0x80; ++cptr; }
 
         Data *data = &methodIndexCache[ii - methodIndexCacheStart];
 
@@ -342,15 +340,25 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
-        if (Data **old = stringCache.value(methodName)) {
+        Data **old = 0;
+
+        if (utf8) {
+            QHashedString methodName(QString::fromUtf8(signature, cptr - signature));
+            old = stringCache.value(methodName);
+            stringCache.insert(methodName, data);
+        } else {
+            QHashedCStringRef methodName(signature, cptr - signature);
+            old = stringCache.value(methodName);
+            stringCache.insert(methodName, data);
+        }
+
+        if (old) {
             // We only overload methods in the same class, exactly like C++
             if ((*old)->flags & Data::IsFunction && (*old)->coreIndex >= methodOffset)
                 data->relatedIndex = (*old)->coreIndex;
             data->overrideIndexIsProperty = !bool((*old)->flags & Data::IsFunction);
             data->overrideIndex = (*old)->coreIndex;
         }
-
-        stringCache.insert(methodName, data);
     }
 
     int propCount = metaObject->propertyCount();
@@ -362,9 +370,10 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         if (!p.isScriptable())
             continue;
 
-        QString str = dynamicMetaObject?QString::fromUtf8(p.name()):
-                                        QString::fromLatin1(p.name());
-        QHashedString propName(str);
+        const char *str = p.name();
+        bool utf8 = false;
+        const char *cptr = str;
+        while (*cptr != 0) { utf8 |= *cptr & 0x80; ++cptr; }
 
         Data *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 
@@ -376,12 +385,22 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
-        if (Data **old = stringCache.value(propName)) {
+        Data **old = 0;
+
+        if (utf8) {
+            QHashedString propName(QString::fromUtf8(str, cptr - str));
+            old = stringCache.value(propName);
+            stringCache.insert(propName, data);
+        } else {
+            QHashedCStringRef propName(str, cptr - str);
+            old = stringCache.value(propName);
+            stringCache.insert(propName, data);
+        }
+
+        if (old) {
             data->overrideIndexIsProperty = !bool((*old)->flags & Data::IsFunction);
             data->overrideIndex = (*old)->coreIndex;
         }
-
-        stringCache.insert(propName, data);
     }
 }
 
@@ -417,8 +436,12 @@ void QDeclarativePropertyCache::update(QDeclarativeEngine *engine, const QMetaOb
     Q_ASSERT(stringCache.isEmpty());
 
     // Optimization to prevent unnecessary reallocation of lists
-    propertyIndexCache.reserve(metaObject->propertyCount());
-    methodIndexCache.reserve(metaObject->methodCount());
+    int pc = metaObject->propertyCount();
+    int mc = metaObject->methodCount();
+    propertyIndexCache.reserve(pc);
+    methodIndexCache.reserve(mc);
+
+    stringCache.reserve(pc + mc);
 
     updateRecur(engine,metaObject);
 }

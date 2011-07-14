@@ -56,6 +56,11 @@ void QHashedStringRef::computeHash() const
     m_hash = stringHash(m_data, m_length);
 }
 
+void QHashedCStringRef::computeHash() const
+{
+    m_hash = v8::String::ComputeHash((char *)m_data, m_length);
+}
+
 /*
     A QHash has initially around pow(2, MinNumBits) buckets. For
     example, if MinNumBits is 4, it has 17 buckets.
@@ -93,7 +98,7 @@ void QStringHashData::rehash()
 
     QStringHashNode *nodeList = nodes;
     while (nodeList) {
-        int bucket = nodeList->key.hash() % numBuckets;
+        int bucket = nodeList->hash % numBuckets;
         nodeList->next = buckets[bucket];
         buckets[bucket] = nodeList;
 

@@ -1424,7 +1424,9 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(const QMetaObj
         return rv;
     } else {
         QDeclarativePropertyCache *super = cache(mo->superClass());
-        QDeclarativePropertyCache *rv = super->copy();
+        QDeclarativePropertyCache *rv = super->copy(mo->propertyCount() + mo->methodCount() - 
+                                                    mo->superClass()->propertyCount() - 
+                                                    mo->superClass()->methodCount());
         rv->append(q, mo);
         propertyCache.insert(mo, rv);
         return rv;
