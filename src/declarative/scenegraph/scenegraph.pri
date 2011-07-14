@@ -62,7 +62,8 @@ HEADERS += \
     $$PWD/qsgdefaultglyphnode_p_p.h \
     $$PWD/qsgdefaultimagenode_p.h \
     $$PWD/qsgdefaultrectanglenode_p.h \
-    $$PWD/qsgflashnode_p.h
+    $$PWD/qsgflashnode_p.h \
+    $$PWD/qsgpathsimplifier_p.h
 
 SOURCES += \
     $$PWD/qsgadaptationlayer.cpp \
@@ -75,4 +76,5 @@ SOURCES += \
     $$PWD/qsgdistancefieldglyphnode_p.cpp \
     $$PWD/qsgdefaultimagenode.cpp \
     $$PWD/qsgdefaultrectanglenode.cpp \
-    $$PWD/qsgflashnode.cpp
+    $$PWD/qsgflashnode.cpp \
+    $$PWD/qsgpathsimplifier.cpp

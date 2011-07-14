@@ -42,7 +42,7 @@
 #include "qsgdistancefieldglyphcache_p.h"
 
 #include <qmath.h>
-#include <private/qtriangulator_p.h>
+#include <private/qsgpathsimplifier_p.h>
 #include <private/qdeclarativeglobal_p.h>
 #include <qglshaderprogram.h>
 #include <private/qglengineshadersource_p.h>
@@ -86,401 +86,650 @@ static inline int qt_next_power_of_two(int v)
     return v;
 }
 
-struct DFPoint
+namespace
 {
-    float x, y;
-};
+    enum FillHDir
+    {
+        LeftToRight,
+        RightToLeft
+    };
 
-struct DFVertex
+    enum FillVDir
+    {
+        TopDown,
+        BottomUp
+    };
+
+    enum FillClip
+    {
+        NoClip,
+        Clip
+    };
+}
+
+template <FillClip clip, FillHDir dir>
+inline void fillLine(qint32 *, int, int, int, qint32, qint32)
 {
-    DFPoint p;
-    float d;
-};
+}
 
-static void drawRectangle(float *bits, int width, int height, const DFVertex *v1, const DFVertex *v2, const DFVertex *v3, const DFVertex *v4)
+template <>
+inline void fillLine<Clip, LeftToRight>(qint32 *line, int width, int lx, int rx, qint32 d, qint32 dd)
 {
-    float minY = qMin(qMin(v1->p.y, v2->p.y), qMin(v3->p.y, v4->p.y));
-    if (v2->p.y == minY) {
-        const DFVertex *tmp = v1;
-        v1 = v2;
-        v2 = v3;
-        v3 = v4;
-        v4 = tmp;
-    } else if (v3->p.y == minY) {
-        const DFVertex *tmp1 = v1;
-        const DFVertex *tmp2 = v2;
-        v1 = v3;
-        v2 = v4;
-        v3 = tmp1;
-        v4 = tmp2;
-    } else if (v4->p.y == minY) {
-        const DFVertex *tmp = v4;
-        v4 = v3;
-        v3 = v2;
-        v2 = v1;
-        v1 = tmp;
-    }
-
-    /*
-       v1
-      /  \
-     v4  v2
-      \  /
-       v3
-    */
-
-    int fromY = qMax(0, qCeil(v1->p.y));
-    int midY1 = qMin(height, qCeil(qMin(v2->p.y, v4->p.y)));
-    int midY2 = qMin(height, qCeil(qMax(v2->p.y, v4->p.y)));
-    int toY = qMin(height, qCeil(v3->p.y));
-
-    if (toY <= fromY)
+    int fromX = qMax(0, lx >> 8);
+    int toX = qMin(width, rx >> 8);
+    int x = toX - fromX;
+    if (x <= 0)
         return;
+    qint32 val = d + (((fromX << 8) + 0xff - lx) * dd >> 8);
+    line += fromX;
+    do {
+        *line = abs(val) < abs(*line) ? val : *line;
+        val += dd;
+        ++line;
+    } while (--x);
+}
 
-    bits += width * fromY;
-    int y = fromY;
-
-    float leftDx = (v4->p.x - v1->p.x) / (v4->p.y - v1->p.y);
-    float leftDd = (v4->d - v1->d) / (v4->p.y - v1->p.y);
-    float leftX = v1->p.x + (fromY - v1->p.y) * leftDx;
-    float leftD = v1->d + (fromY - v1->p.y) * leftDd;
-
-    float rightDx = (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
-    float rightDd = (v2->d - v1->d) / (v2->p.y - v1->p.y);
-    float rightX = v1->p.x + (fromY - v1->p.y) * rightDx;
-    float rightD = v1->d + (fromY - v1->p.y) * rightDd;
-
-    float dd = ((v2->d - v1->d) * (v3->p.y - v1->p.y) - (v2->p.y - v1->p.y) * (v3->d - v1->d))
-             / ((v2->p.x - v1->p.x) * (v3->p.y - v1->p.y) - (v2->p.y - v1->p.y) * (v3->p.x - v1->p.x));
-
-    for (; y < midY1; ++y, leftX += leftDx, leftD += leftDd, rightX += rightDx, rightD += rightDd, bits += width) {
-        int fromX = qMax(0, qCeil(leftX));
-        int toX = qMin(width, qCeil(rightX));
-        if (toX <= fromX)
-            continue;
-        float d = leftD + (fromX - leftX) * dd;
-        for (int x = fromX; x < toX; ++x, d += dd) {
-            if (abs(d) < abs(bits[x]))
-                bits[x] = d;
-        }
-    }
-
-    if (midY1 == toY)
+template <>
+inline void fillLine<Clip, RightToLeft>(qint32 *line, int width, int lx, int rx, qint32 d, qint32 dd)
+{
+    int fromX = qMax(0, lx >> 8);
+    int toX = qMin(width, rx >> 8);
+    int x = toX - fromX;
+    if (x <= 0)
         return;
+    qint32 val = d + (((toX << 8) + 0xff - rx) * dd >> 8);
+    line += toX;
+    do {
+        val -= dd;
+        --line;
+        *line = abs(val) < abs(*line) ? val : *line;
+    } while (--x);
+}
 
-    if (v2->p.y > v4->p.y) {
-        // Long right edge.
-        leftDx = (v3->p.x - v4->p.x) / (v3->p.y - v4->p.y);
-        leftDd = (v3->d - v4->d) / (v3->p.y - v4->p.y);
-        leftX = v4->p.x + (midY1 - v4->p.y) * leftDx;
-        leftD = v4->d + (midY1 - v4->p.y) * leftDd;
+template <>
+inline void fillLine<NoClip, LeftToRight>(qint32 *line, int, int lx, int rx, qint32 d, qint32 dd)
+{
+    int fromX = lx >> 8;
+    int toX = rx >> 8;
+    int x = toX - fromX;
+    if (x <= 0)
+        return;
+    qint32 val = d + ((~lx & 0xff) * dd >> 8);
+    line += fromX;
+    do {
+        *line = abs(val) < abs(*line) ? val : *line;
+        val += dd;
+        ++line;
+    } while (--x);
+}
+
+template <>
+inline void fillLine<NoClip, RightToLeft>(qint32 *line, int, int lx, int rx, qint32 d, qint32 dd)
+{
+    int fromX = lx >> 8;
+    int toX = rx >> 8;
+    int x = toX - fromX;
+    if (x <= 0)
+        return;
+    qint32 val = d + ((~rx & 0xff) * dd >> 8);
+    line += toX;
+    do {
+        val -= dd;
+        --line;
+        *line = abs(val) < abs(*line) ? val : *line;
+    } while (--x);
+}
+
+template <FillClip clip, FillVDir vDir, FillHDir hDir>
+inline void fillLines(qint32 *bits, int width, int height, int upperY, int lowerY,
+                      int &lx, int ldx, int &rx, int rdx, qint32 &d, qint32 ddy, qint32 ddx)
+{
+    Q_UNUSED(height);
+    Q_ASSERT(upperY < lowerY);
+    int y = lowerY - upperY;
+    if (vDir == TopDown) {
+        qint32 *line = bits + upperY * width;
+        do {
+            fillLine<clip, hDir>(line, width, lx, rx, d, ddx);
+            lx += ldx;
+            d += ddy;
+            rx += rdx;
+            line += width;
+        } while (--y);
     } else {
-        // Long left edge.
-        rightDx = (v3->p.x - v2->p.x) / (v3->p.y - v2->p.y);
-        rightDd = (v3->d - v2->d) / (v3->p.y - v2->p.y);
-        rightX = v2->p.x + (midY1 - v2->p.y) * rightDx;
-        rightD = v2->d + (midY1 - v2->p.y) * rightDd;
+        qint32 *line = bits + lowerY * width;
+        do {
+            lx -= ldx;
+            d -= ddy;
+            rx -= rdx;
+            line -= width;
+            fillLine<clip, hDir>(line, width, lx, rx, d, ddx);
+        } while (--y);
+    }
+}
+
+template <FillClip clip>
+void drawTriangle(qint32 *bits, int width, int height, const QPoint *center,
+                  const QPoint *v1, const QPoint *v2, qint32 value)
+{
+    const int y1 = clip == Clip ? qBound(0, v1->y() >> 8, height) : v1->y() >> 8;
+    const int y2 = clip == Clip ? qBound(0, v2->y() >> 8, height) : v2->y() >> 8;
+    const int yC = clip == Clip ? qBound(0, center->y() >> 8, height) : center->y() >> 8;
+
+    const int v1Frac = clip == Clip ? (y1 << 8) + 0xff - v1->y() : ~v2->y() & 0xff;
+    const int v2Frac = clip == Clip ? (y2 << 8) + 0xff - v2->y() : ~v1->y() & 0xff;
+    const int centerFrac = clip == Clip ? (yC << 8) + 0xff - center->y() : ~center->y() & 0xff;
+
+    int dx1, x1, dx2, x2;
+    qint32 dd1, d1, dd2, d2;
+    if (v1->y() != center->y()) {
+        dx1 = ((v1->x() - center->x()) << 8) / (v1->y() - center->y());
+        x1 = center->x() + centerFrac * (v1->x() - center->x()) / (v1->y() - center->y());
+    }
+    if (v2->y() != center->y()) {
+        dx2 = ((v2->x() - center->x()) << 8) / (v2->y() - center->y());
+        x2 = center->x() + centerFrac * (v2->x() - center->x()) / (v2->y() - center->y());
     }
 
-    for (; y < midY2; ++y, leftX += leftDx, leftD += leftDd, rightX += rightDx, rightD += rightDd, bits += width) {
-        int fromX = qMax(0, qCeil(leftX));
-        int toX = qMin(width, qCeil(rightX));
-        if (toX <= fromX)
-            continue;
-        float d = leftD + (fromX - leftX) * dd;
-        for (int x = fromX; x < toX; ++x, d += dd) {
-            if (abs(d) < abs(bits[x]))
-                bits[x] = d;
+    const qint32 div = (v2->x() - center->x()) * (v1->y() - center->y())
+                     - (v2->y() - center->y()) * (v1->x() - center->x());
+    const qint32 dd = div ? qint32((qint64(value * (v1->y() - v2->y())) << 8) / div) : 0;
+
+    if (y2 < yC) {
+        if (y1 < yC) {
+            // Center at the bottom.
+            if (y2 < y1) {
+                // y2 < y1 < yC
+                // Long right edge.
+                d1 = centerFrac * value / (v1->y() - center->y());
+                dd1 = ((value << 8) / (v1->y() - center->y()));
+                fillLines<clip, BottomUp, LeftToRight>(bits, width, height, y1, yC, x1, dx1,
+                                                       x2, dx2, d1, dd1, dd);
+                dx1 = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+                x1 = v1->x() + v1Frac * (v1->x() - v2->x()) / (v1->y() - v2->y());
+                fillLines<clip, BottomUp, LeftToRight>(bits, width, height, y2, y1, x1, dx1,
+                                                       x2, dx2, value, 0, dd);
+            } else {
+                // y1 <= y2 < yC
+                // Long left edge.
+                d2 = centerFrac * value / (v2->y() - center->y());
+                dd2 = ((value << 8) / (v2->y() - center->y()));
+                fillLines<clip, BottomUp, RightToLeft>(bits, width, height, y2, yC, x1, dx1,
+                                                       x2, dx2, d2, dd2, dd);
+                if (y1 != y2) {
+                    dx2 = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+                    x2 = v2->x() + v2Frac * (v1->x() - v2->x()) / (v1->y() - v2->y());
+                    fillLines<clip, BottomUp, RightToLeft>(bits, width, height, y1, y2, x1, dx1,
+                                                           x2, dx2, value, 0, dd);
+                }
+            }
+        } else {
+            // y2 < yC <= y1
+            // Center to the right.
+            int dx = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+            int xUp, xDn;
+            xUp = xDn = v2->x() + (clip == Clip ? (yC << 8) + 0xff - v2->y()
+                                                : (center->y() | 0xff) - v2->y())
+                        * (v1->x() - v2->x()) / (v1->y() - v2->y());
+            fillLines<clip, BottomUp, LeftToRight>(bits, width, height, y2, yC, xUp, dx,
+                                                   x2, dx2, value, 0, dd);
+            if (yC != y1)
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, yC, y1, xDn, dx,
+                                                      x1, dx1, value, 0, dd);
         }
-    }
-
-    if (midY2 == toY)
-        return;
-
-    if (v2->p.y > v4->p.y) {
-        // Long left edge.
-        rightDx = (v3->p.x - v2->p.x) / (v3->p.y - v2->p.y);
-        rightDd = (v3->d - v2->d) / (v3->p.y - v2->p.y);
-        rightX = v2->p.x + (midY2 - v2->p.y) * rightDx;
-        rightD = v2->d + (midY2 - v2->p.y) * rightDd;
     } else {
-        // Long right edge.
-        leftDx = (v3->p.x - v4->p.x) / (v3->p.y - v4->p.y);
-        leftDd = (v3->d - v4->d) / (v3->p.y - v4->p.y);
-        leftX = v4->p.x + (midY2 - v4->p.y) * leftDx;
-        leftD = v4->d + (midY2 - v4->p.y) * leftDd;
-    }
-
-    for (; y < toY; ++y, leftX += leftDx, leftD += leftDd, rightX += rightDx, rightD += rightDd, bits += width) {
-        int fromX = qMax(0, qCeil(leftX));
-        int toX = qMin(width, qCeil(rightX));
-        if (toX <= fromX)
-            continue;
-        float d = leftD + (fromX - leftX) * dd;
-        for (int x = fromX; x < toX; ++x, d += dd) {
-            if (abs(d) < abs(bits[x]))
-                bits[x] = d;
+        if (y1 < yC) {
+            // y1 < yC <= y2
+            // Center to the left.
+            int dx = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+            int xUp, xDn;
+            xUp = xDn = v1->x() + (clip == Clip ? (yC << 8) + 0xff - v1->y()
+                                                : (center->y() | 0xff) - v1->y())
+                        * (v1->x() - v2->x()) / (v1->y() - v2->y());
+            fillLines<clip, BottomUp, RightToLeft>(bits, width, height, y1, yC, x1, dx1,
+                                                   xUp, dx, value, 0, dd);
+            if (yC != y2)
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, yC, y2, x2, dx2,
+                                                      xDn, dx, value, 0, dd);
+        } else {
+            // Center at the top.
+            if (y2 < y1) {
+                // yC <= y2 < y1
+                // Long right edge.
+                if (yC != y2) {
+                    d2 = centerFrac * value / (v2->y() - center->y());
+                    dd2 = ((value << 8) / (v2->y() - center->y()));
+                    fillLines<clip, TopDown, LeftToRight>(bits, width, height, yC, y2, x2, dx2,
+                                                          x1, dx1, d2, dd2, dd);
+                }
+                dx2 = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+                x2 = v2->x() + v2Frac * (v1->x() - v2->x()) / (v1->y() - v2->y());
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, y2, y1, x2, dx2,
+                                                      x1, dx1, value, 0, dd);
+            } else {
+                // Long left edge.
+                // yC <= y1 <= y2
+                if (yC != y1) {
+                    d1 = centerFrac * value / (v1->y() - center->y());
+                    dd1 = ((value << 8) / (v1->y() - center->y()));
+                    fillLines<clip, TopDown, RightToLeft>(bits, width, height, yC, y1, x2, dx2,
+                                                          x1, dx1, d1, dd1, dd);
+                }
+                if (y1 != y2) {
+                    dx1 = ((v1->x() - v2->x()) << 8) / (v1->y() - v2->y());
+                    x1 = v1->x() + v1Frac * (v1->x() - v2->x()) / (v1->y() - v2->y());
+                    fillLines<clip, TopDown, RightToLeft>(bits, width, height, y1, y2, x2, dx2,
+                                                          x1, dx1, value, 0, dd);
+                }
+            }
         }
     }
 }
 
-static void drawTriangle(float *bits, int width, int height, const DFVertex *v1, const DFVertex *v2, const DFVertex *v3)
+template <FillClip clip>
+void drawRectangle(qint32 *bits, int width, int height,
+                   const QPoint *int1, const QPoint *center1, const QPoint *ext1,
+                   const QPoint *int2, const QPoint *center2, const QPoint *ext2,
+                   qint32 extValue)
 {
-    float minY = qMin(qMin(v1->p.y, v2->p.y), v3->p.y);
-    if (v2->p.y == minY) {
-        const DFVertex *tmp = v1;
-        v1 = v2;
-        v2 = v3;
-        v3 = tmp;
-    } else if (v3->p.y == minY) {
-        const DFVertex *tmp = v3;
-        v3 = v2;
-        v2 = v1;
-        v1 = tmp;
+    if (center1->y() > center2->y()) {
+        qSwap(center1, center2);
+        qSwap(int1, ext2);
+        qSwap(ext1, int2);
+        extValue = -extValue;
     }
 
-    /*
-       v1
-      /  \
-     v3--v2
-     */
+    Q_ASSERT(ext1->x() - center1->x() == center1->x() - int1->x());
+    Q_ASSERT(ext1->y() - center1->y() == center1->y() - int1->y());
+    Q_ASSERT(ext2->x() - center2->x() == center2->x() - int2->x());
+    Q_ASSERT(ext2->y() - center2->y() == center2->y() - int2->y());
 
-    int fromY = qMax(0, qCeil(v1->p.y));
-    int midY = qMin(height, qCeil(qMin(v2->p.y, v3->p.y)));
-    int toY = qMin(height, qCeil(qMax(v2->p.y, v3->p.y)));
+    const int yc1 = clip == Clip ? qBound(0, center1->y() >> 8, height) : center1->y() >> 8;
+    const int yc2 = clip == Clip ? qBound(0, center2->y() >> 8, height) : center2->y() >> 8;
+    const int yi1 = clip == Clip ? qBound(0, int1->y() >> 8, height) : int1->y() >> 8;
+    const int yi2 = clip == Clip ? qBound(0, int2->y() >> 8, height) : int2->y() >> 8;
+    const int ye1 = clip == Clip ? qBound(0, ext1->y() >> 8, height) : ext1->y() >> 8;
+    const int ye2 = clip == Clip ? qBound(0, ext2->y() >> 8, height) : ext2->y() >> 8;
 
-    if (toY <= fromY)
-        return;
+    const int center1Frac = clip == Clip ? (yc1 << 8) + 0xff - center1->y() : ~center1->y() & 0xff;
+    const int center2Frac = clip == Clip ? (yc2 << 8) + 0xff - center2->y() : ~center2->y() & 0xff;
+    const int int1Frac = clip == Clip ? (yi1 << 8) + 0xff - int1->y() : ~int1->y() & 0xff;
+    const int ext1Frac = clip == Clip ? (ye1 << 8) + 0xff - ext1->y() : ~ext1->y() & 0xff;
 
-    float leftDx = (v3->p.x - v1->p.x) / (v3->p.y - v1->p.y);
-    float leftDd = (v3->d - v1->d) / (v3->p.y - v1->p.y);
-    float leftX = v1->p.x + (fromY - v1->p.y) * leftDx;
-    float leftD = v1->d + (fromY - v1->p.y) * leftDd;
+    int dxC, dxE; // cap slope, edge slope
+    qint32 ddC;
+    if (ext1->y() != int1->y()) {
+        dxC = ((ext1->x() - int1->x()) << 8) / (ext1->y() - int1->y());
+        ddC = (extValue << 9) / (ext1->y() - int1->y());
+    }
+    if (ext1->y() != ext2->y())
+        dxE = ((ext1->x() - ext2->x()) << 8) / (ext1->y() - ext2->y());
 
-    float rightDx = (v2->p.x - v1->p.x) / (v2->p.y - v1->p.y);
-    float rightDd = (v2->d - v1->d) / (v2->p.y - v1->p.y);
-    float rightX = v1->p.x + (fromY - v1->p.y) * rightDx;
-    float rightD = v1->d + (fromY - v1->p.y) * rightDd;
+    const qint32 div = (ext1->x() - int1->x()) * (ext2->y() - int1->y())
+                     - (ext1->y() - int1->y()) * (ext2->x() - int1->x());
+    const qint32 dd = div ? qint32((qint64(extValue * (ext2->y() - ext1->y())) << 9) / div) : 0;
 
-    float dd = ((v2->d - v1->d) * (v3->p.y - v1->p.y) - (v2->p.y - v1->p.y) * (v3->d - v1->d))
-             / ((v2->p.x - v1->p.x) * (v3->p.y - v1->p.y) - (v2->p.y - v1->p.y) * (v3->p.x - v1->p.x));
+    int xe1, xe2, xc1, xc2;
+    qint32 d;
 
-    bits += width * fromY;
-    int y = fromY;
-    for (; y < midY; ++y, leftX += leftDx, leftD += leftDd, rightX += rightDx, rightD += rightDd, bits += width) {
-        int fromX = qMax(0, qCeil(leftX));
-        int toX = qMin(width, qCeil(rightX));
-        if (toX <= fromX)
-            continue;
-        float d = leftD + (fromX - leftX) * dd;
-        for (int x = fromX; x < toX; ++x, d += dd) {
-            if (abs(d) < abs(bits[x]))
-                bits[x] = d;
+    qint32 intValue = -extValue;
+
+    if (center2->x() < center1->x()) {
+        // Leaning to the right. '/'
+        if (int1->y() < ext2->y()) {
+            // Mostly vertical.
+            Q_ASSERT(ext1->y() != ext2->y());
+            xe1 = ext1->x() + ext1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+            xe2 = int1->x() + int1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+            if (ye1 != yi1) {
+                xc2 = center1->x() + center1Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+                xc2 += (ye1 - yc1) * dxC;
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, ye1, yi1, xe1, dxE,
+                                                      xc2, dxC, extValue, 0, dd);
+            }
+            if (yi1 != ye2)
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, yi1, ye2, xe1, dxE,
+                                                      xe2, dxE, extValue, 0, dd);
+            if (ye2 != yi2) {
+                xc1 = center2->x() + center2Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+                xc1 += (ye2 - yc2) * dxC;
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, ye2, yi2, xc1, dxC,
+                                                      xe2, dxE, intValue, 0, dd);
+            }
+        } else {
+            // Mostly horizontal.
+            Q_ASSERT(ext1->y() != int1->y());
+            xc1 = center2->x() + center2Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+            xc2 = center1->x() + center1Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+            xc1 += (ye2 - yc2) * dxC;
+            xc2 += (ye1 - yc1) * dxC;
+            if (ye1 != ye2) {
+                xe1 = ext1->x() + ext1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, ye1, ye2, xe1, dxE,
+                                                      xc2, dxC, extValue, 0, dd);
+            }
+            if (ye2 != yi1) {
+                d = (clip == Clip ? (ye2 << 8) + 0xff - center2->y()
+                                  : (ext2->y() | 0xff) - center2->y())
+                    * 2 * extValue / (ext1->y() - int1->y());
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, ye2, yi1, xc1, dxC,
+                                                      xc2, dxC, d, ddC, dd);
+            }
+            if (yi1 != yi2) {
+                xe2 = int1->x() + int1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, yi1, yi2, xc1, dxC,
+                                                      xe2, dxE, intValue, 0, dd);
+            }
         }
-    }
-
-    if (midY == toY)
-        return;
-
-    if (v2->p.y > v3->p.y) {
-        // Long right edge.
-        leftDx = (v2->p.x - v3->p.x) / (v2->p.y - v3->p.y);
-        leftDd = (v2->d - v3->d) / (v2->p.y - v3->p.y);
-        leftX = v3->p.x + (midY - v3->p.y) * leftDx;
-        leftD = v3->d + (midY - v3->p.y) * leftDd;
     } else {
-        // Long left edge.
-        rightDx = (v3->p.x - v2->p.x) / (v3->p.y - v2->p.y);
-        rightDd = (v3->d - v2->d) / (v3->p.y - v2->p.y);
-        rightX = v2->p.x + (midY - v2->p.y) * rightDx;
-        rightD = v2->d + (midY - v2->p.y) * rightDd;
-    }
-
-    for (; y < toY; ++y, leftX += leftDx, leftD += leftDd, rightX += rightDx, rightD += rightDd, bits += width) {
-        int fromX = qMax(0, qCeil(leftX));
-        int toX = qMin(width, qCeil(rightX));
-        if (toX <= fromX)
-            continue;
-        float d = leftD + (fromX - leftX) * dd;
-        for (int x = fromX; x < toX; ++x, d += dd) {
-            if (abs(d) < abs(bits[x]))
-                bits[x] = d;
+        // Leaning to the left. '\'
+        if (ext1->y() < int2->y()) {
+            // Mostly vertical.
+            Q_ASSERT(ext1->y() != ext2->y());
+            xe1 = ext1->x() + ext1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+            xe2 = int1->x() + int1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+            if (yi1 != ye1) {
+                xc1 = center1->x() + center1Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+                xc1 += (yi1 - yc1) * dxC;
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, yi1, ye1, xc1, dxC,
+                                                      xe2, dxE, intValue, 0, dd);
+            }
+            if (ye1 != yi2)
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, ye1, yi2, xe1, dxE,
+                                                      xe2, dxE, intValue, 0, dd);
+            if (yi2 != ye2) {
+                xc2 = center2->x() + center2Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+                xc2 += (yi2 - yc2) * dxC;
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, yi2, ye2, xe1, dxE,
+                                                      xc2, dxC, extValue, 0, dd);
+            }
+        } else {
+            // Mostly horizontal.
+            Q_ASSERT(ext1->y() != int1->y());
+            xc1 = center1->x() + center1Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+            xc2 = center2->x() + center2Frac * (ext1->x() - int1->x()) / (ext1->y() - int1->y());
+            xc1 += (yi1 - yc1) * dxC;
+            xc2 += (yi2 - yc2) * dxC;
+            if (yi1 != yi2) {
+                xe2 = int1->x() + int1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, yi1, yi2, xc1, dxC,
+                                                      xe2, dxE, intValue, 0, dd);
+            }
+            if (yi2 != ye1) {
+                d = (clip == Clip ? (yi2 << 8) + 0xff - center2->y()
+                                  : (int2->y() | 0xff) - center2->y())
+                    * 2 * extValue / (ext1->y() - int1->y());
+                fillLines<clip, TopDown, RightToLeft>(bits, width, height, yi2, ye1, xc1, dxC,
+                                                      xc2, dxC, d, ddC, dd);
+            }
+            if (ye1 != ye2) {
+                xe1 = ext1->x() + ext1Frac * (ext1->x() - ext2->x()) / (ext1->y() - ext2->y());
+                fillLines<clip, TopDown, LeftToRight>(bits, width, height, ye1, ye2, xe1, dxE,
+                                                      xc2, dxC, extValue, 0, dd);
+            }
         }
     }
 }
 
-static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfScale, float offs)
+static void drawPolygons(qint32 *bits, int width, int height, const QPoint *vertices,
+                         const quint32 *indices, int indexCount, qint32 value)
 {
-    QImage image(imgSize, imgSize, QImage::Format_ARGB32_Premultiplied);
+    Q_ASSERT(indexCount != 0);
+    Q_ASSERT(height <= 128);
+    QVarLengthArray<quint8, 16> scans[128];
+    int first = 0;
+    for (int i = 1; i < indexCount; ++i) {
+        quint32 idx1 = indices[i - 1];
+        quint32 idx2 = indices[i];
+        Q_ASSERT(idx1 != quint32(-1));
+        if (idx2 == quint32(-1)) {
+            idx2 = indices[first];
+            Q_ASSERT(idx2 != quint32(-1));
+            first = ++i;
+        }
+        const QPoint *v1 = &vertices[idx1];
+        const QPoint *v2 = &vertices[idx2];
+        if (v2->y() < v1->y())
+            qSwap(v1, v2);
+        int fromY = qMax(0, v1->y() >> 8);
+        int toY = qMin(height, v2->y() >> 8);
+        if (fromY >= toY)
+            continue;
+        int dx = ((v2->x() - v1->x()) << 8) / (v2->y() - v1->y());
+        int x = v1->x() + ((fromY << 8) + 0xff - v1->y()) * (v2->x() - v1->x()) / (v2->y() - v1->y());
+        for (int y = fromY; y < toY; ++y) {
+            quint32 c = quint32(x >> 8);
+            if (c < quint32(width))
+                scans[y].append(quint8(c));
+            x += dx;
+        }
+    }
+    for (int i = 0; i < height; ++i) {
+        quint8 *scanline = scans[i].data();
+        int size = scans[i].size();
+        for (int j = 1; j < size; ++j) {
+            int k = j;
+            quint8 value = scanline[k];
+            for (; k != 0 && value < scanline[k - 1]; --k)
+                scanline[k] = scanline[k - 1];
+            scanline[k] = value;
+        }
+        qint32 *line = bits + i * width;
+        int j = 0;
+        for (; j + 1 < size; j += 2) {
+            for (quint8 x = scanline[j]; x < scanline[j + 1]; ++x)
+                line[x] = value;
+        }
+        if (j < size) {
+            for (int x = scanline[j]; x < width; ++x)
+                line[x] = value;
+        }
+    }
+}
+
+static QImage makeDistanceField(int imgSize, const QPainterPath &path, int dfScale, int offs)
+{
+    QImage image(imgSize, imgSize, QImage::Format_Indexed8);
 
     if (path.isEmpty()) {
         image.fill(0);
         return image;
     }
 
-    QPolylineSet polys = qPolyline(path);
+    QTransform transform;
+    transform.translate(offs, offs);
+    transform.scale(qreal(1) / dfScale, qreal(1) / dfScale);
 
-    union Pacific {
-        float value;
-        QRgb color;
-    };
-    Pacific interior;
-    Pacific exterior;
-    interior.value = 127;
-    exterior.value = -127;
+    QDataBuffer<quint32> pathIndices(0);
+    QDataBuffer<QPoint> pathVertices(0);
+    qSimplifyPath(path, pathVertices, pathIndices, transform);
 
-    image.fill(exterior.color);
+    const qint32 interiorColor = -0x7f80; // 8:8 signed format, -127.5
+    const qint32 exteriorColor = 0x7f80; // 8:8 signed format, 127.5
 
-    QPainter p(&image);
-    p.setCompositionMode(QPainter::CompositionMode_Source);
-    p.translate(offs, offs);
-    p.scale(1 / qreal(dfScale), 1 / qreal(dfScale));
-    p.fillPath(path, QColor::fromRgba(interior.color));
-    p.end();
+    QScopedArrayPointer<qint32> bits(new qint32[imgSize * imgSize]);
+    for (int i = 0; i < imgSize * imgSize; ++i)
+        bits[i] = exteriorColor;
 
-    float *bits = (float *)image.bits();
-    const float angleStep = 15 * 3.141592653589793238f / 180;
-    const DFPoint rotation = { cos(angleStep), sin(angleStep) };
+    const qreal angleStep = qreal(15 * 3.141592653589793238 / 180);
+    const QPoint rotation(qRound(cos(angleStep) * 0x4000),
+                          qRound(sin(angleStep) * 0x4000)); // 2:14 signed
 
-    bool isShortData = polys.indices.type() == QVertexIndexVector::UnsignedShort;
-    const void *indices = polys.indices.data();
+    const quint32 *indices = pathIndices.data();
+    QVarLengthArray<QPoint> normals;
+    QVarLengthArray<QPoint> vertices;
+    QVarLengthArray<bool> isConvex;
+    QVarLengthArray<bool> needsClipping;
+
+    drawPolygons(bits.data(), imgSize, imgSize, pathVertices.data(), indices, pathIndices.size(),
+                 interiorColor);
+
     int index = 0;
-    QVarLengthArray<DFPoint> normals(polys.vertices.count());
-    QVarLengthArray<DFVertex> vertices(polys.vertices.count());
 
-    while (index < polys.indices.size()) {
+    while (index < pathIndices.size()) {
         normals.clear();
         vertices.clear();
+        needsClipping.clear();
 
         // Find end of polygon.
         int end = index;
-        if (isShortData) {
-            while (((quint16 *)indices)[end] != quint16(-1))
-                ++end;
-        } else {
-            while (((quint32 *)indices)[end] != quint32(-1))
-                ++end;
-        }
+        while (indices[end] != quint32(-1))
+            ++end;
 
         // Calculate vertex normals.
         for (int next = index, prev = end - 1; next < end; prev = next++) {
-            quint32 fromVertexIndex = isShortData ? (quint32)((quint16 *)indices)[prev] : ((quint32 *)indices)[prev];
-            quint32 toVertexIndex = isShortData ? (quint32)((quint16 *)indices)[next] : ((quint32 *)indices)[next];
-            const qreal *from = &polys.vertices.at(fromVertexIndex * 2);
-            const qreal *to = &polys.vertices.at(toVertexIndex * 2);
-            DFPoint n;
-            n.x = float(to[1] - from[1]);
-            n.y = float(from[0] - to[0]);
-            if (n.x == 0 && n.y == 0)
-                continue;
-            float scale = offs / sqrt(n.x * n.x + n.y * n.y);
-            n.x *= scale;
-            n.y *= scale;
-            normals.append(n);
+            quint32 fromVertexIndex = indices[prev];
+            quint32 toVertexIndex = indices[next];
 
-            DFVertex v;
-            v.p.x = float(to[0] / dfScale) + offs - 0.5f;
-            v.p.y = float(to[1] / dfScale) + offs - 0.5f;
-            v.d = 0.0f;
+            const QPoint &from = pathVertices.at(fromVertexIndex);
+            const QPoint &to = pathVertices.at(toVertexIndex);
+
+            QPoint n(to.y() - from.y(), from.x() - to.x());
+            if (n.x() == 0 && n.y() == 0)
+                continue;
+            int scale = qRound((offs << 16) / sqrt(qreal(n.x() * n.x() + n.y() * n.y()))); // 8:16
+            n.rx() = n.x() * scale >> 8;
+            n.ry() = n.y() * scale >> 8;
+            normals.append(n);
+            QPoint v(to.x() + 0x7f, to.y() + 0x7f);
             vertices.append(v);
+            needsClipping.append((to.x() < offs << 8) || (to.x() >= (imgSize - offs) << 8)
+                                 || (to.y() < offs << 8) || (to.y() >= (imgSize - offs) << 8));
         }
 
-        QVarLengthArray<bool> isConvex(normals.count());
-        for (int next = 0, prev = normals.count() - 1; next < normals.count(); prev = next++)
-            isConvex[prev] = (normals.at(prev).x * normals.at(next).y - normals.at(prev).y * normals.at(next).x > 0);
+        isConvex.resize(normals.count());
+        for (int next = 0, prev = normals.count() - 1; next < normals.count(); prev = next++) {
+            isConvex[prev] = normals.at(prev).x() * normals.at(next).y()
+                           - normals.at(prev).y() * normals.at(next).x() < 0;
+        }
 
         // Draw quads.
         for (int next = 0, prev = normals.count() - 1; next < normals.count(); prev = next++) {
-            DFPoint n = normals.at(next);
-            DFVertex intPrev = vertices.at(prev);
-            DFVertex extPrev = vertices.at(prev);
-            DFVertex intNext = vertices.at(next);
-            DFVertex extNext = vertices.at(next);
+            QPoint n = normals.at(next);
+            QPoint intPrev = vertices.at(prev);
+            QPoint extPrev = vertices.at(prev);
+            QPoint intNext = vertices.at(next);
+            QPoint extNext = vertices.at(next);
 
-            extPrev.p.x += n.x;
-            extPrev.p.y += n.y;
-            intPrev.p.x -= n.x;
-            intPrev.p.y -= n.y;
-            extNext.p.x += n.x;
-            extNext.p.y += n.y;
-            intNext.p.x -= n.x;
-            intNext.p.y -= n.y;
-            extPrev.d = 127;
-            extNext.d = 127;
-            intPrev.d = -127;
-            intNext.d = -127;
+            extPrev.rx() -= n.x();
+            extPrev.ry() -= n.y();
+            intPrev.rx() += n.x();
+            intPrev.ry() += n.y();
+            extNext.rx() -= n.x();
+            extNext.ry() -= n.y();
+            intNext.rx() += n.x();
+            intNext.ry() += n.y();
 
-            drawRectangle(bits, image.width(), image.height(),
-                          &vertices.at(prev), &extPrev, &extNext, &vertices.at(next));
-
-            drawRectangle(bits, image.width(), image.height(),
-                          &intPrev, &vertices.at(prev), &vertices.at(next), &intNext);
+            if (needsClipping[prev] || needsClipping[next]) {
+                drawRectangle<Clip>(bits.data(), imgSize, imgSize,
+                                    &intPrev, &vertices.at(prev), &extPrev,
+                                    &intNext, &vertices.at(next), &extNext,
+                                    exteriorColor);
+            } else {
+                drawRectangle<NoClip>(bits.data(), imgSize, imgSize,
+                                      &intPrev, &vertices.at(prev), &extPrev,
+                                      &intNext, &vertices.at(next), &extNext,
+                                      exteriorColor);
+            }
 
             if (isConvex.at(prev)) {
-                DFVertex v = extPrev;
-                for (;;) {
-                    DFPoint rn = { n.x * rotation.x + n.y * rotation.y,
-                                 n.y * rotation.x - n.x * rotation.y };
-                    n = rn;
-                    if (n.x * normals.at(prev).y - n.y * normals.at(prev).x >= -0.001) {
-                        v.p.x = vertices.at(prev).p.x + normals.at(prev).x;
-                        v.p.y = vertices.at(prev).p.y + normals.at(prev).y;
-                        drawTriangle(bits, image.width(), image.height(), &vertices.at(prev), &v, &extPrev);
-                        break;
-                    }
+                QPoint p = extPrev;
+                if (needsClipping[prev]) {
+                    for (;;) {
+                        QPoint rn((n.x() * rotation.x() - n.y() * rotation.y()) >> 14,
+                                  (n.y() * rotation.x() + n.x() * rotation.y()) >> 14);
+                        n = rn;
+                        if (n.x() * normals.at(prev).y() - n.y() * normals.at(prev).x() <= 0) {
+                            p.rx() = vertices.at(prev).x() - normals.at(prev).x();
+                            p.ry() = vertices.at(prev).y() - normals.at(prev).y();
+                            drawTriangle<Clip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                               &extPrev, &p, exteriorColor);
+                            break;
+                        }
 
-                    v.p.x = vertices.at(prev).p.x + n.x;
-                    v.p.y = vertices.at(prev).p.y + n.y;
-                    drawTriangle(bits, image.width(), image.height(), &vertices.at(prev), &v, &extPrev);
-                    extPrev = v;
+                        p.rx() = vertices.at(prev).x() - n.x();
+                        p.ry() = vertices.at(prev).y() - n.y();
+                        drawTriangle<Clip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                           &extPrev, &p, exteriorColor);
+                        extPrev = p;
+                    }
+                } else {
+                    for (;;) {
+                        QPoint rn((n.x() * rotation.x() - n.y() * rotation.y()) >> 14,
+                                  (n.y() * rotation.x() + n.x() * rotation.y()) >> 14);
+                        n = rn;
+                        if (n.x() * normals.at(prev).y() - n.y() * normals.at(prev).x() <= 0) {
+                            p.rx() = vertices.at(prev).x() - normals.at(prev).x();
+                            p.ry() = vertices.at(prev).y() - normals.at(prev).y();
+                            drawTriangle<NoClip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                                 &extPrev, &p, exteriorColor);
+                            break;
+                        }
+
+                        p.rx() = vertices.at(prev).x() - n.x();
+                        p.ry() = vertices.at(prev).y() - n.y();
+                        drawTriangle<NoClip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                             &extPrev, &p, exteriorColor);
+                        extPrev = p;
+                    }
                 }
             } else {
-                DFVertex v = intPrev;
-                for (;;) {
-                    DFPoint rn = { n.x * rotation.x - n.y * rotation.y,
-                                 n.y * rotation.x + n.x * rotation.y };
-                    n = rn;
-                    if (n.x * normals.at(prev).y - n.y * normals.at(prev).x <= 0.001) {
-                        v.p.x = vertices.at(prev).p.x - normals.at(prev).x;
-                        v.p.y = vertices.at(prev).p.y - normals.at(prev).y;
-                        drawTriangle(bits, image.width(), image.height(), &vertices.at(prev), &intPrev, &v);
-                        break;
-                    }
+                QPoint p = intPrev;
+                if (needsClipping[prev]) {
+                    for (;;) {
+                        QPoint rn((n.x() * rotation.x() + n.y() * rotation.y()) >> 14,
+                                  (n.y() * rotation.x() - n.x() * rotation.y()) >> 14);
+                        n = rn;
+                        if (n.x() * normals.at(prev).y() - n.y() * normals.at(prev).x() >= 0) {
+                            p.rx() = vertices.at(prev).x() + normals.at(prev).x();
+                            p.ry() = vertices.at(prev).y() + normals.at(prev).y();
+                            drawTriangle<Clip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                               &p, &intPrev, interiorColor);
+                            break;
+                        }
 
-                    v.p.x = vertices.at(prev).p.x - n.x;
-                    v.p.y = vertices.at(prev).p.y - n.y;
-                    drawTriangle(bits, image.width(), image.height(), &vertices.at(prev), &intPrev, &v);
-                    intPrev = v;
+                        p.rx() = vertices.at(prev).x() + n.x();
+                        p.ry() = vertices.at(prev).y() + n.y();
+                        drawTriangle<Clip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                           &p, &intPrev, interiorColor);
+                        intPrev = p;
+                    }
+                } else {
+                    for (;;) {
+                        QPoint rn((n.x() * rotation.x() + n.y() * rotation.y()) >> 14,
+                                  (n.y() * rotation.x() - n.x() * rotation.y()) >> 14);
+                        n = rn;
+                        if (n.x() * normals.at(prev).y() - n.y() * normals.at(prev).x() >= 0) {
+                            p.rx() = vertices.at(prev).x() + normals.at(prev).x();
+                            p.ry() = vertices.at(prev).y() + normals.at(prev).y();
+                            drawTriangle<NoClip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                                 &p, &intPrev, interiorColor);
+                            break;
+                        }
+
+                        p.rx() = vertices.at(prev).x() + n.x();
+                        p.ry() = vertices.at(prev).y() + n.y();
+                        drawTriangle<NoClip>(bits.data(), imgSize, imgSize, &vertices.at(prev),
+                                             &p, &intPrev, interiorColor);
+                        intPrev = p;
+                    }
                 }
             }
         }
+
         index = end + 1;
     }
 
-    for (int y = 0; y < image.height(); ++y) {
-        QRgb *iLine = (QRgb *)image.scanLine(y);
-        float *fLine = (float *)iLine;
-        for (int x = 0; x < image.width(); ++x)
-            iLine[x] = QRgb(fLine[x] + 127.5) << 24;
+    const qint32 *inLine = bits.data();
+    uchar *outLine = image.bits();
+    int padding = image.bytesPerLine() - image.width();
+    for (int y = 0; y < imgSize; ++y) {
+        for (int x = 0; x < imgSize; ++x, ++inLine, ++outLine)
+            *outLine = uchar((0x7f80 - *inLine) >> 8);
+        outLine += padding;
     }
 
     return image;
-}
-
-static void convert_to_Format_Alpha(QImage *image)
-{
-    const int width = image->width();
-    const int height = image->height();
-    uchar *data = image->bits();
-    const uint *src = (const uint *) data;
-    int stride = image->bytesPerLine() / sizeof(uint);
-
-    for (int i = 0; i < height; ++i) {
-        uchar *o = data + i * width;
-        for (int x = 0; x < width; ++x)
-            o[x] = (uchar)qAlpha(src[x]);
-        src += stride;
-    }
 }
 
 static bool fontHasNarrowOutlines(const QRawFont &f)
@@ -665,7 +914,7 @@ QImage QSGDistanceFieldGlyphCache::renderDistanceFieldGlyph(glyph_t glyph) const
     QImage im = makeDistanceField(QT_DISTANCEFIELD_TILESIZE,
                                   path,
                                   QT_DISTANCEFIELD_SCALE,
-                                  QT_DISTANCEFIELD_RADIUS / qreal(QT_DISTANCEFIELD_SCALE));
+                                  QT_DISTANCEFIELD_RADIUS / QT_DISTANCEFIELD_SCALE);
     return im;
 }
 
@@ -754,7 +1003,7 @@ void QSGDistanceFieldGlyphCache::derefGlyphs(int count, const glyph_t *glyphs)
 void QSGDistanceFieldGlyphCache::createTexture(int width, int height)
 {
     if (ctx->d_ptr->workaround_brokenFBOReadBack && m_textureData->image.isNull())
-        m_textureData->image = QImage(width, height, QImage::Format_ARGB32_Premultiplied);
+        m_textureData->image = QImage(width, height, QImage::Format_Indexed8);
 
     while (glGetError() != GL_NO_ERROR) { }
 
@@ -797,7 +1046,6 @@ void QSGDistanceFieldGlyphCache::resizeTexture(int width, int height)
     if (ctx->d_ptr->workaround_brokenFBOReadBack) {
         m_textureData->image = m_textureData->image.copy(0, 0, width, height);
         QImage copy = m_textureData->image.copy(0, 0, oldWidth, oldHeight);
-        convert_to_Format_Alpha(&copy);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, oldWidth, oldHeight, GL_ALPHA, GL_UNSIGNED_BYTE, copy.constBits());
         glDeleteTextures(1, &oldTexture);
         return;
@@ -952,13 +1200,15 @@ void QSGDistanceFieldGlyphCache::updateCache()
         QImage glyph = renderDistanceFieldGlyph(glyphIndex);
 
         if (ctx->d_ptr->workaround_brokenFBOReadBack) {
-            QPainter p(&m_textureData->image);
-            p.setCompositionMode(QPainter::CompositionMode_Source);
-            p.drawImage(c.x, c.y, glyph);
-            p.end();
+            uchar *inBits = glyph.scanLine(0);
+            uchar *outBits = m_textureData->image.scanLine(int(c.y)) + int(c.x);
+            for (int y = 0; y < glyph.height(); ++y) {
+                qMemCopy(outBits, inBits, glyph.width());
+                inBits += glyph.bytesPerLine();
+                outBits += m_textureData->image.bytesPerLine();
+            }
         }
 
-        convert_to_Format_Alpha(&glyph);
         glTexSubImage2D(GL_TEXTURE_2D, 0, c.x, c.y, glyph.width(), glyph.height(), GL_ALPHA, GL_UNSIGNED_BYTE, glyph.constBits());
 
         if (cacheDistanceFields) {
