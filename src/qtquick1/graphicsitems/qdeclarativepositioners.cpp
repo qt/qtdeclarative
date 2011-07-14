@@ -325,8 +325,9 @@ void QDeclarative1BasePositioner::finishApplyTransitions()
 
 /*!
   \qmlclass Column QDeclarative1Column
+    \inqmlmodule QtQuick 1
   \ingroup qml-positioning-elements
-  \since 4.7
+  \since QtQuick 1.0
   \brief The Column item arranges its children vertically.
   \inherits Item
 
@@ -390,7 +391,7 @@ void QDeclarative1BasePositioner::finishApplyTransitions()
   \sa Row, Grid, Flow, {declarative/positioners}{Positioners example}
 */
 /*!
-    \qmlproperty Transition Column::add
+    \qmlproperty Transition QtQuick1::Column::add
 
     This property holds the transition to be applied when adding an
     item to the positioner. The transition will only be applied to the
@@ -405,7 +406,7 @@ void QDeclarative1BasePositioner::finishApplyTransitions()
     \sa move
 */
 /*!
-    \qmlproperty Transition Column::move
+    \qmlproperty Transition QtQuick1::Column::move
 
     This property holds the transition to apply when moving an item
     within the positioner.  Positioner transitions will only affect
@@ -430,7 +431,7 @@ void QDeclarative1BasePositioner::finishApplyTransitions()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int Column::spacing
+  \qmlproperty int QtQuick1::Column::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -489,8 +490,9 @@ void QDeclarative1Column::reportConflictingAnchors()
 
 /*!
   \qmlclass Row QDeclarative1Row
+    \inqmlmodule QtQuick 1
   \ingroup qml-positioning-elements
-  \since 4.7
+  \since QtQuick 1.0
   \brief The Row item arranges its children horizontally.
   \inherits Item
 
@@ -533,7 +535,7 @@ void QDeclarative1Column::reportConflictingAnchors()
   \sa Column, Grid, Flow, {declarative/positioners}{Positioners example}
 */
 /*!
-    \qmlproperty Transition Row::add
+    \qmlproperty Transition QtQuick1::Row::add
 
     This property holds the transition to be applied when adding an
     item to the positioner. The transition will only be applied to the
@@ -548,7 +550,7 @@ void QDeclarative1Column::reportConflictingAnchors()
     \sa move
 */
 /*!
-    \qmlproperty Transition Row::move
+    \qmlproperty Transition QtQuick1::Row::move
 
     This property holds the transition to be applied when moving an
     item within the positioner. Positioner transitions will only affect
@@ -572,7 +574,7 @@ void QDeclarative1Column::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int Row::spacing
+  \qmlproperty int QtQuick1::Row::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -585,7 +587,7 @@ QDeclarative1Row::QDeclarative1Row(QDeclarativeItem *parent)
 }
 
 /*!
-    \qmlproperty enumeration Row::layoutDirection
+    \qmlproperty enumeration QtQuick1::Row::layoutDirection
     \since Quick 1.1
 
     This property holds the layoutDirection of the row.
@@ -623,7 +625,7 @@ void QDeclarative1Row::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 
 /*!
-    \qmlproperty enumeration Row::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick1::Row::effectiveLayoutDirection
     This property holds the effective layout direction of the row positioner.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -710,8 +712,9 @@ void QDeclarative1Row::reportConflictingAnchors()
 
 /*!
   \qmlclass Grid QDeclarative1Grid
+    \inqmlmodule QtQuick 1
   \ingroup qml-positioning-elements
-  \since 4.7
+  \since QtQuick 1.0
   \brief The Grid item positions its children in a grid.
   \inherits Item
 
@@ -763,7 +766,7 @@ void QDeclarative1Row::reportConflictingAnchors()
   \sa Flow, Row, Column, {declarative/positioners}{Positioners example}
 */
 /*!
-    \qmlproperty Transition Grid::add
+    \qmlproperty Transition QtQuick1::Grid::add
 
     This property holds the transition to be applied when adding an
     item to the positioner. The transition will only be applied to the
@@ -778,7 +781,7 @@ void QDeclarative1Row::reportConflictingAnchors()
     \sa move
 */
 /*!
-    \qmlproperty Transition Grid::move
+    \qmlproperty Transition QtQuick1::Grid::move
 
     This property holds the transition to be applied when moving an
     item within the positioner. Positioner transitions will only affect
@@ -801,7 +804,7 @@ void QDeclarative1Row::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int Grid::spacing
+  \qmlproperty int QtQuick1::Grid::spacing
 
   The spacing is the amount in pixels left empty between adjacent
   items. The default spacing is 0.
@@ -823,7 +826,7 @@ QDeclarative1Grid::QDeclarative1Grid(QDeclarativeItem *parent) :
 }
 
 /*!
-    \qmlproperty int Grid::columns
+    \qmlproperty int QtQuick1::Grid::columns
 
     This property holds the number of columns in the grid. The default
     number of columns is 4.
@@ -833,7 +836,7 @@ QDeclarative1Grid::QDeclarative1Grid(QDeclarativeItem *parent) :
 */
 
 /*!
-    \qmlproperty int Grid::rows
+    \qmlproperty int QtQuick1::Grid::rows
     This property holds the number of rows in the grid.
 
     If the grid does not have enough items to fill the specified
@@ -859,7 +862,7 @@ void QDeclarative1Grid::setRows(const int rows)
 }
 
 /*!
-    \qmlproperty enumeration Grid::flow
+    \qmlproperty enumeration QtQuick1::Grid::flow
     This property holds the flow of the layout.
 
     Possible values are:
@@ -886,7 +889,7 @@ void QDeclarative1Grid::setFlow(Flow flow)
 }
 
 /*!
-    \qmlproperty enumeration Grid::layoutDirection
+    \qmlproperty enumeration QtQuick1::Grid::layoutDirection
     \since Quick 1.1
 
     This property holds the layout direction of the layout.
@@ -926,7 +929,7 @@ void QDeclarative1Grid::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 
 /*!
-    \qmlproperty enumeration Grid::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick1::Grid::effectiveLayoutDirection
     This property holds the effective layout direction of the grid positioner.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -1102,8 +1105,9 @@ void QDeclarative1Grid::reportConflictingAnchors()
 
 /*!
   \qmlclass Flow QDeclarative1Flow
+    \inqmlmodule QtQuick 1
   \ingroup qml-positioning-elements
-  \since 4.7
+  \since QtQuick 1.0
   \brief The Flow item arranges its children side by side, wrapping as necessary.
   \inherits Item
 
@@ -1152,7 +1156,7 @@ void QDeclarative1Grid::reportConflictingAnchors()
   \sa Column, Row, Grid, {declarative/positioners}{Positioners example}
 */
 /*!
-    \qmlproperty Transition Flow::add
+    \qmlproperty Transition QtQuick1::Flow::add
 
     This property holds the transition to be applied when adding an
     item to the positioner. The transition will only be applied to the
@@ -1167,7 +1171,7 @@ void QDeclarative1Grid::reportConflictingAnchors()
     \sa move
 */
 /*!
-    \qmlproperty Transition Flow::move
+    \qmlproperty Transition QtQuick1::Flow::move
 
     This property holds the transition to be applied when moving an
     item within the positioner. Positioner transitions will only affect
@@ -1191,7 +1195,7 @@ void QDeclarative1Grid::reportConflictingAnchors()
     \sa add, {declarative/positioners}{Positioners example}
 */
 /*!
-  \qmlproperty int Flow::spacing
+  \qmlproperty int QtQuick1::Flow::spacing
 
   spacing is the amount in pixels left empty between each adjacent
   item, and defaults to 0.
@@ -1220,7 +1224,7 @@ QDeclarative1Flow::QDeclarative1Flow(QDeclarativeItem *parent)
 }
 
 /*!
-    \qmlproperty enumeration Flow::flow
+    \qmlproperty enumeration QtQuick1::Flow::flow
     This property holds the flow of the layout.
 
     Possible values are:
@@ -1251,7 +1255,7 @@ void QDeclarative1Flow::setFlow(Flow flow)
 }
 
 /*!
-    \qmlproperty enumeration Flow::layoutDirection
+    \qmlproperty enumeration QtQuick1::Flow::layoutDirection
     \since Quick 1.1
 
     This property holds the layout direction of the layout.
@@ -1288,7 +1292,7 @@ void QDeclarative1Flow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
 }
 
 /*!
-    \qmlproperty enumeration Flow::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick1::Flow::effectiveLayoutDirection
     This property holds the effective layout direction of the flow positioner.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,

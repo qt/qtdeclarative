@@ -46,7 +46,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass KeyEvent QDeclarative1KeyEvent
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-event-elements
     
     \brief The KeyEvent object provides information about a key event.
@@ -62,7 +63,7 @@ Item {
 */
 
 /*!
-    \qmlproperty int KeyEvent::key
+    \qmlproperty int QtQuick1::KeyEvent::key
 
     This property holds the code of the key that was pressed or released.
 
@@ -79,7 +80,7 @@ Item {
 */
 
 /*!
-    \qmlproperty string KeyEvent::text
+    \qmlproperty string QtQuick1::KeyEvent::text
 
     This property holds the Unicode text that the key generated.
     The text returned can be an empty string in cases where modifier keys,
@@ -88,20 +89,20 @@ Item {
 */
 
 /*!
-    \qmlproperty bool KeyEvent::isAutoRepeat
+    \qmlproperty bool QtQuick1::KeyEvent::isAutoRepeat
 
     This property holds whether this event comes from an auto-repeating key.
 */
 
 /*!
-    \qmlproperty int KeyEvent::count
+    \qmlproperty int QtQuick1::KeyEvent::count
 
     This property holds the number of keys involved in this event. If \l KeyEvent::text
     is not empty, this is simply the length of the string.
 */
 
 /*!
-    \qmlproperty bool KeyEvent::accepted
+    \qmlproperty bool QtQuick1::KeyEvent::accepted
 
     Setting \a accepted to true prevents the key event from being
     propagated to the item's parent.
@@ -111,7 +112,7 @@ Item {
 */
 
 /*!
-    \qmlproperty int KeyEvent::modifiers
+    \qmlproperty int QtQuick1::KeyEvent::modifiers
 
     This property holds the keyboard modifier flags that existed immediately
     before the event occurred.
@@ -141,7 +142,8 @@ Item {
 
 /*!
     \qmlclass MouseEvent QDeclarative1MouseEvent
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-event-elements
 
     \brief The MouseEvent object provides information about a mouse event.
@@ -158,15 +160,15 @@ Item {
 */
 
 /*!
-    \qmlproperty int MouseEvent::x
-    \qmlproperty int MouseEvent::y
+    \qmlproperty int QtQuick1::MouseEvent::x
+    \qmlproperty int QtQuick1::MouseEvent::y
 
     These properties hold the coordinates of the position supplied by the mouse event.
 */
 
 
 /*!
-    \qmlproperty bool MouseEvent::accepted
+    \qmlproperty bool QtQuick1::MouseEvent::accepted
 
     Setting \a accepted to true prevents the mouse event from being
     propagated to items below this item.
@@ -176,7 +178,7 @@ Item {
 */
 
 /*!
-    \qmlproperty enumeration MouseEvent::button
+    \qmlproperty enumeration QtQuick1::MouseEvent::button
 
     This property holds the button that caused the event.  It can be one of:
     \list
@@ -187,14 +189,14 @@ Item {
 */
 
 /*!
-    \qmlproperty bool MouseEvent::wasHeld
+    \qmlproperty bool QtQuick1::MouseEvent::wasHeld
 
     This property is true if the mouse button has been held pressed longer the
     threshold (800ms).
 */
 
 /*!
-    \qmlproperty int MouseEvent::buttons
+    \qmlproperty int QtQuick1::MouseEvent::buttons
 
     This property holds the mouse buttons pressed when the event was generated.
     For mouse move events, this is all buttons that are pressed down. For mouse
@@ -210,7 +212,7 @@ Item {
 */
 
 /*!
-    \qmlproperty int MouseEvent::modifiers
+    \qmlproperty int QtQuick1::MouseEvent::modifiers
 
     This property holds the keyboard modifier flags that existed immediately
     before the event occurred.

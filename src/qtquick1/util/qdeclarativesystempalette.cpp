@@ -60,8 +60,9 @@ public:
 
 /*!
     \qmlclass SystemPalette QDeclarative1SystemPalette
+    \inqmlmodule QtQuick 1
     \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The SystemPalette element provides access to the Qt palettes.
 
     The SystemPalette element provides access to the Qt application
@@ -96,7 +97,7 @@ QDeclarative1SystemPalette::~QDeclarative1SystemPalette()
 }
 
 /*!
-    \qmlproperty color SystemPalette::window
+    \qmlproperty color QtQuick1::SystemPalette::window
     The window (general background) color of the current color group.
 
     \sa QPalette::ColorRole
@@ -108,7 +109,7 @@ QColor QDeclarative1SystemPalette::window() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::windowText
+    \qmlproperty color QtQuick1::SystemPalette::windowText
     The window text (general foreground) color of the current color group.
 
     \sa QPalette::ColorRole
@@ -120,7 +121,7 @@ QColor QDeclarative1SystemPalette::windowText() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::base
+    \qmlproperty color QtQuick1::SystemPalette::base
     The base color of the current color group.
 
     \sa QPalette::ColorRole
@@ -132,7 +133,7 @@ QColor QDeclarative1SystemPalette::base() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::text
+    \qmlproperty color QtQuick1::SystemPalette::text
     The text color of the current color group.
 
     \sa QPalette::ColorRole
@@ -144,7 +145,7 @@ QColor QDeclarative1SystemPalette::text() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::alternateBase
+    \qmlproperty color QtQuick1::SystemPalette::alternateBase
     The alternate base color of the current color group.
 
     \sa QPalette::ColorRole
@@ -156,7 +157,7 @@ QColor QDeclarative1SystemPalette::alternateBase() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::button
+    \qmlproperty color QtQuick1::SystemPalette::button
     The button color of the current color group.
 
     \sa QPalette::ColorRole
@@ -168,7 +169,7 @@ QColor QDeclarative1SystemPalette::button() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::buttonText
+    \qmlproperty color QtQuick1::SystemPalette::buttonText
     The button text foreground color of the current color group.
 
     \sa QPalette::ColorRole
@@ -180,7 +181,7 @@ QColor QDeclarative1SystemPalette::buttonText() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::light
+    \qmlproperty color QtQuick1::SystemPalette::light
     The light color of the current color group.
 
     \sa QPalette::ColorRole
@@ -192,7 +193,7 @@ QColor QDeclarative1SystemPalette::light() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::midlight
+    \qmlproperty color QtQuick1::SystemPalette::midlight
     The midlight color of the current color group.
 
     \sa QPalette::ColorRole
@@ -204,7 +205,7 @@ QColor QDeclarative1SystemPalette::midlight() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::dark
+    \qmlproperty color QtQuick1::SystemPalette::dark
     The dark color of the current color group.
 
     \sa QPalette::ColorRole
@@ -216,7 +217,7 @@ QColor QDeclarative1SystemPalette::dark() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::mid
+    \qmlproperty color QtQuick1::SystemPalette::mid
     The mid color of the current color group.
 
     \sa QPalette::ColorRole
@@ -228,7 +229,7 @@ QColor QDeclarative1SystemPalette::mid() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::shadow
+    \qmlproperty color QtQuick1::SystemPalette::shadow
     The shadow color of the current color group.
 
     \sa QPalette::ColorRole
@@ -240,7 +241,7 @@ QColor QDeclarative1SystemPalette::shadow() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::highlight
+    \qmlproperty color QtQuick1::SystemPalette::highlight
     The highlight color of the current color group.
 
     \sa QPalette::ColorRole
@@ -252,7 +253,7 @@ QColor QDeclarative1SystemPalette::highlight() const
 }
 
 /*!
-    \qmlproperty color SystemPalette::highlightedText
+    \qmlproperty color QtQuick1::SystemPalette::highlightedText
     The highlighted text color of the current color group.
 
     \sa QPalette::ColorRole
@@ -264,7 +265,7 @@ QColor QDeclarative1SystemPalette::highlightedText() const
 }
 
 /*!
-    \qmlproperty enumeration SystemPalette::colorGroup
+    \qmlproperty enumeration QtQuick1::SystemPalette::colorGroup
 
     The color group of the palette. This can be one of:
 

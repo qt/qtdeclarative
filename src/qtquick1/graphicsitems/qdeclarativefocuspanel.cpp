@@ -52,7 +52,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
    \qmlclass FocusPanel QDeclarative1FocusPanel
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-basic-interaction-elements
 
    \brief The FocusPanel item explicitly creates a focus panel.
@@ -75,7 +76,7 @@ QDeclarative1FocusPanel::~QDeclarative1FocusPanel()
 }
 
 /*!
-    \qmlproperty bool FocusPanel::active
+    \qmlproperty bool QtQuick1::FocusPanel::active
 
     Sets whether the item is the active focus panel.
 */

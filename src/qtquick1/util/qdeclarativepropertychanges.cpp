@@ -67,8 +67,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass PropertyChanges QDeclarative1PropertyChanges
+    \inqmlmodule QtQuick 1
     \ingroup qml-state-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The PropertyChanges element describes new property bindings or values for a state.
 
     PropertyChanges is used to define the property values or bindings in a 
@@ -134,7 +135,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Object PropertyChanges::target
+    \qmlproperty Object QtQuick1::PropertyChanges::target
     This property holds the object which contains the properties to be changed.
 */
 
@@ -396,7 +397,7 @@ void QDeclarative1PropertyChanges::setObject(QObject *o)
 }
 
 /*!
-    \qmlproperty bool PropertyChanges::restoreEntryValues
+    \qmlproperty bool QtQuick1::PropertyChanges::restoreEntryValues
 
     This property holds whether the previous values should be restored when
     leaving the state. 
@@ -498,7 +499,7 @@ QDeclarative1PropertyChanges::ActionList QDeclarative1PropertyChanges::actions()
 }
 
 /*!
-    \qmlproperty bool PropertyChanges::explicit
+    \qmlproperty bool QtQuick1::PropertyChanges::explicit
 
     If explicit is set to true, any potential bindings will be interpreted as
     once-off assignments that occur when the state is entered.

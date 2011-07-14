@@ -182,8 +182,9 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 
 /*!
     \qmlclass MouseArea QDeclarative1MouseArea
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-interaction-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The MouseArea item enables simple mouse handling.
     \inherits Item
 
@@ -243,7 +244,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onEntered()
+    \qmlsignal QtQuick1::MouseArea::onEntered()
 
     This handler is called when the mouse enters the mouse area.
 
@@ -255,7 +256,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onExited()
+    \qmlsignal QtQuick1::MouseArea::onExited()
 
     This handler is called when the mouse exists the mouse area.
 
@@ -267,7 +268,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onPositionChanged(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onPositionChanged(MouseEvent mouse)
 
     This handler is called when the mouse position changes.
 
@@ -282,7 +283,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onClicked(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onClicked(MouseEvent mouse)
 
     This handler is called when there is a click. A click is defined as a press followed by a release,
     both inside the MouseArea (pressing, moving outside the MouseArea, and then moving back inside and
@@ -295,7 +296,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onPressed(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onPressed(MouseEvent mouse)
 
     This handler is called when there is a press.
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -309,7 +310,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onReleased(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onReleased(MouseEvent mouse)
 
     This handler is called when there is a release.
     The \l {MouseEvent}{mouse} parameter provides information about the click, including the x and y
@@ -321,7 +322,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onPressAndHold(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onPressAndHold(MouseEvent mouse)
 
     This handler is called when there is a long press (currently 800ms).
     The \l {MouseEvent}{mouse} parameter provides information about the press, including the x and y
@@ -331,7 +332,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onDoubleClicked(MouseEvent mouse)
+    \qmlsignal QtQuick1::MouseArea::onDoubleClicked(MouseEvent mouse)
 
     This handler is called when there is a double-click (a press followed by a release followed by a press).
     The \l {MouseEvent}{mouse} parameter provides information about the click, including the x and y
@@ -343,7 +344,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 */
 
 /*!
-    \qmlsignal MouseArea::onCanceled()
+    \qmlsignal QtQuick1::MouseArea::onCanceled()
 
     This handler is called when mouse events have been canceled, either because an event was not accepted, or
     because another element stole the mouse event handling.
@@ -368,8 +369,8 @@ QDeclarative1MouseArea::~QDeclarative1MouseArea()
 }
 
 /*!
-    \qmlproperty real MouseArea::mouseX
-    \qmlproperty real MouseArea::mouseY
+    \qmlproperty real QtQuick1::MouseArea::mouseX
+    \qmlproperty real QtQuick1::MouseArea::mouseY
     These properties hold the coordinates of the mouse cursor.
 
     If the hoverEnabled property is false then these properties will only be valid
@@ -399,7 +400,7 @@ qreal QDeclarative1MouseArea::mouseY() const
 }
 
 /*!
-    \qmlproperty bool MouseArea::enabled
+    \qmlproperty bool QtQuick1::MouseArea::enabled
     This property holds whether the item accepts mouse events.
 
     By default, this property is true.
@@ -420,7 +421,7 @@ void QDeclarative1MouseArea::setEnabled(bool a)
 }
 
 /*!
-    \qmlproperty bool MouseArea::preventStealing
+    \qmlproperty bool QtQuick1::MouseArea::preventStealing
     \since Quick 1.1
     This property holds whether the mouse events may be stolen from this
     MouseArea.
@@ -453,7 +454,7 @@ void QDeclarative1MouseArea::setPreventStealing(bool prevent)
 }
 
 /*!
-    \qmlproperty MouseButtons MouseArea::pressedButtons
+    \qmlproperty MouseButtons QtQuick1::MouseArea::pressedButtons
     This property holds the mouse buttons currently pressed.
 
     It contains a bitwise combination of:
@@ -819,7 +820,7 @@ QVariant QDeclarative1MouseArea::itemChange(GraphicsItemChange change,
 }
 
 /*!
-    \qmlproperty bool MouseArea::hoverEnabled
+    \qmlproperty bool QtQuick1::MouseArea::hoverEnabled
     This property holds whether hover events are handled.
 
     By default, mouse events are only handled in response to a button event, or when a button is
@@ -847,7 +848,7 @@ void QDeclarative1MouseArea::setHoverEnabled(bool h)
 }
 
 /*!
-    \qmlproperty bool MouseArea::containsMouse
+    \qmlproperty bool QtQuick1::MouseArea::containsMouse
     This property holds whether the mouse is currently inside the mouse area.
 
     \warning This property is not updated if the area moves under the mouse: \e containsMouse will not change.
@@ -860,7 +861,7 @@ bool QDeclarative1MouseArea::hovered() const
 }
 
 /*!
-    \qmlproperty bool MouseArea::pressed
+    \qmlproperty bool QtQuick1::MouseArea::pressed
     This property holds whether the mouse area is currently pressed.
 */
 bool QDeclarative1MouseArea::pressed() const
@@ -880,7 +881,7 @@ void QDeclarative1MouseArea::setHovered(bool h)
 }
 
 /*!
-    \qmlproperty Qt::MouseButtons MouseArea::acceptedButtons
+    \qmlproperty QtQuick1::Qt::MouseButtons MouseArea::acceptedButtons
     This property holds the mouse buttons that the mouse area reacts to.
 
     The available buttons are:
@@ -951,14 +952,14 @@ QDeclarative1Drag *QDeclarative1MouseArea::drag()
 }
 
 /*!
-    \qmlproperty Item MouseArea::drag.target
-    \qmlproperty bool MouseArea::drag.active
-    \qmlproperty enumeration MouseArea::drag.axis
-    \qmlproperty real MouseArea::drag.minimumX
-    \qmlproperty real MouseArea::drag.maximumX
-    \qmlproperty real MouseArea::drag.minimumY
-    \qmlproperty real MouseArea::drag.maximumY
-    \qmlproperty bool MouseArea::drag.filterChildren
+    \qmlproperty Item QtQuick1::MouseArea::drag.target
+    \qmlproperty bool QtQuick1::MouseArea::drag.active
+    \qmlproperty enumeration QtQuick1::MouseArea::drag.axis
+    \qmlproperty real QtQuick1::MouseArea::drag.minimumX
+    \qmlproperty real QtQuick1::MouseArea::drag.maximumX
+    \qmlproperty real QtQuick1::MouseArea::drag.minimumY
+    \qmlproperty real QtQuick1::MouseArea::drag.maximumY
+    \qmlproperty bool QtQuick1::MouseArea::drag.filterChildren
 
     \c drag provides a convenient way to make an item draggable.
 

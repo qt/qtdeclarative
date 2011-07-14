@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Package QDeclarative1Package
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
     \brief Package provides a collection of named items.
 

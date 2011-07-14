@@ -399,7 +399,7 @@ void QDeclarative1PaintedItem::paint(QPainter *p, const QStyleOptionGraphicsItem
 }
 
 /*!
-  \qmlproperty int PaintedItem::pixelCacheSize
+  \qmlproperty int QtQuick1::PaintedItem::pixelCacheSize
 
   This property holds the maximum number of pixels of image cache to
   allow. The default is 0.1 megapixels. The cache will not be larger
@@ -472,7 +472,7 @@ QColor QDeclarative1PaintedItem::fillColor() const
 }
 
 /*!
-    \qmlproperty bool PaintedItem::smoothCache
+    \qmlproperty bool QtQuick1::PaintedItem::smoothCache
 
     Controls whether the cached tiles of which the item is composed are
     rendered smoothly when they are generated.

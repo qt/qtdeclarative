@@ -1248,7 +1248,8 @@ void QDeclarative1GridViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
 
 /*!
     \qmlclass GridView QDeclarative1GridView
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-view-elements
 
     \inherits Flickable
@@ -1369,18 +1370,18 @@ QDeclarative1GridView::~QDeclarative1GridView()
 */
 
 /*!
-    \qmlattachedsignal GridView::onAdd()
+    \qmlattachedsignal QtQuick1::GridView::onAdd()
     This attached handler is called immediately after an item is added to the view.
 */
 
 /*!
-    \qmlattachedsignal GridView::onRemove()
+    \qmlattachedsignal QtQuick1::GridView::onRemove()
     This attached handler is called immediately before an item is removed from the view.
 */
 
 
 /*!
-  \qmlproperty model GridView::model
+  \qmlproperty model QtQuick1::GridView::model
   This property holds the model providing data for the grid.
 
     The model provides the set of data that is used to create the items
@@ -1463,7 +1464,7 @@ void QDeclarative1GridView::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component GridView::delegate
+    \qmlproperty Component QtQuick1::GridView::delegate
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -1527,8 +1528,8 @@ void QDeclarative1GridView::setDelegate(QDeclarativeComponent *delegate)
 }
 
 /*!
-  \qmlproperty int GridView::currentIndex
-  \qmlproperty Item GridView::currentItem
+  \qmlproperty int QtQuick1::GridView::currentIndex
+  \qmlproperty Item QtQuick1::GridView::currentItem
 
     The \c currentIndex property holds the index of the current item, and
     \c currentItem holds the current item.  Setting the currentIndex to -1
@@ -1573,7 +1574,7 @@ QDeclarativeItem *QDeclarative1GridView::currentItem()
 }
 
 /*!
-  \qmlproperty Item GridView::highlightItem
+  \qmlproperty Item QtQuick1::GridView::highlightItem
 
   This holds the highlight item created from the \l highlight component.
 
@@ -1591,7 +1592,7 @@ QDeclarativeItem *QDeclarative1GridView::highlightItem()
 }
 
 /*!
-  \qmlproperty int GridView::count
+  \qmlproperty int QtQuick1::GridView::count
   This property holds the number of items in the view.
 */
 int QDeclarative1GridView::count() const
@@ -1603,7 +1604,7 @@ int QDeclarative1GridView::count() const
 }
 
 /*!
-  \qmlproperty Component GridView::highlight
+  \qmlproperty Component QtQuick1::GridView::highlight
   This property holds the component to use as the highlight.
 
   An instance of the highlight component is created for each view.
@@ -1629,7 +1630,7 @@ void QDeclarative1GridView::setHighlight(QDeclarativeComponent *highlight)
 }
 
 /*!
-  \qmlproperty bool GridView::highlightFollowsCurrentItem
+  \qmlproperty bool QtQuick1::GridView::highlightFollowsCurrentItem
   This property sets whether the highlight is managed by the view.
 
     If this property is true (the default value), the highlight is moved smoothly
@@ -1662,7 +1663,7 @@ void QDeclarative1GridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 }
 
 /*!
-    \qmlproperty int GridView::highlightMoveDuration
+    \qmlproperty int QtQuick1::GridView::highlightMoveDuration
     This property holds the move animation duration of the highlight delegate.
 
     highlightFollowsCurrentItem must be true for this property
@@ -1693,9 +1694,9 @@ void QDeclarative1GridView::setHighlightMoveDuration(int duration)
 
 
 /*!
-    \qmlproperty real GridView::preferredHighlightBegin
-    \qmlproperty real GridView::preferredHighlightEnd
-    \qmlproperty enumeration GridView::highlightRangeMode
+    \qmlproperty real QtQuick1::GridView::preferredHighlightBegin
+    \qmlproperty real QtQuick1::GridView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick1::GridView::highlightRangeMode
 
     These properties define the preferred range of the highlight (for the current item)
     within the view. The \c preferredHighlightBegin value must be less than the
@@ -1793,7 +1794,7 @@ void QDeclarative1GridView::setHighlightRangeMode(HighlightRangeMode mode)
 }
 
 /*!
-  \qmlproperty enumeration GridView::layoutDirection
+  \qmlproperty enumeration QtQuick1::GridView::layoutDirection
   This property holds the layout direction of the grid.
 
     Possible values:
@@ -1828,7 +1829,7 @@ void QDeclarative1GridView::setLayoutDirection(Qt::LayoutDirection layoutDirecti
 }
 
 /*!
-    \qmlproperty enumeration GridView::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick1::GridView::effectiveLayoutDirection
     This property holds the effective layout direction of the grid.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -1848,7 +1849,7 @@ Qt::LayoutDirection QDeclarative1GridView::effectiveLayoutDirection() const
 }
 
 /*!
-  \qmlproperty enumeration GridView::flow
+  \qmlproperty enumeration QtQuick1::GridView::flow
   This property holds the flow of the grid.
 
     Possible values:
@@ -1884,7 +1885,7 @@ void QDeclarative1GridView::setFlow(Flow flow)
 }
 
 /*!
-  \qmlproperty bool GridView::keyNavigationWraps
+  \qmlproperty bool QtQuick1::GridView::keyNavigationWraps
   This property holds whether the grid wraps key navigation
 
     If this is true, key navigation that would move the current item selection
@@ -1909,7 +1910,7 @@ void QDeclarative1GridView::setWrapEnabled(bool wrap)
 }
 
 /*!
-    \qmlproperty int GridView::cacheBuffer
+    \qmlproperty int QtQuick1::GridView::cacheBuffer
     This property determines whether delegates are retained outside the
     visible area of the view.
 
@@ -1945,8 +1946,8 @@ void QDeclarative1GridView::setCacheBuffer(int buffer)
 }
 
 /*!
-  \qmlproperty int GridView::cellWidth
-  \qmlproperty int GridView::cellHeight
+  \qmlproperty int QtQuick1::GridView::cellWidth
+  \qmlproperty int QtQuick1::GridView::cellHeight
 
   These properties holds the width and height of each cell in the grid.
 
@@ -1986,7 +1987,7 @@ void QDeclarative1GridView::setCellHeight(int cellHeight)
     }
 }
 /*!
-    \qmlproperty enumeration GridView::snapMode
+    \qmlproperty enumeration QtQuick1::GridView::snapMode
 
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
@@ -2017,7 +2018,7 @@ void QDeclarative1GridView::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty Component GridView::footer
+    \qmlproperty Component QtQuick1::GridView::footer
     This property holds the component to use as the footer.
 
     An instance of the footer component is created for each view.  The
@@ -2053,7 +2054,7 @@ void QDeclarative1GridView::setFooter(QDeclarativeComponent *footer)
 }
 
 /*!
-    \qmlproperty Component GridView::header
+    \qmlproperty Component QtQuick1::GridView::header
     This property holds the component to use as the header.
 
     An instance of the header component is created for each view.  The
@@ -2329,7 +2330,7 @@ void QDeclarative1GridView::keyPressEvent(QKeyEvent *event)
 }
 
 /*!
-    \qmlmethod GridView::moveCurrentIndexUp()
+    \qmlmethod QtQuick1::GridView::moveCurrentIndexUp()
 
     Move the currentIndex up one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2357,7 +2358,7 @@ void QDeclarative1GridView::moveCurrentIndexUp()
 }
 
 /*!
-    \qmlmethod GridView::moveCurrentIndexDown()
+    \qmlmethod QtQuick1::GridView::moveCurrentIndexDown()
 
     Move the currentIndex down one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2385,7 +2386,7 @@ void QDeclarative1GridView::moveCurrentIndexDown()
 }
 
 /*!
-    \qmlmethod GridView::moveCurrentIndexLeft()
+    \qmlmethod QtQuick1::GridView::moveCurrentIndexLeft()
 
     Move the currentIndex left one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2428,7 +2429,7 @@ void QDeclarative1GridView::moveCurrentIndexLeft()
 }
 
 /*!
-    \qmlmethod GridView::moveCurrentIndexRight()
+    \qmlmethod QtQuick1::GridView::moveCurrentIndexRight()
 
     Move the currentIndex right one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2556,7 +2557,7 @@ void QDeclarative1GridViewPrivate::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod GridView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod QtQuick1::GridView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:
@@ -2596,8 +2597,8 @@ void QDeclarative1GridView::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod GridView::positionViewAtBeginning()
-    \qmlmethod GridView::positionViewAtEnd()
+    \qmlmethod QtQuick1::GridView::positionViewAtBeginning()
+    \qmlmethod QtQuick1::GridView::positionViewAtEnd()
     \since Quick 1.1
 
     Positions the view at the beginning or end, taking into account any header or footer.
@@ -2632,7 +2633,7 @@ void QDeclarative1GridView::positionViewAtEnd()
 }
 
 /*!
-    \qmlmethod int GridView::indexAt(int x, int y)
+    \qmlmethod int QtQuick1::GridView::indexAt(int x, int y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is

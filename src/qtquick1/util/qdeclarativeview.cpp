@@ -191,7 +191,7 @@ void QDeclarativeViewPrivate::itemGeometryChanged(QDeclarativeItem *resizeItem, 
 
 /*!
     \class QDeclarativeView
-    \since 4.7
+    \since QtQuick 1.0
     \brief The QDeclarativeView class provides a widget for displaying a Qt Declarative user interface.
 
     QDeclarativeItem objects can be placed on a standard QGraphicsScene and

@@ -51,8 +51,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass LayoutItem QDeclarative1LayoutItem
+    \inqmlmodule QtQuick 1
     \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The LayoutItem element allows declarative UI elements to be placed inside Qt's Graphics View layouts.
 
     LayoutItem is a variant of \l Item with additional size hint properties. These properties provide the size hints
@@ -68,19 +69,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty QSizeF LayoutItem::maximumSize
+    \qmlproperty QSizeF QtQuick1::LayoutItem::maximumSize
 
     The maximumSize property can be set to specify the maximum desired size of this LayoutItem
 */
 
 /*!
-    \qmlproperty QSizeF LayoutItem::minimumSize
+    \qmlproperty QSizeF QtQuick1::LayoutItem::minimumSize
 
     The minimumSize property can be set to specify the minimum desired size of this LayoutItem
 */
 
 /*!
-    \qmlproperty QSizeF LayoutItem::preferredSize
+    \qmlproperty QSizeF QtQuick1::LayoutItem::preferredSize
 
     The preferredSize property can be set to specify the preferred size of this LayoutItem
 */

@@ -89,8 +89,9 @@ QDeclarative1ListModelParser::ListInstruction *QDeclarative1ListModelParser::Lis
 
 /*!
     \qmlclass ListModel QDeclarative1ListModel
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
-    \since 4.7
+    \since QtQuick 1.0
     \brief The ListModel element defines a free-form list data source.
 
     The ListModel is a simple container of ListElement definitions, each containing data roles.
@@ -321,7 +322,7 @@ QVariant QDeclarative1ListModel::data(int index, int role) const
 }
 
 /*!
-    \qmlproperty int ListModel::count
+    \qmlproperty int QtQuick1::ListModel::count
     The number of data entries in the model.
 */
 int QDeclarative1ListModel::count() const
@@ -330,7 +331,7 @@ int QDeclarative1ListModel::count() const
 }
 
 /*!
-    \qmlmethod ListModel::clear()
+    \qmlmethod QtQuick1::ListModel::clear()
 
     Deletes all content from the model.
 
@@ -382,7 +383,7 @@ ModelObject_1 *ModelNode::object(const NestedListModel_1 *model)
 }
 
 /*!
-    \qmlmethod ListModel::remove(int index)
+    \qmlmethod QtQuick1::ListModel::remove(int index)
 
     Deletes the content at \a index from the model.
 
@@ -407,7 +408,7 @@ void QDeclarative1ListModel::remove(int index)
 }
 
 /*!
-    \qmlmethod ListModel::insert(int index, jsobject dict)
+    \qmlmethod QtQuick1::ListModel::insert(int index, jsobject dict)
 
     Adds a new item to the list model at position \a index, with the
     values in \a dict.
@@ -441,7 +442,7 @@ void QDeclarative1ListModel::insert(int index, const QScriptValue& valuemap)
 }
 
 /*!
-    \qmlmethod ListModel::move(int from, int to, int n)
+    \qmlmethod QtQuick1::ListModel::move(int from, int to, int n)
 
     Moves \a n items \a from one position \a to another.
 
@@ -485,7 +486,7 @@ void QDeclarative1ListModel::move(int from, int to, int n)
 }
 
 /*!
-    \qmlmethod ListModel::append(jsobject dict)
+    \qmlmethod QtQuick1::ListModel::append(jsobject dict)
 
     Adds a new item to the end of the list model, with the
     values in \a dict.
@@ -507,7 +508,7 @@ void QDeclarative1ListModel::append(const QScriptValue& valuemap)
 }
 
 /*!
-    \qmlmethod object ListModel::get(int index)
+    \qmlmethod object QtQuick1::ListModel::get(int index)
 
     Returns the item at \a index in the list model. This allows the item
     data to be accessed or modified from JavaScript:
@@ -544,7 +545,7 @@ QScriptValue QDeclarative1ListModel::get(int index) const
 }
 
 /*!
-    \qmlmethod ListModel::set(int index, jsobject dict)
+    \qmlmethod QtQuick1::ListModel::set(int index, jsobject dict)
 
     Changes the item at \a index in the list model with the
     values in \a dict. Properties not appearing in \a dict
@@ -589,7 +590,7 @@ void QDeclarative1ListModel::set(int index, const QScriptValue& valuemap, QList<
 }
 
 /*!
-    \qmlmethod ListModel::setProperty(int index, string property, variant value)
+    \qmlmethod QtQuick1::ListModel::setProperty(int index, string property, variant value)
 
     Changes the \a property of the item at \a index in the list model to \a value.
 
@@ -623,7 +624,7 @@ void QDeclarative1ListModel::setProperty(int index, const QString& property, con
 }
 
 /*!
-    \qmlmethod ListModel::sync()
+    \qmlmethod QtQuick1::ListModel::sync()
 
     Writes any unsaved changes to the list model after it has been modified
     from a worker script.
@@ -873,8 +874,9 @@ bool QDeclarative1ListModelParser::definesEmptyList(const QString &s)
 
 /*!
     \qmlclass ListElement QDeclarative1ListElement
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
-    \since 4.7
+    \since QtQuick 1.0
     \brief The ListElement element defines a data item in a ListModel.
 
     List elements are defined inside ListModel definitions, and represent items in a

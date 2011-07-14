@@ -89,16 +89,17 @@ void QDeclarative1Pen::setWidth(int w)
 
 /*!
     \qmlclass GradientStop QDeclarative1GradientStop
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The GradientStop item defines the color at a position in a Gradient.
 
     \sa Gradient
 */
 
 /*!
-    \qmlproperty real GradientStop::position
-    \qmlproperty color GradientStop::color
+    \qmlproperty real QtQuick1::GradientStop::position
+    \qmlproperty color QtQuick1::GradientStop::color
 
     The position and color properties describe the color used at a given
     position in a gradient, as represented by a gradient stop.
@@ -116,8 +117,9 @@ void QDeclarative1GradientStop::updateGradient()
 
 /*!
     \qmlclass Gradient QDeclarative1Gradient
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Gradient item defines a gradient fill.
 
     A gradient is defined by two or more colors, which will be blended seamlessly.
@@ -166,7 +168,7 @@ void QDeclarative1GradientStop::updateGradient()
 */
 
 /*!
-    \qmlproperty list<GradientStop> Gradient::stops
+    \qmlproperty list<GradientStop> QtQuick1::Gradient::stops
     This property holds the gradient stops describing the gradient.
 
     By default, this property contains an empty list.
@@ -198,8 +200,9 @@ void QDeclarative1Gradient::doUpdate()
 
 /*!
     \qmlclass Rectangle QDeclarative1Rectangle
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Rectangle item provides a filled rectangle with an optional border.
     \inherits Item
 
@@ -258,8 +261,8 @@ void QDeclarative1Rectangle::doUpdate()
 }
 
 /*!
-    \qmlproperty int Rectangle::border.width
-    \qmlproperty color Rectangle::border.color
+    \qmlproperty int QtQuick1::Rectangle::border.width
+    \qmlproperty color QtQuick1::Rectangle::border.color
 
     The width and color used to draw the border of the rectangle.
 
@@ -291,7 +294,7 @@ QDeclarative1Pen *QDeclarative1Rectangle::border()
 }
 
 /*!
-    \qmlproperty Gradient Rectangle::gradient
+    \qmlproperty Gradient QtQuick1::Rectangle::gradient
 
     The gradient to use to fill the rectangle.
 
@@ -335,7 +338,7 @@ void QDeclarative1Rectangle::setGradient(QDeclarative1Gradient *gradient)
 
 
 /*!
-    \qmlproperty real Rectangle::radius
+    \qmlproperty real QtQuick1::Rectangle::radius
     This property holds the corner radius used to draw a rounded rectangle.
 
     If radius is non-zero, the rectangle will be painted as a rounded rectangle, otherwise it will be
@@ -361,7 +364,7 @@ void QDeclarative1Rectangle::setRadius(qreal radius)
 }
 
 /*!
-    \qmlproperty color Rectangle::color
+    \qmlproperty color QtQuick1::Rectangle::color
     This property holds the color used to fill the rectangle.
 
     The default color is white.
@@ -565,7 +568,7 @@ void QDeclarative1Rectangle::drawRect(QPainter &p)
 }
 
 /*!
-    \qmlproperty bool Rectangle::smooth
+    \qmlproperty bool QtQuick1::Rectangle::smooth
 
     Set this property if you want the item to be smoothly scaled or
     transformed.  Smooth filtering gives better visual quality, but is slower.  If

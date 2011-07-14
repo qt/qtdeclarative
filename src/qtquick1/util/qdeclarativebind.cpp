@@ -74,8 +74,9 @@ public:
 
 /*!
     \qmlclass Binding QDeclarative1Bind
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Binding element allows arbitrary property bindings to be created.
 
     Sometimes it is necessary to bind to a property of an object that wasn't
@@ -108,7 +109,7 @@ QDeclarative1Bind::~QDeclarative1Bind()
 }
 
 /*!
-    \qmlproperty bool Binding::when
+    \qmlproperty bool QtQuick1::Binding::when
 
     This property holds when the binding is active.
     This should be set to an expression that evaluates to true when you want the binding to be active.
@@ -134,7 +135,7 @@ void QDeclarative1Bind::setWhen(bool v)
 }
 
 /*!
-    \qmlproperty Object Binding::target
+    \qmlproperty Object QtQuick1::Binding::target
 
     The object to be updated.
 */
@@ -152,7 +153,7 @@ void QDeclarative1Bind::setObject(QObject *obj)
 }
 
 /*!
-    \qmlproperty string Binding::property
+    \qmlproperty string QtQuick1::Binding::property
 
     The property to be updated.
 */
@@ -170,7 +171,7 @@ void QDeclarative1Bind::setProperty(const QString &p)
 }
 
 /*!
-    \qmlproperty any Binding::value
+    \qmlproperty any QtQuick1::Binding::value
 
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.

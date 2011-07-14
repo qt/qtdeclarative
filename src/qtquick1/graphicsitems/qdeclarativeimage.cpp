@@ -52,7 +52,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Image QDeclarative1Image
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-basic-visual-elements
     \brief The Image element displays an image in a declarative user interface
     \inherits Item
@@ -145,7 +146,7 @@ void QDeclarative1ImagePrivate::setPixmap(const QPixmap &pixmap)
 }
 
 /*!
-    \qmlproperty enumeration Image::fillMode
+    \qmlproperty enumeration QtQuick1::Image::fillMode
 
     Set this property to define what happens when the source image has a different size
     than the item.
@@ -258,8 +259,8 @@ void QDeclarative1Image::setFillMode(FillMode mode)
 
 /*!
 
-    \qmlproperty real Image::paintedWidth
-    \qmlproperty real Image::paintedHeight
+    \qmlproperty real QtQuick1::Image::paintedWidth
+    \qmlproperty real QtQuick1::Image::paintedHeight
 
     These properties hold the size of the image that is actually painted.
     In most cases it is the same as \c width and \c height, but when using a 
@@ -280,7 +281,7 @@ qreal QDeclarative1Image::paintedHeight() const
 }
 
 /*!
-    \qmlproperty enumeration Image::status
+    \qmlproperty enumeration QtQuick1::Image::status
 
     This property holds the status of image loading.  It can be one of:
     \list
@@ -317,7 +318,7 @@ qreal QDeclarative1Image::paintedHeight() const
 */
 
 /*!
-    \qmlproperty real Image::progress
+    \qmlproperty real QtQuick1::Image::progress
 
     This property holds the progress of image loading, from 0.0 (nothing loaded)
     to 1.0 (finished).
@@ -326,7 +327,7 @@ qreal QDeclarative1Image::paintedHeight() const
 */
 
 /*!
-    \qmlproperty bool Image::smooth
+    \qmlproperty bool QtQuick1::Image::smooth
 
     Set this property if you want the image to be smoothly filtered when scaled or
     transformed.  Smooth filtering gives better visual quality, but is slower.  If
@@ -339,7 +340,7 @@ qreal QDeclarative1Image::paintedHeight() const
 */
 
 /*!
-    \qmlproperty QSize Image::sourceSize
+    \qmlproperty QSize QtQuick1::Image::sourceSize
 
     This property holds the actual width and height of the loaded image.
 
@@ -449,7 +450,7 @@ QRectF QDeclarative1Image::boundingRect() const
 }
 
 /*!
-    \qmlproperty url Image::source
+    \qmlproperty url QtQuick1::Image::source
 
     Image can handle any image format supported by Qt, loaded from any URL scheme supported by Qt.
 
@@ -459,7 +460,7 @@ QRectF QDeclarative1Image::boundingRect() const
 */
 
 /*!
-    \qmlproperty bool Image::asynchronous
+    \qmlproperty bool QtQuick1::Image::asynchronous
 
     Specifies that images on the local filesystem should be loaded
     asynchronously in a separate thread.  The default value is
@@ -474,7 +475,7 @@ QRectF QDeclarative1Image::boundingRect() const
 */
 
 /*!
-    \qmlproperty bool Image::cache
+    \qmlproperty bool QtQuick1::Image::cache
     \since Quick 1.1
 
     Specifies whether the image should be cached. The default value is
@@ -483,7 +484,7 @@ QRectF QDeclarative1Image::boundingRect() const
 */
 
 /*!
-    \qmlproperty bool Image::mirror
+    \qmlproperty bool QtQuick1::Image::mirror
     \since Quick 1.1
 
     This property holds whether the image should be horizontally inverted

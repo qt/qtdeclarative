@@ -237,9 +237,10 @@ void QDeclarative1SpringAnimationPrivate::updateMode()
 
 /*!
     \qmlclass SpringAnimation QDeclarative1SpringAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
     \inherits NumberAnimation
-    \since 4.7
+    \since QtQuick 1.0
 
     \brief The SpringAnimation element allows a property to track a value in a spring-like motion.
 
@@ -275,7 +276,7 @@ QDeclarative1SpringAnimation::~QDeclarative1SpringAnimation()
 }
 
 /*!
-    \qmlproperty real SpringAnimation::velocity
+    \qmlproperty real QtQuick1::SpringAnimation::velocity
 
     This property holds the maximum velocity allowed when tracking the source.
 
@@ -297,7 +298,7 @@ void QDeclarative1SpringAnimation::setVelocity(qreal velocity)
 }
 
 /*!
-    \qmlproperty real SpringAnimation::spring
+    \qmlproperty real QtQuick1::SpringAnimation::spring
 
     This property describes how strongly the target is pulled towards the
     source. The default value is 0 (that is, the spring-like motion is disabled).
@@ -321,7 +322,7 @@ void QDeclarative1SpringAnimation::setSpring(qreal spring)
 }
 
 /*!
-    \qmlproperty real SpringAnimation::damping
+    \qmlproperty real QtQuick1::SpringAnimation::damping
     This property holds the spring damping value.
 
     This value describes how quickly the spring-like motion comes to rest.
@@ -347,7 +348,7 @@ void QDeclarative1SpringAnimation::setDamping(qreal damping)
 
 
 /*!
-    \qmlproperty real SpringAnimation::epsilon
+    \qmlproperty real QtQuick1::SpringAnimation::epsilon
     This property holds the spring epsilon.
 
     The epsilon is the rate and amount of change in the value which is close enough
@@ -369,7 +370,7 @@ void QDeclarative1SpringAnimation::setEpsilon(qreal epsilon)
 }
 
 /*!
-    \qmlproperty real SpringAnimation::modulus
+    \qmlproperty real QtQuick1::SpringAnimation::modulus
     This property holds the modulus value. The default value is 0.
 
     Setting a \a modulus forces the target value to "wrap around" at the modulus.
@@ -393,7 +394,7 @@ void QDeclarative1SpringAnimation::setModulus(qreal modulus)
 }
 
 /*!
-    \qmlproperty real SpringAnimation::mass
+    \qmlproperty real QtQuick1::SpringAnimation::mass
     This property holds the "mass" of the property being moved.
 
     The value is 1.0 by default.

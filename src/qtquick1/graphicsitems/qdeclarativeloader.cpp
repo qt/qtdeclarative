@@ -120,8 +120,9 @@ void QDeclarative1LoaderPrivate::initResize()
 
 /*!
     \qmlclass Loader QDeclarative1Loader
+    \inqmlmodule QtQuick 1
     \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Item
 
     \brief The Loader item allows dynamically loading an Item-based
@@ -247,7 +248,7 @@ QDeclarative1Loader::~QDeclarative1Loader()
 }
 
 /*!
-    \qmlproperty url Loader::source
+    \qmlproperty url QtQuick1::Loader::source
     This property holds the URL of the QML component to instantiate.
 
     Note the QML component must be an \l{Item}-based component. The loader
@@ -291,7 +292,7 @@ void QDeclarative1Loader::setSource(const QUrl &url)
 }
 
 /*!
-    \qmlproperty Component Loader::sourceComponent
+    \qmlproperty Component QtQuick1::Loader::sourceComponent
     This property holds the \l{Component} to instantiate.
 
     \qml
@@ -427,7 +428,7 @@ void QDeclarative1LoaderPrivate::_q_sourceLoaded()
 }
 
 /*!
-    \qmlproperty enumeration Loader::status
+    \qmlproperty enumeration QtQuick1::Loader::status
 
     This property holds the status of QML loading.  It can be one of:
     \list
@@ -489,7 +490,7 @@ void QDeclarative1Loader::componentComplete()
 
 
 /*!
-    \qmlsignal Loader::onLoaded()
+    \qmlsignal QtQuick1::Loader::onLoaded()
 
     This handler is called when the \l status becomes \c Loader.Ready, or on successful
     initial load.
@@ -497,7 +498,7 @@ void QDeclarative1Loader::componentComplete()
 
 
 /*!
-\qmlproperty real Loader::progress
+\qmlproperty real QtQuick1::Loader::progress
 
 This property holds the progress of loading QML data from the network, from
 0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
@@ -554,7 +555,7 @@ void QDeclarative1LoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
 }
 
 /*!
-    \qmlproperty Item Loader::item
+    \qmlproperty Item QtQuick1::Loader::item
     This property holds the top-level item that is currently loaded.
 */
 QGraphicsObject *QDeclarative1Loader::item() const

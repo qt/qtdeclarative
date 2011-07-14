@@ -55,9 +55,10 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass BorderImage QDeclarative1BorderImage
+    \inqmlmodule QtQuick 1
     \brief The BorderImage element provides an image that can be used as a border.
     \inherits Item
-    \since 4.7
+    \since QtQuick 1.0
     \ingroup qml-basic-visual-elements
 
     The BorderImage element is used to create borders out of images by scaling or tiling
@@ -152,7 +153,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlproperty bool BorderImage::asynchronous
+    \qmlproperty bool QtQuick1::BorderImage::asynchronous
 
     Specifies that images on the local filesystem should be loaded
     asynchronously in a separate thread.  The default value is
@@ -177,7 +178,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
         d->sciReply->deleteLater();
 }
 /*!
-    \qmlproperty enumeration BorderImage::status
+    \qmlproperty enumeration QtQuick1::BorderImage::status
 
     This property describes the status of image loading.  It can be one of:
 
@@ -192,7 +193,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty real BorderImage::progress
+    \qmlproperty real QtQuick1::BorderImage::progress
 
     This property holds the progress of image loading, from 0.0 (nothing loaded)
     to 1.0 (finished).
@@ -201,7 +202,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty bool BorderImage::smooth
+    \qmlproperty bool QtQuick1::BorderImage::smooth
 
     Set this property if you want the image to be smoothly filtered when scaled or
     transformed.  Smooth filtering gives better visual quality, but is slower.  If
@@ -216,7 +217,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty bool BorderImage::cache
+    \qmlproperty bool QtQuick1::BorderImage::cache
     \since Quick 1.1
 
     Specifies whether the image should be cached. The default value is
@@ -225,7 +226,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty bool BorderImage::mirror
+    \qmlproperty bool QtQuick1::BorderImage::mirror
     \since Quick 1.1
 
     This property holds whether the image should be horizontally inverted
@@ -235,7 +236,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty url BorderImage::source
+    \qmlproperty url QtQuick1::BorderImage::source
 
     This property holds the URL that refers to the source image.
 
@@ -263,7 +264,7 @@ QDeclarative1BorderImage::~QDeclarative1BorderImage()
 */
 
 /*!
-    \qmlproperty QSize BorderImage::sourceSize
+    \qmlproperty QSize QtQuick1::BorderImage::sourceSize
 
     This property holds the actual width and height of the loaded image.
 
@@ -371,10 +372,10 @@ void QDeclarative1BorderImage::load()
 }
 
 /*!
-    \qmlproperty int BorderImage::border.left
-    \qmlproperty int BorderImage::border.right
-    \qmlproperty int BorderImage::border.top
-    \qmlproperty int BorderImage::border.bottom
+    \qmlproperty int QtQuick1::BorderImage::border.left
+    \qmlproperty int QtQuick1::BorderImage::border.right
+    \qmlproperty int QtQuick1::BorderImage::border.top
+    \qmlproperty int QtQuick1::BorderImage::border.bottom
 
     The 4 border lines (2 horizontal and 2 vertical) break the image into 9 sections,
     as shown below:
@@ -406,8 +407,8 @@ QDeclarative1ScaleGrid *QDeclarative1BorderImage::border()
 }
 
 /*!
-    \qmlproperty enumeration BorderImage::horizontalTileMode
-    \qmlproperty enumeration BorderImage::verticalTileMode
+    \qmlproperty enumeration QtQuick1::BorderImage::horizontalTileMode
+    \qmlproperty enumeration QtQuick1::BorderImage::verticalTileMode
 
     This property describes how to repeat or stretch the middle parts of the border image.
 

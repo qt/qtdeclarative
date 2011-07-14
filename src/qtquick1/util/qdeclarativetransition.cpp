@@ -55,8 +55,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Transition QDeclarative1Transition
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Transition element defines animated transitions that occur on state changes.
 
     A Transition defines the animations to be applied when a \l State change occurs.
@@ -226,8 +227,8 @@ void QDeclarative1Transition::prepare(QDeclarative1StateOperation::ActionList &a
 }
 
 /*!
-    \qmlproperty string Transition::from
-    \qmlproperty string Transition::to
+    \qmlproperty string QtQuick1::Transition::from
+    \qmlproperty string QtQuick1::Transition::to
 
     These properties indicate the state changes that trigger the transition.
 
@@ -265,7 +266,7 @@ void QDeclarative1Transition::setFromState(const QString &f)
 }
 
 /*!
-    \qmlproperty bool Transition::reversible
+    \qmlproperty bool QtQuick1::Transition::reversible
     This property holds whether the transition should be automatically reversed when the conditions that triggered this transition are reversed.
 
     The default value is false.
@@ -321,7 +322,7 @@ void QDeclarative1Transition::setToState(const QString &t)
 }
 
 /*!
-    \qmlproperty list<Animation> Transition::animations
+    \qmlproperty list<Animation> QtQuick1::Transition::animations
     \default
 
     This property holds a list of the animations to be run for this transition.

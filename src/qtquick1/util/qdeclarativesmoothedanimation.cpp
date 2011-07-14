@@ -252,8 +252,9 @@ void QSmoothedAnimation_1::init()
 
 /*!
     \qmlclass SmoothedAnimation QDeclarative1SmoothedAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits NumberAnimation
     \brief The SmoothedAnimation element allows a property to smoothly track a value.
 
@@ -381,7 +382,7 @@ void QDeclarative1SmoothedAnimation::transition(QDeclarative1StateActions &actio
 }
 
 /*!
-    \qmlproperty enumeration SmoothedAnimation::reversingMode
+    \qmlproperty enumeration QtQuick1::SmoothedAnimation::reversingMode
 
     Sets how the SmoothedAnimation behaves if an animation direction is reversed.
 
@@ -411,7 +412,7 @@ void QDeclarative1SmoothedAnimation::setReversingMode(ReversingMode m)
 }
 
 /*!
-    \qmlproperty int SmoothedAnimation::duration
+    \qmlproperty int QtQuick1::SmoothedAnimation::duration
 
     This property holds the animation duration, in msecs, used when tracking the source.
 
@@ -444,7 +445,7 @@ qreal QDeclarative1SmoothedAnimation::velocity() const
 }
 
 /*!
-    \qmlproperty real SmoothedAnimation::velocity
+    \qmlproperty real QtQuick1::SmoothedAnimation::velocity
 
     This property holds the average velocity allowed when tracking the 'to' value.
 
@@ -467,7 +468,7 @@ void QDeclarative1SmoothedAnimation::setVelocity(qreal v)
 }
 
 /*!
-    \qmlproperty int SmoothedAnimation::maximumEasingTime
+    \qmlproperty int QtQuick1::SmoothedAnimation::maximumEasingTime
 
     This property specifies the maximum time, in msecs, any "eases" during the follow should take.
     Setting this property causes the velocity to "level out" after at a time.  Setting

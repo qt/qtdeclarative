@@ -1545,8 +1545,9 @@ void QDeclarative1ListViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
 
 /*!
     \qmlclass ListView QDeclarative1ListView
+    \inqmlmodule QtQuick 1
     \ingroup qml-view-elements
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Flickable
     \brief The ListView item provides a list view of items provided by a model.
 
@@ -1684,17 +1685,17 @@ QDeclarative1ListView::~QDeclarative1ListView()
 */
 
 /*!
-    \qmlattachedsignal ListView::onAdd()
+    \qmlattachedsignal QtQuick1::ListView::onAdd()
     This attached handler is called immediately after an item is added to the view.
 */
 
 /*!
-    \qmlattachedsignal ListView::onRemove()
+    \qmlattachedsignal QtQuick1::ListView::onRemove()
     This attached handler is called immediately before an item is removed from the view.
 */
 
 /*!
-    \qmlproperty model ListView::model
+    \qmlproperty model QtQuick1::ListView::model
     This property holds the model providing data for the list.
 
     The model provides the set of data that is used to create the items
@@ -1778,7 +1779,7 @@ void QDeclarative1ListView::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component ListView::delegate
+    \qmlproperty Component QtQuick1::ListView::delegate
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -1845,8 +1846,8 @@ void QDeclarative1ListView::setDelegate(QDeclarativeComponent *delegate)
 }
 
 /*!
-    \qmlproperty int ListView::currentIndex
-    \qmlproperty Item ListView::currentItem
+    \qmlproperty int QtQuick1::ListView::currentIndex
+    \qmlproperty Item QtQuick1::ListView::currentItem
 
     The \c currentIndex property holds the index of the current item, and
     \c currentItem holds the current item.   Setting the currentIndex to -1
@@ -1891,7 +1892,7 @@ QDeclarativeItem *QDeclarative1ListView::currentItem()
 }
 
 /*!
-  \qmlproperty Item ListView::highlightItem
+  \qmlproperty Item QtQuick1::ListView::highlightItem
 
     This holds the highlight item created from the \l highlight component.
 
@@ -1909,7 +1910,7 @@ QDeclarativeItem *QDeclarative1ListView::highlightItem()
 }
 
 /*!
-  \qmlproperty int ListView::count
+  \qmlproperty int QtQuick1::ListView::count
   This property holds the number of items in the view.
 */
 int QDeclarative1ListView::count() const
@@ -1921,7 +1922,7 @@ int QDeclarative1ListView::count() const
 }
 
 /*!
-    \qmlproperty Component ListView::highlight
+    \qmlproperty Component QtQuick1::ListView::highlight
     This property holds the component to use as the highlight.
 
     An instance of the highlight component is created for each list.
@@ -1950,7 +1951,7 @@ void QDeclarative1ListView::setHighlight(QDeclarativeComponent *highlight)
 }
 
 /*!
-    \qmlproperty bool ListView::highlightFollowsCurrentItem
+    \qmlproperty bool QtQuick1::ListView::highlightFollowsCurrentItem
     This property holds whether the highlight is managed by the view.
 
     If this property is true (the default value), the highlight is moved smoothly
@@ -1993,9 +1994,9 @@ void QDeclarative1ListView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 //###Possibly rename these properties, since they are very useful even without a highlight?
 /*!
-    \qmlproperty real ListView::preferredHighlightBegin
-    \qmlproperty real ListView::preferredHighlightEnd
-    \qmlproperty enumeration ListView::highlightRangeMode
+    \qmlproperty real QtQuick1::ListView::preferredHighlightBegin
+    \qmlproperty real QtQuick1::ListView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick1::ListView::highlightRangeMode
 
     These properties define the preferred range of the highlight (for the current item)
     within the view. The \c preferredHighlightBegin value must be less than the
@@ -2093,7 +2094,7 @@ void QDeclarative1ListView::setHighlightRangeMode(HighlightRangeMode mode)
 }
 
 /*!
-    \qmlproperty real ListView::spacing
+    \qmlproperty real QtQuick1::ListView::spacing
 
     This property holds the spacing between items.
 
@@ -2116,7 +2117,7 @@ void QDeclarative1ListView::setSpacing(qreal spacing)
 }
 
 /*!
-    \qmlproperty enumeration ListView::orientation
+    \qmlproperty enumeration QtQuick1::ListView::orientation
     This property holds the orientation of the list.
 
     Possible values:
@@ -2162,7 +2163,7 @@ void QDeclarative1ListView::setOrientation(QDeclarative1ListView::Orientation or
 }
 
 /*!
-  \qmlproperty enumeration ListView::layoutDirection
+  \qmlproperty enumeration QtQuick1::ListView::layoutDirection
   This property holds the layout direction of the horizontal list.
 
   Possible values:
@@ -2193,7 +2194,7 @@ void QDeclarative1ListView::setLayoutDirection(Qt::LayoutDirection layoutDirecti
 }
 
 /*!
-    \qmlproperty enumeration ListView::effectiveLayoutDirection
+    \qmlproperty enumeration QtQuick1::ListView::effectiveLayoutDirection
     This property holds the effective layout direction of the horizontal list.
 
     When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
@@ -2213,7 +2214,7 @@ Qt::LayoutDirection QDeclarative1ListView::effectiveLayoutDirection() const
 }
 
 /*!
-    \qmlproperty bool ListView::keyNavigationWraps
+    \qmlproperty bool QtQuick1::ListView::keyNavigationWraps
     This property holds whether the list wraps key navigation. 
 
     If this is true, key navigation that would move the current item selection
@@ -2238,7 +2239,7 @@ void QDeclarative1ListView::setWrapEnabled(bool wrap)
 }
 
 /*!
-    \qmlproperty int ListView::cacheBuffer
+    \qmlproperty int QtQuick1::ListView::cacheBuffer
     This property determines whether delegates are retained outside the
     visible area of the view.
 
@@ -2276,9 +2277,9 @@ void QDeclarative1ListView::setCacheBuffer(int b)
 }
 
 /*!
-    \qmlproperty string ListView::section.property
-    \qmlproperty enumeration ListView::section.criteria
-    \qmlproperty Component ListView::section.delegate
+    \qmlproperty string QtQuick1::ListView::section.property
+    \qmlproperty enumeration QtQuick1::ListView::section.criteria
+    \qmlproperty Component QtQuick1::ListView::section.delegate
 
     These properties hold the expression to be evaluated for the \l section attached property.
 
@@ -2337,7 +2338,7 @@ QDeclarative1ViewSection *QDeclarative1ListView::sectionCriteria()
 }
 
 /*!
-    \qmlproperty string ListView::currentSection
+    \qmlproperty string QtQuick1::ListView::currentSection
     This property holds the section that is currently at the beginning of the view.
 */
 QString QDeclarative1ListView::currentSection() const
@@ -2347,10 +2348,10 @@ QString QDeclarative1ListView::currentSection() const
 }
 
 /*!
-    \qmlproperty real ListView::highlightMoveSpeed
-    \qmlproperty int ListView::highlightMoveDuration
-    \qmlproperty real ListView::highlightResizeSpeed
-    \qmlproperty int ListView::highlightResizeDuration
+    \qmlproperty real QtQuick1::ListView::highlightMoveSpeed
+    \qmlproperty int QtQuick1::ListView::highlightMoveDuration
+    \qmlproperty real QtQuick1::ListView::highlightResizeSpeed
+    \qmlproperty int QtQuick1::ListView::highlightResizeDuration
 
     These properties hold the move and resize animation speed of the highlight delegate.
 
@@ -2434,7 +2435,7 @@ void QDeclarative1ListView::setHighlightResizeDuration(int duration)
 }
 
 /*!
-    \qmlproperty enumeration ListView::snapMode
+    \qmlproperty enumeration QtQuick1::ListView::snapMode
 
     This property determines how the view scrolling will settle following a drag or flick.
     The possible values are:
@@ -2470,7 +2471,7 @@ void QDeclarative1ListView::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \qmlproperty Component ListView::footer
+    \qmlproperty Component QtQuick1::ListView::footer
     This property holds the component to use as the footer.
 
     An instance of the footer component is created for each view.  The
@@ -2508,7 +2509,7 @@ void QDeclarative1ListView::setFooter(QDeclarativeComponent *footer)
 }
 
 /*!
-    \qmlproperty Component ListView::header
+    \qmlproperty Component QtQuick1::ListView::header
     This property holds the component to use as the header.
 
     An instance of the header component is created for each view.  The
@@ -2853,7 +2854,7 @@ void QDeclarative1ListView::geometryChanged(const QRectF &newGeometry,
 
 
 /*!
-    \qmlmethod ListView::incrementCurrentIndex()
+    \qmlmethod QtQuick1::ListView::incrementCurrentIndex()
 
     Increments the current index.  The current index will wrap
     if keyNavigationWraps is true and it is currently at the end.
@@ -2873,7 +2874,7 @@ void QDeclarative1ListView::incrementCurrentIndex()
 }
 
 /*!
-    \qmlmethod ListView::decrementCurrentIndex()
+    \qmlmethod QtQuick1::ListView::decrementCurrentIndex()
 
     Decrements the current index.  The current index will wrap
     if keyNavigationWraps is true and it is currently at the beginning.
@@ -2975,7 +2976,7 @@ void QDeclarative1ListViewPrivate::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod ListView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod QtQuick1::ListView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:
@@ -3016,8 +3017,8 @@ void QDeclarative1ListView::positionViewAtIndex(int index, int mode)
 }
 
 /*!
-    \qmlmethod ListView::positionViewAtBeginning()
-    \qmlmethod ListView::positionViewAtEnd()
+    \qmlmethod QtQuick1::ListView::positionViewAtBeginning()
+    \qmlmethod QtQuick1::ListView::positionViewAtEnd()
     \since Quick 1.1
 
     Positions the view at the beginning or end, taking into account any header or footer.
@@ -3052,7 +3053,7 @@ void QDeclarative1ListView::positionViewAtEnd()
 }
 
 /*!
-    \qmlmethod int ListView::indexAt(int x, int y)
+    \qmlmethod int QtQuick1::ListView::indexAt(int x, int y)
 
     Returns the index of the visible item containing the point \a x, \a y in content
     coordinates.  If there is no item at the point specified, or the item is

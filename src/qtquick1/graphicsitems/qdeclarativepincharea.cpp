@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass PinchEvent QDeclarative1PinchEvent
+    \inqmlmodule QtQuick 1
     \ingroup qml-event-elements
     \brief The PinchEvent object provides information about a pinch event.
 
@@ -75,9 +76,9 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty QPointF PinchEvent::center
-    \qmlproperty QPointF PinchEvent::startCenter
-    \qmlproperty QPointF PinchEvent::previousCenter
+    \qmlproperty QPointF QtQuick1::PinchEvent::center
+    \qmlproperty QPointF QtQuick1::PinchEvent::startCenter
+    \qmlproperty QPointF QtQuick1::PinchEvent::previousCenter
 
     These properties hold the position of the center point between the two touch points.
 
@@ -89,8 +90,8 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real PinchEvent::scale
-    \qmlproperty real PinchEvent::previousScale
+    \qmlproperty real QtQuick1::PinchEvent::scale
+    \qmlproperty real QtQuick1::PinchEvent::previousScale
 
     These properties hold the scale factor determined by the change in distance between the two touch points.
 
@@ -103,9 +104,9 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real PinchEvent::angle
-    \qmlproperty real PinchEvent::previousAngle
-    \qmlproperty real PinchEvent::rotation
+    \qmlproperty real QtQuick1::PinchEvent::angle
+    \qmlproperty real QtQuick1::PinchEvent::previousAngle
+    \qmlproperty real QtQuick1::PinchEvent::rotation
 
     These properties hold the angle between the two touch points.
 
@@ -119,10 +120,10 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty QPointF PinchEvent::point1
-    \qmlproperty QPointF PinchEvent::startPoint1
-    \qmlproperty QPointF PinchEvent::point2
-    \qmlproperty QPointF PinchEvent::startPoint2
+    \qmlproperty QPointF QtQuick1::PinchEvent::point1
+    \qmlproperty QPointF QtQuick1::PinchEvent::startPoint1
+    \qmlproperty QPointF QtQuick1::PinchEvent::point2
+    \qmlproperty QPointF QtQuick1::PinchEvent::startPoint2
 
     These properties provide the actual touch points generating the pinch.
 
@@ -133,7 +134,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool PinchEvent::accepted
+    \qmlproperty bool QtQuick1::PinchEvent::accepted
 
     Setting this property to false in the \c PinchArea::onPinchStarted handler
     will result in no further pinch events being generated, and the gesture
@@ -141,7 +142,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty int PinchEvent::pointCount
+    \qmlproperty int QtQuick1::PinchEvent::pointCount
 
     Holds the number of points currently touched.  The PinchArea will not react
     until two touch points have initited a gesture, but will remain active until
@@ -163,6 +164,7 @@ QDeclarative1PinchAreaPrivate::~QDeclarative1PinchAreaPrivate()
 
 /*!
     \qmlclass PinchArea QDeclarative1PinchArea
+    \inqmlmodule QtQuick 1
     \brief The PinchArea item enables simple pinch gesture handling.
     \inherits Item
 
@@ -186,7 +188,7 @@ QDeclarative1PinchAreaPrivate::~QDeclarative1PinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal PinchArea::onPinchStarted()
+    \qmlsignal QtQuick1::PinchArea::onPinchStarted()
 
     This handler is called when the pinch area detects that a pinch gesture has started.
 
@@ -198,7 +200,7 @@ QDeclarative1PinchAreaPrivate::~QDeclarative1PinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal PinchArea::onPinchUpdated()
+    \qmlsignal QtQuick1::PinchArea::onPinchUpdated()
 
     This handler is called when the pinch area detects that a pinch gesture has changed.
 
@@ -207,7 +209,7 @@ QDeclarative1PinchAreaPrivate::~QDeclarative1PinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal PinchArea::onPinchFinished()
+    \qmlsignal QtQuick1::PinchArea::onPinchFinished()
 
     This handler is called when the pinch area detects that a pinch gesture has finished.
 
@@ -217,17 +219,17 @@ QDeclarative1PinchAreaPrivate::~QDeclarative1PinchAreaPrivate()
 
 
 /*!
-    \qmlproperty Item PinchArea::pinch.target
-    \qmlproperty bool PinchArea::pinch.active
-    \qmlproperty real PinchArea::pinch.minimumScale
-    \qmlproperty real PinchArea::pinch.maximumScale
-    \qmlproperty real PinchArea::pinch.minimumRotation
-    \qmlproperty real PinchArea::pinch.maximumRotation
-    \qmlproperty enumeration PinchArea::pinch.dragAxis
-    \qmlproperty real PinchArea::pinch.minimumX
-    \qmlproperty real PinchArea::pinch.maximumX
-    \qmlproperty real PinchArea::pinch.minimumY
-    \qmlproperty real PinchArea::pinch.maximumY
+    \qmlproperty Item QtQuick1::PinchArea::pinch.target
+    \qmlproperty bool QtQuick1::PinchArea::pinch.active
+    \qmlproperty real QtQuick1::PinchArea::pinch.minimumScale
+    \qmlproperty real QtQuick1::PinchArea::pinch.maximumScale
+    \qmlproperty real QtQuick1::PinchArea::pinch.minimumRotation
+    \qmlproperty real QtQuick1::PinchArea::pinch.maximumRotation
+    \qmlproperty enumeration QtQuick1::PinchArea::pinch.dragAxis
+    \qmlproperty real QtQuick1::PinchArea::pinch.minimumX
+    \qmlproperty real QtQuick1::PinchArea::pinch.maximumX
+    \qmlproperty real QtQuick1::PinchArea::pinch.minimumY
+    \qmlproperty real QtQuick1::PinchArea::pinch.maximumY
 
     \c pinch provides a convenient way to make an item react to pinch gestures.
 
@@ -253,7 +255,7 @@ QDeclarative1PinchArea::~QDeclarative1PinchArea()
 }
 
 /*!
-    \qmlproperty bool PinchArea::enabled
+    \qmlproperty bool QtQuick1::PinchArea::enabled
     This property holds whether the item accepts pinch gestures.
 
     This property defaults to true.

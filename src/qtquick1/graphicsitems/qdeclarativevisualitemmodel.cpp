@@ -130,8 +130,9 @@ public:
 
 /*!
     \qmlclass VisualItemModel QDeclarative1VisualItemModel
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
-  \since 4.7
+  \since QtQuick 1.0
     \brief The VisualItemModel allows items to be provided to a view.
 
     A VisualItemModel contains the visual items to be used in a view.
@@ -185,7 +186,7 @@ QDeclarativeListProperty<QDeclarativeItem> QDeclarative1VisualItemModel::childre
 }
 
 /*!
-    \qmlproperty int VisualItemModel::count
+    \qmlproperty int QtQuick1::VisualItemModel::count
 
     The number of items in the model.  This property is readonly.
 */
@@ -643,6 +644,7 @@ QDeclarative1VisualDataModelData *QDeclarative1VisualDataModelPrivate::data(QObj
 
 /*!
     \qmlclass VisualDataModel QDeclarative1VisualDataModel
+    \inqmlmodule QtQuick 1
     \ingroup qml-working-with-data
     \brief The VisualDataModel encapsulates a model and delegate
 
@@ -680,7 +682,7 @@ QDeclarative1VisualDataModel::~QDeclarative1VisualDataModel()
 }
 
 /*!
-    \qmlproperty model VisualDataModel::model
+    \qmlproperty model QtQuick1::VisualDataModel::model
     This property holds the model providing data for the VisualDataModel.
 
     The model provides a set of data that is used to create the items
@@ -804,7 +806,7 @@ void QDeclarative1VisualDataModel::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component VisualDataModel::delegate
+    \qmlproperty Component QtQuick1::VisualDataModel::delegate
 
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -835,7 +837,7 @@ void QDeclarative1VisualDataModel::setDelegate(QDeclarativeComponent *delegate)
 }
 
 /*!
-    \qmlproperty QModelIndex VisualDataModel::rootIndex
+    \qmlproperty QModelIndex QtQuick1::VisualDataModel::rootIndex
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  \c rootIndex allows the children of
@@ -891,7 +893,7 @@ void QDeclarative1VisualDataModel::setRootIndex(const QVariant &root)
 
 
 /*!
-    \qmlmethod QModelIndex VisualDataModel::modelIndex(int index)
+    \qmlmethod QModelIndex QtQuick1::VisualDataModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -911,7 +913,7 @@ QVariant QDeclarative1VisualDataModel::modelIndex(int idx) const
 }
 
 /*!
-    \qmlmethod QModelIndex VisualDataModel::parentModelIndex()
+    \qmlmethod QModelIndex QtQuick1::VisualDataModel::parentModelIndex()
 
     QAbstractItemModel provides a hierarchical tree of data, whereas
     QML only operates on list data.  This function assists in using
@@ -1007,7 +1009,7 @@ QDeclarative1VisualDataModel::ReleaseFlags QDeclarative1VisualDataModel::release
 }
 
 /*!
-    \qmlproperty object VisualDataModel::parts
+    \qmlproperty object QtQuick1::VisualDataModel::parts
 
     The \a parts property selects a VisualDataModel which creates
     delegates from the part named.  This is used in conjunction with

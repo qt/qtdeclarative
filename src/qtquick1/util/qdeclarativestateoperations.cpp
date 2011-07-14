@@ -172,6 +172,7 @@ void QDeclarative1ParentChangePrivate::doChange(QDeclarativeItem *targetParent, 
 /*!
     \preliminary
     \qmlclass ParentChange QDeclarative1ParentChange
+    \inqmlmodule QtQuick 1
     \ingroup qml-state-elements
     \brief The ParentChange element allows you to reparent an Item in a state change.
 
@@ -207,12 +208,12 @@ QDeclarative1ParentChange::~QDeclarative1ParentChange()
 }
 
 /*!
-    \qmlproperty real ParentChange::x
-    \qmlproperty real ParentChange::y
-    \qmlproperty real ParentChange::width
-    \qmlproperty real ParentChange::height
-    \qmlproperty real ParentChange::scale
-    \qmlproperty real ParentChange::rotation
+    \qmlproperty real QtQuick1::ParentChange::x
+    \qmlproperty real QtQuick1::ParentChange::y
+    \qmlproperty real QtQuick1::ParentChange::width
+    \qmlproperty real QtQuick1::ParentChange::height
+    \qmlproperty real QtQuick1::ParentChange::scale
+    \qmlproperty real QtQuick1::ParentChange::rotation
     These properties hold the new position, size, scale, and rotation
     for the item in this state.
 */
@@ -347,7 +348,7 @@ QDeclarativeItem *QDeclarative1ParentChange::originalParent() const
 }
 
 /*!
-    \qmlproperty Item ParentChange::target
+    \qmlproperty Item QtQuick1::ParentChange::target
     This property holds the item to be reparented
 */
 
@@ -364,7 +365,7 @@ void QDeclarative1ParentChange::setObject(QDeclarativeItem *target)
 }
 
 /*!
-    \qmlproperty Item ParentChange::parent
+    \qmlproperty Item QtQuick1::ParentChange::parent
     This property holds the new parent for the item in this state.
 */
 
@@ -601,6 +602,7 @@ public:
 
 /*!
     \qmlclass StateChangeScript QDeclarative1StateChangeScript
+    \inqmlmodule QtQuick 1
     \ingroup qml-state-elements
     \brief The StateChangeScript element allows you to run a script in a state.
 
@@ -623,7 +625,7 @@ QDeclarative1StateChangeScript::~QDeclarative1StateChangeScript()
 }
 
 /*!
-    \qmlproperty script StateChangeScript::script
+    \qmlproperty script QtQuick1::StateChangeScript::script
     This property holds the script to run when the state is current.
 */
 QDeclarativeScriptString QDeclarative1StateChangeScript::script() const
@@ -639,7 +641,7 @@ void QDeclarative1StateChangeScript::setScript(const QDeclarativeScriptString &s
 }
 
 /*!
-    \qmlproperty string StateChangeScript::name
+    \qmlproperty string QtQuick1::StateChangeScript::name
     This property holds the name of the script. This name can be used by a
     ScriptAction to target a specific script.
 
@@ -688,6 +690,7 @@ QString QDeclarative1StateChangeScript::typeName() const
 
 /*!
     \qmlclass AnchorChanges QDeclarative1AnchorChanges
+    \inqmlmodule QtQuick 1
     \ingroup qml-state-elements
     \brief The AnchorChanges element allows you to change the anchors of an item in a state.
 
@@ -1039,7 +1042,7 @@ public:
 };
 
 /*!
-    \qmlproperty Item AnchorChanges::target
+    \qmlproperty Item QtQuick1::AnchorChanges::target
     This property holds the \l Item for which the anchor changes will be applied.
 */
 
@@ -1121,13 +1124,13 @@ void QDeclarative1AnchorChanges::setObject(QDeclarativeItem *target)
 }
 
 /*!
-    \qmlproperty AnchorLine AnchorChanges::anchors.left
-    \qmlproperty AnchorLine AnchorChanges::anchors.right
-    \qmlproperty AnchorLine AnchorChanges::anchors.horizontalCenter
-    \qmlproperty AnchorLine AnchorChanges::anchors.top
-    \qmlproperty AnchorLine AnchorChanges::anchors.bottom
-    \qmlproperty AnchorLine AnchorChanges::anchors.verticalCenter
-    \qmlproperty AnchorLine AnchorChanges::anchors.baseline
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.left
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.right
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.horizontalCenter
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.top
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.bottom
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.verticalCenter
+    \qmlproperty AnchorLine QtQuick1::AnchorChanges::anchors.baseline
 
     These properties change the respective anchors of the item.
 

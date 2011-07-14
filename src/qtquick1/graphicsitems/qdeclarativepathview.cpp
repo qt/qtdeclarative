@@ -348,8 +348,9 @@ void QDeclarative1PathViewPrivate::regenerate()
 
 /*!
     \qmlclass PathView QDeclarative1PathView
+    \inqmlmodule QtQuick 1
     \ingroup qml-view-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The PathView element lays out model-provided items on a path.
     \inherits Item
 
@@ -467,7 +468,7 @@ QDeclarative1PathView::~QDeclarative1PathView()
 */
 
 /*!
-    \qmlproperty model PathView::model
+    \qmlproperty model QtQuick1::PathView::model
     This property holds the model providing data for the view.
 
     The model provides a set of data that is used to create the items for the view.
@@ -538,7 +539,7 @@ void QDeclarative1PathView::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty int PathView::count
+    \qmlproperty int QtQuick1::PathView::count
     This property holds the number of items in the model.
 */
 int QDeclarative1PathView::count() const
@@ -548,7 +549,7 @@ int QDeclarative1PathView::count() const
 }
 
 /*!
-    \qmlproperty Path PathView::path
+    \qmlproperty Path QtQuick1::PathView::path
     This property holds the path used to lay out the items.
     For more information see the \l Path documentation.
 */
@@ -579,7 +580,7 @@ void QDeclarative1PathView::setPath(QDeclarative1Path *path)
 }
 
 /*!
-    \qmlproperty int PathView::currentIndex
+    \qmlproperty int QtQuick1::PathView::currentIndex
     This property holds the index of the current item.
 */
 int QDeclarative1PathView::currentIndex() const
@@ -624,7 +625,7 @@ void QDeclarative1PathView::setCurrentIndex(int idx)
 }
 
 /*!
-    \qmlmethod PathView::incrementCurrentIndex()
+    \qmlmethod QtQuick1::PathView::incrementCurrentIndex()
 
     Increments the current index.
 
@@ -639,7 +640,7 @@ void QDeclarative1PathView::incrementCurrentIndex()
 
 
 /*!
-    \qmlmethod PathView::decrementCurrentIndex()
+    \qmlmethod QtQuick1::PathView::decrementCurrentIndex()
 
     Decrements the current index.
 
@@ -658,7 +659,7 @@ void QDeclarative1PathView::decrementCurrentIndex()
 }
 
 /*!
-    \qmlproperty real PathView::offset
+    \qmlproperty real QtQuick1::PathView::offset
 
     The offset specifies how far along the path the items are from their initial positions.
     This is a real number that ranges from 0.0 to the count of items in the model.
@@ -698,7 +699,7 @@ void QDeclarative1PathViewPrivate::setAdjustedOffset(qreal o)
 }
 
 /*!
-    \qmlproperty Component PathView::highlight
+    \qmlproperty Component QtQuick1::PathView::highlight
     This property holds the component to use as the highlight.
 
     An instance of the highlight component will be created for each view.
@@ -739,7 +740,7 @@ void QDeclarative1PathView::setHighlight(QDeclarativeComponent *highlight)
 }
 
 /*!
-  \qmlproperty Item PathView::highlightItem
+  \qmlproperty Item QtQuick1::PathView::highlightItem
 
   \c highlightItem holds the highlight item, which was created
   from the \l highlight component.
@@ -752,9 +753,9 @@ QDeclarativeItem *QDeclarative1PathView::highlightItem()
     return d->highlightItem;
 }
 /*!
-    \qmlproperty real PathView::preferredHighlightBegin
-    \qmlproperty real PathView::preferredHighlightEnd
-    \qmlproperty enumeration PathView::highlightRangeMode
+    \qmlproperty real QtQuick1::PathView::preferredHighlightBegin
+    \qmlproperty real QtQuick1::PathView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick1::PathView::highlightRangeMode
 
     These properties set the preferred range of the highlight (current item)
     within the view.  The preferred values must be in the range 0.0-1.0.
@@ -838,7 +839,7 @@ void QDeclarative1PathView::setHighlightRangeMode(HighlightRangeMode mode)
 
 
 /*!
-    \qmlproperty int PathView::highlightMoveDuration
+    \qmlproperty int QtQuick1::PathView::highlightMoveDuration
     This property holds the move animation duration of the highlight delegate.
 
     If the highlightRangeMode is StrictlyEnforceRange then this property
@@ -862,7 +863,7 @@ void QDeclarative1PathView::setHighlightMoveDuration(int duration)
 }
 
 /*!
-    \qmlproperty real PathView::dragMargin
+    \qmlproperty real QtQuick1::PathView::dragMargin
     This property holds the maximum distance from the path that initiate mouse dragging.
 
     By default the path can only be dragged by clicking on an item.  If
@@ -885,7 +886,7 @@ void QDeclarative1PathView::setDragMargin(qreal dragMargin)
 }
 
 /*!
-    \qmlproperty real PathView::flickDeceleration
+    \qmlproperty real QtQuick1::PathView::flickDeceleration
     This property holds the rate at which a flick will decelerate.
 
     The default is 100.
@@ -906,7 +907,7 @@ void QDeclarative1PathView::setFlickDeceleration(qreal dec)
 }
 
 /*!
-    \qmlproperty bool PathView::interactive
+    \qmlproperty bool QtQuick1::PathView::interactive
 
     A user cannot drag or flick a PathView that is not interactive.
 
@@ -931,7 +932,7 @@ void QDeclarative1PathView::setInteractive(bool interactive)
 }
 
 /*!
-    \qmlproperty bool PathView::moving
+    \qmlproperty bool QtQuick1::PathView::moving
 
     This property holds whether the view is currently moving
     due to the user either dragging or flicking the view.
@@ -943,7 +944,7 @@ bool QDeclarative1PathView::isMoving() const
 }
 
 /*!
-    \qmlproperty bool PathView::flicking
+    \qmlproperty bool QtQuick1::PathView::flicking
 
     This property holds whether the view is currently moving
     due to the user flicking the view.
@@ -955,14 +956,14 @@ bool QDeclarative1PathView::isFlicking() const
 }
 
 /*!
-    \qmlsignal PathView::onMovementStarted()
+    \qmlsignal QtQuick1::PathView::onMovementStarted()
 
     This handler is called when the view begins moving due to user
     interaction.
 */
 
 /*!
-    \qmlsignal PathView::onMovementEnded()
+    \qmlsignal QtQuick1::PathView::onMovementEnded()
 
     This handler is called when the view stops moving due to user
     interaction.  If a flick was generated, this handler will
@@ -972,7 +973,7 @@ bool QDeclarative1PathView::isFlicking() const
 */
 
 /*!
-    \qmlsignal PathView::onFlickStarted()
+    \qmlsignal QtQuick1::PathView::onFlickStarted()
 
     This handler is called when the view is flicked.  A flick
     starts from the point that the mouse or touch is released,
@@ -980,13 +981,13 @@ bool QDeclarative1PathView::isFlicking() const
 */
 
 /*!
-    \qmlsignal PathView::onFlickEnded()
+    \qmlsignal QtQuick1::PathView::onFlickEnded()
 
     This handler is called when the view stops moving due to a flick.
 */
 
 /*!
-    \qmlproperty Component PathView::delegate
+    \qmlproperty Component QtQuick1::PathView::delegate
 
     The delegate provides a template defining each item instantiated by the view.
     The index is exposed as an accessible \c index property.  Properties of the
@@ -1035,7 +1036,7 @@ void QDeclarative1PathView::setDelegate(QDeclarativeComponent *delegate)
 }
 
 /*!
-  \qmlproperty int PathView::pathItemCount
+  \qmlproperty int QtQuick1::PathView::pathItemCount
   This property holds the number of items visible on the path at any one time.
 */
 int QDeclarative1PathView::pathItemCount() const

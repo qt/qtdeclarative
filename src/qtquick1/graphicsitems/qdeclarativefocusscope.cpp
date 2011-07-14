@@ -49,7 +49,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass FocusScope QDeclarative1FocusScope
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-basic-interaction-elements
 
     \brief The FocusScope object explicitly creates a focus scope.

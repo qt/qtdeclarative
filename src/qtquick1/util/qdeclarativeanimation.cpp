@@ -76,8 +76,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Animation QDeclarative1AbstractAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Animation element is the base of all QML animations.
 
     The Animation element cannot be used directly in a QML file.  It exists
@@ -101,7 +102,7 @@ QDeclarative1AbstractAnimation::QDeclarative1AbstractAnimation(QDeclarative1Abst
 }
 
 /*!
-    \qmlproperty bool Animation::running
+    \qmlproperty bool QtQuick1::Animation::running
     This property holds whether the animation is currently running.
 
     The \c running property can be set to declaratively control whether or not
@@ -238,7 +239,7 @@ void QDeclarative1AbstractAnimation::setRunning(bool r)
 }
 
 /*!
-    \qmlproperty bool Animation::paused
+    \qmlproperty bool QtQuick1::Animation::paused
     This property holds whether the animation is currently paused.
 
     The \c paused property can be set to declaratively control whether or not
@@ -297,7 +298,7 @@ void QDeclarative1AbstractAnimation::componentFinalized()
 }
 
 /*!
-    \qmlproperty bool Animation::alwaysRunToEnd
+    \qmlproperty bool QtQuick1::Animation::alwaysRunToEnd
     This property holds whether the animation should run to completion when it is stopped.
 
     If this true the animation will complete its current iteration when it
@@ -329,7 +330,7 @@ void QDeclarative1AbstractAnimation::setAlwaysRunToEnd(bool f)
 }
 
 /*!
-    \qmlproperty int Animation::loops
+    \qmlproperty int QtQuick1::Animation::loops
     This property holds the number of times the animation should play.
 
     By default, \c loops is 1: the animation will play through once and then stop.
@@ -406,7 +407,7 @@ void QDeclarative1AbstractAnimation::setGroup(QDeclarative1AnimationGroup *g)
 }
 
 /*!
-    \qmlmethod Animation::start()
+    \qmlmethod QtQuick1::Animation::start()
     \brief Starts the animation.
 
     If the animation is already running, calling this method has no effect.  The
@@ -418,7 +419,7 @@ void QDeclarative1AbstractAnimation::start()
 }
 
 /*!
-    \qmlmethod Animation::pause()
+    \qmlmethod QtQuick1::Animation::pause()
     \brief Pauses the animation.
 
     If the animation is already paused, calling this method has no effect.  The
@@ -430,7 +431,7 @@ void QDeclarative1AbstractAnimation::pause()
 }
 
 /*!
-    \qmlmethod Animation::resume()
+    \qmlmethod QtQuick1::Animation::resume()
     \brief Resumes a paused animation.
 
     If the animation is not paused, calling this method has no effect.  The
@@ -442,7 +443,7 @@ void QDeclarative1AbstractAnimation::resume()
 }
 
 /*!
-    \qmlmethod Animation::stop()
+    \qmlmethod QtQuick1::Animation::stop()
     \brief Stops the animation.
 
     If the animation is not running, calling this method has no effect.  The
@@ -467,7 +468,7 @@ void QDeclarative1AbstractAnimation::stop()
 }
 
 /*!
-    \qmlmethod Animation::restart()
+    \qmlmethod QtQuick1::Animation::restart()
     \brief Restarts the animation.
 
     This is a convenience method, and is equivalent to calling \c stop() and
@@ -480,7 +481,7 @@ void QDeclarative1AbstractAnimation::restart()
 }
 
 /*!
-    \qmlmethod Animation::complete()
+    \qmlmethod QtQuick1::Animation::complete()
     \brief Stops the animation, jumping to the final property values.
 
     If the animation is not running, calling this method has no effect.  The
@@ -556,8 +557,9 @@ void QDeclarative1AbstractAnimation::timelineComplete()
 
 /*!
     \qmlclass PauseAnimation QDeclarative1PauseAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The PauseAnimation element provides a pause for an animation.
 
@@ -594,7 +596,7 @@ void QDeclarative1PauseAnimationPrivate::init()
 }
 
 /*!
-    \qmlproperty int PauseAnimation::duration
+    \qmlproperty int QtQuick1::PauseAnimation::duration
     This property holds the duration of the pause in milliseconds
 
     The default value is 250.
@@ -627,8 +629,9 @@ QAbstractAnimation *QDeclarative1PauseAnimation::qtAnimation()
 
 /*!
     \qmlclass ColorAnimation QDeclarative1ColorAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits PropertyAnimation
     \brief The ColorAnimation element animates changes in color values.
 
@@ -668,7 +671,7 @@ QDeclarative1ColorAnimation::~QDeclarative1ColorAnimation()
 }
 
 /*!
-    \qmlproperty color ColorAnimation::from
+    \qmlproperty color QtQuick1::ColorAnimation::from
     This property holds the color value at which the animation should begin.
 
     For example, the following animation is not applied until a color value
@@ -705,7 +708,7 @@ void QDeclarative1ColorAnimation::setFrom(const QColor &f)
 }
 
 /*!
-    \qmlproperty color ColorAnimation::to
+    \qmlproperty color QtQuick1::ColorAnimation::to
 
     This property holds the color value at which the animation should end.
 
@@ -731,8 +734,9 @@ void QDeclarative1ColorAnimation::setTo(const QColor &t)
 
 /*!
     \qmlclass ScriptAction QDeclarative1ScriptAction
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The ScriptAction element allows scripts to be run during an animation.
 
@@ -776,7 +780,7 @@ void QDeclarative1ScriptActionPrivate::init()
 }
 
 /*!
-    \qmlproperty script ScriptAction::script
+    \qmlproperty script QtQuick1::ScriptAction::script
     This property holds the script to run.
 */
 QDeclarativeScriptString QDeclarative1ScriptAction::script() const
@@ -792,7 +796,7 @@ void QDeclarative1ScriptAction::setScript(const QDeclarativeScriptString &script
 }
 
 /*!
-    \qmlproperty string ScriptAction::scriptName
+    \qmlproperty string QtQuick1::ScriptAction::scriptName
     This property holds the the name of the StateChangeScript to run.
 
     This property is only valid when ScriptAction is used as part of a transition.
@@ -865,8 +869,9 @@ QAbstractAnimation *QDeclarative1ScriptAction::qtAnimation()
 
 /*!
     \qmlclass PropertyAction QDeclarative1PropertyAction
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The PropertyAction element allows immediate property changes during animation.
 
@@ -952,10 +957,10 @@ void QDeclarative1PropertyAction::setProperty(const QString &n)
 }
 
 /*!
-    \qmlproperty Object PropertyAction::target
-    \qmlproperty list<Object> PropertyAction::targets
-    \qmlproperty string PropertyAction::property
-    \qmlproperty string PropertyAction::properties
+    \qmlproperty Object QtQuick1::PropertyAction::target
+    \qmlproperty list<Object> QtQuick1::PropertyAction::targets
+    \qmlproperty string QtQuick1::PropertyAction::property
+    \qmlproperty string QtQuick1::PropertyAction::properties
 
     These properties determine the items and their properties that are
     affected by this action.
@@ -988,7 +993,7 @@ QDeclarativeListProperty<QObject> QDeclarative1PropertyAction::targets()
 }
 
 /*!
-    \qmlproperty list<Object> PropertyAction::exclude
+    \qmlproperty list<Object> QtQuick1::PropertyAction::exclude
     This property holds the objects that should not be affected by this action.
 
     \sa targets
@@ -1000,7 +1005,7 @@ QDeclarativeListProperty<QObject> QDeclarative1PropertyAction::exclude()
 }
 
 /*!
-    \qmlproperty any PropertyAction::value
+    \qmlproperty any QtQuick1::PropertyAction::value
     This property holds the value to be set on the property.
 
     If the PropertyAction is defined within a \l Transition or \l Behavior,
@@ -1126,8 +1131,9 @@ void QDeclarative1PropertyAction::transition(QDeclarative1StateActions &actions,
 
 /*!
     \qmlclass NumberAnimation QDeclarative1NumberAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits PropertyAnimation
     \brief The NumberAnimation element animates changes in qreal-type values.
 
@@ -1175,7 +1181,7 @@ void QDeclarative1NumberAnimation::init()
 }
 
 /*!
-    \qmlproperty real NumberAnimation::from
+    \qmlproperty real QtQuick1::NumberAnimation::from
     This property holds the starting value for the animation.
 
     For example, the following animation is not applied until the \c x value
@@ -1213,7 +1219,7 @@ void QDeclarative1NumberAnimation::setFrom(qreal f)
 }
 
 /*!
-    \qmlproperty real NumberAnimation::to
+    \qmlproperty real QtQuick1::NumberAnimation::to
     This property holds the end value for the animation.
 
     If the NumberAnimation is defined within a \l Transition or \l Behavior,
@@ -1238,8 +1244,9 @@ void QDeclarative1NumberAnimation::setTo(qreal t)
 
 /*!
     \qmlclass Vector3dAnimation QDeclarative1Vector3dAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits PropertyAnimation
     \brief The Vector3dAnimation element animates changes in QVector3d values.
 
@@ -1267,7 +1274,7 @@ QDeclarative1Vector3dAnimation::~QDeclarative1Vector3dAnimation()
 }
 
 /*!
-    \qmlproperty real Vector3dAnimation::from
+    \qmlproperty real QtQuick1::Vector3dAnimation::from
     This property holds the starting value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,
@@ -1289,7 +1296,7 @@ void QDeclarative1Vector3dAnimation::setFrom(QVector3D f)
 }
 
 /*!
-    \qmlproperty real Vector3dAnimation::to
+    \qmlproperty real QtQuick1::Vector3dAnimation::to
     This property holds the end value for the animation.
 
     If the Vector3dAnimation is defined within a \l Transition or \l Behavior,
@@ -1314,8 +1321,9 @@ void QDeclarative1Vector3dAnimation::setTo(QVector3D t)
 
 /*!
     \qmlclass RotationAnimation QDeclarative1RotationAnimation
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits PropertyAnimation
     \brief The RotationAnimation element animates changes in rotation values.
 
@@ -1403,7 +1411,7 @@ QDeclarative1RotationAnimation::~QDeclarative1RotationAnimation()
 }
 
 /*!
-    \qmlproperty real RotationAnimation::from
+    \qmlproperty real QtQuick1::RotationAnimation::from
     This property holds the starting value for the animation.
 
     For example, the following animation is not applied until the \c angle value
@@ -1440,7 +1448,7 @@ void QDeclarative1RotationAnimation::setFrom(qreal f)
 }
 
 /*!
-    \qmlproperty real RotationAnimation::to
+    \qmlproperty real QtQuick1::RotationAnimation::to
     This property holds the end value for the animation..
 
     If the RotationAnimation is defined within a \l Transition or \l Behavior,
@@ -1462,7 +1470,7 @@ void QDeclarative1RotationAnimation::setTo(qreal t)
 }
 
 /*!
-    \qmlproperty enumeration RotationAnimation::direction
+    \qmlproperty enumeration QtQuick1::RotationAnimation::direction
     This property holds the direction of the rotation.
 
     Possible values are:
@@ -1558,8 +1566,9 @@ QDeclarativeListProperty<QDeclarative1AbstractAnimation> QDeclarative1AnimationG
 
 /*!
     \qmlclass SequentialAnimation QDeclarative1SequentialAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The SequentialAnimation element allows animations to be run sequentially.
 
@@ -1632,8 +1641,9 @@ void QDeclarative1SequentialAnimation::transition(QDeclarative1StateActions &act
 
 /*!
     \qmlclass ParallelAnimation QDeclarative1ParallelAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The ParallelAnimation element allows animations to be run in parallel.
 
@@ -1746,8 +1756,9 @@ void QDeclarative1PropertyAnimationPrivate::convertVariant(QVariant &variant, in
 
 /*!
     \qmlclass PropertyAnimation QDeclarative1PropertyAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The PropertyAnimation element animates changes in property values.
 
@@ -1832,7 +1843,7 @@ void QDeclarative1PropertyAnimationPrivate::init()
 }
 
 /*!
-    \qmlproperty int PropertyAnimation::duration
+    \qmlproperty int QtQuick1::PropertyAnimation::duration
     This property holds the duration of the animation, in milliseconds.
 
     The default value is 250.
@@ -1858,7 +1869,7 @@ void QDeclarative1PropertyAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty real PropertyAnimation::from
+    \qmlproperty real QtQuick1::PropertyAnimation::from
     This property holds the starting value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,
@@ -1885,7 +1896,7 @@ void QDeclarative1PropertyAnimation::setFrom(const QVariant &f)
 }
 
 /*!
-    \qmlproperty real PropertyAnimation::to
+    \qmlproperty real QtQuick1::PropertyAnimation::to
     This property holds the end value for the animation.
 
     If the PropertyAnimation is defined within a \l Transition or \l Behavior,
@@ -1912,10 +1923,10 @@ void QDeclarative1PropertyAnimation::setTo(const QVariant &t)
 }
 
 /*!
-    \qmlproperty enumeration PropertyAnimation::easing.type
-    \qmlproperty real PropertyAnimation::easing.amplitude
-    \qmlproperty real PropertyAnimation::easing.overshoot
-    \qmlproperty real PropertyAnimation::easing.period
+    \qmlproperty enumeration QtQuick1::PropertyAnimation::easing.type
+    \qmlproperty real QtQuick1::PropertyAnimation::easing.amplitude
+    \qmlproperty real QtQuick1::PropertyAnimation::easing.overshoot
+    \qmlproperty real QtQuick1::PropertyAnimation::easing.period
     \brief the easing curve used for the animation.
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -2173,10 +2184,10 @@ void QDeclarative1PropertyAnimation::setProperties(const QString &prop)
 }
 
 /*!
-    \qmlproperty string PropertyAnimation::properties
-    \qmlproperty list<Object> PropertyAnimation::targets
-    \qmlproperty string PropertyAnimation::property
-    \qmlproperty Object PropertyAnimation::target
+    \qmlproperty string QtQuick1::PropertyAnimation::properties
+    \qmlproperty list<Object> QtQuick1::PropertyAnimation::targets
+    \qmlproperty string QtQuick1::PropertyAnimation::property
+    \qmlproperty Object QtQuick1::PropertyAnimation::target
 
     These properties are used as a set to determine which properties should be animated.
     The singular and plural forms are functionally identical, e.g.
@@ -2269,7 +2280,7 @@ QDeclarativeListProperty<QObject> QDeclarative1PropertyAnimation::targets()
 }
 
 /*!
-    \qmlproperty list<Object> PropertyAnimation::exclude
+    \qmlproperty list<Object> QtQuick1::PropertyAnimation::exclude
     This property holds the items not to be affected by this animation.
     \sa PropertyAnimation::targets
 */
@@ -2435,8 +2446,9 @@ void QDeclarative1PropertyAnimation::transition(QDeclarative1StateActions &actio
 
 /*!
     \qmlclass ParentAnimation QDeclarative1ParentAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The ParentAnimation element animates changes in parent values.
 
@@ -2495,7 +2507,7 @@ QDeclarative1ParentAnimation::~QDeclarative1ParentAnimation()
 }
 
 /*!
-    \qmlproperty Item ParentAnimation::target
+    \qmlproperty Item QtQuick1::ParentAnimation::target
     The item to reparent.
 
     When used in a transition, if no target is specified, all
@@ -2518,7 +2530,7 @@ void QDeclarative1ParentAnimation::setTarget(QDeclarativeItem *target)
 }
 
 /*!
-    \qmlproperty Item ParentAnimation::newParent
+    \qmlproperty Item QtQuick1::ParentAnimation::newParent
     The new parent to animate to.
 
     If the ParentAnimation is defined within a \l Transition or \l Behavior,
@@ -2543,7 +2555,7 @@ void QDeclarative1ParentAnimation::setNewParent(QDeclarativeItem *newParent)
 }
 
 /*!
-    \qmlproperty Item ParentAnimation::via
+    \qmlproperty Item QtQuick1::ParentAnimation::via
     The item to reparent via. This provides a way to do an unclipped animation
     when both the old parent and new parent are clipped.
 
@@ -2796,8 +2808,9 @@ QAbstractAnimation *QDeclarative1ParentAnimation::qtAnimation()
 
 /*!
     \qmlclass AnchorAnimation QDeclarative1AnchorAnimation
+    \inqmlmodule QtQuick 1
   \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Animation
     \brief The AnchorAnimation element animates changes in anchor values.
 
@@ -2839,7 +2852,7 @@ QAbstractAnimation *QDeclarative1AnchorAnimation::qtAnimation()
 }
 
 /*!
-    \qmlproperty list<Item> AnchorAnimation::targets
+    \qmlproperty list<Item> QtQuick1::AnchorAnimation::targets
     The items to reanchor.
 
     If no targets are specified all AnchorChanges will be
@@ -2852,7 +2865,7 @@ QDeclarativeListProperty<QDeclarativeItem> QDeclarative1AnchorAnimation::targets
 }
 
 /*!
-    \qmlproperty int AnchorAnimation::duration
+    \qmlproperty int QtQuick1::AnchorAnimation::duration
     This property holds the duration of the animation, in milliseconds.
 
     The default value is 250.
@@ -2878,10 +2891,10 @@ void QDeclarative1AnchorAnimation::setDuration(int duration)
 }
 
 /*!
-    \qmlproperty enumeration AnchorAnimation::easing.type
-    \qmlproperty real AnchorAnimation::easing.amplitude
-    \qmlproperty real AnchorAnimation::easing.overshoot
-    \qmlproperty real AnchorAnimation::easing.period
+    \qmlproperty enumeration QtQuick1::AnchorAnimation::easing.type
+    \qmlproperty real QtQuick1::AnchorAnimation::easing.amplitude
+    \qmlproperty real QtQuick1::AnchorAnimation::easing.overshoot
+    \qmlproperty real QtQuick1::AnchorAnimation::easing.period
     \brief the easing curve used for the animation.
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify

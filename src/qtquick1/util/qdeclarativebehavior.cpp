@@ -74,8 +74,9 @@ public:
 
 /*!
     \qmlclass Behavior QDeclarative1Behavior
+    \inqmlmodule QtQuick 1
     \ingroup qml-animation-transition
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Behavior element allows you to specify a default animation for a property change.
 
     A Behavior defines the default animation to be applied whenever a
@@ -110,7 +111,7 @@ QDeclarative1Behavior::~QDeclarative1Behavior()
 }
 
 /*!
-    \qmlproperty Animation Behavior::animation
+    \qmlproperty Animation QtQuick1::Behavior::animation
     \default
 
     This property holds the animation to run when the behavior is triggered.
@@ -151,7 +152,7 @@ void QDeclarative1Behavior::qtAnimationStateChanged(QAbstractAnimation::State ne
 
 
 /*!
-    \qmlproperty bool Behavior::enabled
+    \qmlproperty bool QtQuick1::Behavior::enabled
 
     This property holds whether the behavior will be triggered when the tracked
     property changes value.

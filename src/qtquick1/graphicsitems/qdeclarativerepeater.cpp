@@ -62,8 +62,9 @@ QDeclarative1RepeaterPrivate::~QDeclarative1RepeaterPrivate()
 
 /*!
     \qmlclass Repeater QDeclarative1Repeater
+    \inqmlmodule QtQuick 1
     \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \inherits Item
 
     \brief The Repeater element allows you to repeat an Item-based component using a model.
@@ -127,7 +128,7 @@ QDeclarative1RepeaterPrivate::~QDeclarative1RepeaterPrivate()
  */
 
 /*!
-    \qmlsignal Repeater::onItemAdded(int index, Item item)
+    \qmlsignal QtQuick1::Repeater::onItemAdded(int index, Item item)
     \since Quick 1.1
 
     This handler is called when an item is added to the repeater. The \a index
@@ -136,7 +137,7 @@ QDeclarative1RepeaterPrivate::~QDeclarative1RepeaterPrivate()
 */
 
 /*!
-    \qmlsignal Repeater::onItemRemoved(int index, Item item)
+    \qmlsignal QtQuick1::Repeater::onItemRemoved(int index, Item item)
     \since Quick 1.1
 
     This handler is called when an item is removed from the repeater. The \a index
@@ -157,7 +158,7 @@ QDeclarative1Repeater::~QDeclarative1Repeater()
 }
 
 /*!
-    \qmlproperty any Repeater::model
+    \qmlproperty any QtQuick1::Repeater::model
 
     The model providing data for the repeater.
 
@@ -230,7 +231,7 @@ void QDeclarative1Repeater::setModel(const QVariant &model)
 }
 
 /*!
-    \qmlproperty Component Repeater::delegate
+    \qmlproperty Component QtQuick1::Repeater::delegate
     \default
 
     The delegate provides a template defining each item instantiated by the repeater.
@@ -292,7 +293,7 @@ void QDeclarative1Repeater::setDelegate(QDeclarativeComponent *delegate)
 }
 
 /*!
-    \qmlproperty int Repeater::count
+    \qmlproperty int QtQuick1::Repeater::count
 
     This property holds the number of items in the repeater.
 */
@@ -305,7 +306,7 @@ int QDeclarative1Repeater::count() const
 }
 
 /*!
-    \qmlmethod Item Repeater::itemAt(index)
+    \qmlmethod Item QtQuick1::Repeater::itemAt(index)
     \since Quick 1.1
 
     Returns the \l Item that has been created at the given \a index, or \c null

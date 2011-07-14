@@ -70,8 +70,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Transform QGraphicsTransform
+    \inqmlmodule QtQuick 1
     \ingroup qml-transform-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Transform elements provide a way of building advanced transformations on Items.
 
     The Transform element is a base type which cannot be instantiated directly.
@@ -92,8 +93,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Translate QDeclarative1Translate
+    \inqmlmodule QtQuick 1
     \ingroup qml-transform-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Translate object provides a way to move an Item without changing its x or y properties.
 
     The Translate object provides independent control over position in addition to the Item's x and y properties.
@@ -121,21 +123,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real Translate::x
+    \qmlproperty real QtQuick1::Translate::x
 
     The translation along the X axis.
 */
 
 /*!
-    \qmlproperty real Translate::y
+    \qmlproperty real QtQuick1::Translate::y
 
     The translation along the Y axis.
 */
 
 /*!
     \qmlclass Scale QGraphicsScale
+    \inqmlmodule QtQuick 1
     \ingroup qml-transform-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Scale element provides a way to scale an Item.
 
     The Scale element gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
@@ -155,29 +158,30 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real Scale::origin.x
-    \qmlproperty real Scale::origin.y
+    \qmlproperty real QtQuick1::Scale::origin.x
+    \qmlproperty real QtQuick1::Scale::origin.y
 
     The point that the item is scaled from (i.e., the point that stays fixed relative to the parent as
     the rest of the item grows). By default the origin is 0, 0.
 */
 
 /*!
-    \qmlproperty real Scale::xScale
+    \qmlproperty real QtQuick1::Scale::xScale
 
     The scaling factor for the X axis.
 */
 
 /*!
-    \qmlproperty real Scale::yScale
+    \qmlproperty real QtQuick1::Scale::yScale
 
     The scaling factor for the Y axis.
 */
 
 /*!
     \qmlclass Rotation QGraphicsRotation
+    \inqmlmodule QtQuick 1
     \ingroup qml-transform-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Rotation object provides a way to rotate an Item.
 
     The Rotation object gives more control over rotation than using \l Item's \l{Item::rotation}{rotation} property.
@@ -204,17 +208,17 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real Rotation::origin.x
-    \qmlproperty real Rotation::origin.y
+    \qmlproperty real QtQuick1::Rotation::origin.x
+    \qmlproperty real QtQuick1::Rotation::origin.y
 
     The origin point of the rotation (i.e., the point that stays fixed relative to the parent as
     the rest of the item rotates). By default the origin is 0, 0.
 */
 
 /*!
-    \qmlproperty real Rotation::axis.x
-    \qmlproperty real Rotation::axis.y
-    \qmlproperty real Rotation::axis.z
+    \qmlproperty real QtQuick1::Rotation::axis.x
+    \qmlproperty real QtQuick1::Rotation::axis.y
+    \qmlproperty real QtQuick1::Rotation::axis.z
 
     The axis to rotate around. For simple (2D) rotation around a point, you do not need to specify an axis,
     as the default axis is the z axis (\c{ axis { x: 0; y: 0; z: 1 } }).
@@ -225,7 +229,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real Rotation::angle
+    \qmlproperty real QtQuick1::Rotation::angle
 
     The angle to rotate, in degrees clockwise.
 */
@@ -418,8 +422,9 @@ void QDeclarativeItemKeyFilter::componentComplete()
 
 /*!
     \qmlclass KeyNavigation QDeclarative1KeyNavigationAttached
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-interaction-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The KeyNavigation attached property supports key navigation by arrow keys.
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
@@ -460,12 +465,12 @@ void QDeclarativeItemKeyFilter::componentComplete()
 */
 
 /*!
-    \qmlproperty Item KeyNavigation::left
-    \qmlproperty Item KeyNavigation::right
-    \qmlproperty Item KeyNavigation::up
-    \qmlproperty Item KeyNavigation::down
-    \qmlproperty Item KeyNavigation::tab
-    \qmlproperty Item KeyNavigation::backtab
+    \qmlproperty Item QtQuick1::KeyNavigation::left
+    \qmlproperty Item QtQuick1::KeyNavigation::right
+    \qmlproperty Item QtQuick1::KeyNavigation::up
+    \qmlproperty Item QtQuick1::KeyNavigation::down
+    \qmlproperty Item QtQuick1::KeyNavigation::tab
+    \qmlproperty Item QtQuick1::KeyNavigation::backtab
 
     These properties hold the item to assign focus to
     when the left, right, up or down cursor keys, or the
@@ -473,8 +478,8 @@ void QDeclarativeItemKeyFilter::componentComplete()
 */
 
 /*!
-    \qmlproperty Item KeyNavigation::tab
-    \qmlproperty Item KeyNavigation::backtab
+    \qmlproperty Item QtQuick1::KeyNavigation::tab
+    \qmlproperty Item QtQuick1::KeyNavigation::backtab
 
     These properties hold the item to assign focus to
     when the Tab key or Shift+Tab key combination (Backtab) are pressed.
@@ -626,7 +631,7 @@ void QDeclarative1KeyNavigationAttached::setBacktab(QDeclarativeItem *i)
 }
 
 /*!
-    \qmlproperty enumeration KeyNavigation::priority
+    \qmlproperty enumeration QtQuick1::KeyNavigation::priority
 
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
@@ -793,6 +798,7 @@ void QDeclarative1KeyNavigationAttached::setFocusNavigation(QDeclarativeItem *cu
 
 /*!
     \qmlclass LayoutMirroring QDeclarative1LayoutMirroringAttached
+    \inqmlmodule QtQuick 1
     \since QtQuick 1.1
     \ingroup qml-utility-elements
     \brief The LayoutMirroring attached property is used to mirror layout behavior.
@@ -834,7 +840,7 @@ void QDeclarative1KeyNavigationAttached::setFocusNavigation(QDeclarativeItem *cu
 */
 
 /*!
-    \qmlproperty bool LayoutMirroring::enabled
+    \qmlproperty bool QtQuick1::LayoutMirroring::enabled
 
     This property holds whether the item's layout is mirrored horizontally. Setting this to true
     horizontally reverses \l {anchor-layout}{anchor} settings such that left anchors become right,
@@ -846,7 +852,7 @@ void QDeclarative1KeyNavigationAttached::setFocusNavigation(QDeclarativeItem *cu
 */
 
 /*!
-    \qmlproperty bool LayoutMirroring::childrenInherit
+    \qmlproperty bool QtQuick1::LayoutMirroring::childrenInherit
 
     This property holds whether the \l {enabled}{LayoutMirroring.enabled} value for this item
     is inherited by its children.
@@ -958,8 +964,9 @@ void QDeclarativeItemPrivate::setLayoutMirror(bool mirror)
 
 /*!
     \qmlclass Keys QDeclarative1KeysAttached
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-interaction-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Keys attached property provides key handling to Items.
 
     All visual primitives support key handling via the Keys
@@ -1021,14 +1028,14 @@ void QDeclarativeItemPrivate::setLayoutMirror(bool mirror)
 */
 
 /*!
-    \qmlproperty bool Keys::enabled
+    \qmlproperty bool QtQuick1::Keys::enabled
 
     This flags enables key handling if true (default); otherwise
     no key handlers will be called.
 */
 
 /*!
-    \qmlproperty enumeration Keys::priority
+    \qmlproperty enumeration QtQuick1::Keys::priority
 
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
@@ -1044,7 +1051,7 @@ void QDeclarativeItemPrivate::setLayoutMirror(bool mirror)
 */
 
 /*!
-    \qmlproperty list<Object> Keys::forwardTo
+    \qmlproperty list<Object> QtQuick1::Keys::forwardTo
 
     This property provides a way to forward key presses, key releases, and keyboard input
     coming from input methods to other items. This can be useful when you want
@@ -1071,273 +1078,273 @@ void QDeclarativeItemPrivate::setLayoutMirror(bool mirror)
 */
 
 /*!
-    \qmlsignal Keys::onPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onPressed(KeyEvent event)
 
     This handler is called when a key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onReleased(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onReleased(KeyEvent event)
 
     This handler is called when a key has been released. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit0Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit0Pressed(KeyEvent event)
 
     This handler is called when the digit '0' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit1Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit1Pressed(KeyEvent event)
 
     This handler is called when the digit '1' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit2Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit2Pressed(KeyEvent event)
 
     This handler is called when the digit '2' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit3Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit3Pressed(KeyEvent event)
 
     This handler is called when the digit '3' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit4Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit4Pressed(KeyEvent event)
 
     This handler is called when the digit '4' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit5Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit5Pressed(KeyEvent event)
 
     This handler is called when the digit '5' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit6Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit6Pressed(KeyEvent event)
 
     This handler is called when the digit '6' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit7Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit7Pressed(KeyEvent event)
 
     This handler is called when the digit '7' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit8Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit8Pressed(KeyEvent event)
 
     This handler is called when the digit '8' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDigit9Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDigit9Pressed(KeyEvent event)
 
     This handler is called when the digit '9' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onLeftPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onLeftPressed(KeyEvent event)
 
     This handler is called when the Left arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onRightPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onRightPressed(KeyEvent event)
 
     This handler is called when the Right arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onUpPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onUpPressed(KeyEvent event)
 
     This handler is called when the Up arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDownPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDownPressed(KeyEvent event)
 
     This handler is called when the Down arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onTabPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onTabPressed(KeyEvent event)
 
     This handler is called when the Tab key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onBacktabPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onBacktabPressed(KeyEvent event)
 
     This handler is called when the Shift+Tab key combination (Backtab) has
     been pressed. The \a event parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onAsteriskPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onAsteriskPressed(KeyEvent event)
 
     This handler is called when the Asterisk '*' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onEscapePressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onEscapePressed(KeyEvent event)
 
     This handler is called when the Escape key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onReturnPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onReturnPressed(KeyEvent event)
 
     This handler is called when the Return key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onEnterPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onEnterPressed(KeyEvent event)
 
     This handler is called when the Enter key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onDeletePressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onDeletePressed(KeyEvent event)
 
     This handler is called when the Delete key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onSpacePressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onSpacePressed(KeyEvent event)
 
     This handler is called when the Space key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onBackPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onBackPressed(KeyEvent event)
 
     This handler is called when the Back key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onCancelPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onCancelPressed(KeyEvent event)
 
     This handler is called when the Cancel key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onSelectPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onSelectPressed(KeyEvent event)
 
     This handler is called when the Select key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onYesPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onYesPressed(KeyEvent event)
 
     This handler is called when the Yes key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onNoPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onNoPressed(KeyEvent event)
 
     This handler is called when the No key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onContext1Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onContext1Pressed(KeyEvent event)
 
     This handler is called when the Context1 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onContext2Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onContext2Pressed(KeyEvent event)
 
     This handler is called when the Context2 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onContext3Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onContext3Pressed(KeyEvent event)
 
     This handler is called when the Context3 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onContext4Pressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onContext4Pressed(KeyEvent event)
 
     This handler is called when the Context4 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onCallPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onCallPressed(KeyEvent event)
 
     This handler is called when the Call key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onHangupPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onHangupPressed(KeyEvent event)
 
     This handler is called when the Hangup key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onFlipPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onFlipPressed(KeyEvent event)
 
     This handler is called when the Flip key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onMenuPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onMenuPressed(KeyEvent event)
 
     This handler is called when the Menu key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onVolumeUpPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onVolumeUpPressed(KeyEvent event)
 
     This handler is called when the VolumeUp key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal Keys::onVolumeDownPressed(KeyEvent event)
+    \qmlsignal QtQuick1::Keys::onVolumeDownPressed(KeyEvent event)
 
     This handler is called when the VolumeDown key has been pressed. The \a event
     parameter provides information about the event.
@@ -1548,7 +1555,7 @@ QDeclarative1KeysAttached *QDeclarative1KeysAttached::qmlAttachedProperties(QObj
 
 /*!
     \class QDeclarativeItem
-    \since 4.7
+    \since QtQuick 1.0
     \brief The QDeclarativeItem class provides the most basic of all visual items in QML.
 
     All visual items in Qt Declarative inherit from QDeclarativeItem.  Although QDeclarativeItem
@@ -1565,8 +1572,9 @@ QDeclarative1KeysAttached *QDeclarative1KeysAttached::qmlAttachedProperties(QObj
 
 /*!
     \qmlclass Item QDeclarativeItem
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Item is the most basic of all visual items in QML.
 
     All visual items in Qt Declarative inherit from Item.  Although Item
@@ -1737,7 +1745,7 @@ QDeclarativeItem::~QDeclarativeItem()
 }
 
 /*!
-    \qmlproperty enumeration Item::transformOrigin
+    \qmlproperty enumeration QtQuick1::Item::transformOrigin
     This property holds the origin point around which scale and rotation transform.
 
     Nine transform origins are available, as shown in the image below.
@@ -1760,7 +1768,7 @@ QDeclarativeItem::~QDeclarativeItem()
 */
 
 /*!
-    \qmlproperty Item Item::parent
+    \qmlproperty Item QtQuick1::Item::parent
     This property holds the parent of the item.
 */
 
@@ -1782,10 +1790,10 @@ QDeclarativeItem *QDeclarativeItem::parentItem() const
 }
 
 /*!
-    \qmlproperty real Item::childrenRect.x
-    \qmlproperty real Item::childrenRect.y
-    \qmlproperty real Item::childrenRect.width
-    \qmlproperty real Item::childrenRect.height
+    \qmlproperty real QtQuick1::Item::childrenRect.x
+    \qmlproperty real QtQuick1::Item::childrenRect.y
+    \qmlproperty real QtQuick1::Item::childrenRect.width
+    \qmlproperty real QtQuick1::Item::childrenRect.height
 
     The childrenRect properties allow an item access to the geometry of its
     children. This property is useful if you have an item that needs to be
@@ -1794,8 +1802,8 @@ QDeclarativeItem *QDeclarativeItem::parentItem() const
 
 
 /*!
-    \qmlproperty list<Item> Item::children
-    \qmlproperty list<Object> Item::resources
+    \qmlproperty list<Item> QtQuick1::Item::children
+    \qmlproperty list<Object> QtQuick1::Item::resources
 
     The children property contains the list of visual children of this item.
     The resources property contains non-visual resources that you want to
@@ -1986,7 +1994,7 @@ void QDeclarativeItemPrivate::parentProperty(QObject *o, void *rv, QDeclarativeN
 }
 
 /*!
-    \qmlproperty list<Object> Item::data
+    \qmlproperty list<Object> QtQuick1::Item::data
     \default
 
     The data property allows you to freely mix visual children and resources
@@ -2059,10 +2067,10 @@ void QDeclarativeItem::setClip(bool c)
 }
 
 /*!
-  \qmlproperty real Item::x
-  \qmlproperty real Item::y
-  \qmlproperty real Item::width
-  \qmlproperty real Item::height
+  \qmlproperty real QtQuick1::Item::x
+  \qmlproperty real QtQuick1::Item::y
+  \qmlproperty real QtQuick1::Item::width
+  \qmlproperty real QtQuick1::Item::height
 
   Defines the item's position and size relative to its parent.
 
@@ -2072,7 +2080,7 @@ void QDeclarativeItem::setClip(bool c)
  */
 
 /*!
-  \qmlproperty real Item::z
+  \qmlproperty real QtQuick1::Item::z
 
   Sets the stacking order of sibling items.  By default the stacking order is 0.
 
@@ -2150,7 +2158,7 @@ void QDeclarativeItem::setClip(bool c)
  */
 
 /*!
-    \qmlproperty bool Item::visible
+    \qmlproperty bool QtQuick1::Item::visible
 
     This property holds whether the item is visible. By default this is true.
 
@@ -2367,27 +2375,27 @@ QDeclarative1AnchorLine QDeclarativeItemPrivate::baseline() const
 }
 
 /*!
-  \qmlproperty AnchorLine Item::anchors.top
-  \qmlproperty AnchorLine Item::anchors.bottom
-  \qmlproperty AnchorLine Item::anchors.left
-  \qmlproperty AnchorLine Item::anchors.right
-  \qmlproperty AnchorLine Item::anchors.horizontalCenter
-  \qmlproperty AnchorLine Item::anchors.verticalCenter
-  \qmlproperty AnchorLine Item::anchors.baseline
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.top
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.bottom
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.left
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.right
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.horizontalCenter
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.verticalCenter
+  \qmlproperty AnchorLine QtQuick1::Item::anchors.baseline
 
-  \qmlproperty Item Item::anchors.fill
-  \qmlproperty Item Item::anchors.centerIn
+  \qmlproperty Item QtQuick1::Item::anchors.fill
+  \qmlproperty Item QtQuick1::Item::anchors.centerIn
 
-  \qmlproperty real Item::anchors.margins
-  \qmlproperty real Item::anchors.topMargin
-  \qmlproperty real Item::anchors.bottomMargin
-  \qmlproperty real Item::anchors.leftMargin
-  \qmlproperty real Item::anchors.rightMargin
-  \qmlproperty real Item::anchors.horizontalCenterOffset
-  \qmlproperty real Item::anchors.verticalCenterOffset
-  \qmlproperty real Item::anchors.baselineOffset
+  \qmlproperty real QtQuick1::Item::anchors.margins
+  \qmlproperty real QtQuick1::Item::anchors.topMargin
+  \qmlproperty real QtQuick1::Item::anchors.bottomMargin
+  \qmlproperty real QtQuick1::Item::anchors.leftMargin
+  \qmlproperty real QtQuick1::Item::anchors.rightMargin
+  \qmlproperty real QtQuick1::Item::anchors.horizontalCenterOffset
+  \qmlproperty real QtQuick1::Item::anchors.verticalCenterOffset
+  \qmlproperty real QtQuick1::Item::anchors.baselineOffset
 
-  \qmlproperty bool Item::anchors.mirrored
+  \qmlproperty bool QtQuick1::Item::anchors.mirrored
 
   Anchors provide a way to position an item by specifying its
   relationship with other items.
@@ -2492,7 +2500,7 @@ void QDeclarativeItem::setBaselineOffset(qreal offset)
 }
 
 /*!
-  \qmlproperty real Item::rotation
+  \qmlproperty real QtQuick1::Item::rotation
   This property holds the rotation of the item in degrees clockwise.
 
   This specifies how many degrees to rotate the item around its transformOrigin.
@@ -2519,7 +2527,7 @@ void QDeclarativeItem::setBaselineOffset(qreal offset)
 */
 
 /*!
-  \qmlproperty real Item::scale
+  \qmlproperty real QtQuick1::Item::scale
   This property holds the scale of the item.
 
   A scale of less than 1 means the item will be displayed smaller than
@@ -2557,7 +2565,7 @@ void QDeclarativeItem::setBaselineOffset(qreal offset)
 */
 
 /*!
-  \qmlproperty real Item::opacity
+  \qmlproperty real QtQuick1::Item::opacity
 
   This property holds the opacity of the item.  Opacity is specified as a
   number between 0 (fully transparent) and 1 (fully opaque).  The default is 1.
@@ -2647,7 +2655,7 @@ void QDeclarativeItem::setKeepMouseGrab(bool keep)
 }
 
 /*!
-    \qmlmethod object Item::mapFromItem(Item item, real x, real y)
+    \qmlmethod object QtQuick1::Item::mapFromItem(Item item, real x, real y)
 
     Maps the point (\a x, \a y), which is in \a item's coordinate system, to
     this item's coordinate system, and returns an object with \c x and \c y
@@ -2686,7 +2694,7 @@ void QDeclarativeItem::mapFromItem(QDeclarativeV8Function *args) const
 }
 
 /*!
-    \qmlmethod object Item::mapToItem(Item item, real x, real y)
+    \qmlmethod object QtQuick1::Item::mapToItem(Item item, real x, real y)
 
     Maps the point (\a x, \a y), which is in this item's coordinate system, to
     \a item's coordinate system, and returns an object with \c x and \c y
@@ -2725,7 +2733,7 @@ void QDeclarativeItem::mapToItem(QDeclarativeV8Function *args) const
 }
 
 /*!
-    \qmlmethod Item::forceActiveFocus()
+    \qmlmethod QtQuick1::Item::forceActiveFocus()
 
     Forces active focus on the item.
 
@@ -2752,7 +2760,7 @@ void QDeclarativeItem::forceActiveFocus()
 
 
 /*!
-  \qmlmethod Item::childAt(real x, real y)
+  \qmlmethod QtQuick1::Item::childAt(real x, real y)
 
   Returns the visible child item at point (\a x, \a y), which is in this
   item's coordinate system, or \c null if there is no such item.
@@ -2795,7 +2803,7 @@ QDeclarativeListProperty<QObject> QDeclarativeItemPrivate::resources()
 }
 
 /*!
-  \qmlproperty list<State> Item::states
+  \qmlproperty list<State> QtQuick1::Item::states
   This property holds a list of states defined by the item.
 
   \qml
@@ -2821,7 +2829,7 @@ QDeclarativeListProperty<QDeclarative1State> QDeclarativeItemPrivate::states()
 }
 
 /*!
-  \qmlproperty list<Transition> Item::transitions
+  \qmlproperty list<Transition> QtQuick1::Item::transitions
   This property holds a list of transitions defined by the item.
 
   \qml
@@ -2848,7 +2856,7 @@ QDeclarativeListProperty<QDeclarative1Transition> QDeclarativeItemPrivate::trans
 }
 
 /*
-  \qmlproperty list<Filter> Item::filter
+  \qmlproperty list<Filter> QtQuick1::Item::filter
   This property holds a list of graphical filters to be applied to the item.
 
   \l {Filter}{Filters} include things like \l {Blur}{blurring}
@@ -2873,7 +2881,7 @@ QDeclarativeListProperty<QDeclarative1Transition> QDeclarativeItemPrivate::trans
 */
 
 /*!
-  \qmlproperty bool Item::clip
+  \qmlproperty bool QtQuick1::Item::clip
   This property holds whether clipping is enabled. The default clip value is \c false.
 
   If clipping is enabled, an item will clip its own painting, as well
@@ -2895,7 +2903,7 @@ QDeclarativeListProperty<QDeclarative1Transition> QDeclarativeItemPrivate::trans
 */
 
 /*!
-  \qmlproperty string Item::state
+  \qmlproperty string QtQuick1::Item::state
 
   This property holds the name of the current state of the item.
 
@@ -2932,7 +2940,7 @@ void QDeclarativeItemPrivate::setState(const QString &state)
 }
 
 /*!
-  \qmlproperty list<Transform> Item::transform
+  \qmlproperty list<Transform> QtQuick1::Item::transform
   This property holds the list of transformations to apply.
 
   For more information see \l Transform.
@@ -3534,8 +3542,8 @@ qreal QDeclarativeItem::implicitHeight() const
 }
 
 /*!
-    \qmlproperty real Item::implicitWidth
-    \qmlproperty real Item::implicitHeight
+    \qmlproperty real QtQuick1::Item::implicitWidth
+    \qmlproperty real QtQuick1::Item::implicitHeight
     \since Quick 1.1
 
     Defines the natural width or height of the Item if no \l width or \l height is specified.
@@ -3628,7 +3636,7 @@ void QDeclarativeItem::setSize(const QSizeF &size)
 }
 
 /*!
-  \qmlproperty bool Item::activeFocus
+  \qmlproperty bool QtQuick1::Item::activeFocus
 
   This property indicates whether the item has active focus.
 
@@ -3661,7 +3669,7 @@ bool QDeclarativeItem::hasActiveFocus() const
 }
 
 /*!
-  \qmlproperty bool Item::focus
+  \qmlproperty bool QtQuick1::Item::focus
   This property indicates whether the item has focus within the enclosing focus scope. If true, this item
   will gain active focus when the enclosing focus scope gains active focus.
   In the following example, \c input will be given active focus when \c scope gains active focus.

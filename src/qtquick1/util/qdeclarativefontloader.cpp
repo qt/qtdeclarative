@@ -147,8 +147,9 @@ QHash<QUrl, QDeclarative1FontObject*> QDeclarative1FontLoaderPrivate::fonts;
 
 /*!
     \qmlclass FontLoader QDeclarative1FontLoader
+    \inqmlmodule QtQuick 1
   \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The FontLoader element allows fonts to be loaded by name or URL.
 
     The FontLoader element is used to load fonts by name or URL. 
@@ -181,7 +182,7 @@ QDeclarative1FontLoader::~QDeclarative1FontLoader()
 }
 
 /*!
-    \qmlproperty url FontLoader::source
+    \qmlproperty url QtQuick1::FontLoader::source
     The url of the font to load.
 */
 QUrl QDeclarative1FontLoader::source() const
@@ -255,7 +256,7 @@ void QDeclarative1FontLoader::updateFontInfo(const QString& name, QDeclarative1F
 }
 
 /*!
-    \qmlproperty string FontLoader::name
+    \qmlproperty string QtQuick1::FontLoader::name
 
     This property holds the name of the font family.
     It is set automatically when a font is loaded using the \c url property.
@@ -296,7 +297,7 @@ void QDeclarative1FontLoader::setName(const QString &name)
 }
 
 /*!
-    \qmlproperty enumeration FontLoader::status
+    \qmlproperty enumeration QtQuick1::FontLoader::status
 
     This property holds the status of font loading.  It can be one of:
     \list

@@ -65,8 +65,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass TextEdit QDeclarative1TextEdit
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The TextEdit item displays multiple lines of editable formatted text.
     \inherits Item
 
@@ -108,7 +109,7 @@ TextEdit {
 */
 
 /*!
-    \qmlsignal TextEdit::onLinkActivated(string link)
+    \qmlsignal QtQuick1::TextEdit::onLinkActivated(string link)
     \since Quick 1.1
 
     This handler is called when the user clicks on a link embedded in the text.
@@ -135,7 +136,7 @@ QString QDeclarative1TextEdit::text() const
 }
 
 /*!
-    \qmlproperty string TextEdit::font.family
+    \qmlproperty string QtQuick1::TextEdit::font.family
 
     Sets the family name of the font.
 
@@ -145,13 +146,13 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty bool TextEdit::font.bold
+    \qmlproperty bool QtQuick1::TextEdit::font.bold
 
     Sets whether the font weight is bold.
 */
 
 /*!
-    \qmlproperty enumeration TextEdit::font.weight
+    \qmlproperty enumeration QtQuick1::TextEdit::font.weight
 
     Sets the font's weight.
 
@@ -170,31 +171,31 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty bool TextEdit::font.italic
+    \qmlproperty bool QtQuick1::TextEdit::font.italic
 
     Sets whether the font has an italic style.
 */
 
 /*!
-    \qmlproperty bool TextEdit::font.underline
+    \qmlproperty bool QtQuick1::TextEdit::font.underline
 
     Sets whether the text is underlined.
 */
 
 /*!
-    \qmlproperty bool TextEdit::font.strikeout
+    \qmlproperty bool QtQuick1::TextEdit::font.strikeout
 
     Sets whether the font has a strikeout style.
 */
 
 /*!
-    \qmlproperty real TextEdit::font.pointSize
+    \qmlproperty real QtQuick1::TextEdit::font.pointSize
 
     Sets the font size in points. The point size must be greater than zero.
 */
 
 /*!
-    \qmlproperty int TextEdit::font.pixelSize
+    \qmlproperty int QtQuick1::TextEdit::font.pixelSize
 
     Sets the font size in pixels.
 
@@ -204,7 +205,7 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty real TextEdit::font.letterSpacing
+    \qmlproperty real QtQuick1::TextEdit::font.letterSpacing
 
     Sets the letter spacing for the font.
 
@@ -213,7 +214,7 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty real TextEdit::font.wordSpacing
+    \qmlproperty real QtQuick1::TextEdit::font.wordSpacing
 
     Sets the word spacing for the font.
 
@@ -223,7 +224,7 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty enumeration TextEdit::font.capitalization
+    \qmlproperty enumeration QtQuick1::TextEdit::font.capitalization
 
     Sets the capitalization for the text.
 
@@ -241,7 +242,7 @@ QString QDeclarative1TextEdit::text() const
 */
 
 /*!
-    \qmlproperty string TextEdit::text
+    \qmlproperty string QtQuick1::TextEdit::text
 
     The text to display.  If the text format is AutoText the text edit will
     automatically determine whether the text should be treated as
@@ -267,7 +268,7 @@ void QDeclarative1TextEdit::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty enumeration TextEdit::textFormat
+    \qmlproperty enumeration QtQuick1::TextEdit::textFormat
 
     The way the text property should be displayed.
 
@@ -370,7 +371,7 @@ void QDeclarative1TextEdit::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty color TextEdit::color
+    \qmlproperty color QtQuick1::TextEdit::color
 
     The text color.
 
@@ -406,7 +407,7 @@ void QDeclarative1TextEdit::setColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty color TextEdit::selectionColor
+    \qmlproperty color QtQuick1::TextEdit::selectionColor
 
     The text highlight color, used behind selections.
 */
@@ -432,7 +433,7 @@ void QDeclarative1TextEdit::setSelectionColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty color TextEdit::selectedTextColor
+    \qmlproperty color QtQuick1::TextEdit::selectedTextColor
 
     The selected text color, used in selections.
 */
@@ -458,9 +459,9 @@ void QDeclarative1TextEdit::setSelectedTextColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty enumeration TextEdit::horizontalAlignment
-    \qmlproperty enumeration TextEdit::verticalAlignment
-    \qmlproperty enumeration TextEdit::effectiveHorizontalAlignment
+    \qmlproperty enumeration QtQuick1::TextEdit::horizontalAlignment
+    \qmlproperty enumeration QtQuick1::TextEdit::verticalAlignment
+    \qmlproperty enumeration QtQuick1::TextEdit::effectiveHorizontalAlignment
 
     Sets the horizontal and vertical alignment of the text within the TextEdit item's
     width and height. By default, the text alignment follows the natural alignment
@@ -588,7 +589,7 @@ void QDeclarative1TextEdit::setVAlign(QDeclarative1TextEdit::VAlignment alignmen
 }
 
 /*!
-    \qmlproperty enumeration TextEdit::wrapMode
+    \qmlproperty enumeration QtQuick1::TextEdit::wrapMode
 
     Set this property to wrap the text to the TextEdit item's width.
     The text will only wrap if an explicit width has been set.
@@ -620,7 +621,7 @@ void QDeclarative1TextEdit::setWrapMode(WrapMode mode)
 }
 
 /*!
-    \qmlproperty int TextEdit::lineCount
+    \qmlproperty int QtQuick1::TextEdit::lineCount
     \since Quick 1.1
 
     Returns the total number of lines in the textEdit item.
@@ -632,7 +633,7 @@ int QDeclarative1TextEdit::lineCount() const
 }
 
 /*!
-    \qmlproperty real TextEdit::paintedWidth
+    \qmlproperty real QtQuick1::TextEdit::paintedWidth
 
     Returns the width of the text, including the width past the width
     which is covered due to insufficient wrapping if \l wrapMode is set.
@@ -644,7 +645,7 @@ qreal QDeclarative1TextEdit::paintedWidth() const
 }
 
 /*!
-    \qmlproperty real TextEdit::paintedHeight
+    \qmlproperty real QtQuick1::TextEdit::paintedHeight
 
     Returns the height of the text, including the height past the height
     that is covered if the text does not fit within the set height.
@@ -656,7 +657,7 @@ qreal QDeclarative1TextEdit::paintedHeight() const
 }
 
 /*!
-    \qmlmethod rectangle TextEdit::positionToRectangle(position)
+    \qmlmethod rectangle QtQuick1::TextEdit::positionToRectangle(position)
 
     Returns the rectangle at the given \a position in the text. The x, y,
     and height properties correspond to the cursor that would describe
@@ -672,7 +673,7 @@ QRectF QDeclarative1TextEdit::positionToRectangle(int pos) const
 }
 
 /*!
-    \qmlmethod int TextEdit::positionAt(int x, int y)
+    \qmlmethod int QtQuick1::TextEdit::positionAt(int x, int y)
 
     Returns the text position closest to pixel position (\a x, \a y).
 
@@ -714,7 +715,7 @@ void QDeclarative1TextEdit::moveCursorSelection(int pos)
 }
 
 /*!
-    \qmlmethod void TextEdit::moveCursorSelection(int position, SelectionMode mode = TextEdit.SelectCharacters)
+    \qmlmethod void QtQuick1::TextEdit::moveCursorSelection(int position, SelectionMode mode = TextEdit.SelectCharacters)
     \since Quick 1.1
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
@@ -801,7 +802,7 @@ void QDeclarative1TextEdit::moveCursorSelection(int pos, SelectionMode mode)
 }
 
 /*!
-    \qmlproperty bool TextEdit::cursorVisible
+    \qmlproperty bool QtQuick1::TextEdit::cursorVisible
     If true the text edit shows a cursor.
 
     This property is set and unset when the text edit gets active focus, but it can also
@@ -827,7 +828,7 @@ void QDeclarative1TextEdit::setCursorVisible(bool on)
 }
 
 /*!
-    \qmlproperty int TextEdit::cursorPosition
+    \qmlproperty int QtQuick1::TextEdit::cursorPosition
     The position of the cursor in the TextEdit.
 */
 int QDeclarative1TextEdit::cursorPosition() const
@@ -849,7 +850,7 @@ void QDeclarative1TextEdit::setCursorPosition(int pos)
 }
 
 /*!
-    \qmlproperty Component TextEdit::cursorDelegate
+    \qmlproperty Component QtQuick1::TextEdit::cursorDelegate
     The delegate for the cursor in the TextEdit.
 
     If you set a cursorDelegate for a TextEdit, this delegate will be used for
@@ -909,7 +910,7 @@ void QDeclarative1TextEdit::loadCursorDelegate()
 }
 
 /*!
-    \qmlproperty int TextEdit::selectionStart
+    \qmlproperty int QtQuick1::TextEdit::selectionStart
 
     The cursor position before the first character in the current selection.
 
@@ -925,7 +926,7 @@ int QDeclarative1TextEdit::selectionStart() const
 }
 
 /*!
-    \qmlproperty int TextEdit::selectionEnd
+    \qmlproperty int QtQuick1::TextEdit::selectionEnd
 
     The cursor position after the last character in the current selection.
 
@@ -941,7 +942,7 @@ int QDeclarative1TextEdit::selectionEnd() const
 }
 
 /*!
-    \qmlproperty string TextEdit::selectedText
+    \qmlproperty string QtQuick1::TextEdit::selectedText
 
     This read-only property provides the text currently selected in the
     text edit.
@@ -961,7 +962,7 @@ QString QDeclarative1TextEdit::selectedText() const
 }
 
 /*!
-    \qmlproperty bool TextEdit::activeFocusOnPress
+    \qmlproperty bool QtQuick1::TextEdit::activeFocusOnPress
 
     Whether the TextEdit should gain active focus on a mouse press. By default this is
     set to true.
@@ -982,7 +983,7 @@ void QDeclarative1TextEdit::setFocusOnPress(bool on)
 }
 
 /*!
-    \qmlproperty bool TextEdit::persistentSelection
+    \qmlproperty bool QtQuick1::TextEdit::persistentSelection
 
     Whether the TextEdit should keep the selection visible when it loses active focus to another
     item in the scene. By default this is set to true;
@@ -1003,7 +1004,7 @@ void QDeclarative1TextEdit::setPersistentSelection(bool on)
 }
 
 /*
-   \qmlproperty real TextEdit::textMargin
+   \qmlproperty real QtQuick1::TextEdit::textMargin
 
    The margin, in pixels, around the text in the TextEdit.
 */
@@ -1048,7 +1049,7 @@ void QDeclarative1TextEdit::componentComplete()
 }
 
 /*!
-    \qmlproperty bool TextEdit::selectByMouse
+    \qmlproperty bool QtQuick1::TextEdit::selectByMouse
 
     Defaults to false.
 
@@ -1079,7 +1080,7 @@ void QDeclarative1TextEdit::setSelectByMouse(bool on)
 
 
 /*!
-    \qmlproperty enum TextEdit::mouseSelectionMode
+    \qmlproperty enum QtQuick1::TextEdit::mouseSelectionMode
     \since Quick 1.1
 
     Specifies how text should be selected using a mouse.
@@ -1109,7 +1110,7 @@ void QDeclarative1TextEdit::setMouseSelectionMode(SelectionMode mode)
 }
 
 /*!
-    \qmlproperty bool TextEdit::readOnly
+    \qmlproperty bool QtQuick1::TextEdit::readOnly
 
     Whether the user can interact with the TextEdit item. If this
     property is set to true the text cannot be edited by user interaction.
@@ -1163,7 +1164,7 @@ Qt::TextInteractionFlags QDeclarative1TextEdit::textInteractionFlags() const
 }
 
 /*!
-    \qmlproperty rectangle TextEdit::cursorRectangle
+    \qmlproperty rectangle QtQuick1::TextEdit::cursorRectangle
 
     The rectangle where the text cursor is rendered
     within the text edit. Read-only.
@@ -1225,7 +1226,7 @@ void QDeclarative1TextEditPrivate::focusChanged(bool hasFocus)
 }
 
 /*!
-    \qmlmethod void TextEdit::deselect()
+    \qmlmethod void QtQuick1::TextEdit::deselect()
     \since Quick 1.1
 
     Removes active text selection.
@@ -1239,7 +1240,7 @@ void QDeclarative1TextEdit::deselect()
 }
 
 /*!
-    \qmlmethod void TextEdit::selectAll()
+    \qmlmethod void QtQuick1::TextEdit::selectAll()
 
     Causes all text to be selected.
 */
@@ -1250,7 +1251,7 @@ void QDeclarative1TextEdit::selectAll()
 }
 
 /*!
-    \qmlmethod void TextEdit::selectWord()
+    \qmlmethod void QtQuick1::TextEdit::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -1263,7 +1264,7 @@ void QDeclarative1TextEdit::selectWord()
 }
 
 /*!
-    \qmlmethod void TextEdit::select(int start, int end)
+    \qmlmethod void QtQuick1::TextEdit::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -1292,7 +1293,7 @@ void QDeclarative1TextEdit::select(int start, int end)
 }
 
 /*!
-    \qmlmethod void TextEdit::isRightToLeft(int start, int end)
+    \qmlmethod void QtQuick1::TextEdit::isRightToLeft(int start, int end)
 
     Returns true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
@@ -1310,7 +1311,7 @@ bool QDeclarative1TextEdit::isRightToLeft(int start, int end)
 
 #ifndef QT_NO_CLIPBOARD
 /*!
-    \qmlmethod TextEdit::cut()
+    \qmlmethod QtQuick1::TextEdit::cut()
 
     Moves the currently selected text to the system clipboard.
 */
@@ -1321,7 +1322,7 @@ void QDeclarative1TextEdit::cut()
 }
 
 /*!
-    \qmlmethod TextEdit::copy()
+    \qmlmethod QtQuick1::TextEdit::copy()
 
     Copies the currently selected text to the system clipboard.
 */
@@ -1332,7 +1333,7 @@ void QDeclarative1TextEdit::copy()
 }
 
 /*!
-    \qmlmethod TextEdit::paste()
+    \qmlmethod QtQuick1::TextEdit::paste()
 
     Replaces the currently selected text by the contents of the system clipboard.
 */
@@ -1479,7 +1480,7 @@ void QDeclarative1TextEdit::updateImgCache(const QRectF &rf)
 }
 
 /*!
-    \qmlproperty bool TextEdit::smooth
+    \qmlproperty bool QtQuick1::TextEdit::smooth
 
     This property holds whether the text is smoothly scaled or transformed.
 
@@ -1493,7 +1494,7 @@ void QDeclarative1TextEdit::updateImgCache(const QRectF &rf)
 */
 
 /*!
-    \qmlproperty bool TextEdit::canPaste
+    \qmlproperty bool QtQuick1::TextEdit::canPaste
     \since QtQuick 1.1
 
     Returns true if the TextEdit is writable and the content of the clipboard is
@@ -1506,7 +1507,7 @@ bool QDeclarative1TextEdit::canPaste() const
 }
 
 /*!
-    \qmlproperty bool TextEdit::inputMethodComposing
+    \qmlproperty bool QtQuick1::TextEdit::inputMethodComposing
 
     \since QtQuick 1.1
 
@@ -1766,7 +1767,7 @@ void QDeclarative1TextEditPrivate::updateDefaultTextOption()
 
 
 /*!
-    \qmlmethod void TextEdit::openSoftwareInputPanel()
+    \qmlmethod void QtQuick1::TextEdit::openSoftwareInputPanel()
 
     Opens software input panels like virtual keyboards for typing, useful for
     customizing when you want the input keyboard to be shown and hidden in
@@ -1817,7 +1818,7 @@ void QDeclarative1TextEdit::openSoftwareInputPanel()
 }
 
 /*!
-    \qmlmethod void TextEdit::closeSoftwareInputPanel()
+    \qmlmethod void QtQuick1::TextEdit::closeSoftwareInputPanel()
 
     Closes a software input panel like a virtual keyboard shown on the screen, useful
     for customizing when you want the input keyboard to be shown and hidden in

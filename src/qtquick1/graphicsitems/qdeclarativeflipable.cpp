@@ -71,7 +71,8 @@ public:
 
 /*!
     \qmlclass Flipable QDeclarative1Flipable
-    \since 4.7
+    \inqmlmodule QtQuick 1
+    \since QtQuick 1.0
     \ingroup qml-basic-interaction-elements
     \brief The Flipable item provides a surface that can be flipped.
     \inherits Item
@@ -121,8 +122,8 @@ QDeclarative1Flipable::~QDeclarative1Flipable()
 }
 
 /*!
-  \qmlproperty Item Flipable::front
-  \qmlproperty Item Flipable::back
+  \qmlproperty Item QtQuick1::Flipable::front
+  \qmlproperty Item QtQuick1::Flipable::back
 
   The front and back sides of the flipable.
 */
@@ -179,7 +180,7 @@ void QDeclarative1Flipable::retransformBack()
 }
 
 /*!
-  \qmlproperty enumeration Flipable::side
+  \qmlproperty enumeration QtQuick1::Flipable::side
 
   The side of the Flipable currently visible. Possible values are \c
   Flipable.Front and \c Flipable.Back.

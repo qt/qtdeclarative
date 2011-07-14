@@ -57,8 +57,9 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass AnimatedImage QDeclarative1AnimatedImage
+    \inqmlmodule QtQuick 1
     \inherits Image
-    \since 4.7
+    \since QtQuick 1.0
     \ingroup basic-visual-elements
 
     The AnimatedImage element extends the features of the \l Image element, providing
@@ -89,7 +90,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty url AnimatedImage::source
+    \qmlproperty url QtQuick1::AnimatedImage::source
 
     This property holds the URL that refers to the source image.
 
@@ -100,7 +101,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool AnimatedImage::asynchronous
+    \qmlproperty bool QtQuick1::AnimatedImage::asynchronous
 
     Specifies that images on the local filesystem should be loaded
     asynchronously in a separate thread.  The default value is
@@ -115,7 +116,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool AnimatedImage::cache
+    \qmlproperty bool QtQuick1::AnimatedImage::cache
     \since Quick 1.1
 
     Specifies whether the image should be cached. The default value is
@@ -124,7 +125,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty bool AnimatedImage::mirror
+    \qmlproperty bool QtQuick1::AnimatedImage::mirror
     \since Quick 1.1
 
     This property holds whether the image should be horizontally inverted
@@ -145,7 +146,7 @@ QDeclarative1AnimatedImage::~QDeclarative1AnimatedImage()
 }
 
 /*!
-  \qmlproperty bool AnimatedImage::paused
+  \qmlproperty bool QtQuick1::AnimatedImage::paused
   This property holds whether the animated image is paused.
 
   By default, this property is false. Set it to true when you want to pause
@@ -170,7 +171,7 @@ void QDeclarative1AnimatedImage::setPaused(bool pause)
     d->_movie->setPaused(pause);
 }
 /*!
-  \qmlproperty bool AnimatedImage::playing
+  \qmlproperty bool QtQuick1::AnimatedImage::playing
   This property holds whether the animated image is playing.
 
   By default, this property is true, meaning that the animation
@@ -199,8 +200,8 @@ void QDeclarative1AnimatedImage::setPlaying(bool play)
 }
 
 /*!
-  \qmlproperty int AnimatedImage::currentFrame
-  \qmlproperty int AnimatedImage::frameCount
+  \qmlproperty int QtQuick1::AnimatedImage::currentFrame
+  \qmlproperty int QtQuick1::AnimatedImage::frameCount
 
   currentFrame is the frame that is currently visible. By monitoring this property
   for changes, you can animate other items at the same time as the image.

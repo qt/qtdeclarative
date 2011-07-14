@@ -668,8 +668,9 @@ QPixmap QDeclarative1TextPrivate::drawOutline(const QPixmap &source, const QPixm
 
 /*!
     \qmlclass Text QDeclarative1Text
+    \inqmlmodule QtQuick 1
     \ingroup qml-basic-visual-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Text item allows you to add formatted text to a scene.
     \inherits Item
 
@@ -719,7 +720,7 @@ QDeclarative1Text::~QDeclarative1Text()
 }
 
 /*!
-  \qmlproperty bool Text::clip
+  \qmlproperty bool QtQuick1::Text::clip
   This property holds whether the text is clipped.
 
   Note that if the text does not fit in the bounding rectangle it will be abruptly chopped.
@@ -728,7 +729,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty bool Text::smooth
+    \qmlproperty bool QtQuick1::Text::smooth
 
     This property holds whether the text is smoothly scaled or transformed.
 
@@ -742,7 +743,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlsignal Text::onLinkActivated(string link)
+    \qmlsignal QtQuick1::Text::onLinkActivated(string link)
 
     This handler is called when the user clicks on a link embedded in the text.
     The link must be in rich text or HTML format and the 
@@ -758,7 +759,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty string Text::font.family
+    \qmlproperty string QtQuick1::Text::font.family
 
     Sets the family name of the font.
 
@@ -768,13 +769,13 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty bool Text::font.bold
+    \qmlproperty bool QtQuick1::Text::font.bold
 
     Sets whether the font weight is bold.
 */
 
 /*!
-    \qmlproperty enumeration Text::font.weight
+    \qmlproperty enumeration QtQuick1::Text::font.weight
 
     Sets the font's weight.
 
@@ -793,31 +794,31 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty bool Text::font.italic
+    \qmlproperty bool QtQuick1::Text::font.italic
 
     Sets whether the font has an italic style.
 */
 
 /*!
-    \qmlproperty bool Text::font.underline
+    \qmlproperty bool QtQuick1::Text::font.underline
 
     Sets whether the text is underlined.
 */
 
 /*!
-    \qmlproperty bool Text::font.strikeout
+    \qmlproperty bool QtQuick1::Text::font.strikeout
 
     Sets whether the font has a strikeout style.
 */
 
 /*!
-    \qmlproperty real Text::font.pointSize
+    \qmlproperty real QtQuick1::Text::font.pointSize
 
     Sets the font size in points. The point size must be greater than zero.
 */
 
 /*!
-    \qmlproperty int Text::font.pixelSize
+    \qmlproperty int QtQuick1::Text::font.pixelSize
 
     Sets the font size in pixels.
 
@@ -826,7 +827,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty real Text::font.letterSpacing
+    \qmlproperty real QtQuick1::Text::font.letterSpacing
 
     Sets the letter spacing for the font.
 
@@ -835,7 +836,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty real Text::font.wordSpacing
+    \qmlproperty real QtQuick1::Text::font.wordSpacing
 
     Sets the word spacing for the font.
 
@@ -845,7 +846,7 @@ QDeclarative1Text::~QDeclarative1Text()
 */
 
 /*!
-    \qmlproperty enumeration Text::font.capitalization
+    \qmlproperty enumeration QtQuick1::Text::font.capitalization
 
     Sets the capitalization for the text.
 
@@ -889,7 +890,7 @@ void QDeclarative1Text::setFont(const QFont &font)
 }
 
 /*!
-    \qmlproperty string Text::text
+    \qmlproperty string QtQuick1::Text::text
 
     The text to display. Text supports both plain and rich text strings.
 
@@ -926,7 +927,7 @@ void QDeclarative1Text::setText(const QString &n)
 
 
 /*!
-    \qmlproperty color Text::color
+    \qmlproperty color QtQuick1::Text::color
 
     The text color.
 
@@ -964,7 +965,7 @@ void QDeclarative1Text::setColor(const QColor &color)
 }
 
 /*!
-    \qmlproperty enumeration Text::style
+    \qmlproperty enumeration QtQuick1::Text::style
 
     Set an additional text style.
 
@@ -1008,7 +1009,7 @@ void QDeclarative1Text::setStyle(QDeclarative1Text::TextStyle style)
 }
 
 /*!
-    \qmlproperty color Text::styleColor
+    \qmlproperty color QtQuick1::Text::styleColor
 
     Defines the secondary color used by text styles.
 
@@ -1041,9 +1042,9 @@ void QDeclarative1Text::setStyleColor(const QColor &color)
 
 
 /*!
-    \qmlproperty enumeration Text::horizontalAlignment
-    \qmlproperty enumeration Text::verticalAlignment
-    \qmlproperty enumeration Text::effectiveHorizontalAlignment
+    \qmlproperty enumeration QtQuick1::Text::horizontalAlignment
+    \qmlproperty enumeration QtQuick1::Text::verticalAlignment
+    \qmlproperty enumeration QtQuick1::Text::effectiveHorizontalAlignment
 
     Sets the horizontal and vertical alignment of the text within the Text items
     width and height. By default, the text is vertically aligned to the top. Horizontal
@@ -1166,7 +1167,7 @@ void QDeclarative1Text::setVAlign(VAlignment align)
 }
 
 /*!
-    \qmlproperty enumeration Text::wrapMode
+    \qmlproperty enumeration QtQuick1::Text::wrapMode
 
     Set this property to wrap the text to the Text item's width.  The text will only
     wrap if an explicit width has been set.  wrapMode can be one of:
@@ -1197,7 +1198,7 @@ void QDeclarative1Text::setWrapMode(WrapMode mode)
 }
 
 /*!
-    \qmlproperty int Text::lineCount
+    \qmlproperty int QtQuick1::Text::lineCount
     \since Quick 1.1
 
     Returns the number of lines visible in the text item.
@@ -1213,7 +1214,7 @@ int QDeclarative1Text::lineCount() const
 }
 
 /*!
-    \qmlproperty bool Text::truncated
+    \qmlproperty bool QtQuick1::Text::truncated
     \since Quick 1.1
 
     Returns true if the text has been truncated due to \l maximumLineCount
@@ -1230,7 +1231,7 @@ bool QDeclarative1Text::truncated() const
 }
 
 /*!
-    \qmlproperty int Text::maximumLineCount
+    \qmlproperty int QtQuick1::Text::maximumLineCount
     \since Quick 1.1
 
     Set this property to limit the number of lines that the text item will show.
@@ -1271,7 +1272,7 @@ void QDeclarative1Text::resetMaximumLineCount()
 }
 
 /*!
-    \qmlproperty enumeration Text::textFormat
+    \qmlproperty enumeration QtQuick1::Text::textFormat
 
     The way the text property should be displayed.
 
@@ -1351,7 +1352,7 @@ void QDeclarative1Text::setTextFormat(TextFormat format)
 }
 
 /*!
-    \qmlproperty enumeration Text::elide
+    \qmlproperty enumeration QtQuick1::Text::elide
 
     Set this property to elide parts of the text fit to the Text item's width.
     The text will only elide if an explicit width has been set.
@@ -1440,7 +1441,7 @@ void QDeclarative1Text::geometryChanged(const QRectF &newGeometry, const QRectF 
 }
 
 /*!
-    \qmlproperty real Text::paintedWidth
+    \qmlproperty real QtQuick1::Text::paintedWidth
 
     Returns the width of the text, including width past the width
     which is covered due to insufficient wrapping if WrapMode is set.
@@ -1452,7 +1453,7 @@ qreal QDeclarative1Text::paintedWidth() const
 }
 
 /*!
-    \qmlproperty real Text::paintedHeight
+    \qmlproperty real QtQuick1::Text::paintedHeight
 
     Returns the height of the text, including height past the height
     which is covered due to there being more text than fits in the set height.
@@ -1464,7 +1465,7 @@ qreal QDeclarative1Text::paintedHeight() const
 }
 
 /*!
-    \qmlproperty real Text::lineHeight
+    \qmlproperty real QtQuick1::Text::lineHeight
     \since Quick 1.1
 
     Sets the line height for the text.
@@ -1492,7 +1493,7 @@ void QDeclarative1Text::setLineHeight(qreal lineHeight)
 }
 
 /*!
-    \qmlproperty enumeration Text::lineHeightMode
+    \qmlproperty enumeration QtQuick1::Text::lineHeightMode
 
     This property determines how the line height is specified.
     The possible values are:

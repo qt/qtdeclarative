@@ -72,8 +72,9 @@ public:
 
 /*!
     \qmlclass Timer QDeclarative1Timer
+    \inqmlmodule QtQuick 1
     \ingroup qml-utility-elements
-    \since 4.7
+    \since QtQuick 1.0
     \brief The Timer item triggers a handler at a specified interval.
 
     A Timer can be used to trigger an action either once, or repeatedly
@@ -120,7 +121,7 @@ QDeclarative1Timer::QDeclarative1Timer(QObject *parent)
 }
 
 /*!
-    \qmlproperty int Timer::interval
+    \qmlproperty int QtQuick1::Timer::interval
 
     Sets the \a interval between triggers, in milliseconds.
 
@@ -143,7 +144,7 @@ int QDeclarative1Timer::interval() const
 }
 
 /*!
-    \qmlproperty bool Timer::running
+    \qmlproperty bool QtQuick1::Timer::running
 
     If set to true, starts the timer; otherwise stops the timer.
     For a non-repeating timer, \a running is set to false after the
@@ -171,7 +172,7 @@ void QDeclarative1Timer::setRunning(bool running)
 }
 
 /*!
-    \qmlproperty bool Timer::repeat
+    \qmlproperty bool QtQuick1::Timer::repeat
 
     If \a repeat is true the timer is triggered repeatedly at the
     specified interval; otherwise, the timer will trigger once at the
@@ -198,7 +199,7 @@ void QDeclarative1Timer::setRepeating(bool repeating)
 }
 
 /*!
-    \qmlproperty bool Timer::triggeredOnStart
+    \qmlproperty bool QtQuick1::Timer::triggeredOnStart
 
     When a timer is started, the first trigger is usually after the specified
     interval has elapsed.  It is sometimes desirable to trigger immediately
@@ -231,7 +232,7 @@ void QDeclarative1Timer::setTriggeredOnStart(bool triggeredOnStart)
 }
 
 /*!
-    \qmlmethod Timer::start()
+    \qmlmethod QtQuick1::Timer::start()
     \brief Starts the timer.
 
     If the timer is already running, calling this method has no effect.  The
@@ -243,7 +244,7 @@ void QDeclarative1Timer::start()
 }
 
 /*!
-    \qmlmethod Timer::stop()
+    \qmlmethod QtQuick1::Timer::stop()
     \brief Stops the timer.
 
     If the timer is not running, calling this method has no effect.  The
@@ -255,7 +256,7 @@ void QDeclarative1Timer::stop()
 }
 
 /*!
-    \qmlmethod Timer::restart()
+    \qmlmethod QtQuick1::Timer::restart()
     \brief Restarts the timer.
 
     If the Timer is not running it will be started, otherwise it will be
@@ -300,7 +301,7 @@ void QDeclarative1Timer::componentComplete()
 }
 
 /*!
-    \qmlsignal Timer::onTriggered()
+    \qmlsignal QtQuick1::Timer::onTriggered()
 
     This handler is called when the Timer is triggered.
 */
