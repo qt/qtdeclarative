@@ -138,6 +138,10 @@ public:
     void append(const QVector<Move> &moves) { m_moves += moves; }
     void append(const QVector<Change> &changes) { m_changes += changes; }
 
+    bool isEmpty() const {
+        return m_removes.empty() && m_inserts.empty() && m_moves.empty() && m_changes.empty();
+    }
+
     void clear()
     {
         m_removes.clear();
