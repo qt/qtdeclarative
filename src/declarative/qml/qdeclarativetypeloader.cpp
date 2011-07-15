@@ -51,8 +51,69 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qdiriterator.h>
+
+#if defined (Q_OS_UNIX)
+#include <sys/types.h>
+#include <dirent.h>
+#endif
 
 QT_BEGIN_NAMESPACE
+
+
+/*
+Returns the set of QML files in path (qmldir, *.qml, *.js).  The caller
+is responsible for deleting the returned data.
+*/
+#if defined (Q_OS_UNIX)
+static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
+{
+    QByteArray name(QFile::encodeName(path));
+    DIR *dd = opendir(name);
+    if (!dd)
+        return 0;
+
+    struct dirent *result;
+    union {
+        struct dirent d;
+        char b[offsetof (struct dirent, d_name) + NAME_MAX + 1];
+    } u;
+
+    QStringHash<bool> *files = new QStringHash<bool>;
+    while (readdir_r(dd, &u.d, &result) == 0 && result != 0) {
+        if (!strcmp(u.d.d_name, "qmldir")) {
+            files->insert(QLatin1String("qmldir"), true);
+            continue;
+        }
+        int len = strlen(u.d.d_name);
+        if (len < 4)
+            continue;
+        if (!strcmp(u.d.d_name+len-4, ".qml") || !strcmp(u.d.d_name+len-3, ".js"))
+            files->insert(QFile::decodeName(u.d.d_name), true);
+    }
+
+    closedir(dd);
+    return files;
+}
+#else
+static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
+{
+    QDirIterator dir(path, QDir::Files);
+    if (!dir.hasNext())
+        return 0;
+    QStringHash<bool> *files = new QStringHash<bool>;
+    while (dir.hasNext()) {
+        dir.next();
+        QString fileName = dir.fileName();
+        if (fileName == QLatin1String("qmldir")
+                || fileName.endsWith(QLatin1String(".qml"))
+                || fileName.endsWith(QLatin1String(".js")))
+            files->insert(fileName, true);
+    }
+    return files;
+}
+#endif
+
 
 /*!
 \class QDeclarativeDataBlob
@@ -723,6 +784,60 @@ QDeclarativeQmldirData *QDeclarativeTypeLoader::getQmldir(const QUrl &url)
 }
 
 /*!
+Returns the absolute filename of path via a directory cache for files named
+"qmldir", "*.qml", "*.js"
+Returns a empty string if the path does not exist.
+*/
+QString QDeclarativeTypeLoader::absoluteFilePath(const QString &path)
+{
+    if (path.isEmpty())
+        return QString();
+    if (path.at(0) == QLatin1Char(':')) {
+        // qrc resource
+        QFileInfo fileInfo(path);
+        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
+    }
+    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+    QStringRef dirPath(&path, 0, lastSlash);
+
+    StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
+    if (!fileSet) {
+        QHashedString dirPathString(dirPath.toString());
+        StringSet *files = qmlFilesInDirectory(dirPathString);
+        m_importDirCache.insert(dirPathString, files);
+        fileSet = m_importDirCache.value(dirPathString);
+    }
+    if (!(*fileSet))
+        return QString();
+
+    QString absoluteFilePath = (*fileSet)->contains(QHashedStringRef(path.constData()+lastSlash+1, path.length()-lastSlash-1)) ? path : QString();
+    if (absoluteFilePath.length() > 2 && absoluteFilePath.at(0) != QLatin1Char('/') && absoluteFilePath.at(1) != QLatin1Char(':'))
+        absoluteFilePath = QFileInfo(absoluteFilePath).absoluteFilePath();
+
+    return absoluteFilePath;
+}
+
+/*!
+Return a QDeclarativeDirParser for absoluteFilePath.  The QDeclarativeDirParser may be cached.
+*/
+const QDeclarativeDirParser *QDeclarativeTypeLoader::qmlDirParser(const QString &absoluteFilePath)
+{
+    QDeclarativeDirParser *qmldirParser;
+    QDeclarativeDirParser **val = m_importQmlDirCache.value(absoluteFilePath);
+    if (!val) {
+        qmldirParser = new QDeclarativeDirParser;
+        qmldirParser->setFileSource(absoluteFilePath);
+        qmldirParser->setUrl(QUrl::fromLocalFile(absoluteFilePath));
+        qmldirParser->parse();
+        m_importQmlDirCache.insert(absoluteFilePath, qmldirParser);
+    } else {
+        qmldirParser = *val;
+    }
+
+    return qmldirParser;
+}
+
+/*!
 Clears cached information about loaded files, including any type data, scripts
 and qmldir information.
 */
@@ -734,17 +849,21 @@ void QDeclarativeTypeLoader::clearCache()
         (*iter)->release();
     for (QmldirCache::Iterator iter = m_qmldirCache.begin(); iter != m_qmldirCache.end(); ++iter) 
         (*iter)->release();
+    qDeleteAll(m_importDirCache);
+    qDeleteAll(m_importQmlDirCache);
 
     m_typeCache.clear();
     m_scriptCache.clear();
     m_qmldirCache.clear();
+    m_importDirCache.clear();
+    m_importQmlDirCache.clear();
 }
 
 
 QDeclarativeTypeData::QDeclarativeTypeData(const QUrl &url, QDeclarativeTypeLoader::Options options, 
                                            QDeclarativeTypeLoader *manager)
-: QDeclarativeDataBlob(url, QmlFile), m_options(options), m_typesResolved(false), 
-  m_compiledData(0), m_typeLoader(manager)
+: QDeclarativeDataBlob(url, QmlFile), m_options(options), m_imports(manager), m_typesResolved(false),
+   m_compiledData(0), m_typeLoader(manager)
 {
 }
 
@@ -1104,7 +1223,7 @@ void QDeclarativeScriptData::clear()
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
 : QDeclarativeDataBlob(url, JavaScriptFile), m_pragmas(QDeclarativeParser::Object::ScriptBlock::None),
-  m_scriptData(0), m_typeLoader(loader)
+  m_imports(loader), m_scriptData(0), m_typeLoader(loader)
 {
 }
 

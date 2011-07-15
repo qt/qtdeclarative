@@ -2950,11 +2950,10 @@ bool QDeclarativeCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMeta(aliasObject, ResolveAliases));
 
-    QDeclarativeV4Compiler::Expression expr;
+    QDeclarativeV4Compiler::Expression expr(unit->imports());
     expr.component = compileState->root;
     expr.ids = &compileState->ids;
     expr.importCache = output->importCache;
-    expr.imports = unit->imports();
 
     QDeclarativeV4Compiler bindingCompiler;
 

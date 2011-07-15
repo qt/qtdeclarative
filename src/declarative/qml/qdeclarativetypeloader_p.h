@@ -62,6 +62,7 @@
 #include <private/qdeclarativescriptparser_p.h>
 #include <private/qdeclarativedirparser_p.h>
 #include <private/qdeclarativeimport_p.h>
+#include "private/qhashedstring_p.h"
 
 #include <private/qv8_p.h>
 
@@ -202,14 +203,23 @@ public:
 
     QDeclarativeScriptBlob *getScript(const QUrl &);
     QDeclarativeQmldirData *getQmldir(const QUrl &);
+
+    QString absoluteFilePath(const QString &path);
+    const QDeclarativeDirParser *qmlDirParser(const QString &absoluteFilePath);
+
 private:
     typedef QHash<QUrl, QDeclarativeTypeData *> TypeCache;
     typedef QHash<QUrl, QDeclarativeScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QDeclarativeQmldirData *> QmldirCache;
+    typedef QStringHash<bool> StringSet;
+    typedef QStringHash<StringSet*> ImportDirCache;
+    typedef QStringHash<QDeclarativeDirParser*> ImportQmlDirCache;
 
     TypeCache m_typeCache;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;
+    ImportDirCache m_importDirCache;
+    ImportQmlDirCache m_importQmlDirCache;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeTypeLoader::Options)

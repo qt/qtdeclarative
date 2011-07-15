@@ -504,7 +504,7 @@ const QString &QDeclarativeType::elementName() const
     return d->m_elementName;
 }
 
-QByteArray QDeclarativeType::qmlTypeName() const
+const QByteArray &QDeclarativeType::qmlTypeName() const
 {
     return d->m_name;
 }

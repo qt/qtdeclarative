@@ -74,6 +74,7 @@ public:
 
     struct Expression
     {
+        Expression(const QDeclarativeImports &imp) : imports(imp) {}
         QDeclarativeParser::Object *component;
         QDeclarativeParser::Object *context;
         QDeclarativeParser::Property *property;
