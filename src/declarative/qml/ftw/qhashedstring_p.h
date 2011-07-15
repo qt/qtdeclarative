@@ -60,7 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 class QHashedStringRef;
-class QHashedString : public QString
+class Q_AUTOTEST_EXPORT QHashedString : public QString
 {
 public:
     inline QHashedString();
@@ -78,12 +78,17 @@ public:
     static inline bool isUpper(const QChar &);
 private:
     friend class QHashedStringRef;
+    friend class QStringHashNode;
 
     void computeHash() const;
     mutable quint32 m_hash;
+
+    static bool compare(const QChar *lhs, const QChar *rhs, int length);
+    static inline bool compare(const QChar *lhs, const char *rhs, int length);
+    static inline bool compare(const char *lhs, const char *rhs, int length);
 };
 
-class QHashedV8String 
+class Q_AUTOTEST_EXPORT QHashedV8String 
 {
 public:
     inline QHashedV8String();
@@ -104,7 +109,7 @@ private:
     v8::Handle<v8::String> m_string;
 };
 
-class QHashedStringRef 
+class Q_AUTOTEST_EXPORT QHashedStringRef 
 {
 public:
     inline QHashedStringRef();
@@ -133,7 +138,7 @@ private:
     mutable quint32 m_hash;
 };
 
-class QHashedCStringRef
+class Q_AUTOTEST_EXPORT QHashedCStringRef
 {
 public:
     inline QHashedCStringRef();
@@ -154,7 +159,7 @@ private:
 };
 
 class QStringHashData;
-class QStringHashNode
+class Q_AUTOTEST_EXPORT QStringHashNode
 {
 public:
     QStringHashNode()
@@ -203,29 +208,20 @@ public:
 
     inline bool equals(const QHashedStringRef &string) {
         return length == string.length() && 
-            hash == string.hash() && 
-               ckey?(cstrCompare(string.constData(), ckey, length)):
-                       (0 == ::memcmp(string.constData(), key.constData(), length * sizeof(QChar)));
+               hash == string.hash() && 
+               ckey?(QHashedString::compare(string.constData(), ckey, length)):
+                    (QHashedString::compare(string.constData(), key.constData(), length));
     }
 
     inline bool equals(const QHashedCStringRef &string) {
         return length == string.length() && 
-            hash == string.hash() && 
-               ckey?(0 == ::memcmp(string.constData(), ckey, length)):
-                    (cstrCompare(key.constData(), string.constData(), length));
-    }
-
-private:
-    static inline bool cstrCompare(const QChar *lhsChar, const char *rhs, int length) {
-        Q_ASSERT(lhsChar && rhs);
-        const uint16_t *lhs = (const uint16_t*)lhsChar;
-        while (length--) 
-            if (*lhs++ != *rhs++) return false;
-        return true;
+               hash == string.hash() && 
+               ckey?(QHashedString::compare(string.constData(), ckey, length)):
+                    (QHashedString::compare(key.constData(), string.constData(), length));
     }
 };
 
-struct QStringHashData
+struct Q_AUTOTEST_EXPORT QStringHashData
 {
 public:
     QStringHashData() 
@@ -237,13 +233,18 @@ public:
     int size;
     short numBits;
 
-    void rehash();
+    void rehashToBits(short);
+    void rehashToSize(int);
+
+private:
+    QStringHashData(const QStringHashData &);
+    QStringHashData &operator=(const QStringHashData &);
 };
 
-template<class T>
-class QStringHash
+template<class T, int SmallThreshold = 0>
+class Q_AUTOTEST_EXPORT QStringHash
 {
-private:
+public:
     struct Node : public QStringHashNode {
         Node(const QHashedString &key, const T &value) : QStringHashNode(key), value(value) {}
         Node(const QHashedCStringRef &key, const T &value) : QStringHashNode(key), value(value) {}
@@ -263,6 +264,8 @@ private:
     QStringHashData data;
     ReservedNodePool *nodePool;
 
+    inline Node *findNode(const QString &) const;
+    inline Node *findNode(const QHashedString &) const;
     inline Node *findNode(const QHashedStringRef &) const;
     inline Node *findNode(const QHashedCStringRef &) const;
     inline Node *findNode(const QHashedV8String &) const;
@@ -274,15 +277,15 @@ private:
     inline Node *takeNode(const QHashedCStringRef &key, const T &value);
     inline Node *takeNode(const Node &o);
 
-    inline void copy(const QStringHash<T> &);
+    inline void copy(const QStringHash<T,SmallThreshold> &);
 public:
     inline QStringHash();
     inline QStringHash(const QStringHash &);
     inline ~QStringHash();
 
-    QStringHash &operator=(const QStringHash<T> &);
+    QStringHash &operator=(const QStringHash<T,SmallThreshold> &);
 
-    void copyAndReserve(const QStringHash<T> &other, int additionalReserve);
+    void copyAndReserve(const QStringHash<T,SmallThreshold> &other, int additionalReserve);
 
     inline bool isEmpty() const;
     inline void clear();
@@ -337,53 +340,57 @@ public:
     inline void reserve(int);
 };
 
-template<class T>
-QStringHash<T>::QStringHash()
+template<class T, int SmallThreshold>
+QStringHash<T,SmallThreshold>::QStringHash()
 : nodePool(0)
 {
 }
 
-template<class T>
-QStringHash<T>::QStringHash(const QStringHash<T> &other)
-: data(other.data), nodePool(0)
+template<class T, int SmallThreshold>
+QStringHash<T,SmallThreshold>::QStringHash(const QStringHash<T,SmallThreshold> &other)
+: nodePool(0)
 {
+    data.numBits = other.data.numBits;
+    data.size = other.data.size;
     reserve(other.count());
     copy(other);
 }
 
-template<class T>
-QStringHash<T> &QStringHash<T>::operator=(const QStringHash<T> &other)
+template<class T, int SmallThreshold>
+QStringHash<T,SmallThreshold> &QStringHash<T,SmallThreshold>::operator=(const QStringHash<T,SmallThreshold> &other)
 {
     if (&other == this)
         return *this;
 
     clear();
 
-    data = other.data;
+    data.numBits = other.data.numBits;
+    data.size = other.data.size;
     reserve(other.count());
     copy(other);
 
     return *this;
 }
 
-template<class T>
-void QStringHash<T>::copyAndReserve(const QStringHash<T> &other, int additionalReserve)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::copyAndReserve(const QStringHash<T,SmallThreshold> &other, int additionalReserve)
 {
     clear();
 
-    data = other.data;
+    data.numBits = other.data.numBits;
+    data.size = other.data.size;;
     reserve(other.count() + additionalReserve);
     copy(other);
 }
 
-template<class T>
-QStringHash<T>::~QStringHash()
+template<class T, int SmallThreshold>
+QStringHash<T,SmallThreshold>::~QStringHash()
 {
     clear();
 }
 
-template<class T>
-void QStringHash<T>::clear() 
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::clear() 
 {
     // If all the nodes were allocated from the node pool, we
     // don't need to clean them individually
@@ -398,24 +405,28 @@ void QStringHash<T>::clear()
     if (nodePool) delete nodePool; 
     delete [] data.buckets;
 
-    data = QStringHashData();
+    data.nodes = 0;
+    data.buckets = 0;
+    data.numBuckets = 0;
+    data.numBits = 0;
+
     nodePool = 0;
 }
 
-template<class T>
-bool QStringHash<T>::isEmpty() const
+template<class T, int SmallThreshold>
+bool QStringHash<T,SmallThreshold>::isEmpty() const
 {
     return data.nodes == 0;
 }
 
-template<class T>
-int QStringHash<T>::count() const
+template<class T, int SmallThreshold>
+int QStringHash<T,SmallThreshold>::count() const
 {
     return data.size;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedString &key, const T &value)
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::takeNode(const QHashedString &key, const T &value)
 {
     if (nodePool && nodePool->used != nodePool->count) {
         Node *rv = nodePool->nodes + nodePool->used++;
@@ -430,8 +441,8 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedString &key
     }
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedCStringRef &key, const T &value)
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::takeNode(const QHashedCStringRef &key, const T &value)
 {
     if (nodePool && nodePool->used != nodePool->count) {
         Node *rv = nodePool->nodes + nodePool->used++;
@@ -446,8 +457,8 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const QHashedCStringRef 
     }
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::takeNode(const Node &o)
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::takeNode(const Node &o)
 {
     if (nodePool && nodePool->used != nodePool->count) {
         Node *rv = nodePool->nodes + nodePool->used++;
@@ -464,64 +475,101 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const Node &o)
     }
 }
 
-template<class T>
-void QStringHash<T>::copy(const QStringHash<T> &other)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::copy(const QStringHash<T,SmallThreshold> &other)
 {
-    data.nodes = 0;
-    data.buckets = 0;
+    Q_ASSERT(data.nodes == 0);
+    Q_ASSERT(data.size == 0);
 
-    QStringHashNode *n = other.data.nodes;
-    while (n) {
-        Node *o = (Node *)n;
-        Node *mynode = takeNode(*o);
-        mynode->nlist = data.nodes;
-        data.nodes = mynode;
-        n = o->nlist;
+    if (other.data.size <= SmallThreshold) {
+        QStringHashNode *n = other.data.nodes;
+        while (n) {
+            Node *o = (Node *)n;
+            Node *mynode = takeNode(*o);
+            mynode->nlist = data.nodes;
+            mynode->next = data.nodes;
+            data.nodes = mynode;
+
+            n = o->nlist;
+        }
+    } else {
+        // Ensure buckets array is created
+        data.rehashToBits(data.numBits);
+
+        QStringHashNode *n = other.data.nodes;
+        while (n) {
+            Node *o = (Node *)n;
+            Node *mynode = takeNode(*o);
+            mynode->nlist = data.nodes;
+            data.nodes = mynode;
+
+            int bucket = mynode->hash % data.numBuckets;
+            mynode->next = data.buckets[bucket];
+            data.buckets[bucket] = mynode;
+
+            n = o->nlist;
+        }
+    }
+}
+
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::createNode(const QHashedString &key, const T &value)
+{
+    Node *n = takeNode(key, value);
+
+    if (data.size < SmallThreshold) {
+
+        n->nlist = data.nodes;
+        n->next = data.nodes;
+        data.nodes = n;
+
+    } else {
+        if (data.size >= data.numBuckets)
+            data.rehashToBits(data.numBits + 1);
+
+        n->nlist = data.nodes;
+        data.nodes = n;
+
+        int bucket = key.hash() % data.numBuckets;
+        n->next = data.buckets[bucket];
+        data.buckets[bucket] = n;
     }
 
-    data.rehash();
+    data.size++; 
+
+    return n;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::createNode(const QHashedString &key, const T &value)
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::createNode(const QHashedCStringRef &key, const T &value)
 {
-    if (data.size == data.numBuckets) 
-        data.rehash();
-
     Node *n = takeNode(key, value);
-    n->nlist = data.nodes;
-    data.nodes = n;
 
-    int bucket = key.hash() % data.numBuckets;
-    n->next = data.buckets[bucket];
-    data.buckets[bucket] = n;
+    if (data.size < SmallThreshold) {
+
+        n->nlist = data.nodes;
+        n->next = data.nodes;
+        data.nodes = n;
+
+    } else {
+        if (data.size >= data.numBuckets)
+            data.rehashToBits(data.numBits + 1);
+
+        n->nlist = data.nodes;
+        data.nodes = n;
+
+        int bucket = key.hash() % data.numBuckets;
+        n->next = data.buckets[bucket];
+        data.buckets[bucket] = n;
+    }
 
     data.size++; 
 
     return n;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::createNode(const QHashedCStringRef &key, const T &value)
-{
-    if (data.size == data.numBuckets) 
-        data.rehash();
-
-    Node *n = takeNode(key, value);
-    n->nlist = data.nodes;
-    data.nodes = n;
-
-    int bucket = key.hash() % data.numBuckets;
-    n->next = data.buckets[bucket];
-    data.buckets[bucket] = n;
-
-    data.size++; 
-
-    return n;
-}
-
-template<class T>
-void QStringHash<T>::insert(const QString &key, const T &value)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::insert(const QString &key, const T &value)
 {
     QHashedStringRef ch(key);
     Node *n = findNode(key);
@@ -529,150 +577,148 @@ void QStringHash<T>::insert(const QString &key, const T &value)
     else createNode(QHashedString(key, ch.hash()), value);
 }
 
-template<class T>
-void QStringHash<T>::insert(const QHashedString &key, const T &value)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::insert(const QHashedString &key, const T &value)
 {
     Node *n = findNode(key);
     if (n) n->value = value;
     else createNode(key, value);
 }
 
-template<class T>
-void QStringHash<T>::insert(const QHashedStringRef &key, const T &value)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::insert(const QHashedStringRef &key, const T &value)
 {
     Node *n = findNode(key);
     if (n) n->value = value;
     else createNode(key, value);
 }
 
-template<class T>
-void QStringHash<T>::insert(const QHashedCStringRef &key, const T &value)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::insert(const QHashedCStringRef &key, const T &value)
 {
     Node *n = findNode(key);
     if (n) n->value = value;
     else createNode(key, value);
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedStringRef &string) const
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findNode(const QString &string) const
 {
-    QStringHashNode *node = 0;
-    if (data.numBuckets) {
-        node = data.buckets[string.hash() % data.numBuckets];
-        while (node && !node->equals(string))
-            node = node->next;
-    } 
+    return findNode(QHashedStringRef(string));
+}
+
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findNode(const QHashedString &string) const
+{
+    return findNode(QHashedStringRef(string.constData(), string.length(), string.hash()));
+}
+
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findNode(const QHashedStringRef &string) const
+{
+    QStringHashNode *node = (data.size <= SmallThreshold)?data.nodes:data.buckets[string.hash() % data.numBuckets];
+    while (node && !node->equals(string))
+        node = node->next;
 
     return (Node *)node;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedCStringRef &string) const
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findNode(const QHashedCStringRef &string) const
 {
-    QStringHashNode *node = 0;
-    if (data.numBuckets) {
-        node = data.buckets[string.hash() % data.numBuckets];
-        while (node && !node->equals(string))
-            node = node->next;
-    } 
+    QStringHashNode *node = (data.size <= SmallThreshold)?data.nodes:data.buckets[string.hash() % data.numBuckets];
+    while (node && !node->equals(string))
+        node = node->next;
 
     return (Node *)node;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findNode(const QHashedV8String &string) const
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findNode(const QHashedV8String &string) const
 {
-    QStringHashNode *node = 0;
-    if (data.numBuckets) {
-        quint32 hash = string.hash();
-        node = data.buckets[hash % data.numBuckets];
-        while (node && !node->equals(string))
-            node = node->next;
-    } 
+    QStringHashNode *node = (data.size <= SmallThreshold)?data.nodes:data.buckets[string.hash() % data.numBuckets];
+    while (node && !node->equals(string))
+        node = node->next;
 
     return (Node *)node;
 }
 
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::findSymbolNode(const QHashedV8String &string) const
+template<class T, int SmallThreshold>
+typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::findSymbolNode(const QHashedV8String &string) const
 {
     Q_ASSERT(string.symbolId() != 0);
 
-    QStringHashNode *node = 0;
-    if (data.numBuckets) {
-        quint32 hash = string.hash();
-        node = data.buckets[hash % data.numBuckets];
-        while (node && !node->symbolEquals(string))
-            node = node->next;
+    QStringHashNode *node = (data.size <= SmallThreshold)?data.nodes:data.buckets[string.hash() % data.numBuckets];
+    while (node && !node->symbolEquals(string))
+        node = node->next;
 
-        if (node)
-            node->symbolId = string.symbolId();
-    } 
+    if (node)
+        node->symbolId = string.symbolId();
 
     return (Node *)node;
 }
 
-template<class T>
-T *QStringHash<T>::value(const QString &key) const
+template<class T, int SmallThreshold>
+T *QStringHash<T,SmallThreshold>::value(const QString &key) const
 {
     Node *n = findNode(key);
     return n?&n->value:0;
 }
 
-template<class T>
-T *QStringHash<T>::value(const QHashedString &key) const
+template<class T, int SmallThreshold>
+T *QStringHash<T,SmallThreshold>::value(const QHashedString &key) const
 {
     Node *n = findNode(key);
     return n?&n->value:0;
 }
 
-template<class T>
-T *QStringHash<T>::value(const QHashedStringRef &key) const
+template<class T, int SmallThreshold>
+T *QStringHash<T,SmallThreshold>::value(const QHashedStringRef &key) const
 {
     Node *n = findNode(key);
     return n?&n->value:0;
 }
 
-template<class T>
-T *QStringHash<T>::value(const QHashedCStringRef &key) const
+template<class T, int SmallThreshold>
+T *QStringHash<T,SmallThreshold>::value(const QHashedCStringRef &key) const
 {
     Node *n = findNode(key);
     return n?&n->value:0;
 }
 
-template<class T>
-T *QStringHash<T>::value(const QHashedV8String &string) const
+template<class T, int SmallThreshold>
+T *QStringHash<T,SmallThreshold>::value(const QHashedV8String &string) const
 {
     Node *n = string.symbolId()?findSymbolNode(string):findNode(string);
     return n?&n->value:0;
 }
 
-template<class T>
-bool QStringHash<T>::contains(const QString &s) const
+template<class T, int SmallThreshold>
+bool QStringHash<T,SmallThreshold>::contains(const QString &s) const
 {
     return 0 != value(s);
 }
 
-template<class T>
-bool QStringHash<T>::contains(const QHashedString &s) const
+template<class T, int SmallThreshold>
+bool QStringHash<T,SmallThreshold>::contains(const QHashedString &s) const
 {
     return 0 != value(s);
 }
 
-template<class T>
-bool QStringHash<T>::contains(const QHashedStringRef &s) const
+template<class T, int SmallThreshold>
+bool QStringHash<T,SmallThreshold>::contains(const QHashedStringRef &s) const
 {
     return 0 != value(s);
 }
 
-template<class T>
-bool QStringHash<T>::contains(const QHashedCStringRef &s) const
+template<class T, int SmallThreshold>
+bool QStringHash<T,SmallThreshold>::contains(const QHashedCStringRef &s) const
 {
     return 0 != value(s);
 }
 
-template<class T>
-T &QStringHash<T>::operator[](const QString &key) 
+template<class T, int SmallThreshold>
+T &QStringHash<T,SmallThreshold>::operator[](const QString &key) 
 {
     QHashedStringRef cs(key);
     Node *n = findNode(cs);
@@ -680,32 +726,32 @@ T &QStringHash<T>::operator[](const QString &key)
     else return createNode(QHashedString(key, cs.hash()), T())->value;
 }
 
-template<class T>
-T &QStringHash<T>::operator[](const QHashedString &key)
+template<class T, int SmallThreshold>
+T &QStringHash<T,SmallThreshold>::operator[](const QHashedString &key)
 {
     Node *n = findNode(key);
     if (n) return n->value;
     else return createNode(key, T())->value;
 }
 
-template<class T>
-T &QStringHash<T>::operator[](const QHashedStringRef &key) 
+template<class T, int SmallThreshold>
+T &QStringHash<T,SmallThreshold>::operator[](const QHashedStringRef &key) 
 {
     Node *n = findNode(key);
     if (n) return n->value;
     else return createNode(key, T())->value;
 }
 
-template<class T>
-T &QStringHash<T>::operator[](const QHashedCStringRef &key) 
+template<class T, int SmallThreshold>
+T &QStringHash<T,SmallThreshold>::operator[](const QHashedCStringRef &key) 
 {
     Node *n = findNode(key);
     if (n) return n->value;
     else return createNode(key, T())->value;
 }
 
-template<class T>
-void QStringHash<T>::reserve(int n)
+template<class T, int SmallThreshold>
+void QStringHash<T,SmallThreshold>::reserve(int n)
 {
     if (nodePool || 0 == n)
         return;
@@ -713,6 +759,9 @@ void QStringHash<T>::reserve(int n)
     nodePool->count = n;
     nodePool->used = 0;
     nodePool->nodes = new Node[n];
+
+    if (n > SmallThreshold)
+        data.rehashToSize(n);
 }
 
 inline uint qHash(const QHashedString &string) 
@@ -762,7 +811,7 @@ bool QHashedString::operator==(const QHashedStringRef &string) const
 {
     return length() == string.m_length &&
            (string.m_hash == m_hash || !string.m_hash || !m_hash) && 
-           0 == ::memcmp(constData(), string.m_data, string.m_length * sizeof(QChar));
+           QHashedString::compare(constData(), string.m_data, string.m_length);
 }
 
 quint32 QHashedString::hash() const
@@ -867,14 +916,14 @@ bool QHashedStringRef::operator==(const QHashedString &string) const
 {
     return m_length == string.length() && 
            (m_hash == string.m_hash || !m_hash || !string.m_hash) &&
-           0 == ::memcmp(string.constData(), m_data, m_length * sizeof(QChar));
+           QHashedString::compare(string.constData(), m_data, m_length);
 }
 
 bool QHashedStringRef::operator==(const QHashedStringRef &string) const
 {
     return m_length == string.m_length && 
            (m_hash == string.m_hash || !m_hash || !string.m_hash) &&
-           0 == ::memcmp(string.m_data, m_data, m_length * sizeof(QChar));
+           QHashedString::compare(string.m_data, m_data, m_length);
 }
 
 const QChar *QHashedStringRef::constData() const
@@ -935,6 +984,20 @@ int QHashedCStringRef::length() const
     return m_length;
 }
 
+bool QHashedString::compare(const QChar *lhs, const char *rhs, int length) 
+{
+    Q_ASSERT(lhs && rhs);
+    const quint16 *l = (const quint16*)lhs;
+    while (length--) 
+        if (*l++ != *rhs++) return false;
+    return true;
+}
+
+bool QHashedString::compare(const char *lhs, const char *rhs, int length) 
+{
+    Q_ASSERT(lhs && rhs);
+    return 0 == ::memcmp(lhs, rhs, length);
+}
 
 QT_END_NAMESPACE
 

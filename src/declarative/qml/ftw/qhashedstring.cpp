@@ -87,10 +87,24 @@ static inline int primeForNumBits(int numBits)
     return (1 << numBits) + prime_deltas[numBits];
 }
 
-void QStringHashData::rehash()
+void QStringHashData::rehashToSize(int size)
 {
-    numBits = qMax(MinNumBits, numBits + 1);
-    numBuckets = primeForNumBits(numBits);
+    short bits = qMax(MinNumBits, (int)numBits);
+    while (primeForNumBits(bits) < size) bits++;
+
+    if (bits > numBits)
+        rehashToBits(bits);
+}
+
+void QStringHashData::rehashToBits(short bits)
+{
+    numBits = qMax(MinNumBits, (int)bits);
+
+    int nb = primeForNumBits(numBits);
+    if (nb == numBuckets && buckets)
+        return;
+
+    numBuckets = nb;
 
     delete []  buckets;
     buckets = new QStringHashNode *[numBuckets]; 
@@ -106,3 +120,56 @@ void QStringHashData::rehash()
     }
 }
 
+// Copy of QString's qMemCompare
+bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
+{
+    Q_ASSERT(lhs && rhs);
+    const quint16 *a = (const quint16 *)lhs;
+    const quint16 *b = (const quint16 *)rhs;
+
+    if (a == b || !length)
+        return true;
+
+    register union {
+        const quint16 *w;
+        const quint32 *d;
+        quintptr value;
+    } sa, sb;
+    sa.w = a;
+    sb.w = b;
+
+    // check alignment
+    if ((sa.value & 2) == (sb.value & 2)) {
+        // both addresses have the same alignment
+        if (sa.value & 2) {
+            // both addresses are not aligned to 4-bytes boundaries
+            // compare the first character
+            if (*sa.w != *sb.w)
+                return false;
+            --length;
+            ++sa.w;
+            ++sb.w;
+
+            // now both addresses are 4-bytes aligned
+        }
+
+        // both addresses are 4-bytes aligned
+        // do a fast 32-bit comparison
+        register const quint32 *e = sa.d + (length >> 1);
+        for ( ; sa.d != e; ++sa.d, ++sb.d) {
+            if (*sa.d != *sb.d)
+                return false;
+        }
+
+        // do we have a tail?
+        return (length & 1) ? *sa.w == *sb.w : true;
+    } else {
+        // one of the addresses isn't 4-byte aligned but the other is
+        register const quint16 *e = sa.w + length;
+        for ( ; sa.w != e; ++sa.w, ++sb.w) {
+            if (*sa.w != *sb.w)
+                return false;
+        }
+    }
+    return true;
+}
