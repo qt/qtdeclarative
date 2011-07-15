@@ -1415,9 +1415,9 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 {
     Q_ASSERT(obj->metaObject());
 
-    QString name = prop->name().toString();
-    Q_ASSERT(name.startsWith(on_string));
-    name = name.mid(2);
+    QStringRef propName = prop->name();
+    Q_ASSERT(propName.startsWith(on_string));
+    QString name = propName.string()->mid(propName.position() + 2, propName.length() - 2);
 
     // Note that the property name could start with any alpha or '_' or '$' character,
     // so we need to do the lower-casing of the first alpha character.
@@ -1433,7 +1433,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 
     if (sigIdx == -1) {
 
-        if (notInRevision && -1 == indexOfProperty(obj, prop->name(), 0)) {
+        if (notInRevision && -1 == indexOfProperty(obj, propName, 0)) {
             Q_ASSERT(obj->type != -1);
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
