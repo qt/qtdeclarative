@@ -181,6 +181,7 @@ public:
     static Data create(const QMetaObject *, const QString &);
 
     inline Data *property(const QHashedV8String &) const;
+    Data *property(const QHashedStringRef &) const;
     Data *property(const QString &) const;
     Data *property(int) const;
     Data *method(int) const;

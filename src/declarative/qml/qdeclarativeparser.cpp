@@ -132,17 +132,17 @@ void QDeclarativeParser::Object::addScriptStringProperty(Property *p)
     scriptStringProperties.append(p);
 }
 
-Property *QDeclarativeParser::Object::getProperty(const QString *name, bool create)
+Property *QDeclarativeParser::Object::getProperty(const QStringRef &name, bool create)
 {
     for (Property *p = properties.first(); p; p = properties.next(p)) {
-        if (p->name() == *name)
+        if (p->name() == name)
             return p;
     }
 
     if (create) {
         Property *property = pool()->New<Property>();
         property->parent = this;
-        property->_name = const_cast<QString *>(name);
+        property->_name = name;
         property->isDefault = false;
         properties.prepend(property);
         return property;
@@ -161,7 +161,7 @@ Property *QDeclarativeParser::Object::getProperty(const QString &name, bool crea
     if (create) {
         Property *property = pool()->New<Property>();
         property->parent = this;
-        property->_name = pool()->NewString(name);
+        property->_name = QStringRef(pool()->NewString(name));
         property->isDefault = false;
         properties.prepend(property);
         return property;
@@ -288,7 +288,8 @@ bool QDeclarativeParser::Variant::asBoolean() const
 QString QDeclarativeParser::Variant::asString() const
 {
     if (t == String) {
-        return l->value->asString();
+        // XXX aakenned
+        return l->value.toString();
     } else {
         return asWritten.toString();
     }
@@ -358,9 +359,10 @@ QString QDeclarativeParser::Variant::asScript() const
     case String:
         return escapedString(asString());
     case Script:
-        if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(n)) 
-            return i->name->asString();
-        else
+        if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(n)) {
+            // XXX aakenned
+            return i->name.toString();
+        } else
             return asWritten.toString();
     }
 }
@@ -416,7 +418,7 @@ QStringList QDeclarativeParser::Variant::asStringList() const
         AST::StringLiteral *string = AST::cast<AST::StringLiteral *>(elements->expression);
         if (!string)
             return QStringList();
-        rv.append(string->value->asString());
+        rv.append(string->value.toString());
 
         elements = elements->next;
     }

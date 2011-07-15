@@ -407,7 +407,7 @@ struct Ret: Stmt {
 
 struct Function {
     Module *module;
-    const NameId *name;
+    QString name;
     int tempCount;
     QVector<BasicBlock *> basicBlocks;
     QVector<Expr *> temps;
@@ -415,7 +415,7 @@ struct Function {
     template <typename BB> inline BB i(BB i) { basicBlocks.append(i); return i; }
     template <typename E> inline E e(E e) { temps.append(e); return e; }
 
-    Function(Module *module, const NameId *name = 0): module(module), name(name), tempCount(0) {}
+    Function(Module *module, const QString &name): module(module), name(name), tempCount(0) {}
     ~Function();
 
     BasicBlock *newBasicBlock();
@@ -487,7 +487,7 @@ struct Module {
 
     template <typename BB> inline BB i(BB i) { functions.append(i); return i; }
 
-    Function *newFunction(const NameId *name = 0) { return i(new Function(this, name)); }
+    Function *newFunction(const QString &name = QString()) { return i(new Function(this, name)); }
 
     virtual void dump(QTextStream &out);
 };

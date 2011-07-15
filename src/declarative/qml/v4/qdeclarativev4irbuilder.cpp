@@ -140,7 +140,7 @@ bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
                                               QList<AST::ExpressionNode *> *nodes)
 {
     if (node->kind == AST::Node::Kind_IdentifierExpression) {
-        name << static_cast<AST::IdentifierExpression*>(node)->name->asString();
+        name << static_cast<AST::IdentifierExpression*>(node)->name.toString();
         if (nodes) *nodes << static_cast<AST::IdentifierExpression*>(node);
     } else if (node->kind == AST::Node::Kind_FieldMemberExpression) {
         AST::FieldMemberExpression *expr =
@@ -149,7 +149,7 @@ bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
         if (!buildName(name, expr->base, nodes))
             return false;
 
-        name << expr->name->asString();
+        name << expr->name.toString();
         if (nodes) *nodes << expr;
     } else {
         return false;
@@ -432,7 +432,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
     const quint32 line = ast->identifierToken.startLine;
     const quint32 column = ast->identifierToken.startColumn;
 
-    const QString name = ast->name->asString();
+    const QString name = ast->name.toString();
 
     if (name.at(0) == QLatin1Char('u') && name.length() == 9 && name == QLatin1String("undefined")) {
         _expr.code = _block->CONST(IR::UndefinedType, 0); // ### undefined value
@@ -543,7 +543,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FalseLiteral *)
 bool QDeclarativeV4IRBuilder::visit(AST::StringLiteral *ast)
 {
     // ### TODO: cx format
-    _expr.code = _block->STRING(ast->value->asString());
+    _expr.code = _block->STRING(ast->value.toString());
     return false;
 }
 
@@ -580,7 +580,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
             const quint32 line = ast->identifierToken.startLine;
             const quint32 column = ast->identifierToken.startColumn;
 
-            QString name = ast->name->asString();
+            QString name = ast->name.toString();
 
             switch(baseName->symbol) {
             case IR::Name::Unbound:
@@ -605,7 +605,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     if (!found && qmlVerboseCompiler())
                         qWarning() << "*** unresolved enum:" 
-                                   << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                   << (baseName->id + QLatin1String(".") + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QDeclarativePropertyCache *cache = m_engine->cache(attachedMeta);
                     QDeclarativePropertyCache::Data *data = cache->property(name);
@@ -616,7 +616,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
-                                       << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                       << (baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -662,7 +662,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final property access:"
-                                << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                << (baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 

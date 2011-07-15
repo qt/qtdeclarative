@@ -245,8 +245,8 @@ namespace QDeclarativeParser
         // Content in value and values are mutually exclusive.
         Object *value;
         // The property name
-        QString name() const { return _name?*_name:QString(); }
-        void setName(const QString &n) { _name = pool()->NewString(n); }
+        QStringRef name() const { return _name; }
+        void setName(const QString &n) { _name = QStringRef(pool()->NewString(n)); }
         // True if this property was accessed as the default property.  
         bool isDefault;
         // True if the setting of this property will be deferred.  Set by the
@@ -272,7 +272,7 @@ namespace QDeclarativeParser
 
     private:
         friend class Object;
-        QString *_name;
+        QStringRef _name;
     };
 
     class Object : public QDeclarativePool::Class
@@ -312,7 +312,7 @@ namespace QDeclarativeParser
 
         Property *getDefaultProperty();
         // name ptr must be guarenteed to remain valid
-        Property *getProperty(const QString *name, bool create=true);
+        Property *getProperty(const QStringRef &name, bool create=true);
         Property *getProperty(const QString &name, bool create=true);
 
         Property *defaultProperty;

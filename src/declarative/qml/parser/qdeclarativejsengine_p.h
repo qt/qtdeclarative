@@ -62,54 +62,9 @@
 QT_QML_BEGIN_NAMESPACE
 
 namespace QDeclarativeJS {
-class QML_PARSER_EXPORT NameId
-{
-    QString _text;
-
-public:
-    NameId(const QChar *u, int s)
-        : _text(u, s)
-    { }
-
-    const QString &asString() const
-    { return _text; }
-
-    bool operator == (const NameId &other) const
-    { return _text == other._text; }
-
-    bool operator != (const NameId &other) const
-    { return _text != other._text; }
-
-    bool operator < (const NameId &other) const
-    { return _text < other._text; }
-};
-
-uint qHash(const QDeclarativeJS::NameId &id);
-
-} // end of namespace QDeclarativeJS
-
-namespace QDeclarativeJS {
 
 class Lexer;
 class NodePool;
-
-namespace Ecma {
-
-class QML_PARSER_EXPORT RegExp
-{
-public:
-    enum RegExpFlag {
-        Global     = 0x01,
-        IgnoreCase = 0x02,
-        Multiline  = 0x04
-    };
-
-public:
-    static int flagFromChar(const QChar &);
-    static QString flagsToString(int flags);
-};
-
-} // end of namespace Ecma
 
 class QML_PARSER_EXPORT DiagnosticMessage
 {
@@ -137,27 +92,29 @@ class QML_PARSER_EXPORT Engine
 {
     Lexer *_lexer;
     NodePool *_nodePool;
-    QSet<NameId> _literals;
-    QList<QDeclarativeJS::AST::SourceLocation> _comments;
+    QList<AST::SourceLocation> _comments;
+    QString _extraCode;
+    QString _code;
 
 public:
     Engine();
     ~Engine();
 
-    QSet<NameId> literals() const;
+    void setCode(const QString &code);
 
     void addComment(int pos, int len, int line, int col);
-    QList<QDeclarativeJS::AST::SourceLocation> comments() const;
-
-    NameId *intern(const QChar *u, int s);
-
-    static QString toString(NameId *id);
+    QList<AST::SourceLocation> comments() const;
 
     Lexer *lexer() const;
     void setLexer(Lexer *lexer);
 
     NodePool *nodePool() const;
     void setNodePool(NodePool *nodePool);
+
+    QStringRef midRef(int position, int size);
+
+    QStringRef newStringRef(const QString &s);
+    QStringRef newStringRef(const QChar *chars, int size);
 };
 
 } // end of namespace QDeclarativeJS

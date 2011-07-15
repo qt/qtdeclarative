@@ -46,43 +46,11 @@
 
 #include <qnumeric.h>
 #include <QHash>
+#include <QDebug>
 
 QT_QML_BEGIN_NAMESPACE
 
 namespace QDeclarativeJS {
-
-uint qHash(const QDeclarativeJS::NameId &id)
-{ return qHash(id.asString()); }
-
-QString numberToString(double value)
-{ return QString::number(value); }
-
-int Ecma::RegExp::flagFromChar(const QChar &ch)
-{
-    static QHash<QChar, int> flagsHash;
-    if (flagsHash.isEmpty()) {
-        flagsHash[QLatin1Char('g')] = Global;
-        flagsHash[QLatin1Char('i')] = IgnoreCase;
-        flagsHash[QLatin1Char('m')] = Multiline;
-    }
-    QHash<QChar, int>::const_iterator it;
-    it = flagsHash.constFind(ch);
-    if (it == flagsHash.constEnd())
-        return 0;
-    return it.value();
-}
-
-QString Ecma::RegExp::flagsToString(int flags)
-{
-    QString result;
-    if (flags & Global)
-        result += QLatin1Char('g');
-    if (flags & IgnoreCase)
-        result += QLatin1Char('i');
-    if (flags & Multiline)
-        result += QLatin1Char('m');
-    return result;
-}
 
 NodePool::NodePool(const QString &fileName, Engine *engine)
     : m_fileName(fileName), m_engine(engine)
@@ -178,20 +146,14 @@ Engine::Engine()
 Engine::~Engine()
 { }
 
-QSet<NameId> Engine::literals() const
-{ return _literals; }
+void Engine::setCode(const QString &code)
+{ _code = code; }
 
 void Engine::addComment(int pos, int len, int line, int col)
 { if (len > 0) _comments.append(QDeclarativeJS::AST::SourceLocation(pos, len, line, col)); }
 
 QList<QDeclarativeJS::AST::SourceLocation> Engine::comments() const
 { return _comments; }
-
-NameId *Engine::intern(const QChar *u, int s)
-{ return const_cast<NameId *>(&*_literals.insert(NameId(u, s))); }
-
-QString Engine::toString(NameId *id)
-{ return id->asString(); }
 
 Lexer *Engine::lexer() const
 { return _lexer; }
@@ -205,7 +167,18 @@ NodePool *Engine::nodePool() const
 void Engine::setNodePool(NodePool *nodePool)
 { _nodePool = nodePool; }
 
+QStringRef Engine::midRef(int position, int size)
+{ return _code.midRef(position, size); }
 
+QStringRef Engine::newStringRef(const QString &text)
+{
+    const int pos = _extraCode.length();
+    _extraCode += text;
+    return _extraCode.midRef(pos, text.length());
+}
+
+QStringRef Engine::newStringRef(const QChar *chars, int size)
+{ return newStringRef(QString(chars, size)); }
 
 } // end of namespace QDeclarativeJS
 

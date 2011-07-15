@@ -475,6 +475,14 @@ QDeclarativePropertyCache::method(int index) const
 }
 
 QDeclarativePropertyCache::Data *
+QDeclarativePropertyCache::property(const QHashedStringRef &str) const
+{
+    QDeclarativePropertyCache::Data **rv = stringCache.value(str);
+    if (rv && (*rv)->notFullyResolved()) resolve(*rv);
+    return rv?*rv:0;
+}
+
+QDeclarativePropertyCache::Data *
 QDeclarativePropertyCache::property(const QString &str) const
 {
     QDeclarativePropertyCache::Data **rv = stringCache.value(str);

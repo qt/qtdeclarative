@@ -123,6 +123,11 @@ QList<QDeclarativeError> QDeclarativeCompiler::errors() const
 */
 bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
 {
+    return isAttachedPropertyName(QStringRef(&name));
+}
+
+bool QDeclarativeCompiler::isAttachedPropertyName(const QStringRef &name)
+{
     return !name.isEmpty() && name.at(0) >= 'A' && name.at(0) <= 'Z';
 }
 
@@ -138,6 +143,11 @@ bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
     QML only supports letters, numbers and underscores.
 */
 bool QDeclarativeCompiler::isSignalPropertyName(const QString &name)
+{
+    return isSignalPropertyName(QStringRef(&name));
+}
+
+bool QDeclarativeCompiler::isSignalPropertyName(const QStringRef &name)
 {
     if (name.length() < 3) return false;
     if (!name.startsWith(on_string)) return false;
@@ -769,6 +779,15 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
         enginePrivate->registerCompositeType(output);
 }
 
+static bool QStringList_contains(const QStringList &list, const QStringRef &string)
+{
+    for (int ii = 0; ii < list.count(); ++ii)
+        if (list.at(ii) == string)
+            return true;
+
+    return false;
+}
+
 bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const BindingContext &ctxt)
 {
     if (componentStats)
@@ -913,7 +932,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
             canDefer = ids == compileState->ids.count();
         }
 
-        if (canDefer && !deferredList.isEmpty() && deferredList.contains(prop->name()))
+        if (canDefer && !deferredList.isEmpty() && QStringList_contains(deferredList, prop->name()))
             prop->isDeferred = true;
     }
 
@@ -1042,7 +1061,8 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
         ss.storeScriptString.propertyIndex = prop->index;
         ss.storeScriptString.value = output->indexForString(script);
         ss.storeScriptString.scope = prop->scriptStringScope;
-        ss.storeScriptString.bindingId = rewriteBinding(script, prop->name());
+//        ss.storeScriptString.bindingId = rewriteBinding(script, prop->name());
+        ss.storeScriptString.bindingId = rewriteBinding(script, QString()); // XXX
         ss.storeScriptString.line = prop->location.start.line;
         output->addInstruction(ss);
     }
@@ -1095,8 +1115,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeParser::Object *obj)
             QDeclarativeInstruction assign;
             assign.setType(QDeclarativeInstruction::AssignSignalObject);
             assign.assignSignalObject.line = v->location.start.line;
-            assign.assignSignalObject.signal =
-                output->indexForString(prop->name());
+            assign.assignSignalObject.signal = output->indexForString(prop->name().toString());
             output->addInstruction(assign);
 
         } else if (v->type == Value::SignalExpression) {
@@ -1396,7 +1415,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 {
     Q_ASSERT(obj->metaObject());
 
-    QString name = prop->name();
+    QString name = prop->name().toString();
     Q_ASSERT(name.startsWith(on_string));
     name = name.mid(2);
 
@@ -1419,9 +1438,9 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
             if (type.type) {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
             } else {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name()));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
             }
         }
 
@@ -1538,9 +1557,9 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
                 const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
                 const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
                 if (type.type) {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
                 } else {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name()));
+                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
                 }
             }
 
@@ -1594,7 +1613,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         if (prop->isDefault) {
             COMPILE_EXCEPTION(prop->values.first(), tr("Cannot assign to non-existent default property"));
         } else {
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
         }
 
     } else if (prop->value) {
@@ -1898,7 +1917,7 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeParser::Property *pr
             }
 
             if (!obj->metaObject()->property(prop->index).isWritable()) {
-                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
+                COMPILE_EXCEPTION(prop, tr( "Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
             }
 
 
@@ -1944,10 +1963,10 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
     for (Property *prop = obj->properties.first(); prop; prop = obj->properties.next(prop)) {
         int idx = type->metaObject()->indexOfProperty(prop->name().toUtf8().constData());
         if (idx == -1)
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
         QMetaProperty p = type->metaObject()->property(idx);
         if (!p.isScriptable())
-            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name()));
+            COMPILE_EXCEPTION(prop, tr("Cannot assign to non-existent property \"%1\"").arg(prop->name().toString()));
         prop->index = idx;
         prop->type = p.userType();
         prop->isValueTypeSubProperty = true;
@@ -2100,7 +2119,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeParser::Pro
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     if (QDeclarativeMetaType::isInterface(prop->type)) {
 
@@ -2181,7 +2200,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
     Q_ASSERT(v->object->type != -1);
 
     if (!obj->metaObject()->property(prop->index).isWritable())
-        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
+        COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
 
     // Normally buildObject() will set this up, but we need the static
@@ -2208,7 +2227,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeParser::Propert
             buildDynamicMeta(baseObj, ForceCreation);
         v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
     } else {
-        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name()));
+        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name().toString()));
     }
 
     return true;
@@ -2715,7 +2734,7 @@ static QStringList astNodeToStringList(QDeclarativeJS::AST::Node *node)
 {
     if (node->kind == QDeclarativeJS::AST::Node::Kind_IdentifierExpression) {
         QString name =
-            static_cast<QDeclarativeJS::AST::IdentifierExpression *>(node)->name->asString();
+            static_cast<QDeclarativeJS::AST::IdentifierExpression *>(node)->name.toString();
         return QStringList() << name;
     } else if (node->kind == QDeclarativeJS::AST::Node::Kind_FieldMemberExpression) {
         QDeclarativeJS::AST::FieldMemberExpression *expr = static_cast<QDeclarativeJS::AST::FieldMemberExpression *>(node);
@@ -2723,7 +2742,7 @@ static QStringList astNodeToStringList(QDeclarativeJS::AST::Node *node)
         QStringList rv = astNodeToStringList(expr->base);
         if (rv.isEmpty())
             return rv;
-        rv.append(expr->name->asString());
+        rv.append(expr->name.toString());
         return rv;
     }
     return QStringList();
@@ -2762,7 +2781,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     bool writable = false;
     bool resettable = false;
     if (alias.count() == 2 || alias.count() == 3) {
-        propIdx = indexOfProperty(idObject, alias.at(1).toUtf8());
+        propIdx = indexOfProperty(idObject, alias.at(1));
 
         if (-1 == propIdx) {
             COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
@@ -2834,7 +2853,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
 
     QMetaProperty mp = prop->parent->metaObject()->property(prop->index);
     if (!mp.isWritable() && !QDeclarativeMetaType::isList(prop->type))
-        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name()));
+        COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     BindingReference *reference = pool->New<BindingReference>();
     reference->expression = value->value;
@@ -3177,7 +3196,7 @@ int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, cons
         if (name.endsWith(Changed_string)) {
             QString propName = name.mid(0, name.length() - 7);
 
-            int propIndex = indexOfProperty(object, propName, notInRevision);
+            int propIndex = indexOfProperty(object, QStringRef(&propName), notInRevision);
             if (propIndex != -1) {
                 d = cache->property(propIndex);
                 return d->notifyIndex;
@@ -3194,6 +3213,12 @@ int QDeclarativeCompiler::indexOfSignal(QDeclarativeParser::Object *object, cons
 int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QString &name, 
                                           bool *notInRevision)
 {
+    return indexOfProperty(object, QStringRef(&name), notInRevision);
+}
+
+int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QStringRef &name, 
+                                          bool *notInRevision)
+{
     if (notInRevision) *notInRevision = false;
 
     QDeclarativePropertyCache *cache = 0;
@@ -3205,7 +3230,8 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, co
     else
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
-    QDeclarativePropertyCache::Data *d = cache->property(name);
+    QDeclarativePropertyCache::Data *d = cache->property(QHashedStringRef(name.constData(), name.length()));
+
     // Find the first property
     while (d && d->isFunction())
         d = cache->overrideData(d);

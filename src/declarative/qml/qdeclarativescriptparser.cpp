@@ -111,7 +111,7 @@ class ProcessAST: protected AST::Visitor
             }
         }
 
-        void pushProperty(const QString *name, const LocationSpan &location)
+        void pushProperty(const QStringRef &name, const LocationSpan &location)
         {
             const State &state = top();
             if (state.property) {
@@ -274,7 +274,7 @@ QString ProcessAST::asString(AST::UiQualifiedId *node) const
     QString s;
 
     for (AST::UiQualifiedId *it = node; it; it = it->next) {
-        s.append(it->name->asString());
+        s.append(it->name.toString());
 
         if (it->next)
             s.append(QLatin1Char('.'));
@@ -299,7 +299,7 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
     int propertyCount = 0;
     for (AST::UiQualifiedId *name = propertyName; name; name = name->next){
         ++propertyCount;
-        _stateStack.pushProperty(&name->name->asString(),
+        _stateStack.pushProperty(name->name,
                                  this->location(name));
     }
 
@@ -429,8 +429,8 @@ bool ProcessAST::visit(AST::UiImport *node)
     QString uri;
     QDeclarativeScriptParser::Import import;
 
-    if (node->fileName) {
-        uri = node->fileName->asString();
+    if (!node->fileName.isNull()) {
+        uri = node->fileName.toString();
 
         if (uri.endsWith(QLatin1String(".js"))) {
             import.type = QDeclarativeScriptParser::Import::Script;
@@ -446,8 +446,8 @@ bool ProcessAST::visit(AST::UiImport *node)
     AST::SourceLocation endLoc = node->semicolonToken;
 
     // Qualifier
-    if (node->importId) {
-        import.qualifier = node->importId->asString();
+    if (!node->importId.isNull()) {
+        import.qualifier = node->importId.toString();
         if (!import.qualifier.at(0).isUpper()) {
             QDeclarativeError error;
             error.setDescription(QCoreApplication::translate("QDeclarativeParser","Invalid import qualifier ID"));
@@ -537,14 +537,14 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                                          sizeof(propTypeNameToTypes[0]);
 
     if(node->type == AST::UiPublicMember::Signal) {
-        const QString name = node->name->asString();
+        const QString name = node->name.toString();
 
         Object::DynamicSignal signal;
         signal.name = name.toUtf8();
 
         AST::UiParameterList *p = node->parameters;
         while (p) {
-            const QString memberType = p->type->asString();
+            const QString memberType = p->type.toString();
             const char *qtType = 0;
             for(int ii = 0; !qtType && ii < propTypeNameToTypesCount; ++ii) {
                 if(QLatin1String(propTypeNameToTypes[ii].name) == memberType)
@@ -561,15 +561,15 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             }
             
             signal.parameterTypes << qtType;
-            signal.parameterNames << p->name->asString().toUtf8();
+            signal.parameterNames << p->name.toUtf8();
             p = p->finish();
         }
 
         signal.location = location(node->typeToken, node->semicolonToken);
         _stateStack.top().object->dynamicSignals << signal;
     } else {
-        const QString memberType = node->memberType->asString();
-        const QString name = node->name->asString();
+        const QString memberType = node->memberType.toString();
+        const QString name = node->name.toString();
 
         bool typeFound = false;
         Object::DynamicProperty::Type type;
@@ -588,8 +588,8 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
         if (!typeFound && memberType.at(0).isUpper()) {
             QString typemodifier;
-            if(node->typeModifier)
-                typemodifier = node->typeModifier->asString();
+            if(!node->typeModifier.isNull())
+                typemodifier = node->typeModifier.toString();
             if (typemodifier.isEmpty()) {
                 type = Object::DynamicProperty::Custom;
             } else if(typemodifier == QLatin1String("list")) {
@@ -603,7 +603,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                 return false;
             }
             typeFound = true;
-        } else if (node->typeModifier) {
+        } else if (!node->typeModifier.isNull()) {
             QDeclarativeError error;
             error.setDescription(QCoreApplication::translate("QDeclarativeParser","Unexpected property type modifier"));
             error.setLine(node->typeModifierToken.startLine);
@@ -739,7 +739,7 @@ bool ProcessAST::visit(AST::UiScriptBinding *node)
     AST::UiQualifiedId *propertyName = node->qualifiedId;
     for (AST::UiQualifiedId *name = propertyName; name; name = name->next){
         ++propertyCount;
-        _stateStack.pushProperty(&name->name->asString(),
+        _stateStack.pushProperty(name->name,
                                  location(name));
     }
 
@@ -784,7 +784,7 @@ bool ProcessAST::visit(AST::UiArrayBinding *node)
     AST::UiQualifiedId *propertyName = node->qualifiedId;
     for (AST::UiQualifiedId *name = propertyName; name; name = name->next){
         ++propertyCount;
-        _stateStack.pushProperty(&name->name->asString(),
+        _stateStack.pushProperty(name->name,
                                  location(name));
     }
 
@@ -822,7 +822,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
 
         AST::FormalParameterList *f = funDecl->formals;
         while (f) {
-            slot.parameterNames << f->name->asString().toUtf8();
+            slot.parameterNames << f->name.toUtf8();
             f = f->finish();
         }
 
@@ -830,7 +830,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
         loc.offset = loc.end();
         loc.startColumn += 1;
         QString body = textAt(loc, funDecl->rbraceToken);
-        slot.name = funDecl->name->asString().toUtf8();
+        slot.name = funDecl->name.toUtf8();
         slot.body = body;
         obj->dynamicSlots << slot;
 
@@ -952,7 +952,7 @@ locationFromLexer(const QDeclarativeJS::Lexer &lex, int startLine, int startColu
     QDeclarativeParser::LocationSpan l;
 
     l.start.line = startLine; l.start.column = startColumn;
-    l.end.line = lex.endLineNo(); l.end.column = lex.endColumnNo();
+    l.end.line = lex.tokenEndLine(); l.end.column = lex.tokenEndColumn();
     l.range.offset = startOffset;
     l.range.length = lex.tokenOffset() + lex.tokenLength() - startOffset;
 
@@ -981,26 +981,26 @@ QDeclarativeParser::Object::ScriptBlock::Pragmas QDeclarativeScriptParser::extra
             return rv;
 
         int startOffset = l.tokenOffset();
-        int startLine = l.currentLineNo();
+        int startLine = l.tokenStartLine();
 
         token = l.lex();
 
         if (token != QDeclarativeJSGrammar::T_IDENTIFIER ||
-            l.currentLineNo() != startLine ||
+            l.tokenStartLine() != startLine ||
             script.mid(l.tokenOffset(), l.tokenLength()) != pragma)
             return rv;
 
         token = l.lex();
 
         if (token != QDeclarativeJSGrammar::T_IDENTIFIER ||
-            l.currentLineNo() != startLine)
+            l.tokenStartLine() != startLine)
             return rv;
 
         QString pragmaValue = script.mid(l.tokenOffset(), l.tokenLength());
         int endOffset = l.tokenLength() + l.tokenOffset();
 
         token = l.lex();
-        if (l.currentLineNo() == startLine)
+        if (l.tokenStartLine() == startLine)
             return rv;
 
         if (pragmaValue == library) {
@@ -1013,7 +1013,7 @@ QDeclarativeParser::Object::ScriptBlock::Pragmas QDeclarativeScriptParser::extra
     return rv;
 }
 
-#define CHECK_LINE if(l.currentLineNo() != startLine) return rv;
+#define CHECK_LINE if (l.tokenStartLine() != startLine) return rv;
 #define CHECK_TOKEN(t) if (token != QDeclarativeJSGrammar:: t) return rv;
 
 static const int uriTokens[] = {
@@ -1087,8 +1087,8 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
             return rv;
 
         int startOffset = l.tokenOffset();
-        int startLine = l.startLineNo();
-        int startColumn = l.startColumnNo();
+        int startLine = l.tokenStartLine();
+        int startColumn = l.tokenStartColumn();
 
         token = l.lex();
 
@@ -1105,7 +1105,8 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
 
             if (token == QDeclarativeJSGrammar::T_STRING_LITERAL) {
 
-                QString file(l.characterBuffer(), l.characterCount());
+                QString file = l.tokenText();
+
                 if (!file.endsWith(js))
                     return rv;
 
@@ -1130,7 +1131,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                     locationFromLexer(l, startLine, startColumn, startOffset);
 
                 token = l.lex();
-                if (l.startLineNo() == startLine)
+                if (l.tokenStartLine() == startLine)
                     return rv;
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
@@ -1151,7 +1152,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                     if (!isUriToken(token))
                         return rv;
 
-                    uri.append(QString(l.characterBuffer(), l.characterCount()));
+                    uri.append(l.tokenText());
 
                     token = l.lex();
                     CHECK_LINE;
@@ -1188,7 +1189,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
                     locationFromLexer(l, startLine, startColumn, startOffset);
 
                 token = l.lex();
-                if (l.startLineNo() == startLine)
+                if (l.tokenStartLine() == startLine)
                     return rv;
 
                 replaceWithSpace(script, startOffset, endOffset - startOffset);
@@ -1222,7 +1223,7 @@ QDeclarativeScriptParser::JavaScriptMetaData QDeclarativeScriptParser::extractMe
             }
 
             token = l.lex();
-            if (l.currentLineNo() == startLine)
+            if (l.tokenStartLine() == startLine)
                 return rv;
 
         } else {

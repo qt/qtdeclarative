@@ -72,7 +72,6 @@ QT_QML_BEGIN_NAMESPACE
 namespace QDeclarativeJS {
 
 class Engine;
-class NameId;
 
 class QML_PARSER_EXPORT Parser: protected QDeclarativeJSGrammar
 {
@@ -80,7 +79,6 @@ public:
     union Value {
       int ival;
       double dval;
-      NameId *sval;
       AST::ArgumentList *ArgumentList;
       AST::CaseBlock *CaseBlock;
       AST::CaseClause *CaseClause;
@@ -196,6 +194,9 @@ protected:
     inline Value &sym(int index)
     { return sym_stack [tos + index - 1]; }
 
+    inline QStringRef &stringRef(int index)
+    { return string_stack [tos + index - 1]; }
+
     inline AST::SourceLocation &loc(int index)
     { return location_stack [tos + index - 1]; }
 
@@ -208,6 +209,7 @@ protected:
     Value *sym_stack;
     int *state_stack;
     AST::SourceLocation *location_stack;
+    QStringRef *string_stack;
 
     AST::Node *program;
 
@@ -218,9 +220,11 @@ protected:
        int token;
        double dval;
        AST::SourceLocation loc;
+       QStringRef spell;
     };
 
     double yylval;
+    QStringRef yytokenspell;
     AST::SourceLocation yylloc;
     AST::SourceLocation yyprevlloc;
 

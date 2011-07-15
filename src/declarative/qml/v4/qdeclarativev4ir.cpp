@@ -407,10 +407,8 @@ BasicBlock *Function::newBasicBlock()
 
 void Function::dump(QTextStream &out)
 {
-    QString fname;
-    if (name)
-        fname = name->asString();
-    else
+    QString fname = name;
+    if (fname.isEmpty())
         fname = QLatin1String("$anonymous");
     out << "function " << fname << "() {" << endl;
     foreach (BasicBlock *bb, basicBlocks) {

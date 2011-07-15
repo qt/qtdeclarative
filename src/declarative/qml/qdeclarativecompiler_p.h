@@ -230,6 +230,8 @@ public:
 
     static bool isAttachedPropertyName(const QString &);
     static bool isSignalPropertyName(const QString &);
+    static bool isAttachedPropertyName(const QStringRef &);
+    static bool isSignalPropertyName(const QStringRef &);
 
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QByteArray& name) const; // for QDeclarativeCustomParser::resolveType
@@ -335,6 +337,7 @@ private:
     QString elementName(QDeclarativeParser::Object *);
 
     QStringList deferredProperties(QDeclarativeParser::Object *);
+    int indexOfProperty(QDeclarativeParser::Object *, const QStringRef &, bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
     int indexOfSignal(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
 
