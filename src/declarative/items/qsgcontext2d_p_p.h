@@ -181,7 +181,7 @@ public:
 
     void clearCommands()
     {
-        qDebug() << "painting commands:" << commands.size();
+        //qDebug() << "painting commands:" << commands.size();
         commands.remove(0, commands.size());
         variants.remove(0, variants.size());
         pens.remove(0, pens.size());

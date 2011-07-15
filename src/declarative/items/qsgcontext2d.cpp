@@ -1153,8 +1153,9 @@ v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
 
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    return v8::Undefined();
+    return engine->toString(r->context->font());
 }
 
 static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
@@ -1162,24 +1163,27 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
 
-    Q_UNUSED(value);
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+
+    r->context->setFont(engine->toString(value));
 }
 
 v8::Handle<v8::Value> ctx2d_textAlign(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-
-    return v8::Undefined();
+    return engine->toString(r->context->textAlign());
 }
 
 static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    Q_UNUSED(value);
+    r->context->setTextAlign(engine->toString(value));
 }
 
 v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::AccessorInfo &info)
@@ -1187,16 +1191,18 @@ v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::Access
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
 
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    return v8::Undefined();
+    return engine->toString(r->context->textBaseline());
 }
 
 static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT_SETTER(r)
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    Q_UNUSED(value);
+    r->context->setTextBaseline(engine->toString(value));
 }
 
 static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
