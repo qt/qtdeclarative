@@ -479,7 +479,6 @@ template<class T, int SmallThreshold>
 void QStringHash<T,SmallThreshold>::copy(const QStringHash<T,SmallThreshold> &other)
 {
     Q_ASSERT(data.nodes == 0);
-    Q_ASSERT(data.size == 0);
 
     if (other.data.size <= SmallThreshold) {
         QStringHashNode *n = other.data.nodes;
