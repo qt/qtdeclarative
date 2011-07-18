@@ -1021,7 +1021,7 @@ void QSGGridView::setCellWidth(int cellWidth)
         d->cellWidth = qMax(1, cellWidth);
         d->updateViewport();
         emit cellWidthChanged();
-        d->layoutVisibleItems();
+        d->layout();
     }
 }
 
@@ -1038,7 +1038,7 @@ void QSGGridView::setCellHeight(int cellHeight)
         d->cellHeight = qMax(1, cellHeight);
         d->updateViewport();
         emit cellHeightChanged();
-        d->layoutVisibleItems();
+        d->layout();
     }
 }
 
@@ -1566,7 +1566,7 @@ void QSGGridView::itemsMoved(int from, int to, int count)
         d->releaseItem(item);
     }
 
-    d->layoutVisibleItems();
+    d->layout();
 }
 
 
