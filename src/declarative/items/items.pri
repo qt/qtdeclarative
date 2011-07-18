@@ -58,9 +58,6 @@ HEADERS += \
     $$PWD/qsgstateoperations_p.h \
     $$PWD/qsgimplicitsizeitem_p.h \
     $$PWD/qsgimplicitsizeitem_p_p.h \
-    $$PWD/qsgcanvasitem_p.h \
-    $$PWD/qsgcontext2d_p.h \
-    $$PWD/qsgcontext2d_p_p.h \
     $$PWD/qsgspriteengine_p.h \
     $$PWD/qsgsprite_p.h \
     $$PWD/qsgspriteimage_p.h \
@@ -105,8 +102,6 @@ SOURCES += \
     $$PWD/qsganimation.cpp \
     $$PWD/qsgstateoperations.cpp \
     $$PWD/qsgimplicitsizeitem.cpp \
-    $$PWD/qsgcanvasitem.cpp \
-    $$PWD/qsgcontext2d.cpp \
     $$PWD/qsgspriteengine.cpp \
     $$PWD/qsgsprite.cpp \
     $$PWD/qsgspriteimage.cpp \
@@ -124,3 +119,5 @@ HEADERS += \
     $$PWD/qsgshadereffectmesh_p.h \
     $$PWD/qsgshadereffectnode_p.h \
     $$PWD/qsgshadereffectsource_p.h \
+
+include(context2d/context2d.pri)
