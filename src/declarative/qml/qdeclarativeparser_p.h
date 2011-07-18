@@ -66,6 +66,7 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativepool_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qdeclarativepropertycache_p.h>
 
 QT_BEGIN_HEADER
 
@@ -230,6 +231,10 @@ namespace QDeclarativeParser
         int type;
         // The metaobject index of this property, or -1 if unknown.
         int index;
+        // The core data in the case of a regular property.  
+        // XXX This has to be a value now as the synthCache may change during
+        // compilation which invalidates pointers.  We should fix this.
+        QDeclarativePropertyCache::Data core;
 
         // Returns true if this is an empty property - both value and values
         // are unset.

@@ -58,7 +58,7 @@ class Q_AUTOTEST_EXPORT QDeclarativePackage : public QObject
     Q_DECLARE_PRIVATE(QDeclarativePackage)
 
     Q_CLASSINFO("DefaultProperty", "data")
-    Q_PROPERTY(QDeclarativeListProperty<QObject> data READ data SCRIPTABLE false)
+    Q_PROPERTY(QDeclarativeListProperty<QObject> data READ data)
 
 public:
     QDeclarativePackage(QObject *parent=0);

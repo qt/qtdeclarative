@@ -288,7 +288,7 @@ private:
                                         QDeclarativeParser::Value *value,
                                         const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool doesPropertyExist(QDeclarativeParser::Property *prop, QDeclarativeParser::Object *obj);
-    bool testLiteralAssignment(const QMetaProperty &prop, 
+    bool testLiteralAssignment(QDeclarativeParser::Property *prop,
                                QDeclarativeParser::Value *value);
     bool testQualifiedEnumAssignment(const QMetaProperty &prop,
                                      QDeclarativeParser::Object *obj,
@@ -318,7 +318,7 @@ private:
     void genPropertyAssignment(QDeclarativeParser::Property *prop, 
                                QDeclarativeParser::Object *obj,
                                QDeclarativeParser::Property *valueTypeProperty = 0);
-    void genLiteralAssignment(const QMetaProperty &prop, 
+    void genLiteralAssignment(QDeclarativeParser::Property *prop,
                               QDeclarativeParser::Value *value);
     void genBindingAssignment(QDeclarativeParser::Value *binding, 
                               QDeclarativeParser::Property *prop, 
@@ -337,6 +337,12 @@ private:
     QString elementName(QDeclarativeParser::Object *);
 
     QStringList deferredProperties(QDeclarativeParser::Object *);
+
+    QDeclarativePropertyCache::Data *property(QDeclarativeParser::Object *, int);
+    QDeclarativePropertyCache::Data *property(QDeclarativeParser::Object *, const QStringRef &, 
+                                              bool *notInRevision = 0);
+    QDeclarativePropertyCache::Data *signal(QDeclarativeParser::Object *, const QStringRef &, 
+                                            bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeParser::Object *, const QStringRef &, bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
     int indexOfSignal(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
