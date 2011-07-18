@@ -409,6 +409,7 @@ void QStringHash<T,SmallThreshold>::clear()
     data.buckets = 0;
     data.numBuckets = 0;
     data.numBits = 0;
+    data.size = 0;
 
     nodePool = 0;
 }
