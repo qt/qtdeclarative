@@ -162,8 +162,12 @@ QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &g
             dfNode->setStyleColor(styleColor);
         }
         node->setColor(color);
-        appendChildNode(node);
     }
+
+    node->update();
+
+    if (node != prevNode)
+        appendChildNode(node);
 
     return node;
 }

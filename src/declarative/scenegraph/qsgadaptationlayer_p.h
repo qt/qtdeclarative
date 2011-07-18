@@ -112,6 +112,8 @@ public:
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) = 0;
 
+    virtual void update() = 0;
+
 protected:
     QRectF m_bounding_rect;
 };

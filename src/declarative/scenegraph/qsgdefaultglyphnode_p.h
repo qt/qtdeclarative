@@ -65,6 +65,8 @@ public:
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) { }
 
+    virtual void update() { }
+
 private:
     QGlyphRun m_glyphs;
     QPointF m_position;

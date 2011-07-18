@@ -69,6 +69,8 @@ public:
     void setStyle(QSGText::TextStyle style);
     void setStyleColor(const QColor &color);
 
+    virtual void update();
+
 private:
     void updateGeometry();
     void updateFont();
@@ -84,6 +86,10 @@ private:
     QSGText::TextStyle m_style;
     QColor m_styleColor;
     AntialiasingMode m_antialiasingMode;
+
+    uint m_dirtyFont: 1;
+    uint m_dirtyGeometry: 1;
+    uint m_dirtyMaterial: 1;
 };
 
 QT_END_HEADER

@@ -52,6 +52,9 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode()
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QSGText::Normal)
     , m_antialiasingMode(GrayAntialiasing)
+    , m_dirtyFont(false)
+    , m_dirtyGeometry(false)
+    , m_dirtyMaterial(false)
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
@@ -84,7 +87,7 @@ void QSGDistanceFieldGlyphNode::setPreferredAntialiasingMode(AntialiasingMode mo
     if (mode == m_antialiasingMode)
         return;
     m_antialiasingMode = mode;
-    updateMaterial();
+    m_dirtyMaterial = true;
 }
 
 void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
@@ -93,23 +96,35 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     m_position = QPointF(position.x(), position.y() - font.ascent());
     m_glyphs = glyphs;
 
-    updateFont();
-    updateGeometry();
-    updateMaterial();
-
-#ifdef QML_RUNTIME_TESTING
-    description = QLatin1String("glyphs");
-#endif
+    m_dirtyFont = true;
+    m_dirtyGeometry = true;
+    m_dirtyMaterial = true;
 }
 
 void QSGDistanceFieldGlyphNode::setStyle(QSGText::TextStyle style)
 {
+    if (m_style == style)
+        return;
     m_style = style;
+    m_dirtyMaterial = true;
 }
 
 void QSGDistanceFieldGlyphNode::setStyleColor(const QColor &color)
 {
+    if (m_styleColor == color)
+        return;
     m_styleColor = color;
+    m_dirtyMaterial = true;
+}
+
+void QSGDistanceFieldGlyphNode::update()
+{
+    if (m_dirtyFont)
+        updateFont();
+    if (m_dirtyGeometry)
+        updateGeometry();
+    if (m_dirtyMaterial)
+        updateMaterial();
 }
 
 void QSGDistanceFieldGlyphNode::updateGeometry()
@@ -225,11 +240,13 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     setBoundingRect(boundingRect);
     markDirty(DirtyGeometry);
+    m_dirtyGeometry = false;
 }
 
 void QSGDistanceFieldGlyphNode::updateFont()
 {
     m_glyph_cache = QSGDistanceFieldGlyphCache::get(QGLContext::currentContext(), m_glyphs.rawFont());
+    m_dirtyFont = false;
 }
 
 void QSGDistanceFieldGlyphNode::updateMaterial()
@@ -260,6 +277,7 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
     m_material->setGlyphCache(m_glyph_cache);
     m_material->setColor(m_color);
     setMaterial(m_material);
+    m_dirtyMaterial = false;
 }
 
 QT_END_NAMESPACE
