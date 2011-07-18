@@ -84,7 +84,6 @@ private slots:
 
     void childrenProperty();
     void resourcesProperty();
-    void mouseFocus();
 
     void transformCrash();
     void implicitSize();
@@ -176,34 +175,19 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *e) {
-        keyPressPreHandler(e);
-        if (e->isAccepted())
-            return;
-
         mKey = e->key();
 
         if (e->key() == Qt::Key_A)
             e->accept();
         else
             e->ignore();
-
-        if (!e->isAccepted())
-            QSGItem::keyPressEvent(e);
     }
 
     void keyReleaseEvent(QKeyEvent *e) {
-        keyReleasePreHandler(e);
-
-        if (e->isAccepted())
-            return;
-
         if (e->key() == Qt::Key_B)
             e->accept();
         else
             e->ignore();
-
-        if (!e->isAccepted())
-            QSGItem::keyReleaseEvent(e);
     }
 
 public:
@@ -1020,27 +1004,26 @@ void tst_QSGItem::mapCoordinates_data()
 void tst_QSGItem::transforms_data()
 {
     QTest::addColumn<QByteArray>("qml");
-    QTest::addColumn<QMatrix>("matrix");
+    QTest::addColumn<QTransform>("transform");
     QTest::newRow("translate") << QByteArray("Translate { x: 10; y: 20 }")
-        << QMatrix(1,0,0,1,10,20);
+        << QTransform(1,0,0,0,1,0,10,20,1);
     QTest::newRow("rotation") << QByteArray("Rotation { angle: 90 }")
-        << QMatrix(0,1,-1,0,0,0);
+        << QTransform(0,1,0,-1,0,0,0,0,1);
     QTest::newRow("scale") << QByteArray("Scale { xScale: 1.5; yScale: -2  }")
-        << QMatrix(1.5,0,0,-2,0,0);
+        << QTransform(1.5,0,0,0,-2,0,0,0,1);
     QTest::newRow("sequence") << QByteArray("[ Translate { x: 10; y: 20 }, Scale { xScale: 1.5; yScale: -2  } ]")
-        << QMatrix(1,0,0,1,10,20) * QMatrix(1.5,0,0,-2,0,0);
+        << QTransform(1,0,0,0,1,0,10,20,1) * QTransform(1.5,0,0,0,-2,0,0,0,1);
 }
 
 void tst_QSGItem::transforms()
 {
-    QFAIL("This test has not been ported yet");
-    /*QFETCH(QByteArray, qml);
-    QFETCH(QMatrix, matrix);
+    QFETCH(QByteArray, qml);
+    QFETCH(QTransform, transform);
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0\nItem { transform: "+qml+"}", QUrl::fromLocalFile(""));
     QSGItem *item = qobject_cast<QSGItem*>(component.create());
     QVERIFY(item);
-    QCOMPARE(item->sceneMatrix(), matrix);*/
+    QCOMPARE(item->itemTransform(0,0), transform);
 }
 
 void tst_QSGItem::childrenProperty()
@@ -1073,41 +1056,6 @@ void tst_QSGItem::resourcesProperty()
     delete o;
 }
 
-void tst_QSGItem::mouseFocus()
-{
-    QSGView *canvas = new QSGView(0);
-    QVERIFY(canvas);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mouseFocus.qml"));
-    canvas->show();
-    QVERIFY(canvas->rootObject());
-    QApplication::setActiveWindow(canvas);
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
-
-    QSGItem *item = findItem<QSGItem>(canvas->rootObject(), "declarativeItem");
-    QVERIFY(item);
-    QSignalSpy focusSpy(item, SIGNAL(activeFocusChanged(bool)));
-
-    QTest::mouseClick(canvas, Qt::LeftButton, 0, item->mapToScene(QPointF(0,0)).toPoint());
-    QApplication::processEvents();
-    QCOMPARE(focusSpy.count(), 1);
-    QVERIFY(item->hasActiveFocus());
-
-    // make sure focusable graphics widget underneath does not steal focus
-    QTest::mouseClick(canvas, Qt::LeftButton, 0, item->mapToScene(QPointF(0,0)).toPoint());
-    QApplication::processEvents();
-    QCOMPARE(focusSpy.count(), 1);
-    QVERIFY(item->hasActiveFocus());
-
-    item->setFocus(false);
-    QVERIFY(!item->hasActiveFocus());
-    QCOMPARE(focusSpy.count(), 2);
-    item->setFocus(true);
-    QCOMPARE(focusSpy.count(), 3);
-
-    delete canvas;
-}
-
 void tst_QSGItem::propertyChanges()
 {
     QSGView *canvas = new QSGView(0);
@@ -1115,10 +1063,9 @@ void tst_QSGItem::propertyChanges()
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
     canvas->show();
 
-    QEvent wa(QEvent::WindowActivate);
-    QApplication::sendEvent(canvas, &wa);
-    QFocusEvent fe(QEvent::FocusIn);
-    QApplication::sendEvent(canvas, &fe);
+    QApplication::setActiveWindow(canvas);
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
 
     QSGItem *item = findItem<QSGItem>(canvas->rootObject(), "item");
     QSGItem *parentItem = findItem<QSGItem>(canvas->rootObject(), "parentItem");
