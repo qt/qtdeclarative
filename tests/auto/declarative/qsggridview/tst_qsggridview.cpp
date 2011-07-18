@@ -666,6 +666,7 @@ void tst_QSGGridView::currentIndex()
 
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
+    canvas->show();
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
@@ -726,6 +727,7 @@ void tst_QSGGridView::currentIndex()
     gridview->moveCurrentIndexLeft();
     QCOMPARE(gridview->currentIndex(), model.count()-1);
 
+    qApp->processEvents();
     QTRY_COMPARE(gridview->contentY(), 880.0);
 
     gridview->moveCurrentIndexRight();
@@ -734,7 +736,6 @@ void tst_QSGGridView::currentIndex()
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
     // Test keys
-    canvas->show();
     qApp->setActiveWindow(canvas);
 #ifdef Q_WS_X11
     // to be safe and avoid failing setFocus with window managers
