@@ -1817,7 +1817,7 @@ void QSGTextInput::itemChange(ItemChange change, const ItemChangeData &value)
         bool hasFocus = value.boolValue;
         d->focused = hasFocus;
         setCursorVisible(hasFocus && d->canvas && d->canvas->hasFocus());
-        if(echoMode() == QSGTextInput::PasswordEchoOnEdit && !hasFocus)
+        if(!hasFocus && d->control->passwordEchoEditing())
             d->control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
         if (!hasFocus)
             d->control->deselect();
