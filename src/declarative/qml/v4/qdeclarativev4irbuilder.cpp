@@ -544,7 +544,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FalseLiteral *)
 bool QDeclarativeV4IRBuilder::visit(AST::StringLiteral *ast)
 {
     // ### TODO: cx format
-    _expr.code = _block->STRING(ast->value.toString());
+    _expr.code = _block->STRING(ast->value);
     return false;
 }
 
@@ -704,9 +704,12 @@ bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
         const quint32 column = nameNodes.last()->firstSourceLocation().startColumn;
         IR::Expr *base = _block->NAME(id, line, column);
 
-        QVector<IR::Expr *> args;
-        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
-            args.append(expression(it->expression));
+        IR::ExprList *args = 0, **argsInserter = &args;
+        for (AST::ArgumentList *it = ast->arguments; it; it = it->next) {
+            IR::Expr *arg = expression(it->expression);
+            *argsInserter = new (_module->pool) IR::ExprList(arg);
+            argsInserter = &(*argsInserter)->next;
+        }
 
         IR::Temp *r = _block->TEMP(IR::InvalidType);
         IR::Expr *call = _block->CALL(base, args);

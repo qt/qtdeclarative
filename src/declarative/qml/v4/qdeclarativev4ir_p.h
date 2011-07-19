@@ -60,7 +60,8 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativev4compiler_p.h>
 
-#include <QtCore/qvector.h>
+#include <qdeclarativejsmemorypool_p.h>
+#include <QtCore/qvarlengtharray.h>.h>
 
 // #define DEBUG_IR_STRUCTURE
 
@@ -175,7 +176,7 @@ struct StmtVisitor {
     virtual void visitRet(Ret *) {}
 };
 
-struct Expr {
+struct Expr: Managed {
     Type type;
 
     Expr(Type type): type(type) {}
@@ -191,6 +192,14 @@ struct Expr {
     virtual void dump(QTextStream &out) = 0;
 };
 
+struct ExprList: Managed {
+    Expr *expr;
+    ExprList *next;
+
+    ExprList(Expr *expr, ExprList *next = 0)
+        : expr(expr), next(next) {}
+};
+
 struct Const: Expr {
     double value;
     Const(Type type, double value): Expr(type), value(value) {}
@@ -202,14 +211,14 @@ struct Const: Expr {
 };
 
 struct String: Expr {
-    QString value;
-    String(const QString &value): Expr(StringType), value(value) {}
+    QStringRef value;
+    String(const QStringRef &value): Expr(StringType), value(value) {}
 
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
     virtual String *asString() { return this; }
 
     virtual void dump(QTextStream &out);
-    static QString escape(const QString &s);
+    static QString escape(const QStringRef &s);
 };
 
 enum BuiltinSymbol {
@@ -240,7 +249,7 @@ struct Name: Expr {
     };
 
     Name *base;
-    QString id;
+    QString &id;
     Symbol symbol;
     union {
         void *ptr;
@@ -254,7 +263,7 @@ struct Name: Expr {
     quint32 line;
     quint32 column;
 
-    Name(Name *base, Type type, const QString &id, Symbol symbol, quint32 line, quint32 column);
+    Name(Name *base, Type type, QString &id, Symbol symbol, quint32 line, quint32 column);
 
     inline bool is(Symbol s) const { return s == symbol; }
     inline bool isNot(Symbol s) const { return s != symbol; }
@@ -309,10 +318,16 @@ private:
 
 struct Call: Expr {
     Expr *base;
-    QVector<Expr *> args;
+    ExprList *args;
 
-    Call(Expr *base, const QVector<Expr *> &args)
+    Call(Expr *base, ExprList *args)
         : Expr(typeForFunction(base)), base(base), args(args) {}
+
+    Expr *onlyArgument() const {
+        if (args && ! args->next)
+            return args->expr;
+        return 0;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitCall(this); }
     virtual Call *asCall() { return this; }
@@ -323,7 +338,7 @@ private:
     static Type typeForFunction(Expr *base);
 };
 
-struct Stmt {
+struct Stmt: Managed {
     enum Mode {
         HIR,
         MIR
@@ -409,11 +424,10 @@ struct Function {
     Module *module;
     QString name;
     int tempCount;
-    QVector<BasicBlock *> basicBlocks;
-    QVector<Expr *> temps;
+    QVarLengthArray<BasicBlock *, 8> basicBlocks;
 
     template <typename BB> inline BB i(BB i) { basicBlocks.append(i); return i; }
-    template <typename E> inline E e(E e) { temps.append(e); return e; }
+    template <typename E> inline E e(E e) { return e; }
 
     Function(Module *module, const QString &name): module(module), name(name), tempCount(0) {}
     ~Function();
@@ -426,11 +440,11 @@ struct Function {
 struct BasicBlock {
     Function *function;
     int index;
-    QVector<Stmt *> statements;
     int offset;
+    QVarLengthArray<Stmt *, 32> statements;
 
     BasicBlock(Function *function, int index): function(function), index(index), offset(-1) {}
-    ~BasicBlock() { qDeleteAll(statements); }
+    ~BasicBlock() {}
 
     template <typename Instr> inline Instr i(Instr i) { statements.append(i); return i; }
 
@@ -439,8 +453,8 @@ struct BasicBlock {
     }
 
     inline Stmt *terminator() const {
-        if (! statements.isEmpty() && statements.last()->asTerminator() != 0)
-            return statements.last();
+        if (! statements.isEmpty() && statements.at(statements.size() - 1)->asTerminator() != 0)
+            return statements.at(statements.size() - 1);
         return 0;
     }
 
@@ -455,7 +469,7 @@ struct BasicBlock {
 
     Expr *CONST(double value);
     Expr *CONST(Type type, double value);
-    Expr *STRING(const QString &value);
+    Expr *STRING(const QStringRef &value);
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name *base, const QString &id, quint32 line, quint32 column);
@@ -467,7 +481,7 @@ struct BasicBlock {
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);
-    Expr *CALL(Expr *base, const QVector<Expr *> &args);
+    Expr *CALL(Expr *base, ExprList *args);
 
     Stmt *EXP(Expr *expr);
     Stmt *MOVE(Expr *target, Expr *source, bool = false);
@@ -480,14 +494,15 @@ struct BasicBlock {
 };
 
 struct Module {
-    QVector<Function *> functions;
+    MemoryPool *pool;
+    QVarLengthArray<Function *, 4> functions;
+    QVarLengthArray<QString *, 8> strings;
 
-    Module() {}
-    ~Module() { qDeleteAll(functions); }
+    Module(MemoryPool *pool);
+    ~Module();
 
-    template <typename BB> inline BB i(BB i) { functions.append(i); return i; }
-
-    Function *newFunction(const QString &name = QString()) { return i(new Function(this, name)); }
+    QString &newIdentifier(const QString &text);
+    Function *newFunction(const QString &name = QString());
 
     virtual void dump(QTextStream &out);
 };

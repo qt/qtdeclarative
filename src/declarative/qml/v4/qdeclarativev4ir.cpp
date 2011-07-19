@@ -165,10 +165,11 @@ void String::dump(QTextStream &out)
     out << '"' << escape(value) << '"';
 }
 
-QString String::escape(const QString &s)
+QString String::escape(const QStringRef &s)
 {
     QString r;
-    foreach (const QChar &ch, s) {
+    for (int i = 0; i < s.length(); ++i) {
+        const QChar ch = s.at(i);
         if (ch == QLatin1Char('\n'))
             r += QLatin1String("\\n");
         else if (ch == QLatin1Char('\r'))
@@ -185,7 +186,7 @@ QString String::escape(const QString &s)
     return r;
 }
 
-Name::Name(Name *base, Type type, const QString &id, Symbol symbol, quint32 line, quint32 column)
+Name::Name(Name *base, Type type, QString &id, Symbol symbol, quint32 line, quint32 column)
 : Expr(type)
   , base(base)
   , id(id)
@@ -318,10 +319,10 @@ void Call::dump(QTextStream &out)
 {
     base->dump(out);
     out << '(';
-    for (int i = 0; i < args.size(); ++i) {
-        if (i)
+    for (ExprList *it = args; it; it = it->next) {
+        if (it != args)
             out << ", ";
-        args.at(i)->dump(out);
+        it->expr->dump(out);
     }
     out << ')';
 }
@@ -396,7 +397,6 @@ void Ret::dump(QTextStream &out, Mode)
 Function::~Function()
 {
     qDeleteAll(basicBlocks);
-    qDeleteAll(temps);
 }
 
 BasicBlock *Function::newBasicBlock()
@@ -419,7 +419,7 @@ void Function::dump(QTextStream &out)
 
 Temp *BasicBlock::TEMP(Type type, int index) 
 { 
-    return function->e(new Temp(type, index)); 
+    return function->e(new (function->module->pool) Temp(type, index));
 }
 
 Temp *BasicBlock::TEMP(Type type) 
@@ -434,12 +434,12 @@ Expr *BasicBlock::CONST(double value)
 
 Expr *BasicBlock::CONST(Type type, double value) 
 { 
-    return function->e(new Const(type, value)); 
+    return function->e(new (function->module->pool) Const(type, value));
 }
 
-Expr *BasicBlock::STRING(const QString &value) 
+Expr *BasicBlock::STRING(const QStringRef &value)
 { 
-    return function->e(new String(value)); 
+    return function->e(new (function->module->pool) String(value));
 }
 
 Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
@@ -449,7 +449,9 @@ Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
 
 Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 column)
 { 
-    return function->e(new Name(base, InvalidType, id, Name::Unbound, line, column));
+    return function->e(new (function->module->pool) Name(base, InvalidType,
+                                                          function->module->newIdentifier(id),
+                                                          Name::Unbound, line, column));
 }
 
 Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
@@ -463,7 +465,9 @@ Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, 
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
                          quint32 line, quint32 column)
 {
-    Name *name = new Name(base, type, id, Name::Property, line, column);
+    Name *name = new (function->module->pool) Name(base, type,
+                                                    function->module->newIdentifier(id),
+                                                    Name::Property, line, column);
     name->meta = meta;
     name->index = index;
     name->storage = storage;
@@ -473,7 +477,9 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaOb
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index,
                          quint32 line, quint32 column)
 {
-    Name *name = new Name(base, type, id, Name::Property, line, column);
+    Name *name = new (function->module->pool) Name(base, type,
+                                                    function->module->newIdentifier(id),
+                                                    Name::Property, line, column);
     name->meta = meta;
     name->index = index;
     return function->e(name);
@@ -481,7 +487,9 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaOb
 
 Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeParser::Object *object, quint32 line, quint32 column)
 {
-    Name *name = new Name(/*base = */ 0, IR::ObjectType, id, Name::IdObject, line, column);
+    Name *name = new (function->module->pool) Name(/*base = */ 0, IR::ObjectType,
+                                                    function->module->newIdentifier(id),
+                                                    Name::IdObject, line, column);
     name->idObject = object;
     name->index = object->idIndex;
     name->storage = Name::IdStorage;
@@ -491,7 +499,9 @@ Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeParser::Object 
 Name *BasicBlock::ATTACH_TYPE(const QString &id, const QDeclarativeType *attachType, Name::Storage storage,
                               quint32 line, quint32 column)
 { 
-    Name *name = new Name(/*base = */ 0, IR::AttachType, id, Name::AttachType, line, column);
+    Name *name = new (function->module->pool) Name(/*base = */ 0, IR::AttachType,
+                                                    function->module->newIdentifier(id),
+                                                    Name::AttachType, line, column);
     name->declarativeType = attachType;
     name->storage = storage;
     return function->e(name);
@@ -500,7 +510,7 @@ Name *BasicBlock::ATTACH_TYPE(const QString &id, const QDeclarativeType *attachT
 
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr) 
 { 
-    return function->e(new Unop(op, expr)); 
+    return function->e(new (function->module->pool) Unop(op, expr));
 }
 
 Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
@@ -543,22 +553,22 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
         }
     }
 
-    return function->e(new Binop(op, left, right));
+    return function->e(new (function->module->pool) Binop(op, left, right));
 }
 
-Expr *BasicBlock::CALL(Expr *base, const QVector<Expr *> &args) 
+Expr *BasicBlock::CALL(Expr *base, ExprList *args)
 { 
-    return function->e(new Call(base, args));
+    return function->e(new (function->module->pool) Call(base, args));
 }
 
 Stmt *BasicBlock::EXP(Expr *expr) 
 { 
-    return i(new Exp(expr));
+    return i(new (function->module->pool) Exp(expr));
 }
 
 Stmt *BasicBlock::MOVE(Expr *target, Expr *source, bool isMoveForReturn) 
 { 
-    return i(new Move(target, source, isMoveForReturn));
+    return i(new (function->module->pool) Move(target, source, isMoveForReturn));
 }
 
 Stmt *BasicBlock::JUMP(BasicBlock *target) 
@@ -566,14 +576,14 @@ Stmt *BasicBlock::JUMP(BasicBlock *target)
     if (isTerminated())
         return 0;
     else
-        return i(new Jump(target));
+        return i(new (function->module->pool) Jump(target));
 }
 
 Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse) 
 {
     if (isTerminated())
         return 0;
-    return i(new CJump(cond, iftrue, iffalse));
+    return i(new (function->module->pool) CJump(cond, iftrue, iffalse));
 }
 
 Stmt *BasicBlock::RET(Expr *expr, Type type, quint32 line, quint32 column)
@@ -581,7 +591,7 @@ Stmt *BasicBlock::RET(Expr *expr, Type type, quint32 line, quint32 column)
     if (isTerminated())
         return 0;
     else
-        return i(new Ret(expr, type, line, column));
+        return i(new (function->module->pool) Ret(expr, type, line, column));
 }
 
 void BasicBlock::dump(QTextStream &out)
@@ -592,6 +602,31 @@ void BasicBlock::dump(QTextStream &out)
         s->dump(out);
         out << endl;
     }
+}
+
+Module::Module(MemoryPool *pool)
+    : pool(pool)
+{
+}
+
+Module::~Module()
+{
+    qDeleteAll(functions);
+    qDeleteAll(strings);
+}
+
+QString &Module::newIdentifier(const QString &text)
+{
+    QString *s = new QString(text);
+    strings.append(s);
+    return *s;
+}
+
+Function *Module::newFunction(const QString &name)
+{
+    Function *f = new Function(this, name);
+    functions.append(f);
+    return f;
 }
 
 void Module::dump(QTextStream &out)

@@ -111,7 +111,7 @@ public:
 
     QHash<int, QPair<int, int> > registerCleanups;
 
-    int registerLiteralString(quint8 reg, const QString &);
+    int registerLiteralString(quint8 reg, const QStringRef &);
     int registerString(const QString &);
     QHash<QString, QPair<int, int> > registeredStrings;
     QByteArray data;
@@ -137,6 +137,7 @@ public:
             : block(block), offset(index) {}
     };
     QVector<Patch> patches;
+    QDeclarativeJS::MemoryPool pool;
 
     // Committed binding data
     struct {

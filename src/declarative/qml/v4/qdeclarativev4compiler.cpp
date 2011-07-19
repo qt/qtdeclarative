@@ -91,11 +91,11 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
         if (IR::Stmt *terminator = block->terminator()) {
             if (IR::CJump *cj = terminator->asCJump()) {
                 if (cj->iffalse != next) {
-                    block->i(new IR::Jump(cj->iffalse));
+                    block->i(new (_function->module->pool) IR::Jump(cj->iffalse));
                 }
             } else if (IR::Jump *j = terminator->asJump()) {
                 if (j->target == next) {
-                    delete block->statements.back();
+                    delete block->statements.at(block->statements.size() - 1);
                     block->statements.resize(block->statements.size() - 1);
                 }
             }
@@ -174,9 +174,8 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
 
 void QDeclarativeV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
 {
-    QList<IR::BasicBlock *> todo = QList<IR::BasicBlock *>::fromVector(_function->basicBlocks);
-    while (! todo.isEmpty()) {
-        IR::BasicBlock *block = todo.takeFirst();
+    for (int i = 0; i < _function->basicBlocks.size(); ++i) {
+        IR::BasicBlock *block = _function->basicBlocks.at(i);
 
         while (! blocks->contains(block)) {
             blocks->append(block);
@@ -763,8 +762,9 @@ void QDeclarativeV4CompilerPrivate::visitBinop(IR::Binop *e)
 void QDeclarativeV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
-        if (call->args.size() == 1 && call->args.at(0)->type == IR::RealType) {
-            traceExpression(call->args.at(0), currentReg);
+        IR::Expr *arg = call->onlyArgument();
+        if (arg != 0 && arg->type == IR::RealType) {
+            traceExpression(arg, currentReg);
 
             Instr instr;
             instr.common.type = Instr::Noop;
@@ -989,6 +989,7 @@ void QDeclarativeV4CompilerPrivate::resetInstanceState()
     registeredStrings = committed.registeredStrings;
     bytecode.clear();
     patches.clear();
+    pool.reset(); // reset the memory pool without disposing the allocated memory
     currentReg = 0;
 }
 
@@ -1032,7 +1033,7 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
         return false;
     }
 
-    IR::Module module;
+    IR::Module module(&pool);
     IR::Function *function = 0;
 
     QDeclarativeV4IRBuilder irBuilder(expression, engine);
@@ -1067,7 +1068,7 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
 }
 
 // Returns a reg
-int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QString &str)
+int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
 {
     // ### string cleanup
 
