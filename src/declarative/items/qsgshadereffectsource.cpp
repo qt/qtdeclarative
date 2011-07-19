@@ -314,7 +314,7 @@ void QSGShaderEffectTexture::grab()
     m_renderer->setClearColor(Qt::transparent);
 
     if (m_multisampling) {
-        m_renderer->renderScene(BindableFbo(m_secondaryFbo));
+        m_renderer->renderScene(QSGBindableFbo(m_secondaryFbo));
 
         if (deleteFboLater) {
             delete m_fbo;
@@ -332,7 +332,7 @@ void QSGShaderEffectTexture::grab()
         QGLFramebufferObject::blitFramebuffer(m_fbo, r, m_secondaryFbo, r);
     } else {
         if (m_recursive) {
-            m_renderer->renderScene(BindableFbo(m_secondaryFbo));
+            m_renderer->renderScene(QSGBindableFbo(m_secondaryFbo));
 
             if (deleteFboLater) {
                 delete m_fbo;
@@ -346,7 +346,7 @@ void QSGShaderEffectTexture::grab()
             }
             qSwap(m_fbo, m_secondaryFbo);
         } else {
-            m_renderer->renderScene(BindableFbo(m_fbo));
+            m_renderer->renderScene(QSGBindableFbo(m_fbo));
         }
     }
 

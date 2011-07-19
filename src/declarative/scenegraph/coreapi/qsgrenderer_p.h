@@ -64,7 +64,7 @@ class QSGMaterialShader;
 struct QSGMaterialType;
 class QGLFramebufferObject;
 class TextureReference;
-class Bindable;
+class QSGBindable;
 class QSGNodeUpdater;
 
 
@@ -121,7 +121,7 @@ public:
     QSGContext *context();
 
     void renderScene();
-    void renderScene(const Bindable &bindable);
+    void renderScene(const QSGBindable &bindable);
     virtual void nodeChanged(QSGNode *node, QSGNode::DirtyFlags flags);
     virtual void materialChanged(QSGGeometryNode *node, QSGMaterial *from, QSGMaterial *to);
 
@@ -143,7 +143,7 @@ protected:
     virtual void render() = 0;
     QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
 
-    const Bindable *bindable() const { return m_bindable; }
+    const QSGBindable *bindable() const { return m_bindable; }
 
     virtual void preprocess();
 
@@ -172,7 +172,7 @@ private:
     QGLShaderProgram m_clip_program;
     int m_clip_matrix_id;
 
-    const Bindable *m_bindable;
+    const QSGBindable *m_bindable;
 
     bool m_changed_emitted : 1;
     bool m_mirrored : 1;
@@ -181,19 +181,19 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
 
-class Q_DECLARATIVE_EXPORT Bindable
+class Q_DECLARATIVE_EXPORT QSGBindable
 {
 public:
-    virtual ~Bindable() { }
+    virtual ~QSGBindable() { }
     virtual void bind() const = 0;
     virtual void clear(QSGRenderer::ClearMode mode) const;
     virtual void reactivate() const;
 };
 
-class BindableFbo : public Bindable
+class QSGBindableFbo : public QSGBindable
 {
 public:
-    BindableFbo(QGLFramebufferObject *fbo);
+    QSGBindableFbo(QGLFramebufferObject *fbo);
     virtual void bind() const;
 private:
     QGLFramebufferObject *m_fbo;

@@ -65,7 +65,7 @@ static int updatePassTime;
 static int frameNumber = 0;
 #endif
 
-void Bindable::clear(QSGRenderer::ClearMode mode) const
+void QSGBindable::clear(QSGRenderer::ClearMode mode) const
 {
     GLuint bits = 0;
     if (mode & QSGRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
@@ -75,17 +75,17 @@ void Bindable::clear(QSGRenderer::ClearMode mode) const
 }
 
 // Reactivate the color buffer after switching to the stencil.
-void Bindable::reactivate() const
+void QSGBindable::reactivate() const
 {
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
-BindableFbo::BindableFbo(QGLFramebufferObject *fbo) : m_fbo(fbo)
+QSGBindableFbo::QSGBindableFbo(QGLFramebufferObject *fbo) : m_fbo(fbo)
 {
 }
 
 
-void BindableFbo::bind() const
+void QSGBindableFbo::bind() const
 {
     m_fbo->bind();
 }
@@ -203,7 +203,7 @@ void QSGRenderer::setRootNode(QSGRootNode *node)
 
 void QSGRenderer::renderScene()
 {
-    class B : public Bindable
+    class B : public QSGBindable
     {
     public:
         void bind() const { QGLFramebufferObject::bindDefault(); }
@@ -211,7 +211,7 @@ void QSGRenderer::renderScene()
     renderScene(b);
 }
 
-void QSGRenderer::renderScene(const Bindable &bindable)
+void QSGRenderer::renderScene(const QSGBindable &bindable)
 {
     if (!m_root_node)
         return;

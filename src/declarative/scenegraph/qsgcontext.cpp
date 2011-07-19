@@ -255,7 +255,7 @@ void QSGContext::renderNextFrame(QGLFramebufferObject *fbo)
     cleanupTextures();
 
     if (fbo) {
-        BindableFbo bindable(fbo);
+        QSGBindableFbo bindable(fbo);
         d->renderer->renderScene(bindable);
     } else {
         d->renderer->renderScene();
