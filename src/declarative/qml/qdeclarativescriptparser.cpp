@@ -45,7 +45,7 @@
 #include "parser/qdeclarativejsengine_p.h"
 #include "parser/qdeclarativejsparser_p.h"
 #include "parser/qdeclarativejslexer_p.h"
-#include "parser/qdeclarativejsnodepool_p.h"
+#include "parser/qdeclarativejsmemorypool_p.h"
 #include "parser/qdeclarativejsastvisitor_p.h"
 #include "parser/qdeclarativejsast_p.h"
 #include "private/qdeclarativerewrite_p.h"
@@ -862,10 +862,10 @@ class QDeclarativeScriptParserJsASTData
 {
 public:
     QDeclarativeScriptParserJsASTData(const QString &filename)
-        : nodePool(filename, &engine) {}
+        : filename(filename) {}
 
+    QString filename;
     Engine engine;
-    NodePool nodePool;
 };
 
 bool QDeclarativeScriptParser::parse(const QByteArray &qmldata, const QUrl &url)

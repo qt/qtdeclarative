@@ -40,9 +40,7 @@
 ****************************************************************************/
 
 #include "qdeclarativejsengine_p.h"
-
 #include "qdeclarativejsglobal_p.h"
-#include "qdeclarativejsnodepool_p.h"
 
 #include <qnumeric.h>
 #include <QHash>
@@ -51,22 +49,6 @@
 QT_QML_BEGIN_NAMESPACE
 
 namespace QDeclarativeJS {
-
-NodePool::NodePool(const QString &fileName, Engine *engine)
-    : m_fileName(fileName), m_engine(engine)
-{
-    m_engine->setNodePool(this);
-}
-
-NodePool::~NodePool()
-{
-}
-
-Code *NodePool::createCompiledCode(AST::Node *, CompilationUnit &)
-{
-    Q_ASSERT(0);
-    return 0;
-}
 
 static int toDigit(char c)
 {
@@ -140,7 +122,7 @@ double integerFromString(const QString &str, int radix)
 
 
 Engine::Engine()
-    : _lexer(0), _nodePool(0)
+    : _lexer(0)
 { }
 
 Engine::~Engine()
@@ -161,11 +143,8 @@ Lexer *Engine::lexer() const
 void Engine::setLexer(Lexer *lexer)
 { _lexer = lexer; }
 
-NodePool *Engine::nodePool() const
-{ return _nodePool; }
-
-void Engine::setNodePool(NodePool *nodePool)
-{ _nodePool = nodePool; }
+MemoryPool *Engine::pool()
+{ return &_pool; }
 
 QStringRef Engine::midRef(int position, int size)
 { return _code.midRef(position, size); }

@@ -55,6 +55,7 @@
 
 #include "qdeclarativejsglobal_p.h"
 #include "qdeclarativejsastfwd_p.h"
+#include "qdeclarativejsmemorypool_p.h"
 
 #include <QString>
 #include <QSet>
@@ -64,7 +65,7 @@ QT_QML_BEGIN_NAMESPACE
 namespace QDeclarativeJS {
 
 class Lexer;
-class NodePool;
+class MemoryPool;
 
 class QML_PARSER_EXPORT DiagnosticMessage
 {
@@ -91,7 +92,7 @@ public:
 class QML_PARSER_EXPORT Engine
 {
     Lexer *_lexer;
-    NodePool *_nodePool;
+    MemoryPool _pool;
     QList<AST::SourceLocation> _comments;
     QString _extraCode;
     QString _code;
@@ -108,8 +109,7 @@ public:
     Lexer *lexer() const;
     void setLexer(Lexer *lexer);
 
-    NodePool *nodePool() const;
-    void setNodePool(NodePool *nodePool);
+    MemoryPool *pool();
 
     QStringRef midRef(int position, int size);
 

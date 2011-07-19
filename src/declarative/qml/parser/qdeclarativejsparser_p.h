@@ -204,6 +204,7 @@ protected:
 
 protected:
     Engine *driver;
+    MemoryPool *pool;
     int tos;
     int stack_size;
     Value *sym_stack;

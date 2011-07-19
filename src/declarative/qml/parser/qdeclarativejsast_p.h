@@ -55,6 +55,7 @@
 
 #include "qdeclarativejsastvisitor_p.h"
 #include "qdeclarativejsglobal_p.h"
+#include "qdeclarativejsmemorypool_p.h"
 
 #include <QtCore/QString>
 
@@ -119,7 +120,7 @@ _T1 cast(_T2 *ast)
     return 0;
 }
 
-class QML_PARSER_EXPORT Node
+class QML_PARSER_EXPORT Node: public Managed
 {
 public:
     enum Kind {
@@ -2138,11 +2139,11 @@ public:
     QDECLARATIVEJS_DECLARE_AST_NODE(UiImport)
 
     UiImport(const QStringRef &fileName)
-        : fileName(fileName), importUri(0), importId(0)
+        : fileName(fileName), importUri(0)
     { kind = K; }
 
     UiImport(UiQualifiedId *uri)
-        : fileName(0), importUri(uri), importId(0)
+        : importUri(uri)
     { kind = K; }
 
     virtual SourceLocation firstSourceLocation() const
@@ -2342,13 +2343,13 @@ public:
 
     UiPublicMember(const QStringRef &memberType,
                    const QStringRef &name)
-        : type(Property), typeModifier(0), memberType(memberType), name(name), statement(0), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
+        : type(Property), memberType(memberType), name(name), statement(0), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
     { kind = K; }
 
     UiPublicMember(const QStringRef &memberType,
                    const QStringRef &name,
                    Statement *statement)
-        : type(Property), typeModifier(0), memberType(memberType), name(name), statement(statement), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
+        : type(Property), memberType(memberType), name(name), statement(statement), binding(0), isDefaultMember(false), isReadonlyMember(false), parameters(0)
     { kind = K; }
 
     virtual SourceLocation firstSourceLocation() const

@@ -54,7 +54,6 @@ namespace QDeclarativeRewrite {
 bool SharedBindingTester::isSharable(const QString &code)
 {
     Engine engine;
-    NodePool pool(QString(), &engine);
     Lexer lexer(&engine);
     Parser parser(&engine);
     lexer.setCode(code, 0);
@@ -75,7 +74,6 @@ bool SharedBindingTester::isSharable(AST::Node *node)
 QString RewriteBinding::operator()(const QString &code, bool *ok, bool *sharable)
 {
     Engine engine;
-    NodePool pool(QString(), &engine);
     Lexer lexer(&engine);
     Parser parser(&engine);
     lexer.setCode(code, 0);

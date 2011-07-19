@@ -93,7 +93,6 @@ public:
 
             m_storage = reinterpret_cast<char**>(qRealloc(m_storage, sizeof(char*) * (1 + m_blockIndex)));
             m_currentBlock = m_storage[m_blockIndex] = reinterpret_cast<char*>(qMalloc(m_currentBlockSize));
-            ::memset(m_currentBlock, 0, m_currentBlockSize);
 
             m_currentIndex = (8 - quintptr(m_currentBlock)) & 7; // ensure first chunk is 64-bit aligned
             Q_ASSERT(m_currentIndex + bytes <= m_currentBlockSize);
@@ -124,6 +123,20 @@ private:
 
 private:
     Q_DISABLE_COPY(MemoryPool)
+};
+
+class QML_PARSER_EXPORT Managed
+{
+    Managed(const Managed &other);
+    void operator = (const Managed &other);
+
+public:
+    Managed() {}
+    ~Managed() {}
+
+    void *operator new(size_t size, MemoryPool *pool) { return pool->allocate(size); }
+    void operator delete(void *) {}
+    void operator delete(void *, MemoryPool *) {}
 };
 
 } // namespace QDeclarativeJS

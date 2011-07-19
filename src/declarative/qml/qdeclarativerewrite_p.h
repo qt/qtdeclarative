@@ -56,7 +56,7 @@
 #include "rewriter/textwriter_p.h"
 #include "parser/qdeclarativejslexer_p.h"
 #include "parser/qdeclarativejsparser_p.h"
-#include "parser/qdeclarativejsnodepool_p.h"
+#include "parser/qdeclarativejsmemorypool_p.h"
 
 QT_BEGIN_NAMESPACE
 

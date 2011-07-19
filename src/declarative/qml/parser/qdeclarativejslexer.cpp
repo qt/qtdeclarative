@@ -41,7 +41,8 @@
 
 #include "qdeclarativejslexer_p.h"
 #include "qdeclarativejsengine_p.h"
-#include "qdeclarativejsnodepool_p.h"
+#include "qdeclarativejsmemorypool_p.h"
+
 #include <private/qdeclarativeutils_p.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QVarLengthArray>
