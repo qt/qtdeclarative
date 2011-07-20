@@ -60,6 +60,8 @@ Rectangle{
             "../asteroid/asteroid.qml",
             "../asteroid/blackhole.qml",
             "../custom/blurparticles.qml",
+            "../custom/custom.qml",
+            "../custom/fallingleaves.qml",
             "../modelparticles/bubbles.qml",
             "../modelparticles/gridsplosion.qml",
             "../modelparticles/package.qml",

@@ -188,6 +188,7 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::SQLDatabaseType:
             case QV8ObjectResource::ListModelType:
             case QV8ObjectResource::Context2DType:
+            case QV8ObjectResource::ParticleDataType:
                 return QVariant();
             case QV8ObjectResource::QObjectType:
                 return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));

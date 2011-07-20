@@ -39,13 +39,9 @@
 **
 ****************************************************************************/
 
-#ifndef TRAILSEMITTER_H
-#define TRAILSEMITTER_H
-
-#include <QtCore>//FIXME
-#include <QtGui>
-
-#include "qsgparticleemitter_p.h"
+#ifndef CUSTOMAFFECTOR_H
+#define CUSTOMAFFECTOR_H
+#include "qsgparticleaffector_p.h"
 
 QT_BEGIN_HEADER
 
@@ -54,51 +50,20 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 
-class QSGGeometryNode;
-
-class QSGBasicEmitter : public QSGParticleEmitter
+class QSGCustomAffector : public QSGParticleAffector
 {
     Q_OBJECT
-
-    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
-
 public:
-    explicit QSGBasicEmitter(QSGItem* parent=0);
-    virtual ~QSGBasicEmitter(){}
-    virtual void emitWindow(int timeStamp);
-
-
-    qreal speedFromMovement() const { return m_speed_from_movement; }
-    void setSpeedFromMovement(qreal s);
-
-    qreal renderOpacity() const { return m_render_opacity; }
-
+    explicit QSGCustomAffector(QSGItem *parent = 0);
+protected:
+    virtual bool affectParticle(QSGParticleData *d, qreal dt);
 signals:
-
-    void speedFromMovementChanged();
+    void affectParticle(QDeclarativeV8Handle particle, qreal dt);
 
 public slots:
-public:
-    virtual void reset();
-protected:
 
-private:
-
-    qreal m_speed_from_movement;
-
-    // derived values...
-    int m_particle_count;
-    bool m_reset_last;
-    qreal m_last_timestamp;
-    qreal m_last_emission;
-
-    QPointF m_last_emitter;
-    QPointF m_last_last_emitter;
-    QPointF m_last_last_last_emitter;
-
-    qreal m_render_opacity;
 };
 
 QT_END_NAMESPACE
 QT_END_HEADER
-#endif // TRAILSEMITTER_H
+#endif // CUSTOMAFFECTOR_H

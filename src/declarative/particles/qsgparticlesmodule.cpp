@@ -67,6 +67,8 @@
 #include "qsgwander_p.h"
 #include "qsgtargetaffector_p.h"
 #include "qsgcumulativedirection_p.h"
+#include "qsgcustomemitter_p.h"
+#include "qsgcustomaffector_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -87,7 +89,8 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGItemParticle>(uri, 2, 0, "ItemParticle");
     qmlRegisterType<QSGModelParticle>(uri, 2, 0, "ModelParticle");
 
-    qmlRegisterType<QSGBasicEmitter>(uri, 2, 0, "Emitter");
+    qmlRegisterType<QSGBasicEmitter>(uri, 2, 0, "Emitter");//TODO: Rename BasicEmitter?
+    qmlRegisterType<QSGCustomEmitter>(uri, 2, 0, "CustomEmitter");
     qmlRegisterType<QSGFollowEmitter>(uri, 2, 0, "FollowEmitter");
 
     qmlRegisterType<QSGEllipseExtruder>(uri, 2, 0, "EllipseShape");
@@ -99,7 +102,8 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGTargetedDirection>(uri, 2, 0, "TargetedDirection");
     qmlRegisterType<QSGCumulativeDirection>(uri, 2, 0, "CumulativeDirection");
 
-    qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "Affector");//for the triggered signal
+    qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "Affector");//useful for the triggered signal
+    qmlRegisterType<QSGCustomAffector>(uri, 2, 0, "CustomAffector");
     qmlRegisterType<QSGWanderAffector>(uri, 2, 0, "Wander");
     qmlRegisterType<QSGFrictionAffector>(uri, 2, 0, "Friction");
     qmlRegisterType<QSGPointAttractorAffector>(uri, 2, 0, "PointAttractor");

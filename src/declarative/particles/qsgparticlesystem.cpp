@@ -46,8 +46,10 @@
 #include "qsgparticlepainter_p.h"
 #include "qsgspriteengine_p.h"
 #include "qsgsprite_p.h"
+#include "qsgv8particledata_p.h"
 
 #include "qsgfollowemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
+#include <private/qdeclarativeengine_p.h>
 #include <cmath>
 #include <QDebug>
 
@@ -114,7 +116,7 @@ void QSGParticleDataHeap::grow() //###Consider automatic growth vs resize() call
     m_data.resize(1 << ++m_size);
 }
 
-void QSGParticleDataHeap::insert(QSGParticleData* data)
+void QSGParticleDataHeap::insert(QSGParticleData* data)//TODO: Optimize 0 lifespan (or already dead) case
 {
     int time = roundedTime(data->t + data->lifeSpan);
     if (m_lookups.contains(time)){
@@ -296,6 +298,7 @@ QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     , system(sys)
     , index(0)
     , systemIndex(-1)
+    , v8Datum(0)
 {
     x = 0;
     y = 0;
@@ -359,6 +362,12 @@ void QSGParticleData::clone(const QSGParticleData& other)
     modelIndex = other.modelIndex;
 }
 
+QDeclarativeV8Handle QSGParticleData::v8Value()
+{
+    if (!v8Datum)
+        v8Datum = new QSGV8ParticleData(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(system)), this);
+    return v8Datum->v8Value();
+}
 //sets the x accleration without affecting the instantaneous x velocity or position
 void QSGParticleData::setInstantaneousAX(qreal ax)
 {

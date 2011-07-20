@@ -28,7 +28,10 @@ HEADERS += \
     $$PWD/qsgturbulence_p.h \
     $$PWD/qsgwander_p.h \
     $$PWD/qsgtargetaffector_p.h \
-    $$PWD/qsgcumulativedirection_p.h
+    $$PWD/qsgcumulativedirection_p.h \
+    $$PWD/qsgcustomemitter_p.h \
+    $$PWD/qsgcustomaffector_p.h \
+    $$PWD/qsgv8particledata_p.h
 
 SOURCES += \
     $$PWD/qsgangleddirection.cpp \
@@ -58,7 +61,10 @@ SOURCES += \
     $$PWD/qsgturbulence.cpp \
     $$PWD/qsgwander.cpp \
     $$PWD/qsgtargetaffector.cpp \
-    $$PWD/qsgcumulativedirection.cpp
+    $$PWD/qsgcumulativedirection.cpp \
+    $$PWD/qsgcustomemitter.cpp \
+    $$PWD/qsgcustomaffector.cpp \
+    $$PWD/qsgv8particledata.cpp
 
 RESOURCES += \
     $$PWD/particles.qrc

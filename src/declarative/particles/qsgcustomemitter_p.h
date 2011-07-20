@@ -39,13 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef TRAILSEMITTER_H
-#define TRAILSEMITTER_H
-
-#include <QtCore>//FIXME
-#include <QtGui>
-
+#ifndef QSGCUSTOMEMITTER_H
+#define QSGCUSTOMEMITTER_H
 #include "qsgparticleemitter_p.h"
+#include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER
 
@@ -53,40 +50,17 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-class QSGGeometryNode;
-
-class QSGBasicEmitter : public QSGParticleEmitter
+class QSGCustomEmitter : public QSGParticleEmitter
 {
     Q_OBJECT
-
-    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
-
 public:
-    explicit QSGBasicEmitter(QSGItem* parent=0);
-    virtual ~QSGBasicEmitter(){}
+    explicit QSGCustomEmitter(QSGItem* parent=0);
+    virtual ~QSGCustomEmitter(){}
     virtual void emitWindow(int timeStamp);
-
-
-    qreal speedFromMovement() const { return m_speed_from_movement; }
-    void setSpeedFromMovement(qreal s);
-
-    qreal renderOpacity() const { return m_render_opacity; }
-
-signals:
-
-    void speedFromMovementChanged();
-
-public slots:
-public:
     virtual void reset();
-protected:
-
+Q_SIGNALS:
+    void emitParticle(QDeclarativeV8Handle particle);
 private:
-
-    qreal m_speed_from_movement;
-
-    // derived values...
     int m_particle_count;
     bool m_reset_last;
     qreal m_last_timestamp;
@@ -95,10 +69,8 @@ private:
     QPointF m_last_emitter;
     QPointF m_last_last_emitter;
     QPointF m_last_last_last_emitter;
-
-    qreal m_render_opacity;
 };
 
 QT_END_NAMESPACE
 QT_END_HEADER
-#endif // TRAILSEMITTER_H
+#endif // QSGCUSTOMEMITTER_H

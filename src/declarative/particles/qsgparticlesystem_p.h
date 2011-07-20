@@ -51,6 +51,7 @@
 #include <QtDeclarative/private/qsgsprite_p.h>
 #include <QAbstractAnimation>
 #include <QtDeclarative/qdeclarative.h>
+#include <private/qv8engine_p.h> //For QDeclarativeV8Handle
 
 QT_BEGIN_HEADER
 
@@ -66,6 +67,7 @@ class QSGParticleData;
 class QSGParticleSystemAnimation;
 class QSGSpriteEngine;
 class QSGSprite;
+class QSGV8ParticleData;
 
 struct QSGParticleDataHeapNode{
     int time;//in ms
@@ -204,6 +206,9 @@ public:
     float lifeLeft();
     float curSize();
     void clone(const QSGParticleData& other);//Not =, leaves meta-data like index
+    QDeclarativeV8Handle v8Value();
+private:
+    QSGV8ParticleData* v8Datum;
 };
 
 class QSGParticleSystem : public QSGItem

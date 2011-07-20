@@ -39,66 +39,35 @@
 **
 ****************************************************************************/
 
-#ifndef TRAILSEMITTER_H
-#define TRAILSEMITTER_H
-
-#include <QtCore>//FIXME
-#include <QtGui>
-
-#include "qsgparticleemitter_p.h"
-
-QT_BEGIN_HEADER
-
+#include "qsgcustomaffector_p.h"
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass CustomAffector QSGCustomAffector
+    \inqmlmodule QtQuick.Particles 2
+    \since QtQuick.Particles 2.0
+    \inherits Affector
+    \brief The Custom affector allows you to modify affected particles
 
-QT_MODULE(Declarative)
+*/
 
+//TODO: Document particle 'type'
+/*!
+    \qmlsignal Timer::affecting(particle, dt)
 
-class QSGGeometryNode;
+    This handler is called when a particle is selected to be affected.
 
-class QSGBasicEmitter : public QSGParticleEmitter
+    dt is the time since the last time it was affected. Use dt to normalize
+    trajectory manipulations to real time.
+*/
+QSGCustomAffector::QSGCustomAffector(QSGItem *parent) :
+    QSGParticleAffector(parent)
 {
-    Q_OBJECT
-
-    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
-
-public:
-    explicit QSGBasicEmitter(QSGItem* parent=0);
-    virtual ~QSGBasicEmitter(){}
-    virtual void emitWindow(int timeStamp);
+}
 
 
-    qreal speedFromMovement() const { return m_speed_from_movement; }
-    void setSpeedFromMovement(qreal s);
-
-    qreal renderOpacity() const { return m_render_opacity; }
-
-signals:
-
-    void speedFromMovementChanged();
-
-public slots:
-public:
-    virtual void reset();
-protected:
-
-private:
-
-    qreal m_speed_from_movement;
-
-    // derived values...
-    int m_particle_count;
-    bool m_reset_last;
-    qreal m_last_timestamp;
-    qreal m_last_emission;
-
-    QPointF m_last_emitter;
-    QPointF m_last_last_emitter;
-    QPointF m_last_last_last_emitter;
-
-    qreal m_render_opacity;
-};
-
+bool QSGCustomAffector::affectParticle(QSGParticleData *d, qreal dt)
+{
+    emit affectParticle(d->v8Value(), dt);
+    return true;//TODO: Work it out (best added alongside autoTimeScaling)
+}
 QT_END_NAMESPACE
-QT_END_HEADER
-#endif // TRAILSEMITTER_H
