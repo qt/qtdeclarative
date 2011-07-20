@@ -407,26 +407,40 @@ again:
         if (_char.isDigit()) {
             QByteArray chars;
             chars.reserve(32);
-            while (_char.isLetterOrNumber() || _char == QLatin1Char('.')) {
-                if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
+
+            chars += ch.unicode(); // append the `.'
+
+            while (_char.isDigit()) {
+                chars += _char.unicode();
+                scanChar();
+            }
+
+            if (_char.toLower() == QLatin1Char('e')) {
+                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              _codePtr[1].isDigit())) {
+
                     chars += _char.unicode();
-                    scanChar(); // skip e
+                    scanChar(); // consume `e'
 
                     if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
                         chars += _char.unicode();
-                        scanChar(); // skip +/-
+                        scanChar(); // consume the sign
                     }
-                } else {
-                    chars += _char.unicode();
-                    scanChar();
+
+                    while (_char.isDigit()) {
+                        chars += _char.unicode();
+                        scanChar();
+                    }
                 }
             }
+
             const char *begin = chars.constData();
             const char *end = 0;
             bool ok = false;
+
             _tokenValue = qstrtod(begin, &end, &ok);
 
-            if (! ok || end != chars.end()) {
+            if (end != chars.end()) {
                 _errorCode = IllegalExponentIndicator;
                 _errorMessage = QCoreApplication::translate("QDeclarativeParser", "Illegal syntax for exponential number");
                 return T_ERROR;
@@ -676,27 +690,80 @@ again:
             chars.reserve(32);
             chars += ch.unicode();
 
-            while (_char.isLetterOrNumber() || _char == QLatin1Char('.')) {
-                if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-                    chars += _char.unicode();
-                    scanChar(); // skip e
+            if (ch == QLatin1Char('0') && (_char == 'x' || _char == 'X')) {
+                // parse hex integer literal
 
-                    if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                        chars += _char.unicode();
-                        scanChar(); // skip +/-
-                    }
-                } else {
+                chars += _char.unicode();
+                scanChar(); // consume `x'
+
+                while (isHexDigit(_char)) {
                     chars += _char.unicode();
                     scanChar();
                 }
+
+                _tokenValue = integerFromString(chars.constData(), chars.size(), 16);
+                return T_NUMERIC_LITERAL;
             }
+
+            // decimal integer literal
+            while (_char.isDigit()) {
+                chars += _char.unicode();
+                scanChar(); // consume the digit
+            }
+
+            if (_char == QLatin1Char('.')) {
+                chars += _char.unicode();
+                scanChar(); // consume `.'
+
+                while (_char.isDigit()) {
+                    chars += _char.unicode();
+                    scanChar();
+                }
+
+                if (_char.toLower() == QLatin1Char('e')) {
+                    if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                                  _codePtr[1].isDigit())) {
+
+                        chars += _char.unicode();
+                        scanChar(); // consume `e'
+
+                        if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
+                            chars += _char.unicode();
+                            scanChar(); // consume the sign
+                        }
+
+                        while (_char.isDigit()) {
+                            chars += _char.unicode();
+                            scanChar();
+                        }
+                    }
+                }
+            } else if (_char.toLower() == QLatin1Char('e')) {
+                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              _codePtr[1].isDigit())) {
+
+                    chars += _char.unicode();
+                    scanChar(); // consume `e'
+
+                    if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
+                        chars += _char.unicode();
+                        scanChar(); // consume the sign
+                    }
+
+                    while (_char.isDigit()) {
+                        chars += _char.unicode();
+                        scanChar();
+                    }
+                }
+            }
+
             const char *begin = chars.constData();
             const char *end = 0;
             bool ok = false;
 
             _tokenValue = qstrtod(begin, &end, &ok);
 
-            if (! ok || end != chars.end()) {
+            if (end != chars.end()) {
                 _errorCode = IllegalExponentIndicator;
                 _errorMessage = QCoreApplication::translate("QDeclarativeParser", "Illegal syntax for exponential number");
                 return T_ERROR;

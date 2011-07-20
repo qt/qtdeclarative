@@ -508,21 +508,6 @@ static inline int classify7(const QChar *s) {
       }
     }
   }
-  else if (s[0].unicode() == 'c') {
-    if (s[1].unicode() == 'o') {
-      if (s[2].unicode() == 'm') {
-        if (s[3].unicode() == 'm') {
-          if (s[4].unicode() == 'e') {
-            if (s[5].unicode() == 'n') {
-              if (s[6].unicode() == 't') {
-                return Lexer::T_COMMENT;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
   else if (s[0].unicode() == 'd') {
     if (s[1].unicode() == 'e') {
       if (s[2].unicode() == 'f') {

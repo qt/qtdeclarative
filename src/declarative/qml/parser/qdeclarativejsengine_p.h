@@ -117,6 +117,8 @@ public:
     QStringRef newStringRef(const QChar *chars, int size);
 };
 
+double integerFromString(const char *buf, int size, int radix);
+
 } // end of namespace QDeclarativeJS
 
 QT_QML_END_NAMESPACE
