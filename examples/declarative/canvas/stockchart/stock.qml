@@ -43,15 +43,44 @@ import "contents"
 
 Rectangle {
     id:container
-    width: 1920; height: 1440
+    width: 1920; height: 1200
+    color: "#343434";
+    Image { source: "contents/images/stripes.png"; fillMode: Image.Tile; anchors.fill: parent; opacity: 1 }
+
+
+    TitleBar {
+        id: titleBar
+        width: parent.width
+        anchors.top : container.top
+        height: 40
+        opacity: 0.9
+    }
+
     StockModel {
         id:stockModel
         dataCycle: StockModel.Daily
+        function dataCycleName() {
+            if (dataCycle === StockModel.Weekly)
+                return "Weekly";
+            else if (dataCycle === StockModel.Monthly)
+                return "Monthly";
+            return "Daily";
+        }
+
         onDataChanged: {
             if (view.viewType == "chart") {
                 canvas.requestPaint();
             }
         }
+        onDownloadProgress: {
+            if (bytesReceived == bytesTotal && bytesTotal != -1) {
+                progress.opacity = 0;
+            } else {
+                progress.opacity = 0.8;
+                progress.text = "downloading " + stockModel.dataCycleName() + " data ..."+ Math.round(bytesReceived/1000) + " KB";
+            }
+        }
+
         property string description:"";
     }
 
@@ -60,27 +89,22 @@ Rectangle {
     Rectangle {
         id: header
         width: parent.width
-        height: childrenRect.height
+        height: 20
         color: "steelblue"
-
-        Text {
-            id:t
-            font.pointSize:15
-            horizontalAlignment:Text.AlignHCenter
-            font.bold: true
-            font.underline:true
-        }
-
-        function updateCurrent(price)
-        {
-            if (price !== undefined) {
-                t.text =Qt.formatDate(price.date, "yyyy-MM-dd") + " OPEN:"
-                        + Math.round(price.openPrice*100)/100 + " HIGH:"
-                        + Math.round(price.highPrice*100)/100 + " LOW:"
-                        + Math.round(price.lowPrice*100)/100 + " CLOSE:"
-                        + Math.round(price.closePrice*100)/100 + " VOLUME:"
-                        + price.volume + " ADJ:"
-                        + Math.round(price.adjustedPrice*100)/100;
+        opacity: 0
+        Row {
+            spacing: 2
+            Text {
+                id:t
+                font.pointSize:15
+                horizontalAlignment:Text.AlignHCenter
+                font.bold: true
+                font.underline:true
+            }
+            Rectangle {
+              height:20
+              width:50
+              Text {text:"Stock list"; font.pointSize:15; font.bold: true}
             }
         }
     }
@@ -88,13 +112,19 @@ Rectangle {
     ListView {
         id:stockList
         width: parent.width
-        height: container.height
         anchors.bottom: container.bottom
+        anchors.top : titleBar.bottom
         focus: true
         keyNavigationWraps: true
         spacing:1
         opacity: 1
         model: stocks
+
+        Component.onCompleted: opacity = 0.9;
+        onOpacityChanged: {
+            titleBar.title = "Top 100 NASDAQ stocks"
+        }
+
 
         delegate : Rectangle {
                 height: 30
@@ -116,6 +146,7 @@ Rectangle {
                         stockModel.description = "NASDAQ:" + stockId + " (" + name + ")";
                         view.opacity = 1;
                         view.viewType = "chart";
+                        canvas.opacity = 0.7;
                     }
                     onClicked: stockList.currentIndex = index
                 }//mousearea
@@ -147,6 +178,13 @@ Rectangle {
         property int topIndex:indexAt(0,contentY);
         property int bottomIndex:indexAt(0, contentY+height);
 
+        onCountChanged:  {
+
+            titleBar.title = stockModel.description + " " + Qt.formatDate(stockModel.startDate, "yyyy-MM-dd") + " - " +
+                    Qt.formatDate(stockModel.endDate, "yyyy-MM-dd") + " " + stockModel.dataCycleName() +
+                             " records:" + view.count;
+
+        }
 
         Component {
             id: listDelegate
@@ -240,21 +278,11 @@ Rectangle {
                 view.orientation = ListView.Horizontal;
                 view.delegate = chartDelegate;
                 //comment.opacity = 0.6;
-                var dataCycle = "Daily";
-
-                if (stockModel.dataCycle === StockModel.Weekly)
-                    dataCycle = "Weekly";
-                else if (stockModel.dataCycle === StockModel.Monthly)
-                    dataCycle = "Monthly";
-
-                comment.text = stockModel.description + "\n" +
-                        Qt.formatDate(stockModel.startDate, "yyyy-MM-dd") + " - " +
-                        Qt.formatDate(stockModel.endDate, "yyyy-MM-dd") + " " + dataCycle;
 
                 view.opacity = 1;
                 view.height = 30
 
-                canvas.opacity = 1;
+                canvas.opacity = 0.7;
                 canvas.requestPaint();
             } else {
                 viewType = "list";
@@ -263,7 +291,7 @@ Rectangle {
 
 
         onCurrentIndexChanged: {
-            header.updateCurrent(stockModel.stockPriceAtIndex(view.currentIndex));
+            //header.updateCurrent(stockModel.stockPriceAtIndex(view.currentIndex));
             if (viewType == "chart") {
                 canvas.first = Math.round(view.currentIndex - view.currentIndex / canvas.scaleX);
                 canvas.last = Math.round(view.currentIndex + (view.count - view.currentIndex) / canvas.scaleX);
@@ -310,11 +338,12 @@ Rectangle {
 
     Canvas {
         id:canvas
-        anchors.top : header.bottom
+        anchors.top : titleBar.bottom
         anchors.bottom : view.top
         width:container.width;
         opacity:0
-
+        property bool running:false
+        property int frames:first
         property int mouseX:0;
         property int mouseY:0;
         property int mousePressedX:0;
@@ -337,26 +366,85 @@ Rectangle {
            color:"white"
            opacity: 0.7
            focus:false
+           text: stockModel.description
+           function updateCurrent(price)
+           {
+               if (price !== undefined) {
+                   text =stockModel.description + "\n"
+                           + Qt.formatDate(price.date, "yyyy-MM-dd") + " OPEN:"
+                           + Math.round(price.openPrice*100)/100 + " HIGH:"
+                           + Math.round(price.highPrice*100)/100 + " LOW:"
+                           + Math.round(price.lowPrice*100)/100 + " CLOSE:"
+                           + Math.round(price.closePrice*100)/100 + " VOLUME:"
+                           + price.volume;
+               }
+           }
         }
 
-//        Text {
-//            id:priceAxis
-//            x:25
-//            y:25
-//            font.pointSize: 15
-//            color:"yellow"
-//            opacity: 0.7
-//            focus: false
-//        }
-//        Text {
-//            id:volumeAxis
-//            x:canvas.width - 25
-//            y:25
-//            font.pointSize: 15
-//            color:"yellow"
-//            opacity: 0.7
-//        }
+        Text {
+            id:priceAxis
+            x:25
+            y:25
+            font.pointSize: 15
+            color:"yellow"
+            opacity: 0.7
+            focus: false
+        }
+        Text {
+            id:volumeAxis
+            x:canvas.width - 200
+            y:25
+            font.pointSize: 15
+            color:"yellow"
+            opacity: 0.7
+        }
 
+        Rectangle {
+            id:progress
+            x:canvas.width/2 - 100
+            y:canvas.height/2
+            width:childrenRect.width
+            height: childrenRect.height
+            opacity: 0
+            color:"white"
+            property string text;
+            Text {
+                text:parent.text
+                font.pointSize: 20
+            }
+        }
+
+        Button {
+            id:runButton
+            text:"Run this chart"
+            y:0
+            x:canvas.width/2 - 50
+            opacity: 0.5
+            onClicked:  {
+                if (canvas.running) {
+                    canvas.running = false;
+                    canvas.frames = canvas.first;
+                    canvas.requestPaint();
+                    text = "Run this chart";
+                    comment.text = stockModel.description;
+                } else {
+                    text = " Stop running ";
+                    canvas.runChart();
+                }
+            }
+        }
+        Button {
+            id:returnButton
+            text:"Stocks"
+            y:0
+            anchors.left : runButton.right
+            anchors.leftMargin : 20
+            opacity: 0.5
+            onClicked:  {
+                stockList.opacity = 1;
+                canvas.opacity = 0;
+            }
+        }
         PinchArea {
             anchors.fill: parent
             onPinchUpdated : {
@@ -441,9 +529,14 @@ Rectangle {
             }
         }
 
+        function runChart() {
+           canvas.running = true;
+            requestPaint();
+        }
+
         function showPriceAt(x) {
             var w = (view.width/view.count)*canvas.scaleX;
-            header.updateCurrent(stockModel.stockPriceAtIndex(canvas.first + Math.round(x/w)));
+            //header.updateCurrent(stockModel.stockPriceAtIndex(canvas.first + Math.round(x/w)));
             //console.log("x:" + x + " w:" + w + " index:" + (canvas.first + Math.round(x/w)));
         }
 
@@ -455,7 +548,7 @@ Rectangle {
             ctx.beginPath();
 
             //price x axis
-//            priceAxis.text = "price:" + Math.round(highest);
+            priceAxis.text = "price:" + Math.round(highest);
             ctx.font = "bold 12px sans-serif";
 
             ctx.strokeText("price", 25, 25);
@@ -479,7 +572,8 @@ Rectangle {
 
 
             var w = canvas.width/points.length;
-            for (var i = 0; i < points.length; i++) {
+            var end = canvas.running? canvas.frames - canvas.first :points.length;
+            for (var i = 0; i < end; i++) {
                 var x = points[i].x;
                 var y = points[i][price];
                 y += canvas.movedY;
@@ -498,7 +592,8 @@ Rectangle {
         {
             ctx.globalAlpha = 0.4;
             ctx.lineWidth = 2;
-            for (var i = 0; i < points.length; i++) {
+            var end = canvas.running? canvas.frames - canvas.first :points.length;
+            for (var i = 0; i < end; i++) {
                 var x = points[i].x;
                 var open = canvas.height * (1 - points[i].open/highest) - canvas.movedY;
                 var close = canvas.height * (1 - points[i].close/highest) - canvas.movedY;
@@ -540,7 +635,7 @@ Rectangle {
             ctx.lineWidth = 1;
 
             //volume x axis
-//            volumeAxis.text = "volume:" + Math.round(highest);
+            volumeAxis.text = "volume:" + Math.round(highest/(1000*100))  + "M";
             for (var j = 1; j < 30; j++) {
                 var val = (highest * j) / 30;
                 val = canvas.height * (1 - val/highest);
@@ -558,11 +653,33 @@ Rectangle {
             ctx.lineTo(canvas.width - 10, canvas.height);
             ctx.stroke();
 
-            for (var i = 0; i < points.length; i++) {
+            var end = canvas.running? canvas.frames - canvas.first :points.length;
+            for (var i = 0; i < end; i++) {
                 var x = points[i].x;
                 var y = points[i][price];
                 y = canvas.height * (1 - y/highest);
                 ctx.fillRect(x, y, canvas.width/points.length, canvas.height - y);
+            }
+        }
+
+        onPainted : {
+            if (canvas.running) {
+                if (frames >= last) {
+                    canvas.running = false;
+                    canvas.frames = first;
+                    runButton.text = "Run this chart";
+                    comment.text = stockModel.description;
+                    requestPaint();
+                } else {
+                    frames += Math.round(view.count / 100);
+                    if (frames > last) frames = last;
+                    var price = stockModel.stockPriceAtIndex(frames);
+                    if (price) {
+                        comment.updateCurrent(price);
+                    }
+
+                    requestPaint();
+                }
             }
         }
 

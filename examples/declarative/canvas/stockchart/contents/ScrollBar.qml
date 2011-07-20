@@ -1,10 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the Qt Mobility Components.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,26 +38,37 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
-#include <qdeclarative.h>
-#include <QSGView>
-#include "model.h"
+import QtQuick 2.0
 
-int main(int argc, char ** argv)
-{
-    QApplication app(argc, argv);
+Item {
+    id: scrollBar
+    // The properties that define the scrollbar's state.
+    // position and pageSize are in the range 0.0 - 1.0.  They are relative to the
+    // height of the page, i.e. a pageSize of 0.5 means that you can see 50%
+    // of the height of the view.
+    // orientation can be either 'Vertical' or 'Horizontal'
+    property real position
+    property real pageSize
+    property string orientation : "Vertical"
+    property alias bgColor: background.color
+    property alias fgColor: thumb.color
 
-    qmlRegisterType<StockModel>("StockChart", 1, 0, "StockModel");
-    qmlRegisterType<StockPrice>("StockChart", 1, 0, "StockPrice");
-    QSGView view;
-    view.setResizeMode(QSGView::SizeViewToRootObject);
-    view.setSource(QUrl("qrc:stock.qml"));
-
-    view.showFullScreen();
-    view.raise();
-
-    QObject::connect((QObject*)view.engine(), SIGNAL(quit()), (QObject*)&app, SLOT(quit()));
-
-    return app.exec();
+    // A light, semi-transparent background
+    Rectangle {
+        id: background
+        radius: orientation == 'Vertical' ? (width/2 - 1) : (height/2 - 1)
+        color: "white"; opacity: 0.3
+        anchors.fill: parent
+    }
+    // Size the bar to the required size, depending upon the orientation.
+    Rectangle {
+        id: thumb
+        opacity: 0.7
+        color: "black"
+        radius: orientation == 'Vertical' ? (width/2 - 1) : (height/2 - 1)
+        x: orientation == 'Vertical' ? 1 : (scrollBar.position * (scrollBar.width-2) + 1)
+        y: orientation == 'Vertical' ? (scrollBar.position * (scrollBar.height-2) + 1) : 1
+        width: orientation == 'Vertical' ? (parent.width-2) : (scrollBar.pageSize * (scrollBar.width-2))
+        height: orientation == 'Vertical' ? (scrollBar.pageSize * (scrollBar.height-2)) : (parent.height-2)
+    }
 }
-

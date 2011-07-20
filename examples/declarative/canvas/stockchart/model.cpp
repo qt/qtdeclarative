@@ -116,7 +116,8 @@ void StockModel::doRequest()
                      .arg(dataCycleString());
 
         qDebug() << "request stock data:" << query;
-         _manager->get(QNetworkRequest(QUrl(query)));
+        QNetworkReply* reply = _manager->get(QNetworkRequest(QUrl(query)));
+        connect(reply, SIGNAL(downloadProgress(qint64,qint64)), SIGNAL(downloadProgress(qint64,qint64)));
     }
 }
 

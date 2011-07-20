@@ -142,6 +142,7 @@ signals:
     void startDateChanged();
     void endDateChanged();
     void dataCycleChanged();
+    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
 public slots:
     void requestData();
