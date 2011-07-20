@@ -213,7 +213,7 @@ public:
     ~QV8Engine();
 
     struct Deletable {
-        ~Deletable() {}
+        virtual ~Deletable() {}
     };
 
     void init(QDeclarativeEngine *);
