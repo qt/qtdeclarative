@@ -45,6 +45,7 @@
 #include "private/qdeclarativeboundsignal_p.h"
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qmetaobjectbuilder_p.h"
+#include "private/qfastmetabuilder_p.h"
 #include "private/qdeclarativedata_p.h"
 #include "qdeclarative.h"
 #include "private/qdeclarativecustomparser_p.h"
@@ -356,7 +357,9 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
 
             QMetaObject mo;
             const QByteArray &metadata = datas.at(instr.data);
-            QMetaObjectBuilder::fromRelocatableData(&mo, 0, metadata);
+            QFastMetaBuilder::fromData(&mo, 0, metadata);
+//            QMetaObjectBuilder::fromRelocatableData(&mo, 0, metadata);
+
 
             const QDeclarativeVMEMetaData *data = 
                 (const QDeclarativeVMEMetaData *)datas.at(instr.aliasData).constData();

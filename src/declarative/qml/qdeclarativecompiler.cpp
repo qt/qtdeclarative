@@ -46,6 +46,7 @@
 #include "qdeclarativepropertyvaluesource.h"
 #include "qdeclarativecomponent.h"
 #include "private/qmetaobjectbuilder_p.h"
+#include "private/qfastmetabuilder_p.h"
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
@@ -2489,53 +2490,114 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
         obj->dynamicSlots.isEmpty())
         return true;
 
-    QByteArray dynamicData(sizeof(QDeclarativeVMEMetaData), (char)0);
+    bool resolveAlias = (mode == ResolveAliases);
+
+    const Object::DynamicProperty *defaultProperty = 0;
+    int aliasCount = 0;
+
+    for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
+        const Object::DynamicProperty &p = obj->dynamicProperties.at(ii);
+
+        if (p.type == Object::DynamicProperty::Alias)
+            aliasCount++;
+
+        if (p.isDefaultProperty && 
+            (resolveAlias || p.type != Object::DynamicProperty::Alias))
+            defaultProperty = &p;
+
+        if (!resolveAlias) {
+            // No point doing this for both the alias and non alias cases
+            QString name = QString::fromUtf8(p.name);
+            QDeclarativePropertyCache::Data *d = property(obj, QStringRef(&name));
+            if (d && d->isFinal())
+                COMPILE_EXCEPTION(&p, tr("Cannot override FINAL property"));
+        }
+    }
+
+    bool buildData = resolveAlias || aliasCount == 0;
+
+    QByteArray dynamicData;
+    if (buildData) {
+        typedef QDeclarativeVMEMetaData VMD;
+
+        dynamicData = QByteArray(sizeof(QDeclarativeVMEMetaData) +
+                                 (obj->dynamicProperties.count() - aliasCount) * sizeof(VMD::PropertyData) +
+                                 obj->dynamicSlots.count() * sizeof(VMD::MethodData) +
+                                 aliasCount * sizeof(VMD::AliasData), 0);
+    }
+
+    int uniqueClassId = classIndexCounter()->fetchAndAddRelaxed(1);
 
     QByteArray newClassName = obj->metatype->className();
     newClassName.append("_QML_");
-    int idx = classIndexCounter()->fetchAndAddRelaxed(1);
-    newClassName.append(QByteArray::number(idx));
+    newClassName.append(QByteArray::number(uniqueClassId));
+
     if (compileState->root == obj && !compileState->nested) {
         QString path = output->url.path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             QString nameBase = path.mid(lastSlash + 1, path.length()-lastSlash-5);
             if (!nameBase.isEmpty() && QDeclarativeUtils::isUpper(nameBase.at(0)))
-                newClassName = nameBase.toUtf8() + "_QMLTYPE_" + QByteArray::number(idx);
+                newClassName = nameBase.toUtf8() + "_QMLTYPE_" + QByteArray::number(uniqueClassId);
         }
     }
 
-    QMetaObjectBuilder builder;
-    builder.setClassName(newClassName);
-    builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+    QFastMetaBuilder builder;
+    QFastMetaBuilder::StringRef classNameRef = builder.init(newClassName.length(), 
+            obj->dynamicProperties.count() - (resolveAlias?0:aliasCount),
+            obj->dynamicSlots.count(),
+            obj->dynamicSignals.count() + obj->dynamicProperties.count(),
+            defaultProperty?1:0);
 
-    bool hasAlias = false;
-    for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
-        const Object::DynamicProperty &p = obj->dynamicProperties.at(ii);
+    struct TypeData {
+        Object::DynamicProperty::Type dtype;
+        int metaType;
+        const char *cppType;
+    } builtinTypes[] = {
+        { Object::DynamicProperty::Variant, 0, "QVariant" },
+        { Object::DynamicProperty::Int, QMetaType::Int, "int" },
+        { Object::DynamicProperty::Bool, QMetaType::Bool, "bool" },
+        { Object::DynamicProperty::Real, QMetaType::Double, "double" },
+        { Object::DynamicProperty::String, QMetaType::QString, "QString" },
+        { Object::DynamicProperty::Url, QMetaType::QUrl, "QUrl" },
+        { Object::DynamicProperty::Color, QMetaType::QColor, "QColor" },
+        { Object::DynamicProperty::Time, QMetaType::QTime, "QTime" },
+        { Object::DynamicProperty::Date, QMetaType::QDate, "QDate" },
+        { Object::DynamicProperty::DateTime, QMetaType::QDateTime, "QDateTime" },
+    };
+    static const int builtinTypeCount = sizeof(builtinTypes) / sizeof(TypeData);
+    QFastMetaBuilder::StringRef typeRefs[builtinTypeCount]; 
 
-        int propIdx = obj->metaObject()->indexOfProperty(p.name.constData());
-        if (-1 != propIdx) {
-            QMetaProperty prop = obj->metaObject()->property(propIdx);
-            if (prop.isFinal())
-                COMPILE_EXCEPTION(&p, tr("Cannot override FINAL property"));
-        }
+    // Reserve dynamic properties
+    if (obj->dynamicProperties.count()) {
+        typedef QDeclarativeVMEMetaData VMD;
 
-        if (p.isDefaultProperty &&
-            (p.type != Object::DynamicProperty::Alias ||
-             mode == ResolveAliases))
-            builder.addClassInfo("DefaultProperty", p.name);
+        int effectivePropertyIndex = 0;
+        for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
+            Object::DynamicProperty &p = obj->dynamicProperties[ii];
 
-        QByteArray type;
-        int propertyType = 0;
-        bool readonly = false;
-        switch(p.type) {
-        case Object::DynamicProperty::Alias:
-            hasAlias = true;
-            continue;
-            break;
-        case Object::DynamicProperty::CustomList:
-        case Object::DynamicProperty::Custom:
-            {
+            // Reserve space for name
+            p.nameRef = builder.newString(p.name.length());
+
+            int propertyType = 0;
+            bool readonly = false;
+            QFastMetaBuilder::StringRef typeRef;
+
+            if (p.type == Object::DynamicProperty::Alias) {
+                continue;
+            } else if (p.type < builtinTypeCount) {
+                Q_ASSERT(builtinTypes[p.type].dtype == p.type);
+                propertyType = builtinTypes[p.type].metaType;
+                if (typeRefs[p.type].isEmpty()) 
+                    typeRefs[p.type] = builder.newString(strlen(builtinTypes[p.type].cppType));
+                typeRef = typeRefs[p.type];
+                if (p.type == Object::DynamicProperty::Variant)
+                    propertyType = qMetaTypeId<QVariant>();
+
+            } else {
+                Q_ASSERT(p.type == Object::DynamicProperty::CustomList ||
+                         p.type == Object::DynamicProperty::Custom);
+
                 QByteArray customTypeName;
                 QDeclarativeType *qmltype = 0;
                 QString url;
@@ -2556,144 +2618,216 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                 }
 
                 if (p.type == Object::DynamicProperty::Custom) {
-                    type = customTypeName + '*';
+                    customTypeName += '*';
                     propertyType = QMetaType::QObjectStar;
                 } else {
                     readonly = true;
-                    type = "QDeclarativeListProperty<";
-                    type.append(customTypeName);
-                    type.append(">");
+                    customTypeName = QByteArray("QDeclarativeListProperty<") + customTypeName + QByteArray(">");
                     propertyType = qMetaTypeId<QDeclarativeListProperty<QObject> >();
                 }
+
+                p.resolvedCustomTypeName = customTypeName;
+                p.typeRef = builder.newString(customTypeName.length());
+                typeRef = p.typeRef;
             }
-            break;
-        case Object::DynamicProperty::Variant:
-            propertyType = -1;
-            type = "QVariant";
-            break;
-        case Object::DynamicProperty::Int:
-            propertyType = QVariant::Int;
-            type = "int";
-            break;
-        case Object::DynamicProperty::Bool:
-            propertyType = QVariant::Bool;
-            type = "bool";
-            break;
-        case Object::DynamicProperty::Real:
-            propertyType = QVariant::Double;
-            type = "double";
-            break;
-        case Object::DynamicProperty::String:
-            propertyType = QVariant::String;
-            type = "QString";
-            break;
-        case Object::DynamicProperty::Url:
-            propertyType = QVariant::Url;
-            type = "QUrl";
-            break;
-        case Object::DynamicProperty::Color:
-            propertyType = QVariant::Color;
-            type = "QColor";
-            break;
-        case Object::DynamicProperty::Time:
-            propertyType = QVariant::Time;
-            type = "QTime";
-            break;
-        case Object::DynamicProperty::Date:
-            propertyType = QVariant::Date;
-            type = "QDate";
-            break;
-        case Object::DynamicProperty::DateTime:
-            propertyType = QVariant::DateTime;
-            type = "QDateTime";
-            break;
+
+            if (buildData) {
+                VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
+                vmd->propertyCount++;
+                (vmd->propertyData() + effectivePropertyIndex)->propertyType = propertyType;
+            }
+
+            if (p.type < builtinTypeCount)
+                builder.setProperty(effectivePropertyIndex, p.nameRef, typeRef, (QMetaType::Type)propertyType, 
+                                    readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable, 
+                                    effectivePropertyIndex);
+            else 
+                builder.setProperty(effectivePropertyIndex, p.nameRef, typeRef, 
+                                    readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable, 
+                                    effectivePropertyIndex);
+
+            p.changedSignatureRef = builder.newString(p.name.length() + strlen("Changed()"));
+            builder.setSignal(effectivePropertyIndex, p.changedSignatureRef);
+
+            effectivePropertyIndex++;
         }
-
-        ((QDeclarativeVMEMetaData *)dynamicData.data())->propertyCount++;
-        QDeclarativeVMEMetaData::PropertyData propertyData = { propertyType };
-        dynamicData.append((char *)&propertyData, sizeof(propertyData));
-
-        builder.addSignal(p.name + "Changed()");
-        QMetaPropertyBuilder propBuilder = 
-            builder.addProperty(p.name, type, builder.methodCount() - 1);
-        propBuilder.setWritable(!readonly);
-    }
-
-    for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
-        const Object::DynamicProperty &p = obj->dynamicProperties.at(ii);
-
-        if (p.type == Object::DynamicProperty::Alias) {
-            if (mode == ResolveAliases) {
-                ((QDeclarativeVMEMetaData *)dynamicData.data())->aliasCount++;
-                COMPILE_CHECK(compileAlias(builder, dynamicData, obj, p));
-            } else {
-                // Need a fake signal so that the metaobject remains consistent across
-                // the resolve and non-resolve alias runs
-                builder.addSignal(p.name + "Changed()");
+        
+        if (aliasCount) {
+            int aliasIndex = 0;
+            for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
+                Object::DynamicProperty &p = obj->dynamicProperties[ii];
+                if (p.type == Object::DynamicProperty::Alias) {
+                    if (resolveAlias) {
+                        Q_ASSERT(buildData);
+                        ((QDeclarativeVMEMetaData *)dynamicData.data())->aliasCount++;
+                        COMPILE_CHECK(compileAlias(builder, dynamicData, obj, effectivePropertyIndex, aliasIndex, p));
+                    }
+                    // Even if we aren't resolving the alias, we need a fake signal so that the 
+                    // metaobject remains consistent across the resolve and non-resolve alias runs
+                    p.changedSignatureRef = builder.newString(p.name.length() + strlen("Changed()"));
+                    builder.setSignal(effectivePropertyIndex, p.changedSignatureRef);
+                    effectivePropertyIndex++;
+                    aliasIndex++;
+                }
             }
         }
     }
 
+    // Reserve default property
+    QFastMetaBuilder::StringRef defPropRef;
+    if (defaultProperty) {
+        defPropRef = builder.newString(strlen("DefaultProperty"));
+        builder.setClassInfo(0, defPropRef, defaultProperty->nameRef);
+    }
+
+    // Reserve dynamic signals
     for (int ii = 0; ii < obj->dynamicSignals.count(); ++ii) {
-        const Object::DynamicSignal &s = obj->dynamicSignals.at(ii);
-        QByteArray sig(s.name + '(');
-        for (int jj = 0; jj < s.parameterTypes.count(); ++jj) {
-            if (jj) sig.append(',');
-            sig.append(s.parameterTypes.at(jj));
-        }
-        sig.append(')');
-        QMetaMethodBuilder b = builder.addSignal(sig);
-        b.setParameterNames(s.parameterNames);
-        ((QDeclarativeVMEMetaData *)dynamicData.data())->signalCount++;
+        Object::DynamicSignal &s = obj->dynamicSignals[ii];
+
+        int paramCount = s.parameterNames.count();
+
+        int signatureSize = s.name.length() + 2 /* paren */;
+        int namesSize = 0;
+        if (paramCount) signatureSize += s.parameterTypesLength() + (paramCount - 1) /* commas */;
+        if (paramCount) namesSize += s.parameterNamesLength() + (paramCount - 1) /* commas */;
+
+        s.signatureRef = builder.newString(signatureSize);
+        if (namesSize) s.parameterNamesRef = builder.newString(namesSize);
+
+        if (buildData)
+            ((QDeclarativeVMEMetaData *)dynamicData.data())->signalCount++;
+        
+        builder.setSignal(ii + obj->dynamicProperties.count(), s.signatureRef, s.parameterNamesRef);
     }
 
-    QStringList funcScripts;
+    // Reserve dynamic slots
+    if (obj->dynamicSlots.count()) {
 
-    for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
-        Object::DynamicSlot &s = obj->dynamicSlots[ii];
-        QByteArray sig(s.name + '(');
-        QString funcScript(QLatin1String("(function ") + s.name + QLatin1Char('('));
+        // Allocate QVariant string
+        if (typeRefs[0].isEmpty()) 
+            typeRefs[0] = builder.newString(strlen(builtinTypes[0].cppType));
+
+        typedef QDeclarativeVMEMetaData VMD;
+
+        for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
+            Object::DynamicSlot &s = obj->dynamicSlots[ii];
+            int paramCount = s.parameterNames.count();
+
+            int signatureSize = s.name.length() + 2 /* paren */;
+            int namesSize = 0; 
+            if (paramCount) signatureSize += (paramCount * strlen("QVariant") + (paramCount - 1));
+            if (paramCount) namesSize += s.parameterNamesLength() + (paramCount - 1 /* commas */); 
+
+            s.signatureRef = builder.newString(signatureSize);
+            if (namesSize) s.parameterNamesRef = builder.newString(namesSize);
+
+            builder.setMethod(ii, s.signatureRef, s.parameterNamesRef, typeRefs[0]);
+
+            if (buildData) {
+                QString funcScript;
+                funcScript.reserve(strlen("(function ") + s.name.length() + 1 /* lparen */ + 
+                        namesSize + 1 /* rparen */ + s.body.length() + 1 /* rparen */);
+                funcScript = QLatin1String("(function ") + s.name + QLatin1Char('(');
+                for (int jj = 0; jj < paramCount; ++jj) {
+                    if (jj) funcScript.append(QLatin1Char(','));
+                    funcScript.append(QLatin1String(s.parameterNames.at(jj)));
+                }
+                funcScript += QLatin1Char(')') + s.body + QLatin1Char(')');
+
+                VMD::MethodData methodData = { s.parameterNames.count(), 0, 
+                                               funcScript.length(), 
+                                               s.location.start.line };
+
+                VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
+                vmd->methodCount++;
+
+                VMD::MethodData &md = *(vmd->methodData() + ii);
+                md = methodData;
+                md.bodyOffset = dynamicData.size();
+
+                dynamicData.append((const char *)funcScript.constData(),
+                                   (funcScript.length() * sizeof(QChar)));
+            }
+
+        }
+    }
+
+    // Now allocate used builtin types
+    for (int ii = 0; ii < builtinTypeCount; ++ii) {
+        if (!typeRefs[ii].isEmpty())
+            typeRefs[ii].load(builtinTypes[ii].cppType);
+    }
+
+    // Now allocate properties
+    for (int ii = 0; ii < obj->dynamicProperties.count(); ++ii) {
+        Object::DynamicProperty &p = obj->dynamicProperties[ii];
+
+        char *d = p.changedSignatureRef.data();
+        strcpy(d, p.name.constData());
+        strcpy(d + p.name.length(), "Changed()");
+
+        if (p.type == Object::DynamicProperty::Alias && !resolveAlias)
+            continue;
+
+        p.nameRef.load(p.name);
+
+        if (p.type >= builtinTypeCount) 
+            p.typeRef.load(p.resolvedCustomTypeName);
+    }
+
+    // Allocate default property if necessary
+    if (defaultProperty) 
+        strcpy(defPropRef.data(), "DefaultProperty");
+
+    // Now allocate signals
+    for (int ii = 0; ii < obj->dynamicSignals.count(); ++ii) {
+        Object::DynamicSignal &s = obj->dynamicSignals[ii];
+
+        char *d = s.signatureRef.data();
+        char *d2 = s.parameterNamesRef.isEmpty()?0:s.parameterNamesRef.data();
+        strcpy(d, s.name.constData());
+        d += s.name.length();
+        *d++ = '('; 
 
         for (int jj = 0; jj < s.parameterNames.count(); ++jj) {
-            if (jj) { 
-                sig.append(',');
-                funcScript.append(QLatin1Char(','));
-            }
-            funcScript.append(QLatin1String(s.parameterNames.at(jj)));
-            sig.append("QVariant");
+            if (jj != 0) { *d++ = ','; *d2++ = ','; }
+            strcpy(d, s.parameterTypes.at(jj).constData());
+            d += s.parameterTypes.at(jj).length();
+            strcpy(d2, s.parameterNames.at(jj).constData());
+            d2 += s.parameterNames.at(jj).length();
         }
-        sig.append(')');
-        funcScript.append(QLatin1Char(')'));
-        funcScript.append(s.body);
-        funcScript.append(QLatin1Char(')'));
-        funcScripts << funcScript;
-
-        QMetaMethodBuilder b = builder.addSlot(sig);
-        b.setReturnType("QVariant");
-        b.setParameterNames(s.parameterNames);
-
-        ((QDeclarativeVMEMetaData *)dynamicData.data())->methodCount++;
-        QDeclarativeVMEMetaData::MethodData methodData =
-             { s.parameterNames.count(), 0, funcScript.length(), s.location.start.line };
-
-        dynamicData.append((char *)&methodData, sizeof(methodData));
+        *d++ = ')';
+        *d = 0;
+        if (d2) *d2 = 0;
     }
 
+    // Now allocate methods
     for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
-        const QString &funcScript = funcScripts.at(ii);
-        QDeclarativeVMEMetaData::MethodData *data =
-            ((QDeclarativeVMEMetaData *)dynamicData.data())->methodData() + ii;
-
-        data->bodyOffset = dynamicData.size();
-
-        dynamicData.append((const char *)funcScript.constData(),
-                           (funcScript.length() * sizeof(QChar)));
+        Object::DynamicSlot &s = obj->dynamicSlots[ii];
+        char *d = s.signatureRef.data();
+        char *d2 = s.parameterNamesRef.isEmpty()?0:s.parameterNamesRef.data();
+        strcpy(d, s.name.constData());
+        d += s.name.length();
+        *d++ = '('; 
+        for (int jj = 0; jj < s.parameterNames.count(); ++jj) {
+            if (jj != 0) { *d++ = ','; *d2++ = ','; }
+            strcpy(d, "QVariant");
+            d += strlen("QVariant");
+            strcpy(d2, s.parameterNames.at(jj).constData());
+            d2 += s.parameterNames.at(jj).length();
+        }
+        *d++ = ')';
+        *d = 0;
+        if (d2) *d2 = 0;
     }
 
-    obj->metadata = builder.toRelocatableData();
-    builder.fromRelocatableData(&obj->extObject, obj->metatype, obj->metadata);
+    // Now allocate class name
+    classNameRef.load(newClassName);
 
-    if (mode == IgnoreAliases && hasAlias) 
+    obj->metadata = builder.toData();
+    builder.fromData(&obj->extObject, obj->metatype, obj->metadata);
+
+    if (mode == IgnoreAliases && aliasCount) 
         compileState->aliasingObjects.append(obj);
 
     obj->synthdata = dynamicData;
@@ -2759,10 +2893,11 @@ static QStringList astNodeToStringList(QDeclarativeJS::AST::Node *node)
     return QStringList();
 }
 
-bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
+bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
                                         QByteArray &data,
                                         QDeclarativeParser::Object *obj,
-                                        const Object::DynamicProperty &prop)
+                                        int propIndex, int aliasIndex,
+                                        Object::DynamicProperty &prop)
 {
     if (!prop.defaultValue)
         COMPILE_EXCEPTION(obj, tr("No property alias location"));
@@ -2789,6 +2924,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
 
     int propIdx = -1;
     int flags = 0;
+    int type = 0;
     bool writable = false;
     bool resettable = false;
     if (alias.count() == 2 || alias.count() == 3) {
@@ -2806,6 +2942,9 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
 
         writable = aliasProperty.isWritable();
         resettable = aliasProperty.isResettable();
+
+        if (aliasProperty.type() < QVariant::UserType)
+            type = aliasProperty.type();
 
         if (alias.count() == 3) {
             QDeclarativeValueType *valueType = enginePrivate->valueTypes[aliasProperty.type()];
@@ -2842,15 +2981,20 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     if (typeName.endsWith('*'))
         flags |= QML_ALIAS_FLAG_PTR;
 
-    data.append((const char *)&idObject->idIndex, sizeof(idObject->idIndex));
-    data.append((const char *)&propIdx, sizeof(propIdx));
-    data.append((const char *)&flags, sizeof(flags));
+    QDeclarativeVMEMetaData::AliasData aliasData = { idObject->idIndex, propIdx, flags };
 
-    builder.addSignal(prop.name + "Changed()");
-    QMetaPropertyBuilder propBuilder = 
-        builder.addProperty(prop.name, typeName.constData(), builder.methodCount() - 1);
-    propBuilder.setWritable(writable);
-    propBuilder.setResettable(resettable);
+    typedef QDeclarativeVMEMetaData VMD;
+    VMD *vmd = (QDeclarativeVMEMetaData *)data.data();
+    *(vmd->aliasData() + aliasIndex) = aliasData;
+
+    prop.nameRef = builder.newString(prop.name.length());
+    prop.resolvedCustomTypeName = typeName;
+    prop.typeRef = builder.newString(typeName.length());
+
+    builder.setProperty(propIndex, prop.nameRef, prop.typeRef, (QMetaType::Type)type, 
+                        (QFastMetaBuilder::PropertyFlag)(writable?int(QFastMetaBuilder::Writable):0), 
+                        propIndex);
+
     return true;
 }
 

@@ -195,6 +195,22 @@ QDeclarativeParser::Object::DynamicSignal::DynamicSignal(const DynamicSignal &o)
 {
 }
 
+int QDeclarativeParser::Object::DynamicSignal::parameterTypesLength() const
+{
+    int rv = 0;
+    for (int ii = 0; ii < parameterTypes.count(); ++ii)
+        rv += parameterTypes.at(ii).length();
+    return rv;
+}
+
+int QDeclarativeParser::Object::DynamicSignal::parameterNamesLength() const
+{
+    int rv = 0;
+    for (int ii = 0; ii < parameterNames.count(); ++ii)
+        rv += parameterNames.at(ii).length();
+    return rv;
+}
+
 QDeclarativeParser::Object::DynamicSlot::DynamicSlot()
 {
 }
@@ -202,6 +218,14 @@ QDeclarativeParser::Object::DynamicSlot::DynamicSlot()
 QDeclarativeParser::Object::DynamicSlot::DynamicSlot(const DynamicSlot &o)
 : name(o.name), body(o.body), parameterNames(o.parameterNames), location(o.location)
 {
+}
+
+int QDeclarativeParser::Object::DynamicSlot::parameterNamesLength() const
+{
+    int rv = 0;
+    for (int ii = 0; ii < parameterNames.count(); ++ii)
+        rv += parameterNames.at(ii).length();
+    return rv;
 }
 
 QDeclarativeParser::Property::Property()

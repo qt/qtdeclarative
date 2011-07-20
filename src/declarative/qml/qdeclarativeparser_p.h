@@ -67,6 +67,7 @@
 #include <private/qdeclarativepool_p.h>
 #include <private/qfieldlist_p.h>
 #include <private/qdeclarativepropertycache_p.h>
+#include <private/qfastmetabuilder_p.h>
 
 QT_BEGIN_HEADER
 
@@ -374,6 +375,12 @@ namespace QDeclarativeParser
             QByteArray name;
             QDeclarativeParser::Property *defaultValue;
             LocationSpan location;
+
+            // Used by the compiler
+            QByteArray resolvedCustomTypeName;
+            QFastMetaBuilder::StringRef typeRef;
+            QFastMetaBuilder::StringRef nameRef;
+            QFastMetaBuilder::StringRef changedSignatureRef;
         };
         struct DynamicSignal {
             DynamicSignal();
@@ -382,6 +389,13 @@ namespace QDeclarativeParser
             QByteArray name;
             QList<QByteArray> parameterTypes;
             QList<QByteArray> parameterNames;
+
+            int parameterTypesLength() const;
+            int parameterNamesLength() const;
+
+            // Used by the compiler
+            QFastMetaBuilder::StringRef signatureRef;
+            QFastMetaBuilder::StringRef parameterNamesRef;
         };
         struct DynamicSlot {
             DynamicSlot();
@@ -391,6 +405,12 @@ namespace QDeclarativeParser
             QString body;
             QList<QByteArray> parameterNames;
             LocationSpan location;
+
+            int parameterNamesLength() const;
+
+            // Used by the compiler
+            QFastMetaBuilder::StringRef signatureRef;
+            QFastMetaBuilder::StringRef parameterNamesRef;
         };
 
         // The list of dynamic properties

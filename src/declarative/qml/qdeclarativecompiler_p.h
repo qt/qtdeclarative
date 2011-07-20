@@ -301,10 +301,11 @@ private:
     bool buildBinding(QDeclarativeParser::Value *, QDeclarativeParser::Property *prop,
                       const QDeclarativeCompilerTypes::BindingContext &ctxt);
     bool buildComponentFromRoot(QDeclarativeParser::Object *obj, const QDeclarativeCompilerTypes::BindingContext &);
-    bool compileAlias(QMetaObjectBuilder &, 
+    bool compileAlias(QFastMetaBuilder &, 
                       QByteArray &data,
                       QDeclarativeParser::Object *obj, 
-                      const QDeclarativeParser::Object::DynamicProperty &);
+                      int propIndex, int aliasIndex,
+                      QDeclarativeParser::Object::DynamicProperty &);
     bool completeComponentBuild();
     bool checkValidId(QDeclarativeParser::Value *, const QString &);
 
