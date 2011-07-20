@@ -446,7 +446,22 @@ void QDeclarative1Image::geometryChanged(const QRectF &newGeometry, const QRectF
 QRectF QDeclarative1Image::boundingRect() const
 {
     Q_D(const QDeclarative1Image);
-    return QRectF(0, 0, qMax(d->mWidth, d->paintedWidth), qMax(d->mHeight, d->paintedHeight));
+    QRectF boundingRect(0, 0, qMax(d->mWidth, d->paintedWidth), qMax(d->mHeight, d->paintedHeight));
+
+    if (d->fillMode == PreserveAspectCrop) {
+        if (!d->pix.width() || !d->pix.height())
+            return boundingRect;
+        qreal widthScale = width() / qreal(d->pix.width());
+        qreal heightScale = height() / qreal(d->pix.height());
+        if (widthScale < heightScale) {
+            widthScale = heightScale;
+            boundingRect.moveTo((width() - widthScale * d->pix.width()) / 2, 0);
+        } else if (heightScale < widthScale) {
+            heightScale = widthScale;
+            boundingRect.moveTo(0, (height() - heightScale * d->pix.height()) / 2);
+        }
+    }
+    return boundingRect;
 }
 
 /*!
