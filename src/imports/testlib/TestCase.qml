@@ -145,6 +145,7 @@ Item {
             if ("mapFromItem" in o && "mapToItem" in o) {
                 return "declarativeitem";  // @todo improve detection of declarative items
             } else if ("x" in o && "y" in o && "z" in o) {
+                console.log("typeof debug:" + o);
                 return "vector3d"; // Qt3D vector
             }
             return "object";
@@ -162,18 +163,17 @@ Item {
     // Author: Philippe Rathé <prathe@gmail.com>
     function qtest_compareInternal(act, exp) {
         var success = false;
-
         if (act === exp) {
             success = true; // catch the most you can
         } else if (act === null || exp === null || typeof act === "undefined" || typeof exp === "undefined") {
             success = false; // don't lose time with error prone cases
         } else {
             var typeExp = qtest_typeof(exp), typeAct = qtest_typeof(act)
-
             if (typeExp !== typeAct) {
                 // allow object vs string comparison (e.g. for colors)
                 // else break on different types
-                if ((typeExp === "string" && typeAct === "object") || (typeExp === "object" && typeAct === "string")) {
+                if ((typeExp === "string" && (typeAct === "object") || typeAct == "declarativeitem")
+                 || ((typeExp === "object" || typeExp == "declarativeitem") && typeAct === "string")) {
                     success = (act == exp)
                 }
             } else if (typeExp === "string" || typeExp === "boolean" || typeExp === "number" ||
@@ -227,7 +227,6 @@ Item {
 
         for (i in act) { // be strict: don't ensures hasOwnProperty and go deep
             aProperties.push(i); // collect act's properties
-
             if (!qtest_compareInternal(act[i], exp[i])) {
                 eq = false;
                 break;
@@ -258,7 +257,7 @@ Item {
     }
 
     function qtest_formatValue(value) {
-        if (typeof value == "object") {
+        if (qtest_typeof(value) == "object") {
             if ("x" in value && "y" in value && "z" in value) {
                 return "Qt.vector3d(" + value.x + ", " +
                        value.y + ", " + value.z + ")"
@@ -275,6 +274,7 @@ Item {
     function compare(actual, expected, msg) {
         var act = qtest_formatValue(actual)
         var exp = qtest_formatValue(expected)
+
         var success = qtest_compareInternal(actual, expected)
         if (msg === undefined) {
             if (success)
@@ -282,8 +282,9 @@ Item {
             else
                 msg = "Compared values are not the same"
         }
-        if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine()))
+        if (!qtest_results.compare(success, msg, act, exp, util.callerFile(), util.callerLine())) {
             throw new Error("QtQuickTest::fail")
+        }
     }
 
     function tryCompare(obj, prop, value, timeout) {

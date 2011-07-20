@@ -49,7 +49,7 @@ TestCase {
     function benchmark_create_component() {
         var component = Qt.createComponent("item.qml")
         var obj = component.createObject(top)
-        obj.destroy()
+        //obj.destroy(100)
         component.destroy()
     }
 }

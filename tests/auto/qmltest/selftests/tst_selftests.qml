@@ -216,6 +216,7 @@ TestCase {
         }
         verify(caught)
 
+/*
         caught = false;
         try {
             testCase.compare(Qt.vector3d(1, 2, 3), Qt.vector3d(-1, 2, 3), "x")
@@ -259,6 +260,7 @@ TestCase {
             fail("vector compare did not succeed")
         }
         compare(functions.failmsg, "compare-ok")
+*/
     }
 
     function test_skip() {
