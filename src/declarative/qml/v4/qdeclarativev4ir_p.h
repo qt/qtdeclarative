@@ -60,8 +60,8 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativev4compiler_p.h>
 
-#include <qdeclarativejsmemorypool_p.h>
-#include <QtCore/qvarlengtharray.h>.h>
+#include <qdeclarativepool_p.h>
+#include <QtCore/qvarlengtharray.h>
 
 // #define DEBUG_IR_STRUCTURE
 
@@ -176,10 +176,10 @@ struct StmtVisitor {
     virtual void visitRet(Ret *) {}
 };
 
-struct Expr: Managed {
+struct Expr: QDeclarativePool::POD {
     Type type;
 
-    Expr(Type type): type(type) {}
+    Expr(): type(InvalidType) {}
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
     virtual Const *asConst() { return 0; }
@@ -192,17 +192,25 @@ struct Expr: Managed {
     virtual void dump(QTextStream &out) = 0;
 };
 
-struct ExprList: Managed {
+struct ExprList: QDeclarativePool::POD {
     Expr *expr;
     ExprList *next;
 
-    ExprList(Expr *expr, ExprList *next = 0)
-        : expr(expr), next(next) {}
+    void init(Expr *expr, ExprList *next = 0)
+    {
+        this->expr = expr;
+        this->next = next;
+    }
 };
 
 struct Const: Expr {
     double value;
-    Const(Type type, double value): Expr(type), value(value) {}
+
+    void init(Type type, double value)
+    {
+        this->type = type;
+        this->value = value;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitConst(this); }
     virtual Const *asConst() { return this; }
@@ -212,7 +220,12 @@ struct Const: Expr {
 
 struct String: Expr {
     QStringRef value;
-    String(const QStringRef &value): Expr(StringType), value(value) {}
+
+    void init(const QStringRef &value)
+    {
+        this->type = StringType;
+        this->value = value;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
     virtual String *asString() { return this; }
@@ -249,7 +262,7 @@ struct Name: Expr {
     };
 
     Name *base;
-    QString &id;
+    const QString *id;
     Symbol symbol;
     union {
         void *ptr;
@@ -263,7 +276,7 @@ struct Name: Expr {
     quint32 line;
     quint32 column;
 
-    Name(Name *base, Type type, QString &id, Symbol symbol, quint32 line, quint32 column);
+    void init(Name *base, Type type, const QString *id, Symbol symbol, quint32 line, quint32 column);
 
     inline bool is(Symbol s) const { return s == symbol; }
     inline bool isNot(Symbol s) const { return s != symbol; }
@@ -276,7 +289,12 @@ struct Name: Expr {
 
 struct Temp: Expr {
     int index;
-    Temp(Type type, int index): Expr(type), index(index) {}
+
+    void init(Type type, int index)
+    {
+        this->type = type;
+        this->index = index;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
     virtual Temp *asTemp() { return this; }
@@ -288,8 +306,12 @@ struct Unop: Expr {
     AluOp op;
     Expr *expr;
 
-    Unop(AluOp op, Expr *expr)
-        : Expr(typeForOp(op, expr)), op(op), expr(expr) {}
+    void init(AluOp op, Expr *expr)
+    {
+        this->typeForOp(op, expr);
+        this->op = op;
+        this->expr = expr;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitUnop(this); }
     virtual Unop *asUnop() { return this; }
@@ -304,8 +326,14 @@ struct Binop: Expr {
     AluOp op;
     Expr *left;
     Expr *right;
-    Binop(AluOp op, Expr *left, Expr *right)
-        : Expr(typeForOp(op, left, right)), op(op), left(left), right(right) {}
+
+    void init(AluOp op, Expr *left, Expr *right)
+    {
+        this->type = typeForOp(op, left, right);
+        this->op = op;
+        this->left = left;
+        this->right = right;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitBinop(this); }
     virtual Binop *asBinop() { return this; }
@@ -320,8 +348,12 @@ struct Call: Expr {
     Expr *base;
     ExprList *args;
 
-    Call(Expr *base, ExprList *args)
-        : Expr(typeForFunction(base)), base(base), args(args) {}
+    void init(Expr *base, ExprList *args)
+    {
+        this->type = typeForFunction(base);
+        this->base = base;
+        this->args = args;
+    }
 
     Expr *onlyArgument() const {
         if (args && ! args->next)
@@ -338,7 +370,7 @@ private:
     static Type typeForFunction(Expr *base);
 };
 
-struct Stmt: Managed {
+struct Stmt: QDeclarativePool::POD {
     enum Mode {
         HIR,
         MIR
@@ -358,7 +390,11 @@ struct Stmt: Managed {
 
 struct Exp: Stmt {
     Expr *expr;
-    Exp(Expr *expr): expr(expr) {}
+
+    void init(Expr *expr)
+    {
+        this->expr = expr;
+    }
 
     virtual void accept(StmtVisitor *v) { v->visitExp(this); }
     virtual Exp *asExp() { return this; }
@@ -370,7 +406,13 @@ struct Move: Stmt {
     Expr *target;
     Expr *source;
     bool isMoveForReturn;
-    Move(Expr *target, Expr *source, bool isMoveForReturn): target(target), source(source), isMoveForReturn(isMoveForReturn) {}
+
+    void init(Expr *target, Expr *source, bool isMoveForReturn)
+    {
+        this->target = target;
+        this->source = source;
+        this->isMoveForReturn = isMoveForReturn;
+    }
 
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
     virtual Move *asMove() { return this; }
@@ -380,7 +422,11 @@ struct Move: Stmt {
 
 struct Jump: Stmt {
     BasicBlock *target;
-    Jump(BasicBlock *target): target(target) {}
+
+    void init(BasicBlock *target)
+    {
+        this->target = target;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -394,8 +440,13 @@ struct CJump: Stmt {
     Expr *cond;
     BasicBlock *iftrue;
     BasicBlock *iffalse;
-    CJump(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
-        : cond(cond), iftrue(iftrue), iffalse(iffalse) {}
+
+    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
+    {
+        this->cond = cond;
+        this->iftrue = iftrue;
+        this->iffalse = iffalse;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -410,7 +461,14 @@ struct Ret: Stmt {
     Type type;
     quint32 line;
     quint32 column;
-    Ret(Expr *expr, Type type, quint32 line, quint32 column): expr(expr), type(type), line(line), column(column) {}
+
+    void init(Expr *expr, Type type, quint32 line, quint32 column)
+    {
+        this->expr = expr;
+        this->type = type;
+        this->line = line;
+        this->column = column;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -426,8 +484,7 @@ struct Function {
     int tempCount;
     QVarLengthArray<BasicBlock *, 8> basicBlocks;
 
-    template <typename BB> inline BB i(BB i) { basicBlocks.append(i); return i; }
-    template <typename E> inline E e(E e) { return e; }
+    inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     Function(Module *module, const QString &name): module(module), name(name), tempCount(0) {}
     ~Function();
@@ -494,14 +551,13 @@ struct BasicBlock {
 };
 
 struct Module {
-    MemoryPool *pool;
+    QDeclarativePool *pool;
     QVarLengthArray<Function *, 4> functions;
-    QVarLengthArray<QString *, 8> strings;
 
-    Module(MemoryPool *pool);
+    Module(QDeclarativePool *pool);
     ~Module();
 
-    QString &newIdentifier(const QString &text);
+    QString *newString(const QString &text);
     Function *newFunction(const QString &name = QString());
 
     virtual void dump(QTextStream &out);

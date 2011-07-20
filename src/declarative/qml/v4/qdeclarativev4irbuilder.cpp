@@ -606,7 +606,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     if (!found && qmlVerboseCompiler())
                         qWarning() << "*** unresolved enum:" 
-                                   << (baseName->id + QLatin1String(".") + ast->name.toString());
+                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QDeclarativePropertyCache *cache = m_engine->cache(attachedMeta);
                     QDeclarativePropertyCache::Data *data = cache->property(name);
@@ -617,7 +617,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
-                                       << (baseName->id + QLatin1String(".") + ast->name.toString());
+                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -663,7 +663,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final property access:"
-                                << (baseName->id + QLatin1String(".") + ast->name.toString());
+                                << (*baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -707,7 +707,8 @@ bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
         IR::ExprList *args = 0, **argsInserter = &args;
         for (AST::ArgumentList *it = ast->arguments; it; it = it->next) {
             IR::Expr *arg = expression(it->expression);
-            *argsInserter = new (_module->pool) IR::ExprList(arg);
+            *argsInserter = _module->pool->New<IR::ExprList>();
+            (*argsInserter)->init(arg);
             argsInserter = &(*argsInserter)->next;
         }
 

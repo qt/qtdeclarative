@@ -137,7 +137,7 @@ public:
             : block(block), offset(index) {}
     };
     QVector<Patch> patches;
-    QDeclarativeJS::MemoryPool pool;
+    QDeclarativePool pool;
 
     // Committed binding data
     struct {

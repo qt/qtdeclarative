@@ -91,11 +91,12 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
         if (IR::Stmt *terminator = block->terminator()) {
             if (IR::CJump *cj = terminator->asCJump()) {
                 if (cj->iffalse != next) {
-                    block->i(new (_function->module->pool) IR::Jump(cj->iffalse));
+                    IR::Jump *jump = _function->module->pool->New<IR::Jump>();
+                    jump->init(cj->iffalse);
+                    block->statements.append(jump);
                 }
             } else if (IR::Jump *j = terminator->asJump()) {
                 if (j->target == next) {
-                    delete block->statements.at(block->statements.size() - 1);
                     block->statements.resize(block->statements.size() - 1);
                 }
             }
@@ -269,7 +270,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
         instr.load_id(currentReg, e->index);
         gen(instr);
 
-        _subscribeName << QLatin1String("$$$ID_") + e->id;
+        _subscribeName << QLatin1String("$$$ID_") + *e->id;
 
         if (blockNeedsSubscription(_subscribeName)) {
             Instr sub;
@@ -292,7 +293,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
     } break;
 
     case IR::Name::AttachType: {
-        _subscribeName << e->id;
+        _subscribeName << *e->id;
 
         Instr attached;
         attached.common.type = Instr::LoadAttached;
@@ -305,7 +306,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
     } break;
 
     case IR::Name::Property: {
-        _subscribeName << e->id;
+        _subscribeName << *e->id;
 
         QMetaProperty prop = e->meta->property(e->index);
         int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->index);
@@ -989,7 +990,7 @@ void QDeclarativeV4CompilerPrivate::resetInstanceState()
     registeredStrings = committed.registeredStrings;
     bytecode.clear();
     patches.clear();
-    pool.reset(); // reset the memory pool without disposing the allocated memory
+    pool.clear();
     currentReg = 0;
 }
 
