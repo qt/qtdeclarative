@@ -205,6 +205,7 @@ public:
     QDeclarativeQmldirData *getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);
+    bool directoryExists(const QString &path);
     const QDeclarativeDirParser *qmlDirParser(const QString &absoluteFilePath);
 
 private:

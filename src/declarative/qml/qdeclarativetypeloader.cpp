@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
 /*
 Returns the set of QML files in path (qmldir, *.qml, *.js).  The caller
 is responsible for deleting the returned data.
+Returns 0 if the directory does not exist.
 */
 #if defined (Q_OS_UNIX)
 static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
@@ -90,6 +91,14 @@ static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
             continue;
         if (!strcmp(u.d.d_name+len-4, ".qml") || !strcmp(u.d.d_name+len-3, ".js"))
             files->insert(QFile::decodeName(u.d.d_name), true);
+#if defined(Q_OS_DARWIN)
+        else if ((len > 6 && !strcmp(u.d.d_name+len-6, ".dylib")) || !strcmp(u.d.d_name+len-3, ".so")
+                  || (len > 7 && !strcmp(u.d.d_name+len-7, ".bundle"))
+            files->insert(QFile::decodeName(u.d.d_name), true);
+#else  // Unix
+        else if (!strcmp(u.d.d_name+len-3, ".so") || !strcmp(u.d.d_name+len-3, ".sl"))
+            files->insert(QFile::decodeName(u.d.d_name), true);
+#endif
     }
 
     closedir(dd);
@@ -107,7 +116,18 @@ static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
         QString fileName = dir.fileName();
         if (fileName == QLatin1String("qmldir")
                 || fileName.endsWith(QLatin1String(".qml"))
-                || fileName.endsWith(QLatin1String(".js")))
+                || fileName.endsWith(QLatin1String(".js"))
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+                || fileName.endsWith(QLatin1String(".dll"))
+#elif defined(Q_OS_DARWIN)
+                || fileName.endsWith(QLatin1String(".dylib"))
+                || fileName.endsWith(QLatin1String(".so"))
+                || fileName.endsWith(QLatin1String(".bundle"))
+#else  // Unix
+                || fileName.endsWith(QLatin1String(".so"))
+                || fileName.endsWith(QLatin1String(".sl"))
+#endif
+                )
             files->insert(fileName, true);
     }
     return files;
@@ -785,7 +805,7 @@ QDeclarativeQmldirData *QDeclarativeTypeLoader::getQmldir(const QUrl &url)
 
 /*!
 Returns the absolute filename of path via a directory cache for files named
-"qmldir", "*.qml", "*.js"
+"qmldir", "*.qml", "*.js", and plugins.
 Returns a empty string if the path does not exist.
 */
 QString QDeclarativeTypeLoader::absoluteFilePath(const QString &path)
@@ -816,6 +836,37 @@ QString QDeclarativeTypeLoader::absoluteFilePath(const QString &path)
 
     return absoluteFilePath;
 }
+
+/*!
+Returns true if the path is a directory via a directory cache.  Cache is
+shared with absoluteFilePath().
+*/
+bool QDeclarativeTypeLoader::directoryExists(const QString &path)
+{
+    if (path.isEmpty())
+        return false;
+    if (path.at(0) == QLatin1Char(':')) {
+        // qrc resource
+        QFileInfo fileInfo(path);
+        return fileInfo.exists() && fileInfo.isDir();
+    }
+
+    int length = path.length();
+    if (path.endsWith(QLatin1Char('/')))
+        --length;
+    QStringRef dirPath(&path, 0, length);
+
+    StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
+    if (!fileSet) {
+        QHashedString dirPathString(dirPath.toString());
+        StringSet *files = qmlFilesInDirectory(dirPathString);
+        m_importDirCache.insert(dirPathString, files);
+        fileSet = m_importDirCache.value(dirPathString);
+    }
+
+    return (*fileSet);
+}
+
 
 /*!
 Return a QDeclarativeDirParser for absoluteFilePath.  The QDeclarativeDirParser may be cached.
@@ -1132,7 +1183,7 @@ void QDeclarativeTypeData::resolveTypes()
 
         TypeReference ref;
 
-        QUrl url;
+        QString url;
         int majorVersion;
         int minorVersion;
         QDeclarativeImportedNamespace *typeNamespace = 0;
@@ -1175,7 +1226,7 @@ void QDeclarativeTypeData::resolveTypes()
             ref.majorVersion = majorVersion;
             ref.minorVersion = minorVersion;
         } else {
-            ref.typeData = typeLoader()->get(url);
+            ref.typeData = typeLoader()->get(QUrl(url));
             addDependency(ref.typeData);
         }
 

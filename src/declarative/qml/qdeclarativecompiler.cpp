@@ -607,7 +607,7 @@ void QDeclarativeCompiler::reset(QDeclarativeCompiledData *data)
     data->types.clear();
     data->primitives.clear();
     data->datas.clear();
-    data->bytecode.clear();
+    data->bytecode.resize(0);
 }
 
 /*!
@@ -2523,12 +2523,12 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
             {
                 QByteArray customTypeName;
                 QDeclarativeType *qmltype = 0;
-                QUrl url;
+                QString url;
                 if (!unit->imports().resolveType(p.customType, &qmltype, &url, 0, 0, 0)) 
                     COMPILE_EXCEPTION(&p, tr("Invalid property type"));
 
                 if (!qmltype) {
-                    QDeclarativeTypeData *tdata = enginePrivate->typeLoader.get(url);
+                    QDeclarativeTypeData *tdata = enginePrivate->typeLoader.get(QUrl(url));
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
 

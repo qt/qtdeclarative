@@ -262,6 +262,7 @@ public:
     static QDeclarativeEngine *get(QDeclarativeEnginePrivate *p) { return p->q_func(); }
 
     static QString urlToLocalFileOrQrc(const QUrl& url);
+    static QString urlToLocalFileOrQrc(const QString& url);
 
     static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void defineModule();

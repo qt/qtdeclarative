@@ -82,13 +82,13 @@ public:
     QUrl baseUrl() const;
 
     bool resolveType(const QByteArray& type,
-                     QDeclarativeType** type_return, QUrl* url_return,
+                     QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor,
                      QDeclarativeImportedNamespace** ns_return,
                      QList<QDeclarativeError> *errors = 0) const;
     bool resolveType(QDeclarativeImportedNamespace*, 
                      const QByteArray& type,
-                     QDeclarativeType** type_return, QUrl* url_return,
+                     QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 
     bool addImport(QDeclarativeImportDatabase *, 
@@ -123,10 +123,12 @@ public:
 
 private:
     friend class QDeclarativeImportsPrivate;
-    QString resolvePlugin(const QDir &qmldirPath, const QString &qmldirPluginPath, 
+    QString resolvePlugin(QDeclarativeTypeLoader *typeLoader,
+                          const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName, const QStringList &suffixes,
                           const QString &prefix = QString());
-    QString resolvePlugin(const QDir &qmldirPath, const QString &qmldirPluginPath, 
+    QString resolvePlugin(QDeclarativeTypeLoader *typeLoader,
+                          const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName);
 
 

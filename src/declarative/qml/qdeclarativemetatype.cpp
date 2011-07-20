@@ -1250,12 +1250,14 @@ QDeclarativeType *QDeclarativeMetaType::qmlType(const QByteArray &name, int vers
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
 
-    QList<QDeclarativeType*> types = data->nameToType.values(name);
-    foreach (QDeclarativeType *t, types) {
+    QDeclarativeMetaTypeData::Names::ConstIterator it = data->nameToType.find(name);
+    while (it != data->nameToType.end()) {
         // XXX version_major<0 just a kludge for QDeclarativePropertyPrivate::initProperty
-        if (version_major<0 || t->availableInVersion(version_major,version_minor))
-            return t;
+        if (version_major<0 || (*it)->availableInVersion(version_major,version_minor))
+            return (*it);
+        ++it;
     }
+
     return 0;
 }
 

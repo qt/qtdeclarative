@@ -100,6 +100,7 @@ int QDeclarativeCompiledData::indexForUrl(const QUrl &data)
 QDeclarativeCompiledData::QDeclarativeCompiledData(QDeclarativeEngine *engine)
 : QDeclarativeCleanup(engine), importCache(0), root(0), rootPropertyCache(0)
 {
+    bytecode.reserve(1024);
 }
 
 QDeclarativeCompiledData::~QDeclarativeCompiledData()
@@ -202,10 +203,9 @@ int QDeclarativeCompiledData::addInstruction(const QDeclarativeInstruction &inst
 { 
     int ptrOffset = bytecode.size();
     int size = instr.size();
-    bytecode.resize(bytecode.size() + size);
-    char *data = bytecode.data() + ptrOffset;
-    qMemCopy(data, &instr,  size);
-
+    if (bytecode.capacity() <= bytecode.size() + size)
+        bytecode.reserve(bytecode.size() + size + 512);
+    bytecode.append(reinterpret_cast<const char *>(&instr), size);
     return ptrOffset;
 }
 
