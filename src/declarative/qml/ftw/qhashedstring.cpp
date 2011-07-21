@@ -41,9 +41,95 @@
 
 #include "qhashedstring_p.h"
 
-inline unsigned stringHash(const QChar* data, unsigned length)
+// This is a reimplementation of V8's string hash algorithm.  It is significantly
+// faster to do it here than call into V8, but it adds the maintainence burden of
+// ensuring that the two hashes are identical.  We Q_ASSERT() that the two return
+// the same value.  If these asserts start to fail, the hash code needs to be 
+// synced with V8.
+namespace String {
+    static const int kMaxArrayIndexSize = 10;
+    static const int kMaxHashCalcLength = 16383;
+    static const int kNofHashBitFields = 2;
+    static const int kHashShift = kNofHashBitFields;
+    static const int kIsNotArrayIndexMask = 1 << 1;
+    static const int kArrayIndexValueBits = 24;
+    static const int kArrayIndexHashLengthShift = kArrayIndexValueBits + kNofHashBitFields;
+    static const int kMaxCachedArrayIndexLength = 7;
+};
+
+template <typename schar>
+uint32_t calculateHash(const schar* chars, int length) {
+    if (length > String::kMaxHashCalcLength) {
+        // V8 trivial hash
+        return (length << String::kHashShift) | String::kIsNotArrayIndexMask;
+    }
+
+    uint32_t raw_running_hash = 0;
+    uint32_t array_index = 0;
+    bool is_array_index = (0 < length && length <= String::kMaxArrayIndexSize);
+    bool is_first_char = true;
+
+    int ii = 0;
+    for (;is_array_index && ii < length; ++ii) {
+        quint32 c = *chars++;
+
+        raw_running_hash += c;
+        raw_running_hash += (raw_running_hash << 10);
+        raw_running_hash ^= (raw_running_hash >> 6);
+
+        if (c < '0' || c > '9') {
+            is_array_index = false;
+        } else {
+            int d = c - '0';
+            if (is_first_char) {
+                is_first_char = false;
+                if (c = '0' && length > 1) {
+                    is_array_index = false;
+                    continue;
+                }
+            }
+            if (array_index > 429496729U - ((d + 2) >> 3)) {
+                is_array_index = false;
+            } else {
+                array_index = array_index * 10 + d;
+            }
+        }
+    }
+
+    for (;ii < length; ++ii) {
+        raw_running_hash += *chars++;
+        raw_running_hash += (raw_running_hash << 10);
+        raw_running_hash ^= (raw_running_hash >> 6);
+    }
+
+    if (is_array_index) {
+        array_index <<= String::kHashShift;
+        array_index |= length << String::kArrayIndexHashLengthShift;
+        return array_index;
+    } else {
+        raw_running_hash += (raw_running_hash << 3);
+        raw_running_hash ^= (raw_running_hash >> 11);
+        raw_running_hash += (raw_running_hash << 15);
+        if (raw_running_hash == 0) {
+            raw_running_hash = 27;
+        }
+
+        return (raw_running_hash << String::kHashShift) | String::kIsNotArrayIndexMask;
+    }
+}
+
+inline quint32 stringHash(const QChar* data, int length)
 {
-    return v8::String::ComputeHash((uint16_t *)data, length);
+    quint32 rv = calculateHash<quint16>((quint16*)data, length) >> String::kHashShift;
+    Q_ASSERT(rv == v8::String::ComputeHash((uint16_t*)data, length));
+    return rv;
+}
+
+inline quint32 stringHash(const char *data, int length)
+{
+    quint32 rv = calculateHash<quint8>((quint8*)data, length) >> String::kHashShift;
+    Q_ASSERT(rv == v8::String::ComputeHash((char *)data, length));
+    return rv;
 }
 
 void QHashedString::computeHash() const
@@ -58,7 +144,7 @@ void QHashedStringRef::computeHash() const
 
 void QHashedCStringRef::computeHash() const
 {
-    m_hash = v8::String::ComputeHash((char *)m_data, m_length);
+    m_hash = stringHash(m_data, m_length);
 }
 
 /*
