@@ -539,8 +539,8 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                                                 sizeof(propTypeNameToTypes[0]);
 
     if(node->type == AST::UiPublicMember::Signal) {
-        Object::DynamicSignal signal;
-        signal.name = node->name.toUtf8();
+        Object::DynamicSignal *signal = _parser->_pool.New<Object::DynamicSignal>();
+        signal->name = node->name;
 
         AST::UiParameterList *p = node->parameters;
         while (p) {
@@ -565,13 +565,13 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                 return false;
             }
             
-            signal.parameterTypes << QHashedCStringRef(type->qtName, type->qtNameLength);
-            signal.parameterNames << p->name.toUtf8();
+            signal->parameterTypes << QHashedCStringRef(type->qtName, type->qtNameLength);
+            signal->parameterNames << p->name.toUtf8();
             p = p->finish();
         }
 
         signal.location = location(node->typeToken, node->semicolonToken);
-        _stateStack.top().object->dynamicSignals << signal;
+        _stateStack.top().object->dynamicSignals.append(signal);
     } else {
         const QStringRef &memberType = node->memberType;
         const QStringRef &name = node->name;
@@ -639,34 +639,34 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
         }
 
-        Object::DynamicProperty property;
-        property.isDefaultProperty = node->isDefaultMember;
-        property.type = type;
+        Object::DynamicProperty *property = _parser->_pool.New<Object::DynamicProperty>();
+        property->isDefaultProperty = node->isDefaultMember;
+        property->type = type;
         if (type >= Object::DynamicProperty::Custom) {
             QDeclarativeScriptParser::TypeReference *typeRef =
                 _parser->findOrCreateType(memberType.toString());
             typeRef->refObjects.append(_stateStack.top().object);
-            property.customType = memberType;
+            property->customType = memberType;
         }
 
-        property.name = QHashedStringRef(name);
-        property.location = location(node->firstSourceLocation(),
-                                     node->lastSourceLocation());
+        property->name = QHashedStringRef(name);
+        property->location = location(node->firstSourceLocation(),
+                                      node->lastSourceLocation());
 
         if (node->statement) { // default value
-            property.defaultValue = _parser->_pool.New<Property>();
-            property.defaultValue->parent = _stateStack.top().object;
-            property.defaultValue->location =
+            property->defaultValue = _parser->_pool.New<Property>();
+            property->defaultValue->parent = _stateStack.top().object;
+            property->defaultValue->location =
                     location(node->statement->firstSourceLocation(),
                              node->statement->lastSourceLocation());
             QDeclarativeParser::Value *value = _parser->_pool.New<QDeclarativeParser::Value>();
             value->location = location(node->statement->firstSourceLocation(),
                                        node->statement->lastSourceLocation());
             value->value = getVariant(node->statement);
-            property.defaultValue->values.append(value);
+            property->defaultValue->values.append(value);
         }
 
-        _stateStack.top().object->dynamicProperties << property;
+        _stateStack.top().object->dynamicProperties.append(property);
 
         // process QML-like initializers (e.g. property Object o: Object {})
         accept(node->binding);
@@ -827,12 +827,12 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
 
     if (AST::FunctionDeclaration *funDecl = AST::cast<AST::FunctionDeclaration *>(node->sourceElement)) {
 
-        Object::DynamicSlot slot;
-        slot.location = location(funDecl->firstSourceLocation(), funDecl->lastSourceLocation());
+        Object::DynamicSlot *slot = _parser->_pool.New<Object::DynamicSlot>();
+        slot->location = location(funDecl->firstSourceLocation(), funDecl->lastSourceLocation());
 
         AST::FormalParameterList *f = funDecl->formals;
         while (f) {
-            slot.parameterNames << f->name.toUtf8();
+            slot->parameterNames << f->name.toUtf8();
             f = f->finish();
         }
 
@@ -840,9 +840,9 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
         loc.offset = loc.end();
         loc.startColumn += 1;
         QString body = textAt(loc, funDecl->rbraceToken);
-        slot.name = funDecl->name.toUtf8();
-        slot.body = body;
-        obj->dynamicSlots << slot;
+        slot->name = funDecl->name;
+        slot->body = body;
+        obj->dynamicSlots.append(slot);
 
     } else {
         QDeclarativeError error;

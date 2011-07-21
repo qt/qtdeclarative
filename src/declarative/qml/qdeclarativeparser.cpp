@@ -176,28 +176,13 @@ Property *QDeclarativeParser::Object::getProperty(const QString &name, bool crea
 }
 
 QDeclarativeParser::Object::DynamicProperty::DynamicProperty()
-: isDefaultProperty(false), type(Variant), defaultValue(0), resolvedCustomTypeName(0)
-{
-}
-
-QDeclarativeParser::Object::DynamicProperty::DynamicProperty(const DynamicProperty &o)
-: isDefaultProperty(o.isDefaultProperty),
-  type(o.type),
-  customType(o.customType),
-  name(o.name),
-  defaultValue(o.defaultValue),
-  location(o.location),
-  resolvedCustomTypeName(o.resolvedCustomTypeName)
+: isDefaultProperty(false), type(Variant), defaultValue(0), nextProperty(0), 
+  resolvedCustomTypeName(0)
 {
 }
 
 QDeclarativeParser::Object::DynamicSignal::DynamicSignal()
-{
-}
-
-QDeclarativeParser::Object::DynamicSignal::DynamicSignal(const DynamicSignal &o)
-: name(o.name), parameterTypes(o.parameterTypes), 
-  parameterNames(o.parameterNames), location(o.location)
+: nextSignal(0)
 {
 }
 
@@ -218,11 +203,7 @@ int QDeclarativeParser::Object::DynamicSignal::parameterNamesLength() const
 }
 
 QDeclarativeParser::Object::DynamicSlot::DynamicSlot()
-{
-}
-
-QDeclarativeParser::Object::DynamicSlot::DynamicSlot(const DynamicSlot &o)
-: name(o.name), body(o.body), parameterNames(o.parameterNames), location(o.location)
+: nextSlot(0)
 {
 }
 

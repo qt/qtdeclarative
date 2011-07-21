@@ -365,9 +365,9 @@ namespace QDeclarativeParser
 
         LocationSpan location;
 
-        struct DynamicProperty {
+        struct DynamicProperty : public QDeclarativePool::POD 
+        {
             DynamicProperty();
-            DynamicProperty(const DynamicProperty &);
 
             enum Type { Variant, Int, Bool, Real, String, Url, Color, Time, 
                         Date, DateTime, Alias, Custom, CustomList };
@@ -380,37 +380,48 @@ namespace QDeclarativeParser
             QDeclarativeParser::Property *defaultValue;
             LocationSpan location;
 
+            // Used by Object::DynamicPropertyList
+            DynamicProperty *nextProperty;
+
             // Used by the compiler
             QByteArray *resolvedCustomTypeName;
             QFastMetaBuilder::StringRef typeRef;
             QFastMetaBuilder::StringRef nameRef;
             QFastMetaBuilder::StringRef changedSignatureRef;
         };
-        struct DynamicSignal {
-            DynamicSignal();
-            DynamicSignal(const DynamicSignal &);
 
-            QByteArray name;
+        struct DynamicSignal : public QDeclarativePool::Class
+        {
+            DynamicSignal();
+
+            QHashedStringRef name;
             QList<QHashedCStringRef> parameterTypes;
             QList<QByteArray> parameterNames;
 
             int parameterTypesLength() const;
             int parameterNamesLength() const;
 
+            // Used by Object::DynamicSignalList
+            DynamicSignal *nextSignal;
+
             // Used by the compiler
             QFastMetaBuilder::StringRef signatureRef;
             QFastMetaBuilder::StringRef parameterNamesRef;
         };
-        struct DynamicSlot {
-            DynamicSlot();
-            DynamicSlot(const DynamicSlot &);
 
-            QByteArray name;
+        struct DynamicSlot : public QDeclarativePool::Class
+        {
+            DynamicSlot();
+
+            QHashedStringRef name;
             QString body;
             QList<QByteArray> parameterNames;
             LocationSpan location;
 
             int parameterNamesLength() const;
+
+            // Used by Object::DynamicSlotList
+            DynamicSlot *nextSlot;
 
             // Used by the compiler
             QFastMetaBuilder::StringRef signatureRef;
@@ -418,11 +429,14 @@ namespace QDeclarativeParser
         };
 
         // The list of dynamic properties
-        QList<DynamicProperty> dynamicProperties;
+        typedef QFieldList<DynamicProperty, &DynamicProperty::nextProperty> DynamicPropertyList;
+        DynamicPropertyList dynamicProperties;
         // The list of dynamic signals
-        QList<DynamicSignal> dynamicSignals;
+        typedef QFieldList<DynamicSignal, &DynamicSignal::nextSignal> DynamicSignalList;
+        DynamicSignalList dynamicSignals;
         // The list of dynamic slots
-        QList<DynamicSlot> dynamicSlots;
+        typedef QFieldList<DynamicSlot, &DynamicSlot::nextSlot> DynamicSlotList;
+        DynamicSlotList dynamicSlots;
 
         // Used by compiler
         QDeclarativeCompilerTypes::ComponentCompileState *componentCompileState;
