@@ -132,14 +132,18 @@ void QDeclarativeParser::Object::addScriptStringProperty(Property *p)
     scriptStringProperties.append(p);
 }
 
+// This lookup is optimized for missing, and having to create a new property.
 Property *QDeclarativeParser::Object::getProperty(const QHashedStringRef &name, bool create)
 {
-    for (Property *p = properties.first(); p; p = properties.next(p)) {
-        if (p->name() == name)
-            return p;
-    }
-
     if (create) {
+        quint32 h = name.hash();
+        if (propertiesHashField.testAndSet(h)) {
+            for (Property *p = properties.first(); p; p = properties.next(p)) {
+                if (p->name() == name)
+                    return p;
+            }
+        }
+
         Property *property = pool()->New<Property>();
         property->parent = this;
         property->_name = name;
@@ -147,7 +151,10 @@ Property *QDeclarativeParser::Object::getProperty(const QHashedStringRef &name, 
         properties.prepend(property);
         return property;
     } else {
-        return 0;
+        for (Property *p = properties.first(); p; p = properties.next(p)) {
+            if (p->name() == name)
+                return p;
+        }
     }
 }
 
@@ -167,6 +174,7 @@ Property *QDeclarativeParser::Object::getProperty(const QString &name, bool crea
         Property *property = pool()->New<Property>();
         property->parent = this;
         property->_name = QStringRef(pool()->NewString(name));
+        propertiesHashField.testAndSet(property->_name.hash());
         property->isDefault = false;
         properties.prepend(property);
         return property;

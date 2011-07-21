@@ -848,6 +848,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
 
         const QMetaObject *metaObject = obj->metaObject();
         Q_ASSERT(metaObject);
+        // XXX aakenned
         QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
         if (p.name()) {
             Property *explicitProperty = obj->getProperty(QString::fromUtf8(p.name()), false);
@@ -2388,8 +2389,8 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
     // We use a coarse grain, 31 bit hash to check if there are duplicates.
     // Calculating the hash for the names is not a waste as we have to test
     // them against the illegalNames set anyway.
-    quint32 propNames = 0;
-    quint32 methodNames = 0;
+    QHashField propNames;
+    QHashField methodNames;
 
     // Check properties
     int dpCount = obj->dynamicProperties.count();
@@ -2402,16 +2403,13 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
             seenDefaultProperty = true;
         }
 
-        quint32 hash = prop.name.hash();
-        quint32 bit = hash % 31;
-        if (propNames & (1 << bit)) {
+        if (propNames.testAndSet(prop.name.hash())) {
             for (Object::DynamicProperty *p2 = obj->dynamicProperties.first(); p2 != p; 
                  p2 = obj->dynamicProperties.next(p2)) {
                 if (p2->name == prop.name)
                     COMPILE_EXCEPTION(&prop, tr("Duplicate property name"));
             }
         }
-        propNames |= (1 << bit);
 
         if (QDeclarativeUtils::isUpper(prop.name.at(0)))
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));

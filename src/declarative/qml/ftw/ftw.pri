@@ -11,6 +11,7 @@ HEADERS +=  \
     $$PWD/qfieldlist_p.h \
     $$PWD/qdeclarativeutils_p.h \
     $$PWD/qfastmetabuilder_p.h \
+    $$PWD/qhashfield_p.h \
 
 SOURCES += \
     $$PWD/qintrusivelist.cpp \

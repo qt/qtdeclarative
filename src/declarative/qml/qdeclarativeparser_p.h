@@ -69,6 +69,7 @@
 #include <private/qdeclarativepropertycache_p.h>
 #include <private/qfastmetabuilder_p.h>
 #include <private/qhashedstring_p.h>
+#include <private/qhashfield_p.h>
 
 QT_BEGIN_HEADER
 
@@ -327,6 +328,7 @@ namespace QDeclarativeParser
 
         typedef QFieldList<Property, &Property::nextMainProperty> MainPropertyList;
         MainPropertyList properties;
+        QHashField propertiesHashField;
 
         // Output of the compilation phase (these properties continue to exist
         // in either the defaultProperty or properties members too)
