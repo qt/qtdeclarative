@@ -48,7 +48,7 @@ QtObject {
                 if (x.status == expectedStatus)
                     done = true;
 
-                if (expectedStatus == 404) {
+                if (expectedStatus != 200) {
                     dataOK = (x.responseText == "");
                 } else {
                     dataOK = (x.responseText == "QML Rocks!\n");

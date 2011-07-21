@@ -1332,7 +1332,8 @@ void QDeclarativeXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ContentOperationNotPermittedError ||
         error == QNetworkReply::ContentNotFoundError ||
         error == QNetworkReply::AuthenticationRequiredError ||
-        error == QNetworkReply::ContentReSendError) {
+        error == QNetworkReply::ContentReSendError ||
+        error == QNetworkReply::UnknownContentError) {
         m_state = Loading;
         v8::TryCatch tc;
         dispatchCallback(m_me);

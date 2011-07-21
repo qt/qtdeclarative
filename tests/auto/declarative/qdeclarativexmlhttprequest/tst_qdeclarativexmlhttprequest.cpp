@@ -843,6 +843,7 @@ void tst_qdeclarativexmlhttprequest::status_data()
 
     QTest::newRow("OK") << TEST_FILE("status.200.reply") << 200;
     QTest::newRow("Not Found") << TEST_FILE("status.404.reply") << 404;
+    QTest::newRow("Bad Request") << TEST_FILE("status.400.reply") << 400;
 }
 
 void tst_qdeclarativexmlhttprequest::statusText()
@@ -883,6 +884,7 @@ void tst_qdeclarativexmlhttprequest::statusText_data()
 
     QTest::newRow("OK") << TEST_FILE("status.200.reply") << "OK";
     QTest::newRow("Not Found") << TEST_FILE("status.404.reply") << "Document not found";
+    QTest::newRow("Bad Request") << TEST_FILE("status.400.reply") << "Bad request";
 }
 
 void tst_qdeclarativexmlhttprequest::responseText()
@@ -926,6 +928,7 @@ void tst_qdeclarativexmlhttprequest::responseText_data()
     QTest::newRow("OK") << TEST_FILE("status.200.reply") << TEST_FILE("testdocument.html") << "QML Rocks!\n";
     QTest::newRow("empty body") << TEST_FILE("status.200.reply") << QUrl() << "";
     QTest::newRow("Not Found") << TEST_FILE("status.404.reply") << TEST_FILE("testdocument.html") << "";
+    QTest::newRow("Bad Request") << TEST_FILE("status.404.reply") << TEST_FILE("testdocument.html") << "";
 }
 
 void tst_qdeclarativexmlhttprequest::nonUtf8()
