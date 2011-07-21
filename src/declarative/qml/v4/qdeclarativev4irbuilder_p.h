@@ -115,6 +115,8 @@ protected:
 
     void implicitCvt(ExprResult &expr, QDeclarativeJS::IR::Type type);
 
+    virtual bool preVisit(QDeclarativeJS::AST::Node *ast);
+
     // QML
     virtual bool visit(QDeclarativeJS::AST::UiProgram *ast);
     virtual bool visit(QDeclarativeJS::AST::UiImportList *ast);
@@ -220,7 +222,7 @@ protected:
     virtual bool visit(QDeclarativeJS::AST::DebuggerStatement *ast);
 
 private:
-    bool buildName(QStringList &name, QDeclarativeJS::AST::Node *node, 
+    bool buildName(QList<QStringRef> &name, QDeclarativeJS::AST::Node *node,
                    QList<QDeclarativeJS::AST::ExpressionNode *> *nodes);
     void discard();
 

@@ -85,7 +85,7 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
     currentBlockMask = 0x00000001;
 
 
-    for (int i = 0; i < blocks.size(); ++i) {
+    for (int i = 0; !_discarded && i < blocks.size(); ++i) {
         IR::BasicBlock *block = blocks.at(i);
         IR::BasicBlock *next = i + 1 < blocks.size() ? blocks.at(i + 1) : 0;
         if (IR::Stmt *terminator = block->terminator()) {
@@ -137,8 +137,10 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
         blockop.block(currentBlockMask);
         gen(blockop);
 
-        foreach (IR::Stmt *s, block->statements)
-            s->accept(this);
+        foreach (IR::Stmt *s, block->statements) {
+            if (! _discarded)
+                s->accept(this);
+        }
 
         qSwap(usedSubscriptionIdsChanged, usic);
 
@@ -148,7 +150,7 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
                 return;
             }
             currentBlockMask <<= 1;
-        } else {
+        } else if (! _discarded) {
             const int adjust = bytecode.remove(blockopIndex);
             // Correct patches
             for (int ii = patchesCount; ii < patches.count(); ++ii) 
@@ -164,13 +166,15 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
 #endif
 
 
-    // back patching
-    foreach (const Patch &patch, patches) {
-        Instr &instr = bytecode[patch.offset];
-        instr.branchop.offset = patch.block->offset - patch.offset - instr.size();
-    }
+    if (! _discarded) {
+        // back patching
+        foreach (const Patch &patch, patches) {
+            Instr &instr = bytecode[patch.offset];
+            instr.branchop.offset = patch.block->offset - patch.offset - instr.size();
+        }
 
-    patches.clear();
+        patches.clear();
+    }
 }
 
 void QDeclarativeV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
@@ -1005,7 +1009,7 @@ int QDeclarativeV4CompilerPrivate::commitCompile()
     int rv = committed.count();
     committed.offsets << committed.bytecode.count();
     committed.dependencies << usedSubscriptionIds;
-    committed.bytecode += bytecode.code();
+    committed.bytecode.append(bytecode.constData(), bytecode.size());
     committed.data = data;
     committed.exceptions = exceptions;
     committed.subscriptionIds = subscriptionIds;
@@ -1280,8 +1284,10 @@ QByteArray QDeclarativeV4Compiler::program() const
         }
 
 
-        QByteArray bytecode = bc.code();
-        bytecode += d->committed.bytecode;
+        QByteArray bytecode;
+        bytecode.reserve(bc.size() + d->committed.bytecode.size());
+        bytecode.append(bc.constData(), bc.size());
+        bytecode.append(d->committed.bytecode.constData(), d->committed.bytecode.size());
 
         QByteArray data = d->committed.data;
         while (data.count() % 4) data.append('\0');

@@ -136,12 +136,12 @@ QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Module *module,
     return discarded?0:function;
 }
 
-bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
+bool QDeclarativeV4IRBuilder::buildName(QList<QStringRef> &name,
                                               AST::Node *node,
                                               QList<AST::ExpressionNode *> *nodes)
 {
     if (node->kind == AST::Node::Kind_IdentifierExpression) {
-        name << static_cast<AST::IdentifierExpression*>(node)->name.toString();
+        name << static_cast<AST::IdentifierExpression*>(node)->name;
         if (nodes) *nodes << static_cast<AST::IdentifierExpression*>(node);
     } else if (node->kind == AST::Node::Kind_FieldMemberExpression) {
         AST::FieldMemberExpression *expr =
@@ -150,7 +150,7 @@ bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
         if (!buildName(name, expr->base, nodes))
             return false;
 
-        name << expr->name.toString();
+        name << expr->name;
         if (nodes) *nodes << expr;
     } else {
         return false;
@@ -683,6 +683,11 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
     return false;
 }
 
+bool QDeclarativeV4IRBuilder::preVisit(AST::Node *ast)
+{
+    return ! _discard;
+}
+
 bool QDeclarativeV4IRBuilder::visit(AST::NewMemberExpression *)
 {
     return false;
@@ -695,14 +700,22 @@ bool QDeclarativeV4IRBuilder::visit(AST::NewExpression *)
 
 bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
 {
-    QStringList names;
+    QList<QStringRef> names;
     QList<AST::ExpressionNode *> nameNodes;
+
+    names.reserve(4);
+    nameNodes.reserve(4);
+
     if (buildName(names, ast->base, &nameNodes)) {
         //ExprResult base = expression(ast->base);
-        const QString id = names.join(QLatin1String("."));
-        const quint32 line = nameNodes.last()->firstSourceLocation().startLine;
-        const quint32 column = nameNodes.last()->firstSourceLocation().startColumn;
-        IR::Expr *base = _block->NAME(id, line, column);
+        QString id;
+        for (int i = 0; i < names.size(); ++i) {
+            if (! i)
+                id += QLatin1Char('.');
+            id += names.at(i);
+        }
+        const AST::SourceLocation loc = nameNodes.last()->firstSourceLocation();
+        IR::Expr *base = _block->NAME(id, loc.startLine, loc.startColumn);
 
         IR::ExprList *args = 0, **argsInserter = &args;
         for (AST::ArgumentList *it = ast->arguments; it; it = it->next) {

@@ -512,6 +512,8 @@ void Instr::block(quint32 mask)
 
 Bytecode::Bytecode()
 {
+    d.reserve(8 * 1024);
+
 #ifdef QML_THREADED_INTERPRETER
     decodeInstr = QDeclarativeV4Bindings::getDecodeInstrTable();
 #endif
@@ -528,12 +530,6 @@ void Bytecode::append(const Instr &instr)
     it = (const char *) &instr;
 #endif
     d.append(it, instr.size());
-}
-
-void Bytecode::append(const QVector<Instr> &instrs)
-{
-    foreach (const Instr &i, instrs)
-        append(i);
 }
 
 int Bytecode::remove(int offset)
