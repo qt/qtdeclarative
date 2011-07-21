@@ -278,7 +278,7 @@ QObject *QV8QObjectWrapper::toQObject(v8::Handle<v8::Object> obj)
 }
 
 // r *MUST* be a QV8ObjectResource (r->type() == QV8ObjectResource::QObjectType)
-QObject *QV8QObjectWrapper::QV8QObjectWrapper::toQObject(QV8ObjectResource *r)
+QObject *QV8QObjectWrapper::toQObject(QV8ObjectResource *r)
 {
     Q_ASSERT(r->resourceType() == QV8ObjectResource::QObjectType);
     return static_cast<QV8QObjectResource *>(r)->object;
