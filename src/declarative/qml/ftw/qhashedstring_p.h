@@ -76,16 +76,16 @@ public:
     inline quint32 existingHash() const;
 
     static inline bool isUpper(const QChar &);
+
+    static bool compare(const QChar *lhs, const QChar *rhs, int length);
+    static inline bool compare(const QChar *lhs, const char *rhs, int length);
+    static inline bool compare(const char *lhs, const char *rhs, int length);
 private:
     friend class QHashedStringRef;
     friend class QStringHashNode;
 
     void computeHash() const;
     mutable quint32 m_hash;
-
-    static bool compare(const QChar *lhs, const QChar *rhs, int length);
-    static inline bool compare(const QChar *lhs, const char *rhs, int length);
-    static inline bool compare(const char *lhs, const char *rhs, int length);
 };
 
 class Q_AUTOTEST_EXPORT QHashedV8String 
@@ -114,27 +114,46 @@ class Q_AUTOTEST_EXPORT QHashedStringRef
 public:
     inline QHashedStringRef();
     inline QHashedStringRef(const QString &);
+    inline QHashedStringRef(const QStringRef &);
     inline QHashedStringRef(const QChar *, int);
     inline QHashedStringRef(const QChar *, int, quint32);
     inline QHashedStringRef(const QHashedString &);
     inline QHashedStringRef(const QHashedStringRef &);
+    inline QHashedStringRef &operator=(const QHashedStringRef &);
 
+    inline bool operator==(const QString &string) const;
     inline bool operator==(const QHashedString &string) const;
     inline bool operator==(const QHashedStringRef &string) const;
+    inline bool operator!=(const QString &string) const;
+    inline bool operator!=(const QHashedString &string) const;
+    inline bool operator!=(const QHashedStringRef &string) const;
 
     inline quint32 hash() const;
 
+    inline const QChar &at(int) const;
     inline const QChar *constData() const;
+    bool startsWith(const QString &) const;
+    bool endsWith(const QString &) const;
+    QHashedStringRef mid(int, int) const;
+
+    inline bool isEmpty() const;
     inline int length() const;
     inline bool startsWithUpper() const;
 
+    QString toString() const;
+
+    inline int utf8length() const;
+    QByteArray toUtf8() const;
+    void writeUtf8(char *) const;
 private:
     friend class QHashedString;
 
     void computeHash() const;
+    void computeUtf8Length() const;
 
     const QChar *m_data;
     int m_length;
+    mutable int m_utf8length;
     mutable quint32 m_hash;
 };
 
@@ -163,20 +182,23 @@ class Q_AUTOTEST_EXPORT QStringHashNode
 {
 public:
     QStringHashNode()
-    : nlist(0), next(0), length(0), hash(0), pooled(0), ckey(0), symbolId()
+    : nlist(0), next(0), length(0), hash(0), pooled(0), ckey(0), ukey(0), symbolId()
     {
     }
 
     QStringHashNode(const QHashedString &key)
-    : nlist(0), next(0), length(key.length()), hash(key.hash()), pooled(0), ckey(0), key(key), symbolId(0) {
+    : nlist(0), next(0), length(key.length()), hash(key.hash()), pooled(0), ckey(0), key(key), 
+      ukey(key.constData()), symbolId(0) {
     }
 
     QStringHashNode(const QHashedCStringRef &key)
-    : nlist(0), next(0), length(key.length()), hash(key.hash()), pooled(0), ckey(key.constData()), symbolId(0) {
+    : nlist(0), next(0), length(key.length()), hash(key.hash()), pooled(0), ckey(key.constData()), 
+      ukey(0), symbolId(0) {
     }
 
     QStringHashNode(const QStringHashNode &o)
-    : nlist(0), next(0), length(o.length), hash(o.hash), pooled(0), ckey(o.ckey), key(o.key), symbolId(o.symbolId) {
+    : nlist(0), next(0), length(o.length), hash(o.hash), pooled(0), ckey(o.ckey), key(o.key), 
+      ukey(o.ukey), symbolId(o.symbolId) {
     }
 
     QStringHashNode *nlist;
@@ -187,12 +209,13 @@ public:
     quint32 pooled:1;
     const char *ckey;
     QString key;
+    const QChar *ukey;
     
     quint32 symbolId;
 
     inline bool equals(v8::Handle<v8::String> string) {
         return ckey?string->Equals((char*)ckey, length):
-                    string->Equals((uint16_t*)key.constData(), length);
+                    string->Equals((uint16_t*)ukey, length);
     }
 
     inline bool symbolEquals(const QHashedV8String &string) {
@@ -209,15 +232,15 @@ public:
     inline bool equals(const QHashedStringRef &string) {
         return length == string.length() && 
                hash == string.hash() && 
-               ckey?(QHashedString::compare(string.constData(), ckey, length)):
-                    (QHashedString::compare(string.constData(), key.constData(), length));
+               (ckey?(QHashedString::compare(string.constData(), ckey, length)):
+                     (QHashedString::compare(string.constData(), ukey, length)));
     }
 
     inline bool equals(const QHashedCStringRef &string) {
         return length == string.length() && 
                hash == string.hash() && 
-               ckey?(QHashedString::compare(string.constData(), ckey, length)):
-                    (QHashedString::compare(key.constData(), string.constData(), length));
+               (ckey?(QHashedString::compare(string.constData(), ckey, length)):
+                     (QHashedString::compare(ukey, string.constData(), length)));
     }
 };
 
@@ -434,6 +457,7 @@ typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::tak
         rv->length = key.length();
         rv->hash = key.hash();
         rv->key = key;
+        rv->ukey = rv->key.constData();
         rv->pooled = 1;
         rv->value = value;
         return rv;
@@ -467,6 +491,7 @@ typename QStringHash<T,SmallThreshold>::Node *QStringHash<T,SmallThreshold>::tak
         rv->hash = o.hash;
         rv->ckey = o.ckey;
         rv->key = o.key;
+        rv->ukey = o.ukey;
         rv->pooled = 1;
         rv->symbolId = o.symbolId;
         rv->value = o.value;
@@ -883,33 +908,54 @@ v8::Handle<v8::String> QHashedV8String::string() const
 }
 
 QHashedStringRef::QHashedStringRef() 
-: m_data(0), m_length(0), m_hash(0) 
+: m_data(0), m_length(0), m_utf8length(-1), m_hash(0) 
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QString &str)
-: m_data(str.constData()), m_length(str.length()), m_hash(0)
+: m_data(str.constData()), m_length(str.length()), m_utf8length(0), m_hash(0)
+{
+}
+
+QHashedStringRef::QHashedStringRef(const QStringRef &str)
+: m_data(str.constData()), m_length(str.length()), m_utf8length(0), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QChar *data, int length)
-: m_data(data), m_length(length), m_hash(0)
+: m_data(data), m_length(length), m_utf8length(0), m_hash(0)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QChar *data, int length, quint32 hash)
-: m_data(data), m_length(length), m_hash(hash)
+: m_data(data), m_length(length), m_utf8length(0), m_hash(hash)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedString &string)
-: m_data(string.constData()), m_length(string.length()), m_hash(string.m_hash)
+: m_data(string.constData()), m_length(string.length()), m_utf8length(0), m_hash(string.m_hash)
 {
 }
 
 QHashedStringRef::QHashedStringRef(const QHashedStringRef &string)
-: m_data(string.m_data), m_length(string.m_length), m_hash(string.m_hash)
+: m_data(string.m_data), m_length(string.m_length), m_utf8length(string.m_utf8length), 
+  m_hash(string.m_hash)
 {
+}
+
+QHashedStringRef &QHashedStringRef::operator=(const QHashedStringRef &o)
+{
+    m_data = o.m_data;
+    m_length = o.m_length;
+    m_utf8length = o.m_utf8length;
+    m_hash = o.m_hash;
+    return *this;
+}
+
+bool QHashedStringRef::operator==(const QString &string) const
+{
+    return m_length == string.length() &&
+           QHashedString::compare(string.constData(), m_data, m_length);
 }
 
 bool QHashedStringRef::operator==(const QHashedString &string) const
@@ -926,14 +972,52 @@ bool QHashedStringRef::operator==(const QHashedStringRef &string) const
            QHashedString::compare(string.m_data, m_data, m_length);
 }
 
+bool QHashedStringRef::operator!=(const QString &string) const
+{
+    return m_length != string.length() ||
+           !QHashedString::compare(string.constData(), m_data, m_length);
+}
+
+bool QHashedStringRef::operator!=(const QHashedString &string) const
+{
+    return m_length != string.length() || 
+           (m_hash != string.m_hash && m_hash && string.m_hash) ||
+           !QHashedString::compare(string.constData(), m_data, m_length);
+}
+
+bool QHashedStringRef::operator!=(const QHashedStringRef &string) const
+{
+    return m_length != string.m_length ||
+           (m_hash != string.m_hash && m_hash && string.m_hash) ||
+           QHashedString::compare(string.m_data, m_data, m_length);
+}
+
+const QChar &QHashedStringRef::at(int index) const
+{
+    Q_ASSERT(index < m_length);
+    return m_data[index];
+}
+
 const QChar *QHashedStringRef::constData() const
 {
     return m_data;
 }
 
+bool QHashedStringRef::isEmpty() const
+{
+    return m_length == 0;
+}
+
 int QHashedStringRef::length() const
 {
     return m_length;
+}
+
+int QHashedStringRef::utf8length() const
+{
+    if (m_utf8length < m_length)
+        computeUtf8Length();
+    return m_utf8length;
 }
 
 bool QHashedStringRef::startsWithUpper() const

@@ -132,7 +132,7 @@ void QDeclarativeParser::Object::addScriptStringProperty(Property *p)
     scriptStringProperties.append(p);
 }
 
-Property *QDeclarativeParser::Object::getProperty(const QStringRef &name, bool create)
+Property *QDeclarativeParser::Object::getProperty(const QHashedStringRef &name, bool create)
 {
     for (Property *p = properties.first(); p; p = properties.next(p)) {
         if (p->name() == name)
@@ -149,6 +149,11 @@ Property *QDeclarativeParser::Object::getProperty(const QStringRef &name, bool c
     } else {
         return 0;
     }
+}
+
+Property *QDeclarativeParser::Object::getProperty(const QStringRef &name, bool create)
+{
+    return getProperty(QHashedStringRef(name), create);
 }
 
 Property *QDeclarativeParser::Object::getProperty(const QString &name, bool create)
@@ -171,7 +176,7 @@ Property *QDeclarativeParser::Object::getProperty(const QString &name, bool crea
 }
 
 QDeclarativeParser::Object::DynamicProperty::DynamicProperty()
-: isDefaultProperty(false), type(Variant), defaultValue(0)
+: isDefaultProperty(false), type(Variant), defaultValue(0), resolvedCustomTypeName(0)
 {
 }
 
@@ -181,7 +186,8 @@ QDeclarativeParser::Object::DynamicProperty::DynamicProperty(const DynamicProper
   customType(o.customType),
   name(o.name),
   defaultValue(o.defaultValue),
-  location(o.location)
+  location(o.location),
+  resolvedCustomTypeName(o.resolvedCustomTypeName)
 {
 }
 
@@ -229,7 +235,7 @@ int QDeclarativeParser::Object::DynamicSlot::parameterNamesLength() const
 }
 
 QDeclarativeParser::Property::Property()
-: parent(0), type(0), index(-1), value(0), _name(0), isDefault(true), isDeferred(false), 
+: parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false), 
   isValueTypeSubProperty(false), isAlias(false), scriptStringScope(-1), nextProperty(0), 
   nextMainProperty(0)
 {

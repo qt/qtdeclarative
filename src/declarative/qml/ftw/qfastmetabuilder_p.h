@@ -56,6 +56,8 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qmetatype.h>
 
+#include <private/qhashedstring_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QFastMetaBuilder
@@ -70,6 +72,7 @@ public:
         inline StringRef(const StringRef &);
         inline StringRef &operator=(const StringRef &);
 
+        inline void load(const QHashedStringRef &);
         inline void load(const QByteArray &);
         inline void load(const char *);
 
@@ -176,6 +179,13 @@ int QFastMetaBuilder::StringRef::length() const
     return _l;
 }
 
+void QFastMetaBuilder::StringRef::load(const QHashedStringRef &str)
+{
+    Q_ASSERT(str.length() == _l);
+    str.writeUtf8(data());
+    *(data() + _l) = 0;
+}
+
 void QFastMetaBuilder::StringRef::load(const QByteArray &str)
 {
     Q_ASSERT(str.length() == _l);
@@ -184,7 +194,7 @@ void QFastMetaBuilder::StringRef::load(const QByteArray &str)
 
 void QFastMetaBuilder::StringRef::load(const char *str)
 {
-    Q_ASSERT(strlen(str) == _l);
+    Q_ASSERT(strlen(str) == (uint)_l);
     strcpy(data(), str);
 }
 

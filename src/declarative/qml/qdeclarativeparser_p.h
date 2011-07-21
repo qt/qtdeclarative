@@ -68,6 +68,7 @@
 #include <private/qfieldlist_p.h>
 #include <private/qdeclarativepropertycache_p.h>
 #include <private/qfastmetabuilder_p.h>
+#include <private/qhashedstring_p.h>
 
 QT_BEGIN_HEADER
 
@@ -251,8 +252,8 @@ namespace QDeclarativeParser
         // Content in value and values are mutually exclusive.
         Object *value;
         // The property name
-        QStringRef name() const { return _name; }
-        void setName(const QString &n) { _name = QStringRef(pool()->NewString(n)); }
+        const QHashedStringRef &name() const { return _name; }
+        void setName(const QString &n) { _name = QHashedStringRef(pool()->NewString(n)); }
         // True if this property was accessed as the default property.  
         bool isDefault;
         // True if the setting of this property will be deferred.  Set by the
@@ -278,7 +279,7 @@ namespace QDeclarativeParser
 
     private:
         friend class Object;
-        QStringRef _name;
+        QHashedStringRef _name;
     };
 
     class Object : public QDeclarativePool::Class
@@ -318,6 +319,7 @@ namespace QDeclarativeParser
 
         Property *getDefaultProperty();
         // name ptr must be guarenteed to remain valid
+        Property *getProperty(const QHashedStringRef &name, bool create=true);
         Property *getProperty(const QStringRef &name, bool create=true);
         Property *getProperty(const QString &name, bool create=true);
 
@@ -367,17 +369,19 @@ namespace QDeclarativeParser
             DynamicProperty();
             DynamicProperty(const DynamicProperty &);
 
-            enum Type { Variant, Int, Bool, Real, String, Url, Color, Time, Date, DateTime, Alias, Custom, CustomList };
+            enum Type { Variant, Int, Bool, Real, String, Url, Color, Time, 
+                        Date, DateTime, Alias, Custom, CustomList };
 
             bool isDefaultProperty;
             Type type;
-            QByteArray customType;
-            QByteArray name;
+
+            QHashedStringRef customType;
+            QHashedStringRef name;
             QDeclarativeParser::Property *defaultValue;
             LocationSpan location;
 
             // Used by the compiler
-            QByteArray resolvedCustomTypeName;
+            QByteArray *resolvedCustomTypeName;
             QFastMetaBuilder::StringRef typeRef;
             QFastMetaBuilder::StringRef nameRef;
             QFastMetaBuilder::StringRef changedSignatureRef;
@@ -387,7 +391,7 @@ namespace QDeclarativeParser
             DynamicSignal(const DynamicSignal &);
 
             QByteArray name;
-            QList<QByteArray> parameterTypes;
+            QList<QHashedCStringRef> parameterTypes;
             QList<QByteArray> parameterNames;
 
             int parameterTypesLength() const;

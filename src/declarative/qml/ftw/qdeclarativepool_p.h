@@ -99,9 +99,12 @@ public:
     inline T *New();
 
     inline QString *NewString(const QString &);
+    inline QByteArray *NewByteArray(const QByteArray &);
 
 private:
     struct StringClass : public QString, public Class {
+    };
+    struct ByteArrayClass : public QByteArray, public Class {
     };
 
     inline void *allocate(int size);
@@ -151,6 +154,13 @@ T *QDeclarativePool::New()
 QString *QDeclarativePool::NewString(const QString &s)
 {
     QString *rv = New<StringClass>();
+    *rv = s;
+    return rv;
+}
+
+QByteArray *QDeclarativePool::NewByteArray(const QByteArray &s)
+{
+    QByteArray *rv = New<ByteArrayClass>();
     *rv = s;
     return rv;
 }

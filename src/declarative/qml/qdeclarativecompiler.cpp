@@ -125,10 +125,10 @@ QList<QDeclarativeError> QDeclarativeCompiler::errors() const
 */
 bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
 {
-    return isAttachedPropertyName(QStringRef(&name));
+    return isAttachedPropertyName(QHashedStringRef(&name));
 }
 
-bool QDeclarativeCompiler::isAttachedPropertyName(const QStringRef &name)
+bool QDeclarativeCompiler::isAttachedPropertyName(const QHashedStringRef &name)
 {
     return !name.isEmpty() && QDeclarativeUtils::isUpper(name.at(0));
 }
@@ -149,11 +149,11 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QString &name)
     return isSignalPropertyName(QStringRef(&name));
 }
 
-bool QDeclarativeCompiler::isSignalPropertyName(const QStringRef &name)
+bool QDeclarativeCompiler::isSignalPropertyName(const QHashedStringRef &name)
 {
     if (name.length() < 3) return false;
     if (!name.startsWith(on_string)) return false;
-    int ns = name.size();
+    int ns = name.length();
     for (int i = 2; i < ns; ++i) {
         const QChar curr = name.at(i);
         if (curr.unicode() == '_') continue;
@@ -777,10 +777,10 @@ void QDeclarativeCompiler::compileTree(QDeclarativeParser::Object *tree)
         enginePrivate->registerCompositeType(output);
 }
 
-static bool QStringList_contains(const QStringList &list, const QStringRef &string)
+static bool QStringList_contains(const QStringList &list, const QHashedStringRef &string)
 {
     for (int ii = 0; ii < list.count(); ++ii)
-        if (list.at(ii) == string)
+        if (string == list.at(ii))
             return true;
 
     return false;
@@ -1413,9 +1413,10 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 {
     Q_ASSERT(obj->metaObject());
 
-    QStringRef propName = prop->name();
+    const QHashedStringRef &propName = prop->name();
+
     Q_ASSERT(propName.startsWith(on_string));
-    QString name = propName.string()->mid(propName.position() + 2, propName.length() - 2);
+    QString name = propName.mid(2, -1).toString();
 
     // Note that the property name could start with any alpha or '_' or '$' character,
     // so we need to do the lower-casing of the first alpha character.
@@ -2382,7 +2383,8 @@ int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QStrin
 // Ensures that the dynamic meta specification on obj is valid
 bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
 {
-    QSet<QByteArray> propNames;
+    // XXX aakenned - inefficient copying of the string ref
+    QStringHash<bool> propNames;
     QSet<QByteArray> methodNames;
     bool seenDefaultProperty = false;
 
@@ -2400,14 +2402,13 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         if (propNames.contains(prop.name))
             COMPILE_EXCEPTION(&prop, tr("Duplicate property name"));
 
-        QString propName = QString::fromUtf8(prop.name);
-        if (QDeclarativeUtils::isUpper(propName.at(0)))
+        if (QDeclarativeUtils::isUpper(prop.name.at(0)))
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
 
-        if (enginePrivate->v8engine()->illegalNames().contains(propName))
+        if (enginePrivate->v8engine()->illegalNames().contains(prop.name))
             COMPILE_EXCEPTION(&prop, tr("Illegal property name"));
 
-        propNames.insert(prop.name);
+        propNames.insert(prop.name.toString(), true);
     }
 
     for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
@@ -2507,8 +2508,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
 
         if (!resolveAlias) {
             // No point doing this for both the alias and non alias cases
-            QString name = QString::fromUtf8(p.name);
-            QDeclarativePropertyCache::Data *d = property(obj, QStringRef(&name));
+            QDeclarativePropertyCache::Data *d = property(obj, p.name);
             if (d && d->isFinal())
                 COMPILE_EXCEPTION(&p, tr("Cannot override FINAL property"));
         }
@@ -2577,7 +2577,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
             Object::DynamicProperty &p = obj->dynamicProperties[ii];
 
             // Reserve space for name
-            p.nameRef = builder.newString(p.name.length());
+            p.nameRef = builder.newString(p.name.utf8length());
 
             int propertyType = 0;
             bool readonly = false;
@@ -2598,10 +2598,12 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                 Q_ASSERT(p.type == Object::DynamicProperty::CustomList ||
                          p.type == Object::DynamicProperty::Custom);
 
+                // XXX don't double resolve this in the case of an alias run
+
                 QByteArray customTypeName;
                 QDeclarativeType *qmltype = 0;
                 QString url;
-                if (!unit->imports().resolveType(p.customType, &qmltype, &url, 0, 0, 0)) 
+                if (!unit->imports().resolveType(p.customType.toUtf8(), &qmltype, &url, 0, 0, 0)) 
                     COMPILE_EXCEPTION(&p, tr("Invalid property type"));
 
                 if (!qmltype) {
@@ -2626,7 +2628,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                     propertyType = qMetaTypeId<QDeclarativeListProperty<QObject> >();
                 }
 
-                p.resolvedCustomTypeName = customTypeName;
+                p.resolvedCustomTypeName = pool->NewByteArray(customTypeName);
                 p.typeRef = builder.newString(customTypeName.length());
                 typeRef = p.typeRef;
             }
@@ -2646,7 +2648,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                                     readonly?QFastMetaBuilder::None:QFastMetaBuilder::Writable, 
                                     effectivePropertyIndex);
 
-            p.changedSignatureRef = builder.newString(p.name.length() + strlen("Changed()"));
+            p.changedSignatureRef = builder.newString(p.name.utf8length() + strlen("Changed()"));
             builder.setSignal(effectivePropertyIndex, p.changedSignatureRef);
 
             effectivePropertyIndex++;
@@ -2664,7 +2666,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                     }
                     // Even if we aren't resolving the alias, we need a fake signal so that the 
                     // metaobject remains consistent across the resolve and non-resolve alias runs
-                    p.changedSignatureRef = builder.newString(p.name.length() + strlen("Changed()"));
+                    p.changedSignatureRef = builder.newString(p.name.utf8length() + strlen("Changed()"));
                     builder.setSignal(effectivePropertyIndex, p.changedSignatureRef);
                     effectivePropertyIndex++;
                     aliasIndex++;
@@ -2763,16 +2765,18 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
         Object::DynamicProperty &p = obj->dynamicProperties[ii];
 
         char *d = p.changedSignatureRef.data();
-        strcpy(d, p.name.constData());
-        strcpy(d + p.name.length(), "Changed()");
+        p.name.writeUtf8(d);
+        strcpy(d + p.name.utf8length(), "Changed()");
 
         if (p.type == Object::DynamicProperty::Alias && !resolveAlias)
             continue;
 
         p.nameRef.load(p.name);
 
-        if (p.type >= builtinTypeCount) 
-            p.typeRef.load(p.resolvedCustomTypeName);
+        if (p.type >= builtinTypeCount) {
+            Q_ASSERT(p.resolvedCustomTypeName);
+            p.typeRef.load(*p.resolvedCustomTypeName);
+        }
     }
 
     // Allocate default property if necessary
@@ -2988,7 +2992,7 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
     *(vmd->aliasData() + aliasIndex) = aliasData;
 
     prop.nameRef = builder.newString(prop.name.length());
-    prop.resolvedCustomTypeName = typeName;
+    prop.resolvedCustomTypeName = pool->NewByteArray(typeName);
     prop.typeRef = builder.newString(typeName.length());
 
     builder.setProperty(propIndex, prop.nameRef, prop.typeRef, (QMetaType::Type)type, 
@@ -3006,6 +3010,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
     Q_ASSERT(prop->parent);
     Q_ASSERT(prop->parent->metaObject());
 
+    // XXX aakenned
     QMetaProperty mp = prop->parent->metaObject()->property(prop->index);
     if (!mp.isWritable() && !QDeclarativeMetaType::isList(prop->type))
         COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
@@ -3158,7 +3163,7 @@ bool QDeclarativeCompiler::completeComponentBuild()
         QString expression = binding.expression.asScript();
 
         QDeclarativeRewrite::RewriteBinding rewriteBinding;
-        rewriteBinding.setName(QLatin1Char('$')+binding.property->name());
+        rewriteBinding.setName(QLatin1Char('$')+binding.property->name().toString());
         bool isSharable = false;
         binding.rewrittenExpression = rewriteBinding(binding.expression.asAST(), expression, &isSharable);
 
@@ -3341,7 +3346,7 @@ QDeclarativeCompiler::property(QDeclarativeParser::Object *object, int index)
 }
 
 QDeclarativePropertyCache::Data *
-QDeclarativeCompiler::property(QDeclarativeParser::Object *object, const QStringRef &name, bool *notInRevision)
+QDeclarativeCompiler::property(QDeclarativeParser::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
 
@@ -3354,7 +3359,7 @@ QDeclarativeCompiler::property(QDeclarativeParser::Object *object, const QString
     else
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
-    QDeclarativePropertyCache::Data *d = cache->property(QHashedStringRef(name.constData(), name.length()));
+    QDeclarativePropertyCache::Data *d = cache->property(name);
 
     // Find the first property
     while (d && d->isFunction())
@@ -3370,7 +3375,7 @@ QDeclarativeCompiler::property(QDeclarativeParser::Object *object, const QString
 
 // This code must match the semantics of QDeclarativePropertyPrivate::findSignalByName
 QDeclarativePropertyCache::Data *
-QDeclarativeCompiler::signal(QDeclarativeParser::Object *object, const QStringRef &name, bool *notInRevision)
+QDeclarativeCompiler::signal(QDeclarativeParser::Object *object, const QHashedStringRef &name, bool *notInRevision)
 {
     if (notInRevision) *notInRevision = false;
 
@@ -3384,7 +3389,7 @@ QDeclarativeCompiler::signal(QDeclarativeParser::Object *object, const QStringRe
         cache = QDeclarativeEnginePrivate::get(engine)->cache(object->metaObject());
 
 
-    QDeclarativePropertyCache::Data *d = cache->property(QHashedStringRef(name.constData(), name.length()));
+    QDeclarativePropertyCache::Data *d = cache->property(name);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))
@@ -3398,7 +3403,7 @@ QDeclarativeCompiler::signal(QDeclarativeParser::Object *object, const QStringRe
     }
 
     if (name.endsWith(Changed_string)) {
-        QStringRef propName(name.string(), name.position(), name.length() - Changed_string.length());
+        QHashedStringRef propName = name.mid(0, name.length() - Changed_string.length());
 
         d = property(object, propName, notInRevision);
         if (d) 
@@ -3422,7 +3427,7 @@ int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, co
     return indexOfProperty(object, QStringRef(&name), notInRevision);
 }
 
-int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QStringRef &name, 
+int QDeclarativeCompiler::indexOfProperty(QDeclarativeParser::Object *object, const QHashedStringRef &name, 
                                           bool *notInRevision)
 {
     QDeclarativePropertyCache::Data *d = property(object, name, notInRevision);

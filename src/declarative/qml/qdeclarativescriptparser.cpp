@@ -512,46 +512,51 @@ bool ProcessAST::visit(AST::UiImport *node)
 
 bool ProcessAST::visit(AST::UiPublicMember *node)
 {
-    const struct TypeNameToType {
+    static const struct TypeNameToType {
         const char *name;
+        int nameLength;
         Object::DynamicProperty::Type type;
         const char *qtName;
+        int qtNameLength;
     } propTypeNameToTypes[] = {
-        { "int", Object::DynamicProperty::Int, "int" },
-        { "bool", Object::DynamicProperty::Bool, "bool" },
-        { "double", Object::DynamicProperty::Real, "double" },
-        { "real", Object::DynamicProperty::Real, "qreal" },
-        { "string", Object::DynamicProperty::String, "QString" },
-        { "url", Object::DynamicProperty::Url, "QUrl" },
-        { "color", Object::DynamicProperty::Color, "QColor" },
+        { "int", strlen("int"), Object::DynamicProperty::Int, "int", strlen("int") },
+        { "bool", strlen("bool"), Object::DynamicProperty::Bool, "bool", strlen("bool") },
+        { "double", strlen("double"), Object::DynamicProperty::Real, "double", strlen("double") },
+        { "real", strlen("real"), Object::DynamicProperty::Real, "qreal", strlen("qreal") },
+        { "string", strlen("string"), Object::DynamicProperty::String, "QString", strlen("QString") },
+        { "url", strlen("url"), Object::DynamicProperty::Url, "QUrl", strlen("QUrl") },
+        { "color", strlen("color"), Object::DynamicProperty::Color, "QColor", strlen("QColor") },
         // Internally QTime, QDate and QDateTime are all supported.
         // To be more consistent with JavaScript we expose only
         // QDateTime as it matches closely with the Date JS type.
         // We also call it "date" to match.
-        // { "time", Object::DynamicProperty::Time, "QTime" },
-        // { "date", Object::DynamicProperty::Date, "QDate" },
-        { "date", Object::DynamicProperty::DateTime, "QDateTime" },
-        { "variant", Object::DynamicProperty::Variant, "QVariant" }
+        // { "time", strlen("time"), Object::DynamicProperty::Time, "QTime", strlen("QTime") },
+        // { "date", strlen("date"), Object::DynamicProperty::Date, "QDate", strlen("QDate") },
+        { "date", strlen("date"), Object::DynamicProperty::DateTime, "QDateTime", strlen("QDateTime") },
+        { "variant", strlen("variant"), Object::DynamicProperty::Variant, "QVariant", strlen("QVariant") }
     };
-    const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
-                                         sizeof(propTypeNameToTypes[0]);
+    static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /
+                                                sizeof(propTypeNameToTypes[0]);
 
     if(node->type == AST::UiPublicMember::Signal) {
-        const QString name = node->name.toString();
-
         Object::DynamicSignal signal;
-        signal.name = name.toUtf8();
+        signal.name = node->name.toUtf8();
 
         AST::UiParameterList *p = node->parameters;
         while (p) {
-            const QString memberType = p->type.toString();
-            const char *qtType = 0;
-            for(int ii = 0; !qtType && ii < propTypeNameToTypesCount; ++ii) {
-                if(QLatin1String(propTypeNameToTypes[ii].name) == memberType)
-                    qtType = propTypeNameToTypes[ii].qtName;
+            const QStringRef &memberType = p->type;
+
+            const TypeNameToType *type = 0;
+            for(int typeIndex = 0; typeIndex < propTypeNameToTypesCount; ++typeIndex) {
+                const TypeNameToType *t = propTypeNameToTypes + typeIndex;
+                if (t->nameLength == memberType.length() && 
+                    QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                    type = t;
+                    break;
+                }
             }
 
-            if (!qtType) {
+            if (!type) {
                 QDeclarativeError error;
                 error.setDescription(QCoreApplication::translate("QDeclarativeParser","Expected parameter type"));
                 error.setLine(node->typeToken.startLine);
@@ -560,7 +565,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                 return false;
             }
             
-            signal.parameterTypes << qtType;
+            signal.parameterTypes << QHashedCStringRef(type->qtName, type->qtNameLength);
             signal.parameterNames << p->name.toUtf8();
             p = p->finish();
         }
@@ -568,31 +573,34 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         signal.location = location(node->typeToken, node->semicolonToken);
         _stateStack.top().object->dynamicSignals << signal;
     } else {
-        const QString memberType = node->memberType.toString();
-        const QString name = node->name.toString();
+        const QStringRef &memberType = node->memberType;
+        const QStringRef &name = node->name;
 
         bool typeFound = false;
         Object::DynamicProperty::Type type;
 
-        if (memberType == QLatin1String("alias")) {
+        if (memberType.length() == strlen("alias") && 
+            QHashedString::compare(memberType.constData(), "alias", strlen("alias"))) {
             type = Object::DynamicProperty::Alias;
             typeFound = true;
-        }
+        } 
 
         for(int ii = 0; !typeFound && ii < propTypeNameToTypesCount; ++ii) {
-            if(QLatin1String(propTypeNameToTypes[ii].name) == memberType) {
-                type = propTypeNameToTypes[ii].type;
+            const TypeNameToType *t = propTypeNameToTypes + ii;
+            if (t->nameLength == memberType.length() && 
+                QHashedString::compare(memberType.constData(), t->name, t->nameLength)) {
+                type = t->type;
                 typeFound = true;
             }
         }
 
         if (!typeFound && memberType.at(0).isUpper()) {
-            QString typemodifier;
-            if(!node->typeModifier.isNull())
-                typemodifier = node->typeModifier.toString();
-            if (typemodifier.isEmpty()) {
+            const QStringRef &typeModifier = node->typeModifier;
+
+            if (typeModifier.isEmpty()) {
                 type = Object::DynamicProperty::Custom;
-            } else if(typemodifier == QLatin1String("list")) {
+            } else if(typeModifier.length() == strlen("list") && 
+                      QHashedString::compare(typeModifier.constData(), "list", strlen("list"))) {
                 type = Object::DynamicProperty::CustomList;
             } else {
                 QDeclarativeError error;
@@ -630,16 +638,18 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             return false;
 
         }
+
         Object::DynamicProperty property;
         property.isDefaultProperty = node->isDefaultMember;
         property.type = type;
         if (type >= Object::DynamicProperty::Custom) {
             QDeclarativeScriptParser::TypeReference *typeRef =
-                _parser->findOrCreateType(memberType);
+                _parser->findOrCreateType(memberType.toString());
             typeRef->refObjects.append(_stateStack.top().object);
+            property.customType = memberType;
         }
-        property.customType = memberType.toUtf8();
-        property.name = name.toUtf8();
+
+        property.name = QHashedStringRef(name);
         property.location = location(node->firstSourceLocation(),
                                      node->lastSourceLocation());
 

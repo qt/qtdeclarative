@@ -173,3 +173,209 @@ bool QHashedString::compare(const QChar *lhs, const QChar *rhs, int length)
     }
     return true;
 }
+
+// Unicode stuff
+static inline bool isUnicodeNonCharacter(uint ucs4)
+{
+    // Unicode has a couple of "non-characters" that one can use internally,
+    // but are not allowed to be used for text interchange.
+    //
+    // Those are the last two entries each Unicode Plane (U+FFFE, U+FFFF,
+    // U+1FFFE, U+1FFFF, etc.) as well as the entries between U+FDD0 and
+    // U+FDEF (inclusive)
+
+    return (ucs4 & 0xfffe) == 0xfffe
+            || (ucs4 - 0xfdd0U) < 16;
+}
+
+static int utf8LengthFromUtf16(const QChar *uc, int len)
+{
+    int length = 0;
+
+    int surrogate_high = -1;
+
+    const QChar *ch = uc;
+    int invalid = 0;
+
+    const QChar *end = ch + len;
+    while (ch < end) {
+        uint u = ch->unicode();
+        if (surrogate_high >= 0) {
+            if (u >= 0xdc00 && u < 0xe000) {
+                u = (surrogate_high - 0xd800)*0x400 + (u - 0xdc00) + 0x10000;
+                surrogate_high = -1;
+            } else {
+                // high surrogate without low
+                ++ch;
+                ++invalid;
+                surrogate_high = -1;
+                continue;
+            }
+        } else if (u >= 0xdc00 && u < 0xe000) {
+            // low surrogate without high
+            ++ch;
+            ++invalid;
+            continue;
+        } else if (u >= 0xd800 && u < 0xdc00) {
+            surrogate_high = u;
+            ++ch;
+            continue;
+        }
+
+        if (u < 0x80) {
+            ++length;
+        } else {
+            if (u < 0x0800) {
+                ++length;
+            } else {
+                // is it one of the Unicode non-characters?
+                if (isUnicodeNonCharacter(u)) {
+                    ++length;
+                    ++ch;
+                    ++invalid;
+                    continue;
+                }
+
+                if (u > 0xffff) {
+                    ++length;
+                    ++length;
+                } else {
+                    ++length;
+                }
+                ++length;
+            }
+            ++length;
+        }
+        ++ch;
+    }
+
+    return length;
+}
+
+// Writes the utf8 version of uc to output.  uc is of length len.
+// There must be at least utf8LengthFromUtf16(uc, len) bytes in output.
+// A null terminator is not written.
+static void utf8FromUtf16(char *output, const QChar *uc, int len)
+{
+    uchar replacement = '?';
+    int surrogate_high = -1;
+
+    uchar* cursor = (uchar*)output;
+    const QChar *ch = uc;
+    int invalid = 0;
+
+    const QChar *end = ch + len;
+    while (ch < end) {
+        uint u = ch->unicode();
+        if (surrogate_high >= 0) {
+            if (u >= 0xdc00 && u < 0xe000) {
+                u = (surrogate_high - 0xd800)*0x400 + (u - 0xdc00) + 0x10000;
+                surrogate_high = -1;
+            } else {
+                // high surrogate without low
+                *cursor = replacement;
+                ++ch;
+                ++invalid;
+                surrogate_high = -1;
+                continue;
+            }
+        } else if (u >= 0xdc00 && u < 0xe000) {
+            // low surrogate without high
+            *cursor = replacement;
+            ++ch;
+            ++invalid;
+            continue;
+        } else if (u >= 0xd800 && u < 0xdc00) {
+            surrogate_high = u;
+            ++ch;
+            continue;
+        }
+
+        if (u < 0x80) {
+            *cursor++ = (uchar)u;
+        } else {
+            if (u < 0x0800) {
+                *cursor++ = 0xc0 | ((uchar) (u >> 6));
+            } else {
+                // is it one of the Unicode non-characters?
+                if (isUnicodeNonCharacter(u)) {
+                    *cursor++ = replacement;
+                    ++ch;
+                    ++invalid;
+                    continue;
+                }
+
+                if (u > 0xffff) {
+                    *cursor++ = 0xf0 | ((uchar) (u >> 18));
+                    *cursor++ = 0x80 | (((uchar) (u >> 12)) & 0x3f);
+                } else {
+                    *cursor++ = 0xe0 | (((uchar) (u >> 12)) & 0x3f);
+                }
+                *cursor++ = 0x80 | (((uchar) (u >> 6)) & 0x3f);
+            }
+            *cursor++ = 0x80 | ((uchar) (u&0x3f));
+        }
+        ++ch;
+    }
+}
+
+void QHashedStringRef::computeUtf8Length() const
+{
+    if (m_length) 
+        m_utf8length = utf8LengthFromUtf16(m_data, m_length);
+    else
+        m_utf8length = 0;
+}
+
+QHashedStringRef QHashedStringRef::mid(int offset, int length) const
+{
+    Q_ASSERT(offset < m_length);
+    return QHashedStringRef(m_data + offset, 
+                            (length == -1 || (offset + length) > m_length)?(m_length - offset):length);
+}
+
+bool QHashedStringRef::endsWith(const QString &s) const
+{
+    return s.length() < m_length && 
+           QHashedString::compare(s.constData(), m_data + m_length - s.length(), s.length());
+}
+
+bool QHashedStringRef::startsWith(const QString &s) const
+{
+    return s.length() < m_length && 
+           QHashedString::compare(s.constData(), m_data, s.length());
+}
+
+QString QHashedStringRef::toString() const
+{
+    if (m_length == 0)
+        return QString();
+    return QString(m_data, m_length);
+}
+
+QByteArray QHashedStringRef::toUtf8() const
+{
+    if (m_length == 0)
+        return QByteArray();
+
+    QByteArray result;
+    result.resize(utf8length());
+    writeUtf8(result.data());
+    return result;
+}
+
+void QHashedStringRef::writeUtf8(char *output) const
+{
+    if (m_length) {
+        int ulen = utf8length();
+        if (ulen == m_length) {
+            // Must be a latin1 string
+            uchar *o = (uchar *)output;
+            const QChar *c = m_data;
+            while (ulen--) 
+                *o++ = (uchar)((*c++).unicode());
+        } else {
+            utf8FromUtf16(output, m_data, m_length);
+        }
+    }
+}

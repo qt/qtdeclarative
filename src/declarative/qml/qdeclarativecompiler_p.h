@@ -230,8 +230,8 @@ public:
 
     static bool isAttachedPropertyName(const QString &);
     static bool isSignalPropertyName(const QString &);
-    static bool isAttachedPropertyName(const QStringRef &);
-    static bool isSignalPropertyName(const QStringRef &);
+    static bool isAttachedPropertyName(const QHashedStringRef &);
+    static bool isSignalPropertyName(const QHashedStringRef &);
 
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
     const QMetaObject *resolveType(const QByteArray& name) const; // for QDeclarativeCustomParser::resolveType
@@ -340,11 +340,11 @@ private:
     QStringList deferredProperties(QDeclarativeParser::Object *);
 
     QDeclarativePropertyCache::Data *property(QDeclarativeParser::Object *, int);
-    QDeclarativePropertyCache::Data *property(QDeclarativeParser::Object *, const QStringRef &, 
+    QDeclarativePropertyCache::Data *property(QDeclarativeParser::Object *, const QHashedStringRef &, 
                                               bool *notInRevision = 0);
-    QDeclarativePropertyCache::Data *signal(QDeclarativeParser::Object *, const QStringRef &, 
+    QDeclarativePropertyCache::Data *signal(QDeclarativeParser::Object *, const QHashedStringRef &, 
                                             bool *notInRevision = 0);
-    int indexOfProperty(QDeclarativeParser::Object *, const QStringRef &, bool *notInRevision = 0);
+    int indexOfProperty(QDeclarativeParser::Object *, const QHashedStringRef &, bool *notInRevision = 0);
     int indexOfProperty(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
     int indexOfSignal(QDeclarativeParser::Object *, const QString &, bool *notInRevision = 0);
 
