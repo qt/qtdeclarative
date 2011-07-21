@@ -44,6 +44,7 @@
 
 #include <QObject>
 #include <QDebug>
+#include <QPair>
 #include "qsgparticlesystem_p.h"
 
 QT_BEGIN_HEADER
@@ -66,6 +67,7 @@ public:
     void reload(QSGParticleData*);
     void setCount(int c);
     int count();
+    void performPendingCommits();//Called from updatePaintNode
     QSGParticleSystem* system() const
     {
         return m_system;
@@ -93,6 +95,7 @@ void setParticles(QStringList arg)
         emit particlesChanged(arg);
     }
 }
+
 private slots:
     void calcSystemOffset(bool resetPending = false);
 
@@ -104,11 +107,11 @@ protected:
     virtual void reset();
 
     virtual void componentComplete();
-    virtual void initialize(int gIdx, int pIdx){
+    virtual void initialize(int gIdx, int pIdx){//Called from main thread
         Q_UNUSED(gIdx);
         Q_UNUSED(pIdx);
     }
-    virtual void commit(int gIdx, int pIdx){
+    virtual void commit(int gIdx, int pIdx){//Called in Render Thread
         //###If you need to do something on size changed, check m_data size in this? Or we reset you every time?
         Q_UNUSED(gIdx);
         Q_UNUSED(pIdx);
@@ -123,6 +126,7 @@ protected:
 
 private:
     QSGParticleData* m_sentinel;
+    QSet<QPair<int,int> > m_pendingCommits;
     //QVector<QSGParticleData*> m_shadowData;//For when we implement overwrite: false
 };
 

@@ -105,12 +105,12 @@ void QSGParticlePainter::setSystem(QSGParticleSystem *arg)
 void QSGParticlePainter::load(QSGParticleData* d)
 {
     initialize(d->group, d->index);
-    commit(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
 }
 
 void QSGParticlePainter::reload(QSGParticleData* d)
 {
-    commit(d->group, d->index);
+    m_pendingCommits << qMakePair<int, int>(d->group, d->index);
 }
 
 void QSGParticlePainter::reset()
@@ -148,4 +148,12 @@ void QSGParticlePainter::calcSystemOffset(bool resetPending)
         }
     }
 }
+typedef QPair<int,int> intPair;
+void QSGParticlePainter::performPendingCommits()
+{
+    foreach (intPair p, m_pendingCommits)
+        commit(p.first, p.second);
+    m_pendingCommits.clear();
+}
+
 QT_END_NAMESPACE

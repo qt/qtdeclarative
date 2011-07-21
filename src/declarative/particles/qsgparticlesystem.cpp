@@ -133,7 +133,7 @@ void QSGParticleDataHeap::insert(QSGParticleData* data)
 int QSGParticleDataHeap::top()
 {
     if (m_end == 0)
-        return 1e24;
+        return 1 << 30;
     return m_data[0].time;
 }
 
@@ -658,8 +658,8 @@ void QSGParticleSystem::componentComplete()
 {
     QSGItem::componentComplete();
     m_componentComplete = true;
-    //if (!m_emitters.isEmpty() && !m_particlePainters.isEmpty())
-    reset();
+    m_animation = new QSGParticleSystemAnimation(this);
+    reset();//restarts animation as well
 }
 
 void QSGParticleSystem::reset()//TODO: Needed? Or just in component complete?
@@ -667,6 +667,7 @@ void QSGParticleSystem::reset()//TODO: Needed? Or just in component complete?
     if (!m_componentComplete)
         return;
 
+    m_timeInt = 0;
     //Clear guarded pointers which have been deleted
     int cleared = 0;
     cleared += m_emitters.removeAll(0);
@@ -690,8 +691,10 @@ void QSGParticleSystem::reset()//TODO: Needed? Or just in component complete?
         p->reset();
     }
 
-    m_timeInt = 0;
-    m_timestamp.restart();//TODO: Better placement
+    if (m_animation){
+        m_animation->stop();
+        m_animation->start();
+    }
     m_initialized = true;
 }
 
@@ -831,37 +834,41 @@ void QSGParticleSystem::finishNewDatum(QSGParticleData *pd){
             p->load(pd);
 }
 
-qint64 QSGParticleSystem::systemSync(QSGParticlePainter* p)
+void QSGParticleSystem::updateCurrentTime( int currentTime )
+{
+    if (!m_running)
+        return;
+    if (!m_initialized)
+        return;//error in initialization
+
+    //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
+    qreal dt = m_timeInt / 1000.;
+    m_timeInt = currentTime + m_startTime;
+    qreal time =  m_timeInt / 1000.;
+    dt = time - dt;
+    m_needsReset.clear();
+    if (m_spriteEngine)
+        m_spriteEngine->updateSprites(m_timeInt);
+
+    foreach (QSGParticleEmitter* emitter, m_emitters)
+        if (emitter)
+            emitter->emitWindow(m_timeInt);
+    foreach (QSGParticleAffector* a, m_affectors)
+        if (a)
+            a->affectSystem(dt);
+    foreach (QSGParticleData* d, m_needsReset)
+        foreach (QSGParticlePainter* p, m_groupData[d->group]->painters)
+            if (p && d)
+                p->reload(d);
+}
+
+int QSGParticleSystem::systemSync(QSGParticlePainter* p)
 {
     if (!m_running)
         return 0;
     if (!m_initialized)
         return 0;//error in initialization
-
-    if (m_syncList.isEmpty() || m_syncList.contains(p)){//Need to advance the simulation
-        m_syncList.clear();
-
-        //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
-        qreal dt = m_timeInt / 1000.;
-        m_timeInt = m_timestamp.elapsed() + m_startTime;
-        qreal time =  m_timeInt / 1000.;
-        dt = time - dt;
-        m_needsReset.clear();
-        if (m_spriteEngine)
-            m_spriteEngine->updateSprites(m_timeInt);
-
-        foreach (QSGParticleEmitter* emitter, m_emitters)
-            if (emitter)
-                emitter->emitWindow(m_timeInt);
-        foreach (QSGParticleAffector* a, m_affectors)
-            if (a)
-                a->affectSystem(dt);
-        foreach (QSGParticleData* d, m_needsReset)
-            foreach (QSGParticlePainter* p, m_groupData[d->group]->painters)
-                if (p && d)
-                    p->reload(d);
-    }
-    m_syncList << p;
+    p->performPendingCommits();
     return m_timeInt;
 }
 

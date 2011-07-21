@@ -49,6 +49,8 @@
 #include <QPointer>
 #include <QSignalMapper>
 #include <QtDeclarative/private/qsgsprite_p.h>
+#include <QAbstractAnimation>
+#include <QtDeclarative/qdeclarative.h>
 
 QT_BEGIN_HEADER
 
@@ -61,6 +63,7 @@ class QSGParticleAffector;
 class QSGParticleEmitter;
 class QSGParticlePainter;
 class QSGParticleData;
+class QSGParticleSystemAnimation;
 class QSGSpriteEngine;
 class QSGSprite;
 
@@ -208,7 +211,6 @@ class QSGParticleSystem : public QSGItem
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
-
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
 public:
@@ -216,42 +218,46 @@ public:
     ~QSGParticleSystem();
     QDeclarativeListProperty<QSGSprite> particleStates();
 
-bool isRunning() const
-{
-    return m_running;
-}
+    //TODO: Hook up running and temporal manipulators to the animation
+    bool isRunning() const
+    {
+        return m_running;
+    }
 
-int startTime() const
-{
-    return m_startTime;
-}
+    int startTime() const
+    {
+        return m_startTime;
+    }
 
-int count(){ return m_particle_count; }
+    int count(){ return m_particle_count; }
 
 signals:
 
-void systemInitialized();
-void runningChanged(bool arg);
+    void systemInitialized();
+    void runningChanged(bool arg);
 
-void startTimeChanged(int arg);
+    void startTimeChanged(int arg);
 
 
 public slots:
-void reset();
-void setRunning(bool arg);
+    void reset();
+    void setRunning(bool arg);
 
 
-void setStartTime(int arg)
-{
-    m_startTime = arg;
-}
+    void setStartTime(int arg)
+    {
+        m_startTime = arg;
+    }
 
-void fastForward(int ms)
-{
-    m_startTime += ms;
-}
+    void fastForward(int ms)
+    {
+        m_startTime += ms;
+    }
+
+    virtual int duration() const { return -1; }
 
 protected:
+    //This one only once per frame (effectively)
     void componentComplete();
 
 private slots:
@@ -268,17 +274,16 @@ public://###but only really for related class usage. Perhaps we should all be fr
     void moveGroups(QSGParticleData *d, int newGIdx);
     int nextSystemIndex();
 
-    //This one only once per frame (effectively)
-    qint64 systemSync(QSGParticlePainter* p);
+    //This one only once per painter per frame
+    int systemSync(QSGParticlePainter* p);
 
-    QElapsedTimer m_timestamp;
     QSet<QSGParticleData*> m_needsReset;
     QVector<QSGParticleData*> m_bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QHash<QString, int> m_groupIds;
     QHash<int, QSGParticleGroupData*> m_groupData;
     QSGSpriteEngine* m_spriteEngine;
 
-    qint64 m_timeInt;
+    int m_timeInt;
     bool m_initialized;
 
     void registerParticlePainter(QSGParticlePainter* p);
@@ -303,6 +308,32 @@ private:
 
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;
+    friend class QSGParticleSystemAnimation;
+    void updateCurrentTime( int currentTime );
+    QSGParticleSystemAnimation* m_animation;
+};
+
+// Internally, this animation drives all the timing. Painters sync up in their updatePaintNode
+class QSGParticleSystemAnimation : public QAbstractAnimation
+{
+    Q_OBJECT
+public:
+    QSGParticleSystemAnimation(QSGParticleSystem* system)
+        : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
+    { }
+protected:
+    virtual void updateCurrentTime( int t )
+    {
+        m_system->updateCurrentTime(t);
+    }
+
+    virtual int duration() const
+    {
+        return -1;
+    }
+
+private:
+    QSGParticleSystem* m_system;
 };
 
 
