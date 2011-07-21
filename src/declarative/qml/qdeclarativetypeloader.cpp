@@ -93,7 +93,7 @@ static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
             files->insert(QFile::decodeName(u.d.d_name), true);
 #if defined(Q_OS_DARWIN)
         else if ((len > 6 && !strcmp(u.d.d_name+len-6, ".dylib")) || !strcmp(u.d.d_name+len-3, ".so")
-                  || (len > 7 && !strcmp(u.d.d_name+len-7, ".bundle"))
+                  || (len > 7 && !strcmp(u.d.d_name+len-7, ".bundle")))
             files->insert(QFile::decodeName(u.d.d_name), true);
 #else  // Unix
         else if (!strcmp(u.d.d_name+len-3, ".so") || !strcmp(u.d.d_name+len-3, ".sl"))
