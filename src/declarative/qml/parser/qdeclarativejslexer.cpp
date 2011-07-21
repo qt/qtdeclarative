@@ -42,7 +42,9 @@
 #include "qdeclarativejslexer_p.h"
 #include "qdeclarativejsengine_p.h"
 #include "qdeclarativejsnodepool_p.h"
+#include <private/qdeclarativeutils_p.h>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QVarLengthArray>
 #include <QtCore/QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -126,6 +128,7 @@ void Lexer::setCode(const QString &code, int lineno)
 
     _code = code;
     _tokenText.clear();
+    _tokenText.reserve(1024);
     _errorMessage.clear();
     _tokenSpell = QStringRef();
 
@@ -275,7 +278,7 @@ again:
     _validTokenText = false;
     _tokenLinePtr = _lastLinePtr;
 
-    while (_char.isSpace()) {
+    while (QDeclarativeUtils::isSpace(_char)) {
         if (_char == QLatin1Char('\n')) {
             _tokenLinePtr = _codePtr;
 
@@ -404,35 +407,36 @@ again:
         return T_DIVIDE_;
 
     case '.':
-        if (_char.isDigit()) {
-            QByteArray chars;
-            chars.reserve(32);
+        if (QDeclarativeUtils::isDigit(_char)) {
+            QVarLengthArray<char,32> chars;
 
-            chars += ch.unicode(); // append the `.'
+            chars.append(ch.unicode()); // append the `.'
 
-            while (_char.isDigit()) {
-                chars += _char.unicode();
+            while (QDeclarativeUtils::isDigit(_char)) {
+                chars.append(_char.unicode());
                 scanChar();
             }
 
-            if (_char.toLower() == QLatin1Char('e')) {
-                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                              _codePtr[1].isDigit())) {
+            if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
+                if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              QDeclarativeUtils::isDigit(_codePtr[1]))) {
 
-                    chars += _char.unicode();
+                    chars.append(_char.unicode());
                     scanChar(); // consume `e'
 
                     if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                        chars += _char.unicode();
+                        chars.append(_char.unicode());
                         scanChar(); // consume the sign
                     }
 
-                    while (_char.isDigit()) {
-                        chars += _char.unicode();
+                    while (QDeclarativeUtils::isDigit(_char)) {
+                        chars.append(_char.unicode());
                         scanChar();
                     }
                 }
             }
+
+            chars.append('\0');
 
             const char *begin = chars.constData();
             const char *end = 0;
@@ -440,7 +444,7 @@ again:
 
             _tokenValue = qstrtod(begin, &end, &ok);
 
-            if (end != chars.end()) {
+            if (end - begin != chars.size() - 1) {
                 _errorCode = IllegalExponentIndicator;
                 _errorMessage = QCoreApplication::translate("QDeclarativeParser", "Illegal syntax for exponential number");
                 return T_ERROR;
@@ -525,7 +529,7 @@ again:
     case '\'':
     case '"': {
         const QChar quote = ch;
-        _tokenText.clear();
+        _tokenText.resize(0);
         _validTokenText = true;
 
         bool multilineStringLiteral = false;
@@ -632,11 +636,11 @@ again:
     }
 
     default:
-        if (ch.isLetter() || ch == QLatin1Char('$') || ch == QLatin1Char('_') || (ch == QLatin1Char('\\') && _char == QLatin1Char('u'))) {
+        if (QDeclarativeUtils::isLetter(ch) || ch == QLatin1Char('$') || ch == QLatin1Char('_') || (ch == QLatin1Char('\\') && _char == QLatin1Char('u'))) {
             bool identifierWithEscapeChars = false;
             if (ch == QLatin1Char('\\')) {
                 identifierWithEscapeChars = true;
-                _tokenText.clear();
+                _tokenText.resize(0);
                 bool ok = false;
                 _tokenText += decodeUnicodeEscapeCharacter(&ok);
                 _validTokenText = true;
@@ -647,7 +651,7 @@ again:
                 }
             }
             while (true) {
-                if (_char.isLetterOrNumber() || _char == QLatin1Char('$') || _char == QLatin1Char('_')) {
+                if (QDeclarativeUtils::isLetterOrNumber(_char) || _char == QLatin1Char('$') || _char == QLatin1Char('_')) {
                     if (identifierWithEscapeChars)
                         _tokenText += _char;
 
@@ -655,7 +659,8 @@ again:
                 } else if (_char == QLatin1Char('\\') && _codePtr[0] == QLatin1Char('u')) {
                     if (! identifierWithEscapeChars) {
                         identifierWithEscapeChars = true;
-                        _tokenText = QString(_tokenStartPtr, _codePtr - _tokenStartPtr - 1);
+                        _tokenText.resize(0);
+                        _tokenText.insert(0, _tokenStartPtr, _codePtr - _tokenStartPtr - 1);
                         _validTokenText = true;
                     }
 
@@ -685,19 +690,18 @@ again:
                     return kind;
                 }
             }
-        } else if (ch.isDigit()) {
-            QByteArray chars;
-            chars.reserve(32);
-            chars += ch.unicode();
+        } else if (QDeclarativeUtils::isDigit(ch)) {
+            QVarLengthArray<char,32> chars;
+            chars.append(ch.unicode());
 
             if (ch == QLatin1Char('0') && (_char == 'x' || _char == 'X')) {
                 // parse hex integer literal
 
-                chars += _char.unicode();
+                chars.append(_char.unicode());
                 scanChar(); // consume `x'
 
                 while (isHexDigit(_char)) {
-                    chars += _char.unicode();
+                    chars.append(_char.unicode());
                     scanChar();
                 }
 
@@ -706,56 +710,58 @@ again:
             }
 
             // decimal integer literal
-            while (_char.isDigit()) {
-                chars += _char.unicode();
+            while (QDeclarativeUtils::isDigit(_char)) {
+                chars.append(_char.unicode());
                 scanChar(); // consume the digit
             }
 
             if (_char == QLatin1Char('.')) {
-                chars += _char.unicode();
+                chars.append(_char.unicode());
                 scanChar(); // consume `.'
 
-                while (_char.isDigit()) {
-                    chars += _char.unicode();
+                while (QDeclarativeUtils::isDigit(_char)) {
+                    chars.append(_char.unicode());
                     scanChar();
                 }
 
-                if (_char.toLower() == QLatin1Char('e')) {
-                    if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                                  _codePtr[1].isDigit())) {
+                if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
+                    if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                                  QDeclarativeUtils::isDigit(_codePtr[1]))) {
 
-                        chars += _char.unicode();
+                        chars.append(_char.unicode());
                         scanChar(); // consume `e'
 
                         if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                            chars += _char.unicode();
+                            chars.append(_char.unicode());
                             scanChar(); // consume the sign
                         }
 
-                        while (_char.isDigit()) {
-                            chars += _char.unicode();
+                        while (QDeclarativeUtils::isDigit(_char)) {
+                            chars.append(_char.unicode());
                             scanChar();
                         }
                     }
                 }
-            } else if (_char.toLower() == QLatin1Char('e')) {
-                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                              _codePtr[1].isDigit())) {
+            } else if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
+                if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              QDeclarativeUtils::isDigit(_codePtr[1]))) {
 
-                    chars += _char.unicode();
+                    chars.append(_char.unicode());
                     scanChar(); // consume `e'
 
                     if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                        chars += _char.unicode();
+                        chars.append(_char.unicode());
                         scanChar(); // consume the sign
                     }
 
-                    while (_char.isDigit()) {
-                        chars += _char.unicode();
+                    while (QDeclarativeUtils::isDigit(_char)) {
+                        chars.append(_char.unicode());
                         scanChar();
                     }
                 }
             }
+
+            chars.append('\0');
 
             const char *begin = chars.constData();
             const char *end = 0;
@@ -763,7 +769,7 @@ again:
 
             _tokenValue = qstrtod(begin, &end, &ok);
 
-            if (end != chars.end()) {
+            if (end - begin != chars.size() - 1) {
                 _errorCode = IllegalExponentIndicator;
                 _errorMessage = QCoreApplication::translate("QDeclarativeParser", "Illegal syntax for exponential number");
                 return T_ERROR;
@@ -780,7 +786,7 @@ again:
 
 bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
 {
-    _tokenText.clear();
+    _tokenText.resize(0);
     _validTokenText = true;
     _patternFlags = 0;
 

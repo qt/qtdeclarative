@@ -44,6 +44,7 @@
 
 #include <private/qsganchors_p_p.h> // For AnchorLine
 #include <private/qdeclarativetypenamecache_p.h>
+#include <private/qdeclarativeutils_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 
@@ -587,7 +588,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 break;
 
             case IR::Name::AttachType:
-                if (name.at(0).isUpper()) {
+                if (QDeclarativeUtils::isUpper(name.at(0))) {
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();
 

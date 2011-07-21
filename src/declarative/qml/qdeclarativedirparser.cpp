@@ -42,6 +42,7 @@
 #include "private/qdeclarativedirparser_p.h"
 #include "qdeclarativeerror.h"
 #include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeutils_p.h>
 
 #include <QtCore/QTextStream>
 #include <QtCore/QFile>
@@ -140,9 +141,9 @@ bool QDeclarativeDirParser::parse()
         while (index != length) {
             const QChar ch = line.at(index);
 
-            if (ch.isSpace()) {
+            if (QDeclarativeUtils::isSpace(ch)) {
                 do { ++index; }
-                while (index != length && line.at(index).isSpace());
+                while (index != length && QDeclarativeUtils::isSpace(line.at(index)));
 
             } else if (ch == QLatin1Char('#')) {
                 // recognized a comment
@@ -152,7 +153,7 @@ bool QDeclarativeDirParser::parse()
                 const int start = index;
 
                 do { ++index; }
-                while (index != length && !line.at(index).isSpace());
+                while (index != length && !QDeclarativeUtils::isSpace(line.at(index)));
 
                 const QString lexeme = line.mid(start, index - start);
 

@@ -64,6 +64,7 @@
 #include "private/qdeclarativescriptparser_p.h"
 #include "private/qdeclarativebinding_p.h"
 #include "private/qdeclarativev4compiler_p.h"
+#include "private/qdeclarativeutils_p.h"
 
 #include <QColor>
 #include <QDebug>
@@ -128,7 +129,7 @@ bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
 
 bool QDeclarativeCompiler::isAttachedPropertyName(const QStringRef &name)
 {
-    return !name.isEmpty() && name.at(0) >= 'A' && name.at(0) <= 'Z';
+    return !name.isEmpty() && QDeclarativeUtils::isUpper(name.at(0));
 }
 
 /*!
@@ -153,9 +154,9 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QStringRef &name)
     if (!name.startsWith(on_string)) return false;
     int ns = name.size();
     for (int i = 2; i < ns; ++i) {
-        QChar curr = name.at(i);
-        if (curr == QLatin1Char('_')) continue;
-        if (curr >= QLatin1Char('A') && curr <= QLatin1Char('Z')) return true;
+        const QChar curr = name.at(i);
+        if (curr.unicode() == '_') continue;
+        if (QDeclarativeUtils::isUpper(curr)) return true;
         return false;
     }
     return false; // consists solely of underscores - invalid.
@@ -1418,7 +1419,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
     // Note that the property name could start with any alpha or '_' or '$' character,
     // so we need to do the lower-casing of the first alpha character.
     for (int firstAlphaIndex = 0; firstAlphaIndex < name.size(); ++firstAlphaIndex) {
-        if (name.at(firstAlphaIndex) >= QLatin1Char('A') && name.at(firstAlphaIndex) <= QLatin1Char('Z')) {
+        if (QDeclarativeUtils::isUpper(name.at(firstAlphaIndex))) {
             name[firstAlphaIndex] = name.at(firstAlphaIndex).toLower();
             break;
         }
@@ -2274,7 +2275,7 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop.name())));
 
     QString string = v->value.asString();
-    if (!string.at(0).isUpper())
+    if (!QDeclarativeUtils::isUpper(string.at(0)))
         return true;
 
     QStringList parts = string.split(QLatin1Char('.'));
@@ -2399,7 +2400,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
             COMPILE_EXCEPTION(&prop, tr("Duplicate property name"));
 
         QString propName = QString::fromUtf8(prop.name);
-        if (propName.at(0).isUpper())
+        if (QDeclarativeUtils::isUpper(propName.at(0)))
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
 
         if (enginePrivate->v8engine()->illegalNames().contains(propName))
@@ -2408,29 +2409,43 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         propNames.insert(prop.name);
     }
 
-    for (int ii = 0; ii < obj->dynamicSignals.count(); ++ii) {
-        const QDeclarativeParser::Object::DynamicSignal &currSig = obj->dynamicSignals.at(ii);
-        QByteArray name = currSig.name;
-        if (methodNames.contains(name))
-            COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name"));
-        QString nameStr = QString::fromUtf8(name);
-        if (nameStr.at(0).isUpper())
+    for (Object::DynamicSignal *s = obj->dynamicSignals.first(); s; s = obj->dynamicSignals.next(s)) {
+        const QDeclarativeScript::Object::DynamicSignal &currSig = *s;
+
+        if (methodNames.testAndSet(currSig.name.hash())) {
+            for (Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2 != s;
+                 s2 = obj->dynamicSignals.next(s2)) {
+                if (s2->name == currSig.name)
+                    COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name"));
+            }
+        }
+
+        if (currSig.name.at(0).isUpper())
             COMPILE_EXCEPTION(&currSig, tr("Signal names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine()->illegalNames().contains(currSig.name))
             COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
-        methodNames.insert(name);
     }
-    for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
-        const QDeclarativeParser::Object::DynamicSlot &currSlot = obj->dynamicSlots.at(ii);
-        QByteArray name = currSlot.name;
-        if (methodNames.contains(name))
-            COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
-        QString nameStr = QString::fromUtf8(name);
-        if (nameStr.at(0).isUpper())
+
+    for (Object::DynamicSlot *s = obj->dynamicSlots.first(); s; s = obj->dynamicSlots.next(s)) {
+        const QDeclarativeScript::Object::DynamicSlot &currSlot = *s;
+
+        if (methodNames.testAndSet(currSlot.name.hash())) {
+            for (Object::DynamicSignal *s2 = obj->dynamicSignals.first(); s2;
+                 s2 = obj->dynamicSignals.next(s2)) {
+                if (s2->name == currSlot.name)
+                    COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
+            }
+            for (Object::DynamicSlot *s2 = obj->dynamicSlots.first(); s2 != s;
+                 s2 = obj->dynamicSlots.next(s2)) {
+                if (s2->name == currSlot.name)
+                    COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
+            }
+        }
+
+        if (currSlot.name.at(0).isUpper())
             COMPILE_EXCEPTION(&currSlot, tr("Method names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine()->illegalNames().contains(currSlot.name))
             COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
-        methodNames.insert(name);
     }
 
     return true;
@@ -2485,7 +2500,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             QString nameBase = path.mid(lastSlash + 1, path.length()-lastSlash-5);
-            if (!nameBase.isEmpty() && nameBase.at(0).isUpper())
+            if (!nameBase.isEmpty() && QDeclarativeUtils::isUpper(nameBase.at(0)))
                 newClassName = nameBase.toUtf8() + "_QMLTYPE_" + QByteArray::number(idx);
         }
     }
@@ -2704,18 +2719,18 @@ bool QDeclarativeCompiler::checkValidId(QDeclarativeParser::Value *v, const QStr
     if (val.isEmpty()) 
         COMPILE_EXCEPTION(v, tr( "Invalid empty ID"));
 
-    if (val.at(0).isLetter() && !val.at(0).isLower()) 
+    QChar ch = val.at(0);
+    if (QDeclarativeUtils::isLetter(ch) && !QDeclarativeUtils::isLower(ch))
         COMPILE_EXCEPTION(v, tr( "IDs cannot start with an uppercase letter"));
 
     QChar u(QLatin1Char('_'));
-    for (int ii = 0; ii < val.count(); ++ii) {
+    if (!QDeclarativeUtils::isLetter(ch) && ch != u)
+        COMPILE_EXCEPTION(v, tr( "IDs must start with a letter or underscore"));
 
-        if (ii == 0 && !val.at(ii).isLetter() && val.at(ii) != u) {
-            COMPILE_EXCEPTION(v, tr( "IDs must start with a letter or underscore"));
-        } else if (ii != 0 && !val.at(ii).isLetterOrNumber() && val.at(ii) != u)  {
+    for (int ii = 1; ii < val.count(); ++ii) {
+        ch = val.at(ii);
+        if (!QDeclarativeUtils::isLetterOrNumber(ch) && ch != u)
             COMPILE_EXCEPTION(v, tr( "IDs must contain only letters, numbers, and underscores"));
-        }
-
     }
 
     if (enginePrivate->v8engine()->illegalNames().contains(val))
