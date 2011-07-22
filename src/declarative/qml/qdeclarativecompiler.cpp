@@ -1614,7 +1614,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
         COMPILE_CHECK(buildGroupedProperty(prop, obj, ctxt));
 
-    } else if (enginePrivate->isList(prop->type)) {
+    } else if (prop->core.isQList()) {
 
         COMPILE_CHECK(buildListProperty(prop, obj, ctxt));
 
@@ -1668,7 +1668,7 @@ bool QDeclarativeCompiler::buildPropertyInNamespace(QDeclarativeImportedNamespac
 void QDeclarativeCompiler::genValueProperty(QDeclarativeParser::Property *prop,
                                    QDeclarativeParser::Object *obj)
 {
-    if (enginePrivate->isList(prop->type)) {
+    if (prop->core.isQList()) {
         genListProperty(prop, obj);
     } else {
         genPropertyAssignment(prop, obj);
@@ -2021,7 +2021,7 @@ bool QDeclarativeCompiler::buildListProperty(QDeclarativeParser::Property *prop,
                                              QDeclarativeParser::Object *obj,
                                              const BindingContext &ctxt)
 {
-    Q_ASSERT(enginePrivate->isList(prop->type));
+    Q_ASSERT(prop->core.isQList());
 
     int t = prop->type;
 
@@ -3011,9 +3011,7 @@ bool QDeclarativeCompiler::buildBinding(QDeclarativeParser::Value *value,
     Q_ASSERT(prop->parent);
     Q_ASSERT(prop->parent->metaObject());
 
-    // XXX aakenned
-    QMetaProperty mp = prop->parent->metaObject()->property(prop->index);
-    if (!mp.isWritable() && !QDeclarativeMetaType::isList(prop->type))
+    if (!prop->core.isWritable() && !prop->core.isQList())
         COMPILE_EXCEPTION(prop, tr("Invalid property assignment: \"%1\" is a read-only property").arg(prop->name().toString()));
 
     BindingReference *reference = pool->New<BindingReference>();
