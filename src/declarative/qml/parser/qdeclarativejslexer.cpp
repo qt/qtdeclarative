@@ -530,10 +530,28 @@ again:
     case '\'':
     case '"': {
         const QChar quote = ch;
-        _tokenText.resize(0);
         _validTokenText = true;
 
         bool multilineStringLiteral = false;
+
+        const QChar *startCode = _codePtr;
+
+        while (!_char.isNull()) {
+            if (_char == QLatin1Char('\n') || _char == QLatin1Char('\\')) {
+                break;
+            } else if (_char == quote) {
+                _tokenSpell = _engine->midRef(startCode - _code.unicode() - 1, _codePtr - startCode);
+                scanChar();
+
+                return T_STRING_LITERAL;
+            }
+            scanChar();
+        }
+
+        _tokenText.resize(0);
+        startCode--;
+        while (startCode != _codePtr - 1) 
+            _tokenText += *startCode++;
 
         while (! _char.isNull()) {
             if (_char == QLatin1Char('\n')) {
@@ -692,6 +710,24 @@ again:
                 }
             }
         } else if (QDeclarativeUtils::isDigit(ch)) {
+            if (ch != '0') {
+                int integer = ch.unicode() - '0';
+
+                QChar n = _char;
+                const QChar *code = _codePtr;
+                while (QDeclarativeUtils::isDigit(n)) {
+                    integer = integer * 10 + (n.unicode() - '0');
+                    n = *code++;
+                }
+
+                if (n != QLatin1Char('.') && n != QLatin1Char('e') && n != QLatin1Char('E')) {
+                    _codePtr = code - 1;
+                    scanChar();
+                    _tokenValue = integer;
+                    return T_NUMERIC_LITERAL;
+                } 
+            }
+
             QVarLengthArray<char,32> chars;
             chars.append(ch.unicode());
 
