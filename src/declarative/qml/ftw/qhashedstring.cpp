@@ -465,3 +465,15 @@ void QHashedStringRef::writeUtf8(char *output) const
         }
     }
 }
+
+QString QHashedCStringRef::toUtf16() const
+{
+    if (m_length == 0)
+        return QString();
+
+    QString rv;
+    rv.resize(m_length);
+    writeUtf16((uint16_t*)rv.data());
+    return rv;
+}
+

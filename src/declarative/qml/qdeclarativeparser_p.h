@@ -255,6 +255,7 @@ namespace QDeclarativeParser
         // The property name
         const QHashedStringRef &name() const { return _name; }
         void setName(const QString &n) { _name = QHashedStringRef(pool()->NewString(n)); }
+        void setName(const QHashedStringRef &n) { _name = n; }
         // True if this property was accessed as the default property.  
         bool isDefault;
         // True if the setting of this property will be deferred.  Set by the

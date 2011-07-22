@@ -97,6 +97,10 @@ public:
 
     template<typename T>
     inline T *New();
+    template<typename T>
+    inline T *NewRaw();
+    template<typename T>
+    inline T *NewRawArray(int length);
 
     inline QString *NewString(const QString &);
     inline QByteArray *NewByteArray(const QByteArray &);
@@ -149,6 +153,18 @@ T *QDeclarativePool::New()
     initialize<T>(rv);
     rv->_pool = this;
     return rv;
+}
+
+template<typename T>
+T *QDeclarativePool::NewRaw()
+{
+    return (T*)allocate(sizeof(T));
+}
+
+template<typename T>
+T *QDeclarativePool::NewRawArray(int length)
+{
+    return (T*)allocate(length * sizeof(T));
 }
 
 QString *QDeclarativePool::NewString(const QString &s)

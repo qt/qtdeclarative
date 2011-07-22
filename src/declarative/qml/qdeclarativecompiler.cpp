@@ -846,29 +846,73 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
     if (obj->defaultProperty) {
         defaultProperty = obj->defaultProperty;
 
-        const QMetaObject *metaObject = obj->metaObject();
-        Q_ASSERT(metaObject);
-        // XXX aakenned
-        QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
-        if (p.name()) {
-            Property *explicitProperty = obj->getProperty(QString::fromUtf8(p.name()), false);
-            if (explicitProperty && !explicitProperty->value && !explicitProperty->values.isEmpty()) {
+        Property *explicitProperty = 0;
 
-                skipProperty = explicitProperty; // We merge the values into defaultProperty
+        const QMetaObject *mo = obj->metatype;
+        int idx = mo->indexOfClassInfo("DefaultProperty"); 
+        if (idx != -1) {
+            QMetaClassInfo info = mo->classInfo(idx);
+            const char *p = info.value();
+            if (p) {
+                int plen = 0;
+                char ord = 0;
+                while (char c = p[plen++]) { ord |= c; };
+                --plen;
 
-                // Find the correct insertion point
-                Value *insertPos = 0;
+                if (ord & 0x80) {
+                    // Utf8 - unoptimal, but seldom hit
+                    QString *s = pool->NewString(QString::fromUtf8(p, plen));
+                    QHashedStringRef r(*s);
 
-                for (Value *v = defaultProperty->values.first(); v; v = Property::ValueList::next(v)) {
-                    if (!(v->location.start < explicitProperty->values.first()->location.start))
-                        break;
-                    insertPos = v;
+                    if (obj->propertiesHashField.test(r.hash())) {
+                        for (Property *ep = obj->properties.first(); ep; ep = obj->properties.next(ep)) {
+                            if (ep->name() == r) {
+                                explicitProperty = ep;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!explicitProperty) 
+                        defaultProperty->setName(r);
+
+                } else {
+                    QHashedCStringRef r(p, plen); 
+
+                    if (obj->propertiesHashField.test(r.hash())) {
+                        for (Property *ep = obj->properties.first(); ep; ep = obj->properties.next(ep)) {
+                            if (ep->name() == r) {
+                                explicitProperty = ep;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!explicitProperty) {
+                        // Set the default property name
+                        QChar *buffer = pool->NewRawArray<QChar>(r.length());
+                        r.writeUtf16(buffer);
+                        defaultProperty->setName(QHashedStringRef(buffer, r.length(), r.hash()));
+                    }
                 }
-
-                defaultProperty->values.insertAfter(insertPos, explicitProperty->values);
-
-            } 
+            }
         }
+
+        if (explicitProperty && !explicitProperty->value && !explicitProperty->values.isEmpty()) {
+
+            skipProperty = explicitProperty; // We merge the values into defaultProperty
+
+            // Find the correct insertion point
+            Value *insertPos = 0;
+
+            for (Value *v = defaultProperty->values.first(); v; v = Property::ValueList::next(v)) {
+                if (!(v->location.start < explicitProperty->values.first()->location.start))
+                    break;
+                insertPos = v;
+            }
+
+            defaultProperty->values.insertAfter(insertPos, explicitProperty->values);
+        } 
     }
 
     QDeclarativeCustomParser *cp = 0;
@@ -1486,16 +1530,12 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
 bool QDeclarativeCompiler::doesPropertyExist(QDeclarativeParser::Property *prop,
                                              QDeclarativeParser::Object *obj)
 {
+    if (prop->name().isEmpty())
+        return false;
     if(isAttachedPropertyName(prop->name()) || prop->name() == id_string)
         return true;
 
-    if (prop->isDefault) {
-        const QMetaObject *mo = obj->metaObject();
-        QMetaProperty p = QDeclarativeMetaType::defaultProperty(mo);
-        return p.name() != 0;
-    } else {
-        return property(obj, prop->name()) != 0;
-    }
+    return property(obj, prop->name()) != 0;
 }
 
 bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
@@ -1538,34 +1578,21 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         prop->value->metatype = type->attachedPropertiesType();
     } else {
         // Setup regular property data
+        bool notInRevision = false;
+        QDeclarativePropertyCache::Data *d = 
+            prop->name().isEmpty()?0:property(obj, prop->name(), &notInRevision);
 
-        if (prop->isDefault) {
-            QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
-
-            if (p.name()) {
-                prop->setName(QString::fromLatin1(p.name()));
-
-                QDeclarativePropertyCache::Data *d = property(obj, p.propertyIndex());
-                prop->index = d->coreIndex;
-                prop->core = *d;
+        if (d == 0 && notInRevision) {
+            const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
+            const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
+            if (type.type) {
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+            } else {
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
             }
-
-        } else {
-            bool notInRevision = false;
-            QDeclarativePropertyCache::Data *d = property(obj, prop->name(), &notInRevision);
-
-            if (d == 0 && notInRevision) {
-                const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
-                const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
-                if (type.type) {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
-                } else {
-                    COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
-                }
-            } else if (d) {
-                prop->index = d->coreIndex;
-                prop->core = *d;
-            }
+        } else if (d) {
+            prop->index = d->coreIndex;
+            prop->core = *d;
         }
 
         // We can't error here as the "id" property does not require a
