@@ -2827,8 +2827,8 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
             if (jj != 0) { *d++ = ','; *d2++ = ','; }
             strcpy(d, s->parameterTypes.at(jj).constData());
             d += s->parameterTypes.at(jj).length();
-            strcpy(d2, s->parameterNames.at(jj).constData());
-            d2 += s->parameterNames.at(jj).length();
+            s->parameterNames.at(jj).writeUtf8(d2);
+            d2 += s->parameterNames.at(jj).utf8length();
         }
         *d++ = ')';
         *d = 0;

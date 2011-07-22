@@ -543,6 +543,16 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
         signal->name = node->name;
 
         AST::UiParameterList *p = node->parameters;
+        int paramLength = 0;
+        while (p) { paramLength++; p = p->finish(); }
+        p = node->parameters;
+
+        if (paramLength) {
+            signal->parameterTypes = _parser->_pool.NewRawList<QHashedCStringRef>(paramLength);
+            signal->parameterNames = _parser->_pool.NewRawList<QHashedStringRef>(paramLength);
+        }
+
+        int index = 0;
         while (p) {
             const QStringRef &memberType = p->type;
 
@@ -565,9 +575,10 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
                 return false;
             }
             
-            signal->parameterTypes << QHashedCStringRef(type->qtName, type->qtNameLength);
-            signal->parameterNames << p->name.toUtf8();
+            signal->parameterTypes[index] = QHashedCStringRef(type->qtName, type->qtNameLength);
+            signal->parameterNames[index] = QHashedStringRef(p->name);
             p = p->finish();
+            index++;
         }
 
         signal.location = location(node->typeToken, node->semicolonToken);

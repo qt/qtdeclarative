@@ -194,6 +194,7 @@ QDeclarativeParser::Object::DynamicSignal::DynamicSignal()
 {
 }
 
+// Returns length in utf8 bytes
 int QDeclarativeParser::Object::DynamicSignal::parameterTypesLength() const
 {
     int rv = 0;
@@ -202,11 +203,12 @@ int QDeclarativeParser::Object::DynamicSignal::parameterTypesLength() const
     return rv;
 }
 
+// Returns length in utf8 bytes
 int QDeclarativeParser::Object::DynamicSignal::parameterNamesLength() const
 {
     int rv = 0;
     for (int ii = 0; ii < parameterNames.count(); ++ii)
-        rv += parameterNames.at(ii).length();
+        rv += parameterNames.at(ii).utf8length();
     return rv;
 }
 

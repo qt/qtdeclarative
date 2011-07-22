@@ -105,6 +105,40 @@ public:
     inline QString *NewString(const QString &);
     inline QByteArray *NewByteArray(const QByteArray &);
 
+    template<typename T>
+    struct List {
+        List() : m_length(0), m_data(0) {}
+        List(const List &o) : m_length(o.m_length), m_data(o.m_data) {}
+        List &operator=(const List &o) {
+            m_length = o.m_length;
+            m_data = o.m_data;
+            return *this;
+        }
+
+        int count() const {
+            return m_length;
+        }
+        int length() const { 
+            return m_length; 
+        }
+        const T &at(int index) const { 
+            Q_ASSERT(index < m_length); 
+            return m_data[index]; 
+        };
+        T &operator[](int index) {
+            Q_ASSERT(index < m_length); 
+            return m_data[index]; 
+        };
+    private:
+        friend class QDeclarativePool;
+        List(T *d, int l) : m_length(l), m_data(d) {}
+        int m_length;
+        T *m_data;
+    };
+
+    template<typename T>
+    inline List<T> NewRawList(int length);
+
 private:
     struct StringClass : public QString, public Class {
     };
@@ -165,6 +199,12 @@ template<typename T>
 T *QDeclarativePool::NewRawArray(int length)
 {
     return (T*)allocate(length * sizeof(T));
+}
+
+template<typename T>
+QDeclarativePool::List<T> QDeclarativePool::NewRawList(int length)
+{
+    return List<T>(NewRawArray<T>(length), length);
 }
 
 QString *QDeclarativePool::NewString(const QString &s)

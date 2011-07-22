@@ -393,13 +393,13 @@ namespace QDeclarativeParser
             QFastMetaBuilder::StringRef changedSignatureRef;
         };
 
-        struct DynamicSignal : public QDeclarativePool::Class
+        struct DynamicSignal : public QDeclarativePool::POD
         {
             DynamicSignal();
 
             QHashedStringRef name;
-            QList<QHashedCStringRef> parameterTypes;
-            QList<QByteArray> parameterNames;
+            QDeclarativePool::List<QHashedCStringRef> parameterTypes;
+            QDeclarativePool::List<QHashedStringRef> parameterNames;
 
             int parameterTypesLength() const;
             int parameterNamesLength() const;
