@@ -92,7 +92,7 @@ class QDeclarativeImportedNamespace
 {
 public:
     struct Data {
-        QByteArray uri;
+        QString uri;
         QString url;
         int majversion;
         int minversion;
@@ -102,10 +102,10 @@ public:
     QList<Data> imports;
 
 
-    bool find_helper(QDeclarativeTypeLoader *typeLoader, const Data &data, const QByteArray& type, int *vmajor, int *vminor,
+    bool find_helper(QDeclarativeTypeLoader *typeLoader, const Data &data, const QString& type, int *vmajor, int *vminor,
                                  QDeclarativeType** type_return, QString* url_return,
                                  QString *base = 0, bool *typeRecursionDetected = 0);
-    bool find(QDeclarativeTypeLoader *typeLoader, const QByteArray& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
+    bool find(QDeclarativeTypeLoader *typeLoader, const QString& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
               QString* url_return, QString *base = 0, QList<QDeclarativeError> *errors = 0);
 };
 
@@ -123,7 +123,7 @@ public:
              const QString& uri_arg, const QString& prefix, 
              int vmaj, int vmin, QDeclarativeScriptParser::Import::Type importType, 
              QDeclarativeImportDatabase *database, QList<QDeclarativeError> *errors);
-    bool find(const QByteArray& type, int *vmajor, int *vminor, 
+    bool find(const QString& type, int *vmajor, int *vminor,
               QDeclarativeType** type_return, QString* url_return, QList<QDeclarativeError> *errors);
 
     QDeclarativeImportedNamespace *findNamespace(const QString& type);
@@ -210,7 +210,7 @@ void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDecla
             if (module)
                 import.modules.append(QDeclarativeTypeModuleVersion(module, data.minversion));
 
-            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(data.uri, data.majversion, data.minversion);
+            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(data.uri.toUtf8(), data.majversion, data.minversion);
             if (moduleApi.script || moduleApi.qobject) {
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
                 QDeclarativeMetaType::ModuleApiInstance *a = ep->moduleApiInstances.value(moduleApi);
@@ -242,11 +242,11 @@ void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDecla
 
   \sa addImport()
 */
-bool QDeclarativeImports::resolveType(const QByteArray& type,
+bool QDeclarativeImports::resolveType(const QString& type,
                                       QDeclarativeType** type_return, QString* url_return, int *vmaj, int *vmin,
                                       QDeclarativeImportedNamespace** ns_return, QList<QDeclarativeError> *errors) const
 {
-    QDeclarativeImportedNamespace* ns = d->findNamespace(QString::fromUtf8(type));
+    QDeclarativeImportedNamespace* ns = d->findNamespace(type);
     if (ns) {
         if (ns_return)
             *ns_return = ns;
@@ -281,17 +281,20 @@ bool QDeclarativeImports::resolveType(const QByteArray& type,
 
   If either return pointer is 0, the corresponding search is not done.
 */
-bool QDeclarativeImports::resolveType(QDeclarativeImportedNamespace* ns, const QByteArray& type, 
+bool QDeclarativeImports::resolveType(QDeclarativeImportedNamespace* ns, const QString& type,
                                       QDeclarativeType** type_return, QString* url_return,
                                       int *vmaj, int *vmin) const
 {
     return ns->find(d->typeLoader,type,vmaj,vmin,type_return,url_return);
 }
 
-bool QDeclarativeImportedNamespace::find_helper(QDeclarativeTypeLoader *typeLoader, const Data &data, const QByteArray& type, int *vmajor, int *vminor,
+bool QDeclarativeImportedNamespace::find_helper(QDeclarativeTypeLoader *typeLoader, const Data &data, const QString& type, int *vmajor, int *vminor,
                                  QDeclarativeType** type_return, QString* url_return,
                                  QString *base, bool *typeRecursionDetected)
 {
+    int vmaj = data.majversion;
+    int vmin = data.minversion;
+
     if (vmaj >= 0 && vmin >= 0) {
         QString qt = data.uri + QLatin1Char('/') + type;
         QDeclarativeType *t = QDeclarativeMetaType::qmlType(qt,vmaj,vmin);
@@ -333,7 +336,7 @@ bool QDeclarativeImportedNamespace::find_helper(QDeclarativeTypeLoader *typeLoad
 
     if (!typeWasDeclaredInQmldir && !data.isLibrary) {
         // XXX search non-files too! (eg. zip files, see QT-524)
-        QString url(data.url + QString::fromUtf8(type) + QLatin1String(".qml"));
+        QString url(data.url + type + QLatin1String(".qml"));
         QString file = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(url);
         if (!typeLoader->absoluteFilePath(file).isEmpty()) {
             if (base && *base == url) { // no recursion
@@ -542,14 +545,13 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
             }
         }
 
-        if (QDeclarativeMetaType::isModule(uri.toUtf8(), vmaj, vmin)) {
+        if (QDeclarativeMetaType::isModule(uri, vmaj, vmin))
             versionFound = true;
-        }
 
         if (!versionFound && qmldircomponents.isEmpty()) {
             if (errors) {
                 QDeclarativeError error; // we don't set the url or line or column as these will be set by the loader.
-                if (QDeclarativeMetaType::isAnyModule(uri.toUtf8()))
+                if (QDeclarativeMetaType::isAnyModule(uri))
                     error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri_arg).arg(vmaj).arg(vmin));
                 else
                     error.setDescription(QDeclarativeImportDatabase::tr("module \"%1\" is not installed").arg(uri_arg));
@@ -626,7 +628,7 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
         url += Slash;
 
     QDeclarativeImportedNamespace::Data data;
-    data.uri = uri.toUtf8();
+    data.uri = uri;
     data.url = url;
     data.majversion = vmaj;
     data.minversion = vmin;
@@ -637,13 +639,13 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
     return true;
 }
 
-bool QDeclarativeImportsPrivate::find(const QByteArray& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
+bool QDeclarativeImportsPrivate::find(const QString& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
                                       QString* url_return, QList<QDeclarativeError> *errors)
 {
     QDeclarativeImportedNamespace *s = 0;
-    int slash = type.indexOf('/');
+    int slash = type.indexOf(QLatin1Char('/'));
     if (slash >= 0) {
-        QString namespaceName = QString::fromUtf8(type.left(slash));
+        QString namespaceName = type.left(slash);
         s = set.value(namespaceName);
         if (!s) {
             if (errors) {
@@ -653,7 +655,7 @@ bool QDeclarativeImportsPrivate::find(const QByteArray& type, int *vmajor, int *
             }
             return false;
         }
-        int nslash = type.indexOf('/',slash+1);
+        int nslash = type.indexOf(QLatin1Char('/'),slash+1);
         if (nslash > 0) {
             if (errors) {
                 QDeclarativeError error;
@@ -665,13 +667,13 @@ bool QDeclarativeImportsPrivate::find(const QByteArray& type, int *vmajor, int *
     } else {
         s = &unqualifiedset;
     }
-    QByteArray unqualifiedtype = slash < 0 ? type : type.mid(slash+1); // common-case opt (QString::mid works fine, but slower)
+    QString unqualifiedtype = slash < 0 ? type : type.mid(slash+1); // common-case opt (QString::mid works fine, but slower)
     if (s) {
         if (s->find(typeLoader,unqualifiedtype,vmajor,vminor,type_return,url_return, &base, errors))
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0).isLibrary && url_return && s != &unqualifiedset) {
             // qualified, and only 1 url
-            *url_return = resolveLocalUrl(s->imports.at(0).url, QString::fromUtf8(unqualifiedtype) + QLatin1String(".qml"));
+            *url_return = resolveLocalUrl(s->imports.at(0).url, unqualifiedtype + QLatin1String(".qml"));
             return true;
         }
     }
@@ -684,7 +686,7 @@ QDeclarativeImportedNamespace *QDeclarativeImportsPrivate::findNamespace(const Q
     return set.value(type);
 }
 
-bool QDeclarativeImportedNamespace::find(QDeclarativeTypeLoader *typeLoader, const QByteArray& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
+bool QDeclarativeImportedNamespace::find(QDeclarativeTypeLoader *typeLoader, const QString& type, int *vmajor, int *vminor, QDeclarativeType** type_return,
           QString* url_return, QString *base, QList<QDeclarativeError> *errors)
 {
     bool typeRecursionDetected = false;

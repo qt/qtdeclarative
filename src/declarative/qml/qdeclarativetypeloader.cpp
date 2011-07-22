@@ -1179,8 +1179,6 @@ void QDeclarativeTypeData::resolveTypes()
     }
 
     foreach (QDeclarativeScriptParser::TypeReference *parserRef, scriptParser.referencedTypes()) {
-        QByteArray typeName = parserRef->name.toUtf8();
-
         TypeReference ref;
 
         QString url;
@@ -1189,7 +1187,7 @@ void QDeclarativeTypeData::resolveTypes()
         QDeclarativeImportedNamespace *typeNamespace = 0;
         QList<QDeclarativeError> errors;
 
-        if (!m_imports.resolveType(typeName, &ref.type, &url, &majorVersion, &minorVersion,
+        if (!m_imports.resolveType(parserRef->name, &ref.type, &url, &majorVersion, &minorVersion,
                                    &typeNamespace, &errors) || typeNamespace) {
             // Known to not be a type:
             //  - known to be a namespace (Namespace {})

@@ -79,7 +79,7 @@ public:
 
     static QDeclarativeType *qmlType(const QByteArray &, int, int);
     static QDeclarativeType *qmlType(const QMetaObject *);
-    static QDeclarativeType *qmlType(const QMetaObject *metaObject, const QByteArray &module, int version_major, int version_minor);
+    static QDeclarativeType *qmlType(const QMetaObject *metaObject, const QString &module, int version_major, int version_minor);
     static QDeclarativeType *qmlType(int);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
@@ -105,9 +105,9 @@ public:
     static void registerCustomStringConverter(int, StringConverter);
     static StringConverter customStringConverter(int);
 
-    static bool isAnyModule(const QByteArray &uri);
-    static bool isModule(const QByteArray &module, int versionMajor, int versionMinor);
-    static QDeclarativeTypeModule *typeModule(const QByteArray &uri, int majorVersion);
+    static bool isAnyModule(const QString &uri);
+    static bool isModule(const QString &module, int versionMajor, int versionMinor);
+    static QDeclarativeTypeModule *typeModule(const QString &uri, int majorVersion);
 
     static QList<QDeclarativePrivate::AutoParentFunction> parentFunctions();
 
@@ -128,7 +128,7 @@ public:
         QJSValue (*script)(QDeclarativeEngine *, QJSEngine *);
         QObject *(*qobject)(QDeclarativeEngine *, QJSEngine *);
     };
-    static ModuleApi moduleApi(const QByteArray &, int, int);
+    static ModuleApi moduleApi(const QString &, int, int);
 };
 
 class QHashedStringRef;
@@ -140,12 +140,12 @@ public:
     const QByteArray &qmlTypeName() const;
     const QString &elementName() const;
 
-    QByteArray module() const;
+    QString module() const;
     int majorVersion() const;
     int minorVersion() const;
 
     bool availableInVersion(int vmajor, int vminor) const;
-    bool availableInVersion(const QByteArray &module, int vmajor, int vminor) const;
+    bool availableInVersion(const QString &module, int vmajor, int vminor) const;
 
     QObject *create() const;
     void create(QObject **, void **, size_t) const;
@@ -200,7 +200,7 @@ class QDeclarativeTypeModulePrivate;
 class QDeclarativeTypeModule
 {
 public:
-    QByteArray module() const;
+    QString module() const;
     int majorVersion() const;
 
     int minimumMinorVersion() const;

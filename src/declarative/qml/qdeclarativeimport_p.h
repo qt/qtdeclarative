@@ -81,13 +81,13 @@ public:
     void setBaseUrl(const QUrl &url);
     QUrl baseUrl() const;
 
-    bool resolveType(const QByteArray& type,
+    bool resolveType(const QString& type,
                      QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor,
                      QDeclarativeImportedNamespace** ns_return,
                      QList<QDeclarativeError> *errors = 0) const;
     bool resolveType(QDeclarativeImportedNamespace*, 
-                     const QByteArray& type,
+                     const QString& type,
                      QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 

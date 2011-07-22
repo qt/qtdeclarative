@@ -1483,7 +1483,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeParser::Property *prop, QDecl
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
             if (type.type) {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
             } else {
                 COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
             }
@@ -1560,7 +1560,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
 
         QDeclarativeType *type = 0;
         QDeclarativeImportedNamespace *typeNamespace = 0;
-        unit->imports().resolveType(prop->name().toUtf8(), &type, 0, 0, 0, &typeNamespace);
+        unit->imports().resolveType(prop->name().toString(), &type, 0, 0, 0, &typeNamespace);
 
         if (typeNamespace) {
             COMPILE_CHECK(buildPropertyInNamespace(typeNamespace, prop, obj, 
@@ -1586,7 +1586,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
             const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
             const QDeclarativeTypeData::TypeReference &type = resolvedTypes.at(obj->type);
             if (type.type) {
-                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(QString::fromUtf8(type.type->module())).arg(type.majorVersion).arg(type.minorVersion));
+                COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(elementName(obj)).arg(prop->name().toString()).arg(type.type->module()).arg(type.majorVersion).arg(type.minorVersion));
             } else {
                 COMPILE_EXCEPTION(prop, tr("\"%1.%2\" is not available due to component versioning.").arg(elementName(obj)).arg(prop->name().toString()));
             }
@@ -1674,7 +1674,7 @@ bool QDeclarativeCompiler::buildPropertyInNamespace(QDeclarativeImportedNamespac
         // Setup attached property data
 
         QDeclarativeType *type = 0;
-        unit->imports().resolveType(ns, prop->name().toUtf8(), &type, 0, 0, 0);
+        unit->imports().resolveType(ns, prop->name().toString(), &type, 0, 0, 0);
 
         if (!type || !type->attachedPropertiesType()) 
             COMPILE_EXCEPTION(prop, tr("Non-existent attached object"));
@@ -2314,7 +2314,7 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
 
     QString typeName = parts.at(0);
     QDeclarativeType *type = 0;
-    unit->imports().resolveType(typeName.toUtf8(), &type, 0, 0, 0, 0);
+    unit->imports().resolveType(typeName, &type, 0, 0, 0, 0);
 
     //handle enums on value types (where obj->typeName is empty)
     QByteArray objTypeName = obj->typeName;
@@ -2371,7 +2371,7 @@ int QDeclarativeCompiler::evaluateEnum(const QByteArray& script) const
     if (dot > 0) {
         const QByteArray &scope = script.left(dot);
         QDeclarativeType *type = 0;
-        unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
+        unit->imports().resolveType(QString::fromUtf8(script.left(dot)), &type, 0, 0, 0, 0);
         if (!type && scope != "Qt")
             return -1;
         const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
@@ -2389,7 +2389,7 @@ int QDeclarativeCompiler::evaluateEnum(const QByteArray& script) const
 const QMetaObject *QDeclarativeCompiler::resolveType(const QByteArray& name) const
 {
     QDeclarativeType *qmltype = 0;
-    if (!unit->imports().resolveType(name, &qmltype, 0, 0, 0, 0)) 
+    if (!unit->imports().resolveType(QString::fromUtf8(name), &qmltype, 0, 0, 0, 0))
         return 0;
     if (!qmltype)
         return 0;
@@ -2634,7 +2634,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                 QByteArray customTypeName;
                 QDeclarativeType *qmltype = 0;
                 QString url;
-                if (!unit->imports().resolveType(p->customType.toUtf8(), &qmltype, &url, 0, 0, 0)) 
+                if (!unit->imports().resolveType(p->customType.toString(), &qmltype, &url, 0, 0, 0))
                     COMPILE_EXCEPTION(p, tr("Invalid property type"));
 
                 if (!qmltype) {
