@@ -146,9 +146,6 @@ void Engine::setLexer(Lexer *lexer)
 MemoryPool *Engine::pool()
 { return &_pool; }
 
-QStringRef Engine::midRef(int position, int size)
-{ return _code.midRef(position, size); }
-
 QStringRef Engine::newStringRef(const QString &text)
 {
     const int pos = _extraCode.length();

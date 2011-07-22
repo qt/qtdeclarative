@@ -111,7 +111,7 @@ public:
 
     MemoryPool *pool();
 
-    QStringRef midRef(int position, int size);
+    inline QStringRef midRef(int position, int size) { return _code.midRef(position, size); }
 
     QStringRef newStringRef(const QString &s);
     QStringRef newStringRef(const QChar *chars, int size);

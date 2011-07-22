@@ -152,7 +152,7 @@ public:
     };
 
 private:
-    void scanChar();
+    inline void scanChar();
     int scanToken();
 
     int classify(const QChar *s, int n);
