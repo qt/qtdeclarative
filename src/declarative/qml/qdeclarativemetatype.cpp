@@ -52,6 +52,8 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qbitarray.h>
 #include <QtCore/qreadwritelock.h>
+#include <QtCore/private/qmetaobject_p.h>
+
 #include <qmetatype.h>
 #include <qobjectdefs.h>
 #include <qdatetime.h>
@@ -398,6 +400,24 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
     }
 }
 
+static bool isPropertyRevisioned(const QMetaObject *mo, int index)
+{
+    int i = index;
+    i -= mo->propertyOffset();
+    if (i < 0 && mo->d.superdata)
+        return isPropertyRevisioned(mo->d.superdata, index);
+
+    const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate*>(mo->d.data);
+    if (i >= 0 && i < mop->propertyCount) {
+        int handle = mop->propertyData + 3*i;
+        int flags = mo->d.data[handle + 2];
+
+        return (flags & Revisioned);
+    }
+
+    return false;
+}
+
 void QDeclarativeTypePrivate::init() const
 {
     if (m_isSetup) return;
@@ -451,7 +471,7 @@ void QDeclarativeTypePrivate::init() const
             mo = m_metaObjects.first().metaObject;
 
         for (int ii = 0; !m_containsRevisionedAttributes && ii < mo->propertyCount(); ++ii) {
-            if (mo->property(ii).revision() != 0)
+            if (isPropertyRevisioned(mo, ii))
                 m_containsRevisionedAttributes = true;
         }
 
