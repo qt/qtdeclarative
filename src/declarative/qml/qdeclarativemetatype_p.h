@@ -74,10 +74,10 @@ public:
     static bool canCopy(int type);
     static bool copy(int type, void *data, const void *copy = 0);
 
-    static QList<QByteArray> qmlTypeNames();
+    static QList<QString> qmlTypeNames();
     static QList<QDeclarativeType*> qmlTypes();
 
-    static QDeclarativeType *qmlType(const QByteArray &, int, int);
+    static QDeclarativeType *qmlType(const QString &, int, int);
     static QDeclarativeType *qmlType(const QMetaObject *);
     static QDeclarativeType *qmlType(const QMetaObject *metaObject, const QString &module, int version_major, int version_minor);
     static QDeclarativeType *qmlType(int);

@@ -94,7 +94,7 @@ struct QDeclarativeMetaTypeData
     QList<QDeclarativeType *> types;
     typedef QHash<int, QDeclarativeType *> Ids;
     Ids idToType;
-    typedef QHash<QByteArray, QDeclarativeType *> Names;
+    typedef QHash<QString, QDeclarativeType *> Names;
     Names nameToType;
     typedef QHash<const QMetaObject *, QDeclarativeType *> MetaObjects;
     MetaObjects metaObjectToType;
@@ -841,7 +841,7 @@ int registerInterface(const QDeclarativePrivate::RegisterInterface &interface)
     data->idToType.insert(type->qListTypeId(), type);
     // XXX No insertMulti, so no multi-version interfaces?
     if (!type->qmlTypeName().isEmpty())
-        data->nameToType.insert(type->qmlTypeName(), type);
+        data->nameToType.insert(QString::fromUtf8(type->qmlTypeName()), type);
 
     if (data->interfaces.size() <= interface.typeId)
         data->interfaces.resize(interface.typeId + 16);
@@ -875,7 +875,7 @@ int registerType(const QDeclarativePrivate::RegisterType &type)
     if (dtype->qListTypeId()) data->idToType.insert(dtype->qListTypeId(), dtype);
 
     if (!dtype->qmlTypeName().isEmpty())
-        data->nameToType.insertMulti(dtype->qmlTypeName(), dtype);
+        data->nameToType.insertMulti(QString::fromUtf8(dtype->qmlTypeName()), dtype);
 
     data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
 
@@ -1244,7 +1244,7 @@ QDeclarativeMetaType::StringConverter QDeclarativeMetaType::customStringConverte
     Returns the type (if any) of URI-qualified named \a name in version specified
     by \a version_major and \a version_minor.
 */
-QDeclarativeType *QDeclarativeMetaType::qmlType(const QByteArray &name, int version_major, int version_minor)
+QDeclarativeType *QDeclarativeMetaType::qmlType(const QString &name, int version_major, int version_minor)
 {
     Q_ASSERT(version_major >= 0 && version_minor >= 0);
     QReadLocker lock(metaTypeDataLock());
@@ -1314,7 +1314,7 @@ QDeclarativeType *QDeclarativeMetaType::qmlType(int userType)
 /*!
     Returns the list of registered QML type names.
 */
-QList<QByteArray> QDeclarativeMetaType::qmlTypeNames()
+QList<QString> QDeclarativeMetaType::qmlTypeNames()
 {
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
