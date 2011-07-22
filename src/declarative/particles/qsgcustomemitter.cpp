@@ -147,8 +147,8 @@ void QSGCustomEmitter::emitWindow(int timeStamp)
 
             // Particle speed
             const QPointF &speed = m_speed->sample(newPos);
-            datum->sx = speed.x();
-            datum->sy = speed.y();
+            datum->vx = speed.x();
+            datum->vy = speed.y();
 
             // Particle acceleration
             const QPointF &accel = m_acceleration->sample(newPos);

@@ -220,9 +220,9 @@ void QSGBasicEmitter::emitWindow(int timeStamp)
 
             // Particle speed
             const QPointF &speed = m_speed->sample(newPos);
-            datum->sx = speed.x()
+            datum->vx = speed.x()
                     + m_speed_from_movement * vx;
-            datum->sy = speed.y()
+            datum->vy = speed.y()
                     + m_speed_from_movement * vy;
 
             // Particle acceleration

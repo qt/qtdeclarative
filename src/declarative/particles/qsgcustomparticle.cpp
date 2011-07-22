@@ -105,8 +105,8 @@ struct PlainVertex {
     float lifeSpan;
     float size;
     float endSize;
-    float sx;
-    float sy;
+    float vx;
+    float vy;
     float ax;
     float ay;
     float r;
@@ -535,8 +535,8 @@ void QSGCustomParticle::commit(int gIdx, int pIdx)
         vertices[i].lifeSpan = datum->lifeSpan;
         vertices[i].size = datum->size;
         vertices[i].endSize = datum->endSize;
-        vertices[i].sx = datum->sx;
-        vertices[i].sy = datum->sy;
+        vertices[i].vx = datum->vx;
+        vertices[i].vy = datum->vy;
         vertices[i].ax = datum->ax;
         vertices[i].ay = datum->ay;
         vertices[i].r = datum->r;

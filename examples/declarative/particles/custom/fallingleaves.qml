@@ -13,21 +13,24 @@ Item {
     Emitter{
         system: sys
         width: parent.width
-        emitRate: 6
-        lifeSpan: 12000
+        emitRate: 4
+        lifeSpan: 14000
         size: 80
         speed: PointDirection{ y: 60 }
     }
     Wander {
         system: sys
         anchors.fill: parent
+        anchors.bottomMargin: 100
         xVariance: 60
         pace: 60
     }
     CustomAffector{
         system: sys
-        property real coefficient: 0.5
-        property real speed: 10.0
+        property real coefficient: 0.1
+        property real speed: 1.5
+        width: parent.width
+        height: parent.height - 100
         onAffectParticle:{
         /*  //Linear movement
             if (particle.r == 0){
@@ -53,6 +56,27 @@ Item {
         }
     }
 
+    CustomAffector{//Custom Friction, adds some 'randomness'
+        system: sys
+        //onceOff: true
+        x: -60
+        width: parent.width + 120
+        height: 100
+        anchors.bottom: parent.bottom
+        onAffectParticle:{
+            var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;
+            var yslow = pseudoRand * 0.001 + 1.01;
+            var xslow = pseudoRand * 0.0005 + 1.0;
+            if (particle.curVY < 1)
+                particle.curVY == 0;
+            else
+                particle.curVY = (particle.curVY / yslow);
+            if (particle.curVX < 1)
+                particle.curVX == 0;
+            else
+                particle.curVX = (particle.curVX / xslow);
+        }
+    }
     ImageParticle{
         anchors.fill: parent
         id: particles

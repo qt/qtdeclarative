@@ -173,8 +173,8 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
                 fy += m_field[p.first][p.second].y() * ((m_magSum - dist)/m_magSum);
             }
             if (fx || fy){
-                d->setInstantaneousSX(d->curSX()+ fx * dt);
-                d->setInstantaneousSY(d->curSY()+ fy * dt);
+                d->setInstantaneousVX(d->curVX()+ fx * dt);
+                d->setInstantaneousVY(d->curVY()+ fy * dt);
                 m_system->m_needsReset << d;
             }
         }

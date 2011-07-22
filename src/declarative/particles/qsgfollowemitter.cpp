@@ -220,12 +220,12 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 qreal sizeOffset = d->size/2;//TODO: Current size? As an option
                 //TODO: Set variations
                 //Subtract offset, because PS expects this in emitter coordinates
-                QRectF boundsRect(d->x - offset.x() + d->sx * followT + d->ax * followT2 - m_emitterXVariation/2,
-                                  d->y - offset.y() + d->sy * followT + d->ay * followT2 - m_emitterYVariation/2,
+                QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - m_emitterXVariation/2,
+                                  d->y - offset.y() + d->vy * followT + d->ay * followT2 - m_emitterYVariation/2,
                                   m_emitterXVariation,
                                   m_emitterYVariation);
-    //            QRectF boundsRect(d->x + d->sx * followT + d->ax * followT2 + offset.x() - sizeOffset,
-    //                              d->y + d->sy * followT + d->ay * followT2 + offset.y() - sizeOffset,
+    //            QRectF boundsRect(d->x + d->vx * followT + d->ax * followT2 + offset.x() - sizeOffset,
+    //                              d->y + d->vy * followT + d->ay * followT2 + offset.y() - sizeOffset,
     //                              sizeOffset*2,
     //                              sizeOffset*2);
 
@@ -236,8 +236,8 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 // Particle speed
                 const QPointF &speed = m_speed->sample(newPos);
-                datum->sx = speed.x();
-                datum->sy = speed.y();
+                datum->vx = speed.x();
+                datum->vy = speed.y();
 
                 // Particle acceleration
                 const QPointF &accel = m_acceleration->sample(newPos);

@@ -92,8 +92,8 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
         break;
     case Velocity: //also default
     default:
-        d->setInstantaneousSX(d->sx + dx);
-        d->setInstantaneousSY(d->sy + dy);
+        d->setInstantaneousVX(d->vx + dx);
+        d->setInstantaneousVY(d->vy + dy);
     }
 
     return true;

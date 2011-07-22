@@ -66,8 +66,8 @@ struct SimpleVertex {
     float lifeSpan;
     float size;
     float endSize;
-    float sx;
-    float sy;
+    float vx;
+    float vy;
     float ax;
     float ay;
 };
@@ -88,8 +88,8 @@ struct UltraVertex {
     float lifeSpan;
     float size;
     float endSize;
-    float sx;
-    float sy;
+    float vx;
+    float vy;
     float ax;
     float ay;
     Color4ub color;

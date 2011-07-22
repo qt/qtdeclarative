@@ -63,10 +63,10 @@ bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     if (!m_factor)
         return false;
-    qreal curSX = d->curSX();
-    qreal curSY = d->curSY();
-    d->setInstantaneousSX(curSX + (curSX * m_factor * -1 * dt));
-    d->setInstantaneousSY(curSY + (curSY * m_factor * -1 * dt));
+    qreal curVX = d->curVX();
+    qreal curVY = d->curVY();
+    d->setInstantaneousVX(curVX + (curVX * m_factor * -1 * dt));
+    d->setInstantaneousVY(curVY + (curVY * m_factor * -1 * dt));
     return true;
 }
 QT_END_NAMESPACE

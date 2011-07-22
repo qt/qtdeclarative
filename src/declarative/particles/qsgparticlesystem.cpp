@@ -306,8 +306,8 @@ QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     lifeSpan = 0;
     size = 0;
     endSize = 0;
-    sx = 0;
-    sy = 0;
+    vx = 0;
+    vy = 0;
     ax = 0;
     ay = 0;
     xx = 1;
@@ -338,8 +338,8 @@ void QSGParticleData::clone(const QSGParticleData& other)
     lifeSpan = other.lifeSpan;
     size = other.size;
     endSize = other.endSize;
-    sx = other.sx;
-    sy = other.sy;
+    vx = other.vx;
+    vy = other.vy;
     ax = other.ax;
     ay = other.ay;
     xx = other.xx;
@@ -372,24 +372,24 @@ QDeclarativeV8Handle QSGParticleData::v8Value()
 void QSGParticleData::setInstantaneousAX(qreal ax)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    qreal sx = (this->sx + t*this->ax) - t*ax;
-    qreal ex = this->x + this->sx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*sx - 0.5 * t*t*ax;
+    qreal vx = (this->vx + t*this->ax) - t*ax;
+    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
+    qreal x = ex - t*vx - 0.5 * t*t*ax;
 
     this->ax = ax;
-    this->sx = sx;
+    this->vx = vx;
     this->x = x;
 }
 
 //sets the x velocity without affecting the instantaneous x postion
-void QSGParticleData::setInstantaneousSX(qreal vx)
+void QSGParticleData::setInstantaneousVX(qreal vx)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    qreal sx = vx - t*this->ax;
-    qreal ex = this->x + this->sx * t + 0.5 * this->ax * t * t;
-    qreal x = ex - t*sx - 0.5 * t*t*this->ax;
+    qreal evx = vx - t*this->ax;
+    qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
+    qreal x = ex - t*evx - 0.5 * t*t*this->ax;
 
-    this->sx = sx;
+    this->vx = evx;
     this->x = x;
 }
 
@@ -397,31 +397,31 @@ void QSGParticleData::setInstantaneousSX(qreal vx)
 void QSGParticleData::setInstantaneousX(qreal x)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    this->x = x - t*this->sx - 0.5 * t*t*this->ax;
+    this->x = x - t*this->vx - 0.5 * t*t*this->ax;
 }
 
 //sets the y accleration without affecting the instantaneous y velocity or position
 void QSGParticleData::setInstantaneousAY(qreal ay)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    qreal sy = (this->sy + t*this->ay) - t*ay;
-    qreal ey = this->y + this->sy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*sy - 0.5 * t*t*ay;
+    qreal vy = (this->vy + t*this->ay) - t*ay;
+    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
+    qreal y = ey - t*vy - 0.5 * t*t*ay;
 
     this->ay = ay;
-    this->sy = sy;
+    this->vy = vy;
     this->y = y;
 }
 
 //sets the y velocity without affecting the instantaneous y position
-void QSGParticleData::setInstantaneousSY(qreal vy)
+void QSGParticleData::setInstantaneousVY(qreal vy)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    qreal sy = vy - t*this->ay;
-    qreal ey = this->y + this->sy * t + 0.5 * this->ay * t * t;
-    qreal y = ey - t*sy - 0.5 * t*t*this->ay;
+    qreal evy = vy - t*this->ay;
+    qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
+    qreal y = ey - t*evy - 0.5 * t*t*this->ay;
 
-    this->sy = sy;
+    this->vy = evy;
     this->y = y;
 }
 
@@ -429,38 +429,38 @@ void QSGParticleData::setInstantaneousSY(qreal vy)
 void QSGParticleData::setInstantaneousY(qreal y)
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    this->y = y - t*this->sy - 0.5 * t*t*this->ay;
+    this->y = y - t*this->vy - 0.5 * t*t*this->ay;
 }
 
 qreal QSGParticleData::curX() const
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    return this->x + this->sx * t + 0.5 * this->ax * t * t;
+    return this->x + this->vx * t + 0.5 * this->ax * t * t;
 }
 
-qreal QSGParticleData::curSX() const
+qreal QSGParticleData::curVX() const
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    return this->sx + t*this->ax;
+    return this->vx + t*this->ax;
 }
 
 qreal QSGParticleData::curY() const
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    return y + sy * t + 0.5 * ay * t * t;
+    return y + vy * t + 0.5 * ay * t * t;
 }
 
-qreal QSGParticleData::curSY() const
+qreal QSGParticleData::curVY() const
 {
     qreal t = (system->m_timeInt / 1000.0) - this->t;
-    return sy + t*ay;
+    return vy + t*ay;
 }
 
 void QSGParticleData::debugDump()
 {
     qDebug() << "Particle" << systemIndex << group << "/" << index << stillAlive()
              << "Pos: " << x << "," << y
-             //<< "Vel: " << sx << "," << sy
+             //<< "Vel: " << vx << "," << sy
              //<< "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
              << "Time: " << t << "," <<lifeSpan << ";" << (system->m_timeInt / 1000.0) ;

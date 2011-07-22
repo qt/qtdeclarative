@@ -110,6 +110,24 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> VARIABLE = value->NumberValue();\
 }
 
+#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+{ \
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    if (!r || !r->datum) \
+        V8THROW_ERROR("Not a valid ParticleData object"); \
+\
+    return v8::Number::New(r->datum-> GETTER ());\
+}\
+\
+static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+{\
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    if (!r || !r->datum)\
+        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+\
+    r->datum-> SETTER ( value->NumberValue() );\
+}
+
 #define FLOAT_REGISTER_ACCESSOR(FT, ENGINE, VARIABLE) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #VARIABLE ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
 
 FLOAT_GETTER_AND_SETTER(x)
@@ -118,8 +136,8 @@ FLOAT_GETTER_AND_SETTER(t)
 FLOAT_GETTER_AND_SETTER(lifeSpan)
 FLOAT_GETTER_AND_SETTER(size)
 FLOAT_GETTER_AND_SETTER(endSize)
-FLOAT_GETTER_AND_SETTER(sx)
-FLOAT_GETTER_AND_SETTER(sy)
+FLOAT_GETTER_AND_SETTER(vx)
+FLOAT_GETTER_AND_SETTER(vy)
 FLOAT_GETTER_AND_SETTER(ax)
 FLOAT_GETTER_AND_SETTER(ay)
 FLOAT_GETTER_AND_SETTER(xx)
@@ -132,6 +150,12 @@ FLOAT_GETTER_AND_SETTER(frameDuration)
 FLOAT_GETTER_AND_SETTER(frameCount)
 FLOAT_GETTER_AND_SETTER(animT)
 FLOAT_GETTER_AND_SETTER(r)
+FAKE_FLOAT_GETTER_AND_SETTER(curX, curX, setInstantaneousX)
+FAKE_FLOAT_GETTER_AND_SETTER(curVX, curVX, setInstantaneousVX)
+FAKE_FLOAT_GETTER_AND_SETTER(curAX, curAX, setInstantaneousAX)
+FAKE_FLOAT_GETTER_AND_SETTER(curY, curY, setInstantaneousY)
+FAKE_FLOAT_GETTER_AND_SETTER(curVY, curVY, setInstantaneousVY)
+FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 
 //TODO: Non-floats (color) and special floats (curX) once basic floats are working well
 
@@ -151,8 +175,8 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     FLOAT_REGISTER_ACCESSOR(ft, engine, lifeSpan);
     FLOAT_REGISTER_ACCESSOR(ft, engine, size);
     FLOAT_REGISTER_ACCESSOR(ft, engine, endSize);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, sx);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, sy);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, vx);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, vy);
     FLOAT_REGISTER_ACCESSOR(ft, engine, ax);
     FLOAT_REGISTER_ACCESSOR(ft, engine, ay);
     FLOAT_REGISTER_ACCESSOR(ft, engine, xx);
@@ -165,6 +189,12 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     FLOAT_REGISTER_ACCESSOR(ft, engine, frameCount);
     FLOAT_REGISTER_ACCESSOR(ft, engine, animT);
     FLOAT_REGISTER_ACCESSOR(ft, engine, r);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curVX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curAX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curY);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curVY);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curAY);
 
     constructor = qPersistentNew(ft->GetFunction());
 }

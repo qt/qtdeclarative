@@ -150,21 +150,23 @@ public:
     //sets the x accleration without affecting the instantaneous x velocity or position
     void setInstantaneousAX(qreal ax);
     //sets the x velocity without affecting the instantaneous x postion
-    void setInstantaneousSX(qreal vx);
+    void setInstantaneousVX(qreal vx);
     //sets the instantaneous x postion
     void setInstantaneousX(qreal x);
     //sets the y accleration without affecting the instantaneous y velocity or position
     void setInstantaneousAY(qreal ay);
     //sets the y velocity without affecting the instantaneous y postion
-    void setInstantaneousSY(qreal vy);
+    void setInstantaneousVY(qreal vy);
     //sets the instantaneous Y postion
     void setInstantaneousY(qreal y);
 
     //TODO: Slight caching?
     qreal curX() const;
-    qreal curSX() const;
+    qreal curVX() const;
+    qreal curAX() const { return ax; }
     qreal curY() const;
-    qreal curSY() const;
+    qreal curVY() const;
+    qreal curAY() const { return ay; }
 
     int group;
     QSGParticleEmitter* e;//### Needed?
@@ -179,8 +181,8 @@ public:
     float lifeSpan;
     float size;
     float endSize;
-    float sx;
-    float sy;
+    float vx;
+    float vy;
     float ax;
     float ay;
 

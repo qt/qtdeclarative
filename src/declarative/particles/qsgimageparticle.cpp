@@ -985,8 +985,8 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             ultraVertices[i].lifeSpan = datum->lifeSpan;
             ultraVertices[i].size = datum->size;
             ultraVertices[i].endSize = datum->endSize;
-            ultraVertices[i].sx = datum->sx;
-            ultraVertices[i].sy = datum->sy;
+            ultraVertices[i].vx = datum->vx;
+            ultraVertices[i].vy = datum->vy;
             ultraVertices[i].ax = datum->ax;
             ultraVertices[i].ay = datum->ay;
             ultraVertices[i].xx = datum->xx;
@@ -1018,8 +1018,8 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             simpleVertices[i].lifeSpan = datum->lifeSpan;
             simpleVertices[i].size = datum->size;
             simpleVertices[i].endSize = datum->endSize;
-            simpleVertices[i].sx = datum->sx;
-            simpleVertices[i].sy = datum->sy;
+            simpleVertices[i].vx = datum->vx;
+            simpleVertices[i].vy = datum->vy;
             simpleVertices[i].ax = datum->ax;
             simpleVertices[i].ay = datum->ay;
         }

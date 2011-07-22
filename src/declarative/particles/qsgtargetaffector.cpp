@@ -66,8 +66,8 @@ bool QSGTargetAffector::affectParticle(QSGParticleData *d, qreal dt)
     qreal t = tt - (d->lifeSpan - d->lifeLeft());
     if (t <= 0)
         return false;
-    qreal tx = d->x + d->sx * tt + 0.5 * d->ax * tt * tt;
-    qreal ty = d->y + d->sy * tt + 0.5 * d->ay * tt * tt;
+    qreal tx = d->x + d->vx * tt + 0.5 * d->ax * tt * tt;
+    qreal ty = d->y + d->vy * tt + 0.5 * d->ay * tt * tt;
 
     if (QPointF(tx,ty) == target)
         return false;
@@ -77,14 +77,14 @@ bool QSGTargetAffector::affectParticle(QSGParticleData *d, qreal dt)
 
     qreal w = 1 - (t / tt) + 0.05;
     w = qMin(w, 1.0);
-    qreal wvX = vX * w + d->sx * (1 - w);
-    qreal wvY = vY * w + d->sy * (1 - w);
+    qreal wvX = vX * w + d->vx * (1 - w);
+    qreal wvY = vY * w + d->vy * (1 - w);
     //Screws with the acceleration so that the given start pos with the chosen weighted velocity will still end at the target coordinates
     qreal ax = (2*(target.x() - d->x - wvX*tt)) / (tt*tt);
     qreal ay = (2*(target.y() - d->y - wvY*tt)) / (tt*tt);
 
-    d->sx = wvX;
-    d->sy = wvY;
+    d->vx = wvX;
+    d->vy = wvY;
     d->ax = ax;
     d->ay = ay;
 
