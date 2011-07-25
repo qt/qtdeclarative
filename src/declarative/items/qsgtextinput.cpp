@@ -1219,12 +1219,12 @@ void QSGTextInput::selectionChanged()
 void QSGTextInput::q_textChanged()
 {
     Q_D(QSGTextInput);
+    emit textChanged();
+    emit displayTextChanged();
     updateSize();
     d->determineHorizontalAlignment();
     d->updateHorizontalScroll();
     updateMicroFocus();
-    emit textChanged();
-    emit displayTextChanged();
     if(hasAcceptableInput() != d->oldValidity){
         d->oldValidity = hasAcceptableInput();
         emit acceptableInputChanged();
