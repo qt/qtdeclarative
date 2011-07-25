@@ -665,6 +665,7 @@ QVariant QDeclarativeExpressionPrivate::value(QObject *secondaryScope, bool *isU
 
     {
         v8::HandleScope handle_scope;
+        v8::Context::Scope context_scope(ep->v8engine.context());
         v8::Local<v8::Value> result = v8value(secondaryScope, isUndefined);
         rv = ep->v8engine.toVariant(result, qMetaTypeId<QList<QObject*> >());
     }
