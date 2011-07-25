@@ -512,8 +512,6 @@ void Instr::block(quint32 mask)
 
 Bytecode::Bytecode()
 {
-    d.reserve(8 * 1024);
-
 #ifdef QML_THREADED_INTERPRETER
     decodeInstr = QDeclarativeV4Bindings::getDecodeInstrTable();
 #endif

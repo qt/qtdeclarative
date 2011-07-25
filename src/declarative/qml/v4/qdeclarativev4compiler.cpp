@@ -986,7 +986,6 @@ This does not clear the global "committed binding" states.
 */
 void QDeclarativeV4CompilerPrivate::resetInstanceState()
 {
-    registerCleanups.clear();
     data = committed.data;
     exceptions = committed.exceptions;
     usedSubscriptionIds.clear();
@@ -1095,9 +1094,9 @@ int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
 {
     Q_ASSERT(!string.isEmpty());
 
-    QHash<QString, QPair<int, int> >::ConstIterator iter = registeredStrings.find(string);
+    QPair<int, int> *iter = registeredStrings.value(string);
 
-    if (iter == registeredStrings.end()) {
+    if (!iter) {
         quint32 len = string.length();
         QByteArray lendata((const char *)&len, sizeof(quint32));
         QByteArray strdata((const char *)string.constData(), string.length() * sizeof(QChar));
@@ -1105,7 +1104,8 @@ int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
         int rv = data.count();
         data += strdata;
 
-        iter = registeredStrings.insert(string, qMakePair(registeredStrings.count(), rv));
+        iter = &registeredStrings[string];
+        *iter = qMakePair(registeredStrings.count(), rv);
     } 
 
     Instr reg;
@@ -1123,12 +1123,12 @@ bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &su
 {
     QString str = sub.join(QLatin1String("."));
 
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    if (iter == subscriptionIds.end())
+    int *iter = subscriptionIds.value(str);
+    if (!iter)
         return true;
 
-    QHash<int, quint32>::ConstIterator uiter = usedSubscriptionIds.find(*iter);
-    if (uiter == usedSubscriptionIds.end())
+    quint32 *uiter = usedSubscriptionIds.value(*iter);
+    if (!uiter)
         return true;
     else
         return !(*uiter & currentBlockMask);
@@ -1137,11 +1137,15 @@ bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &su
 int QDeclarativeV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
 {
     QString str = sub.join(QLatin1String("."));
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    if (iter == subscriptionIds.end()) 
-        iter = subscriptionIds.insert(str, subscriptionIds.count());
-    if (!(usedSubscriptionIds[*iter] & currentBlockMask)) {
-        usedSubscriptionIds[*iter] |= currentBlockMask;
+    int *iter = subscriptionIds.value(str);
+    if (!iter) {
+        int count = subscriptionIds.count();
+        iter = &subscriptionIds[str];
+        *iter = count;
+    }
+    quint32 &u = usedSubscriptionIds[*iter];
+    if (!(u & currentBlockMask)) {
+        u |= currentBlockMask;
         usedSubscriptionIdsChanged = true;
     }
     return *iter;
@@ -1151,11 +1155,11 @@ quint32 QDeclarativeV4CompilerPrivate::subscriptionBlockMask(const QStringList &
 {
     QString str = sub.join(QLatin1String("."));
 
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    Q_ASSERT(iter != subscriptionIds.end());
+    int *iter = subscriptionIds.value(str);
+    Q_ASSERT(iter != 0);
 
-    QHash<int, quint32>::ConstIterator uiter = usedSubscriptionIds.find(*iter);
-    Q_ASSERT(uiter != usedSubscriptionIds.end());
+    quint32 *uiter = usedSubscriptionIds.value(*iter);
+    Q_ASSERT(uiter != 0);
 
     return *uiter;
 }
@@ -1230,9 +1234,9 @@ QByteArray QDeclarativeV4CompilerPrivate::buildSignalTable() const
     QHash<int, QList<QPair<int, quint32> > > table;
 
     for (int ii = 0; ii < committed.count(); ++ii) {
-        const QHash<int, quint32> &deps = committed.dependencies.at(ii);
-        for (QHash<int, quint32>::ConstIterator iter = deps.begin(); iter != deps.end(); ++iter) 
-            table[iter.key()].append(qMakePair(ii, iter.value()));
+        const QDeclarativeAssociationList<int, quint32> &deps = committed.dependencies.at(ii);
+        for (QDeclarativeAssociationList<int, quint32>::const_iterator iter = deps.begin(); iter != deps.end(); ++iter)
+            table[iter->first].append(qMakePair(ii, iter->second));
     }
 
     QVector<quint32> header;
@@ -1315,12 +1319,11 @@ QByteArray QDeclarativeV4Compiler::program() const
     if (bindingsDump()) {
         qWarning().nospace() << "Subscription slots:";
 
-        for (QHash<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
+        for (QDeclarativeAssociationList<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
                 iter != d->committed.subscriptionIds.end();
                 ++iter) {
-            qWarning().nospace() << "    " << iter.value() << "\t-> " << iter.key();
+            qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
         }
-
 
         QDeclarativeV4Compiler::dump(programData);
     }
