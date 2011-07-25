@@ -61,6 +61,7 @@ private slots:
     void pinchProperties();
     void scale();
     void pan();
+    void retouch();
 
 private:
     QSGView *createView();
@@ -309,6 +310,85 @@ void tst_QSGPinchArea::pan()
 
     delete canvas;
 }
+
+// test pinch, release one point, touch again to continue pinch
+void tst_QSGPinchArea::retouch()
+{
+    QSGView *canvas = createView();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pinchproperties.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(canvas->rootObject() != 0);
+    qApp->processEvents();
+
+    QSGPinchArea *pinchArea = canvas->rootObject()->findChild<QSGPinchArea*>("pincharea");
+    QSGPinch *pinch = pinchArea->pinch();
+    QVERIFY(pinchArea != 0);
+    QVERIFY(pinch != 0);
+
+    QSGItem *root = qobject_cast<QSGItem*>(canvas->rootObject());
+    QVERIFY(root != 0);
+
+    QSignalSpy startedSpy(pinchArea, SIGNAL(pinchStarted(QSGPinchEvent *)));
+    QSignalSpy finishedSpy(pinchArea, SIGNAL(pinchFinished(QSGPinchEvent *)));
+
+    // target
+    QSGItem *blackRect = canvas->rootObject()->findChild<QSGItem*>("blackrect");
+    QVERIFY(blackRect != 0);
+
+    QPoint p1(80, 80);
+    QPoint p2(100, 100);
+
+    QTest::touchEvent(canvas).press(0, p1);
+    QTest::touchEvent(canvas).stationary(0).press(1, p2);
+    p1 -= QPoint(10,10);
+    p2 += QPoint(10,10);
+    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+
+    QCOMPARE(root->property("scale").toReal(), 1.0);
+
+    p1 -= QPoint(10,10);
+    p2 += QPoint(10,10);
+    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+
+    QCOMPARE(startedSpy.count(), 1);
+
+    QCOMPARE(root->property("scale").toReal(), 1.5);
+    QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+    QCOMPARE(blackRect->scale(), 1.5);
+
+    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
+
+    QCOMPARE(startedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
+
+    QTest::touchEvent(canvas).stationary(0).release(1, p2);
+
+    QCOMPARE(startedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
+
+    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 1);
+
+    QTest::touchEvent(canvas).stationary(0).press(1, p2);
+    p1 -= QPoint(10,10);
+    p2 += QPoint(10,10);
+    QTest::touchEvent(canvas).move(0, p1).move(1, p2);
+
+    // Lifting and retouching results in onPinchStarted being called again
+    QCOMPARE(startedSpy.count(), 2);
+    QCOMPARE(finishedSpy.count(), 0);
+
+    QCOMPARE(canvas->rootObject()->property("pointCount").toInt(), 2);
+
+    QTest::touchEvent(canvas).release(0, p1).release(1, p2);
+
+    QCOMPARE(startedSpy.count(), 2);
+    QCOMPARE(finishedSpy.count(), 1);
+
+    delete canvas;
+}
+
 
 QSGView *tst_QSGPinchArea::createView()
 {

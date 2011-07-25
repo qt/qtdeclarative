@@ -68,7 +68,7 @@ class QSGPinchAreaPrivate : public QSGItemPrivate
 public:
     QSGPinchAreaPrivate()
       : absorb(true), stealMouse(false), inPinch(false)
-      , pinchRejected(false), pinchActivated(false)
+      , pinchRejected(false), pinchActivated(false), initPinch(false)
       , pinch(0), pinchStartDist(0), pinchStartScale(1.0)
       , pinchLastScale(1.0), pinchStartRotation(0.0), pinchStartAngle(0.0)
       , pinchLastAngle(0.0), pinchRotation(0.0)
@@ -89,6 +89,7 @@ public:
     bool inPinch : 1;
     bool pinchRejected : 1;
     bool pinchActivated : 1;
+    bool initPinch : 1;
     QSGPinch *pinch;
     QPointF sceneStartPoint1;
     QPointF sceneStartPoint2;

@@ -3,6 +3,7 @@ Rectangle {
     id: whiteRect
     property variant center
     property real scale
+    property int pointCount: 0
     width: 240; height: 320
     color: "white"
     Rectangle {
@@ -32,14 +33,17 @@ Rectangle {
             onPinchStarted: {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
+                whiteRect.pointCount = pinch.pointCount;
             }
             onPinchUpdated: {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
+                whiteRect.pointCount = pinch.pointCount;
             }
             onPinchFinished: {
                 whiteRect.center = pinch.center
                 whiteRect.scale = pinch.scale
+                whiteRect.pointCount = pinch.pointCount;
             }
          }
      }

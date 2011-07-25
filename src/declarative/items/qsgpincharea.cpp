@@ -122,8 +122,6 @@ void QSGPinchArea::updatePinch()
     Q_D(QSGPinchArea);
     if (d->touchPoints.count() == 0) {
         if (d->inPinch) {
-            d->stealMouse = false;
-            setKeepMouseGrab(false);
             d->inPinch = false;
             QPointF pinchCenter = mapFromScene(d->sceneLastCenter);
             QSGPinchEvent pe(pinchCenter, d->pinchLastScale, d->pinchLastAngle, d->pinchRotation);
@@ -141,6 +139,13 @@ void QSGPinchArea::updatePinch()
             if (d->pinch && d->pinch->target())
                 d->pinch->setActive(false);
         }
+        d->initPinch = false;
+        d->pinchRejected = false;
+        d->stealMouse = false;
+        setKeepMouseGrab(false);
+        QSGCanvas *c = canvas();
+        if (c && c->mouseGrabberItem() == this)
+            ungrabMouse();
         return;
     }
     QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
@@ -150,10 +155,10 @@ void QSGPinchArea::updatePinch()
         d->id1 = touchPoint1.id();
         d->sceneStartPoint1 = touchPoint1.scenePos();
         d->sceneStartPoint2 = touchPoint2.scenePos();
-        d->inPinch = false;
-        d->pinchRejected = false;
         d->pinchActivated = true;
-    } else if (d->pinchActivated && !d->pinchRejected){
+        d->initPinch = true;
+    }
+    if (d->pinchActivated && !d->pinchRejected){
         const int dragThreshold = QApplication::startDragDistance();
         QPointF p1 = touchPoint1.scenePos();
         QPointF p2 = touchPoint2.scenePos();
@@ -173,12 +178,13 @@ void QSGPinchArea::updatePinch()
         d->id1 = touchPoint1.id();
         if (angle > 180)
             angle -= 360;
-        if (!d->inPinch) {
+        if (!d->inPinch || d->initPinch) {
             if (d->touchPoints.count() >= 2
                     && (qAbs(p1.x()-d->sceneStartPoint1.x()) > dragThreshold
                     || qAbs(p1.y()-d->sceneStartPoint1.y()) > dragThreshold
                     || qAbs(p2.x()-d->sceneStartPoint2.x()) > dragThreshold
                     || qAbs(p2.y()-d->sceneStartPoint2.y()) > dragThreshold)) {
+                d->initPinch = false;
                 d->sceneStartCenter = sceneCenter;
                 d->sceneLastCenter = sceneCenter;
                 d->pinchStartCenter = mapFromScene(sceneCenter);

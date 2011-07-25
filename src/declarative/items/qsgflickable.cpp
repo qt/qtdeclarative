@@ -1299,10 +1299,9 @@ bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         }
 
         return stealThisEvent || d->delayedPressEvent || disabledItem;
-    } else if (d->lastPosTime.isValid()) {
-        d->lastPosTime.invalidate();
     }
     if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease) {
+        d->lastPosTime.invalidate();
         d->clearDelayedPress();
         d->stealMouse = false;
         d->pressed = false;
