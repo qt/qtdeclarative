@@ -44,7 +44,9 @@
 #include "qsgitem.h"
 #include "qsgcanvas.h"
 #include "private/qsgfocusscope_p.h"
+#include "../../../shared/util.h"
 #include <QDebug>
+#include <QTimer>
 
 class TestItem : public QSGItem
 {
@@ -60,6 +62,28 @@ protected:
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++pressCount; }
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++releaseCount; }
+};
+
+class TestPolishItem : public QSGItem
+{
+Q_OBJECT
+public:
+    TestPolishItem(QSGItem *parent)
+    : QSGItem(parent), wasPolished(false) {
+        QTimer::singleShot(50, this, SLOT(doPolish()));
+    }
+
+    bool wasPolished;
+
+protected:
+    virtual void updatePolish() {
+        wasPolished = true;
+    }
+
+public slots:
+    void doPolish() { 
+        polish();
+    }
 };
 
 class TestFocusScope : public QSGFocusScope
@@ -97,6 +121,7 @@ private slots:
     void enabled();
 
     void mouseGrab();
+    void polishOutsideAnimation();
 
 private:
     void ensureFocus(QWidget *w) {
@@ -806,6 +831,19 @@ void tst_qsgitem::mouseGrab()
     delete canvas;
 }
 
+void tst_qsgitem::polishOutsideAnimation()
+{
+    QSGCanvas *canvas = new QSGCanvas;
+    canvas->resize(200, 200);
+    canvas->show();
+
+    TestPolishItem *item = new TestPolishItem(canvas->rootItem());
+
+    QTRY_VERIFY(item->wasPolished);
+
+    delete item;
+    delete canvas;
+}
 
 QTEST_MAIN(tst_qsgitem)
 

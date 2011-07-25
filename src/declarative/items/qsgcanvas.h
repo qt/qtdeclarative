@@ -118,6 +118,7 @@ private Q_SLOTS:
     void maybeUpdate();
 
 private:
+    friend class QSGItem;
     Q_DISABLE_COPY(QSGCanvas)
 };
 

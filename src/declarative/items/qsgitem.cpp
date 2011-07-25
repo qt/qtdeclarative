@@ -1830,8 +1830,12 @@ void QSGItem::polish()
     Q_D(QSGItem);
     if (!d->polishScheduled) {
         d->polishScheduled = true;
-        if (d->canvas)
-            QSGCanvasPrivate::get(d->canvas)->itemsToPolish.insert(this);
+        if (d->canvas) {
+            QSGCanvasPrivate *p = QSGCanvasPrivate::get(d->canvas);
+            bool maybeupdate = p->itemsToPolish.isEmpty();
+            p->itemsToPolish.insert(this);
+            if (maybeupdate) d->canvas->maybeUpdate();
+        }
     }
 }
 
