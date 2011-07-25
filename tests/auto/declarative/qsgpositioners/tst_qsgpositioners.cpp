@@ -251,19 +251,17 @@ void tst_qsgpositioners::test_horizontal_animated()
 
     QTRY_COMPARE(one->x(), 0.0);
     QTRY_COMPARE(one->y(), 0.0);
-    QTRY_COMPARE(two->opacity(), 0.0);
+    QTRY_COMPARE(two->isVisible(), false);
     QTRY_COMPARE(two->x(), -100.0);//Not 'in' yet
     QTRY_COMPARE(two->y(), 0.0);
     QTRY_COMPARE(three->x(), 50.0);
     QTRY_COMPARE(three->y(), 0.0);
 
     //Add 'two'
-    two->setOpacity(1.0);
-    QCOMPARE(two->opacity(), 1.0);
-
-    // New size should be immediate
-    QCOMPARE(row->width(), 150.0);
-    QCOMPARE(row->height(), 50.0);
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
+    QTRY_COMPARE(row->width(), 150.0);
+    QTRY_COMPARE(row->height(), 50.0);
 
     QTest::qWait(0);//Let the animation start
     QCOMPARE(two->x(), -100.0);
@@ -305,19 +303,19 @@ void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 
     QTRY_COMPARE(one->x(), 50.0);
     QTRY_COMPARE(one->y(), 0.0);
-    QTRY_COMPARE(two->opacity(), 0.0);
+    QTRY_COMPARE(two->isVisible(), false);
     QTRY_COMPARE(two->x(), -100.0);//Not 'in' yet
     QTRY_COMPARE(two->y(), 0.0);
     QTRY_COMPARE(three->x(), 0.0);
     QTRY_COMPARE(three->y(), 0.0);
 
     //Add 'two'
-    two->setOpacity(1.0);
-    QCOMPARE(two->opacity(), 1.0);
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
 
-    // New size should be immediate
-    QCOMPARE(row->width(), 150.0);
-    QCOMPARE(row->height(), 50.0);
+    // New size should propagate after visible change
+    QTRY_COMPARE(row->width(), 150.0);
+    QTRY_COMPARE(row->height(), 50.0);
 
     QTest::qWait(0);//Let the animation start
     QCOMPARE(one->x(), 50.0);
@@ -411,17 +409,17 @@ void tst_qsgpositioners::test_vertical_animated()
 
     QTRY_COMPARE(one->y(), 0.0);
     QTRY_COMPARE(one->x(), 0.0);
-    QTRY_COMPARE(two->opacity(), 0.0);
+    QTRY_COMPARE(two->isVisible(), false);
     QTRY_COMPARE(two->y(), -100.0);//Not 'in' yet
     QTRY_COMPARE(two->x(), 0.0);
     QTRY_COMPARE(three->y(), 50.0);
     QTRY_COMPARE(three->x(), 0.0);
 
     //Add 'two'
-    two->setOpacity(1.0);
-    QTRY_COMPARE(two->opacity(), 1.0);
-    QCOMPARE(column->height(), 150.0);
-    QCOMPARE(column->width(), 50.0);
+    two->setVisible(true);
+    QTRY_COMPARE(two->isVisible(), true);
+    QTRY_COMPARE(column->height(), 150.0);
+    QTRY_COMPARE(column->width(), 50.0);
     QTest::qWait(0);//Let the animation start
     QCOMPARE(two->y(), -100.0);
     QCOMPARE(three->y(), 50.0);
@@ -624,7 +622,7 @@ void tst_qsgpositioners::test_grid_animated()
 
     QTRY_COMPARE(one->y(), 0.0);
     QTRY_COMPARE(one->x(), 0.0);
-    QTRY_COMPARE(two->opacity(), 0.0);
+    QTRY_COMPARE(two->isVisible(), false);
     QTRY_COMPARE(two->y(), -100.0);
     QTRY_COMPARE(two->x(), -100.0);
     QTRY_COMPARE(three->y(), 0.0);
@@ -635,8 +633,8 @@ void tst_qsgpositioners::test_grid_animated()
     QTRY_COMPARE(five->x(), 0.0);
 
     //Add 'two'
-    two->setOpacity(1.0);
-    QCOMPARE(two->opacity(), 1.0);
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
     QCOMPARE(grid->width(), 150.0);
     QCOMPARE(grid->height(), 100.0);
     QTest::qWait(0);//Let the animation start
@@ -707,7 +705,7 @@ void tst_qsgpositioners::test_grid_animated_rightToLeft()
 
     QTRY_COMPARE(one->y(), 0.0);
     QTRY_COMPARE(one->x(), 100.0);
-    QTRY_COMPARE(two->opacity(), 0.0);
+    QTRY_COMPARE(two->isVisible(), false);
     QTRY_COMPARE(two->y(), -100.0);
     QTRY_COMPARE(two->x(), -100.0);
     QTRY_COMPARE(three->y(), 0.0);
@@ -718,8 +716,8 @@ void tst_qsgpositioners::test_grid_animated_rightToLeft()
     QTRY_COMPARE(five->x(), 100.0);
 
     //Add 'two'
-    two->setOpacity(1.0);
-    QCOMPARE(two->opacity(), 1.0);
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
     QCOMPARE(grid->width(), 150.0);
     QCOMPARE(grid->height(), 100.0);
     QTest::qWait(0);//Let the animation start

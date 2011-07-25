@@ -31,7 +31,7 @@ Item {
             objectName: "two"
             x: -100
             y: -100
-            opacity: 0
+            visible: false
             color: "green"
             width: 50
             height: 50

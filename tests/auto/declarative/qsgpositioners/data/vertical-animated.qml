@@ -26,7 +26,7 @@ Item {
             objectName: "two"
             color: "blue"
             y: -100
-            opacity: 0
+            visible: false
             width: 50
             height: 50
         }

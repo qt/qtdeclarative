@@ -57,7 +57,6 @@ static const QSGItemPrivate::ChangeTypes watchedChanges
     = QSGItemPrivate::Geometry
     | QSGItemPrivate::SiblingOrder
     | QSGItemPrivate::Visibility
-    | QSGItemPrivate::Opacity
     | QSGItemPrivate::Destroyed;
 
 void QSGBasePositionerPrivate::watchChanges(QSGItem *other)
@@ -195,13 +194,13 @@ void QSGBasePositioner::prePositioning()
             positionedItems.append(posItem);
             item = &positionedItems[positionedItems.count()-1];
             item->isNew = true;
-            if (child->opacity() <= 0.0 || !childPrivate->explicitVisible || !child->width() || !child->height())
+            if (!childPrivate->explicitVisible || !child->width() || !child->height())
                 item->isVisible = false;
         } else {
             item = &oldItems[wIdx];
             // Items are only omitted from positioning if they are explicitly hidden
             // i.e. their positioning is not affected if an ancestor is hidden.
-            if (child->opacity() <= 0.0 || !childPrivate->explicitVisible || !child->width() || !child->height()) {
+            if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 item->isVisible = false;
             } else if (!item->isVisible) {
                 item->isVisible = true;
