@@ -70,6 +70,10 @@ void registerTypes()
     qmlRegisterCustomType<MyCustomParserType>("Test", 1, 0, "MyCustomParserType", new MyCustomParserTypeParser);
 
     qmlRegisterTypeNotAvailable("Test",1,0,"UnavailableType", "UnavailableType is unavailable for testing");
+
+    qmlRegisterType<MyQmlObject>("Test.Version",1,0,"MyQmlObject");
+    qmlRegisterType<MyTypeObject>("Test.Version",1,0,"MyTypeObject");
+    qmlRegisterType<MyTypeObject>("Test.Version",2,0,"MyTypeObject");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
