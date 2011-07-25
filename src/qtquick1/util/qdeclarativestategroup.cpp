@@ -75,6 +75,11 @@ public:
     static QDeclarative1State *at_state(QDeclarativeListProperty<QDeclarative1State> *list, int index);
     static void clear_states(QDeclarativeListProperty<QDeclarative1State> *list);
 
+    static void append_transition(QDeclarativeListProperty<QDeclarative1Transition> *list, QDeclarative1Transition *state);
+    static int count_transitions(QDeclarativeListProperty<QDeclarative1Transition> *list);
+    static QDeclarative1Transition *at_transition(QDeclarativeListProperty<QDeclarative1Transition> *list, int index);
+    static void clear_transitions(QDeclarativeListProperty<QDeclarative1Transition> *list);
+
     QList<QDeclarative1State *> states;
     QList<QDeclarative1Transition *> transitions;
 
@@ -221,7 +226,35 @@ void QDeclarative1StateGroupPrivate::clear_states(QDeclarativeListProperty<QDecl
 QDeclarativeListProperty<QDeclarative1Transition> QDeclarative1StateGroup::transitionsProperty()
 {
     Q_D(QDeclarative1StateGroup);
-    return QDeclarativeListProperty<QDeclarative1Transition>(this, d->transitions);
+    return QDeclarativeListProperty<QDeclarative1Transition>(this, &d->transitions, &QDeclarative1StateGroupPrivate::append_transition,
+                                                       &QDeclarative1StateGroupPrivate::count_transitions,
+                                                       &QDeclarative1StateGroupPrivate::at_transition,
+                                                       &QDeclarative1StateGroupPrivate::clear_transitions);
+}
+
+void QDeclarative1StateGroupPrivate::append_transition(QDeclarativeListProperty<QDeclarative1Transition> *list, QDeclarative1Transition *trans)
+{
+    QDeclarative1StateGroup *_this = static_cast<QDeclarative1StateGroup *>(list->object);
+    if (trans)
+        _this->d_func()->transitions.append(trans);
+}
+
+int QDeclarative1StateGroupPrivate::count_transitions(QDeclarativeListProperty<QDeclarative1Transition> *list)
+{
+    QDeclarative1StateGroup *_this = static_cast<QDeclarative1StateGroup *>(list->object);
+    return _this->d_func()->transitions.count();
+}
+
+QDeclarative1Transition *QDeclarative1StateGroupPrivate::at_transition(QDeclarativeListProperty<QDeclarative1Transition> *list, int index)
+{
+    QDeclarative1StateGroup *_this = static_cast<QDeclarative1StateGroup *>(list->object);
+    return _this->d_func()->transitions.at(index);
+}
+
+void QDeclarative1StateGroupPrivate::clear_transitions(QDeclarativeListProperty<QDeclarative1Transition> *list)
+{
+    QDeclarative1StateGroup *_this = static_cast<QDeclarative1StateGroup *>(list->object);
+    _this->d_func()->transitions.clear();
 }
 
 /*!
