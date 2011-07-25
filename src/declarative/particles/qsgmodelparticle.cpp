@@ -187,7 +187,6 @@ void QSGModelParticle::processPending()
             m_available << datum->modelIndex;
             datum->modelIndex = -1;
             datum->delegate = 0;
-            datum = 0;
             m_activeCount--;
         }
 

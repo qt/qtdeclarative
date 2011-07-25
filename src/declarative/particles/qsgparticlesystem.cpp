@@ -820,6 +820,7 @@ void QSGParticleSystem::emitParticle(QSGParticleData* pd)
 }
 
 void QSGParticleSystem::finishNewDatum(QSGParticleData *pd){
+    Q_ASSERT(pd);
     m_groupData[pd->group]->prepareRecycler(pd);
 
     foreach (QSGParticleAffector *a, m_affectors)
