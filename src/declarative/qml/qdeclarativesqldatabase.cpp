@@ -51,6 +51,7 @@
 #include <QtSql/qsqlquery.h>
 #include <QtSql/qsqlerror.h>
 #include <QtSql/qsqlrecord.h>
+#include <QtSql/qsqlfield.h>
 #include <QtGui/qdesktopservices.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qcryptographichash.h>
@@ -222,8 +223,13 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_index(QV8SqlDatabaseResource *r
         // XXX optimize
         v8::Local<v8::Object> row = v8::Object::New();
         for (int ii = 0; ii < record.count(); ++ii) {
-            row->Set(r->engine->toString(record.fieldName(ii)), 
-                     r->engine->toString(record.value(ii).toString()));
+            QVariant v = record.value(ii);
+            if (v.isNull()) {
+                row->Set(r->engine->toString(record.fieldName(ii)), v8::Null());
+            } else {
+                row->Set(r->engine->toString(record.fieldName(ii)),
+                         r->engine->fromVariant(v));
+            }
         }
         return row;
     } else {
