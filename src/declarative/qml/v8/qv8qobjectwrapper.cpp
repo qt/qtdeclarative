@@ -878,7 +878,7 @@ v8::Local<v8::Object> QV8QObjectWrapper::newQObject(QObject *object, QDeclarativ
         if (ddata->propertyCache) ddata->propertyCache->addref();
     }
 
-    if (ddata->propertyCache) {
+    if (ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine->engine()) {
         rv = ddata->propertyCache->newQObject(object, engine);
     } else {
         // XXX NewInstance() should be optimized

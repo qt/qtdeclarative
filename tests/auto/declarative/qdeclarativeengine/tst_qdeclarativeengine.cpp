@@ -49,6 +49,7 @@
 #include <QDebug>
 #include <QDeclarativeComponent>
 #include <QDeclarativeNetworkAccessManagerFactory>
+#include <QDeclarativeExpression>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -70,6 +71,7 @@ private slots:
     void clearComponentCache();
     void outputWarningsToStandardError();
     void objectOwnership();
+    void multipleEngines();
 };
 
 void tst_qdeclarativeengine::rootContext()
@@ -326,6 +328,41 @@ void tst_qdeclarativeengine::objectOwnership()
     delete o;
     }
 
+}
+
+// Test an object can be accessed by multiple engines
+void tst_qdeclarativeengine::multipleEngines()
+{
+    QObject o;
+    o.setObjectName("TestName");
+
+    // Simultaneous engines
+    {
+        QDeclarativeEngine engine1;
+        QDeclarativeEngine engine2;
+        engine1.rootContext()->setContextProperty("object", &o);
+        engine2.rootContext()->setContextProperty("object", &o);
+
+        QDeclarativeExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
+        QDeclarativeExpression expr2(engine2.rootContext(), 0, QString("object.objectName"));
+
+        QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
+        QCOMPARE(expr2.evaluate().toString(), QString("TestName"));
+    }
+
+    // Serial engines
+    {
+        QDeclarativeEngine engine1;
+        engine1.rootContext()->setContextProperty("object", &o);
+        QDeclarativeExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
+        QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
+    }
+    {
+        QDeclarativeEngine engine1;
+        engine1.rootContext()->setContextProperty("object", &o);
+        QDeclarativeExpression expr1(engine1.rootContext(), 0, QString("object.objectName"));
+        QCOMPARE(expr1.evaluate().toString(), QString("TestName"));
+    }
 }
 
 QTEST_MAIN(tst_qdeclarativeengine)

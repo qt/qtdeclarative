@@ -220,20 +220,17 @@ QDeclarativePropertyCache::QDeclarativePropertyCache(QDeclarativeEngine *e, cons
 QDeclarativePropertyCache::~QDeclarativePropertyCache()
 {
     clear();
-}
 
-void QDeclarativePropertyCache::clear()
-{
     if (parent) parent->release();
     parent = 0;
+}
 
-    propertyIndexCacheStart = 0;
-    methodIndexCacheStart = 0;
-
-    propertyIndexCache.clear();
-    methodIndexCache.clear();
-    stringCache.clear();
+// This is inherited from QDeclarativeCleanup, so it should only clear the things
+// that are tied to the specific QDeclarativeEngine.
+void QDeclarativePropertyCache::clear()
+{
     qPersistentDispose(constructor);
+    engine = 0;
 }
 
 QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObject *metaObject, 
@@ -417,8 +414,7 @@ void QDeclarativePropertyCache::update(QDeclarativeEngine *engine, const QMetaOb
 {
     Q_ASSERT(engine);
     Q_ASSERT(metaObject);
-
-    clear();
+    Q_ASSERT(stringCache.isEmpty());
 
     // Optimization to prevent unnecessary reallocation of lists
     propertyIndexCache.reserve(metaObject->propertyCount());
@@ -508,7 +504,7 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
         QDeclarativeData *ddata = QDeclarativeData::get(obj);
-        if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine) // XXX aakenend
+        if (ddata && ddata->propertyCache)
             cache = ddata->propertyCache;
         if (!cache) {
             cache = ep->cache(obj);
@@ -546,7 +542,7 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
 
         QDeclarativePropertyCache *cache = 0;
         QDeclarativeData *ddata = QDeclarativeData::get(obj);
-        if (ddata && ddata->propertyCache && ddata->propertyCache->qmlEngine() == engine)
+        if (ddata && ddata->propertyCache)
             cache = ddata->propertyCache;
         if (!cache) {
             cache = enginePrivate->cache(obj);
