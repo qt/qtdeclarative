@@ -149,6 +149,7 @@ private slots:
     void scarceResources();
     void propertyChangeSlots();
     void elementAssign();
+    void objectPassThroughSignals();
 
     void bug1();
     void bug2();
@@ -2915,6 +2916,19 @@ void tst_qdeclarativeecmascript::propertyChangeSlots()
 void tst_qdeclarativeecmascript::elementAssign()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("elementAssign.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+// QTBUG-12457
+void tst_qdeclarativeecmascript::objectPassThroughSignals()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("objectsPassThroughSignals.qml"));
 
     QObject *object = component.create();
     QVERIFY(object != 0);
