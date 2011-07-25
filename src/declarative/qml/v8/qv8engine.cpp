@@ -174,6 +174,9 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
     if (value.IsEmpty()) 
         return QVariant();
 
+    if (typeHint == QVariant::Bool)
+        return QVariant(value->BooleanValue());
+
     if (value->IsObject()) {
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
         if (r) {

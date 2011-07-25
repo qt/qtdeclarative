@@ -150,6 +150,7 @@ private slots:
     void propertyChangeSlots();
     void elementAssign();
     void objectPassThroughSignals();
+    void booleanConversion();
 
     void bug1();
     void bug2();
@@ -2934,6 +2935,27 @@ void tst_qdeclarativeecmascript::objectPassThroughSignals()
     QVERIFY(object != 0);
 
     QCOMPARE(object->property("test").toBool(), true);
+
+    delete object;
+}
+
+// QTBUG-20242
+void tst_qdeclarativeecmascript::booleanConversion()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("booleanConversion.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test_true1").toBool(), true);
+    QCOMPARE(object->property("test_true2").toBool(), true);
+    QCOMPARE(object->property("test_true3").toBool(), true);
+    QCOMPARE(object->property("test_true4").toBool(), true);
+    QCOMPARE(object->property("test_true5").toBool(), true);
+
+    QCOMPARE(object->property("test_false1").toBool(), false);
+    QCOMPARE(object->property("test_false2").toBool(), false);
+    QCOMPARE(object->property("test_false3").toBool(), false);
 
     delete object;
 }
