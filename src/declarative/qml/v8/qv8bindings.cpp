@@ -63,6 +63,9 @@ public:
 
         void update() { QDeclarativeAbstractBinding::update(); }
 
+        // Inherited from QDeclarativeJavaScriptExpression
+        inline virtual QString expressionIdentifier();
+
         // Inherited from QDeclarativeAbstractBinding
         virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
         virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
@@ -159,6 +162,11 @@ void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags
     } else {
         QDeclarativeBindingPrivate::printBindingLoopError(property);
     }
+}
+
+QString QV8BindingsPrivate::Binding::expressionIdentifier()
+{
+    return parent->url.toString() + QLatin1String(":") + QString::number(line);
 }
 
 void QV8BindingsPrivate::Binding::destroy()

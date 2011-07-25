@@ -153,7 +153,7 @@ public:
     inline void setScopeObject(QObject *v);
 
 protected:
-    inline virtual QStringRef expressionString();
+    inline virtual QString expressionIdentifier();
 
 private:
     quint32 m_requiresThisObject:1;
@@ -173,7 +173,7 @@ private:
 
         typedef QPODVector<QDeclarativeEnginePrivate::CapturedProperty> CapturedProperties;
         void updateGuards(QObject *guardObject, int guardObjectNotifyIndex,
-                          const QStringRef &expression, const CapturedProperties &properties);
+                          QDeclarativeJavaScriptExpression *, const CapturedProperties &properties);
 
     private:
         QDeclarativeNotifierEndpoint *endpoints;
@@ -213,7 +213,7 @@ public:
     bool expressionFunctionValid:1;
     bool extractExpressionFromFunction:1;
 
-    inline virtual QStringRef expressionString();
+    inline virtual QString expressionIdentifier();
 
     QString expression;
 
@@ -291,9 +291,9 @@ void QDeclarativeJavaScriptExpression::setScopeObject(QObject *v)
     m_scopeObject = v; 
 }
 
-QStringRef QDeclarativeJavaScriptExpression::expressionString() 
+QString QDeclarativeJavaScriptExpression::expressionIdentifier() 
 { 
-    return QStringRef(); 
+    return QString();
 }
 
 QDeclarativeJavaScriptExpression::GuardList::GuardList() 
@@ -323,9 +323,9 @@ QDeclarativeExpression *QDeclarativeExpressionPrivate::get(QDeclarativeExpressio
     return expr->q_func();
 }
 
-QStringRef QDeclarativeExpressionPrivate::expressionString()
+QString QDeclarativeExpressionPrivate::expressionIdentifier()
 {
-    return QStringRef(&expression);
+    return QLatin1String("\"") + expression + QLatin1String("\"");
 }
 
 QT_END_NAMESPACE

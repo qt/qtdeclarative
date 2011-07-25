@@ -516,8 +516,7 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
     }
 
     if (!watcher.wasDeleted() && notifyOnValueChanged()) {
-        guardList.updateGuards(m_notifyObject, m_notifyIndex, expressionString(), 
-                               ep->capturedProperties);
+        guardList.updateGuards(m_notifyObject, m_notifyIndex, this, ep->capturedProperties);
     }
 
     if (lastCapturedProperties.count())
@@ -531,7 +530,7 @@ v8::Local<v8::Value> QDeclarativeJavaScriptExpression::evaluate(v8::Handle<v8::F
 }
 
 void QDeclarativeJavaScriptExpression::GuardList::updateGuards(QObject *notifyObject, int notifyIndex,
-                                                               const QStringRef &expression,
+                                                               QDeclarativeJavaScriptExpression *expression,
                                                                const CapturedProperties &properties)
 {
     Q_ASSERT(notifyObject);
@@ -605,10 +604,11 @@ void QDeclarativeJavaScriptExpression::GuardList::updateGuards(QObject *notifyOb
                 }
             }
 
-        } else if (!expression.isEmpty()) {
+        } else {
             if (!outputWarningHeader) {
+                QString e = expression->expressionIdentifier();
                 outputWarningHeader = true;
-                qWarning() << "QDeclarativeExpression: Expression" << expression
+                qWarning() << "QDeclarativeExpression: Expression" << qPrintable(e)
                            << "depends on non-NOTIFYable properties:";
             }
 
