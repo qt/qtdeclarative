@@ -55,7 +55,7 @@ class QDeclarativeV4IRBuilder : public QDeclarativeJS::AST::Visitor
 public:
     QDeclarativeV4IRBuilder(const QDeclarativeV4Compiler::Expression *, QDeclarativeEnginePrivate *);
 
-    QDeclarativeJS::IR::Function *operator()(QDeclarativeJS::IR::Module *, QDeclarativeJS::AST::Node *);
+    bool operator()(QDeclarativeJS::IR::Function *, QDeclarativeJS::AST::Node *);
 
 protected:
     struct ExprResult {
@@ -229,7 +229,6 @@ private:
     const QDeclarativeV4Compiler::Expression *m_expression;
     QDeclarativeEnginePrivate *m_engine;
 
-    QDeclarativeJS::IR::Module *_module;
     QDeclarativeJS::IR::Function *_function;
     QDeclarativeJS::IR::BasicBlock *_block;
     bool _discard;

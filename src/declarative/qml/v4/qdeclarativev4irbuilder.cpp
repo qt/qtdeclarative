@@ -86,19 +86,15 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
 
 QDeclarativeV4IRBuilder::QDeclarativeV4IRBuilder(const QDeclarativeV4Compiler::Expression *expr, 
                                                              QDeclarativeEnginePrivate *engine)
-: m_expression(expr), m_engine(engine), _module(0), _function(0), _block(0), _discard(false)
+: m_expression(expr), m_engine(engine), _function(0), _block(0), _discard(false)
 {
 }
 
-QDeclarativeJS::IR::Function *
-QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Module *module, 
+bool QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Function *function,
                                          QDeclarativeJS::AST::Node *ast)
 {
     bool discarded = false;
 
-    qSwap(_module, module);
-
-    IR::Function *function = _module->newFunction();
     IR::BasicBlock *block = function->newBasicBlock();
 
     qSwap(_discard, discarded);
@@ -131,9 +127,7 @@ QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Module *module,
     qSwap(_function, function);
     qSwap(_discard, discarded);
 
-    qSwap(_module, module);
-
-    return discarded?0:function;
+    return !discarded;
 }
 
 bool QDeclarativeV4IRBuilder::buildName(QList<QStringRef> &name,
@@ -342,27 +336,28 @@ bool QDeclarativeV4IRBuilder::visit(AST::UiFormal *)
 
 
 // JS
-bool QDeclarativeV4IRBuilder::visit(AST::Program *ast)
+bool QDeclarativeV4IRBuilder::visit(AST::Program *)
 {
-    _function = _module->newFunction();
-    _block = _function->newBasicBlock();
-    accept(ast->elements);
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::SourceElements *)
 {
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::FunctionSourceElement *)
 {
-    return true; // look inside
+    Q_ASSERT(!"unreachable");
+    return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::StatementSourceElement *)
 {
-    return true; // look inside
+    Q_ASSERT(!"unreachable");
+    return false;
 }
 
 // object literals
@@ -683,7 +678,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::preVisit(AST::Node *ast)
+bool QDeclarativeV4IRBuilder::preVisit(AST::Node *)
 {
     return ! _discard;
 }
@@ -720,7 +715,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
         IR::ExprList *args = 0, **argsInserter = &args;
         for (AST::ArgumentList *it = ast->arguments; it; it = it->next) {
             IR::Expr *arg = expression(it->expression);
-            *argsInserter = _module->pool->New<IR::ExprList>();
+            *argsInserter = _function->pool->New<IR::ExprList>();
             (*argsInserter)->init(arg);
             argsInserter = &(*argsInserter)->next;
         }

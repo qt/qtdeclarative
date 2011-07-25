@@ -78,7 +78,6 @@ namespace IR {
 
 struct BasicBlock;
 struct Function;
-struct Module;
 
 struct Stmt;
 struct Expr;
@@ -479,17 +478,19 @@ struct Ret: Stmt {
 };
 
 struct Function {
-    Module *module;
-    QString name;
-    int tempCount;
+    QDeclarativePool *pool;
     QVarLengthArray<BasicBlock *, 8> basicBlocks;
+    int tempCount;
 
-    inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
+    Function(QDeclarativePool *pool)
+      : pool(pool), tempCount(0) {}
 
-    Function(Module *module, const QString &name): module(module), name(name), tempCount(0) {}
     ~Function();
 
     BasicBlock *newBasicBlock();
+    QString *newString(const QString &text);
+
+    inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     virtual void dump(QTextStream &out);
 };
@@ -546,19 +547,6 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Expr *expr, Type type, quint32 line, quint32 column);
-
-    virtual void dump(QTextStream &out);
-};
-
-struct Module {
-    QDeclarativePool *pool;
-    QVarLengthArray<Function *, 4> functions;
-
-    Module(QDeclarativePool *pool);
-    ~Module();
-
-    QString *newString(const QString &text);
-    Function *newFunction(const QString &name = QString());
 
     virtual void dump(QTextStream &out);
 };

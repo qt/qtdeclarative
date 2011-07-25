@@ -91,7 +91,7 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
         if (IR::Stmt *terminator = block->terminator()) {
             if (IR::CJump *cj = terminator->asCJump()) {
                 if (cj->iffalse != next) {
-                    IR::Jump *jump = _function->module->pool->New<IR::Jump>();
+                    IR::Jump *jump = _function->pool->New<IR::Jump>();
                     jump->init(cj->iffalse);
                     block->statements.append(jump);
                 }
@@ -1038,11 +1038,10 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
         return false;
     }
 
-    IR::Module module(&pool);
-    IR::Function *function = 0;
+    IR::Function thisFunction(&pool), *function = &thisFunction;
 
     QDeclarativeV4IRBuilder irBuilder(expression, engine);
-    if (!(function = irBuilder(&module, node)))
+    if (!irBuilder(function, node))
         return false;
 
     bool discarded = false;
