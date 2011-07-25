@@ -182,6 +182,7 @@ private slots:
     void aliasBindingsAssignCorrectly();
     void aliasBindingsOverrideTarget();
     void aliasWritesOverrideBindings();
+    void aliasToCompositeElement();
     void realToInt();
 
     void include();
@@ -3524,6 +3525,18 @@ void tst_qdeclarativeecmascript::aliasWritesOverrideBindings()
 
     delete o;
     }
+}
+
+// Allow an alais to a composite element
+// QTBUG-20200
+void tst_qdeclarativeecmascript::aliasToCompositeElement()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("aliasToCompositeElement.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    delete object;
 }
 
 void tst_qdeclarativeecmascript::revisionErrors()
