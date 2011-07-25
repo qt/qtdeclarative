@@ -294,6 +294,9 @@ QDeclarativeType *QDeclarativeType::superType() const
 static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo, 
                   const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd)
 {
+    // Set classname
+    builder.setClassName(ignoreEnd->className());
+
     // Clone Q_CLASSINFO
     for (int ii = mo->classInfoOffset(); ii < mo->classInfoCount(); ++ii) {
         QMetaClassInfo info = mo->classInfo(ii);
