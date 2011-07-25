@@ -121,10 +121,8 @@ void QSGItemParticle::tick()
         if (m_stasis.contains(d->delegate))
             qWarning() << "Current model particles prefers overwrite:false";
         //remove old item from the particle that is dying to make room for this one
-        if (d->delegate){
+        if (d->delegate)
             m_deletables << d->delegate;
-            m_activeCount--;
-        }
         d->delegate = 0;
         if (!m_pendingItems.isEmpty()){
             d->delegate = m_pendingItems.front();
@@ -143,6 +141,7 @@ void QSGItemParticle::tick()
             d->delegate->setParentItem(this);
             if (m_fade)
                 d->delegate->setOpacity(0.);
+            d->delegate->setVisible(false);//Will be set to true when we prepare the next frame
             m_activeCount++;
         }
     }
@@ -202,7 +201,6 @@ void QSGItemParticle::prepareNextFrame()
             if (t >= 1.0){//Usually happens from load
                 m_deletables << item;
                 data->delegate = 0;
-                m_activeCount--;
             }else{//Fade
                 data->delegate->setVisible(true);
                 if (m_fade){

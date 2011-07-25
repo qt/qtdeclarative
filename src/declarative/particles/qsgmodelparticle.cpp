@@ -171,7 +171,6 @@ void QSGModelParticle::initialize(int gIdx, int pIdx)
     if (m_available.isEmpty())
         return;
     m_requests << m_system->m_groupData[gIdx]->data[pIdx];
-    m_activeCount++;
 }
 
 void QSGModelParticle::processPending()
@@ -181,6 +180,7 @@ void QSGModelParticle::processPending()
         if (m_fade)
             item->setOpacity(0.);
         m_model->release(item);
+        m_activeCount--;
     }
     m_deletables.clear();
 
@@ -193,7 +193,6 @@ void QSGModelParticle::processPending()
             m_available << datum->modelIndex;
             datum->modelIndex = -1;
             datum->delegate = 0;
-            m_activeCount--;
         }
 
         if (!m_available.isEmpty()){
@@ -206,7 +205,10 @@ void QSGModelParticle::processPending()
                 mpa->attach();
             }
             datum->delegate->setParentItem(this);
-            datum->delegate->setOpacity(0.0);
+            if (m_fade)
+                datum->delegate->setOpacity(0.0);
+            datum->delegate->setVisible(false);//Will be set to true when we prepare the next frame
+            m_activeCount++;
         }
     }
     m_requests.clear();
@@ -271,7 +273,6 @@ void QSGModelParticle::prepareNextFrame()
                 m_deletables << data->delegate;
                 data->modelIndex = -1;
                 data->delegate = 0;
-                m_activeCount--;
                 continue;
             }else{//Fade
                 data->delegate->setVisible(true);
