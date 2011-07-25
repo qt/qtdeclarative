@@ -213,6 +213,13 @@ QDeclarativeProperty::QDeclarativeProperty(QObject *obj, const QString &name, QD
 
 Q_GLOBAL_STATIC(QDeclarativeValueTypeFactory, qmlValueTypes);
 
+QDeclarativeContextData *QDeclarativePropertyPrivate::effectiveContext() const 
+{
+    if (context) return context;
+    else if (engine) return QDeclarativeContextData::get(engine->rootContext());
+    else return 0;
+}
+
 void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name)
 {
     if (!obj) return;
@@ -392,7 +399,7 @@ const char *QDeclarativeProperty::propertyTypeName() const
         return 0;
     if (d->isValueType()) {
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->context);
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->engine);
         QDeclarativeValueType *valueType = 0;
         if (ep) valueType = ep->valueTypes[d->core.propType];
         else valueType = QDeclarativeValueTypeFactory::valueType(d->core.propType);
@@ -980,7 +987,7 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
 {
     if (isValueType()) {
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context);
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
         QDeclarativeValueType *valueType = 0;
         if (ep) valueType = ep->valueTypes[core.propType];
         else valueType = QDeclarativeValueTypeFactory::valueType(core.propType);
@@ -1065,7 +1072,7 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
 
     bool rv = false;
     if (isValueType()) {
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(context);
+        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
         QDeclarativeValueType *writeBack = 0;
         if (ep) {
@@ -1080,14 +1087,14 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
         data.setFlags(valueType.flags);
         data.coreIndex = valueType.valueTypeCoreIdx;
         data.propType = valueType.valueTypePropType;
-        rv = write(writeBack, data, value, context, flags);
+        rv = write(writeBack, data, value, effectiveContext(), flags);
 
         writeBack->write(object, core.coreIndex, flags);
         if (!ep) delete writeBack;
 
     } else {
 
-        rv = write(object, core, value, context, flags);
+        rv = write(object, core, value, effectiveContext(), flags);
 
     }
 

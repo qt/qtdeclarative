@@ -75,6 +75,7 @@ public:
     QDeclarativePropertyPrivate()
         : context(0), engine(0), object(0), isNameCached(false) {}
 
+    inline QDeclarativeContextData *effectiveContext() const;
     QDeclarativeContextData *context;
     QDeclarativeEngine *engine;
     QDeclarativeGuard<QObject> object;

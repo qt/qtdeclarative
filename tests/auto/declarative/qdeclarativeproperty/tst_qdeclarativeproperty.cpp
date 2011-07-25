@@ -133,6 +133,7 @@ private slots:
     // Bugs
     void crashOnValueProperty();
     void aliasPropertyBindings();
+    void noContext();
 
     void copy();
 private:
@@ -1481,13 +1482,28 @@ void tst_qdeclarativeproperty::copy()
     QCOMPARE(p2.propertyType(), (int)QVariant::Int);
 }
 
+void tst_qdeclarativeproperty::noContext()
+{
+    QDeclarativeComponent compA(&engine, TEST_FILE("NoContextTypeA.qml"));
+    QDeclarativeComponent compB(&engine, TEST_FILE("NoContextTypeB.qml"));
+
+    QObject *a = compA.create();
+    QVERIFY(a != 0);
+    QObject *b = compB.create();
+    QVERIFY(b != 0);
+
+    QVERIFY(QDeclarativeProperty::write(b, "myTypeA", QVariant::fromValue(a), &engine));
+
+    delete a;
+    delete b;
+}
+
 void tst_qdeclarativeproperty::initTestCase()
 {
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<PropertyObject>("Test",1,0,"PropertyObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
 }
-
 
 QTEST_MAIN(tst_qdeclarativeproperty)
 
