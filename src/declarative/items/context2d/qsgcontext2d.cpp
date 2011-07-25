@@ -1654,7 +1654,7 @@ void QSGContext2DPrivate::arc(qreal xc,
                               qreal ear,
                               bool antiClockWise)
 {
-    QPainterPath path;
+    QPainterPath p;
 
     //### HACK
 
@@ -1689,12 +1689,12 @@ void QSGContext2DPrivate::arc(qreal xc,
         span   += ea - sa;
     }
 
-    path.moveTo(QPointF(xc + radius  * qCos(sar),
+    p.moveTo(QPointF(xc + radius  * qCos(sar),
                         yc - radius  * qSin(sar)));
 
-    path.arcTo(xs, ys, width, height, sa, span);
+    p.arcTo(xs, ys, width, height, sa, span);
 
-    path.addPath(state.matrix.map(path));
+    path.addPath(state.matrix.map(p));
 }
 
 void QSGContext2DPrivate::fill()
