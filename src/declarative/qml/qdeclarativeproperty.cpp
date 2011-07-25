@@ -1095,8 +1095,8 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
 }
 
 bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePropertyCache::Data &property, 
-                                            const QVariant &value, QDeclarativeContextData *context, 
-                                            WriteFlags flags)
+                                        const QVariant &value, QDeclarativeContextData *context, 
+                                        WriteFlags flags)
 {
     int coreIdx = property.coreIndex;
     int status = -1;    //for dbus
@@ -1549,7 +1549,8 @@ struct ValueTypeSerializedData : public SerializedData {
 };
 
 QByteArray QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObject, int index, 
-                                                 const QMetaObject *subObject, int subIndex)
+                                                      const QMetaObject *subObject, int subIndex,
+                                                      QDeclarativeEngine *)
 {
     QMetaProperty prop = metaObject->property(index);
     QMetaProperty subProp = subObject->property(subIndex);
@@ -1567,12 +1568,13 @@ QByteArray QDeclarativePropertyPrivate::saveValueType(const QMetaObject *metaObj
     return rv;
 }
 
-QByteArray QDeclarativePropertyPrivate::saveProperty(const QMetaObject *metaObject, int index)
+QByteArray QDeclarativePropertyPrivate::saveProperty(const QMetaObject *metaObject, int index, 
+                                                     QDeclarativeEngine *engine)
 {
     SerializedData sd;
     memset(&sd, 0, sizeof(sd));
     sd.isValueType = false;
-    sd.core.load(metaObject->property(index));
+    sd.core.load(metaObject->property(index), engine);
 
     QByteArray rv((const char *)&sd, sizeof(sd));
     return rv;

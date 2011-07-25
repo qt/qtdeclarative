@@ -148,6 +148,7 @@ private slots:
     void importScripts();
     void scarceResources();
     void propertyChangeSlots();
+    void elementAssign();
 
     void bug1();
     void bug2();
@@ -189,6 +190,7 @@ private slots:
 
     void revisionErrors();
     void revision();
+
 private:
     QDeclarativeEngine engine;
 };
@@ -2906,6 +2908,19 @@ void tst_qdeclarativeecmascript::propertyChangeSlots()
     QCOMPARE(e4.errors().at(0).toString(), expectedErrorString);
     object = e4.create();
     QVERIFY(object == 0);
+    delete object;
+}
+
+// Ensure that QObject type conversion works on binding assignment
+void tst_qdeclarativeecmascript::elementAssign()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("elementAssign.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("test").toBool(), true);
+
     delete object;
 }
 

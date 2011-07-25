@@ -111,8 +111,10 @@ public:
     static QDeclarativeAbstractBinding *binding(QObject *, int coreIndex, int valueTypeIndex /* -1 */);
 
     static QByteArray saveValueType(const QMetaObject *, int, 
-                                    const QMetaObject *, int);
-    static QByteArray saveProperty(const QMetaObject *, int);
+                                    const QMetaObject *, int,
+                                    QDeclarativeEngine *);
+    static QByteArray saveProperty(const QMetaObject *, int, 
+                                   QDeclarativeEngine *);
 
     static QDeclarativeProperty restore(const QByteArray &, QObject *, QDeclarativeContextData *);
     static QDeclarativeProperty restore(const QDeclarativePropertyCache::Data &,

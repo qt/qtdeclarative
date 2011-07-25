@@ -2910,18 +2910,20 @@ int QDeclarativeCompiler::genContextCache()
 int QDeclarativeCompiler::genValueTypeData(QDeclarativeParser::Property *valueTypeProp, 
                                   QDeclarativeParser::Property *prop)
 {
-    QByteArray data =
-        QDeclarativePropertyPrivate::saveValueType(prop->parent->metaObject(), prop->index, 
-                                                   enginePrivate->valueTypes[prop->type]->metaObject(), 
-                                                   valueTypeProp->index);
-//                valueTypeProp->index, valueTypeProp->type);
+    typedef QDeclarativePropertyPrivate QDPP;
+    QByteArray data = QDPP::saveValueType(prop->parent->metaObject(), prop->index, 
+                                          enginePrivate->valueTypes[prop->type]->metaObject(), 
+                                          valueTypeProp->index, engine);
 
     return output->indexForByteArray(data);
 }
 
 int QDeclarativeCompiler::genPropertyData(QDeclarativeParser::Property *prop)
 {
-    return output->indexForByteArray(QDeclarativePropertyPrivate::saveProperty(prop->parent->metaObject(), prop->index));
+    typedef QDeclarativePropertyPrivate QDPP;
+    QByteArray data = QDPP::saveProperty(prop->parent->metaObject(), prop->index, engine);
+
+    return output->indexForByteArray(data);
 }
 
 bool QDeclarativeCompiler::completeComponentBuild()
