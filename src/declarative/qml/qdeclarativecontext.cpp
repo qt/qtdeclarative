@@ -402,6 +402,20 @@ QVariant QDeclarativeContext::contextProperty(const QString &name) const
 }
 
 /*!
+Returns the name of \a object in this context, or an empty string if \a object 
+is not named in the context.  Objects are named by setContextProperty(), or by ids in
+the case of QML created contexts.
+
+If the object has multiple names, the first is returned.
+*/
+QString QDeclarativeContext::nameForObject(QObject *object) const
+{
+    Q_D(const QDeclarativeContext);
+
+    return d->data->findObjectId(object);
+}
+
+/*!
     Resolves the URL \a src relative to the URL of the
     containing component.
 
@@ -693,12 +707,19 @@ void QDeclarativeContextData::setIdPropertyData(QDeclarativeIntegerCache *data)
 
 QString QDeclarativeContextData::findObjectId(const QObject *obj) const
 {
-    if (!idValues || !propertyNames)
+    if (!propertyNames)
         return QString();
 
-    for (int i=0; i<idValueCount; i++) {
-        if (idValues[i] == obj)
-            return propertyNames->findId(i);
+    for (int ii = 0; ii < idValueCount; ii++) {
+        if (idValues[ii] == obj)
+            return propertyNames->findId(ii);
+    }
+
+    if (publicContext) {
+        QDeclarativeContextPrivate *p = QDeclarativeContextPrivate::get(publicContext);
+        for (int ii = 0; ii < p->propertyValues.count(); ++ii)
+            if (p->propertyValues.at(ii) == QVariant::fromValue((QObject *)obj))
+                return propertyNames->findId(ii);
     }
 
     if (linkedContext)

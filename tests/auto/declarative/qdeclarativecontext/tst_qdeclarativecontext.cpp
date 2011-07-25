@@ -67,6 +67,7 @@ private slots:
     void destruction();
     void idAsContextProperty();
     void readOnlyContexts();
+    void nameForObject();
 
 private:
     QDeclarativeEngine engine;
@@ -461,6 +462,37 @@ void tst_qdeclarativecontext::readOnlyContexts()
     QVERIFY(context->contextObject() == obj);
 
     delete obj;
+}
+
+void tst_qdeclarativecontext::nameForObject()
+{
+    QObject o1;
+    QObject o2;
+    QObject o3;
+
+    QDeclarativeEngine engine;
+
+    // As a context property
+    engine.rootContext()->setContextProperty("o1", &o1);
+    engine.rootContext()->setContextProperty("o2", &o2);
+    engine.rootContext()->setContextProperty("o1_2", &o1);
+
+    QCOMPARE(engine.rootContext()->nameForObject(&o1), QString("o1"));
+    QCOMPARE(engine.rootContext()->nameForObject(&o2), QString("o2"));
+    QCOMPARE(engine.rootContext()->nameForObject(&o3), QString());
+
+    // As an id
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 1.0; QtObject { id: root; property QtObject o: QtObject { id: nested } }", QUrl());
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QCOMPARE(qmlContext(o)->nameForObject(o), QString("root"));
+    QCOMPARE(qmlContext(o)->nameForObject(qvariant_cast<QObject*>(o->property("o"))), QString("nested"));
+    QCOMPARE(qmlContext(o)->nameForObject(&o1), QString());
+
+    delete o;
 }
 
 QTEST_MAIN(tst_qdeclarativecontext)

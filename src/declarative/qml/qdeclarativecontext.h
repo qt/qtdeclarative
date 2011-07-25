@@ -83,6 +83,8 @@ public:
     void setContextProperty(const QString &, QObject *);
     void setContextProperty(const QString &, const QVariant &);
 
+    QString nameForObject(QObject *) const;
+
     QUrl resolvedUrl(const QUrl &);
 
     void setBaseUrl(const QUrl &);
