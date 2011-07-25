@@ -885,7 +885,8 @@ void QDeclarative1TextInputPrivate::updateInputMethodHints()
     \o TextInput.Normal - Displays the text as it is. (Default)
     \o TextInput.Password - Displays asterixes instead of characters.
     \o TextInput.NoEcho - Displays nothing.
-    \o TextInput.PasswordEchoOnEdit - Displays all but the current character as asterixes.
+    \o TextInput.PasswordEchoOnEdit - Displays characters as they are entered
+    while editing, otherwise displays asterisks.
     \endlist
 */
 QDeclarative1TextInput::EchoMode QDeclarative1TextInput::echoMode() const
