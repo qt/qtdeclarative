@@ -171,7 +171,9 @@ void QSGModelParticle::initialize(int gIdx, int pIdx)
 void QSGModelParticle::processPending()
 {//can't create/delete arbitrary items in the render thread
     foreach (QSGItem* item, m_deletables){
-        item->setOpacity(0.);
+        item->setVisible(false);
+        if (m_fade)
+            item->setOpacity(0.);
         m_model->release(item);
     }
     m_deletables.clear();
@@ -267,6 +269,7 @@ void QSGModelParticle::prepareNextFrame()
                 m_activeCount--;
                 continue;
             }else{//Fade
+                data->delegate->setVisible(true);
                 if (m_fade){
                     qreal o = 1.;
                     if (t<0.2)
@@ -274,8 +277,6 @@ void QSGModelParticle::prepareNextFrame()
                     if (t>0.8)
                         o = (1-t)*5;
                     data->delegate->setOpacity(o);
-                }else{
-                    data->delegate->setOpacity(1.);//###Without fade, it's just a binary toggle - if we turn it off we have to turn it back on
                 }
             }
             data->delegate->setX(data->curX() - data->delegate->width()/2  - m_systemOffset.x());

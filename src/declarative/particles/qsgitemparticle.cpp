@@ -108,6 +108,7 @@ void QSGItemParticle::tick()
     foreach (QSGItem* item, m_deletables){
         if (m_fade)
             item->setOpacity(0.);
+        item->setVisible(false);
         QSGItemParticleAttached* mpa;
         if ((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(item))))
             mpa->detach();//reparent as well?
@@ -203,6 +204,7 @@ void QSGItemParticle::prepareNextFrame()
                 data->delegate = 0;
                 m_activeCount--;
             }else{//Fade
+                data->delegate->setVisible(true);
                 if (m_fade){
                     qreal o = 1.;
                     if (t<0.2)
@@ -210,8 +212,6 @@ void QSGItemParticle::prepareNextFrame()
                     if (t>0.8)
                         o = (1-t)*5;
                     item->setOpacity(o);
-                }else{
-                    item->setOpacity(1.);//###Without fade, it's just a binary toggle - if we turn it off we have to turn it back on
                 }
             }
             item->setX(data->curX() - item->width()/2 - m_systemOffset.x());
