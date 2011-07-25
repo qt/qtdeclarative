@@ -103,11 +103,11 @@ void QSGTextInput::setFont(const QFont &font)
     }
     if (oldFont != d->font) {
         d->control->setFont(d->font);
+        updateSize();
+        updateCursorRectangle();
         if(d->cursorItem){
             d->cursorItem->setHeight(QFontMetrics(d->font).height());
-            moveCursor();
         }
-        updateSize();
     }
     emit fontChanged(d->sourceFont);
 }
@@ -182,8 +182,7 @@ void QSGTextInput::setHAlign(HAlignment align)
     bool forceAlign = d->hAlignImplicit && d->effectiveLayoutMirror;
     d->hAlignImplicit = false;
     if (d->setHAlign(align, forceAlign) && isComponentComplete()) {
-        updateRect();
-        d->updateHorizontalScroll();
+        updateCursorRectangle();
     }
 }
 
@@ -192,8 +191,7 @@ void QSGTextInput::resetHAlign()
     Q_D(QSGTextInput);
     d->hAlignImplicit = true;
     if (d->determineHorizontalAlignment() && isComponentComplete()) {
-        updateRect();
-        d->updateHorizontalScroll();
+        updateCursorRectangle();
     }
 }
 
@@ -246,8 +244,7 @@ void QSGTextInputPrivate::mirrorChange()
     Q_Q(QSGTextInput);
     if (q->isComponentComplete()) {
         if (!hAlignImplicit && (hAlign == QSGTextInput::AlignRight || hAlign == QSGTextInput::AlignLeft)) {
-            q->updateRect();
-            updateHorizontalScroll();
+            q->updateCursorRectangle();
             emit q->effectiveHorizontalAlignmentChanged();
         }
     }
@@ -391,7 +388,7 @@ void QSGTextInput::setAutoScroll(bool b)
     d->autoScroll = b;
     //We need to repaint so that the scrolling is taking into account.
     updateSize(true);
-    d->updateHorizontalScroll();
+    updateCursorRectangle();
     emit autoScrollChanged(d->autoScroll);
 }
 
@@ -502,10 +499,6 @@ void QSGTextInput::setCursorDelegate(QDeclarativeComponent* c)
     d->cursorComponent = c;
     if(!c){
         //note that the components are owned by something else
-        disconnect(d->control, SIGNAL(cursorPositionChanged(int,int)),
-                this, SLOT(moveCursor()));
-        disconnect(d->control, SIGNAL(updateMicroFocus()),
-                this, SLOT(moveCursor()));
         delete d->cursorItem;
     }else{
         d->startCreatingCursor();
@@ -517,10 +510,6 @@ void QSGTextInput::setCursorDelegate(QDeclarativeComponent* c)
 void QSGTextInputPrivate::startCreatingCursor()
 {
     Q_Q(QSGTextInput);
-    q->connect(control, SIGNAL(cursorPositionChanged(int,int)),
-            q, SLOT(moveCursor()), Qt::UniqueConnection);
-    q->connect(control, SIGNAL(updateMicroFocus()),
-            q, SLOT(moveCursor()), Qt::UniqueConnection);
     if(cursorComponent->isReady()){
         q->createCursor();
     }else if(cursorComponent->isLoading()){
@@ -554,15 +543,6 @@ void QSGTextInput::createCursor()
     d->cursorItem->setParentItem(this);
     d->cursorItem->setX(d->control->cursorToX());
     d->cursorItem->setHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
-}
-
-void QSGTextInput::moveCursor()
-{
-    Q_D(QSGTextInput);
-    if(!d->cursorItem)
-        return;
-    d->updateHorizontalScroll();
-    d->cursorItem->setX(d->control->cursorToX() - d->hscroll);
 }
 
 QRectF QSGTextInput::positionToRectangle(int pos) const
@@ -626,8 +606,6 @@ void QSGTextInput::inputMethodEvent(QInputMethodEvent *ev)
         ev->ignore();
     } else {
         d->control->processInputMethodEvent(ev);
-        updateSize();
-        d->updateHorizontalScroll();
     }
     if (!ev->isAccepted())
         QSGPaintedItem::inputMethodEvent(ev);
@@ -790,7 +768,7 @@ void QSGTextInput::geometryChanged(const QRectF &newGeometry,
     Q_D(QSGTextInput);
     if (newGeometry.width() != oldGeometry.width()) {
         updateSize();
-        d->updateHorizontalScroll();
+        updateCursorRectangle();
     }
     QSGPaintedItem::geometryChanged(newGeometry, oldGeometry);
 }
@@ -1033,7 +1011,6 @@ void QSGTextInput::moveCursorSelection(int position)
 {
     Q_D(QSGTextInput);
     d->control->moveCursor(position, true);
-    d->updateHorizontalScroll();
 }
 
 void QSGTextInput::moveCursorSelection(int pos, SelectionMode mode)
@@ -1173,7 +1150,7 @@ void QSGTextInputPrivate::init()
     canPaste = !control->isReadOnly() && QApplication::clipboard()->text().length() != 0;
 #endif // QT_NO_CLIPBOARD
     q->connect(control, SIGNAL(updateMicroFocus()),
-               q, SLOT(updateMicroFocus()));
+               q, SLOT(updateCursorRectangle()));
     q->connect(control, SIGNAL(displayTextChanged(QString)),
                q, SLOT(updateRect()));
     q->updateSize();
@@ -1189,9 +1166,7 @@ void QSGTextInputPrivate::init()
 void QSGTextInput::cursorPosChanged()
 {
     Q_D(QSGTextInput);
-    d->updateHorizontalScroll();
-    updateRect();//TODO: Only update rect between pos's
-    updateMicroFocus();
+    updateCursorRectangle();
     emit cursorPositionChanged();
     // XXX todo - not in 4.8?
 #if 0
@@ -1208,6 +1183,17 @@ void QSGTextInput::cursorPosChanged()
             emit selectionEndChanged();
         }
     }
+}
+
+void QSGTextInput::updateCursorRectangle()
+{
+    Q_D(QSGTextInput);
+    d->updateHorizontalScroll();
+    updateRect();//TODO: Only update rect between pos's
+    updateMicroFocus();
+    emit cursorRectangleChanged();
+    if (d->cursorItem)
+        d->cursorItem->setX(d->control->cursorToX() - d->hscroll);
 }
 
 void QSGTextInput::selectionChanged()
