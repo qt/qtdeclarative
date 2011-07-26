@@ -136,6 +136,7 @@ private slots:
     void reservedWords();
     void inlineAssignmentsOverrideBindings();
     void nestedComponentRoots();
+    void registrationOrder();
 
     void basicRemote_data();
     void basicRemote();
@@ -2054,6 +2055,18 @@ void tst_qdeclarativelanguage::propertyInit()
 
         delete o;
     }
+}
+
+// Test that registration order doesn't break type availability
+// QTBUG-16878
+void tst_qdeclarativelanguage::registrationOrder()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("registrationOrder.qml"));
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QVERIFY(o->metaObject() == &MyVersion2Class::staticMetaObject);
+    delete o;
 }
 
 QTEST_MAIN(tst_qdeclarativelanguage)

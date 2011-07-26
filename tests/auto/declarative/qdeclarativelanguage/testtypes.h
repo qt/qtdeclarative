@@ -794,6 +794,11 @@ protected:
     qreal m_p5;
 };
 
+class MyVersion2Class : public QObject
+{
+    Q_OBJECT
+};
+
 QML_DECLARE_TYPE(MyRevisionedBaseClassRegistered)
 QML_DECLARE_TYPE(MyRevisionedBaseClassUnregistered)
 QML_DECLARE_TYPE(MyRevisionedClass)

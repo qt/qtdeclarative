@@ -74,6 +74,9 @@ void registerTypes()
     qmlRegisterType<MyQmlObject>("Test.Version",1,0,"MyQmlObject");
     qmlRegisterType<MyTypeObject>("Test.Version",1,0,"MyTypeObject");
     qmlRegisterType<MyTypeObject>("Test.Version",2,0,"MyTypeObject");
+
+    qmlRegisterType<MyVersion2Class>("Test.VersionOrder", 2,0, "MyQmlObject");
+    qmlRegisterType<MyQmlObject>("Test.VersionOrder", 1,0, "MyQmlObject");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
