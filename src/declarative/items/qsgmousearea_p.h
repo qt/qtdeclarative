@@ -161,7 +161,6 @@ class Q_AUTOTEST_EXPORT QSGMouseArea : public QSGItem
     Q_PROPERTY(bool hoverEnabled READ hoverEnabled WRITE setHoverEnabled NOTIFY hoverEnabledChanged)
     Q_PROPERTY(QSGDrag *drag READ drag CONSTANT) //### add flicking to QSGDrag or add a QDeclarativeFlick ???
     Q_PROPERTY(bool preventStealing READ preventStealing WRITE setPreventStealing NOTIFY preventStealingChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QSGItem> forwardTo READ forwardTo);
 
 public:
     QSGMouseArea(QSGItem *parent=0);
@@ -188,8 +187,6 @@ public:
 
     bool preventStealing() const;
     void setPreventStealing(bool prevent);
-
-    QDeclarativeListProperty<QSGItem> forwardTo();
 
 Q_SIGNALS:
     void hoveredChanged();

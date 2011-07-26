@@ -106,8 +106,6 @@ public:
     Qt::MouseButtons lastButtons;
     Qt::KeyboardModifiers lastModifiers;
     QBasicTimer pressAndHoldTimer;
-    QDeclarativeListProperty<QSGItem> forwardTo;
-    QList<QSGItem*> forwardToList;
 };
 
 QT_END_NAMESPACE
