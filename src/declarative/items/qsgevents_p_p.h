@@ -119,6 +119,7 @@ public:
     // only for internal usage
     void setX(int x) { _x = x; }
     void setY(int y) { _y = y; }
+    void setPosition(const QPointF &point) { _x = point.x(); _y = point.y(); }
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }

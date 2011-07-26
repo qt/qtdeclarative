@@ -586,9 +586,10 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         }
     }
     QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
-    emit mousePositionChanged(&me);
-    me.setX(d->lastPos.x());
-    me.setY(d->lastPos.y());
+    emit mouseXChanged(&me);
+    me.setPosition(d->lastPos);
+    emit mouseYChanged(&me);
+    me.setPosition(d->lastPos);
     emit positionChanged(&me);
 
     if(!event->isAccepted() && d->forwardToList.count())
@@ -663,7 +664,10 @@ void QSGMouseArea::hoverEnterEvent(QHoverEvent *event)
         d->lastModifiers = event->modifiers();
         setHovered(true);
         QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
-        emit mousePositionChanged(&me);
+        emit mouseXChanged(&me);
+        me.setPosition(d->lastPos);
+        emit mouseYChanged(&me);
+        me.setPosition(d->lastPos);
     }
 }
 
@@ -676,9 +680,10 @@ void QSGMouseArea::hoverMoveEvent(QHoverEvent *event)
         d->lastPos = event->posF();
         d->lastModifiers = event->modifiers();
         QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
-        emit mousePositionChanged(&me);
-        me.setX(d->lastPos.x());
-        me.setY(d->lastPos.y());
+        emit mouseXChanged(&me);
+        me.setPosition(d->lastPos);
+        emit mouseYChanged(&me);
+        me.setPosition(d->lastPos);
         emit positionChanged(&me);
     }
 }
@@ -893,14 +898,14 @@ bool QSGMouseArea::setPressed(bool p)
         if (d->pressed) {
             if (!d->doubleClick)
                 emit pressed(&me);
-            me.setX(d->lastPos.x());
-            me.setY(d->lastPos.y());
-            emit mousePositionChanged(&me);
+            me.setPosition(d->lastPos);
+            emit mouseXChanged(&me);
+            me.setPosition(d->lastPos);
+            emit mouseYChanged(&me);
             emit pressedChanged();
         } else {
             emit released(&me);
-            me.setX(d->lastPos.x());
-            me.setY(d->lastPos.y());
+            me.setPosition(d->lastPos);
             emit pressedChanged();
             if (isclick && !d->longPress && !d->doubleClick){
                 me.setAccepted(d->isClickConnected());

@@ -151,8 +151,8 @@ class Q_AUTOTEST_EXPORT QSGMouseArea : public QSGItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal mouseX READ mouseX NOTIFY mousePositionChanged)
-    Q_PROPERTY(qreal mouseY READ mouseY NOTIFY mousePositionChanged)
+    Q_PROPERTY(qreal mouseX READ mouseX NOTIFY mouseXChanged)
+    Q_PROPERTY(qreal mouseY READ mouseY NOTIFY mouseYChanged)
     Q_PROPERTY(bool containsMouse READ hovered NOTIFY hoveredChanged)
     Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
@@ -198,7 +198,8 @@ Q_SIGNALS:
     void acceptedButtonsChanged();
     void hoverEnabledChanged();
     void positionChanged(QSGMouseEvent *mouse);
-    void mousePositionChanged(QSGMouseEvent *mouse);
+    void mouseXChanged(QSGMouseEvent *mouse);
+    void mouseYChanged(QSGMouseEvent *mouse);
     void preventStealingChanged();
 
     void pressed(QSGMouseEvent *mouse);
