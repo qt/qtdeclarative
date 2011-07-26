@@ -74,6 +74,7 @@ private slots:
     void open_sync();
     void open_arg_count();
     void setRequestHeader();
+    void setRequestHeader_caseInsensitive();
     void setRequestHeader_unsent();
     void setRequestHeader_illegalName_data();
     void setRequestHeader_illegalName();
@@ -368,6 +369,25 @@ void tst_qdeclarativexmlhttprequest::setRequestHeader()
     delete object;
 }
 
+// Test valid setRequestHeader() calls with different header cases
+void tst_qdeclarativexmlhttprequest::setRequestHeader_caseInsensitive()
+{
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    QVERIFY(server.wait(TEST_FILE("setRequestHeader.expect"),
+                        TEST_FILE("setRequestHeader.reply"),
+                        TEST_FILE("testdocument.html")));
+
+    QDeclarativeComponent component(&engine, TEST_FILE("setRequestHeader_caseInsensitive.qml"));
+    QObject *object = component.beginCreate(engine.rootContext());
+    QVERIFY(object != 0);
+    object->setProperty("url", "http://127.0.0.1:14445/testdocument.html");
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("dataOK").toBool() == true);
+
+    delete object;
+}
 // Test setting headers before open() throws exception
 void tst_qdeclarativexmlhttprequest::setRequestHeader_unsent()
 {

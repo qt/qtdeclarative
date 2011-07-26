@@ -1601,7 +1601,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Argume
         nameUpper.startsWith(QLatin1String("SEC-"))) 
         return v8::Undefined();
 
-    r->addHeader(nameUpper, value);
+    r->addHeader(name, value);
 
     return v8::Undefined();
 }

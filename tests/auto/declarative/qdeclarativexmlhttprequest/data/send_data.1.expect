@@ -1,5 +1,5 @@
 POST /testdocument.html HTTP/1.1
-ACCEPT-LANGUAGE: en-US
+Accept-Language: en-US
 Content-Type: text/plain;charset=UTF-8
 Content-Length: 12
 Connection: Keep-Alive
