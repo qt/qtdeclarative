@@ -1,15 +1,3 @@
-TEMPLATE = lib
-CONFIG += staticlib
-
-CONFIG += building-libs
-
-QT =
-
-win32|mac:!macx-xcode:CONFIG += debug_and_release
-macx:CONFIG(debug, debug|release) {
-   TARGET = v8_debug
-}
-
 equals(QT_ARCH, x86_64)|contains(CONFIG, x86_64):CONFIG += arch_x86_64
 else:equals(QT_ARCH, "i386"):CONFIG += arch_i386
 else:equals(QT_ARCH, "arm"):CONFIG += arch_arm
@@ -17,6 +5,8 @@ else:equals(QT_ARCH, "arm"):CONFIG += arch_arm
 include($$PWD/v8base.pri)
 
 V8_GENERATED_SOURCES_DIR = generated
+
+DEFINES += V8_SHARED BUILDING_V8_SHARED
 
 # this maybe removed in future
 DEFINES += ENABLE_DEBUGGER_SUPPORT

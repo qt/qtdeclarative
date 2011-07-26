@@ -6,10 +6,5 @@ HEADERS += v8test.h
 
 CONFIG += parallel_test
 
-LIBS += -L../../../../src/v8/
-macx:CONFIG(debug, debug|release) {
-    LIBS += -lv8_debug 
-} else {
-    LIBS += -lv8 
-}
-
+QT += declarative
+DEFINES += USING_V8_SHARED

@@ -33,6 +33,7 @@ include(debugger/debugger.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
 include(particles/particles.pri)
+include(v8/v8.pri)
 
 symbian: {
     TARGET.UID3=0x2001E623
@@ -52,8 +53,3 @@ DEFINES += QT_NO_OPENTYPE
 INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
 
 
-macx:CONFIG(debug, debug|release) {
-    QMAKE_LIBS_PRIVATE += -L../v8/ -lv8_debug
-} else {
-    QMAKE_LIBS_PRIVATE += -L../v8/ -lv8
-}
