@@ -379,8 +379,10 @@ void QDeclarativeDataBlob::tryDone()
             m_status = Complete;
 
         m_isDone = true;
+        addref();
         done();
         notifyAllWaitingOnMe();
+        release();
     }
 }
 

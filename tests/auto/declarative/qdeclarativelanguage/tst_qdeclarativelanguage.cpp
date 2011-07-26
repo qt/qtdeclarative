@@ -160,6 +160,7 @@ private slots:
     void revisionOverloads();
 
     void propertyInit();
+    void remoteLoadCrash();
 
     // regression tests for crashes
     void crash1();
@@ -2066,6 +2067,21 @@ void tst_qdeclarativelanguage::registrationOrder()
     QObject *o = component.create();
     QVERIFY(o != 0);
     QVERIFY(o->metaObject() == &MyVersion2Class::staticMetaObject);
+    delete o;
+}
+
+// QTBUG-18268
+void tst_qdeclarativelanguage::remoteLoadCrash()
+{
+    TestHTTPServer server(14448);
+    server.serveDirectory(SRCDIR);
+
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/data/remoteLoadCrash.qml"));
+    while (component.isLoading()) 
+        QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
+
+    QObject *o = component.create();
     delete o;
 }
 
