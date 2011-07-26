@@ -211,7 +211,7 @@ void QSGBasePositioner::prePositioning()
             positionedItems.append(*item);
         }
     }
-    QSizeF contentSize;
+    QSizeF contentSize(0,0);
     doPositioning(&contentSize);
     if(d->addTransition || d->moveTransition)
         finishApplyTransitions();
@@ -288,10 +288,11 @@ void QSGColumn::doPositioning(QSizeF *contentSize)
         contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
 
         voffset += child.item->height();
-        voffset += spacing();
+        if (ii != positionedItems.count() - 1)
+            voffset += spacing();
     }
 
-    contentSize->setHeight(voffset - spacing());
+    contentSize->setHeight(voffset);
 }
 
 void QSGColumn::reportConflictingAnchors()
@@ -370,10 +371,11 @@ void QSGRow::doPositioning(QSizeF *contentSize)
         contentSize->setHeight(qMax(contentSize->height(), child.item->height()));
 
         hoffset += child.item->width();
-        hoffset += spacing();
+        if (ii != positionedItems.count() - 1)
+            hoffset += spacing();
     }
 
-    contentSize->setWidth(hoffset - spacing());
+    contentSize->setWidth(hoffset);
 
     if (d->isLeftToRight())
         return;

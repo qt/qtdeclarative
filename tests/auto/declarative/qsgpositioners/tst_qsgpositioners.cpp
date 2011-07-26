@@ -88,6 +88,7 @@ private slots:
     void test_flow_implicit_resize();
     void test_conflictinganchors();
     void test_mirroring();
+    void test_allInvisible();
 private:
     QSGView *createView(const QString &filename);
 };
@@ -1249,6 +1250,24 @@ void tst_qsgpositioners::test_mirroring()
         delete canvasA;
         delete canvasB;
     }
+}
+
+void tst_qsgpositioners::test_allInvisible()
+{
+    //QTBUG-19361
+    QSGView *canvas = createView(SRCDIR "/data/allInvisible.qml");
+
+    QSGItem *root = qobject_cast<QSGItem*>(canvas->rootObject());
+    QVERIFY(root);
+
+    QSGRow *row = canvas->rootObject()->findChild<QSGRow*>("row");
+    QVERIFY(row != 0);
+    QVERIFY(row->width() == 0);
+    QVERIFY(row->height() == 0);
+    QSGColumn *column = canvas->rootObject()->findChild<QSGColumn*>("column");
+    QVERIFY(column != 0);
+    QVERIFY(column->width() == 0);
+    QVERIFY(column->height() == 0);
 }
 
 QSGView *tst_qsgpositioners::createView(const QString &filename)
