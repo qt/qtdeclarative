@@ -1767,6 +1767,11 @@ void tst_qsgtextinput::readOnly()
     simulateKey(&canvas, Qt::Key_Space);
     simulateKey(&canvas, Qt::Key_Escape);
     QCOMPARE(input->text(), initial);
+
+    input->setCursorPosition(3);
+    input->setReadOnly(false);
+    QCOMPARE(input->isReadOnly(), false);
+    QCOMPARE(input->cursorPosition(), input->text().length());
 }
 
 void tst_qsgtextinput::echoMode()

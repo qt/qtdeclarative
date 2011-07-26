@@ -264,6 +264,8 @@ void QSGTextInput::setReadOnly(bool ro)
 
     setFlag(QSGItem::ItemAcceptsInputMethod, !ro);
     d->control->setReadOnly(ro);
+    if (!ro)
+        d->control->setCursorPosition(d->control->end());
 
     emit readOnlyChanged(ro);
 }

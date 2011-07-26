@@ -1785,6 +1785,11 @@ void tst_qsgtextedit::readOnly()
     simulateKey(&canvas, Qt::Key_Space);
     simulateKey(&canvas, Qt::Key_Escape);
     QCOMPARE(edit->text(), initial);
+
+    edit->setCursorPosition(3);
+    edit->setReadOnly(false);
+    QCOMPARE(edit->isReadOnly(), false);
+    QCOMPARE(edit->cursorPosition(), edit->text().length());
 }
 
 void tst_qsgtextedit::simulateKey(QSGView *view, int key, Qt::KeyboardModifiers modifiers)
