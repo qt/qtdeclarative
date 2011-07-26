@@ -351,7 +351,8 @@ void QSGViewPrivate::setRootObject(QObject *obj)
 
     if (root) {
         initialSize = rootObjectSize();
-        if (initialSize != q->size()) {
+        if ((resizeMode == QSGView::SizeViewToRootObject || !q->testAttribute(Qt::WA_Resized))
+             && initialSize != q->size()) {
             if (!(q->parentWidget() && q->parentWidget()->layout())) {
                 q->resize(initialSize);
             }

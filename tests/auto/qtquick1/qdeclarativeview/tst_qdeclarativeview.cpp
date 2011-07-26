@@ -192,6 +192,23 @@ void tst_QDeclarativeView::resizemodedeclarativeitem()
     QCOMPARE(sceneResizedSpy2.count(), 3);
 
     delete canvas;
+
+    canvas = new QDeclarativeView(&window);
+    canvas->resize(300, 300);
+    canvas->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+    QCOMPARE(QSize(0,0), canvas->initialSize());
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/resizemodedeclarativeitem.qml"));
+    declarativeItem = qobject_cast<QDeclarativeItem*>(canvas->rootObject());
+    QVERIFY(declarativeItem);
+    window.show();
+
+    // initial size from root object
+    QCOMPARE(declarativeItem->width(), 300.0);
+    QCOMPARE(declarativeItem->height(), 300.0);
+    QCOMPARE(canvas->size(), QSize(300, 300));
+    QCOMPARE(canvas->size(), canvas->sizeHint());
+    QCOMPARE(canvas->initialSize(), QSize(200, 200));
+    delete canvas;
 }
 
 void tst_QDeclarativeView::resizemodegraphicswidget()

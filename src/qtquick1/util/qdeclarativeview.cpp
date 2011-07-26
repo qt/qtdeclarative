@@ -603,7 +603,8 @@ void QDeclarativeView::setRootObject(QObject *obj)
 
     if (d->root) {
         d->initialSize = d->rootObjectSize();
-        if (d->initialSize != size()) {
+        if ((d->resizeMode == QDeclarativeView::SizeViewToRootObject || !testAttribute(Qt::WA_Resized))
+             && d->initialSize != size()) {
             if (!(parentWidget() && parentWidget()->layout())) {
                 resize(d->initialSize);
             }
