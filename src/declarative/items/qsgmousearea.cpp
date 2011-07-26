@@ -803,6 +803,8 @@ void QSGMouseArea::timerEvent(QTimerEvent *event)
             emit pressAndHold(&me);
             if (!me.isAccepted())
                 d->propagate(&me, QSGMouseAreaPrivate::PressAndHold);
+            if (!me.isAccepted()) // no one handled the long press - allow click
+                d->longPress = false;
         }
     }
 }

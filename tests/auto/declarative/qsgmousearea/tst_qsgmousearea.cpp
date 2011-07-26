@@ -331,27 +331,53 @@ void tst_QSGMouseArea::updateMouseAreaPosOnResize()
 
 void tst_QSGMouseArea::noOnClickedWithPressAndHold()
 {
-    QSGView *canvas = createView();
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clickandhold.qml"));
-    canvas->show();
-    canvas->setFocus();
-    QVERIFY(canvas->rootObject() != 0);
+    {
+        // We handle onPressAndHold, therefore no onClicked
+        QSGView *canvas = createView();
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clickandhold.qml"));
+        canvas->show();
+        canvas->setFocus();
+        QVERIFY(canvas->rootObject() != 0);
 
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+        QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QApplication::sendEvent(canvas, &pressEvent);
 
-    QVERIFY(!canvas->rootObject()->property("clicked").toBool());
-    QVERIFY(!canvas->rootObject()->property("held").toBool());
+        QVERIFY(!canvas->rootObject()->property("clicked").toBool());
+        QVERIFY(!canvas->rootObject()->property("held").toBool());
 
-    QTest::qWait(1000);
+        QTest::qWait(1000);
 
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QApplication::sendEvent(canvas, &releaseEvent);
 
-    QVERIFY(!canvas->rootObject()->property("clicked").toBool());
-    QVERIFY(canvas->rootObject()->property("held").toBool());
+        QVERIFY(!canvas->rootObject()->property("clicked").toBool());
+        QVERIFY(canvas->rootObject()->property("held").toBool());
 
-    delete canvas;
+        delete canvas;
+    }
+
+    {
+        // We do not handle onPressAndHold, therefore we get onClicked
+        QSGView *canvas = createView();
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/noclickandhold.qml"));
+        canvas->show();
+        canvas->setFocus();
+        QVERIFY(canvas->rootObject() != 0);
+
+        QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QApplication::sendEvent(canvas, &pressEvent);
+
+        QVERIFY(!canvas->rootObject()->property("clicked").toBool());
+
+        QTest::qWait(1000);
+
+        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QApplication::sendEvent(canvas, &releaseEvent);
+
+        QVERIFY(canvas->rootObject()->property("clicked").toBool());
+
+        delete canvas;
+    }
 }
 
 void tst_QSGMouseArea::onMousePressRejected()
