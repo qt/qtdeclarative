@@ -92,6 +92,19 @@ The club may decorate the members list by binding visual objects to the
 \snippet doc/src/snippets/declarative/listview-decorations.qml decorations
 \image listview-decorations.png
 
+\section1 Mouse/touch Handling
+
+The views handle dragging and flicking of their content, however they do
+not handle touch interaction with the individual delegates.  In order for the
+delegates to react to touch input, e.g. to set the \c currentIndex, a MouseArea
+with the appropriate touch handling logic must be provided by the delegate.
+
+Note that if \c highlightRangeMode is set to \c StrictlyEnforceRange the
+currentIndex will be affected by dragging/flicking the view, since the view
+will always ensure that the \c currentIndex is within the highlight range
+specified.
+
+
 \section1 ListView Sections
 
 \l {ListView} contents may be grouped into \e sections, where related list items
