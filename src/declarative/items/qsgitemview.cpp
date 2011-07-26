@@ -309,6 +309,12 @@ QDeclarativeComponent *QSGItemView::header() const
     return d->headerComponent;
 }
 
+QSGItem *QSGItemView::headerItem() const
+{
+    Q_D(const QSGItemView);
+    return d->header ? d->header->item : 0;
+}
+
 void QSGItemView::setHeader(QDeclarativeComponent *headerComponent)
 {
     Q_D(QSGItemView);
@@ -325,6 +331,8 @@ void QSGItemView::setHeader(QDeclarativeComponent *headerComponent)
             d->updateFooter();
             d->updateViewport();
             d->fixupPosition();
+        } else {
+            emit headerItemChanged();
         }
         emit headerChanged();
     }
@@ -334,6 +342,12 @@ QDeclarativeComponent *QSGItemView::footer() const
 {
     Q_D(const QSGItemView);
     return d->footerComponent;
+}
+
+QSGItem *QSGItemView::footerItem() const
+{
+    Q_D(const QSGItemView);
+    return d->footer ? d->footer->item : 0;
 }
 
 void QSGItemView::setFooter(QDeclarativeComponent *footerComponent)
@@ -348,6 +362,8 @@ void QSGItemView::setFooter(QDeclarativeComponent *footerComponent)
             d->updateFooter();
             d->updateViewport();
             d->fixupPosition();
+        } else {
+            emit footerItemChanged();
         }
         emit footerChanged();
     }

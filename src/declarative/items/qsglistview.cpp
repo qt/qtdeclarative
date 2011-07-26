@@ -917,13 +917,14 @@ qreal QSGListViewPrivate::footerSize() const
 void QSGListViewPrivate::updateFooter()
 {
     Q_Q(QSGListView);
-
+    bool created = false;
     if (!footer) {
         QSGItem *item = createComponentItem(footerComponent, true);
         if (!item)
             return;
         item->setZ(1);
         footer = new FxListItemSG(item, q, true);
+        created = true;
     }
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(footer);
@@ -939,17 +940,22 @@ void QSGListViewPrivate::updateFooter()
     } else {
         listItem->setPosition(visiblePos);
     }
+
+    if (created)
+        emit q->footerItemChanged();
 }
 
 void QSGListViewPrivate::updateHeader()
 {
     Q_Q(QSGListView);
+    bool created = false;
     if (!header) {
         QSGItem *item = createComponentItem(headerComponent, true);
         if (!item)
             return;
         item->setZ(1);
         header = new FxListItemSG(item, q, true);
+        created = true;
     }
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
@@ -966,6 +972,9 @@ void QSGListViewPrivate::updateHeader()
             listItem->setPosition(-headerSize());
         }
     }
+
+    if (created)
+        emit q->headerItemChanged();
 }
 
 void QSGListViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)

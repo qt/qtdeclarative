@@ -71,7 +71,9 @@ class Q_AUTOTEST_EXPORT QSGItemView : public QSGFlickable
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
 
     Q_PROPERTY(QDeclarativeComponent *header READ header WRITE setHeader NOTIFY headerChanged)
+    Q_PROPERTY(QSGItem *headerItem READ headerItem NOTIFY headerItemChanged)
     Q_PROPERTY(QDeclarativeComponent *footer READ footer WRITE setFooter NOTIFY footerChanged)
+    Q_PROPERTY(QSGItem *footerItem READ footerItem NOTIFY footerItemChanged)
 
     Q_PROPERTY(QDeclarativeComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
     Q_PROPERTY(QSGItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
@@ -113,9 +115,11 @@ public:
 
     QDeclarativeComponent *footer() const;
     void setFooter(QDeclarativeComponent *);
+    QSGItem *footerItem() const;
 
     QDeclarativeComponent *header() const;
     void setHeader(QDeclarativeComponent *);
+    QSGItem *headerItem() const;
 
     QDeclarativeComponent *highlight() const;
     void setHighlight(QDeclarativeComponent *);
@@ -164,6 +168,8 @@ signals:
 
     void headerChanged();
     void footerChanged();
+    void headerItemChanged();
+    void footerItemChanged();
 
     void highlightChanged();
     void highlightItemChanged();

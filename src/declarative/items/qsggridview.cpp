@@ -641,13 +641,14 @@ qreal QSGGridViewPrivate::footerSize() const
 void QSGGridViewPrivate::updateFooter()
 {
     Q_Q(QSGGridView);
-
+    bool created = false;
     if (!footer) {
         QSGItem *item = createComponentItem(footerComponent, true);
         if (!item)
             return;
         item->setZ(1);
         footer = new FxGridItemSG(item, q, true);
+        created = true;
     }
 
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(footer);
@@ -671,18 +672,22 @@ void QSGGridViewPrivate::updateFooter()
     } else {
         gridItem->setPosition(colOffset, rowOffset);
     }
+
+    if (created)
+        emit q->footerItemChanged();
 }
 
 void QSGGridViewPrivate::updateHeader()
 {
     Q_Q(QSGGridView);
-
+    bool created = false;
     if (!header) {
         QSGItem *item = createComponentItem(headerComponent, true);
         if (!item)
             return;
         item->setZ(1);
         header = new FxGridItemSG(item, q, true);
+        created = true;
     }
 
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(header);
@@ -710,6 +715,9 @@ void QSGGridViewPrivate::updateHeader()
         else
             gridItem->setPosition(colOffset, -headerSize());
     }
+
+    if (created)
+        emit q->headerItemChanged();
 }
 
 void QSGGridViewPrivate::initializeCurrentItem()

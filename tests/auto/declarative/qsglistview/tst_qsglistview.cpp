@@ -1930,6 +1930,8 @@ void tst_QSGListView::header()
     QSGText *header = findItem<QSGText>(contentItem, "header");
     QVERIFY(header);
 
+    QVERIFY(header == listview->headerItem());
+
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
     QCOMPARE(header->pos(), initialHeaderPos);
@@ -1945,12 +1947,17 @@ void tst_QSGListView::header()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
+    QSignalSpy headerItemSpy(listview, SIGNAL(headerItemChanged()));
     QMetaObject::invokeMethod(canvas->rootObject(), "changeHeader");
+
+    QCOMPARE(headerItemSpy.count(), 1);
 
     header = findItem<QSGText>(contentItem, "header");
     QVERIFY(!header);
     header = findItem<QSGText>(contentItem, "header2");
     QVERIFY(header);
+
+    QVERIFY(header == listview->headerItem());
 
     QCOMPARE(header->pos(), changedHeaderPos);
     QCOMPARE(header->width(), 50.);
@@ -2070,6 +2077,8 @@ void tst_QSGListView::footer()
     QSGText *footer = findItem<QSGText>(contentItem, "footer");
     QVERIFY(footer);
 
+    QVERIFY(footer == listview->footerItem());
+
     QCOMPARE(footer->pos(), initialFooterPos);
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
@@ -2106,12 +2115,17 @@ void tst_QSGListView::footer()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
+    QSignalSpy footerItemSpy(listview, SIGNAL(footerItemChanged()));
     QMetaObject::invokeMethod(canvas->rootObject(), "changeFooter");
+
+    QCOMPARE(footerItemSpy.count(), 1);
 
     footer = findItem<QSGText>(contentItem, "footer");
     QVERIFY(!footer);
     footer = findItem<QSGText>(contentItem, "footer2");
     QVERIFY(footer);
+
+    QVERIFY(footer == listview->footerItem());
 
     QCOMPARE(footer->pos(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);

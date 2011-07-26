@@ -1865,6 +1865,8 @@ void tst_QSGGridView::footer()
     QSGText *footer = findItem<QSGText>(contentItem, "footer");
     QVERIFY(footer);
 
+    QVERIFY(footer == gridview->footerItem());
+
     QCOMPARE(footer->pos(), initialFooterPos);
     QCOMPARE(footer->width(), 100.);
     QCOMPARE(footer->height(), 30.);
@@ -1905,12 +1907,18 @@ void tst_QSGGridView::footer()
     // add 30 items
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
+
+    QSignalSpy footerItemSpy(gridview, SIGNAL(footerItemChanged()));
     QMetaObject::invokeMethod(canvas->rootObject(), "changeFooter");
+
+    QCOMPARE(footerItemSpy.count(), 1);
 
     footer = findItem<QSGText>(contentItem, "footer");
     QVERIFY(!footer);
     footer = findItem<QSGText>(contentItem, "footer2");
     QVERIFY(footer);
+
+    QVERIFY(footer == gridview->footerItem());
 
     QCOMPARE(footer->pos(), changedFooterPos);
     QCOMPARE(footer->width(), 50.);
@@ -2005,6 +2013,8 @@ void tst_QSGGridView::header()
     QSGText *header = findItem<QSGText>(contentItem, "header");
     QVERIFY(header);
 
+    QVERIFY(header == gridview->headerItem());
+
     QCOMPARE(header->pos(), initialHeaderPos);
     QCOMPARE(header->width(), 100.);
     QCOMPARE(header->height(), 30.);
@@ -2020,12 +2030,17 @@ void tst_QSGGridView::header()
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
+    QSignalSpy headerItemSpy(gridview, SIGNAL(headerItemChanged()));
     QMetaObject::invokeMethod(canvas->rootObject(), "changeHeader");
+
+    QCOMPARE(headerItemSpy.count(), 1);
 
     header = findItem<QSGText>(contentItem, "header");
     QVERIFY(!header);
     header = findItem<QSGText>(contentItem, "header2");
     QVERIFY(header);
+
+    QVERIFY(header == gridview->headerItem());
 
     QCOMPARE(header->pos(), changedHeaderPos);
     QCOMPARE(header->width(), 50.);
