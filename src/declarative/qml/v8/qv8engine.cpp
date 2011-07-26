@@ -578,6 +578,10 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     global->Set(v8::String::New("Qt"), qt);
     global->Set(v8::String::New("gc"), V8FUNCTION(gc, this));
 
+    v8::Local<v8::Object> string = v8::Local<v8::Object>::Cast(global->Get(v8::String::New("String")));
+    v8::Local<v8::Object> stringPrototype = v8::Local<v8::Object>::Cast(string->Get(v8::String::New("prototype")));
+    stringPrototype->Set(v8::String::New("arg"), V8FUNCTION(stringArg, this));
+
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
     m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
@@ -721,6 +725,23 @@ v8::Handle<v8::Value> QV8Engine::print(const v8::Arguments &args)
     return v8::Undefined();
 }
 
+v8::Handle<v8::Value> QV8Engine::stringArg(const v8::Arguments &args)
+{
+    QString value = V8ENGINE()->toString(args.This()->ToString());
+    if (args.Length() != 1)
+        V8THROW_ERROR("String.arg(): Invalid arguments");
+
+    if (args[0]->IsUint32())
+        return V8ENGINE()->toString(value.arg(args[0]->Uint32Value()));
+    else if (args[0]->IsInt32())
+        return V8ENGINE()->toString(value.arg(args[0]->Int32Value()));
+    else if (args[0]->IsNumber())
+        return V8ENGINE()->toString(value.arg(args[0]->NumberValue()));
+    else if (args[0]->IsBoolean())
+        return V8ENGINE()->toString(value.arg(args[0]->BooleanValue()));
+
+    return V8ENGINE()->toString(value.arg(V8ENGINE()->toString(args[0])));
+}
 /*!
 \qmlmethod bool Qt::isQtObject(object)
 Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.

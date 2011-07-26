@@ -184,7 +184,7 @@ private slots:
     void aliasWritesOverrideBindings();
     void aliasToCompositeElement();
     void realToInt();
-
+    void dynamicString();
     void include();
 
     void callQtInvokables();
@@ -3643,6 +3643,14 @@ void tst_qdeclarativeecmascript::realToInt()
     QCOMPARE(object->value(), int(4));
     QMetaObject::invokeMethod(object, "test2");
     QCOMPARE(object->value(), int(8));
+}
+void tst_qdeclarativeecmascript::dynamicString()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("dynamicString.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("stringProperty").toString(),
+             QString::fromLatin1("string:Hello World false:0 true:1 uint32:100 int32:-100 double:3.14159 date:2011-02-11 05::30:50!"));
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)

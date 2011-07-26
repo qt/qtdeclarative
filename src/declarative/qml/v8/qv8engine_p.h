@@ -351,6 +351,7 @@ private:
     static v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args);
     static v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
     static v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
+    static v8::Handle<v8::Value> stringArg(const v8::Arguments &args);
 
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
