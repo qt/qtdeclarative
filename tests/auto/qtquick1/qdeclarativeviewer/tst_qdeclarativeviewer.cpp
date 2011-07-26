@@ -62,6 +62,20 @@
 #  define MENUBAR_HEIGHT(mw) (mw->menuBar()->height())
 #endif
 
+
+class QDeclarativeViewerTest : public QDeclarativeViewer
+{
+public:
+    QDeclarativeViewerTest() : QDeclarativeViewer(), resizeCount(0) {}
+
+    void resizeEvent (QResizeEvent *event) {
+        QDeclarativeViewer::resizeEvent(event);
+        ++resizeCount;
+    }
+
+    int resizeCount;
+};
+
 class tst_QDeclarativeViewer : public QObject
 
 {
@@ -288,7 +302,7 @@ void tst_QDeclarativeViewer::fileBrowser()
 
 void tst_QDeclarativeViewer::resizing()
 {
-    QDeclarativeViewer *viewer = new QDeclarativeViewer();
+    QDeclarativeViewerTest *viewer = new QDeclarativeViewerTest();
     QVERIFY(viewer);
     viewer->open(SRCDIR "/data/orientation.qml");
     QVERIFY(viewer->view());
@@ -303,6 +317,8 @@ void tst_QDeclarativeViewer::resizing()
 
     TEST_INITIAL_SIZES(viewer);
 
+    QCOMPARE(viewer->resizeCount, 1);
+
     viewer->setSizeToView(false);
 
     // size view to root object
@@ -316,6 +332,8 @@ void tst_QDeclarativeViewer::resizing()
     QCOMPARE(viewer->view()->initialSize(), QSize(200, 300));
     QCOMPARE(viewer->view()->sceneRect().size(), QSizeF(150, 200));
     QCOMPARE(viewer->size(), QSize(150, 200 + MENUBAR_HEIGHT(viewer)));
+
+    QCOMPARE(viewer->resizeCount, 2);
 
     // do not size root object to view
     viewer->resize(QSize(180,250));
@@ -336,9 +354,13 @@ void tst_QDeclarativeViewer::resizing()
     QCOMPARE(viewer->size(), QSize(250, 350));
 
     // do not size view to root object
+    viewer->resizeCount = 0;
+
     rootItem->setWidth(150);
     rootItem->setHeight(200);
     QTRY_COMPARE(viewer->size(), QSize(250, 350));
+
+    QCOMPARE(viewer->resizeCount, 0);
 
     delete viewer;
 }

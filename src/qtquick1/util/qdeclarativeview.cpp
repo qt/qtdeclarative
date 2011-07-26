@@ -248,6 +248,10 @@ void QDeclarativeViewPrivate::itemGeometryChanged(QDeclarativeItem *resizeItem, 
     This signal is emitted when the component's current \a status changes.
 */
 
+/*! \fn void QDeclarativeView::initialSizeChanged(QSize size)
+  \internal
+*/
+
 /*!
   \fn QDeclarativeView::QDeclarativeView(QWidget *parent)
 
@@ -609,6 +613,7 @@ void QDeclarativeView::setRootObject(QObject *obj)
                 resize(d->initialSize);
             }
         }
+        emit initialSizeChanged(d->initialSize);
         d->initResize();
     }
 }

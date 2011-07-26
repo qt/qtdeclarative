@@ -97,6 +97,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void sceneResized(QSize size); // ???
     void statusChanged(QDeclarativeView::Status);
+    void initialSizeChanged(QSize size);
 
 private Q_SLOTS:
     void continueExecute();

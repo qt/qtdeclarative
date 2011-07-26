@@ -112,6 +112,7 @@ public:
 
 public slots:
     void sceneResized(QSize size);
+    void initialSizeChanged(QSize size);
     bool open(const QString&);
     void openFile();
     void openUrl();

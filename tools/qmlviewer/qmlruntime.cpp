@@ -651,7 +651,7 @@ QDeclarativeViewer::QDeclarativeViewer(QWidget *parent, Qt::WindowFlags flags)
 
     canvas->setFocus();
 
-    QObject::connect(canvas, SIGNAL(sceneResized(QSize)), this, SLOT(sceneResized(QSize)));
+    QObject::connect(canvas, SIGNAL(initialSizeChanged(QSize)), this, SLOT(initialSizeChanged(QSize)));
     QObject::connect(canvas, SIGNAL(statusChanged(QDeclarativeView::Status)), this, SLOT(statusChanged()));
     QObject::connect(canvas->engine(), SIGNAL(quit()), this, SLOT(close()));
 
@@ -1052,6 +1052,7 @@ void QDeclarativeViewer::statusChanged()
     if (canvas->status() == QDeclarativeView::Ready) {
         initialSize = canvas->initialSize();
         updateSizeHints(true);
+        QObject::connect(canvas, SIGNAL(sceneResized(QSize)), this, SLOT(sceneResized(QSize)));
     }
 }
 
@@ -1144,6 +1145,7 @@ bool QDeclarativeViewer::open(const QString& file_or_url)
     QTime t;
     t.start();
 
+    QObject::disconnect(canvas, SIGNAL(sceneResized(QSize)), this, SLOT(sceneResized(QSize)));
     canvas->setSource(url);
 
     return true;
@@ -1175,6 +1177,15 @@ void QDeclarativeViewer::setRecordRate(int fps)
 void QDeclarativeViewer::sceneResized(QSize)
 {
     updateSizeHints();
+}
+
+void QDeclarativeViewer::initialSizeChanged(QSize size)
+{
+    if (!isFullScreen() && !isMaximized()) {
+        canvas->setFixedSize(size);
+        layout()->setSizeConstraint(QLayout::SetFixedSize);
+        layout()->activate();
+    }
 }
 
 void QDeclarativeViewer::keyPressEvent(QKeyEvent *event)
