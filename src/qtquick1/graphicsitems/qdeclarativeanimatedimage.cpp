@@ -83,6 +83,8 @@ QT_BEGIN_NAMESPACE
     about its state, such as the current frame and total number of frames.
     The result is an animated image with a simple progress indicator underneath it.
 
+    \bold Note: Unlike images, animated images are not cached or shared internally.
+
     \clearfloat
     \snippet doc/src/snippets/declarative/animatedimage.qml document
 
@@ -113,15 +115,6 @@ QT_BEGIN_NAMESPACE
     Note that this property is only valid for images read from the
     local filesystem.  Images loaded via a network resource (e.g. HTTP)
     are always loaded asynchonously.
-*/
-
-/*!
-    \qmlproperty bool QtQuick1::AnimatedImage::cache
-    \since Quick 1.1
-
-    Specifies whether the image should be cached. The default value is
-    true. Setting \a cache to false is useful when dealing with large images,
-    to make sure that they aren't cached at the expense of small 'ui element' images.
 */
 
 /*!
