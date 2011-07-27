@@ -963,7 +963,7 @@ void tst_qdeclarativelistmodel::property_changes()
     QString qml = "import QtQuick 2.0\n"
                   "Connections {\n"
                         "property bool gotSignal: false\n"
-                        "target: model.get(0)\n"
+                        "target: model.get(" + QString::number(listIndex) + ")\n"
                         + signalHandler + " gotSignal = true\n"
                   "}\n";
     QDeclarativeComponent component(&engine);
@@ -1014,6 +1014,31 @@ void tst_qdeclarativelistmodel::property_changes_data()
             << "b" << 0 << false << "get(0).b == 456";
     QTest::newRow("setProperty: plain, no changes") << "append({'a':123, 'b':456, 'c':789});" << "setProperty(0, 'b', 456);"
             << "b" << 0 << false << "get(0).b == 456";
+
+    QTest::newRow("set: inserted item")
+            << "{append({'a':123, 'b':456, 'c':789}); get(0); insert(0, {'a':0, 'b':0, 'c':0});}"
+            << "set(1, {'a':456});"
+            << "a" << 1 << true << "get(1).a == 456";
+    QTest::newRow("setProperty: inserted item")
+            << "{append({'a':123, 'b':456, 'c':789}); get(0); insert(0, {'a':0, 'b':0, 'c':0});}"
+            << "setProperty(1, 'a', 456);"
+            << "a" << 1 << true << "get(1).a == 456";
+    QTest::newRow("get: inserted item")
+            << "{append({'a':123, 'b':456, 'c':789}); get(0); insert(0, {'a':0, 'b':0, 'c':0});}"
+            << "get(1).a = 456;"
+            << "a" << 1 << true << "get(1).a == 456";
+    QTest::newRow("set: removed item")
+            << "{append({'a':0, 'b':0, 'c':0}); append({'a':123, 'b':456, 'c':789}); get(1); remove(0);}"
+            << "set(0, {'a':456});"
+            << "a" << 0 << true << "get(0).a == 456";
+    QTest::newRow("setProperty: removed item")
+            << "{append({'a':0, 'b':0, 'c':0}); append({'a':123, 'b':456, 'c':789}); get(1); remove(0);}"
+            << "setProperty(0, 'a', 456);"
+            << "a" << 0 << true << "get(0).a == 456";
+    QTest::newRow("get: removed item")
+            << "{append({'a':0, 'b':0, 'c':0}); append({'a':123, 'b':456, 'c':789}); get(1); remove(0);}"
+            << "get(0).a = 456;"
+            << "a" << 0 << true << "get(0).a == 456";
 
     // Following tests only call set() since setProperty() only allows plain
     // values, not lists, as the argument.

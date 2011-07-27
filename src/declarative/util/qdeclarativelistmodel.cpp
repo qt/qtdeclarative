@@ -1373,6 +1373,11 @@ void NestedListModel::remove(int index)
         return;
     ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(index));
     _root->values.removeAt(index);
+    for (int i = 0; i < _root->values.count(); ++i) {
+        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
+        if (node)
+            node->listIndex = i;
+    }
     if (node)
         delete node;
 }
@@ -1388,6 +1393,11 @@ bool NestedListModel::insert(int index, v8::Handle<v8::Value> valuemap)
     mn->listIndex = index;
     mn->setObjectValue(valuemap);
     _root->values.insert(index,QVariant::fromValue(mn));
+    for (int i = index + 1; i < _root->values.count(); ++i) {
+        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
+        if (node)
+            node->listIndex = i;
+    }
     return true;
 }
 
@@ -1396,6 +1406,11 @@ void NestedListModel::move(int from, int to, int n)
     if (!_root)
         return;
     qdeclarativelistmodel_move<QVariantList>(from, to, n, &_root->values);
+    for (int i = qMin(from, to), end = qMin(_root->values.count(), qMax(from, to) + n); i < end; ++i) {
+        ModelNode *node = qvariant_cast<ModelNode *>(_root->values.at(i));
+        if (node)
+            node->listIndex = i;
+    }
 }
 
 v8::Handle<v8::Value> NestedListModel::get(int index) const
