@@ -398,7 +398,7 @@ void QSGPathView::setModel(const QVariant &model)
         d->model = vim;
     } else {
         if (!d->ownModel) {
-            d->model = new QSGVisualDataModel(qmlContext(this), this);
+            d->model = new QSGVisualDataModel(qmlContext(this));
             d->ownModel = true;
         }
         if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model))

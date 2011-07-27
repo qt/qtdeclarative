@@ -68,6 +68,12 @@ QSGModelParticle::QSGModelParticle(QSGItem *parent) :
     manageDelegates->start();
 }
 
+QSGModelParticle::~QSGModelParticle()
+{
+    if (m_ownModel)
+        delete m_model;
+}
+
 QVariant QSGModelParticle::model() const
 {
     return m_dataSource;

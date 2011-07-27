@@ -63,6 +63,7 @@ class QSGModelParticle : public QSGParticlePainter
     Q_CLASSINFO("DefaultProperty", "delegate")
 public:
     explicit QSGModelParticle(QSGItem *parent = 0);
+    virtual ~QSGModelParticle();
     QVariant model() const;
     void setModel(const QVariant &);
 

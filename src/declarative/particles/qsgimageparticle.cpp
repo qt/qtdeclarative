@@ -59,7 +59,11 @@ class UltraMaterial : public QSGMaterial
 {
 public:
     UltraMaterial(bool withSprites=false)
-        : timestamp(0)
+        : texture(0)
+        , colortable(0)
+        , sizetable(0)
+        , opacitytable(0)
+        , timestamp(0)
         , framecount(1)
         , animcount(1)
         , usesSprites(withSprites)
@@ -69,10 +73,14 @@ public:
 
     ~UltraMaterial()
     {
-        delete texture;
-        delete colortable;
-        delete sizetable;
-        delete opacitytable;
+        if (texture)
+            delete texture;
+        if (colortable)
+            delete colortable;
+        if (sizetable)
+            delete sizetable;
+        if (opacitytable)
+            delete opacitytable;
     }
 
     virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }

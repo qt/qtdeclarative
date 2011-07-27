@@ -66,7 +66,7 @@ public:
 };
 
 QDeclarativeOpenMetaObjectType::QDeclarativeOpenMetaObjectType(const QMetaObject *base, QDeclarativeEngine *engine)
-    : d(new QDeclarativeOpenMetaObjectTypePrivate)
+    : QDeclarativeCleanup(engine), d(new QDeclarativeOpenMetaObjectTypePrivate)
 {
     d->engine = engine;
     d->init(base);
@@ -81,6 +81,10 @@ QDeclarativeOpenMetaObjectType::~QDeclarativeOpenMetaObjectType()
     delete d;
 }
 
+void QDeclarativeOpenMetaObjectType::clear()
+{
+    d->engine = 0;
+}
 
 int QDeclarativeOpenMetaObjectType::propertyOffset() const
 {

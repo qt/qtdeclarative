@@ -602,6 +602,8 @@ void QDeclarativeView::setRootObject(QObject *obj)
                 widget->setVisible(true);
             }
             resize(widget->size());
+        }else{
+            delete obj;
         }
     }
 
