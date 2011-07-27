@@ -1813,11 +1813,13 @@ void QSGListView::itemsMoved(int from, int to, int count)
     }
 
     d->moveReason = QSGListViewPrivate::Other;
-    FxViewItem *firstVisible = d->firstVisibleItem();
-    QHash<int,FxViewItem*> moved;
-    int moveBy = 0;
 
     bool movingBackwards = from > to;
+    d->adjustMoveParameters(&from, &to, &count);
+
+    QHash<int,FxViewItem*> moved;
+    int moveBy = 0;
+    FxViewItem *firstVisible = d->firstVisibleItem();
     int firstItemIndex = firstVisible ? firstVisible->index : -1;
 
     // if visibleItems.first() is above the content start pos, and the items
@@ -1845,21 +1847,20 @@ void QSGListView::itemsMoved(int from, int to, int count)
         }
     }
 
-    int remaining = count;
+    int movedCount = 0;
     int endIndex = d->visibleIndex;
     it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
         FxViewItem *item = *it;
-        if (remaining && item->index >= to && item->index < to + count) {
+        if (movedCount < count && item->index >= to && item->index < to + count) {
             // place items in the target position, reusing any existing items
-            FxViewItem *movedItem = moved.take(item->index);
+            int targetIndex = item->index + movedCount;
+            FxViewItem *movedItem = moved.take(targetIndex);
             if (!movedItem)
-                movedItem = d->createItem(item->index);
-            if (item->index <= firstVisible->index)
-                moveBy -= movedItem->size();
+                movedItem = d->createItem(targetIndex);
             it = d->visibleItems.insert(it, movedItem);
             ++it;
-            --remaining;
+            ++movedCount;
         } else {
             if (item->index != -1) {
                 if (item->index >= to) {

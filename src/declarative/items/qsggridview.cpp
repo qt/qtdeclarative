@@ -1497,11 +1497,13 @@ void QSGGridView::itemsMoved(int from, int to, int count)
     }
 
     d->moveReason = QSGGridViewPrivate::Other;
-    FxGridItemSG *firstVisible = static_cast<FxGridItemSG*>(d->firstVisibleItem());
-    QHash<int,FxGridItemSG*> moved;
-    int moveByCount = 0;
 
     bool movingBackwards = from > to;
+    d->adjustMoveParameters(&from, &to, &count);
+
+    QHash<int,FxGridItemSG*> moved;
+    int moveByCount = 0;
+    FxGridItemSG *firstVisible = static_cast<FxGridItemSG*>(d->firstVisibleItem());
     int firstItemIndex = firstVisible ? firstVisible->index : -1;
 
     // if visibleItems.first() is above the content start pos, and the items
@@ -1532,19 +1534,20 @@ void QSGGridView::itemsMoved(int from, int to, int count)
         }
     }
 
-    int remaining = count;
+    int movedCount = 0;
     int endIndex = d->visibleIndex;
     it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
         FxViewItem *item = *it;
-        if (remaining && item->index >= to && item->index < to + count) {
+        if (movedCount < count && item->index >= to && item->index < to + count) {
             // place items in the target position, reusing any existing items
-            FxGridItemSG *movedItem = moved.take(item->index);
+            int targetIndex = item->index + movedCount;
+            FxGridItemSG *movedItem = moved.take(targetIndex);
             if (!movedItem)
-                movedItem = static_cast<FxGridItemSG*>(d->createItem(item->index));
+                movedItem = static_cast<FxGridItemSG*>(d->createItem(targetIndex));
             it = d->visibleItems.insert(it, movedItem);
             ++it;
-            --remaining;
+            ++movedCount;
         } else {
             if (item->index != -1) {
                 if (item->index >= to) {

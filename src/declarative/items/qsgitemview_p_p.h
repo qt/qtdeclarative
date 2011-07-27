@@ -92,6 +92,7 @@ public:
     FxViewItem *visibleItem(int modelIndex) const;
     FxViewItem *firstVisibleItem() const;
     int mapFromModel(int modelIndex) const;
+    void adjustMoveParameters(int *from, int *to, int *count) const;
 
     virtual void init();
     virtual void updateCurrent(int modelIndex);

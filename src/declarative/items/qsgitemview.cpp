@@ -1089,6 +1089,18 @@ int QSGItemViewPrivate::mapFromModel(int modelIndex) const
     return -1; // Not in visibleList
 }
 
+void QSGItemViewPrivate::adjustMoveParameters(int *from, int *to, int *count) const
+{
+    if (*from > *to) {
+        // Only move forwards - flip if backwards moving
+        int tfrom = *from;
+        int tto = *to;
+        *from = tto;
+        *to = tto + *count;
+        *count = tfrom - tto;
+    }
+}
+
 void QSGItemViewPrivate::init()
 {
     Q_Q(QSGItemView);

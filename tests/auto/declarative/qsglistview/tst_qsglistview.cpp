@@ -960,6 +960,68 @@ void tst_QSGListView::moved_data()
             << 0.0
             << 29 << 15 << 1
             << 0.0;
+
+    QTest::newRow("move 1 backwards, from visible -> non-visible")
+            << 80.0     // show 4-19
+            << 16 << 1 << 1
+            << 20.0 * 15;   // this results in a forward movement that removes 15 items
+
+    QTest::newRow("move 1 backwards, from visible -> non-visible (move first item)")
+            << 80.0     // show 4-19
+            << 16 << 0 << 1
+            << 20.0 * 16;   // everything should move to after item 16
+
+
+    QTest::newRow("move multiple forwards, within visible items")
+            << 0.0
+            << 0 << 5 << 3
+            << 20.0 * 3;
+
+    QTest::newRow("move multiple forwards, from non-visible -> visible")
+            << 80.0     // show 4-19
+            << 1 << 5 << 3
+            << 20.0 * 3;    // moving 3 from above the content y should adjust y positions accordingly
+
+    QTest::newRow("move multiple forwards, from non-visible -> visible (move first item)")
+            << 80.0     // show 4-19
+            << 0 << 5 << 3
+            << 20.0 * 3;        // moving 3 from above the content y should adjust y positions accordingly
+
+    QTest::newRow("move multiple forwards, from visible -> non-visible")
+            << 0.0
+            << 1 << 16 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
+            << 0.0
+            << 0 << 16 << 3
+            << 20.0 * 3;
+
+
+    QTest::newRow("move multiple backwards, within visible items")
+            << 0.0
+            << 4 << 1 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from non-visible -> visible")
+            << 0.0
+            << 20 << 4 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from non-visible -> visible (move last item)")
+            << 0.0
+            << 27 << 10 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from visible -> non-visible")
+            << 80.0     // show 4-19
+            << 16 << 1 << 3
+            << 20.0 * 15;   // this results in a forward movement that removes 15 items
+
+    QTest::newRow("move multiple backwards, from visible -> non-visible (move first item)")
+            << 80.0     // show 4-19
+            << 16 << 0 << 3
+            << 20.0 * 16;
 }
 
 void tst_QSGListView::swapWithFirstItem()

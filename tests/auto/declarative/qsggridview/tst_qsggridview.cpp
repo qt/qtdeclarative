@@ -710,6 +710,68 @@ void tst_QSGGridView::moved_data()
             << 0.0
             << 29 << 14 << 1
             << 0.0;
+
+    QTest::newRow("move 1 backwards, from visible -> non-visible")
+            << 120.0     // show 6-23
+            << 7 << 1 << 1
+            << 60.0 * 2;   // this results in a forward movement that removes 6 items (2 rows)
+
+    QTest::newRow("move 1 backwards, from visible -> non-visible (move first item)")
+            << 120.0     // show 6-23
+            << 7 << 0 << 1
+            << 60.0 * 2;     // first visible item moved, so all items shift 2 rows down with it
+
+
+    QTest::newRow("move multiple forwards, within visible items")
+            << 0.0
+            << 0 << 5 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, from non-visible -> visible")
+            << 120.0     // show 6-23
+            << 1 << 6 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, from non-visible -> visible (move first item)")
+            << 120.0     // show 6-23
+            << 0 << 6 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, from visible -> non-visible")
+            << 0.0
+            << 1 << 16 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
+            << 0.0
+            << 0 << 16 << 3
+            << 0.0;
+
+
+    QTest::newRow("move multiple backwards, within visible items")
+            << 0.0
+            << 4 << 1 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from non-visible -> visible")
+            << 0.0
+            << 20 << 4 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from non-visible -> visible (move last item)")
+            << 0.0
+            << 27 << 10 << 3
+            << 0.0;
+
+    QTest::newRow("move multiple backwards, from visible -> non-visible")
+            << 120.0     // show 6-23
+            << 16 << 1 << 3
+            << 60.0 * 5;   // this results in a forward movement that removes 15 items (5 rows)
+
+    QTest::newRow("move multiple backwards, from visible -> non-visible (move first item)")
+            << 120.0     // show 6-23
+            << 16 << 0 << 3
+            << 60.0 * 5;    // this results in a forward movement that removes 16 items (5 rows)
 }
 
 void tst_QSGGridView::swapWithFirstItem()
