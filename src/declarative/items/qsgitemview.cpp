@@ -547,11 +547,11 @@ void QSGItemViewPrivate::positionViewAtIndex(int index, int mode)
         case QSGItemView::Visible:
             if (itemPos > pos + size())
                 pos = itemPos - size() + item->size();
-            else if (item->endPosition() < pos)
+            else if (item->endPosition() <= pos)
                 pos = itemPos;
             break;
         case QSGItemView::Contain:
-            if (item->endPosition() > pos + size())
+            if (item->endPosition() >= pos + size())
                 pos = itemPos - size() + item->size();
             if (itemPos < pos)
                 pos = itemPos;
@@ -746,18 +746,14 @@ void QSGItemView::trackedPositionChanged()
                 if (trackedPos < pos + highlightStart)
                     pos = trackedPos - highlightStart;
             } else {
-                if (trackedPos < d->startPosition() + highlightStart) {
+                if (trackedPos > pos + highlightEnd - trackedSize)
+                    pos = trackedPos - highlightEnd + trackedSize;
+                if (trackedPos < pos + highlightStart)
+                    pos = trackedPos - highlightStart;
+                if (pos > d->endPosition() - d->size())
+                    pos = d->endPosition() - d->size();
+                if (pos < d->startPosition())
                     pos = d->startPosition();
-                } else if (d->trackedItem->endPosition() > d->endPosition() - d->size() + highlightEnd) {
-                    pos = d->endPosition() - d->size() + 1;
-                    if (pos < d->startPosition())
-                        pos = d->startPosition();
-                } else {
-                    if (trackedPos > pos + highlightEnd - trackedSize)
-                        pos = trackedPos - highlightEnd + trackedSize;
-                    if (trackedPos < pos + highlightStart)
-                        pos = trackedPos - highlightStart;
-                }
             }
         } else {
             if (trackedPos < viewPos && d->currentItem->position() < viewPos) {
@@ -765,11 +761,11 @@ void QSGItemView::trackedPositionChanged()
             } else if (d->trackedItem->endPosition() >= viewPos + d->size()
                 && d->currentItem->endPosition() >= viewPos + d->size()) {
                 if (d->trackedItem->endPosition() <= d->currentItem->endPosition()) {
-                    pos = d->trackedItem->endPosition() - d->size() + 1;
+                    pos = d->trackedItem->endPosition() - d->size();
                     if (trackedSize > d->size())
                         pos = trackedPos;
                 } else {
-                    pos = d->currentItem->endPosition() - d->size() + 1;
+                    pos = d->currentItem->endPosition() - d->size();
                     if (d->currentItem->size() > d->size())
                         pos = d->currentItem->position();
                 }
@@ -808,7 +804,7 @@ qreal QSGItemView::minYExtent() const
             d->minExtent += d->highlightRangeStart;
             if (d->visibleItem(0))
                 d->minExtent -= d->visibleItem(0)->sectionSize();
-            d->minExtent = qMax(d->minExtent, -(d->endPositionAt(0) - d->highlightRangeEnd + 1));
+            d->minExtent = qMax(d->minExtent, -(d->endPositionAt(0) - d->highlightRangeEnd));
         }
         d->minExtentDirty = false;
     }
@@ -829,9 +825,9 @@ qreal QSGItemView::maxYExtent() const
         } else if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
             d->maxExtent = -(d->positionAt(d->model->count()-1) - d->highlightRangeStart);
             if (d->highlightRangeEnd != d->highlightRangeStart)
-                d->maxExtent = qMin(d->maxExtent, -(d->endPosition() - d->highlightRangeEnd + 1));
+                d->maxExtent = qMin(d->maxExtent, -(d->endPosition() - d->highlightRangeEnd));
         } else {
-            d->maxExtent = -(d->endPosition() - height() + 1);
+            d->maxExtent = -(d->endPosition() - height());
         }
 
         if (d->footer)
@@ -878,7 +874,7 @@ qreal QSGItemView::minXExtent() const
         }
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
             d->minExtent += highlightStart;
-            d->minExtent = qMax(d->minExtent, -(endPositionFirstItem - highlightEnd + 1));
+            d->minExtent = qMax(d->minExtent, -(endPositionFirstItem - highlightEnd));
         }
         d->minExtentDirty = false;
     }
@@ -915,11 +911,11 @@ qreal QSGItemView::maxXExtent() const
             d->maxExtent = -(lastItemPosition - highlightStart);
             if (highlightEnd != highlightStart) {
                 d->maxExtent = d->isContentFlowReversed()
-                        ? qMax(d->maxExtent, -(d->endPosition() - highlightEnd + 1))
-                        : qMin(d->maxExtent, -(d->endPosition() - highlightEnd + 1));
+                        ? qMax(d->maxExtent, -(d->endPosition() - highlightEnd))
+                        : qMin(d->maxExtent, -(d->endPosition() - highlightEnd));
             }
         } else {
-            d->maxExtent = -(d->endPosition() - width() + 1);
+            d->maxExtent = -(d->endPosition() - width());
         }
         if (d->isContentFlowReversed()) {
             if (d->header && d->visibleItems.count())
@@ -1030,12 +1026,12 @@ qreal QSGItemViewPrivate::size() const
 
 qreal QSGItemViewPrivate::startPosition() const
 {
-    return isContentFlowReversed() ? -lastPosition()-1 : originPosition();
+    return isContentFlowReversed() ? -lastPosition() : originPosition();
 }
 
 qreal QSGItemViewPrivate::endPosition() const
 {
-    return isContentFlowReversed() ? -originPosition()-1 : lastPosition();
+    return isContentFlowReversed() ? -originPosition() : lastPosition();
 }
 
 qreal QSGItemViewPrivate::contentStartPosition() const
@@ -1070,7 +1066,7 @@ FxViewItem *QSGItemViewPrivate::firstVisibleItem() const {
     const qreal pos = isContentFlowReversed() ? -position()-size() : position();
     for (int i = 0; i < visibleItems.count(); ++i) {
         FxViewItem *item = visibleItems.at(i);
-        if (item->index != -1 && item->endPosition() > pos)
+        if (item->index != -1 && item->endPosition() >= pos)
             return item;
     }
     return visibleItems.count() ? visibleItems.first() : 0;
@@ -1172,9 +1168,9 @@ void QSGItemViewPrivate::mirrorChange()
 void QSGItemViewPrivate::refill()
 {
     if (isContentFlowReversed())
-        refill(-position()-size()+1, -position());
+        refill(-position()-size(), -position());
     else
-        refill(position(), position()+size()-1);
+        refill(position(), position()+size());
 }
 
 void QSGItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
@@ -1250,9 +1246,9 @@ void QSGItemViewPrivate::updateViewport()
     Q_Q(QSGItemView);
     if (isValid()) {
         if (layoutOrientation() == Qt::Vertical)
-            q->setContentHeight(endPosition() - startPosition() + 1);
+            q->setContentHeight(endPosition() - startPosition());
         else
-            q->setContentWidth(endPosition() - startPosition() + 1);
+            q->setContentWidth(endPosition() - startPosition());
     }
 }
 

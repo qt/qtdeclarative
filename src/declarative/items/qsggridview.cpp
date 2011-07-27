@@ -105,12 +105,12 @@ public:
     }
     qreal endRowPos() const {
         if (view->flow() == QSGGridView::LeftToRight) {
-            return item->y() + view->cellHeight() - 1;
+            return item->y() + view->cellHeight();
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft)
-                return -item->x() - 1;
+                return -item->x();
             else
-                return item->x() + view->cellWidth() - 1;
+                return item->x() + view->cellWidth();
         }
     }
     void setPosition(qreal col, qreal row) {
@@ -255,8 +255,7 @@ qreal QSGGridViewPrivate::lastPosition() const
     qreal pos = 0;
     if (model && model->count()) {
         // get end position of last item
-        // endPosition() of items calculate -1 to get last edge pixel, so do that here as well
-        pos = (rowPosAt(model->count() - 1) + rowSize()) - 1;
+        pos = (rowPosAt(model->count() - 1) + rowSize());
     }
     return pos;
 }
@@ -661,12 +660,12 @@ void QSGGridViewPrivate::updateFooter()
             colOffset = gridItem->item->width() - cellWidth;
     }
     if (visibleItems.count()) {
-        qreal endPos = lastPosition() + 1;
+        qreal endPos = lastPosition();
         if (findLastVisibleIndex() == model->count()-1) {
             gridItem->setPosition(colOffset, endPos + rowOffset);
         } else {
             qreal visiblePos = isRightToLeftTopToBottom() ? -position() : position() + size();
-            if (endPos <= visiblePos || gridItem->endPosition() < endPos + rowOffset)
+            if (endPos <= visiblePos || gridItem->endPosition() <= endPos + rowOffset)
                 gridItem->setPosition(colOffset, endPos + rowOffset);
         }
     } else {
