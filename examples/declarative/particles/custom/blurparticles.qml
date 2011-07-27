@@ -76,7 +76,7 @@ Rectangle{
             attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
             attribute highp float r;
 
-            uniform highp mat4 qt_ModelViewProjectionMatrix;                              
+            uniform highp mat4 qt_Matrix;
             uniform highp float timestamp;
             uniform lowp float qt_Opacity;
 
@@ -101,7 +101,7 @@ Rectangle{
                 + vVec.xy * t * vData.y         // apply speed vector..
                 + 0.5 * vVec.zw * pow(t * vData.y, 2.);
 
-                gl_Position = qt_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0, 1);
+                gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
 
                 highp float fadeIn = min(t * 10., 1.);
                 highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
@@ -113,13 +113,13 @@ Rectangle{
         property variant source: theSource
         property variant blurred: ShaderEffectSource {
         smooth: true
-        sourceItem: ShaderEffectItem {
+        sourceItem: ShaderEffect {
             width: theItem.width
             height: theItem.height
             property variant delta: Qt.size(0.0, 1.0 / height)
             property variant source: ShaderEffectSource {
                 smooth: true
-                sourceItem: ShaderEffectItem {
+                sourceItem: ShaderEffect {
                     width: theItem.width
                     height: theItem.height
                     property variant delta: Qt.size(1.0 / width, 0.0)

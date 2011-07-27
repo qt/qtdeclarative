@@ -105,7 +105,7 @@ public:
     void updateTextures() const;
 
 protected:
-    friend class QSGShaderEffectItem;
+    friend class QSGShaderEffect;
     friend class QSGCustomMaterialShader;
 
     // The type pointer needs to be unique. It is not safe to let the type object be part of the

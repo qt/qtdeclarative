@@ -102,7 +102,7 @@ Image {
                 }
             }
         }
-        ShaderEffectItem {
+        ShaderEffect {
             width: 180
             height: 180
             property variant source: theSource
@@ -128,19 +128,19 @@ Image {
                 height: 40
             }
         }
-        ShaderEffectItem {
+        ShaderEffect {
             width: 180
             height: 180
             property variant source: theSource
             property variant shadow: ShaderEffectSource {
                 smooth: true
-                sourceItem: ShaderEffectItem {
+                sourceItem: ShaderEffect {
                     width: theItem.width
                     height: theItem.height
                     property variant delta: Qt.size(0.0, 1.0 / height)
                     property variant source: ShaderEffectSource {
                         smooth: true
-                        sourceItem: ShaderEffectItem {
+                        sourceItem: ShaderEffect {
                             width: theItem.width
                             height: theItem.height
                             property variant delta: Qt.size(1.0 / width, 0.0)
@@ -196,7 +196,7 @@ Image {
                 height: 40
             }
         }
-        ShaderEffectItem {
+        ShaderEffect {
             width: 180
             height: 180
             property variant source: theSource
@@ -217,7 +217,7 @@ Image {
                     gl_FragColor.w = clamp(dot(sqrt(gx * gx + gy * gy), vec4(1.)), 0., 1.) * qt_Opacity;
                 }"
         }
-        ShaderEffectItem {
+        ShaderEffect {
             width: 180
             height: 180
             property variant source: theSource
@@ -241,10 +241,10 @@ Image {
                 height: 40
             }
         }
-        ShaderEffectItem {
+        ShaderEffect {
             width: 180
             height: 180
-            mesh: GridMesh { resolution: Qt.size(10, 10) }
+            mesh: Qt.size(10, 10)
             property variant source: theSource
             property real bend: 0
             property real minimize: 0
@@ -265,7 +265,7 @@ Image {
                 PauseAnimation { duration: 1300 }
             }
             vertexShader: "
-                uniform highp mat4 qt_ModelViewProjectionMatrix;
+                uniform highp mat4 qt_Matrix;
                 uniform highp float bend;
                 uniform highp float minimize;
                 uniform highp float side;
@@ -281,7 +281,7 @@ Image {
                     highp float t = pos.y / height;
                     t = (3. - 2. * t) * t * t;
                     pos.x = mix(qt_Vertex.x, side * width, t * bend);
-                    gl_Position = qt_ModelViewProjectionMatrix * pos;
+                    gl_Position = qt_Matrix * pos;
                 }"
             Slider {
                 id: genieSlider

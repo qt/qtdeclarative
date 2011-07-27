@@ -69,7 +69,7 @@
 #include "qsgtranslate_p.h"
 #include "qsgstateoperations_p.h"
 #include "qsganimation_p.h"
-#include <private/qsgshadereffectitem_p.h>
+#include <private/qsgshadereffect_p.h>
 #include <private/qsgshadereffectsource_p.h>
 //#include "private/qsgpincharea_p.h"
 #include "qsgcanvasitem_p.h"
@@ -170,10 +170,11 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGPinch>(uri,major,minor,"Pinch");
     qmlRegisterType<QSGPinchEvent>();
 
-    qmlRegisterType<QSGShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem");
+    qmlRegisterType<QSGShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem"); // TODO: Remove after grace period.
+    qmlRegisterType<QSGShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QSGShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
-    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
-    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh");
+    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh.")); // TODO: Remove after grace period.
+    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh"); // TODO: Remove after grace period.
 
     qmlRegisterUncreatableType<QSGPaintedItem>("QtQuick", 2, 0, "PaintedItem", QSGPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 

@@ -53,7 +53,7 @@ QT_MODULE(Declarative)
 
 class QSGNode;
 struct PlainVertices;
-//Genealogy: Hybrid of UltraParticle and ShaderEffectItem
+//Genealogy: Hybrid of UltraParticle and ShaderEffect
 class QSGCustomParticle : public QSGParticlePainter
 {
     Q_OBJECT

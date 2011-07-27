@@ -109,13 +109,13 @@ SOURCES += \
     $$PWD/qsgitemview.cpp
 
 SOURCES += \
-    $$PWD/qsgshadereffectitem.cpp \
+    $$PWD/qsgshadereffect.cpp \
     $$PWD/qsgshadereffectmesh.cpp \
     $$PWD/qsgshadereffectnode.cpp \
     $$PWD/qsgshadereffectsource.cpp \
 
 HEADERS += \
-    $$PWD/qsgshadereffectitem_p.h \
+    $$PWD/qsgshadereffect_p.h \
     $$PWD/qsgshadereffectmesh_p.h \
     $$PWD/qsgshadereffectnode_p.h \
     $$PWD/qsgshadereffectsource_p.h \

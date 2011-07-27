@@ -77,7 +77,7 @@ public:
         resolveUniforms();
     }
 
-    const char *uniformMatrixName() const { return "qt_ModelViewProjectionMatrix"; }
+    const char *uniformMatrixName() const { return "qt_Matrix"; }
     const char *uniformOpacityName() const { return "qt_Opacity"; }
 
     void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);

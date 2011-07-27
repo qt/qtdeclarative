@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include <private/qsgshadereffectitem_p.h>
+#include <private/qsgshadereffect_p.h>
 #include <private/qsgshadereffectnode_p.h>
 
 #include "qsgmaterial.h"
@@ -55,13 +55,13 @@
 QT_BEGIN_NAMESPACE
 
 static const char qt_default_vertex_code[] =
-    "uniform highp mat4 qt_ModelViewProjectionMatrix;               \n"
+    "uniform highp mat4 qt_Matrix;                                  \n"
     "attribute highp vec4 qt_Vertex;                                \n"
     "attribute highp vec2 qt_MultiTexCoord0;                        \n"
     "varying highp vec2 qt_TexCoord0;                               \n"
     "void main() {                                                  \n"
     "    qt_TexCoord0 = qt_MultiTexCoord0;                          \n"
-    "    gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;    \n"
+    "    gl_Position = qt_Matrix * qt_Vertex;                       \n"
     "}";
 
 static const char qt_default_fragment_code[] =
@@ -85,14 +85,22 @@ const char *qtTexCoordAttributeName()
     return qt_texcoord_attribute_name;
 }
 
+// TODO: Remove after grace period.
+QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
+    : QSGShaderEffect(parent)
+{
+    qWarning("ShaderEffectItem has been deprecated. Use ShaderEffect instead.");
+}
+
+
 /*!
-    \qmlclass ShaderEffectItem QSGShaderEffectItem
+    \qmlclass ShaderEffect QSGShaderEffect
     \since 5.0
     \ingroup qml-basic-visual-elements
-    \brief The ShaderEffectItem element applies custom shaders to a rectangle.
+    \brief The ShaderEffect element applies custom shaders to a rectangle.
     \inherits Item
 
-    The ShaderEffectItem element applies a custom OpenGL
+    The ShaderEffect element applies a custom OpenGL
     \l{vertexShader}{vertex} and \l{fragmentShader}{fragment} shader to a
     rectangle. It allows you to write effects such as drop shadow, blur,
     colorize and page curl directly in QML.
@@ -100,11 +108,11 @@ const char *qtTexCoordAttributeName()
     There are two types of input to the \l vertexShader:
     uniform variables and attributes. Some are predefined:
     \list
-    \o uniform mat4 qt_ModelViewProjectionMatrix - combined transformation
+    \o uniform mat4 qt_Matrix - combined transformation
        matrix, the product of the matrices from the root item to this
-       ShaderEffectItem, and an orthogonal projection.
+       ShaderEffect, and an orthogonal projection.
     \o uniform float qt_Opacity - combined opacity, the product of the
-       opacities from the root item to this ShaderEffectItem.
+       opacities from the root item to this ShaderEffect.
     \o attribute vec4 qt_Vertex - vertex position, the top-left vertex has
        position (0, 0), the bottom-right (\l{Item::width}{width},
        \l{Item::height}{height}).
@@ -143,17 +151,17 @@ const char *qtTexCoordAttributeName()
             width: 200; height: 100
             Row {
                 Image { id: img; sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
-                ShaderEffectItem {
+                ShaderEffect {
                     width: 100; height: 100
                     property variant src: img
                     vertexShader: "
-                        uniform highp mat4 qt_ModelViewProjectionMatrix;
+                        uniform highp mat4 qt_Matrix;
                         attribute highp vec4 qt_Vertex;
                         attribute highp vec2 qt_MultiTexCoord0;
                         varying highp vec2 coord;
                         void main() {
                             coord = qt_MultiTexCoord0;
-                            gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;
+                            gl_Position = qt_Matrix * qt_Vertex;
                         }"
                     fragmentShader: "
                         varying highp vec2 coord;
@@ -169,18 +177,18 @@ const char *qtTexCoordAttributeName()
         \endqml
     \endrow
 
-    By default, the ShaderEffectItem consists of four vertices, one for each
+    By default, the ShaderEffect consists of four vertices, one for each
     corner. For non-linear vertex transformations, like page curl, you can
-    specify a fine grid of vertices by assigning a \l GridMesh to the \l mesh
-    property.
+    specify a fine grid of vertices by specifying a \l mesh resolution.
 
     \note Scene Graph textures have origin in the top-left corner rather than
     bottom-left which is common in OpenGL.
 */
 
-QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
+QSGShaderEffect::QSGShaderEffect(QSGItem *parent)
     : QSGItem(parent)
-    , m_mesh(0)
+    , m_meshResolution(1, 1)
+    , m_deprecatedMesh(0)
     , m_cullMode(NoCulling)
     , m_blending(true)
     , m_dirtyData(true)
@@ -191,26 +199,26 @@ QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
     setFlag(QSGItem::ItemHasContents);
 }
 
-QSGShaderEffectItem::~QSGShaderEffectItem()
+QSGShaderEffect::~QSGShaderEffect()
 {
     reset();
 }
 
-void QSGShaderEffectItem::componentComplete()
+void QSGShaderEffect::componentComplete()
 {
     updateProperties();
     QSGItem::componentComplete();
 }
 
 /*!
-    \qmlproperty string ShaderEffectItem::fragmentShader
+    \qmlproperty string ShaderEffect::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
     The default shader passes the texture coordinate along to the fragment
     shader as "varying highp vec2 qt_TexCoord0".
 */
 
-void QSGShaderEffectItem::setFragmentShader(const QByteArray &code)
+void QSGShaderEffect::setFragmentShader(const QByteArray &code)
 {
     if (m_source.fragmentCode.constData() == code.constData())
         return;
@@ -223,7 +231,7 @@ void QSGShaderEffectItem::setFragmentShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty string ShaderEffectItem::vertexShader
+    \qmlproperty string ShaderEffect::vertexShader
 
     This property holds the vertex shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the
@@ -231,7 +239,7 @@ void QSGShaderEffectItem::setFragmentShader(const QByteArray &code)
     sampler2D named "source".
 */
 
-void QSGShaderEffectItem::setVertexShader(const QByteArray &code)
+void QSGShaderEffect::setVertexShader(const QByteArray &code)
 {
     if (m_source.vertexCode.constData() == code.constData())
         return;
@@ -244,7 +252,7 @@ void QSGShaderEffectItem::setVertexShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty bool ShaderEffectItem::blending
+    \qmlproperty bool ShaderEffect::blending
 
     If this property is true, the output from the \l fragmentShader is blended
     with the background using source-over blend mode. If false, the background
@@ -252,7 +260,7 @@ void QSGShaderEffectItem::setVertexShader(const QByteArray &code)
     property to false when blending is not needed. The default value is true.
 */
 
-void QSGShaderEffectItem::setBlending(bool enable)
+void QSGShaderEffect::setBlending(bool enable)
 {
     if (blending() == enable)
         return;
@@ -264,42 +272,103 @@ void QSGShaderEffectItem::setBlending(bool enable)
 }
 
 /*!
-    \qmlproperty object ShaderEffectItem::mesh
+    \qmlproperty size ShaderEffect::mesh
 
-    This property holds the mesh definition. If not set, a simple mesh with one
-    vertex in each corner is used. Assign a \l GridMesh to this property to get
-    a higher resolution grid.
+    This property holds the mesh resolution. The default resolution is 1x1
+    which is the minimum and corresponds to a mesh with four vertices.
+    For non-linear vertex transformations, you probably want to set the
+    resolution higher.
+
+    \row
+    \o \image declarative-gridmesh.png
+    \o \qml
+        import QtQuick 2.0
+
+        ShaderEffect {
+            width: 200
+            height: 200
+            mesh: Qt.size(20, 20)
+            property variant source: Image {
+                source: "qt-logo.png"
+                sourceSize { width: 200; height: 200 }
+                smooth: true
+            }
+            vertexShader: "
+                uniform highp mat4 qt_Matrix;
+                attribute highp vec4 qt_Vertex;
+                attribute highp vec2 qt_MultiTexCoord0;
+                varying highp vec2 qt_TexCoord0;
+                uniform highp float width;
+                void main() {
+                    highp vec4 pos = qt_Vertex;
+                    highp float d = .5 * smoothstep(0., 1., qt_MultiTexCoord0.y);
+                    pos.x = width * mix(d, 1.0 - d, qt_MultiTexCoord0.x);
+                    gl_Position = qt_Matrix * pos;
+                    qt_TexCoord0 = qt_MultiTexCoord0;
+                }"
+        }
+        \endqml
+    \endrow
 */
 
-void QSGShaderEffectItem::setMesh(QSGShaderEffectMesh *mesh)
+QVariant QSGShaderEffect::mesh() const
 {
-    if (mesh == m_mesh)
+    return m_deprecatedMesh ? qVariantFromValue(static_cast<QObject *>(m_deprecatedMesh))
+                            : qVariantFromValue(m_meshResolution);
+}
+
+void QSGShaderEffect::setMesh(const QVariant &mesh)
+{
+    // TODO: Replace QVariant with QSize after grace period.
+    QSGShaderEffectMesh *newMesh = qobject_cast<QSGShaderEffectMesh *>(qVariantValue<QObject *>(mesh));
+    if (newMesh && newMesh == m_deprecatedMesh)
         return;
-    if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
-    m_mesh = mesh;
-    if (m_mesh)
-        connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
+    if (m_deprecatedMesh)
+        disconnect(m_deprecatedMesh, SIGNAL(geometryChanged()), this, 0);
+    m_deprecatedMesh = newMesh;
+    if (m_deprecatedMesh) {
+        qWarning("ShaderEffect: Setting the mesh to something other than a size is deprecated.");
+        connect(m_deprecatedMesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
+    } else {
+        if (qVariantCanConvert<QSize>(mesh)) {
+            m_meshResolution = mesh.toSize();
+        } else {
+            QList<QByteArray> res = mesh.toByteArray().split('x');
+            bool ok = res.size() == 2;
+            if (ok) {
+                int w = res.at(0).toInt(&ok);
+                if (ok) {
+                    int h = res.at(1).toInt(&ok);
+                    if (ok)
+                        m_meshResolution = QSize(w, h);
+                }
+            }
+            if (!ok)
+                qWarning("ShaderEffect: mesh resolution must be a size.");
+        }
+        m_defaultMesh.setResolution(m_meshResolution);
+    }
+
     m_dirtyMesh = true;
     update();
     emit meshChanged();
 }
 
 /*!
-    \qmlproperty enumeration ShaderEffectItem::cullMode
+    \qmlproperty enumeration ShaderEffect::cullMode
 
     This property defines which sides of the element should be visible.
 
     \list
-    \o ShaderEffectItem.NoCulling - Both sides are visible
-    \o ShaderEffectItem.BackFaceCulling - only front side is visible
-    \o ShaderEffectItem.FrontFaceCulling - only back side is visible
+    \o ShaderEffect.NoCulling - Both sides are visible
+    \o ShaderEffect.BackFaceCulling - only front side is visible
+    \o ShaderEffect.FrontFaceCulling - only back side is visible
     \endlist
 
     The default is NoCulling.
 */
 
-void QSGShaderEffectItem::setCullMode(CullMode face)
+void QSGShaderEffect::setCullMode(CullMode face)
 {
     if (face == m_cullMode)
         return;
@@ -308,26 +377,26 @@ void QSGShaderEffectItem::setCullMode(CullMode face)
     emit cullModeChanged();
 }
 
-void QSGShaderEffectItem::changeSource(int index)
+void QSGShaderEffect::changeSource(int index)
 {
     Q_ASSERT(index >= 0 && index < m_sources.size());
     QVariant v = property(m_sources.at(index).name.constData());
     setSource(v, index);
 }
 
-void QSGShaderEffectItem::updateData()
+void QSGShaderEffect::updateData()
 {
     m_dirtyData = true;
     update();
 }
 
-void QSGShaderEffectItem::updateGeometry()
+void QSGShaderEffect::updateGeometry()
 {
     m_dirtyGeometry = true;
     update();
 }
 
-void QSGShaderEffectItem::setSource(const QVariant &var, int index)
+void QSGShaderEffect::setSource(const QVariant &var, int index)
 {
     Q_ASSERT(index >= 0 && index < m_sources.size());
 
@@ -360,7 +429,7 @@ void QSGShaderEffectItem::setSource(const QVariant &var, int index)
     }
 }
 
-void QSGShaderEffectItem::disconnectPropertySignals()
+void QSGShaderEffect::disconnectPropertySignals()
 {
     disconnect(this, 0, this, SLOT(updateData()));
     for (int i = 0; i < m_sources.size(); ++i) {
@@ -370,7 +439,7 @@ void QSGShaderEffectItem::disconnectPropertySignals()
     }
 }
 
-void QSGShaderEffectItem::connectPropertySignals()
+void QSGShaderEffect::connectPropertySignals()
 {
     QSet<QByteArray>::const_iterator it;
     for (it = m_source.uniformNames.begin(); it != m_source.uniformNames.end(); ++it) {
@@ -378,12 +447,12 @@ void QSGShaderEffectItem::connectPropertySignals()
         if (pi >= 0) {
             QMetaProperty mp = metaObject()->property(pi);
             if (!mp.hasNotifySignal())
-                qWarning("QSGShaderEffectItem: property '%s' does not have notification method!", it->constData());
+                qWarning("QSGShaderEffect: property '%s' does not have notification method!", it->constData());
             QByteArray signalName("2");
             signalName.append(mp.notifySignal().signature());
             connect(this, signalName, this, SLOT(updateData()));
         } else {
-            qWarning("QSGShaderEffectItem: '%s' does not have a matching property!", it->constData());
+            qWarning("QSGShaderEffect: '%s' does not have a matching property!", it->constData());
         }
     }
     for (int i = 0; i < m_sources.size(); ++i) {
@@ -397,12 +466,12 @@ void QSGShaderEffectItem::connectPropertySignals()
             source.mapper->setMapping(this, i);
             connect(source.mapper, SIGNAL(mapped(int)), this, SLOT(changeSource(int)));
         } else {
-            qWarning("QSGShaderEffectItem: '%s' does not have a matching source!", source.name.constData());
+            qWarning("QSGShaderEffect: '%s' does not have a matching source!", source.name.constData());
         }
     }
 }
 
-void QSGShaderEffectItem::reset()
+void QSGShaderEffect::reset()
 {
     disconnectPropertySignals();
 
@@ -424,7 +493,7 @@ void QSGShaderEffectItem::reset()
     m_dirtyMesh = true;
 }
 
-void QSGShaderEffectItem::updateProperties()
+void QSGShaderEffect::updateProperties()
 {
     QByteArray vertexCode = m_source.vertexCode;
     QByteArray fragmentCode = m_source.fragmentCode;
@@ -436,14 +505,15 @@ void QSGShaderEffectItem::updateProperties()
     lookThroughShaderCode(vertexCode);
     lookThroughShaderCode(fragmentCode);
 
-    if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name))
-        qWarning("QSGShaderEffectItem: Missing reference to \'%s\'.", qt_position_attribute_name);
-    if (!m_mesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name))
-        qWarning("QSGShaderEffectItem: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
+    // TODO: Remove !m_deprecatedMesh check after grace period.
+    if (!m_deprecatedMesh && !m_source.attributeNames.contains(qt_position_attribute_name))
+        qWarning("QSGShaderEffect: Missing reference to \'%s\'.", qt_position_attribute_name);
+    if (!m_deprecatedMesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name))
+        qWarning("QSGShaderEffect: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
     if (!m_source.respectsMatrix)
-        qWarning("QSGShaderEffectItem: Missing reference to \'qt_ModelViewProjectionMatrix\'.");
+        qWarning("QSGShaderEffect: Missing reference to \'qt_Matrix\'.");
     if (!m_source.respectsOpacity)
-        qWarning("QSGShaderEffectItem: Missing reference to \'qt_Opacity\'.");
+        qWarning("QSGShaderEffect: Missing reference to \'qt_Opacity\'.");
 
     for (int i = 0; i < m_sources.size(); ++i) {
         QVariant v = property(m_sources.at(i).name);
@@ -453,7 +523,7 @@ void QSGShaderEffectItem::updateProperties()
     connectPropertySignals();
 }
 
-void QSGShaderEffectItem::lookThroughShaderCode(const QByteArray &code)
+void QSGShaderEffect::lookThroughShaderCode(const QByteArray &code)
 {
     // Regexp for matching attributes and uniforms.
     // In human readable form: attribute|uniform [lowp|mediump|highp] <type> <name>
@@ -474,7 +544,11 @@ void QSGShaderEffectItem::lookThroughShaderCode(const QByteArray &code)
         } else {
             Q_ASSERT(decl == "uniform");
 
-            if (name == "qt_ModelViewProjectionMatrix") {
+            if (name == "qt_Matrix") {
+                m_source.respectsMatrix = true;
+            } else if (name == "qt_ModelViewProjectionMatrix") {
+                // TODO: Remove after grace period.
+                qWarning("ShaderEffect: qt_ModelViewProjectionMatrix is deprecated. Use qt_Matrix instead.");
                 m_source.respectsMatrix = true;
             } else if (name == "qt_Opacity") {
                 m_source.respectsOpacity = true;
@@ -492,13 +566,13 @@ void QSGShaderEffectItem::lookThroughShaderCode(const QByteArray &code)
     }
 }
 
-void QSGShaderEffectItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QSGShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     m_dirtyGeometry = true;
     QSGItem::geometryChanged(newGeometry, oldGeometry);
 }
 
-QSGNode *QSGShaderEffectItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     QSGShaderEffectNode *node = static_cast<QSGShaderEffectNode *>(oldNode);
 
@@ -520,7 +594,7 @@ QSGNode *QSGShaderEffectItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeD
         node->setFlag(QSGNode::OwnsGeometry, false);
         QSGGeometry *geometry = node->geometry();
         QRectF rect(0, 0, width(), height());
-        QSGShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
+        QSGShaderEffectMesh *mesh = m_deprecatedMesh ? m_deprecatedMesh : &m_defaultMesh;
 
         geometry = mesh->updateGeometry(geometry, m_source.attributeNames, rect);
         if (!geometry) {

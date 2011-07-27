@@ -52,7 +52,7 @@ static const char qt_particles_default_vertex_code[] =
         "attribute highp vec2 vTex;                                                         \n"
         "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize    \n"
         "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration            \n"
-        "uniform highp mat4 qt_ModelViewProjectionMatrix;                                   \n"
+        "uniform highp mat4 qt_Matrix;                                                      \n"
         "uniform highp float timestamp;                                                     \n"
         "varying highp vec2 fTex;                                                           \n"
         "void main() {                                                                      \n"
@@ -67,7 +67,7 @@ static const char qt_particles_default_vertex_code[] =
         "                   - currentSize / 2. + currentSize * vTex          // adjust size \n"
         "                   + vVec.xy * t * vData.y         // apply speed vector..         \n"
         "                   + 0.5 * vVec.zw * pow(t * vData.y, 2.);                         \n"
-        "    gl_Position = qt_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0, 1);         \n"
+        "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);                            \n"
         "}";
 
 static const char qt_particles_default_fragment_code[] =//TODO: Default frag requires source?
@@ -244,7 +244,7 @@ void QSGCustomParticle::setSource(const QVariant &var, int index)
 
     source.item = qobject_cast<QSGItem *>(obj);
 
-    // TODO: Copy better solution in QSGShaderEffectItem when they find it.
+    // TODO: Copy better solution in QSGShaderEffect when they find it.
     // 'source.item' needs a canvas to get a scenegraph node.
     // The easiest way to make sure it gets a canvas is to
     // make it a part of the same item tree as 'this'.
@@ -272,12 +272,12 @@ void QSGCustomParticle::connectPropertySignals()
         if (pi >= 0) {
             QMetaProperty mp = metaObject()->property(pi);
             if (!mp.hasNotifySignal())
-                qWarning("QSGShaderEffectItem: property '%s' does not have notification method!", it->constData());
+                qWarning("QSGCustomParticle: property '%s' does not have notification method!", it->constData());
             QByteArray signalName("2");
             signalName.append(mp.notifySignal().signature());
             connect(this, signalName, this, SLOT(updateData()));
         } else {
-            qWarning("QSGShaderEffectItem: '%s' does not have a matching property!", it->constData());
+            qWarning("QSGCustomParticle: '%s' does not have a matching property!", it->constData());
         }
     }
     for (int i = 0; i < m_sources.size(); ++i) {
@@ -291,7 +291,7 @@ void QSGCustomParticle::connectPropertySignals()
             source.mapper->setMapping(this, i);
             connect(source.mapper, SIGNAL(mapped(int)), this, SLOT(changeSource(int)));
         } else {
-            qWarning("QSGShaderEffectItem: '%s' does not have a matching source!", source.name.constData());
+            qWarning("QSGCustomParticle: '%s' does not have a matching source!", source.name.constData());
         }
     }
 }
@@ -312,13 +312,13 @@ void QSGCustomParticle::updateProperties()
     lookThroughShaderCode(fragmentCode);
 
     if (!m_source.attributeNames.contains(qt_position_attribute_name))
-        qWarning("QSGShaderEffectItem: Missing reference to \'%s\'.", qt_position_attribute_name);
+        qWarning("QSGCustomParticle: Missing reference to \'%s\'.", qt_position_attribute_name);
     if (!m_source.attributeNames.contains(qt_texcoord_attribute_name))
-        qWarning("QSGShaderEffectItem: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
+        qWarning("QSGCustomParticle: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
     if (!m_source.respectsMatrix)
-        qWarning("QSGShaderEffectItem: Missing reference to \'qt_ModelViewProjectionMatrix\'.");
+        qWarning("QSGCustomParticle: Missing reference to \'qt_Matrix\'.");
     if (!m_source.respectsOpacity)
-        qWarning("QSGShaderEffectItem: Missing reference to \'qt_Opacity\'.");
+        qWarning("QSGCustomParticle: Missing reference to \'qt_Opacity\'.");
 
     for (int i = 0; i < m_sources.size(); ++i) {
         QVariant v = property(m_sources.at(i).name);
@@ -350,7 +350,11 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
         } else {
             Q_ASSERT(decl == "uniform");//TODO: Shouldn't assert
 
-            if (name == "qt_ModelViewProjectionMatrix") {
+            if (name == "qt_Matrix") {
+                m_source.respectsMatrix = true;
+            } else if (name == "qt_ModelViewProjectionMatrix") {
+                // TODO: Remove after grace period.
+                qWarning("ShaderEffect: qt_ModelViewProjectionMatrix is deprecated. Use qt_Matrix instead.");
                 m_source.respectsMatrix = true;
             } else if (name == "qt_Opacity") {
                 m_source.respectsOpacity = true;

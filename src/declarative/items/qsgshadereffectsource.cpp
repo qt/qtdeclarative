@@ -380,7 +380,7 @@ void QSGShaderEffectTexture::grab()
 
     ShaderEffectSource can be used as:
     \list
-    \o a texture source in a \l ShaderEffectItem.
+    \o a texture source in a \l ShaderEffect.
        This allows you to apply custom shader effects to any QML element.
     \o a cache for a complex element.
        The complex element can be rendered once into the texture, which can
@@ -472,7 +472,7 @@ QSGShaderEffectSource::~QSGShaderEffectSource()
 
     This property defines the OpenGL wrap modes associated with the texture.
     Modifying this property makes most sense when the element is used as a
-    source texture of a \l ShaderEffectItem.
+    source texture of a \l ShaderEffect.
 
     \list
     \o ShaderEffectSource.ClampToEdge - GL_CLAMP_TO_EDGE both horizontally and vertically
@@ -581,7 +581,7 @@ void QSGShaderEffectSource::setTextureSize(const QSize &size)
 
     This property defines the internal OpenGL format of the texture.
     Modifying this property makes most sense when the element is used as a
-    source texture of a \l ShaderEffectItem. Depending on the OpenGL
+    source texture of a \l ShaderEffect. Depending on the OpenGL
     implementation, this property might allow you to save some texture memory.
 
     \list

@@ -64,13 +64,13 @@ class QSGContext;
 class QSignalMapper;
 class QSGCustomMaterialShader;
 
-class QSGShaderEffectItem : public QSGItem
+class QSGShaderEffect : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
     Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
-    Q_PROPERTY(QSGShaderEffectMesh *mesh READ mesh WRITE setMesh NOTIFY meshChanged)
+    Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
     Q_PROPERTY(CullMode culling READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
     Q_ENUMS(CullMode)
 
@@ -82,8 +82,8 @@ public:
         FrontFaceCulling = QSGShaderEffectMaterial::FrontFaceCulling
     };
 
-    QSGShaderEffectItem(QSGItem *parent = 0);
-    ~QSGShaderEffectItem();
+    QSGShaderEffect(QSGItem *parent = 0);
+    ~QSGShaderEffect();
 
     virtual void componentComplete();
 
@@ -96,8 +96,8 @@ public:
     bool blending() const { return m_blending; }
     void setBlending(bool enable);
 
-    QSGShaderEffectMesh *mesh() const { return m_mesh; }
-    void setMesh(QSGShaderEffectMesh *mesh);
+    QVariant mesh() const;
+    void setMesh(const QVariant &mesh);
 
     CullMode cullMode() const { return m_cullMode; }
     void setCullMode(CullMode face);
@@ -130,7 +130,8 @@ private:
     void lookThroughShaderCode(const QByteArray &code);
 
     QSGShaderEffectProgram m_source;
-    QSGShaderEffectMesh *m_mesh;
+    QSize m_meshResolution;
+    QSGShaderEffectMesh *m_deprecatedMesh; // TODO: Remove after grace period.
     QSGGridMesh m_defaultMesh;
     CullMode m_cullMode;
 
@@ -149,6 +150,13 @@ private:
     uint m_programDirty : 1;
     uint m_dirtyMesh : 1;
     uint m_dirtyGeometry : 1;
+};
+
+// TODO: Remove after grace period.
+class QSGShaderEffectItem : public QSGShaderEffect
+{
+public:
+    QSGShaderEffectItem(QSGItem *parent = 0);
 };
 
 QT_END_NAMESPACE

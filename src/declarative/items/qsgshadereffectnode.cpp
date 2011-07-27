@@ -195,7 +195,10 @@ char const *const *QSGCustomMaterialShader::attributeNames() const
 void QSGCustomMaterialShader::initialize()
 {
     m_opacityLoc = program()->uniformLocation("qt_Opacity");
-    m_matrixLoc = program()->uniformLocation("qt_ModelViewProjectionMatrix");
+    m_matrixLoc = program()->uniformLocation("qt_Matrix");
+    // TODO: Remove after grace period.
+    if (m_matrixLoc == -1)
+        m_matrixLoc = program()->uniformLocation("qt_ModelViewProjectionMatrix");
 }
 
 const char *QSGCustomMaterialShader::vertexShader() const
