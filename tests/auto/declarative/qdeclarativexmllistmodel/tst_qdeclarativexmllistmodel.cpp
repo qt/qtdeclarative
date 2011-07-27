@@ -390,7 +390,10 @@ void tst_qdeclarativexmllistmodel::xml()
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
-    QCOMPARE(model->status(), QDeclarativeXmlListModel::Ready);
+    if (xml.isEmpty())
+        QCOMPARE(model->status(), QDeclarativeXmlListModel::Null);
+    else
+        QCOMPARE(model->status(), QDeclarativeXmlListModel::Ready);
     QVERIFY(model->errorString().isEmpty());
     QCOMPARE(model->count(), count);
 
@@ -452,6 +455,8 @@ void tst_qdeclarativexmllistmodel::source()
     QCOMPARE(model->count(), 9);
 
     model->setSource(source);
+    if (model->source().isEmpty())
+        QCOMPARE(model->status(), QDeclarativeXmlListModel::Null);
     QCOMPARE(model->progress(), qreal(0.0));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     QCOMPARE(model->status(), QDeclarativeXmlListModel::Loading);
@@ -521,7 +526,8 @@ void tst_qdeclarativexmllistmodel::data()
 void tst_qdeclarativexmllistmodel::get()
 {
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/get.qml"));
-    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());    
+    QDeclarativeXmlListModel *model = qobject_cast<QDeclarativeXmlListModel*>(component.create());
+
     QVERIFY(model != 0);
 
     QVERIFY(QMetaObject::invokeMethod(model, "runPreTest"));

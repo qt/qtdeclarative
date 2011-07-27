@@ -1018,7 +1018,10 @@ void QDeclarativeXmlListModel::queryCompleted(const QDeclarativeXmlQueryResult &
     d->size = result.size;
     d->data = result.data;
     d->keyRoleResultsCache = result.keyRoleResultsCache;
-    d->status = Ready;
+    if (d->src.isEmpty() && d->xml.isEmpty())
+        d->status = Null;
+    else
+        d->status = Ready;
     d->errorString.clear();
     d->queryId = -1;
 
