@@ -76,6 +76,7 @@ private slots:
     void static_types();
     void static_types_data();
     void static_i18n();
+    void static_i18n_data();
     void static_nestedElements();
     void static_nestedElements_data();
     void dynamic_data();
@@ -197,20 +198,62 @@ void tst_qdeclarativelistmodel::static_types()
     delete obj;
 }
 
+void tst_qdeclarativelistmodel::static_i18n_data()
+{
+    QTest::addColumn<QString>("qml");
+    QTest::addColumn<QVariant>("value");
+    QTest::addColumn<QString>("error");
+
+    QTest::newRow("QT_TR_NOOP")
+        << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"na\303\257ve\") }")
+        << QVariant(QString::fromUtf8("na\303\257ve"))
+        << QString();
+
+    QTest::newRow("QT_TRANSLATE_NOOP")
+        << "ListElement { foo: QT_TRANSLATE_NOOP(\"MyListModel\", \"hello\") }"
+        << QVariant(QString("hello"))
+        << QString();
+
+    QTest::newRow("QT_TR_NOOP extra param")
+            << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"hello\",\"world\") }")
+            << QVariant(QString())
+            << QString("ListElement: improperly specified QT_TR_NOOP");
+
+    QTest::newRow("QT_TRANSLATE_NOOP missing params")
+        << "ListElement { foo: QT_TRANSLATE_NOOP() }"
+        << QVariant(QString())
+        << QString("ListElement: improperly specified QT_TRANSLATE_NOOP");
+}
+
 void tst_qdeclarativelistmodel::static_i18n()
 {
-    QString expect = QString::fromUtf8("na\303\257ve");
+    QFETCH(QString, qml);
+    QFETCH(QVariant, value);
+    QFETCH(QString, error);
 
-    QString componentStr = "import QtQuick 2.0\nItem { property string prop1: model.get(0).prop1; property string prop2: model.get(0).prop2; ListModel { id: model; ListElement { prop1: \""+expect+"\"; prop2: QT_TR_NOOP(\""+expect+"\") } } }";
+    qml = "import QtQuick 2.0\nItem { property variant test: model.get(0).foo; ListModel { id: model; " + qml + " } }";
+
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine);
-    component.setData(componentStr.toUtf8(), QUrl::fromLocalFile(""));
+    component.setData(qml.toUtf8(),
+                      QUrl::fromLocalFile(QString("dummy.qml")));
+
+    if (!error.isEmpty()) {
+        QVERIFY(component.isError());
+        QCOMPARE(component.errors().at(0).description(), error);
+        return;
+    }
+
+    QVERIFY(!component.isError());
+
     QObject *obj = component.create();
     QVERIFY(obj != 0);
-    QString prop1 = obj->property("prop1").toString();
-    QCOMPARE(prop1,expect);
-    QString prop2 = obj->property("prop2").toString();
-    QCOMPARE(prop2,expect); // (no, not translated, QT_TR_NOOP is a no-op)
+
+    QVariant actual = obj->property("test");
+
+    QCOMPARE(actual, value);
+    QCOMPARE(actual.toString(), value.toString());
+
     delete obj;
 }
 

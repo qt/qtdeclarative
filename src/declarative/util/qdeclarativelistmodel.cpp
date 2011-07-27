@@ -42,6 +42,8 @@
 #include "private/qdeclarativelistmodel_p_p.h"
 #include "private/qdeclarativelistmodelworkeragent_p.h"
 #include "private/qdeclarativeopenmetaobject_p.h"
+#include "parser/qdeclarativejsast_p.h"
+#include "parser/qdeclarativejsengine_p.h"
 
 #include <qdeclarativecustomparser_p.h>
 #include <qdeclarativeparser_p.h>
@@ -840,9 +842,32 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                     QByteArray script = variant.asScript().toUtf8();
                     int v = evaluateEnum(script);
                     if (v<0) {
-                        if (script.startsWith("QT_TR_NOOP(\"") && script.endsWith("\")")) {
+                        using namespace QDeclarativeJS;
+                        AST::Node *node = variant.asAST();
+                        AST::StringLiteral *literal = 0;
+                        if (AST::CallExpression *callExpr = AST::cast<AST::CallExpression *>(node)) {
+                            if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(callExpr->base)) {
+                                if (idExpr->name->asString() == QLatin1String("QT_TR_NOOP")) {
+                                    if (callExpr->arguments && !callExpr->arguments->next)
+                                        literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
+                                    if (!literal) {
+                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified QT_TR_NOOP"));
+                                        return false;
+                                    }
+                                } else if (idExpr->name->asString() == QLatin1String("QT_TRANSLATE_NOOP")) {
+                                    if (callExpr->arguments && callExpr->arguments->next && !callExpr->arguments->next->next)
+                                        literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->next->expression);
+                                    if (!literal) {
+                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified QT_TRANSLATE_NOOP"));
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (literal) {
                             d[0] = char(QDeclarativeParser::Variant::String);
-                            d += script.mid(12,script.length()-14);
+                            d += literal->value->asString().toUtf8();
                         } else {
                             error(prop, QDeclarativeListModel::tr("ListElement: cannot use script for property value"));
                             return false;
