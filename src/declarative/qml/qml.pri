@@ -112,7 +112,6 @@ HEADERS += \
     $$PWD/qdeclarativeextensioninterface.h \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
-    $$PWD/qperformancetimer_p.h \
     $$PWD/qdeclarativenullablevalue_p_p.h \
     $$PWD/qintrusivelist_p.h \
     $$PWD/qdeclarativescriptstring_p.h
