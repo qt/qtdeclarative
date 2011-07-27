@@ -1281,8 +1281,7 @@ void QDeclarative1ListViewPrivate::updateHeader()
                     header->setPosition(startPos - header->size());
             }
         } else {
-            if (itemCount == 0)
-                visiblePos = header->size();
+            visiblePos = header->size();
             header->setPosition(0);
         }
     }

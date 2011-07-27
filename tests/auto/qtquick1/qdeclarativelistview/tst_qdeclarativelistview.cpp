@@ -1950,6 +1950,38 @@ void tst_QDeclarative1ListView::header()
 
         delete canvas;
     }
+    {
+        // QTBUG-19844
+        QDeclarativeView *canvas = createView();
+
+        TestModel model;
+
+        QDeclarativeContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+        qApp->processEvents();
+
+        QDeclarative1ListView *listview = findItem<QDeclarative1ListView>(canvas->rootObject(), "list");
+        QTRY_VERIFY(listview != 0);
+
+        QDeclarativeItem *contentItem = listview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QDeclarative1Text *header = findItem<QDeclarative1Text>(contentItem, "header");
+        QVERIFY(header);
+
+        header->setHeight(500);
+
+        model.addItem("Item 0", "");
+
+        header->setHeight(40);
+        QDeclarativeItem *item = findItem<QDeclarativeItem>(contentItem, "wrapper", 0);
+        QVERIFY(item);
+        QTRY_VERIFY(header->y() + header->height() == item->y());
+
+        delete canvas;
+    }
 }
 
 void tst_QDeclarative1ListView::footer()
