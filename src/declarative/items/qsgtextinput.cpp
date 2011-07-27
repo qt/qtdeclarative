@@ -784,36 +784,36 @@ void QSGTextInputPrivate::updateHorizontalScroll()
 {
     Q_Q(QSGTextInput);
     const int preeditLength = control->preeditAreaText().length();
-    int cix = qRound(control->cursorToX(control->cursor() + preeditLength));
-    QRect br(q->boundingRect().toRect());
+    const int width = q->width();
     int widthUsed = calculateTextWidth();
 
-    QSGTextInput::HAlignment effectiveHAlign = q->effectiveHAlign();
-    if (autoScroll) {
-        if (widthUsed <=  br.width()) {
-            // text fits in br; use hscroll for alignment
-            switch (effectiveHAlign & ~(Qt::AlignAbsolute|Qt::AlignVertical_Mask)) {
-            case Qt::AlignRight:
-                hscroll = widthUsed - br.width() - 1;
-                break;
-            case Qt::AlignHCenter:
-                hscroll = (widthUsed - br.width()) / 2;
-                break;
-            default:
-                // Left
-                hscroll = 0;
-                break;
-            }
-        } else if (cix - hscroll >= br.width()) {
+    if (!autoScroll || widthUsed <=  width) {
+        QSGTextInput::HAlignment effectiveHAlign = q->effectiveHAlign();
+        // text fits in br; use hscroll for alignment
+        switch (effectiveHAlign & ~(Qt::AlignAbsolute|Qt::AlignVertical_Mask)) {
+        case Qt::AlignRight:
+            hscroll = widthUsed - width;
+            break;
+        case Qt::AlignHCenter:
+            hscroll = (widthUsed - width) / 2;
+            break;
+        default:
+            // Left
+            hscroll = 0;
+            break;
+        }
+    } else {
+        int cix = qRound(control->cursorToX(control->cursor() + preeditLength));
+        if (cix - hscroll >= width) {
             // text doesn't fit, cursor is to the right of br (scroll right)
-            hscroll = cix - br.width() + 1;
+            hscroll = cix - width;
         } else if (cix - hscroll < 0 && hscroll < widthUsed) {
             // text doesn't fit, cursor is to the left of br (scroll left)
             hscroll = cix;
-        } else if (widthUsed - hscroll < br.width()) {
+        } else if (widthUsed - hscroll < width) {
             // text doesn't fit, text document is to the left of br; align
             // right
-            hscroll = widthUsed - br.width() + 1;
+            hscroll = widthUsed - width;
         }
         if (preeditLength > 0) {
             // check to ensure long pre-edit text doesn't push the cursor
@@ -823,26 +823,13 @@ void QSGTextInputPrivate::updateHorizontalScroll()
              if (cix < hscroll)
                  hscroll = cix;
         }
-    } else {
-        switch (effectiveHAlign) {
-        case QSGTextInput::AlignRight:
-            hscroll = q->width() - widthUsed;
-            break;
-        case QSGTextInput::AlignHCenter:
-            hscroll = (q->width() - widthUsed) / 2;
-            break;
-        default:
-            // Left
-            hscroll = 0;
-            break;
-        }
     }
 }
 
 void QSGTextInput::paint(QPainter *p)
 {
     // XXX todo
-    QRect r(0, 0, width(), height());
+    QRect r = boundingRect().toRect();
 
     Q_D(QSGTextInput);
     p->setRenderHint(QPainter::TextAntialiasing, true);
@@ -853,15 +840,9 @@ void QSGTextInput::paint(QPainter *p)
         flags |= QLineControl::DrawCursor;
     if (d->control->hasSelectedText())
             flags |= QLineControl::DrawSelections;
-    QPoint offset = QPoint(0,0);
     QFontMetrics fm = QFontMetrics(d->font);
-    QRect br(boundingRect().toRect());
-    if (d->autoScroll) {
-        // the y offset is there to keep the baseline constant in case we have script changes in the text.
-        offset = br.topLeft() - QPoint(d->hscroll, d->control->ascent() - fm.ascent());
-    } else {
-        offset = QPoint(d->hscroll, 0);
-    }
+    // the y offset is there to keep the baseline constant in case we have script changes in the text.
+    QPoint offset(-d->hscroll, fm.ascent() - d->control->ascent());
     d->control->draw(p, offset, r, flags);
     p->restore();
 }
@@ -1262,7 +1243,7 @@ void QSGTextInput::updateSize(bool needsRedraw)
     int h = height();
     setImplicitHeight(d->control->height()-1); // -1 to counter QLineControl's +1 which is not consistent with Text.
     setImplicitWidth(d->calculateTextWidth());
-    setContentsSize(QSize(width(), height()));
+    setContentsSize(boundingRect().size().toSize());
     if(w==width() && h==height() && needsRedraw)
         update();
 }

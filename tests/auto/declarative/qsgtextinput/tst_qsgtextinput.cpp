@@ -1745,6 +1745,12 @@ void tst_qsgtextinput::cursorRectangle()
         QVERIFY(r.right() >= 0);
         QCOMPARE(input.inputMethodQuery(Qt::ImMicroFocus).toRect(), r);
     }
+
+    input.setText("Hi!");
+    input.setHAlign(QSGTextInput::AlignRight);
+    r = input.cursorRectangle();
+    QVERIFY(r.left() < input.boundingRect().width());
+    QVERIFY(r.right() >= input.width() - error);
 }
 
 void tst_qsgtextinput::readOnly()
