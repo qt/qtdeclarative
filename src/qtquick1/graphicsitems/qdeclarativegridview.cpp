@@ -2714,11 +2714,10 @@ void QDeclarative1GridView::trackedPositionChanged()
                     if (pos < d->startPosition())
                         pos = d->startPosition();
                 } else {
-                    if (trackedPos < viewPos + highlightStart) {
-                        pos = trackedPos - highlightStart;
-                    } else if (trackedPos > viewPos + highlightEnd - d->rowSize()) {
+                    if (trackedPos > pos + highlightEnd - d->rowSize())
                         pos = trackedPos - highlightEnd + d->rowSize();
-                    }
+                    if (trackedPos < pos + highlightStart)
+                        pos = trackedPos - highlightStart;
                 }
             }
         } else {

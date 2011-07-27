@@ -753,11 +753,10 @@ void QSGItemView::trackedPositionChanged()
                     if (pos < d->startPosition())
                         pos = d->startPosition();
                 } else {
-                    if (trackedPos < viewPos + highlightStart) {
-                        pos = trackedPos - highlightStart;
-                    } else if (trackedPos > viewPos + highlightEnd - trackedSize) {
+                    if (trackedPos > pos + highlightEnd - trackedSize)
                         pos = trackedPos - highlightEnd + trackedSize;
-                    }
+                    if (trackedPos < pos + highlightStart)
+                        pos = trackedPos - highlightStart;
                 }
             }
         } else {
