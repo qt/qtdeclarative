@@ -1500,9 +1500,17 @@ void QSGGridView::itemsMoved(int from, int to, int count)
     d->moveReason = QSGGridViewPrivate::Other;
     FxGridItemSG *firstVisible = static_cast<FxGridItemSG*>(d->firstVisibleItem());
     QHash<int,FxGridItemSG*> moved;
+    int moveByCount = 0;
 
     bool movingBackwards = from > to;
     int firstItemIndex = firstVisible ? firstVisible->index : -1;
+
+    // if visibleItems.first() is above the content start pos, and the items
+    // beneath it are moved, ensure this first item is later repositioned correctly
+    // (to above the next visible item) so that subsequent layout() is correct
+    bool repositionFirstItem = firstVisible
+            && d->visibleItems.first()->position() < firstVisible->position()
+            && from > d->visibleItems.first()->index;
 
     QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
@@ -1511,6 +1519,8 @@ void QSGGridView::itemsMoved(int from, int to, int count)
             // take the items that are moving
             item->index += (to-from);
             moved.insert(item->index, static_cast<FxGridItemSG*>(item));
+            if (repositionFirstItem)
+                moveByCount++;
             it = d->visibleItems.erase(it);
         } else {
             if (item->index > from && item->index != -1) {
@@ -1592,6 +1602,12 @@ void QSGGridView::itemsMoved(int from, int to, int count)
         if (d->currentItem && item->item == d->currentItem->item)
             item->setPosition(d->colPosAt(idx), d->rowPosAt(idx));
         d->releaseItem(item);
+    }
+
+    // Ensure we don't cause an ugly list scroll.
+    if (d->visibleItems.count() && moveByCount > 0) {
+        FxGridItemSG *first = static_cast<FxGridItemSG*>(d->visibleItems.first());
+        first->setPosition(first->colPos(), first->rowPos() + ((moveByCount / d->columns) * d->rowSize()));
     }
 
     d->layout();

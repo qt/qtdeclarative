@@ -77,6 +77,7 @@ private slots:
     void removed();
     void clear();
     void moved();
+    void moved_data();
     void swapWithFirstItem();
     void changeFlow();
     void currentIndex();
@@ -115,6 +116,29 @@ private:
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
     void dumpTree(QSGItem *parent, int depth = 0);
 };
+
+template<typename T>
+void tst_qsggridview_move(int from, int to, int n, T *items)
+{
+    if (n == 1) {
+        items->move(from, to);
+    } else {
+        T replaced;
+        int i=0;
+        typename T::ConstIterator it=items->begin(); it += from+n;
+        for (; i<to-from; ++i,++it)
+            replaced.append(*it);
+        i=0;
+        it=items->begin(); it += from;
+        for (; i<n; ++i,++it)
+            replaced.append(*it);
+        typename T::ConstIterator f=replaced.begin();
+        typename T::Iterator t=items->begin(); t += from;
+        for (; f != replaced.end(); ++f, ++t)
+            *t = *f;
+    }
+}
+
 void tst_QSGGridView::initTestCase()
 {
     QSGView canvas;
@@ -188,6 +212,12 @@ public:
     void moveItem(int from, int to) {
         emit beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
         list.move(from, to);
+        emit endMoveRows();
+    }
+
+    void moveItems(int from, int to, int count) {
+        emit beginMoveRows(QModelIndex(), from, from+count-1, QModelIndex(), to > from ? to+count : to);
+        tst_qsggridview_move(from, to, count, &list);
         emit endMoveRows();
     }
 
@@ -566,7 +596,16 @@ void tst_QSGGridView::clear()
 
 void tst_QSGGridView::moved()
 {
+    QFETCH(qreal, contentY);
+    QFETCH(int, from);
+    QFETCH(int, to);
+    QFETCH(int, count);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
     QSGView *canvas = createView();
+    canvas->show();
 
     TestModel model;
     for (int i = 0; i < 30; i++)
@@ -586,72 +625,91 @@ void tst_QSGGridView::moved()
     QSGItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    model.moveItem(1, 8);
+    QSGItem *currentItem = gridview->currentItem();
+    QTRY_VERIFY(currentItem != 0);
 
-    QSGText *name = findItem<QSGText>(contentItem, "textName", 1);
-    QTRY_VERIFY(name != 0);
-    QTRY_COMPARE(name->text(), model.name(1));
-    QSGText *number = findItem<QSGText>(contentItem, "textNumber", 1);
-    QTRY_VERIFY(number != 0);
-    QTRY_COMPARE(number->text(), model.number(1));
+    gridview->setContentY(contentY);
+    model.moveItems(from, to, count);
 
-    name = findItem<QSGText>(contentItem, "textName", 8);
-    QTRY_VERIFY(name != 0);
-    QTRY_COMPARE(name->text(), model.name(8));
-    number = findItem<QSGText>(contentItem, "textNumber", 8);
-    QTRY_VERIFY(number != 0);
-    QTRY_COMPARE(number->text(), model.number(8));
-
-    // Confirm items positioned correctly
+    // Confirm items positioned correctly and indexes correct
+    int firstVisibleIndex = qCeil(contentY / 60.0) * 3;
     int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        if (i >= firstVisibleIndex + 18)    // index has moved out of view
+            continue;
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+
         QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
-    }
+        QTRY_VERIFY(item->y() == (i/3)*60 + itemsOffsetAfterMove);
 
-    gridview->setContentY(120);
-
-    // move outside visible area
-    model.moveItem(1, 25);
-
-    // Confirm items positioned correctly and indexes correct
-    itemCount = findItems<QSGItem>(contentItem, "wrapper").count()-1;
-    for (int i = 6; i < model.count()-6 && i < itemCount+6; ++i) {
-        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->x(), qreal((i%3)*80));
-        QTRY_COMPARE(item->y(), qreal((i/3)*60));
         name = findItem<QSGText>(contentItem, "textName", i);
-        QTRY_VERIFY(name != 0);
+        QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
         number = findItem<QSGText>(contentItem, "textNumber", i);
-        QTRY_VERIFY(number != 0);
+        QVERIFY(number != 0);
         QTRY_COMPARE(number->text(), model.number(i));
-    }
 
-    // move from outside visible into visible
-    model.moveItem(28, 8);
-
-    // Confirm items positioned correctly and indexes correct
-    for (int i = 6; i < model.count()-6 && i < itemCount+6; ++i) {
-        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60);
-        name = findItem<QSGText>(contentItem, "textName", i);
-        QTRY_VERIFY(name != 0);
-        QTRY_COMPARE(name->text(), model.name(i));
-        number = findItem<QSGText>(contentItem, "textNumber", i);
-        QTRY_VERIFY(number != 0);
-        QTRY_COMPARE(number->text(), model.number(i));
+        // current index should have been updated
+        if (item == currentItem)
+            QTRY_COMPARE(gridview->currentIndex(), i);
     }
 
     delete canvas;
+}
+
+void tst_QSGGridView::moved_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("from");
+    QTest::addColumn<int>("to");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    // model starts with 30 items, each 80x60, in area 240x320
+    // 18 items should be visible at a time
+
+    QTest::newRow("move 1 forwards, within visible items")
+            << 0.0
+            << 1 << 8 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from non-visible -> visible")
+            << 120.0     // show 6-23
+            << 1 << 23 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from non-visible -> visible (move first item)")
+            << 120.0     // // show 6-23
+            << 0 << 6 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from visible -> non-visible")
+            << 0.0
+            << 1 << 20 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from visible -> non-visible (move first item)")
+            << 0.0
+            << 0 << 20 << 1
+            << 0.0;
+
+
+    QTest::newRow("move 1 backwards, within visible items")
+            << 0.0
+            << 10 << 5 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 backwards, from non-visible -> visible")
+            << 0.0
+            << 28 << 8 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 backwards, from non-visible -> visible (move last item)")
+            << 0.0
+            << 29 << 14 << 1
+            << 0.0;
 }
 
 void tst_QSGGridView::swapWithFirstItem()
@@ -2395,3 +2453,4 @@ void tst_QSGGridView::dumpTree(QSGItem *parent, int depth)
 QTEST_MAIN(tst_QSGGridView)
 
 #include "tst_qsggridview.moc"
+

@@ -86,7 +86,9 @@ private slots:
     void qAbstractItemModel_removed();
 
     void qListModelInterface_moved();
+    void qListModelInterface_moved_data();
     void qAbstractItemModel_moved();
+    void qAbstractItemModel_moved_data();
 
     void qListModelInterface_clear();
     void qAbstractItemModel_clear();
@@ -141,6 +143,8 @@ private:
     template<typename T>
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
     void dumpTree(QSGItem *parent, int depth = 0);
+
+    void moved_data();
 };
 
 void tst_QSGListView::initTestCase()
@@ -192,6 +196,36 @@ public:
     bool mInvalidHighlight;
     int mCacheBuffer;
 };
+
+template<typename T>
+void tst_qsglistview_move(int from, int to, int n, T *items)
+{
+    if (from > to) {
+        // Only move forwards - flip if backwards moving
+        int tfrom = from;
+        int tto = to;
+        from = tto;
+        to = tto+n;
+        n = tfrom-tto;
+    }
+    if (n == 1) {
+        items->move(from, to);
+    } else {
+        T replaced;
+        int i=0;
+        typename T::ConstIterator it=items->begin(); it += from+n;
+        for (; i<to-from; ++i,++it)
+            replaced.append(*it);
+        i=0;
+        it=items->begin(); it += from;
+        for (; i<n; ++i,++it)
+            replaced.append(*it);
+        typename T::ConstIterator f=replaced.begin();
+        typename T::Iterator t=items->begin(); t += from;
+        for (; f != replaced.end(); ++f, ++t)
+            *t = *f;
+    }
+}
 
 class TestModel : public QListModelInterface
 {
@@ -275,6 +309,11 @@ public:
         emit itemsMoved(from, to, 1);
     }
 
+    void moveItems(int from, int to, int count) {
+        tst_qsglistview_move(from, to, count, &list);
+        emit itemsMoved(from, to, count);
+    }
+
     void modifyItem(int index, const QString &name, const QString &number) {
         list[index] = QPair<QString,QString>(name, number);
         emit itemsChanged(index, 1, roles());
@@ -353,6 +392,12 @@ public:
     void moveItem(int from, int to) {
         emit beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
         list.move(from, to);
+        emit endMoveRows();
+    }
+
+    void moveItems(int from, int to, int count) {
+        emit beginMoveRows(QModelIndex(), from, from+count-1, QModelIndex(), to > from ? to+count : to);
+        tst_qsglistview_move(from, to, count, &list);
         emit endMoveRows();
     }
 
@@ -592,7 +637,6 @@ void tst_QSGListView::removed(bool animated)
     ctxt->setContextProperty("testModel", &model);
 
     TestObject *testObject = new TestObject;
-    testObject->setAnimate(animated);
     ctxt->setContextProperty("testObject", testObject);
 
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
@@ -790,11 +834,19 @@ void tst_QSGListView::clear()
     delete testObject;
 }
 
-
 template <class T>
 void tst_QSGListView::moved()
 {
+    QFETCH(qreal, contentY);
+    QFETCH(int, from);
+    QFETCH(int, to);
+    QFETCH(int, count);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
     QSGView *canvas = createView();
+    canvas->show();
 
     T model;
     for (int i = 0; i < 30; i++)
@@ -815,69 +867,91 @@ void tst_QSGListView::moved()
     QSGItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
 
-    model.moveItem(1, 4);
+    QSGItem *currentItem = listview->currentItem();
+    QTRY_VERIFY(currentItem != 0);
 
-    QSGText *name = findItem<QSGText>(contentItem, "textName", 1);
-    QTRY_VERIFY(name != 0);
-    QTRY_COMPARE(name->text(), model.name(1));
-    QSGText *number = findItem<QSGText>(contentItem, "textNumber", 1);
-    QTRY_VERIFY(number != 0);
-    QTRY_COMPARE(number->text(), model.number(1));
+    listview->setContentY(contentY);
+    model.moveItems(from, to, count);
+    qApp->processEvents();
 
-    name = findItem<QSGText>(contentItem, "textName", 4);
-    QTRY_VERIFY(name != 0);
-    QTRY_COMPARE(name->text(), model.name(4));
-    number = findItem<QSGText>(contentItem, "textNumber", 4);
-    QTRY_VERIFY(number != 0);
-    QTRY_COMPARE(number->text(), model.number(4));
-
-    // Confirm items positioned correctly
+    // Confirm items positioned correctly and indexes correct
+    int firstVisibleIndex = qCeil(contentY / 20.0);
     int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
-    for (int i = 0; i < model.count() && i < itemCount; ++i) {
+
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        if (i >= firstVisibleIndex + 16)    // index has moved out of view
+            continue;
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_VERIFY(item->y() == i*20);
-    }
-
-    listview->setContentY(80);
-
-    // move outside visible area
-    model.moveItem(1, 18);
-
-    // Confirm items positioned correctly and indexes correct
-    for (int i = 3; i < model.count() && i < itemCount; ++i) {
-        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.0 + 20);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
         name = findItem<QSGText>(contentItem, "textName", i);
-        QTRY_VERIFY(name != 0);
+        QVERIFY(name != 0);
         QTRY_COMPARE(name->text(), model.name(i));
         number = findItem<QSGText>(contentItem, "textNumber", i);
-        QTRY_VERIFY(number != 0);
+        QVERIFY(number != 0);
         QTRY_COMPARE(number->text(), model.number(i));
-    }
 
-    // move from outside visible into visible
-    model.moveItem(20, 4);
-
-    // Confirm items positioned correctly and indexes correct
-    for (int i = 3; i < model.count() && i < itemCount; ++i) {
-        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
-        if (!item) qWarning() << "Item" << i << "not found";
-        QTRY_VERIFY(item);
-        QTRY_COMPARE(item->y(), i*20.0 + 20);
-        name = findItem<QSGText>(contentItem, "textName", i);
-        QTRY_VERIFY(name != 0);
-        QTRY_COMPARE(name->text(), model.name(i));
-        number = findItem<QSGText>(contentItem, "textNumber", i);
-        QTRY_VERIFY(number != 0);
-        QTRY_COMPARE(number->text(), model.number(i));
+        // current index should have been updated
+        if (item == currentItem)
+            QTRY_COMPARE(listview->currentIndex(), i);
     }
 
     delete canvas;
     delete testObject;
+}
+
+void tst_QSGListView::moved_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("from");
+    QTest::addColumn<int>("to");
+    QTest::addColumn<int>("count");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    // model starts with 30 items, each 20px high, in area 320px high
+    // 16 items should be visible at a time
+    // itemsOffsetAfterMove should be > 0 whenever items above the visible pos have moved
+
+    QTest::newRow("move 1 forwards, within visible items")
+            << 0.0
+            << 1 << 4 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from non-visible -> visible")
+            << 80.0     // show 4-19
+            << 1 << 18 << 1
+            << 20.0;
+
+    QTest::newRow("move 1 forwards, from non-visible -> visible (move first item)")
+            << 80.0     // show 4-19
+            << 0 << 4 << 1
+            << 20.0;
+
+    QTest::newRow("move 1 forwards, from visible -> non-visible")
+            << 0.0
+            << 1 << 16 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 forwards, from visible -> non-visible (move first item)")
+            << 0.0
+            << 0 << 16 << 1
+            << 20.0;
+
+
+    QTest::newRow("move 1 backwards, within visible items")
+            << 0.0
+            << 4 << 1 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 backwards, from non-visible -> visible")
+            << 0.0
+            << 20 << 4 << 1
+            << 0.0;
+
+    QTest::newRow("move 1 backwards, from non-visible -> visible (move last item)")
+            << 0.0
+            << 29 << 15 << 1
+            << 0.0;
 }
 
 void tst_QSGListView::swapWithFirstItem()
@@ -903,7 +977,7 @@ void tst_QSGListView::swapWithFirstItem()
 
     // ensure content position is stable
     listview->setContentY(0);
-    model.moveItem(10, 0);
+    model.moveItem(1, 0);
     QTRY_VERIFY(listview->contentY() == 0);
 
     delete testObject;
@@ -2848,9 +2922,19 @@ void tst_QSGListView::qListModelInterface_moved()
     moved<TestModel>();
 }
 
+void tst_QSGListView::qListModelInterface_moved_data()
+{
+    moved_data();
+}
+
 void tst_QSGListView::qAbstractItemModel_moved()
 {
     moved<TestModel2>();
+}
+
+void tst_QSGListView::qAbstractItemModel_moved_data()
+{
+    moved_data();
 }
 
 void tst_QSGListView::qListModelInterface_clear()
@@ -2937,3 +3021,4 @@ void tst_QSGListView::dumpTree(QSGItem *parent, int depth)
 QTEST_MAIN(tst_QSGListView)
 
 #include "tst_qsglistview.moc"
+

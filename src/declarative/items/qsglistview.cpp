@@ -1815,12 +1815,18 @@ void QSGListView::itemsMoved(int from, int to, int count)
 
     d->moveReason = QSGListViewPrivate::Other;
     FxViewItem *firstVisible = d->firstVisibleItem();
-    qreal firstItemPos = firstVisible->position();
     QHash<int,FxViewItem*> moved;
     int moveBy = 0;
 
     bool movingBackwards = from > to;
     int firstItemIndex = firstVisible ? firstVisible->index : -1;
+
+    // if visibleItems.first() is above the content start pos, and the items
+    // beneath it are moved, ensure this first item is later repositioned correctly
+    // (to above the next visible item) so that subsequent layout() is correct
+    bool repositionFirstItem = firstVisible
+            && d->visibleItems.first()->position() < firstVisible->position()
+            && from > d->visibleItems.first()->index;
 
     QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
@@ -1829,7 +1835,7 @@ void QSGListView::itemsMoved(int from, int to, int count)
             // take the items that are moving
             item->index += (to-from);
             moved.insert(item->index, item);
-            if (item->position() < firstItemPos)
+            if (repositionFirstItem)
                 moveBy += item->size();
             it = d->visibleItems.erase(it);
         } else {
@@ -1913,7 +1919,8 @@ void QSGListView::itemsMoved(int from, int to, int count)
     }
 
     // Ensure we don't cause an ugly list scroll.
-    static_cast<FxListItemSG*>(d->visibleItems.first())->setPosition(d->visibleItems.first()->position() + moveBy);
+    if (d->visibleItems.count())
+        static_cast<FxListItemSG*>(d->visibleItems.first())->setPosition(d->visibleItems.first()->position() + moveBy);
 
     d->updateSections();
     d->layout();
