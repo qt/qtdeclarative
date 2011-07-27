@@ -1819,6 +1819,9 @@ void QSGListView::itemsMoved(int from, int to, int count)
     QHash<int,FxViewItem*> moved;
     int moveBy = 0;
 
+    bool movingBackwards = from > to;
+    int firstItemIndex = firstVisible ? firstVisible->index : -1;
+
     QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
         FxViewItem *item = *it;
@@ -1876,6 +1879,17 @@ void QSGListView::itemsMoved(int from, int to, int count)
         if ((*it)->index != -1) {
             d->visibleIndex = (*it)->index;
             break;
+        }
+    }
+
+    // if first visible item is moving but another item is moving up to replace it,
+    // do this positioning now to avoid shifting all content forwards
+    if (movingBackwards && firstItemIndex >= 0) {
+        for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
+            if ((*it)->index == firstItemIndex) {
+                static_cast<FxListItemSG*>(*it)->setPosition(firstVisible->position());
+                break;
+            }
         }
     }
 

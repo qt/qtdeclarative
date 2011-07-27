@@ -1490,9 +1490,19 @@ void QSGGridView::itemsMoved(int from, int to, int count)
     Q_D(QSGGridView);
     if (!isComponentComplete())
         return;
+    d->updateUnrequestedIndexes();
+
+    if (d->visibleItems.isEmpty()) {
+        d->refill();
+        return;
+    }
+
+    d->moveReason = QSGGridViewPrivate::Other;
+    FxGridItemSG *firstVisible = static_cast<FxGridItemSG*>(d->firstVisibleItem());
     QHash<int,FxGridItemSG*> moved;
 
-    FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(d->firstVisibleItem());
+    bool movingBackwards = from > to;
+    int firstItemIndex = firstVisible ? firstVisible->index : -1;
 
     QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
     while (it != d->visibleItems.end()) {
@@ -1524,8 +1534,6 @@ void QSGGridView::itemsMoved(int from, int to, int count)
             if (!movedItem)
                 movedItem = static_cast<FxGridItemSG*>(d->createItem(item->index));
             it = d->visibleItems.insert(it, movedItem);
-            if (it == d->visibleItems.begin() && firstItem)
-                movedItem->setPosition(firstItem->colPos(), firstItem->rowPos());
             ++it;
             --remaining;
         } else {
@@ -1552,6 +1560,18 @@ void QSGGridView::itemsMoved(int from, int to, int count)
         if ((*it)->index != -1) {
             d->visibleIndex = (*it)->index;
             break;
+        }
+    }
+
+    // if first visible item is moving but another item is moving up to replace it,
+    // do this positioning now to avoid shifting all content forwards
+    if (movingBackwards && firstItemIndex >= 0) {
+        for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
+            if ((*it)->index == firstItemIndex) {
+                static_cast<FxGridItemSG*>(*it)->setPosition(firstVisible->colPos(),
+                                                             firstVisible->rowPos());
+                break;
+            }
         }
     }
 

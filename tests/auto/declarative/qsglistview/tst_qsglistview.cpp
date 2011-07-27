@@ -91,6 +91,7 @@ private slots:
     void qListModelInterface_clear();
     void qAbstractItemModel_clear();
 
+    void swapWithFirstItem();
     void itemList();
     void currentIndex();
     void noCurrentIndex();
@@ -877,6 +878,36 @@ void tst_QSGListView::moved()
 
     delete canvas;
     delete testObject;
+}
+
+void tst_QSGListView::swapWithFirstItem()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    // ensure content position is stable
+    listview->setContentY(0);
+    model.moveItem(10, 0);
+    QTRY_VERIFY(listview->contentY() == 0);
+
+    delete testObject;
+    delete canvas;
 }
 
 void tst_QSGListView::enforceRange()

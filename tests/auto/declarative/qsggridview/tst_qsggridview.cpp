@@ -77,6 +77,7 @@ private slots:
     void removed();
     void clear();
     void moved();
+    void swapWithFirstItem();
     void changeFlow();
     void currentIndex();
     void noCurrentIndex();
@@ -649,6 +650,30 @@ void tst_QSGGridView::moved()
         QTRY_VERIFY(number != 0);
         QTRY_COMPARE(number->text(), model.number(i));
     }
+
+    delete canvas;
+}
+
+void tst_QSGGridView::swapWithFirstItem()
+{
+    // QTBUG_9697
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview1.qml"));
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
 
     // ensure content position is stable
     gridview->setContentY(0);
