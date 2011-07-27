@@ -123,20 +123,23 @@ bool QSmoothedAnimation::recalc()
         sd = s;
     } else if (maximumEasingTime != -1 && tf > (maximumEasingTime / 1000.)) {
         qreal met = maximumEasingTime / 1000.;
-        td = tf - met;
+        //       tp|       |td
+        // vp_      _______
+        //         /       \
+        // vi_    /         \
+        //                   \
+        //                    \   _ 0
+        //       |ta|      |ta|
+        //
+        qreal ta = met / 2.;
+        a = (s - (vi * tf - 0.5 * vi * ta)) / (tf * ta - ta * ta);
 
-        qreal c1 = td;
-        qreal c2 = (tf - td) * vi - tf * velocity;
-        qreal c3 = -0.5 * (tf - td) * vi * vi;
-
-        qreal vp1 = (-c2 + sqrt(c2 * c2 - 4 * c1 * c3)) / (2. * c1);
-
-        vp = vp1;
-        a = vp / met;
-        d = a;
-        tp = (vp - vi) / a;
-        sp = vi * tp + 0.5 * a * tp * tp;
-        sd = sp + (td - tp) * vp;
+        vp = vi + a * ta;
+        d = vp / ta;
+        tp = ta;
+        sp = vi * ta + 0.5 * a * tp * tp;
+        sd = sp + vp * (tf - 2 * ta);
+        td = tf - ta;
     } else {
         qreal c1 = 0.25 * tf * tf;
         qreal c2 = 0.5 * vi * tf - s;

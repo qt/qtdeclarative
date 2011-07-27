@@ -103,7 +103,7 @@ private:
     qreal d;  // Deceleration
     qreal tf; // Total time
     qreal tp; // Time at which peak velocity occurs
-    qreal td; // Time at which decelleration begins
+    qreal td; // Time at which deceleration begins
     qreal vp; // Velocity at tp
     qreal sp; // Displacement at tp
     qreal sd; // Displacement at td
