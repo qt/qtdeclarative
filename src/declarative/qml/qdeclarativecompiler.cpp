@@ -2294,16 +2294,23 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
     return true;
 }
 
+struct StaticQtMetaObject : public QObject
+{
+    static const QMetaObject *get()
+        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
+};
+
 // Similar logic to above, but not knowing target property.
 int QDeclarativeCompiler::evaluateEnum(const QByteArray& script) const
 {
     int dot = script.indexOf('.');
     if (dot > 0) {
+        const QByteArray &scope = script.left(dot);
         QDeclarativeType *type = 0;
-        unit->imports().resolveType(script.left(dot), &type, 0, 0, 0, 0);
-        if (!type)
+        unit->imports().resolveType(scope, &type, 0, 0, 0, 0);
+        if (!type && scope != "Qt")
             return -1;
-        const QMetaObject *mo = type->metaObject();
+        const QMetaObject *mo = type ? type->metaObject() : StaticQtMetaObject::get();
         const char *key = script.constData() + dot+1;
         int i = mo->enumeratorCount();
         while (i--) {
