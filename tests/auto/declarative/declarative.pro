@@ -19,6 +19,7 @@ PUBLICTESTS += \
     qdeclarativemoduleplugin \
     qdeclarativepixmapcache \
     qdeclarativeqt \
+    qdeclarativetranslation \
     qdeclarativexmlhttprequest
 
 PRIVATETESTS += \

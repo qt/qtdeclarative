@@ -3,6 +3,7 @@ contains(QT_CONFIG,declarative): QT += declarative
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativetranslation.cpp
+RESOURCES += data/translation.qrc
 
 symbian: {
     importFiles.files = data

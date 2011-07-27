@@ -43,7 +43,6 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <QTranslator>
-#include <QDebug>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -59,6 +58,7 @@ public:
 private slots:
     void translation();
     void idTranslation();
+    void translationInQrc();
 };
 
 inline QUrl TEST_FILE(const QString &filename)
@@ -103,6 +103,30 @@ void tst_qdeclarativetranslation::idTranslation()
 
     QCOMPARE(object->property("idTranslation").toString(), QLatin1String("bonjour tout le monde"));
     QCOMPARE(object->property("idTranslation2").toString(), QLatin1String("bonjour tout le monde"));
+
+    QApplication::removeTranslator(&translator);
+    delete object;
+}
+
+void tst_qdeclarativetranslation::translationInQrc()
+{
+    QTranslator translator;
+    translator.load(":/qml_fr.qm");
+    QApplication::installTranslator(&translator);
+
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, QUrl("qrc:/translation.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("basic").toString(), QLatin1String("bonjour"));
+    QCOMPARE(object->property("basic2").toString(), QLatin1String("au revoir"));
+    QCOMPARE(object->property("disambiguation").toString(), QLatin1String("salut"));
+    QCOMPARE(object->property("disambiguation2").toString(), QString::fromUtf8("\xc3\xa0 plus tard"));
+    QCOMPARE(object->property("noop").toString(), QLatin1String("bonjour"));
+    QCOMPARE(object->property("noop2").toString(), QLatin1String("au revoir"));
+    QCOMPARE(object->property("singular").toString(), QLatin1String("1 canard"));
+    QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
 
     QApplication::removeTranslator(&translator);
     delete object;

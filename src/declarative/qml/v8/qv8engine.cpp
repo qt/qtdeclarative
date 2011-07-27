@@ -1587,7 +1587,10 @@ v8::Handle<v8::Value> QV8Engine::qsTr(const v8::Arguments &args)
     QV8Engine *v8engine = V8ENGINE();
     QDeclarativeContextData *ctxt = v8engine->callingContext();
 
-    QString context = ctxt->url.toString();
+    QString path = ctxt->url.toString();
+    int lastSlash = path.lastIndexOf(QLatin1Char('/'));
+    QString context = (lastSlash > -1) ? path.mid(lastSlash + 1, path.length()-lastSlash-5) : QString();
+
     QString text = v8engine->toString(args[0]);
     QString comment;
     if (args.Length() > 1)
