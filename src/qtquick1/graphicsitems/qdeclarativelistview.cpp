@@ -3287,7 +3287,7 @@ void QDeclarative1ListView::itemsInserted(int modelIndex, int count)
         }
     } else {
         int i = 0;
-        int to = d->buffer+tempPos+d->size()-1;
+        int to = d->buffer+tempPos+d->size();
         for (i = 0; i < count && pos <= to; ++i) {
             if (!addedVisible) {
                 d->scheduleLayout();

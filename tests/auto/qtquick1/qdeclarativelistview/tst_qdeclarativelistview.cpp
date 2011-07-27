@@ -557,6 +557,14 @@ void tst_QDeclarative1ListView::inserted()
 
 //    QTRY_COMPARE(listview->contentItemHeight(), model.count() * 20.0);
 
+    // QTBUG-19675
+    model.clear();
+    model.insertItem(0, "Hello", "1234");
+    QDeclarativeItem *item = findItem<QDeclarativeItem>(contentItem, "wrapper", 0);
+    QVERIFY(item);
+    QCOMPARE(item->y(), 0.);
+    QVERIFY(listview->contentY() == 0);
+
     delete canvas;
     delete testObject;
 }
