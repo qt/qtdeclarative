@@ -1579,7 +1579,7 @@ bool QDeclarative1Flickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
 bool QDeclarative1Flickable::sceneEventFilter(QGraphicsItem *i, QEvent *e)
 {
     Q_D(QDeclarative1Flickable);
-    if (!isVisible() || !d->interactive)
+    if (!isVisible() || !d->interactive || !isEnabled())
         return QDeclarativeItem::sceneEventFilter(i, e);
     switch (e->type()) {
     case QEvent::GraphicsSceneMousePress:

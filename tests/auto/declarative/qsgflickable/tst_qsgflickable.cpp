@@ -78,6 +78,7 @@ private slots:
     void returnToBounds();
     void wheel();
     void movingAndDragging();
+    void disabled();
 
 private:
     QDeclarativeEngine engine;
@@ -510,6 +511,39 @@ void tst_qsgflickable::movingAndDragging()
     // Don't test moving because a flick could occur
 
     delete canvas;
+}
+
+void tst_qsgflickable::disabled()
+{
+    QSGView *canvas = new QSGView;
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/disabled.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGFlickable *flick = canvas->rootObject()->findChild<QSGFlickable*>("flickable");
+    QVERIFY(flick != 0);
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
+
+    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(50, 80), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 70), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 60), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    QVERIFY(flick->isMoving() == false);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 60));
+
+    // verify that mouse clicks on other elements still work (QTBUG-20584)
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 10));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10));
+
+    QVERIFY(canvas->rootObject()->property("clicked").toBool() == true);
 }
 
 template<typename T>

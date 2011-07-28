@@ -78,6 +78,7 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
     void wheel();
+    void disabled();
 
 private:
     QDeclarativeEngine engine;
@@ -480,6 +481,38 @@ void tst_qdeclarativeflickable::wheel()
     delete canvas;
 }
 
+void tst_qdeclarativeflickable::disabled()
+{
+    QDeclarativeView *canvas = new QDeclarativeView;
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/disabled.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QDeclarative1Flickable *flick = canvas->rootObject()->findChild<QDeclarative1Flickable*>("flickable");
+    QVERIFY(flick != 0);
+
+    QTest::mousePress(canvas->viewport(), Qt::LeftButton, 0, canvas->mapFromScene(QPoint(50,90)));
+
+    QMouseEvent moveEvent(QEvent::MouseMove, canvas->mapFromScene(QPoint(50, 80)), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, canvas->mapFromScene(QPoint(50, 70)), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, canvas->mapFromScene(QPoint(50, 60)), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    QVERIFY(flick->isMoving() == false);
+
+    QTest::mouseRelease(canvas->viewport(), Qt::LeftButton, 0, canvas->mapFromScene(QPoint(50, 60)));
+
+    // verify that mouse clicks on other elements still work (QTBUG-20584)
+    QTest::mousePress(canvas->viewport(), Qt::LeftButton, 0, canvas->mapFromScene(QPoint(50, 10)));
+    QTest::mouseRelease(canvas->viewport(), Qt::LeftButton, 0, canvas->mapFromScene(QPoint(50, 10)));
+
+    QVERIFY(canvas->rootObject()->property("clicked").toBool() == true);
+}
 
 template<typename T>
 T *tst_qdeclarativeflickable::findItem(QGraphicsObject *parent, const QString &objectName)

@@ -1346,7 +1346,7 @@ bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
 bool QSGFlickable::childMouseEventFilter(QSGItem *i, QEvent *e)
 {
     Q_D(QSGFlickable);
-    if (!isVisible() || !d->interactive)
+    if (!isVisible() || !d->interactive || !isEnabled())
         return QSGItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::GraphicsSceneMousePress:
