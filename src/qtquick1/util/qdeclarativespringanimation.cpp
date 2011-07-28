@@ -325,11 +325,13 @@ void QDeclarative1SpringAnimation::setSpring(qreal spring)
     \qmlproperty real QtQuick1::SpringAnimation::damping
     This property holds the spring damping value.
 
-    This value describes how quickly the spring-like motion comes to rest.
+    This parameter can be used to tweak the spring behaviour by exerting a resisting force
+    (like friction).
+
     The default value is 0.
 
-    The useful value range is 0 - 1.0. The lower the value, the faster it
-    comes to rest.
+    The useful value range is 0 - 1.0. The higher the value, the faster it
+    usually comes to rest.
 */
 qreal QDeclarative1SpringAnimation::damping() const
 {
