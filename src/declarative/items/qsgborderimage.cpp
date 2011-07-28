@@ -339,8 +339,8 @@ QSGNode *QSGBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     const QSGScaleGrid *border = d->getScaleGrid();
     node->setInnerRect(QRectF(border->left(),
                               border->top(),
-                              d->pix.width() - border->right() - border->left(),
-                              d->pix.height() - border->bottom() - border->top()));
+                              qMax(1, d->pix.width() - border->right() - border->left()),
+                              qMax(1, d->pix.height() - border->bottom() - border->top())));
     node->setRect(QRectF(0, 0, width(), height()));
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
     node->setHorzontalTileMode(d->horizontalTileMode);
