@@ -428,6 +428,34 @@ void QSGFlickablePrivate::updateBeginningEnd()
         visibleArea->updateVisible();
 }
 
+/*
+XXXTODO add docs describing moving, dragging, flicking properties, e.g.
+
+When the user starts dragging the Flickable, the dragging and moving properties
+will be true.
+
+If the velocity is sufficient when the drag is ended, flicking may begin.
+
+The moving properties will remain true until all dragging and flicking
+is finished.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onDragStarted()
+
+    This handler is called when the view starts to be dragged due to user
+    interaction.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onDragEnded()
+
+    This handler is called when the user stops dragging the view.
+
+    If the velocity of the drag is suffient at the time the
+    touch/mouse button is released then a flick will start.
+*/
+
 QSGFlickable::QSGFlickable(QSGItem *parent)
   : QSGItem(*(new QSGFlickablePrivate), parent)
 {
@@ -698,6 +726,7 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     if (hMoved || vMoved) {
+        draggingStarting();
         q->movementStarting();
         q->viewportMoved();
     }
@@ -724,8 +753,6 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *even
     stealMouse = false;
     q->setKeepMouseGrab(false);
     pressed = false;
-    if (!lastPosTime.isValid())
-        return;
 
     // if we drag then pause before release we should not cause a flick.
     if (QSGItemPrivate::elapsed(lastPosTime) < 100) {
@@ -735,6 +762,11 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *even
         hData.velocity = 0.0;
         vData.velocity = 0.0;
     }
+
+    draggingEnding();
+
+    if (!lastPosTime.isValid())
+        return;
 
     vTime = timeline.time();
 
@@ -1231,6 +1263,7 @@ void QSGFlickable::mouseUngrabEvent()
         // if our mouse grab has been removed (probably by another Flickable),
         // fix our state
         d->pressed = false;
+        d->draggingEnding();
         d->stealMouse = false;
         setKeepMouseGrab(false);
     }
@@ -1373,6 +1406,68 @@ bool QSGFlickable::isFlickingVertically() const
 {
     Q_D(const QSGFlickable);
     return d->flickingVertically;
+}
+
+/*!
+    \qmlproperty bool QtQuick2::Flickable::dragging
+    \qmlproperty bool QtQuick2::Flickable::draggingHorizontally
+    \qmlproperty bool QtQuick2::Flickable::draggingVertically
+
+    These properties describe whether the view is currently moving horizontally,
+    vertically or in either direction, due to the user dragging the view.
+*/
+bool QSGFlickable::isDragging() const
+{
+    Q_D(const QSGFlickable);
+    return d->hData.dragging ||  d->vData.dragging;
+}
+
+bool QSGFlickable::isDraggingHorizontally() const
+{
+    Q_D(const QSGFlickable);
+    return d->hData.dragging;
+}
+
+bool QSGFlickable::isDraggingVertically() const
+{
+    Q_D(const QSGFlickable);
+    return d->vData.dragging;
+}
+
+void QSGFlickablePrivate::draggingStarting()
+{
+    Q_Q(QSGFlickable);
+    bool wasDragging = hData.dragging || vData.dragging;
+    if (hMoved && !hData.dragging) {
+        hData.dragging = true;
+        emit q->draggingHorizontallyChanged();
+    }
+    if (vMoved && !vData.dragging) {
+        vData.dragging = true;
+        emit q->draggingVerticallyChanged();
+    }
+    if (!wasDragging && (hData.dragging || vData.dragging)) {
+        emit q->draggingChanged();
+        emit q->dragStarted();
+    }
+}
+
+void QSGFlickablePrivate::draggingEnding()
+{
+    Q_Q(QSGFlickable);
+    bool wasDragging = hData.dragging || vData.dragging;
+    if (hData.dragging) {
+        hData.dragging = false;
+        emit q->draggingHorizontallyChanged();
+    }
+    if (vData.dragging) {
+        vData.dragging = false;
+        emit q->draggingVerticallyChanged();
+    }
+    if (wasDragging && !hData.dragging && !vData.dragging) {
+        emit q->draggingChanged();
+        emit q->dragEnded();
+    }
 }
 
 int QSGFlickable::pressDelay() const

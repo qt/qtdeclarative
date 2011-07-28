@@ -75,6 +75,9 @@ class Q_AUTOTEST_EXPORT QSGFlickable : public QSGItem
     Q_PROPERTY(bool flicking READ isFlicking NOTIFY flickingChanged)
     Q_PROPERTY(bool flickingHorizontally READ isFlickingHorizontally NOTIFY flickingHorizontallyChanged)
     Q_PROPERTY(bool flickingVertically READ isFlickingVertically NOTIFY flickingVerticallyChanged)
+    Q_PROPERTY(bool dragging READ isDragging NOTIFY draggingChanged)
+    Q_PROPERTY(bool draggingHorizontally READ isDraggingHorizontally NOTIFY draggingHorizontallyChanged)
+    Q_PROPERTY(bool draggingVertically READ isDraggingVertically NOTIFY draggingVerticallyChanged)
     Q_PROPERTY(FlickableDirection flickableDirection READ flickableDirection WRITE setFlickableDirection NOTIFY flickableDirectionChanged)
 
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged)
@@ -123,6 +126,9 @@ public:
     bool isFlicking() const;
     bool isFlickingHorizontally() const;
     bool isFlickingVertically() const;
+    bool isDragging() const;
+    bool isDraggingHorizontally() const;
+    bool isDraggingVertically() const;
 
     int pressDelay() const;
     void setPressDelay(int delay);
@@ -164,6 +170,9 @@ Q_SIGNALS:
     void flickingChanged();
     void flickingHorizontallyChanged();
     void flickingVerticallyChanged();
+    void draggingChanged();
+    void draggingHorizontallyChanged();
+    void draggingVerticallyChanged();
     void horizontalVelocityChanged();
     void verticalVelocityChanged();
     void isAtBoundaryChanged();
@@ -177,6 +186,8 @@ Q_SIGNALS:
     void movementEnded();
     void flickStarted();
     void flickEnded();
+    void dragStarted();
+    void dragEnded();
 
 protected:
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);

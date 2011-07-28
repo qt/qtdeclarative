@@ -77,6 +77,7 @@ private slots:
     void resizeContent();
     void returnToBounds();
     void wheel();
+    void movingAndDragging();
 
 private:
     QDeclarativeEngine engine;
@@ -400,6 +401,116 @@ void tst_qsgflickable::wheel()
     delete canvas;
 }
 
+void tst_qsgflickable::movingAndDragging()
+{
+    QSGView *canvas = new QSGView;
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
+
+    QSignalSpy vDragSpy(flickable, SIGNAL(draggingVerticallyChanged()));
+    QSignalSpy hDragSpy(flickable, SIGNAL(draggingHorizontallyChanged()));
+    QSignalSpy dragSpy(flickable, SIGNAL(draggingChanged()));
+    QSignalSpy vMoveSpy(flickable, SIGNAL(movingVerticallyChanged()));
+    QSignalSpy hMoveSpy(flickable, SIGNAL(movingHorizontallyChanged()));
+    QSignalSpy moveSpy(flickable, SIGNAL(movingChanged()));
+    QSignalSpy dragStartSpy(flickable, SIGNAL(dragStarted()));
+    QSignalSpy dragEndSpy(flickable, SIGNAL(dragEnded()));
+
+    //Vertical
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
+
+    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(50, 80), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 70), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 60), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    QVERIFY(!flickable->isDraggingHorizontally());
+    QVERIFY(flickable->isDraggingVertically());
+    QVERIFY(flickable->isDragging());
+    QCOMPARE(vDragSpy.count(), 1);
+    QCOMPARE(dragSpy.count(), 1);
+    QCOMPARE(hDragSpy.count(), 0);
+    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(dragEndSpy.count(), 0);
+
+    QVERIFY(!flickable->isMovingHorizontally());
+    QVERIFY(flickable->isMovingVertically());
+    QVERIFY(flickable->isMoving());
+    QCOMPARE(vMoveSpy.count(), 1);
+    QCOMPARE(moveSpy.count(), 1);
+    QCOMPARE(hMoveSpy.count(), 0);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 60));
+
+    QVERIFY(!flickable->isDraggingVertically());
+    QVERIFY(!flickable->isDragging());
+    QCOMPARE(vDragSpy.count(), 2);
+    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(hDragSpy.count(), 0);
+    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(dragEndSpy.count(), 1);
+
+    // Don't test moving because a flick could occur
+
+    //Horizontal
+    vDragSpy.clear();
+    hDragSpy.clear();
+    dragSpy.clear();
+    vMoveSpy.clear();
+    hMoveSpy.clear();
+    moveSpy.clear();
+    dragStartSpy.clear();
+    dragEndSpy.clear();
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(90, 50));
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(80, 50), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(70, 50), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(60, 50), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+
+    QVERIFY(flickable->isDraggingHorizontally());
+    QVERIFY(flickable->isDragging());
+    QCOMPARE(vDragSpy.count(), 0);
+    QCOMPARE(dragSpy.count(), 1);
+    QCOMPARE(hDragSpy.count(), 1);
+    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(dragEndSpy.count(), 0);
+
+    QVERIFY(!flickable->isMovingVertically());
+    QVERIFY(flickable->isMovingHorizontally());
+    QVERIFY(flickable->isMoving());
+    QCOMPARE(vMoveSpy.count(), 0);
+    QCOMPARE(moveSpy.count(), 1);
+    QCOMPARE(hMoveSpy.count(), 1);
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(60, 50));
+
+    QVERIFY(!flickable->isDraggingHorizontally());
+    QVERIFY(!flickable->isDragging());
+    QCOMPARE(vDragSpy.count(), 0);
+    QCOMPARE(dragSpy.count(), 2);
+    QCOMPARE(hDragSpy.count(), 2);
+    QCOMPARE(dragStartSpy.count(), 1);
+    QCOMPARE(dragEndSpy.count(), 1);
+
+    // Don't test moving because a flick could occur
+
+    delete canvas;
+}
 
 template<typename T>
 T *tst_qsgflickable::findItem(QSGItem *parent, const QString &objectName)

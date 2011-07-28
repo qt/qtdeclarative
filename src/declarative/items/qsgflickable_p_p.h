@@ -96,7 +96,7 @@ public:
     struct AxisData {
         AxisData(QSGFlickablePrivate *fp, void (QSGFlickablePrivate::*func)(qreal))
             : move(fp, func), viewSize(-1), smoothVelocity(fp), atEnd(false), atBeginning(true)
-            , fixingUp(false), inOvershoot(false)
+            , fixingUp(false), inOvershoot(false), dragging(false)
         {}
 
         void reset() {
@@ -123,6 +123,7 @@ public:
         bool atBeginning : 1;
         bool fixingUp : 1;
         bool inOvershoot : 1;
+        bool dragging : 1;
     };
 
     void flickX(qreal velocity);
@@ -146,6 +147,9 @@ public:
     qreal overShootDistance(qreal size);
 
     void itemGeometryChanged(QSGItem *, const QRectF &, const QRectF &);
+
+    void draggingStarting();
+    void draggingEnding();
 
 public:
     QSGItem *contentItem;

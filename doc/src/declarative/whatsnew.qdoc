@@ -43,6 +43,8 @@ set binding when its \e when clause becomes false.
 QDeclarativeExpression can now be directly (and more efficiently) constructed from a
 QDeclarativeScriptString.
 
+Flickable: added dragging, draggingHorizontally and draggingVerically properties.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
