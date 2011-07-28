@@ -418,7 +418,10 @@ void QSGPathView::setModel(const QVariant &model)
             d->offset = d->model->count() + d->offset;
 }
     d->regenerate();
-    d->fixOffset();
+    if (d->currentIndex < d->modelCount)
+        setOffset(qmlMod(d->modelCount - d->currentIndex, d->modelCount));
+    else
+        d->fixOffset();
     emit countChanged();
     emit modelChanged();
 }
