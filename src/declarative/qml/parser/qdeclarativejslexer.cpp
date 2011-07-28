@@ -80,9 +80,9 @@ static unsigned char convertHex(ushort c)
         return (c - 'A' + 10);
 }
 
-static unsigned char convertHex(QChar c1, QChar c2)
+static QChar convertHex(QChar c1, QChar c2)
 {
-    return ((convertHex(c1.unicode()) << 4) + convertHex(c2.unicode()));
+    return QChar((convertHex(c1.unicode()) << 4) + convertHex(c2.unicode()));
 }
 
 static QChar convertUnicode(QChar c1, QChar c2, QChar c3, QChar c4)
@@ -622,7 +622,7 @@ again:
                     while (_char == QLatin1Char('\r'))
                         scanChar();
 
-                    if (_char == '\n') {
+                    if (_char == QLatin1Char('\n')) {
                         u = _char;
                         scanChar();
                     } else {
@@ -710,7 +710,7 @@ again:
                 }
             }
         } else if (QDeclarativeUtils::isDigit(ch)) {
-            if (ch != '0') {
+            if (ch != QLatin1Char('0')) {
                 int integer = ch.unicode() - '0';
 
                 QChar n = _char;
@@ -731,7 +731,7 @@ again:
             QVarLengthArray<char,32> chars;
             chars.append(ch.unicode());
 
-            if (ch == QLatin1Char('0') && (_char == 'x' || _char == 'X')) {
+            if (ch == QLatin1Char('0') && (_char == QLatin1Char('x') || _char == QLatin1Char('X'))) {
                 // parse hex integer literal
 
                 chars.append(_char.unicode());
