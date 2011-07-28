@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QJSDEBUGSERVICE_P_H
-#define QJSDEBUGSERVICE_P_H
+#ifndef QV8DEBUGSERVICE_P_H
+#define QV8DEBUGSERVICE_P_H
 
 //
 //  W A R N I N G
@@ -64,36 +64,40 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
-class QJSDebuggerAgent;
+class QJSEngine;
+class QV8DebugServicePrivate;
 
-class QJSDebugService : public QDeclarativeDebugService
+class QV8DebugService : public QDeclarativeDebugService
 {
     Q_OBJECT
-
 public:
-    QJSDebugService(QObject *parent = 0);
-    ~QJSDebugService();
+    QV8DebugService(QObject *parent = 0);
+    ~QV8DebugService();
 
-    static QJSDebugService *instance();
+    static QV8DebugService *instance();
 
     void addEngine(QDeclarativeEngine *);
     void removeEngine(QDeclarativeEngine *);
 
+    void debugMessageHandler(QByteArray message);
+    void executionStopped();
+
+    void appendSourcePath(QByteArray message);
+
 protected:
-    void statusChanged(Status status);
     void messageReceived(const QByteArray &);
 
-private Q_SLOTS:
-    void executionStopped(bool becauseOfException,
-                          const QString &exception);
+private:
+    void sendDebugMessage(const QByteArray &msg);
+    QByteArray packMessage(QByteArray &message);
 
 private:
-    QList<QDeclarativeEngine *> m_engines;
-    QPointer<QJSDebuggerAgent> m_agent;
+    Q_DISABLE_COPY(QV8DebugService)
+    Q_DECLARE_PRIVATE(QV8DebugService)
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QJSDEBUGSERVICE_P_H
+#endif // QV8DEBUGSERVICE_P_H

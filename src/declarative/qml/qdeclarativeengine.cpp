@@ -67,7 +67,7 @@
 #include "private/qdeclarativenotifier_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeapplication_p.h"
-#include "private/qjsdebugservice_p.h"
+#include "private/qv8debugservice_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QNetworkReply>
@@ -451,7 +451,7 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeEngineDebugServer::isDebuggingEnabled()) {
         isDebugging = true;
         QDeclarativeEngineDebugServer::instance()->addEngine(q);
-        QJSDebugService::instance()->addEngine(q);
+        QV8DebugService::instance()->addEngine(q);
     }
 }
 

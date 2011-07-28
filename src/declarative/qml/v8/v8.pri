@@ -5,6 +5,7 @@ include(script.pri)
 
 HEADERS += \
     $$PWD/qv8_p.h \
+    $$PWD/qv8debug_p.h \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qhashedstring_p.h \
