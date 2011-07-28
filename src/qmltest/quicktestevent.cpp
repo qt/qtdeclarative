@@ -49,7 +49,7 @@
 #include <QtDeclarative/qsgcanvas.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
-#include <QtGui/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsscene.h>
 
 QT_BEGIN_NAMESPACE
 

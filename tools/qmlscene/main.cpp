@@ -41,19 +41,19 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qabstractanimation.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qapplication.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtCore/qdir.h>
-#include <QtGui/QFormLayout>
-#include <QtGui/QComboBox>
-#include <QtGui/QCheckBox>
-#include <QtGui/QDialog>
-#include <QtGui/QDialogButtonBox>
-#include <QtGui/QFileDialog>
-#include <QtGui/QGraphicsView>
+#include <QtWidgets/QFormLayout>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QGraphicsView>
 
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <private/qdeclarativedebughelper_p.h>

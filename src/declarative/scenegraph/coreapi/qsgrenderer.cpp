@@ -48,7 +48,7 @@
 
 #include <QGLShaderProgram>
 #include <qglframebufferobject.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qapplication.h>
 
 #include <qdatetime.h>
 

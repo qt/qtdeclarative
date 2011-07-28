@@ -44,9 +44,9 @@
 #include "declarativeinputcontext.h"
 
 #include <QtCore/qdebug.h>
-#include <QtGui/qapplication.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qtextformat.h>
+#include <QtWidgets/qapplication.h>
 
 QT_BEGIN_NAMESPACE
 

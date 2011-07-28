@@ -41,7 +41,7 @@
 
 #include "qsgcontextplugin_p.h"
 #include <private/qsgcontext_p.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qapplication.h>
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qlibraryinfo.h>
 

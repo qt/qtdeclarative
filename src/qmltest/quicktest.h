@@ -43,7 +43,7 @@
 #define QUICKTEST_H
 
 #include <QtQuickTest/quicktestglobal.h>
-#include <QtGui/qwidget.h>
+#include <QtWidgets/qwidget.h>
 #ifdef QT_OPENGL_LIB
 #include <QtOpenGL/qgl.h>
 #endif

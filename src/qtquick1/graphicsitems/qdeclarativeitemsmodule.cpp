@@ -41,10 +41,10 @@
 
 #include "QtQuick1/private/qdeclarativeitemsmodule_p.h"
 
-#include <QtGui/qaction.h>
+#include <QtWidgets/qaction.h>
 #include <QtGui/qvalidator.h>
-#include <QtGui/qgraphicseffect.h>
-#include <QtGui/qgraphicsitem.h>
+#include <QtWidgets/qgraphicseffect.h>
+#include <QtWidgets/qgraphicsitem.h>
 
 #include "QtQuick1/private/qdeclarativeevents_p_p.h"
 #include "QtQuick1/private/qdeclarativescalegrid_p_p.h"

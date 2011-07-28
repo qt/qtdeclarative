@@ -60,9 +60,10 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QtCore/qnumeric.h>
 #include <QtScript/qscriptengine.h>
-#include <QtGui/qgraphicstransform.h>
 
 #include <private/qv8engine_p.h>
+#include <QtWidgets/qgraphicstransform.h>
+#include <private/qlistmodelinterface_p.h>
 
 #include <float.h>
 

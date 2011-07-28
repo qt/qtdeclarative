@@ -42,8 +42,8 @@
 #include "qsgpincharea_p_p.h"
 #include "qsgcanvas.h"
 
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qapplication.h>
 
 #include <float.h>
 #include <math.h>

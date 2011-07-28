@@ -72,7 +72,7 @@
 #include <QtCore/qrect.h>
 #include <QtCore/qdebug.h>
 
-#include <private/qgraphicsitem_p.h>
+#include <QtWidgets/private/qgraphicsitem_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -53,9 +53,9 @@
 #include <private/qabstractanimation_p.h>
 
 #include <QtGui/qpainter.h>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QtGui/qmatrix4x4.h>
-#include <QtGui/qinputcontext.h>
+#include <QtWidgets/qinputcontext.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 
@@ -416,7 +416,6 @@ void QSGCanvas::sceneGraphChanged()
 //    Q_D(QSGCanvas);
 //    d->needsRepaint = true;
 }
-
 
 QSGCanvasPrivate::QSGCanvasPrivate()
     : rootItem(0)

@@ -41,7 +41,7 @@
 
 #include "QtQuick1/private/qdeclarativeapplication_p.h"
 #include <private/qobject_p.h>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 
 QT_BEGIN_NAMESPACE
 

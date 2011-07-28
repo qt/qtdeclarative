@@ -42,7 +42,7 @@
 #ifndef DECLARATIVEINPUTCONTEXT_H
 #define DECLARATIVEINPUTCONTEXT_H
 
-#include <QtGui/qinputcontext.h>
+#include <QtWidgets/qinputcontext.h>
 
 QT_BEGIN_HEADER
 

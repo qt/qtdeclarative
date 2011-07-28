@@ -47,8 +47,8 @@
 #include <private/qwidget_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qinputcontext.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qinputcontext.h>
 #include <QTextBoundaryFinder>
 #include <qstyle.h>
 
@@ -465,7 +465,7 @@ void QSGTextInput::setEchoMode(QSGTextInput::EchoMode echo)
     Q_D(QSGTextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((uint)echo);
+    d->control->setEchoMode((QLineControl::EchoMode)echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());

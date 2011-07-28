@@ -47,10 +47,10 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
-#include <QtGui/qgraphicsitem.h>
-#include <QtGui/qgraphicstransform.h>
 #include <QtGui/qfont.h>
-#include <QtGui/qaction.h>
+#include <QtWidgets/qgraphicsitem.h>
+#include <QtWidgets/qgraphicstransform.h>
+#include <QtWidgets/qaction.h>
 
 QT_BEGIN_HEADER
 

@@ -44,9 +44,9 @@
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qurl.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qgraphicsview.h>
-#include <QtGui/qwidget.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicsview.h>
+#include <QtWidgets/qwidget.h>
 
 QT_BEGIN_HEADER
 

@@ -56,7 +56,7 @@
 
 #include "qsgitem_p.h"
 
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE

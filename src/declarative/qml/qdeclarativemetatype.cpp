@@ -1093,13 +1093,13 @@ QT_END_NAMESPACE
 #include <QtGui/qbrush.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qpalette.h>
-#include <QtGui/qicon.h>
+#include <QtWidgets/qicon.h>
 #include <QtGui/qimage.h>
 #include <QtGui/qpolygon.h>
 #include <QtGui/qregion.h>
 #include <QtGui/qbitmap.h>
 #include <QtGui/qcursor.h>
-#include <QtGui/qsizepolicy.h>
+#include <QtWidgets/qsizepolicy.h>
 #include <QtGui/qkeysequence.h>
 #include <QtGui/qpen.h>
 

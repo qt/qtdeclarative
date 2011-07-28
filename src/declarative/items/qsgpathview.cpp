@@ -48,8 +48,8 @@
 #include <private/qlistmodelinterface_p.h>
 
 #include <QtGui/qevent.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qapplication.h>
 #include <QtCore/qmath.h>
 #include <math.h>
 

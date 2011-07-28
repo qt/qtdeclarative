@@ -47,9 +47,9 @@
 #include <QtCore/qdebug.h>
 #include "private/qsgcontext_p.h"
 
-#include <QtGui/qgraphicsitem.h>
-#include <QtGui/qapplication.h>
-#include <QtGui/qgraphicseffect.h>
+#include <QtWidgets/qgraphicsitem.h>
+#include <QtWidgets/qapplication.h>
+#include <QtWidgets/qgraphicseffect.h>
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
 #include "qdeclarativepixmapcache_p.h"

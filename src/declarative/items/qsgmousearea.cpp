@@ -45,8 +45,8 @@
 #include "qsgevent.h"
 #include "qsgevents_p_p.h"
 
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qapplication.h>
 
 #include <float.h>
 

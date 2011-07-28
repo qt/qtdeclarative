@@ -51,9 +51,9 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicstransform.h>
+#include <QtWidgets/qgraphicstransform.h>
 #include <QtGui/qpen.h>
-#include <QtGui/qinputcontext.h>
+#include <QtWidgets/qinputcontext.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>

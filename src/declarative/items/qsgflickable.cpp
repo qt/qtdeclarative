@@ -45,8 +45,8 @@
 #include "qsgcanvas_p.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qapplication.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE

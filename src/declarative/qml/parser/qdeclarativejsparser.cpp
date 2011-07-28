@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtCore/QtDebug>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 
 #include <string.h>
 

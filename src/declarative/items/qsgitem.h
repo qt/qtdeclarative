@@ -48,9 +48,9 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QtGui/qfont.h>
-#include <QtGui/qaction.h>
+#include <QtWidgets/qaction.h>
 
 QT_BEGIN_HEADER
 

@@ -2,7 +2,7 @@ TARGET  = qmlgesturesplugin
 TARGETPATH = Qt/labs/gestures
 include(../qimportbase.pri)
 
-QT += core-private gui-private declarative-private script-private qtquick1 qtquick1-private
+QT += core-private gui-private declarative-private script-private qtquick1 qtquick1-private widgets-private
 
 SOURCES += qdeclarativegesturearea.cpp plugin.cpp
 HEADERS += qdeclarativegesturearea_p.h

@@ -48,7 +48,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
-#include <QtGui/qgesture.h>
+#include <QtWidgets/qgesture.h>
 
 #ifndef QT_NO_GESTURES
 

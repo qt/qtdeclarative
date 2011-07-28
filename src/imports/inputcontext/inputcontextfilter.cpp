@@ -43,7 +43,7 @@
 
 #include "declarativeinputcontext.h"
 
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qapplication.h>
 
 QT_BEGIN_NAMESPACE
 

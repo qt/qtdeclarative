@@ -45,8 +45,8 @@
 #include "qsgcanvas.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qapplication.h>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtWidgets/qapplication.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtCore/qmath.h>

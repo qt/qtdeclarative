@@ -900,7 +900,7 @@ void QDeclarative1TextInput::setEchoMode(QDeclarative1TextInput::EchoMode echo)
     Q_D(QDeclarative1TextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((uint)echo);
+    d->control->setEchoMode((QLineControl::EchoMode)echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());

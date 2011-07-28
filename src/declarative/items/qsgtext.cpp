@@ -50,13 +50,13 @@
 #include <private/qsgtexture_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicssceneevent.h>
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextdocument.h>
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtextcursor.h>
-#include <QtGui/qapplication.h>
+#include <QtWidgets/qapplication.h>
 
 #include <private/qdeclarativestyledtext_p.h>
 #include <private/qdeclarativepixmapcache_p.h>
