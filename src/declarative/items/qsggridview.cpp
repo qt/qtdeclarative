@@ -1445,6 +1445,15 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
         }
     }
 
+    // update visibleIndex
+    d->visibleIndex = 0;
+    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
+        if ((*it)->index != -1) {
+            d->visibleIndex = (*it)->index;
+            break;
+        }
+    }
+
     // fix current
     if (d->currentIndex >= modelIndex + count) {
         d->currentIndex -= count;
@@ -1460,15 +1469,6 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
             d->updateCurrent(qMin(modelIndex, d->itemCount-1));
         else
             emit currentIndexChanged();
-    }
-
-    // update visibleIndex
-    d->visibleIndex = 0;
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            break;
-        }
     }
 
     if (removedVisible && d->visibleItems.isEmpty()) {

@@ -1751,6 +1751,16 @@ void QSGListView::itemsRemoved(int modelIndex, int count)
     if (firstVisible && d->visibleItems.first() != firstVisible)
         static_cast<FxListItemSG*>(d->visibleItems.first())->setPosition(d->visibleItems.first()->position() + preRemovedSize);
 
+    // update visibleIndex
+    bool haveVisibleIndex = false;
+    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
+        if ((*it)->index != -1) {
+            d->visibleIndex = (*it)->index;
+            haveVisibleIndex = true;
+            break;
+        }
+    }
+
     // fix current
     if (d->currentIndex >= modelIndex + count) {
         d->currentIndex -= count;
@@ -1769,16 +1779,6 @@ void QSGListView::itemsRemoved(int modelIndex, int count)
             d->updateCurrent(qMin(modelIndex, d->itemCount-1));
         else
             emit currentIndexChanged();
-    }
-
-    // update visibleIndex
-    bool haveVisibleIndex = false;
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            haveVisibleIndex = true;
-            break;
-        }
     }
 
     if (!haveVisibleIndex) {

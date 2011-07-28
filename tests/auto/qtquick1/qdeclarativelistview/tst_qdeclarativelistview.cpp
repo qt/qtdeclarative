@@ -725,8 +725,15 @@ void tst_QDeclarative1ListView::removed(bool animated)
     QCOMPARE(name->text(), QString("New"));
 
     // Add some more items so that we don't run out
-    for (int i = 50; i < 100; i++)
+    model.clear();
+    for (int i = 0; i < 50; i++)
         model.addItem("Item" + QString::number(i), "");
+
+    // QTBUG-QTBUG-20575
+    listview->setCurrentIndex(0);
+    listview->setContentY(30);
+    model.removeItem(0);
+    QTRY_VERIFY(name = findItem<QDeclarative1Text>(contentItem, "textName", 0));
 
     // QTBUG-19198 move to end and remove all visible items one at a time.
     listview->positionViewAtEnd();
