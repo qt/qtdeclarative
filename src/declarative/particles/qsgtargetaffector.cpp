@@ -76,7 +76,7 @@ bool QSGTargetAffector::affectParticle(QSGParticleData *d, qreal dt)
     qreal vY = (target.y() - d->y) / tt;
 
     qreal w = 1 - (t / tt) + 0.05;
-    w = qMin(w, 1.0);
+    w = qMin<qreal>(w, 1.0);
     qreal wvX = vX * w + d->vx * (1 - w);
     qreal wvY = vY * w + d->vy * (1 - w);
     //Screws with the acceleration so that the given start pos with the chosen weighted velocity will still end at the target coordinates
