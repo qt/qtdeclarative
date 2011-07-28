@@ -895,6 +895,25 @@ void tst_QSGGridView::currentIndex()
     QTest::keyClick(canvas, Qt::Key_Up);
     QCOMPARE(gridview->currentIndex(), 0);
 
+    // hold down Key_Down
+    for (int i=0; i<(model.count() / 3) - 1; i++) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Down, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i*3 + 3);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Down);
+    QTRY_COMPARE(gridview->currentIndex(), 57);
+    QTRY_COMPARE(gridview->contentY(), 880.0);
+
+    // hold down Key_Up
+    for (int i=(model.count() / 3) - 1; i > 0; i--) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Up, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i*3 - 3);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Up);
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentY(), 0.0);
+
+
     gridview->setFlow(QSGGridView::TopToBottom);
 
     qApp->setActiveWindow(canvas);
@@ -916,6 +935,24 @@ void tst_QSGGridView::currentIndex()
 
     QTest::keyClick(canvas, Qt::Key_Up);
     QCOMPARE(gridview->currentIndex(), 0);
+
+    // hold down Key_Right
+    for (int i=0; i<(model.count() / 5) - 1; i++) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Right, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i*5 + 5);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Right);
+    QTRY_COMPARE(gridview->currentIndex(), 55);
+    QTRY_COMPARE(gridview->contentX(), 720.0);
+
+    // hold down Key_Left
+    for (int i=(model.count() / 5) - 1; i > 0; i--) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Left, Qt::NoModifier, "", true);
+        QTRY_COMPARE(gridview->currentIndex(), i*5 - 5);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Left);
+    QTRY_COMPARE(gridview->currentIndex(), 0);
+    QTRY_COMPARE(gridview->contentX(), 0.0);
 
 
     // turn off auto highlight

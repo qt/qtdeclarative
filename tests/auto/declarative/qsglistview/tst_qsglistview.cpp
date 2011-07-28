@@ -1447,6 +1447,25 @@ void tst_QSGListView::currentIndex()
     QTest::keyClick(canvas, Qt::Key_Up);
     QCOMPARE(listview->currentIndex(), 0);
 
+    // hold down Key_Down
+    for (int i=0; i<model.count()-1; i++) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Down, Qt::NoModifier, "", true);
+        QTRY_COMPARE(listview->currentIndex(), i+1);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->currentIndex(), model.count()-1);
+    QTRY_COMPARE(listview->contentY(), 280.0);
+
+    // hold down Key_Up
+    for (int i=model.count()-1; i > 0; i--) {
+        QTest::simulateEvent(canvas, true, Qt::Key_Up, Qt::NoModifier, "", true);
+        QTRY_COMPARE(listview->currentIndex(), i-1);
+    }
+    QTest::keyRelease(canvas, Qt::Key_Up);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(listview->contentY(), 0.0);
+
+
     // turn off auto highlight
     listview->setHighlightFollowsCurrentItem(false);
     QVERIFY(listview->highlightFollowsCurrentItem() == false);

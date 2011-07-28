@@ -1161,7 +1161,6 @@ void QSGGridView::keyPressEvent(QKeyEvent *event)
             return;
         }
     }
-    d->moveReason = QSGGridViewPrivate::Other;
     event->ignore();
     QSGItemView::keyPressEvent(event);
 }
