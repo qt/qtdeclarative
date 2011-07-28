@@ -256,7 +256,7 @@ public:
     void setFlag(Flag flag, bool enabled = true);
     void setFlags(Flags flags);
 
-    QRectF boundingRect() const;
+    virtual QRectF boundingRect() const;
 
     bool hasActiveFocus() const;
     bool hasFocus() const;

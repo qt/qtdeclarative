@@ -160,7 +160,7 @@ public:
     qreal radius() const;
     void setRadius(qreal radius);
 
-    QRectF boundingRect() const;
+    virtual QRectF boundingRect() const;
 
 Q_SIGNALS:
     void colorChanged();

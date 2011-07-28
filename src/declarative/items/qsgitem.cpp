@@ -2227,6 +2227,7 @@ void QSGItem::itemChange(ItemChange change, const ItemChangeData &value)
 
 /*! \internal */
 // XXX todo - do we want/need this anymore?
+// Note that it's now used for varying clip rect
 QRectF QSGItem::boundingRect() const
 {
     Q_D(const QSGItem);
