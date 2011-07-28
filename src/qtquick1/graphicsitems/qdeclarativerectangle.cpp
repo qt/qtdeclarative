@@ -169,6 +169,8 @@ void QDeclarative1GradientStop::updateGradient()
 
 /*!
     \qmlproperty list<GradientStop> QtQuick1::Gradient::stops
+    \default
+
     This property holds the gradient stops describing the gradient.
 
     By default, this property contains an empty list.
