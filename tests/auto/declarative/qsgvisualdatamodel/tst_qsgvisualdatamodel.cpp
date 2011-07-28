@@ -81,9 +81,9 @@ class SingleRoleModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    SingleRoleModel(QObject *parent = 0) {
+    SingleRoleModel(const QByteArray &role = "name", QObject *parent = 0) {
         QHash<int, QByteArray> roles;
-        roles.insert(Qt::DisplayRole , "name");
+        roles.insert(Qt::DisplayRole , role);
         setRoleNames(roles);
         list << "one" << "two" << "three" << "four";
     }
@@ -364,6 +364,28 @@ void tst_qsgvisualdatamodel::singleRole()
         QSGView view;
 
         SingleRoleModel model;
+
+        QDeclarativeContext *ctxt = view.rootContext();
+        ctxt->setContextProperty("myModel", &model);
+
+        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/singlerole2.qml"));
+
+        QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
+        QVERIFY(listview != 0);
+
+        QSGItem *contentItem = listview->contentItem();
+        QVERIFY(contentItem != 0);
+
+        QSGText *name = findItem<QSGText>(contentItem, "name", 1);
+        QCOMPARE(name->text(), QString("two"));
+
+        model.set(1, "Changed");
+        QCOMPARE(name->text(), QString("Changed"));
+    }
+    {
+        QSGView view;
+
+        SingleRoleModel model("modelData");
 
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);

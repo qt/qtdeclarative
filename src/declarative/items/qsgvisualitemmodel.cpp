@@ -270,7 +270,7 @@ public:
                     ++it;
                 }
                 // Add modelData property
-                if (m_roles.count() == 1)
+                if (m_roles.count() == 1 && !m_roleNames.contains("modelData"))
                     m_modelDataPropId = m_delegateDataType->createProperty("modelData") - m_delegateDataType->propertyOffset();
                 m_metaDataCreated = true;
             }
@@ -1061,16 +1061,15 @@ void QSGVisualDataModel::_q_itemsChanged(int index, int count,
                     qmlInfo(this) << "Changing role not present in item: " << roleName;
                 }
             }
-            if (d->m_roles.count() == 1) {
+            if (d->m_modelDataPropId != -1) {
                 // Handle the modelData role we add if there is just one role.
-                int propId = data->modelDataPropertyId();
-                if (data->hasValue(propId)) {
+                if (data->hasValue(d->m_modelDataPropId)) {
                     int role = d->m_roles.at(0);
                     if (d->m_listModelInterface) {
-                        data->setValue(propId, d->m_listModelInterface->data(idx, role));
+                        data->setValue(d->m_modelDataPropId, d->m_listModelInterface->data(idx, role));
                     } else if (d->m_abstractItemModel) {
                         QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
-                        data->setValue(propId, d->m_abstractItemModel->data(index, role));
+                        data->setValue(d->m_modelDataPropId, d->m_abstractItemModel->data(index, role));
                     }
                 }
             }
