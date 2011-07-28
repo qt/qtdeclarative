@@ -74,13 +74,13 @@ Rectangle {
 
         function test_key_click() {
             keyClick(Qt.Key_Left)
-            tryCompare(top, "leftKeyPressed", true)
-            tryCompare(top, "leftKeyReleased", true)
+            tryCompare(top, "leftKeyPressed", true, 10000)
+            tryCompare(top, "leftKeyReleased", true, 10000)
         }
 
         function test_mouse_click() {
             mouseClick(top, 25, 30)
-            tryCompare(top, "mouseHasBeenClicked", true)
+            tryCompare(top, "mouseHasBeenClicked", true, 10000)
         }
     }
 }
