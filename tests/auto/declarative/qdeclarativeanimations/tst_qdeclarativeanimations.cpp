@@ -89,6 +89,7 @@ private slots:
     void doubleRegistrationBug();
     void alwaysRunToEndRestartBug();
     void transitionAssignmentBug();
+    void pauseBindingBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -855,6 +856,20 @@ void tst_qdeclarativeanimations::transitionAssignmentBug()
     QVERIFY(rect != 0);
 
     QCOMPARE(rect->property("nullObject").toBool(), false);
+}
+
+//QTBUG-19080
+void tst_qdeclarativeanimations::pauseBindingBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, SRCDIR "/data/pauseBindingBug.qml");
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+    QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
+    QVERIFY(anim->qtAnimation()->state() == QAbstractAnimation::Paused);
+
+    delete rect;
 }
 
 QTEST_MAIN(tst_qdeclarativeanimations)
