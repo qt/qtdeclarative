@@ -192,12 +192,13 @@ public:
     QDeclarativeV8Handle &operator=(const QDeclarativeV8Handle &other) { d = other.d; return *this; }
 
     static QDeclarativeV8Handle fromHandle(v8::Handle<v8::Value> h) {
-        return reinterpret_cast<QDeclarativeV8Handle &>(h);
+        return QDeclarativeV8Handle(*h);
     }
     v8::Handle<v8::Value> toHandle() const {
         return reinterpret_cast<const v8::Handle<v8::Value> &>(*this);
     }
 private:
+    QDeclarativeV8Handle(void *d) : d(d) {}
     void *d;
 };
 
