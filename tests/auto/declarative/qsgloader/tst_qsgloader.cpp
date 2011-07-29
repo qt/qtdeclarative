@@ -99,6 +99,7 @@ tst_QSGLoader::tst_QSGLoader()
 
 void tst_QSGLoader::sourceOrComponent()
 {
+    QFETCH(QString, sourceOrComponent);
     QFETCH(QString, sourceDefinition);
     QFETCH(QUrl, sourceUrl);
     QFETCH(QString, errorString);
@@ -113,6 +114,7 @@ void tst_QSGLoader::sourceOrComponent()
             "Loader {\n"
             "   property int onItemChangedCount: 0\n"
             "   property int onSourceChangedCount: 0\n"
+            "   property int onSourceComponentChangedCount: 0\n"
             "   property int onStatusChangedCount: 0\n"
             "   property int onProgressChangedCount: 0\n"
             "   property int onLoadedCount: 0\n")
@@ -120,6 +122,7 @@ void tst_QSGLoader::sourceOrComponent()
             + QByteArray(
             "   onItemChanged: onItemChangedCount += 1\n"
             "   onSourceChanged: onSourceChangedCount += 1\n"
+            "   onSourceComponentChanged: onSourceComponentChangedCount += 1\n"
             "   onStatusChanged: onStatusChangedCount += 1\n"
             "   onProgressChanged: onProgressChangedCount += 1\n"
             "   onLoaded: onLoadedCount += 1\n"
@@ -141,7 +144,13 @@ void tst_QSGLoader::sourceOrComponent()
         QCOMPARE(loader->sourceComponent(), c);
     }
 
-    QCOMPARE(loader->property("onSourceChangedCount").toInt(), 1);
+    if (sourceOrComponent == "component") {
+        QCOMPARE(loader->property("onSourceComponentChangedCount").toInt(), 1);
+        QCOMPARE(loader->property("onSourceChangedCount").toInt(), 0);
+    } else {
+        QCOMPARE(loader->property("onSourceComponentChangedCount").toInt(), 0);
+        QCOMPARE(loader->property("onSourceChangedCount").toInt(), 1);
+    }
     QCOMPARE(loader->property("onStatusChangedCount").toInt(), 1);
     QCOMPARE(loader->property("onProgressChangedCount").toInt(), 1);
 
@@ -153,14 +162,14 @@ void tst_QSGLoader::sourceOrComponent()
 
 void tst_QSGLoader::sourceOrComponent_data()
 {
+    QTest::addColumn<QString>("sourceOrComponent");
     QTest::addColumn<QString>("sourceDefinition");
     QTest::addColumn<QUrl>("sourceUrl");
     QTest::addColumn<QString>("errorString");
 
-    QTest::newRow("source") << "source: 'Rect120x60.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/Rect120x60.qml") << "";
-    QTest::newRow("sourceComponent") << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
-
-    QTest::newRow("invalid source") << "source: 'IDontExist.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/IDontExist.qml")
+    QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/Rect120x60.qml") << "";
+    QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
+    QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/IDontExist.qml")
             << QString(QUrl::fromLocalFile(SRCDIR "/data/IDontExist.qml").toString() + ": File not found");
 }
 
