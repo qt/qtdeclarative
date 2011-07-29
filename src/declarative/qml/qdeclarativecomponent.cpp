@@ -748,6 +748,10 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
 
     completeCreate();
     
+    QDeclarativeData *ddata = QDeclarativeData::get(ret);
+    Q_ASSERT(ddata);
+    ddata->setImplicitDestructible();
+
     RETURN(object);
 
 #undef RETURN

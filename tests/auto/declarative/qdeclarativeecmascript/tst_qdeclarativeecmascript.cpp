@@ -1074,6 +1074,7 @@ void tst_qdeclarativeecmascript::dynamicCreation()
 */
 void tst_qdeclarativeecmascript::dynamicDestruction()
 {
+    {
     QDeclarativeComponent component(&engine, TEST_FILE("dynamicDeletion.qml"));
     QDeclarativeGuard<MyQmlObject> object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != 0);
@@ -1102,6 +1103,27 @@ void tst_qdeclarativeecmascript::dynamicDestruction()
     QTest::qWait(0);
     QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
     QVERIFY(!object);
+    }
+
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("dynamicDeletion.2.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) == 0);
+
+    QMetaObject::invokeMethod(o, "create");
+
+    QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) != 0);
+
+    QMetaObject::invokeMethod(o, "destroy");
+
+    QCoreApplication::instance()->processEvents(QEventLoop::DeferredDeletion);
+
+    QVERIFY(qvariant_cast<QObject*>(o->property("objectProperty")) == 0);
+
+    delete o;
+    }
 }
 
 /*
