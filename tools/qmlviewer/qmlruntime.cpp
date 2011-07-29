@@ -1426,9 +1426,9 @@ void QDeclarativeViewer::recordFrame()
         if (frame_fmt == QLatin1String(".gif")) {
             // ffmpeg can't do 32bpp with gif
             QImage rgb24 = frame.convertToFormat(QImage::Format_RGB888);
-            frame_stream->write((char*)rgb24.bits(),rgb24.numBytes());
+            frame_stream->write((char*)rgb24.bits(),rgb24.byteCount());
         } else {
-            frame_stream->write((char*)frame.bits(),frame.numBytes());
+            frame_stream->write((char*)frame.bits(),frame.byteCount());
         }
     } else {
         frames.append(new QImage(frame));

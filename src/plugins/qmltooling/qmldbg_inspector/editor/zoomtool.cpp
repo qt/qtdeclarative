@@ -46,8 +46,8 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>
 #include <QtGui/QKeyEvent>
-#include <QtGui/QMenu>
-#include <QtGui/QAction>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QAction>
 
 #include <QtCore/QRectF>
 #include <QtCore/QDebug>

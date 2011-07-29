@@ -48,7 +48,7 @@
 #include <QtCore/QRectF>
 #include <QtGui/QRgb>
 #include <QtGui/QImage>
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 #include <QtGui/QPalette>
 
 namespace QmlJSDebugger {

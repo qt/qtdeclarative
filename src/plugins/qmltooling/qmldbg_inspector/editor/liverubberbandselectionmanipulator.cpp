@@ -43,7 +43,7 @@
 
 #include "../qdeclarativeviewinspector_p.h"
 
-#include <QtGui/QGraphicsItem>
+#include <QtWidgets/QGraphicsItem>
 
 #include <QtCore/QDebug>
 

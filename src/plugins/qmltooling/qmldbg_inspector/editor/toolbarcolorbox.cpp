@@ -45,12 +45,12 @@
 
 #include <QtGui/QPixmap>
 #include <QtGui/QPainter>
-#include <QtGui/QMenu>
-#include <QtGui/QAction>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QAction>
 #include <QtGui/QContextMenuEvent>
 #include <QtGui/QClipboard>
-#include <QtGui/QApplication>
-#include <QtGui/QColorDialog>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QColorDialog>
 #include <QtGui/QDrag>
 
 #include <QtCore/QMimeData>

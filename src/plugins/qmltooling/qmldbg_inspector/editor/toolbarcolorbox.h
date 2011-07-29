@@ -42,7 +42,7 @@
 #ifndef TOOLBARCOLORBOX_H
 #define TOOLBARCOLORBOX_H
 
-#include <QtGui/QLabel>
+#include <QtWidgets/QLabel>
 #include <QtGui/QColor>
 #include <QtCore/QPoint>
 

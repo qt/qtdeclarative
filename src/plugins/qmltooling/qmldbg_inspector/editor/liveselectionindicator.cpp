@@ -44,9 +44,9 @@
 #include "../qdeclarativeviewinspector_p.h"
 #include "../qmlinspectorconstants.h"
 
-#include <QtGui/QGraphicsRectItem>
-#include <QtGui/QGraphicsObject>
-#include <QtGui/QGraphicsScene>
+#include <QtWidgets/QGraphicsRectItem>
+#include <QtWidgets/QGraphicsObject>
+#include <QtWidgets/QGraphicsScene>
 #include <QtGui/QPen>
 
 namespace QmlJSDebugger {

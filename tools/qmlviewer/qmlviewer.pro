@@ -1,7 +1,7 @@
 TEMPLATE = app
 CONFIG += qt uic
 DESTDIR = ../../bin
-QT += declarative qtquick1 qtquick1-private
+QT += declarative qtquick1 qtquick1-private widgets widgets-private 
 
 include(qml.pri)
 
@@ -10,6 +10,7 @@ SOURCES += main.cpp
 INCLUDEPATH += ../../include/QtDeclarative
 INCLUDEPATH += ../../src/declarative/util
 INCLUDEPATH += ../../src/declarative/graphicsitems
+INCLUDEPATH += ../../src/3rdparty/v8/include
 
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 

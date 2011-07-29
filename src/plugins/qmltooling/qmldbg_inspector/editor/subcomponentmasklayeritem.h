@@ -42,7 +42,7 @@
 #ifndef SUBCOMPONENTMASKLAYERITEM_H
 #define SUBCOMPONENTMASKLAYERITEM_H
 
-#include <QtGui/QGraphicsPolygonItem>
+#include <QtWidgets/QGraphicsPolygonItem>
 
 namespace QmlJSDebugger {
 
