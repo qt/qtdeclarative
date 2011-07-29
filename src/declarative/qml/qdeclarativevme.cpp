@@ -73,9 +73,31 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qvarlengtharray.h>
 #include <QtScript/qscriptvalue.h>
 
 QT_BEGIN_NAMESPACE
+
+// A simple stack wrapper around QVarLengthArray
+template<typename T>
+class QDeclarativeVMEStack : private QVarLengthArray<T, 128>
+{
+private:
+    typedef QVarLengthArray<T, 128> VLA; 
+    int _index;
+
+public:
+    inline QDeclarativeVMEStack();
+    inline bool isEmpty() const;
+    inline const T &top() const;
+    inline void push(const T &o);
+    inline T pop();
+    inline int count() const;
+    inline const T &at(int index) const;
+};
+
+// We do this so we can forward declare the type in the qdeclarativevme_p.h header
+class QDeclarativeVMEObjectStack : public QDeclarativeVMEStack<QObject *> {};
 
 QDeclarativeVME::QDeclarativeVME()
 {
@@ -102,10 +124,12 @@ struct ListInstance
     QDeclarativeListProperty<void> qListProperty;
 };
 
+Q_DECLARE_TYPEINFO(ListInstance, Q_PRIMITIVE_TYPE  | Q_MOVABLE_TYPE);
+
 QObject *QDeclarativeVME::run(QDeclarativeContextData *ctxt, QDeclarativeCompiledData *comp, 
                               int start, const QBitField &bindingSkipList)
 {
-    QDeclarativeVMEStack<QObject *> stack;
+    QDeclarativeVMEObjectStack stack;
 
     if (start == -1) start = 0;
 
@@ -122,7 +146,7 @@ void QDeclarativeVME::runDeferred(QObject *object)
     QDeclarativeContextData *ctxt = data->context;
     QDeclarativeCompiledData *comp = data->deferredComponent;
     int start = data->deferredIdx;
-    QDeclarativeVMEStack<QObject *> stack;
+    QDeclarativeVMEObjectStack stack;
     stack.push(object);
 
     run(stack, ctxt, comp, start, QBitField());
@@ -152,7 +176,7 @@ static void removeBindingOnProperty(QObject *o, int index)
 
 #define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
 
-QObject *QDeclarativeVME::run(QDeclarativeVMEStack<QObject *> &stack, 
+QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack, 
                               QDeclarativeContextData *ctxt, 
                               QDeclarativeCompiledData *comp, 
                               int start, const QBitField &bindingSkipList)
@@ -1067,6 +1091,50 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     }
 
     return rv;
+}
+
+template<typename T>
+QDeclarativeVMEStack<T>::QDeclarativeVMEStack()
+: _index(-1)
+{
+}
+
+template<typename T>
+bool QDeclarativeVMEStack<T>::isEmpty() const {
+    return _index == -1;
+}
+
+template<typename T>
+const T &QDeclarativeVMEStack<T>::top() const {
+    return at(_index);
+}
+
+template<typename T>
+void QDeclarativeVMEStack<T>::push(const T &o) {
+    _index++;
+
+    Q_ASSERT(_index <= VLA::size());
+    if (_index == VLA::size())
+        append(o);
+    else
+        VLA::data()[_index] = o;
+}
+
+template<typename T>
+T QDeclarativeVMEStack<T>::pop() {
+    Q_ASSERT(_index >= 0);
+    --_index;
+    return VLA::data()[_index + 1];
+}
+
+template<typename T>
+int QDeclarativeVMEStack<T>::count() const {
+    return _index + 1;
+}
+
+template<typename T>
+const T &QDeclarativeVMEStack<T>::at(int index) const {
+    return VLA::data()[index];
 }
 
 QT_END_NAMESPACE
