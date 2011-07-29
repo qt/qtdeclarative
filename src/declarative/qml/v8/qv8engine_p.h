@@ -195,7 +195,7 @@ public:
         return QDeclarativeV8Handle(*h);
     }
     v8::Handle<v8::Value> toHandle() const {
-        return reinterpret_cast<const v8::Handle<v8::Value> &>(*this);
+        return v8::Handle<v8::Value>((v8::Value *)d);
     }
 private:
     QDeclarativeV8Handle(void *d) : d(d) {}
