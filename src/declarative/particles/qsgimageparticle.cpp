@@ -73,14 +73,10 @@ public:
 
     ~UltraMaterial()
     {
-        if (texture)
-            delete texture;
-        if (colortable)
-            delete colortable;
-        if (sizetable)
-            delete sizetable;
-        if (opacitytable)
-            delete opacitytable;
+        delete texture;
+        delete colortable;
+        delete sizetable;
+        delete opacitytable;
     }
 
     virtual QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
