@@ -67,20 +67,20 @@ struct Register {
     void setNaN() { setqreal(qSNaN()); }
     bool isUndefined() const { return dataType == UndefinedType; }
 
-    void setQObject(QObject *o) { *((QObject **)data) = o; dataType = QObjectStarType; }
-    QObject *getQObject() const { return *((QObject **)data); }
+    void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
+    QObject *getQObject() const { return qobjectValue; }
 
-    void setqreal(qreal v) { *((qreal *)data) = v; dataType = QRealType; }
-    qreal getqreal() const { return *((qreal *)data); }
-    qreal &getqrealref() const { return *((qreal *)data); }
+    void setqreal(qreal v) { qrealValue = v; dataType = QRealType; }
+    qreal getqreal() const { return qrealValue; }
+    qreal &getqrealref() { return qrealValue; }
 
-    void setint(int v) { *((int *)data) = v; dataType = IntType; }
-    int getint() const { return *((int *)data); }
-    int &getintref() const { return *((int *)data); }
+    void setint(int v) { intValue = v; dataType = IntType; }
+    int getint() const { return intValue; }
+    int &getintref() { return intValue; }
 
-    void setbool(bool v) { *((bool *)data) = v; dataType = BoolType; }
-    bool getbool() const { return *((bool *)data); }
-    bool &getboolref() const { return *((bool *)data); }
+    void setbool(bool v) { boolValue = v; dataType = BoolType; }
+    bool getbool() const { return boolValue; }
+    bool &getboolref() { return boolValue; }
 
     QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
     QString *getstringptr() { return (QString *)typeDataPtr(); }
@@ -97,10 +97,16 @@ struct Register {
     Type gettype() const { return dataType; }
     void settype(Type t) { dataType = t; }
 
-    // int type;          // Optional type
-
     Type dataType;     // Type of data
-    void *data[2];     // Object stored here
+    union {
+        QObject *qobjectValue;
+        qreal qrealValue;
+        int intValue;
+        bool boolValue;
+        void *data[sizeof(QVariant)];
+        qint64 q_for_alignment_1;
+        double q_for_alignment_2;
+    };
 
     inline void cleanup();
     inline void cleanupString();
@@ -496,18 +502,6 @@ inline static QUrl toUrl(Register *reg, int type, QDeclarativeContextData *conte
         return context->url.resolved(base);
     else
         return base;
-}
-
-static QObject *variantToQObject(const QVariant &value, bool *ok)
-{
-    if (ok) *ok = true;
-
-    if (value.userType() == QMetaType::QObjectStar) {
-        return qvariant_cast<QObject*>(value);
-    } else {
-        if (ok) *ok = false;
-        return 0;
-    }
 }
 
 void QDeclarativeV4BindingsPrivate::init()
