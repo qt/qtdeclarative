@@ -1714,6 +1714,13 @@ bool QSGItem::childMouseEventFilter(QSGItem *, QEvent *)
     return false;
 }
 
+void QSGItem::windowDeactivateEvent()
+{
+    foreach (QSGItem* item, childItems()) {
+        item->windowDeactivateEvent();
+    }
+}
+
 Qt::InputMethodHints QSGItem::inputMethodHints() const
 {
     Q_D(const QSGItem);

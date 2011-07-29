@@ -1017,6 +1017,9 @@ bool QSGCanvas::event(QEvent *e)
     case QSGEvent::SGDragDrop:
         d->deliverDragEvent(static_cast<QSGDragEvent *>(e));
         break;
+    case QEvent::WindowDeactivate:
+        rootItem()->windowDeactivateEvent();
+        break;
     default:
         break;
     }

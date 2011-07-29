@@ -682,7 +682,7 @@ void QSGMouseArea::hoverLeaveEvent(QHoverEvent *event)
         setHovered(false);
 }
 
-void QSGMouseArea::mouseUngrabEvent()
+void QSGMouseArea::ungrabMouse()
 {
     Q_D(QSGMouseArea);
     if (d->pressed) {
@@ -698,6 +698,11 @@ void QSGMouseArea::mouseUngrabEvent()
             emit hoveredChanged();
         }
     }
+}
+
+void QSGMouseArea::mouseUngrabEvent()
+{
+    ungrabMouse();
 }
 
 bool QSGMouseArea::sendMouseEvent(QGraphicsSceneMouseEvent *event)
@@ -792,6 +797,12 @@ void QSGMouseArea::timerEvent(QTimerEvent *event)
                 d->longPress = false;
         }
     }
+}
+
+void QSGMouseArea::windowDeactivateEvent()
+{
+    ungrabMouse();
+    QSGItem::windowDeactivateEvent();
 }
 
 void QSGMouseArea::geometryChanged(const QRectF &newGeometry,

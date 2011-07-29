@@ -223,6 +223,7 @@ protected:
     virtual void hoverLeaveEvent(QHoverEvent *event);
     virtual bool childMouseEventFilter(QSGItem *i, QEvent *e);
     virtual void timerEvent(QTimerEvent *event);
+    virtual void windowDeactivateEvent();
 
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
@@ -231,6 +232,7 @@ protected:
 private:
     void handlePress();
     void handleRelease();
+    void ungrabMouse();
 
 private:
     Q_DISABLE_COPY(QSGMouseArea)

@@ -67,6 +67,7 @@ private slots:
     void updateMouseAreaPosOnResize();
     void noOnClickedWithPressAndHold();
     void onMousePressRejected();
+    void pressedCanceledOnWindowDeactivate();
     void doubleClick();
     void clickTwice();
     void pressedOrdering();
@@ -418,7 +419,51 @@ void tst_QSGMouseArea::onMousePressRejected()
 
     delete canvas;
 }
+void tst_QSGMouseArea::pressedCanceledOnWindowDeactivate()
+{
+    QSGView *canvas = createView();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pressedCanceled.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
 
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &pressEvent);
+
+    QVERIFY(canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
+    QApplication::sendEvent(canvas, &windowDeactivateEvent);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    //press again
+    QApplication::sendEvent(canvas, &pressEvent);
+    QVERIFY(canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    //release
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &releaseEvent);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(canvas->rootObject()->property("released").toBool());
+
+    delete canvas;
+}
 void tst_QSGMouseArea::doubleClick()
 {
     QSGView *canvas = createView();
