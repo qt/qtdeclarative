@@ -228,6 +228,10 @@ public:
     QV8Engine(QJSEngine* qq,QJSEngine::ContextOwnership ownership = QJSEngine::CreateNewContext);
     ~QV8Engine();
 
+    // ### TODO get rid of it, do we really need CppOwnership?
+    // This enum should be in sync with QDeclarativeEngine::ObjectOwnership
+    enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
+
     struct Deletable {
         virtual ~Deletable() {}
     };
@@ -311,6 +315,7 @@ public:
 
     // Return a JS wrapper for the given QObject \a object
     inline v8::Handle<v8::Value> newQObject(QObject *object);
+    inline v8::Handle<v8::Value> newQObject(QObject *object, const ObjectOwnership ownership);
     inline bool isQObject(v8::Handle<v8::Value>);
     inline QObject *toQObject(v8::Handle<v8::Value>);
 
@@ -509,6 +514,20 @@ QObject *QV8Engine::toQObject(v8::Handle<v8::Value> obj)
 v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object)
 {
     return m_qobjectWrapper.newQObject(object);
+}
+
+v8::Handle<v8::Value> QV8Engine::newQObject(QObject *object, const ObjectOwnership ownership)
+{
+    if (!object)
+        return v8::Null();
+
+    v8::Handle<v8::Value> result = newQObject(object);
+    QDeclarativeData *ddata = QDeclarativeData::get(object, true);
+    if (ownership == JavaScriptOwnership && ddata) {
+        ddata->indestructible = false;
+        ddata->explicitIndestructibleSet = true;
+    }
+    return result;
 }
 
 v8::Local<v8::String> QV8Engine::toString(const QString &string)

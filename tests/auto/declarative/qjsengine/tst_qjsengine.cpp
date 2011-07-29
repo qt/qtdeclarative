@@ -182,9 +182,7 @@ private slots:
     void castWithPrototypeChain();
 #endif
     void castWithMultipleInheritance();
-#if 0 // ###FIXME: ScriptOwnership
     void collectGarbage();
-#endif
 #if 0 // ###FIXME: no reportAdditionalMemoryCost API
     void reportAdditionalMemoryCost();
 #endif
@@ -965,34 +963,33 @@ void tst_QJSEngine::newQObject()
 
 void tst_QJSEngine::newQObject_ownership()
 {
-#if 0 // FIXME: ownership tests need to be revivewed
-    QScriptEngine eng;
+    QJSEngine eng;
     {
         QPointer<QObject> ptr = new QObject();
         QVERIFY(ptr != 0);
         {
-            QScriptValue v = eng.newQObject(ptr, QScriptEngine::ScriptOwnership);
+            QJSValue v = eng.newQObject(ptr);
         }
-        eng.evaluate("gc()");
+        collectGarbage_helper(eng);
         if (ptr)
-            QEXPECT_FAIL("", "In the JSC-based back-end, script-owned QObjects are not always deleted immediately during GC", Continue);
+            QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(ptr == 0);
     }
     {
-        QPointer<QObject> ptr = new QObject();
+        QPointer<QObject> ptr = new QObject(this);
         QVERIFY(ptr != 0);
         {
-            QScriptValue v = eng.newQObject(ptr, QScriptEngine::QtOwnership);
+            QJSValue v = eng.newQObject(ptr);
         }
         QObject *before = ptr;
-        eng.evaluate("gc()");
+        collectGarbage_helper(eng);
         QVERIFY(ptr == before);
         delete ptr;
     }
     {
         QObject *parent = new QObject();
         QObject *child = new QObject(parent);
-        QScriptValue v = eng.newQObject(child, QScriptEngine::QtOwnership);
+        QJSValue v = eng.newQObject(child);
         QCOMPARE(v.toQObject(), child);
         delete parent;
         QCOMPARE(v.toQObject(), (QObject *)0);
@@ -1001,12 +998,12 @@ void tst_QJSEngine::newQObject_ownership()
         QPointer<QObject> ptr = new QObject();
         QVERIFY(ptr != 0);
         {
-            QScriptValue v = eng.newQObject(ptr, QScriptEngine::AutoOwnership);
+            QJSValue v = eng.newQObject(ptr);
         }
-        eng.evaluate("gc()");
+        collectGarbage_helper(eng);
         // no parent, so it should be like ScriptOwnership
         if (ptr)
-            QEXPECT_FAIL("", "In the JSC-based back-end, script-owned QObjects are not always deleted immediately during GC", Continue);
+            QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
         QVERIFY(ptr == 0);
     }
     {
@@ -1014,14 +1011,13 @@ void tst_QJSEngine::newQObject_ownership()
         QPointer<QObject> child = new QObject(parent);
         QVERIFY(child != 0);
         {
-            QScriptValue v = eng.newQObject(child, QScriptEngine::AutoOwnership);
+            QJSValue v = eng.newQObject(child);
         }
-        eng.evaluate("gc()");
+        collectGarbage_helper(eng);
         // has parent, so it should be like QtOwnership
         QVERIFY(child != 0);
         delete parent;
     }
-#endif
 }
 
 void tst_QJSEngine::newQObject_promoteObject()
@@ -3097,21 +3093,21 @@ void tst_QJSEngine::castWithMultipleInheritance()
     QCOMPARE(qjsvalue_cast<QGraphicsItem*>(v), (QGraphicsItem *)&klz);
 }
 
-#if 0 // ###FIXME: ScriptOwnership
 void tst_QJSEngine::collectGarbage()
 {
-    QScriptEngine eng;
+    QJSEngine eng;
     eng.evaluate("a = new Object(); a = new Object(); a = new Object()");
-    QScriptValue a = eng.newObject();
+    QJSValue a = eng.newObject();
     a = eng.newObject();
     a = eng.newObject();
     QPointer<QObject> ptr = new QObject();
     QVERIFY(ptr != 0);
-    (void)eng.newQObject(ptr, QScriptEngine::ScriptOwnership);
+    (void)eng.newQObject(ptr);
     collectGarbage_helper(eng);
+    if (ptr)
+        QApplication::sendPostedEvents(ptr, QEvent::DeferredDelete);
     QVERIFY(ptr == 0);
 }
-#endif
 
 #if 0 // ###FIXME: no reportAdditionalMemoryCost API
 void tst_QJSEngine::reportAdditionalMemoryCost()
