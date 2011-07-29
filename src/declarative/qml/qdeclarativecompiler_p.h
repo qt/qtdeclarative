@@ -76,7 +76,6 @@ class QDeclarativeComponent;
 class QDeclarativeContext;
 class QDeclarativeContextData;
 
-class QScriptProgram;
 class Q_AUTOTEST_EXPORT QDeclarativeCompiledData : public QDeclarativeRefCount, public QDeclarativeCleanup
 {
 public:
@@ -112,8 +111,7 @@ public:
     QList<QString> primitives;
     QList<QByteArray> datas;
     QByteArray bytecode;
-    QList<QScriptProgram *> cachedPrograms;
-    QList<QScriptValue *> cachedClosures;
+    QList<QJSValue *> cachedClosures;
     QList<QDeclarativePropertyCache *> propertyCaches;
     QList<QDeclarativeIntegerCache *> contextCaches;
     QList<QDeclarativeScriptData *> scripts;

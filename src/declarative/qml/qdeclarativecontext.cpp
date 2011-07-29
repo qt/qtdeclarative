@@ -50,11 +50,9 @@
 #include "private/qdeclarativev4bindings_p.h"
 #include "private/qv8bindings_p.h"
 
-#include <qscriptengine.h>
+#include <qjsengine.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qdebug.h>
-
-#include <private/qscriptdeclarativeclass_p.h>
 
 QT_BEGIN_NAMESPACE
 

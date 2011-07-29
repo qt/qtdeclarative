@@ -59,7 +59,7 @@
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QtCore/qnumeric.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 #include <QtGui/qgraphicstransform.h>
 
 #include <private/qv8engine_p.h>

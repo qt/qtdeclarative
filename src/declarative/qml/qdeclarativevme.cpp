@@ -74,7 +74,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qvarlengtharray.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1025,7 +1025,7 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
         return qPersistentNew<v8::Object>(script->m_value);
 
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
-    QV8Engine *v8engine = &ep->v8engine;
+    QV8Engine *v8engine = ep->v8engine();
 
     bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
 

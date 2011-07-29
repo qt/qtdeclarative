@@ -126,7 +126,6 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
     if (rootPropertyCache)
         rootPropertyCache->release();
 
-    qDeleteAll(cachedPrograms);
     qDeleteAll(cachedClosures);
 
     for (int ii = 0; ii < v8bindings.count(); ++ii)
@@ -135,12 +134,9 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
 
 void QDeclarativeCompiledData::clear()
 {
-    qDeleteAll(cachedPrograms);
     qDeleteAll(cachedClosures);
     for (int ii = 0; ii < cachedClosures.count(); ++ii)
         cachedClosures[ii] = 0;
-    for (int ii = 0; ii < cachedPrograms.count(); ++ii)
-        cachedPrograms[ii] = 0;
 }
 
 const QMetaObject *QDeclarativeCompiledData::TypeReference::metaObject() const

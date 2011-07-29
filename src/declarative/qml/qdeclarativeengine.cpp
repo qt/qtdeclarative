@@ -441,7 +441,7 @@ void QDeclarativeEnginePrivate::init()
     Q_Q(QDeclarativeEngine);
     qRegisterMetaType<QVariant>("QVariant");
     qRegisterMetaType<QDeclarativeScriptString>("QDeclarativeScriptString");
-    qRegisterMetaType<QScriptValue>("QScriptValue");
+    qRegisterMetaType<QJSValue>("QJSValue");
     qRegisterMetaType<QDeclarativeComponent::Status>("QDeclarativeComponent::Status");
     qRegisterMetaType<QList<QObject*> >("QList<QObject*>");
     qRegisterMetaType<QList<int> >("QList<int>");
@@ -449,8 +449,7 @@ void QDeclarativeEnginePrivate::init()
 
     QDeclarativeData::init();
 
-    // Init V8 data
-    v8engine.init(q);
+    v8engine()->setEngine(q);
 
     rootContext = new QDeclarativeContext(q,true);
 
@@ -505,7 +504,7 @@ QDeclarativeWorkerScriptEngine *QDeclarativeEnginePrivate::getWorkerScriptEngine
   Create a new QDeclarativeEngine with the given \a parent.
 */
 QDeclarativeEngine::QDeclarativeEngine(QObject *parent)
-: QObject(*new QDeclarativeEnginePrivate(this), parent)
+: QJSEngine(*new QDeclarativeEnginePrivate(this), parent)
 {
     Q_D(QDeclarativeEngine);
     d->init();
@@ -1386,13 +1385,13 @@ bool QDeclarativeEngine::importPlugin(const QString &filePath, const QString &ur
 void QDeclarativeEngine::setOfflineStoragePath(const QString& dir)
 {
     Q_D(QDeclarativeEngine);
-    qt_qmlsqldatabase_setOfflineStoragePath(&d->v8engine, dir);
+    qt_qmlsqldatabase_setOfflineStoragePath(d->v8engine(), dir);
 }
 
 QString QDeclarativeEngine::offlineStoragePath() const
 {
     Q_D(const QDeclarativeEngine);
-    return qt_qmlsqldatabase_getOfflineStoragePath(&d->v8engine);
+    return qt_qmlsqldatabase_getOfflineStoragePath(d->v8engine());
 }
 
 static void voidptr_destructor(void *v)

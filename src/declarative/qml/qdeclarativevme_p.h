@@ -64,7 +64,7 @@
 QT_BEGIN_NAMESPACE
 
 class QObject;
-class QScriptValue;
+class QJSValue;
 class QDeclarativeScriptData;
 class QDeclarativeCompiledData;
 class QDeclarativeCompiledData;

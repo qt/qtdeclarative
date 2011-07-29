@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVESQLDATABASE_P_H
 #define QDECLARATIVESQLDATABASE_P_H
 
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 //
 //  W A R N I N G
 //  -------------

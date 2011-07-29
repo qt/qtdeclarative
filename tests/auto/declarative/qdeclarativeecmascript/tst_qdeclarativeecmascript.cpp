@@ -49,7 +49,6 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qnumeric.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qscriptdeclarativeclass_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../../../shared/util.h"
@@ -1600,7 +1599,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QDeclarativeEngine qmlengine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(&qmlengine);
     
-    QV8Engine *engine = &ep->v8engine;
+    QV8Engine *engine = ep->v8engine();
 
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(engine->context());
@@ -1693,8 +1692,6 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 5);
     QCOMPARE(o.actuals().count(), 0);
 
-    // XXX enable once qml/qtscript integration is implemented
-#if 0
     o.reset();
     {
     v8::Handle<v8::Value> ret = EVALUATE("object.method_NoArgs_QScriptValue()");
@@ -1704,7 +1701,6 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 6);
     QCOMPARE(o.actuals().count(), 0);
     }
-#endif
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_NoArgs_QVariant()", engine->toString("QML rocks")));
@@ -1920,35 +1916,33 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.actuals().count(), 1);
     QCOMPARE(o.actuals().at(0), qVariantFromValue((QObject *)&o));
 
-    // XXX enable once qml/qtscript integration is implemented
-#if 0
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(null)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isNull());
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isNull());
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(undefined)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isUndefined());
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isUndefined());
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue(19)", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).strictlyEquals(QScriptValue(engine, 19)));
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).strictlyEquals(QJSValue(19)));
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_QScriptValue([19, 20])", v8::Undefined()));
     QCOMPARE(o.error(), false);
     QCOMPARE(o.invoked(), 14);
     QCOMPARE(o.actuals().count(), 1);
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(0)).isArray());
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(0)).isArray());
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(4, null)", v8::Undefined()));
@@ -1956,7 +1950,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(4));
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isNull());
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isNull());
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(8, undefined)", v8::Undefined()));
@@ -1964,7 +1958,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(8));
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isUndefined());
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isUndefined());
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(3, 19)", v8::Undefined()));
@@ -1972,7 +1966,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(3));
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).strictlyEquals(QScriptValue(engine, 19)));
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).strictlyEquals(QJSValue(19)));
 
     o.reset();
     QVERIFY(EVALUATE_VALUE("object.method_intQScriptValue(44, [19, 20])", v8::Undefined()));
@@ -1980,8 +1974,7 @@ void tst_qdeclarativeecmascript::callQtInvokables()
     QCOMPARE(o.invoked(), 15);
     QCOMPARE(o.actuals().count(), 2);
     QCOMPARE(o.actuals().at(0), QVariant(44));
-    QVERIFY(qvariant_cast<QScriptValue>(o.actuals().at(1)).isArray());
-#endif
+    QVERIFY(qvariant_cast<QJSValue>(o.actuals().at(1)).isArray());
 
     o.reset();
     QVERIFY(EVALUATE_ERROR("object.method_overload()"));

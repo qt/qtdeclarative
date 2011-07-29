@@ -42,7 +42,7 @@
 #include "qsgitem.h"
 
 #include "qsgcanvas.h"
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 #include "qsgcanvas_p.h"
 #include "qsgevent.h"
 

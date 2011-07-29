@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVEXMLHTTPREQUEST_P_H
 #define QDECLARATIVEXMLHTTPREQUEST_P_H
 
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 //
 //  W A R N I N G
 //  -------------

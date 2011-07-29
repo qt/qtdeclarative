@@ -55,8 +55,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtNetwork/qnetworkreply.h>
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptprogram.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativeerror.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <private/qdeclarativecleanup_p.h>

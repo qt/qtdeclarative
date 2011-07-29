@@ -39,12 +39,10 @@
 **
 ****************************************************************************/
 
-#include <QtScript/QScriptEngine>
-
 #include "private/qdeclarativedebughelper_p.h"
 
 #include <QtCore/QAbstractAnimation>
-#include <QtScript/QScriptEngine>
+#include <QtDeclarative/QJSEngine>
 
 #include <private/qdeclarativeengine_p.h>
 #include <private/qabstractanimation_p.h>

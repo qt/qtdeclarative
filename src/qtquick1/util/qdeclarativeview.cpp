@@ -51,7 +51,6 @@
 #include <QtDeclarative/private/qdeclarativedebugtrace_p.h>
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
 
-#include <qscriptvalueiterator.h>
 #include <qdebug.h>
 #include <qtimer.h>
 #include <qevent.h>

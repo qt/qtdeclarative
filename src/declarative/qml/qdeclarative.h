@@ -395,8 +395,8 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
 
 class QDeclarativeContext;
 class QDeclarativeEngine;
-class QScriptValue;
-class QScriptEngine;
+class QJSValue;
+class QJSEngine;
 Q_DECLARATIVE_EXPORT void qmlExecuteDeferred(QObject *);
 Q_DECLARATIVE_EXPORT QDeclarativeContext *qmlContext(const QObject *);
 Q_DECLARATIVE_EXPORT QDeclarativeEngine *qmlEngine(const QObject *);
@@ -454,7 +454,7 @@ Q_DECLARATIVE_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor
    \endqml
   */
 inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
-                                QScriptValue (*callback)(QDeclarativeEngine *, QScriptEngine *))
+                                QJSValue (*callback)(QDeclarativeEngine *, QJSEngine *))
 {
     QDeclarativePrivate::RegisterModuleApi api = {
         0,
@@ -537,7 +537,7 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
    \endqml
   */
 inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMinor,
-                                QObject *(*callback)(QDeclarativeEngine *, QScriptEngine *))
+                                QObject *(*callback)(QDeclarativeEngine *, QJSEngine *))
 {
     QDeclarativePrivate::RegisterModuleApi api = {
         0,

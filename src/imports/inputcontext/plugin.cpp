@@ -48,7 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static QObject *createContext(QDeclarativeEngine *, QScriptEngine *)
+static QObject *createContext(QDeclarativeEngine *, QJSEngine *)
 {
     return new InputContextModule;
 }

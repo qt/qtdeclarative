@@ -48,15 +48,17 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativevmemetaobject_p.h>
 #include <private/qdeclarativebinding_p.h>
+#include <private/qjsvalue_p.h>
+#include <private/qscript_impl_p.h>
 
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QJSValue);
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 #if defined(__GNUC__)
@@ -137,7 +139,7 @@ private:
         QString *qstringPtr;
         QVariant *qvariantPtr;
         QList<QObject *> *qlistPtr;
-        QScriptValue *qscriptValuePtr;
+        QJSValue *qjsValuePtr;
         QDeclarativeV8Handle *handlePtr;
     };
 
@@ -691,7 +693,9 @@ v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info
 
     QStringList result;
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(resource->engine->engine());
+    QDeclarativeEnginePrivate *ep = resource->engine->engine()
+            ? QDeclarativeEnginePrivate::get(resource->engine->engine())
+            : 0;
 
     QDeclarativePropertyCache *cache = 0;
     QDeclarativeData *ddata = QDeclarativeData::get(object);
@@ -699,7 +703,7 @@ v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info
         cache = ddata->propertyCache;
 
     if (!cache) {
-        cache = ep->cache(object);
+        cache = ep ? ep->cache(object) : 0;
         if (cache) {
             if (ddata) { cache->addref(); ddata->propertyCache = cache; }
         } else {
@@ -1837,8 +1841,8 @@ void MetaCallArgument::cleanup()
         qstringPtr->~QString();
     } else if (type == -1 || type == QMetaType::QVariant) {
         qvariantPtr->~QVariant();
-    } else if (type == qMetaTypeId<QScriptValue>()) {
-        qscriptValuePtr->~QScriptValue();
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr->~QJSValue();
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
         qlistPtr->~QList<QObject *>();
     } 
@@ -1857,8 +1861,8 @@ void MetaCallArgument::initAsType(int callType)
     if (type != 0) { cleanup(); type = 0; }
     if (callType == 0) return;
 
-    if (callType == qMetaTypeId<QScriptValue>()) {
-        qscriptValuePtr = new (&allocData) QScriptValue();
+    if (callType == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr = new (&allocData) QJSValue();
         type = callType;
     } else if (callType == QMetaType::Int ||
                callType == QMetaType::UInt ||
@@ -1891,9 +1895,9 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
 {
     if (type != 0) { cleanup(); type = 0; }
 
-    if (callType == qMetaTypeId<QScriptValue>()) {
-        qscriptValuePtr = new (&allocData) QScriptValue();
-        type = qMetaTypeId<QScriptValue>();
+    if (callType == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr = new (&allocData) QJSValue(QJSValuePrivate::get(new QJSValuePrivate(engine, value)));
+        type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
         intValue = quint32(value->Int32Value());
         type = callType;
@@ -1939,7 +1943,7 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
         qvariantPtr = new (&allocData) QVariant();
         type = -1;
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
+        QDeclarativeEnginePrivate *ep = engine->engine() ? QDeclarativeEnginePrivate::get(engine->engine()) : 0;
         QVariant v = engine->toVariant(value, -1);
 
         if (v.userType() == callType) {
@@ -1947,7 +1951,7 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
         } else if (v.canConvert((QVariant::Type)callType)) {
             *qvariantPtr = v;
             qvariantPtr->convert((QVariant::Type)callType);
-        } else if (const QMetaObject *mo = ep->rawMetaObjectForType(callType)) {
+        } else if (const QMetaObject *mo = ep ? ep->rawMetaObjectForType(callType) : 0) {
             QObject *obj = ep->toQObject(v);
             
             if (obj) {
@@ -1965,8 +1969,8 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
 
 v8::Handle<v8::Value> MetaCallArgument::toValue(QV8Engine *engine)
 {
-    if (type == qMetaTypeId<QScriptValue>()) {
-        return v8::Undefined();
+    if (type == qMetaTypeId<QJSValue>()) {
+        return QJSValuePrivate::get(*qjsValuePtr)->asV8Value(engine);
     } else if (type == QMetaType::Int) {
         return v8::Integer::New(int(intValue));
     } else if (type == QMetaType::UInt) {

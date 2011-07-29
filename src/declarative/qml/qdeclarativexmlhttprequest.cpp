@@ -51,9 +51,8 @@
 #include "qdeclarativeglobal_p.h"
 
 #include <QtCore/qobject.h>
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptcontext.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsvalue.h>
+#include <QtDeclarative/qjsengine.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qtextcodec.h>
 #include <QtCore/qxmlstream.h>

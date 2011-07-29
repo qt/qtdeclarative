@@ -41,7 +41,7 @@
 
 #include "qv8include_p.h"
 
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 #include <QtNetwork/qnetworkrequest.h>
 #include <QtNetwork/qnetworkreply.h>
 #include <QtCore/qfile.h>

@@ -52,9 +52,8 @@
 #include <QtDeclarative/qsgview.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptcontext.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsvalue.h>
+#include <QtDeclarative/qjsengine.h>
 #include <QtOpenGL/qgl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
@@ -73,7 +72,7 @@ QT_BEGIN_NAMESPACE
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugHelper
 {
 public:
-    static QScriptEngine *getScriptEngine(QDeclarativeEngine *engine);
+    static QJSEngine *getScriptEngine(QDeclarativeEngine *engine);
     static void setAnimationSlowDownFactor(qreal factor);
     static void enableDebugging();
 };

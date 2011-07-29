@@ -19,4 +19,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private script-private qtquick1-private
+QT += core-private gui-private declarative-private qtquick1-private

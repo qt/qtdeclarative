@@ -48,7 +48,7 @@
 #include "private/qdeclarativecontext_p.h"
 #include "private/qdeclarativebinding_p.h"
 
-Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QJSValue);
 
 QT_BEGIN_NAMESPACE
 
@@ -73,7 +73,7 @@ public:
     inline const QTime &asQTime();
     inline const QDate &asQDate();
     inline const QDateTime &asQDateTime();
-    inline const QScriptValue &asQScriptValue();
+    inline const QJSValue &asQJSValue();
 
     inline void setValue(QObject *);
     inline void setValue(const QVariant &);
@@ -86,7 +86,7 @@ public:
     inline void setValue(const QTime &);
     inline void setValue(const QDate &);
     inline void setValue(const QDateTime &);
-    inline void setValue(const QScriptValue &);
+    inline void setValue(const QJSValue &);
 private:
     int type;
     void *data[4]; // Large enough to hold all types
@@ -135,8 +135,8 @@ void QDeclarativeVMEVariant::cleanup()
     } else if (type == qMetaTypeId<QVariant>()) {
         ((QVariant *)dataPtr())->~QVariant();
         type = QVariant::Invalid;
-    } else if (type == qMetaTypeId<QScriptValue>()) {
-        ((QScriptValue *)dataPtr())->~QScriptValue();
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        ((QJSValue *)dataPtr())->~QJSValue();
         type = QVariant::Invalid;
     }
 
@@ -245,12 +245,12 @@ const QDateTime &QDeclarativeVMEVariant::asQDateTime()
     return *(QDateTime *)(dataPtr());
 }
 
-const QScriptValue &QDeclarativeVMEVariant::asQScriptValue() 
+const QJSValue &QDeclarativeVMEVariant::asQJSValue()
 {
-    if (type != qMetaTypeId<QScriptValue>())
-        setValue(QScriptValue());
+    if (type != qMetaTypeId<QJSValue>())
+        setValue(QJSValue());
 
-    return *(QScriptValue *)(dataPtr());
+    return *(QJSValue *)(dataPtr());
 }
 
 void QDeclarativeVMEVariant::setValue(QObject *v)
@@ -367,14 +367,14 @@ void QDeclarativeVMEVariant::setValue(const QDateTime &v)
     }
 }
 
-void QDeclarativeVMEVariant::setValue(const QScriptValue &v)
+void QDeclarativeVMEVariant::setValue(const QJSValue &v)
 {
-    if (type != qMetaTypeId<QScriptValue>()) {
+    if (type != qMetaTypeId<QJSValue>()) {
         cleanup();
-        type = qMetaTypeId<QScriptValue>();
-        new (dataPtr()) QScriptValue(v);
+        type = qMetaTypeId<QJSValue>();
+        new (dataPtr()) QJSValue(v);
     } else {
-        *(QScriptValue *)(dataPtr()) = v;
+        *(QJSValue *)(dataPtr()) = v;
     }
 }
 
@@ -656,18 +656,18 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                 QDeclarativeVMEMetaData::MethodData *data = metaData->methodData() + id;
 
                 v8::HandleScope handle_scope;
-                v8::Context::Scope scope(ep->v8engine.context());
+                v8::Context::Scope scope(ep->v8engine()->context());
                 v8::Handle<v8::Value> *args = 0;
 
                 if (data->parameterCount) {
                     args = new v8::Handle<v8::Value>[data->parameterCount];
                     for (int ii = 0; ii < data->parameterCount; ++ii) 
-                        args[ii] = ep->v8engine.fromVariant(*(QVariant *)a[ii + 1]);
+                        args[ii] = ep->v8engine()->fromVariant(*(QVariant *)a[ii + 1]);
                 }
 
                 v8::TryCatch try_catch;
 
-                v8::Local<v8::Value> result = function->Call(ep->v8engine.global(), data->parameterCount, args);
+                v8::Local<v8::Value> result = function->Call(ep->v8engine()->global(), data->parameterCount, args);
 
                 QVariant rv;
                 if (try_catch.HasCaught()) {
@@ -677,7 +677,7 @@ int QDeclarativeVMEMetaObject::metaCall(QMetaObject::Call c, int _id, void **a)
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = ep->v8engine.toVariant(result, 0);
+                    if (a[0]) *(QVariant *)a[0] = ep->v8engine()->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
@@ -720,7 +720,7 @@ v8::Handle<v8::Function> QDeclarativeVMEMetaObject::method(int index)
 QScriptValue QDeclarativeVMEMetaObject::readVarProperty(int id)
 {
     if (data[id].dataType() == qMetaTypeId<QScriptValue>())
-        return data[id].asQScriptValue();
+        return data[id].asQJSValue();
     else if (data[id].dataType() == QMetaType::QObjectStar) 
         return QDeclarativeEnginePrivate::get(ctxt->engine)->objectClass->newQObject(data[id].asQObject());
     else
@@ -732,7 +732,7 @@ QVariant QDeclarativeVMEMetaObject::readVarPropertyAsVariant(int id)
 {
 #if 0
     if (data[id].dataType() == qMetaTypeId<QScriptValue>())
-        return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueToVariant(data[id].asQScriptValue());
+        return QDeclarativeEnginePrivate::get(ctxt->engine)->scriptValueToVariant(data[id].asQJSValue());
     else 
 #endif
     if (data[id].dataType() == QMetaType::QObjectStar) 

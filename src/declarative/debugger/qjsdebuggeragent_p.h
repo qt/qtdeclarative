@@ -53,11 +53,11 @@
 // We mean it.
 //
 
-#include <QtScript/qscriptengineagent.h>
 #include <QtCore/qset.h>
+#include <QtDeclarative/qjsengine.h>
 
 QT_BEGIN_NAMESPACE
-class QScriptValue;
+class QJSValue;
 class QDeclarativeEngine;
 QT_END_NAMESPACE
 
@@ -136,16 +136,17 @@ inline uint qHash(const JSAgentBreakpointData &b)
 }
 
 
-class QJSDebuggerAgent : public QObject, public QScriptEngineAgent
+class QJSDebuggerAgent : public QObject
 {
     Q_OBJECT
 
 public:
-    QJSDebuggerAgent(QScriptEngine *engine, QObject *parent = 0);
+    QJSDebuggerAgent(QJSEngine *engine, QObject *parent = 0);
     QJSDebuggerAgent(QDeclarativeEngine *engine, QObject *parent = 0);
     ~QJSDebuggerAgent();
 
     bool isInitialized() const;
+    QJSEngine * engine() {return 0; }
 
     void setBreakpoints(const JSAgentBreakpoints &);
     void setWatchExpressions(const QStringList &);
@@ -175,20 +176,16 @@ public:
 
     void functionEntry(qint64 scriptId);
     void functionExit(qint64 scriptId,
-                      const QScriptValue &returnValue);
+                      const QJSValue &returnValue);
 
     void positionChange(qint64 scriptId,
                         int lineNumber, int columnNumber);
 
     void exceptionThrow(qint64 scriptId,
-                        const QScriptValue &exception,
+                        const QJSValue &exception,
                         bool hasHandler);
     void exceptionCatch(qint64 scriptId,
-                        const QScriptValue &exception);
-
-    bool supportsExtension(Extension extension) const;
-    QVariant extension(Extension extension,
-                       const QVariant &argument = QVariant());
+                        const QJSValue &exception);
 
 Q_SIGNALS:
     void stopped(bool becauseOfException,

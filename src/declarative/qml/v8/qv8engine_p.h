@@ -57,7 +57,14 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qset.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qstack.h>
+#include <QtCore/qstringlist.h>
+
 #include <private/qv8_p.h>
+#include <qjsengine.h>
+#include <qjsvalue.h>
+#include "qscriptoriginalglobalobject_p.h"
+#include "qscripttools_p.h"
 
 #include <private/qdeclarativepropertycache_p.h>
 
@@ -210,18 +217,49 @@ class QDeclarativeContextData;
 class Q_DECLARATIVE_EXPORT QV8Engine
 {
 public:
-    QV8Engine();
+    static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
+    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
+
+    QV8Engine(QJSEngine* qq,QJSEngine::ContextOwnership ownership = QJSEngine::CreateNewContext);
     ~QV8Engine();
 
     struct Deletable {
         virtual ~Deletable() {}
     };
 
-    void init(QDeclarativeEngine *);
+    class Exception
+    {
+        typedef QPair<v8::Persistent<v8::Value>, v8::Persistent<v8::Message> > ValueMessagePair;
 
+        v8::Persistent<v8::Value> m_value;
+        v8::Persistent<v8::Message> m_message;
+        QStack<ValueMessagePair> m_stack;
+
+        Q_DISABLE_COPY(Exception)
+    public:
+        inline Exception();
+        inline ~Exception();
+        inline void set(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message);
+        inline void clear();
+        inline operator bool() const;
+        inline operator v8::Handle<v8::Value>() const;
+        inline int lineNumber() const;
+        inline QStringList backtrace() const;
+
+        inline void push();
+        inline void pop();
+    };
+
+    void initDeclarativeGlobalObject();
+    void setEngine(QDeclarativeEngine *engine);
     QDeclarativeEngine *engine() { return m_engine; }
     v8::Local<v8::Object> global() { return m_context->Global(); }
-    v8::Handle<v8::Context> context() { return m_context; }
+    v8::Handle<v8::Context> context() const { return m_context; }
+
+    inline void registerValue(QJSValuePrivate *data);
+    inline void unregisterValue(QJSValuePrivate *data);
+    inline void invalidateAllValues();
+
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
     QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
@@ -237,6 +275,7 @@ public:
     QDeclarativeContextData *callingContext();
 
     v8::Local<v8::Array> getOwnPropertyNames(v8::Handle<v8::Object>);
+    inline QJSValue::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
     void freezeObject(v8::Handle<v8::Value>);
 
     inline QString toString(v8::Handle<v8::Value> string);
@@ -256,6 +295,9 @@ public:
 
     // Return the QML global "scope" object for the \a ctxt context and \a scope object.
     inline v8::Local<v8::Object> qmlScope(QDeclarativeContextData *ctxt, QObject *scope);
+
+    QScriptPassPointer<QJSValuePrivate> newRegExp(const QRegExp &regexp);
+    QScriptPassPointer<QJSValuePrivate> newRegExp(const QString &pattern, const QString &flags);
 
     // Return a JS wrapper for the given QObject \a object
     inline v8::Handle<v8::Value> newQObject(QObject *object);
@@ -281,7 +323,18 @@ public:
     // Return the list of illegal id names (the names of the properties on the global object)
     const QSet<QString> &illegalNames() const;
 
+    inline void collectGarbage() { gc(); }
     static void gc();
+
+    void clearExceptions();
+    void setException(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message = v8::Handle<v8::Message>());
+    v8::Handle<v8::Value> throwException(v8::Handle<v8::Value> value);
+    bool hasUncaughtException() const;
+    int uncaughtExceptionLineNumber() const;
+    QStringList uncaughtExceptionBacktrace() const;
+    v8::Handle<v8::Value> uncaughtException() const;
+    void saveException();
+    void restoreException();
 
 #ifdef QML_GLOBAL_HANDLE_DEBUGGING
     // Used for handle debugging
@@ -295,9 +348,50 @@ public:
     inline Deletable *extensionData(int) const;
     void setExtensionData(int, Deletable *);
 
-private:
+    inline v8::Handle<v8::Value> makeJSValue(bool value);
+    inline v8::Handle<v8::Value> makeJSValue(int value);
+    inline v8::Handle<v8::Value> makeJSValue(uint value);
+    inline v8::Handle<v8::Value> makeJSValue(double value);
+    inline v8::Handle<v8::Value> makeJSValue(QJSValue::SpecialValue value);
+    inline v8::Handle<v8::Value> makeJSValue(const QString& value);
+
+    inline QScriptPassPointer<QJSValuePrivate> evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
+    QScriptPassPointer<QJSValuePrivate> evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch);
+
+    QScriptPassPointer<QJSValuePrivate> newArray(uint length);
+    v8::Handle<v8::Object> newVariant(const QVariant &variant);
+    QScriptPassPointer<QJSValuePrivate> newVariant(QJSValuePrivate* value, const QVariant &variant);
+
+    v8::Handle<v8::Array> variantListToJS(const QVariantList &lst);
+    QVariantList variantListFromJS(v8::Handle<v8::Array> jsArray);
+
+    v8::Handle<v8::Object> variantMapToJS(const QVariantMap &vmap);
+    QVariantMap variantMapFromJS(v8::Handle<v8::Object> jsObject);
+
+    v8::Handle<v8::Value> variantToJS(const QVariant &value);
+    QVariant variantFromJS(v8::Handle<v8::Value> value);
+
+    v8::Handle<v8::Value> metaTypeToJS(int type, const void *data);
+    bool metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data);
+
+    bool convertToNativeQObject(v8::Handle<v8::Value> value,
+                                const QByteArray &targetType,
+                                void **result);
+
+    QVariant variantValue(v8::Handle<v8::Value> value);
+
+    QJSValue scriptValueFromInternal(v8::Handle<v8::Value>) const;
+
+    void emitSignalHandlerException();
+
+    QObject *qtObjectFromJS(v8::Handle<v8::Value> value);
+    QSet<int> visitedConversionObjects;
+protected:
+    QJSEngine* q;
     QDeclarativeEngine *m_engine;
+    bool m_ownsV8Context;
     v8::Persistent<v8::Context> m_context;
+    QScriptOriginalGlobalObject m_originalGlobalObject;
 
     QV8StringWrapper m_stringWrapper;
     QV8ContextWrapper m_contextWrapper;
@@ -317,6 +411,8 @@ private:
     Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
+
+    Exception m_exception;
 
     QVariant toBasicVariant(v8::Handle<v8::Value>);
 
@@ -356,6 +452,10 @@ private:
 
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
+private:
+    QScriptBagContainer<QJSValuePrivate> m_values;
+
+    Q_DISABLE_COPY(QV8Engine)
 };
 
 // Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated

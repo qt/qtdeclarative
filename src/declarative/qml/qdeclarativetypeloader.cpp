@@ -1230,7 +1230,7 @@ void QDeclarativeScriptBlob::done()
     m_scriptData->pragmas = m_pragmas;
 
     // XXX TODO: Handle errors that occur duing the script compile
-    QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
+    QV8Engine *v8engine = QDeclarativeEnginePrivate::get(engine)->v8engine();
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(v8engine->context());
     v8::Local<v8::Script> program = v8engine->qmlModeCompile(m_source, finalUrl().toString(), 1);

@@ -55,7 +55,7 @@
 
 #include <QtDeclarative/qdeclarative.h>
 
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtGui/qevent.h>
 #include <QMutex>
 #include <QWaitCondition>

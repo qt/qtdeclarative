@@ -48,10 +48,9 @@
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdebug.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
-#include <QtScript/qscriptvalueiterator.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdatetime.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
@@ -190,7 +189,7 @@ private:
 };
 
 QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QDeclarativeWorkerScriptEnginePrivate *parent) 
-: p(parent), accessManager(0) 
+: QV8Engine(0), p(parent), accessManager(0)
 {
 }
 
@@ -203,8 +202,7 @@ QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
 
 void QDeclarativeWorkerScriptEnginePrivate::WorkerEngine::init()
 {
-    QV8Engine::init(0);
-
+    initDeclarativeGlobalObject();
 #define CALL_ONMESSAGE_SCRIPT \
     "(function(object, message) { "\
         "var isfunction = false; "\
@@ -705,7 +703,7 @@ bool QDeclarativeWorkerScript::event(QEvent *event)
         QDeclarativeEngine *engine = qmlEngine(this);
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
-            QV8Engine *v8engine = &QDeclarativeEnginePrivate::get(engine)->v8engine;
+            QV8Engine *v8engine = QDeclarativeEnginePrivate::get(engine)->v8engine();
             v8::HandleScope handle_scope;
             v8::Context::Scope scope(v8engine->context());
             v8::Handle<v8::Value> value = QV8Worker::deserialize(workerEvent->data(), v8engine);

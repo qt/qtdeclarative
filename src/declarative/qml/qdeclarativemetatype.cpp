@@ -61,7 +61,7 @@
 #include <qvector.h>
 #include <qlocale.h>
 #include <QtCore/qcryptographichash.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 
 #include <ctype.h>
 
@@ -1114,7 +1114,7 @@ QT_END_NAMESPACE
 #include <QtGui/qquaternion.h>
 #include <private/qv8engine_p.h>
 
-Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QJSValue);
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 QT_BEGIN_NAMESPACE
@@ -1195,7 +1195,7 @@ bool QDeclarativeMetaType::canCopy(int type)
 
     default:
         if (type == qMetaTypeId<QVariant>() ||
-            type == qMetaTypeId<QScriptValue>() ||
+            type == qMetaTypeId<QJSValue>() ||
             type == qMetaTypeId<QDeclarativeV8Handle>() ||
             typeCategory(type) != Unknown) {
             return true;
@@ -1416,8 +1416,8 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             if (type == qMetaTypeId<QVariant>()) {
                 *static_cast<NS(QVariant) *>(data) = *static_cast<const NS(QVariant)*>(copy);
                 return true;
-            } else if (type == qMetaTypeId<QScriptValue>()) {
-                *static_cast<NS(QScriptValue) *>(data) = *static_cast<const NS(QScriptValue)*>(copy);
+            } else if (type == qMetaTypeId<QJSValue>()) {
+                *static_cast<NS(QJSValue) *>(data) = *static_cast<const NS(QJSValue)*>(copy);
                 return true;
             } else if (type == qMetaTypeId<QDeclarativeV8Handle>()) {
                 *static_cast<NS(QDeclarativeV8Handle) *>(data) = *static_cast<const NS(QDeclarativeV8Handle)*>(copy);
@@ -1626,8 +1626,8 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             if (type == qMetaTypeId<QVariant>()) {
                 *static_cast<NS(QVariant) *>(data) = NS(QVariant)();
                 return true;
-            } else if (type == qMetaTypeId<QScriptValue>()) {
-                *static_cast<NS(QScriptValue) *>(data) = NS(QScriptValue)();
+            } else if (type == qMetaTypeId<QJSValue>()) {
+                *static_cast<NS(QJSValue) *>(data) = NS(QJSValue)();
                 return true;
             } else if (type == qMetaTypeId<QDeclarativeV8Handle>()) {
                 *static_cast<NS(QDeclarativeV8Handle) *>(data) = NS(QDeclarativeV8Handle)();

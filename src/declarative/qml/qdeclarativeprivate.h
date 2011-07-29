@@ -74,8 +74,8 @@ public:
 };
 
 
-class QScriptValue;
-class QScriptEngine;
+class QJSValue;
+class QJSEngine;
 class QDeclarativeEngine;
 class QDeclarativeCustomParser;
 namespace QDeclarativePrivate
@@ -243,8 +243,8 @@ namespace QDeclarativePrivate
         int versionMajor;
         int versionMinor;
 
-        QScriptValue (*scriptApi)(QDeclarativeEngine *, QScriptEngine *);
-        QObject *(*qobjectApi)(QDeclarativeEngine *, QScriptEngine *);
+        QJSValue (*scriptApi)(QDeclarativeEngine *, QJSEngine *);
+        QObject *(*qobjectApi)(QDeclarativeEngine *, QJSEngine *);
     };
 
     enum RegistrationType {

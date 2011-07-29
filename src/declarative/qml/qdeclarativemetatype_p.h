@@ -59,7 +59,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qbitarray.h>
 #include <private/qdeclarativeglobal_p.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -113,9 +113,9 @@ public:
         ModuleApiInstance()
             : scriptCallback(0), qobjectCallback(0), qobjectApi(0) {}
 
-        QScriptValue (*scriptCallback)(QDeclarativeEngine *, QScriptEngine *);
-        QObject *(*qobjectCallback)(QDeclarativeEngine *, QScriptEngine *);
-        QScriptValue scriptApi;
+        QJSValue (*scriptCallback)(QDeclarativeEngine *, QJSEngine *);
+        QObject *(*qobjectCallback)(QDeclarativeEngine *, QJSEngine *);
+        QJSValue scriptApi;
         QObject *qobjectApi;
     };
     struct ModuleApi {
@@ -123,8 +123,8 @@ public:
         inline bool operator==(const ModuleApi &) const;
         int major;
         int minor;
-        QScriptValue (*script)(QDeclarativeEngine *, QScriptEngine *);
-        QObject *(*qobject)(QDeclarativeEngine *, QScriptEngine *);
+        QJSValue (*script)(QDeclarativeEngine *, QJSEngine *);
+        QObject *(*qobject)(QDeclarativeEngine *, QJSEngine *);
     };
     static ModuleApi moduleApi(const QByteArray &, int, int);
 };

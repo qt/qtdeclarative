@@ -53,7 +53,7 @@
 #include <QtGui/qpixmap.h>
 #include <QtGui/qvector3d.h>
 #include <QtCore/qdatetime.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtScript/qjsvalue.h>
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 

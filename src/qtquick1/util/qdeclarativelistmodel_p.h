@@ -51,7 +51,7 @@
 #include <QtCore/QList>
 #include <QtCore/QVariant>
 #include <QtQuick1/private/qlistmodelinterface_p.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 
 QT_BEGIN_HEADER
 

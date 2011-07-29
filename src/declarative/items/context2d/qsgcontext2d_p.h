@@ -55,7 +55,7 @@
 #include <QtCore/qmetatype.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qvariant.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <private/qv8engine_p.h>
 #include <QMutex>
 #include <QWaitCondition>
@@ -323,7 +323,7 @@ public slots:
 
     void paint(QPainter* painter);
     void sync();
-    void processCommands(const QScriptValue& commands);
+    void processCommands(const QJSValue& commands);
 signals:
     void changed();
     void painted();
@@ -385,7 +385,7 @@ protected:
     virtual bool event(QEvent *);
 
 private:
-    void processCommand(const QScriptValue& command);
+    void processCommand(const QJSValue& command);
 
     Q_DECLARE_PRIVATE(QSGContext2D)
 };

@@ -367,7 +367,7 @@ void QDeclarativeBinding::update(QDeclarativePropertyPrivate::WriteFlags flags)
             bool isUndefined = false;
 
             v8::HandleScope handle_scope;
-            v8::Context::Scope scope(ep->v8engine.context());
+            v8::Context::Scope scope(ep->v8engine()->context());
             v8::Local<v8::Value> result = d->v8value(0, &isUndefined);
 
             bool needsErrorData = false;

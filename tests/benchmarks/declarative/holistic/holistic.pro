@@ -1,7 +1,7 @@
 load(qttest_p4)
 TEMPLATE = app
 TARGET = tst_holistic
-QT += declarative script network
+QT += declarative network
 macx:CONFIG -= app_bundle
 
 CONFIG += release

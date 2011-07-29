@@ -5,4 +5,4 @@ macx:CONFIG -= app_bundle
 HEADERS += ../shared/debugutil_p.h
 SOURCES += tst_qdeclarativedebugclient.cpp \
            ../shared/debugutil.cpp
-QT += core-private gui-private declarative-private script-private
+QT += core-private gui-private declarative-private

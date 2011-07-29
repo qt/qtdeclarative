@@ -1,6 +1,5 @@
 load(qttest_p4)
 contains(QT_CONFIG,declarative): QT += declarative
-QT += script
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativelistmodel.cpp
@@ -15,4 +14,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private script-private opengl-private
+QT += core-private gui-private declarative-private opengl-private

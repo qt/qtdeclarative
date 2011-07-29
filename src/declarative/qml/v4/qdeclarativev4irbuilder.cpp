@@ -436,7 +436,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
 
     if (name.at(0) == QLatin1Char('u') && name.length() == 9 && name == QLatin1String("undefined")) {
         _expr.code = _block->CONST(IR::UndefinedType, 0); // ### undefined value
-    } else if(m_engine->v8engine.illegalNames().contains(name) ) {
+    } else if (m_engine->v8engine()->illegalNames().contains(name) ) {
         if (qmlVerboseCompiler()) qWarning() << "*** illegal symbol:" << name;
         return false;
     } else if (const QDeclarativeParser::Object *obj = m_expression->ids.value(name)) {

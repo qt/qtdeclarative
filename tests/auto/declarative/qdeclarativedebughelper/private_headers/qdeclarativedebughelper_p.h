@@ -48,7 +48,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QScriptEngine;
+class QJSEngine;
 class QDeclarativeEngine;
 
 // Helper methods to access private API through a stable interface
@@ -56,7 +56,7 @@ class QDeclarativeEngine;
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugHelper
 {
 public:
-    static QScriptEngine *getScriptEngine(QDeclarativeEngine *engine);
+    static QJSEngine *getScriptEngine(QDeclarativeEngine *engine);
     static void setAnimationSlowDownFactor(qreal factor);
 
     // Enables remote debugging functionality
