@@ -455,7 +455,8 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             QTime time = QDeclarativeStringConverters::timeFromString(string);
             instr.setType(QDeclarativeInstruction::StoreTime);
             instr.storeTime.propertyIndex = prop.propertyIndex();
-            instr.storeTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
+            Q_ASSERT(sizeof(instr.storeTime.time) == sizeof(QTime));
+            ::memcpy(&instr.storeTime.time, &time, sizeof(QTime));
             }
             break;
         case QVariant::DateTime:
@@ -465,7 +466,8 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.setType(QDeclarativeInstruction::StoreDateTime);
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
             instr.storeDateTime.date = dateTime.date().toJulianDay();
-            instr.storeDateTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
+            Q_ASSERT(sizeof(instr.storeDateTime.time) == sizeof(QTime));
+            ::memcmp(&instr.storeDateTime.time, &time, sizeof(QTime));
             }
             break;
 #endif // QT_NO_DATESTRING
