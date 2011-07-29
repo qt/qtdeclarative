@@ -115,6 +115,7 @@ private slots:
     void mouseDrag();
     void treeModel();
     void changePreferredHighlight();
+    void missingPercent();
 
 private:
     QSGView *createView();
@@ -1071,6 +1072,17 @@ QList<T*> tst_QSGPathView::findItems(QSGItem *parent, const QString &objectName)
 
     return items;
 }
+
+void tst_QSGPathView::missingPercent()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/missingPercent.qml"));
+    QDeclarativePath *obj = qobject_cast<QDeclarativePath*>(c.create());
+    QVERIFY(obj);
+    QCOMPARE(obj->attributeAt("_qfx_percent", 1.0), qreal(1.0));
+    delete obj;
+}
+
 
 QTEST_MAIN(tst_QSGPathView)
 

@@ -208,6 +208,8 @@ void QDeclarativePath::endpoint(const QString &name)
     }
 }
 
+static QString percentString(QStringLiteral("_qfx_percent"));
+
 void QDeclarativePath::processPath()
 {
     Q_D(QDeclarativePath);
@@ -227,6 +229,7 @@ void QDeclarativePath::processPath()
     d->_path.moveTo(d->startX, d->startY);
 
     QDeclarativeCurve *lastCurve = 0;
+    bool usesPercent = false;
     foreach (QDeclarativePathElement *pathElement, d->_pathElements) {
         if (QDeclarativeCurve *curve = qobject_cast<QDeclarativeCurve *>(pathElement)) {
             curve->addToPath(d->_path);
@@ -240,8 +243,9 @@ void QDeclarativePath::processPath()
             interpolate(d->_attributePoints.count() - 1, attribute->name(), attribute->value());
         } else if (QDeclarativePathPercent *percent = qobject_cast<QDeclarativePathPercent *>(pathElement)) {
             AttributePoint &point = d->_attributePoints.last();
-            point.values[QLatin1String("_qfx_percent")] = percent->value();
-            interpolate(d->_attributePoints.count() - 1, QLatin1String("_qfx_percent"), percent->value());
+            point.values[percentString] = percent->value();
+            interpolate(d->_attributePoints.count() - 1, percentString, percent->value());
+            usesPercent = true;
         }
     }
 
@@ -251,6 +255,11 @@ void QDeclarativePath::processPath()
         if (!last.values.contains(d->_attributes.at(ii)))
             endpoint(d->_attributes.at(ii));
     }
+    if (usesPercent && !last.values.contains(percentString)) {
+        d->_attributePoints.last().values[percentString] = 1;
+        interpolate(d->_attributePoints.count() - 1, percentString, 1);
+    }
+
 
     // Adjust percent
     qreal length = d->_path.length();
@@ -258,14 +267,14 @@ void QDeclarativePath::processPath()
     qreal prevorigpercent = 0;
     for (int ii = 0; ii < d->_attributePoints.count(); ++ii) {
         const AttributePoint &point = d->_attributePoints.at(ii);
-        if (point.values.contains(QLatin1String("_qfx_percent"))) { //special string for QDeclarativePathPercent
+        if (point.values.contains(percentString)) { //special string for QDeclarativePathPercent
             if ( ii > 0) {
                 qreal scale = (d->_attributePoints[ii].origpercent/length - prevorigpercent) /
-                            (point.values.value(QLatin1String("_qfx_percent"))-prevpercent);
+                            (point.values.value(percentString)-prevpercent);
                 d->_attributePoints[ii].scale = scale;
             }
             d->_attributePoints[ii].origpercent /= length;
-            d->_attributePoints[ii].percent = point.values.value(QLatin1String("_qfx_percent"));
+            d->_attributePoints[ii].percent = point.values.value(percentString);
             prevorigpercent = d->_attributePoints[ii].origpercent;
             prevpercent = d->_attributePoints[ii].percent;
         } else {
