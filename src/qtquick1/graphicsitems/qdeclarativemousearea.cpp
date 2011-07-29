@@ -258,11 +258,37 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
 /*!
     \qmlsignal QtQuick1::MouseArea::onExited()
 
-    This handler is called when the mouse exists the mouse area.
+    This handler is called when the mouse exits the mouse area.
 
     By default the onExited handler is only called while a button is
     pressed. Setting hoverEnabled to true enables handling of
     onExited when no mouse button is pressed.
+
+    The example below shows a fairly typical relationship between
+    two MouseAreas, with \c mouseArea2 on top of \c mouseArea1. Moving the
+    mouse into \c mouseArea2 from \c mouseArea1 will cause \c onExited
+    to be called for \c mouseArea1.
+    \qml
+    Rectangle {
+        width: 400; height: 400
+        MouseArea {
+            id: mouseArea1
+            anchors.fill: parent
+            hoverEnabled: true
+        }
+        MouseArea {
+            id: mouseArea2
+            width: 100; height: 100
+            anchors.centerIn: parent
+            hoverEnabled: true
+        }
+    }
+    \endqml
+
+    If instead you give the two mouseAreas a parent-child relationship,
+    moving the mouse into \c mouseArea2 from \c mouseArea1 will \b not
+    cause \c onExited to be called for \c mouseArea1. Instead, they will
+    both be considered to be simultaneously hovered.
 
     \sa hoverEnabled
 */
