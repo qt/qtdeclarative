@@ -222,6 +222,39 @@ attributes such as \l {SpringAnimation::}{mass},
 \o AnchorAnimation: used for animating an anchor change (see AnchorChanges)
 \endlist
 
+\section1 Sharing Animation Instances
+
+Sharing animation instances between Transitions or Behaviors is not
+supported, and may lead to undefined behavior. In the following example,
+changes to the Rectangle's position will most likely not be correctly animated.
+
+\qml
+Rectangle {
+    // NOT SUPPORTED: this will not work correctly as both Behaviors
+    // try to control a single animation instance
+    NumberAnimation { id: anim; duration: 300; easing.type: Easing.InBack }
+    Behavior on x { animation: anim }
+    Behavior on y { animation: anim }
+}
+\endqml
+
+The easiest fix is to repeat the NumberAnimation for both Behaviors. If the repeated
+animation is rather complex, you might also consider creating a custom animation
+component and assigning an instance to each Behavior, for example:
+
+\qml
+// MyNumberAnimation.qml
+NumberAnimation { id: anim; duration: 300; easing.type: Easing.InBack }
+\endqml
+
+\qml
+// main.qml
+Rectangle {
+    Behavior on x { MyNumberAnimation {} }
+    Behavior on y { MyNumberAnimation {} }
+}
+\endqml
+
 */
 
 
