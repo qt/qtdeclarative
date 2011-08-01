@@ -202,9 +202,7 @@ private slots:
     void throwErrorFromProcessEvents();
     void disableProcessEventsInterval();
 #endif
-#if 0 // ###FIXME: No QScriptValueIterator API
     void stacktrace();
-#endif
     void numberParsing_data();
     void numberParsing();
     void automaticSemicolonInsertion();
@@ -3323,7 +3321,7 @@ void tst_QJSEngine::disableProcessEventsInterval()
 }
 #endif
 
-#if 0 // ###FIXME: No QScriptValueIterator API
+
 void tst_QJSEngine::stacktrace()
 {
     QString script = QString::fromLatin1(
@@ -3351,34 +3349,36 @@ void tst_QJSEngine::stacktrace()
               << "foo(0)@testfile:3"
               << "<global>()@testfile:12";
 
-    QScriptEngine eng;
-    QScriptValue result = eng.evaluate(script, fileName);
+    QJSEngine eng;
+    QJSValue result = eng.evaluate(script, fileName);
     QVERIFY(eng.hasUncaughtException());
     QVERIFY(result.isError());
 
-    QEXPECT_FAIL("", "QTBUG-6139: uncaughtExceptionBacktrace() doesn't give the full backtrace", Abort);
+    // QEXPECT_FAIL("", "QTBUG-6139: uncaughtExceptionBacktrace() doesn't give the full backtrace", Abort);
     // ###FIXME: no uncahgutExceptionBacktrace: QCOMPARE(eng.uncaughtExceptionBacktrace(), backtrace);
     QVERIFY(eng.hasUncaughtException());
     QVERIFY(result.strictlyEquals(eng.uncaughtException()));
 
-    QCOMPARE(result.property("fileName").toString(), fileName);
-    QCOMPARE(result.property("lineNumber").toInt32(), 9);
+    // FIXME? it is not standard.
+    //QCOMPARE(result.property("fileName").toString(), fileName);
+    //QCOMPARE(result.property("lineNumber").toInt32(), 9);
 
-    QScriptValue stack = result.property("stack");
-    QVERIFY(stack.isArray());
+    QJSValue stack = result.property("stack");
 
-    QCOMPARE(stack.property("length").toInt32(), 7);
+    // FIXME? it is not standard.
+    // QVERIFY(stack.isArray());
+    //QCOMPARE(stack.property("length").toInt32(), 7);
 
-    QScriptValueIterator it(stack);
+    QJSValueIterator it(stack);
     int counter = 5;
     while (it.hasNext()) {
         it.next();
-        QScriptValue obj = it.value();
-        QScriptValue frame = obj.property("frame");
+        QJSValue obj = it.value();
+        QJSValue frame = obj.property("frame");
 
         QCOMPARE(obj.property("fileName").toString(), fileName);
         if (counter >= 0) {
-            QScriptValue callee = frame.property("arguments").property("callee");
+            QJSValue callee = frame.property("arguments").property("callee");
             QVERIFY(callee.strictlyEquals(eng.globalObject().property("foo")));
             QCOMPARE(obj.property("functionName").toString(), QString("foo"));
             int line = obj.property("lineNumber").toInt32();
@@ -3394,10 +3394,11 @@ void tst_QJSEngine::stacktrace()
         --counter;
     }
 
-    {
-        QScriptValue bt = result.property("backtrace").call(result);
-        QCOMPARE(qscriptvalue_cast<QStringList>(bt), backtrace);
-    }
+//    FIXME? it is not standard.
+//    {
+//        QJSValue bt = result.property("backtrace").call(result);
+//        QCOMPARE(qjsvalue_cast<QStringList>(bt), backtrace);
+//    }
 
     // throw something that isn't an Error object
     eng.clearExceptions();
@@ -3416,7 +3417,7 @@ void tst_QJSEngine::stacktrace()
         "}\n"
         "foo(0);");
 
-    QScriptValue result2 = eng.evaluate(script2, fileName);
+    QJSValue result2 = eng.evaluate(script2, fileName);
     QVERIFY(eng.hasUncaughtException());
     QVERIFY(!result2.isError());
     QVERIFY(result2.isString());
@@ -3428,7 +3429,6 @@ void tst_QJSEngine::stacktrace()
     QVERIFY(!eng.hasUncaughtException());
     // ###FIXME: No uncaughtExceptionBacktrace:  QVERIFY(eng.uncaughtExceptionBacktrace().isEmpty());
 }
-#endif
 
 void tst_QJSEngine::numberParsing_data()
 {
