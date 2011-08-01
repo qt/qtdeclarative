@@ -422,7 +422,6 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
-    , hoverItem(0)
     , dirtyItemList(0)
     , context(0)
     , contextFailed(false)
@@ -955,17 +954,19 @@ QSGItem *QSGCanvas::mouseGrabberItem() const
 }
 
 
-void QSGCanvasPrivate::clearHover()
+bool QSGCanvasPrivate::clearHover()
 {
     Q_Q(QSGCanvas);
-    if (!hoverItem)
-        return;
+    if (hoverItems.isEmpty())
+        return false;
 
     QPointF pos = q->mapFromGlobal(QCursor::pos());
 
-    QSGItem *item = hoverItem;
-    hoverItem = 0;
-    sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true);
+    bool accepted = false;
+    foreach (QSGItem* item, hoverItems)
+        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true) || accepted;
+    hoverItems.clear();
+    return accepted;
 }
 
 
@@ -1205,11 +1206,7 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
         bool delivered = d->deliverHoverEvent(d->rootItem, event->pos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
-            if (d->hoverItem) {
-                QSGItem *item = d->hoverItem;
-                d->hoverItem = 0;
-                accepted = d->sendHoverEvent(QEvent::HoverLeave, item, event->pos(), last, event->modifiers(), accepted);
-            }
+            accepted = d->clearHover();
         }
         event->setAccepted(accepted);
         return;
@@ -1247,20 +1244,43 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
     if (itemPrivate->hoverEnabled) {
         QPointF p = item->mapFromScene(scenePos);
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-            if (hoverItem == item) {
+            if (!hoverItems.isEmpty() && hoverItems[0] == item) {
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
             } else {
-                //exit from previous
-                if (hoverItem) {
-                    QSGItem *item = hoverItem;
-                    hoverItem = 0;
-                    accepted = sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, accepted);
+                QList<QSGItem*> parents;
+                QSGItem* parent = item;
+                parents << item;
+                while ((parent = parent->parentItem()))
+                    parents << parent;
+
+                //exit from previous (excepting ancestors)
+                while (!hoverItems.isEmpty() && !parents.contains(hoverItems[0])){
+                    sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
+                    hoverItems.removeFirst();
                 }
 
-                //enter new item
-                hoverItem = item;
-                accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
+                if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
+                    accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
+                } else {
+                    //enter any ancestors that also wish to be hovered and aren't
+                    int startIdx = -1;
+                    if (!hoverItems.isEmpty())
+                        startIdx = parents.indexOf(hoverItems[0]);
+                    if (startIdx == -1)
+                        startIdx = parents.count() - 1;
+
+                    for (int i = startIdx; i >= 0; i--) {
+                        if (QSGItemPrivate::get(parents[i])->hoverEnabled) {
+                            hoverItems.prepend(parents[i]);
+                            sendHoverEvent(QEvent::HoverEnter, parents[i], scenePos, lastScenePos, modifiers, accepted);
+                        }
+                    }
+
+                    //enter new item
+                    hoverItems.prepend(item);
+                    accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
+                }
             }
             return true;
         }

@@ -75,6 +75,7 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
     void hoverPosition();
+    void hoverPropagation();
 
 private:
     QSGView *createView();
@@ -737,6 +738,31 @@ void tst_QSGMouseArea::hoverPosition()
 
     QCOMPARE(root->property("mouseX").toReal(), qreal(10));
     QCOMPARE(root->property("mouseY").toReal(), qreal(32));
+
+    delete canvas;
+}
+
+void tst_QSGMouseArea::hoverPropagation()
+{
+    //QTBUG-18175, to behave like GV did.
+    QSGView *canvas = createView();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/hoverPropagation.qml"));
+
+    QSGItem *root = canvas->rootObject();
+    QVERIFY(root != 0);
+
+    QCOMPARE(root->property("point1").toBool(), false);
+    QCOMPARE(root->property("point2").toBool(), false);
+
+    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+    QCOMPARE(root->property("point1").toBool(), true);
+    QCOMPARE(root->property("point2").toBool(), false);
+
+    QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(232, 32), Qt::NoButton, Qt::NoButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent2);
+    QCOMPARE(root->property("point1").toBool(), false);
+    QCOMPARE(root->property("point2").toBool(), true);
 
     delete canvas;
 }

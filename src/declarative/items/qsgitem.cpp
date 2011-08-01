@@ -1161,6 +1161,8 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
             c->itemsToPolish.remove(q);
         if (c->mouseGrabberItem == q)
             c->mouseGrabberItem = 0;
+        if ( hoverEnabled )
+            c->hoverItems.removeAll(q);
     }
 
     canvas = c;
@@ -3021,8 +3023,21 @@ void QSGItem::setAcceptHoverEvents(bool enabled)
     Q_D(QSGItem);
     d->hoverEnabled = enabled;
 
-    if (d->canvas && d->hoverEnabled && !d->canvas->hasMouseTracking())
-        d->canvas->setMouseTracking(true);
+    if (d->canvas){
+        QSGCanvasPrivate *c = QSGCanvasPrivate::get(d->canvas);
+        if (d->hoverEnabled){
+            if (!d->canvas->hasMouseTracking())
+                d->canvas->setMouseTracking(true);
+            if (isUnderMouse())
+                c->hoverItems.prepend(this);
+                c->sendHoverEvent(QEvent::HoverEnter, this, c->lastMousePosition, c->lastMousePosition,
+                        QApplication::keyboardModifiers(), true);
+        } else {
+            c->hoverItems.removeAll(this);
+            c->sendHoverEvent(QEvent::HoverLeave, this, c->lastMousePosition, c->lastMousePosition,
+                    QApplication::keyboardModifiers(), true);
+        }
+    }
 }
 
 void QSGItem::grabMouse() 

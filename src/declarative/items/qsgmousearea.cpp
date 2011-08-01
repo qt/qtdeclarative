@@ -834,8 +834,6 @@ void QSGMouseArea::setHoverEnabled(bool h)
 
     setAcceptHoverEvents(h);
     emit hoverEnabledChanged();
-    if (d->hovered != isUnderMouse())
-        setHovered(!d->hovered);
 }
 
 bool QSGMouseArea::hovered() const
