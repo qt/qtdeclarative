@@ -1285,6 +1285,7 @@ bool QDeclarative1PathView::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         return d->stealMouse;
     } else if (d->lastPosTime.isValid()) {
         d->lastPosTime.invalidate();
+        d->fixOffset();
     }
     if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease)
         d->stealMouse = false;
@@ -1307,6 +1308,22 @@ bool QDeclarative1PathView::sceneEventFilter(QGraphicsItem *i, QEvent *e)
     }
 
     return QDeclarativeItem::sceneEventFilter(i, e);
+}
+
+bool QDeclarative1PathView::sceneEvent(QEvent *event)
+{
+    bool rv = QDeclarativeItem::sceneEvent(event);
+    if (event->type() == QEvent::UngrabMouse) {
+        Q_D(QDeclarative1PathView);
+        if (d->stealMouse) {
+            // if our mouse grab has been removed (probably by another Flickable),
+            // fix our state
+            d->stealMouse = false;
+            setKeepMouseGrab(false);
+            d->lastPosTime.invalidate();
+        }
+    }
+    return rv;
 }
 
 bool QDeclarative1PathView::event(QEvent *event)

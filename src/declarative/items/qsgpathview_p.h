@@ -176,6 +176,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
     bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
     bool childMouseEventFilter(QSGItem *, QEvent *);
+    void mouseUngrabEvent();
     void componentComplete();
 
 private Q_SLOTS:

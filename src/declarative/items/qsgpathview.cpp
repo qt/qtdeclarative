@@ -976,6 +976,7 @@ bool QSGPathView::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         return d->stealMouse;
     } else if (d->lastPosTime.isValid()) {
         d->lastPosTime.invalidate();
+        d->fixOffset();
     }
     if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease)
         d->stealMouse = false;
@@ -998,6 +999,18 @@ bool QSGPathView::childMouseEventFilter(QSGItem *i, QEvent *e)
     }
 
     return QSGItem::childMouseEventFilter(i, e);
+}
+
+void QSGPathView::mouseUngrabEvent()
+{
+    Q_D(QSGPathView);
+    if (d->stealMouse) {
+        // if our mouse grab has been removed (probably by a Flickable),
+        // fix our state
+        d->stealMouse = false;
+        setKeepMouseGrab(false);
+        d->lastPosTime.invalidate();
+    }
 }
 
 void QSGPathView::updatePolish()
