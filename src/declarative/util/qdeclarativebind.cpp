@@ -280,11 +280,11 @@ void QDeclarativeBind::eval()
         if (!d->when) {
             //restore any previous binding
             if (d->prevBind) {
-                QDeclarativeAbstractBinding *tmp;
-                tmp = QDeclarativePropertyPrivate::setBinding(d->prop, d->prevBind);
+                QDeclarativeAbstractBinding *tmp = d->prevBind;
+                d->prevBind = 0;
+                tmp = QDeclarativePropertyPrivate::setBinding(d->prop, tmp);
                 if (tmp) //should this ever be true?
                     tmp->destroy();
-                d->prevBind = 0;
             }
             return;
         }
