@@ -544,7 +544,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
 
         AST::UiParameterList *p = node->parameters;
         int paramLength = 0;
-        while (p) { paramLength++; p = p->finish(); }
+        while (p) { paramLength++; p = p->next; }
         p = node->parameters;
 
         if (paramLength) {
@@ -577,7 +577,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             
             signal->parameterTypes[index] = QHashedCStringRef(type->qtName, type->qtNameLength);
             signal->parameterNames[index] = QHashedStringRef(p->name);
-            p = p->finish();
+            p = p->next;
             index++;
         }
 
@@ -844,7 +844,7 @@ bool ProcessAST::visit(AST::UiSourceElement *node)
         AST::FormalParameterList *f = funDecl->formals;
         while (f) {
             slot->parameterNames << f->name.toUtf8();
-            f = f->finish();
+            f = f->next;
         }
 
         AST::SourceLocation loc = funDecl->rparenToken;
