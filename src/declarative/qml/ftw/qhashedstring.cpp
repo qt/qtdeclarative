@@ -83,7 +83,7 @@ uint32_t calculateHash(const schar* chars, int length) {
             int d = c - '0';
             if (is_first_char) {
                 is_first_char = false;
-                if (c = '0' && length > 1) {
+                if (c == '0' && length > 1) {
                     is_array_index = false;
                     continue;
                 }
