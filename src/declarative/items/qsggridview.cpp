@@ -602,7 +602,8 @@ void QSGGridViewPrivate::updateHighlight()
 {
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
-    if (currentItem && autoHighlight && highlight && !movingHorizontally && !movingVertically) {
+    bool strictHighlight = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
+    if (currentItem && autoHighlight && highlight && (!strictHighlight || !pressed)) {
         // auto-update highlight
         highlightXAnimator->to = currentItem->item->x();
         highlightYAnimator->to = currentItem->item->y();
@@ -1115,7 +1116,13 @@ void QSGGridView::viewportMoved()
             if (pos < viewPos + highlightStart)
                 pos = viewPos + highlightStart;
 
-            static_cast<FxGridItemSG*>(d->highlight)->setPosition(static_cast<FxGridItemSG*>(d->highlight)->colPos(), qRound(pos));
+            if (pos != d->highlight->position()) {
+                d->highlightXAnimator->stop();
+                d->highlightYAnimator->stop();
+                static_cast<FxGridItemSG*>(d->highlight)->setPosition(static_cast<FxGridItemSG*>(d->highlight)->colPos(), pos);
+            } else {
+                d->updateHighlight();
+            }
 
             // update current index
             int idx = d->snapIndex();

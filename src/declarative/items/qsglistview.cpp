@@ -726,7 +726,8 @@ void QSGListViewPrivate::updateHighlight()
 {
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
-    if (currentItem && autoHighlight && highlight && !movingHorizontally && !movingVertically) {
+    bool strictHighlight = haveHighlightRange && highlightRange == QSGListView::StrictlyEnforceRange;
+    if (currentItem && autoHighlight && highlight && (!strictHighlight || !pressed)) {
         // auto-update highlight
         FxListItemSG *listItem = static_cast<FxListItemSG*>(currentItem);
         highlightPosAnimator->to = isRightToLeft()
@@ -1432,8 +1433,12 @@ void QSGListView::viewportMoved()
                 pos = viewPos + highlightEnd - d->highlight->size();
             if (pos < viewPos + highlightStart)
                 pos = viewPos + highlightStart;
-            d->highlightPosAnimator->stop();
-            static_cast<FxListItemSG*>(d->highlight)->setPosition(qRound(pos));
+            if (pos != d->highlight->position()) {
+                d->highlightPosAnimator->stop();
+                static_cast<FxListItemSG*>(d->highlight)->setPosition(pos);
+            } else {
+                d->updateHighlight();
+            }
 
             // update current index
             if (FxViewItem *snapItem = d->snapItemAt(d->highlight->position())) {
