@@ -90,6 +90,7 @@ private slots:
     void alwaysRunToEndRestartBug();
     void transitionAssignmentBug();
     void pauseBindingBug();
+    void pauseBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -870,6 +871,21 @@ void tst_qdeclarativeanimations::pauseBindingBug()
     QVERIFY(anim->qtAnimation()->state() == QAbstractAnimation::Paused);
 
     delete rect;
+}
+
+//QTBUG-13598
+void tst_qdeclarativeanimations::pauseBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, SRCDIR "/data/pauseBug.qml");
+    QDeclarativeAbstractAnimation *anim = qobject_cast<QDeclarativeAbstractAnimation*>(c.create());
+    QVERIFY(anim != 0);
+    QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimation::Paused);
+    QCOMPARE(anim->isPaused(), true);
+    QCOMPARE(anim->isRunning(), true);
+
+    delete anim;
 }
 
 QTEST_MAIN(tst_qdeclarativeanimations)

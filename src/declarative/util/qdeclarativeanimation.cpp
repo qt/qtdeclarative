@@ -159,7 +159,7 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
 
     q->qtAnimation()->start();
-    if (q->qtAnimation()->state() != QAbstractAnimation::Running) {
+    if (q->qtAnimation()->state() == QAbstractAnimation::Stopped) {
         running = false;
         emit q->completed();
     }
