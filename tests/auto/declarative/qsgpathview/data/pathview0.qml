@@ -17,6 +17,7 @@ Rectangle {
             Rectangle {
                 id: wrapper
                 objectName: "wrapper"
+                property bool onPath: PathView.onPath
                 height: root.delegateHeight
                 width: root.delegateWidth
                 scale: root.delegateScale

@@ -65,6 +65,13 @@ QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i
 the library (lib/libQtQuick1*) and plugin (imports/QtQuick/) must be installed.
 
 
+\section2 PathView
+
+Added the following properties:
+\list
+\o \l {PathView::}{currentItem}
+\endlist
+
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
 QtQuick 1.1 is a minor feature update.  \e {import QtQuick 1.1} to use the new

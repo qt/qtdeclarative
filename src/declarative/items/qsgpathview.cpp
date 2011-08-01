@@ -111,7 +111,7 @@ void QSGPathViewPrivate::init()
                          q, movementEndingIdx, Qt::DirectConnection);
 }
 
-QSGItem *QSGPathViewPrivate::getItem(int modelIndex)
+QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)
 {
     Q_Q(QSGPathView);
     requestedIndex = modelIndex;
@@ -128,7 +128,7 @@ QSGItem *QSGPathViewPrivate::getItem(int modelIndex)
         qPathViewAttachedType = 0;
         if (att) {
             att->m_view = q;
-            att->setOnPath(true);
+            att->setOnPath(onPath);
         }
         item->setParentItem(q);
         QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
@@ -158,6 +158,10 @@ QSGPathViewAttached *QSGPathViewPrivate::attached(QSGItem *item)
 
 void QSGPathViewPrivate::clear()
 {
+    if (currentItem) {
+        releaseItem(currentItem);
+        currentItem = 0;
+    }
     for (int i=0; i<items.count(); i++){
         QSGItem *p = items[i];
         releaseItem(p);
@@ -470,33 +474,42 @@ void QSGPathView::setCurrentIndex(int idx)
     if (d->model && d->modelCount)
         idx = qAbs(idx % d->modelCount);
     if (d->model && idx != d->currentIndex) {
-        if (d->modelCount) {
-            int itemIndex = (d->currentIndex - d->firstIndex + d->modelCount) % d->modelCount;
-            if (itemIndex < d->items.count()) {
-                if (QSGItem *item = d->items.at(itemIndex)) {
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(false);
-                }
-            }
+        if (d->currentItem) {
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setIsCurrentItem(false);
+            d->releaseItem(d->currentItem);
         }
         d->currentItem = 0;
         d->moveReason = QSGPathViewPrivate::SetIndex;
         d->currentIndex = idx;
         if (d->modelCount) {
-            if (d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
-                d->snapToCurrent();
             int itemIndex = (idx - d->firstIndex + d->modelCount) % d->modelCount;
             if (itemIndex < d->items.count()) {
-                d->currentItem = d->items.at(itemIndex);
+                d->currentItem = d->model->item(d->currentIndex, true);
                 d->currentItem->setFocus(true);
                 if (QSGPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
+            } else {
+                d->currentItem = d->getItem(d->currentIndex, false);
+                d->updateItem(d->currentItem, d->currentIndex < d->firstIndex ? 0.0 : 1.0);
+                if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                    att->setIsCurrentItem(true);
+                if (d->model->completePending())
+                    d->model->completeItem();
             }
+            if (d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
+                d->snapToCurrent();
             d->currentItemOffset = d->positionOfIndex(d->currentIndex);
             d->updateHighlight();
         }
         emit currentIndexChanged();
     }
+}
+
+QSGItem *QSGPathView::currentItem() const
+{
+    Q_D(const QSGPathView);
+    return d->currentItem;
 }
 
 void QSGPathView::incrementCurrentIndex()
@@ -1092,12 +1105,8 @@ void QSGPathView::refill()
                 if (d->model->completePending())
                     item->setZ(idx+1);
                 if (d->currentIndex == idx) {
-                    item->setFocus(true);
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(true);
                     currentVisible = true;
                     d->currentItemOffset = pos;
-                    d->currentItem = item;
                 }
                 if (d->items.count() == 0)
                     d->firstIndex = idx;
@@ -1121,12 +1130,8 @@ void QSGPathView::refill()
                 if (d->model->completePending())
                     item->setZ(idx+1);
                 if (d->currentIndex == idx) {
-                    item->setFocus(true);
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(true);
                     currentVisible = true;
                     d->currentItemOffset = pos;
-                    d->currentItem = item;
                 }
                 d->items.prepend(item);
                 d->updateItem(item, pos);
@@ -1141,8 +1146,25 @@ void QSGPathView::refill()
         }
     }
 
-    if (!currentVisible)
+    if (!currentVisible) {
         d->currentItemOffset = 1.0;
+        if (d->currentItem) {
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setOnPath(false);
+        } else if (d->currentIndex >= 0 && d->currentIndex < d->modelCount) {
+            d->currentItem = d->getItem(d->currentIndex, false);
+            d->updateItem(d->currentItem, d->currentIndex < d->firstIndex ? 0.0 : 1.0);
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setIsCurrentItem(true);
+            if (d->model->completePending())
+                d->model->completeItem();
+        }
+    } else if (!d->currentItem) {
+        d->currentItem = d->model->item(d->currentIndex, true);
+        d->currentItem->setFocus(true);
+        if (QSGPathViewAttached *att = d->attached(d->currentItem))
+            att->setIsCurrentItem(true);
+    }
 
     if (d->highlightItem && d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange) {
         d->updateItem(d->highlightItem, d->highlightRangeStart);
@@ -1206,6 +1228,8 @@ void QSGPathView::itemsRemoved(int modelIndex, int count)
         if (d->currentItem) {
             if (QSGPathViewAttached *att = d->attached(d->currentItem))
                 att->setIsCurrentItem(true);
+            d->releaseItem(d->currentItem);
+            d->currentItem = 0;
         }
         currentChanged = true;
     }
@@ -1345,21 +1369,26 @@ void QSGPathViewPrivate::updateCurrent()
 
     int idx = calcCurrentIndex();
     if (model && idx != currentIndex) {
-        int itemIndex = (currentIndex - firstIndex + modelCount) % modelCount;
-        if (itemIndex < items.count()) {
-            if (QSGItem *item = items.at(itemIndex)) {
-                if (QSGPathViewAttached *att = attached(item))
-                    att->setIsCurrentItem(false);
-            }
+        if (currentItem) {
+            if (QSGPathViewAttached *att = attached(currentItem))
+                att->setIsCurrentItem(false);
+            releaseItem(currentItem);
         }
         currentIndex = idx;
         currentItem = 0;
-        itemIndex = (idx - firstIndex + modelCount) % modelCount;
+        int itemIndex = (idx - firstIndex + modelCount) % modelCount;
         if (itemIndex < items.count()) {
-            currentItem = items.at(itemIndex);
+            currentItem = model->item(currentIndex, true);
             currentItem->setFocus(true);
             if (QSGPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(true);
+        } else if (currentIndex >= 0 && currentIndex < modelCount) {
+            currentItem = getItem(currentIndex, false);
+            updateItem(currentItem, currentIndex < firstIndex ? 0.0 : 1.0);
+            if (QSGPathViewAttached *att = attached(currentItem))
+                att->setIsCurrentItem(true);
+            if (model->completePending())
+                model->completeItem();
         }
         emit q->currentIndexChanged();
     }

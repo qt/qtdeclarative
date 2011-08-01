@@ -111,7 +111,7 @@ public:
         }
     }
 
-    QSGItem *getItem(int modelIndex);
+    QSGItem *getItem(int modelIndex, bool onPath = true);
     void releaseItem(QSGItem *item);
     QSGPathViewAttached *attached(QSGItem *item);
     void clear();
