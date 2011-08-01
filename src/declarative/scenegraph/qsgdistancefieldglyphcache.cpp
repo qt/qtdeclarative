@@ -1170,6 +1170,12 @@ void QSGDistanceFieldGlyphCache::updateCache()
     // ### Remove before final release
     static bool cacheDistanceFields = QApplication::arguments().contains("--cache-distance-fields");
 
+// #define QSGDISTANCEFIELDS_TIME_CREATION
+#ifdef QSGDISTANCEFIELDS_TIME_CREATION
+    QTime time;
+    time.start();
+#endif
+
     QString tmpPath = QString::fromLatin1("%1/.qt/").arg(QDir::tempPath());
     QString keyBase = QString::fromLatin1("%1%2%3_%4_%5_%6.fontblob")
             .arg(tmpPath)
@@ -1218,6 +1224,13 @@ void QSGDistanceFieldGlyphCache::updateCache()
             file.write((const char *) glyph.constBits(), glyph.width() * glyph.height());
         }
     }
+
+#ifdef QSGDISTANCEFIELDS_TIME_CREATION
+        static int totalTime;
+    totalTime += time.elapsed();
+    printf("time: %d\n", totalTime);
+#endif
+
     m_textureData->pendingGlyphs.reset();
 }
 
