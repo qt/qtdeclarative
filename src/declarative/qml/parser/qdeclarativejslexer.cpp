@@ -536,16 +536,18 @@ again:
 
         const QChar *startCode = _codePtr;
 
-        while (!_char.isNull()) {
-            if (_char == QLatin1Char('\n') || _char == QLatin1Char('\\')) {
-                break;
-            } else if (_char == quote) {
-                _tokenSpell = _engine->midRef(startCode - _code.unicode() - 1, _codePtr - startCode);
-                scanChar();
+        if (_engine) {
+            while (!_char.isNull()) {
+                if (_char == QLatin1Char('\n') || _char == QLatin1Char('\\')) {
+                    break;
+                } else if (_char == quote) {
+                    _tokenSpell = _engine->midRef(startCode - _code.unicode() - 1, _codePtr - startCode);
+                    scanChar();
 
-                return T_STRING_LITERAL;
+                    return T_STRING_LITERAL;
+                }
+                scanChar();
             }
-            scanChar();
         }
 
         _tokenText.resize(0);
