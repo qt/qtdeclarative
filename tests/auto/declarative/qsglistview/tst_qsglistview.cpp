@@ -98,6 +98,7 @@ private slots:
     void currentIndex();
     void noCurrentIndex();
     void enforceRange();
+    void enforceRange_withoutHighlight();
     void spacing();
     void sections();
     void sectionsDelegate();
@@ -1109,6 +1110,51 @@ void tst_QSGListView::enforceRange()
 
     ctxt->setContextProperty("testModel", &model2);
     QCOMPARE(listview->count(), 5);
+
+    delete canvas;
+}
+
+void tst_QSGListView::enforceRange_withoutHighlight()
+{
+    // QTBUG-20287
+    // If no highlight is set but StrictlyEnforceRange is used, the content should still move
+    // to the correct position (i.e. to the next/previous item, not next/previous section)
+    // when moving up/down via incrementCurrentIndex() and decrementCurrentIndex()
+
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    model.addItem("Item 0", "a");
+    model.addItem("Item 1", "b");
+    model.addItem("Item 2", "b");
+    model.addItem("Item 3", "c");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-enforcerange-nohighlight.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    qreal expectedPos = -100.0;
+
+    expectedPos += 10.0;    // scroll past 1st section's delegate (10px height)
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20 + 10;     // scroll past 1st section and section delegate of 2nd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20;     // scroll past 1st item of 2nd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20 + 10;     // scroll past 2nd item of 2nd section and section delegate of 3rd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->contentY(), expectedPos);
 
     delete canvas;
 }

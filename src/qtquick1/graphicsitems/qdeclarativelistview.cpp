@@ -3131,7 +3131,6 @@ void QDeclarative1ListView::trackedPositionChanged()
         qreal trackedPos = qCeil(d->trackedItem->position());
         qreal trackedSize = d->trackedItem->size();
         if (d->trackedItem != d->currentItem) {
-            trackedPos -= d->currentItem->sectionSize();
             trackedSize += d->currentItem->sectionSize();
         }
         qreal viewPos;
