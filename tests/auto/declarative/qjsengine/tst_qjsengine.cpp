@@ -43,6 +43,7 @@
 #include <QtTest/QtTest>
 
 #include <qjsengine.h>
+#include <qjsvalueiterator.h>
 #include <qgraphicsitem.h>
 #include <qstandarditemmodel.h>
 #include <QtCore/qnumeric.h>
@@ -138,9 +139,7 @@ private slots:
 #endif
     void globalObjectProperties();
     void globalObjectEquals();
-#if 0 // ###FIXME: No QScriptValueIterator API
     void globalObjectProperties_enumerate();
-#endif
     void createGlobalObjectProperty();
     void globalObjectGetterSetterProperty();
 #if 0 // ###FIXME: No support for setting the global object
@@ -1560,11 +1559,10 @@ void tst_QJSEngine::globalObjectEquals()
     QVERIFY(o.equals(eng.globalObject()));
 }
 
-#if 0 // ###FIXME: No QScriptValueIterator API
 void tst_QJSEngine::globalObjectProperties_enumerate()
 {
-    QScriptEngine eng;
-    QScriptValue global = eng.globalObject();
+    QJSEngine eng;
+    QJSValue global = eng.globalObject();
 
     QSet<QString> expectedNames;
     expectedNames
@@ -1598,10 +1596,6 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "unescape"
         << "SyntaxError"
         << "undefined"
-        // non-standard
-        << "gc"
-        << "version"
-        << "print"
         // JavaScriptCore
         << "JSON"
         // V8
@@ -1609,7 +1603,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         ;
     QSet<QString> actualNames;
     {
-        QScriptValueIterator it(global);
+        QJSValueIterator it(global);
         while (it.hasNext()) {
             it.next();
             actualNames.insert(it.name());
@@ -1627,7 +1621,6 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
     }
     QVERIFY(remainingNames.isEmpty());
 }
-#endif
 
 void tst_QJSEngine::createGlobalObjectProperty()
 {
