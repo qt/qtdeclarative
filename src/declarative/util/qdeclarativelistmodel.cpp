@@ -847,14 +847,14 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                         AST::StringLiteral *literal = 0;
                         if (AST::CallExpression *callExpr = AST::cast<AST::CallExpression *>(node)) {
                             if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(callExpr->base)) {
-                                if (idExpr->name->asString() == QLatin1String("QT_TR_NOOP")) {
+                                if (idExpr->name == QLatin1String("QT_TR_NOOP")) {
                                     if (callExpr->arguments && !callExpr->arguments->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
                                     if (!literal) {
                                         error(prop, QDeclarativeListModel::tr("ListElement: improperly specified QT_TR_NOOP"));
                                         return false;
                                     }
-                                } else if (idExpr->name->asString() == QLatin1String("QT_TRANSLATE_NOOP")) {
+                                } else if (idExpr->name == QLatin1String("QT_TRANSLATE_NOOP")) {
                                     if (callExpr->arguments && callExpr->arguments->next && !callExpr->arguments->next->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->next->expression);
                                     if (!literal) {
@@ -867,7 +867,7 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
 
                         if (literal) {
                             d[0] = char(QDeclarativeParser::Variant::String);
-                            d += literal->value->asString().toUtf8();
+                            d += literal->value.toUtf8();
                         } else {
                             error(prop, QDeclarativeListModel::tr("ListElement: cannot use script for property value"));
                             return false;
