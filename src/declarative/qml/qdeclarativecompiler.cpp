@@ -856,6 +856,9 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
                 int ids = compileState.ids.count();
                 COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
                 canDefer = ids == compileState.ids.count();
+            } else if (isSignalPropertyName(prop->name) && 
+                    (cp->flags() & QDeclarativeCustomParser::AcceptsSignalHandlers)) {
+                COMPILE_CHECK(buildSignal(prop,obj,objCtxt));
             } else {
                 customProps << QDeclarativeCustomParserNodePrivate::fromProperty(prop);
             }
