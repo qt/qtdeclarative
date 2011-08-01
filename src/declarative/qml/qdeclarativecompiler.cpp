@@ -2623,7 +2623,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeParser::Object *obj, Dyn
                     typeRefs[p->type] = builder.newString(strlen(builtinTypes[p->type].cppType));
                 typeRef = typeRefs[p->type];
                 if (p->type == Object::DynamicProperty::Variant)
-                    propertyType = qMetaTypeId<QVariant>();
+                    propertyType = -1;
 
             } else {
                 Q_ASSERT(p->type == Object::DynamicProperty::CustomList ||
