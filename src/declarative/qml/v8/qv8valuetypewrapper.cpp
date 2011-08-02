@@ -103,15 +103,21 @@ QV8ValueTypeWrapper::~QV8ValueTypeWrapper()
 
 void QV8ValueTypeWrapper::destroy()
 {
+    qPersistentDispose(m_toString);
     qPersistentDispose(m_constructor);
 }
 
 void QV8ValueTypeWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
+    m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
     ft->InstanceTemplate()->SetNamedPropertyHandler(Getter, Setter);
     ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0,
+                                        m_toString, v8::DEFAULT,
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
@@ -166,6 +172,59 @@ QVariant QV8ValueTypeWrapper::toVariant(QV8ObjectResource *r)
     }
 }
 
+bool QV8ValueTypeWrapper::isEqual(QV8ObjectResource *r, const QVariant& value)
+{
+    Q_ASSERT(r->resourceType() == QV8ObjectResource::ValueTypeType);
+    QV8ValueTypeResource *resource = static_cast<QV8ValueTypeResource *>(r);
+
+    if (resource->objectType == QV8ValueTypeResource::Reference) {
+        QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(resource);
+        if (reference->object) {
+            reference->type->read(reference->object, reference->property);
+            return reference->type->isEqual(value);
+        } else {
+            return false;
+        }
+    } else {
+        Q_ASSERT(resource->objectType == QV8ValueTypeResource::Copy);
+        QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(resource);
+        return (value == copy->value);
+    }
+}
+
+v8::Handle<v8::Value> QV8ValueTypeWrapper::ToStringGetter(v8::Local<v8::String> property,
+                                                        const v8::AccessorInfo &info)
+{
+    Q_UNUSED(property);
+    return info.Data();
+}
+
+v8::Handle<v8::Value> QV8ValueTypeWrapper::ToString(const v8::Arguments &args)
+{
+    QV8ValueTypeResource *resource = v8_resource_cast<QV8ValueTypeResource>(args.This());
+    if (resource) {
+        if (resource->objectType == QV8ValueTypeResource::Reference) {
+            QV8ValueTypeReferenceResource *reference = static_cast<QV8ValueTypeReferenceResource *>(resource);
+            if (reference->object) {
+                reference->type->read(reference->object, reference->property);
+                return resource->engine->toString(resource->type->toString());
+            } else {
+                return v8::Undefined();
+            }
+        } else {
+            Q_ASSERT(resource->objectType == QV8ValueTypeResource::Copy);
+            QV8ValueTypeCopyResource *copy = static_cast<QV8ValueTypeCopyResource *>(resource);
+            QString result = copy->value.toString();
+            if (result.isEmpty() && !copy->value.canConvert(QVariant::String)) {
+                result = QString::fromLatin1("QVariant(%0)").arg(QString::fromLatin1(copy->value.typeName()));
+            }
+            return resource->engine->toString(result);
+        }
+    } else {
+        return v8::Undefined();
+    }
+}
+
 v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property, 
                                                   const v8::AccessorInfo &info)
 {
@@ -177,6 +236,10 @@ v8::Handle<v8::Value> QV8ValueTypeWrapper::Getter(v8::Local<v8::String> property
     // We should probably just replace all value properties with dedicated accessors.
 
     QByteArray propName = r->engine->toString(property).toUtf8();
+    if (propName == QByteArray("toString")) {
+        return r->engine->valueTypeWrapper()->m_toString;
+    }
+
     int index = r->type->metaObject()->indexOfProperty(propName.constData());
     if (index == -1)
         return v8::Undefined();

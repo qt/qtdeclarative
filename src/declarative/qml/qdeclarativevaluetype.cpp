@@ -193,6 +193,16 @@ void QDeclarativePointFValueType::setValue(QVariant value)
     point = qvariant_cast<QPointF>(value);
 }
 
+QString QDeclarativePointFValueType::toString() const
+{
+    return QString(QLatin1String("QPointF(%1, %2)")).arg(point.x()).arg(point.y());
+}
+
+bool QDeclarativePointFValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(point) == value);
+}
+
 qreal QDeclarativePointFValueType::x() const
 {
     return point.x();
@@ -239,6 +249,16 @@ QVariant QDeclarativePointValueType::value()
 void QDeclarativePointValueType::setValue(QVariant value)
 {
     point = qvariant_cast<QPoint>(value);
+}
+
+QString QDeclarativePointValueType::toString() const
+{
+    return QString(QLatin1String("QPoint(%1, %2)")).arg(point.x()).arg(point.y());
+}
+
+bool QDeclarativePointValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(point) == value);
 }
 
 int QDeclarativePointValueType::x() const
@@ -289,6 +309,16 @@ void QDeclarativeSizeFValueType::setValue(QVariant value)
     size = qvariant_cast<QSizeF>(value);
 }
 
+QString QDeclarativeSizeFValueType::toString() const
+{
+    return QString(QLatin1String("QSizeF(%1, %2)")).arg(size.width()).arg(size.height());
+}
+
+bool QDeclarativeSizeFValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(size) == value);
+}
+
 qreal QDeclarativeSizeFValueType::width() const
 {
     return size.width();
@@ -337,6 +367,16 @@ void QDeclarativeSizeValueType::setValue(QVariant value)
     size = qvariant_cast<QSize>(value);
 }
 
+QString QDeclarativeSizeValueType::toString() const
+{
+    return QString(QLatin1String("QSize(%1, %2)")).arg(size.width()).arg(size.height());
+}
+
+bool QDeclarativeSizeValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(size) == value);
+}
+
 int QDeclarativeSizeValueType::width() const
 {
     return size.width();
@@ -383,6 +423,16 @@ QVariant QDeclarativeRectFValueType::value()
 void QDeclarativeRectFValueType::setValue(QVariant value)
 {
     rect = qvariant_cast<QRectF>(value);
+}
+
+QString QDeclarativeRectFValueType::toString() const
+{
+    return QString(QLatin1String("QRectF(%1, %2, %3, %4)")).arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
+}
+
+bool QDeclarativeRectFValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(rect) == value);
 }
 
 qreal QDeclarativeRectFValueType::x() const
@@ -453,6 +503,16 @@ void QDeclarativeRectValueType::setValue(QVariant value)
     rect = qvariant_cast<QRect>(value);
 }
 
+QString QDeclarativeRectValueType::toString() const
+{
+    return QString(QLatin1String("QRect(%1, %2, %3, %4)")).arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
+}
+
+bool QDeclarativeRectValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(rect) == value);
+}
+
 int QDeclarativeRectValueType::x() const
 {
     return rect.x();
@@ -521,6 +581,16 @@ void QDeclarativeVector2DValueType::setValue(QVariant value)
     vector = qvariant_cast<QVector2D>(value);
 }
 
+QString QDeclarativeVector2DValueType::toString() const
+{
+    return QString(QLatin1String("QVector2D(%1, %2)")).arg(vector.x()).arg(vector.y());
+}
+
+bool QDeclarativeVector2DValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(vector) == value);
+}
+
 qreal QDeclarativeVector2DValueType::x() const
 {
     return vector.x();
@@ -567,6 +637,16 @@ QVariant  QDeclarativeVector3DValueType::value()
 void QDeclarativeVector3DValueType::setValue(QVariant value)
 {
     vector = qvariant_cast<QVector3D>(value);
+}
+
+QString QDeclarativeVector3DValueType::toString() const
+{
+    return QString(QLatin1String("QVector3D(%1, %2, %3)")).arg(vector.x()).arg(vector.y()).arg(vector.z());
+}
+
+bool QDeclarativeVector3DValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(vector) == value);
 }
 
 qreal QDeclarativeVector3DValueType::x() const
@@ -625,6 +705,16 @@ QVariant  QDeclarativeVector4DValueType::value()
 void QDeclarativeVector4DValueType::setValue(QVariant value)
 {
     vector = qvariant_cast<QVector4D>(value);
+}
+
+QString QDeclarativeVector4DValueType::toString() const
+{
+    return QString(QLatin1String("QVector4D(%1, %2, %3, %4)")).arg(vector.x()).arg(vector.y()).arg(vector.z()).arg(vector.w());
+}
+
+bool QDeclarativeVector4DValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(vector) == value);
 }
 
 qreal QDeclarativeVector4DValueType::x() const
@@ -695,6 +785,16 @@ void QDeclarativeQuaternionValueType::setValue(QVariant value)
     quaternion = qvariant_cast<QQuaternion>(value);
 }
 
+QString QDeclarativeQuaternionValueType::toString() const
+{
+    return QString(QLatin1String("QQuaternion(%1, %2, %3, %4)")).arg(quaternion.scalar()).arg(quaternion.x()).arg(quaternion.y()).arg(quaternion.z());
+}
+
+bool QDeclarativeQuaternionValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(quaternion) == value);
+}
+
 qreal QDeclarativeQuaternionValueType::scalar() const
 {
     return quaternion.scalar();
@@ -763,6 +863,20 @@ void QDeclarativeMatrix4x4ValueType::setValue(QVariant value)
     matrix = qvariant_cast<QMatrix4x4>(value);
 }
 
+QString QDeclarativeMatrix4x4ValueType::toString() const
+{
+    return QString(QLatin1String("QMatrix4x4(%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14, %15, %16)"))
+            .arg(matrix(0, 0)).arg(matrix(0, 1)).arg(matrix(0, 2)).arg(matrix(0, 3))
+            .arg(matrix(1, 0)).arg(matrix(1, 1)).arg(matrix(1, 2)).arg(matrix(1, 3))
+            .arg(matrix(2, 0)).arg(matrix(2, 1)).arg(matrix(2, 2)).arg(matrix(2, 3))
+            .arg(matrix(3, 0)).arg(matrix(3, 1)).arg(matrix(3, 2)).arg(matrix(3, 3));
+}
+
+bool QDeclarativeMatrix4x4ValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(matrix) == value);
+}
+
 QDeclarativeEasingValueType::QDeclarativeEasingValueType(QObject *parent)
 : QDeclarativeValueType(parent)
 {
@@ -789,6 +903,16 @@ QVariant QDeclarativeEasingValueType::value()
 void QDeclarativeEasingValueType::setValue(QVariant value)
 {
     easing = qvariant_cast<QEasingCurve>(value);
+}
+
+QString QDeclarativeEasingValueType::toString() const
+{
+    return QString(QLatin1String("QEasingCurve(%1, %2, %3, %4)")).arg(easing.type()).arg(easing.amplitude()).arg(easing.overshoot()).arg(easing.period());
+}
+
+bool QDeclarativeEasingValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(easing) == value);
 }
 
 QDeclarativeEasingValueType::Type QDeclarativeEasingValueType::type() const
@@ -859,6 +983,16 @@ QVariant  QDeclarativeFontValueType::value()
 void QDeclarativeFontValueType::setValue(QVariant value)
 {
     font = qvariant_cast<QFont>(value);
+}
+
+QString QDeclarativeFontValueType::toString() const
+{
+    return QString(QLatin1String("QFont(%1)")).arg(font.toString());
+}
+
+bool QDeclarativeFontValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(font) == value);
 }
 
 

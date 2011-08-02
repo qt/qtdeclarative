@@ -65,11 +65,14 @@ class MyTypeObject : public QObject
 
     Q_PROPERTY(QPoint point READ point WRITE setPoint NOTIFY changed)
     Q_PROPERTY(QPointF pointf READ pointf WRITE setPointf NOTIFY changed)
+    Q_PROPERTY(QPointF pointfpoint READ pointfpoint WRITE setPointfpoint NOTIFY changed)
     Q_PROPERTY(QSize size READ size WRITE setSize NOTIFY changed)
     Q_PROPERTY(QSizeF sizef READ sizef WRITE setSizef NOTIFY changed)
+    Q_PROPERTY(QSizeF sizefsize READ sizefsize WRITE setSizefsize NOTIFY changed)
     Q_PROPERTY(QSize sizereadonly READ size NOTIFY changed)
     Q_PROPERTY(QRect rect READ rect WRITE setRect NOTIFY changed)
     Q_PROPERTY(QRectF rectf READ rectf WRITE setRectf NOTIFY changed)
+    Q_PROPERTY(QRectF rectfrect READ rectfrect WRITE setRectfrect NOTIFY changed)
     Q_PROPERTY(QVector2D vector2 READ vector2 WRITE setVector2 NOTIFY changed)
     Q_PROPERTY(QVector3D vector READ vector WRITE setVector NOTIFY changed)
     Q_PROPERTY(QVector4D vector4 READ vector4 WRITE setVector4 NOTIFY changed)
@@ -82,10 +85,13 @@ public:
     MyTypeObject() :
         m_point(10, 4),
         m_pointf(11.3, -10.9),
+        m_pointfpoint(10.0, 4.0),
         m_size(1912, 1913),
         m_sizef(0.1, 100923.2),
+        m_sizefsize(1912.0, 1913.0),
         m_rect(2, 3, 109, 102),
         m_rectf(103.8, 99.2, 88.1, 77.6),
+        m_rectfrect(2.0, 3.0, 109.0, 102.0),
         m_vector2(32.88, 1.3),
         m_vector(23.88, 3.1, 4.3),
         m_vector4(54.2, 23.88, 3.1, 4.3),
@@ -113,6 +119,10 @@ public:
     QPointF pointf() const { return m_pointf; }
     void setPointf(const QPointF &v) { m_pointf = v; emit changed(); }
 
+    QPointF m_pointfpoint;
+    QPointF pointfpoint() const { return m_pointfpoint; }
+    void setPointfpoint(const QPointF &v) { m_pointfpoint = v; emit changed(); }
+
     QSize m_size;
     QSize size() const { return m_size; }
     void setSize(const QSize &v) { m_size = v; emit changed(); }
@@ -121,6 +131,10 @@ public:
     QSizeF sizef() const { return m_sizef; }
     void setSizef(const QSizeF &v) { m_sizef = v; emit changed(); }
 
+    QSizeF m_sizefsize;
+    QSizeF sizefsize() const { return m_sizefsize; }
+    void setSizefsize(const QSizeF &v) { m_sizefsize = v; emit changed(); }
+
     QRect m_rect;
     QRect rect() const { return m_rect; }
     void setRect(const QRect &v) { m_rect = v; emit changed(); }
@@ -128,6 +142,10 @@ public:
     QRectF m_rectf;
     QRectF rectf() const { return m_rectf; }
     void setRectf(const QRectF &v) { m_rectf = v; emit changed(); }
+
+    QRectF m_rectfrect;
+    QRectF rectfrect() const { return m_rectfrect; }
+    void setRectfrect(const QRectF &v) { m_rectfrect = v; emit changed(); }
 
     QVector2D m_vector2;
     QVector2D vector2() const { return m_vector2; }

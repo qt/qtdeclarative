@@ -134,6 +134,26 @@ void tst_qdeclarativevaluetypes::point()
 
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("point_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QPoint(10, 4)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), true);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("pointEqualsPointf").toBool(), true);
+
+        delete object;
+    }
 }
 
 void tst_qdeclarativevaluetypes::pointf()
@@ -156,6 +176,26 @@ void tst_qdeclarativevaluetypes::pointf()
         QVERIFY(object != 0);
 
         QCOMPARE(object->pointf(), QPointF(6.8, 9.3));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("pointf_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QPointF(11.3, -10.9)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), true);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("pointfEqualsPoint").toBool(), true);
 
         delete object;
     }
@@ -184,6 +224,26 @@ void tst_qdeclarativevaluetypes::size()
 
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("size_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QSize(1912, 1913)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), true);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("sizeEqualsSizef").toBool(), true);
+
+        delete object;
+    }
 }
 
 void tst_qdeclarativevaluetypes::sizef()
@@ -206,6 +266,26 @@ void tst_qdeclarativevaluetypes::sizef()
         QVERIFY(object != 0);
 
         QCOMPARE(object->sizef(), QSizeF(44.3, 92.8));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("sizef_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QSizeF(0.1, 100923)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), true);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("sizefEqualsSize").toBool(), true);
 
         delete object;
     }
@@ -293,6 +373,26 @@ void tst_qdeclarativevaluetypes::rect()
 
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("rect_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QRect(2, 3, 109, 102)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), true);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("rectEqualsRectf").toBool(), true);
+
+        delete object;
+    }
 }
 
 void tst_qdeclarativevaluetypes::rectf()
@@ -317,6 +417,26 @@ void tst_qdeclarativevaluetypes::rectf()
         QVERIFY(object != 0);
 
         QCOMPARE(object->rectf(), QRectF(70.1, -113.2, 80924.8, 99.2));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("rectf_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QRectF(103.8, 99.2, 88.1, 77.6)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), true);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
+        QCOMPARE(object->property("rectfEqualsRect").toBool(), true);
 
         delete object;
     }
@@ -345,6 +465,24 @@ void tst_qdeclarativevaluetypes::vector2d()
 
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("vector2d_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QVector2D(32.88, 1.3)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+
+        delete object;
+    }
 }
 
 void tst_qdeclarativevaluetypes::vector3d()
@@ -368,6 +506,25 @@ void tst_qdeclarativevaluetypes::vector3d()
         QVERIFY(object != 0);
 
         QCOMPARE(object->vector(), QVector3D(-0.3, -12.9, 907.4));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("vector3d_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QVector3D(23.88, 3.1, 4.3)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), true);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+        QCOMPARE(object->property("equalsOther").toBool(), false);
 
         delete object;
     }
@@ -398,6 +555,24 @@ void tst_qdeclarativevaluetypes::vector4d()
 
         delete object;
     }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("vector4d_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QVector4D(54.2, 23.88, 3.1, 4.3)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
+
+        delete object;
+    }
 }
 
 void tst_qdeclarativevaluetypes::quaternion()
@@ -422,6 +597,24 @@ void tst_qdeclarativevaluetypes::quaternion()
         QVERIFY(object != 0);
 
         QCOMPARE(object->quaternion(), QQuaternion(88.5, -0.3, -12.9, 907.4));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("quaternion_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QQuaternion(4.3, 54.2, 23.88, 3.1)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
 
         delete object;
     }
@@ -468,6 +661,24 @@ void tst_qdeclarativevaluetypes::matrix4x4()
                                               21, 22, 23, 24,
                                               31, 32, 33, 34,
                                               41, 42, 43, 44));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("matrix4x4_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
 
         delete object;
     }
@@ -573,6 +784,24 @@ void tst_qdeclarativevaluetypes::font()
 
         QCOMPARE(object1->font().pixelSize(), 19);
         QCOMPARE(object2->font().pointSize(), 14);
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("font_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QString tostring = QLatin1String("QFont(Arial,29,-1,0,63,1,1,1,0,0)");
+        QCOMPARE(object->property("tostring").toString(), tostring);
+        QCOMPARE(object->property("equalsString").toBool(), true);
+        QCOMPARE(object->property("equalsColor").toBool(), false);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+        QCOMPARE(object->property("equalsSelf").toBool(), true);
 
         delete object;
     }

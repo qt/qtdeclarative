@@ -67,6 +67,7 @@
 #include <QtGui/qmatrix4x4.h>
 #include <QtGui/qquaternion.h>
 #include <QtGui/qfont.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,6 +80,9 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags flags) = 0;
     virtual QVariant value() = 0;
     virtual void setValue(QVariant) = 0;
+
+    virtual QString toString() const = 0;
+    virtual bool isEqual(const QVariant &value) const = 0;
 };
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeValueTypeFactory
@@ -113,6 +117,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -135,6 +141,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     int x() const;
     int y() const;
@@ -157,6 +165,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal width() const;
     qreal height() const;
@@ -179,6 +189,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     int width() const;
     int height() const;
@@ -203,6 +215,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -232,6 +246,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     int x() const;
     int y() const;
@@ -259,6 +275,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -282,6 +300,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -308,6 +328,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal x() const;
     qreal y() const;
@@ -336,6 +358,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal scalar() const;
     qreal x() const;
@@ -376,6 +400,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     qreal m11() const { return matrix(0, 0); }
     qreal m12() const { return matrix(0, 1); }
@@ -457,6 +483,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     Type type() const;
     qreal amplitude() const;
@@ -508,6 +536,8 @@ public:
     virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
     virtual QVariant value();
     virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
 
     QString family() const;
     void setFamily(const QString &);

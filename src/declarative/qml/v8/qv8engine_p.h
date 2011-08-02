@@ -265,6 +265,7 @@ public:
     QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8VariantWrapper *variantWrapper() { return &m_variantWrapper; }
+    QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
     void *sqlDatabaseData() { return m_sqlDatabaseData; }

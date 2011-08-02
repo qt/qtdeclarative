@@ -42,6 +42,7 @@
 #include "qv8engine_p.h"
 
 #include "qv8contextwrapper_p.h"
+#include "qv8valuetypewrapper_p.h"
 #include "qv8include_p.h"
 #include "../../../3rdparty/javascriptcore/DateMath.h"
 
@@ -87,10 +88,20 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
         QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
 
         switch (lhst) {
+        case QV8ObjectResource::ValueTypeType:
+            if (rhst == QV8ObjectResource::ValueTypeType) {
+                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->valueTypeWrapper()->toVariant(rhsr));
+            } else if (rhst == QV8ObjectResource::VariantType) {
+                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->variantWrapper()->toVariant(rhsr));
+            }
+            break;
         case QV8ObjectResource::VariantType:
-            if (rhst == QV8ObjectResource::VariantType)
+            if (rhst == QV8ObjectResource::VariantType) {
                 return lhsr->engine->variantWrapper()->toVariant(lhsr) == 
                        lhsr->engine->variantWrapper()->toVariant(rhsr);
+            } else if (rhst == QV8ObjectResource::ValueTypeType) {
+                return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, rhsr->engine->variantWrapper()->toVariant(lhsr));
+            }
             break;
         default:
             break;
