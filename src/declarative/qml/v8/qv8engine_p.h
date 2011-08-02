@@ -214,6 +214,8 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
+class QJSValueIteratorPrivate;
+
 class Q_DECLARATIVE_EXPORT QV8Engine
 {
 public:
@@ -259,6 +261,10 @@ public:
     inline void registerValue(QJSValuePrivate *data);
     inline void unregisterValue(QJSValuePrivate *data);
     inline void invalidateAllValues();
+
+    inline void registerValueIterator(QJSValueIteratorPrivate *data);
+    inline void unregisterValueIterator(QJSValueIteratorPrivate *data);
+    inline void invalidateAllIterators();
 
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
@@ -455,6 +461,7 @@ protected:
     QDateTime qtDateTimeFromJsDate(double jsDate);
 private:
     QScriptBagContainer<QJSValuePrivate> m_values;
+    QScriptBagContainer<QJSValueIteratorPrivate> m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
 };

@@ -38,6 +38,7 @@
 #include "qv8engine_p.h"
 #include "qjsvalue_p.h"
 #include "qjsconverter_p.h"
+#include "qjsvalueiterator_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -80,6 +81,10 @@ public:
     {
         value->reinitialize();
     }
+    void operator () (QJSValueIteratorPrivate *iterator) const
+    {
+        iterator->invalidate();
+    }
 };
 
 inline void QV8Engine::registerValue(QJSValuePrivate *data)
@@ -97,6 +102,23 @@ inline void QV8Engine::invalidateAllValues()
     QtScriptBagCleaner invalidator;
     m_values.forEach(invalidator);
     m_values.clear();
+}
+
+inline void QV8Engine::registerValueIterator(QJSValueIteratorPrivate *data)
+{
+    m_valueIterators.insert(data);
+}
+
+inline void QV8Engine::unregisterValueIterator(QJSValueIteratorPrivate *data)
+{
+    m_valueIterators.remove(data);
+}
+
+inline void QV8Engine::invalidateAllIterators()
+{
+    QtScriptBagCleaner invalidator;
+    m_valueIterators.forEach(invalidator);
+    m_valueIterators.clear();
 }
 
 /*!

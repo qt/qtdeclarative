@@ -49,6 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QV8Engine;
+
 /*!
   \internal
   \class QJSValuePrivate
