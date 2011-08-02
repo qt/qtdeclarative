@@ -1578,7 +1578,7 @@ void QSGListView::updateSections()
 void QSGListView::itemsInserted(int modelIndex, int count)
 {
     Q_D(QSGListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
     d->updateUnrequestedIndexes();
     d->moveReason = QSGListViewPrivate::Other;
@@ -1718,7 +1718,7 @@ void QSGListView::itemsInserted(int modelIndex, int count)
 void QSGListView::itemsRemoved(int modelIndex, int count)
 {
     Q_D(QSGListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
     d->moveReason = QSGListViewPrivate::Other;
     d->updateUnrequestedIndexes();
@@ -1815,7 +1815,7 @@ void QSGListView::itemsRemoved(int modelIndex, int count)
 void QSGListView::itemsMoved(int from, int to, int count)
 {
     Q_D(QSGListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->isValid())
         return;
     d->updateUnrequestedIndexes();
 

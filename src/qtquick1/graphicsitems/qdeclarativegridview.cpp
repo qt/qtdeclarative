@@ -2748,7 +2748,7 @@ void QDeclarative1GridView::trackedPositionChanged()
 void QDeclarative1GridView::itemsInserted(int modelIndex, int count)
 {
     Q_D(QDeclarative1GridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     int index = d->visibleItems.count() ? d->mapFromModel(modelIndex) : 0;
@@ -2879,7 +2879,7 @@ void QDeclarative1GridView::itemsInserted(int modelIndex, int count)
 void QDeclarative1GridView::itemsRemoved(int modelIndex, int count)
 {
     Q_D(QDeclarative1GridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     d->itemCount -= count;
@@ -2979,7 +2979,7 @@ void QDeclarative1GridView::destroyRemoved()
 void QDeclarative1GridView::itemsMoved(int from, int to, int count)
 {
     Q_D(QDeclarative1GridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->isValid())
         return;
     QHash<int,FxGridItem1*> moved;
 

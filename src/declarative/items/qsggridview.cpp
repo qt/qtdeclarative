@@ -1280,7 +1280,7 @@ void QSGGridView::moveCurrentIndexRight()
 void QSGGridView::itemsInserted(int modelIndex, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     int index = d->visibleItems.count() ? d->mapFromModel(modelIndex) : 0;
@@ -1411,7 +1411,7 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
 void QSGGridView::itemsRemoved(int modelIndex, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     d->itemCount -= count;
@@ -1493,7 +1493,7 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
 void QSGGridView::itemsMoved(int from, int to, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->isValid())
         return;
     d->updateUnrequestedIndexes();
 

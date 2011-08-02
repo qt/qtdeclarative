@@ -3195,7 +3195,7 @@ void QDeclarative1ListView::trackedPositionChanged()
 void QDeclarative1ListView::itemsInserted(int modelIndex, int count)
 {
     Q_D(QDeclarative1ListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
     d->updateUnrequestedIndexes();
     d->moveReason = QDeclarative1ListViewPrivate::Other;
@@ -3338,7 +3338,7 @@ void QDeclarative1ListView::itemsInserted(int modelIndex, int count)
 void QDeclarative1ListView::itemsRemoved(int modelIndex, int count)
 {
     Q_D(QDeclarative1ListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
     d->moveReason = QDeclarative1ListViewPrivate::Other;
     d->updateUnrequestedIndexes();
@@ -3453,7 +3453,7 @@ void QDeclarative1ListView::destroyRemoved()
 void QDeclarative1ListView::itemsMoved(int from, int to, int count)
 {
     Q_D(QDeclarative1ListView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->isValid())
         return;
     d->updateUnrequestedIndexes();
 
