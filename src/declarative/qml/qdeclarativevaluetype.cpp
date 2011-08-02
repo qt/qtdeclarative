@@ -152,6 +152,9 @@ QDeclarativeValueType *QDeclarativeValueTypeFactory::valueType(int t)
     case QVariant::Font:
         rv = new QDeclarativeFontValueType;
         break;
+    case QVariant::Color:
+        rv = new QDeclarativeColorValueType;
+        break;
     default:
         break;
     }
@@ -1141,6 +1144,85 @@ qreal QDeclarativeFontValueType::wordSpacing() const
 void QDeclarativeFontValueType::setWordSpacing(qreal size)
 {
     font.setWordSpacing(size);
+}
+
+QDeclarativeColorValueType::QDeclarativeColorValueType(QObject *parent)
+: QDeclarativeValueType(parent)
+{
+}
+
+void QDeclarativeColorValueType::read(QObject *obj, int idx)
+{
+    void *a[] = { &color, 0 };
+    QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
+}
+
+void QDeclarativeColorValueType::write(QObject *obj, int idx, QDeclarativePropertyPrivate::WriteFlags flags)
+{
+    int status = -1;
+    void *a[] = { &color, 0, &status, &flags };
+    QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
+}
+
+QVariant QDeclarativeColorValueType::value()
+{
+    return QVariant(color);
+}
+
+void QDeclarativeColorValueType::setValue(QVariant value)
+{
+    color = qvariant_cast<QColor>(value);
+}
+
+QString QDeclarativeColorValueType::toString() const
+{
+    // special case - to maintain behaviour with QtQuick 1.0, we just output normal toString() value.
+    return QVariant(color).toString();
+}
+
+bool QDeclarativeColorValueType::isEqual(const QVariant &value) const
+{
+    return (QVariant(color) == value);
+}
+
+qreal QDeclarativeColorValueType::r() const
+{
+    return color.redF();
+}
+
+qreal QDeclarativeColorValueType::g() const
+{
+    return color.greenF();
+}
+
+qreal QDeclarativeColorValueType::b() const
+{
+    return color.blueF();
+}
+
+qreal QDeclarativeColorValueType::a() const
+{
+    return color.alphaF();
+}
+
+void QDeclarativeColorValueType::setR(qreal r)
+{
+    color.setRedF(r);
+}
+
+void QDeclarativeColorValueType::setG(qreal g)
+{
+    color.setGreenF(g);
+}
+
+void QDeclarativeColorValueType::setB(qreal b)
+{
+    color.setBlueF(b);
+}
+
+void QDeclarativeColorValueType::setA(qreal a)
+{
+    color.setAlphaF(a);
 }
 
 QT_END_NAMESPACE

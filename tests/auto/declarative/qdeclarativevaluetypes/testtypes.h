@@ -54,6 +54,7 @@
 #include <QQuaternion>
 #include <QMatrix4x4>
 #include <QFont>
+#include <QColor>
 #include <qdeclarative.h>
 #include <QDeclarativePropertyValueSource>
 #include <QDeclarativeProperty>
@@ -79,6 +80,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(QQuaternion quaternion READ quaternion WRITE setQuaternion NOTIFY changed)
     Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY changed)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY changed)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY changed)
     Q_PROPERTY(QVariant variant READ variant NOTIFY changed)
 
 public:
@@ -109,6 +111,10 @@ public:
         m_font.setCapitalization(QFont::AllLowercase);
         m_font.setLetterSpacing(QFont::AbsoluteSpacing, 10.2);
         m_font.setWordSpacing(19.7);
+        m_color.setRedF(0.2);
+        m_color.setGreenF(0.88);
+        m_color.setBlueF(0.6);
+        m_color.setAlphaF(0.34);
     }
 
     QPoint m_point;
@@ -170,6 +176,10 @@ public:
     QFont m_font;
     QFont font() const { return m_font; }
     void setFont(const QFont &v) { m_font = v; emit changed(); }
+
+    QColor m_color;
+    QColor color() const { return m_color; }
+    void setColor(const QColor &v) { m_color = v; emit changed(); }
 
     QVariant variant() const { return sizef(); }
 

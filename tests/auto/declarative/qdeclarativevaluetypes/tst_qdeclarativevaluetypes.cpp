@@ -77,6 +77,7 @@ private slots:
     void quaternion();
     void matrix4x4();
     void font();
+    void color();
     void variant();
 
     void bindingAssignment();
@@ -802,6 +803,73 @@ void tst_qdeclarativevaluetypes::font()
         QCOMPARE(object->property("equalsPoint").toBool(), false);
         QCOMPARE(object->property("equalsRect").toBool(), false);
         QCOMPARE(object->property("equalsSelf").toBool(), true);
+
+        delete object;
+    }
+}
+
+void tst_qdeclarativevaluetypes::color()
+{
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("color_read.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QCOMPARE((float)object->property("v_r").toDouble(), (float)0.2);
+        QCOMPARE((float)object->property("v_g").toDouble(), (float)0.88);
+        QCOMPARE((float)object->property("v_b").toDouble(), (float)0.6);
+        QCOMPARE((float)object->property("v_a").toDouble(), (float)0.34);
+        QColor comparison;
+        comparison.setRedF(0.2);
+        comparison.setGreenF(0.88);
+        comparison.setBlueF(0.6);
+        comparison.setAlphaF(0.34);
+        QCOMPARE(object->property("copy"), QVariant(comparison));
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("color_write.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+
+        QColor newColor;
+        newColor.setRedF(0.5);
+        newColor.setGreenF(0.38);
+        newColor.setBlueF(0.3);
+        newColor.setAlphaF(0.7);
+        QCOMPARE(object->color(), newColor);
+
+        delete object;
+    }
+
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("color_compare.qml"));
+        MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
+        QVERIFY(object != 0);
+        QString colorString("#33e199");
+        QCOMPARE(object->property("colorToString").toString(), colorString);
+        QCOMPARE(object->property("colorEqualsIdenticalRgba").toBool(), true);
+        QCOMPARE(object->property("colorEqualsDifferentAlpha").toBool(), false);
+        QCOMPARE(object->property("colorEqualsDifferentRgba").toBool(), false);
+        QCOMPARE(object->property("colorToStringEqualsColorString").toBool(), true);
+        QCOMPARE(object->property("colorToStringEqualsDifferentAlphaString").toBool(), true);
+        QCOMPARE(object->property("colorToStringEqualsDifferentRgbaString").toBool(), false);
+        QCOMPARE(object->property("colorEqualsColorString").toBool(), true);          // maintaining behaviour with QtQuick 1.0
+        QCOMPARE(object->property("colorEqualsDifferentAlphaString").toBool(), true); // maintaining behaviour with QtQuick 1.0
+        QCOMPARE(object->property("colorEqualsDifferentRgbaString").toBool(), false);
+
+        QCOMPARE(object->property("equalsColor").toBool(), true);
+        QCOMPARE(object->property("equalsVector3d").toBool(), false);
+        QCOMPARE(object->property("equalsSize").toBool(), false);
+        QCOMPARE(object->property("equalsPoint").toBool(), false);
+        QCOMPARE(object->property("equalsRect").toBool(), false);
+
+        // Color == Property and Property == Color should return the same result.
+        QCOMPARE(object->property("equalsColorRHS").toBool(), object->property("equalsColor").toBool());
+        QCOMPARE(object->property("colorEqualsCopy").toBool(), true);
+        QCOMPARE(object->property("copyEqualsColor").toBool(), object->property("colorEqualsCopy").toBool());
 
         delete object;
     }

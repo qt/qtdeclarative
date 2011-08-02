@@ -582,6 +582,36 @@ private:
     mutable QDeclarativeNullableValue<int> dpi;
 };
 
+class Q_AUTOTEST_EXPORT QDeclarativeColorValueType : public QDeclarativeValueType
+{
+    Q_PROPERTY(qreal r READ r WRITE setR)
+    Q_PROPERTY(qreal g READ g WRITE setG)
+    Q_PROPERTY(qreal b READ b WRITE setB)
+    Q_PROPERTY(qreal a READ a WRITE setA)
+    Q_OBJECT
+public:
+    QDeclarativeColorValueType(QObject *parent = 0);
+
+    virtual void read(QObject *, int);
+    virtual void write(QObject *, int, QDeclarativePropertyPrivate::WriteFlags);
+    virtual QVariant value();
+    virtual void setValue(QVariant value);
+    virtual QString toString() const;
+    virtual bool isEqual(const QVariant &value) const;
+
+    qreal r() const;
+    qreal g() const;
+    qreal b() const;
+    qreal a() const;
+    void setR(qreal);
+    void setG(qreal);
+    void setB(qreal);
+    void setA(qreal);
+
+private:
+    QColor color;
+};
+
 QT_END_NAMESPACE
 
 #endif  // QDECLARATIVEVALUETYPE_P_H
