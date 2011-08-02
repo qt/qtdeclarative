@@ -467,7 +467,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
             instr.storeDateTime.date = dateTime.date().toJulianDay();
             Q_ASSERT(sizeof(instr.storeDateTime.time) == sizeof(QTime));
-            ::memcmp(&instr.storeDateTime.time, &time, sizeof(QTime));
+            ::memcpy(&instr.storeDateTime.time, &time, sizeof(QTime));
             }
             break;
 #endif // QT_NO_DATESTRING
