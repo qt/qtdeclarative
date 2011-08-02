@@ -835,7 +835,7 @@ void tst_QSGPathView::modelChanges()
 
     QDeclarativeListModel *alternateModel = canvas->rootObject()->findChild<QDeclarativeListModel*>("alternateModel");
     QVERIFY(alternateModel);
-    QVariant modelVariant = QVariant::fromValue(alternateModel);
+    QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(pathView, SIGNAL(modelChanged()));
 
     pathView->setModel(modelVariant);

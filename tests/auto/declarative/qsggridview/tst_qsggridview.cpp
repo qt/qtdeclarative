@@ -1344,7 +1344,7 @@ void tst_QSGGridView::modelChanges()
 
     QDeclarativeListModel *alternateModel = canvas->rootObject()->findChild<QDeclarativeListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
-    QVariant modelVariant = QVariant::fromValue(alternateModel);
+    QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(gridView, SIGNAL(modelChanged()));
 
     gridView->setModel(modelVariant);

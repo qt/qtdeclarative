@@ -15,5 +15,7 @@ ListView {
         property variant test7: index
         property variant test8: model.index
         property variant test9: model.modelData.display
+        width: 100
+        height: 2
     }
 }

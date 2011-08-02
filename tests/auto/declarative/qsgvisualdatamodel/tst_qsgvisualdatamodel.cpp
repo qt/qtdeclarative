@@ -460,7 +460,6 @@ void tst_qsgvisualdatamodel::modelProperties()
         QSGItem *delegate = findItem<QSGItem>(contentItem, "delegate", 1);
         QVERIFY(delegate);
         QCOMPARE(delegate->property("test1").toString(),QString("Item 2"));
-        QEXPECT_FAIL("", "QTBUG-13576", Continue);
         QCOMPARE(delegate->property("test2").toString(),QString("Item 2"));
         QVERIFY(qobject_cast<DataObject*>(delegate->property("test3").value<QObject*>()) != 0);
         QVERIFY(qobject_cast<DataObject*>(delegate->property("test4").value<QObject*>()) != 0);
