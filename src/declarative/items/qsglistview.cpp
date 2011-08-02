@@ -455,6 +455,7 @@ void QSGListViewPrivate::changedVisibleIndex(int newIndex)
 
 void QSGListViewPrivate::init()
 {
+    QSGItemViewPrivate::init();
     ::memset(sectionCache, 0, sizeof(QSGItem*) * sectionCacheSize);
 }
 
@@ -498,6 +499,8 @@ FxViewItem *QSGListViewPrivate::newViewItem(int modelIndex, QSGItem *item)
 
 void QSGListViewPrivate::initializeViewItem(FxViewItem *item)
 {
+    QSGItemViewPrivate::initializeViewItem(item);
+
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item->item);
     itemPrivate->addItemChangeListener(this, QSGItemPrivate::Geometry);
 
@@ -815,6 +818,8 @@ void QSGListViewPrivate::createSection(FxListItemSG *listItem)
 
 void QSGListViewPrivate::updateSections()
 {
+    QSGItemViewPrivate::updateSections();
+
     if (sectionCriteria && !visibleItems.isEmpty()) {
         QString prevSection;
         if (visibleIndex > 0)
@@ -871,6 +876,8 @@ void QSGListViewPrivate::updateCurrentSection()
 
 void QSGListViewPrivate::initializeCurrentItem()
 {
+    QSGItemViewPrivate::initializeCurrentItem();
+
     if (currentItem) {
         FxListItemSG *listItem = static_cast<FxListItemSG *>(currentItem);
 

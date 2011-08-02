@@ -95,10 +95,10 @@ public:
     void adjustMoveParameters(int *from, int *to, int *count) const;
 
     virtual void init();
-    virtual void updateCurrent(int modelIndex);
     virtual void clear();
-    virtual void regenerate();
     virtual void updateViewport();
+
+    void regenerate();
     void layout();
     void refill();
     void refill(qreal from, qreal to, bool doBuffer = false);
@@ -111,6 +111,7 @@ public:
     QSGItem *createHighlightItem();
     QSGItem *createComponentItem(QDeclarativeComponent *component, bool receiveItemGeometryChanges, bool createDefault = false);
 
+    void updateCurrent(int modelIndex);
     void updateTrackedItem();
     void updateUnrequestedIndexes();
     void updateUnrequestedPositions();
@@ -191,14 +192,14 @@ protected:
     virtual void visibleItemsChanged() = 0;
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item) = 0;
-    virtual void initializeViewItem(FxViewItem *) {}
     virtual void repositionPackageItemAt(QSGItem *item, int index) = 0;
 
     virtual void layoutVisibleItems() = 0;
-
-    virtual void updateSections() {}
     virtual void changedVisibleIndex(int newIndex) = 0;
+
+    virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}
+    virtual void updateSections() {}
 
     virtual void itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
 };
