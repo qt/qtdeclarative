@@ -854,6 +854,8 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
                 _patternFlags |= flag;
                 scanChar();
             }
+
+            _tokenLength = _codePtr - _tokenStartPtr - 1;
             return true;
 
         case '\\':
