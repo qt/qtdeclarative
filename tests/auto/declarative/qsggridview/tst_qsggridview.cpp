@@ -641,8 +641,8 @@ void tst_QSGGridView::moved()
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
 
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60 + itemsOffsetAfterMove);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
 
         name = findItem<QSGText>(contentItem, "textName", i);
         QVERIFY(name != 0);
@@ -725,17 +725,17 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 0.0;
+            << 60.0;    // moved 3 items (i.e. 1 row) down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 120.0     // show 6-23
             << 1 << 6 << 3
-            << 0.0;
+            << 60.0;    // top row moved, all items should shift down by 1 row
 
     QTest::newRow("move multiple forwards, from non-visible -> visible (move first item)")
             << 120.0     // show 6-23
             << 0 << 6 << 3
-            << 0.0;
+            << 60.0;    // top row moved, all items should shift down by 1 row
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
@@ -745,7 +745,7 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 0.0;
+            << 60.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")
