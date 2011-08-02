@@ -688,6 +688,8 @@ void tst_qdeclarativeecmascript::attachedProperties()
         QCOMPARE(object->property("b").toInt(), 26);
         QCOMPARE(object->property("c").toInt(), 26);
         QCOMPARE(object->property("d").toInt(), 26);
+
+        delete object;
     }
 
     {

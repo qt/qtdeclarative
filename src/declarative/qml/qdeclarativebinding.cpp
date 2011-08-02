@@ -243,6 +243,8 @@ QDeclarativeBinding::createBinding(Identifier id, QObject *obj, QDeclarativeCont
         cdata = typeData->compiledData();
     }
     QDeclarativeBinding *rv = cdata ? new QDeclarativeBinding(cdata->primitives.at(id), true, obj, ctxtdata, url, lineNumber, parent) : 0;
+    if (cdata)
+        cdata->release();
     if (typeData)
         typeData->release();
     return rv;
