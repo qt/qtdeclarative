@@ -1,6 +1,5 @@
 import QtQuick 2.0
-
-import Qt.test 1.0 as QtTest     // module API installed into existing uri
+import Qt.test 1.0 as QtTest     // qobject module API installed into existing uri
 
 QtObject {
     property int firstProperty: 1

@@ -945,7 +945,7 @@ public:
 
     ~testQObjectApi() {}
 
-    Q_INVOKABLE int qobjectTestMethod() { m_methodCallCount += 1; return m_methodCallCount; }
+    Q_INVOKABLE int qobjectTestMethod(int increment = 1) { m_methodCallCount += increment; return m_methodCallCount; }
 
     int qobjectTestProperty() const { return m_testProperty; }
     void setQObjectTestProperty(int tp) { m_testProperty = tp; emit qobjectTestPropertyChanged(tp); }

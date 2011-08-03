@@ -45,6 +45,9 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativecontext_p.h>
 
+#include <private/qjsvalue_p.h>
+#include <private/qscript_impl_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QV8TypeResource : public QV8ObjectResource
@@ -186,6 +189,11 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
             if (moduleApi->qobjectApi) {
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(moduleApi->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
+            } else if (moduleApi->scriptApi.isValid()) {
+                // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
+                QJSValuePrivate *apiprivate = QJSValuePrivate::get(moduleApi->scriptApi);
+                QScopedPointer<QJSValuePrivate> propertyValue(apiprivate->property(property).give());
+                return propertyValue->asV8Value(v8engine);
             } else {
                 return v8::Handle<v8::Value>();
             }
@@ -212,8 +220,6 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
 
     QV8Engine *v8engine = resource->engine;
 
-    // XXX TODO: Implement writes to module API objects
-
     QHashedV8String propertystring(property);
 
     if (resource->type && resource->object) {
@@ -235,9 +241,20 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
                 moduleApi->qobjectCallback = 0;
             }
 
-            if (moduleApi->qobjectApi) 
+            if (moduleApi->qobjectApi) {
                 v8engine->qobjectWrapper()->setProperty(moduleApi->qobjectApi, propertystring, value, 
                                                         QV8QObjectWrapper::IgnoreRevision);
+            } else if (moduleApi->scriptApi.isValid()) {
+                QScopedPointer<QJSValuePrivate> setvalp(new QJSValuePrivate(v8engine, value));
+                QJSValuePrivate *apiprivate = QJSValuePrivate::get(moduleApi->scriptApi);
+                if (apiprivate->propertyFlags(property) & QJSValue::ReadOnly) {
+                    QString error = QLatin1String("Cannot assign to read-only property \"") +
+                                    v8engine->toString(property) + QLatin1Char('\"');
+                    v8::ThrowException(v8::Exception::Error(v8engine->toString(error)));
+                } else {
+                    apiprivate->setProperty(property, setvalp.data());
+                }
+            }
         }
     }
 

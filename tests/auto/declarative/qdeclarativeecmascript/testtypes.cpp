@@ -111,6 +111,21 @@ static QJSValue script_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
     return v;
 }
 
+static QJSValue readonly_script_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+
+    static int testProperty = 42;
+    QJSValue v = scriptEngine->newObject();
+    v.setProperty("scriptTestProperty", testProperty++);
+
+    // now freeze it so that it's read-only
+    QJSValue freezeFunction = scriptEngine->evaluate("(function(obj) { return Object.freeze(obj); })");
+    v = freezeFunction.call(QJSValue(), (QJSValueList() << v));
+
+    return v;
+}
+
 static QObject *qobject_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
@@ -166,6 +181,7 @@ void registerTypes()
     qmlRegisterModuleApi("Qt.test",1,0,script_api);             // register (script) module API for an existing uri which contains elements
     qmlRegisterModuleApi("Qt.test",1,0,qobject_api);            // register (qobject) for an existing uri for which another module API was previously regd.  Should replace!
     qmlRegisterModuleApi("Qt.test.scriptApi",1,0,script_api);   // register (script) module API for a uri which doesn't contain elements
+    qmlRegisterModuleApi("Qt.test.scriptApi",2,0,readonly_script_api); // register (script) module API for a uri which doesn't contain elements - will be made read-only
     qmlRegisterModuleApi("Qt.test.qobjectApi",1,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements
     qmlRegisterModuleApi("Qt.test.qobjectApi",1,3,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, minor version set
     qmlRegisterModuleApi("Qt.test.qobjectApi",2,0,qobject_api); // register (qobject) module API for a uri which doesn't contain elements, major version set

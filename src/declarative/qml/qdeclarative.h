@@ -420,33 +420,35 @@ Q_DECLARATIVE_EXPORT void qmlRegisterBaseTypes(const char *uri, int versionMajor
    Installing a module API into a uri allows developers to provide arbitrary functionality
    (methods and properties) in a namespace that doesn't necessarily contain elements.
 
-   A module API may be either a QObject or a QScriptValue.  Only one module API provider
+   A module API may be either a QObject or a QJSValue.  Only one module API provider
    may be registered into any given namespace (combination of \a uri, \a majorVersion and \a minorVersion).
-   This function should be used to register a module API provider function which returns a QScriptValue as a module API.
+   This function should be used to register a module API provider function which returns a QJSValue as a module API.
+
+   \e NOTE: QJSValue module API properties will \e not trigger binding re-evaluation if changed.
 
    Usage:
    \code
    // first, define the module API provider function (callback).
-   static QScriptValue *example_qscriptvalue_module_api_provider(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
+   static QJSValue *example_qjsvalue_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
 
        static int seedValue = 5;
-       QScriptValue example = scriptEngine->newObject();
+       QJSValue example = scriptEngine->newObject();
        example.setProperty("someProperty", seedValue++);
        return example;
    }
 
    // second, register the module API provider with QML by calling this function in an initialization function.
    ...
-   qmlRegisterModuleApi("Qt.example.qscriptvalueApi", 1, 0, example_qscriptvalue_module_api_provider);
+   qmlRegisterModuleApi("Qt.example.qjsvalueApi", 1, 0, example_qjsvalue_module_api_provider);
    ...
    \endcode
 
    In order to use the registered module API in QML, you must import the module API.
    \qml
    import QtQuick 2.0
-   import Qt.example.qscriptvalueApi 1.0 as ExampleApi
+   import Qt.example.qjsvalueApi 1.0 as ExampleApi
    Item {
        id: root
        property int someValue: ExampleApi.someProperty
@@ -474,7 +476,7 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
    Installing a module API into a uri allows developers to provide arbitrary functionality
    (methods and properties) in a namespace that doesn't necessarily contain elements.
 
-   A module API may be either a QObject or a QScriptValue.  Only one module API provider
+   A module API may be either a QObject or a QJSValue.  Only one module API provider
    may be registered into any given namespace (combination of \a uri, \a majorVersion and \a minorVersion).
    This function should be used to register a module API provider function which returns a QObject as a module API.
 
@@ -507,7 +509,7 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
    };
 
    // second, define the module API provider function (callback).
-   static QObject *example_qobject_module_api_provider(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
+   static QObject *example_qobject_module_api_provider(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
    {
        Q_UNUSED(engine)
        Q_UNUSED(scriptEngine)
