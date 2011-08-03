@@ -50,6 +50,9 @@ Rectangle {
         Button {}
         Button {text: "Me Too!"}
         Button {text: "Me Three!"}
+//! [grouped property]
+        Button {label.color: "green"}
+//! [grouped property]
     }
 }
 //! [document]

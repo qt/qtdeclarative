@@ -139,5 +139,22 @@ children which is beneficial for certain types of interfaces. However, since
 to be exposed.
 
 \snippet doc/src/snippets/declarative/reusablecomponents/focusbutton.qml document
-*/
 
+\section2 Child Components
+
+Objects or Items declared within a component can be made accessible by binding their id to a
+property alias.
+
+\snippet doc/src/snippets/declarative/reusablecomponents/Button.qml parent begin
+\snippet doc/src/snippets/declarative/reusablecomponents/Button.qml object alias
+\snippet doc/src/snippets/declarative/reusablecomponents/Button.qml text
+\snippet doc/src/snippets/declarative/reusablecomponents/Button.qml parent end
+
+The advantage of using an alias instead a property of type of the object is that the value of
+the alias cannot be overridden, and members of the object can be used in property bindings when
+declaring an instance of the component.
+\snippet doc/src/snippets/declarative/reusablecomponents/application.qml grouped property
+If a property of type \c Text was used instead of an alias in this instance there would be no
+guarantee that \c label would be initialized before the binding was attempted which would cause
+the binding to fail.
+*/

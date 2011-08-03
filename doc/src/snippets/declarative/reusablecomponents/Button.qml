@@ -51,6 +51,9 @@ Rectangle {
     smooth: true; radius: 9
     property alias text: label.text
 //! [properties]
+//! [object alias]
+    property alias label: label
+//! [object alias]
     border {color: "#B9C5D0"; width: 1}
 
     gradient: Gradient {
@@ -58,7 +61,7 @@ Rectangle {
         GradientStop {color: "#99C0E5"; position: 0.57}
         GradientStop {color: "#719FCB"; position: 0.9}
     }
-
+//![text]
     Text {
         id: label
         anchors.centerIn: parent
@@ -66,7 +69,7 @@ Rectangle {
         font.pointSize: 12
         color: "blue"
     }
-
+//![text]
     MouseArea {
         anchors.fill: parent
         onClicked: console.log(text + " clicked")
