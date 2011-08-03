@@ -603,6 +603,8 @@ bool QSGListViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
     while (visibleItems.count() > 1 && (item = visibleItems.first()) && item->endPosition() <= bufferFrom) {
         if (item->attached->delayRemove())
             break;
+        if (item->size() == 0)
+            break;
 //            qDebug() << "refill: remove first" << visibleIndex << "top end pos" << item->endPosition();
         if (item->index != -1)
             visibleIndex++;
