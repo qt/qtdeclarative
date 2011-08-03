@@ -175,12 +175,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
     \endcode
 */
 
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
-};
-
 static bool qt_QmlQtModule_registered = false;
 bool QDeclarativeEnginePrivate::qml_debugging_enabled = false;
 
