@@ -44,6 +44,7 @@
 #include "private/qdeclarativenullablevalue_p_p.h"
 #include "private/qdeclarativeproperty_p.h"
 #include "private/qdeclarativebinding_p.h"
+#include "private/qdeclarativeguard_p.h"
 
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
@@ -67,7 +68,7 @@ public:
 
     QDeclarativeNullableValue<bool> when;
     bool componentComplete;
-    QObject *obj;
+    QDeclarativeGuard<QObject> obj;
     QString propName;
     QDeclarativeNullableValue<QVariant> value;
     QDeclarativeProperty prop;
@@ -196,9 +197,12 @@ QObject *QDeclarativeBind::object()
 void QDeclarativeBind::setObject(QObject *obj)
 {
     Q_D(QDeclarativeBind);
-    if (d->obj && d->obj != obj) {
-        qmlInfo(this) << tr("Cannot change the object assigned to a Binding.");
-        return;
+    if (d->obj && d->when.isValid() && d->when) {
+        /* if we switch the object at runtime, we need to restore the
+           previous binding on the old object before continuing */
+        d->when = false;
+        eval();
+        d->when = true;
     }
     d->obj = obj;
     if (d->componentComplete)
@@ -220,9 +224,12 @@ QString QDeclarativeBind::property() const
 void QDeclarativeBind::setProperty(const QString &p)
 {
     Q_D(QDeclarativeBind);
-    if (!d->propName.isEmpty() && d->propName != p) {
-        qmlInfo(this) << tr("Cannot change the property assigned to a Binding.");
-        return;
+    if (!d->propName.isEmpty() && d->when.isValid() && d->when) {
+        /* if we switch the property name at runtime, we need to restore the
+           previous binding on the old object before continuing */
+        d->when = false;
+        eval();
+        d->when = true;
     }
     d->propName = p;
     if (d->componentComplete)
