@@ -2381,25 +2381,27 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
     }
 
     for (int ii = 0; ii < obj->dynamicSignals.count(); ++ii) {
-        QByteArray name = obj->dynamicSignals.at(ii).name;
+        const QDeclarativeParser::Object::DynamicSignal &currSig = obj->dynamicSignals.at(ii);
+        QByteArray name = currSig.name;
         if (methodNames.contains(name))
-            COMPILE_EXCEPTION(obj, tr("Duplicate signal name"));
+            COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name"));
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
-            COMPILE_EXCEPTION(obj, tr("Signal names cannot begin with an upper case letter"));
+            COMPILE_EXCEPTION(&currSig, tr("Signal names cannot begin with an upper case letter"));
         if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
-            COMPILE_EXCEPTION(obj, tr("Illegal signal name"));
+            COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
         methodNames.insert(name);
     }
     for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
-        QByteArray name = obj->dynamicSlots.at(ii).name;
+        const QDeclarativeParser::Object::DynamicSlot &currSlot = obj->dynamicSlots.at(ii);
+        QByteArray name = currSlot.name;
         if (methodNames.contains(name))
-            COMPILE_EXCEPTION(obj, tr("Duplicate method name"));
+            COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
-            COMPILE_EXCEPTION(obj, tr("Method names cannot begin with an upper case letter"));
+            COMPILE_EXCEPTION(&currSlot, tr("Method names cannot begin with an upper case letter"));
         if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
-            COMPILE_EXCEPTION(obj, tr("Illegal method name"));
+            COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
         methodNames.insert(name);
     }
 

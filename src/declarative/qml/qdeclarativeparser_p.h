@@ -212,6 +212,7 @@ namespace QDeclarativeParser
             QByteArray name;
             QList<QByteArray> parameterTypes;
             QList<QByteArray> parameterNames;
+            LocationSpan location;
         };
         struct DynamicSlot {
             DynamicSlot();

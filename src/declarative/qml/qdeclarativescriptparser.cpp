@@ -528,6 +528,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             p = p->finish();
         }
 
+        signal.location = location(node->typeToken, node->semicolonToken);
         _stateStack.top().object->dynamicSignals << signal;
     } else {
         const QString memberType = node->memberType->asString();
