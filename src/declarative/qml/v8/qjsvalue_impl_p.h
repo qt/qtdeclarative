@@ -826,6 +826,8 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(const QStri
 {
     if (!name.length())
         return InvalidValue();
+    if (!isObject())
+        return InvalidValue();
 
     v8::HandleScope handleScope;
     return property(QJSConverter::toString(name));
