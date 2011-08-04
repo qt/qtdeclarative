@@ -64,7 +64,9 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
 #include <private/qwidget_p.h>
+#include <private/qwindow_p.h>
 #include <private/qgl_p.h>
+#include <qguiglcontext_qpa.h>
 #include <QtOpenGL/qglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
@@ -82,7 +84,7 @@ class QSGCanvasPrivate;
 class QTouchEvent;
 class QSGCanvasRenderThread;
 
-class QSGCanvasPrivate : public QGLWidgetPrivate
+class QSGCanvasPrivate : public QWindowPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QSGCanvas)
@@ -156,8 +158,6 @@ public:
 
     QSGContext *context;
 
-    uint contextFailed : 1;
-    uint threadedRendering : 1;
     uint animationRunning: 1;
     uint renderThreadAwakened : 1;
 
@@ -182,6 +182,8 @@ class QSGCanvasRenderThread : public QThread
 public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
+        , guiContext(0)
+        , glContext(0)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
         , isGuiBlockPending(false)
@@ -224,6 +226,9 @@ public:
 
     QSGCanvas *renderer;
     QSGCanvasPrivate *d;
+
+    QGuiGLContext *guiContext;
+    QGLContext *glContext;
 
     int isGuiBlocked;
     uint isPaintCompleted : 1;

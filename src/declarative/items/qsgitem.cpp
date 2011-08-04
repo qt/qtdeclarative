@@ -1168,9 +1168,6 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
     if (canvas && polishScheduled) 
         QSGCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
 
-    if (canvas && hoverEnabled && !canvas->hasMouseTracking())
-        canvas->setMouseTracking(true);
-
     // XXX todo - why aren't these added to the destroy list?
     itemNodeInstance = 0;
     opacityNode = 0;
@@ -1728,9 +1725,10 @@ void QSGItem::setInputMethodHints(Qt::InputMethodHints hints)
 
     QSGCanvasPrivate::get(d->canvas)->updateInputMethodData();
 #ifndef QT_NO_IM
-    if (d->canvas->hasFocus())
-        if (QInputContext *inputContext = d->canvas->inputContext())
-            inputContext->update();
+    // ### refactor: port properly
+    qDebug("QSGItem: setInputMethodHints: not implemented");
+//    if (QInputContext *inputContext = d->canvas->inputContext())
+//        inputContext->update();
 #endif
 }
 
@@ -1738,9 +1736,12 @@ void QSGItem::updateMicroFocus()
 {
 #ifndef QT_NO_IM
     Q_D(QSGItem);
-    if (d->canvas && d->canvas->hasFocus())
-        if (QInputContext *inputContext = d->canvas->inputContext())
-            inputContext->update();
+    if (d->canvas) {
+        // ### refactor: port properly
+        qDebug("QSGItem: setInputMethodHints: not implemented");
+        //    if (QInputContext *inputContext = d->canvas->inputContext())
+        //        inputContext->update();
+    }
 #endif
 }
 
@@ -3005,7 +3006,7 @@ bool QSGItem::isUnderMouse() const
         return false;
 
     QPoint cursorPos = QCursor::pos();
-    if (QRectF(0, 0, width(), height()).contains(mapFromScene(d->canvas->mapFromGlobal(cursorPos))))
+    if (QRectF(0, 0, width(), height()).contains(mapFromScene(cursorPos))) // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
         return true;
     return false; 
 }
@@ -3020,9 +3021,6 @@ void QSGItem::setAcceptHoverEvents(bool enabled)
 { 
     Q_D(QSGItem);
     d->hoverEnabled = enabled;
-
-    if (d->canvas && d->hoverEnabled && !d->canvas->hasMouseTracking())
-        d->canvas->setMouseTracking(true);
 }
 
 void QSGItem::grabMouse() 

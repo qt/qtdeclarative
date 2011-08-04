@@ -834,9 +834,11 @@ void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!d->showInputPanelOnFocus) { // input panel on click
         if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
-            if (canvas() && canvas() == qApp->focusWidget()) {
-                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-            }
+            // ### refactor: port properly
+            qDebug("QSGTextEdit: virtual keyboard handling not implemented");
+//            if (canvas() && canvas() == qApp->focusWidget()) {
+//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
+//            }
         }
     }
     d->clickCausedFocus = false;
@@ -886,7 +888,7 @@ void QSGTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QSGTextEdit);
     if (change == ItemActiveFocusHasChanged) {
-        setCursorVisible(value.boolValue && d->canvas && d->canvas->hasFocus());
+        setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
     }
     QSGItem::itemChange(change, value);
 }
@@ -1191,20 +1193,24 @@ void QSGTextEditPrivate::updateDefaultTextOption()
 void QSGTextEdit::openSoftwareInputPanel()
 {
     if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::RequestSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
+        // ### refactor:port properly
+        qDebug("QSGTextEdit: opening of virtual keyboard not implemented");
+//        if (canvas() && canvas() == qApp->focusWidget()) {
+//            QEvent event(QEvent::RequestSoftwareInputPanel);
+//            QApplication::sendEvent(canvas(), &event);
+//        }
     }
 }
 
 void QSGTextEdit::closeSoftwareInputPanel()
-{
+{  
     if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
+        // ### refactor: port properly
+        qDebug("QSGTextEdit: closing of virtual keyboard not implemented...");
+//        if (canvas() && canvas() == qApp->focusWidget()) {
+//            QEvent event(QEvent::CloseSoftwareInputPanel);
+//            QApplication::sendEvent(canvas(), &event);
+//        }
     }
 }
 

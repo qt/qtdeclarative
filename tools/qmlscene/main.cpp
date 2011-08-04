@@ -144,35 +144,12 @@ void RenderStatistics::printTotalStats()
 }
 #endif
 
-
-static QGLFormat getFormat()
-{
-    QGLFormat f = QGLFormat::defaultFormat();
-    f.setSampleBuffers(!qApp->arguments().contains("--no-multisample"));
-    f.setSwapInterval(qApp->arguments().contains("--nonblocking-swap") ? 0 : 1);
-    f.setStereo(qApp->arguments().contains("--stereo"));
-    return f;
-}
-
 class MyQSGView : public QSGView
 {
 public:
-    MyQSGView() : QSGView(getFormat())
+    MyQSGView() : QSGView()
     {
         setResizeMode(QSGView::SizeRootObjectToView);
-    }
-
-protected:
-    void paintEvent(QPaintEvent *e) {
-        QSGView::paintEvent(e);
-
-#ifdef QML_RUNTIME_TESTING
-//        RenderStatistics::updateStats();
-#endif
-
-        static bool continuousUpdate = qApp->arguments().contains("--continuous-update");
-        if (continuousUpdate)
-            update();
     }
 };
 
@@ -182,20 +159,6 @@ public:
     MyDeclarativeView(QWidget *parent = 0) : QDeclarativeView(parent)
     {
         setResizeMode(QDeclarativeView::SizeRootObjectToView);
-    }
-
-protected:
-    void paintEvent(QPaintEvent *event)
-    {
-        QDeclarativeView::paintEvent(event);
-
-#ifdef QML_RUNTIME_TESTING
-        RenderStatistics::updateStats();
-#endif
-
-        static bool continuousUpdate = qApp->arguments().contains("--continuous-update");
-        if (continuousUpdate)
-            scene()->update();
     }
 };
 
@@ -499,7 +462,7 @@ int main(int argc, char ** argv)
         displayFileDialog(&options);
 #endif
 
-    QWidget *view = 0;
+    QWindow *window = 0;
     QDeclarativeEngine *engine = 0;
 
     int exitCode = 0;
@@ -520,54 +483,37 @@ int main(int argc, char ** argv)
             item->setSource(options.file);
         } else
 #endif
-        if (!options.originalQml && !options.originalQmlRaster) {
-            if (options.versionDetection)
-                checkAndAdaptVersion(options.file);
-            QSGView *qxView = new MyQSGView();
-            qxView->setVSyncAnimations(options.vsync);
-            engine = qxView->engine();
-            for (int i = 0; i < imports.size(); ++i)
-                engine->addImportPath(imports.at(i));
-            view = qxView;
-            if (options.file.isLocalFile()) {
-                QFileInfo fi(options.file.toLocalFile());
-                loadDummyDataFiles(*engine, fi.path());
-            }
-            qxView->setSource(options.file);
-
-        } else {
-            MyDeclarativeView *gvView = new MyDeclarativeView();
-            engine = gvView->engine();
-            for (int i = 0; i < imports.size(); ++i)
-                engine->addImportPath(imports.at(i));
-            view = gvView;
-            if (options.file.isLocalFile()) {
-                QFileInfo fi(options.file.toLocalFile());
-                loadDummyDataFiles(*engine, fi.path());
-            }
-            gvView->setSource(options.file);
-            if (!options.originalQmlRaster) {
-                QGLWidget *viewport = new QGLWidget(getFormat());
-                gvView->setViewport(viewport);
-            }
+        if (options.versionDetection)
+            checkAndAdaptVersion(options.file);
+        QSGView *qxView = new MyQSGView();
+        qxView->setVSyncAnimations(options.vsync);
+        engine = qxView->engine();
+        for (int i = 0; i < imports.size(); ++i)
+            engine->addImportPath(imports.at(i));
+        window = qxView;
+        if (options.file.isLocalFile()) {
+            QFileInfo fi(options.file.toLocalFile());
+            loadDummyDataFiles(*engine, fi.path());
         }
+        qxView->setSource(options.file);
 
         QObject::connect(engine, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
 
         if (options.fullscreen)
-            view->showFullScreen();
+            window->showFullScreen();
         else if (options.maximized)
-            view->showMaximized();
+            window->showMaximized();
         else
-            view->show();
+            window->show();
+
 
 #ifdef Q_WS_MAC
-        view->raise();
+        window->raise();
 #endif
 
         exitCode = app.exec();
 
-        delete view;
+        delete window;
 
 #ifdef QML_RUNTIME_TESTING
         RenderStatistics::printTotalStats();

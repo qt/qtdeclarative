@@ -57,13 +57,13 @@ class QSGEngine;
 class QSGCanvasPrivate;
 class QGLFramebufferObject;
 
-class Q_DECLARATIVE_EXPORT QSGCanvas : public QGLWidget
+class Q_DECLARATIVE_EXPORT QSGCanvas : public QWindow
 {
 Q_OBJECT
 Q_DECLARE_PRIVATE(QSGCanvas)
 public:
-    QSGCanvas(QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGCanvas(const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    QSGCanvas(QWindow *parent = 0);
+
     virtual ~QSGCanvas();
 
     QSGItem *rootItem() const;
@@ -89,17 +89,13 @@ Q_SIGNALS:
     void sceneGraphInitialized();
 
 protected:
-    QSGCanvas(QSGCanvasPrivate &dd, QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGCanvas(QSGCanvasPrivate &dd, const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    QSGCanvas(QSGCanvasPrivate &dd, QWindow *parent = 0);
 
-    virtual void paintEvent(QPaintEvent *);
+    virtual void exposeEvent(QExposeEvent *);
     virtual void resizeEvent(QResizeEvent *);
 
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
-
-    virtual void focusOutEvent(QFocusEvent *);
-    virtual void focusInEvent(QFocusEvent *);
 
     virtual bool event(QEvent *);
     virtual void keyPressEvent(QKeyEvent *);

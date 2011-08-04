@@ -1,4 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS +=  qmlviewer qmlscene qmlplugindump
-contains(QT_CONFIG, qmltest): SUBDIRS += qmltestrunner
+
+# ### refactor: port properly
+# contains(QT_CONFIG, qmltest): SUBDIRS += qmltestrunner
 

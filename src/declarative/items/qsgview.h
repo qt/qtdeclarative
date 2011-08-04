@@ -66,10 +66,8 @@ class Q_DECLARATIVE_EXPORT QSGView : public QSGCanvas
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
     Q_ENUMS(ResizeMode Status)
 public:
-    explicit QSGView(QWidget *parent = 0, Qt::WindowFlags f = 0);
-    explicit QSGView(const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGView(const QUrl &source, QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGView(const QUrl &source, const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    explicit QSGView(QWindow *parent = 0, Qt::WindowFlags f = 0);
+    QSGView(const QUrl &source, QWindow *parent = 0, Qt::WindowFlags f = 0);
     virtual ~QSGView();
 
     QUrl source() const;
@@ -102,7 +100,6 @@ private Q_SLOTS:
 
 protected:
     virtual void resizeEvent(QResizeEvent *);
-    virtual void paintEvent(QPaintEvent *event);
     virtual void timerEvent(QTimerEvent*);
 
     virtual void keyPressEvent(QKeyEvent *);

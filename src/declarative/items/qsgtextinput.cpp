@@ -686,8 +686,10 @@ void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
     if (!d->showInputPanelOnFocus) { // input panel on click
         if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
-            if (canvas() && canvas() == qApp->focusWidget()) {
-                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
+            if (canvas() && canvas() == QGuiApplication::activeWindow()) {
+                // ### refactor: implement virtual keyboard properly..
+                qDebug("QSGTextInput: virtual keyboard no implemented...");
+//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
             }
         }
     }
@@ -767,7 +769,6 @@ bool QSGTextInput::event(QEvent* ev)
 void QSGTextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
-    Q_D(QSGTextInput);
     if (newGeometry.width() != oldGeometry.width()) {
         updateSize();
         updateCursorRectangle();
@@ -1057,7 +1058,7 @@ void QSGTextInput::openSoftwareInputPanel()
 {
     QEvent event(QEvent::RequestSoftwareInputPanel);
     if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
+        if (canvas() && canvas() == QGuiApplication::activeWindow()) {
             QEvent event(QEvent::RequestSoftwareInputPanel);
             QApplication::sendEvent(canvas(), &event);
         }
@@ -1067,9 +1068,11 @@ void QSGTextInput::openSoftwareInputPanel()
 void QSGTextInput::closeSoftwareInputPanel()
 {
     if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
+        if (canvas() && canvas() == QGuiApplication::activeWindow()) {
+            // ### refactor: port properly
+            qDebug("QSGTextInput: closing virtual keyboard not implemented");
+//            QEvent event(QEvent::CloseSoftwareInputPanel);
+//            QApplication::sendEvent(canvas(), &event);
         }
     }
 }
@@ -1091,7 +1094,7 @@ void QSGTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
         d->focused = hasFocus;
-        setCursorVisible(hasFocus && d->canvas && d->canvas->hasFocus());
+        setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
         if(echoMode() == QSGTextInput::PasswordEchoOnEdit && !hasFocus)
             d->control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
         if (!hasFocus)
