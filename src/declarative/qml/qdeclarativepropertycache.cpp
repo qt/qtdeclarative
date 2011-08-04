@@ -330,6 +330,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         Data *data = &methodIndexCache[ii - methodIndexCacheStart];
 
         data->lazyLoad(m);
+
         if (data->isSignal())
             data->flags |= signalFlags;
         else
@@ -340,24 +341,26 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
-        Data **old = 0;
+        Data *old = 0;
 
         if (utf8) {
             QHashedString methodName(QString::fromUtf8(signature, cptr - signature));
-            old = stringCache.value(methodName);
+            if (Data **it = stringCache.value(methodName))
+                old = *it;
             stringCache.insert(methodName, data);
         } else {
             QHashedCStringRef methodName(signature, cptr - signature);
-            old = stringCache.value(methodName);
+            if (Data **it = stringCache.value(methodName))
+                old = *it;
             stringCache.insert(methodName, data);
         }
 
         if (old) {
             // We only overload methods in the same class, exactly like C++
-            if ((*old)->flags & Data::IsFunction && (*old)->coreIndex >= methodOffset)
-                data->relatedIndex = (*old)->coreIndex;
-            data->overrideIndexIsProperty = !bool((*old)->flags & Data::IsFunction);
-            data->overrideIndex = (*old)->coreIndex;
+            if (old->flags & Data::IsFunction && old->coreIndex >= methodOffset)
+                data->relatedIndex = old->coreIndex;
+            data->overrideIndexIsProperty = !bool(old->flags & Data::IsFunction);
+            data->overrideIndex = old->coreIndex;
         }
     }
 
@@ -385,21 +388,23 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
-        Data **old = 0;
+        Data *old = 0;
 
         if (utf8) {
             QHashedString propName(QString::fromUtf8(str, cptr - str));
-            old = stringCache.value(propName);
+            if (Data **it = stringCache.value(propName))
+                old = *it;
             stringCache.insert(propName, data);
         } else {
             QHashedCStringRef propName(str, cptr - str);
-            old = stringCache.value(propName);
+            if (Data **it = stringCache.value(propName))
+                old = *it;
             stringCache.insert(propName, data);
         }
 
         if (old) {
-            data->overrideIndexIsProperty = !bool((*old)->flags & Data::IsFunction);
-            data->overrideIndex = (*old)->coreIndex;
+            data->overrideIndexIsProperty = !bool(old->flags & Data::IsFunction);
+            data->overrideIndex = old->coreIndex;
         }
     }
 }
