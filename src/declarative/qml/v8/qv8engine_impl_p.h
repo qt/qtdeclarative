@@ -99,9 +99,10 @@ inline void QV8Engine::unregisterValue(QJSValuePrivate *data)
 
 inline void QV8Engine::invalidateAllValues()
 {
-    QtScriptBagCleaner invalidator;
-    m_values.forEach(invalidator);
-    m_values.clear();
+    ValueList::iterator it;
+    for (it = m_values.begin(); it != m_values.end(); it = it.erase())
+        (*it)->invalidate();
+    Q_ASSERT(m_values.isEmpty());
 }
 
 inline void QV8Engine::registerValueIterator(QJSValueIteratorPrivate *data)
@@ -116,9 +117,10 @@ inline void QV8Engine::unregisterValueIterator(QJSValueIteratorPrivate *data)
 
 inline void QV8Engine::invalidateAllIterators()
 {
-    QtScriptBagCleaner invalidator;
-    m_valueIterators.forEach(invalidator);
-    m_valueIterators.clear();
+    ValueIteratorList::iterator it;
+    for (it = m_valueIterators.begin(); it != m_valueIterators.end(); it = it.erase())
+        (*it)->invalidate();
+    Q_ASSERT(m_valueIterators.isEmpty());
 }
 
 /*!

@@ -24,16 +24,17 @@
 #ifndef QJSVALUEITERATOR_P_H
 #define QJSVALUEITERATOR_P_H
 
-#include <qscripttools_p.h>
-#include <qjsvalue_p.h>
+#include <private/qintrusivelist_p.h>
+#include "qjsvalue_p.h"
 
-#include <qv8_p.h>
+#include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QV8Engine;
 
-class QJSValueIteratorPrivate : public QScriptLinkedNode {
+class QJSValueIteratorPrivate
+{
 public:
     inline QJSValueIteratorPrivate(const QJSValuePrivate* value);
     inline ~QJSValueIteratorPrivate();
@@ -52,10 +53,13 @@ public:
 private:
     Q_DISABLE_COPY(QJSValueIteratorPrivate)
 
+    QIntrusiveListNode m_node;
     QScriptSharedDataPointer<QJSValuePrivate> m_object;
     v8::Persistent<v8::Array> m_names;
     uint32_t m_index;
     uint32_t m_count;
+
+    friend class QV8Engine;
 };
 
 

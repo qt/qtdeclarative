@@ -1038,12 +1038,14 @@ bool QJSValuePrivate::assignEngine(QV8Engine* engine)
 
 /*!
   \internal
-  reinitialize this value to an invalid value.
+  Invalidates this value.
+
+  Does not remove the value from the engine's list of
+  registered values; that's the responsibility of the caller.
 */
-void QJSValuePrivate::reinitialize()
+void QJSValuePrivate::invalidate()
 {
     if (isJSBased()) {
-        m_engine->unregisterValue(this);
         m_value.Dispose();
         m_value.Clear();
     } else if (isStringBased()) {

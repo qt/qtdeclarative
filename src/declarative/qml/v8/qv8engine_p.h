@@ -63,6 +63,8 @@
 #include <private/qv8_p.h>
 #include <qjsengine.h>
 #include <qjsvalue.h>
+#include "qjsvalue_p.h"
+#include "qjsvalueiterator_p.h"
 #include "qscriptoriginalglobalobject_p.h"
 #include "qscripttools_p.h"
 
@@ -214,7 +216,6 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
-class QJSValueIteratorPrivate;
 
 class Q_DECLARATIVE_EXPORT QV8Engine
 {
@@ -460,8 +461,10 @@ protected:
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
 private:
-    QScriptBagContainer<QJSValuePrivate> m_values;
-    QScriptBagContainer<QJSValueIteratorPrivate> m_valueIterators;
+    typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
+    ValueList m_values;
+    typedef QScriptIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;
+    ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
 };
