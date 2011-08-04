@@ -384,7 +384,11 @@ QDeclarativeTransition *QDeclarativeStateGroupPrivate::findTransition(const QStr
             QStringList toState;
 
             fromState = t->fromState().split(QLatin1Char(','));
+            for (int jj = 0; jj < fromState.count(); ++jj)
+                fromState[jj] = fromState.at(jj).trimmed();
             toState = t->toState().split(QLatin1Char(','));
+            for (int jj = 0; jj < toState.count(); ++jj)
+                toState[jj] = toState.at(jj).trimmed();
             if (ii == 1)
                 qSwap(fromState, toState);
             int tScore = 0;
