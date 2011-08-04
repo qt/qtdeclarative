@@ -82,7 +82,6 @@ public:
     inline QJSValuePrivate(QV8Engine *engine, QJSValue::SpecialValue value);
     inline QJSValuePrivate(QV8Engine *engine, v8::Handle<v8::Value>);
     inline void reinitialize();
-    inline void reinitialize(QV8Engine *engine, v8::Handle<v8::Value> value);
 
     inline bool toBool() const;
     inline double toNumber() const;

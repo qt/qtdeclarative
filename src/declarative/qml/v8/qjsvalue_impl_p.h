@@ -1051,26 +1051,6 @@ void QJSValuePrivate::reinitialize()
     m_state = Invalid;
 }
 
-/*!
-  \internal
-  reinitialize this value to an JSValue.
-*/
-void QJSValuePrivate::reinitialize(QV8Engine* engine, v8::Handle<v8::Value> value)
-{
-    Q_ASSERT_X(this != InvalidValue(), Q_FUNC_INFO, "static invalid can't be reinitialized to a different value");
-    if (isJSBased()) {
-        m_value.Dispose();
-        // avoid double registration
-        m_engine->unregisterValue(this);
-    } else if (isStringBased()) {
-        delete u.m_string;
-    }
-    m_engine = engine;
-    m_state = JSValue;
-    m_value = v8::Persistent<v8::Value>::New(value);
-    m_engine->registerValue(this);
-}
-
 QV8Engine* QJSValuePrivate::engine() const
 {
     return m_engine;
