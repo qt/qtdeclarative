@@ -276,55 +276,6 @@ static v8::Handle<v8::Object> objectFromVariantMap(QV8Engine *engine, const QVar
 
 Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
-// Converts a QRegExp to a JS RegExp.
-// The conversion is not 100% exact since ECMA regexp and QRegExp
-// have different semantics/flags, but we try to do our best.
-static v8::Handle<v8::RegExp> regexpFromQRegExp(QV8Engine *engine, const QRegExp &re)
-{
-    // Convert the pattern to a ECMAScript pattern.
-    QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
-    if (re.isMinimal()) {
-        QString ecmaPattern;
-        int len = pattern.length();
-        ecmaPattern.reserve(len);
-        int i = 0;
-        const QChar *wc = pattern.unicode();
-        bool inBracket = false;
-        while (i < len) {
-            QChar c = wc[i++];
-            ecmaPattern += c;
-            switch (c.unicode()) {
-            case '?':
-            case '+':
-            case '*':
-            case '}':
-                if (!inBracket)
-                    ecmaPattern += QLatin1Char('?');
-                break;
-            case '\\':
-                if (i < len)
-                    ecmaPattern += wc[i++];
-                break;
-            case '[':
-                inBracket = true;
-                break;
-            case ']':
-                inBracket = false;
-                break;
-            default:
-                break;
-            }
-        }
-        pattern = ecmaPattern;
-    }
-
-    int flags = v8::RegExp::kNone;
-    if (re.caseSensitivity() == Qt::CaseInsensitive)
-        flags |= v8::RegExp::kIgnoreCase;
-
-    return v8::RegExp::New(engine->toString(pattern), static_cast<v8::RegExp::Flags>(flags));
-}
-
 v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 {
     int type = variant.userType();
@@ -367,7 +318,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QTime:
                 return v8::Date::New(qtDateTimeToJsDate(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
-                return regexpFromQRegExp(this, *reinterpret_cast<const QRegExp *>(ptr));
+                return QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr));
             case QMetaType::QObjectStar:
             case QMetaType::QWidgetStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
