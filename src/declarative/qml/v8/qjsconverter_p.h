@@ -28,6 +28,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qnumeric.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qstringlist.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qregexp.h>
 #include <QtCore/qdatetime.h>
@@ -70,7 +71,7 @@ public:
         return qstr;
     }
 
-    static v8::Handle<v8::String> toString(const QString& string)
+    static v8::Local<v8::String> toString(const QString& string)
     {
         return v8::String::New(reinterpret_cast<const uint16_t*>(string.data()), string.size());
     }

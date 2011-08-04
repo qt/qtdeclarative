@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qv8stringwrapper_p.h"
+#include "qjsconverter_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -73,7 +74,7 @@ void QV8StringWrapper::destroy()
 v8::Local<v8::String> QV8StringWrapper::toString(const QString &qstr)
 {
 //    return v8::String::NewExternal(new QV8StringResource(qstr));
-    return v8::String::New((uint16_t*)qstr.constData(), qstr.length());
+    return QJSConverter::toString(qstr);
 }
 
 QString QV8StringWrapper::toString(v8::Handle<v8::String> jsstr)
@@ -84,10 +85,7 @@ QString QV8StringWrapper::toString(v8::Handle<v8::String> jsstr)
         QV8StringResource *r = (QV8StringResource *)jsstr->GetExternalStringResource();
         return r->str;
     } else {
-        QString qstr;
-        qstr.resize(jsstr->Length());
-        jsstr->Write((uint16_t*)qstr.data());
-        return qstr;
+        return QJSConverter::toString(jsstr);
     }
 }
 
