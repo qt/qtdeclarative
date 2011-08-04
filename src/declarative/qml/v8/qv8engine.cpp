@@ -491,16 +491,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
     if (value->IsRegExp()) {
         v8::Context::Scope scope(context());
-        v8::Handle<v8::RegExp> jsRegExp = v8::Handle<v8::RegExp>::Cast(value);
-        // Copied from QtScript
-        // Converts a JS RegExp to a QRegExp.
-        // The conversion is not 100% exact since ECMA regexp and QRegExp
-        // have different semantics/flags, but we try to do our best.
-        QString pattern = toString(jsRegExp->GetSource());
-        Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive;
-        if (jsRegExp->GetFlags() & v8::RegExp::kIgnoreCase)
-            caseSensitivity = Qt::CaseInsensitive;
-        return QRegExp(pattern, caseSensitivity, QRegExp::RegExp2);
+        return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
     } else if (value->IsArray()) {
         v8::Context::Scope scope(context());
         QVariantList rv;
