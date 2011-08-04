@@ -68,6 +68,7 @@ private slots:
     void test_horizontal_spacing_rightToLeft();
     void test_horizontal_animated();
     void test_horizontal_animated_rightToLeft();
+    void test_horizontal_animated_disabled();
     void test_vertical();
     void test_vertical_spacing();
     void test_vertical_animated();
@@ -324,6 +325,46 @@ void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 
     QTRY_COMPARE(one->x(), 100.0);
     QTRY_COMPARE(two->x(), 50.0);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_horizontal_animated_disabled()
+{
+    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated-disabled.qml");
+
+    QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QSGRectangle *two = canvas->rootObject()->findChild<QSGRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
+    QVERIFY(three != 0);
+
+    QSGItem *row = canvas->rootObject()->findChild<QSGItem*>("row");
+    QVERIFY(row);
+
+    qApp->processEvents();
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->isVisible(), false);
+    QCOMPARE(two->x(), -100.0);//Not 'in' yet
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 50.0);
+    QCOMPARE(three->y(), 0.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
+    qApp->processEvents();
+    QCOMPARE(row->width(), 150.0);
+    QCOMPARE(row->height(), 50.0);
+
+    qApp->processEvents();
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(three->x(), 100.0);
 
     delete canvas;
 }

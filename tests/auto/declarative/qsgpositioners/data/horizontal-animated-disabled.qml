@@ -3,23 +3,16 @@ import QtQuick 2.0
 Item {
     width: 640
     height: 480
-    property bool testRightToLeft: false
-    property bool testEnabled: false
 
     Row {
         objectName: "row"
-        layoutDirection: testRightToLeft ? Qt.RightToLeft : Qt.LeftToRight
         add: Transition {
-            enabled: testEnabled ? false : true
-            NumberAnimation {
-                properties: "x";
-            }
+            enabled: false
+            NumberAnimation { properties: "x" }
         }
         move: Transition {
-            enabled: testEnabled ? false : true
-            NumberAnimation {
-                properties: "x";
-            }
+            enabled: false
+            NumberAnimation { properties: "x" }
         }
         Rectangle {
             objectName: "one"

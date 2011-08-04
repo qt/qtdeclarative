@@ -50,6 +50,7 @@
 #include <private/qdeclarativestate_p.h>
 #include <private/qdeclarativestategroup_p.h>
 #include <private/qdeclarativestateoperations_p.h>
+#include <private/qdeclarativetransition_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -213,7 +214,7 @@ void QSGBasePositioner::prePositioning()
     }
     QSizeF contentSize(0,0);
     doPositioning(&contentSize);
-    if(d->addTransition || d->moveTransition)
+    if (!d->addActions.isEmpty() || !d->moveActions.isEmpty())
         finishApplyTransitions();
     d->doingPositioning = false;
     //Set implicit size to the size of its children
@@ -226,12 +227,12 @@ void QSGBasePositioner::positionX(int x, const PositionedItem &target)
     Q_D(QSGBasePositioner);
     if(d->type == Horizontal || d->type == Both){
         if (target.isNew) {
-            if (!d->addTransition)
+            if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setX(x);
             else
                 d->addActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
         } else if (x != target.item->x()) {
-            if (!d->moveTransition)
+            if (!d->moveTransition || !d->moveTransition->enabled())
                 target.item->setX(x);
             else
                 d->moveActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
@@ -244,12 +245,12 @@ void QSGBasePositioner::positionY(int y, const PositionedItem &target)
     Q_D(QSGBasePositioner);
     if(d->type == Vertical || d->type == Both){
         if (target.isNew) {
-            if (!d->addTransition)
+            if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setY(y);
             else
                 d->addActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));
         } else if (y != target.item->y()) {
-            if (!d->moveTransition)
+            if (!d->moveTransition || !d->moveTransition->enabled())
                 target.item->setY(y);
             else
                 d->moveActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));

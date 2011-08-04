@@ -372,6 +372,8 @@ QDeclarativeTransition *QDeclarativeStateGroupPrivate::findTransition(const QStr
 
     for (int ii = 0; !done && ii < transitions.count(); ++ii) {
         QDeclarativeTransition *t = transitions.at(ii);
+        if (!t->enabled())
+            continue;
         for (int ii = 0; ii < 2; ++ii)
         {
             if (ii && (!t->reversible() ||

@@ -113,7 +113,7 @@ class QDeclarativeTransitionPrivate : public QObjectPrivate
 public:
     QDeclarativeTransitionPrivate()
     : fromState(QLatin1String("*")), toState(QLatin1String("*")),
-      reversed(false), reversible(false), endState(0)
+      reversed(false), reversible(false), enabled(true), endState(0)
     {
         group.trans = this;
     }
@@ -122,6 +122,7 @@ public:
     QString toState;
     bool reversed;
     bool reversible;
+    bool enabled;
     ParallelAnimationWrapper group;
     QDeclarativeTransitionManager *endState;
 
@@ -316,6 +317,49 @@ void QDeclarativeTransition::setToState(const QString &t)
 
     d->toState = t;
     emit toChanged();
+}
+
+/*!
+    \qmlproperty bool Transition::enabled
+
+    This property holds whether the Transition will be run when moving
+    from the \c from state to the \c to state.
+
+    By default a Transition is enabled.
+
+    Note that in some circumstances disabling a Transition may cause an
+    alternative Transition to be used in its place. In the following
+    example, the generic Transition will be used to animate the change
+    from \c state1 to \c state2, as the more specific Transition has
+    been disabled.
+
+    \qml
+    Item {
+        states: [
+            State { name: "state1" ... }
+            State { name: "state2" ... }
+        ]
+        transitions: [
+            Transition { from: "state1"; to: "state2"; enabled: false ... }
+            Transition { ... }
+        ]
+    }
+    \endqml
+*/
+
+bool QDeclarativeTransition::enabled() const
+{
+    Q_D(const QDeclarativeTransition);
+    return d->enabled;
+}
+
+void QDeclarativeTransition::setEnabled(bool enabled)
+{
+    Q_D(QDeclarativeTransition);
+    if (d->enabled == enabled)
+        return;
+    d->enabled = enabled;
+    emit enabledChanged();
 }
 
 /*!
