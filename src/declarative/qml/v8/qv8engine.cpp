@@ -475,13 +475,13 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 {
     if (value->IsNull() || value->IsUndefined())
         return QVariant();
-    else if (value->IsBoolean())
+    if (value->IsBoolean())
         return value->ToBoolean()->Value();
-    else if (value->IsInt32())
+    if (value->IsInt32())
         return value->ToInt32()->Value();
-    else if (value->IsNumber())
+    if (value->IsNumber())
         return value->ToNumber()->Value();
-    else if (value->IsString())
+    if (value->IsString())
         return m_stringWrapper.toString(value->ToString());
     if (value->IsDate())
         return qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(value)->NumberValue());
@@ -492,7 +492,8 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
     if (value->IsRegExp()) {
         v8::Context::Scope scope(context());
         return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
-    } else if (value->IsArray()) {
+    }
+    if (value->IsArray()) {
         v8::Context::Scope scope(context());
         QVariantList rv;
 
@@ -502,7 +503,8 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
             rv << toVariant(array->Get(ii), -1);
 
         return rv;
-    } else if (!value->IsFunction()) {
+    }
+    if (!value->IsFunction()) {
         v8::Context::Scope scope(context());
         v8::Handle<v8::Object> object = value->ToObject();
         v8::Local<v8::Array> properties = object->GetPropertyNames();
@@ -2203,9 +2205,9 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
         return QVariant();
     if (value->IsBoolean())
         return value->ToBoolean()->Value();
-    else if (value->IsInt32())
+    if (value->IsInt32())
         return value->ToInt32()->Value();
-    else if (value->IsNumber())
+    if (value->IsNumber())
         return value->ToNumber()->Value();
     if (value->IsString())
         return QJSConverter::toString(value->ToString());
