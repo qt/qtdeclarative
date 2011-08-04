@@ -42,6 +42,29 @@
 
 QT_BEGIN_NAMESPACE
 
+// This template is used indirectly by the Q_GLOBAL_STATIC macro below
+template<>
+class QGlobalStaticDeleter<QJSValuePrivate>
+{
+public:
+    QGlobalStatic<QJSValuePrivate> &globalStatic;
+    QGlobalStaticDeleter(QGlobalStatic<QJSValuePrivate> &_globalStatic)
+        : globalStatic(_globalStatic)
+    {
+        globalStatic.pointer->ref.ref();
+    }
+
+    inline ~QGlobalStaticDeleter()
+    {
+        if (!globalStatic.pointer->ref.deref()) { // Logic copy & paste from SharedDataPointer
+            delete globalStatic.pointer;
+        }
+        globalStatic.pointer = 0;
+        globalStatic.destroyed = true;
+    }
+};
+
+Q_GLOBAL_STATIC(QJSValuePrivate, InvalidValue)
 
 QJSValuePrivate* QJSValuePrivate::get(const QJSValue& q) { Q_ASSERT(q.d_ptr.data()); return q.d_ptr.data(); }
 
