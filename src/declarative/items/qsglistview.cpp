@@ -434,6 +434,7 @@ qreal QSGListViewPrivate::snapPosAt(qreal pos)
 FxViewItem *QSGListViewPrivate::snapItemAt(qreal pos)
 {
     FxViewItem *snapItem = 0;
+    qreal prevItemSize = 0;
     for (int i = 0; i < visibleItems.count(); ++i) {
         FxViewItem *item = visibleItems.at(i);
         if (item->index == -1)
@@ -441,8 +442,9 @@ FxViewItem *QSGListViewPrivate::snapItemAt(qreal pos)
         qreal itemTop = item->position();
         if (highlight && itemTop >= pos && item->endPosition() <= pos + highlight->size())
             return item;
-        if (itemTop+item->size()/2 >= pos && itemTop-item->size()/2 < pos)
+        if (itemTop+item->size()/2 >= pos && itemTop-prevItemSize/2 < pos)
             snapItem = item;
+        prevItemSize = item->size();
     }
     return snapItem;
 }

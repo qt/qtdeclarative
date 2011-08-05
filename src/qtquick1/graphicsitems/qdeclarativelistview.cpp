@@ -446,6 +446,7 @@ public:
 
     FxListItem1 *snapItemAt(qreal pos) {
         FxListItem1 *snapItem = 0;
+        qreal prevItemSize = 0;
         for (int i = 0; i < visibleItems.count(); ++i) {
             FxListItem1 *item = visibleItems[i];
             if (item->index == -1)
@@ -453,8 +454,9 @@ public:
             qreal itemTop = item->position();
             if (highlight && itemTop >= pos && item->endPosition() <= pos + highlight->size() - 1)
                 return item;
-            if (itemTop+item->size()/2 >= pos && itemTop-item->size()/2 < pos)
+            if (itemTop+item->size()/2 >= pos && itemTop-prevItemSize/2 < pos)
                 snapItem = item;
+            prevItemSize = item->size();
         }
         return snapItem;
     }
