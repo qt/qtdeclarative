@@ -53,7 +53,6 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtWidgets/qgraphicstransform.h>
 #include <QtGui/qpen.h>
-#include <QtWidgets/qinputcontext.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
@@ -1723,12 +1722,10 @@ void QSGItem::setInputMethodHints(Qt::InputMethodHints hints)
     if (!d->canvas || d->canvas->activeFocusItem() != this)
         return;
 
-    QSGCanvasPrivate::get(d->canvas)->updateInputMethodData();
+    QSGCanvasPrivate *cd = QSGCanvasPrivate::get(d->canvas);
+    cd->updateInputMethodData();
 #ifndef QT_NO_IM
-    // ### refactor: port properly
-    qDebug("QSGItem: setInputMethodHints: not implemented");
-//    if (QInputContext *inputContext = d->canvas->inputContext())
-//        inputContext->update();
+    cd->updateInputContext();
 #endif
 }
 
@@ -1736,12 +1733,8 @@ void QSGItem::updateMicroFocus()
 {
 #ifndef QT_NO_IM
     Q_D(QSGItem);
-    if (d->canvas) {
-        // ### refactor: port properly
-        qDebug("QSGItem: setInputMethodHints: not implemented");
-        //    if (QInputContext *inputContext = d->canvas->inputContext())
-        //        inputContext->update();
-    }
+    if (d->canvas)
+        QSGCanvasPrivate::get(d->canvas)->updateInputContext();
 #endif
 }
 

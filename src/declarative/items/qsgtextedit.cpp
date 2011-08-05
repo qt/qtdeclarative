@@ -1193,24 +1193,20 @@ void QSGTextEditPrivate::updateDefaultTextOption()
 void QSGTextEdit::openSoftwareInputPanel()
 {
     if (qApp) {
-        // ### refactor:port properly
-        qDebug("QSGTextEdit: opening of virtual keyboard not implemented");
-//        if (canvas() && canvas() == qApp->focusWidget()) {
-//            QEvent event(QEvent::RequestSoftwareInputPanel);
-//            QApplication::sendEvent(canvas(), &event);
-//        }
+        if (canvas()) {
+            QEvent event(QEvent::RequestSoftwareInputPanel);
+            QApplication::sendEvent(canvas(), &event);
+        }
     }
 }
 
 void QSGTextEdit::closeSoftwareInputPanel()
 {  
     if (qApp) {
-        // ### refactor: port properly
-        qDebug("QSGTextEdit: closing of virtual keyboard not implemented...");
-//        if (canvas() && canvas() == qApp->focusWidget()) {
-//            QEvent event(QEvent::CloseSoftwareInputPanel);
-//            QApplication::sendEvent(canvas(), &event);
-//        }
+        if (canvas()) {
+            QEvent event(QEvent::CloseSoftwareInputPanel);
+            QApplication::sendEvent(canvas(), &event);
+        }
     }
 }
 

@@ -143,6 +143,9 @@ public:
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
 
+    void updateInputContext();
+    void resetInputContext();
+
     QSGItem::UpdatePaintNodeData updatePaintNodeData;
 
     QSGItem *dirtyItemList;

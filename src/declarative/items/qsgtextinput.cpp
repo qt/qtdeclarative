@@ -1056,9 +1056,8 @@ void QSGTextInput::moveCursorSelection(int pos, SelectionMode mode)
 
 void QSGTextInput::openSoftwareInputPanel()
 {
-    QEvent event(QEvent::RequestSoftwareInputPanel);
     if (qApp) {
-        if (canvas() && canvas() == QGuiApplication::activeWindow()) {
+        if (canvas()) {
             QEvent event(QEvent::RequestSoftwareInputPanel);
             QApplication::sendEvent(canvas(), &event);
         }
@@ -1068,11 +1067,9 @@ void QSGTextInput::openSoftwareInputPanel()
 void QSGTextInput::closeSoftwareInputPanel()
 {
     if (qApp) {
-        if (canvas() && canvas() == QGuiApplication::activeWindow()) {
-            // ### refactor: port properly
-            qDebug("QSGTextInput: closing virtual keyboard not implemented");
-//            QEvent event(QEvent::CloseSoftwareInputPanel);
-//            QApplication::sendEvent(canvas(), &event);
+        if (canvas()) {
+            QEvent event(QEvent::CloseSoftwareInputPanel);
+            QApplication::sendEvent(canvas(), &event);
         }
     }
 }

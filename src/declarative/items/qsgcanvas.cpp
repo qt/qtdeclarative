@@ -50,12 +50,14 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
+#include <private/qguiapplication_p.h>
+#include <QtGui/QPlatformInputContext>
+
 #include <private/qabstractanimation_p.h>
 
 #include <QtGui/qpainter.h>
 #include <QtWidgets/qgraphicssceneevent.h>
 #include <QtGui/qmatrix4x4.h>
-#include <QtWidgets/qinputcontext.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 
@@ -253,6 +255,27 @@ bool QSGCanvas::vsyncAnimations() const
     return d->vsyncAnimations;
 }
 
+/*!
+    This function is an attempt to localize all uses of QInputContext::update in
+    one place up until the point where we have public API for the QInputContext API.
+ */
+void QSGCanvasPrivate::updateInputContext()
+{
+   QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
+   if (ic)
+       ic->update();
+}
+/*!
+    This function is an attempt to localize all uses of QInputContext::reset in
+    one place up until the point where we have public API for the QInputContext API.
+ */
+void QSGCanvasPrivate::resetInputContext()
+{
+    QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
+    if (ic)
+        ic->reset();
+}
+
 
 void QSGCanvasPrivate::initializeSceneGraph()
 {
@@ -350,10 +373,13 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     Q_Q(QSGCanvas);
 
     rootItem = new QSGRootItem;
-    rootItem->setFocus(true);
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QSGItem::ItemIsFocusScope;
+
+    // QML always has focus. It is important that this call happens after the rootItem
+    // has a canvas..
+    rootItem->setFocus(true);
 
     thread = new QSGCanvasRenderThread;
     thread->renderer = q;
@@ -516,10 +542,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            // ### refactor: port properly...
-            qDebug("QSGCanvas: input context resetting is not implemented");
-//            if (QInputContext *ic = inputContext())
-//                ic->reset();
+            resetInputContext();
 #endif
 
             activeFocusItem = 0;
@@ -628,10 +651,7 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        // ### refactor: port properly
-        qDebug("QSGCanvas: clear focus in scope, not implemented");
-//        if (QInputContext *ic = inputContext())
-//            ic->reset();
+        resetInputContext();
 #endif
 
         activeFocusItem = 0;
