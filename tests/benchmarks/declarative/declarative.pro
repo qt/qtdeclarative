@@ -10,7 +10,8 @@ SUBDIRS += \
            qdeclarativeimage \
            qdeclarativemetaproperty \
            script \
-           qmltime
+           qmltime \
+           js
 
 contains(QT_CONFIG, opengl): SUBDIRS += painting
 
