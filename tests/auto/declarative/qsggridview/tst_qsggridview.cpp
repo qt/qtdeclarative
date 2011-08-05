@@ -880,6 +880,26 @@ void tst_QSGGridView::currentIndex()
 
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
+
+    // footer should become visible if it is out of view, and then current index moves to the first row
+    canvas->rootObject()->setProperty("showFooter", true);
+    QTRY_VERIFY(gridview->footerItem());
+    gridview->setCurrentIndex(model.count()-3);
+    QTRY_VERIFY(gridview->footerItem()->y() > gridview->contentY() + gridview->height());
+    gridview->setCurrentIndex(model.count()-2);
+    QTRY_COMPARE(gridview->contentY() + gridview->height(), (60.0 * model.count()/3) + gridview->footerItem()->height());
+    canvas->rootObject()->setProperty("showFooter", false);
+
+    // header should become visible if it is out of view, and then current index moves to the last row
+    canvas->rootObject()->setProperty("showHeader", true);
+    QTRY_VERIFY(gridview->headerItem());
+    gridview->setCurrentIndex(3);
+    QTRY_VERIFY(gridview->headerItem()->y() + gridview->headerItem()->height() < gridview->contentY());
+    gridview->setCurrentIndex(1);
+    QTRY_COMPARE(gridview->contentY(), -gridview->headerItem()->height());
+    canvas->rootObject()->setProperty("showHeader", false);
+
+
     // Test keys
     qApp->setActiveWindow(canvas);
 #ifdef Q_WS_X11
@@ -888,6 +908,8 @@ void tst_QSGGridView::currentIndex()
 #endif
     QTRY_VERIFY(canvas->hasFocus());
     qApp->processEvents();
+
+    gridview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
     QCOMPARE(gridview->currentIndex(), 3);

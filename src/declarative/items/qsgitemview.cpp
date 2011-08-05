@@ -756,16 +756,32 @@ void QSGItemView::trackedPositionChanged()
                     pos = d->startPosition();
             }
         } else {
-            if (trackedPos < viewPos && d->currentItem->position() < viewPos) {
-                pos = qMax(trackedPos, d->currentItem->position());
-            } else if (d->trackedItem->endPosition() >= viewPos + d->size()
-                && d->currentItem->endPosition() >= viewPos + d->size()) {
-                if (d->trackedItem->endPosition() <= d->currentItem->endPosition()) {
-                    pos = d->trackedItem->endPosition() - d->size();
+            qreal trackedEndPos = d->trackedItem->endPosition();
+            qreal toItemPos = d->currentItem->position();
+            qreal toItemEndPos = d->currentItem->endPosition();
+
+            if (d->header && d->showHeaderForIndex(d->currentIndex)) {
+                trackedPos -= d->headerSize();
+                trackedEndPos -= d->headerSize();
+                toItemPos -= d->headerSize();
+                toItemEndPos -= d->headerSize();
+            } else if (d->footer && d->showFooterForIndex(d->currentIndex)) {
+                trackedPos += d->footerSize();
+                trackedEndPos += d->footerSize();
+                toItemPos += d->footerSize();
+                toItemEndPos += d->footerSize();
+            }
+
+            if (trackedPos < viewPos && toItemPos < viewPos) {
+                pos = qMax(trackedPos, toItemPos);
+            } else if (trackedEndPos >= viewPos + d->size()
+                && toItemEndPos >= viewPos + d->size()) {
+                if (trackedEndPos <= toItemEndPos) {
+                    pos = trackedEndPos - d->size();
                     if (trackedSize > d->size())
                         pos = trackedPos;
                 } else {
-                    pos = d->currentItem->endPosition() - d->size();
+                    pos = toItemEndPos - d->size();
                     if (d->currentItem->size() > d->size())
                         pos = d->currentItem->position();
                 }

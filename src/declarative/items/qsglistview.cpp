@@ -223,6 +223,8 @@ public:
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
+    virtual bool showHeaderForIndex(int index) const;
+    virtual bool showFooterForIndex(int index) const;
     virtual void updateHeader();
     virtual void updateFooter();
 
@@ -923,6 +925,16 @@ qreal QSGListViewPrivate::headerSize() const
 qreal QSGListViewPrivate::footerSize() const
 {
     return footer ? footer->size() : 0.0;
+}
+
+bool QSGListViewPrivate::showHeaderForIndex(int index) const
+{
+    return index == 0;
+}
+
+bool QSGListViewPrivate::showFooterForIndex(int index) const
+{
+    return index == model->count()-1;
 }
 
 void QSGListViewPrivate::updateFooter()

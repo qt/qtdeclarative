@@ -1,7 +1,12 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: root
+
     property int current: grid.currentIndex
+    property bool showHeader: false
+    property bool showFooter: false
+
     width: 240
     height: 320
     color: "#ffffff"
@@ -37,6 +42,12 @@ Rectangle {
             }
         }
     ]
+
+    Component {
+        id: headerFooter
+        Rectangle { height: 30; width: 240; color: "blue" }
+    }
+
     GridView {
         id: grid
         objectName: "grid"
@@ -48,5 +59,7 @@ Rectangle {
         cellHeight: 60
         delegate: myDelegate
         model: testModel
+        header: root.showHeader ? headerFooter : null
+        footer: root.showFooter ? headerFooter : null
     }
 }

@@ -176,6 +176,8 @@ public:
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
+    virtual bool showHeaderForIndex(int index) const;
+    virtual bool showFooterForIndex(int index) const;
     virtual void updateHeader();
     virtual void updateFooter();
 
@@ -636,6 +638,16 @@ qreal QSGGridViewPrivate::footerSize() const
     if (!footer)
         return 0.0;
     return flow == QSGGridView::LeftToRight? footer->item->height() : footer->item->width();
+}
+
+bool QSGGridViewPrivate::showHeaderForIndex(int index) const
+{
+    return index / columns == 0;
+}
+
+bool QSGGridViewPrivate::showFooterForIndex(int index) const
+{
+    return index / columns == (model->count()-1) / columns;
 }
 
 void QSGGridViewPrivate::updateFooter()

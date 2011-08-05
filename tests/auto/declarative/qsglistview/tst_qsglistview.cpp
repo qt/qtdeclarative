@@ -1478,6 +1478,26 @@ void tst_QSGListView::currentIndex()
 
     QTRY_COMPARE(listview->contentY(), 0.0);
 
+
+    // footer should become visible if it is out of view, and then current index is set to count-1
+    canvas->rootObject()->setProperty("showFooter", true);
+    QTRY_VERIFY(listview->footerItem());
+    listview->setCurrentIndex(model.count()-2);
+    QTRY_VERIFY(listview->footerItem()->y() > listview->contentY() + listview->height());
+    listview->setCurrentIndex(model.count()-1);
+    QTRY_COMPARE(listview->contentY() + listview->height(), (20.0 * model.count()) + listview->footerItem()->height());
+    canvas->rootObject()->setProperty("showFooter", false);
+
+    // header should become visible if it is out of view, and then current index is set to 0
+    canvas->rootObject()->setProperty("showHeader", true);
+    QTRY_VERIFY(listview->headerItem());
+    listview->setCurrentIndex(1);
+    QTRY_VERIFY(listview->headerItem()->y() + listview->headerItem()->height() < listview->contentY());
+    listview->setCurrentIndex(0);
+    QTRY_COMPARE(listview->contentY(), -listview->headerItem()->height());
+    canvas->rootObject()->setProperty("showHeader", false);
+
+
     // Test keys
     canvas->show();
     qApp->setActiveWindow(canvas);
@@ -1487,6 +1507,8 @@ void tst_QSGListView::currentIndex()
 #endif
     QTRY_VERIFY(canvas->hasFocus());
     qApp->processEvents();
+
+    listview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
     QCOMPARE(listview->currentIndex(), 1);

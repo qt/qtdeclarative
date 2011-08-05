@@ -177,6 +177,8 @@ protected:
 
     virtual qreal headerSize() const = 0;
     virtual qreal footerSize() const = 0;
+    virtual bool showHeaderForIndex(int index) const = 0;
+    virtual bool showFooterForIndex(int index) const = 0;
     virtual void updateHeader() = 0;
     virtual void updateFooter() = 0;
 
