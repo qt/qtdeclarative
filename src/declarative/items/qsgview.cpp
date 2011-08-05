@@ -87,6 +87,8 @@ public:
     QSGView::ResizeMode resizeMode;
     QSize initialSize;
     QElapsedTimer frameTimer;
+
+    bool resized;
 };
 
 void QSGViewPrivate::init()
@@ -97,7 +99,7 @@ void QSGViewPrivate::init()
 }
 
 QSGViewPrivate::QSGViewPrivate()
-: root(0), component(0), resizeMode(QSGView::SizeViewToRootObject), initialSize(0,0) 
+    : root(0), component(0), resizeMode(QSGView::SizeViewToRootObject), initialSize(0,0), resized(false)
 {
 }
 
@@ -334,12 +336,13 @@ void QSGViewPrivate::setRootObject(QObject *obj)
         delete obj;
         root = 0;
     }
-
     if (root) {
         initialSize = rootObjectSize();
-        if ((resizeMode == QSGView::SizeViewToRootObject) // ### refactor:  || !q->testAttribute(Qt::WA_Resized)
+        if ((resizeMode == QSGView::SizeViewToRootObject || !resized) // ### refactor:  || !q->testAttribute(Qt::WA_Resized)
              && initialSize != q->size()) {
-             q->resize(initialSize);
+
+            q->resize(initialSize);
+            resized = true;
         }
         initResize();
     }

@@ -145,7 +145,7 @@ have a scope focused item), and the other items will have their focus cleared.
 // #define MOUSE_DEBUG
 // #define TOUCH_DEBUG
 // #define DIRTY_DEBUG
-#define THREAD_DEBUG
+// #define THREAD_DEBUG
 
 // #define FRAME_TIMING
 
@@ -172,12 +172,22 @@ void QSGCanvas::exposeEvent(QExposeEvent *)
 
 void QSGCanvas::resizeEvent(QResizeEvent *e)
 {
+    // Since we are faking resizeEvent from QEvent::Map in event(), spit
+    // out a warning when it starts to work properly
+    if (e)
+        qDebug("Resize events are working, remove this code: %s : %d", __FILE__, __LINE__);
+
     Q_D(QSGCanvas);
-    d->thread->resize(e->size());
+    d->thread->resize(size());
 }
 
 void QSGCanvas::showEvent(QShowEvent *e)
 {
+    // Since we are faking the showEvent from QEvent::Map in ::event(), spit
+    // out a warning when it starts to work properly...
+    if (e)
+        qDebug("Show events are working, remove this code: %s : %d", __FILE__, __LINE__);
+
     Q_D(QSGCanvas);
 
     if (d->vsyncAnimations) {
@@ -188,11 +198,20 @@ void QSGCanvas::showEvent(QShowEvent *e)
         }
         d->animationDriver->install();
     }
-    d->thread->startRenderThread();
+
+    if (!d->thread->isRunning()) {
+        d->thread->windowSize = size();
+        d->thread->startRenderThread();
+    }
 }
 
 void QSGCanvas::hideEvent(QHideEvent *e)
 {
+    // Since we are faking the showEvent from QEvent::Map in ::event(), spit
+    // out a warning when it starts to work properly...
+    if (e)
+        qDebug("Hide events are working, remove this code: %s : %d", __FILE__, __LINE__);
+
     Q_D(QSGCanvas);
     d->thread->stopRenderThread();
 }
@@ -339,6 +358,9 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     thread = new QSGCanvasRenderThread;
     thread->renderer = q;
     thread->d = this;
+
+    context = QSGContext::createDefaultContext();
+    context->moveToThread(thread);
 }
 
 void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
@@ -735,7 +757,6 @@ QSGCanvas::QSGCanvas(QWindow *parent)
     : QWindow(parent)
 {
     Q_D(QSGCanvas);
-
     d->init(this);
 }
 
@@ -743,7 +764,6 @@ QSGCanvas::QSGCanvas(QSGCanvasPrivate &dd, QWindow *parent)
     : QWindow(dd, parent)
 {
     Q_D(QSGCanvas);
-
     d->init(this);
 }
 
@@ -805,6 +825,14 @@ void QSGCanvasPrivate::clearHover()
 
 bool QSGCanvas::event(QEvent *e)
 {
+    // Fake a resize/show/hide events until QWindow starts sending events properly.
+    if (e->type() == QEvent::Map) {
+        resizeEvent(0);
+        showEvent(0);
+    } else if(e->type() == QEvent::Unmap) {
+        hideEvent(0);
+    }
+
     Q_D(QSGCanvas);
 
     if (e->type() == QEvent::User) {
