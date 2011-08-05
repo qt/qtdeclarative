@@ -186,7 +186,6 @@ public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
         , guiContext(0)
-        , glContext(0)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
         , isGuiBlockPending(false)
@@ -231,7 +230,6 @@ public:
     QSGCanvasPrivate *d;
 
     QGuiGLContext *guiContext;
-    QGLContext *glContext;
 
     int isGuiBlocked;
     uint isPaintCompleted : 1;

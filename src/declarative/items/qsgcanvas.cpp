@@ -1884,16 +1884,12 @@ void QSGCanvasRenderThread::run()
     if (!guiContext) {
         guiContext = new QGuiGLContext();
         guiContext->create();
+        guiContext->makeCurrent(renderer);
 
-        glContext = QGLContext::fromGuiGLContext(guiContext);
-
-    }
-
-    guiContext->makeCurrent(renderer);
-
-    if (!d->context->isReady())
         d->initializeSceneGraph();
-
+    } else {
+        guiContext->makeCurrent(renderer);
+    }
     
     while (!shouldExit) {
         lock();
