@@ -110,7 +110,10 @@ static inline QString stripQuotes(const QString &s)
 
 int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir)
 {
-    QApplication app(argc, argv);
+    QApplication* app = 0;
+    if (!QCoreApplication::instance()) {
+        app = new QApplication(argc, argv);
+    }
 
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
@@ -287,6 +290,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
 
+    delete app;
     // Return the number of failures as the exit code.
     return QuickTestResult::exitCode();
 }
