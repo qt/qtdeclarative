@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Package QDeclarativePackage
+    \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
     \brief Package provides a collection of named items.
 

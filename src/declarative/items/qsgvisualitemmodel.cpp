@@ -123,10 +123,55 @@ public:
     QList<Item> children;
 };
 
+
+/*!
+    \qmlclass VisualItemModel QSGVisualItemModel
+    \inqmlmodule QtQuick 2
+    \ingroup qml-working-with-data
+    \brief The VisualItemModel allows items to be provided to a view.
+
+    A VisualItemModel contains the visual items to be used in a view.
+    When a VisualItemModel is used in a view, the view does not require
+    a delegate since the VisualItemModel already contains the visual
+    delegate (items).
+
+    An item can determine its index within the
+    model via the \l{VisualItemModel::index}{index} attached property.
+
+    The example below places three colored rectangles in a ListView.
+    \code
+    import QtQuick 1.0
+
+    Rectangle {
+        VisualItemModel {
+            id: itemModel
+            Rectangle { height: 30; width: 80; color: "red" }
+            Rectangle { height: 30; width: 80; color: "green" }
+            Rectangle { height: 30; width: 80; color: "blue" }
+        }
+
+        ListView {
+            anchors.fill: parent
+            model: itemModel
+        }
+    }
+    \endcode
+
+    \image visualitemmodel.png
+
+    \sa {declarative/modelviews/visualitemmodel}{VisualItemModel example}
+*/
 QSGVisualItemModel::QSGVisualItemModel(QObject *parent)
     : QSGVisualModel(*(new QSGVisualItemModelPrivate), parent)
 {
 }
+
+/*!
+    \qmlattachedproperty int VisualItemModel::index
+    This attached property holds the index of this delegate's item within the model.
+
+    It is attached to each instance of the delegate.
+*/
 
 QDeclarativeListProperty<QSGItem> QSGVisualItemModel::children()
 {
@@ -135,6 +180,11 @@ QDeclarativeListProperty<QSGItem> QSGVisualItemModel::children()
                                                       d->children_count, d->children_at);
 }
 
+/*!
+    \qmlproperty int QtQuick2::VisualItemModel::count
+
+    The number of items in the model.  This property is readonly.
+*/
 int QSGVisualItemModel::count() const
 {
     Q_D(const QSGVisualItemModel);
@@ -746,6 +796,26 @@ QSGVisualDataModelData *QSGVisualDataModelPrivate::data(QObject *item)
 
 //---------------------------------------------------------------------------
 
+/*!
+    \qmlclass VisualDataModel QSGVisualDataModel
+    \inqmlmodule QtQuick 2
+    \ingroup qml-working-with-data
+    \brief The VisualDataModel encapsulates a model and delegate
+
+    A VisualDataModel encapsulates a model and the delegate that will
+    be instantiated for items in the model.
+
+    It is usually not necessary to create VisualDataModel elements.
+    However, it can be useful for manipulating and accessing the \l modelIndex
+    when a QAbstractItemModel subclass is used as the
+    model. Also, VisualDataModel is used together with \l Package to
+    provide delegates to multiple views.
+
+    The example below illustrates using a VisualDataModel with a ListView.
+
+    \snippet doc/src/snippets/declarative/visualdatamodel.qml 0
+*/
+
 QSGVisualDataModel::QSGVisualDataModel()
 : QSGVisualModel(*(new QSGVisualDataModelPrivate(0)))
 {
@@ -765,6 +835,20 @@ QSGVisualDataModel::~QSGVisualDataModel()
         d->m_delegateDataType->release();
 }
 
+/*!
+    \qmlproperty model QtQuick2::VisualDataModel::model
+    This property holds the model providing data for the VisualDataModel.
+
+    The model provides a set of data that is used to create the items
+    for a view.  For large or dynamic datasets the model is usually
+    provided by a C++ model object.  The C++ model object must be a \l
+    {QAbstractItemModel} subclass or a simple list.
+
+    Models can also be created directly in QML, using a \l{ListModel} or
+    \l{XmlListModel}.
+
+    \sa {qmlmodels}{Data Models}
+*/
 QVariant QSGVisualDataModel::model() const
 {
     Q_D(const QSGVisualDataModel);
@@ -873,6 +957,13 @@ void QSGVisualDataModel::setModel(const QVariant &model)
     }
 }
 
+/*!
+    \qmlproperty Component QtQuick2::VisualDataModel::delegate
+
+    The delegate provides a template defining each item instantiated by a view.
+    The index is exposed as an accessible \c index property.  Properties of the
+    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+*/
 QDeclarativeComponent *QSGVisualDataModel::delegate() const
 {
     Q_D(const QSGVisualDataModel);
@@ -897,6 +988,35 @@ void QSGVisualDataModel::setDelegate(QDeclarativeComponent *delegate)
     }
 }
 
+/*!
+    \qmlproperty QModelIndex QtQuick2::VisualDataModel::rootIndex
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  \c rootIndex allows the children of
+    any node in a QAbstractItemModel to be provided by this model.
+
+    This property only affects models of type QAbstractItemModel that
+    are hierarchical (e.g, a tree model).
+
+    For example, here is a simple interactive file system browser.
+    When a directory name is clicked, the view's \c rootIndex is set to the
+    QModelIndex node of the clicked directory, thus updating the view to show
+    the new directory's contents.
+
+    \c main.cpp:
+    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/main.cpp 0
+
+    \c view.qml:
+    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/view.qml 0
+
+    If the \l model is a QAbstractItemModel subclass, the delegate can also
+    reference a \c hasModelChildren property (optionally qualified by a
+    \e model. prefix) that indicates whether the delegate's model item has
+    any child nodes.
+
+
+    \sa modelIndex(), parentModelIndex()
+*/
 QVariant QSGVisualDataModel::rootIndex() const
 {
     Q_D(const QSGVisualDataModel);
@@ -923,6 +1043,18 @@ void QSGVisualDataModel::setRootIndex(const QVariant &root)
     }
 }
 
+/*!
+    \qmlmethod QModelIndex QtQuick2::VisualDataModel::modelIndex(int index)
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  This function assists in using
+    tree models in QML.
+
+    Returns a QModelIndex for the specified index.
+    This value can be assigned to rootIndex.
+
+    \sa rootIndex
+*/
 QVariant QSGVisualDataModel::modelIndex(int idx) const
 {
     Q_D(const QSGVisualDataModel);
@@ -931,6 +1063,18 @@ QVariant QSGVisualDataModel::modelIndex(int idx) const
     return QVariant::fromValue(QModelIndex());
 }
 
+/*!
+    \qmlmethod QModelIndex QtQuick2::VisualDataModel::parentModelIndex()
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  This function assists in using
+    tree models in QML.
+
+    Returns a QModelIndex for the parent of the current rootIndex.
+    This value can be assigned to rootIndex.
+
+    \sa rootIndex
+*/
 QVariant QSGVisualDataModel::parentModelIndex() const
 {
     Q_D(const QSGVisualDataModel);
@@ -939,6 +1083,33 @@ QVariant QSGVisualDataModel::parentModelIndex() const
     return QVariant::fromValue(QModelIndex());
 }
 
+/*!
+    \qmlproperty object QtQuick2::VisualDataModel::parts
+
+    The \a parts property selects a VisualDataModel which creates
+    delegates from the part named.  This is used in conjunction with
+    the \l Package element.
+
+    For example, the code below selects a model which creates
+    delegates named \e list from a \l Package:
+
+    \code
+    VisualDataModel {
+        id: visualModel
+        delegate: Package {
+            Item { Package.name: "list" }
+        }
+        model: myModel
+    }
+
+    ListView {
+        width: 200; height:200
+        model: visualModel.parts.list
+    }
+    \endcode
+
+    \sa Package
+*/
 QString QSGVisualDataModel::part() const
 {
     Q_D(const QSGVisualDataModel);

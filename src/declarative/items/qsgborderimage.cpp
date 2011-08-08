@@ -50,6 +50,119 @@
 
 QT_BEGIN_NAMESPACE
 
+
+/*!
+    \qmlclass BorderImage QSGBorderImage
+    \inqmlmodule QtQuick 2
+    \brief The BorderImage element provides an image that can be used as a border.
+    \inherits Item
+    \ingroup qml-basic-visual-elements
+
+    The BorderImage element is used to create borders out of images by scaling or tiling
+    parts of each image.
+
+    A BorderImage element breaks a source image, specified using the \l url property,
+    into 9 regions, as shown below:
+
+    \image declarative-scalegrid.png
+
+    When the image is scaled, regions of the source image are scaled or tiled to
+    create the displayed border image in the following way:
+
+    \list
+    \i The corners (regions 1, 3, 7, and 9) are not scaled at all.
+    \i Regions 2 and 8 are scaled according to
+       \l{BorderImage::horizontalTileMode}{horizontalTileMode}.
+    \i Regions 4 and 6 are scaled according to
+       \l{BorderImage::verticalTileMode}{verticalTileMode}.
+    \i The middle (region 5) is scaled according to both
+       \l{BorderImage::horizontalTileMode}{horizontalTileMode} and
+       \l{BorderImage::verticalTileMode}{verticalTileMode}.
+    \endlist
+
+    The regions of the image are defined using the \l border property group, which
+    describes the distance from each edge of the source image to use as a border.
+
+    \section1 Example Usage
+
+    The following examples show the effects of the different modes on an image.
+    Guide lines are overlaid onto the image to show the different regions of the
+    image as described above.
+
+    \beginfloatleft
+    \image qml-borderimage-normal-image.png
+    \endfloat
+
+    An unscaled image is displayed using an Image element. The \l border property is
+    used to determine the parts of the image that will lie inside the unscaled corner
+    areas and the parts that will be stretched horizontally and vertically.
+
+    \snippet doc/src/snippets/declarative/borderimage/normal-image.qml normal image
+
+    \clearfloat
+    \beginfloatleft
+    \image qml-borderimage-scaled.png
+    \endfloat
+
+    A BorderImage element is used to display the image, and it is given a size that is
+    larger than the original image. Since the \l horizontalTileMode property is set to
+    \l{BorderImage::horizontalTileMode}{BorderImage.Stretch}, the parts of image in
+    regions 2 and 8 are stretched horizontally. Since the \l verticalTileMode property
+    is set to \l{BorderImage::verticalTileMode}{BorderImage.Stretch}, the parts of image
+    in regions 4 and 6 are stretched vertically.
+
+    \snippet doc/src/snippets/declarative/borderimage/borderimage-scaled.qml scaled border image
+
+    \clearfloat
+    \beginfloatleft
+    \image qml-borderimage-tiled.png
+    \endfloat
+
+    Again, a large BorderImage element is used to display the image. With the
+    \l horizontalTileMode property set to \l{BorderImage::horizontalTileMode}{BorderImage.Repeat},
+    the parts of image in regions 2 and 8 are tiled so that they fill the space at the
+    top and bottom of the element. Similarly, the \l verticalTileMode property is set to
+    \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, the parts of image in regions
+    4 and 6 are tiled so that they fill the space at the left and right of the element.
+
+    \snippet doc/src/snippets/declarative/borderimage/borderimage-tiled.qml tiled border image
+
+    \clearfloat
+    In some situations, the width of regions 2 and 8 may not be an exact multiple of the width
+    of the corresponding regions in the source image. Similarly, the height of regions 4 and 6
+    may not be an exact multiple of the height of the corresponding regions. It can be useful
+    to use \l{BorderImage::horizontalTileMode}{BorderImage.Round} instead of
+    \l{BorderImage::horizontalTileMode}{BorderImage.Repeat} in cases like these.
+
+    The \l{declarative/imageelements/borderimage}{BorderImage example} shows how a BorderImage
+    can be used to simulate a shadow effect on a rectangular item.
+
+    \section1 Quality and Performance
+
+    By default, any scaled regions of the image are rendered without smoothing to improve
+    rendering speed. Setting the \l smooth property improves rendering quality of scaled
+    regions, but may slow down rendering.
+
+    The source image may not be loaded instantaneously, depending on its original location.
+    Loading progress can be monitored with the \l progress property.
+
+    \sa Image, AnimatedImage
+ */
+
+/*!
+    \qmlproperty bool QtQuick2::BorderImage::asynchronous
+
+    Specifies that images on the local filesystem should be loaded
+    asynchronously in a separate thread.  The default value is
+    false, causing the user interface thread to block while the
+    image is loaded.  Setting \a asynchronous to true is useful where
+    maintaining a responsive user interface is more desirable
+    than having images immediately visible.
+
+    Note that this property is only valid for images read from the
+    local filesystem.  Images loaded via a network resource (e.g. HTTP)
+    are always loaded asynchonously.
+*/
 QSGBorderImage::QSGBorderImage(QSGItem *parent)
 : QSGImageBase(*(new QSGBorderImagePrivate), parent)
 {
@@ -62,6 +175,99 @@ QSGBorderImage::~QSGBorderImage()
         d->sciReply->deleteLater();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::BorderImage::status
+
+    This property describes the status of image loading.  It can be one of:
+
+    \list
+    \o BorderImage.Null - no image has been set
+    \o BorderImage.Ready - the image has been loaded
+    \o BorderImage.Loading - the image is currently being loaded
+    \o BorderImage.Error - an error occurred while loading the image
+    \endlist
+
+    \sa progress
+*/
+
+/*!
+    \qmlproperty real QtQuick2::BorderImage::progress
+
+    This property holds the progress of image loading, from 0.0 (nothing loaded)
+    to 1.0 (finished).
+
+    \sa status
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::BorderImage::smooth
+
+    Set this property if you want the image to be smoothly filtered when scaled or
+    transformed.  Smooth filtering gives better visual quality, but is slower.  If
+    the image is displayed at its natural size, this property has no visual or
+    performance effect.
+
+    By default, this property is set to false.
+
+    \note Generally scaling artifacts are only visible if the image is stationary on
+    the screen.  A common pattern when animating an image is to disable smooth
+    filtering at the beginning of the animation and enable it at the conclusion.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::BorderImage::cache
+
+    Specifies whether the image should be cached. The default value is
+    true. Setting \a cache to false is useful when dealing with large images,
+    to make sure that they aren't cached at the expense of small 'ui element' images.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::BorderImage::mirror
+
+    This property holds whether the image should be horizontally inverted
+    (effectively displaying a mirrored image).
+
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty url QtQuick2::BorderImage::source
+
+    This property holds the URL that refers to the source image.
+
+    BorderImage can handle any image format supported by Qt, loaded from any
+    URL scheme supported by Qt.
+
+    This property can also be used to refer to .sci files, which are
+    written in a QML-specific, text-based format that specifies the
+    borders, the image file and the tile rules for a given border image.
+
+    The following .sci file sets the borders to 10 on each side for the
+    image \c picture.png:
+
+    \code
+    border.left: 10
+    border.top: 10
+    border.bottom: 10
+    border.right: 10
+    source: "picture.png"
+    \endcode
+
+    The URL may be absolute, or relative to the URL of the component.
+
+    \sa QDeclarativeImageProvider
+*/
+
+/*!
+    \qmlproperty QSize QtQuick2::BorderImage::sourceSize
+
+    This property holds the actual width and height of the loaded image.
+
+    In BorderImage, this property is read-only.
+
+    \sa Image::sourceSize
+*/
 void QSGBorderImage::setSource(const QUrl &url)
 {
     Q_D(QSGBorderImage);
@@ -160,12 +366,55 @@ void QSGBorderImage::load()
     emit statusChanged(d->status);
 }
 
+/*!
+    \qmlproperty int QtQuick2::BorderImage::border.left
+    \qmlproperty int QtQuick2::BorderImage::border.right
+    \qmlproperty int QtQuick2::BorderImage::border.top
+    \qmlproperty int QtQuick2::BorderImage::border.bottom
+
+    The 4 border lines (2 horizontal and 2 vertical) break the image into 9 sections,
+    as shown below:
+
+    \image declarative-scalegrid.png
+
+    Each border line (left, right, top, and bottom) specifies an offset in pixels
+    from the respective edge of the source image. By default, each border line has
+    a value of 0.
+
+    For example, the following definition sets the bottom line 10 pixels up from
+    the bottom of the image:
+
+    \qml
+    BorderImage {
+        border.bottom: 10
+        // ...
+    }
+    \endqml
+
+    The border lines can also be specified using a
+    \l {BorderImage::source}{.sci file}.
+*/
+
 QSGScaleGrid *QSGBorderImage::border()
 {
     Q_D(QSGBorderImage);
     return d->getScaleGrid();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::BorderImage::horizontalTileMode
+    \qmlproperty enumeration QtQuick2::BorderImage::verticalTileMode
+
+    This property describes how to repeat or stretch the middle parts of the border image.
+
+    \list
+    \o BorderImage.Stretch - Scales the image to fit to the available area.
+    \o BorderImage.Repeat - Tile the image until there is no more space. May crop the last image.
+    \o BorderImage.Round - Like Repeat, but scales the images down to ensure that the last image is not cropped.
+    \endlist
+
+    The default tile mode for each property is BorderImage.Stretch.
+*/
 QSGBorderImage::TileMode QSGBorderImage::horizontalTileMode() const
 {
     Q_D(const QSGBorderImage);

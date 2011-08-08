@@ -78,8 +78,8 @@ public:
 
 /*!
     \qmlclass Binding QDeclarativeBind
+    \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \since 4.7
     \brief The Binding element allows arbitrary property bindings to be created.
 
     \section1 Binding to an inaccessible property
@@ -152,7 +152,7 @@ QDeclarativeBind::~QDeclarativeBind()
 }
 
 /*!
-    \qmlproperty bool Binding::when
+    \qmlproperty bool QtQuick2::Binding::when
 
     This property holds when the binding is active.
     This should be set to an expression that evaluates to true when you want the binding to be active.
@@ -184,7 +184,7 @@ void QDeclarativeBind::setWhen(bool v)
 }
 
 /*!
-    \qmlproperty Object Binding::target
+    \qmlproperty Object QtQuick2::Binding::target
 
     The object to be updated.
 */
@@ -211,7 +211,7 @@ void QDeclarativeBind::setObject(QObject *obj)
 }
 
 /*!
-    \qmlproperty string Binding::property
+    \qmlproperty string QtQuick2::Binding::property
 
     The property to be updated.
 */
@@ -238,7 +238,7 @@ void QDeclarativeBind::setProperty(const QString &p)
 }
 
 /*!
-    \qmlproperty any Binding::value
+    \qmlproperty any QtQuick2::Binding::value
 
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.

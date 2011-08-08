@@ -93,8 +93,8 @@ public:
 
 /*!
    \qmlclass StateGroup QDeclarativeStateGroup
+    \inqmlmodule QtQuick 2
    \ingroup qml-state-elements
-   \since 4.7
    \brief The StateGroup element provides state support for non-Item elements.
 
    Item (and all derived elements) provides built in support for states and transitions
@@ -140,7 +140,7 @@ QList<QDeclarativeState *> QDeclarativeStateGroup::states() const
 }
 
 /*!
-  \qmlproperty list<State> StateGroup::states
+  \qmlproperty list<State> QtQuick2::StateGroup::states
   This property holds a list of states defined by the state group.
 
   \qml
@@ -201,7 +201,7 @@ void QDeclarativeStateGroupPrivate::clear_states(QDeclarativeListProperty<QDecla
 }
 
 /*!
-  \qmlproperty list<Transition> StateGroup::transitions
+  \qmlproperty list<Transition> QtQuick2::StateGroup::transitions
   This property holds a list of transitions defined by the state group.
 
   \qml
@@ -255,7 +255,7 @@ void QDeclarativeStateGroupPrivate::clear_transitions(QDeclarativeListProperty<Q
 }
 
 /*!
-  \qmlproperty string StateGroup::state
+  \qmlproperty string QtQuick2::StateGroup::state
 
   This property holds the name of the current state of the state group.
 

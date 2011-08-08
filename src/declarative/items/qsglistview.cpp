@@ -1265,6 +1265,68 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
 
 //----------------------------------------------------------------------------
 
+/*!
+    \qmlclass ListView QSGListView
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+    \inherits Flickable
+    \brief The ListView item provides a list view of items provided by a model.
+
+    A ListView displays data from models created from built-in QML elements like ListModel
+    and XmlListModel, or custom model classes defined in C++ that inherit from
+    QAbstractListModel.
+
+    A ListView has a \l model, which defines the data to be displayed, and
+    a \l delegate, which defines how the data should be displayed. Items in a
+    ListView are laid out horizontally or vertically. List views are inherently
+    flickable because ListView inherits from \l Flickable.
+
+    \section1 Example Usage
+
+    The following example shows the definition of a simple list model defined
+    in a file called \c ContactModel.qml:
+
+    \snippet doc/src/snippets/declarative/listview/ContactModel.qml 0
+
+    Another component can display this model data in a ListView, like this:
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml import
+    \codeline
+    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs simple
+
+    \image listview-simple.png
+
+    Here, the ListView creates a \c ContactModel component for its model, and a \l Text element
+    for its delegate. The view will create a new \l Text component for each item in the model. Notice
+    the delegate is able to access the model's \c name and \c number data directly.
+
+    An improved list view is shown below. The delegate is visually improved and is moved
+    into a separate \c contactDelegate component.
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs advanced
+    \image listview-highlight.png
+
+    The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
+    and \c focus is set to \c true to enable keyboard navigation for the list view.
+    The list view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+
+    Delegates are instantiated as needed and may be destroyed at any time.
+    State should \e never be stored in a delegate.
+
+    ListView attaches a number of properties to the root item of the delegate, for example
+    \c {ListView.isCurrentItem}.  In the following example, the root delegate item can access
+    this attached property directly as \c ListView.isCurrentItem, while the child
+    \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+
+    \note Views do not enable \e clip automatically.  If the view
+    is not clipped by another item or the screen, it will be necessary
+    to set \e {clip: true} in order to have the out of view items clipped
+    nicely.
+
+    \sa {QML Data Models}, GridView, {declarative/modelviews/listview}{ListView examples}
+*/
 QSGListView::QSGListView(QSGItem *parent)
     : QSGItemView(*(new QSGListViewPrivate), parent)
 {
@@ -1274,6 +1336,203 @@ QSGListView::~QSGListView()
 {
 }
 
+/*!
+    \qmlattachedproperty bool ListView::isCurrentItem
+    This attached property is true if this delegate is the current item; otherwise false.
+
+    It is attached to each instance of the delegate.
+
+    This property may be used to adjust the appearance of the current item, for example:
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+*/
+
+/*!
+    \qmlattachedproperty ListView ListView::view
+    This attached property holds the view that manages this delegate instance.
+
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedproperty string ListView::previousSection
+    This attached property holds the section of the previous element.
+
+    It is attached to each instance of the delegate.
+
+    The section is evaluated using the \l {ListView::section.property}{section} properties.
+*/
+
+/*!
+    \qmlattachedproperty string ListView::nextSection
+    This attached property holds the section of the next element.
+
+    It is attached to each instance of the delegate.
+
+    The section is evaluated using the \l {ListView::section.property}{section} properties.
+*/
+
+/*!
+    \qmlattachedproperty string ListView::section
+    This attached property holds the section of this element.
+
+    It is attached to each instance of the delegate.
+
+    The section is evaluated using the \l {ListView::section.property}{section} properties.
+*/
+
+/*!
+    \qmlattachedproperty bool ListView::delayRemove
+    This attached property holds whether the delegate may be destroyed.
+
+    It is attached to each instance of the delegate.
+
+    It is sometimes necessary to delay the destruction of an item
+    until an animation completes.
+
+    The example delegate below ensures that the animation completes before
+    the item is removed from the list.
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml delayRemove
+*/
+
+/*!
+    \qmlattachedsignal QtQuick2::ListView::onAdd()
+    This attached handler is called immediately after an item is added to the view.
+*/
+
+/*!
+    \qmlattachedsignal QtQuick2::ListView::onRemove()
+    This attached handler is called immediately before an item is removed from the view.
+*/
+
+/*!
+    \qmlproperty model QtQuick2::ListView::model
+    This property holds the model providing data for the list.
+
+    The model provides the set of data that is used to create the items
+    in the view. Models can be created directly in QML using \l ListModel, \l XmlListModel
+    or \l VisualItemModel, or provided by C++ model classes. If a C++ model class is
+    used, it must be a subclass of \l QAbstractItemModel or a simple list.
+
+    \sa {qmlmodels}{Data Models}
+*/
+
+/*!
+    \qmlproperty Component QtQuick2::ListView::delegate
+
+    The delegate provides a template defining each item instantiated by the view.
+    The index is exposed as an accessible \c index property.  Properties of the
+    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+
+    The number of elements in the delegate has a direct effect on the
+    flicking performance of the view.  If at all possible, place functionality
+    that is not needed for the normal display of the delegate in a \l Loader which
+    can load additional elements when needed.
+
+    The ListView will lay out the items based on the size of the root item
+    in the delegate.
+
+    It is recommended that the delagate's size be a whole number to avoid sub-pixel
+    alignment of items.
+
+    \note Delegates are instantiated as needed and may be destroyed at any time.
+    State should \e never be stored in a delegate.
+*/
+/*!
+    \qmlproperty int QtQuick2::ListView::currentIndex
+    \qmlproperty Item QtQuick2::ListView::currentItem
+
+    The \c currentIndex property holds the index of the current item, and
+    \c currentItem holds the current item.   Setting the currentIndex to -1
+    will clear the highlight and set currentItem to null.
+
+    If highlightFollowsCurrentItem is \c true, setting either of these
+    properties will smoothly scroll the ListView so that the current
+    item becomes visible.
+
+    Note that the position of the current item
+    may only be approximate until it becomes visible in the view.
+*/
+
+/*!
+  \qmlproperty Item QtQuick2::ListView::highlightItem
+
+    This holds the highlight item created from the \l highlight component.
+
+  The \c highlightItem is managed by the view unless
+  \l highlightFollowsCurrentItem is set to false.
+
+  \sa highlight, highlightFollowsCurrentItem
+*/
+
+/*!
+  \qmlproperty int QtQuick2::ListView::count
+  This property holds the number of items in the view.
+*/
+
+/*!
+    \qmlproperty Component QtQuick2::ListView::highlight
+    This property holds the component to use as the highlight.
+
+    An instance of the highlight component is created for each list.
+    The geometry of the resulting component instance is managed by the list
+    so as to stay with the current item, unless the highlightFollowsCurrentItem
+    property is false.
+
+    \sa highlightItem, highlightFollowsCurrentItem, {declarative/modelviews/listview}{ListView examples}
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::ListView::highlightFollowsCurrentItem
+    This property holds whether the highlight is managed by the view.
+
+    If this property is true (the default value), the highlight is moved smoothly
+    to follow the current item.  Otherwise, the
+    highlight is not moved by the view, and any movement must be implemented
+    by the highlight.
+
+    Here is a highlight with its motion defined by a \l {SpringAnimation} item:
+
+    \snippet doc/src/snippets/declarative/listview/listview.qml highlightFollowsCurrentItem
+
+    Note that the highlight animation also affects the way that the view
+    is scrolled.  This is because the view moves to maintain the
+    highlight within the preferred highlight range (or visible viewport).
+
+    \sa highlight, highlightMoveSpeed
+*/
+//###Possibly rename these properties, since they are very useful even without a highlight?
+/*!
+    \qmlproperty real QtQuick2::ListView::preferredHighlightBegin
+    \qmlproperty real QtQuick2::ListView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick2::ListView::highlightRangeMode
+
+    These properties define the preferred range of the highlight (for the current item)
+    within the view. The \c preferredHighlightBegin value must be less than the
+    \c preferredHighlightEnd value.
+
+    These properties affect the position of the current item when the list is scrolled.
+    For example, if the currently selected item should stay in the middle of the
+    list when the view is scrolled, set the \c preferredHighlightBegin and
+    \c preferredHighlightEnd values to the top and bottom coordinates of where the middle
+    item would be. If the \c currentItem is changed programmatically, the list will
+    automatically scroll so that the current item is in the middle of the view.
+    Furthermore, the behavior of the current item index will occur whether or not a
+    highlight exists.
+
+    Valid values for \c highlightRangeMode are:
+
+    \list
+    \o ListView.ApplyRange - the view attempts to maintain the highlight within the range.
+       However, the highlight can move outside of the range at the ends of the list or due
+       to mouse interaction.
+    \o ListView.StrictlyEnforceRange - the highlight never moves outside of the range.
+       The current item changes if a keyboard or mouse action would cause the highlight to move
+       outside of the range.
+    \o ListView.NoHighlightRange - this is the default value.
+    \endlist
+*/
 void QSGListView::setHighlightFollowsCurrentItem(bool autoHighlight)
 {
     Q_D(QSGListView);
@@ -1288,6 +1547,13 @@ void QSGListView::setHighlightFollowsCurrentItem(bool autoHighlight)
     }
 }
 
+/*!
+    \qmlproperty real QtQuick2::ListView::spacing
+
+    This property holds the spacing between items.
+
+    The default value is 0.
+*/
 qreal QSGListView::spacing() const
 {
     Q_D(const QSGListView);
@@ -1304,6 +1570,27 @@ void QSGListView::setSpacing(qreal spacing)
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::ListView::orientation
+    This property holds the orientation of the list.
+
+    Possible values:
+
+    \list
+    \o ListView.Horizontal - Items are laid out horizontally
+    \o ListView.Vertical (default) - Items are laid out vertically
+    \endlist
+
+    \table
+    \row
+    \o Horizontal orientation:
+    \image ListViewHorizontal.png
+
+    \row
+    \o Vertical orientation:
+    \image listview-highlight.png
+    \endtable
+*/
 QSGListView::Orientation QSGListView::orientation() const
 {
     Q_D(const QSGListView);
@@ -1329,6 +1616,116 @@ void QSGListView::setOrientation(QSGListView::Orientation orientation)
     }
 }
 
+/*!
+  \qmlproperty enumeration QtQuick2::ListView::layoutDirection
+  This property holds the layout direction of the horizontal list.
+
+  Possible values:
+
+  \list
+  \o Qt.LeftToRight (default) - Items will be laid out from left to right.
+  \o Qt.RightToLeft - Items will be laid out from right to let.
+  \endlist
+
+  \sa ListView::effectiveLayoutDirection
+*/
+
+
+/*!
+    \qmlproperty enumeration QtQuick2::ListView::effectiveLayoutDirection
+    This property holds the effective layout direction of the horizontal list.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
+    the visual layout direction of the horizontal list will be mirrored. However, the
+    property \l {ListView::layoutDirection}{layoutDirection} will remain unchanged.
+
+    \sa ListView::layoutDirection, {LayoutMirroring}{LayoutMirroring}
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::ListView::keyNavigationWraps
+    This property holds whether the list wraps key navigation.
+
+    If this is true, key navigation that would move the current item selection
+    past the end of the list instead wraps around and moves the selection to
+    the start of the list, and vice-versa.
+
+    By default, key navigation is not wrapped.
+*/
+
+
+/*!
+    \qmlproperty int QtQuick2::ListView::cacheBuffer
+    This property determines whether delegates are retained outside the
+    visible area of the view.
+
+    If this value is non-zero, the view keeps as many delegates
+    instantiated as it can fit within the buffer specified.  For example,
+    if in a vertical view the delegate is 20 pixels high and \c cacheBuffer is
+    set to 40, then up to 2 delegates above and 2 delegates below the visible
+    area may be retained.
+
+    Note that cacheBuffer is not a pixel buffer - it only maintains additional
+    instantiated delegates.
+
+    Setting this value can improve the smoothness of scrolling behavior at the expense
+    of additional memory usage.  It is not a substitute for creating efficient
+    delegates; the fewer elements in a delegate, the faster a view can be
+    scrolled.
+*/
+
+
+/*!
+    \qmlproperty string QtQuick2::ListView::section.property
+    \qmlproperty enumeration QtQuick2::ListView::section.criteria
+    \qmlproperty Component QtQuick2::ListView::section.delegate
+
+    These properties hold the expression to be evaluated for the \l section attached property.
+
+    The \l section attached property enables a ListView to be visually
+    separated into different parts. These properties determine how sections
+    are created.
+
+    \c section.property holds the name of the property that is the basis
+    of each section.
+
+    \c section.criteria holds the criteria for forming each section based on
+    \c section.property. This value can be one of:
+
+    \list
+    \o ViewSection.FullString (default) - sections are created based on the
+    \c section.property value.
+    \o ViewSection.FirstCharacter - sections are created based on the first
+    character of the \c section.property value (for example, 'A', 'B', 'C'
+    sections, etc. for an address book)
+    \endlist
+
+    \c section.delegate holds the delegate component for each section.
+
+    Each item in the list has attached properties named \c ListView.section,
+    \c ListView.previousSection and \c ListView.nextSection.  These may be
+    used to place a section header for related items.
+
+    For example, here is a ListView that displays a list of animals, separated
+    into sections. Each item in the ListView is placed in a different section
+    depending on the "size" property of the model item. The \c sectionHeading
+    delegate component provides the light blue bar that marks the beginning of
+    each section.
+
+
+    \snippet examples/declarative/modelviews/listview/sections.qml 0
+
+    \image qml-listview-sections-example.png
+
+    \note Adding sections to a ListView does not automatically re-order the
+    list items by the section criteria.
+    If the model is not ordered by section, then it is possible that
+    the sections created will not be unique; each boundary between
+    differing sections will result in a section header being created
+    even if that section exists elsewhere.
+
+    \sa {declarative/modelviews/listview}{ListView examples}
+*/
 QSGViewSection *QSGListView::sectionCriteria()
 {
     Q_D(QSGListView);
@@ -1339,12 +1736,35 @@ QSGViewSection *QSGListView::sectionCriteria()
     return d->sectionCriteria;
 }
 
+/*!
+    \qmlproperty string QtQuick2::ListView::currentSection
+    This property holds the section that is currently at the beginning of the view.
+*/
 QString QSGListView::currentSection() const
 {
     Q_D(const QSGListView);
     return d->currentSection;
 }
 
+/*!
+    \qmlproperty real QtQuick2::ListView::highlightMoveSpeed
+    \qmlproperty int QtQuick2::ListView::highlightMoveDuration
+    \qmlproperty real QtQuick2::ListView::highlightResizeSpeed
+    \qmlproperty int QtQuick2::ListView::highlightResizeDuration
+
+    These properties hold the move and resize animation speed of the highlight delegate.
+
+    \l highlightFollowsCurrentItem must be true for these properties
+    to have effect.
+
+    The default value for the speed properties is 400 pixels/second.
+    The default value for the duration properties is -1, i.e. the
+    highlight will take as much time as necessary to move at the set speed.
+
+    These properties have the same characteristics as a SmoothedAnimation.
+
+    \sa highlightFollowsCurrentItem
+*/
 qreal QSGListView::highlightMoveSpeed() const
 {
     Q_D(const QSGListView);
@@ -1406,6 +1826,27 @@ void QSGListView::setHighlightResizeDuration(int duration)
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::ListView::snapMode
+
+    This property determines how the view scrolling will settle following a drag or flick.
+    The possible values are:
+
+    \list
+    \o ListView.NoSnap (default) - the view stops anywhere within the visible area.
+    \o ListView.SnapToItem - the view settles with an item aligned with the start of
+    the view.
+    \o ListView.SnapOneItem - the view settles no more than one item away from the first
+    visible item at the time the mouse button is released.  This mode is particularly
+    useful for moving one page at a time.
+    \endlist
+
+    \c snapMode does not affect the \l currentIndex.  To update the
+    \l currentIndex as the list is moved, set \l highlightRangeMode
+    to \c ListView.StrictlyEnforceRange.
+
+    \sa highlightRangeMode
+*/
 QSGListView::SnapMode QSGListView::snapMode() const
 {
     Q_D(const QSGListView);
@@ -1420,6 +1861,28 @@ void QSGListView::setSnapMode(SnapMode mode)
         emit snapModeChanged();
     }
 }
+
+
+/*!
+    \qmlproperty Component QtQuick2::ListView::footer
+    This property holds the component to use as the footer.
+
+    An instance of the footer component is created for each view.  The
+    footer is positioned at the end of the view, after any items.
+
+    \sa header
+*/
+
+
+/*!
+    \qmlproperty Component QtQuick2::ListView::header
+    This property holds the component to use as the header.
+
+    An instance of the header component is created for each view.  The
+    header is positioned at the beginning of the view, before any items.
+
+    \sa footer
+*/
 
 void QSGListView::viewportMoved()
 {
@@ -1555,6 +2018,15 @@ void QSGListView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 }
 
 
+/*!
+    \qmlmethod QtQuick2::ListView::incrementCurrentIndex()
+
+    Increments the current index.  The current index will wrap
+    if keyNavigationWraps is true and it is currently at the end.
+    This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGListView::incrementCurrentIndex()
 {
     Q_D(QSGListView);
@@ -1566,6 +2038,15 @@ void QSGListView::incrementCurrentIndex()
     }
 }
 
+/*!
+    \qmlmethod QtQuick2::ListView::decrementCurrentIndex()
+
+    Decrements the current index.  The current index will wrap
+    if keyNavigationWraps is true and it is currently at the beginning.
+    This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGListView::decrementCurrentIndex()
 {
     Q_D(QSGListView);
@@ -1954,6 +2435,72 @@ void QSGListView::itemsMoved(int from, int to, int count)
     d->layout();
 }
 
+/*!
+    \qmlmethod QtQuick2::ListView::positionViewAtIndex(int index, PositionMode mode)
+
+    Positions the view such that the \a index is at the position specified by
+    \a mode:
+
+    \list
+    \o ListView.Beginning - position item at the top (or left for horizontal orientation) of the view.
+    \o ListView.Center - position item in the center of the view.
+    \o ListView.End - position item at bottom (or right for horizontal orientation) of the view.
+    \o ListView.Visible - if any part of the item is visible then take no action, otherwise
+    bring the item into view.
+    \o ListView.Contain - ensure the entire item is visible.  If the item is larger than
+    the view the item is positioned at the top (or left for horizontal orientation) of the view.
+    \endlist
+
+    If positioning the view at \a index would cause empty space to be displayed at
+    the beginning or end of the view, the view will be positioned at the boundary.
+
+    It is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY} to position the view
+    at a particular index.  This is unreliable since removing items from the start
+    of the list does not cause all other items to be repositioned, and because
+    the actual start of the view can vary based on the size of the delegates.
+    The correct way to bring an item into view is with \c positionViewAtIndex.
+
+    \bold Note: methods should only be called after the Component has completed.  To position
+    the view at startup, this method should be called by Component.onCompleted.  For
+    example, to position the view at the end:
+
+    \code
+    Component.onCompleted: positionViewAtIndex(count - 1, ListView.Beginning)
+    \endcode
+*/
+
+/*!
+    \qmlmethod QtQuick2::ListView::positionViewAtBeginning()
+    \qmlmethod QtQuick2::ListView::positionViewAtEnd()
+
+    Positions the view at the beginning or end, taking into account any header or footer.
+
+    It is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY} to position the view
+    at a particular index.  This is unreliable since removing items from the start
+    of the list does not cause all other items to be repositioned, and because
+    the actual start of the view can vary based on the size of the delegates.
+
+    \bold Note: methods should only be called after the Component has completed.  To position
+    the view at startup, this method should be called by Component.onCompleted.  For
+    example, to position the view at the end on startup:
+
+    \code
+    Component.onCompleted: positionViewAtEnd()
+    \endcode
+*/
+
+/*!
+    \qmlmethod int QtQuick2::ListView::indexAt(int x, int y)
+
+    Returns the index of the visible item containing the point \a x, \a y in content
+    coordinates.  If there is no item at the point specified, or the item is
+    not visible -1 is returned.
+
+    If the item is outside the visible area, -1 is returned, regardless of
+    whether an item will exist at that point when scrolled into view.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 
 QSGListViewAttached *QSGListView::qmlAttachedProperties(QObject *obj)
 {

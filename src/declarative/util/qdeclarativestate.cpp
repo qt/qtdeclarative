@@ -130,8 +130,8 @@ QDeclarativeStateOperation::QDeclarativeStateOperation(QObjectPrivate &dd, QObje
 
 /*!
     \qmlclass State QDeclarativeState
+    \inqmlmodule QtQuick 2
     \ingroup qml-state-elements
-    \since 4.7
     \brief The State element defines configurations of objects and properties.
 
     A \e state is a set of batched changes from the default configuration.
@@ -176,7 +176,7 @@ QDeclarativeState::~QDeclarativeState()
 }
 
 /*!
-    \qmlproperty string State::name
+    \qmlproperty string QtQuick2::State::name
     This property holds the name of the state.
 
     Each state should have a unique name within its item.
@@ -207,7 +207,7 @@ bool QDeclarativeState::isWhenKnown() const
 }
 
 /*!
-    \qmlproperty bool State::when
+    \qmlproperty bool QtQuick2::State::when
     This property holds when the state should be applied.
 
     This should be set to an expression that evaluates to \c true when you want the state to
@@ -245,7 +245,7 @@ void QDeclarativeState::setWhen(QDeclarativeBinding *when)
 }
 
 /*!
-    \qmlproperty string State::extend
+    \qmlproperty string QtQuick2::State::extend
     This property holds the state that this state extends.
 
     When a state extends another state, it inherits all the changes of that state.
@@ -266,7 +266,7 @@ void QDeclarativeState::setExtends(const QString &extends)
 }
 
 /*!
-    \qmlproperty list<Change> State::changes
+    \qmlproperty list<Change> QtQuick2::State::changes
     This property holds the changes to apply for this state
     \default
 

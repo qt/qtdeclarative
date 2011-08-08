@@ -97,7 +97,6 @@ void QDeclarativePropertyMapMetaObject::propertyCreated(int, QMetaPropertyBuilde
 
 /*!
     \class QDeclarativePropertyMap
-    \since 4.7
     \brief The QDeclarativePropertyMap class allows you to set key-value pairs that can be used in QML bindings.
 
     QDeclarativePropertyMap provides a convenient way to expose domain data to the UI layer.

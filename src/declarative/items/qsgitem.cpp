@@ -72,6 +72,168 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass Transform QSGTransform
+    \inqmlmodule QtQuick 2
+    \ingroup qml-transform-elements
+    \brief The Transform elements provide a way of building advanced transformations on Items.
+
+    The Transform element is a base type which cannot be instantiated directly.
+    The following concrete Transform types are available:
+
+    \list
+    \o \l Rotation
+    \o \l Scale
+    \o \l Translate
+    \endlist
+
+    The Transform elements let you create and control advanced transformations that can be configured
+    independently using specialized properties.
+
+    You can assign any number of Transform elements to an \l Item. Each Transform is applied in order,
+    one at a time.
+*/
+
+/*!
+    \qmlclass Translate QSGTranslate
+    \inqmlmodule QtQuick 2
+    \ingroup qml-transform-elements
+    \brief The Translate object provides a way to move an Item without changing its x or y properties.
+
+    The Translate object provides independent control over position in addition to the Item's x and y properties.
+
+    The following example moves the Y axis of the \l Rectangle elements while still allowing the \l Row element
+    to lay the items out as if they had not been transformed:
+    \qml
+    import QtQuick 1.0
+
+    Row {
+        Rectangle {
+            width: 100; height: 100
+            color: "blue"
+            transform: Translate { y: 20 }
+        }
+        Rectangle {
+            width: 100; height: 100
+            color: "red"
+            transform: Translate { y: -20 }
+        }
+    }
+    \endqml
+
+    \image translate.png
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Translate::x
+
+    The translation along the X axis.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Translate::y
+
+    The translation along the Y axis.
+*/
+
+/*!
+    \qmlclass Scale QSGScale
+    \inqmlmodule QtQuick 2
+    \ingroup qml-transform-elements
+    \brief The Scale element provides a way to scale an Item.
+
+    The Scale element gives more control over scaling than using \l Item's \l{Item::scale}{scale} property. Specifically,
+    it allows a different scale for the x and y axes, and allows the scale to be relative to an
+    arbitrary point.
+
+    The following example scales the X axis of the Rectangle, relative to its interior point 25, 25:
+    \qml
+    Rectangle {
+        width: 100; height: 100
+        color: "blue"
+        transform: Scale { origin.x: 25; origin.y: 25; xScale: 3}
+    }
+    \endqml
+
+    \sa Rotation, Translate
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Scale::origin.x
+    \qmlproperty real QtQuick2::Scale::origin.y
+
+    The point that the item is scaled from (i.e., the point that stays fixed relative to the parent as
+    the rest of the item grows). By default the origin is 0, 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Scale::xScale
+
+    The scaling factor for the X axis.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Scale::yScale
+
+    The scaling factor for the Y axis.
+*/
+
+/*!
+    \qmlclass Rotation QSGRotation
+    \inqmlmodule QtQuick 2
+    \ingroup qml-transform-elements
+    \brief The Rotation object provides a way to rotate an Item.
+
+    The Rotation object gives more control over rotation than using \l Item's \l{Item::rotation}{rotation} property.
+    Specifically, it allows (z axis) rotation to be relative to an arbitrary point.
+
+    The following example rotates a Rectangle around its interior point 25, 25:
+    \qml
+    Rectangle {
+        width: 100; height: 100
+        color: "blue"
+        transform: Rotation { origin.x: 25; origin.y: 25; angle: 45}
+    }
+    \endqml
+
+    Rotation also provides a way to specify 3D-like rotations for Items. For these types of
+    rotations you must specify the axis to rotate around in addition to the origin point.
+
+    The following example shows various 3D-like rotations applied to an \l Image.
+    \snippet doc/src/snippets/declarative/rotation.qml 0
+
+    \image axisrotation.png
+
+    \sa {declarative/ui-components/dialcontrol}{Dial Control example}, {declarative/toys/clocks}{Clocks example}
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Rotation::origin.x
+    \qmlproperty real QtQuick2::Rotation::origin.y
+
+    The origin point of the rotation (i.e., the point that stays fixed relative to the parent as
+    the rest of the item rotates). By default the origin is 0, 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Rotation::axis.x
+    \qmlproperty real QtQuick2::Rotation::axis.y
+    \qmlproperty real QtQuick2::Rotation::axis.z
+
+    The axis to rotate around. For simple (2D) rotation around a point, you do not need to specify an axis,
+    as the default axis is the z axis (\c{ axis { x: 0; y: 0; z: 1 } }).
+
+    For a typical 3D-like rotation you will usually specify both the origin and the axis.
+
+    \image 3d-rotation-axis.png
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Rotation::angle
+
+    The angle to rotate, in degrees clockwise.
+*/
+
 QSGTransformPrivate::QSGTransformPrivate()
 {
 }
@@ -105,7 +267,7 @@ void QSGTransform::update()
     }
 }
 
-QSGContents::QSGContents(QSGItem *item) 
+QSGContents::QSGContents(QSGItem *item)
 : m_item(item), m_x(0), m_y(0), m_width(0), m_height(0)
 {
     //### optimize
@@ -284,6 +446,69 @@ void QSGItemKeyFilter::componentComplete()
 {
     if (m_next) m_next->componentComplete();
 }
+/*!
+    \qmlclass KeyNavigation QSGKeyNavigationAttached
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-interaction-elements
+    \brief The KeyNavigation attached property supports key navigation by arrow keys.
+
+    Key-based user interfaces commonly allow the use of arrow keys to navigate between
+    focusable items.  The KeyNavigation attached property enables this behavior by providing a
+    convenient way to specify the item that should gain focus when an arrow or tab key is pressed.
+
+    The following example provides key navigation for a 2x2 grid of items:
+
+    \snippet doc/src/snippets/declarative/keynavigation.qml 0
+
+    The top-left item initially receives focus by setting \l {Item::}{focus} to
+    \c true. When an arrow key is pressed, the focus will move to the
+    appropriate item, as defined by the value that has been set for
+    the KeyNavigation \l left, \l right, \l up or \l down properties.
+
+    Note that if a KeyNavigation attached property receives the key press and release
+    events for a requested arrow or tab key, the event is accepted and does not
+    propagate any further.
+
+    By default, KeyNavigation receives key events after the item to which it is attached.
+    If the item accepts the key event, the KeyNavigation attached property will not
+    receive an event for that key.  Setting the \l priority property to
+    \c KeyNavigation.BeforeItem allows the event to be used for key navigation
+    before the item, rather than after.
+
+    If item to which the focus is switching is not enabled or visible, an attempt will
+    be made to skip this item and focus on the next. This is possible if there are
+    a chain of items with the same KeyNavigation handler. If multiple items in a row are not enabled
+    or visible, they will also be skipped.
+
+    KeyNavigation will implicitly set the other direction to return focus to this item. So if you set
+    \l left to another item, \l right will be set on that item's KeyNavigation to set focus back to this
+    item. However, if that item's KeyNavigation has had right explicitly set then no change will occur.
+    This means that the above example could have been written, with the same behaviour, without specifing
+    KeyNavigation.right or KeyNavigation.down for any of the items.
+
+    \sa {Keys}{Keys attached property}
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::KeyNavigation::left
+    \qmlproperty Item QtQuick2::KeyNavigation::right
+    \qmlproperty Item QtQuick2::KeyNavigation::up
+    \qmlproperty Item QtQuick2::KeyNavigation::down
+    \qmlproperty Item QtQuick2::KeyNavigation::tab
+    \qmlproperty Item QtQuick2::KeyNavigation::backtab
+
+    These properties hold the item to assign focus to
+    when the left, right, up or down cursor keys, or the
+    tab key are pressed.
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::KeyNavigation::tab
+    \qmlproperty Item QtQuick2::KeyNavigation::backtab
+
+    These properties hold the item to assign focus to
+    when the Tab key or Shift+Tab key combination (Backtab) are pressed.
+*/
 
 QSGKeyNavigationAttached::QSGKeyNavigationAttached(QObject *parent)
 : QObject(*(new QSGKeyNavigationAttachedPrivate), parent),
@@ -430,6 +655,21 @@ void QSGKeyNavigationAttached::setBacktab(QSGItem *i)
     emit backtabChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::KeyNavigation::priority
+
+    This property determines whether the keys are processed before
+    or after the attached item's own key handling.
+
+    \list
+    \o KeyNavigation.BeforeItem - process the key events before normal
+    item key processing.  If the event is used for key navigation, it will be accepted and will not
+    be passed on to the item.
+    \o KeyNavigation.AfterItem (default) - process the key events after normal item key
+    handling.  If the item accepts the key event it will not be
+    handled by the KeyNavigation attached property handler.
+    \endlist
+*/
 QSGKeyNavigationAttached::Priority QSGKeyNavigationAttached::priority() const
 {
     return m_processPost ? AfterItem : BeforeItem;
@@ -618,6 +858,393 @@ bool QSGKeysAttachedPrivate::isConnected(const char *signalName)
     return isSignalConnected(signalIndex(signalName));
 }
 
+/*!
+    \qmlclass Keys QSGKeysAttached
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-interaction-elements
+    \brief The Keys attached property provides key handling to Items.
+
+    All visual primitives support key handling via the Keys
+    attached property.  Keys can be handled via the onPressed
+    and onReleased signal properties.
+
+    The signal properties have a \l KeyEvent parameter, named
+    \e event which contains details of the event.  If a key is
+    handled \e event.accepted should be set to true to prevent the
+    event from propagating up the item hierarchy.
+
+    \section1 Example Usage
+
+    The following example shows how the general onPressed handler can
+    be used to test for a certain key; in this case, the left cursor
+    key:
+
+    \snippet doc/src/snippets/declarative/keys/keys-pressed.qml key item
+
+    Some keys may alternatively be handled via specific signal properties,
+    for example \e onSelectPressed.  These handlers automatically set
+    \e event.accepted to true.
+
+    \snippet doc/src/snippets/declarative/keys/keys-handler.qml key item
+
+    See \l{Qt::Key}{Qt.Key} for the list of keyboard codes.
+
+    \section1 Key Handling Priorities
+
+    The Keys attached property can be configured to handle key events
+    before or after the item it is attached to. This makes it possible
+    to intercept events in order to override an item's default behavior,
+    or act as a fallback for keys not handled by the item.
+
+    If \l priority is Keys.BeforeItem (default) the order of key event processing is:
+
+    \list 1
+    \o Items specified in \c forwardTo
+    \o specific key handlers, e.g. onReturnPressed
+    \o onKeyPress, onKeyRelease handlers
+    \o Item specific key handling, e.g. TextInput key handling
+    \o parent item
+    \endlist
+
+    If priority is Keys.AfterItem the order of key event processing is:
+
+    \list 1
+    \o Item specific key handling, e.g. TextInput key handling
+    \o Items specified in \c forwardTo
+    \o specific key handlers, e.g. onReturnPressed
+    \o onKeyPress, onKeyRelease handlers
+    \o parent item
+    \endlist
+
+    If the event is accepted during any of the above steps, key
+    propagation stops.
+
+    \sa KeyEvent, {KeyNavigation}{KeyNavigation attached property}
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Keys::enabled
+
+    This flags enables key handling if true (default); otherwise
+    no key handlers will be called.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick2::Keys::priority
+
+    This property determines whether the keys are processed before
+    or after the attached item's own key handling.
+
+    \list
+    \o Keys.BeforeItem (default) - process the key events before normal
+    item key processing.  If the event is accepted it will not
+    be passed on to the item.
+    \o Keys.AfterItem - process the key events after normal item key
+    handling.  If the item accepts the key event it will not be
+    handled by the Keys attached property handler.
+    \endlist
+*/
+
+/*!
+    \qmlproperty list<Object> QtQuick2::Keys::forwardTo
+
+    This property provides a way to forward key presses, key releases, and keyboard input
+    coming from input methods to other items. This can be useful when you want
+    one item to handle some keys (e.g. the up and down arrow keys), and another item to
+    handle other keys (e.g. the left and right arrow keys).  Once an item that has been
+    forwarded keys accepts the event it is no longer forwarded to items later in the
+    list.
+
+    This example forwards key events to two lists:
+    \qml
+    Item {
+        ListView {
+            id: list1
+            // ...
+        }
+        ListView {
+            id: list2
+            // ...
+        }
+        Keys.forwardTo: [list1, list2]
+        focus: true
+    }
+    \endqml
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onPressed(KeyEvent event)
+
+    This handler is called when a key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onReleased(KeyEvent event)
+
+    This handler is called when a key has been released. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit0Pressed(KeyEvent event)
+
+    This handler is called when the digit '0' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit1Pressed(KeyEvent event)
+
+    This handler is called when the digit '1' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit2Pressed(KeyEvent event)
+
+    This handler is called when the digit '2' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit3Pressed(KeyEvent event)
+
+    This handler is called when the digit '3' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit4Pressed(KeyEvent event)
+
+    This handler is called when the digit '4' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit5Pressed(KeyEvent event)
+
+    This handler is called when the digit '5' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit6Pressed(KeyEvent event)
+
+    This handler is called when the digit '6' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit7Pressed(KeyEvent event)
+
+    This handler is called when the digit '7' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit8Pressed(KeyEvent event)
+
+    This handler is called when the digit '8' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDigit9Pressed(KeyEvent event)
+
+    This handler is called when the digit '9' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onLeftPressed(KeyEvent event)
+
+    This handler is called when the Left arrow has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onRightPressed(KeyEvent event)
+
+    This handler is called when the Right arrow has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onUpPressed(KeyEvent event)
+
+    This handler is called when the Up arrow has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDownPressed(KeyEvent event)
+
+    This handler is called when the Down arrow has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onTabPressed(KeyEvent event)
+
+    This handler is called when the Tab key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onBacktabPressed(KeyEvent event)
+
+    This handler is called when the Shift+Tab key combination (Backtab) has
+    been pressed. The \a event parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onAsteriskPressed(KeyEvent event)
+
+    This handler is called when the Asterisk '*' has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onEscapePressed(KeyEvent event)
+
+    This handler is called when the Escape key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onReturnPressed(KeyEvent event)
+
+    This handler is called when the Return key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onEnterPressed(KeyEvent event)
+
+    This handler is called when the Enter key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onDeletePressed(KeyEvent event)
+
+    This handler is called when the Delete key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onSpacePressed(KeyEvent event)
+
+    This handler is called when the Space key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onBackPressed(KeyEvent event)
+
+    This handler is called when the Back key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onCancelPressed(KeyEvent event)
+
+    This handler is called when the Cancel key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onSelectPressed(KeyEvent event)
+
+    This handler is called when the Select key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onYesPressed(KeyEvent event)
+
+    This handler is called when the Yes key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onNoPressed(KeyEvent event)
+
+    This handler is called when the No key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onContext1Pressed(KeyEvent event)
+
+    This handler is called when the Context1 key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onContext2Pressed(KeyEvent event)
+
+    This handler is called when the Context2 key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onContext3Pressed(KeyEvent event)
+
+    This handler is called when the Context3 key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onContext4Pressed(KeyEvent event)
+
+    This handler is called when the Context4 key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onCallPressed(KeyEvent event)
+
+    This handler is called when the Call key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onHangupPressed(KeyEvent event)
+
+    This handler is called when the Hangup key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onFlipPressed(KeyEvent event)
+
+    This handler is called when the Flip key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onMenuPressed(KeyEvent event)
+
+    This handler is called when the Menu key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onVolumeUpPressed(KeyEvent event)
+
+    This handler is called when the VolumeUp key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Keys::onVolumeDownPressed(KeyEvent event)
+
+    This handler is called when the VolumeDown key has been pressed. The \a event
+    parameter provides information about the event.
+*/
+
 QSGKeysAttached::QSGKeysAttached(QObject *parent)
 : QObject(*(new QSGKeysAttachedPrivate), parent),
   QSGItemKeyFilter(qobject_cast<QSGItem*>(parent))
@@ -760,7 +1387,7 @@ QVariant QSGKeysAttached::inputMethodQuery(Qt::InputMethodQuery query) const
     if (d->item) {
         for (int ii = 0; ii < d->targets.count(); ++ii) {
             QSGItem *i = d->targets.at(ii);
-            if (i && i->isVisible() && (i->flags() & QSGItem::ItemAcceptsInputMethod) && i == d->imeItem) { 
+            if (i && i->isVisible() && (i->flags() & QSGItem::ItemAcceptsInputMethod) && i == d->imeItem) {
                 //### how robust is i == d->imeItem check?
                 QVariant v = i->inputMethodQuery(query);
                 if (v.userType() == QVariant::RectF)
@@ -776,6 +1403,69 @@ QSGKeysAttached *QSGKeysAttached::qmlAttachedProperties(QObject *obj)
 {
     return new QSGKeysAttached(obj);
 }
+
+/*!
+    \qmlclass LayoutMirroring QSGLayoutMirroringAttached
+    \inqmlmodule QtQuick 2
+    \ingroup qml-utility-elements
+    \brief The LayoutMirroring attached property is used to mirror layout behavior.
+
+    The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
+    \l{Using QML Positioner and Repeater Items}{positioner} elements (such as \l Row and \l Grid)
+    and views (such as \l GridView and horizontal \l ListView). Mirroring is a visual change: left
+    anchors become right anchors, and positioner elements like \l Grid and \l Row reverse the
+    horizontal layout of child items.
+
+    Mirroring is enabled for an item by setting the \l enabled property to true. By default, this
+    only affects the item itself; setting the \l childrenInherit property to true propagates the mirroring
+    behavior to all child elements as well. If the \c LayoutMirroring attached property has not been defined
+    for an item, mirroring is not enabled.
+
+    The following example shows mirroring in action. The \l Row below is specified as being anchored
+    to the left of its parent. However, since mirroring has been enabled, the anchor is horizontally
+    reversed and it is now anchored to the right. Also, since items in a \l Row are positioned
+    from left to right by default, they are now positioned from right to left instead, as demonstrated
+    by the numbering and opacity of the items:
+
+    \snippet doc/src/snippets/declarative/layoutmirroring.qml 0
+
+    \image layoutmirroring.png
+
+    Layout mirroring is useful when it is necessary to support both left-to-right and right-to-left
+    layout versions of an application to target different language areas. The \l childrenInherit
+    property allows layout mirroring to be applied without manually setting layout configurations
+    for every item in an application. Keep in mind, however, that mirroring does not affect any
+    positioning that is defined by the \l Item \l {Item::}{x} coordinate value, so even with
+    mirroring enabled, it will often be necessary to apply some layout fixes to support the
+    desired layout direction. Also, it may be necessary to disable the mirroring of individual
+    child items (by setting \l {enabled}{LayoutMirroring.enabled} to false for such items) if
+    mirroring is not the desired behavior, or if the child item already implements mirroring in
+    some custom way.
+
+    See \l {QML Right-to-left User Interfaces} for further details on using \c LayoutMirroring and
+    other related features to implement right-to-left support for an application.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::LayoutMirroring::enabled
+
+    This property holds whether the item's layout is mirrored horizontally. Setting this to true
+    horizontally reverses \l {anchor-layout}{anchor} settings such that left anchors become right,
+    and right anchors become left. For \l{Using QML Positioner and Repeater Items}{positioner} elements
+    (such as \l Row and \l Grid) and view elements (such as \l {GridView}{GridView} and \l {ListView}{ListView})
+    this also mirrors the horizontal layout direction of the item.
+
+    The default value is false.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::LayoutMirroring::childrenInherit
+
+    This property holds whether the \l {enabled}{LayoutMirroring.enabled} value for this item
+    is inherited by its children.
+
+    The default value is false.
+*/
 
 
 QSGLayoutMirroringAttached::QSGLayoutMirroringAttached(QObject *parent) : QObject(parent), itemPrivate(0)
@@ -881,6 +1571,137 @@ void QSGItemPrivate::setLayoutMirror(bool mirror)
     }
 }
 
+/*!
+    \class QSGItem
+    \brief The QSGItem class provides the most basic of all visual items in QML.
+
+    All visual items in Qt Declarative inherit from QSGItem.  Although QSGItem
+    has no visual appearance, it defines all the properties that are
+    common across visual items - such as the x and y position, the
+    width and height, \l {anchor-layout}{anchoring} and key handling.
+
+    You can subclass QSGItem to provide your own custom visual item that inherits
+    these features. Note that, because it does not draw anything, QSGItem sets the
+    QGraphicsItem::ItemHasNoContents flag. If you subclass QSGItem to create a visual
+    item, you will need to unset this flag.
+
+*/
+
+/*!
+    \qmlclass Item QSGItem
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-visual-elements
+    \brief The Item is the most basic of all visual items in QML.
+
+    All visual items in Qt Declarative inherit from Item.  Although Item
+    has no visual appearance, it defines all the properties that are
+    common across visual items - such as the x and y position, the
+    width and height, \l {anchor-layout}{anchoring} and key handling.
+
+    Item is also useful for grouping items together.
+
+    \qml
+    Item {
+        Image {
+            source: "tile.png"
+        }
+        Image {
+            x: 80
+            width: 100
+            height: 100
+            source: "tile.png"
+        }
+        Image {
+            x: 190
+            width: 100
+            height: 100
+            fillMode: Image.Tile
+            source: "tile.png"
+        }
+    }
+    \endqml
+
+
+    \section1 Key Handling
+
+    Key handling is available to all Item-based visual elements via the \l {Keys}{Keys}
+    attached property.  The \e Keys attached property provides basic handlers such
+    as \l {Keys::onPressed}{onPressed} and \l {Keys::onReleased}{onReleased},
+    as well as handlers for specific keys, such as
+    \l {Keys::onCancelPressed}{onCancelPressed}.  The example below
+    assigns \l {qmlfocus}{focus} to the item and handles
+    the Left key via the general \e onPressed handler and the Select key via the
+    onSelectPressed handler:
+
+    \qml
+    Item {
+        focus: true
+        Keys.onPressed: {
+            if (event.key == Qt.Key_Left) {
+                console.log("move left");
+                event.accepted = true;
+            }
+        }
+        Keys.onSelectPressed: console.log("Selected");
+    }
+    \endqml
+
+    See the \l {Keys}{Keys} attached property for detailed documentation.
+
+    \section1 Layout Mirroring
+
+    Item layouts can be mirrored using the \l {LayoutMirroring}{LayoutMirroring} attached property.
+
+*/
+
+/*!
+    \fn void QSGItem::childrenRectChanged(const QRectF &)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::baselineOffsetChanged(qreal)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::stateChanged(const QString &state)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::parentChanged(QSGItem *)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::smoothChanged(bool)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::clipChanged(bool)
+    \internal
+*/
+
+/*! \fn void QSGItem::transformOriginChanged(TransformOrigin)
+  \internal
+*/
+
+/*!
+    \fn void QSGItem::focusChanged(bool)
+    \internal
+*/
+
+/*!
+    \fn void QSGItem::activeFocusChanged(bool)
+    \internal
+*/
+/*!
+    \fn QSGItem::QSGItem(QSGItem *parent)
+
+    Constructs a QSGItem with the given \a parent.
+*/
 QSGItem::QSGItem(QSGItem* parent)
 : QObject(*(new QSGItemPrivate), parent)
 {
@@ -888,6 +1709,8 @@ QSGItem::QSGItem(QSGItem* parent)
     d->init(parent);
 }
 
+/*! \internal
+*/
 QSGItem::QSGItem(QSGItemPrivate &dd, QSGItem *parent)
 : QObject(dd, parent)
 {
@@ -895,6 +1718,9 @@ QSGItem::QSGItem(QSGItemPrivate &dd, QSGItem *parent)
     d->init(parent);
 }
 
+/*!
+    Destroys the QSGItem.
+*/
 QSGItem::~QSGItem()
 {
     Q_D(QSGItem);
@@ -903,7 +1729,7 @@ QSGItem::~QSGItem()
     setParentItem(0);
     while (!d->childItems.isEmpty())
         d->childItems.first()->setParentItem(0);
-    
+
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         QSGAnchorsPrivate *anchor = d->changeListeners.at(ii).listener->anchorPrivate();
         if (anchor)
@@ -916,7 +1742,7 @@ QSGItem::~QSGItem()
         if (anchor && anchor->item && anchor->item->parent() != this) //child will be deleted anyway
             anchor->updateOnComplete();
     }
-    
+
     for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         const QSGItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
         if (change.types & QSGItemPrivate::Destroyed)
@@ -929,6 +1755,38 @@ QSGItem::~QSGItem()
     delete d->_contents; d->_contents = 0;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Item::transformOrigin
+    This property holds the origin point around which scale and rotation transform.
+
+    Nine transform origins are available, as shown in the image below.
+
+    \image declarative-transformorigin.png
+
+    This example rotates an image around its bottom-right corner.
+    \qml
+    Image {
+        source: "myimage.png"
+        transformOrigin: Item.BottomRight
+        rotation: 45
+    }
+    \endqml
+
+    The default transform origin is \c Item.Center.
+
+    To set an arbitrary transform origin point use the \l Scale or \l Rotation
+    transform elements.
+*/
+
+/*!
+    \qmlproperty Item QtQuick2::Item::parent
+    This property holds the parent of the item.
+*/
+
+/*!
+    \property QSGItem::parent
+    This property holds the parent of the item.
+*/
 void QSGItem::setParentItem(QSGItem *parentItem)
 {
     Q_D(QSGItem);
@@ -953,10 +1811,10 @@ void QSGItem::setParentItem(QSGItem *parentItem)
             scopeItem = oldParentItem;
             while (!scopeItem->isFocusScope()) scopeItem = scopeItem->parentItem();
             scopeFocusedItem = d->subFocusItem;
-        } 
+        }
 
-        if (scopeFocusedItem) 
-            QSGCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem, 
+        if (scopeFocusedItem)
+            QSGCanvasPrivate::get(d->canvas)->clearFocusInScope(scopeItem, scopeFocusedItem,
                                                                 QSGCanvasPrivate::DontChangeFocusProperty);
 
         op->removeChild(this);
@@ -975,7 +1833,7 @@ void QSGItem::setParentItem(QSGItem *parentItem)
     }
 
     d->dirty(QSGItemPrivate::ParentChanged);
-    
+
     if (d->parentItem)
         QSGItemPrivate::get(d->parentItem)->addChild(this);
 
@@ -992,7 +1850,7 @@ void QSGItem::setParentItem(QSGItem *parentItem)
             QSGItemPrivate::get(scopeFocusedItem)->focus = false;
             emit scopeFocusedItem->focusChanged(false);
         } else {
-            QSGCanvasPrivate::get(d->canvas)->setFocusInScope(scopeItem, scopeFocusedItem, 
+            QSGCanvasPrivate::get(d->canvas)->setFocusInScope(scopeItem, scopeFocusedItem,
                                                               QSGCanvasPrivate::DontChangeFocusProperty);
         }
     }
@@ -1016,7 +1874,7 @@ void QSGItem::stackBefore(const QSGItem *sibling)
 
     int myIndex = parentPrivate->childItems.indexOf(this);
     int siblingIndex = parentPrivate->childItems.indexOf(const_cast<QSGItem *>(sibling));
-    
+
     Q_ASSERT(myIndex != -1 && siblingIndex != -1);
 
     if (myIndex == siblingIndex - 1)
@@ -1030,7 +1888,7 @@ void QSGItem::stackBefore(const QSGItem *sibling)
 
     parentPrivate->dirty(QSGItemPrivate::ChildrenStackingChanged);
 
-    for (int ii = qMin(siblingIndex, myIndex); ii < parentPrivate->childItems.count(); ++ii) 
+    for (int ii = qMin(siblingIndex, myIndex); ii < parentPrivate->childItems.count(); ++ii)
         QSGItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
 }
 
@@ -1046,7 +1904,7 @@ void QSGItem::stackAfter(const QSGItem *sibling)
 
     int myIndex = parentPrivate->childItems.indexOf(this);
     int siblingIndex = parentPrivate->childItems.indexOf(const_cast<QSGItem *>(sibling));
-    
+
     Q_ASSERT(myIndex != -1 && siblingIndex != -1);
 
     if (myIndex == siblingIndex + 1)
@@ -1060,7 +1918,7 @@ void QSGItem::stackAfter(const QSGItem *sibling)
 
     parentPrivate->dirty(QSGItemPrivate::ChildrenStackingChanged);
 
-    for (int ii = qMin(myIndex, siblingIndex + 1); ii < parentPrivate->childItems.count(); ++ii) 
+    for (int ii = qMin(myIndex, siblingIndex + 1); ii < parentPrivate->childItems.count(); ++ii)
         QSGItemPrivate::get(parentPrivate->childItems.at(ii))->siblingOrderChanged();
 }
 
@@ -1078,8 +1936,8 @@ QSGEngine *QSGItem::sceneGraphEngine() const
     return canvas()->sceneGraphEngine();
 }
 
-QSGCanvas *QSGItem::canvas() const 
-{ 
+QSGCanvas *QSGItem::canvas() const
+{
     Q_D(const QSGItem);
     return d->canvas;
 }
@@ -1129,13 +1987,13 @@ void QSGItemPrivate::removeChild(QSGItem *child)
     emit q->childrenChanged();
 }
 
-void QSGItemPrivate::InitializationState::clear() 
-{ 
-    focusScope = 0; 
+void QSGItemPrivate::InitializationState::clear()
+{
+    focusScope = 0;
 }
 
-void QSGItemPrivate::InitializationState::clear(QSGItem *fs) 
-{ 
+void QSGItemPrivate::InitializationState::clear(QSGItem *fs)
+{
     focusScope = fs;
 }
 
@@ -1167,7 +2025,7 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
 
     canvas = c;
 
-    if (canvas && polishScheduled) 
+    if (canvas && polishScheduled)
         QSGCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
 
     if (canvas && hoverEnabled && !canvas->hasMouseTracking())
@@ -1254,6 +2112,55 @@ void QSGItemPrivate::itemToParentTransform(QTransform &t) const
     }
 }
 
+
+/*!
+    \qmlproperty real QtQuick2::Item::childrenRect.x
+    \qmlproperty real QtQuick2::Item::childrenRect.y
+    \qmlproperty real QtQuick2::Item::childrenRect.width
+    \qmlproperty real QtQuick2::Item::childrenRect.height
+
+    The childrenRect properties allow an item access to the geometry of its
+    children. This property is useful if you have an item that needs to be
+    sized to fit its children.
+*/
+
+
+/*!
+    \qmlproperty list<Item> QtQuick2::Item::children
+    \qmlproperty list<Object> QtQuick2::Item::resources
+
+    The children property contains the list of visual children of this item.
+    The resources property contains non-visual resources that you want to
+    reference by name.
+
+    Generally you can rely on Item's default property to handle all this for
+    you, but it can come in handy in some cases.
+
+    \qml
+    Item {
+        children: [
+            Text {},
+            Rectangle {}
+        ]
+        resources: [
+            Component {
+                id: myComponent
+                Text {}
+            }
+        ]
+    }
+    \endqml
+*/
+
+/*!
+    Returns true if construction of the QML component is complete; otherwise
+    returns false.
+
+    It is often desirable to delay some processing until the component is
+    completed.
+
+    \sa componentComplete()
+*/
 bool QSGItem::isComponentComplete() const
 {
     Q_D(const QSGItem);
@@ -1261,11 +2168,11 @@ bool QSGItem::isComponentComplete() const
 }
 
 QSGItemPrivate::QSGItemPrivate()
-: _anchors(0), _contents(0), baselineOffset(0), _anchorLines(0), _stateGroup(0), origin(QSGItem::Center), 
-    
-  flags(0), widthValid(false), heightValid(false), componentComplete(true), 
+: _anchors(0), _contents(0), baselineOffset(0), _anchorLines(0), _stateGroup(0), origin(QSGItem::Center),
+
+  flags(0), widthValid(false), heightValid(false), componentComplete(true),
   keepMouse(false), hoverEnabled(false), smooth(false), focus(false), activeFocus(false), notifiedFocus(false),
-  notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true), 
+  notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
   inheritMirrorFromParent(false), inheritMirrorFromItem(false), childrenDoNotOverlap(false),
@@ -1274,12 +2181,12 @@ QSGItemPrivate::QSGItemPrivate()
 
   subFocusItem(0),
 
-  x(0), y(0), width(0), height(0), implicitWidth(0), implicitHeight(0), 
+  x(0), y(0), width(0), height(0), implicitWidth(0), implicitHeight(0),
   z(0), scale(1), rotation(0), opacity(1),
 
   attachedLayoutDirection(0), acceptedMouseButtons(0),
   imHints(Qt::ImhNone),
-  
+
   keyHandler(0),
 
   dirtyAttributes(0), nextDirtyItem(0), prevDirtyItem(0),
@@ -1311,7 +2218,7 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
     // This test is measurably (albeit only slightly) faster than qobject_cast<>()
     const QMetaObject *mo = o->metaObject();
     while (mo && mo != &QSGItem::staticMetaObject) {
-        if (mo == &QGraphicsObject::staticMetaObject) 
+        if (mo == &QGraphicsObject::staticMetaObject)
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         mo = mo->d.superdata;
     }
@@ -1324,6 +2231,40 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
         o->setParent(that);
     }
 }
+
+/*!
+    \qmlproperty list<Object> QtQuick2::Item::data
+    \default
+
+    The data property allows you to freely mix visual children and resources
+    in an item.  If you assign a visual item to the data list it becomes
+    a child and if you assign any other object type, it is added as a resource.
+
+    So you can write:
+    \qml
+    Item {
+        Text {}
+        Rectangle {}
+        Timer {}
+    }
+    \endqml
+
+    instead of:
+    \qml
+    Item {
+        children: [
+            Text {},
+            Rectangle {}
+        ]
+        resources: [
+            Timer {}
+        ]
+    }
+    \endqml
+
+    data is a behind-the-scenes property: you should never need to explicitly
+    specify it.
+ */
 
 int QSGItemPrivate::data_count(QDeclarativeListProperty<QObject> *prop)
 {
@@ -1489,6 +2430,227 @@ void QSGItemPrivate::transform_clear(QDeclarativeListProperty<QSGTransform> *pro
     p->dirty(QSGItemPrivate::Transform);
 }
 
+/*!
+    \property QSGItem::childrenRect
+    \brief The geometry of an item's children.
+
+    This property holds the (collective) position and size of the item's children.
+*/
+
+/*!
+  \qmlproperty real QtQuick2::Item::x
+  \qmlproperty real QtQuick2::Item::y
+  \qmlproperty real QtQuick2::Item::width
+  \qmlproperty real QtQuick2::Item::height
+
+  Defines the item's position and size relative to its parent.
+
+  \qml
+  Item { x: 100; y: 100; width: 100; height: 100 }
+  \endqml
+ */
+
+/*!
+  \qmlproperty real QtQuick2::Item::z
+
+  Sets the stacking order of sibling items.  By default the stacking order is 0.
+
+  Items with a higher stacking value are drawn on top of siblings with a
+  lower stacking order.  Items with the same stacking value are drawn
+  bottom up in the order they appear.  Items with a negative stacking
+  value are drawn under their parent's content.
+
+  The following example shows the various effects of stacking order.
+
+  \table
+  \row
+  \o \image declarative-item_stacking1.png
+  \o Same \c z - later children above earlier children:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+      }
+      Rectangle {
+          color: "blue"
+          x: 50; y: 50; width: 100; height: 100
+      }
+  }
+  \endqml
+  \row
+  \o \image declarative-item_stacking2.png
+  \o Higher \c z on top:
+  \qml
+  Item {
+      Rectangle {
+          z: 1
+          color: "red"
+          width: 100; height: 100
+      }
+      Rectangle {
+          color: "blue"
+          x: 50; y: 50; width: 100; height: 100
+      }
+  }
+  \endqml
+  \row
+  \o \image declarative-item_stacking3.png
+  \o Same \c z - children above parents:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+          Rectangle {
+              color: "blue"
+              x: 50; y: 50; width: 100; height: 100
+          }
+      }
+  }
+  \endqml
+  \row
+  \o \image declarative-item_stacking4.png
+  \o Lower \c z below:
+  \qml
+  Item {
+      Rectangle {
+          color: "red"
+          width: 100; height: 100
+          Rectangle {
+              z: -1
+              color: "blue"
+              x: 50; y: 50; width: 100; height: 100
+          }
+      }
+  }
+  \endqml
+  \endtable
+ */
+
+/*!
+    \qmlproperty bool QtQuick2::Item::visible
+
+    This property holds whether the item is visible. By default this is true.
+
+    Setting this property directly affects the \c visible value of child
+    items. When set to \c false, the \c visible values of all child items also
+    become \c false. When set to \c true, the \c visible values of child items
+    are returned to \c true, unless they have explicitly been set to \c false.
+
+    (Because of this flow-on behavior, using the \c visible property may not
+    have the intended effect if a property binding should only respond to
+    explicit property changes. In such cases it may be better to use the
+    \l opacity property instead.)
+
+    Setting this property to \c false automatically causes \l focus to be set
+    to \c false, and this item will longer receive mouse and keyboard events.
+    (In contrast, setting the \l opacity to 0 does not affect the \l focus
+    property and the receiving of key events.)
+
+    \note This property's value is only affected by changes to this property or
+    the parent's \c visible property. It does not change, for example, if this
+    item moves off-screen, or if the \l opacity changes to 0.
+*/
+
+
+/*!
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.top
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.bottom
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.left
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.right
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.horizontalCenter
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.verticalCenter
+  \qmlproperty AnchorLine QtQuick2::Item::anchors.baseline
+
+  \qmlproperty Item QtQuick2::Item::anchors.fill
+  \qmlproperty Item QtQuick2::Item::anchors.centerIn
+
+  \qmlproperty real QtQuick2::Item::anchors.margins
+  \qmlproperty real QtQuick2::Item::anchors.topMargin
+  \qmlproperty real QtQuick2::Item::anchors.bottomMargin
+  \qmlproperty real QtQuick2::Item::anchors.leftMargin
+  \qmlproperty real QtQuick2::Item::anchors.rightMargin
+  \qmlproperty real QtQuick2::Item::anchors.horizontalCenterOffset
+  \qmlproperty real QtQuick2::Item::anchors.verticalCenterOffset
+  \qmlproperty real QtQuick2::Item::anchors.baselineOffset
+
+  \qmlproperty bool QtQuick2::Item::anchors.mirrored
+
+  Anchors provide a way to position an item by specifying its
+  relationship with other items.
+
+  Margins apply to top, bottom, left, right, and fill anchors.
+  The \c anchors.margins property can be used to set all of the various margins at once, to the same value.
+  Note that margins are anchor-specific and are not applied if an item does not
+  use anchors.
+
+  Offsets apply for horizontal center, vertical center, and baseline anchors.
+
+  \table
+  \row
+  \o \image declarative-anchors_example.png
+  \o Text anchored to Image, horizontally centered and vertically below, with a margin.
+  \qml
+  Item {
+      Image {
+          id: pic
+          // ...
+      }
+      Text {
+          id: label
+          anchors.horizontalCenter: pic.horizontalCenter
+          anchors.top: pic.bottom
+          anchors.topMargin: 5
+          // ...
+      }
+  }
+  \endqml
+  \row
+  \o \image declarative-anchors_example2.png
+  \o
+  Left of Text anchored to right of Image, with a margin. The y
+  property of both defaults to 0.
+
+  \qml
+  Item {
+      Image {
+          id: pic
+          // ...
+      }
+      Text {
+          id: label
+          anchors.left: pic.right
+          anchors.leftMargin: 5
+          // ...
+      }
+  }
+  \endqml
+  \endtable
+
+  \c anchors.fill provides a convenient way for one item to have the
+  same geometry as another item, and is equivalent to connecting all
+  four directional anchors.
+
+  To clear an anchor value, set it to \c undefined.
+
+  \c anchors.mirrored returns true it the layout has been \l {LayoutMirroring}{mirrored}.
+
+  \note You can only anchor an item to siblings or a parent.
+
+  For more information see \l {anchor-layout}{Anchor Layouts}.
+*/
+
+/*!
+  \property QSGItem::baselineOffset
+  \brief The position of the item's baseline in local coordinates.
+
+  The baseline of a \l Text item is the imaginary line on which the text
+  sits. Controls containing text usually set their baseline to the
+  baseline of their text.
+
+  For non-text items, a default baseline offset of 0 is used.
+*/
 QSGAnchors *QSGItemPrivate::anchors() const
 {
     if (!_anchors) {
@@ -1500,7 +2662,7 @@ QSGAnchors *QSGItemPrivate::anchors() const
     return _anchors;
 }
 
-QSGItemPrivate::AnchorLines *QSGItemPrivate::anchorLines() const 
+QSGItemPrivate::AnchorLines *QSGItemPrivate::anchorLines() const
 {
     Q_Q(const QSGItem);
     if (!_anchorLines) _anchorLines =
@@ -1559,6 +2721,12 @@ void QSGItem::setClip(bool c)
     emit clipChanged(c);
 }
 
+
+/*!
+  This function is called to handle this item's changes in
+  geometry from \a oldGeometry to \a newGeometry. If the two
+  geometries are the same, it doesn't do anything.
+ */
 void QSGItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QSGItem);
@@ -1881,7 +3049,7 @@ QTransform QSGItem::itemTransform(QSGItem *other, bool *ok) const
 {
     Q_D(const QSGItem);
 
-    // XXX todo - we need to be able to handle common parents better and detect 
+    // XXX todo - we need to be able to handle common parents better and detect
     // invalid cases
     if (ok) *ok = true;
 
@@ -1927,7 +3095,7 @@ void QSGItem::forceActiveFocus()
     while (parent) {
         if (parent->flags() & QSGItem::ItemIsFocusScope) {
             parent->setFocus(true);
-        } 
+        }
         parent = parent->parentItem();
     }
 }
@@ -1957,11 +3125,11 @@ QDeclarativeListProperty<QObject> QSGItemPrivate::resources()
 
 QDeclarativeListProperty<QSGItem> QSGItemPrivate::children()
 {
-    return QDeclarativeListProperty<QSGItem>(q_func(), 0, QSGItemPrivate::children_append, 
+    return QDeclarativeListProperty<QSGItem>(q_func(), 0, QSGItemPrivate::children_append,
                                              QSGItemPrivate::children_count,
                                              QSGItemPrivate::children_at,
                                              QSGItemPrivate::children_clear);
-                                     
+
 }
 
 QDeclarativeListProperty<QDeclarativeState> QSGItemPrivate::states()
@@ -2084,7 +3252,7 @@ void QSGItemPrivate::transformChanged()
 void QSGItemPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     Q_Q(QSGItem);
-    
+
     Q_ASSERT(e->isAccepted());
     if (keyHandler) {
         if (e->type() == QEvent::KeyPress)
@@ -2252,7 +3420,7 @@ QSGItem::TransformOrigin QSGItem::transformOrigin() const
 void QSGItem::setTransformOrigin(TransformOrigin origin)
 {
     Q_D(QSGItem);
-    if (origin == d->origin) 
+    if (origin == d->origin)
         return;
 
     d->origin = origin;
@@ -2282,19 +3450,146 @@ void QSGItem::setZ(qreal v)
     d->z = v;
 
     d->dirty(QSGItemPrivate::ZValue);
-    if (d->parentItem) 
+    if (d->parentItem)
         QSGItemPrivate::get(d->parentItem)->dirty(QSGItemPrivate::ChildrenStackingChanged);
 
     emit zChanged();
 }
 
-qreal QSGItem::rotation() const 
-{ 
+
+/*!
+  \qmlproperty real QtQuick2::Item::rotation
+  This property holds the rotation of the item in degrees clockwise.
+
+  This specifies how many degrees to rotate the item around its transformOrigin.
+  The default rotation is 0 degrees (i.e. not rotated at all).
+
+  \table
+  \row
+  \o \image declarative-rotation.png
+  \o
+  \qml
+  Rectangle {
+      color: "blue"
+      width: 100; height: 100
+      Rectangle {
+          color: "red"
+          x: 25; y: 25; width: 50; height: 50
+          rotation: 30
+      }
+  }
+  \endqml
+  \endtable
+
+  \sa transform, Rotation
+*/
+
+/*!
+  \qmlproperty real QtQuick2::Item::scale
+  This property holds the scale of the item.
+
+  A scale of less than 1 means the item will be displayed smaller than
+  normal, and a scale of greater than 1 means the item will be
+  displayed larger than normal.  A negative scale means the item will
+  be mirrored.
+
+  By default, items are displayed at a scale of 1 (i.e. at their
+  normal size).
+
+  Scaling is from the item's transformOrigin.
+
+  \table
+  \row
+  \o \image declarative-scale.png
+  \o
+  \qml
+  Rectangle {
+      color: "blue"
+      width: 100; height: 100
+      Rectangle {
+          color: "green"
+          width: 25; height: 25
+      }
+      Rectangle {
+          color: "red"
+          x: 25; y: 25; width: 50; height: 50
+          scale: 1.4
+      }
+  }
+  \endqml
+  \endtable
+
+  \sa transform, Scale
+*/
+
+/*!
+  \qmlproperty real QtQuick2::Item::opacity
+
+  This property holds the opacity of the item.  Opacity is specified as a
+  number between 0 (fully transparent) and 1 (fully opaque).  The default is 1.
+
+  When this property is set, the specified opacity is also applied
+  individually to child items.  In almost all cases this is what you want,
+  but in some cases it may produce undesired results. For example in the
+  second set of rectangles below, the red rectangle has specified an opacity
+  of 0.5, which affects the opacity of its blue child rectangle even though
+  the child has not specified an opacity.
+
+  \table
+  \row
+  \o \image declarative-item_opacity1.png
+  \o
+  \qml
+    Item {
+        Rectangle {
+            color: "red"
+            width: 100; height: 100
+            Rectangle {
+                color: "blue"
+                x: 50; y: 50; width: 100; height: 100
+            }
+        }
+    }
+  \endqml
+  \row
+  \o \image declarative-item_opacity2.png
+  \o
+  \qml
+    Item {
+        Rectangle {
+            opacity: 0.5
+            color: "red"
+            width: 100; height: 100
+            Rectangle {
+                color: "blue"
+                x: 50; y: 50; width: 100; height: 100
+            }
+        }
+    }
+  \endqml
+  \endtable
+
+  If an item's opacity is set to 0, the item will no longer receive mouse
+  events, but will continue to receive key events and will retain the keyboard
+  \l focus if it has been set. (In contrast, setting the \l visible property
+  to \c false stops both mouse and keyboard events, and also removes focus
+  from the item.)
+*/
+
+/*!
+  Returns a value indicating whether mouse input should
+  remain with this item exclusively.
+
+  \sa setKeepMouseGrab()
+ */
+
+qreal QSGItem::rotation() const
+{
     Q_D(const QSGItem);
     return d->rotation;
 }
 
-void QSGItem::setRotation(qreal r) 
+void QSGItem::setRotation(qreal r)
 {
     Q_D(QSGItem);
     if (d->rotation == r)
@@ -2309,13 +3604,13 @@ void QSGItem::setRotation(qreal r)
     emit rotationChanged();
 }
 
-qreal QSGItem::scale() const 
-{ 
+qreal QSGItem::scale() const
+{
     Q_D(const QSGItem);
     return d->scale;
 }
 
-void QSGItem::setScale(qreal s) 
+void QSGItem::setScale(qreal s)
 {
     Q_D(QSGItem);
     if (d->scale == s)
@@ -2341,7 +3636,7 @@ void QSGItem::setOpacity(qreal o)
         return;
 
     d->opacity = o;
-    
+
     d->dirty(QSGItemPrivate::OpacityValue);
 
     d->itemChange(ItemOpacityHasChanged, o);
@@ -2415,7 +3710,7 @@ void QSGItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
             q->ungrabMouse();
     }
 
-    for (int ii = 0; ii < childItems.count(); ++ii) 
+    for (int ii = 0; ii < childItems.count(); ++ii)
         QSGItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
     for(int ii = 0; ii < changeListeners.count(); ++ii) {
@@ -2459,7 +3754,7 @@ void QSGItemPrivate::setEffectiveEnableRecur(bool newEffectiveEnable)
             q->ungrabMouse();
     }
 
-    for (int ii = 0; ii < childItems.count(); ++ii) 
+    for (int ii = 0; ii < childItems.count(); ++ii)
         QSGItemPrivate::get(childItems.at(ii))->setEffectiveEnableRecur(newEffectiveEnable);
 
     emit q->enabledChanged();
@@ -2640,12 +3935,37 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
     }
 }
 
+/*!
+    \property QSGItem::smooth
+    \brief whether the item is smoothly transformed.
+
+    This property is provided purely for the purpose of optimization. Turning
+    smooth transforms off is faster, but looks worse; turning smooth
+    transformations on is slower, but looks better.
+
+    By default smooth transformations are off.
+*/
+
+/*!
+    Returns true if the item should be drawn with antialiasing and
+    smooth pixmap filtering, false otherwise.
+
+    The default is false.
+
+    \sa setSmooth()
+*/
 bool QSGItem::smooth() const
 {
     Q_D(const QSGItem);
     return d->smooth;
 }
 
+/*!
+    Sets whether the item should be drawn with antialiasing and
+    smooth pixmap filtering to \a smooth.
+
+    \sa smooth()
+*/
 void QSGItem::setSmooth(bool smooth)
 {
     Q_D(QSGItem);
@@ -2658,14 +3978,14 @@ void QSGItem::setSmooth(bool smooth)
     emit smoothChanged(smooth);
 }
 
-QSGItem::Flags QSGItem::flags() const 
-{ 
+QSGItem::Flags QSGItem::flags() const
+{
     Q_D(const QSGItem);
     return (QSGItem::Flags)d->flags;
 }
 
 void QSGItem::setFlag(Flag flag, bool enabled)
-{ 
+{
     Q_D(QSGItem);
     if (enabled)
         setFlags((Flags)(d->flags | (quint32)flag));
@@ -2673,8 +3993,8 @@ void QSGItem::setFlag(Flag flag, bool enabled)
         setFlags((Flags)(d->flags & ~(quint32)flag));
 }
 
-void QSGItem::setFlags(Flags flags) 
-{ 
+void QSGItem::setFlags(Flags flags)
+{
     Q_D(QSGItem);
 
     if ((flags & ItemIsFocusScope) != (d->flags & ItemIsFocusScope)) {
@@ -2684,10 +4004,10 @@ void QSGItem::setFlags(Flags flags)
         } else if (d->flags & ItemIsFocusScope) {
             qWarning("QSGItem: Cannot unset FocusScope flag.");
             flags |= ItemIsFocusScope;
-        } 
+        }
     }
 
-    if ((flags & ItemClipsChildrenToShape ) != (d->flags & ItemClipsChildrenToShape)) 
+    if ((flags & ItemClipsChildrenToShape ) != (d->flags & ItemClipsChildrenToShape))
         d->dirty(QSGItemPrivate::Clip);
 
     d->flags = flags;
@@ -2801,13 +4121,54 @@ qreal QSGItemPrivate::getImplicitWidth() const
 {
     return implicitWidth;
 }
-
+/*!
+    Returns the width of the item that is implied by other properties that determine the content.
+*/
 qreal QSGItem::implicitWidth() const
 {
     Q_D(const QSGItem);
     return d->getImplicitWidth();
 }
 
+/*!
+    \qmlproperty real QtQuick2::Item::implicitWidth
+    \qmlproperty real QtQuick2::Item::implicitHeight
+
+    Defines the natural width or height of the Item if no \l width or \l height is specified.
+
+    The default implicit size for most items is 0x0, however some elements have an inherent
+    implicit size which cannot be overridden, e.g. Image, Text.
+
+    Setting the implicit size is useful for defining components that have a preferred size
+    based on their content, for example:
+
+    \qml
+    // Label.qml
+    import QtQuick 1.1
+
+    Item {
+        property alias icon: image.source
+        property alias label: text.text
+        implicitWidth: text.implicitWidth + image.implicitWidth
+        implicitHeight: Math.max(text.implicitHeight, image.implicitHeight)
+        Image { id: image }
+        Text {
+            id: text
+            wrapMode: Text.Wrap
+            anchors.left: image.right; anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+    \endqml
+
+    \bold Note: using implicitWidth of Text or TextEdit and setting the width explicitly
+    incurs a performance penalty as the text must be laid out twice.
+*/
+
+/*!
+    Sets the implied width of the item to \a w.
+    This is the width implied by other properties that determine the content.
+*/
 void QSGItem::setImplicitWidth(qreal w)
 {
     Q_D(QSGItem);
@@ -2817,11 +4178,11 @@ void QSGItem::setImplicitWidth(qreal w)
         if (changed)
             d->implicitWidthChanged();
         return;
-    }   
+    }
 
     qreal oldWidth = d->width;
     d->width = w;
-    
+
     d->dirty(QSGItemPrivate::Size);
 
     geometryChanged(QRectF(x(), y(), width(), height()),
@@ -2831,6 +4192,9 @@ void QSGItem::setImplicitWidth(qreal w)
         d->implicitWidthChanged();
 }
 
+/*!
+    Returns whether the width property has been set explicitly.
+*/
 bool QSGItem::widthValid() const
 {
     Q_D(const QSGItem);
@@ -2880,12 +4244,20 @@ qreal QSGItemPrivate::getImplicitHeight() const
     return implicitHeight;
 }
 
+/*!
+    Returns the height of the item that is implied by other properties that determine the content.
+*/
 qreal QSGItem::implicitHeight() const
 {
     Q_D(const QSGItem);
     return d->getImplicitHeight();
 }
 
+
+/*!
+    Sets the implied height of the item to \a h.
+    This is the height implied by other properties that determine the content.
+*/
 void QSGItem::setImplicitHeight(qreal h)
 {
     Q_D(QSGItem);
@@ -2909,6 +4281,9 @@ void QSGItem::setImplicitHeight(qreal h)
         d->implicitHeightChanged();
 }
 
+/*!
+    Returns whether the height property has been set explicitly.
+*/
 bool QSGItem::heightValid() const
 {
     Q_D(const QSGItem);
@@ -2978,19 +4353,19 @@ QSGItem *QSGItem::scopedFocusItem() const
     Q_D(const QSGItem);
     if (!isFocusScope())
         return 0;
-    else 
+    else
         return d->subFocusItem;
 }
 
 
-Qt::MouseButtons QSGItem::acceptedMouseButtons() const 
-{ 
+Qt::MouseButtons QSGItem::acceptedMouseButtons() const
+{
     Q_D(const QSGItem);
     return d->acceptedMouseButtons;
 }
 
-void QSGItem::setAcceptedMouseButtons(Qt::MouseButtons buttons) 
-{ 
+void QSGItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
+{
     Q_D(QSGItem);
     d->acceptedMouseButtons = buttons;
 }
@@ -3001,13 +4376,13 @@ bool QSGItem::filtersChildMouseEvents() const
     return d->filtersChildMouseEvents;
 }
 
-void QSGItem::setFiltersChildMouseEvents(bool filter) 
-{ 
+void QSGItem::setFiltersChildMouseEvents(bool filter)
+{
     Q_D(QSGItem);
     d->filtersChildMouseEvents = filter;
 }
 
-bool QSGItem::isUnderMouse() const 
+bool QSGItem::isUnderMouse() const
 {
     Q_D(const QSGItem);
     if (!d->canvas)
@@ -3016,17 +4391,17 @@ bool QSGItem::isUnderMouse() const
     QPoint cursorPos = QCursor::pos();
     if (QRectF(0, 0, width(), height()).contains(mapFromScene(d->canvas->mapFromGlobal(cursorPos))))
         return true;
-    return false; 
+    return false;
 }
 
-bool QSGItem::acceptHoverEvents() const 
-{ 
+bool QSGItem::acceptHoverEvents() const
+{
     Q_D(const QSGItem);
     return d->hoverEnabled;
 }
 
-void QSGItem::setAcceptHoverEvents(bool enabled) 
-{ 
+void QSGItem::setAcceptHoverEvents(bool enabled)
+{
     Q_D(QSGItem);
     d->hoverEnabled = enabled;
 
@@ -3062,7 +4437,7 @@ void QSGItem::grabMouse()
         oldGrabber->mouseUngrabEvent();
 }
 
-void QSGItem::ungrabMouse() 
+void QSGItem::ungrabMouse()
 {
     Q_D(QSGItem);
     if (!d->canvas)
@@ -3083,22 +4458,60 @@ bool QSGItem::keepMouseGrab() const
     return d->keepMouse;
 }
 
+/*!
+  The flag indicating whether the mouse should remain
+  with this item is set to \a keep.
+
+  This is useful for items that wish to grab and keep mouse
+  interaction following a predefined gesture.  For example,
+  an item that is interested in horizontal mouse movement
+  may set keepMouseGrab to true once a threshold has been
+  exceeded.  Once keepMouseGrab has been set to true, filtering
+  items will not react to mouse events.
+
+  If the item does not indicate that it wishes to retain mouse grab,
+  a filtering item may steal the grab. For example, Flickable may attempt
+  to steal a mouse grab if it detects that the user has begun to
+  move the viewport.
+
+  \sa keepMouseGrab()
+ */
 void QSGItem::setKeepMouseGrab(bool keep)
 {
     Q_D(QSGItem);
     d->keepMouse = keep;
 }
 
-QPointF QSGItem::mapToItem(const QSGItem *item, const QPointF &point) const 
-{ 
+/*!
+    \qmlmethod object QtQuick2::Item::mapFromItem(Item item, real x, real y)
+
+    Maps the point (\a x, \a y), which is in \a item's coordinate system, to
+    this item's coordinate system, and returns an object with \c x and \c y
+    properties matching the mapped cooordinate.
+
+    If \a item is a \c null value, this maps the point from the coordinate
+    system of the root QML view.
+*/
+/*!
+    \qmlmethod object QtQuick2::Item::mapToItem(Item item, real x, real y)
+
+    Maps the point (\a x, \a y), which is in this item's coordinate system, to
+    \a item's coordinate system, and returns an object with \c x and \c y
+    properties matching the mapped cooordinate.
+
+    If \a item is a \c null value, this maps \a x and \a y to the coordinate
+    system of the root QML view.
+*/
+QPointF QSGItem::mapToItem(const QSGItem *item, const QPointF &point) const
+{
     QPointF p = mapToScene(point);
     if (item)
         p = item->mapFromScene(p);
     return p;
 }
 
-QPointF QSGItem::mapToScene(const QPointF &point) const 
-{ 
+QPointF QSGItem::mapToScene(const QPointF &point) const
+{
     Q_D(const QSGItem);
     return d->itemToCanvasTransform().map(point);
 }
@@ -3112,26 +4525,26 @@ QRectF QSGItem::mapRectToItem(const QSGItem *item, const QRectF &rect) const
     return t.mapRect(rect);
 }
 
-QRectF QSGItem::mapRectToScene(const QRectF &rect) const 
-{ 
+QRectF QSGItem::mapRectToScene(const QRectF &rect) const
+{
     Q_D(const QSGItem);
     return d->itemToCanvasTransform().mapRect(rect);
 }
 
-QPointF QSGItem::mapFromItem(const QSGItem *item, const QPointF &point) const 
-{ 
+QPointF QSGItem::mapFromItem(const QSGItem *item, const QPointF &point) const
+{
     QPointF p = item?item->mapToScene(point):point;
     return mapFromScene(p);
 }
 
-QPointF QSGItem::mapFromScene(const QPointF &point) const 
-{ 
+QPointF QSGItem::mapFromScene(const QPointF &point) const
+{
     Q_D(const QSGItem);
     return d->canvasToItemTransform().map(point);
 }
 
-QRectF QSGItem::mapRectFromItem(const QSGItem *item, const QRectF &rect) const 
-{ 
+QRectF QSGItem::mapRectFromItem(const QSGItem *item, const QRectF &rect) const
+{
     Q_D(const QSGItem);
     QTransform t = item?QSGItemPrivate::get(item)->itemToCanvasTransform():QTransform();
     t *= d->canvasToItemTransform();
@@ -3143,6 +4556,318 @@ QRectF QSGItem::mapRectFromScene(const QRectF &rect) const
     Q_D(const QSGItem);
     return d->canvasToItemTransform().mapRect(rect);
 }
+
+
+/*!
+    \qmlmethod QtQuick2::Item::forceActiveFocus()
+
+    Forces active focus on the item.
+
+    This method sets focus on the item and makes sure that all the focus scopes
+    higher in the object hierarchy are also given the focus.
+*/
+
+/*!
+    Forces active focus on the item.
+
+    This method sets focus on the item and makes sure that all the focus scopes
+    higher in the object hierarchy are also given the focus.
+*/
+
+/*!
+  \qmlmethod QtQuick2::Item::childAt(real x, real y)
+
+  Returns the visible child item at point (\a x, \a y), which is in this
+  item's coordinate system, or \c null if there is no such item.
+*/
+
+/*!
+  Returns the visible child item at point (\a x, \a y), which is in this
+  item's coordinate system, or 0 if there is no such item.
+*/
+
+/*!
+  \qmlproperty list<State> QtQuick2::Item::states
+  This property holds a list of states defined by the item.
+
+  \qml
+  Item {
+      states: [
+          State {
+              // ...
+          },
+          State {
+              // ...
+          }
+          // ...
+      ]
+  }
+  \endqml
+
+  \sa {qmlstate}{States}
+*/
+/*!
+  \qmlproperty list<Transition> QtQuick2::Item::transitions
+  This property holds a list of transitions defined by the item.
+
+  \qml
+  Item {
+      transitions: [
+          Transition {
+              // ...
+          },
+          Transition {
+              // ...
+          }
+          // ...
+      ]
+  }
+  \endqml
+
+  \sa {QML Animation and Transitions}{Transitions}
+*/
+/*
+  \qmlproperty list<Filter> QtQuick2::Item::filter
+  This property holds a list of graphical filters to be applied to the item.
+
+  \l {Filter}{Filters} include things like \l {Blur}{blurring}
+  the item, or giving it a \l Reflection.  Some
+  filters may not be available on all canvases; if a filter is not
+  available on a certain canvas, it will simply not be applied for
+  that canvas (but the QML will still be considered valid).
+
+  \qml
+  Item {
+      filter: [
+          Blur {
+              // ...
+          },
+          Reflection {
+              // ...
+          }
+          // ...
+      ]
+  }
+  \endqml
+*/
+
+/*!
+  \qmlproperty bool QtQuick2::Item::clip
+  This property holds whether clipping is enabled. The default clip value is \c false.
+
+  If clipping is enabled, an item will clip its own painting, as well
+  as the painting of its children, to its bounding rectangle.
+
+  Non-rectangular clipping regions are not supported for performance reasons.
+*/
+
+/*!
+  \property QSGItem::clip
+  This property holds whether clipping is enabled. The default clip value is \c false.
+
+  If clipping is enabled, an item will clip its own painting, as well
+  as the painting of its children, to its bounding rectangle. If you set
+  clipping during an item's paint operation, remember to re-set it to
+  prevent clipping the rest of your scene.
+
+  Non-rectangular clipping regions are not supported for performance reasons.
+*/
+
+/*!
+  \qmlproperty string QtQuick2::Item::state
+
+  This property holds the name of the current state of the item.
+
+  This property is often used in scripts to change between states. For
+  example:
+
+  \js
+  function toggle() {
+      if (button.state == 'On')
+          button.state = 'Off';
+      else
+          button.state = 'On';
+  }
+  \endjs
+
+  If the item is in its base state (i.e. no explicit state has been
+  set), \c state will be a blank string. Likewise, you can return an
+  item to its base state by setting its current state to \c ''.
+
+  \sa {qmlstates}{States}
+*/
+
+/*!
+  \qmlproperty list<Transform> QtQuick2::Item::transform
+  This property holds the list of transformations to apply.
+
+  For more information see \l Transform.
+*/
+
+/*!
+    \enum QSGItem::TransformOrigin
+
+    Controls the point about which simple transforms like scale apply.
+
+    \value TopLeft The top-left corner of the item.
+    \value Top The center point of the top of the item.
+    \value TopRight The top-right corner of the item.
+    \value Left The left most point of the vertical middle.
+    \value Center The center of the item.
+    \value Right The right most point of the vertical middle.
+    \value BottomLeft The bottom-left corner of the item.
+    \value Bottom The center point of the bottom of the item.
+    \value BottomRight The bottom-right corner of the item.
+*/
+
+
+/*!
+  \qmlproperty bool QtQuick2::Item::activeFocus
+
+  This property indicates whether the item has active focus.
+
+  An item with active focus will receive keyboard input,
+  or is a FocusScope ancestor of the item that will receive keyboard input.
+
+  Usually, activeFocus is gained by setting focus on an item and its enclosing
+  FocusScopes. In the following example \c input will have activeFocus.
+  \qml
+  Rectangle {
+      FocusScope {
+          focus: true
+          TextInput {
+              id: input
+              focus: true
+          }
+      }
+  }
+  \endqml
+
+  \sa focus, {qmlfocus}{Keyboard Focus}
+*/
+
+/*!
+  \qmlproperty bool QtQuick2::Item::focus
+  This property indicates whether the item has focus within the enclosing focus scope. If true, this item
+  will gain active focus when the enclosing focus scope gains active focus.
+  In the following example, \c input will be given active focus when \c scope gains active focus.
+  \qml
+  Rectangle {
+      FocusScope {
+          id: scope
+          TextInput {
+              id: input
+              focus: true
+          }
+      }
+  }
+  \endqml
+
+  For the purposes of this property, the scene as a whole is assumed to act like a focus scope.
+  On a practical level, that means the following QML will give active focus to \c input on startup.
+
+  \qml
+  Rectangle {
+      TextInput {
+          id: input
+          focus: true
+      }
+  }
+  \endqml
+
+  \sa activeFocus, {qmlfocus}{Keyboard Focus}
+*/
+
+
+/*!
+  \property QSGItem::anchors
+  \internal
+*/
+
+/*!
+  \property QSGItem::left
+  \internal
+*/
+
+/*!
+  \property QSGItem::right
+  \internal
+*/
+
+/*!
+  \property QSGItem::horizontalCenter
+  \internal
+*/
+
+/*!
+  \property QSGItem::top
+  \internal
+*/
+
+/*!
+  \property QSGItem::bottom
+  \internal
+*/
+
+/*!
+  \property QSGItem::verticalCenter
+  \internal
+*/
+
+/*!
+  \property QSGItem::focus
+  \internal
+*/
+
+/*!
+  \property QSGItem::transform
+  \internal
+*/
+
+/*!
+  \property QSGItem::transformOrigin
+  \internal
+*/
+
+/*!
+  \property QSGItem::activeFocus
+  \internal
+*/
+
+/*!
+  \property QSGItem::baseline
+  \internal
+*/
+
+/*!
+  \property QSGItem::data
+  \internal
+*/
+
+/*!
+  \property QSGItem::resources
+  \internal
+*/
+
+/*!
+  \property QSGItem::state
+  \internal
+*/
+
+/*!
+  \property QSGItem::states
+  \internal
+*/
+
+/*!
+  \property QSGItem::transformOriginPoint
+  \internal
+*/
+
+/*!
+  \property QSGItem::transitions
+  \internal
+*/
 
 bool QSGItem::event(QEvent *ev)
 {

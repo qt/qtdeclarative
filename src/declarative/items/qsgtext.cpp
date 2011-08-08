@@ -694,6 +694,49 @@ QPixmap QSGTextPrivate::drawOutline(const QPixmap &source, const QPixmap &styleS
     return img;
 }
 
+/*!
+    \qmlclass Text QSGText
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-visual-elements
+    \brief The Text item allows you to add formatted text to a scene.
+    \inherits Item
+
+    Text items can display both plain and rich text. For example, red text with
+    a specific font and size can be defined like this:
+
+    \qml
+    Text {
+        text: "Hello World!"
+        font.family: "Helvetica"
+        font.pointSize: 24
+        color: "red"
+    }
+    \endqml
+
+    Rich text is defined using HTML-style markup:
+
+    \qml
+    Text {
+        text: "<b>Hello</b> <i>World!</i>"
+    }
+    \endqml
+
+    \image declarative-text.png
+
+    If height and width are not explicitly set, Text will attempt to determine how
+    much room is needed and set it accordingly. Unless \l wrapMode is set, it will always
+    prefer width to height (all text will be placed on a single line).
+
+    The \l elide property can alternatively be used to fit a single line of
+    plain text to a set width.
+
+    Note that the \l{Supported HTML Subset} is limited. Also, if the text contains
+    HTML img tags that load remote images, the text is reloaded.
+
+    Text provides read-only text. For editable text, see \l TextEdit.
+
+    \sa {declarative/text/fonts}{Fonts example}
+*/
 QSGText::QSGText(QSGItem *parent)
 : QSGImplicitSizeItem(*(new QSGTextPrivate), parent)
 {
@@ -705,6 +748,149 @@ QSGText::~QSGText()
 {
 }
 
+/*!
+  \qmlproperty bool QtQuick2::Text::clip
+  This property holds whether the text is clipped.
+
+  Note that if the text does not fit in the bounding rectangle it will be abruptly chopped.
+
+  If you want to display potentially long text in a limited space, you probably want to use \c elide instead.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Text::smooth
+
+    This property holds whether the text is smoothly scaled or transformed.
+
+    Smooth filtering gives better visual quality, but is slower.  If
+    the item is displayed at its natural size, this property has no visual or
+    performance effect.
+
+    \note Generally scaling artifacts are only visible if the item is stationary on
+    the screen.  A common pattern when animating an item is to disable smooth
+    filtering at the beginning of the animation and reenable it at the conclusion.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Text::onLinkActivated(string link)
+
+    This handler is called when the user clicks on a link embedded in the text.
+    The link must be in rich text or HTML format and the
+    \a link string provides access to the particular link.
+
+    \snippet doc/src/snippets/declarative/text/onLinkActivated.qml 0
+
+    The example code will display the text
+    "The main website is at \l{http://qt.nokia.com}{Nokia Qt DF}."
+
+    Clicking on the highlighted link will output
+    \tt{http://qt.nokia.com link activated} to the console.
+*/
+
+/*!
+    \qmlproperty string QtQuick2::Text::font.family
+
+    Sets the family name of the font.
+
+    The family name is case insensitive and may optionally include a foundry name, e.g. "Helvetica [Cronyx]".
+    If the family is available from more than one foundry and the foundry isn't specified, an arbitrary foundry is chosen.
+    If the family isn't available a family will be set using the font matching algorithm.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Text::font.bold
+
+    Sets whether the font weight is bold.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick2::Text::font.weight
+
+    Sets the font's weight.
+
+    The weight can be one of:
+    \list
+    \o Font.Light
+    \o Font.Normal - the default
+    \o Font.DemiBold
+    \o Font.Bold
+    \o Font.Black
+    \endlist
+
+    \qml
+    Text { text: "Hello"; font.weight: Font.DemiBold }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Text::font.italic
+
+    Sets whether the font has an italic style.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Text::font.underline
+
+    Sets whether the text is underlined.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::Text::font.strikeout
+
+    Sets whether the font has a strikeout style.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Text::font.pointSize
+
+    Sets the font size in points. The point size must be greater than zero.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::Text::font.pixelSize
+
+    Sets the font size in pixels.
+
+    Using this function makes the font device dependent.
+    Use \c pointSize to set the size of the font in a device independent manner.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Text::font.letterSpacing
+
+    Sets the letter spacing for the font.
+
+    Letter spacing changes the default spacing between individual letters in the font.
+    A positive value increases the letter spacing by the corresponding pixels; a negative value decreases the spacing.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Text::font.wordSpacing
+
+    Sets the word spacing for the font.
+
+    Word spacing changes the default spacing between individual words.
+    A positive value increases the word spacing by a corresponding amount of pixels,
+    while a negative value decreases the inter-word spacing accordingly.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick2::Text::font.capitalization
+
+    Sets the capitalization for the text.
+
+    \list
+    \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
+    \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
+    \o Font.AllLowercase	 - This alters the text to be rendered in all lowercase type.
+    \o Font.SmallCaps -	This alters the text to be rendered in small-caps type.
+    \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
+    \endlist
+
+    \qml
+    Text { text: "Hello"; font.capitalization: Font.AllLowercase }
+    \endqml
+*/
 QFont QSGText::font() const
 {
     Q_D(const QSGText);
@@ -735,6 +921,14 @@ void QSGText::setFont(const QFont &font)
     emit fontChanged(d->sourceFont);
 }
 
+/*!
+    \qmlproperty string QtQuick2::Text::text
+
+    The text to display. Text supports both plain and rich text strings.
+
+    The item will try to automatically determine whether the text should
+    be treated as rich text. This determination is made using Qt::mightBeRichText().
+*/
 QString QSGText::text() const
 {
     Q_D(const QSGText);
@@ -764,6 +958,27 @@ void QSGText::setText(const QString &n)
     emit textChanged(d->text);
 }
 
+/*!
+    \qmlproperty color QtQuick2::Text::color
+
+    The text color.
+
+    An example of green text defined using hexadecimal notation:
+    \qml
+    Text {
+        color: "#00FF00"
+        text: "green text"
+    }
+    \endqml
+
+    An example of steel blue text defined using an SVG color name:
+    \qml
+    Text {
+        color: "steelblue"
+        text: "blue text"
+    }
+    \endqml
+*/
 QColor QSGText::color() const
 {
     Q_D(const QSGText);
@@ -780,7 +995,30 @@ void QSGText::setColor(const QColor &color)
     d->invalidateImageCache();
     emit colorChanged(d->color);
 }
+/*!
+    \qmlproperty enumeration QtQuick2::Text::style
 
+    Set an additional text style.
+
+    Supported text styles are:
+    \list
+    \o Text.Normal - the default
+    \o Text.Outline
+    \o Text.Raised
+    \o Text.Sunken
+    \endlist
+
+    \qml
+    Row {
+        Text { font.pointSize: 24; text: "Normal" }
+        Text { font.pointSize: 24; text: "Raised"; style: Text.Raised; styleColor: "#AAAAAA" }
+        Text { font.pointSize: 24; text: "Outline";style: Text.Outline; styleColor: "red" }
+        Text { font.pointSize: 24; text: "Sunken"; style: Text.Sunken; styleColor: "#AAAAAA" }
+    }
+    \endqml
+
+    \image declarative-textstyle.png
+*/
 QSGText::TextStyle QSGText::style() const
 {
     Q_D(const QSGText);
@@ -801,6 +1039,21 @@ void QSGText::setStyle(QSGText::TextStyle style)
     emit styleChanged(d->style);
 }
 
+/*!
+    \qmlproperty color QtQuick2::Text::styleColor
+
+    Defines the secondary color used by text styles.
+
+    \c styleColor is used as the outline color for outlined text, and as the
+    shadow color for raised or sunken text. If no style has been set, it is not
+    used at all.
+
+    \qml
+    Text { font.pointSize: 18; text: "hello"; style: Text.Raised; styleColor: "gray" }
+    \endqml
+
+    \sa style
+ */
 QColor QSGText::styleColor() const
 {
     Q_D(const QSGText);
@@ -818,6 +1071,30 @@ void QSGText::setStyleColor(const QColor &color)
     emit styleColorChanged(d->styleColor);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::horizontalAlignment
+    \qmlproperty enumeration QtQuick2::Text::verticalAlignment
+    \qmlproperty enumeration QtQuick2::Text::effectiveHorizontalAlignment
+
+    Sets the horizontal and vertical alignment of the text within the Text items
+    width and height. By default, the text is vertically aligned to the top. Horizontal
+    alignment follows the natural alignment of the text, for example text that is read
+    from left to right will be aligned to the left.
+
+    The valid values for \c horizontalAlignment are \c Text.AlignLeft, \c Text.AlignRight, \c Text.AlignHCenter and
+    \c Text.AlignJustify.  The valid values for \c verticalAlignment are \c Text.AlignTop, \c Text.AlignBottom
+    and \c Text.AlignVCenter.
+
+    Note that for a single line of text, the size of the text is the area of the text. In this common case,
+    all alignments are equivalent. If you want the text to be, say, centered in its parent, then you will
+    need to either modify the Item::anchors, or set horizontalAlignment to Text.AlignHCenter and bind the width to
+    that of the parent.
+
+    When using the attached property LayoutMirroring::enabled to mirror application
+    layouts, the horizontal alignment of text will also be mirrored. However, the property
+    \c horizontalAlignment will remain unchanged. To query the effective horizontal alignment
+    of Text, use the read-only property \c effectiveHorizontalAlignment.
+*/
 QSGText::HAlignment QSGText::hAlign() const
 {
     Q_D(const QSGText);
@@ -917,6 +1194,19 @@ void QSGText::setVAlign(VAlignment align)
     emit verticalAlignmentChanged(align);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::wrapMode
+
+    Set this property to wrap the text to the Text item's width.  The text will only
+    wrap if an explicit width has been set.  wrapMode can be one of:
+
+    \list
+    \o Text.NoWrap (default) - no wrapping will be performed. If the text contains insufficient newlines, then \l paintedWidth will exceed a set width.
+    \o Text.WordWrap - wrapping is done on word boundaries only. If a word is too long, \l paintedWidth will exceed a set width.
+    \o Text.WrapAnywhere - wrapping is done at any point on a line, even if it occurs in the middle of a word.
+    \o Text.Wrap - if possible, wrapping occurs at a word boundary; otherwise it will occur at the appropriate point on the line, even in the middle of a word.
+    \endlist
+*/
 QSGText::WrapMode QSGText::wrapMode() const
 {
     Q_D(const QSGText);
@@ -935,18 +1225,48 @@ void QSGText::setWrapMode(WrapMode mode)
     emit wrapModeChanged();
 }
 
+/*!
+    \qmlproperty int QtQuick2::Text::lineCount
+
+    Returns the number of lines visible in the text item.
+
+    This property is not supported for rich text.
+
+    \sa maximumLineCount
+*/
 int QSGText::lineCount() const
 {
     Q_D(const QSGText);
     return d->lineCount;
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Text::truncated
+
+    Returns true if the text has been truncated due to \l maximumLineCount
+    or \l elide.
+
+    This property is not supported for rich text.
+
+    \sa maximumLineCount, elide
+*/
 bool QSGText::truncated() const
 {
     Q_D(const QSGText);
     return d->truncated;
 }
 
+/*!
+    \qmlproperty int QtQuick2::Text::maximumLineCount
+
+    Set this property to limit the number of lines that the text item will show.
+    If elide is set to Text.ElideRight, the text will be elided appropriately.
+    By default, this is the value of the largest possible integer.
+
+    This property is not supported for rich text.
+
+    \sa lineCount, elide
+*/
 int QSGText::maximumLineCount() const
 {
     Q_D(const QSGText);
@@ -976,6 +1296,61 @@ void QSGText::resetMaximumLineCount()
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::textFormat
+
+    The way the text property should be displayed.
+
+    Supported text formats are:
+
+    \list
+    \o Text.AutoText (default)
+    \o Text.PlainText
+    \o Text.RichText
+    \o Text.StyledText
+    \endlist
+
+    If the text format is \c Text.AutoText the text element
+    will automatically determine whether the text should be treated as
+    rich text.  This determination is made using Qt::mightBeRichText().
+
+    Text.StyledText is an optimized format supporting some basic text
+    styling markup, in the style of html 3.2:
+
+    \code
+    <font size="4" color="#ff0000">font size and color</font>
+    <b>bold</b>
+    <i>italic</i>
+    <br>
+    &gt; &lt; &amp;
+    \endcode
+
+    \c Text.StyledText parser is strict, requiring tags to be correctly nested.
+
+    \table
+    \row
+    \o
+    \qml
+Column {
+    Text {
+        font.pointSize: 24
+        text: "<b>Hello</b> <i>World!</i>"
+    }
+    Text {
+        font.pointSize: 24
+        textFormat: Text.RichText
+        text: "<b>Hello</b> <i>World!</i>"
+    }
+    Text {
+        font.pointSize: 24
+        textFormat: Text.PlainText
+        text: "<b>Hello</b> <i>World!</i>"
+    }
+}
+    \endqml
+    \o \image declarative-textformat.png
+    \endtable
+*/
 QSGText::TextFormat QSGText::textFormat() const
 {
     Q_D(const QSGText);
@@ -1002,6 +1377,31 @@ void QSGText::setTextFormat(TextFormat format)
     emit textFormatChanged(d->format);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::elide
+
+    Set this property to elide parts of the text fit to the Text item's width.
+    The text will only elide if an explicit width has been set.
+
+    This property cannot be used with rich text.
+
+    Eliding can be:
+    \list
+    \o Text.ElideNone  - the default
+    \o Text.ElideLeft
+    \o Text.ElideMiddle
+    \o Text.ElideRight
+    \endlist
+
+    If this property is set to Text.ElideRight, it can be used with multiline
+    text. The text will only elide if maximumLineCount has been set.
+
+    If the text is a multi-length string, and the mode is not \c Text.ElideNone,
+    the first string that fits will be used, otherwise the last will be elided.
+
+    Multi-length strings are ordered from longest to shortest, separated by the
+    Unicode "String Terminator" character \c U009C (write this in QML with \c{"\u009C"} or \c{"\x9C"}).
+*/
 QSGText::TextElideMode QSGText::elideMode() const
 {
     Q_D(const QSGText);
@@ -1156,18 +1556,39 @@ bool QSGText::event(QEvent *e)
     }
 }
 
+/*!
+    \qmlproperty real QtQuick2::Text::paintedWidth
+
+    Returns the width of the text, including width past the width
+    which is covered due to insufficient wrapping if WrapMode is set.
+*/
 qreal QSGText::paintedWidth() const
 {
     Q_D(const QSGText);
     return d->paintedSize.width();
 }
 
+/*!
+    \qmlproperty real QtQuick2::Text::paintedHeight
+
+    Returns the height of the text, including height past the height
+    which is covered due to there being more text than fits in the set height.
+*/
 qreal QSGText::paintedHeight() const
 {
     Q_D(const QSGText);
     return d->paintedSize.height();
 }
 
+/*!
+    \qmlproperty real QtQuick2::Text::lineHeight
+
+    Sets the line height for the text.
+    The value can be in pixels or a multiplier depending on lineHeightMode.
+
+    The default value is a multiplier of 1.0.
+    The line height must be a positive value.
+*/
 qreal QSGText::lineHeight() const
 {
     Q_D(const QSGText);
@@ -1186,6 +1607,18 @@ void QSGText::setLineHeight(qreal lineHeight)
     emit lineHeightChanged(lineHeight);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Text::lineHeightMode
+
+    This property determines how the line height is specified.
+    The possible values are:
+
+    \list
+    \o Text.ProportionalHeight (default) - this sets the spacing proportional to the
+       line (as a multiplier). For example, set to 2 for double spacing.
+    \o Text.FixedHeight - this sets the line height to a fixed line height (in pixels).
+    \endlist
+*/
 QSGText::LineHeightMode QSGText::lineHeightMode() const
 {
     Q_D(const QSGText);

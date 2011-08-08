@@ -56,15 +56,29 @@ public:
     qreal y;
 };
 
+/*!
+    Constructs an empty QSGTranslate object with the given \a parent.
+*/
 QSGTranslate::QSGTranslate(QObject *parent)
 : QSGTransform(*new QSGTranslatePrivate, parent)
 {
 }
 
+/*!
+    Destroys the graphics scale.
+*/
 QSGTranslate::~QSGTranslate()
 {
 }
 
+/*!
+    \property QSGTranslate::x
+    \brief the horizontal translation.
+
+    The translation can be any real number; the default value is 0.0.
+
+    \sa y
+*/
 qreal QSGTranslate::x() const
 {
     Q_D(const QSGTranslate);
@@ -81,6 +95,14 @@ void QSGTranslate::setX(qreal x)
     emit xChanged();
 }
 
+/*!
+    \property QSGTranslate::y
+    \brief the vertical translation.
+
+    The translation can be any real number; the default value is 0.0.
+
+    \sa x
+*/
 qreal QSGTranslate::y() const
 {
     Q_D(const QSGTranslate);

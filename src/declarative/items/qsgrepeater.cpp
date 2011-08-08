@@ -60,6 +60,90 @@ QSGRepeaterPrivate::~QSGRepeaterPrivate()
         delete model;
 }
 
+/*!
+    \qmlclass Repeater QSGRepeater
+    \inqmlmodule QtQuick 2
+    \ingroup qml-utility-elements
+    \inherits Item
+
+    \brief The Repeater element allows you to repeat an Item-based component using a model.
+
+    The Repeater element is used to create a large number of
+    similar items. Like other view elements, a Repeater has a \l model and a \l delegate:
+    for each entry in the model, the delegate is instantiated
+    in a context seeded with data from the model. A Repeater item is usually
+    enclosed in a positioner element such as \l Row or \l Column to visually
+    position the multiple delegate items created by the Repeater.
+
+    The following Repeater creates three instances of a \l Rectangle item within
+    a \l Row:
+
+    \snippet doc/src/snippets/declarative/repeaters/repeater.qml import
+    \codeline
+    \snippet doc/src/snippets/declarative/repeaters/repeater.qml simple
+
+    \image repeater-simple.png
+
+    A Repeater's \l model can be any of the supported \l {qmlmodels}{data models}.
+    Additionally, like delegates for other views, a Repeater delegate can access
+    its index within the repeater, as well as the model data relevant to the
+    delegate. See the \l delegate property documentation for details.
+
+    Items instantiated by the Repeater are inserted, in order, as
+    children of the Repeater's parent.  The insertion starts immediately after
+    the repeater's position in its parent stacking list.  This allows
+    a Repeater to be used inside a layout. For example, the following Repeater's
+    items are stacked between a red rectangle and a blue rectangle:
+
+    \snippet doc/src/snippets/declarative/repeaters/repeater.qml layout
+
+    \image repeater.png
+
+
+    \note A Repeater item owns all items it instantiates. Removing or dynamically destroying
+    an item created by a Repeater results in unpredictable behavior.
+
+
+    \section2 Considerations when using Repeater
+
+    The Repeater element creates all of its delegate items when the repeater is first
+    created. This can be inefficient if there are a large number of delegate items and
+    not all of the items are required to be visible at the same time. If this is the case,
+    consider using other view elements like ListView (which only creates delegate items
+    when they are scrolled into view) or use the \l {Dynamic Object Creation} methods to
+    create items as they are required.
+
+    Also, note that Repeater is \l {Item}-based, and can only repeat \l {Item}-derived objects.
+    For example, it cannot be used to repeat QtObjects:
+    \badcode
+    Item {
+        //XXX does not work! Can't repeat QtObject as it doesn't derive from Item.
+        Repeater {
+            model: 10
+            QtObject {}
+        }
+    }
+    \endcode
+ */
+
+/*!
+    \qmlsignal QtQuick2::Repeater::onItemAdded(int index, Item item)
+
+    This handler is called when an item is added to the repeater. The \a index
+    parameter holds the index at which the item has been inserted within the
+    repeater, and the \a item parameter holds the \l Item that has been added.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Repeater::onItemRemoved(int index, Item item)
+
+    This handler is called when an item is removed from the repeater. The \a index
+    parameter holds the index at which the item was removed from the repeater,
+    and the \a item parameter holds the \l Item that was removed.
+
+    Do not keep a reference to \a item if it was created by this repeater, as
+    in these cases it will be deleted shortly after the handler is called.
+*/
 QSGRepeater::QSGRepeater(QSGItem *parent)
   : QSGItem(*(new QSGRepeaterPrivate), parent)
 {
@@ -69,6 +153,24 @@ QSGRepeater::~QSGRepeater()
 {
 }
 
+/*!
+    \qmlproperty any QtQuick2::Repeater::model
+
+    The model providing data for the repeater.
+
+    This property can be set to any of the supported \l {qmlmodels}{data models}:
+
+    \list
+    \o A number that indicates the number of delegates to be created by the repeater
+    \o A model (e.g. a ListModel item, or a QAbstractItemModel subclass)
+    \o A string list
+    \o An object list
+    \endlist
+
+    The type of model affects the properties that are exposed to the \l delegate.
+
+    \sa {qmlmodels}{Data Models}
+*/
 QVariant QSGRepeater::model() const
 {
     Q_D(const QSGRepeater);
@@ -124,6 +226,39 @@ void QSGRepeater::setModel(const QVariant &model)
     emit countChanged();
 }
 
+/*!
+    \qmlproperty Component QtQuick2::Repeater::delegate
+    \default
+
+    The delegate provides a template defining each item instantiated by the repeater.
+
+    Delegates are exposed to a read-only \c index property that indicates the index
+    of the delegate within the repeater. For example, the following \l Text delegate
+    displays the index of each repeated item:
+
+    \table
+    \row
+    \o \snippet doc/src/snippets/declarative/repeaters/repeater.qml index
+    \o \image repeater-index.png
+    \endtable
+
+    If the \l model is a \l{QStringList-based model}{string list} or
+    \l{QObjectList-based model}{object list}, the delegate is also exposed to
+    a read-only \c modelData property that holds the string or object data. For
+    example:
+
+    \table
+    \row
+    \o \snippet doc/src/snippets/declarative/repeaters/repeater.qml modeldata
+    \o \image repeater-modeldata.png
+    \endtable
+
+    If the \l model is a model object (such as a \l ListModel) the delegate
+    can access all model roles as named properties, in the same way that delegates
+    do for view classes like ListView.
+
+    \sa {QML Data Models}
+ */
 QDeclarativeComponent *QSGRepeater::delegate() const
 {
     Q_D(const QSGRepeater);
@@ -153,6 +288,11 @@ void QSGRepeater::setDelegate(QDeclarativeComponent *delegate)
     }
 }
 
+/*!
+    \qmlproperty int QtQuick2::Repeater::count
+
+    This property holds the number of items in the repeater.
+*/
 int QSGRepeater::count() const
 {
     Q_D(const QSGRepeater);
@@ -161,6 +301,12 @@ int QSGRepeater::count() const
     return 0;
 }
 
+/*!
+    \qmlmethod Item QtQuick2::Repeater::itemAt(index)
+
+    Returns the \l Item that has been created at the given \a index, or \c null
+    if no item exists at \a index.
+*/
 QSGItem *QSGRepeater::itemAt(int index) const
 {
     Q_D(const QSGRepeater);

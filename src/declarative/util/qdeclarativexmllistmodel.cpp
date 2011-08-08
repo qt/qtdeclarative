@@ -71,15 +71,15 @@ typedef QPair<int, int> QDeclarativeXmlListRange;
 
 /*!
     \qmlclass XmlRole QDeclarativeXmlListModelRole
+    \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-  \since 4.7
     \brief The XmlRole element allows you to specify a role for an XmlListModel.
 
     \sa {QtDeclarative}
 */
 
 /*!
-    \qmlproperty string XmlRole::name
+    \qmlproperty string QtQuick2::XmlRole::name
 
     The name for the role. This name is used to access the model data for this role.
 
@@ -106,7 +106,7 @@ typedef QPair<int, int> QDeclarativeXmlListRange;
 */
 
 /*!
-    \qmlproperty string XmlRole::query
+    \qmlproperty string QtQuick2::XmlRole::query
     The relative XPath expression query for this role. The query must be relative; it cannot start
     with a '/'.
 
@@ -124,7 +124,7 @@ typedef QPair<int, int> QDeclarativeXmlListRange;
 */
 
 /*!
-    \qmlproperty bool XmlRole::isKey
+    \qmlproperty bool QtQuick2::XmlRole::isKey
     Defines whether this is a key role.
     
     Key roles are used to to determine whether a set of values should
@@ -597,8 +597,8 @@ void QDeclarativeXmlListModelPrivate::clear_role(QDeclarativeListProperty<QDecla
 
 /*!
     \qmlclass XmlListModel QDeclarativeXmlListModel
+    \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-  \since 4.7
     \brief The XmlListModel element is used to specify a read-only model using XPath expressions.
 
     XmlListModel is used to create a read-only model from XML data. It can be used as a data source
@@ -702,7 +702,7 @@ QDeclarativeXmlListModel::~QDeclarativeXmlListModel()
 }
 
 /*!
-    \qmlproperty list<XmlRole> XmlListModel::roles
+    \qmlproperty list<XmlRole> QtQuick2::XmlListModel::roles
 
     The roles to make available for this model.
 */
@@ -735,7 +735,7 @@ QVariant QDeclarativeXmlListModel::data(int index, int role) const
 }
 
 /*!
-    \qmlproperty int XmlListModel::count
+    \qmlproperty int QtQuick2::XmlListModel::count
     The number of data entries in the model.
 */
 int QDeclarativeXmlListModel::count() const
@@ -760,7 +760,7 @@ QString QDeclarativeXmlListModel::toString(int role) const
 }
 
 /*!
-    \qmlproperty url XmlListModel::source
+    \qmlproperty url QtQuick2::XmlListModel::source
     The location of the XML data source.
 
     If both \c source and \l xml are set, \l xml is used.
@@ -783,7 +783,7 @@ void QDeclarativeXmlListModel::setSource(const QUrl &src)
 }
 
 /*!
-    \qmlproperty string XmlListModel::xml
+    \qmlproperty string QtQuick2::XmlListModel::xml
     This property holds the XML data for this model, if set.
 
     The text is assumed to be UTF-8 encoded.
@@ -807,7 +807,7 @@ void QDeclarativeXmlListModel::setXml(const QString &xml)
 }
 
 /*!
-    \qmlproperty string XmlListModel::query
+    \qmlproperty string QtQuick2::XmlListModel::query
     An absolute XPath query representing the base query for creating model items
     from this model's XmlRole objects. The query should start with '/' or '//'.
 */
@@ -833,7 +833,7 @@ void QDeclarativeXmlListModel::setQuery(const QString &query)
 }
 
 /*!
-    \qmlproperty string XmlListModel::namespaceDeclarations
+    \qmlproperty string QtQuick2::XmlListModel::namespaceDeclarations
     The namespace declarations to be used in the XPath queries.
 
     The namespaces should be declared as in XQuery. For example, if a requested document
@@ -867,7 +867,7 @@ void QDeclarativeXmlListModel::setNamespaceDeclarations(const QString &declarati
 }
 
 /*!
-    \qmlmethod object XmlListModel::get(int index)
+    \qmlmethod object QtQuick2::XmlListModel::get(int index)
 
     Returns the item at \a index in the model.
 
@@ -907,7 +907,7 @@ QDeclarativeV8Handle QDeclarativeXmlListModel::get(int index) const
 }
 
 /*!
-    \qmlproperty enumeration XmlListModel::status
+    \qmlproperty enumeration QtQuick2::XmlListModel::status
     Specifies the model loading status, which can be one of the following:
 
     \list
@@ -928,7 +928,7 @@ QDeclarativeXmlListModel::Status QDeclarativeXmlListModel::status() const
 }
 
 /*!
-    \qmlproperty real XmlListModel::progress
+    \qmlproperty real QtQuick2::XmlListModel::progress
 
     This indicates the current progress of the downloading of the XML data
     source. This value ranges from 0.0 (no data downloaded) to
@@ -949,7 +949,7 @@ qreal QDeclarativeXmlListModel::progress() const
 }
 
 /*!
-    \qmlmethod void XmlListModel::errorString()
+    \qmlmethod void QtQuick2::XmlListModel::errorString()
 
     Returns a string description of the last error that occurred
     if \l status is XmlListModel::Error.
@@ -980,7 +980,7 @@ void QDeclarativeXmlListModel::componentComplete()
 }
 
 /*!
-    \qmlmethod XmlListModel::reload()
+    \qmlmethod QtQuick2::XmlListModel::reload()
 
     Reloads the model.
     

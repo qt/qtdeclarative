@@ -46,7 +46,6 @@ QT_BEGIN_NAMESPACE
 /*!
   \internal
   \class QListModelInterface
-  \since 4.7
   \brief The QListModelInterface class can be subclassed to provide C++ models to QDeclarativeGraphics Views
 
   This class is comprised primarily of pure virtual functions which

@@ -52,6 +52,75 @@
 #include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass AnimatedImage QSGAnimatedImage
+    \inqmlmodule QtQuick 2
+    \inherits Image
+    \ingroup basic-visual-elements
+
+    The AnimatedImage element extends the features of the \l Image element, providing
+    a way to play animations stored as images containing a series of frames,
+    such as those stored in GIF files.
+
+    Information about the current frame and totla length of the animation can be
+    obtained using the \l currentFrame and \l frameCount properties. You can
+    start, pause and stop the animation by changing the values of the \l playing
+    and \l paused properties.
+
+    The full list of supported formats can be determined with QMovie::supportedFormats().
+
+    \section1 Example Usage
+
+    \beginfloatleft
+    \image animatedimageitem.gif
+    \endfloat
+
+    The following QML shows how to display an animated image and obtain information
+    about its state, such as the current frame and total number of frames.
+    The result is an animated image with a simple progress indicator underneath it.
+
+    \bold Note: Unlike images, animated images are not cached or shared internally.
+
+    \clearfloat
+    \snippet doc/src/snippets/declarative/animatedimage.qml document
+
+    \sa BorderImage, Image
+*/
+
+/*!
+    \qmlproperty url QtQuick2::AnimatedImage::source
+
+    This property holds the URL that refers to the source image.
+
+    AnimatedImage can handle any image format supported by Qt, loaded from any
+    URL scheme supported by Qt.
+
+    \sa QDeclarativeImageProvider
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::AnimatedImage::asynchronous
+
+    Specifies that images on the local filesystem should be loaded
+    asynchronously in a separate thread.  The default value is
+    false, causing the user interface thread to block while the
+    image is loaded.  Setting \a asynchronous to true is useful where
+    maintaining a responsive user interface is more desirable
+    than having images immediately visible.
+
+    Note that this property is only valid for images read from the
+    local filesystem.  Images loaded via a network resource (e.g. HTTP)
+    are always loaded asynchonously.
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::AnimatedImage::mirror
+
+    This property holds whether the image should be horizontally inverted
+    (effectively displaying a mirrored image).
+
+    The default value is false.
+*/
 
 QSGAnimatedImage::QSGAnimatedImage(QSGItem *parent)
     : QSGImage(*(new QSGAnimatedImagePrivate), parent)
@@ -63,6 +132,14 @@ QSGAnimatedImage::~QSGAnimatedImage()
     Q_D(QSGAnimatedImage);
     delete d->_movie;
 }
+
+/*!
+  \qmlproperty bool QtQuick2::AnimatedImage::paused
+  This property holds whether the animated image is paused.
+
+  By default, this property is false. Set it to true when you want to pause
+  the animation.
+*/
 
 bool QSGAnimatedImage::isPaused() const
 {
@@ -82,6 +159,14 @@ void QSGAnimatedImage::setPaused(bool pause)
         return;
     d->_movie->setPaused(pause);
 }
+
+/*!
+  \qmlproperty bool QtQuick2::AnimatedImage::playing
+  This property holds whether the animated image is playing.
+
+  By default, this property is true, meaning that the animation
+  will start playing immediately.
+*/
 
 bool QSGAnimatedImage::isPlaying() const
 {
@@ -105,6 +190,16 @@ void QSGAnimatedImage::setPlaying(bool play)
         d->_movie->stop();
 }
 
+/*!
+  \qmlproperty int QtQuick2::AnimatedImage::currentFrame
+  \qmlproperty int QtQuick2::AnimatedImage::frameCount
+
+  currentFrame is the frame that is currently visible. By monitoring this property
+  for changes, you can animate other items at the same time as the image.
+
+  frameCount is the number of frames in the animation. For some animation formats,
+  frameCount is unknown and has a value of zero.
+*/
 int QSGAnimatedImage::currentFrame() const
 {
     Q_D(const QSGAnimatedImage);

@@ -103,6 +103,115 @@ void QSGLoaderPrivate::initResize()
     _q_updateSize();
 }
 
+/*!
+    \qmlclass Loader QSGLoader
+    \inqmlmodule QtQuick 2
+    \ingroup qml-utility-elements
+    \inherits Item
+
+    \brief The Loader item allows dynamically loading an Item-based
+    subtree from a URL or Component.
+
+    Loader is used to dynamically load visual QML components. It can load a
+    QML file (using the \l source property) or a \l Component object (using
+    the \l sourceComponent property). It is useful for delaying the creation
+    of a component until it is required: for example, when a component should
+    be created on demand, or when a component should not be created
+    unnecessarily for performance reasons.
+
+    Here is a Loader that loads "Page1.qml" as a component when the
+    \l MouseArea is clicked:
+
+    \snippet doc/src/snippets/declarative/loader/simple.qml 0
+
+    The loaded item can be accessed using the \l item property.
+
+    If the \l source or \l sourceComponent changes, any previously instantiated
+    items are destroyed. Setting \l source to an empty string or setting
+    \l sourceComponent to \c undefined destroys the currently loaded item,
+    freeing resources and leaving the Loader empty.
+
+    \section2 Loader sizing behavior
+
+    Loader is like any other visual item and must be positioned and sized
+    accordingly to become visible.
+
+    \list
+    \o If an explicit size is not specified for the Loader, the Loader
+    is automatically resized to the size of the loaded item once the
+    component is loaded.
+    \o If the size of the Loader is specified explicitly by setting
+    the width, height or by anchoring, the loaded item will be resized
+    to the size of the Loader.
+    \endlist
+
+    In both scenarios the size of the item and the Loader are identical.
+    This ensures that anchoring to the Loader is equivalent to anchoring
+    to the loaded item.
+
+    \table
+    \row
+    \o sizeloader.qml
+    \o sizeitem.qml
+    \row
+    \o \snippet doc/src/snippets/declarative/loader/sizeloader.qml 0
+    \o \snippet doc/src/snippets/declarative/loader/sizeitem.qml 0
+    \row
+    \o The red rectangle will be sized to the size of the root item.
+    \o The red rectangle will be 50x50, centered in the root item.
+    \endtable
+
+
+    \section2 Receiving signals from loaded items
+
+    Any signals emitted from the loaded item can be received using the
+    \l Connections element. For example, the following \c application.qml
+    loads \c MyItem.qml, and is able to receive the \c message signal from
+    the loaded item through a \l Connections object:
+
+    \table
+    \row
+    \o application.qml
+    \o MyItem.qml
+    \row
+    \o \snippet doc/src/snippets/declarative/loader/connections.qml 0
+    \o \snippet doc/src/snippets/declarative/loader/MyItem.qml 0
+    \endtable
+
+    Alternatively, since \c MyItem.qml is loaded within the scope of the
+    Loader, it could also directly call any function defined in the Loader or
+    its parent \l Item.
+
+
+    \section2 Focus and key events
+
+    Loader is a focus scope. Its \l {Item::}{focus} property must be set to
+    \c true for any of its children to get the \e {active focus}. (See
+    \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page}
+    for more details.) Any key events received in the loaded item should likely
+    also be \l {KeyEvent::}{accepted} so they are not propagated to the Loader.
+
+    For example, the following \c application.qml loads \c KeyReader.qml when
+    the \l MouseArea is clicked.  Notice the \l {Item::}{focus} property is
+    set to \c true for the Loader as well as the \l Item in the dynamically
+    loaded object:
+
+    \table
+    \row
+    \o application.qml
+    \o KeyReader.qml
+    \row
+    \o \snippet doc/src/snippets/declarative/loader/focus.qml 0
+    \o \snippet doc/src/snippets/declarative/loader/KeyReader.qml 0
+    \endtable
+
+    Once \c KeyReader.qml is loaded, it accepts key events and sets
+    \c event.accepted to \c true so that the event is not propagated to the
+    parent \l Rectangle.
+
+    \sa {dynamic-object-creation}{Dynamic Object Creation}
+*/
+
 QSGLoader::QSGLoader(QSGItem *parent)
   : QSGImplicitSizeItem(*(new QSGLoaderPrivate), parent)
 {
@@ -118,6 +227,19 @@ QSGLoader::~QSGLoader()
     }
 }
 
+/*!
+    \qmlproperty url QtQuick2::Loader::source
+    This property holds the URL of the QML component to instantiate.
+
+    Note the QML component must be an \l{Item}-based component. The loader
+    cannot load non-visual components.
+
+    To unload the currently loaded item, set this property to an empty string,
+    or set \l sourceComponent to \c undefined. Setting \c source to a
+    new URL will also cause the item created by the previous URL to be unloaded.
+
+    \sa sourceComponent, status, progress
+*/
 QUrl QSGLoader::source() const
 {
     Q_D(const QSGLoader);
@@ -147,6 +269,28 @@ void QSGLoader::setSource(const QUrl &url)
     if (isComponentComplete())
         d->load();
 }
+
+/*!
+    \qmlproperty Component QtQuick2::Loader::sourceComponent
+    This property holds the \l{Component} to instantiate.
+
+    \qml
+    Item {
+        Component {
+            id: redSquare
+            Rectangle { color: "red"; width: 10; height: 10 }
+        }
+
+        Loader { sourceComponent: redSquare }
+        Loader { sourceComponent: redSquare; x: 10 }
+    }
+    \endqml
+
+    To unload the currently loaded item, set this property to an empty string
+    or \c undefined.
+
+    \sa source, progress
+*/
 
 QDeclarativeComponent *QSGLoader::sourceComponent() const
 {
@@ -270,6 +414,46 @@ void QSGLoaderPrivate::_q_sourceLoaded()
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Loader::status
+
+    This property holds the status of QML loading.  It can be one of:
+    \list
+    \o Loader.Null - no QML source has been set
+    \o Loader.Ready - the QML source has been loaded
+    \o Loader.Loading - the QML source is currently being loaded
+    \o Loader.Error - an error occurred while loading the QML source
+    \endlist
+
+    Use this status to provide an update or respond to the status change in some way.
+    For example, you could:
+
+    \list
+    \o Trigger a state change:
+    \qml
+        State { name: 'loaded'; when: loader.status == Loader.Ready }
+    \endqml
+
+    \o Implement an \c onStatusChanged signal handler:
+    \qml
+        Loader {
+            id: loader
+            onStatusChanged: if (loader.status == Loader.Ready) console.log('Loaded')
+        }
+    \endqml
+
+    \o Bind to the status value:
+    \qml
+        Text { text: loader.status == Loader.Ready ? 'Loaded' : 'Not loaded' }
+    \endqml
+    \endlist
+
+    Note that if the source is a local file, the status will initially be Ready (or Error). While
+    there will be no onStatusChanged signal in that case, the onLoaded will still be invoked.
+
+    \sa progress
+*/
+
 QSGLoader::Status QSGLoader::status() const
 {
     Q_D(const QSGLoader);
@@ -290,6 +474,23 @@ void QSGLoader::componentComplete()
     d->load();
 }
 
+/*!
+    \qmlsignal QtQuick2::Loader::onLoaded()
+
+    This handler is called when the \l status becomes \c Loader.Ready, or on successful
+    initial load.
+*/
+
+
+/*!
+\qmlproperty real QtQuick2::Loader::progress
+
+This property holds the progress of loading QML data from the network, from
+0.0 (nothing loaded) to 1.0 (finished).  Most QML files are quite small, so
+this value will rapidly change from 0 to 1.
+
+\sa status
+*/
 qreal QSGLoader::progress() const
 {
     Q_D(const QSGLoader);
@@ -328,6 +529,10 @@ void QSGLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
     updatingSize = false;
 }
 
+/*!
+    \qmlproperty Item QtQuick2::Loader::item
+    This property holds the top-level item that is currently loaded.
+*/
 QSGItem *QSGLoader::item() const
 {
     Q_D(const QSGLoader);
