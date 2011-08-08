@@ -43,17 +43,16 @@
 
 #define VERIFY_EXPECTED_OUTPUT
 
-
-
 class tst_qdeclarativemodelchange : public QObject
 {
     Q_OBJECT
 public:
     struct Signal
     {
-        int start;
-        int end;
+        int index;
+        int count;
         int to;
+        int moveId;
 
         bool isInsert() const { return to == -1; }
         bool isRemove() const { return to == -2; }
@@ -61,10 +60,10 @@ public:
         bool isChange() const { return to == -3; }
     };
 
-    static Signal Insert(int start, int end) { Signal signal = { start, end, -1 }; return signal; }
-    static Signal Remove(int start, int end) { Signal signal = { start, end, -2 }; return signal; }
-    static Signal Move(int start, int end, int to) { Signal signal = { start, end, to }; return signal; }
-    static Signal Change(int start, int end) { Signal signal = { start, end, -3 }; return signal; }
+    static Signal Insert(int index, int count, int moveId = -1) { Signal signal = { index, count, -1, moveId }; return signal; }
+    static Signal Remove(int index, int count, int moveId = -1) { Signal signal = { index, count, -2, moveId }; return signal; }
+    static Signal Move(int from, int to, int count) { Signal signal = { from, count, to, -1 }; return signal; }
+    static Signal Change(int index, int count) { Signal signal = { index, count, -3, -1 }; return signal; }
 
     typedef QVector<Signal> SignalList;
 
@@ -100,16 +99,24 @@ public:
 
     QVector<int> applyChanges(const QVector<int> &list, const QVector<Signal> &changes)
     {
+        QHash<int, QVector<int> > removedValues;
         QVector<int> alteredList = list;
         foreach (const Signal &signal, changes) {
             if (signal.isInsert()) {
-                alteredList.insert(signal.start, signal.end - signal.start, 100);
+                if (signal.moveId != -1) {
+                    QVector<int> tail = alteredList.mid(signal.index);
+                    alteredList = alteredList.mid(0, signal.index) + removedValues.take(signal.moveId) + tail;
+                } else {
+                    alteredList.insert(signal.index, signal.count, 100);
+                }
             } else if (signal.isRemove()) {
-                alteredList.erase(alteredList.begin() + signal.start, alteredList.begin() + signal.end);
+                if (signal.moveId != -1)
+                    removedValues.insert(signal.moveId, alteredList.mid(signal.index, signal.count));
+                alteredList.erase(alteredList.begin() + signal.index, alteredList.begin() + signal.index + signal.count);
             } else if (signal.isMove()) {
-                move(signal.start, signal.to, signal.end - signal.start, &alteredList);
+                move(signal.index, signal.to, signal.count, &alteredList);
             } else if (signal.isChange()) {
-                for (int i = signal.start; i < signal.end; ++i) {
+                for (int i = signal.index; i < signal.index + signal.count; ++i) {
                     if (alteredList[i] < 100)
                         alteredList[i] = 100;
                 }
@@ -126,19 +133,19 @@ private slots:
 };
 
 bool operator ==(const tst_qdeclarativemodelchange::Signal &left, const tst_qdeclarativemodelchange::Signal &right) {
-    return left.start == right.start && left.end == right.end && left.to == right.to; }
+    return left.index == right.index && left.count == right.count && left.to == right.to; }
 
 
 QDebug operator <<(QDebug debug, const tst_qdeclarativemodelchange::Signal &signal)
 {
     if (signal.isInsert())
-        debug.nospace() << "Insert(" << signal.start << "," << signal.end << ")";
+        debug.nospace() << "Insert(" << signal.index << "," << signal.count << "," << signal.moveId << ")";
     else if (signal.isRemove())
-        debug.nospace() << "Remove(" << signal.start << "," << signal.end << ")";
+        debug.nospace() << "Remove(" << signal.index << "," << signal.count << "," << signal.moveId << ")";
     else if (signal.isMove())
-        debug.nospace() << "Move(" << signal.start << "," << signal.end << "," << signal.to << ")";
+        debug.nospace() << "Move(" << signal.index << "," << signal.to << "," << signal.count << ")";
     else if (signal.isChange())
-        debug.nospace() << "Change(" << signal.start << "," << signal.end << ")";
+        debug.nospace() << "Change(" << signal.index << "," << signal.count << ")";
     return debug;
 }
 
@@ -150,405 +157,571 @@ void tst_qdeclarativemodelchange::sequence_data()
     QTest::addColumn<SignalList>("output");
 
     // Insert
-    QTest::newRow("i(12-17)")
-            << (SignalList() << Insert(12, 17))
-            << (SignalList() << Insert(12, 17));
-    QTest::newRow("i(2-5),i(12-17)")
-            << (SignalList() << Insert(2, 5) << Insert(12, 17))
-            << (SignalList() << Insert(2, 5) << Insert(12, 17));
-    QTest::newRow("i(12-17),i(2-5)")
-            << (SignalList() << Insert(12, 17) << Insert(2, 5))
-            << (SignalList() << Insert(2, 5) << Insert(15, 20));
-    QTest::newRow("i(12-17),i(12-15)")
-            << (SignalList() << Insert(12, 17) << Insert(12, 15))
-            << (SignalList() << Insert(12, 20));
-    QTest::newRow("i(12-17),i(17-20)")
-            << (SignalList() << Insert(12, 17) << Insert(17, 20))
-            << (SignalList() << Insert(12, 20));
-    QTest::newRow("i(12-17),i(15-18)")
-            << (SignalList() << Insert(12, 17) << Insert(15, 18))
-            << (SignalList() << Insert(12, 20));
+    QTest::newRow("i(12,5)")
+            << (SignalList() << Insert(12,5))
+            << (SignalList() << Insert(12,5));
+    QTest::newRow("i(2,3),i(12,5)")
+            << (SignalList() << Insert(2,3) << Insert(12,5))
+            << (SignalList() << Insert(2,3) << Insert(12,5));
+    QTest::newRow("i(12,5),i(2,3)")
+            << (SignalList() << Insert(12,5) << Insert(2,3))
+            << (SignalList() << Insert(2,3) << Insert(15,5));
+    QTest::newRow("i(12,5),i(12,3)")
+            << (SignalList() << Insert(12,5) << Insert(12,3))
+            << (SignalList() << Insert(12,8));
+    QTest::newRow("i(12,5),i(17,3)")
+            << (SignalList() << Insert(12,5) << Insert(17,3))
+            << (SignalList() << Insert(12,8));
+    QTest::newRow("i(12,5),i(15,3)")
+            << (SignalList() << Insert(12,5) << Insert(15,3))
+            << (SignalList() << Insert(12,8));
 
     // Remove
-    QTest::newRow("r(3-12)")
-            << (SignalList() << Remove(3, 12))
-            << (SignalList() << Remove(3, 12));
-    QTest::newRow("r(3-7),r(3-5)")
-            << (SignalList() << Remove(3, 7) << Remove(3, 5))
-            << (SignalList() << Remove(3, 9));
-    QTest::newRow("r(4-3),r(14-19)")
-            << (SignalList() << Remove(4, 7) << Remove(14, 19))
-            << (SignalList() << Remove(4, 7) << Remove(14, 19));
-    QTest::newRow("r(14-19),r(4-7)")
-            << (SignalList() << Remove(14, 19) << Remove(4, 7))
-            << (SignalList() << Remove(4, 7) << Remove(11, 16));
-    QTest::newRow("r(4-7),r(2-11)")
-            << (SignalList() << Remove(4, 7) << Remove(2, 11))
-            << (SignalList() << Remove(2, 14));
+    QTest::newRow("r(3,9)")
+            << (SignalList() << Remove(3,9))
+            << (SignalList() << Remove(3,9));
+    QTest::newRow("r(3,4),r(3,2)")
+            << (SignalList() << Remove(3,4) << Remove(3,2))
+            << (SignalList() << Remove(3,6));
+    QTest::newRow("r(4,3),r(14,5)")
+            << (SignalList() << Remove(4,3) << Remove(14,5))
+            << (SignalList() << Remove(4,3) << Remove(14,5));
+    QTest::newRow("r(14,5),r(4,3)")
+            << (SignalList() << Remove(14,5) << Remove(4,3))
+            << (SignalList() << Remove(4,3) << Remove(11,5));
+    QTest::newRow("r(4,3),r(2,9)")
+            << (SignalList() << Remove(4,3) << Remove(2,9))
+            << (SignalList() << Remove(2,12));
 
     // Move
-    QTest::newRow("m(8-10,10)")
-            << (SignalList() << Move(8, 10, 10))
-            << (SignalList() << Move(8, 10, 10));
-    // No merging of moves yet.
-//    QTest::newRow("m(5-7,13),m(5-8,12)")
-//            << (SignalList() << Move(5, 7, 13) << Move(5, 8, 12))
-//            << (SignalList() << Move(5, 10, 10));
+    QTest::newRow("m(8-10,2)")
+            << (SignalList() << Move(8,10,2))
+            << (SignalList() << Remove(8,2,1) << Insert(10,2,1));
+
+    QTest::newRow("m(23-12,6),m(13-15,5)")
+            << (SignalList() << Move(23,12,6) << Move(13,15,5))
+            << (SignalList() << Remove(23,1,0) << Remove(23,5,1) << Insert(12,1,0) << Insert(15,5,1));
+    QTest::newRow("m(23-12,6),m(13-15,2)")
+            << (SignalList() << Move(23,12,6) << Move(13,20,2))
+            << (SignalList() << Remove(23,1,0) << Remove(23,2,1) << Remove(23,3,2) << Insert(12,1,0) << Insert(13,3,2) << Insert(20,2,1));
+    QTest::newRow("m(23-12,6),m(13-2,2)")
+            << (SignalList() << Move(23,12,6) << Move(13,2,2))
+            << (SignalList() << Remove(23,1,0) << Remove(23,2,1) << Remove(23,3,2) << Insert(2,2,1) << Insert(14,1,0) << Insert(15,3,2));
+    QTest::newRow("m(23-12,6),m(12-6,5)")
+            << (SignalList() << Move(23,12,6) << Move(12,6,5))
+            << (SignalList() << Remove(23,5,0) << Remove(23,1,1) << Insert(6,5,0) << Insert(17,1,1));
+    QTest::newRow("m(23-12,6),m(10-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(10,5,4))
+            << (SignalList() << Remove(10,2,0) << Remove(21,2,1) << Remove(21,4,2) << Insert(5,2,0) << Insert(7,2,1) << Insert(14,4,2));
+    QTest::newRow("m(23-12,6),m(16-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(16,5,4))
+            << (SignalList() << Remove(12,2,0) << Remove(21,4,1) << Remove(21,2,2) << Insert(5,2,2) << Insert(7,2,0) << Insert(16,4,1));
+    QTest::newRow("m(23-12,6),m(13-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(13,5,4))
+            << (SignalList() << Remove(23,1,0) << Remove(23,4,1) << Remove(23,1,2) << Insert(5,4,1) << Insert(16,1,0) << Insert(17,1,2));
+    QTest::newRow("m(23-12,6),m(14-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(14,5,4))
+            << (SignalList() << Remove(23,2,0) << Remove(23,4,1) << Insert(5,4,1) << Insert(16,2,0));
+    QTest::newRow("m(23-12,6),m(12-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(12,5,4))
+            << (SignalList() << Remove(23,4,0) << Remove(23,2,1) << Insert(5,4,0) << Insert(16,2,1));
+    QTest::newRow("m(23-12,6),m(11-5,8)")
+            << (SignalList() << Move(23,12,6) << Move(11,5,8))
+            << (SignalList() << Remove(11,1,0) << Remove(11,1,1) << Remove(21,6,2) << Insert(5,1,0) << Insert(6,6,2) << Insert(12,1,1));
+    QTest::newRow("m(23-12,6),m(8-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(8,5,4))
+            << (SignalList() << Remove(8,4,0) << Remove(19,6,1) << Insert(5,4,0) << Insert(12,6,1));
+    QTest::newRow("m(23-12,6),m(2-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(2,5,4))
+            << (SignalList() << Remove(2,4,0) << Remove(19,6,1) << Insert(5,4,0) << Insert(12,6,1));
+    QTest::newRow("m(23-12,6),m(18-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(18,5,4))
+            << (SignalList() << Remove(12,4,0) << Remove(19,6,1) << Insert(5,4,0) << Insert(16,6,1));
+    QTest::newRow("m(23-12,6),m(20-5,4)")
+            << (SignalList() << Move(23,12,6) << Move(20,5,4))
+            << (SignalList() << Remove(14,4,0) << Remove(19,6,1) << Insert(5,4,0) << Insert(16,6,1));
+
+    QTest::newRow("m(23-12,6),m(5-13,11)")
+            << (SignalList() << Move(23,12,6) << Move(5,13,11))
+            << (SignalList() << Remove(5,7,0) << Remove(16,4,1) << Remove(16,2,2) << Insert(5,2,2) << Insert(13,7,0) << Insert(20,4,1));
+
+    QTest::newRow("m(23-12,6),m(12-23,6)")
+            << (SignalList() << Move(23,12,6) << Move(12,23,6))
+            << (SignalList() << Remove(23,6,0) << Insert(23,6,0));  // ### These cancel out.
+    QTest::newRow("m(23-12,6),m(10-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(10,23,4))
+            << (SignalList() << Remove(10,2 ,0) << Remove(21,2,1) << Remove(21,4,2) << Insert(10,4,2) << Insert(23,2,0) << Insert(25,2,1));
+    QTest::newRow("m(23-12,6),m(16-23.4)")
+            << (SignalList() << Move(23,12,6) << Move(16,23,4))
+            << (SignalList() << Remove(12,2,0) << Remove(21,4,1) << Remove(21,2,2) << Insert(12,4,1) << Insert(23,2,2) << Insert(25,2,0));
+    QTest::newRow("m(23-12,6),m(13-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(13,23,4))
+            << (SignalList() << Remove(23,1,0) << Remove(23,4,1) << Remove(23,1,2) << Insert(12,1,0) << Insert(13,1,2) << Insert(23,4,1));
+    QTest::newRow("m(23-12,6),m(14-23,)")
+            << (SignalList() << Move(23,12,6) << Move(14,23,4))
+            << (SignalList() << Remove(23,2,0) << Remove(23,4,1) << Insert(12,2,0) << Insert(23,4,1));
+    QTest::newRow("m(23-12,6),m(12-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(12,23,4))
+            << (SignalList() << Remove(23,4,0) << Remove(23,2,1) << Insert(12,2,1) << Insert(23,4,0));
+    QTest::newRow("m(23-12,6),m(11-23,8)")
+            << (SignalList() << Move(23,12,6) << Move(11,23,8))
+            << (SignalList() << Remove(11,1,0) << Remove(11,1,1) << Remove(21,6,2) << Insert(23,1,0) << Insert(24,6,2) << Insert(30,1,1));
+    QTest::newRow("m(23-12,6),m(8-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(8,23,4))
+            << (SignalList() << Remove(8,4,0) << Remove(19,6,1) << Insert(8,6,1) << Insert(23,4,0));
+    QTest::newRow("m(23-12,6),m(2-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(2,23,4))
+            << (SignalList() << Remove(2,4,0) << Remove(19,6,1) << Insert(8,6,1) << Insert(23,4,0));
+    QTest::newRow("m(23-12,6),m(18-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(18,23,4))
+            << (SignalList() << Remove(12,4,0) << Remove(19,6,1) << Insert(12,6,1) << Insert(23,4,0));
+    QTest::newRow("m(23-12,6),m(20-23,4)")
+            << (SignalList() << Move(23,12,6) << Move(20,23,4))
+            << (SignalList() << Remove(14,4,1) << Remove(19,6,0) << Insert(12,6,0) << Insert(23,4,1));
+
+    QTest::newRow("m(23-12,6),m(11-23,10)")
+            << (SignalList() << Move(23,12,6) << Move(11,23,10))
+            << (SignalList() << Remove(11,1,3) << Remove(11,3,1) << Remove(19,6,2) << Insert(23,1,3) << Insert(24,6,2) << Insert(30,3,1));
+
+    QTest::newRow("m(3-9,12),m(13-5,12)")
+            << (SignalList() << Move(3,9,12) << Move(13,15,5))
+            << (SignalList() << Remove(3,4,2) << Remove(3,5,1) << Remove(3,2,0) << Remove(3,1,3) << Insert(9,4,2) << Insert(13,2,0) << Insert(15,5,1) << Insert(20,1,3));
+    QTest::newRow("m(3-9,12),m(13-15,20)")
+            << (SignalList() << Move(3,9,12) << Move(13,15,20))
+            << (SignalList() << Remove(3,4,0) << Remove(3,8,1) << Remove(9,12,2) << Insert(9,4,0) << Insert(15,8,1) << Insert(23,12,2));
+    QTest::newRow("m(3-9,12),m(13-15,2)")
+            << (SignalList() << Move(3,9,12) << Move(13,15,2))
+            << (SignalList() << Remove(3,4,2) << Remove(3,2,1) << Remove(3,2,0) << Remove(3,4,3) << Insert(9,4,2) << Insert(13,2,0) << Insert(15,2,1) << Insert(17,4,3));
+    QTest::newRow("m(3-9,12),m(12-5,6)")
+            << (SignalList() << Move(3,9,12) << Move(12,5,6))
+            << (SignalList() << Remove(3,3,0) << Remove(3,6,1) << Remove(3,3,2) << Insert(5,6,1) << Insert(15,3,0) << Insert(18,3,2));
+    QTest::newRow("m(3-9,12),m(10-14,5)")
+            << (SignalList() << Move(3,9,12) << Move(10,14,5))
+            << (SignalList() << Remove(3,1,2) << Remove(3,5,1) << Remove(3,4,0) << Remove(3,2,3) << Insert(9,1,2) << Insert(10,4,0) << Insert(14,5,1) << Insert(19,2,3));
+    QTest::newRow("m(3-9,12),m(16-20,5)")
+            << (SignalList() << Move(3,9,12) << Move(16,20,5))
+            << (SignalList() << Remove(3,7,0) << Remove(3,5,1) << Insert(9,7,0) << Insert(20,5,1));
+    QTest::newRow("m(3-9,12),m(13-17,5)")
+            << (SignalList() << Move(3,9,12) << Move(13,17,5))
+            << (SignalList() << Remove(3,4,0) << Remove(3,5,1) << Remove(3,3,2) << Insert(9,4,0) << Insert(13,3,2) << Insert(17,5,1));
+    QTest::newRow("m(3-9,12),m(14-18,5)")
+            << (SignalList() << Move(3,9,12) << Move(14,18,5))
+            << (SignalList() << Remove(3,5,0) << Remove(3,5,1) << Remove(3,2,2) << Insert(9,5,0) << Insert(14,2,2) << Insert(18,5,1));
+    QTest::newRow("m(3-9,12),m(12-16,5)")
+            << (SignalList() << Move(3,9,12) << Move(12,16,5))
+            << (SignalList() << Remove(3,3,2) << Remove(3,5,1) << Remove(3,4,0) << Insert(9,3,2) << Insert(12,4,0) << Insert(16,5,1));
+    QTest::newRow("m(3-9,12),m(11-19,5)")
+            << (SignalList() << Move(3,9,12) << Move(11,19,5))
+            << (SignalList() << Remove(3,2,0) << Remove(3,5,1) << Remove(3,5,2) << Insert(9,2,0) << Insert(11,5,2) << Insert(19,5,1));
+    QTest::newRow("m(3-9,12),m(8-12,5)")
+            << (SignalList() << Move(3,9,12) << Move(8,12,5))
+            << (SignalList() << Remove(3,4,1) << Remove(3,4,0) << Remove(3,4,4) << Remove(8,1,2) << Insert(8,4,0) << Insert(12,1,2) << Insert(13,4,1) << Insert(17,4,4));
+    QTest::newRow("m(3-9,12),m(2-6,5)")
+            << (SignalList() << Move(3,9,12) << Move(2,6,5))
+            << (SignalList() <<  Remove(2,1,2) << Remove(2,2,0) << Remove(2,10,3) << Remove(2,4,1) << Insert(4,2,0) << Insert(6,1,2) << Insert(7,4,1) << Insert(11,10,3));
+    QTest::newRow("m(3-9,12),m(18-22,5)")
+            << (SignalList() << Move(3,9,12) << Move(18,22,5))
+            << (SignalList() << Remove(3,9,0) << Remove(3,3,1) << Remove(9,2,2) << Insert(9,9,0) << Insert(22,3,1) << Insert(25,2,2));
+    QTest::newRow("m(3-9,12),m(20-24,5)")
+            << (SignalList() << Move(3,9,12) << Move(20,24,5))
+            << (SignalList() << Remove(3,11,0) << Remove(3,1,1) << Remove(9,4,2) << Insert(9,11,0) << Insert(24,1,1) << Insert(25,4,2));
+
+    QTest::newRow("m(3-9,12),m(5-11,8)")
+            << (SignalList() << Move(3,9,12) << Move(5,11,8))
+            << (SignalList() << Remove(3,4,1) << Remove(3,6,0) << Remove(3,2,3) << Remove(5,4,2) << Insert(5,6,0) << Insert(11,4,2) << Insert(15,2,3) << Insert(15,4,1));
+
+    QTest::newRow("m(3-9,12),m(12-23,6)")
+            << (SignalList() << Move(3,9,12) << Move(12,23,6))
+            << (SignalList() << Remove(3,3,2) << Remove(3,6,1) << Remove(3,3,0) << Insert(9,3,2) << Insert(12,3,0) << Insert(23,6,1));
+    QTest::newRow("m(3-9,12),m(10-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(10,23,4))
+            << (SignalList() << Remove(3,1,2) << Remove(3,4,1) << Remove(3,7,0) << Insert(9,1,2) << Insert(10,7,0) << Insert(23,4,1));
+    QTest::newRow("m(3-9,12),m(16-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(16,23,4))
+            << (SignalList() << Remove(3,7,2) << Remove(3,4,1) << Remove(3,1,0) << Insert(9,7,2) << Insert(16,1,0) << Insert(23,4,1));
+    QTest::newRow("m(3-9,12),m(13-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(13,23,4))
+            << (SignalList() << Remove(3,4,2) << Remove(3,4,1) << Remove(3,4,0) << Insert(9,4,2) << Insert(13,4,0) << Insert(23,4,1));
+    QTest::newRow("m(3-9,12),m(14-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(14,23,4))
+            << (SignalList() << Remove(3,5,2) << Remove(3,4,1) << Remove(3,3,0) << Insert(9,5,2) << Insert(14,3,0) << Insert(23,4,1));
+    QTest::newRow("m(3-9,12),m(12-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(12,23,4))
+            << (SignalList() << Remove(3,3,2) << Remove(3,4,1) << Remove(3,5,0) << Insert(9,3,2) << Insert(12,5,0) << Insert(23,4,1));
+    QTest::newRow("m(3-9,12),m(11-23,8)")
+            << (SignalList() << Move(3,9,12) << Move(11,23,8))
+            << (SignalList() << Remove(3,2,2) << Remove(3,8,1) << Remove(3,2,0) << Insert(9,2,2) << Insert(11,2,0) << Insert(23,8,1));
+    QTest::newRow("m(3-9,12),m(8-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(8,23,4))
+            << (SignalList() << Remove(3,3,1) << Remove(3,9,0) << Remove(8,1,2) << Insert(8,9,0) << Insert(23,1,2) << Insert(24,3,1));
+    QTest::newRow("m(3-9,12),m(2-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(2,23,4))
+            << (SignalList() << Remove(2,1,2) << Remove(2,12,0) << Remove(2,3,1) << Insert(5,12,0) << Insert(23,1,2) << Insert(24,3,1));
+    QTest::newRow("m(3-9,12),m(18-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(18,23,4))
+            << (SignalList() << Remove(3,9,3) << Remove(3,3,2) << Remove(9,1,1) << Insert(9,9,3) << Insert(23,3,2) << Insert(26,1,1));
+    QTest::newRow("m(3-9,12),m(20-23,4)")
+            << (SignalList() << Move(3,9,12) << Move(20,23,4))
+            << (SignalList() << Remove(3,11,3) << Remove(3,1,2) << Remove(9,3,1) << Insert(9,11,3) << Insert(23,1,2) << Insert(24,3,1));
+
+    QTest::newRow("m(3-9,12),m(11-23,10)")
+            << (SignalList() << Move(3,9,12) << Move(11,23,10))
+            << (SignalList() << Remove(3,2,2) << Remove(3,10,1) << Insert(9,2,2) << Insert(23,10,1));
 
     // Change
-    QTest::newRow("c(4-9)")
-            << (SignalList() << Change(4, 9))
-            << (SignalList() << Change(4, 9));
-    QTest::newRow("c(4-9),c(12-14)")
-            << (SignalList() << Change(4, 9) << Change(12, 14))
-            << (SignalList() << Change(4, 9) << Change(12, 14));
-    QTest::newRow("c(12-14),c(4-9)")
-            << (SignalList() << Change(12, 14) << Change(4, 9))
-            << (SignalList() << Change(4, 9) << Change(12, 14));
-    QTest::newRow("c(4-9),c(2-4)")
-            << (SignalList() << Change(4, 9) << Change(2, 4))
-            << (SignalList() << Change(2, 9));
-    QTest::newRow("c(4-9),c(9-11)")
-            << (SignalList() << Change(4, 9) << Change(9, 11))
-            << (SignalList() << Change(4, 11));
-    QTest::newRow("c(4-9),c(3-5)")
-            << (SignalList() << Change(4, 9) << Change(3, 5))
-            << (SignalList() << Change(3, 9));
-    QTest::newRow("c(4-9),c(8-10)")
-            << (SignalList() << Change(4, 9) << Change(8, 10))
-            << (SignalList() << Change(4, 10));
-    QTest::newRow("c(4-9),c(3-5)")
-            << (SignalList() << Change(4, 9) << Change(3, 5))
-            << (SignalList() << Change(3, 9));
-    QTest::newRow("c(4-9),c(2,11)")
-            << (SignalList() << Change(4, 9) << Change(2, 11))
-            << (SignalList() << Change(2, 11));
-    QTest::newRow("c(4-9),c(12-15),c(8-14)")
-            << (SignalList() << Change(4, 9) << Change(12, 15) << Change(8, 14))
-            << (SignalList() << Change(4, 15));
+    QTest::newRow("c(4,5)")
+            << (SignalList() << Change(4,5))
+            << (SignalList() << Change(4,5));
+    QTest::newRow("c(4,5),c(12,2)")
+            << (SignalList() << Change(4,5) << Change(12,2))
+            << (SignalList() << Change(4,5) << Change(12,2));
+    QTest::newRow("c(12,2),c(4,5)")
+            << (SignalList() << Change(12,2) << Change(4,5))
+            << (SignalList() << Change(4,5) << Change(12,2));
+    QTest::newRow("c(4,5),c(2,2)")
+            << (SignalList() << Change(4,5) << Change(2,2))
+            << (SignalList() << Change(2,7));
+    QTest::newRow("c(4,5),c(9,2)")
+            << (SignalList() << Change(4,5) << Change(9,2))
+            << (SignalList() << Change(4,7));
+    QTest::newRow("c(4,5),c(3,2)")
+            << (SignalList() << Change(4,5) << Change(3,2))
+            << (SignalList() << Change(3,6));
+    QTest::newRow("c(4,5),c(8,2)")
+            << (SignalList() << Change(4,5) << Change(8,2))
+            << (SignalList() << Change(4,6));
+    QTest::newRow("c(4,5),c(3,2)")
+            << (SignalList() << Change(4,5) << Change(3,2))
+            << (SignalList() << Change(3,6));
+    QTest::newRow("c(4,5),c(2,9)")
+            << (SignalList() << Change(4,5) << Change(2,9))
+            << (SignalList() << Change(2,9));
+    QTest::newRow("c(4,5),c(12,3),c(8,6)")
+            << (SignalList() << Change(4,5) << Change(12,3) << Change(8,6))
+            << (SignalList() << Change(4,11));
 
-    // Insert, then remove.
-    QTest::newRow("i(12-18),r(12-18)")
-            << (SignalList() << Insert(12, 18) << Remove(12, 18))
+    // Insert,then remove.
+    QTest::newRow("i(12,6),r(12,6)")
+            << (SignalList() << Insert(12,6) << Remove(12,6))
             << (SignalList());
-    QTest::newRow("i(12-18),r(10-14)")
-            << (SignalList() << Insert(12, 18) << Remove(10, 14))
-            << (SignalList() << Remove(10, 12) << Insert(10, 14));
-    QTest::newRow("i(12-18),r(16-20)")
-            << (SignalList() << Insert(12, 18) << Remove(16, 20))
-            << (SignalList() << Remove(12, 14) << Insert(12, 16));
-    QTest::newRow("i(12-18),r(13-17)")
-            << (SignalList() << Insert(12, 18) << Remove(13, 17))
-            << (SignalList() << Insert(12, 14));
-    QTest::newRow("i(12-18),r(14,18)")
-            << (SignalList() << Insert(12, 18) << Remove(14, 18))
-            << (SignalList() << Insert(12, 14));
-    QTest::newRow("i(12-18),r(12-16)")
-            << (SignalList() << Insert(12, 18) << Remove(12, 16))
-            << (SignalList() << Insert(12, 14));
-    QTest::newRow("i(12-18),r(11-19)")
-            << (SignalList() << Insert(12, 18) << Remove(11, 19))
-            << (SignalList() << Remove(11, 13));
-    QTest::newRow("i(12-18),r(8-12)")
-            << (SignalList() << Insert(12, 18) << Remove(8, 12))
-            << (SignalList() << Remove(8, 12) << Insert(8, 14));
-    QTest::newRow("i(12-18),r(2-6)")
-            << (SignalList() << Insert(12, 18) << Remove(2, 6))
-            << (SignalList() << Remove(2, 6) << Insert(8, 14));
-    QTest::newRow("i(12-18),r(18-22)")
-            << (SignalList() << Insert(12, 18) << Remove(18, 22))
-            << (SignalList() << Remove(12, 16) << Insert(12, 18));
-    QTest::newRow("i(12-18),r(20-24)")
-            << (SignalList() << Insert(12, 18) << Remove(20, 24))
-            << (SignalList() << Remove(14, 18) << Insert(12, 18));
+    QTest::newRow("i(12,6),r(10,4)")
+            << (SignalList() << Insert(12,6) << Remove(10,4))
+            << (SignalList() << Remove(10,2) << Insert(10,4));
+    QTest::newRow("i(12,6),r(16,4)")
+            << (SignalList() << Insert(12,6) << Remove(16,4))
+            << (SignalList() << Remove(12,2) << Insert(12,4));
+    QTest::newRow("i(12,6),r(13,4)")
+            << (SignalList() << Insert(12,6) << Remove(13,4))
+            << (SignalList() << Insert(12,2));
+    QTest::newRow("i(12,6),r(14,4)")
+            << (SignalList() << Insert(12,6) << Remove(14,4))
+            << (SignalList() << Insert(12,2));
+    QTest::newRow("i(12,6),r(12,4)")
+            << (SignalList() << Insert(12,6) << Remove(12,4))
+            << (SignalList() << Insert(12,2));
+    QTest::newRow("i(12,6),r(11,8)")
+            << (SignalList() << Insert(12,6) << Remove(11,8))
+            << (SignalList() << Remove(11,2));
+    QTest::newRow("i(12,6),r(8,4)")
+            << (SignalList() << Insert(12,6) << Remove(8,4))
+            << (SignalList() << Remove(8,4) << Insert(8,6));
+    QTest::newRow("i(12,6),r(2,4)")
+            << (SignalList() << Insert(12,6) << Remove(2,4))
+            << (SignalList() << Remove(2,4) << Insert(8,6));
+    QTest::newRow("i(12,6),r(18,4)")
+            << (SignalList() << Insert(12,6) << Remove(18,4))
+            << (SignalList() << Remove(12,4) << Insert(12,6));
+    QTest::newRow("i(12,6),r(20,4)")
+            << (SignalList() << Insert(12,6) << Remove(20,4))
+            << (SignalList() << Remove(14,4) << Insert(12,6));
 
-    // Insert, then move
-    QTest::newRow("i(12-18),m(12-18,5)")
-            << (SignalList() << Insert(12, 18) << Move(12, 18, 5))
-            << (SignalList() << Insert(5, 11));
-    QTest::newRow("i(12-18),m(10-14,5)")
-            << (SignalList() << Insert(12, 18) << Move(10, 14, 5))
-            << (SignalList() << Insert(5, 7) << Insert(14, 18) << Move(12, 14, 5));
-    QTest::newRow("i(12-18),m(16-20,5)")
-            << (SignalList() << Insert(12, 18) << Move(16, 20, 5))
-            << (SignalList() << Insert(5, 7) << Insert(14, 18) << Move(18, 20, 7));
-    QTest::newRow("i(12-18),m(13-17,5)")
-            << (SignalList() << Insert(12, 18) << Move(13, 17, 5))
-            << (SignalList() << Insert(5, 9) << Insert(16, 18));
-    QTest::newRow("i(12-18),m(14-18,5)")
-            << (SignalList() << Insert(12, 18) << Move(14, 18, 5))
-            << (SignalList() << Insert(5, 9) << Insert(16, 18));
-    QTest::newRow("i(12-18),m(12-16,5)")
-            << (SignalList() << Insert(12, 18) << Move(12, 16, 5))
-            << (SignalList() << Insert(5, 9) << Insert(16, 18));
-    QTest::newRow("i(12-18),m(11-19,5)")
-            << (SignalList() << Insert(12, 18) << Move(11, 19, 5))
-            << (SignalList() << Insert(5, 11) << Move(17, 18, 5) << Move(18, 19, 12));
-    QTest::newRow("i(12-18),m(8-12,5)")
-            << (SignalList() << Insert(12, 18) << Move(8, 12, 5))
-            << (SignalList() << Insert(12, 18) << Move(8, 12, 5));
-    QTest::newRow("i(12-18),m(2-6,5)")
-            << (SignalList() << Insert(12, 18) << Move(2, 6, 5))
-            << (SignalList() << Insert(12, 18) << Move(2, 6, 5));
-    QTest::newRow("i(12-18),m(18-22,5)")
-            << (SignalList() << Insert(12, 18) << Move(18, 22, 5))
-            << (SignalList() << Insert(12, 18) << Move(18, 22, 5));
-    QTest::newRow("i(12-18),m(20-24,5)")
-            << (SignalList() << Insert(12, 18) << Move(20, 24, 5))
-            << (SignalList() << Insert(12, 18) << Move(20, 24, 5));
+    // Insert,then move
+    QTest::newRow("i(12,6),m(12-5,6)")
+            << (SignalList() << Insert(12,6) << Move(12,5,6))
+            << (SignalList() << Insert(5,6));
+    QTest::newRow("i(12,6),m(10-5,4)")
+            << (SignalList() << Insert(12,6) << Move(10,5,4))
+            << (SignalList() << Remove(10,2,0) << Insert(5,2,0) << Insert(7,2) << Insert(14,4));
+    QTest::newRow("i(12,6),m(16-5,4)")
+            << (SignalList() << Insert(12,6) << Move(16,5,4))
+            << (SignalList() << Remove(12,2,0) << Insert(5,2) << Insert(7,2,0) << Insert(16,4));
+    QTest::newRow("i(12,6),m(13-5,4)")
+            << (SignalList() << Insert(12,6) << Move(13,5,4))
+            << (SignalList() << Insert(5,4) << Insert(16,2));
+    QTest::newRow("i(12,6),m(14-5,4)")
+            << (SignalList() << Insert(12,6) << Move(14,5,4))
+            << (SignalList() << Insert(5,4) << Insert(16,2));
+    QTest::newRow("i(12,6),m(12-5,4)")
+            << (SignalList() << Insert(12,6) << Move(12,5,4))
+            << (SignalList() << Insert(5,4) << Insert(16,2));
+    QTest::newRow("i(12,6),m(11-5,8)")
+            << (SignalList() << Insert(12,6) << Move(11,5,8))
+            << (SignalList() << Remove(11,1,0) << Remove(11,1,1) << Insert(5,1,0) << Insert(6,6) << Insert(12,1,1));
+    QTest::newRow("i(12,6),m(8-5,4)")
+            << (SignalList() << Insert(12,6) << Move(8,5,4))
+            << (SignalList() << Remove(8,4,0) << Insert(5,4,0) << Insert(12,6));
+    QTest::newRow("i(12,6),m(2-5,4)")
+            << (SignalList() << Insert(12,6) << Move(2,5,4))
+            << (SignalList() << Remove(2,4,0) << Insert(5,4,0) << Insert(12,6));
+    QTest::newRow("i(12,6),m(18-5,4)")
+            << (SignalList() << Insert(12,6) << Move(18,5,4))
+            << (SignalList() << Remove(12,4,0) << Insert(5,4,0) << Insert(16,6));
+    QTest::newRow("i(12,6),m(20-5,4)")
+            << (SignalList() << Insert(12,6) << Move(20,5,4))
+            << (SignalList() << Remove(14,4,0) << Insert(5,4,0) << Insert(16,6));
 
-    QTest::newRow("i(12-18),m(5-13,11)")
-            << (SignalList() << Insert(12, 18) << Move(5, 13, 11))
-            << (SignalList() << Insert(12, 17) << Insert(18, 19) << Move(5, 12, 11));
+    QTest::newRow("i(12,6),m(5-13,11)")
+            << (SignalList() << Insert(12,6) << Move(5,11,8))
+            << (SignalList() << Remove(5,7,0) << Insert(5,5) << Insert(11,7,0) << Insert(18,1));
 
-    QTest::newRow("i(12-18),m(12-18,23)")
-            << (SignalList() << Insert(12, 18) << Move(12, 18, 23))
-            << (SignalList() << Insert(23, 29));
-    QTest::newRow("i(12-18),m(10-14,23)")
-            << (SignalList() << Insert(12, 18) << Move(10, 14, 23))
-            << (SignalList() << Insert(12, 16) << Insert(25, 27) << Move(10, 12, 23));
-    QTest::newRow("i(12-18),m(16-20,23)")
-            << (SignalList() << Insert(12, 18) << Move(16, 20, 23))
-            << (SignalList() << Insert(12, 16) << Insert(25, 27) << Move(16, 18, 25));
-    QTest::newRow("i(12-18),m(13-17,23)")
-            << (SignalList() << Insert(12, 18) << Move(13, 17, 23))
-            << (SignalList() << Insert(12, 14) << Insert(23, 27));
-    QTest::newRow("i(12-18),m(14-18,23)")
-            << (SignalList() << Insert(12, 18) << Move(14, 18, 23))
-            << (SignalList() << Insert(12, 14) << Insert(23, 27));
-    QTest::newRow("i(12-18),m(12-16,23)")
-            << (SignalList() << Insert(12, 18) << Move(12, 16, 23))
-            << (SignalList() << Insert(12, 14) << Insert(23, 27));
-    QTest::newRow("i(12-18),m(11-19,23)")
-            << (SignalList() << Insert(12, 18) << Move(11, 19, 23))
-            << (SignalList() << Insert(25, 31) << Move(11, 12, 24) << Move(11, 12, 30));
-    QTest::newRow("i(12-18),m(8-12,23)")
-            << (SignalList() << Insert(12, 18) << Move(8, 12, 23))
-            << (SignalList() << Insert(12, 18) << Move(8, 12, 23));
-    QTest::newRow("i(12-18),m(2-6,23)")
-            << (SignalList() << Insert(12, 18) << Move(2, 6, 23))
-            << (SignalList() << Insert(12, 18) << Move(2, 6, 23));
-    QTest::newRow("i(12-18),m(18-22,23)")
-            << (SignalList() << Insert(12, 18) << Move(18, 22, 23))
-            << (SignalList() << Insert(12, 18) << Move(18, 22, 23));
-    QTest::newRow("i(12-18),m(20-24,23)")
-            << (SignalList() << Insert(12, 18) << Move(20, 24, 23))
-            << (SignalList() << Insert(12, 18) << Move(20, 24, 23));
+    QTest::newRow("i(12,6),m(12-23,6)")
+            << (SignalList() << Insert(12,6) << Move(12,23,6))
+            << (SignalList() << Insert(23,6));
+    QTest::newRow("i(12,6),m(10-23,4)")
+            << (SignalList() << Insert(12,6) << Move(10,23,4))
+            << (SignalList() << Remove(10,2,0) << Insert(10,4) << Insert(23,2,0) << Insert(25,2));
+    QTest::newRow("i(12,6),m(16-23,4)")
+            << (SignalList() << Insert(12,6) << Move(16,23,4))
+            << (SignalList() << Remove(12,2,0) << Insert(12,4) << Insert(23,2) << Insert(25,2,0));
+    QTest::newRow("i(12,6),m(13-23,4)")
+            << (SignalList() << Insert(12,6) << Move(13,23,4))
+            << (SignalList() << Insert(12,2) << Insert(23,4));
+    QTest::newRow("i(12,6),m(14-23,4)")
+            << (SignalList() << Insert(12,6) << Move(14,23,4))
+            << (SignalList() << Insert(12,2) << Insert(23,4));
+    QTest::newRow("i(12,6),m(12-23,4)")
+            << (SignalList() << Insert(12,6) << Move(12,23,4))
+            << (SignalList() << Insert(12,2) << Insert(23,4));
+    QTest::newRow("i(12,6),m(11-23,8)")
+            << (SignalList() << Insert(12,6) << Move(11,23,8))
+            << (SignalList() << Remove(11,1,0) << Remove(11,1,1) << Insert(23,1,0)<< Insert(24,6) << Insert(30,1,1));
+    QTest::newRow("i(12,6),m(8-23,4)")
+            << (SignalList() << Insert(12,6) << Move(8,23,4))
+            << (SignalList() << Remove(8,4,0) << Insert(8,6) << Insert(23,4,0));
+    QTest::newRow("i(12,6),m(2-23,4)")
+            << (SignalList() << Insert(12,6) << Move(2,23,4))
+            << (SignalList() << Remove(2,4,0) << Insert(8,6) << Insert(23,4,0));
+    QTest::newRow("i(12,6),m(18-23,4)")
+            << (SignalList() << Insert(12,6) << Move(18,23,4))
+            << (SignalList() << Remove(12,4,0) << Insert(12,6) << Insert(23,4,0));
+    QTest::newRow("i(12,6),m(20-23,4)")
+            << (SignalList() << Insert(12,6) << Move(20,23,4))
+            << (SignalList() << Remove(14,4,0) << Insert(12,6) << Insert(23,4,0));
 
-    QTest::newRow("i(12-18),m(11-21,23)")
-            << (SignalList() << Insert(12, 18) << Move(11, 21, 23))
-            << (SignalList() << Insert(27, 33) << Move(11, 12, 26) << Move(11, 14, 30));
+    QTest::newRow("i(12,6),m(11-23,10)")
+            << (SignalList() << Insert(12,6) << Move(11,23,10))
+            << (SignalList() << Remove(11,1,0) << Remove(11,3,1) << Insert(23,1,0) << Insert(24,6) << Insert(30,3,1));
 
-    // Insert, then change
-    QTest::newRow("i(12-18),c(12-16)")
-            << (SignalList() << Insert(12, 18) << Change(12, 6))
-            << (SignalList() << Insert(12, 18));
-    QTest::newRow("i(12-18),c(10-14)")
-            << (SignalList() << Insert(12, 18) << Change(10, 16))
-            << (SignalList() << Insert(12, 18) << Change(10, 12));
-    QTest::newRow("i(12-18),c(16-20)")
-            << (SignalList() << Insert(12, 18) << Change(16, 20))
-            << (SignalList() << Insert(12, 18) << Change(18, 20));
-    QTest::newRow("i(12-18),c(13-17)")
-            << (SignalList() << Insert(12, 18) << Change(13, 17))
-            << (SignalList() << Insert(12, 18));
-    QTest::newRow("i(12-18),c(14-18)")
-            << (SignalList() << Insert(12, 18) << Change(14, 18))
-            << (SignalList() << Insert(12, 18));
-    QTest::newRow("i(12-18),c(12-16)")
-            << (SignalList() << Insert(12, 18) << Change(12, 16))
-            << (SignalList() << Insert(12, 18));
-    QTest::newRow("i(12-18),c(11-19)")
-            << (SignalList() << Insert(12, 18) << Change(11, 19))
-            << (SignalList() << Insert(12, 18) << Change(11, 12) << Change(18, 19));
-    QTest::newRow("i(12-18),c(8-12)")
-            << (SignalList() << Insert(12, 18) << Change(8, 12))
-            << (SignalList() << Insert(12, 18) << Change(8, 12));
-    QTest::newRow("i(12-18),c(2-6)")
-            << (SignalList() << Insert(12, 18) << Change(2, 6))
-            << (SignalList() << Insert(12, 18) << Change(2, 6));
-    QTest::newRow("i(12-18),c(18-22)")
-            << (SignalList() << Insert(12, 18) << Change(18, 22))
-            << (SignalList() << Insert(12, 18) << Change(18, 22));
-    QTest::newRow("i(12-18),c(20-24)")
-            << (SignalList() << Insert(12, 18) << Change(20, 24))
-            << (SignalList() << Insert(12, 18) << Change(20, 24));
+    // Insert,then change
+    QTest::newRow("i(12,6),c(12,6)")
+            << (SignalList() << Insert(12,6) << Change(12,6))
+            << (SignalList() << Insert(12,6));
+    QTest::newRow("i(12,6),c(10,6)")
+            << (SignalList() << Insert(12,6) << Change(10,6))
+            << (SignalList() << Insert(12,6) << Change(10,2));
+    QTest::newRow("i(12,6),c(16,4)")
+            << (SignalList() << Insert(12,6) << Change(16,4))
+            << (SignalList() << Insert(12,6) << Change(18,2));
+    QTest::newRow("i(12,6),c(13,4)")
+            << (SignalList() << Insert(12,6) << Change(13,4))
+            << (SignalList() << Insert(12,6));
+    QTest::newRow("i(12,6),c(14,4)")
+            << (SignalList() << Insert(12,6) << Change(14,4))
+            << (SignalList() << Insert(12,6));
+    QTest::newRow("i(12,6),c(12,4)")
+            << (SignalList() << Insert(12,6) << Change(12,4))
+            << (SignalList() << Insert(12,6));
+    QTest::newRow("i(12,6),c(11,8)")
+            << (SignalList() << Insert(12,6) << Change(11,8))
+            << (SignalList() << Insert(12,6) << Change(11,1) << Change(18,1));
+    QTest::newRow("i(12,6),c(8,4)")
+            << (SignalList() << Insert(12,6) << Change(8,4))
+            << (SignalList() << Insert(12,6) << Change(8,4));
+    QTest::newRow("i(12,6),c(2,4)")
+            << (SignalList() << Insert(12,6) << Change(2,4))
+            << (SignalList() << Insert(12,6) << Change(2,4));
+    QTest::newRow("i(12,6),c(18,4)")
+            << (SignalList() << Insert(12,6) << Change(18,4))
+            << (SignalList() << Insert(12,6) << Change(18,4));
+    QTest::newRow("i(12,6),c(20,4)")
+            << (SignalList() << Insert(12,6) << Change(20,4))
+            << (SignalList() << Insert(12,6) << Change(20,4));
 
-    // Remove, then insert
-    QTest::newRow("r(12-18),i(12-18)")
-            << (SignalList() << Remove(12, 18) << Insert(12, 18))
-            << (SignalList() << Remove(12, 18) << Insert(12, 18));
-    QTest::newRow("r(12-18),i(10-14)")
-            << (SignalList() << Remove(12, 18) << Insert(10, 14))
-            << (SignalList() << Remove(12, 18) << Insert(10, 14));
-    QTest::newRow("r(12-18),i(16-20)")
-            << (SignalList() << Remove(12, 18) << Insert(16, 20))
-            << (SignalList() << Remove(12, 18) << Insert(16, 20));
-    QTest::newRow("r(12-18),i(13-17)")
-            << (SignalList() << Remove(12, 18) << Insert(13, 17))
-            << (SignalList() << Remove(12, 18) << Insert(13, 17));
-    QTest::newRow("r(12-18),i(14-18)")
-            << (SignalList() << Remove(12, 18) << Insert(14, 18))
-            << (SignalList() << Remove(12, 18) << Insert(14, 18));
-    QTest::newRow("r(12-18),i(12-16)")
-            << (SignalList() << Remove(12, 18) << Insert(12, 16))
-            << (SignalList() << Remove(12, 18) << Insert(12, 16));
-    QTest::newRow("r(12-18),i(11-19)")
-            << (SignalList() << Remove(12, 18) << Insert(11, 19))
-            << (SignalList() << Remove(12, 18) << Insert(11, 19));
-    QTest::newRow("i(12-18),r(8-12)")
-            << (SignalList() << Remove(12, 18) << Insert(8, 12))
-            << (SignalList() << Remove(12, 18) << Insert(8, 12));
-    QTest::newRow("i(12-18),r(2-6)")
-            << (SignalList() << Remove(12, 18) << Insert(2, 6))
-            << (SignalList() << Remove(12, 18) << Insert(2, 6));
-    QTest::newRow("i(12-18),r(18-22)")
-            << (SignalList() << Remove(12, 18) << Insert(18, 22))
-            << (SignalList() << Remove(12, 18) << Insert(18, 22));
-    QTest::newRow("i(12-18),r(20-24)")
-            << (SignalList() << Remove(12, 18) << Insert(20, 24))
-            << (SignalList() << Remove(12, 18) << Insert(20, 24));
+    // Remove,then insert
+    QTest::newRow("r(12,6),i(12,6)")
+            << (SignalList() << Remove(12,6) << Insert(12,6))
+            << (SignalList() << Remove(12,6) << Insert(12,6));
+    QTest::newRow("r(12,6),i(10,4)")
+            << (SignalList() << Remove(12,6) << Insert(10,14))
+            << (SignalList() << Remove(12,6) << Insert(10,14));
+    QTest::newRow("r(12,6),i(16,4)")
+            << (SignalList() << Remove(12,6) << Insert(16,4))
+            << (SignalList() << Remove(12,6) << Insert(16,4));
+    QTest::newRow("r(12,6),i(13,4)")
+            << (SignalList() << Remove(12,6) << Insert(13,4))
+            << (SignalList() << Remove(12,6) << Insert(13,4));
+    QTest::newRow("r(12,6),i(14,4)")
+            << (SignalList() << Remove(12,6) << Insert(14,4))
+            << (SignalList() << Remove(12,6) << Insert(14,4));
+    QTest::newRow("r(12,6),i(12,4)")
+            << (SignalList() << Remove(12,6) << Insert(12,4))
+            << (SignalList() << Remove(12,6) << Insert(12,4));
+    QTest::newRow("r(12,6),i(11,8)")
+            << (SignalList() << Remove(12,6) << Insert(11,8))
+            << (SignalList() << Remove(12,6) << Insert(11,8));
+    QTest::newRow("r(12,6),i(8,4)")
+            << (SignalList() << Remove(12,6) << Insert(8,4))
+            << (SignalList() << Remove(12,6) << Insert(8,4));
+    QTest::newRow("r(12,6),i(2,4)")
+            << (SignalList() << Remove(12,6) << Insert(2,4))
+            << (SignalList() << Remove(12,6) << Insert(2,4));
+    QTest::newRow("r(12,6),i(18,4)")
+            << (SignalList() << Remove(12,6) << Insert(18,4))
+            << (SignalList() << Remove(12,6) << Insert(18,4));
+    QTest::newRow("r(12,6),i(20,4)")
+            << (SignalList() << Remove(12,6) << Insert(20,4))
+            << (SignalList() << Remove(12,6) << Insert(20,4));
 
-    // Move, then insert
-    QTest::newRow("m(12-18,5),i(12-18)")
-            << (SignalList() << Move(12, 18, 5) << Insert(12, 18))
-            << (SignalList() << Insert(6, 12) << Move(18, 24, 5));
-    QTest::newRow("m(12-18,5),i(10-14)")
-            << (SignalList() << Move(12, 18, 5) << Insert(10, 14))
-            << (SignalList() << Insert(5, 9) << Move(16, 21, 5) << Move(21, 22, 14));
-    QTest::newRow("m(12-18,5),i(16-20)")
-            << (SignalList() << Move(12, 18, 5) << Insert(16, 20))
-            << (SignalList() << Insert(10, 14) << Move(16, 22, 5));
-    QTest::newRow("m(12-18,5),i(13-17)")
-            << (SignalList() << Move(12, 18, 5) << Insert(13, 17))
-            << (SignalList() << Insert(7, 11) << Move(16, 22, 5));
-    QTest::newRow("m(12-18,5),i(14-18)")
-            << (SignalList() << Move(12, 18, 5) << Insert(14, 18))
-            << (SignalList() << Insert(8, 12) << Move(16, 22, 5));
-    QTest::newRow("m(12-18,5),i(12-16)")
-            << (SignalList() << Move(12, 18, 5) << Insert(12, 16))
-            << (SignalList() << Insert(6, 10) << Move(16, 22, 5));
-    QTest::newRow("m(12-18,5),i(11-19)")
-            << (SignalList() << Move(12, 18, 5) << Insert(11, 19))
-            << (SignalList() << Insert(5, 13) << Move(20, 26, 5));
-    QTest::newRow("m(12-18,5),i(8-12)")
-            << (SignalList() << Move(12, 18, 5) << Insert(8, 12))
-            << (SignalList() << Insert(5, 9) << Move(16, 19, 5) << Move(19, 22, 12));
-    QTest::newRow("m(12-18,5),i(2-6)")
-            << (SignalList() << Move(12, 18, 5) << Insert(2, 6))
-            << (SignalList() << Insert(2, 6) << Move(16, 22, 9));
-    QTest::newRow("m(12-18,5),i(18-22)")
-            << (SignalList() << Move(12, 18, 5) << Insert(18, 22))
-            << (SignalList() << Insert(18, 22) << Move(12, 18, 5));
-    QTest::newRow("m(12-18,5),i(20-24)")
-            << (SignalList() << Move(12, 18, 5) << Insert(20, 24))
-            << (SignalList() << Insert(20, 24) << Move(12, 18, 5));
+    // Move,then insert
+    QTest::newRow("m(12-5,6),i(12,6)")
+            << (SignalList() << Move(12,5,6) << Insert(12,6))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(12,6));
+    QTest::newRow("m(12-5,6),i(10,4)")
+            << (SignalList() << Move(12,5,6) << Insert(10,4))
+            << (SignalList() << Remove(12,5,0) << Remove(12,1,1) << Insert(5,5,0) << Insert(10,4) << Insert(14,1,1));
+    QTest::newRow("m(12-5,6),i(16,4)")
+            << (SignalList() << Move(12,5,6) << Insert(16,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(16,4));
+    QTest::newRow("m(12-5,6),i(13,4)")
+            << (SignalList() << Move(12,5,6) << Insert(13,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(13,4));
+    QTest::newRow("m(12-5,6),i(14,4)")
+            << (SignalList() << Move(12,5,6) << Insert(14,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(14,4));
+    QTest::newRow("m(12-5,6),i(12,4)")
+            << (SignalList() << Move(12,5,6) << Insert(12,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(12,4));
+    QTest::newRow("m(12-5,6),i(11,8)")
+            << (SignalList() << Move(12,5,6) << Insert(11,8))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(11,8));
+    QTest::newRow("m(12-5,6),i(8,4)")
+            << (SignalList() << Move(12,5,6) << Insert(8,4))
+            << (SignalList() << Remove(12,3,0) << Remove(12,3,1) << Insert(5,3,0) << Insert(8,4) << Insert(12,3,1));
+    QTest::newRow("m(12-5,6),i(2,4)")
+            << (SignalList() << Move(12,5,6) << Insert(2,4))
+            << (SignalList() << Remove(12,6,0) << Insert(2,4) << Insert(9,6,0));
+    QTest::newRow("m(12-5,6),i(18,4)")
+            << (SignalList() << Move(12,5,6) << Insert(18,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(18,4));
+    QTest::newRow("m(12-5,6),i(20,4)")
+            << (SignalList() << Move(12,5,6) << Insert(20,4))
+            << (SignalList() << Remove(12,6,0) << Insert(5,6,0) << Insert(20,4));
 
-    QTest::newRow("m(12-18,23),i(12-18)")
-            << (SignalList() << Move(12, 18, 23) << Insert(12, 18))
-            << (SignalList() << Insert(12, 18) << Move(18, 24, 29));
-    QTest::newRow("m(12-18,23),i(10-14)")
-            << (SignalList() << Move(12, 18, 23) << Insert(10, 14))
-            << (SignalList() << Insert(10, 14) << Move(16, 22, 27));
-    QTest::newRow("m(12-18,23),i(16-20)")
-            << (SignalList() << Move(12, 18, 23) << Insert(16, 20))
-            << (SignalList() << Insert(22, 26) << Move(12, 18, 27));
-    QTest::newRow("m(12-18,23),i(13-17)")
-            << (SignalList() << Move(12, 18, 23) << Insert(13, 17))
-            << (SignalList() << Insert(19, 23) << Move(12, 18, 27));
-    QTest::newRow("m(12-18,23),i(14-18)")
-            << (SignalList() << Move(12, 18, 23) << Insert(14, 18))
-            << (SignalList() << Insert(20, 24) << Move(12, 18, 27));
-    QTest::newRow("m(12-18,23),i(12-16)")
-            << (SignalList() << Move(12, 18, 23) << Insert(12, 16))
-            << (SignalList() << Insert(12, 16) << Move(16, 22, 27));
-    QTest::newRow("m(12-18,23),i(11-19)")
-            << (SignalList() << Move(12, 18, 23) << Insert(11, 19))
-            << (SignalList() << Insert(11, 19) << Move(20, 26, 31));
-    QTest::newRow("m(12-18,23),i(8-12)")
-            << (SignalList() << Move(12, 18, 23) << Insert(8, 12))
-            << (SignalList() << Insert(8, 12) << Move(16, 22, 27));
-    QTest::newRow("m(12-18,23),i(2-6)")
-            << (SignalList() << Move(12, 18, 23) << Insert(2, 6))
-            << (SignalList() << Insert(2, 6) << Move(16, 22, 27));
-    QTest::newRow("m(12-18,23),i(18-22)")
-            << (SignalList() << Move(12, 18, 23) << Insert(18, 22))
-            << (SignalList() << Insert(24, 28) << Move(12, 18, 27));
-    QTest::newRow("m(12-18,23),i(20-24)")
-            << (SignalList() << Move(12, 18, 23) << Insert(20, 24))
-            << (SignalList() << Insert(26, 30) << Move(12, 18, 27));
+    QTest::newRow("m(12-23,6),i(12,6)")
+            << (SignalList() << Move(12,23,6) << Insert(12,6))
+            << (SignalList() << Remove(12,6,0) << Insert(12,6) << Insert(29,6,0));
+    QTest::newRow("m(12-23,6),i(10,4)")
+            << (SignalList() << Move(12,23,6) << Insert(10,4))
+            << (SignalList() << Remove(12,6,0) << Insert(10,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(16,4)")
+            << (SignalList() << Move(12,23,6) << Insert(16,4))
+            << (SignalList() << Remove(12,6,0) << Insert(16,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(13,4)")
+            << (SignalList() << Move(12,23,6) << Insert(13,4))
+            << (SignalList() << Remove(12,6,0) << Insert(13,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(14,4)")
+            << (SignalList() << Move(12,23,6) << Insert(14,4))
+            << (SignalList() << Remove(12,6,0) << Insert(14,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(12,4)")
+            << (SignalList() << Move(12,23,6) << Insert(12,4))
+            << (SignalList() << Remove(12,6,0) << Insert(12,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(11,8)")
+            << (SignalList() << Move(12,23,6) << Insert(11,8))
+            << (SignalList() << Remove(12,6,0) << Insert(11,8) << Insert(31,6,0));
+    QTest::newRow("m(12-23,6),i(8,4)")
+            << (SignalList() << Move(12,23,6) << Insert(8,4))
+            << (SignalList() << Remove(12,6,0) << Insert(8,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(2,4)")
+            << (SignalList() << Move(12,23,6) << Insert(2,4))
+            << (SignalList() << Remove(12,6,0) << Insert(2,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(18,4)")
+            << (SignalList() << Move(12,23,6) << Insert(18,4))
+            << (SignalList() << Remove(12,6,0) << Insert(18,4) << Insert(27,6,0));
+    QTest::newRow("m(12-23,6),i(20,4)")
+            << (SignalList() << Move(12,23,6) << Insert(20,4))
+            << (SignalList() << Remove(12,6,0) << Insert(20,4) << Insert(27,6,0));
 
-    // Move, then remove
-    QTest::newRow("m(12-18,5),r(12-18)")
-            << (SignalList() << Move(12, 18, 5) << Remove(12, 18))
-            << (SignalList() << Remove(6, 12) << Move(6, 12, 5));
-    QTest::newRow("m(12-18,5),r(10-14)")
-            << (SignalList() << Move(12, 18, 5) << Remove(10, 14))
-            << (SignalList() << Remove(5, 8) << Remove(14, 15) << Move(9, 14, 5));
-    QTest::newRow("m(12-18,5),r(16-20)")
-            << (SignalList() << Move(12, 18, 5) << Remove(16, 20))
-            << (SignalList() << Remove(10, 12) << Remove(16, 18) << Move(10, 16, 5));
-    QTest::newRow("m(12-18,5),r(13-17)")
-            << (SignalList() << Move(12, 18, 5) << Remove(13, 17))
-            << (SignalList() << Remove(7, 11) << Move(8, 14, 5));
-    QTest::newRow("m(12-18,5),r(14-18)")
-            << (SignalList() << Move(12, 18, 5) << Remove(14, 18))
-            << (SignalList() << Remove(8, 12) << Move(8, 14, 5));
-    QTest::newRow("m(12-18,5),r(12-16)")
-            << (SignalList() << Move(12, 18, 5) << Remove(12, 16))
-            << (SignalList() << Remove(6, 10) << Move(8, 14, 5));
-    QTest::newRow("m(12-18,5),r(11-19)")
-            << (SignalList() << Move(12, 18, 5) << Remove(11, 19))
-            << (SignalList() << Remove(5, 12) << Remove(11, 12));
-    QTest::newRow("m(12-18,5),r(8-12)")
-            << (SignalList() << Move(12, 18, 5) << Remove(8, 12))
-            << (SignalList() << Remove(5, 6) << Remove(14, 17) << Move(11, 14, 5));
-    QTest::newRow("m(12-18,5),r(2-6)")
-            << (SignalList() << Move(12, 18, 5) << Remove(2, 6))
-            << (SignalList() << Remove(2, 5) << Remove(9, 10) << Move(9, 14, 2));
-    QTest::newRow("m(12-18,5),r(6-10)")
-            << (SignalList() << Move(12, 18, 5) << Remove(6, 10))
-            << (SignalList() << Remove(13, 17) << Move(12, 14, 5));
-    QTest::newRow("m(12-18,5),r(18-22)")
-            << (SignalList() << Move(12, 18, 5) << Remove(18, 22))
-            << (SignalList() << Remove(18, 22) << Move(12, 18, 5));
-    QTest::newRow("m(12-18,5),r(20-24)")
-            << (SignalList() << Move(12, 18, 5) << Remove(20, 24))
-            << (SignalList() << Remove(20, 24) << Move(12, 18, 5));
+    // Move,then remove
+    QTest::newRow("m(12-5,6),r(12,6)")
+            << (SignalList() << Move(12,5,6) << Remove(12,6))
+            << (SignalList() << Remove(6,6) << Remove(6,6,0) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(10,4)")
+            << (SignalList() << Move(12,5,6) << Remove(10,4))
+            << (SignalList() << Remove(5,3) << Remove(9,5,0) << Remove(9,1) << Insert(5,5,0));
+    QTest::newRow("m(12-5,6),r(16,4)")
+            << (SignalList() << Move(12,5,6) << Remove(16,4))
+            << (SignalList() << Remove(10,2) << Remove(10,6,0) << Remove(10,2) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(13,4)")
+            << (SignalList() << Move(12,5,6) << Remove(13,4))
+            << (SignalList() << Remove(7,4) << Remove(8,6,0) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(14,4)")
+            << (SignalList() << Move(12,5,6) << Remove(14,4))
+            << (SignalList() << Remove(8,4) << Remove(8,6,0) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(12,4)")
+            << (SignalList() << Move(12,5,6) << Remove(12,4))
+            << (SignalList() << Remove(6,4) << Remove(8,6,0) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(11,8)")
+            << (SignalList() << Move(12,5,6) << Remove(11,8))
+            << (SignalList() << Remove(5,7) << Remove(5,6,0) << Remove(5,1) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(8,4)")
+            << (SignalList() << Move(12,5,6) << Remove(8,4))
+            << (SignalList() << Remove(5,1) << Remove(11,3,0) << Remove(11,3) << Insert(5,3,0));
+    QTest::newRow("m(12-5,6),r(2,4)")
+            << (SignalList() << Move(12,5,6) << Remove(2,4))
+            << (SignalList() << Remove(2,3) << Remove(9,1) << Remove(9,5,0) << Insert(2,5,0));
+    QTest::newRow("m(12-5,6),r(6,4)")
+            << (SignalList() << Move(12,5,6) << Remove(6,4))
+            << (SignalList() << Remove(12,1,0) << Remove(12,4) << Remove(12,1,1) << Insert(5,1,0) << Insert(6,1,1));
+    QTest::newRow("m(12-5,6),r(18,4)")
+            << (SignalList() << Move(12,5,6) << Remove(18,4))
+            << (SignalList() << Remove(12,6,0) << Remove(12,4) << Insert(5,6,0));
+    QTest::newRow("m(12-5,6),r(20,4)")
+            << (SignalList() << Move(12,5,6) << Remove(20,4))
+            << (SignalList() << Remove(12,6,0) << Remove(14,4) << Insert(5,6,0));
 
-    QTest::newRow("m(12-18,23),r(12-18)")
-            << (SignalList() << Move(12, 18, 23) << Remove(12, 18))
-            << (SignalList() << Remove(18, 24) << Move(12, 18, 17));
-    QTest::newRow("m(12-18,23),r(10-14)")
-            << (SignalList() << Move(12, 18, 23) << Remove(10, 14))
-            << (SignalList() << Remove(10, 12) << Remove(16, 18) << Move(10, 16, 19));
-    QTest::newRow("m(12-18,23),r(16-20)")
-            << (SignalList() << Move(12, 18, 23) << Remove(16, 20))
-            << (SignalList() << Remove(22, 26) << Move(12, 18, 19));
-    QTest::newRow("m(12-18,23),r(13-17)")
-            << (SignalList() << Move(12, 18, 23) << Remove(13, 17))
-            << (SignalList() << Remove(19, 23) << Move(12, 18, 19));
-    QTest::newRow("m(12-18,23),r(14-18)")
-            << (SignalList() << Move(12, 18, 23) << Remove(14, 18))
-            << (SignalList() << Remove(20, 24) << Move(12, 18, 19));
-    QTest::newRow("m(12-18,23),r(12-16)")
-            << (SignalList() << Move(12, 18, 23) << Remove(12, 16))
-            << (SignalList() << Remove(18, 22) << Move(12, 18, 19));
-    QTest::newRow("m(12-18,23),r(11-19)")
-            << (SignalList() << Move(12, 18, 23) << Remove(11, 19))
-            << (SignalList() << Remove(11, 12) << Remove(17, 24) << Move(11, 17, 15));
-    QTest::newRow("m(12-18,23),r(8-12)")
-            << (SignalList() << Move(12, 18, 23) << Remove(8, 12))
-            << (SignalList() << Remove(8, 12) << Move(8, 14, 19));
-    QTest::newRow("m(12-18,23),r(2-6)")
-            << (SignalList() << Move(12, 18, 23) << Remove(2, 6))
-            << (SignalList() << Remove(2, 6) << Move(8, 14, 19));
-    QTest::newRow("m(12-18,23),r(18-22)")
-            << (SignalList() << Move(12, 18, 23) << Remove(18, 22))
-            << (SignalList() << Remove(24, 28) << Move(12, 18, 19));
-    QTest::newRow("m(12-18,23),r(20-24)")
-            << (SignalList() << Move(12, 18, 23) << Remove(20, 24))
-            << (SignalList() << Remove(12, 13) << Remove(25, 28) << Move(12, 17, 20));
+    QTest::newRow("m(12-23,6),r(12,6)")
+            << (SignalList() << Move(12,23,6) << Remove(12,6))
+            << (SignalList() << Remove(12,6,0) << Remove(12,6) << Insert(17,6,0));
+    QTest::newRow("m(12-23,6),r(10,4)")
+            << (SignalList() << Move(12,23,6) << Remove(10,4))
+            << (SignalList() << Remove(10,2) << Remove(10,6,0) << Remove(10,2) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(16,4)")
+            << (SignalList() << Move(12,23,6) << Remove(16,4))
+            << (SignalList() << Remove(12,6,0) << Remove(16,4) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(13,4)")
+            << (SignalList() << Move(12,23,6) << Remove(13,4))
+            << (SignalList() << Remove(12,6,0) << Remove(13,4) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(14,4)")
+            << (SignalList() << Move(12,23,6) << Remove(14,4))
+            << (SignalList() << Remove(12,6,0) << Remove(14,4) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(12,4)")
+            << (SignalList() << Move(12,23,6) << Remove(12,4))
+            << (SignalList() << Remove(12,6,0) << Remove(12,4) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(11,8)")
+            << (SignalList() << Move(12,23,6) << Remove(11,8))
+            << (SignalList() << Remove(11,1) << Remove(11,6,0) << Remove(11,7) << Insert(15,6,0));
+    QTest::newRow("m(12-23,6),r(8,4)")
+            << (SignalList() << Move(12,23,6) << Remove(8,4))
+            << (SignalList() << Remove(8,4) << Remove(8,6,0) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(2,4)")
+            << (SignalList() << Move(12,23,6) << Remove(2,4))
+            << (SignalList() << Remove(2,4) << Remove(8,6,0) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(18,4)")
+            << (SignalList() << Move(12,23,6) << Remove(18,4))
+            << (SignalList() << Remove(12,6,0) << Remove(18,4) << Insert(19,6,0));
+    QTest::newRow("m(12-23,6),r(20,4)")
+            << (SignalList() << Move(12,23,6) << Remove(20,4))
+            << (SignalList() << Remove(12,1) << Remove(12,5,0) << Remove(20,3) << Insert(20,5,0));
 }
 
 void tst_qdeclarativemodelchange::sequence()
@@ -560,24 +733,22 @@ void tst_qdeclarativemodelchange::sequence()
 
     foreach (const Signal &signal, input) {
         if (signal.isRemove())
-            set.insertRemove(signal.start, signal.end);
+            set.remove(signal.index, signal.count);
         else if (signal.isInsert())
-            set.insertInsert(signal.start, signal.end);
+            set.insert(signal.index, signal.count);
         else if (signal.isMove())
-            set.insertMove(signal.start, signal.end, signal.to);
+            set.move(signal.index, signal.to, signal.count);
         else if (signal.isChange())
-            set.insertChange(signal.start, signal.end);
+            set.change(signal.index, signal.count);
     }
 
     SignalList changes;
     foreach (const QDeclarativeChangeSet::Remove &remove, set.removes())
-        changes << Remove(remove.start, remove.end);
+        changes << Remove(remove.index, remove.count, remove.moveId);
     foreach (const QDeclarativeChangeSet::Insert &insert, set.inserts())
-        changes << Insert(insert.start, insert.end);
-    foreach (const QDeclarativeChangeSet::Move &move, set.moves())
-        changes << Move(move.start, move.end, move.to);
+        changes << Insert(insert.index, insert.count, insert.moveId);
     foreach (const QDeclarativeChangeSet::Change &change, set.changes())
-        changes << Change(change.start, change.end);
+        changes << Change(change.index, change.count);
 
 #ifdef VERIFY_EXPECTED_OUTPUT
     QVector<int> list;
