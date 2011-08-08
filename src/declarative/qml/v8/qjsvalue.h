@@ -34,7 +34,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Script)
+QT_MODULE(Declarative)
 
 class QJSValue;
 class QJSEngine;
@@ -50,7 +50,7 @@ class QJSValuePrivate;
 struct QScriptValuePrivatePointerDeleter;
 template <class T> class QScriptPassPointer;
 
-class Q_SCRIPT_EXPORT QJSValue
+class Q_DECLARATIVE_EXPORT QJSValue
 {
 public:
     enum PropertyFlag {

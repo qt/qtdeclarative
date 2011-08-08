@@ -31,12 +31,12 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Script)
+QT_MODULE(Declarative)
 
 class QString;
 
 class QJSValueIteratorPrivate;
-class Q_SCRIPT_EXPORT QJSValueIterator
+class Q_DECLARATIVE_EXPORT QJSValueIterator
 {
 public:
     QJSValueIterator(const QJSValue &value);
