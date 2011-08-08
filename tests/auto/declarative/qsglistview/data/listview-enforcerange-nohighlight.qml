@@ -48,6 +48,7 @@ Rectangle {
         height: 320
         model: testModel
         delegate: myDelegate
+        focus: true
 
         preferredHighlightBegin: 100
         preferredHighlightEnd: 100
