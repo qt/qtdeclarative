@@ -174,24 +174,13 @@ void QSGCanvas::exposeEvent(QExposeEvent *)
 
 void QSGCanvas::resizeEvent(QResizeEvent *e)
 {
-    // Since we are faking resizeEvent from QEvent::Map in event(), spit
-    // out a warning when it starts to work properly
-    if (e)
-        qDebug("Resize events are working, remove this code: %s : %d", __FILE__, __LINE__);
-
     Q_D(QSGCanvas);
     d->thread->resize(size());
 }
 
 void QSGCanvas::showEvent(QShowEvent *e)
 {
-    // Since we are faking the showEvent from QEvent::Map in ::event(), spit
-    // out a warning when it starts to work properly...
-    if (e)
-        qDebug("Show events are working, remove this code: %s : %d", __FILE__, __LINE__);
-
     Q_D(QSGCanvas);
-
     if (d->vsyncAnimations) {
         if (!d->animationDriver) {
             d->animationDriver = d->context->createAnimationDriver(this);
@@ -209,11 +198,6 @@ void QSGCanvas::showEvent(QShowEvent *e)
 
 void QSGCanvas::hideEvent(QHideEvent *e)
 {
-    // Since we are faking the showEvent from QEvent::Map in ::event(), spit
-    // out a warning when it starts to work properly...
-    if (e)
-        qDebug("Hide events are working, remove this code: %s : %d", __FILE__, __LINE__);
-
     Q_D(QSGCanvas);
     d->thread->stopRenderThread();
 }
@@ -845,14 +829,6 @@ void QSGCanvasPrivate::clearHover()
 
 bool QSGCanvas::event(QEvent *e)
 {
-    // Fake a resize/show/hide events until QWindow starts sending events properly.
-    if (e->type() == QEvent::Map) {
-        resizeEvent(0);
-        showEvent(0);
-    } else if(e->type() == QEvent::Unmap) {
-        hideEvent(0);
-    }
-
     Q_D(QSGCanvas);
 
     if (e->type() == QEvent::User) {
