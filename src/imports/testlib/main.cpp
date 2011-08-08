@@ -58,8 +58,8 @@ QML_DECLARE_TYPE(QuickTestEvent)
 class QuickTestUtil : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions)
-    Q_PROPERTY(bool wrapper READ wrapper)
+    Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
+    Q_PROPERTY(bool wrapper READ wrapper NOTIFY wrapperChanged)
 public:
     QuickTestUtil(QObject *parent = 0)
         :QObject(parent)
@@ -75,7 +75,9 @@ public:
     {
         return true;
     }
-
+Q_SIGNALS:
+    void printAvailableFunctionsChanged();
+    void wrapperChanged();
 public Q_SLOTS:
 
     QDeclarativeV8Handle typeName(const QVariant& v) const
