@@ -324,8 +324,10 @@ void tst_qsgborderimage::sciSource_data()
     QTest::addColumn<bool>("valid");
 
     QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/colors-round.sci").toString() << true;
+    QTest::newRow("local quoted filename") << QUrl::fromLocalFile(SRCDIR "/data/colors-round-quotes.sci").toString() << true;
     QTest::newRow("local not found") << QUrl::fromLocalFile(SRCDIR "/data/no-such-file.sci").toString() << false;
     QTest::newRow("remote") << SERVER_ADDR "/colors-round.sci" << true;
+    QTest::newRow("remote filename quoted") << SERVER_ADDR "/colors-round-quotes.sci" << true;
     QTest::newRow("remote image") << SERVER_ADDR "/colors-round-remote.sci" << true;
     QTest::newRow("remote not found") << SERVER_ADDR "/no-such-file.sci" << false;
 }
