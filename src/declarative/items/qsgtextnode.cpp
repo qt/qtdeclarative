@@ -156,11 +156,8 @@ QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &g
     node->setGlyphs(position, glyphs);
 
     if (node != prevNode) {
-        if (QSGDistanceFieldGlyphCache::distanceFieldEnabled()) {
-            QSGDistanceFieldGlyphNode *dfNode = static_cast<QSGDistanceFieldGlyphNode *>(node);
-            dfNode->setStyle(style);
-            dfNode->setStyleColor(styleColor);
-        }
+        node->setStyle(style);
+        node->setStyleColor(styleColor);
         node->setColor(color);
     }
 

@@ -91,6 +91,7 @@ private:
     static QSet<QUrl> errors;
 };
 
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 DEFINE_BOOL_CONFIG_OPTION(enableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE);
 
 QString QSGTextPrivate::elideChar = QString(0x2026);
@@ -574,7 +575,7 @@ void QSGTextPrivate::invalidateImageCache()
 {
     Q_Q(QSGText);
 
-    if(richTextAsImage || cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && style != QSGText::Normal)){//If actually using the image cache
+    if(richTextAsImage || cacheAllTextAsImage || (qmlDisableDistanceField() && style != QSGText::Normal)){//If actually using the image cache
         if (imageCacheDirty)
             return;
 
@@ -906,7 +907,7 @@ void QSGText::setFont(const QFont &font)
     d->sourceFont = font;
     QFont oldFont = d->font;
     d->font = font;
-    if (QSGDistanceFieldGlyphCache::distanceFieldEnabled())
+    if (!qmlDisableDistanceField())
         d->font.setHintingPreference(QFont::PreferNoHinting);
 
     if (d->font.pointSizeF() != -1) {
@@ -1483,7 +1484,7 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         d->updateLayout();
 
     // XXX todo - some styled text can be done by the QSGTextNode
-    if (d->richTextAsImage || d->cacheAllTextAsImage || (!QSGDistanceFieldGlyphCache::distanceFieldEnabled() && d->style != Normal)) {
+    if (d->richTextAsImage || d->cacheAllTextAsImage || (qmlDisableDistanceField() && d->style != Normal)) {
         bool wasDirty = d->textureImageCacheDirty;
         d->textureImageCacheDirty = false;
 

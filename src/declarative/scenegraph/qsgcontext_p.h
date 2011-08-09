@@ -114,6 +114,9 @@ public:
     void setRenderAlpha(qreal renderAlpha);
     qreal renderAlpha() const;
 
+    void setDistanceFieldEnabled(bool enabled);
+    bool isDistanceFieldEnabled() const;
+
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 
 signals:

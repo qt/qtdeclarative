@@ -797,48 +797,17 @@ static bool fontHasNarrowOutlines(const QRawFont &f)
     return minHThick == 1 || minVThick == 1;
 }
 
-DEFINE_BOOL_CONFIG_OPTION(disableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *> QSGDistanceFieldGlyphCache::m_caches;
-QHash<QFontEngine *, QGLContextGroupResource<QSGDistanceFieldGlyphCache::DistanceFieldTextureData> > QSGDistanceFieldGlyphCache::m_textures_data;
-
-QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCache::get(const QGLContext *ctx, const QRawFont &font)
-{
-    QRawFontPrivate *fontD = QRawFontPrivate::get(font);
-    QPair<const QGLContext *, QFontEngine *> key(ctx, fontD->fontEngine);
-    QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *>::iterator atlas = m_caches.find(key);
-    if (atlas == m_caches.end())
-        atlas = m_caches.insert(key, new QSGDistanceFieldGlyphCache(ctx, font));
-
-    return atlas.value();
-}
-
-QSGDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDistanceFieldGlyphCache::textureData()
-{
-    return m_textures_data[QRawFontPrivate::get(m_font)->fontEngine].value(ctx);
-}
-
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QGLContext *c, const QRawFont &font)
-    : QObject()
-    , m_maxTextureSize(0)
-    , ctx(c)
-    , m_blitProgram(0)
+QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager(const QGLContext *c)
+    : ctx(c)
     , m_threshold_func(defaultThresholdFunc)
     , m_antialiasingSpread_func(defaultAntialiasingSpreadFunc)
+    , m_maxTextureSize(0)
 {
-    Q_ASSERT(font.isValid());
-    m_font = font;
-
-    m_textureData = textureData();
-
-    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
-    m_glyphCount = fontD->fontEngine->glyphCount();
-
-    m_textureData->doubleGlyphResolution = fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
-
-    m_referenceFont = m_font;
-    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE);
-    Q_ASSERT(m_referenceFont.isValid());
+#ifndef QT_OPENGL_ES
+    m_defaultAntialiasingMode = QSGGlyphNode::SubPixelAntialiasing;
+#else
+    m_defaultAntialiasingMode = QSGGlyphNode::GrayAntialiasing;
+#endif
 
     m_vertexCoordinateArray[0] = -1.0f;
     m_vertexCoordinateArray[1] = -1.0f;
@@ -858,24 +827,88 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QGLContext *c, cons
     m_textureCoordinateArray[6] = 0.0f;
     m_textureCoordinateArray[7] = 1.0f;
 
-    connect(QGLSignalProxy::instance(), SIGNAL(aboutToDestroyContext(const QGLContext*)),
-            this, SLOT(onContextDestroyed(const QGLContext*)));
+    m_blitProgram = new QGLShaderProgram;
+    {
+        QString source;
+        source.append(QLatin1String(qglslMainWithTexCoordsVertexShader));
+        source.append(QLatin1String(qglslUntransformedPositionVertexShader));
+
+        QGLShader *vertexShader = new QGLShader(QGLShader::Vertex, m_blitProgram);
+        vertexShader->compileSourceCode(source);
+
+        m_blitProgram->addShader(vertexShader);
+    }
+    {
+        QString source;
+        source.append(QLatin1String(qglslMainFragmentShader));
+        source.append(QLatin1String(qglslImageSrcFragmentShader));
+
+        QGLShader *fragmentShader = new QGLShader(QGLShader::Fragment, m_blitProgram);
+        fragmentShader->compileSourceCode(source);
+
+        m_blitProgram->addShader(fragmentShader);
+    }
+    m_blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
+    m_blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
+    m_blitProgram->link();
+}
+
+QSGDistanceFieldGlyphCacheManager::~QSGDistanceFieldGlyphCacheManager()
+{
+    delete m_blitProgram;
+    qDeleteAll(m_caches.values());
+}
+
+QSGDistanceFieldGlyphCache *QSGDistanceFieldGlyphCacheManager::cache(const QRawFont &font)
+{
+    QRawFontPrivate *fontD = QRawFontPrivate::get(font);
+    QHash<QFontEngine *, QSGDistanceFieldGlyphCache *>::iterator cache = m_caches.find(fontD->fontEngine);
+    if (cache == m_caches.end())
+        cache = m_caches.insert(fontD->fontEngine, new QSGDistanceFieldGlyphCache(this, ctx, font));
+    return cache.value();
+}
+
+int QSGDistanceFieldGlyphCacheManager::maxTextureSize() const
+{
+    if (!m_maxTextureSize)
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
+    return m_maxTextureSize;
+}
+
+
+QHash<QString, QGLContextGroupResource<QSGDistanceFieldGlyphCache::DistanceFieldTextureData> > QSGDistanceFieldGlyphCache::m_textures_data;
+
+QSGDistanceFieldGlyphCache::DistanceFieldTextureData *QSGDistanceFieldGlyphCache::textureData()
+{
+    QString key = QString::fromLatin1("%1_%2_%3_%4")
+            .arg(m_font.familyName())
+            .arg(m_font.styleName())
+            .arg(m_font.weight())
+            .arg(m_font.style());
+    return m_textures_data[key].value(ctx);
+}
+
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QGLContext *c, const QRawFont &font)
+    : m_manager(man)
+    , ctx(c)
+{
+    Q_ASSERT(font.isValid());
+    m_font = font;
+
+    m_textureData = textureData();
+
+    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
+    m_glyphCount = fontD->fontEngine->glyphCount();
+
+    m_textureData->doubleGlyphResolution = fontHasNarrowOutlines(font) && m_glyphCount < QT_DISTANCEFIELD_HIGHGLYPHCOUNT;
+
+    m_referenceFont = m_font;
+    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE);
+    Q_ASSERT(m_referenceFont.isValid());
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
 {
-    delete m_blitProgram;
-}
-
-void QSGDistanceFieldGlyphCache::onContextDestroyed(const QGLContext *context)
-{
-    if (context != ctx)
-        return;
-
-    QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
-    QPair<const QGLContext *, QFontEngine *> key(context, fontD->fontEngine);
-    m_caches.remove(key);
-    deleteLater();
 }
 
 GLuint QSGDistanceFieldGlyphCache::texture()
@@ -886,13 +919,6 @@ GLuint QSGDistanceFieldGlyphCache::texture()
 QSize QSGDistanceFieldGlyphCache::textureSize() const
 {
     return m_textureData->size;
-}
-
-int QSGDistanceFieldGlyphCache::maxTextureSize() const
-{
-    if (!m_maxTextureSize)
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
-    return m_maxTextureSize;
 }
 
 QSGDistanceFieldGlyphCache::Metrics QSGDistanceFieldGlyphCache::glyphMetrics(glyph_t glyph)
@@ -987,7 +1013,7 @@ void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
 
         if (!cacheIsFull()) {
             m_textureData->currX += QT_DISTANCEFIELD_TILESIZE;
-            if (m_textureData->currX >= maxTextureSize()) {
+            if (m_textureData->currX >= m_manager->maxTextureSize()) {
                 m_textureData->currX = 0;
                 m_textureData->currY += QT_DISTANCEFIELD_TILESIZE;
             }
@@ -1003,7 +1029,7 @@ void QSGDistanceFieldGlyphCache::populate(int count, const glyph_t *glyphs)
             }
         }
 
-        if (c.y < maxTextureSize()) {
+        if (c.y < m_manager->maxTextureSize()) {
             m_textureData->texCoords.insert(glyphIndex, c);
             m_textureData->pendingGlyphs.add(glyphIndex);
         }
@@ -1107,45 +1133,14 @@ void QSGDistanceFieldGlyphCache::resizeTexture(int width, int height)
 
     glViewport(0, 0, oldWidth, oldHeight);
 
-    if (m_blitProgram == 0) {
-        m_blitProgram = new QGLShaderProgram;
+    ctx->functions()->glVertexAttribPointer(QT_VERTEX_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_manager->blitVertexArray());
+    ctx->functions()->glVertexAttribPointer(QT_TEXTURE_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_manager->blitTextureArray());
 
-        {
-            QString source;
-            source.append(QLatin1String(qglslMainWithTexCoordsVertexShader));
-            source.append(QLatin1String(qglslUntransformedPositionVertexShader));
-
-            QGLShader *vertexShader = new QGLShader(QGLShader::Vertex, m_blitProgram);
-            vertexShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(vertexShader);
-        }
-
-        {
-            QString source;
-            source.append(QLatin1String(qglslMainFragmentShader));
-            source.append(QLatin1String(qglslImageSrcFragmentShader));
-
-            QGLShader *fragmentShader = new QGLShader(QGLShader::Fragment, m_blitProgram);
-            fragmentShader->compileSourceCode(source);
-
-            m_blitProgram->addShader(fragmentShader);
-        }
-
-        m_blitProgram->bindAttributeLocation("vertexCoordsArray", QT_VERTEX_COORDS_ATTR);
-        m_blitProgram->bindAttributeLocation("textureCoordArray", QT_TEXTURE_COORDS_ATTR);
-
-        m_blitProgram->link();
-    }
-
-    ctx->functions()->glVertexAttribPointer(QT_VERTEX_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_vertexCoordinateArray);
-    ctx->functions()->glVertexAttribPointer(QT_TEXTURE_COORDS_ATTR, 2, GL_FLOAT, GL_FALSE, 0, m_textureCoordinateArray);
-
-    m_blitProgram->bind();
-    m_blitProgram->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
-    m_blitProgram->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
-    m_blitProgram->disableAttributeArray(int(QT_OPACITY_ATTR));
-    m_blitProgram->setUniformValue("imageTexture", GLuint(0));
+    m_manager->blitProgram()->bind();
+    m_manager->blitProgram()->enableAttributeArray(int(QT_VERTEX_COORDS_ATTR));
+    m_manager->blitProgram()->enableAttributeArray(int(QT_TEXTURE_COORDS_ATTR));
+    m_manager->blitProgram()->disableAttributeArray(int(QT_OPACITY_ATTR));
+    m_manager->blitProgram()->setUniformValue("imageTexture", GLuint(0));
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -1177,9 +1172,9 @@ void QSGDistanceFieldGlyphCache::updateCache()
     if (m_textureData->pendingGlyphs.isEmpty())
         return;
 
-    int requiredWidth = maxTextureSize();
+    int requiredWidth = m_manager->maxTextureSize();
     int rows = 128 / (requiredWidth / QT_DISTANCEFIELD_TILESIZE); // Enough rows to fill the latin1 set by default..
-    int requiredHeight = qMin(maxTextureSize(), qMax(m_textureData->currY + QT_DISTANCEFIELD_TILESIZE, QT_DISTANCEFIELD_TILESIZE * rows));
+    int requiredHeight = qMin(m_manager->maxTextureSize(), qMax(m_textureData->currY + QT_DISTANCEFIELD_TILESIZE, QT_DISTANCEFIELD_TILESIZE * rows));
 
     resizeTexture((requiredWidth), (requiredHeight));
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
@@ -1254,11 +1249,6 @@ void QSGDistanceFieldGlyphCache::updateCache()
 bool QSGDistanceFieldGlyphCache::useWorkaroundBrokenFBOReadback() const
 {
     return ctx->d_ptr->workaround_brokenFBOReadBack;
-}
-
-bool QSGDistanceFieldGlyphCache::distanceFieldEnabled()
-{
-    return !disableDistanceField();
 }
 
 int QSGDistanceFieldGlyphCache::glyphCount() const

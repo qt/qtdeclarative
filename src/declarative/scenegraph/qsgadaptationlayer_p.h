@@ -44,6 +44,7 @@
 
 #include "qsgnode.h"
 #include "qsgtexture.h"
+#include "qsgtext_p.h"
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
@@ -105,6 +106,8 @@ public:
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
+    virtual void setStyle(QSGText::TextStyle style) = 0;
+    virtual void setStyleColor(const QColor &color) = 0;
     virtual QPointF baseLine() const = 0;
 
     virtual QRectF boundingRect() const { return m_bounding_rect; }

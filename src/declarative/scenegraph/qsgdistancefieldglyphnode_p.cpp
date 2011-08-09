@@ -162,8 +162,10 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         m_matrixScale = qSqrt(state.modelViewMatrix().determinant());
         updateRange = true;
     }
-    if (updateRange)
-        updateAlphaRange(material->glyphCache()->thresholdFunc(), material->glyphCache()->antialiasingSpreadFunc());
+    if (updateRange) {
+        updateAlphaRange(material->glyphCache()->manager()->thresholdFunc(),
+                         material->glyphCache()->manager()->antialiasingSpreadFunc());
+    }
 
     Q_ASSERT(material->glyphCache());
 

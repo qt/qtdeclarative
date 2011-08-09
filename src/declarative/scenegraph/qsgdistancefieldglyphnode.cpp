@@ -46,8 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode()
+QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager)
     : m_material(0)
+    , m_glyph_cacheManager(cacheManager)
     , m_glyph_cache(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QSGText::Normal)
@@ -58,10 +59,7 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode()
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
-
-#ifndef QT_OPENGL_ES
-    setPreferredAntialiasingMode(QSGGlyphNode::SubPixelAntialiasing);
-#endif
+    setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
 }
 
 QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
@@ -245,7 +243,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
 void QSGDistanceFieldGlyphNode::updateFont()
 {
-    m_glyph_cache = QSGDistanceFieldGlyphCache::get(QGLContext::currentContext(), m_glyphs.rawFont());
+    m_glyph_cache = m_glyph_cacheManager->cache(m_glyphs.rawFont());
     m_dirtyFont = false;
 }
 
