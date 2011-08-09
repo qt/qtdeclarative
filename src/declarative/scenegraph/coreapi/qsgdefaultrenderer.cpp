@@ -510,8 +510,7 @@ void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         //glDepthRange((geomNode->renderOrder() + 0.1) * scale, (geomNode->renderOrder() + 0.9) * scale);
 
         const QSGGeometry *g = geomNode->geometry();
-        bindGeometry(program, g);
-        draw(geomNode);
+        draw(program, g);
 
 #ifdef RENDERER_DEBUG
         geometryNodesDrawn++;

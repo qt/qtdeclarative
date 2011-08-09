@@ -50,6 +50,8 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QSGGeometryData;
+
 class Q_DECLARATIVE_EXPORT QSGGeometry
 {
 public:
@@ -91,6 +93,13 @@ public:
     static const AttributeSet &defaultAttributes_Point2D();
     static const AttributeSet &defaultAttributes_TexturedPoint2D();
     static const AttributeSet &defaultAttributes_ColoredPoint2D();
+
+    enum DataPattern {
+        AlwaysUploadPattern = 0,
+        StreamPattern       = 1,
+        DynamicPattern      = 2,
+        StaticPattern       = 3
+    };
 
     QSGGeometry(const QSGGeometry::AttributeSet &attribs,
                 int vertexCount,
@@ -134,7 +143,18 @@ public:
     static void updateRectGeometry(QSGGeometry *g, const QRectF &rect);
     static void updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &sourceRect);
 
+    void setIndexDataPattern(DataPattern p);
+    DataPattern indexDataPattern() const { return (DataPattern) m_index_usage_pattern; }
+
+    void setVertexDataPattern(DataPattern p);
+    DataPattern vertexDataPattern() const { return (DataPattern) m_vertex_usage_pattern; }
+
+    void markIndexDataDirty();
+    void markVertexDataDirty();
+
 private:
+    friend class QSGGeometryData;
+
     int m_drawing_mode;
     int m_vertex_count;
     int m_index_count;
@@ -143,10 +163,14 @@ private:
     void *m_data;
     int m_index_data_offset;
 
-    void *m_reserved_pointer;
+    QSGGeometryData *m_server_data;
 
     uint m_owns_data : 1;
-    uint m_reserved_bits : 31;
+    uint m_index_usage_pattern : 2;
+    uint m_vertex_usage_pattern : 2;
+    uint m_dirty_index_data : 1;
+    uint m_dirty_vertex_data : 1;
+    uint m_reserved_bits : 27;
 
     float m_prealloc[16];
 };

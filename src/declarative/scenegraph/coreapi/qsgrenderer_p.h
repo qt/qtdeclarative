@@ -137,8 +137,7 @@ signals:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 
 protected:
-    void draw(const QSGBasicGeometryNode *geometry);
-    void bindGeometry(QSGMaterialShader *material, const QSGGeometry *g);
+    void draw(const QSGMaterialShader *material, const QSGGeometry *g);
 
     virtual void render() = 0;
     QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
@@ -174,9 +173,12 @@ private:
 
     const QSGBindable *m_bindable;
 
-    bool m_changed_emitted : 1;
-    bool m_mirrored : 1;
-    bool m_is_rendering : 1;
+    uint m_changed_emitted : 1;
+    uint m_mirrored : 1;
+    uint m_is_rendering : 1;
+
+    uint m_vertex_buffer_bound : 1;
+    uint m_index_buffer_bound : 1;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)

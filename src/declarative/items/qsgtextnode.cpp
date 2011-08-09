@@ -166,8 +166,19 @@ QSGGlyphNode *QSGTextNode::addGlyphs(const QPointF &position, const QGlyphRun &g
 
     node->update();
 
-    if (node != prevNode)
+    // A new node, add it to the graph.
+    if (node != prevNode) {
         appendChildNode(node);
+
+        /* We flag the geometry as static, but we never call markVertexDataDirty
+           or markIndexDataDirty on them. This is because all text nodes are
+           discarded when a change occurs. If we start appending/removing from
+           existing geometry, then we also need to start marking the geometry as
+           dirty.
+         */
+        node->geometry()->setIndexDataPattern(QSGGeometry::StaticPattern);
+        node->geometry()->setVertexDataPattern(QSGGeometry::StaticPattern);
+    }
 
     return node;
 }
