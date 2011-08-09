@@ -86,6 +86,21 @@ static inline int qt_next_power_of_two(int v)
     return v;
 }
 
+static float defaultThresholdFunc(float glyphScale)
+{
+    static float base = qgetenv("QT_DF_BASE").isEmpty() ? 0.5f : qgetenv("QT_DF_BASE").toFloat();
+    static float baseDev = qgetenv("QT_DF_BASEDEVIATION").isEmpty() ? 0.065f : qgetenv("QT_DF_BASEDEVIATION").toFloat();
+    static float devScaleMin = qgetenv("QT_DF_SCALEFORMAXDEV").isEmpty() ? 0.15f : qgetenv("QT_DF_SCALEFORMAXDEV").toFloat();
+    static float devScaleMax = qgetenv("QT_DF_SCALEFORNODEV").isEmpty() ? 0.3f : qgetenv("QT_DF_SCALEFORNODEV").toFloat();
+    return base - ((qBound(devScaleMin, glyphScale, devScaleMax) - devScaleMin) / (devScaleMax - devScaleMin) * -baseDev + baseDev);
+}
+
+static float defaultAntialiasingSpreadFunc(float glyphScale)
+{
+    static float range = qgetenv("QT_DF_RANGE").isEmpty() ? 0.06f : qgetenv("QT_DF_RANGE").toFloat();
+    return range / glyphScale;
+}
+
 namespace
 {
     enum FillHDir
@@ -808,6 +823,8 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QGLContext *c, cons
     , m_maxTextureSize(0)
     , ctx(c)
     , m_blitProgram(0)
+    , m_threshold_func(defaultThresholdFunc)
+    , m_antialiasingSpread_func(defaultAntialiasingSpreadFunc)
 {
     Q_ASSERT(font.isValid());
     m_font = font;

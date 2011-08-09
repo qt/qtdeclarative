@@ -60,10 +60,10 @@ protected:
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
-    virtual void updateAlphaRange();
+    void updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc);
 
-    qreal m_fontScale;
-    qreal m_matrixScale;
+    float m_fontScale;
+    float m_matrixScale;
 
     int m_matrix_id;
     int m_textureScale_id;
@@ -110,11 +110,14 @@ QSGDistanceFieldTextMaterialShader::QSGDistanceFieldTextMaterialShader()
 {
 }
 
-void QSGDistanceFieldTextMaterialShader::updateAlphaRange()
+void QSGDistanceFieldTextMaterialShader::updateAlphaRange(ThresholdFunc thresholdFunc, AntialiasingSpreadFunc spreadFunc)
 {
-    qreal combinedScale = m_fontScale * m_matrixScale;
-    qreal alphaMin = qMax(0.0, 0.5 - 0.07 / combinedScale);
-    qreal alphaMax = qMin(0.5 + 0.07 / combinedScale, 1.0);
+    float combinedScale = m_fontScale * m_matrixScale;
+    float base = thresholdFunc(combinedScale);
+    float range = spreadFunc(combinedScale);
+
+    float alphaMin = qMax(0.0f, base - range);
+    float alphaMax = qMin(base + range, 1.0f);
     program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
     program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
 }
@@ -160,7 +163,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         updateRange = true;
     }
     if (updateRange)
-        updateAlphaRange();
+        updateAlphaRange(material->glyphCache()->thresholdFunc(), material->glyphCache()->antialiasingSpreadFunc());
 
     Q_ASSERT(material->glyphCache());
 
@@ -506,8 +509,6 @@ protected:
     virtual const char *vertexShader() const;
     virtual const char *fragmentShader() const;
 
-    void updateAlphaRange();
-
 private:
     int m_fontScale_id;
     int m_vecDelta_id;
@@ -618,15 +619,6 @@ void QSGSubPixelDistanceFieldTextMaterialShader::deactivate()
 {
     QSGDistanceFieldTextMaterialShader::deactivate();
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void QSGSubPixelDistanceFieldTextMaterialShader::updateAlphaRange()
-{
-    qreal combinedScale = m_fontScale * m_matrixScale;
-    qreal alphaMin = qMax(0.0, 0.5 - 0.05 / combinedScale);
-    qreal alphaMax = qMin(0.5 + 0.05 / combinedScale, 1.0);
-    program()->setUniformValue(m_alphaMin_id, GLfloat(alphaMin));
-    program()->setUniformValue(m_alphaMax_id, GLfloat(alphaMax));
 }
 
 void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)

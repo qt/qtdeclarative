@@ -53,6 +53,9 @@ QT_BEGIN_NAMESPACE
 
 class QGLShaderProgram;
 
+typedef float (*ThresholdFunc)(float glyphScale);
+typedef float (*AntialiasingSpreadFunc)(float glyphScale);
+
 class Q_DECLARATIVE_EXPORT QSGDistanceFieldGlyphCache : public QObject
 {
     Q_OBJECT
@@ -104,6 +107,12 @@ public:
 
     static bool distanceFieldEnabled();
 
+    ThresholdFunc thresholdFunc() const { return m_threshold_func; }
+    void setThresholdFunc(ThresholdFunc func) { m_threshold_func = func; }
+
+    AntialiasingSpreadFunc antialiasingSpreadFunc() const { return m_antialiasingSpread_func; }
+    void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
+
 private Q_SLOTS:
     void onContextDestroyed(const QGLContext *context);
 
@@ -153,6 +162,8 @@ private:
     GLfloat m_vertexCoordinateArray[8];
     GLfloat m_textureCoordinateArray[8];
 
+    ThresholdFunc m_threshold_func;
+    AntialiasingSpreadFunc m_antialiasingSpread_func;
 };
 
 QT_END_NAMESPACE
