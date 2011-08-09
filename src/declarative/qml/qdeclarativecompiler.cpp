@@ -873,7 +873,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
                         }
                     }
 
-                    if (!explicitProperty) 
+                    if (!explicitProperty)
                         defaultProperty->setName(r);
 
                 } else {
@@ -1578,6 +1578,13 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         prop->value->metatype = type->attachedPropertiesType();
     } else {
         // Setup regular property data
+        if (prop->isDefault) {
+            QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
+
+            if (p.name())
+                prop->setName(p.name());
+        }
+
         bool notInRevision = false;
         QDeclarativePropertyCache::Data *d = 
             prop->name().isEmpty()?0:property(obj, prop->name(), &notInRevision);
