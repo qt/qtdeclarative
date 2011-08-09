@@ -269,7 +269,7 @@ void QSmoothedAnimation_1::init()
     bound to those of the red rectangle. Whenever these values change, the
     green rectangle smoothly animates to its new position:
 
-    \snippet doc/src/snippets/declarative/smoothedanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/smoothedanimation.qml 0
 
     A SmoothedAnimation can be configured by setting the \l velocity at which the
     animation should occur, or the \l duration that the animation should take.

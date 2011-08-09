@@ -80,9 +80,9 @@ QT_BEGIN_NAMESPACE
     properties are to be modified, and define the new property values or
     bindings. For example:
     
-    \snippet doc/src/snippets/declarative/propertychanges.qml import 
+    \snippet doc/src/snippets/qtquick1/propertychanges.qml import 
     \codeline
-    \snippet doc/src/snippets/declarative/propertychanges.qml 0
+    \snippet doc/src/snippets/qtquick1/propertychanges.qml 0
 
     When the mouse is pressed, the \l Rectangle changes to the \e resized
     state. In this state, the PropertyChanges object sets the rectangle's 
@@ -116,7 +116,7 @@ QT_BEGIN_NAMESPACE
     state, its \c width property is reset, giving the text its natural width
     and displaying the whole string on a single line.
 
-    \snippet doc/src/snippets/declarative/propertychanges.qml reset
+    \snippet doc/src/snippets/qtquick1/propertychanges.qml reset
 
 
     \section2 Immediate property changes in transitions

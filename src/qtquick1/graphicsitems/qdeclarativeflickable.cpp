@@ -462,7 +462,7 @@ void QDeclarative1FlickablePrivate::updateBeginningEnd()
     The following example shows a small view onto a large image in which the
     user can drag or flick the image in order to view different parts of it.
 
-    \snippet doc/src/snippets/declarative/flickable.qml document
+    \snippet doc/src/snippets/qtquick1/flickable.qml document
 
     \clearfloat
 
@@ -524,9 +524,9 @@ void QDeclarative1FlickablePrivate::updateBeginningEnd()
 
     These properties are typically used to draw a scrollbar. For example:
 
-    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 0
+    \snippet doc/src/snippets/qtquick1/flickableScrollbar.qml 0
     \dots 8
-    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 1
+    \snippet doc/src/snippets/qtquick1/flickableScrollbar.qml 1
 
     \sa {declarative/ui-components/scrollbar}{scrollbar example}
 */
@@ -1331,7 +1331,7 @@ void QDeclarative1Flickable::setBoundsBehavior(BoundsBehavior b)
     The following snippet shows how these properties are used to display
     an image that is larger than the Flickable item itself:
 
-    \snippet doc/src/snippets/declarative/flickable.qml document
+    \snippet doc/src/snippets/qtquick1/flickable.qml document
 
     In some cases, the the content dimensions can be automatically set
     using the \l {Item::childrenRect.width}{childrenRect.width}

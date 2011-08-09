@@ -79,7 +79,7 @@ public:
     group and uses this to color the window and text items
     appropriately:
 
-    \snippet doc/src/snippets/declarative/systempalette.qml 0
+    \snippet doc/src/snippets/qtquick1/systempalette.qml 0
 
     \sa QPalette
 */

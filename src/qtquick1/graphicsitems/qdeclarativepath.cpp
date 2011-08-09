@@ -155,7 +155,7 @@ bool QDeclarative1Path::isClosed() const
         \i \l PathPercent - a way to spread out items along various segments of the path.
     \endlist
 
-    \snippet doc/src/snippets/declarative/pathview/pathattributes.qml 2
+    \snippet doc/src/snippets/qtquick1/pathview/pathattributes.qml 2
 */
 
 QDeclarativeListProperty<QDeclarative1PathElement> QDeclarative1Path::pathElements()
@@ -519,7 +519,7 @@ void QDeclarative1Curve::setY(qreal y)
     \row
     \o \image declarative-pathattribute.png
     \o
-    \snippet doc/src/snippets/declarative/pathview/pathattributes.qml 0
+    \snippet doc/src/snippets/qtquick1/pathview/pathattributes.qml 0
     (see the PathView documentation for the specification of ContactModel.qml
      used for ContactModel above.)
     \endtable

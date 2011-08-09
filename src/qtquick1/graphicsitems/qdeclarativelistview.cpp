@@ -1566,13 +1566,13 @@ void QDeclarative1ListViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/src/snippets/declarative/listview/ContactModel.qml 0
+    \snippet doc/src/snippets/qtquick1/listview/ContactModel.qml 0
 
     Another component can display this model data in a ListView, like this:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml import
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs simple
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml classdocs simple
 
     \image listview-simple.png
 
@@ -1583,7 +1583,7 @@ void QDeclarative1ListViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     An improved list view is shown below. The delegate is visually improved and is moved 
     into a separate \c contactDelegate component.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml classdocs advanced
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml classdocs advanced
     \image listview-highlight.png
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
@@ -1598,7 +1598,7 @@ void QDeclarative1ListViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     this attached property directly as \c ListView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.ListView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml isCurrentItem
 
     \note Views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -1633,7 +1633,7 @@ QDeclarative1ListView::~QDeclarative1ListView()
 
     This property may be used to adjust the appearance of the current item, for example:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml isCurrentItem
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml isCurrentItem
 */
 
 /*!
@@ -1682,7 +1682,7 @@ QDeclarative1ListView::~QDeclarative1ListView()
     The example delegate below ensures that the animation completes before
     the item is removed from the list.
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml delayRemove
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml delayRemove
 */
 
 /*!
@@ -1962,7 +1962,7 @@ void QDeclarative1ListView::setHighlight(QDeclarativeComponent *highlight)
     
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/src/snippets/declarative/listview/listview.qml highlightFollowsCurrentItem
+    \snippet doc/src/snippets/qtquick1/listview/listview.qml highlightFollowsCurrentItem
 
     Note that the highlight animation also affects the way that the view
     is scrolled.  This is because the view moves to maintain the

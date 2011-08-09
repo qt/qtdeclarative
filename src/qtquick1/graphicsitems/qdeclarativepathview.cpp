@@ -365,11 +365,11 @@ void QDeclarative1PathViewPrivate::regenerate()
 
     For example, if there is a simple list model defined in a file \c ContactModel.qml like this:
 
-    \snippet doc/src/snippets/declarative/pathview/ContactModel.qml 0
+    \snippet doc/src/snippets/qtquick1/pathview/ContactModel.qml 0
 
     This data can be represented as a PathView, like this:
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 0
+    \snippet doc/src/snippets/qtquick1/pathview/pathview.qml 0
 
     \image pathview.gif
 
@@ -402,7 +402,7 @@ void QDeclarative1PathViewPrivate::regenerate()
     this attached property directly as \c PathView.isCurrentItem, while the child
     \c nameText object must refer to this property as \c wrapper.PathView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qtquick1/pathview/pathview.qml 1
 
     \bold Note that views do not enable \e clip automatically.  If the view
     is not clipped by another item or the screen, it will be necessary
@@ -464,7 +464,7 @@ QDeclarative1PathView::~QDeclarative1PathView()
 
     This property may be used to adjust the appearance of the current item.
 
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qtquick1/pathview/pathview.qml 1
 */
 
 /*!
@@ -1002,7 +1002,7 @@ bool QDeclarative1PathView::isFlicking() const
     item in the delegate.
 
     Here is an example delegate:
-    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+    \snippet doc/src/snippets/qtquick1/pathview/pathview.qml 1
 */
 QDeclarativeComponent *QDeclarative1PathView::delegate() const
 {

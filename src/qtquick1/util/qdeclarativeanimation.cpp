@@ -642,7 +642,7 @@ QAbstractAnimation *QDeclarative1PauseAnimation::qtAnimation()
     as a property value source. It animates the \c color property's value from
     its current value to a value of "red", over 1000 milliseconds:
 
-    \snippet doc/src/snippets/declarative/coloranimation.qml 0
+    \snippet doc/src/snippets/qtquick1/coloranimation.qml 0
 
     Like any other animation element, a ColorAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
@@ -757,7 +757,7 @@ void QDeclarative1ColorAnimation::setTo(const QColor &t)
     When used as part of a Transition, you can also target a specific
     StateChangeScript to run using the \c scriptName property.
 
-    \snippet doc/src/snippets/declarative/states/statechangescript.qml state and transition
+    \snippet doc/src/snippets/qtquick1/states/statechangescript.qml state and transition
 
     \sa StateChangeScript
 */
@@ -884,14 +884,14 @@ QAbstractAnimation *QDeclarative1ScriptAction::qtAnimation()
     \l {Image::}{smooth} property to \c true, animates the width of the image,
     then sets \l {Image::}{smooth} back to \c false:
 
-    \snippet doc/src/snippets/declarative/propertyaction.qml standalone
+    \snippet doc/src/snippets/qtquick1/propertyaction.qml standalone
 
     PropertyAction is also useful for setting the exact point at which a property
     change should occur during a \l Transition. For example, if PropertyChanges
     was used in a \l State to rotate an item around a particular
     \l {Item::}{transformOrigin}, it might be implemented like this:
 
-    \snippet doc/src/snippets/declarative/propertyaction.qml transition
+    \snippet doc/src/snippets/qtquick1/propertyaction.qml transition
 
     However, with this code, the \c transformOrigin is not set until \e after
     the animation, as a \l State is taken to define the values at the \e end of
@@ -899,7 +899,7 @@ QAbstractAnimation *QDeclarative1ScriptAction::qtAnimation()
     then jump to \c Item.BottomRight. To fix this, insert a PropertyAction
     before the RotationAnimation begins:
 
-    \snippet doc/src/snippets/declarative/propertyaction-sequential.qml sequential
+    \snippet doc/src/snippets/qtquick1/propertyaction-sequential.qml sequential
 
     This immediately sets the \c transformOrigin property to the value defined
     in the end state of the \l Transition (i.e. the value defined in the
@@ -1144,7 +1144,7 @@ void QDeclarative1PropertyAction::transition(QDeclarative1StateActions &actions,
     as a property value source. It animates the \c x value from its current
     value to a value of 50, over 1000 milliseconds:
 
-    \snippet doc/src/snippets/declarative/numberanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/numberanimation.qml 0
 
     Like any other animation element, a NumberAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
@@ -1339,7 +1339,7 @@ void QDeclarative1Vector3dAnimation::setTo(QVector3D t)
     In the following example we use RotationAnimation to animate the rotation
     between states via the shortest path:
 
-    \snippet doc/src/snippets/declarative/rotationanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/rotationanimation.qml 0
 
     Notice the RotationAnimation did not need to set a \l target
     value. As a convenience, when used in a transition, RotationAnimation will rotate all
@@ -1580,7 +1580,7 @@ QDeclarativeListProperty<QDeclarative1AbstractAnimation> QDeclarative1AnimationG
     The following example runs two number animations in a sequence.  The \l Rectangle
     animates to a \c x position of 50, then to a \c y position of 50.
 
-    \snippet doc/src/snippets/declarative/sequentialanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/sequentialanimation.qml 0
 
     Animations defined within a \l Transition are automatically run in parallel,
     so SequentialAnimation can be used to enclose the animations in a \l Transition
@@ -1655,7 +1655,7 @@ void QDeclarative1SequentialAnimation::transition(QDeclarative1StateActions &act
     The following animation runs two number animations in parallel. The \l Rectangle
     moves to (50,50) by animating its \c x and \c y properties at the same time.
 
-    \snippet doc/src/snippets/declarative/parallelanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/parallelanimation.qml 0
 
     Like any other animation element, a ParallelAnimation can be applied in a
     number of ways, including transitions, behaviors and property value
@@ -1772,21 +1772,21 @@ void QDeclarative1PropertyAnimationPrivate::convertVariant(QVariant &variant, in
     For example, to animate any objects that have changed their \c x or \c y properties
     as a result of a state change, using an \c InOutQuad easing curve:
 
-    \snippet doc/src/snippets/declarative/propertyanimation.qml transition
+    \snippet doc/src/snippets/qtquick1/propertyanimation.qml transition
 
 
     \o In a \l Behavior
 
     For example, to animate all changes to a rectangle's \c x property:
 
-    \snippet doc/src/snippets/declarative/propertyanimation.qml behavior
+    \snippet doc/src/snippets/qtquick1/propertyanimation.qml behavior
 
 
     \o As a property value source
 
     For example, to repeatedly animate the rectangle's \c x property:
 
-    \snippet doc/src/snippets/declarative/propertyanimation.qml propertyvaluesource
+    \snippet doc/src/snippets/qtquick1/propertyanimation.qml propertyvaluesource
 
 
     \o In a signal handler
@@ -1803,7 +1803,7 @@ void QDeclarative1PropertyAnimationPrivate::convertVariant(QVariant &variant, in
 
     For example, to animate \c rect's \c width property over 500ms, from its current width to 30:
 
-    \snippet doc/src/snippets/declarative/propertyanimation.qml standalone
+    \snippet doc/src/snippets/qtquick1/propertyanimation.qml standalone
 
     \endlist
 
@@ -2460,7 +2460,7 @@ void QDeclarative1PropertyAnimation::transition(QDeclarative1StateActions &actio
     the transition, ensures the item animates smoothly as it moves to
     its new parent:
 
-    \snippet doc/src/snippets/declarative/parentanimation.qml 0
+    \snippet doc/src/snippets/qtquick1/parentanimation.qml 0
 
     A ParentAnimation can contain any number of animations. These animations will
     be run in parallel; to run them sequentially, define them within a
@@ -2818,7 +2818,7 @@ QAbstractAnimation *QDeclarative1ParentAnimation::qtAnimation()
 
     In the following snippet we animate the addition of a right anchor to a \l Rectangle:
 
-    \snippet doc/src/snippets/declarative/anchoranimation.qml 0
+    \snippet doc/src/snippets/qtquick1/anchoranimation.qml 0
 
     For convenience, when an AnchorAnimation is used in a \l Transition, it will
     animate any AnchorChanges that have occurred during the state change.

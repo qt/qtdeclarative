@@ -115,7 +115,7 @@ QDeclarative1ListModelParser::ListInstruction *QDeclarative1ListModelParser::Lis
     \inlineimage listmodel.png
     \enddiv
 
-    \snippet doc/src/snippets/declarative/listmodel.qml 0
+    \snippet doc/src/snippets/qtquick1/listmodel.qml 0
 
     \clearfloat
     Roles (properties) in each element must begin with a lower-case letter and
@@ -125,14 +125,14 @@ QDeclarative1ListModelParser::ListInstruction *QDeclarative1ListModelParser::Lis
     Since the example model contains an \c id property, it can be referenced
     by views, such as the ListView in this example:
 
-    \snippet doc/src/snippets/declarative/listmodel-simple.qml 0
+    \snippet doc/src/snippets/qtquick1/listmodel-simple.qml 0
     \dots 8
-    \snippet doc/src/snippets/declarative/listmodel-simple.qml 1
+    \snippet doc/src/snippets/qtquick1/listmodel-simple.qml 1
 
     It is possible for roles to contain list data.  In the following example we
     create a list of fruit attributes:
 
-    \snippet doc/src/snippets/declarative/listmodel-nested.qml model
+    \snippet doc/src/snippets/qtquick1/listmodel-nested.qml model
 
     The delegate displays all the fruit attributes:
 
@@ -140,7 +140,7 @@ QDeclarative1ListModelParser::ListInstruction *QDeclarative1ListModelParser::Lis
     \inlineimage listmodel-nested.png
     \enddiv
 
-    \snippet doc/src/snippets/declarative/listmodel-nested.qml delegate
+    \snippet doc/src/snippets/qtquick1/listmodel-nested.qml delegate
 
     \clearfloat
     \section1 Modifying List Models
@@ -148,7 +148,7 @@ QDeclarative1ListModelParser::ListInstruction *QDeclarative1ListModelParser::Lis
     The content of a ListModel may be created and modified using the clear(),
     append(), set(), insert() and setProperty() methods.  For example:
 
-    \snippet doc/src/snippets/declarative/listmodel-modify.qml delegate
+    \snippet doc/src/snippets/qtquick1/listmodel-modify.qml delegate
 
     Note that when creating content dynamically the set of available properties
     cannot be changed once set. Whatever properties are first added to the model
@@ -905,12 +905,12 @@ bool QDeclarative1ListModelParser::definesEmptyList(const QString &s)
     The following model defines a series of list elements, each of which
     contain "name" and "cost" roles and their associated values.
 
-    \snippet doc/src/snippets/declarative/qml-data-models/listelements.qml model
+    \snippet doc/src/snippets/qtquick1/qml-data-models/listelements.qml model
 
     The delegate obtains the name and cost for each element by simply referring
     to \c name and \c cost:
 
-    \snippet doc/src/snippets/declarative/qml-data-models/listelements.qml view
+    \snippet doc/src/snippets/qtquick1/qml-data-models/listelements.qml view
 
     \sa ListModel
 */

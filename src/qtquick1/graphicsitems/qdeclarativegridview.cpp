@@ -1269,7 +1269,7 @@ void QDeclarative1GridViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     The following example shows the definition of a simple list model defined
     in a file called \c ContactModel.qml:
 
-    \snippet doc/src/snippets/declarative/gridview/ContactModel.qml 0
+    \snippet doc/src/snippets/qtquick1/gridview/ContactModel.qml 0
 
     \div {class="float-right"}
     \inlineimage gridview-simple.png
@@ -1283,9 +1283,9 @@ void QDeclarative1GridViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     (containing \l Image and \l Text elements) for its delegate.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml import
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs simple
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml classdocs simple
 
     \div {class="float-right"}
     \inlineimage gridview-highlight.png
@@ -1298,7 +1298,7 @@ void QDeclarative1GridViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     into a separate \c contactDelegate component.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs advanced
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml classdocs advanced
 
     The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
     and \c focus is set to \c true to enable keyboard navigation for the grid view.
@@ -1312,7 +1312,7 @@ void QDeclarative1GridViewPrivate::flick(AxisData &data, qreal minExtent, qreal 
     this attached property directly as \c GridView.isCurrentItem, while the child
     \c contactInfo object must refer to this property as \c wrapper.GridView.isCurrentItem.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml isCurrentItem
 
     \note Views do not set the \l{Item::}{clip} property automatically.
     If the view is not clipped by another item or the screen, it will be necessary
@@ -1351,7 +1351,7 @@ QDeclarative1GridView::~QDeclarative1GridView()
 
     It is attached to each instance of the delegate.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml isCurrentItem
 */
 
 /*!
@@ -1366,7 +1366,7 @@ QDeclarative1GridView::~QDeclarative1GridView()
     The example below ensures that the animation completes before
     the item is removed from the grid.
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml delayRemove
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml delayRemove
 */
 
 /*!
@@ -1640,7 +1640,7 @@ void QDeclarative1GridView::setHighlight(QDeclarativeComponent *highlight)
     
     Here is a highlight with its motion defined by a \l {SpringAnimation} item:
 
-    \snippet doc/src/snippets/declarative/gridview/gridview.qml highlightFollowsCurrentItem
+    \snippet doc/src/snippets/qtquick1/gridview/gridview.qml highlightFollowsCurrentItem
 */
 bool QDeclarative1GridView::highlightFollowsCurrentItem() const
 {

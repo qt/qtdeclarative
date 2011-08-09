@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
     used to determine the parts of the image that will lie inside the unscaled corner
     areas and the parts that will be stretched horizontally and vertically.
 
-    \snippet doc/src/snippets/declarative/borderimage/normal-image.qml normal image
+    \snippet doc/src/snippets/qtquick1/borderimage/normal-image.qml normal image
 
     \clearfloat
     \beginfloatleft
@@ -114,7 +114,7 @@ QT_BEGIN_NAMESPACE
     is set to \l{BorderImage::verticalTileMode}{BorderImage.Stretch}, the parts of image
     in regions 4 and 6 are stretched vertically.
 
-    \snippet doc/src/snippets/declarative/borderimage/borderimage-scaled.qml scaled border image
+    \snippet doc/src/snippets/qtquick1/borderimage/borderimage-scaled.qml scaled border image
 
     \clearfloat
     \beginfloatleft
@@ -128,7 +128,7 @@ QT_BEGIN_NAMESPACE
     \l{BorderImage::verticalTileMode}{BorderImage.Repeat}, the parts of image in regions
     4 and 6 are tiled so that they fill the space at the left and right of the element.
 
-    \snippet doc/src/snippets/declarative/borderimage/borderimage-tiled.qml tiled border image
+    \snippet doc/src/snippets/qtquick1/borderimage/borderimage-tiled.qml tiled border image
 
     \clearfloat
     In some situations, the width of regions 2 and 8 may not be an exact multiple of the width
