@@ -38,12 +38,12 @@
 **
 ****************************************************************************/
 import QtQuick 2.0
-import StockChart 1.0
-import "contents"
+import com.nokia.StockChartExample 1.0
+import "../contents"
 
 Rectangle {
     id:container
-    width: 1920; height: 1200
+    width: 360; height: 600
     color: "#343434";
     Image { source: "contents/images/stripes.png"; fillMode: Image.Tile; anchors.fill: parent; opacity: 1 }
 
@@ -259,8 +259,6 @@ Rectangle {
 
         onViewTypeChanged : {
             if (viewType == "list") {
-//                container.width = 700;
-//                container.height = 800;
                 view.orientation = ListView.Vertical;
                 view.delegate = listDelegate;
 //                view.section.property = "year";
@@ -269,12 +267,9 @@ Rectangle {
                 view.highlight = listHighlight;
                 view.opacity = 1;
                 canvas.opacity = 0;
-                //view.height = 750;
                // comment.opacity = 0;
 
             } else if (viewType == "chart") {
-//                container.width = 1600;
-//                container.height = 800;
                 view.orientation = ListView.Horizontal;
                 view.delegate = chartDelegate;
                 //comment.opacity = 0.6;
@@ -342,6 +337,8 @@ Rectangle {
         anchors.bottom : view.top
         width:container.width;
         opacity:0
+        threadRendering:false
+        renderTarget: Canvas.Image
         property bool running:false
         property int frames:first
         property int mouseX:0;
@@ -661,7 +658,7 @@ Rectangle {
                 ctx.fillRect(x, y, canvas.width/points.length, canvas.height - y);
             }
         }
-
+/*
         onPainted : {
             if (canvas.running) {
                 if (frames >= last) {
@@ -682,7 +679,7 @@ Rectangle {
                 }
             }
         }
-
+*/
         onPaint: {
             if (view.currentIndex <= 0)
                 first = 0;
@@ -726,4 +723,3 @@ Rectangle {
         }
     }
 }
-

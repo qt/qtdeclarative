@@ -1,20 +1,20 @@
-TEMPLATE = app
+TEMPLATE = lib
+CONFIG += qt plugin
+QT += declarative network
 
-QT += declarative
+DESTDIR = com/nokia/StockChartExample
+TARGET  = qmlstockchartexampleplugin
 
-RESOURCES += stockchart.qrc
+SOURCES += model.cpp  plugin.cpp
+HEADERS += model.h
+qdeclarativesources.files += \
+    com/nokia/StockChartExample/qmldir \
+    stock.qml
 
-HEADERS = model.h
-SOURCES = main.cpp model.cpp
+qdeclarativesources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/plugins/com/nokia/StockChartExample
 
-macx: CONFIG -= app_bundle
-CONFIG += console
+sources.files += stockchart.pro model.h model.cpp plugin.cpp README
+sources.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/plugins
+target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/plugins/com/nokia/StockChartExample
 
-OTHER_FILES += \
-    stock.qml \
-    contents/Stocks.qml \
-    contents/ScrollBar.qml \
-    contents/TitleBar.qml \
-    contents/Button.qml \
-    contents/ToolBar.qml
-
+INSTALLS += qdeclarativesources sources target

@@ -38,26 +38,23 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
-#include <qdeclarative.h>
-#include <QSGView>
+#include <QtDeclarative/QDeclarativeExtensionPlugin>
+#include <QtDeclarative/qdeclarative.h>
+#include <qapplication.h>
 #include "model.h"
 
-int main(int argc, char ** argv)
+class QStockChartExampleQmlPlugin : public QDeclarativeExtensionPlugin
 {
-    QApplication app(argc, argv);
+    Q_OBJECT
+public:
+    void registerTypes(const char *uri)
+    {
+        Q_ASSERT(uri == QLatin1String("com.nokia.StockChartExample"));
+        qmlRegisterType<StockModel>(uri, 1, 0, "StockModel");
+        qmlRegisterType<StockPrice>(uri, 1, 0, "StockPrice");
+    }
+};
 
-    qmlRegisterType<StockModel>("StockChart", 1, 0, "StockModel");
-    qmlRegisterType<StockPrice>("StockChart", 1, 0, "StockPrice");
-    QSGView view;
-    view.setResizeMode(QSGView::SizeViewToRootObject);
-    view.setSource(QUrl("qrc:stock.qml"));
+#include "plugin.moc"
 
-    view.showFullScreen();
-    view.raise();
-
-    QObject::connect((QObject*)view.engine(), SIGNAL(quit()), (QObject*)&app, SLOT(quit()));
-
-    return app.exec();
-}
-
+Q_EXPORT_PLUGIN2(qmlstockchartexampleplugin, QStockChartExampleQmlPlugin);

@@ -184,8 +184,6 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterUncreatableType<QSGPaintedItem>("QtQuick", 2, 0, "PaintedItem", QSGPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
     qmlRegisterType<QSGCanvasItem>("QtQuick", 2, 0, "Canvas");
-    qmlRegisterType<QSGContext2D>();
-    qmlRegisterType<QSGCanvasGradient>();
 
     qmlRegisterType<QSGSprite>("QtQuick", 2, 0, "Sprite");
     qmlRegisterType<QSGSpriteImage>("QtQuick", 2, 0, "SpriteImage");

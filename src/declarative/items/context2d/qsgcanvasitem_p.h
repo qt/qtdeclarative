@@ -42,14 +42,10 @@
 #ifndef QSGCANVASITEM_P_H
 #define QSGCANVASITEM_P_H
 
-#include "qsgpainteditem.h"
+#include "qsgitem.h"
 #include <private/qv8engine_p.h>
 
-#define QSGCANVASITEM_DEBUG //enable this for just DEBUG purpose!
 
-#ifdef QSGCANVASITEM_DEBUG
-#include <QElapsedTimer>
-#endif
 
 QT_BEGIN_HEADER
 
@@ -58,41 +54,92 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 class QSGContext2D;
 class QSGCanvasItemPrivate;
-class QSGCanvasItem : public QSGPaintedItem
+class QSGCanvasItem : public QSGItem
 {
     Q_OBJECT
-    Q_PROPERTY(QPointF canvasPos READ canvasPos FINAL)
-    Q_PROPERTY(qreal canvasX READ canvasX WRITE setCanvasX NOTIFY canvasXChanged FINAL)
-    Q_PROPERTY(qreal canvasY READ canvasY WRITE setCanvasY NOTIFY canvasYChanged FINAL)
+    Q_ENUMS(RenderTarget)
+    Q_ENUMS(ImageFilterMode)
+
+    Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
+    Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
+    Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
+    Q_PROPERTY(bool threadRendering READ threadRendering WRITE setThreadRendering NOTIFY threadRenderingChanged)
+    Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
 public:
+    enum RenderTarget {
+        Image,
+        FramebufferObject
+    };
+
+    enum ImageFilterMode {
+        Threshold,
+        GrayScale,
+        Brightness,
+        Invert,
+        Blur,
+        Opaque,
+        Convolute
+    };
+
     QSGCanvasItem(QSGItem *parent = 0);
     ~QSGCanvasItem();
-    void setCanvasX(qreal x);
-    void setCanvasY(qreal y);
-    qreal canvasX() const;
-    qreal canvasY() const;
-    QPointF canvasPos() const;
+
+    QSizeF canvasSize() const;
+    void setCanvasSize(const QSizeF &);
+
+    QSize tileSize() const;
+    void setTileSize(const QSize &);
+
+    QRectF canvasWindow() const;
+    void setCanvasWindow(const QRectF& rect);
+
+    bool threadRendering() const;
+    void setThreadRendering(bool theadRendering);
+
+    RenderTarget renderTarget() const;
+    void setRenderTarget(RenderTarget target);
+
+    QSGContext2D* context() const;
+    QImage toImage(const QRectF& region = QRectF()) const;
+
+    QImage loadedImage(const QUrl& url);
 Q_SIGNALS:
-    void painted();
     void paint(QDeclarativeV8Handle context, const QRect &region);
-    void canvasXChanged();
-    void canvasYChanged();
+    void painted();
+    void canvasSizeChanged();
+    void tileSizeChanged();
+    void viewpointChanged();
+    void threadRenderingChanged();
+    void textureChanged();
+    void canvasWindowChanged();
+    void renderTargetChanged();
+    void imageLoaded();
 public Q_SLOTS:
     QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QDeclarativeV8Handle getContext(const QString & = QLatin1String("2d"));
-    void requestPaint(const QRect& region = QRect());
-
+    void markDirty(const QRectF& region);
+    void requestPaint() {markDirty(canvasWindow());}
     // Save current canvas to disk
     bool save(const QString& filename) const;
-
+    void loadImage(const QUrl& url);
+    void unloadImage(const QUrl& url);
+    bool isImageLoaded(const QUrl& url) const;
+    bool isImageLoading(const QUrl& url) const;
+    bool isImageError(const QUrl& url) const;
+private Q_SLOTS:
+    void _doPainting(const QRectF& region);
 protected:
-    void updatePolish();
-    void paint(QPainter *painter);
     virtual void componentComplete();
+    virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    virtual void geometryChanged(const QRectF &newGeometry,
+                                 const QRectF &oldGeometry);
+    virtual void updatePolish();
 private:
     void createContext();
+    void createTexture();
     Q_DECLARE_PRIVATE(QSGCanvasItem)
     friend class QSGContext2D;
+    friend class QSGContext2DTexture;
 };
 QT_END_NAMESPACE
 
