@@ -41,72 +41,51 @@
 
 import QtQuick 2.0
 import QtQuick.Particles 2.0
+import "samegame.js" as Logic
 
 Item {
-    id: block
-    property bool dying: false
-    property bool spawned: false
-    property int type: 0
-    property ParticleSystem particleSystem
-
-    Behavior on x {
-        enabled: spawned;
-        SpringAnimation{ spring: 2; damping: 0.2 }
-    }
-    Behavior on y {
-        SpringAnimation{ spring: 2; damping: 0.2 }
-    }
-
+    id: gameCanvas
+    property int score: 0
+    property int blockSize: 40
+    property ParticleSystem ps: particleSystem
     Image {
-        id: img
-        source: {
-            if(type == 0){
-                "pics/redStone.png";
-            } else if(type == 1) {
-                "pics/blueStone.png";
-            } else {
-                "pics/greenStone.png";
-            }
-        }
-        opacity: 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        id: background
         anchors.fill: parent
-    }
-    Emitter {
-        id: particles
-        system: particleSystem
-        particle: { 
-            if(type == 0){
-                "red";
-            } else if (type == 1) {
-                "blue";
-            } else {
-                "green";
-            }
-        }
-        anchors.fill: parent
-
-        speed: TargetedDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
-        shape: EllipseShape{fill:true}
-        emitting: false;
-        lifeSpan: 700; lifeSpanVariation: 100
-        emitRate: 1000
-        emitCap: 100 //only fires 0.1s bursts (still 2x old number, ImageParticle wants less than 16000 max though)
-        size: 28
-        endSize: 14
+        z: -1
+        source: "pics/background.png"
+        fillMode: Image.PreserveAspectCrop
     }
 
-    states: [
-        State {
-            name: "AliveState"; when: spawned == true && dying == false
-            PropertyChanges { target: img; opacity: 1 }
-        },
-
-        State {
-            name: "DeathState"; when: dying == true
-            StateChangeScript { script: particles.pulse(0.1); }
-            PropertyChanges { target: img; opacity: 0 }
-            StateChangeScript { script: block.destroy(1000); }
+    width: 480
+    height: 800
+    MouseArea {
+        anchors.fill: parent; onClicked: Logic.handleClick(mouse.x,mouse.y);
+    }
+    ParticleSystem{ 
+        id: particleSystem;
+        z:2
+        ImageParticle {
+            particles: ["red"]
+            color: Qt.darker("red");//Actually want desaturated...
+            source: "pics/particle.png"
+            colorVariation: 0.4
+            alpha: 0.1
         }
-    ]
+        ImageParticle {
+            particles: ["green"]
+            color: Qt.darker("green");//Actually want desaturated...
+            source: "pics/particle.png"
+            colorVariation: 0.4
+            alpha: 0.1
+        }
+        ImageParticle {
+            particles: ["blue"]
+            color: Qt.darker("blue");//Actually want desaturated...
+            source: "pics/particle.png"
+            colorVariation: 0.4
+            alpha: 0.1
+        }
+        anchors.fill: parent
+    }
 }
+
