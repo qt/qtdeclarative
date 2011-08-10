@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = qmlscene
-DESTDIR= ../../bin
+DESTDIR= $$QT.declarative.bins
 
 QT += declarative declarative-private qtquick1
 
