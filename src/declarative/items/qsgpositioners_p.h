@@ -155,6 +155,8 @@ class Q_AUTOTEST_EXPORT QSGGrid : public QSGBasePositioner
     Q_OBJECT
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
     Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(int rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
+    Q_PROPERTY(int columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
@@ -167,6 +169,12 @@ public:
 
     int columns() const {return m_columns;}
     void setColumns(const int columns);
+
+    int rowSpacing() const { return m_rowSpacing; }
+    void setRowSpacing(int);
+
+    int columnSpacing() const { return m_columnSpacing; }
+    void setColumnSpacing(int);
 
     Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
@@ -183,6 +191,8 @@ Q_SIGNALS:
     void flowChanged();
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
+    void rowSpacingChanged();
+    void columnSpacingChanged();
 
 protected:
     virtual void doPositioning(QSizeF *contentSize);
@@ -191,6 +201,8 @@ protected:
 private:
     int m_rows;
     int m_columns;
+    int m_rowSpacing;
+    int m_columnSpacing;
     Flow m_flow;
     Q_DISABLE_COPY(QSGGrid)
 };

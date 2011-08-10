@@ -76,6 +76,7 @@ private slots:
     void test_grid_topToBottom();
     void test_grid_rightToLeft();
     void test_grid_spacing();
+    void test_grid_row_column_spacing();
     void test_grid_animated();
     void test_grid_animated_rightToLeft();
     void test_grid_zero_columns();
@@ -618,6 +619,39 @@ void tst_qsgpositioners::test_grid_spacing()
     QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
     QCOMPARE(grid->width(), 128.0);
     QCOMPARE(grid->height(), 104.0);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_grid_row_column_spacing()
+{
+    QSGView *canvas = createView(SRCDIR "/data/grid-row-column-spacing.qml");
+
+    QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
+    QVERIFY(one != 0);
+    QSGRectangle *two = canvas->rootObject()->findChild<QSGRectangle*>("two");
+    QVERIFY(two != 0);
+    QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
+    QVERIFY(three != 0);
+    QSGRectangle *four = canvas->rootObject()->findChild<QSGRectangle*>("four");
+    QVERIFY(four != 0);
+    QSGRectangle *five = canvas->rootObject()->findChild<QSGRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 61.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 92.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 57.0);
+    QCOMPARE(five->x(), 61.0);
+    QCOMPARE(five->y(), 57.0);
+
+    QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
+    QCOMPARE(grid->width(), 142.0);
+    QCOMPARE(grid->height(), 107.0);
 
     delete canvas;
 }

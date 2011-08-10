@@ -52,6 +52,8 @@ The Loader element now only emits the \c sourceChanged signal when the source is
 \c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one
 of the properties was changed.
 
+Grid now has rowSpacing and columnSpacing properties.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem

@@ -780,7 +780,7 @@ void QSGRow::reportConflictingAnchors()
   \sa rows, columns
 */
 QSGGrid::QSGGrid(QSGItem *parent) :
-    QSGBasePositioner(Both, parent), m_rows(-1), m_columns(-1), m_flow(LeftToRight)
+    QSGBasePositioner(Both, parent), m_rows(-1), m_columns(-1), m_rowSpacing(-1), m_columnSpacing(-1), m_flow(LeftToRight)
 {
 }
 
@@ -845,6 +845,40 @@ void QSGGrid::setFlow(Flow flow)
         prePositioning();
         emit flowChanged();
     }
+}
+
+/*!
+    \qmlproperty int QtQuick2::Grid::rowSpacing
+
+    This property holds the spacing in pixels between rows.
+
+    \sa columnSpacing
+    \since QtQuick2.0
+*/
+void QSGGrid::setRowSpacing(const int rowSpacing)
+{
+    if (rowSpacing == m_rowSpacing)
+        return;
+    m_rowSpacing = rowSpacing;
+    prePositioning();
+    emit rowSpacingChanged();
+}
+
+/*!
+    \qmlproperty int QtQuick2::Grid::columnSpacing
+
+    This property holds the spacing in pixels between columns.
+
+    \sa rowSpacing
+    \since QtQuick2.0
+*/
+void QSGGrid::setColumnSpacing(const int columnSpacing)
+{
+    if (columnSpacing == m_columnSpacing)
+        return;
+    m_columnSpacing = columnSpacing;
+    prePositioning();
+    emit columnSpacingChanged();
 }
 
 /*!
@@ -967,17 +1001,25 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
         }
     }
 
+    int columnSpacing = m_columnSpacing;
+    if (columnSpacing == -1)
+        columnSpacing = spacing();
+
+    int rowSpacing = m_rowSpacing;
+    if (rowSpacing == -1)
+        rowSpacing = spacing();
+
     int widthSum = 0;
     for (int j=0; j < maxColWidth.size(); j++){
         if (j)
-            widthSum += spacing();
+            widthSum += columnSpacing;
         widthSum += maxColWidth[j];
     }
 
     int heightSum = 0;
     for (int i=0; i < maxRowHeight.size(); i++){
         if (i)
-            heightSum += spacing();
+            heightSum += rowSpacing;
         heightSum += maxRowHeight[i];
     }
 
@@ -1008,13 +1050,13 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
 
         if (m_flow == LeftToRight) {
             if (d->isLeftToRight())
-                xoffset += maxColWidth[curCol]+spacing();
+                xoffset += maxColWidth[curCol]+columnSpacing;
             else
-                xoffset -= maxColWidth[curCol]+spacing();
+                xoffset -= maxColWidth[curCol]+columnSpacing;
             curCol++;
             curCol%=c;
             if (!curCol){
-                yoffset += maxRowHeight[curRow]+spacing();
+                yoffset += maxRowHeight[curRow]+rowSpacing;
                 if (d->isLeftToRight())
                     xoffset = 0;
                 else
@@ -1024,14 +1066,14 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
                     break;
             }
         } else {
-            yoffset+=maxRowHeight[curRow]+spacing();
+            yoffset+=maxRowHeight[curRow]+rowSpacing;
             curRow++;
             curRow%=r;
             if (!curRow){
                 if (d->isLeftToRight())
-                    xoffset += maxColWidth[curCol]+spacing();
+                    xoffset += maxColWidth[curCol]+columnSpacing;
                 else
-                    xoffset -= maxColWidth[curCol]+spacing();
+                    xoffset -= maxColWidth[curCol]+columnSpacing;
                 yoffset=0;
                 curCol++;
                 if (curCol>=c)
