@@ -1966,7 +1966,7 @@ void QSGCanvasRenderThread::run()
     }
 
 #ifdef THREAD_DEBUG
-    printf("                RenderThread: exited... Good Night!\n");
+    printf("                RenderThread: render loop exited... Good Night!\n");
 #endif
 
     guiContext->doneCurrent();
@@ -1978,6 +1978,10 @@ void QSGCanvasRenderThread::run()
 #endif
     wake();
     unlock();
+
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: All done...\n");
+#endif
 }
 
 
@@ -2172,6 +2176,11 @@ void QSGCanvasRenderThread::stopRenderThread()
     // Actually wait for the thread to terminate.  Otherwise we can delete it
     // too early and crash.
     QThread::wait();
+
+#ifdef THREAD_DEBUG
+    printf("GUI: thread has terminated and we're all good..\n");
+#endif
+
 }
 
 
