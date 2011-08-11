@@ -84,13 +84,13 @@ static void qt_print_node_count()
 QSGNode::QSGNode()
     : m_parent(0)
     , m_type(BasicNodeType)
-    , m_subtreeGeometryCount(0)
-    , m_nodeFlags(OwnedByParent)
-    , m_flags(0)
     , m_firstChild(0)
     , m_lastChild(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
+    , m_subtreeGeometryCount(0)
+    , m_nodeFlags(OwnedByParent)
+    , m_flags(0)
 {
     init();
 }
@@ -98,13 +98,13 @@ QSGNode::QSGNode()
 QSGNode::QSGNode(NodeType type)
     : m_parent(0)
     , m_type(type)
-    , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
-    , m_nodeFlags(OwnedByParent)
-    , m_flags(0)
     , m_firstChild(0)
     , m_lastChild(0)
     , m_nextSibling(0)
     , m_previousSibling(0)
+    , m_subtreeGeometryCount(type == GeometryNodeType ? 1 : 0)
+    , m_nodeFlags(OwnedByParent)
+    , m_flags(0)
 {
     init();
 }
