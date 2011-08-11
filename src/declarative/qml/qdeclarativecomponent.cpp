@@ -54,7 +54,6 @@
 #include "private/qdeclarativescriptparser_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeenginedebug_p.h"
-#include <QtScript/qscriptvalueiterator.h>
 
 #include <QStack>
 #include <QStringList>
@@ -672,7 +671,7 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
 
     QDeclarativeEngine *engine = d->engine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-    QV8Engine *v8engine = &ep->v8engine;
+    QV8Engine *v8engine = ep->v8engine();
 
     QDeclarativeContext *ctxt = creationContext();
     if (!ctxt) ctxt = engine->rootContext();
@@ -748,6 +747,10 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
 
     completeCreate();
     
+    QDeclarativeData *ddata = QDeclarativeData::get(ret);
+    Q_ASSERT(ddata);
+    ddata->setImplicitDestructible();
+
     RETURN(object);
 
 #undef RETURN

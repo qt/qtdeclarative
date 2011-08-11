@@ -60,7 +60,6 @@
 #include "private/qhashedstring_p.h"
 #include <QtCore/qvector.h>
 
-#include <QtScript/private/qscriptdeclarativeclass_p.h>
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
@@ -96,7 +95,7 @@ public:
                     IsEnumType        = 0x00000100, // Property type is an enum
                     IsQList           = 0x00000200, // Property type is a QML list
                     IsQmlBinding      = 0x00000400, // Property type is a QDeclarativeBinding*
-                    IsQScriptValue    = 0x00000800, // Property type is a QScriptValue
+                    IsQJSValue    = 0x00000800, // Property type is a QScriptValue
                     IsV8Handle        = 0x00001000, // Property type is a QDeclarativeV8Handle
 
                     // Apply only to IsFunctions
@@ -127,7 +126,7 @@ public:
         bool isEnum() const { return flags & IsEnumType; }
         bool isQList() const { return flags & IsQList; }
         bool isQmlBinding() const { return flags & IsQmlBinding; }
-        bool isQScriptValue() const { return flags & IsQScriptValue; }
+        bool isQJSValue() const { return flags & IsQJSValue; }
         bool isV8Handle() const { return flags & IsV8Handle; }
         bool isVMEFunction() const { return flags & IsVMEFunction; }
         bool hasArguments() const { return flags & HasArguments; }

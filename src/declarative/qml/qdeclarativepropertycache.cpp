@@ -49,7 +49,7 @@
 
 #include <QtCore/qdebug.h>
 
-Q_DECLARE_METATYPE(QScriptValue)
+Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 QT_BEGIN_NAMESPACE
@@ -83,8 +83,8 @@ static QDeclarativePropertyCache::Data::Flags flagsForPropertyType(int propType,
     if (propType < QMetaType::User && propType != QMetaType::QObjectStar && propType != QMetaType::QWidgetStar) {
     } else if (propType == qMetaTypeId<QDeclarativeBinding *>()) {
         flags |= QDeclarativePropertyCache::Data::IsQmlBinding;
-    } else if (propType == qMetaTypeId<QScriptValue>()) {
-        flags |= QDeclarativePropertyCache::Data::IsQScriptValue;
+    } else if (propType == qMetaTypeId<QJSValue>()) {
+        flags |= QDeclarativePropertyCache::Data::IsQJSValue;
     } else if (propType == qMetaTypeId<QDeclarativeV8Handle>()) {
         flags |= QDeclarativePropertyCache::Data::IsV8Handle;
     } else {
@@ -518,7 +518,7 @@ QDeclarativePropertyCache::property(QDeclarativeEngine *engine, QObject *obj,
         rv = cache->property(name);
     } else {
         QString strname = QV8Engine::toStringStatic(name.string());
-        // QString strname = ep->v8engine.toString(name);
+        // QString strname = ep->v8engine()->toString(name);
         local = QDeclarativePropertyCache::create(obj->metaObject(), strname);
         if (local.isValid())
             rv = &local;

@@ -63,7 +63,7 @@
 #include "private/qdeclarativeparser_p.h"
 
 #include <QtCore/qhash.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qset.h>
 
 #include <private/qobject_p.h>

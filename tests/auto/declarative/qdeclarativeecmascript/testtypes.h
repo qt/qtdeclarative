@@ -53,7 +53,7 @@
 #include <QtGui/qvector3d.h>
 #include <QtGui/QPixmap>
 #include <QtCore/qdatetime.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 
@@ -581,7 +581,7 @@ public:
     }
 };
 
-Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QJSValue);
 class MyInvokableBaseObject : public QObject
 {
     Q_OBJECT
@@ -614,7 +614,7 @@ public:
     Q_INVOKABLE QPointF method_NoArgs_QPointF() { invoke(3); return QPointF(123, 4.5); }
     Q_INVOKABLE QObject *method_NoArgs_QObject() { invoke(4); return this; }
     Q_INVOKABLE MyInvokableObject *method_NoArgs_unknown() { invoke(5); return this; }
-    Q_INVOKABLE QScriptValue method_NoArgs_QScriptValue() { invoke(6); return QScriptValue("Hello world"); }
+    Q_INVOKABLE QJSValue method_NoArgs_QScriptValue() { invoke(6); return QJSValue("Hello world"); }
     Q_INVOKABLE QVariant method_NoArgs_QVariant() { invoke(7); return QVariant("QML rocks"); }
 
     Q_INVOKABLE void method_int(int a) { invoke(8); m_actuals << a; }
@@ -623,8 +623,8 @@ public:
     Q_INVOKABLE void method_QString(QString a) { invoke(11); m_actuals << a; }
     Q_INVOKABLE void method_QPointF(QPointF a) { invoke(12); m_actuals << a; }
     Q_INVOKABLE void method_QObject(QObject *a) { invoke(13); m_actuals << qVariantFromValue(a); }
-    Q_INVOKABLE void method_QScriptValue(QScriptValue a) { invoke(14); m_actuals << qVariantFromValue(a); }
-    Q_INVOKABLE void method_intQScriptValue(int a, QScriptValue b) { invoke(15); m_actuals << a << qVariantFromValue(b); }
+    Q_INVOKABLE void method_QScriptValue(QJSValue a) { invoke(14); m_actuals << qVariantFromValue(a); }
+    Q_INVOKABLE void method_intQScriptValue(int a, QJSValue b) { invoke(15); m_actuals << a << qVariantFromValue(b); }
     
     Q_INVOKABLE void method_overload(int a) { invoke(16); m_actuals << a; }
     Q_INVOKABLE void method_overload(int a, int b) { invoke(17); m_actuals << a << b; }

@@ -67,20 +67,20 @@ struct Register {
     void setNaN() { setqreal(qSNaN()); }
     bool isUndefined() const { return dataType == UndefinedType; }
 
-    void setQObject(QObject *o) { *((QObject **)data) = o; dataType = QObjectStarType; }
-    QObject *getQObject() const { return *((QObject **)data); }
+    void setQObject(QObject *o) { qobjectValue = o; dataType = QObjectStarType; }
+    QObject *getQObject() const { return qobjectValue; }
 
-    void setqreal(qreal v) { *((qreal *)data) = v; dataType = QRealType; }
-    qreal getqreal() const { return *((qreal *)data); }
-    qreal &getqrealref() const { return *((qreal *)data); }
+    void setqreal(qreal v) { qrealValue = v; dataType = QRealType; }
+    qreal getqreal() const { return qrealValue; }
+    qreal &getqrealref() { return qrealValue; }
 
-    void setint(int v) { *((int *)data) = v; dataType = IntType; }
-    int getint() const { return *((int *)data); }
-    int &getintref() const { return *((int *)data); }
+    void setint(int v) { intValue = v; dataType = IntType; }
+    int getint() const { return intValue; }
+    int &getintref() { return intValue; }
 
-    void setbool(bool v) { *((bool *)data) = v; dataType = BoolType; }
-    bool getbool() const { return *((bool *)data); }
-    bool &getboolref() const { return *((bool *)data); }
+    void setbool(bool v) { boolValue = v; dataType = BoolType; }
+    bool getbool() const { return boolValue; }
+    bool &getboolref() { return boolValue; }
 
     QVariant *getvariantptr() { return (QVariant *)typeDataPtr(); }
     QString *getstringptr() { return (QString *)typeDataPtr(); }
@@ -97,10 +97,16 @@ struct Register {
     Type gettype() const { return dataType; }
     void settype(Type t) { dataType = t; }
 
-    // int type;          // Optional type
-
     Type dataType;     // Type of data
-    void *data[2];     // Object stored here
+    union {
+        QObject *qobjectValue;
+        qreal qrealValue;
+        int intValue;
+        bool boolValue;
+        void *data[sizeof(QVariant)];
+        qint64 q_for_alignment_1;
+        double q_for_alignment_2;
+    };
 
     inline void cleanup();
     inline void cleanupString();
@@ -211,7 +217,6 @@ public:
 
     typedef QDeclarativeNotifierEndpoint Subscription;
     Subscription *subscriptions;
-    QScriptDeclarativeClass::PersistentIdentifier *identifiers;
 
     void run(Binding *, QDeclarativePropertyPrivate::WriteFlags flags);
 
@@ -234,20 +239,19 @@ public:
     inline void subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex);
     inline void subscribe(QObject *o, int notifyIndex, int subIndex);
 
-    inline static qint32 toInt32(qsreal n);
-    static const qsreal D32;
-    static quint32 toUint32(qsreal n);
+    inline static qint32 toInt32(qreal n);
+    static const qreal D32;
+    static quint32 toUint32(qreal n);
 };
 
 QDeclarativeV4BindingsPrivate::QDeclarativeV4BindingsPrivate()
-: subscriptions(0), identifiers(0), program(0), bindings(0)
+: subscriptions(0), program(0), bindings(0)
 {
 }
 
 QDeclarativeV4BindingsPrivate::~QDeclarativeV4BindingsPrivate()
 {
     delete [] subscriptions; subscriptions = 0;
-    delete [] identifiers; identifiers = 0;
 }
 
 int QDeclarativeV4BindingsPrivate::methodCount = -1;
@@ -498,24 +502,10 @@ inline static QUrl toUrl(Register *reg, int type, QDeclarativeContextData *conte
         return base;
 }
 
-static QObject *variantToQObject(const QVariant &value, bool *ok)
-{
-    if (ok) *ok = true;
-
-    if (value.userType() == QMetaType::QObjectStar) {
-        return qvariant_cast<QObject*>(value);
-    } else {
-        if (ok) *ok = false;
-        return 0;
-    }
-}
-
 void QDeclarativeV4BindingsPrivate::init()
 {
     if (program->subscriptions)
         subscriptions = new QDeclarativeV4BindingsPrivate::Subscription[program->subscriptions];
-    if (program->identifiers)
-        identifiers = new QScriptDeclarativeClass::PersistentIdentifier[program->identifiers];
 
     bindings = new QDeclarativeV4BindingsPrivate::Binding[program->bindings];
 }
@@ -685,15 +675,15 @@ static void throwException(int id, QDeclarativeDelayedError *error,
         QDeclarativeEnginePrivate::warning(context->engine, error->error);
 }
 
-const qsreal QDeclarativeV4BindingsPrivate::D32 = 4294967296.0;
+const qreal QDeclarativeV4BindingsPrivate::D32 = 4294967296.0;
 
-qint32 QDeclarativeV4BindingsPrivate::toInt32(qsreal n)
+qint32 QDeclarativeV4BindingsPrivate::toInt32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
 
     double sign = (n < 0) ? -1.0 : 1.0;
-    qsreal abs_n = fabs(n);
+    qreal abs_n = fabs(n);
 
     n = ::fmod(sign * ::floor(abs_n), D32);
     const double D31 = D32 / 2.0;
@@ -707,13 +697,13 @@ qint32 QDeclarativeV4BindingsPrivate::toInt32(qsreal n)
     return qint32 (n);
 }
 
-inline quint32 QDeclarativeV4BindingsPrivate::toUint32(qsreal n)
+inline quint32 QDeclarativeV4BindingsPrivate::toUint32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
 
     double sign = (n < 0) ? -1.0 : 1.0;
-    qsreal abs_n = fabs(n);
+    qreal abs_n = fabs(n);
 
     n = ::fmod(sign * ::floor(abs_n), D32);
 
@@ -1021,7 +1011,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         } else {
             // Delegate the conversion. This is pretty fast and it doesn't require a QScriptEngine.
             // Ideally we should just call the methods in the QScript namespace directly.
-            QScriptValue tmp(*src.getstringptr());
+            QJSValue tmp(*src.getstringptr());
             if (instr->unaryop.src == instr->unaryop.output) {
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
@@ -1041,7 +1031,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         } else {
             // Delegate the conversion. This is pretty fast and it doesn't require a QScriptEngine.
             // Ideally we should just call the methods in the QScript namespace directly.
-            QScriptValue tmp(*src.getstringptr());
+            QJSValue tmp(*src.getstringptr());
             if (instr->unaryop.src == instr->unaryop.output) {
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
@@ -1061,7 +1051,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         } else {
             // Delegate the conversion. This is pretty fast and it doesn't require a QScriptEngine.
             // Ideally we should just call the methods in the QScript namespace directly.
-            QScriptValue tmp(*src.getstringptr());
+            QJSValue tmp(*src.getstringptr());
             if (instr->unaryop.src == instr->unaryop.output) {
                 output.cleanupString();
                 MARK_CLEAN_REGISTER(instr->unaryop.output);
@@ -1109,7 +1099,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
     QML_V4_BEGIN_INSTR(MathPIReal, unaryop)
     {
-        static const qsreal qmlPI = 2.0 * qAsin(1.0);
+        static const qreal qmlPI = 2.0 * qAsin(1.0);
         Register &output = registers[instr->unaryop.output];
         output.setqreal(qmlPI);
     }
@@ -1486,16 +1476,16 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
         executedBlocks |= instr->blockop.block;
     QML_V4_END_INSTR(Block, blockop)
 
+    // XXX not applicable in v8
     QML_V4_BEGIN_INSTR(InitString, initstring)
-        if (!identifiers[instr->initstring.offset].identifier) {
-            quint32 len = *(quint32 *)(data + instr->initstring.dataIdx);
-            QChar *strdata = (QChar *)(data + instr->initstring.dataIdx + sizeof(quint32));
+//        if (!identifiers[instr->initstring.offset].identifier) {
+//            quint32 len = *(quint32 *)(data + instr->initstring.dataIdx);
+//            QChar *strdata = (QChar *)(data + instr->initstring.dataIdx + sizeof(quint32));
 
-            QString str = QString::fromRawData(strdata, len);
+//            QString str = QString::fromRawData(strdata, len);
 
-            // XXX not applicable in v8
-            // identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
-        }
+//            // identifiers[instr->initstring.offset] = engine->objectClass->createPersistentIdentifier(str);
+//        }
     QML_V4_END_INSTR(InitString, initstring)
 
     QML_V4_BEGIN_INSTR(CleanupRegister, cleanup)

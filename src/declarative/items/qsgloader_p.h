@@ -58,13 +58,13 @@ class Q_AUTOTEST_EXPORT QSGLoader : public QSGImplicitSizeItem
     Q_ENUMS(Status)
 
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(QDeclarativeComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceChanged)
+    Q_PROPERTY(QDeclarativeComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
     Q_PROPERTY(QSGItem *item READ item NOTIFY itemChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
 
 public:
-    QSGLoader(QSGItem *parent=0);
+    QSGLoader(QSGItem *parent = 0);
     virtual ~QSGLoader();
 
     QUrl source() const;
@@ -83,6 +83,7 @@ public:
 Q_SIGNALS:
     void itemChanged();
     void sourceChanged();
+    void sourceComponentChanged();
     void statusChanged();
     void progressChanged();
     void loaded();

@@ -20,7 +20,10 @@ PUBLICTESTS += \
     qdeclarativepixmapcache \
     qdeclarativeqt \
     qdeclarativetranslation \
-    qdeclarativexmlhttprequest
+    qdeclarativexmlhttprequest \
+    qjsvalue \
+    qjsvalueiterator \
+    qjsengine
 
 PRIVATETESTS += \
     qdeclarativeanimations \

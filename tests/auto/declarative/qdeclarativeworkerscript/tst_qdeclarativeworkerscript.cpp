@@ -43,7 +43,7 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsengine.h>
 
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>

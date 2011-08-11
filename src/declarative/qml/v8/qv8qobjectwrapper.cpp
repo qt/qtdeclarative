@@ -48,15 +48,17 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativevmemetaobject_p.h>
 #include <private/qdeclarativebinding_p.h>
+#include <private/qjsvalue_p.h>
+#include <private/qscript_impl_p.h>
 
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_METATYPE(QScriptValue);
+Q_DECLARE_METATYPE(QJSValue);
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
 
 #if defined(__GNUC__)
@@ -122,9 +124,26 @@ private:
 
     inline void cleanup();
 
-    char data[4 * sizeof(void *)];
+    union {
+        float floatValue;
+        double doubleValue;
+        quint32 intValue;
+        bool boolValue;
+        QObject *qobjectPtr;
+
+        char allocData[sizeof(QVariant)];
+    };
+
+    // Pointers to allocData
+    union {
+        QString *qstringPtr;
+        QVariant *qvariantPtr;
+        QList<QObject *> *qlistPtr;
+        QJSValue *qjsValuePtr;
+        QDeclarativeV8Handle *handlePtr;
+    };
+
     int type;
-    bool isObjectType;
 };
 }
 
@@ -316,7 +335,7 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         QDeclarativeV8Handle handle;
         void *args[] = { &handle, 0 };
         QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex, args); 
-        return reinterpret_cast<v8::Handle<v8::Value> &>(handle);
+        return handle.toHandle();
     } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
@@ -361,7 +380,7 @@ static v8::Handle<v8::Value> LoadPropertyDirect(QV8Engine *engine, QObject *obje
         QDeclarativeV8Handle handle;
         void *args[] = { &handle, 0 };
         object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args); 
-        return reinterpret_cast<v8::Handle<v8::Value> &>(handle);
+        return handle.toHandle();
     } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
@@ -674,7 +693,9 @@ v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info
 
     QStringList result;
 
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(resource->engine->engine());
+    QDeclarativeEnginePrivate *ep = resource->engine->engine()
+            ? QDeclarativeEnginePrivate::get(resource->engine->engine())
+            : 0;
 
     QDeclarativePropertyCache *cache = 0;
     QDeclarativeData *ddata = QDeclarativeData::get(object);
@@ -682,7 +703,7 @@ v8::Handle<v8::Array> QV8QObjectWrapper::Enumerator(const v8::AccessorInfo &info
         cache = ddata->propertyCache;
 
     if (!cache) {
-        cache = ep->cache(object);
+        cache = ep ? ep->cache(object) : 0;
         if (cache) {
             if (ddata) { cache->addref(); ddata->propertyCache = cache; }
         } else {
@@ -1805,7 +1826,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Invoke(const v8::Arguments &args)
 }
 
 MetaCallArgument::MetaCallArgument()
-: type(QVariant::Invalid), isObjectType(false)
+: type(QVariant::Invalid)
 {
 }
 
@@ -1817,22 +1838,22 @@ MetaCallArgument::~MetaCallArgument()
 void MetaCallArgument::cleanup()
 {
     if (type == QMetaType::QString) {
-        ((QString *)&data)->~QString();
-    } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
-        ((QVariant *)&data)->~QVariant();
-    } else if (type == qMetaTypeId<QScriptValue>()) {
-        ((QScriptValue *)&data)->~QScriptValue();
+        qstringPtr->~QString();
+    } else if (type == -1 || type == QMetaType::QVariant) {
+        qvariantPtr->~QVariant();
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr->~QJSValue();
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
-        ((QList<QObject *> *)&data)->~QList<QObject *>();
-    }
+        qlistPtr->~QList<QObject *>();
+    } 
 }
 
 void *MetaCallArgument::dataPtr()
 {
     if (type == -1)
-        return ((QVariant *)data)->data();
+        return qvariantPtr->data();
     else
-        return (void *)&data;
+        return (void *)&allocData;
 }
 
 void MetaCallArgument::initAsType(int callType)
@@ -1840,8 +1861,8 @@ void MetaCallArgument::initAsType(int callType)
     if (type != 0) { cleanup(); type = 0; }
     if (callType == 0) return;
 
-    if (callType == qMetaTypeId<QScriptValue>()) {
-        new (&data) QScriptValue();
+    if (callType == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr = new (&allocData) QJSValue();
         type = callType;
     } else if (callType == QMetaType::Int ||
                callType == QMetaType::UInt ||
@@ -1850,23 +1871,23 @@ void MetaCallArgument::initAsType(int callType)
                callType == QMetaType::Float) {
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
-        *((QObject **)&data) = 0;
+        qobjectPtr = 0;
         type = callType;
     } else if (callType == QMetaType::QString) {
-        new (&data) QString();
+        qstringPtr = new (&allocData) QString();
         type = callType;
-    } else if (callType == qMetaTypeId<QVariant>()) {
+    } else if (callType == QMetaType::QVariant) {
         type = callType;
-        new (&data) QVariant();
+        qvariantPtr = new (&allocData) QVariant();
     } else if (callType == qMetaTypeId<QList<QObject *> >()) {
         type = callType;
-        new (&data) QList<QObject *>();
+        qlistPtr = new (&allocData) QList<QObject *>();
     } else if (callType == qMetaTypeId<QDeclarativeV8Handle>()) {
         type = callType;
-        new (&data) v8::Handle<v8::Value>();
+        handlePtr = new (&allocData) QDeclarativeV8Handle;
     } else {
         type = -1;
-        new (&data) QVariant(callType, (void *)0);
+        qvariantPtr = new (&allocData) QVariant(callType, (void *)0);
     }
 }
 
@@ -1874,63 +1895,63 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
 {
     if (type != 0) { cleanup(); type = 0; }
 
-    if (callType == qMetaTypeId<QScriptValue>()) {
-        new (&data) QScriptValue();
-        type = qMetaTypeId<QScriptValue>();
+    if (callType == qMetaTypeId<QJSValue>()) {
+        qjsValuePtr = new (&allocData) QJSValue(QJSValuePrivate::get(new QJSValuePrivate(engine, value)));
+        type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
-        *((int *)&data) = int(value->Int32Value());
+        intValue = quint32(value->Int32Value());
         type = callType;
     } else if (callType == QMetaType::UInt) {
-        *((uint *)&data) = uint(value->Uint32Value());
+        intValue = quint32(value->Uint32Value());
         type = callType;
     } else if (callType == QMetaType::Bool) {
-        *((bool *)&data) = value->BooleanValue();
+        boolValue = value->BooleanValue();
         type = callType;
     } else if (callType == QMetaType::Double) {
-        *((double *)&data) = double(value->NumberValue());
+        doubleValue = double(value->NumberValue());
         type = callType;
     } else if (callType == QMetaType::Float) {
-        *((float *)&data) = float(value->NumberValue());
+        floatValue = float(value->NumberValue());
         type = callType;
     } else if (callType == QMetaType::QString) {
         if (value->IsNull() || value->IsUndefined())
-            new (&data) QString();
+            qstringPtr = new (&allocData) QString();
         else
-            new (&data) QString(engine->toString(value->ToString()));
+            qstringPtr = new (&allocData) QString(engine->toString(value->ToString()));
         type = callType;
     } else if (callType == QMetaType::QObjectStar) {
-        *((QObject **)&data) = engine->toQObject(value);
+        qobjectPtr = engine->toQObject(value);
         type = callType;
     } else if (callType == qMetaTypeId<QVariant>()) {
-        new (&data) QVariant(engine->toVariant(value, -1));
+        qvariantPtr = new (&allocData) QVariant(engine->toVariant(value, -1));
         type = callType;
     } else if (callType == qMetaTypeId<QList<QObject*> >()) {
-        QList<QObject *> *list = new (&data) QList<QObject *>(); 
+        qlistPtr = new (&allocData) QList<QObject *>();
         if (value->IsArray()) {
             v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
             uint32_t length = array->Length();
             for (uint32_t ii = 0; ii < length; ++ii) 
-                list->append(engine->toQObject(array->Get(ii)));
+                qlistPtr->append(engine->toQObject(array->Get(ii)));
         } else {
-            list->append(engine->toQObject(value));
+            qlistPtr->append(engine->toQObject(value));
         }
         type = callType;
     } else if (callType == qMetaTypeId<QDeclarativeV8Handle>()) {
-        new (&data) v8::Handle<v8::Value>(value);
+        handlePtr = new (&allocData) QDeclarativeV8Handle(QDeclarativeV8Handle::fromHandle(value));
         type = callType;
     } else {
-        new (&data) QVariant();
+        qvariantPtr = new (&allocData) QVariant();
         type = -1;
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
+        QDeclarativeEnginePrivate *ep = engine->engine() ? QDeclarativeEnginePrivate::get(engine->engine()) : 0;
         QVariant v = engine->toVariant(value, -1);
 
         if (v.userType() == callType) {
-            *((QVariant *)&data) = v;
+            *qvariantPtr = v;
         } else if (v.canConvert((QVariant::Type)callType)) {
-            *((QVariant *)&data) = v;
-            ((QVariant *)&data)->convert((QVariant::Type)callType);
-        } else if (const QMetaObject *mo = ep->rawMetaObjectForType(callType)) {
+            *qvariantPtr = v;
+            qvariantPtr->convert((QVariant::Type)callType);
+        } else if (const QMetaObject *mo = ep ? ep->rawMetaObjectForType(callType) : 0) {
             QObject *obj = ep->toQObject(v);
             
             if (obj) {
@@ -1939,46 +1960,46 @@ void MetaCallArgument::fromValue(int callType, QV8Engine *engine, v8::Handle<v8:
                 if (!objMo) obj = 0;
             }
 
-            *((QVariant *)&data) = QVariant(callType, &obj);
+            *qvariantPtr = QVariant(callType, &obj);
         } else {
-            *((QVariant *)&data) = QVariant(callType, (void *)0);
+            *qvariantPtr = QVariant(callType, (void *)0);
         }
     }
 }
 
 v8::Handle<v8::Value> MetaCallArgument::toValue(QV8Engine *engine)
 {
-    if (type == qMetaTypeId<QScriptValue>()) {
-        return v8::Undefined();
+    if (type == qMetaTypeId<QJSValue>()) {
+        return QJSValuePrivate::get(*qjsValuePtr)->asV8Value(engine);
     } else if (type == QMetaType::Int) {
-        return v8::Integer::New(*((int *)&data));
+        return v8::Integer::New(int(intValue));
     } else if (type == QMetaType::UInt) {
-        return v8::Integer::NewFromUnsigned(*((uint *)&data));
+        return v8::Integer::NewFromUnsigned(intValue);
     } else if (type == QMetaType::Bool) {
-        return v8::Boolean::New(*((bool *)&data));
+        return v8::Boolean::New(boolValue);
     } else if (type == QMetaType::Double) {
-        return v8::Number::New(*((double *)&data));
+        return v8::Number::New(doubleValue);
     } else if (type == QMetaType::Float) {
-        return v8::Number::New(*((float *)&data));
+        return v8::Number::New(floatValue);
     } else if (type == QMetaType::QString) {
-        return engine->toString(*((QString *)&data));
+        return engine->toString(*qstringPtr);
     } else if (type == QMetaType::QObjectStar) {
-        QObject *object = *((QObject **)&data);
+        QObject *object = qobjectPtr;
         if (object)
             QDeclarativeData::get(object, true)->setImplicitDestructible();
         return engine->newQObject(object);
     } else if (type == qMetaTypeId<QList<QObject *> >()) {
         // XXX Can this be made more by using Array as a prototype and implementing
         // directly against QList<QObject*>?
-        QList<QObject *> &list = *(QList<QObject *>*)&data;
+        QList<QObject *> &list = *qlistPtr;
         v8::Local<v8::Array> array = v8::Array::New(list.count());
         for (int ii = 0; ii < list.count(); ++ii) 
             array->Set(ii, engine->newQObject(list.at(ii)));
         return array;
     } else if (type == qMetaTypeId<QDeclarativeV8Handle>()) {
-        return *(v8::Handle<v8::Value>*)&data;
+        return handlePtr->toHandle();
     } else if (type == -1 || type == qMetaTypeId<QVariant>()) {
-        QVariant value = *((QVariant *)&data);
+        QVariant value = *qvariantPtr;
         v8::Handle<v8::Value> rv = engine->fromVariant(value);
         if (QObject *object = engine->toQObject(rv)) 
             QDeclarativeData::get(object, true)->setImplicitDestructible();

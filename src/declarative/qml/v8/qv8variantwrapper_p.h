@@ -87,9 +87,12 @@ private:
                                                const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property, 
                                                 const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> ValueOfGetter(v8::Local<v8::String> property,
+                                               const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Preserve(const v8::Arguments &args);
     static v8::Handle<v8::Value> Destroy(const v8::Arguments &args);
     static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
+    static v8::Handle<v8::Value> ValueOf(const v8::Arguments &args);
 
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;
@@ -97,6 +100,7 @@ private:
     v8::Persistent<v8::Function> m_preserve;
     v8::Persistent<v8::Function> m_destroy;
     v8::Persistent<v8::Function> m_toString;
+    v8::Persistent<v8::Function> m_valueOf;
 };
 
 QT_END_NAMESPACE

@@ -49,6 +49,7 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativecomponent_p.h>
 #include <private/qdeclarativestringconverters_p.h>
+#include <private/qdeclarativeapplication_p.h>
 
 #include <QtDeclarative/qdeclarativecomponent.h>
 
@@ -58,9 +59,14 @@
 #include <QtCore/qnumeric.h>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
-#include <private/qdeclarativeapplication_p.h>
 #include <private/qdeclarativexmlhttprequest_p.h>
 #include <private/qdeclarativesqldatabase_p.h>
+
+#include "qscript_impl_p.h"
+
+Q_DECLARE_METATYPE(QJSValue)
+Q_DECLARE_METATYPE(QList<int>)
+
 
 // XXX TODO: Need to check all the global functions will also work in a worker script where the 
 // QDeclarativeEngine is not available
@@ -94,46 +100,24 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
     return false;
 }
 
-QV8Engine::QV8Engine()
-: m_xmlHttpRequestData(0), m_sqlDatabaseData(0), m_listModelData(0)
+QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
+    : q(qq)
+    , m_engine(0)
+    , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
+    , m_context((ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent()))
+    , m_originalGlobalObject(this, m_context)
+    , m_xmlHttpRequestData(0)
+    , m_sqlDatabaseData(0)
+    , m_listModelData(0)
 {
-}
-
-QV8Engine::~QV8Engine()
-{
-    for (int ii = 0; ii < m_extensionData.count(); ++ii) 
-        delete m_extensionData[ii];
-    m_extensionData.clear();
-
-    qt_rem_qmlsqldatabase(this, m_sqlDatabaseData); 
-    m_sqlDatabaseData = 0;
-    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData); 
-    m_xmlHttpRequestData = 0;
-    delete m_listModelData;
-    m_listModelData = 0;
-
-    qPersistentDispose(m_freezeObject);
-    qPersistentDispose(m_getOwnPropertyNames);
-    m_valueTypeWrapper.destroy();
-    m_variantWrapper.destroy();
-    m_listWrapper.destroy();
-    m_typeWrapper.destroy();
-    m_qobjectWrapper.destroy();
-    m_contextWrapper.destroy();
-    m_stringWrapper.destroy();
-    qPersistentDispose(m_context);
-}
-
-void QV8Engine::init(QDeclarativeEngine *engine)
-{
-    m_engine = engine;
+    qMetaTypeId<QJSValue>();
+    qMetaTypeId<QList<int> >();
 
     QByteArray v8args = qgetenv("V8ARGS");
     if (!v8args.isEmpty())
         v8::V8::SetFlagsFromString(v8args.constData(), v8args.length());
 
     v8::HandleScope handle_scope;
-    m_context = v8::Context::New();
     qPersistentRegister(m_context);
     v8::Context::Scope context_scope(m_context);
 
@@ -151,9 +135,39 @@ void QV8Engine::init(QDeclarativeEngine *engine)
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));
     m_getOwnPropertyNames = qPersistentNew<v8::Function>(v8::Handle<v8::Function>::Cast(v));
     }
+}
 
-    initializeGlobal(m_context->Global());
-    freezeObject(m_context->Global());
+QV8Engine::~QV8Engine()
+{
+    for (int ii = 0; ii < m_extensionData.count(); ++ii) 
+        delete m_extensionData[ii];
+    m_extensionData.clear();
+
+    qt_rem_qmlsqldatabase(this, m_sqlDatabaseData); 
+    m_sqlDatabaseData = 0;
+    qt_rem_qmlxmlhttprequest(this, m_xmlHttpRequestData); 
+    m_xmlHttpRequestData = 0;
+    delete m_listModelData;
+    m_listModelData = 0;
+
+    qPersistentDispose(m_freezeObject);
+    qPersistentDispose(m_getOwnPropertyNames);
+
+    invalidateAllValues();
+    clearExceptions();
+
+    m_valueTypeWrapper.destroy();
+    m_variantWrapper.destroy();
+    m_listWrapper.destroy();
+    m_typeWrapper.destroy();
+    m_qobjectWrapper.destroy();
+    m_contextWrapper.destroy();
+    m_stringWrapper.destroy();
+
+    m_originalGlobalObject.destroy();
+
+    if (m_ownsV8Context)
+        qPersistentDispose(m_context);
 }
 
 QString QV8Engine::toStringStatic(v8::Handle<v8::Value> jsstr)
@@ -357,8 +371,10 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
                 break;
         }
 
-        if (QDeclarativeValueType *vt = QDeclarativeEnginePrivate::get(m_engine)->valueTypes[type]) 
-            return m_valueTypeWrapper.newValueType(variant, vt);
+        if (m_engine) {
+            if (QDeclarativeValueType *vt = QDeclarativeEnginePrivate::get(m_engine)->valueTypes[type])
+                return m_valueTypeWrapper.newValueType(variant, vt);
+        }
 
     } else {
         if (type == qMetaTypeId<QDeclarativeListReference>()) {
@@ -386,7 +402,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
     }
 
     // XXX TODO: To be compatible, we still need to handle:
-    //    + QScriptValue
+    //    + QJSValue
     //    + QObjectList
     //    + QList<int>
 
@@ -420,6 +436,7 @@ const QSet<QString> &QV8Engine::illegalNames() const
 // Requires a handle scope
 v8::Local<v8::Array> QV8Engine::getOwnPropertyNames(v8::Handle<v8::Object> o)
 {
+    // FIXME Newer v8 have API for this function
     v8::TryCatch tc;
     v8::Handle<v8::Value> args[] = { o };
     v8::Local<v8::Value> r = m_getOwnPropertyNames->Call(global(), 1, args);
@@ -531,9 +548,6 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
         }
     }
 
-    if (m_engine)
-        qt->Set(v8::String::New("application"), newQObject(new QDeclarativeApplication(m_engine)));
-
     qt->Set(v8::String::New("include"), V8FUNCTION(QV8Include::include, this));
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));
     qt->Set(v8::String::New("rgba"), V8FUNCTION(rgba, this));
@@ -542,12 +556,6 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("point"), V8FUNCTION(point, this));
     qt->Set(v8::String::New("size"), V8FUNCTION(size, this));
     qt->Set(v8::String::New("vector3d"), V8FUNCTION(vector3d, this));
-
-    if (m_engine) {
-        qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
-        qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
-        qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
-    }
 
     qt->Set(v8::String::New("formatDate"), V8FUNCTION(formatDate, this));
     qt->Set(v8::String::New("formatTime"), V8FUNCTION(formatTime, this));
@@ -561,6 +569,10 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("resolvedUrl"), V8FUNCTION(resolvedUrl, this));
 
     if (m_engine) {
+        qt->Set(v8::String::New("application"), newQObject(new QDeclarativeApplication(m_engine)));
+        qt->Set(v8::String::New("lighter"), V8FUNCTION(lighter, this));
+        qt->Set(v8::String::New("darker"), V8FUNCTION(darker, this));
+        qt->Set(v8::String::New("tint"), V8FUNCTION(tint, this));
         qt->Set(v8::String::New("quit"), V8FUNCTION(quit, this));
         qt->Set(v8::String::New("createQmlObject"), V8FUNCTION(createQmlObject, this));
         qt->Set(v8::String::New("createComponent"), V8FUNCTION(createComponent, this));
@@ -1656,6 +1668,653 @@ v8::Handle<v8::Value> QV8Engine::qsTrIdNoOp(const v8::Arguments &args)
     if (args.Length() < 1)
         return v8::Undefined();
     return args[0];
+}
+
+void QV8Engine::initDeclarativeGlobalObject()
+{
+    v8::HandleScope handels;
+    v8::Context::Scope contextScope(m_context);
+    initializeGlobal(m_context->Global());
+    freezeObject(m_context->Global());
+}
+
+void QV8Engine::setEngine(QDeclarativeEngine *engine)
+{
+    m_engine = engine;
+    initDeclarativeGlobalObject();
+}
+
+void QV8Engine::setException(v8::Handle<v8::Value> value, v8::Handle<v8::Message> msg)
+{
+    m_exception.set(value, msg);
+}
+
+v8::Handle<v8::Value> QV8Engine::throwException(v8::Handle<v8::Value> value)
+{
+    setException(value);
+    v8::ThrowException(value);
+    return value;
+}
+
+void QV8Engine::clearExceptions()
+{
+    m_exception.clear();
+}
+
+v8::Handle<v8::Value> QV8Engine::uncaughtException() const
+{
+    if (!hasUncaughtException())
+        return v8::Handle<v8::Value>();
+    return m_exception;
+}
+
+bool QV8Engine::hasUncaughtException() const
+{
+    return m_exception;
+}
+
+int QV8Engine::uncaughtExceptionLineNumber() const
+{
+    return m_exception.lineNumber();
+}
+
+QStringList QV8Engine::uncaughtExceptionBacktrace() const
+{
+    return m_exception.backtrace();
+}
+
+/*!
+  \internal
+  Save the current exception on stack so it can be set again later.
+  \sa QV8Engine::restoreException
+*/
+void QV8Engine::saveException()
+{
+    m_exception.push();
+}
+
+/*!
+  \internal
+  Load a saved exception from stack. Current exception, if exists will be dropped
+  \sa QV8Engine::saveException
+*/
+void QV8Engine::restoreException()
+{
+    m_exception.pop();
+}
+
+QV8Engine::Exception::Exception() {}
+
+QV8Engine::Exception::~Exception()
+{
+    Q_ASSERT_X(m_stack.isEmpty(), Q_FUNC_INFO, "Some saved exceptions left. Asymetric pop/push found.");
+    clear();
+}
+
+void QV8Engine::Exception::set(v8::Handle<v8::Value> value, v8::Handle<v8::Message> message)
+{
+    Q_ASSERT_X(!value.IsEmpty(), Q_FUNC_INFO, "Throwing an empty value handle is highly suspected");
+    clear();
+    m_value = v8::Persistent<v8::Value>::New(value);
+    m_message = v8::Persistent<v8::Message>::New(message);
+}
+
+void QV8Engine::Exception::clear()
+{
+    m_value.Dispose();
+    m_value.Clear();
+    m_message.Dispose();
+    m_message.Clear();
+}
+
+QV8Engine::Exception::operator bool() const
+{
+    return !m_value.IsEmpty();
+}
+
+QV8Engine::Exception::operator v8::Handle<v8::Value>() const
+{
+    Q_ASSERT(*this);
+    return m_value;
+}
+
+int QV8Engine::Exception::lineNumber() const
+{
+    if (m_message.IsEmpty())
+        return -1;
+    return m_message->GetLineNumber();
+}
+
+QStringList QV8Engine::Exception::backtrace() const
+{
+    if (m_message.IsEmpty())
+        return QStringList();
+
+    QStringList backtrace;
+    v8::Handle<v8::StackTrace> trace = m_message->GetStackTrace();
+    if (trace.IsEmpty())
+        // FIXME it should not happen (SetCaptureStackTraceForUncaughtExceptions is called).
+        return QStringList();
+
+    for (int i = 0; i < trace->GetFrameCount(); ++i) {
+        v8::Local<v8::StackFrame> frame = trace->GetFrame(i);
+        backtrace.append(QJSConverter::toString(frame->GetFunctionName()));
+        backtrace.append(QJSConverter::toString(frame->GetFunctionName()));
+        backtrace.append(QString::fromAscii("()@"));
+        backtrace.append(QJSConverter::toString(frame->GetScriptName()));
+        backtrace.append(QString::fromAscii(":"));
+        backtrace.append(QString::number(frame->GetLineNumber()));
+    }
+    return backtrace;
+}
+
+void QV8Engine::Exception::push()
+{
+    m_stack.push(qMakePair(m_value, m_message));
+    m_value.Clear();
+    m_message.Clear();
+}
+
+void QV8Engine::Exception::pop()
+{
+    Q_ASSERT_X(!m_stack.empty(), Q_FUNC_INFO, "Attempt to load unsaved exception found");
+    ValueMessagePair pair = m_stack.pop();
+    clear();
+    m_value = pair.first;
+    m_message = pair.second;
+}
+
+QScriptPassPointer<QJSValuePrivate> QV8Engine::newRegExp(const QString &pattern, const QString &flags)
+{
+    int f = v8::RegExp::kNone;
+
+    QString::const_iterator i = flags.constBegin();
+    for (; i != flags.constEnd(); ++i) {
+        switch (i->unicode()) {
+        case 'i':
+            f |= v8::RegExp::kIgnoreCase;
+            break;
+        case 'm':
+            f |= v8::RegExp::kMultiline;
+            break;
+        case 'g':
+            f |= v8::RegExp::kGlobal;
+            break;
+        default:
+            {
+                // ignore a Syntax Error.
+            }
+        }
+    }
+
+    v8::Handle<v8::RegExp> regexp = v8::RegExp::New(QJSConverter::toString(pattern), static_cast<v8::RegExp::Flags>(f));
+    return new QJSValuePrivate(this, regexp);
+}
+
+QScriptPassPointer<QJSValuePrivate> QV8Engine::newRegExp(const QRegExp &regexp)
+{
+    return new QJSValuePrivate(this, QJSConverter::toRegExp(regexp));
+}
+
+
+// Converts a QVariantList to JS.
+// The result is a new Array object with length equal to the length
+// of the QVariantList, and the elements being the QVariantList's
+// elements converted to JS, recursively.
+v8::Handle<v8::Array> QV8Engine::variantListToJS(const QVariantList &lst)
+{
+    v8::Handle<v8::Array> result = v8::Array::New(lst.size());
+    for (int i = 0; i < lst.size(); ++i)
+        result->Set(i, variantToJS(lst.at(i)));
+    return result;
+}
+
+// Converts a JS Array object to a QVariantList.
+// The result is a QVariantList with length equal to the length
+// of the JS Array, and elements being the JS Array's elements
+// converted to QVariants, recursively.
+QVariantList QV8Engine::variantListFromJS(v8::Handle<v8::Array> jsArray)
+{
+    QVariantList result;
+    int hash = jsArray->GetIdentityHash();
+    if (visitedConversionObjects.contains(hash))
+        return result; // Avoid recursion.
+    v8::HandleScope handleScope;
+    visitedConversionObjects.insert(hash);
+    uint32_t length = jsArray->Length();
+    for (uint32_t i = 0; i < length; ++i)
+        result.append(variantFromJS(jsArray->Get(i)));
+    visitedConversionObjects.remove(hash);
+    return result;
+}
+
+// Converts a QVariantMap to JS.
+// The result is a new Object object with property names being
+// the keys of the QVariantMap, and values being the values of
+// the QVariantMap converted to JS, recursively.
+v8::Handle<v8::Object> QV8Engine::variantMapToJS(const QVariantMap &vmap)
+{
+    v8::Handle<v8::Object> result = v8::Object::New();
+    QVariantMap::const_iterator it;
+    for (it = vmap.constBegin(); it != vmap.constEnd(); ++it)
+        result->Set(QJSConverter::toString(it.key()), variantToJS(it.value()));
+    return result;
+}
+
+// Converts a JS Object to a QVariantMap.
+// The result is a QVariantMap with keys being the property names
+// of the object, and values being the values of the JS object's
+// properties converted to QVariants, recursively.
+QVariantMap QV8Engine::variantMapFromJS(v8::Handle<v8::Object> jsObject)
+{
+    QVariantMap result;
+    int hash = jsObject->GetIdentityHash();
+    if (visitedConversionObjects.contains(hash))
+        return result; // Avoid recursion.
+    visitedConversionObjects.insert(hash);
+    v8::HandleScope handleScope;
+    // TODO: Only object's own property names. Include non-enumerable properties.
+    v8::Handle<v8::Array> propertyNames = jsObject->GetPropertyNames();
+    uint32_t length = propertyNames->Length();
+    for (uint32_t i = 0; i < length; ++i) {
+        v8::Handle<v8::Value> name = propertyNames->Get(i);
+        result.insert(QJSConverter::toString(name->ToString()), variantFromJS(jsObject->Get(name)));
+    }
+    visitedConversionObjects.remove(hash);
+    return result;
+}
+
+// Converts the meta-type defined by the given type and data to JS.
+// Returns the value if conversion succeeded, an empty handle otherwise.
+v8::Handle<v8::Value> QV8Engine::metaTypeToJS(int type, const void *data)
+{
+    Q_ASSERT(data != 0);
+    v8::Handle<v8::Value> result;
+
+    // check if it's one of the types we know
+    switch (QMetaType::Type(type)) {
+    case QMetaType::Void:
+        return v8::Undefined();
+    case QMetaType::Bool:
+        return v8::Boolean::New(*reinterpret_cast<const bool*>(data));
+    case QMetaType::Int:
+        return v8::Int32::New(*reinterpret_cast<const int*>(data));
+    case QMetaType::UInt:
+        return v8::Uint32::New(*reinterpret_cast<const uint*>(data));
+    case QMetaType::LongLong:
+        return v8::Number::New(double(*reinterpret_cast<const qlonglong*>(data)));
+    case QMetaType::ULongLong:
+#if defined(Q_OS_WIN) && defined(_MSC_FULL_VER) && _MSC_FULL_VER <= 12008804
+#pragma message("** NOTE: You need the Visual Studio Processor Pack to compile support for 64bit unsigned integers.")
+        return v8::Number::New(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
+#elif defined(Q_CC_MSVC) && !defined(Q_CC_MSVC_NET)
+        return v8::Number::New(double((qlonglong)*reinterpret_cast<const qulonglong*>(data)));
+#else
+        return v8::Number::New(double(*reinterpret_cast<const qulonglong*>(data)));
+#endif
+    case QMetaType::Double:
+        return v8::Number::New(double(*reinterpret_cast<const double*>(data)));
+    case QMetaType::QString:
+        return QJSConverter::toString(*reinterpret_cast<const QString*>(data));
+    case QMetaType::Float:
+        return v8::Number::New(*reinterpret_cast<const float*>(data));
+    case QMetaType::Short:
+        return v8::Int32::New(*reinterpret_cast<const short*>(data));
+    case QMetaType::UShort:
+        return v8::Uint32::New(*reinterpret_cast<const unsigned short*>(data));
+    case QMetaType::Char:
+        return v8::Int32::New(*reinterpret_cast<const char*>(data));
+    case QMetaType::UChar:
+        return v8::Uint32::New(*reinterpret_cast<const unsigned char*>(data));
+    case QMetaType::QChar:
+        return v8::Uint32::New((*reinterpret_cast<const QChar*>(data)).unicode());
+    case QMetaType::QStringList:
+        result = QJSConverter::toStringList(*reinterpret_cast<const QStringList *>(data));
+        break;
+    case QMetaType::QVariantList:
+        result = variantListToJS(*reinterpret_cast<const QVariantList *>(data));
+        break;
+    case QMetaType::QVariantMap:
+        result = variantMapToJS(*reinterpret_cast<const QVariantMap *>(data));
+        break;
+    case QMetaType::QDateTime:
+        result = QJSConverter::toDateTime(*reinterpret_cast<const QDateTime *>(data));
+        break;
+    case QMetaType::QDate:
+        result = QJSConverter::toDateTime(QDateTime(*reinterpret_cast<const QDate *>(data)));
+        break;
+    case QMetaType::QRegExp:
+        result = QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(data));
+        break;
+    case QMetaType::QObjectStar:
+    case QMetaType::QWidgetStar:
+        result = newQObject(*reinterpret_cast<QObject* const *>(data));
+        break;
+    case QMetaType::QVariant:
+        result = variantToJS(*reinterpret_cast<const QVariant*>(data));
+        break;
+    default:
+        if (type == qMetaTypeId<QJSValue>()) {
+            return QJSValuePrivate::get(*reinterpret_cast<const QJSValue*>(data))->asV8Value(this);
+        } else {
+            QByteArray typeName = QMetaType::typeName(type);
+            if (typeName.endsWith('*') && !*reinterpret_cast<void* const *>(data)) {
+                return v8::Null();
+            } else {
+                // Fall back to wrapping in a QVariant.
+                result = newVariant(QVariant(type, data));
+            }
+        }
+    }
+    return result;
+}
+
+// Converts a JS value to a meta-type.
+// data must point to a place that can store a value of the given type.
+// Returns true if conversion succeeded, false otherwise.
+bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data) {
+    // check if it's one of the types we know
+    switch (QMetaType::Type(type)) {
+    case QMetaType::Bool:
+        *reinterpret_cast<bool*>(data) = value->ToBoolean()->Value();
+        return true;
+    case QMetaType::Int:
+        *reinterpret_cast<int*>(data) = value->ToInt32()->Value();
+        return true;
+    case QMetaType::UInt:
+        *reinterpret_cast<uint*>(data) = value->ToUint32()->Value();
+        return true;
+    case QMetaType::LongLong:
+        *reinterpret_cast<qlonglong*>(data) = qlonglong(value->ToInteger()->Value());
+        return true;
+    case QMetaType::ULongLong:
+        *reinterpret_cast<qulonglong*>(data) = qulonglong(value->ToInteger()->Value());
+        return true;
+    case QMetaType::Double:
+        *reinterpret_cast<double*>(data) = value->ToNumber()->Value();
+        return true;
+    case QMetaType::QString:
+        if (value->IsUndefined() || value->IsNull())
+            *reinterpret_cast<QString*>(data) = QString();
+        else
+            *reinterpret_cast<QString*>(data) = QJSConverter::toString(value->ToString());
+        return true;
+    case QMetaType::Float:
+        *reinterpret_cast<float*>(data) = value->ToNumber()->Value();
+        return true;
+    case QMetaType::Short:
+        *reinterpret_cast<short*>(data) = short(value->ToInt32()->Value());
+        return true;
+    case QMetaType::UShort:
+        *reinterpret_cast<unsigned short*>(data) = ushort(value->ToInt32()->Value()); // ### QScript::ToUInt16()
+        return true;
+    case QMetaType::Char:
+        *reinterpret_cast<char*>(data) = char(value->ToInt32()->Value());
+        return true;
+    case QMetaType::UChar:
+        *reinterpret_cast<unsigned char*>(data) = (unsigned char)(value->ToInt32()->Value());
+        return true;
+    case QMetaType::QChar:
+        if (value->IsString()) {
+            QString str = QJSConverter::toString(v8::Handle<v8::String>::Cast(value));
+            *reinterpret_cast<QChar*>(data) = str.isEmpty() ? QChar() : str.at(0);
+        } else {
+            *reinterpret_cast<QChar*>(data) = QChar(ushort(value->ToInt32()->Value())); // ### QScript::ToUInt16()
+        }
+        return true;
+    case QMetaType::QDateTime:
+        if (value->IsDate()) {
+            *reinterpret_cast<QDateTime *>(data) = QJSConverter::toDateTime(v8::Handle<v8::Date>::Cast(value));
+            return true;
+        } break;
+    case QMetaType::QDate:
+        if (value->IsDate()) {
+            *reinterpret_cast<QDate *>(data) = QJSConverter::toDateTime(v8::Handle<v8::Date>::Cast(value)).date();
+            return true;
+        } break;
+    case QMetaType::QRegExp:
+        if (value->IsRegExp()) {
+            *reinterpret_cast<QRegExp *>(data) = QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
+            return true;
+        } break;
+    case QMetaType::QObjectStar:
+        if (isQObject(value) || value->IsNull()) {
+            *reinterpret_cast<QObject* *>(data) = qtObjectFromJS(value);
+            return true;
+        } break;
+    case QMetaType::QWidgetStar:
+        if (isQObject(value) || value->IsNull()) {
+            QObject *qo = qtObjectFromJS(value);
+            if (!qo || qo->isWidgetType()) {
+                *reinterpret_cast<QWidget* *>(data) = reinterpret_cast<QWidget*>(qo);
+                return true;
+            }
+        } break;
+    case QMetaType::QStringList:
+        if (value->IsArray()) {
+            *reinterpret_cast<QStringList *>(data) = QJSConverter::toStringList(v8::Handle<v8::Array>::Cast(value));
+            return true;
+        } break;
+    case QMetaType::QVariantList:
+        if (value->IsArray()) {
+            *reinterpret_cast<QVariantList *>(data) = variantListFromJS(v8::Handle<v8::Array>::Cast(value));
+            return true;
+        } break;
+    case QMetaType::QVariantMap:
+        if (value->IsObject()) {
+            *reinterpret_cast<QVariantMap *>(data) = variantMapFromJS(v8::Handle<v8::Object>::Cast(value));
+            return true;
+        } break;
+    case QMetaType::QVariant:
+        *reinterpret_cast<QVariant*>(data) = variantFromJS(value);
+        return true;
+    default:
+    ;
+    }
+
+#if 0
+    if (isQtVariant(value)) {
+        const QVariant &var = variantValue(value);
+        // ### Enable once constructInPlace() is in qt master.
+        if (var.userType() == type) {
+            QMetaType::constructInPlace(type, data, var.constData());
+            return true;
+        }
+        if (var.canConvert(QVariant::Type(type))) {
+            QVariant vv = var;
+            vv.convert(QVariant::Type(type));
+            Q_ASSERT(vv.userType() == type);
+            QMetaType::constructInPlace(type, data, vv.constData());
+            return true;
+        }
+
+    }
+#endif
+
+    // Try to use magic.
+
+    QByteArray name = QMetaType::typeName(type);
+    if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
+        return true;
+    if (isVariant(value) && name.endsWith('*')) {
+        int valueType = QMetaType::type(name.left(name.size()-1));
+        QVariant var = variantValue(value);
+        if (valueType == var.userType()) {
+            // We have T t, T* is requested, so return &t.
+            *reinterpret_cast<void* *>(data) = var.data();
+            return true;
+        } else {
+            // Look in the prototype chain.
+            v8::Handle<v8::Value> proto = value->ToObject()->GetPrototype();
+            while (proto->IsObject()) {
+                bool canCast = false;
+                if (isVariant(proto)) {
+                    canCast = (type == variantValue(proto).userType())
+                              || (valueType && (valueType == variantValue(proto).userType()));
+                }
+                else if (isQObject(proto)) {
+                    QByteArray className = name.left(name.size()-1);
+                    if (QObject *qobject = qtObjectFromJS(proto))
+                        canCast = qobject->qt_metacast(className) != 0;
+                }
+                if (canCast) {
+                    QByteArray varTypeName = QMetaType::typeName(var.userType());
+                    if (varTypeName.endsWith('*'))
+                        *reinterpret_cast<void* *>(data) = *reinterpret_cast<void* *>(var.data());
+                    else
+                        *reinterpret_cast<void* *>(data) = var.data();
+                    return true;
+                }
+                proto = proto->ToObject()->GetPrototype();
+            }
+        }
+    } else if (value->IsNull() && name.endsWith('*')) {
+        *reinterpret_cast<void* *>(data) = 0;
+        return true;
+    } else if (type == qMetaTypeId<QJSValue>()) {
+        *reinterpret_cast<QJSValue*>(data) = QJSValuePrivate::get(new QJSValuePrivate(this, value));
+        return true;
+    }
+
+    return false;
+}
+
+// Converts a QVariant to JS.
+v8::Handle<v8::Value> QV8Engine::variantToJS(const QVariant &value)
+{
+    return metaTypeToJS(value.userType(), value.constData());
+}
+
+// Converts a JS value to a QVariant.
+// Null, Undefined -> QVariant() (invalid)
+// Boolean -> QVariant(bool)
+// Number -> QVariant(double)
+// String -> QVariant(QString)
+// Array -> QVariantList(...)
+// Date -> QVariant(QDateTime)
+// RegExp -> QVariant(QRegExp)
+// [Any other object] -> QVariantMap(...)
+QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
+{
+    Q_ASSERT(!value.IsEmpty());
+    if (value->IsNull() || value->IsUndefined())
+        return QVariant();
+    if (value->IsBoolean())
+        return value->ToBoolean()->Value();
+    else if (value->IsInt32())
+        return value->ToInt32()->Value();
+    else if (value->IsNumber())
+        return value->ToNumber()->Value();
+    if (value->IsString())
+        return QJSConverter::toString(value->ToString());
+    Q_ASSERT(value->IsObject());
+    if (value->IsArray())
+        return variantListFromJS(v8::Handle<v8::Array>::Cast(value));
+    if (value->IsDate())
+        return QJSConverter::toDateTime(v8::Handle<v8::Date>::Cast(value));
+    if (value->IsRegExp())
+        return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
+    if (isVariant(value))
+        return variantValue(value);
+    if (isQObject(value))
+        return qVariantFromValue(qtObjectFromJS(value));
+    return variantMapFromJS(value->ToObject());
+}
+
+bool QV8Engine::convertToNativeQObject(v8::Handle<v8::Value> value,
+                                                  const QByteArray &targetType,
+                                                  void **result)
+{
+    if (!targetType.endsWith('*'))
+        return false;
+    if (QObject *qobject = qtObjectFromJS(value)) {
+        int start = targetType.startsWith("const ") ? 6 : 0;
+        QByteArray className = targetType.mid(start, targetType.size()-start-1);
+        if (void *instance = qobject->qt_metacast(className)) {
+            *result = instance;
+            return true;
+        }
+    }
+    return false;
+}
+
+QObject *QV8Engine::qtObjectFromJS(v8::Handle<v8::Value> value)
+{
+    if (!value->IsObject())
+        return 0;
+
+    QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
+    if (!r)
+        return 0;
+    QV8ObjectResource::ResourceType type = r->resourceType();
+    if (type == QV8ObjectResource::QObjectType)
+        return qobjectWrapper()->toQObject(r);
+    else if (type == QV8ObjectResource::VariantType) {
+        QVariant variant = variantWrapper()->toVariant(r);
+        int type = variant.userType();
+        if ((type == QMetaType::QObjectStar) || (type == QMetaType::QWidgetStar))
+            return *reinterpret_cast<QObject* const *>(variant.constData());
+    }
+    return 0;
+}
+
+
+QVariant QV8Engine::variantValue(v8::Handle<v8::Value> value)
+{
+    Q_ASSERT(isVariant(value));
+    return QV8Engine::toVariant(value, -1 /*whateever magic hint is*/);
+}
+
+// Creates a QVariant wrapper object.
+v8::Handle<v8::Object> QV8Engine::newVariant(const QVariant &value)
+{
+    v8::Handle<v8::Object> instance = variantWrapper()->newVariant(value);
+    return instance;
+}
+
+QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch)
+{
+    v8::HandleScope handleScope;
+
+    clearExceptions();
+    if (script.IsEmpty()) {
+        v8::Handle<v8::Value> exception = tryCatch.Exception();
+        if (exception.IsEmpty()) {
+            // This is possible on syntax errors like { a:12, b:21 } <- missing "(", ")" around expression.
+            return InvalidValue();
+        }
+        setException(exception, tryCatch.Message());
+        return new QJSValuePrivate(this, exception);
+    }
+    v8::Handle<v8::Value> result;
+    result = script->Run();
+    if (result.IsEmpty()) {
+        v8::Handle<v8::Value> exception = tryCatch.Exception();
+        // TODO: figure out why v8 doesn't always produce an exception value
+        //Q_ASSERT(!exception.IsEmpty());
+        if (exception.IsEmpty())
+            exception = v8::Exception::Error(v8::String::New("missing exception value"));
+        setException(exception, tryCatch.Message());
+        return new QJSValuePrivate(this, exception);
+    }
+    return new QJSValuePrivate(this, result);
+}
+
+QJSValue QV8Engine::scriptValueFromInternal(v8::Handle<v8::Value> value) const
+{
+    if (value.IsEmpty())
+        return QJSValuePrivate::get(InvalidValue());
+    return QJSValuePrivate::get(new QJSValuePrivate(const_cast<QV8Engine*>(this), value));
+}
+
+QScriptPassPointer<QJSValuePrivate> QV8Engine::newArray(uint length)
+{
+    return new QJSValuePrivate(this, v8::Array::New(length));
+}
+
+void QV8Engine::emitSignalHandlerException()
+{
+    emit q->signalHandlerException(scriptValueFromInternal(uncaughtException()));
 }
 
 QT_END_NAMESPACE

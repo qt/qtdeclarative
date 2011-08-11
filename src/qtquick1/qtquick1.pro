@@ -7,8 +7,7 @@ CONFIG += module
 CONFIG += dll warn_on
 MODULE_PRI += ../../modules/qt_qtquick1.pri
 
-QT += testlib-private declarative script testlib declarative-private core-private gui-private script-private network widgets-private
-DEFINES += QT_NO_URL_CAST_FROM_STRING
+QT += testlib-private declarative testlib declarative-private core-private gui-private network widgets-private
 
 load(qt_module_config)
 

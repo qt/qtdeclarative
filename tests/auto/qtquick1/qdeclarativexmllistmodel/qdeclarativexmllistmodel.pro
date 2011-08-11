@@ -1,5 +1,5 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative script gui network qtquick1
+contains(QT_CONFIG,declarative): QT += declarative gui network qtquick1
 contains(QT_CONFIG,xmlpatterns) {
     QT += xmlpatterns
     DEFINES += QTEST_XMLPATTERNS
@@ -18,4 +18,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private script-private qtquick1-private
+QT += core-private gui-private declarative-private qtquick1-private

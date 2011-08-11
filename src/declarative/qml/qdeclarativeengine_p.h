@@ -139,8 +139,7 @@ public:
     QDeclarativeDelayedError *erroredBindings;
     int inProgressCreations;
 
-    // V8 Engine
-    QV8Engine v8engine;
+    QV8Engine *v8engine() const { return q_func()->handle(); }
 
     QDeclarativeWorkerScriptEngine *getWorkerScriptEngine();
     QDeclarativeWorkerScriptEngine *workerScriptEngine;
@@ -256,7 +255,7 @@ public:
     static void warning(QDeclarativeEnginePrivate *, const QDeclarativeError &);
     static void warning(QDeclarativeEnginePrivate *, const QList<QDeclarativeError> &);
 
-    static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return &e->d_func()->v8engine; }
+    static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return e->d_func()->v8engine(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e) { return e->d_func(); }
     static QDeclarativeEnginePrivate *get(QDeclarativeContext *c) { return (c && c->engine()) ? QDeclarativeEnginePrivate::get(c->engine()) : 0; }
     static QDeclarativeEnginePrivate *get(QDeclarativeContextData *c) { return (c && c->engine) ? QDeclarativeEnginePrivate::get(c->engine) : 0; }

@@ -129,7 +129,7 @@ void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags
         ep->referenceScarceResources(); 
 
         v8::HandleScope handle_scope;
-        v8::Context::Scope scope(ep->v8engine.context());
+        v8::Context::Scope scope(ep->v8engine()->context());
         v8::Local<v8::Value> result = evaluate(v8::Handle<v8::Function>::Cast(parent->functions->Get(index)), 
                                                &isUndefined);
 

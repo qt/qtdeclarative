@@ -1,7 +1,7 @@
 load(qttest_p4)
 TEMPLATE = app
 TARGET = tst_script
-QT += declarative script
+QT += declarative
 macx:CONFIG -= app_bundle
 CONFIG += release
 

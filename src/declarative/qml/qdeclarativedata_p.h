@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <private/qobject_p.h>
 
 #include <private/qv8_p.h>

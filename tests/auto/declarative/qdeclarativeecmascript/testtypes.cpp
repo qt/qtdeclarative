@@ -42,7 +42,7 @@
 #include <QWidget>
 #include <QPlainTextEdit>
 #include <QDeclarativeEngine>
-#include <QScriptEngine>
+#include <QJSEngine>
 
 class BaseExtensionObject : public QObject
 {
@@ -101,17 +101,17 @@ public:
     void setWidth(int) { }
 };
 
-static QScriptValue script_api(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
+static QJSValue script_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
 
     static int testProperty = 13;
-    QScriptValue v = scriptEngine->newObject();
+    QJSValue v = scriptEngine->newObject();
     v.setProperty("scriptTestProperty", testProperty++);
     return v;
 }
 
-static QObject *qobject_api(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
+static QObject *qobject_api(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
@@ -122,7 +122,7 @@ static QObject *qobject_api(QDeclarativeEngine *engine, QScriptEngine *scriptEng
     return o;
 }
 
-static QObject *qobject_api_engine_parent(QDeclarativeEngine *engine, QScriptEngine *scriptEngine)
+static QObject *qobject_api_engine_parent(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(scriptEngine)
 

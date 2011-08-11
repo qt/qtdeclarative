@@ -52,7 +52,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qstack.h>
 #include <QXmlStreamReader>
-#include <QtScript/qscriptvalueiterator.h>
+#include <QtDeclarative/qscriptvalueiterator.h>
 
 Q_DECLARE_METATYPE(QListModelInterface *)
 

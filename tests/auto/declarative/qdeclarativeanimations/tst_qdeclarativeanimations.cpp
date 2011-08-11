@@ -89,6 +89,8 @@ private slots:
     void doubleRegistrationBug();
     void alwaysRunToEndRestartBug();
     void transitionAssignmentBug();
+    void pauseBindingBug();
+    void pauseBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -855,6 +857,35 @@ void tst_qdeclarativeanimations::transitionAssignmentBug()
     QVERIFY(rect != 0);
 
     QCOMPARE(rect->property("nullObject").toBool(), false);
+}
+
+//QTBUG-19080
+void tst_qdeclarativeanimations::pauseBindingBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, SRCDIR "/data/pauseBindingBug.qml");
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+    QDeclarativeAbstractAnimation *anim = rect->findChild<QDeclarativeAbstractAnimation*>("animation");
+    QVERIFY(anim->qtAnimation()->state() == QAbstractAnimation::Paused);
+
+    delete rect;
+}
+
+//QTBUG-13598
+void tst_qdeclarativeanimations::pauseBug()
+{
+    QDeclarativeEngine engine;
+
+    QDeclarativeComponent c(&engine, SRCDIR "/data/pauseBug.qml");
+    QDeclarativeAbstractAnimation *anim = qobject_cast<QDeclarativeAbstractAnimation*>(c.create());
+    QVERIFY(anim != 0);
+    QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimation::Paused);
+    QCOMPARE(anim->isPaused(), true);
+    QCOMPARE(anim->isRunning(), true);
+
+    delete anim;
 }
 
 QTEST_MAIN(tst_qdeclarativeanimations)

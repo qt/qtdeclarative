@@ -61,6 +61,7 @@ private slots:
     void binding();
     void whenAfterValue();
     void restoreBinding();
+    void restoreBindingWithLoop();
 
 private:
     QDeclarativeEngine engine;
@@ -140,6 +141,40 @@ void tst_qdeclarativebinding::restoreBinding()
     //original binding restored
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(100-49));
+
+    delete rect;
+}
+
+void tst_qdeclarativebinding::restoreBindingWithLoop()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/restoreBindingWithLoop.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QSGRectangle *myItem = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("myItem"));
+    QVERIFY(myItem != 0);
+
+    myItem->setY(25);
+    QCOMPARE(myItem->x(), qreal(25 + 100));
+
+    myItem->setY(13);
+    QCOMPARE(myItem->x(), qreal(13 + 100));
+
+    //Binding takes effect
+    rect->setProperty("activateBinding", true);
+    myItem->setY(51);
+    QCOMPARE(myItem->x(), qreal(51));
+
+    myItem->setY(88);
+    QCOMPARE(myItem->x(), qreal(88));
+
+    //original binding restored
+    rect->setProperty("activateBinding", false);
+    QCOMPARE(myItem->x(), qreal(88 + 100)); //if loop handling changes this could be 90 + 100
+
+    myItem->setY(49);
+    QCOMPARE(myItem->x(), qreal(49 + 100));
 
     delete rect;
 }

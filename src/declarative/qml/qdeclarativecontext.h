@@ -44,7 +44,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qvariant.h>
 

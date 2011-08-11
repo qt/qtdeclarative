@@ -3361,7 +3361,7 @@ void QSGContext2D::release()
     }
 }
 
-void QSGContext2D::processCommands(const QScriptValue& commands)
+void QSGContext2D::processCommands(const QJSValue& commands)
 {
 #ifdef QSGCANVASITEM_DEBUG
     QElapsedTimer t;
@@ -3369,7 +3369,7 @@ void QSGContext2D::processCommands(const QScriptValue& commands)
 #endif
     int ii = 0;
     if (commands.isArray()) {
-        QScriptValue cmd = commands.property(ii);
+        QJSValue cmd = commands.property(ii);
         while(cmd.isValid()) {
             processCommand(cmd);
             ii++;
@@ -3460,7 +3460,7 @@ bool QSGContext2D::event(QEvent *e)
     return QObject::event(e);
 }
 
-void QSGContext2D::processCommand(const QScriptValue& cmd)
+void QSGContext2D::processCommand(const QJSValue& cmd)
 {
     int action = cmd.property(0).toInt32();
     switch (action) {

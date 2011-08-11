@@ -455,7 +455,8 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             QTime time = QDeclarativeStringConverters::timeFromString(string);
             instr.setType(QDeclarativeInstruction::StoreTime);
             instr.storeTime.propertyIndex = prop.propertyIndex();
-            instr.storeTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
+            Q_ASSERT(sizeof(instr.storeTime.time) == sizeof(QTime));
+            ::memcpy(&instr.storeTime.time, &time, sizeof(QTime));
             }
             break;
         case QVariant::DateTime:
@@ -465,7 +466,8 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.setType(QDeclarativeInstruction::StoreDateTime);
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
             instr.storeDateTime.date = dateTime.date().toJulianDay();
-            instr.storeDateTime.time = *(QDeclarativeInstruction::instr_storeTime::QTime *)&time;
+            Q_ASSERT(sizeof(instr.storeDateTime.time) == sizeof(QTime));
+            ::memcmp(&instr.storeDateTime.time, &time, sizeof(QTime));
             }
             break;
 #endif // QT_NO_DATESTRING
@@ -2369,7 +2371,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         if (propName.at(0).isUpper())
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
 
-        if (enginePrivate->v8engine.illegalNames().contains(propName))
+        if (enginePrivate->v8engine()->illegalNames().contains(propName))
             COMPILE_EXCEPTION(&prop, tr("Illegal property name"));
 
         propNames.insert(prop.name);
@@ -2382,7 +2384,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
             COMPILE_EXCEPTION(obj, tr("Signal names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine.illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
             COMPILE_EXCEPTION(obj, tr("Illegal signal name"));
         methodNames.insert(name);
     }
@@ -2393,7 +2395,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
             COMPILE_EXCEPTION(obj, tr("Method names cannot begin with an upper case letter"));
-        if (enginePrivate->v8engine.illegalNames().contains(nameStr))
+        if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
             COMPILE_EXCEPTION(obj, tr("Illegal method name"));
         methodNames.insert(name);
     }
@@ -2687,7 +2689,7 @@ bool QDeclarativeCompiler::checkValidId(QDeclarativeParser::Value *v, const QStr
 
     }
 
-    if (enginePrivate->v8engine.illegalNames().contains(val))
+    if (enginePrivate->v8engine()->illegalNames().contains(val))
         COMPILE_EXCEPTION(v, tr( "ID illegally masks global JavaScript property"));
 
     return true;

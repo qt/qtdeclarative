@@ -159,7 +159,7 @@ void QDeclarativeAbstractAnimationPrivate::commence()
     q->transition(actions, properties, QDeclarativeAbstractAnimation::Forward);
 
     q->qtAnimation()->start();
-    if (q->qtAnimation()->state() != QAbstractAnimation::Running) {
+    if (q->qtAnimation()->state() == QAbstractAnimation::Stopped) {
         running = false;
         emit q->completed();
     }
@@ -265,6 +265,10 @@ void QDeclarativeAbstractAnimation::setPaused(bool p)
     }
 
     d->paused = p;
+
+    if (!d->componentComplete)
+        return;
+
     if (d->paused)
         qtAnimation()->pause();
     else
@@ -291,6 +295,10 @@ void QDeclarativeAbstractAnimation::componentFinalized()
     if (d->running) {
         d->running = false;
         setRunning(true);
+    }
+    if (d->paused) {
+        d->paused = false;
+        setPaused(true);
     }
 }
 

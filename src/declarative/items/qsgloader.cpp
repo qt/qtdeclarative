@@ -165,7 +165,7 @@ void QSGLoader::setSourceComponent(QDeclarativeComponent *comp)
     d->component = comp;
     d->ownComponent = false;
     if (!d->component) {
-        emit sourceChanged();
+        emit sourceComponentChanged();
         emit statusChanged();
         emit progressChanged();
         emit itemChanged();
@@ -197,7 +197,10 @@ void QSGLoaderPrivate::load()
                 q, SIGNAL(progressChanged()));
         emit q->statusChanged();
         emit q->progressChanged();
-        emit q->sourceChanged();
+        if (ownComponent)
+            emit q->sourceChanged();
+        else
+            emit q->sourceComponentChanged();
         emit q->itemChanged();
     }
 }
@@ -209,7 +212,10 @@ void QSGLoaderPrivate::_q_sourceLoaded()
     if (component) {
         if (!component->errors().isEmpty()) {
             QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
-            emit q->sourceChanged();
+            if (ownComponent)
+                emit q->sourceChanged();
+            else
+                emit q->sourceComponentChanged();
             emit q->statusChanged();
             emit q->progressChanged();
             return;
@@ -253,7 +259,10 @@ void QSGLoaderPrivate::_q_sourceLoaded()
             source = QUrl();
         }
         component->completeCreate();
-        emit q->sourceChanged();
+        if (ownComponent)
+            emit q->sourceChanged();
+        else
+            emit q->sourceComponentChanged();
         emit q->statusChanged();
         emit q->progressChanged();
         emit q->itemChanged();

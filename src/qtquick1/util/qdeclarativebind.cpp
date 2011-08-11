@@ -49,9 +49,8 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptcontext.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsvalue.h>
+#include <QtDeclarative/qjsengine.h>
 
 #include <private/qobject_p.h>
 

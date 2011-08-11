@@ -58,7 +58,7 @@
 #include "QtQuick1/private/qdeclarativeopenmetaobject_p.h"
 #include <QtDeclarative/qdeclarative.h>
 
-#include <QtScript/private/qscriptdeclarativeclass_p.h>
+#include <QtDeclarative/private/qscriptdeclarativeclass_p.h>
 
 QT_BEGIN_HEADER
 

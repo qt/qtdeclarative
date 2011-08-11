@@ -13,5 +13,4 @@ symbian: {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
 }
 QT += core-private gui-private declarative-private
-QT += script-private
 QT += opengl-private

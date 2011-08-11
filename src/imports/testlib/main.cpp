@@ -41,10 +41,8 @@
 
 #include <QtDeclarative/qdeclarativeextensionplugin.h>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtScript/qscriptvalue.h>
-#include <QtScript/qscriptcontext.h>
-#include <QtScript/qscriptcontextinfo.h>
-#include <QtScript/qscriptengine.h>
+#include <QtDeclarative/qjsvalue.h>
+#include <QtDeclarative/qjsengine.h>
 #include "QtQuickTest/private/quicktestresult_p.h"
 #include "QtQuickTest/private/quicktestevent_p.h"
 #include "private/qtestoptions_p.h"

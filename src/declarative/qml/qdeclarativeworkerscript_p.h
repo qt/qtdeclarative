@@ -57,7 +57,7 @@
 #include "qdeclarativeparserstatus.h"
 
 #include <QtCore/qthread.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qurl.h>
 
 QT_BEGIN_HEADER

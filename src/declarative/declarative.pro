@@ -6,7 +6,8 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_declarative.pri
 
-QT         = core-private gui-private script-private network script opengl opengl-private widgets-private
+QT         = core-private gui-private network opengl opengl-private widgets-private
+
 contains(QT_CONFIG, svg): QT += svg
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000

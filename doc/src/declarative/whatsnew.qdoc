@@ -45,6 +45,13 @@ QDeclarativeScriptString.
 
 Flickable: added dragging, draggingHorizontally and draggingVerically properties.
 
+Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
+fillMode (Image.Pad) that does not transform the image.
+
+The Loader element now only emits the \c sourceChanged signal when the source is changed and the
+\c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one
+of the properties was changed.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem

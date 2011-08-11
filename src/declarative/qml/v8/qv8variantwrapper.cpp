@@ -71,6 +71,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
 {
     m_engine = engine;
     m_toString = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ToString)->GetFunction());
+    m_valueOf = qPersistentNew<v8::Function>(v8::FunctionTemplate::New(ValueOf)->GetFunction());
 
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -79,6 +80,9 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->MarkAsUseUserObjectComparison();
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
                                         m_toString, v8::DEFAULT, 
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
+                                        m_valueOf, v8::DEFAULT,
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_constructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
@@ -98,6 +102,9 @@ void QV8VariantWrapper::init(QV8Engine *engine)
     ft->InstanceTemplate()->SetAccessor(v8::String::New("toString"), ToStringGetter, 0, 
                                         m_toString, v8::DEFAULT, 
                                         v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("valueOf"), ValueOfGetter, 0,
+                                        m_valueOf, v8::DEFAULT,
+                                        v8::PropertyAttribute(v8::ReadOnly | v8::DontDelete));
     m_scarceConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
     }
 
@@ -105,6 +112,7 @@ void QV8VariantWrapper::init(QV8Engine *engine)
 
 void QV8VariantWrapper::destroy()
 {
+    qPersistentDispose(m_valueOf);
     qPersistentDispose(m_toString);
     qPersistentDispose(m_destroy);
     qPersistentDispose(m_preserve);
@@ -185,6 +193,13 @@ v8::Handle<v8::Value> QV8VariantWrapper::ToStringGetter(v8::Local<v8::String> pr
     return info.Data();
 }
 
+v8::Handle<v8::Value> QV8VariantWrapper::ValueOfGetter(v8::Local<v8::String> property,
+                                                       const v8::AccessorInfo &info)
+{
+    Q_UNUSED(property);
+    return info.Data();
+}
+
 v8::Handle<v8::Value> QV8VariantWrapper::Preserve(const v8::Arguments &args)
 {
     QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
@@ -215,6 +230,29 @@ v8::Handle<v8::Value> QV8VariantWrapper::ToString(const v8::Arguments &args)
     } else {
         return v8::Undefined();
     }
+}
+
+v8::Handle<v8::Value> QV8VariantWrapper::ValueOf(const v8::Arguments &args)
+{
+    QV8VariantResource *resource = v8_resource_cast<QV8VariantResource>(args.This());
+    if (resource) {
+        QVariant v = resource->data;
+        switch (v.type()) {
+        case QVariant::Invalid:
+            return v8::Undefined();
+        case QVariant::String:
+            return resource->engine->toString(v.toString());
+        case QVariant::Int:
+        case QVariant::Double:
+        case QVariant::UInt:
+            return v8::Number::New(v.toDouble());
+        case QVariant::Bool:
+            return v8::Boolean::New(v.toBool());
+        default:
+            break;
+        }
+    }
+    return args.This();
 }
 
 QT_END_NAMESPACE

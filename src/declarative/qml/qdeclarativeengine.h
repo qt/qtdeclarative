@@ -45,7 +45,8 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qmap.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsengine.h>
+#include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativeerror.h>
 
 QT_BEGIN_HEADER
@@ -61,12 +62,12 @@ class QDeclarativeExpression;
 class QDeclarativeContext;
 class QDeclarativeType;
 class QUrl;
-class QScriptEngine;
+class QJSEngine;
 class QScriptContext;
 class QDeclarativeImageProvider;
 class QNetworkAccessManager;
 class QDeclarativeNetworkAccessManagerFactory;
-class Q_DECLARATIVE_EXPORT QDeclarativeEngine : public QObject
+class Q_DECLARATIVE_EXPORT QDeclarativeEngine : public QJSEngine
 {
     Q_PROPERTY(QString offlineStoragePath READ offlineStoragePath WRITE setOfflineStoragePath)
     Q_OBJECT

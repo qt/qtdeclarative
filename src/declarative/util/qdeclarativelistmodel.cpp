@@ -485,7 +485,7 @@ ModelObject *ModelNode::object(const NestedListModel *model)
 {
     if (!objectCache) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(qmlEngine(model->m_listModel));
-        objectCache = new ModelObject(this, const_cast<NestedListModel*>(model), &ep->v8engine);
+        objectCache = new ModelObject(this, const_cast<NestedListModel*>(model), ep->v8engine());
 
         QHash<QString, ModelNode *>::iterator it;
         for (it = properties.begin(); it != properties.end(); ++it) {
@@ -1451,7 +1451,7 @@ v8::Handle<v8::Value> NestedListModel::get(int index) const
     if (!node)
         return v8::Undefined();;
 
-    return QDeclarativeEnginePrivate::get(eng)->v8engine.newQObject(node->object(this));
+    return QDeclarativeEnginePrivate::get(eng)->v8engine()->newQObject(node->object(this));
 }
 
 void NestedListModel::set(int index, v8::Handle<v8::Value> valuemap, QList<int> *roles)

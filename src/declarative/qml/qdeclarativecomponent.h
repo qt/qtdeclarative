@@ -47,7 +47,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
-#include <QtScript/qscriptvalue.h>
+#include <QtDeclarative/qjsvalue.h>
 
 QT_BEGIN_HEADER
 

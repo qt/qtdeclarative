@@ -1,5 +1,5 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative script
+contains(QT_CONFIG,declarative): QT += declarative
 SOURCES += tst_qdeclarativeqt.cpp
 macx:CONFIG -= app_bundle
 
@@ -16,4 +16,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private script-private
+QT += core-private gui-private declarative-private
