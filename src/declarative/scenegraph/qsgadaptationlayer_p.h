@@ -101,7 +101,8 @@ public:
     enum AntialiasingMode
     {
         GrayAntialiasing,
-        SubPixelAntialiasing
+        LowQualitySubPixelAntialiasing,
+        HighQualitySubPixelAntialiasing
     };
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;

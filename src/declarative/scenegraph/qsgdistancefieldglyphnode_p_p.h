@@ -116,7 +116,14 @@ protected:
     QPointF m_shift;
 };
 
-class QSGSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+class QSGHiQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
+{
+public:
+    virtual QSGMaterialType *type() const;
+    virtual QSGMaterialShader *createShader() const;
+};
+
+class QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
 {
 public:
     virtual QSGMaterialType *type() const;

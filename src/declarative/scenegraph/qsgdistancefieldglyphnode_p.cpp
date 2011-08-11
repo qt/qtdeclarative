@@ -499,7 +499,7 @@ QSGMaterialShader *QSGDistanceFieldShiftedStyleTextMaterial::createShader() cons
 }
 
 
-class QSGSubPixelDistanceFieldTextMaterialShader : public QSGDistanceFieldTextMaterialShader
+class QSGHiQSubPixelDistanceFieldTextMaterialShader : public QSGDistanceFieldTextMaterialShader
 {
 public:
     virtual void initialize();
@@ -516,7 +516,7 @@ private:
     int m_vecDelta_id;
 };
 
-const char *QSGSubPixelDistanceFieldTextMaterialShader::vertexShader() const {
+const char *QSGHiQSubPixelDistanceFieldTextMaterialShader::vertexShader() const {
     return
         "uniform highp mat4 matrix;                                             \n"
         "uniform highp vec2 textureScale;                                       \n"
@@ -548,7 +548,7 @@ const char *QSGSubPixelDistanceFieldTextMaterialShader::vertexShader() const {
         "}";
 }
 
-const char *QSGSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
+const char *QSGHiQSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
     return
         "varying highp vec2 sampleCoord;                                        \n"
         "varying highp vec3 sampleFarLeft;                                      \n"
@@ -582,7 +582,7 @@ const char *QSGSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
         "}";
 }
 
-//const char *QSGSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
+//const char *QSGHiQSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
 //    return
 //        "#extension GL_OES_standard_derivatives: enable                         \n"
 //        "varying highp vec2 sampleCoord;                                        \n"
@@ -604,26 +604,26 @@ const char *QSGSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
 //        "}";
 //}
 
-void QSGSubPixelDistanceFieldTextMaterialShader::initialize()
+void QSGHiQSubPixelDistanceFieldTextMaterialShader::initialize()
 {
     QSGDistanceFieldTextMaterialShader::initialize();
     m_fontScale_id = program()->uniformLocation("fontScale");
     m_vecDelta_id = program()->uniformLocation("vecDelta");
 }
 
-void QSGSubPixelDistanceFieldTextMaterialShader::activate()
+void QSGHiQSubPixelDistanceFieldTextMaterialShader::activate()
 {
     QSGDistanceFieldTextMaterialShader::activate();
     glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
 }
 
-void QSGSubPixelDistanceFieldTextMaterialShader::deactivate()
+void QSGHiQSubPixelDistanceFieldTextMaterialShader::deactivate()
 {
     QSGDistanceFieldTextMaterialShader::deactivate();
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+void QSGHiQSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
     Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
     QSGDistanceFieldTextMaterial *material = static_cast<QSGDistanceFieldTextMaterial *>(newEffect);
@@ -646,16 +646,77 @@ void QSGSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &
     QSGDistanceFieldTextMaterialShader::updateState(state, newEffect, oldEffect);
 }
 
-QSGMaterialType *QSGSubPixelDistanceFieldTextMaterial::type() const
+QSGMaterialType *QSGHiQSubPixelDistanceFieldTextMaterial::type() const
 {
     static QSGMaterialType type;
     return &type;
 }
 
-QSGMaterialShader *QSGSubPixelDistanceFieldTextMaterial::createShader() const
+QSGMaterialShader *QSGHiQSubPixelDistanceFieldTextMaterial::createShader() const
 {
-    return new QSGSubPixelDistanceFieldTextMaterialShader;
+    return new QSGHiQSubPixelDistanceFieldTextMaterialShader;
 }
 
+
+class QSGLoQSubPixelDistanceFieldTextMaterialShader : public QSGHiQSubPixelDistanceFieldTextMaterialShader
+{
+protected:
+    virtual const char *vertexShader() const;
+    virtual const char *fragmentShader() const;
+};
+
+const char *QSGLoQSubPixelDistanceFieldTextMaterialShader::vertexShader() const {
+    return
+        "uniform highp mat4 matrix;                                             \n"
+        "uniform highp vec2 textureScale;                                       \n"
+        "uniform highp float fontScale;                                         \n"
+        "uniform highp vec4 vecDelta;                                           \n"
+        "attribute highp vec4 vCoord;                                           \n"
+        "attribute highp vec2 tCoord;                                           \n"
+        "varying highp vec3 sampleNearLeft;                                     \n"
+        "varying highp vec3 sampleNearRight;                                    \n"
+        "void main() {                                                          \n"
+        "     highp vec2 sampleCoord = tCoord * textureScale;                   \n"
+        "     gl_Position = matrix * vCoord;                                    \n"
+        // Calculate neighbour pixel position in item space.
+        "     highp vec3 wDelta = gl_Position.w * vecDelta.xyw;                 \n"
+        "     highp vec3 nearLeft = vCoord.xyw - 0.25 * wDelta;                 \n"
+        "     highp vec3 nearRight = vCoord.xyw + 0.25 * wDelta;                \n"
+        // Calculate neighbour texture coordinate.
+        "     highp vec2 scale = textureScale / fontScale;                      \n"
+        "     highp vec2 base = sampleCoord - scale * vCoord.xy;                \n"
+        "     sampleNearLeft = vec3(base * nearLeft.z + scale * nearLeft.xy, nearLeft.z); \n"
+        "     sampleNearRight = vec3(base * nearRight.z + scale * nearRight.xy, nearRight.z); \n"
+        "}";
+}
+
+const char *QSGLoQSubPixelDistanceFieldTextMaterialShader::fragmentShader() const {
+    return
+        "varying highp vec3 sampleNearLeft;                                     \n"
+        "varying highp vec3 sampleNearRight;                                    \n"
+        "uniform sampler2D texture;                                             \n"
+        "uniform lowp vec4 color;                                               \n"
+        "uniform highp float alphaMin;                                          \n"
+        "uniform highp float alphaMax;                                          \n"
+        "void main() {                                                          \n"
+        "    highp vec2 n;                                                      \n"
+        "    n.x = texture2DProj(texture, sampleNearLeft).a;                    \n"
+        "    n.y = texture2DProj(texture, sampleNearRight).a;                   \n"
+        "    n = smoothstep(alphaMin, alphaMax, n);                             \n"
+        "    highp float c = 0.5 * (n.x + n.y);                                 \n"
+        "    gl_FragColor = vec4(n.x, c, n.y, c) * color.w;                     \n"
+        "}";
+}
+
+QSGMaterialType *QSGLoQSubPixelDistanceFieldTextMaterial::type() const
+{
+    static QSGMaterialType type;
+    return &type;
+}
+
+QSGMaterialShader *QSGLoQSubPixelDistanceFieldTextMaterial::createShader() const
+{
+    return new QSGLoQSubPixelDistanceFieldTextMaterialShader;
+}
 
 QT_END_NAMESPACE

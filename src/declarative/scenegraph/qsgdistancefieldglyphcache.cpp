@@ -804,7 +804,7 @@ QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager(const QGLCo
     , m_maxTextureSize(0)
 {
 #ifndef QT_OPENGL_ES
-    m_defaultAntialiasingMode = QSGGlyphNode::SubPixelAntialiasing;
+    m_defaultAntialiasingMode = QSGGlyphNode::HighQualitySubPixelAntialiasing;
 #else
     m_defaultAntialiasingMode = QSGGlyphNode::GrayAntialiasing;
 #endif

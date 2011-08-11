@@ -252,10 +252,18 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
     delete m_material;
 
     if (m_style == QSGText::Normal) {
-        if (m_antialiasingMode == SubPixelAntialiasing)
-            m_material = new QSGSubPixelDistanceFieldTextMaterial;
-        else
+        switch (m_antialiasingMode) {
+        case HighQualitySubPixelAntialiasing:
+            m_material = new QSGHiQSubPixelDistanceFieldTextMaterial;
+            break;
+        case LowQualitySubPixelAntialiasing:
+            m_material = new QSGLoQSubPixelDistanceFieldTextMaterial;
+            break;
+        case GrayAntialiasing:
+        default:
             m_material = new QSGDistanceFieldTextMaterial;
+            break;
+        }
     } else {
         QSGDistanceFieldStyledTextMaterial *material;
         if (m_style == QSGText::Outline) {

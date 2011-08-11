@@ -297,6 +297,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
 
     // ### Do something with these before final release...
     static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
+    static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
     static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
 
     if (d->distanceFieldDisabled) {
@@ -305,7 +306,9 @@ QSGGlyphNode *QSGContext::createGlyphNode()
         if (!d->distanceFieldCacheManager) {
             d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(d->gl);
             if (doSubpixel)
-                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::SubPixelAntialiasing);
+                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::HighQualitySubPixelAntialiasing);
+            else if (doLowQualSubpixel)
+                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::LowQualitySubPixelAntialiasing);
             else if (doGray)
                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
         }
