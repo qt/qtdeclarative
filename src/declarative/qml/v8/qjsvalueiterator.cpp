@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
 
     \brief The QJSValueIterator class provides a Java-style iterator for QJSValue.
 
-    \ingroup script
+    \ingroup qtjavascript
 
 
     The QJSValueIterator constructor takes a QJSValue as
@@ -44,28 +44,24 @@ QT_BEGIN_NAMESPACE
     beginning of the sequence of properties. Here's how to iterate over
     all the properties of a QJSValue:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 0
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 0
 
-    The next() advances the iterator. The name(), value() and flags()
-    functions return the name, value and flags of the last item that was
+    The next() advances the iterator. The name() and value()
+    functions return the name and value of the last item that was
     jumped over.
-
-    If you want to remove properties as you iterate over the
-    QJSValue, use remove(). If you want to modify the value of a
-    property, use setValue().
 
     Note that QJSValueIterator only iterates over the QJSValue's
     own properties; i.e. it does not follow the prototype chain. You can
     use a loop like this to follow the prototype chain:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 1
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 1
 
     Note that QJSValueIterator will not automatically skip over
     properties that have the QJSValue::SkipInEnumeration flag set;
     that flag only affects iteration in script code.  If you want, you
     can skip over such properties with code like the following:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 2
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 2
 
     \sa QJSValue::property()
 */
@@ -90,7 +86,7 @@ QJSValueIterator::~QJSValueIterator()
     (i.e. the iterator is \e not at the back of the property sequence);
     otherwise returns false.
 
-    \sa next(), hasPrevious()
+    \sa next()
 */
 bool QJSValueIterator::hasNext() const
 {
@@ -101,11 +97,14 @@ bool QJSValueIterator::hasNext() const
 
 /*!
     Advances the iterator by one position.
+    Returns true if there is at least one item ahead of the iterator
+    (i.e. the iterator is \e not at the back of the property sequence);
+    otherwise returns false.
 
     Calling this function on an iterator located at the back of the
     container leads to undefined results.
 
-    \sa hasNext(), previous(), name()
+    \sa hasNext(), name()
 */
 bool QJSValueIterator::next()
 {
@@ -116,9 +115,9 @@ bool QJSValueIterator::next()
 
 /*!
     Returns the name of the last property that was jumped over using
-    next() or previous().
+    next().
 
-    \sa value(), flags()
+    \sa value()
 */
 QString QJSValueIterator::name() const
 {
@@ -130,9 +129,9 @@ QString QJSValueIterator::name() const
 
 /*!
     Returns the value of the last property that was jumped over using
-    next() or previous().
+    next().
 
-    \sa setValue(), name()
+    \sa name()
 */
 QJSValue QJSValueIterator::value() const
 {
