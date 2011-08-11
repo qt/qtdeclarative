@@ -44,7 +44,7 @@
 
 #include "qsgnode.h"
 #include "qsgtexture.h"
-#include "qsgtext_p.h"
+#include <private/qsgtext_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
