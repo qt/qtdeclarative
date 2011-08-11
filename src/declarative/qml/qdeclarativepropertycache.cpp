@@ -247,6 +247,8 @@ QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObj
                 QMetaProperty p = metaObject->property(idx);
                 if (p.isScriptable()) {
                     rv.load(metaObject->property(idx));
+                    if (!isDynamicMetaObject(cmo))
+                        rv.flags |= Data::IsDirect;
                     return rv;
                 } else {
                     while (cmo && cmo->propertyOffset() >= idx)
@@ -271,6 +273,8 @@ QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObj
 
         if (methodNameRef == property) {
             rv.load(m);
+            if (!isDynamicMetaObject(m.enclosingMetaObject()))
+                rv.flags |= Data::IsDirect;
             return rv;
         }
     }
