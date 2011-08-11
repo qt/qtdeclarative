@@ -76,6 +76,8 @@ class QSGParticleEmitter : public QSGItem
 
     Q_PROPERTY(QSGStochasticDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged)
     Q_PROPERTY(QSGStochasticDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
+    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
+
 public:
     explicit QSGParticleEmitter(QSGItem *parent = 0);
     virtual ~QSGParticleEmitter();
@@ -111,6 +113,8 @@ public:
         return m_particleDurationVariation;
     }
 
+    qreal speedFromMovement() const { return m_speed_from_movement; }
+    void setSpeedFromMovement(qreal s);
     virtual void componentComplete();
 signals:
     void particlesPerSecondChanged(qreal);
@@ -137,6 +141,8 @@ signals:
 
     void maxParticleCountChanged(int arg);
     void particleCountChanged();
+
+    void speedFromMovementChanged();
 
 public slots:
     void pulse(qreal seconds);
@@ -293,8 +299,22 @@ protected:
        int m_burstLeft;//TODO: Rename to pulse
        QList<QPair<int, QPointF > > m_burstQueue;
        int m_maxParticleCount;
+
+       //Used in default implementation, but might be useful
+       qreal m_speed_from_movement;
+
+       int m_particle_count;
+       bool m_reset_last;
+       qreal m_last_timestamp;
+       qreal m_last_emission;
+
+       QPointF m_last_emitter;
+       QPointF m_last_last_emitter;
+       QPointF m_last_last_last_emitter;
+
 private:
        QSGStochasticDirection m_nullVector;
+       qreal m_speedFromMovement;
 };
 
 QT_END_NAMESPACE
