@@ -336,7 +336,8 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         void *args[] = { &handle, 0 };
         QMetaObject::metacall(object, QMetaObject::ReadProperty, property.coreIndex, args); 
         return handle.toHandle();
-    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
+    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)
+               && engine->engine()) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
         if (valueType)
@@ -381,7 +382,8 @@ static v8::Handle<v8::Value> LoadPropertyDirect(QV8Engine *engine, QObject *obje
         void *args[] = { &handle, 0 };
         object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args); 
         return handle.toHandle();
-    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
+    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)
+               && engine->engine()) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
         if (valueType)
