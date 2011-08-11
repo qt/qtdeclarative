@@ -46,7 +46,6 @@ const qreal CONV = 0.017453292520444443;
 /*!
     \qmlclass Gravity QSGGravityAffector
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Affector
     \brief The Gravity element allows you to set a constant accleration in an angle
 

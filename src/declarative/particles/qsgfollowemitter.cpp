@@ -48,7 +48,6 @@ QT_BEGIN_NAMESPACE
     \qmlclass FollowEmitter QSGFollowEmitter
     \inqmlmodule QtQuick.Particles 2
     \inherits QSGParticleEmitter
-    \since QtQuick.Particles 2.0
     \brief The FollowEmitter element allows you to emit logical particles from other logical particles.
 
     This element emits logical particles into the ParticleSystem, with the

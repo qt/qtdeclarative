@@ -48,7 +48,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass TargetedDirection QSGTargetedDirection
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits StochasticDirection
     \brief The TargetedDirection element allows you to specify a direction towards the target point
 

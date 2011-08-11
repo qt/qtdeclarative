@@ -49,7 +49,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass ModelParticle QSGModelParticle
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits ParticlePainter
     \brief The ModelParticle element allows you to specify a model and delegate pair to paint particles.
 

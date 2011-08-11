@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass CustomEmitter QSGCustomEmitter
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Emitter
     \brief The Custom emitter allows you to modify particles as they are emitted
 

@@ -44,7 +44,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass CustomAffector QSGCustomAffector
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Affector
     \brief The Custom affector allows you to modify affected particles
 

@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass StochasticDirection QSGStochasticDirection
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \brief The StochasticDirection elements allow you to specify a vector space.
 
 */

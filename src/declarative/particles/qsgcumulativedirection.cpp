@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass CumulativeDirection QSGCumulativeDirection
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits StochasticDirection
     \brief The CumulativeDirection element allows you to specify a direction made of other directions
 

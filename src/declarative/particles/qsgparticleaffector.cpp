@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Affector QSGParticleAffector
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \brief Affector elements can alter the attributes of logical particles at any point in their lifetime.
 
     The base Affector does not alter any attributes, but can be used to emit a signal

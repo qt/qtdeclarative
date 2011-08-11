@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass ParticleSystem QSGParticleSystem
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \brief The ParticleSystem brings together ParticlePainter, Emitter and Affector elements.
 
 */

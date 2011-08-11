@@ -46,7 +46,6 @@ const qreal CONV = 0.017453292519943295;
 /*!
     \qmlclass AngledDirection QSGAngledDirection
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits StochasticDirection
     \brief The AngledDirection element allows you to specify a direction that varies in angle
 

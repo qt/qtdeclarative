@@ -285,7 +285,6 @@ QSGMaterialShader *SimpleMaterial::createShader() const {
 /*!
     \qmlclass ImageParticle QSGImageParticle
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits ParticlePainter
     \brief The ImageParticle element visualizes logical particles using an image
 

@@ -122,7 +122,6 @@ struct PlainVertices {
 /*!
     \qmlclass CustomParticle QSGCustomParticle
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits ParticlePainter
     \brief The CustomParticle element allows you to specify your own shader to paint particles.
 
