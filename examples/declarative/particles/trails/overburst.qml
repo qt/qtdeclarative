@@ -61,7 +61,6 @@ Rectangle{
         x: ma.mouseX
         y: ma.mouseY
         emitRate: 16000
-        lifeSpan: 1000
         emitCap: 4000
         acceleration: AngledDirection{angleVariation: 360; magnitude: 360; }
         size: 8
@@ -75,7 +74,7 @@ Rectangle{
     MouseArea{
         width: 100
         height: 100
-        onClicked: sys.overwrite = !sys.overwrite
+        onClicked: bursty.noCap = true;
         id: ma2
         Rectangle{
             anchors.fill: parent

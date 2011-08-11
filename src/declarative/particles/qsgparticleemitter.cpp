@@ -110,6 +110,7 @@ QT_BEGIN_NAMESPACE
 
     Default value is 0.
 */
+
 /*!
     \qmlproperty int QtQuick.Particles2::Emitter::emitCap
 
@@ -118,6 +119,21 @@ QT_BEGIN_NAMESPACE
     This can be set as a performance optimization (when using burst and pulse) or
     to stagger emissions. The default value is emitRate * lifeSpan in seconds, which
     is the number of particles that would be alive at any one time given the default settings.
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Emitter::noCap
+
+    If set to true, the emitCap will be ignored and this emitter will never skip emitting
+    a particle based on how many it has alive.
+
+    Default value is false.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::startTime
+
+    If this value is set when the emitter is loaded, then it will emit particles from the
+    past, up to startTime milliseconds ago. These will simulate as if they were emitted then,
+    but will not have any affectors applied to them. Affectors will take effect from the present time.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::Emitter::size
@@ -184,8 +200,10 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_speed_from_movement(0)
   , m_particle_count(0)
   , m_reset_last(true)
-  , m_last_timestamp(0)
+  , m_last_timestamp(-1)
   , m_last_emission(0)
+  , m_startTime(0)
+  , m_overwrite(false)
 
 {
     //TODO: Reset speed/acc back to null vector? Or allow null pointer?
@@ -297,7 +315,10 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 
     if (m_reset_last) {
         m_last_emitter = m_last_last_emitter = QPointF(x(), y());
-        m_last_timestamp = timeStamp/1000.;
+        if (m_last_timestamp == -1)
+            m_last_timestamp = timeStamp/1000. - m_startTime;
+        else
+            m_last_timestamp = timeStamp/1000.;
         m_last_emission = m_last_timestamp;
         m_reset_last = false;
     }
@@ -339,7 +360,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
         pt = time;
     while (pt < time || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
-        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle]);
+        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;

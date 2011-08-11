@@ -134,6 +134,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
         }
     }
 
+    //TODO: Implement startTime and speedFromMovement
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerParticlePerSecond;
     qreal pt;
@@ -158,7 +159,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
             continue;
         }
         while (pt < time || !m_burstQueue.isEmpty()){
-            QSGParticleData* datum = m_system->newDatum(gId2);
+            QSGParticleData* datum = m_system->newDatum(gId2, !m_overwrite);
             if (datum){//else, skip this emission
                 datum->e = this;//###useful?
 

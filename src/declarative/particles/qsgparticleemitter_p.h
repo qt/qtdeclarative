@@ -64,6 +64,8 @@ class QSGParticleEmitter : public QSGItem
     Q_PROPERTY(QString particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)
     Q_PROPERTY(bool emitting READ emitting WRITE setEmitting NOTIFY emittingChanged)
+    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
+    Q_PROPERTY(bool noCap READ overwrite WRITE setOverWrite NOTIFY overwriteChanged)
 
     Q_PROPERTY(qreal emitRate READ particlesPerSecond WRITE setParticlesPerSecond NOTIFY particlesPerSecondChanged)
     Q_PROPERTY(int lifeSpan READ particleDuration WRITE setParticleDuration NOTIFY particleDurationChanged)
@@ -143,6 +145,10 @@ signals:
     void particleCountChanged();
 
     void speedFromMovementChanged();
+
+    void startTimeChanged(int arg);
+
+    void overwriteChanged(bool arg);
 
 public slots:
     void pulse(qreal seconds);
@@ -241,6 +247,22 @@ public slots:
 
        void setMaxParticleCount(int arg);
 
+       void setStartTime(int arg)
+       {
+           if (m_startTime != arg) {
+               m_startTime = arg;
+               emit startTimeChanged(arg);
+           }
+       }
+
+       void setOverWrite(bool arg)
+{
+    if (m_overwrite != arg) {
+    m_overwrite = arg;
+emit overwriteChanged(arg);
+}
+}
+
 public:
        int particleCount() const;
 
@@ -280,6 +302,16 @@ public:
            return m_maxParticleCount;
        }
 
+       int startTime() const
+       {
+           return m_startTime;
+       }
+
+       bool overwrite() const
+       {
+           return m_overwrite;
+       }
+
 protected:
        qreal m_particlesPerSecond;
        int m_particleDuration;
@@ -295,6 +327,10 @@ protected:
        qreal m_particleSize;
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
+
+       qreal m_speedFromMovement;
+       int m_startTime;
+       bool m_overwrite;
 
        int m_burstLeft;//TODO: Rename to pulse
        QList<QPair<int, QPointF > > m_burstQueue;
@@ -314,7 +350,7 @@ protected:
 
 private:
        QSGStochasticDirection m_nullVector;
-       qreal m_speedFromMovement;
+
 };
 
 QT_END_NAMESPACE
