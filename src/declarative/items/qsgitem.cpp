@@ -1718,15 +1718,34 @@ QSGItem::QSGItem(QSGItemPrivate &dd, QSGItem *parent)
     d->init(parent);
 }
 
+#ifndef QT_NO_DEBUG
+static int qt_item_count = 0;
+
+static void qt_print_item_count()
+{
+    qDebug("Number of leaked items: %i", qt_item_count);
+    qt_item_count = -1;
+}
+#endif
+
 /*!
     Destroys the QSGItem.
 */
 QSGItem::~QSGItem()
 {
+#ifndef QT_NO_DEBUG
+    --qt_item_count;
+    if (qt_item_count < 0)
+        qDebug("Item destroyed after qt_print_item_count() was called.");
+#endif
+
     Q_D(QSGItem);
 
+    if (d->parentItem)
+        setParentItem(0);
+    else if (d->canvas && d->itemNodeInstance)
+        QSGCanvasPrivate::get(d->canvas)->cleanup(d->itemNodeInstance); // cleanup root
     // XXX todo - optimize
-    setParentItem(0);
     while (!d->childItems.isEmpty())
         d->childItems.first()->setParentItem(0);
 
@@ -1824,9 +1843,6 @@ void QSGItem::setParentItem(QSGItem *parentItem)
 
     QSGCanvas *parentCanvas = parentItem?QSGItemPrivate::get(parentItem)->canvas:0;
     if (d->canvas != parentCanvas) {
-        if (d->canvas && d->itemNodeInstance)
-            QSGCanvasPrivate::get(d->canvas)->cleanup(d->itemNodeInstance);
-
         QSGItemPrivate::InitializationState initState;
         initState.clear();
         d->initCanvas(&initState, parentCanvas);
@@ -2021,6 +2037,8 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
             c->mouseGrabberItem = 0;
         if ( hoverEnabled )
             c->hoverItems.removeAll(q);
+        if (itemNodeInstance)
+            c->cleanup(itemNodeInstance);
     }
 
     canvas = c;
@@ -2031,7 +2049,6 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
     if (canvas && hoverEnabled && !canvas->hasMouseTracking())
         canvas->setMouseTracking(true);
 
-    // XXX todo - why aren't these added to the destroy list?
     itemNodeInstance = 0;
     opacityNode = 0;
     clipNode = 0;
@@ -2198,6 +2215,15 @@ QSGItemPrivate::QSGItemPrivate()
 
 void QSGItemPrivate::init(QSGItem *parent)
 {
+#ifndef QT_NO_DEBUG
+    ++qt_item_count;
+    static bool atexit_registered = false;
+    if (!atexit_registered) {
+        atexit(qt_print_item_count);
+        atexit_registered = true;
+    }
+#endif
+
     Q_Q(QSGItem);
     baselineOffset.invalidate();
 

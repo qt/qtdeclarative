@@ -126,7 +126,7 @@ QSGNode::~QSGNode()
 #ifndef QT_NO_DEBUG
     --qt_node_count;
     if (qt_node_count < 0)
-        qDebug("Material destroyed after qt_print_node_count() was called.");
+        qDebug("Node destroyed after qt_print_node_count() was called.");
 #endif
     destroy();
 }

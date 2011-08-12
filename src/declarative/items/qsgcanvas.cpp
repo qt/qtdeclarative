@@ -910,11 +910,9 @@ QSGCanvas::~QSGCanvas()
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
-    rootItemPrivate->canvas = 0;
 
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
-
 
     if (!d->contextFailed) {
         // We need to remove all references to textures pointing to "our" QSGContext
