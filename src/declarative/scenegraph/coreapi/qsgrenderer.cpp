@@ -398,8 +398,8 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
 
         // TODO: Check for multisampling and pixel grid alignment.
         bool canUseScissor = clip->isRectangular()
-                           && qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(0, 2))
-                           && qFuzzyIsNull(m(1, 0)) && qFuzzyIsNull(m(1, 2));
+                           && qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0))
+                           && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
 
         if (canUseScissor) {
             QRectF bbox = clip->clipRect();
