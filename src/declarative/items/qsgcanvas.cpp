@@ -1725,6 +1725,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode == 0);
             itemPriv->clipNode = new QSGDefaultClipNode(item->boundingRect());
+            itemPriv->clipNode->update();
 
             if (child)
                 parent->removeChildNode(child);
@@ -1809,7 +1810,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         }
     }
 
-    if ((dirty & QSGItemPrivate::Size || clipEffectivelyChanged) && itemPriv->clipNode) {
+    if ((dirty & QSGItemPrivate::Size) && itemPriv->clipNode) {
         itemPriv->clipNode->setRect(item->boundingRect());
         itemPriv->clipNode->update();
     }

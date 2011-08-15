@@ -330,8 +330,22 @@ QSGRectangle::QSGRectangle(QSGItem *parent)
 void QSGRectangle::doUpdate()
 {
     Q_D(QSGRectangle);
-    const int pw = d->pen && d->pen->isValid() ? d->pen->width() : 0;
-    d->setPaintMargin((pw+1)/2);
+    qreal penMargin = 0;
+    qreal penOffset = 0;
+    if (d->pen && d->pen->isValid()) {
+        if (d->pen->aligned()) {
+            const int pw = qRound(d->pen->width());
+            penMargin = qreal(0.5) * pw;
+            penOffset = (pw & 1) * qreal(0.5);
+        } else {
+            penMargin = qreal(0.5) * d->pen->width();
+        }
+    }
+    if (penMargin != d->penMargin || penOffset != d->penOffset) {
+        d->penMargin = penMargin;
+        d->penOffset = penOffset;
+        d->dirty(QSGItemPrivate::Size); // update clip
+    }
     update();
 }
 
@@ -534,7 +548,8 @@ QSGNode *QSGRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *da
 QRectF QSGRectangle::boundingRect() const
 {
     Q_D(const QSGRectangle);
-    return QRectF(-d->paintmargin, -d->paintmargin, width()+d->paintmargin*2, height()+d->paintmargin*2);
+    return QRectF(d->penOffset - d->penMargin, d->penOffset - d->penMargin,
+                  d->width + 2 * d->penMargin, d->height + 2 * d->penMargin);
 }
 
 QT_END_NAMESPACE
