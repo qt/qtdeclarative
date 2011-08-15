@@ -558,8 +558,12 @@ void QSGShaderEffectSource::setSourceRect(const QRectF &rect)
 /*!
     \qmlproperty size ShaderEffectSource::textureSize
 
-    This property holds the size of the texture. If it is empty, which is the
-    default, the size of the source rectangle is used.
+    This property holds the requested size of the texture. If it is empty,
+    which is the default, the size of the source rectangle is used.
+
+    \note Some platforms have a limit on how small framebuffer objects can be,
+    which means the actual texture size might be larger than the requested
+    size.
 */
 
 QSize QSGShaderEffectSource::textureSize() const
@@ -762,7 +766,7 @@ QSGTexture *QSGShaderEffectSource::texture() const
 
 QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
-    if (!m_sourceItem) {
+    if (!m_sourceItem || m_sourceItem->width() == 0 || m_sourceItem->height() == 0) {
         delete oldNode;
         return 0;
     }
@@ -782,13 +786,22 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
 
     tex->setLive(m_live);
     tex->setItem(QSGItemPrivate::get(m_sourceItem)->itemNode());
-    QRectF sourceRect = m_sourceRect.isNull()
+    QRectF sourceRect = m_sourceRect.width() == 0 || m_sourceRect.height() == 0
                       ? QRectF(0, 0, m_sourceItem->width(), m_sourceItem->height())
                       : m_sourceRect;
     tex->setRect(sourceRect);
     QSize textureSize = m_textureSize.isEmpty()
                       ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())))
                       : m_textureSize;
+    Q_ASSERT(!textureSize.isEmpty());
+    QSGItemPrivate *d = static_cast<QSGItemPrivate *>(QObjectPrivate::get(this));
+    const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
+    // Keep power-of-two by doubling the size.
+    while (textureSize.width() < minTextureSize.width())
+        textureSize.rwidth() *= 2;
+    while (textureSize.height() < minTextureSize.height())
+        textureSize.rheight() *= 2;
+
     tex->setSize(textureSize);
     tex->setRecursive(m_recursive);
     tex->setFormat(GLenum(m_format));

@@ -102,6 +102,7 @@ public:
                                                      QSize *size,
                                                      const QSize &requestSize);
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
+    virtual QSize minimumFBOSize() const;
 
     static QSGContext *createDefaultContext();
 

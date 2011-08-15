@@ -398,6 +398,21 @@ QSGTexture *QSGContext::createTexture(const QImage &image) const
 
 
 /*!
+    Returns the minimum supported framebuffer object size.
+ */
+
+QSize QSGContext::minimumFBOSize() const
+{
+#ifdef Q_WS_MAC
+    return QSize(33, 33);
+#else
+    return QSize(1, 1);
+#endif
+}
+
+
+
+/*!
     Returns a material shader for the given material.
  */
 
