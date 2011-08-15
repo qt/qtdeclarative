@@ -227,8 +227,8 @@ int QDeclarativeParser::Object::DynamicSlot::parameterNamesLength() const
 
 QDeclarativeParser::Property::Property()
 : parent(0), type(0), index(-1), value(0), isDefault(true), isDeferred(false), 
-  isValueTypeSubProperty(false), isAlias(false), scriptStringScope(-1), nextProperty(0), 
-  nextMainProperty(0)
+  isValueTypeSubProperty(false), isAlias(false), scriptStringScope(-1), nextMainProperty(0),
+  nextProperty(0)
 {
 }
 
