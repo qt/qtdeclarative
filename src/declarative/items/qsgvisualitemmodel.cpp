@@ -272,6 +272,7 @@ public:
                 | QMetaObjectBuilder::SuperClass
                 | QMetaObjectBuilder::ClassName)
     {
+        builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
     }
 
     ~VDMDelegateDataType()
