@@ -1752,7 +1752,7 @@ void QSGCanvas::maybeUpdate()
 {
     Q_D(QSGCanvas);
 
-    if (d->thread->isRunning()) {
+    if (d->thread && d->thread->isRunning()) {
         Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || d->thread->inSync,
                    "QSGCanvas::update",
                    "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
