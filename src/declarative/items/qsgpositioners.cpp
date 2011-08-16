@@ -230,6 +230,7 @@ void QSGBasePositioner::prePositioning()
     }
     QSizeF contentSize(0,0);
     doPositioning(&contentSize);
+    updateAttachedProperties();
     if (!d->addActions.isEmpty() || !d->moveActions.isEmpty())
         finishApplyTransitions();
     d->doingPositioning = false;
@@ -283,6 +284,119 @@ void QSGBasePositioner::finishApplyTransitions()
     d->moveTransitionManager.transition(d->moveActions, d->moveTransition);
     d->addActions.clear();
     d->moveActions.clear();
+}
+
+QSGPositionerAttached *QSGBasePositioner::qmlAttachedProperties(QObject *obj)
+{
+    return new QSGPositionerAttached(obj);
+}
+
+void QSGBasePositioner::updateAttachedProperties(QSGPositionerAttached *specificProperty, QSGItem *specificPropertyOwner) const
+{
+    // If this function is deemed too expensive or shows up in profiles, it could
+    // be changed to run only when there are attached properties present. This
+    // could be a flag in the positioner that is set by the attached property
+    // constructor.
+    QSGPositionerAttached *prevLastProperty = 0;
+    QSGPositionerAttached *lastProperty = 0;
+
+    int visibleItemIndex = 0;
+    for (int ii = 0; ii < positionedItems.count(); ++ii) {
+        const PositionedItem &child = positionedItems.at(ii);
+        if (!child.item)
+            continue;
+
+        QSGPositionerAttached *property = 0;
+
+        if (specificProperty) {
+            if (specificPropertyOwner == child.item) {
+                property = specificProperty;
+            }
+        } else {
+            property = static_cast<QSGPositionerAttached *>(qmlAttachedPropertiesObject<QSGBasePositioner>(child.item, false));
+        }
+
+        if (child.isVisible) {
+            if (property) {
+              property->setIndex(visibleItemIndex);
+              property->setIsFirstItem(visibleItemIndex == 0);
+
+              if (property->isLastItem())
+                prevLastProperty = property;
+            }
+
+            lastProperty = property;
+            ++visibleItemIndex;
+        } else if (property) {
+            property->setIndex(-1);
+            property->setIsFirstItem(false);
+            property->setIsLastItem(false);
+        }
+    }
+
+    if (prevLastProperty && prevLastProperty != lastProperty)
+        prevLastProperty->setIsLastItem(false);
+    if (lastProperty)
+      lastProperty->setIsLastItem(true);
+}
+
+/*!
+    \qmlclass Positioner QSGPositionerAttached
+    \inqmlmodule QtQuick 2
+    \ingroup qml-positioning-elements
+    \brief The Positioner type provides attached properties that contain details on where an item exists in a positioner.
+
+    Positioner items (such as Column, Row, Flow and Grid) provide automatic layout
+    for child items. Attaching this property allows a child item to determine
+    where it exists within the positioner.
+*/
+
+QSGPositionerAttached::QSGPositionerAttached(QObject *parent) : QObject(parent), m_index(-1), m_isFirstItem(false), m_isLastItem(false)
+{
+    QSGItem *attachedItem = qobject_cast<QSGItem *>(parent);
+    if (attachedItem) {
+        QSGBasePositioner *positioner = qobject_cast<QSGBasePositioner *>(attachedItem->parent());
+        if (positioner) {
+            positioner->updateAttachedProperties(this, attachedItem);
+        }
+    }
+}
+
+/*!
+    \qmlattachedproperty Item QtQuick2::Positioner::index
+
+    This property allows the item to determine
+    its index within the positioner.
+*/
+void QSGPositionerAttached::setIndex(int index)
+{
+    if (m_index == index)
+        return;
+    m_index = index;
+    emit indexChanged();
+}
+
+/*!
+    \qmlattachedproperty Item QtQuick2::Positioner::isFirstItem
+    \qmlattachedproperty Item QtQuick2::Positioner::isLastItem
+
+    These properties allow the item to determine if it
+    is the first or last item in the positioner, respectively.
+*/
+void QSGPositionerAttached::setIsFirstItem(bool isFirstItem)
+{
+    if (m_isFirstItem == isFirstItem)
+        return;
+    m_isFirstItem = isFirstItem;
+    emit isFirstItemChanged();
+}
+
+void QSGPositionerAttached::setIsLastItem(bool isLastItem)
+{
+    if (m_isLastItem == isLastItem)
+        return;
+    m_isLastItem = isLastItem;
+    emit isLastItemChanged();
 }
 
 /*!
@@ -349,7 +463,7 @@ void QSGBasePositioner::finishApplyTransitions()
 
   Items with a width or height of 0 will not be positioned.
 
-  \sa Row, Grid, Flow, {declarative/positioners}{Positioners example}
+  \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Column::add
@@ -492,7 +606,7 @@ void QSGColumn::reportConflictingAnchors()
 
   Items with a width or height of 0 will not be positioned.
 
-  \sa Column, Grid, Flow, {declarative/positioners}{Positioners example}
+  \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Row::add
@@ -722,7 +836,7 @@ void QSGRow::reportConflictingAnchors()
 
   Items with a width or height of 0 will not be positioned.
 
-  \sa Flow, Row, Column, {declarative/positioners}{Positioners example}
+  \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Grid::add
@@ -1149,7 +1263,7 @@ void QSGGrid::reportConflictingAnchors()
 
   Items with a width or height of 0 will not be positioned.
 
-  \sa Column, Row, Grid, {declarative/positioners}{Positioners example}
+  \sa Column, Row, Grid, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
     \qmlproperty Transition QtQuick2::Flow::add

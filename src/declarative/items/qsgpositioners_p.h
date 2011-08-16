@@ -59,6 +59,37 @@ QT_MODULE(Declarative)
 
 class QSGBasePositionerPrivate;
 
+class QSGPositionerAttached : public QObject
+{
+    Q_OBJECT
+
+public:
+    QSGPositionerAttached(QObject *parent);
+
+    Q_PROPERTY(int index READ index NOTIFY indexChanged)
+    Q_PROPERTY(bool isFirstItem READ isFirstItem NOTIFY isFirstItemChanged)
+    Q_PROPERTY(bool isLastItem READ isLastItem NOTIFY isLastItemChanged)
+
+    int index() const { return m_index; }
+    void setIndex(int index);
+
+    bool isFirstItem() const { return m_isFirstItem; }
+    void setIsFirstItem(bool isFirstItem);
+
+    bool isLastItem() const { return m_isLastItem; }
+    void setIsLastItem(bool isLastItem);
+
+Q_SIGNALS:
+    void indexChanged();
+    void isFirstItemChanged();
+    void isLastItemChanged();
+
+private:
+    int m_index;
+    bool m_isFirstItem;
+    bool m_isLastItem;
+};
+
 class Q_DECLARATIVE_PRIVATE_EXPORT QSGBasePositioner : public QSGImplicitSizeItem
 {
     Q_OBJECT
@@ -79,6 +110,10 @@ public:
 
     QDeclarativeTransition *add() const;
     void setAdd(QDeclarativeTransition *);
+
+    static QSGPositionerAttached *qmlAttachedProperties(QObject *obj);
+
+    void updateAttachedProperties(QSGPositionerAttached *specificProperty = 0, QSGItem *specificPropertyOwner = 0) const;
 
 protected:
     QSGBasePositioner(QSGBasePositionerPrivate &dd, PositionerType at, QSGItem *parent);
@@ -120,6 +155,7 @@ class Q_AUTOTEST_EXPORT QSGColumn : public QSGBasePositioner
     Q_OBJECT
 public:
     QSGColumn(QSGItem *parent=0);
+
 protected:
     virtual void doPositioning(QSizeF *contentSize);
     virtual void reportConflictingAnchors();
@@ -248,6 +284,9 @@ QML_DECLARE_TYPE(QSGColumn)
 QML_DECLARE_TYPE(QSGRow)
 QML_DECLARE_TYPE(QSGGrid)
 QML_DECLARE_TYPE(QSGFlow)
+
+QML_DECLARE_TYPE(QSGBasePositioner)
+QML_DECLARE_TYPEINFO(QSGBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 

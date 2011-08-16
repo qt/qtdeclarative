@@ -91,6 +91,10 @@ private slots:
     void test_conflictinganchors();
     void test_mirroring();
     void test_allInvisible();
+    void test_attachedproperties();
+    void test_attachedproperties_data();
+    void test_attachedproperties_dynamic();
+
 private:
     QSGView *createView(const QString &filename);
 };
@@ -1343,6 +1347,116 @@ void tst_qsgpositioners::test_allInvisible()
     QVERIFY(column != 0);
     QVERIFY(column->width() == 0);
     QVERIFY(column->height() == 0);
+}
+
+void tst_qsgpositioners::test_attachedproperties()
+{
+    QFETCH(QString, filename);
+
+    QSGView *canvas = createView(filename);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGRectangle *greenRect = canvas->rootObject()->findChild<QSGRectangle *>("greenRect");
+    QVERIFY(greenRect != 0);
+
+    int posIndex = greenRect->property("posIndex").toInt();
+    QVERIFY(posIndex == 0);
+    bool isFirst = greenRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == true);
+    bool isLast = greenRect->property("isLastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *yellowRect = canvas->rootObject()->findChild<QSGRectangle *>("yellowRect");
+    QVERIFY(yellowRect != 0);
+
+    posIndex = yellowRect->property("posIndex").toInt();
+    QVERIFY(posIndex == -1);
+    isFirst = yellowRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = yellowRect->property("isLastItem").toBool();
+    QVERIFY(isLast == false);
+
+    yellowRect->metaObject()->invokeMethod(yellowRect, "onDemandPositioner");
+
+    posIndex = yellowRect->property("posIndex").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = yellowRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = yellowRect->property("isLastItem").toBool();
+    QVERIFY(isLast == true);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_attachedproperties_data()
+{
+    QTest::addColumn<QString>("filename");
+
+    QTest::newRow("column") << SRCDIR "/data/attachedproperties-column.qml";
+    QTest::newRow("row") << SRCDIR "/data/attachedproperties-row.qml";
+    QTest::newRow("grid") << SRCDIR "/data/attachedproperties-grid.qml";
+    QTest::newRow("flow") << SRCDIR "/data/attachedproperties-flow.qml";
+}
+
+void tst_qsgpositioners::test_attachedproperties_dynamic()
+{
+    QSGView *canvas = createView(SRCDIR "/data/attachedproperties-dynamic.qml");
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGRow *row = canvas->rootObject()->findChild<QSGRow *>("pos");
+    QVERIFY(row != 0);
+
+    QSGRectangle *rect0 = canvas->rootObject()->findChild<QSGRectangle *>("rect0");
+    QVERIFY(rect0 != 0);
+
+    int posIndex = rect0->property("index").toInt();
+    QVERIFY(posIndex == 0);
+    bool isFirst = rect0->property("firstItem").toBool();
+    QVERIFY(isFirst == true);
+    bool isLast = rect0->property("lastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *rect1 = canvas->rootObject()->findChild<QSGRectangle *>("rect1");
+    QVERIFY(rect1 != 0);
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    row->metaObject()->invokeMethod(row, "createSubRect");
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *rect2 = canvas->rootObject()->findChild<QSGRectangle *>("rect2");
+    QVERIFY(rect2 != 0);
+
+    posIndex = rect2->property("index").toInt();
+    QVERIFY(posIndex == 2);
+    isFirst = rect2->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect2->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    row->metaObject()->invokeMethod(row, "destroySubRect");
+
+    qApp->processEvents(QEventLoop::DeferredDeletion);
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    delete canvas;
 }
 
 QSGView *tst_qsgpositioners::createView(const QString &filename)

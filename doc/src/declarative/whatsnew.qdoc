@@ -54,6 +54,9 @@ of the properties was changed.
 
 Grid now has rowSpacing and columnSpacing properties.
 
+Positioner now has an attached property that can be used to determine a subitem's location within a
+container such as Column or Row.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
