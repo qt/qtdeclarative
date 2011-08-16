@@ -167,7 +167,7 @@ QSGVisualItemModel::QSGVisualItemModel(QObject *parent)
 }
 
 /*!
-    \qmlattachedproperty int VisualItemModel::index
+    \qmlattachedproperty int QtQuick2::VisualItemModel::index
     This attached property holds the index of this delegate's item within the model.
 
     It is attached to each instance of the delegate.

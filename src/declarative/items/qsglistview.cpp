@@ -1337,7 +1337,7 @@ QSGListView::~QSGListView()
 }
 
 /*!
-    \qmlattachedproperty bool ListView::isCurrentItem
+    \qmlattachedproperty bool QtQuick2::ListView::isCurrentItem
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
@@ -1348,14 +1348,14 @@ QSGListView::~QSGListView()
 */
 
 /*!
-    \qmlattachedproperty ListView ListView::view
+    \qmlattachedproperty ListView QtQuick2::ListView::view
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate.
 */
 
 /*!
-    \qmlattachedproperty string ListView::previousSection
+    \qmlattachedproperty string QtQuick2::ListView::previousSection
     This attached property holds the section of the previous element.
 
     It is attached to each instance of the delegate.
@@ -1364,7 +1364,7 @@ QSGListView::~QSGListView()
 */
 
 /*!
-    \qmlattachedproperty string ListView::nextSection
+    \qmlattachedproperty string QtQuick2::ListView::nextSection
     This attached property holds the section of the next element.
 
     It is attached to each instance of the delegate.
@@ -1373,7 +1373,7 @@ QSGListView::~QSGListView()
 */
 
 /*!
-    \qmlattachedproperty string ListView::section
+    \qmlattachedproperty string QtQuick2::ListView::section
     This attached property holds the section of this element.
 
     It is attached to each instance of the delegate.
@@ -1382,7 +1382,7 @@ QSGListView::~QSGListView()
 */
 
 /*!
-    \qmlattachedproperty bool ListView::delayRemove
+    \qmlattachedproperty bool QtQuick2::ListView::delayRemove
     This attached property holds whether the delegate may be destroyed.
 
     It is attached to each instance of the delegate.

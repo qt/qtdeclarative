@@ -1065,14 +1065,14 @@ void QSGGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 }
 
 /*!
-    \qmlattachedproperty bool GridView::isCurrentItem
+    \qmlattachedproperty bool QtQuick2::GridView::isCurrentItem
     This attached property is true if this delegate is the current item; otherwise false.
 
     It is attached to each instance of the delegate.
 */
 
 /*!
-    \qmlattachedproperty GridView GridView::view
+    \qmlattachedproperty GridView QtQuick2::GridView::view
     This attached property holds the view that manages this delegate instance.
 
     It is attached to each instance of the delegate.
@@ -1081,7 +1081,7 @@ void QSGGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 */
 
 /*!
-    \qmlattachedproperty bool GridView::delayRemove
+    \qmlattachedproperty bool QtQuick2::GridView::delayRemove
     This attached property holds whether the delegate may be destroyed.
 
     It is attached to each instance of the delegate.
