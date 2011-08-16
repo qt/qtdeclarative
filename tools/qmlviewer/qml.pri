@@ -1,4 +1,4 @@
-QT += core-private gui-private declarative-private network sql
+QT += core-private gui-private v8-private declarative-private network sql
 contains(QT_CONFIG, opengl) {
     QT += opengl
     DEFINES += GL_SUPPORTED

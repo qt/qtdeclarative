@@ -8,4 +8,4 @@ SOURCES += tst_qdeclarativedebug.cpp \
 
 CONFIG += parallel_test declarative_debug
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private v8-private declarative-private
