@@ -723,11 +723,13 @@ again:
                 }
 
                 if (n != QLatin1Char('.') && n != QLatin1Char('e') && n != QLatin1Char('E')) {
-                    _codePtr = code - 1;
-                    scanChar();
+                    if (code != _codePtr) {
+                        _codePtr = code - 1;
+                        scanChar();
+                    }
                     _tokenValue = integer;
                     return T_NUMERIC_LITERAL;
-                } 
+                }
             }
 
             QVarLengthArray<char,32> chars;
