@@ -397,17 +397,32 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
             m *= *clip->matrix();
 
         // TODO: Check for multisampling and pixel grid alignment.
-        bool canUseScissor = clip->isRectangular()
-                           && qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0))
-                           && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
+        bool isRectangleWithNoPerspective = clip->isRectangular()
+                && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
+        bool noRotate = qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0));
+        bool isRotate90 = qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1));
 
-        if (canUseScissor) {
+        if (isRectangleWithNoPerspective && (noRotate || isRotate90)) {
             QRectF bbox = clip->clipRect();
             qreal invW = 1 / m(3, 3);
-            qreal fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
-            qreal fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
-            qreal fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
-            qreal fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
+            qreal fx1, fy1, fx2, fy2;
+            if (noRotate) {
+                fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
+                fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
+                fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
+                fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
+            } else {
+                Q_ASSERT(isRotate90);
+                fx1 = (bbox.bottom() * m(0, 1) + m(0, 3)) * invW;
+                fy1 = (bbox.left() * m(1, 0) + m(1, 3)) * invW;
+                fx2 = (bbox.top() * m(0, 1) + m(0, 3)) * invW;
+                fy2 = (bbox.right() * m(1, 0) + m(1, 3)) * invW;
+            }
+
+            if (fx1 > fx2)
+                qSwap(fx1, fx2);
+            if (fy1 > fy2)
+                qSwap(fy1, fy2);
 
             GLint ix1 = qRound((fx1 + 1) * m_device_rect.width() * qreal(0.5));
             GLint iy1 = qRound((fy1 + 1) * m_device_rect.height() * qreal(0.5));
@@ -422,7 +437,6 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
                 clipRect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
             }
 
-            clipRect = clipRect.normalized();
             glScissor(clipRect.x(), clipRect.y(), clipRect.width(), clipRect.height());
         } else {
             if (!stencilEnabled) {
