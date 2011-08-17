@@ -713,7 +713,7 @@ again:
             }
         } else if (QDeclarativeUtils::isDigit(ch)) {
             if (ch != QLatin1Char('0')) {
-                int integer = ch.unicode() - '0';
+                double integer = ch.unicode() - '0';
 
                 QChar n = _char;
                 const QChar *code = _codePtr;
