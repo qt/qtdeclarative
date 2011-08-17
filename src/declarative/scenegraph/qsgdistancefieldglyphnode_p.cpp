@@ -159,7 +159,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     }
     if (state.isMatrixDirty()) {
         program()->setUniformValue(m_matrix_id, state.combinedMatrix());
-        m_matrixScale = qSqrt(state.modelViewMatrix().determinant());
+        m_matrixScale = qSqrt(qAbs(state.modelViewMatrix().determinant()));
         updateRange = true;
     }
     if (updateRange) {
