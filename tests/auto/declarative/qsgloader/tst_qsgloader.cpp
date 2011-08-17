@@ -41,6 +41,7 @@
 #include <qtest.h>
 
 #include <QSignalSpy>
+
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qsgloader_p.h>
@@ -79,6 +80,12 @@ private slots:
     void networkRequestUrl();
     void failNetworkRequest();
 //    void networkComponent();
+    void active();
+    void initialPropertyValues_data();
+    void initialPropertyValues();
+    void initialPropertyValuesBinding();
+    void initialPropertyValuesError_data();
+    void initialPropertyValuesError();
 
     void deleteComponentCrash();
     void nonItem();
@@ -463,6 +470,237 @@ void tst_QSGLoader::failNetworkRequest()
     QCOMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 0);
 
     delete loader;
+}
+
+void tst_QSGLoader::active()
+{
+    // check that the item isn't instantiated until active is set to true
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.1.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == false); // set manually to false
+        QVERIFY(loader->item() == 0);
+        QMetaObject::invokeMethod(object, "doSetSourceComponent");
+        QVERIFY(loader->item() == 0);
+        QMetaObject::invokeMethod(object, "doSetSource");
+        QVERIFY(loader->item() == 0);
+        QMetaObject::invokeMethod(object, "doSetActive");
+        QVERIFY(loader->item() != 0);
+
+        delete object;
+    }
+
+    // check that the status is Null if active is set to false
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.2.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == true); // active is true by default
+        QCOMPARE(loader->status(), QSGLoader::Ready);
+        int currStatusChangedCount = loader->property("statusChangedCount").toInt();
+        QMetaObject::invokeMethod(object, "doSetInactive");
+        QCOMPARE(loader->status(), QSGLoader::Null);
+        QCOMPARE(loader->property("statusChangedCount").toInt(), (currStatusChangedCount+1));
+
+        delete object;
+    }
+
+    // check that the source is not cleared if active is set to false
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.3.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == true); // active is true by default
+        QVERIFY(!loader->source().isEmpty());
+        int currSourceChangedCount = loader->property("sourceChangedCount").toInt();
+        QMetaObject::invokeMethod(object, "doSetInactive");
+        QVERIFY(!loader->source().isEmpty());
+        QCOMPARE(loader->property("sourceChangedCount").toInt(), currSourceChangedCount);
+
+        delete object;
+    }
+
+    // check that the sourceComponent is not cleared if active is set to false
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.4.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == true); // active is true by default
+        QVERIFY(loader->sourceComponent() != 0);
+        int currSourceComponentChangedCount = loader->property("sourceComponentChangedCount").toInt();
+        QMetaObject::invokeMethod(object, "doSetInactive");
+        QVERIFY(loader->sourceComponent() != 0);
+        QCOMPARE(loader->property("sourceComponentChangedCount").toInt(), currSourceComponentChangedCount);
+
+        delete object;
+    }
+
+    // check that the item is released if active is set to false
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.5.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == true); // active is true by default
+        QVERIFY(loader->item() != 0);
+        int currItemChangedCount = loader->property("itemChangedCount").toInt();
+        QMetaObject::invokeMethod(object, "doSetInactive");
+        QVERIFY(loader->item() == 0);
+        QCOMPARE(loader->property("itemChangedCount").toInt(), (currItemChangedCount+1));
+
+        delete object;
+    }
+
+    // check that the activeChanged signal is emitted correctly
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.6.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+
+        QVERIFY(loader->active() == true); // active is true by default
+        loader->setActive(true);           // no effect
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 0);
+        loader->setActive(false);          // change signal should be emitted
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 1);
+        loader->setActive(false);          // no effect
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 1);
+        loader->setActive(true);           // change signal should be emitted
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 2);
+        loader->setActive(false);          // change signal should be emitted
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 3);
+        QMetaObject::invokeMethod(object, "doSetActive");
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 4);
+        QMetaObject::invokeMethod(object, "doSetActive");
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 4);
+        QMetaObject::invokeMethod(object, "doSetInactive");
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 5);
+        loader->setActive(true);           // change signal should be emitted
+        QCOMPARE(loader->property("activeChangedCount").toInt(), 6);
+
+        delete object;
+    }
+}
+
+void tst_QSGLoader::initialPropertyValues_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+    QTest::addColumn<QStringList>("expectedWarnings");
+    QTest::addColumn<QStringList>("propertyNames");
+    QTest::addColumn<QVariantList>("propertyValues");
+
+    QTest::newRow("source url with value set in onLoaded, initially active = true") << TEST_FILE("initialPropertyValues.1.qml")
+            << QStringList()
+            << (QStringList() << "initialValue" << "behaviorCount")
+            << (QVariantList() << 1 << 1);
+
+    QTest::newRow("set source with initial property values specified, active = true") << TEST_FILE("initialPropertyValues.2.qml")
+            << QStringList()
+            << (QStringList() << "initialValue" << "behaviorCount")
+            << (QVariantList() << 2 << 0);
+
+    QTest::newRow("set source with initial property values specified, active = false") << TEST_FILE("initialPropertyValues.3.qml")
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("initialPropertyValues.3.qml").toLocalFile() + QLatin1String(":16: TypeError: Cannot read property 'canary' of null")))
+            << (QStringList())
+            << (QVariantList());
+
+    QTest::newRow("set source with initial property values specified, active = false, with active set true later") << TEST_FILE("initialPropertyValues.4.qml")
+            << QStringList()
+            << (QStringList() << "initialValue" << "behaviorCount")
+            << (QVariantList() << 4 << 0);
+
+    QTest::newRow("set source without initial property values specified, active = true") << TEST_FILE("initialPropertyValues.5.qml")
+            << QStringList()
+            << (QStringList() << "initialValue" << "behaviorCount")
+            << (QVariantList() << 0 << 0);
+
+    QTest::newRow("set source with initial property values specified with binding, active = true") << TEST_FILE("initialPropertyValues.6.qml")
+            << QStringList()
+            << (QStringList() << "initialValue" << "behaviorCount")
+            << (QVariantList() << 6 << 0);
+
+    QTest::newRow("ensure initial property value semantics mimic createObject") << TEST_FILE("initialPropertyValues.7.qml")
+            << QStringList()
+            << (QStringList() << "loaderValue" << "createObjectValue")
+            << (QVariantList() << 1 << 1);
+}
+
+void tst_QSGLoader::initialPropertyValues()
+{
+    QFETCH(QUrl, qmlFile);
+    QFETCH(QStringList, expectedWarnings);
+    QFETCH(QStringList, propertyNames);
+    QFETCH(QVariantList, propertyValues);
+
+    foreach (const QString &warning, expectedWarnings)
+        QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    for (int i = 0; i < propertyNames.size(); ++i)
+        QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
+
+    delete object;
+}
+
+void tst_QSGLoader::initialPropertyValuesBinding()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("initialPropertyValues.binding.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QVERIFY(object->setProperty("bindable", QVariant(8)));
+    QCOMPARE(object->property("canaryValue").toInt(), 8);
+
+    delete object;
+}
+
+void tst_QSGLoader::initialPropertyValuesError_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+    QTest::addColumn<QStringList>("expectedWarnings");
+
+    QTest::newRow("invalid initial property values object") << TEST_FILE("initialPropertyValues.error.1.qml")
+            << (QStringList() << QString(TEST_FILE("initialPropertyValues.error.1.qml").toString() + ":6:5: QML Loader: setSource: value is not an object"));
+
+    QTest::newRow("nonexistent source url") << TEST_FILE("initialPropertyValues.error.2.qml")
+            << (QStringList() << QString(TEST_FILE("NonexistentSourceComponent.qml").toString() + ": File not found"));
+
+    QTest::newRow("invalid source url") << TEST_FILE("initialPropertyValues.error.3.qml")
+            << (QStringList() << QString(TEST_FILE("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+
+    QTest::newRow("invalid initial property values object with invalid property access") << TEST_FILE("initialPropertyValues.error.4.qml")
+            << (QStringList() << QString(TEST_FILE("initialPropertyValues.error.4.qml").toString() + ":7:5: QML Loader: setSource: value is not an object")
+                              << QString(TEST_FILE("initialPropertyValues.error.4.qml").toString() + ":5: TypeError: Cannot read property 'canary' of null"));
+}
+
+void tst_QSGLoader::initialPropertyValuesError()
+{
+    QFETCH(QUrl, qmlFile);
+    QFETCH(QStringList, expectedWarnings);
+
+    foreach (const QString &warning, expectedWarnings)
+        QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
+
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QSGLoader *loader = object->findChild<QSGLoader*>("loader");
+    QVERIFY(loader != 0);
+    QVERIFY(loader->item() == 0);
+    delete object;
 }
 
 // QTBUG-9241

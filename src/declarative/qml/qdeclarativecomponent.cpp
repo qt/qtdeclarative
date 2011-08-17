@@ -55,6 +55,9 @@
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeenginedebug_p.h"
 
+#include "private/qv8engine_p.h"
+#include "private/qv8include_p.h"
+
 #include <QStack>
 #include <QStringList>
 #include <QtCore/qdebug.h>
@@ -663,35 +666,45 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
 {
     Q_ASSERT(args);
 
-#define RETURN(result) { args->returnValue((result)); return; }
-
     Q_D(QDeclarativeComponent);
 
     Q_ASSERT(d->engine);
 
-    QDeclarativeEngine *engine = d->engine;
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-
-    QDeclarativeContext *ctxt = creationContext();
-    if (!ctxt) ctxt = engine->rootContext();
+    QObject *parent = args->Length()?QDeclarativeEnginePrivate::get(d->engine)->v8engine()->toQObject((*args)[0]):0;
 
     v8::Local<v8::Object> valuemap;
     if (args->Length() >= 2) {
         v8::Local<v8::Value> v = (*args)[1];
         if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
-            RETURN(v8::Null());
+            args->returnValue(v8::Null());
+            return;
         }
         valuemap = v8::Local<v8::Object>::Cast(v);
     }
 
-    QObject *parent = args->Length()?v8engine->toQObject((*args)[0]):0;
+    QV8Engine *v8engine = QDeclarativeEnginePrivate::get(d->engine)->v8engine();
+    QObject *retn = d->createObjectWithInitialProperties(args->qmlGlobal(), valuemap, parent);
+    if (!retn)
+        args->returnValue(v8::Null());
+    else
+        args->returnValue(v8engine->newQObject(retn));
+}
 
-    QObject *ret = beginCreate(ctxt);
+QObject *QDeclarativeComponentPrivate::createObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *parentObject)
+{
+    Q_Q(QDeclarativeComponent);
+    Q_ASSERT(engine);
+
+    QDeclarativeContext *ctxt = q->creationContext();
+    if (!ctxt) ctxt = engine->rootContext();
+
+    QObject *parent = parentObject;
+
+    QObject *ret = q->beginCreate(ctxt);
     if (!ret) {
-        completeCreate();
-        RETURN(v8::Null());
+        q->completeCreate();
+        return 0;
     }
 
     if (parent) {
@@ -715,7 +728,14 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
             qWarning("QDeclarativeComponent: Created graphical object was not placed in the graphics scene.");
     }
 
-    v8::Handle<v8::Value> ov = v8engine->newQObject(ret);
+    return completeCreateObjectWithInitialProperties(qmlGlobal, valuemap, ret);
+}
+
+QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate)
+{
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+    QV8Engine *v8engine = ep->v8engine();
+    v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
     Q_ASSERT(ov->IsObject());
     v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
 
@@ -738,7 +758,7 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
         "})"
 
         v8::Local<v8::Script> script = v8engine->qmlModeCompile(SET_ARGS_SOURCE);
-        v8::Local<v8::Function> function = v8::Local<v8::Function>::Cast(script->Run(args->qmlGlobal()));
+        v8::Local<v8::Function> function = v8::Local<v8::Function>::Cast(script->Run(qmlGlobal));
 
         // Try catch isn't needed as the function itself is loaded with try/catch
         v8::Handle<v8::Value> args[] = { object, valuemap };
@@ -746,14 +766,12 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
     }
 
     completeCreate();
-    
-    QDeclarativeData *ddata = QDeclarativeData::get(ret);
+
+    QDeclarativeData *ddata = QDeclarativeData::get(toCreate);
     Q_ASSERT(ddata);
     ddata->setImplicitDestructible();
 
-    RETURN(object);
-
-#undef RETURN
+    return v8engine->toQObject(object);
 }
 
 /*!

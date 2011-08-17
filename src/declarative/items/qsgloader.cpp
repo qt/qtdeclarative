@@ -46,16 +46,21 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativeglobal_p.h>
 
+#include <private/qdeclarativecomponent_p.h>
+
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QSGLoaderPrivate::QSGLoaderPrivate()
     : item(0), component(0), ownComponent(false), updatingSize(false),
-      itemWidthValid(false), itemHeightValid(false)
+      itemWidthValid(false), itemHeightValid(false), active(true)
 {
 }
 
 QSGLoaderPrivate::~QSGLoaderPrivate()
 {
+    disposeInitialPropertyValues();
 }
 
 void QSGLoaderPrivate::itemGeometryChanged(QSGItem *resizeItem, const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -72,6 +77,8 @@ void QSGLoaderPrivate::itemGeometryChanged(QSGItem *resizeItem, const QRectF &ne
 
 void QSGLoaderPrivate::clear()
 {
+    disposeInitialPropertyValues();
+
     if (ownComponent) {
         component->deleteLater();
         component = 0;
@@ -228,6 +235,59 @@ QSGLoader::~QSGLoader()
 }
 
 /*!
+    \qmlproperty bool QtQuick2::Loader::active
+    This property is \c true if the Loader is currently active.
+    The default value for the \l active property is \c true.
+
+    If the Loader is inactive, changing the \l source or \l sourceComponent
+    will not cause the item to be instantiated until the Loader is made active.
+
+    Setting the value to inactive will cause any \l item loaded by the loader
+    to be released, but will not affect the \l source or \l sourceComponent.
+
+    The \l status of an inactive loader is always \c Null.
+
+    \sa source, sourceComponent
+ */
+bool QSGLoader::active() const
+{
+    Q_D(const QSGLoader);
+    return d->active;
+}
+
+void QSGLoader::setActive(bool newVal)
+{
+    Q_D(QSGLoader);
+    if (d->active != newVal) {
+        d->active = newVal;
+        if (newVal == true) {
+            if (d->loadingFromSource) {
+                loadFromSource();
+            } else {
+                loadFromSourceComponent();
+            }
+            d->disposeInitialPropertyValues(); // release persistent handles
+        } else {
+            if (d->item) {
+                QSGItemPrivate *p = QSGItemPrivate::get(d->item);
+                p->removeItemChangeListener(d, QSGItemPrivate::Geometry);
+
+                // We can't delete immediately because our item may have triggered
+                // the Loader to load a different item.
+                d->item->setParentItem(0);
+                d->item->setVisible(false);
+                d->item->deleteLater();
+                d->item = 0;
+                emit itemChanged();
+            }
+            emit statusChanged();
+        }
+        emit activeChanged();
+    }
+}
+
+
+/*!
     \qmlproperty url QtQuick2::Loader::source
     This property holds the URL of the QML component to instantiate.
 
@@ -248,13 +308,30 @@ QUrl QSGLoader::source() const
 
 void QSGLoader::setSource(const QUrl &url)
 {
+    setSource(url, true); // clear previous values
+}
+
+void QSGLoader::setSource(const QUrl &url, bool needsClear)
+{
     Q_D(QSGLoader);
     if (d->source == url)
         return;
 
-    d->clear();
+    if (needsClear)
+        d->clear();
 
     d->source = url;
+    d->loadingFromSource = true;
+
+    if (d->active)
+        loadFromSource();
+    else
+        emit sourceChanged();
+}
+
+void QSGLoader::loadFromSource()
+{
+    Q_D(QSGLoader);
     if (d->source.isEmpty()) {
         emit sourceChanged();
         emit statusChanged();
@@ -308,6 +385,22 @@ void QSGLoader::setSourceComponent(QDeclarativeComponent *comp)
 
     d->component = comp;
     d->ownComponent = false;
+    d->loadingFromSource = false;
+
+    if (d->active)
+        loadFromSourceComponent();
+    else
+        emit sourceComponentChanged();
+}
+
+void QSGLoader::resetSourceComponent()
+{
+    setSourceComponent(0);
+}
+
+void QSGLoader::loadFromSourceComponent()
+{
+    Q_D(QSGLoader);
     if (!d->component) {
         emit sourceComponentChanged();
         emit statusChanged();
@@ -320,9 +413,95 @@ void QSGLoader::setSourceComponent(QDeclarativeComponent *comp)
         d->load();
 }
 
-void QSGLoader::resetSourceComponent()
+/*!
+    \qmlmethod object QtQuick2::Loader::setSource(url source, object properties)
+
+    Creates an object instance of the given \a source component that will have
+    the given \a properties. The \a properties argument is optional.  The instance
+    will be accessible via the \l item property once loading and instantiation
+    is complete.
+
+    If the \l active property is \c false at the time when this function is called,
+    the given \a source component will not be loaded but the \a source and initial
+    \a properties will be cached.  When the loader is made \l active, an instance of
+    the \a source component will be created with the initial \a properties set.
+
+    Setting the initial property values of an instance of a component in this manner
+    will \e not trigger any associated \l{Behavior}s.
+
+    Note that the cached \a properties will be cleared if the \l source or \l sourceComponent
+    is changed after calling this function but prior to setting the loader \l active.
+
+    Example:
+    \table
+    \row
+    \o
+    \qml
+    // ExampleComponent.qml
+    import QtQuick 2.0
+    Rectangle {
+        id: rect
+        color: "red"
+        width: 10
+        height: 10
+
+        Behavior on color {
+            NumberAnimation {
+                target: rect
+                property: "width"
+                to: (rect.width + 20)
+                duration: 0
+            }
+        }
+    }
+    \endqml
+    \o
+    \qml
+    // example.qml
+    import QtQuick 2.0
+    Item {
+        Loader {
+            id: squareLoader
+            onLoaded: console.log(squareLoader.item.width); // prints [10], not [30]
+        }
+
+        Component.onCompleted: {
+            squareLoader.setSource("ExampleComponent.qml", { "color": "blue" });
+            // will trigger the onLoaded code when complete.
+        }
+    }
+    \endqml
+    \endtable
+
+    \sa source, active
+*/
+void QSGLoader::setSource(QDeclarativeV8Function *args)
 {
-    setSourceComponent(0);
+    Q_ASSERT(args);
+    Q_D(QSGLoader);
+
+    bool ipvError = false;
+    args->returnValue(v8::Undefined());
+    v8::Handle<v8::Object> ipv = d->extractInitialPropertyValues(args, this, &ipvError);
+    if (ipvError)
+        return;
+
+    d->clear();
+    QUrl sourceUrl = d->resolveSourceUrl(args);
+    if (!ipv.IsEmpty()) {
+        d->initialPropertyValues = qPersistentNew(ipv);
+        d->qmlGlobalForIpv = qPersistentNew(args->qmlGlobal());
+    }
+
+    setSource(sourceUrl, false); // already cleared and set ipv above.
+}
+
+void QSGLoaderPrivate::disposeInitialPropertyValues()
+{
+    if (!initialPropertyValues.IsEmpty())
+        qPersistentDispose(initialPropertyValues);
+    if (!qmlGlobalForIpv.IsEmpty())
+        qPersistentDispose(qmlGlobalForIpv);
 }
 
 void QSGLoaderPrivate::load()
@@ -377,7 +556,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
             // component to be set to something else. In that case we just
             // need to cleanup.
             if (c)
-                c->completeCreate();
+                completeCreateWithInitialPropertyValues(c, obj, initialPropertyValues, qmlGlobalForIpv);
             delete obj;
             delete ctxt;
             return;
@@ -402,7 +581,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
             delete ctxt;
             source = QUrl();
         }
-        component->completeCreate();
+        completeCreateWithInitialPropertyValues(component, obj, initialPropertyValues, qmlGlobalForIpv);
         if (ownComponent)
             emit q->sourceChanged();
         else
@@ -419,7 +598,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
 
     This property holds the status of QML loading.  It can be one of:
     \list
-    \o Loader.Null - no QML source has been set
+    \o Loader.Null - the loader is inactive or no QML source has been set
     \o Loader.Ready - the QML source has been loaded
     \o Loader.Loading - the QML source is currently being loaded
     \o Loader.Error - an error occurred while loading the QML source
@@ -457,6 +636,9 @@ void QSGLoaderPrivate::_q_sourceLoaded()
 QSGLoader::Status QSGLoader::status() const
 {
     Q_D(const QSGLoader);
+
+    if (!d->active)
+        return Null;
 
     if (d->component)
         return static_cast<QSGLoader::Status>(d->component->status());
@@ -546,6 +728,47 @@ void QSGLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeom
         d->_q_updateSize();
     }
     QSGItem::geometryChanged(newGeometry, oldGeometry);
+}
+
+QUrl QSGLoaderPrivate::resolveSourceUrl(QDeclarativeV8Function *args)
+{
+    QV8Engine *v8engine = args->engine();
+    QString arg = v8engine->toString((*args)[0]->ToString());
+    if (arg.isEmpty())
+        return QUrl();
+
+    QDeclarativeContextData *context = args->context();
+    Q_ASSERT(context);
+    return context->resolvedUrl(QUrl(arg));
+}
+
+v8::Handle<v8::Object> QSGLoaderPrivate::extractInitialPropertyValues(QDeclarativeV8Function *args, QObject *loader, bool *error)
+{
+    v8::Local<v8::Object> valuemap;
+    if (args->Length() >= 2) {
+        v8::Local<v8::Value> v = (*args)[1];
+        if (!v->IsObject() || v->IsArray()) {
+            *error = true;
+            qmlInfo(loader) << loader->tr("setSource: value is not an object");
+        } else {
+            *error = false;
+            valuemap = v8::Local<v8::Object>::Cast(v);
+        }
+    }
+
+    return valuemap;
+}
+
+void QSGLoaderPrivate::completeCreateWithInitialPropertyValues(QDeclarativeComponent *component, QObject *object, v8::Handle<v8::Object> initialPropertyValues, v8::Handle<v8::Object> qmlGlobal)
+{
+    if (initialPropertyValues.IsEmpty()) {
+        component->completeCreate();
+        return;
+    }
+
+    QDeclarativeComponentPrivate *d = QDeclarativeComponentPrivate::get(component);
+    Q_ASSERT(d && d->engine);
+    d->completeCreateObjectWithInitialProperties(qmlGlobal, initialPropertyValues, object);
 }
 
 #include <moc_qsgloader_p.cpp>
