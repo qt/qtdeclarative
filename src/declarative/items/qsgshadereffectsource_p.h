@@ -114,6 +114,8 @@ public:
 
     void scheduleUpdate();
 
+    void scheduleForCleanup();
+
 Q_SIGNALS:
     void textureChanged();
 
@@ -136,6 +138,8 @@ private:
 #ifdef QSG_DEBUG_FBO_OVERLAY
     QSGRectangleNode *m_debugOverlay;
 #endif
+
+    QSGContext *m_context;
 
     uint m_mipmap : 1;
     uint m_live : 1;
@@ -226,7 +230,7 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
-    QSGTexture *m_texture;
+    QSGShaderEffectTexture *m_texture;
     WrapMode m_wrapMode;
     QPointer<QSGItem> m_sourceItem;
     QRectF m_sourceRect;

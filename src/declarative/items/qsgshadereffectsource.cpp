@@ -76,6 +76,7 @@ QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
+    , m_context(0)
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -94,6 +95,17 @@ QSGShaderEffectTexture::~QSGShaderEffectTexture()
 #ifdef QSG_DEBUG_FBO_OVERLAY
     delete m_debugOverlay;
 #endif
+}
+
+void QSGShaderEffectTexture::scheduleForCleanup()
+{
+    if (m_context)
+        m_context->scheduleTextureForCleanup(this);
+    else {
+        // Never really been used, hence we can delete it right away..
+        Q_ASSERT(!m_fbo);
+        delete this;
+    }
 }
 
 
@@ -226,10 +238,12 @@ void QSGShaderEffectTexture::grab()
         return;
     }
 
-    QSGContext *context = QSGItemPrivate::get(m_shaderSource)->sceneGraphContext();
+    if (!m_context)
+        m_context = QSGItemPrivate::get(m_shaderSource)->sceneGraphContext();
+    Q_ASSERT(QSGItemPrivate::get(m_shaderSource)->sceneGraphContext() == m_context);
 
     if (!m_renderer) {
-        m_renderer = context->createRenderer();
+        m_renderer = m_context->createRenderer();
         connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));
@@ -293,7 +307,7 @@ void QSGShaderEffectTexture::grab()
 #ifdef QSG_DEBUG_FBO_OVERLAY
     if (qmlFboOverlay()) {
         if (!m_debugOverlay)
-            m_debugOverlay = context->createRectangleNode();
+            m_debugOverlay = m_context->createRectangleNode();
         m_debugOverlay->setRect(QRectF(0, 0, m_size.width(), m_size.height()));
         m_debugOverlay->setColor(QColor(0xff, 0x00, 0x80, 0x40));
         m_debugOverlay->setPenColor(QColor());
@@ -306,7 +320,7 @@ void QSGShaderEffectTexture::grab()
 
     m_dirtyTexture = false;
 
-    const QGLContext *ctx = QGLContext::currentContext();
+    const QGLContext *ctx = m_context->glContext();
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
@@ -462,7 +476,8 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
 
 QSGShaderEffectSource::~QSGShaderEffectSource()
 {
-    delete m_texture;
+    m_texture->scheduleForCleanup();
+
     if (m_sourceItem)
         QSGItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
 }
