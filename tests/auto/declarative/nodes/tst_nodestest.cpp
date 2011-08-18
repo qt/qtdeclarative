@@ -220,8 +220,6 @@ void NodesTest::simulatedEffect_data()
 
 void NodesTest::simulatedEffect()
 {
-    QSKIP("QTBUG-20029", SkipAll);
-
     QFETCH(bool, connected);
 
     QSGRootNode root;
