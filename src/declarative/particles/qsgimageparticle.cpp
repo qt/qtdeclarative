@@ -55,6 +55,91 @@
 QT_BEGIN_NAMESPACE
 
 const float CONV = 0.017453292519943295;
+class TabledMaterialData
+{
+    public:
+    TabledMaterialData()
+        : texture(0), colortable(0), sizetable(0), opacitytable(0)
+    {}
+
+    ~TabledMaterialData(){
+        delete texture;
+        delete colortable;
+        delete sizetable;
+        delete opacitytable;
+    }
+
+    QSGTexture *texture;
+    QSGTexture *colortable;
+    QSGTexture *sizetable;
+    QSGTexture *opacitytable;
+
+    qreal timestamp;
+};
+
+class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
+{
+    QSG_DECLARE_SIMPLE_SHADER(TabledMaterial, TabledMaterialData)
+
+public:
+    TabledMaterial()
+    {
+        QFile vf(":defaultshaders/tabledvertex.shader");
+        vf.open(QFile::ReadOnly);
+        m_vertex_code = vf.readAll();
+
+        QFile ff(":defaultshaders/tabledfragment.shader");
+        ff.open(QFile::ReadOnly);
+        m_fragment_code = ff.readAll();
+
+        Q_ASSERT(!m_vertex_code.isNull());
+        Q_ASSERT(!m_fragment_code.isNull());
+    }
+
+    const char *vertexShader() const { return m_vertex_code.constData(); }
+    const char *fragmentShader() const { return m_fragment_code.constData(); }
+
+    QList<QByteArray> attributes() const {
+        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
+            << "vColor" << "vDeformVec" << "vRotation" << "vAnimData";
+    };
+
+    void initialize() {
+        QSGSimpleMaterialShader<TabledMaterialData>::initialize();
+        program()->bind();
+        program()->setUniformValue("texture", 0);
+        program()->setUniformValue("colortable", 1);
+        program()->setUniformValue("sizetable", 2);
+        program()->setUniformValue("opacitytable", 3);
+        glFuncs = QGLContext::currentContext()->functions();
+        m_timestamp_id = program()->uniformLocation("timestamp");
+    }
+
+    void updateState(const TabledMaterialData* d, const TabledMaterialData*) {
+        glFuncs->glActiveTexture(GL_TEXTURE1);
+        d->colortable->bind();
+
+        glFuncs->glActiveTexture(GL_TEXTURE2);
+        d->sizetable->bind();
+
+        glFuncs->glActiveTexture(GL_TEXTURE3);
+        d->opacitytable->bind();
+
+        // make sure we end by setting GL_TEXTURE0 as active texture
+        glFuncs->glActiveTexture(GL_TEXTURE0);
+        d->texture->bind();
+
+        program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
+        program()->setUniformValue("framecount", (float) 1);
+        program()->setUniformValue("animcount", (float) 1);
+    }
+
+    int m_timestamp_id;
+    QByteArray m_vertex_code;
+    QByteArray m_fragment_code;
+    QGLFunctions* glFuncs;
+};
+
 class UltraMaterial : public QSGMaterial
 {
 public:
@@ -95,6 +180,7 @@ public:
     int framecount;
     int animcount;
     bool usesSprites;
+
 };
 class UltraMaterialData : public QSGMaterialShader
 {
@@ -302,6 +388,8 @@ QSGMaterialShader *SimpleMaterial::createShader() const {
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::sizeTable
+
+    Note that currently sizeTable is ignored for sprite particles.
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::opacityTable
@@ -359,6 +447,7 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_color_variation(0.0)
     , m_rootNode(0)
     , m_material(0)
+    , m_tabledMaterial(0)
     , m_alphaVariation(0.0)
     , m_alpha(1.0)
     , m_redVariation(0.0)
@@ -377,6 +466,12 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_lastLevel(Unknown)
 {
     setFlag(ItemHasContents);
+}
+
+QSGImageParticle::~QSGImageParticle()
+{
+    delete m_material;
+    delete m_tabledMaterial;
 }
 
 QDeclarativeListProperty<QSGSprite> QSGImageParticle::sprites()
@@ -695,6 +790,104 @@ QSGGeometryNode* QSGImageParticle::buildSimpleParticleNodes()
     return *(m_nodes.begin());
 }
 
+QSGGeometryNode* QSGImageParticle::buildTabledParticleNodes()//TODO: TabledParticle so as to not have the unused anim attributes
+{
+    perfLevel = Tabled;//TODO: More Intermediate levels
+    if (!m_color.isValid())//But we're in colored level (or higher)
+        m_color = QColor(Qt::white);
+    QImage image = QImage(m_image_name.toLocalFile());
+    if (image.isNull()) {
+        printf("ImageParticle: loading image failed... '%s'\n", qPrintable(m_image_name.toLocalFile()));
+        return 0;
+    }
+
+    if (m_material) {
+        delete m_material;
+        m_material = 0;
+    }
+
+    m_tabledMaterial = TabledMaterial::createMaterial();
+    m_tabledMaterial->setFlag(QSGMaterial::Blending, true);
+    QImage colortable(m_colortable_name.toLocalFile());
+    QImage sizetable(m_sizetable_name.toLocalFile());
+    QImage opacitytable(m_opacitytable_name.toLocalFile());
+    if (colortable.isNull())
+        colortable = QImage(":defaultshaders/identitytable.png");
+    if (sizetable.isNull())
+        sizetable = QImage(":defaultshaders/identitytable.png");
+    if (opacitytable.isNull())
+        opacitytable = QImage(":defaultshaders/defaultFadeInOut.png");
+    Q_ASSERT(!colortable.isNull());
+    Q_ASSERT(!sizetable.isNull());
+    Q_ASSERT(!opacitytable.isNull());
+    m_tabledMaterial->state()->colortable = sceneGraphEngine()->createTextureFromImage(colortable);
+    m_tabledMaterial->state()->sizetable = sceneGraphEngine()->createTextureFromImage(sizetable);
+    m_tabledMaterial->state()->opacitytable = sceneGraphEngine()->createTextureFromImage(opacitytable);
+    m_tabledMaterial->state()->texture = sceneGraphEngine()->createTextureFromImage(image);
+    m_tabledMaterial->state()->texture->setFiltering(QSGTexture::Linear);
+
+    foreach (const QString &str, m_particles){
+        int gIdx = m_system->m_groupIds[str];
+        int count = m_system->m_groupData[gIdx]->size();
+        QSGGeometryNode* node = new QSGGeometryNode();
+        node->setMaterial(m_tabledMaterial);
+
+        m_nodes.insert(gIdx, node);
+        m_idxStarts.insert(gIdx, m_lastIdxStart);
+        m_lastIdxStart += count;
+
+        //Create Particle Geometry
+        int vCount = count * 4;
+        int iCount = count * 6;
+
+        QSGGeometry *g = new QSGGeometry(UltraParticle_AttributeSet, vCount, iCount);
+        node->setGeometry(g);
+        g->setDrawingMode(GL_TRIANGLES);
+
+        UltraVertex *vertices = (UltraVertex *) g->vertexData();
+        for (int p=0; p < count; ++p) {
+            commit(gIdx, p);//commit sets geometry for the node
+
+            vertices[0].tx = 0;
+            vertices[0].ty = 0;
+
+            vertices[1].tx = 1;
+            vertices[1].ty = 0;
+
+            vertices[2].tx = 0;
+            vertices[2].ty = 1;
+
+            vertices[3].tx = 1;
+            vertices[3].ty = 1;
+
+            vertices += 4;
+        }
+
+        quint16 *indices = g->indexDataAsUShort();
+        for (int i=0; i < count; ++i) {
+            int o = i * 4;
+            indices[0] = o;
+            indices[1] = o + 1;
+            indices[2] = o + 2;
+            indices[3] = o + 1;
+            indices[4] = o + 3;
+            indices[5] = o + 2;
+            indices += 6;
+        }
+
+    }
+
+
+
+    foreach (QSGGeometryNode* node, m_nodes){
+        if (node == *(m_nodes.begin()))
+                continue;
+        (*(m_nodes.begin()))->appendChildNode(node);
+    }
+
+    return *(m_nodes.begin());
+}
+
 QSGGeometryNode* QSGImageParticle::buildParticleNodes()
 {
     if (m_count * 4 > 0xffff) {
@@ -705,8 +898,8 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     if (count() <= 0)
         return 0;
 
-    if (!m_sprites.count() && !m_bloat
-            && m_colortable_name.isEmpty()
+    if (!m_sprites.count() && !m_bloat) {
+        if (m_colortable_name.isEmpty()
             && m_sizetable_name.isEmpty()
             && m_opacitytable_name.isEmpty()
             && !m_autoRotation
@@ -716,7 +909,15 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
             && !m_redVariation && !m_blueVariation && !m_greenVariation
             && !m_color.isValid()
             )
-        return buildSimpleParticleNodes();
+            return buildSimpleParticleNodes();
+        else
+            return buildTabledParticleNodes();
+    }
+    if (m_tabledMaterial) {
+        delete m_tabledMaterial;
+        m_tabledMaterial = 0;
+    }
+
     perfLevel = Sprites;//TODO: intermediate levels
     if (!m_color.isValid())//But we're in colored level (or higher)
         m_color = QColor(Qt::white);
@@ -871,33 +1072,46 @@ void QSGImageParticle::prepareNextFrame()
     qint64 timeStamp = m_system->systemSync(this);
 
     qreal time = timeStamp / 1000.;
-    m_material->timestamp = time;
 
-    //Advance State
-    if (m_spriteEngine){//perfLevel == Sprites?//TODO: use signals?
+    switch (perfLevel){//Fall-through intended... eventually //TODO: solve m_material/m_namedMaterial!
+    case Sprites:
+        m_material->timestamp = time;
+        //Advance State
+        if (m_spriteEngine){//perfLevel == Sprites?//TODO: use signals?
 
-        m_material->animcount = m_spriteEngine->spriteCount();
-        m_spriteEngine->updateSprites(timeStamp);
-        foreach (const QString &str, m_particles){
-            int gIdx = m_system->m_groupIds[str];
-            int count = m_system->m_groupData[gIdx]->size();
+            m_material->animcount = m_spriteEngine->spriteCount();
+            m_spriteEngine->updateSprites(timeStamp);
+            foreach (const QString &str, m_particles){
+                int gIdx = m_system->m_groupIds[str];
+                int count = m_system->m_groupData[gIdx]->size();
 
-            UltraVertices *particles = (UltraVertices *) m_nodes[gIdx]->geometry()->vertexData();
-            for (int i=0; i < count; i++){
-                int spriteIdx = m_idxStarts[gIdx] + i;
-                UltraVertices &p = particles[i];
-                int curIdx = m_spriteEngine->spriteState(spriteIdx);
-                if (curIdx != p.v1.animIdx){
-                    p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = curIdx;
-                    p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
-                    p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-                    p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                UltraVertices *particles = (UltraVertices *) m_nodes[gIdx]->geometry()->vertexData();
+                for (int i=0; i < count; i++){
+                    int spriteIdx = m_idxStarts[gIdx] + i;
+                    UltraVertices &p = particles[i];
+                    int curIdx = m_spriteEngine->spriteState(spriteIdx);
+                    if (curIdx != p.v1.animIdx){
+                        p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = curIdx;
+                        p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
+                        p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
+                        p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    }
                 }
             }
+        }else{
+            m_material->animcount = 1;
         }
-    }else{
-        m_material->animcount = 1;
+        break;
+    case Tabled:
+    case Deformable:
+    case Colored:
+        m_tabledMaterial->state()->timestamp = time; break;
+    case Simple:
+        m_material->timestamp = time; break;
+    default:
+        break;
     }
+
 }
 
 void QSGImageParticle::reloadColor(const Color4ub &c, QSGParticleData* d)
@@ -1001,8 +1215,33 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             ultraVertices[i].color.a = datum->color.a;
         }
         break;
-    case Tabled://TODO: Us
-    case Deformable:
+    case Tabled:
+        ultraVertices += pIdx*4;
+        for (int i=0; i<4; i++){
+            ultraVertices[i].x = datum->x  - m_systemOffset.x();
+            ultraVertices[i].y = datum->y  - m_systemOffset.y();
+            ultraVertices[i].t = datum->t;
+            ultraVertices[i].lifeSpan = datum->lifeSpan;
+            ultraVertices[i].size = datum->size;
+            ultraVertices[i].endSize = datum->endSize;
+            ultraVertices[i].vx = datum->vx;
+            ultraVertices[i].vy = datum->vy;
+            ultraVertices[i].ax = datum->ax;
+            ultraVertices[i].ay = datum->ay;
+            ultraVertices[i].xx = datum->xx;
+            ultraVertices[i].xy = datum->xy;
+            ultraVertices[i].yx = datum->yx;
+            ultraVertices[i].yy = datum->yy;
+            ultraVertices[i].rotation = datum->rotation;
+            ultraVertices[i].rotationSpeed = datum->rotationSpeed;
+            ultraVertices[i].autoRotate = datum->autoRotate;
+            ultraVertices[i].color.r = datum->color.r;
+            ultraVertices[i].color.g = datum->color.g;
+            ultraVertices[i].color.b = datum->color.b;
+            ultraVertices[i].color.a = datum->color.a;
+        }
+        break;
+    case Deformable: //TODO: Us
     case Colored:
     case Simple:
         simpleVertices += pIdx*4;

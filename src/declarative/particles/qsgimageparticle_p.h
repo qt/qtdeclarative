@@ -44,6 +44,7 @@
 #include "qsgparticlepainter_p.h"
 #include "qsgstochasticdirection_p.h"
 #include <QDeclarativeListProperty>
+#include <qsgsimplematerial.h>
 
 QT_BEGIN_HEADER
 
@@ -52,6 +53,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class UltraMaterial;
+class TabledMaterialData;
 class QSGGeometryNode;
 
 class QSGSprite;
@@ -156,7 +158,7 @@ class QSGImageParticle : public QSGParticlePainter
     Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
 public:
     explicit QSGImageParticle(QSGItem *parent = 0);
-    virtual ~QSGImageParticle(){}
+    virtual ~QSGImageParticle();
 
 
     QDeclarativeListProperty<QSGSprite> sprites();
@@ -291,6 +293,7 @@ protected:
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNodes();
     QSGGeometryNode* buildSimpleParticleNodes();
+    QSGGeometryNode* buildTabledParticleNodes();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
@@ -313,6 +316,7 @@ private:
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
     int m_lastIdxStart;
     UltraMaterial *m_material;
+    QSGSimpleMaterial<TabledMaterialData> *m_tabledMaterial;
 
     // derived values...
 
