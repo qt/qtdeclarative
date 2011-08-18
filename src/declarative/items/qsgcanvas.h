@@ -85,6 +85,9 @@ public:
     void setRenderTarget(QGLFramebufferObject *fbo);
     QGLFramebufferObject *renderTarget() const;
 
+signals:
+    void frameSwapped();
+
 Q_SIGNALS:
     void sceneGraphInitialized();
 
@@ -115,6 +118,7 @@ private Q_SLOTS:
 
 private:
     friend class QSGItem;
+    friend class QSGCanvasRenderThread;
     Q_DISABLE_COPY(QSGCanvas)
 };
 

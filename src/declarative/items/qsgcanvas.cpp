@@ -1937,7 +1937,7 @@ void QSGCanvasRenderThread::run()
 #endif
 
         guiContext->swapBuffers(renderer);
-
+        emit renderer->frameSwapped();//notify compositor that frame has been swapped
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
 #endif
