@@ -52,8 +52,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class UltraMaterial;
-class TabledMaterialData;
+class ImageMaterialData;
 class QSGGeometryNode;
 
 class QSGSprite;
@@ -74,14 +73,23 @@ struct SimpleVertex {
     float ay;
 };
 
-struct SimpleVertices {
-    SimpleVertex v1;
-    SimpleVertex v2;
-    SimpleVertex v3;
-    SimpleVertex v4;
+struct ColoredVertex {
+    float x;
+    float y;
+    float tx;
+    float ty;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float vx;
+    float vy;
+    float ax;
+    float ay;
+    Color4ub color;
 };
 
-struct UltraVertex {
+struct DeformableVertex {
     float x;
     float y;
     float tx;
@@ -101,25 +109,42 @@ struct UltraVertex {
     float yy;
     float rotation;
     float rotationSpeed;
-    float autoRotate;//Assume that GPUs prefer floats to bools
+    float autoRotate;//Assumed that GPUs prefer floats to bools
+};
+
+struct SpriteVertex {
+    float x;
+    float y;
+    float tx;
+    float ty;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float vx;
+    float vy;
+    float ax;
+    float ay;
+    Color4ub color;
+    float xx;
+    float xy;
+    float yx;
+    float yy;
+    float rotation;
+    float rotationSpeed;
+    float autoRotate;//Assumed that GPUs prefer floats to bools
     float animIdx;
     float frameDuration;
     float frameCount;
     float animT;
 };
 
-struct UltraVertices {
-    UltraVertex v1;
-    UltraVertex v2;
-    UltraVertex v3;
-    UltraVertex v4;
-};
-
-struct IntermediateVertices {
-    UltraVertex* v1;
-    UltraVertex* v2;
-    UltraVertex* v3;
-    UltraVertex* v4;
+template <typename Vertex>
+struct Vertices {
+    Vertex v1;
+    Vertex v2;
+    Vertex v3;
+    Vertex v4;
 };
 
 class QSGImageParticle : public QSGParticlePainter
@@ -292,8 +317,6 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNodes();
-    QSGGeometryNode* buildSimpleParticleNodes();
-    QSGGeometryNode* buildTabledParticleNodes();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
@@ -315,8 +338,7 @@ private:
     QHash<int, QSGGeometryNode *> m_nodes;
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
     int m_lastIdxStart;
-    UltraMaterial *m_material;
-    QSGSimpleMaterial<TabledMaterialData> *m_tabledMaterial;
+    QSGMaterial *m_material;
 
     // derived values...
 
@@ -342,6 +364,31 @@ private:
 
     PerformanceLevel m_lastLevel;
     bool m_debugMode;
+
+    template<class Vertex>
+    void initTexCoords(Vertex* v, int count){
+        Vertex* end = v + count;
+        while (v < end){
+            v[0].tx = 0;
+            v[0].ty = 0;
+
+            v[1].tx = 1;
+            v[1].ty = 0;
+
+            v[2].tx = 0;
+            v[2].ty = 1;
+
+            v[3].tx = 1;
+            v[3].ty = 1;
+
+            v += 4;
+        }
+    }
+
+    template<class MaterialData>
+    MaterialData* getState(QSGMaterial* m){
+        return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
+    }
 };
 
 QT_END_NAMESPACE

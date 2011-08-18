@@ -5,7 +5,6 @@ attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
 attribute lowp vec4 vColor;
 attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector
 attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate
-attribute highp vec4 vAnimData;// idx, duration, frameCount (this anim), timestamp (this anim)
 
 uniform highp mat4 qt_Matrix;
 uniform highp float timestamp;
@@ -17,12 +16,12 @@ varying lowp vec4 fColor;
 
 
 void main() {
+    fTex = vTex;
     highp float size = vData.z;
     highp float endSize = vData.w;
 
     highp float t = (timestamp - vData.x) / vData.y;
 
-    fTex = vTex;
     highp float currentSize = mix(size, endSize, t * t);
     if (t < 0. || t > 1.)
         currentSize = 0.;
