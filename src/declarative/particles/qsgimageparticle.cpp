@@ -54,6 +54,9 @@
 
 QT_BEGIN_NAMESPACE
 
+//###Switch to define later, for now user-friendly (no compilation) debugging is worth it
+DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
+
 const float CONV = 0.017453292519943295;
 class TabledMaterialData
 {
@@ -464,8 +467,10 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_bloat(false)
     , perfLevel(Unknown)
     , m_lastLevel(Unknown)
+    , m_debugMode(false)
 {
     setFlag(ItemHasContents);
+    m_debugMode = qmlParticlesDebug();
 }
 
 QSGImageParticle::~QSGImageParticle()
@@ -1067,7 +1072,16 @@ void QSGImageParticle::prepareNextFrame()
         m_rootNode = buildParticleNodes();
         if (m_rootNode == 0)
             return;
-        //qDebug() << "Feature level: " << perfLevel;
+        if(m_debugMode){
+            qDebug() << "QSGImageParticle Feature level: " << perfLevel;
+            qDebug() << "QSGImageParticle Nodes: ";
+            int count = 0;
+            foreach(int i, m_nodes.keys()){
+                qDebug() << "Group " << i << " (" << m_system->m_groupData[i]->size() << " particles)";
+                count += m_system->m_groupData[i]->size();
+            }
+            qDebug() << "Total count: " << count;
+        }
     }
     qint64 timeStamp = m_system->systemSync(this);
 

@@ -341,6 +341,7 @@ private:
     PerformanceLevel perfLevel;
 
     PerformanceLevel m_lastLevel;
+    bool m_debugMode;
 };
 
 QT_END_NAMESPACE
