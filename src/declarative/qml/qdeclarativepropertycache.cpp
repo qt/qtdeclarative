@@ -241,12 +241,13 @@ QDeclarativePropertyCache::Data QDeclarativePropertyCache::create(const QMetaObj
     QDeclarativePropertyCache::Data rv;
     {
         const QMetaObject *cmo = metaObject;
+        const QByteArray propertyName = property.toUtf8();
         while (cmo) {
-            int idx = metaObject->indexOfProperty(property.toUtf8());
+            int idx = cmo->indexOfProperty(propertyName);
             if (idx != -1) {
-                QMetaProperty p = metaObject->property(idx);
+                QMetaProperty p = cmo->property(idx);
                 if (p.isScriptable()) {
-                    rv.load(metaObject->property(idx));
+                    rv.load(p);
                     return rv;
                 } else {
                     while (cmo && cmo->propertyOffset() >= idx)
