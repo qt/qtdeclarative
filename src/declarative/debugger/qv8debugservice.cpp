@@ -79,10 +79,11 @@ public:
     QList<QDeclarativeEngine *> engines;
     QEventLoop loop;
     QHash<QString,QString> sourcePath;
+    QHash<QString,QByteArray> requestCache;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
-    : QDeclarativeDebugService(*(new QV8DebugServicePrivate()),QLatin1String("V8Debugger"), parent)
+    : QDeclarativeDebugService(*(new QV8DebugServicePrivate()), QLatin1String("V8Debugger"), parent)
 {
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
 }
@@ -134,14 +135,24 @@ void QV8DebugService::appendSourcePath(QByteArray message)
     {
         QString msg(message);
         QJSValue parser = d->engine.evaluate("JSON.parse");
-        QJSValue out = parser.call(QJSValue(),QJSValueList() << QJSValue(msg));
+        QJSValue out = parser.call(QJSValue(), QJSValueList() << QJSValue(msg));
         msgMap = out.toVariant().toMap();
     }
 
     QString sourcePath(msgMap.value("body").toMap().value("script").toMap().value("name").toString());
     QString fileName(QFileInfo(sourcePath).fileName());
 
-    d->sourcePath.insert(fileName,sourcePath);
+    d->sourcePath.insert(fileName, sourcePath);
+
+    //Check if there are any pending breakpoint requests for this file
+    if (d->requestCache.contains(fileName)) {
+        QList<QByteArray> list = d->requestCache.values(fileName);
+        d->requestCache.remove(fileName);
+        foreach (QByteArray request, list) {
+            request.replace(fileName.toUtf8(), sourcePath.toUtf8());
+            sendDebugMessage(request);
+        }
+    }
 }
 
 void QV8DebugService::messageReceived(const QByteArray &message)
@@ -160,7 +171,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
         {
             QString req(request);
             QJSValue parser = d->engine.evaluate("JSON.parse");
-            QJSValue out = parser.call(QJSValue(),QJSValueList() << QJSValue(req));
+            QJSValue out = parser.call(QJSValue(), QJSValueList() << QJSValue(req));
             reqMap = out.toVariant().toMap();
         }
 
@@ -170,16 +181,25 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             v8::Debug::DebugBreak();
 
         } else {
+            bool ok = true;
             if (debugCommand == QString("setbreakpoint")){
                 QVariantMap arguments = reqMap.value("arguments").toMap();
                 QString type(arguments.value("type").toString());
                 if (type == QString("script")) {
                     QString fileName(arguments.value("target").toString());
-                    QString filePath = d->sourcePath.value(fileName);
-                    request.replace(fileName.toUtf8(),filePath.toUtf8());
+                    //Check if the filepath has been cached
+                    if (d->sourcePath.contains(fileName)) {
+                        QString filePath = d->sourcePath.value(fileName);
+                        request.replace(fileName.toUtf8(), filePath.toUtf8());
+                    } else {
+                        //Store the setbreakpoint message till filepath is resolved
+                        d->requestCache.insertMulti(fileName, request);
+                        ok = false;
+                    }
                 }
             }
-            sendDebugMessage(request);
+            if (ok)
+                sendDebugMessage(request);
         }
     }
 
