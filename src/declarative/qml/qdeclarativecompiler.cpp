@@ -2999,6 +2999,11 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
             
             aliasProperty = valueType->metaObject()->property(valueTypeIndex);
             propIdx |= (valueTypeIndex << 16);
+
+            // update the property type
+            type = aliasProperty.type();
+            if (type >= QVariant::UserType)
+                type = 0;
         }
 
         if (aliasProperty.isEnumType()) 
