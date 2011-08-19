@@ -63,33 +63,6 @@
 
 #ifndef QT_NO_XMLSTREAMREADER
 
-// From DOM-Level-3-Core spec
-// http://www.w3.org/TR/DOM-Level-3-Core/core.html
-#define INDEX_SIZE_ERR 1
-#define DOMSTRING_SIZE_ERR 2
-#define HIERARCHY_REQUEST_ERR 3
-#define WRONG_DOCUMENT_ERR 4
-#define INVALID_CHARACTER_ERR 5
-#define NO_DATA_ALLOWED_ERR 6
-#define NO_MODIFICATION_ALLOWED_ERR 7
-#define NOT_FOUND_ERR 8
-#define NOT_SUPPORTED_ERR 9
-#define INUSE_ATTRIBUTE_ERR 10
-#define INVALID_STATE_ERR 11
-#define SYNTAX_ERR 12
-#define INVALID_MODIFICATION_ERR 13
-#define NAMESPACE_ERR 14
-#define INVALID_ACCESS_ERR 15
-#define VALIDATION_ERR 16
-#define TYPE_MISMATCH_ERR 17
-
-#define V8THROW_DOM(error, string) { \
-    v8::Local<v8::Value> v = v8::Exception::Error(v8::String::New(string)); \
-    v->ToObject()->Set(v8::String::New("code"), v8::Integer::New(error)); \
-    v8::ThrowException(v); \
-    return v8::Handle<v8::Value>(); \
-}
-
 #define V8THROW_REFERENCE(string) { \
     v8::ThrowException(v8::Exception::ReferenceError(v8::String::New(string))); \
     return v8::Handle<v8::Value>(); \
@@ -1518,7 +1491,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
         V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
     if (args.Length() < 2 || args.Length() > 5)
-        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     QV8Engine *engine = r->engine;
 
@@ -1529,7 +1502,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
         method != QLatin1String("HEAD") &&
         method != QLatin1String("POST") &&
         method != QLatin1String("DELETE"))
-        V8THROW_DOM(SYNTAX_ERR, "Unsupported HTTP method type");
+        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Unsupported HTTP method type");
 
     // Argument 1 - URL
     QUrl url = QUrl::fromEncoded(engine->toString(args[1]).toUtf8());
@@ -1539,7 +1512,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_open(const v8::Arguments &args)
 
     // Argument 2 - async (optional)
     if (args.Length() > 2 && !args[2]->BooleanValue())
-        V8THROW_DOM(NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
+        V8THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Synchronous XMLHttpRequest calls are not supported");
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
@@ -1565,10 +1538,10 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_setRequestHeader(const v8::Argume
         V8THROW_REFERENCE("Not an XMLHttpRequest object");
 
     if (args.Length() != 2)
-        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QDeclarativeXMLHttpRequest::Opened || r->sendFlag())
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QV8Engine *engine = r->engine;
 
@@ -1615,7 +1588,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_send(const v8::Arguments &args)
 
     if (r->readyState() != QDeclarativeXMLHttpRequest::Opened ||
         r->sendFlag())
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
     if (args.Length() > 0)
@@ -1642,12 +1615,12 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_getResponseHeader(const v8::Argum
     QV8Engine *engine = r->engine;
 
     if (args.Length() != 1)
-        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
         r->readyState() != QDeclarativeXMLHttpRequest::Done &&
         r->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     return engine->toString(r->header(engine->toString(args[0])));
 }
@@ -1661,12 +1634,12 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_getAllResponseHeaders(const v8::A
     QV8Engine *engine = r->engine;
 
     if (args.Length() != 0) 
-        V8THROW_DOM(SYNTAX_ERR, "Incorrect argument count");
+        V8THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QDeclarativeXMLHttpRequest::Loading &&
         r->readyState() != QDeclarativeXMLHttpRequest::Done &&
         r->readyState() != QDeclarativeXMLHttpRequest::HeadersReceived)
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     return engine->toString(r->headers());
 }
@@ -1691,7 +1664,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Local<v8::String> prop
 
     if (r->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
         r->readyState() == QDeclarativeXMLHttpRequest::Opened)
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
         return v8::Integer::New(0);
@@ -1710,7 +1683,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Local<v8::String> 
 
     if (r->readyState() == QDeclarativeXMLHttpRequest::Unsent ||
         r->readyState() == QDeclarativeXMLHttpRequest::Opened)
-        V8THROW_DOM(INVALID_STATE_ERR, "Invalid state");
+        V8THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     if (r->errorFlag())
         return engine->toString(QString());
@@ -1811,27 +1784,6 @@ void *qt_add_qmlxmlhttprequest(QV8Engine *engine)
     xmlhttprequest->Set(v8::String::New("LOADING"), v8::Integer::New(3), attributes);
     xmlhttprequest->Set(v8::String::New("DONE"), v8::Integer::New(4), attributes);
     engine->global()->Set(v8::String::New("XMLHttpRequest"), xmlhttprequest->GetFunction());
-
-    // DOM Exception
-    v8::Local<v8::Object> domexception = v8::Object::New();
-    domexception->Set(v8::String::New("INDEX_SIZE_ERR"), v8::Integer::New(INDEX_SIZE_ERR), attributes);
-    domexception->Set(v8::String::New("DOMSTRING_SIZE_ERR"), v8::Integer::New(DOMSTRING_SIZE_ERR), attributes);
-    domexception->Set(v8::String::New("HIERARCHY_REQUEST_ERR"), v8::Integer::New(HIERARCHY_REQUEST_ERR), attributes);
-    domexception->Set(v8::String::New("WRONG_DOCUMENT_ERR"), v8::Integer::New(WRONG_DOCUMENT_ERR), attributes);
-    domexception->Set(v8::String::New("INVALID_CHARACTER_ERR"), v8::Integer::New(INVALID_CHARACTER_ERR), attributes);
-    domexception->Set(v8::String::New("NO_DATA_ALLOWED_ERR"), v8::Integer::New(NO_DATA_ALLOWED_ERR), attributes);
-    domexception->Set(v8::String::New("NO_MODIFICATION_ALLOWED_ERR"), v8::Integer::New(NO_MODIFICATION_ALLOWED_ERR), attributes);
-    domexception->Set(v8::String::New("NOT_FOUND_ERR"), v8::Integer::New(NOT_FOUND_ERR), attributes);
-    domexception->Set(v8::String::New("NOT_SUPPORTED_ERR"), v8::Integer::New(NOT_SUPPORTED_ERR), attributes);
-    domexception->Set(v8::String::New("INUSE_ATTRIBUTE_ERR"), v8::Integer::New(INUSE_ATTRIBUTE_ERR), attributes);
-    domexception->Set(v8::String::New("INVALID_STATE_ERR"), v8::Integer::New(INVALID_STATE_ERR), attributes);
-    domexception->Set(v8::String::New("SYNTAX_ERR"), v8::Integer::New(SYNTAX_ERR), attributes);
-    domexception->Set(v8::String::New("INVALID_MODIFICATION_ERR"), v8::Integer::New(INVALID_MODIFICATION_ERR), attributes);
-    domexception->Set(v8::String::New("NAMESPACE_ERR"), v8::Integer::New(NAMESPACE_ERR), attributes);
-    domexception->Set(v8::String::New("INVALID_ACCESS_ERR"), v8::Integer::New(INVALID_ACCESS_ERR), attributes);
-    domexception->Set(v8::String::New("VALIDATION_ERR"), v8::Integer::New(VALIDATION_ERR), attributes);
-    domexception->Set(v8::String::New("TYPE_MISMATCH_ERR"), v8::Integer::New(TYPE_MISMATCH_ERR), attributes);
-    engine->global()->Set(v8::String::New("DOMException"), domexception);
 
     QDeclarativeXMLHttpRequestData *data = new QDeclarativeXMLHttpRequestData;
     return data;

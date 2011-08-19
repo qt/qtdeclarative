@@ -485,6 +485,32 @@ struct StaticQtMetaObject : public QObject
         { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
 };
 
+void qt_add_domexceptions(QV8Engine *engine)
+{
+    // DOM Exception
+    v8::PropertyAttribute attributes = (v8::PropertyAttribute)(v8::ReadOnly | v8::DontEnum | v8::DontDelete);
+
+    v8::Local<v8::Object> domexception = v8::Object::New();
+    domexception->Set(v8::String::New("INDEX_SIZE_ERR"), v8::Integer::New(DOMEXCEPTION_INDEX_SIZE_ERR), attributes);
+    domexception->Set(v8::String::New("DOMSTRING_SIZE_ERR"), v8::Integer::New(DOMEXCEPTION_DOMSTRING_SIZE_ERR), attributes);
+    domexception->Set(v8::String::New("HIERARCHY_REQUEST_ERR"), v8::Integer::New(DOMEXCEPTION_HIERARCHY_REQUEST_ERR), attributes);
+    domexception->Set(v8::String::New("WRONG_DOCUMENT_ERR"), v8::Integer::New(DOMEXCEPTION_WRONG_DOCUMENT_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_CHARACTER_ERR"), v8::Integer::New(DOMEXCEPTION_INVALID_CHARACTER_ERR), attributes);
+    domexception->Set(v8::String::New("NO_DATA_ALLOWED_ERR"), v8::Integer::New(DOMEXCEPTION_NO_DATA_ALLOWED_ERR), attributes);
+    domexception->Set(v8::String::New("NO_MODIFICATION_ALLOWED_ERR"), v8::Integer::New(DOMEXCEPTION_NO_MODIFICATION_ALLOWED_ERR), attributes);
+    domexception->Set(v8::String::New("NOT_FOUND_ERR"), v8::Integer::New(DOMEXCEPTION_NOT_FOUND_ERR), attributes);
+    domexception->Set(v8::String::New("NOT_SUPPORTED_ERR"), v8::Integer::New(DOMEXCEPTION_NOT_SUPPORTED_ERR), attributes);
+    domexception->Set(v8::String::New("INUSE_ATTRIBUTE_ERR"), v8::Integer::New(DOMEXCEPTION_INUSE_ATTRIBUTE_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_STATE_ERR"), v8::Integer::New(DOMEXCEPTION_INVALID_STATE_ERR), attributes);
+    domexception->Set(v8::String::New("SYNTAX_ERR"), v8::Integer::New(DOMEXCEPTION_SYNTAX_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_MODIFICATION_ERR"), v8::Integer::New(DOMEXCEPTION_INVALID_MODIFICATION_ERR), attributes);
+    domexception->Set(v8::String::New("NAMESPACE_ERR"), v8::Integer::New(DOMEXCEPTION_NAMESPACE_ERR), attributes);
+    domexception->Set(v8::String::New("INVALID_ACCESS_ERR"), v8::Integer::New(DOMEXCEPTION_INVALID_ACCESS_ERR), attributes);
+    domexception->Set(v8::String::New("VALIDATION_ERR"), v8::Integer::New(DOMEXCEPTION_VALIDATION_ERR), attributes);
+    domexception->Set(v8::String::New("TYPE_MISMATCH_ERR"), v8::Integer::New(DOMEXCEPTION_TYPE_MISMATCH_ERR), attributes);
+    engine->global()->Set(v8::String::New("DOMException"), domexception);
+}
+
 void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
 {
     v8::Local<v8::Function> printFn = V8FUNCTION(print, this);
@@ -551,6 +577,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     v8::Local<v8::Object> stringPrototype = v8::Local<v8::Object>::Cast(string->Get(v8::String::New("prototype")));
     stringPrototype->Set(v8::String::New("arg"), V8FUNCTION(stringArg, this));
 
+    qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
     m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
