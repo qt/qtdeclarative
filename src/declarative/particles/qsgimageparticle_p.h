@@ -61,8 +61,6 @@ class QSGSpriteEngine;
 struct SimpleVertex {
     float x;
     float y;
-    float tx;
-    float ty;
     float t;
     float lifeSpan;
     float size;
@@ -76,8 +74,6 @@ struct SimpleVertex {
 struct ColoredVertex {
     float x;
     float y;
-    float tx;
-    float ty;
     float t;
     float lifeSpan;
     float size;

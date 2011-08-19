@@ -287,9 +287,24 @@ public:
     const char *vertexShader() const { return m_vertex_code.constData(); }
     const char *fragmentShader() const { return m_fragment_code.constData(); }
 
+    void activate() {
+        QSGSimpleMaterialShader<ColoredMaterialData>::activate();
+#ifndef QT_OPENGL_ES_2
+        glEnable(GL_POINT_SPRITE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
+    }
+
+    void deactivate() {
+        QSGSimpleMaterialShader<ColoredMaterialData>::deactivate();
+#ifndef QT_OPENGL_ES_2
+        glDisable(GL_POINT_SPRITE);
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
+    }
+
     QList<QByteArray> attributes() const {
-        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
-            << "vColor";
+        return QList<QByteArray>() << "vPos" << "vData" << "vVec" << "vColor";
     }
 
     void initialize() {
@@ -336,8 +351,24 @@ public:
     const char *vertexShader() const { return m_vertex_code.constData(); }
     const char *fragmentShader() const { return m_fragment_code.constData(); }
 
+    void activate() {
+        QSGSimpleMaterialShader<SimpleMaterialData>::activate();
+#ifndef QT_OPENGL_ES_2
+        glEnable(GL_POINT_SPRITE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
+    }
+
+    void deactivate() {
+        QSGSimpleMaterialShader<SimpleMaterialData>::deactivate();
+#ifndef QT_OPENGL_ES_2
+        glDisable(GL_POINT_SPRITE);
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#endif
+    }
+
     QList<QByteArray> attributes() const {
-        return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec";
+        return QList<QByteArray>() << "vPos" << "vData" << "vVec";
     }
 
     void initialize() {
@@ -679,30 +710,28 @@ void QSGImageParticle::createEngine()
 
 static QSGGeometry::Attribute SimpleParticle_Attributes[] = {
     { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT }             // Vectors
+    { 1, 4, GL_FLOAT },             // Data
+    { 2, 4, GL_FLOAT }             // Vectors
 };
 
 static QSGGeometry::AttributeSet SimpleParticle_AttributeSet =
 {
-    4, // Attribute Count
-    (2 + 2 + 4 + 4 ) * sizeof(float),
+    3, // Attribute Count
+    ( 2 + 4 + 4 ) * sizeof(float),
     SimpleParticle_Attributes
 };
 
 static QSGGeometry::Attribute ColoredParticle_Attributes[] = {
     { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT },             // Vectors
-    { 4, 4, GL_UNSIGNED_BYTE },     // Colors
+    { 1, 4, GL_FLOAT },             // Data
+    { 2, 4, GL_FLOAT },             // Vectors
+    { 3, 4, GL_UNSIGNED_BYTE },     // Colors
 };
 
 static QSGGeometry::AttributeSet ColoredParticle_AttributeSet =
 {
-    5, // Attribute Count
-    (2 + 2 + 4 + 4) * sizeof(float) + 4 * sizeof(uchar),
+    4, // Attribute Count
+    ( 2 + 4 + 4 ) * sizeof(float) + 4 * sizeof(uchar),
     ColoredParticle_Attributes
 };
 
@@ -855,12 +884,20 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         else if (perfLevel == Deformable)
             g = new QSGGeometry(DeformableParticle_AttributeSet, vCount, iCount);
         else if (perfLevel == Colored)
-            g = new QSGGeometry(ColoredParticle_AttributeSet, vCount, iCount);
+            g = new QSGGeometry(ColoredParticle_AttributeSet, count, 0);
         else //Simple
-            g = new QSGGeometry(SimpleParticle_AttributeSet, vCount, iCount);
+            g = new QSGGeometry(SimpleParticle_AttributeSet, count, 0);
 
         node->setGeometry(g);
-        g->setDrawingMode(GL_TRIANGLES);
+        if (perfLevel <= Colored){
+            g->setDrawingMode(GL_POINTS);
+            if (m_debugMode){
+                GLfloat pointSizeRange[2];
+                glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, pointSizeRange);
+                qDebug() << "Using point sprites, GL_ALIASED_POINT_SIZE_RANGE " <<pointSizeRange[0] << ":" << pointSizeRange[1];
+            }
+        }else
+            g->setDrawingMode(GL_TRIANGLES);
 
         for (int p=0; p < count; ++p)
             commit(gIdx, p);//commit sets geometry for the node, has its own perfLevel switch
@@ -871,21 +908,19 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
             initTexCoords<DeformableVertex>((DeformableVertex*)g->vertexData(), vCount);
         else if (perfLevel == Deformable)
             initTexCoords<DeformableVertex>((DeformableVertex*)g->vertexData(), vCount);
-        else if (perfLevel == Colored)
-            initTexCoords<ColoredVertex>((ColoredVertex*)g->vertexData(), vCount);
-        else //Simple
-            initTexCoords<SimpleVertex>((SimpleVertex*)g->vertexData(), vCount);
 
-        quint16 *indices = g->indexDataAsUShort();
-        for (int i=0; i < count; ++i) {
-            int o = i * 4;
-            indices[0] = o;
-            indices[1] = o + 1;
-            indices[2] = o + 2;
-            indices[3] = o + 1;
-            indices[4] = o + 3;
-            indices[5] = o + 2;
-            indices += 6;
+        if (perfLevel > Colored){
+            quint16 *indices = g->indexDataAsUShort();
+            for (int i=0; i < count; ++i) {
+                int o = i * 4;
+                indices[0] = o;
+                indices[1] = o + 1;
+                indices[2] = o + 2;
+                indices[3] = o + 1;
+                indices[4] = o + 3;
+                indices[5] = o + 2;
+                indices += 6;
+            }
         }
 
     }
@@ -1114,8 +1149,8 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
         }
         break;
     case Colored:
-        coloredVertices += pIdx*4;
-        for (int i=0; i<4; i++){
+        coloredVertices += pIdx*1;
+        for (int i=0; i<1; i++){
             coloredVertices[i].x = datum->x  - m_systemOffset.x();
             coloredVertices[i].y = datum->y  - m_systemOffset.y();
             coloredVertices[i].t = datum->t;
@@ -1133,8 +1168,8 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
         }
         break;
     case Simple:
-        simpleVertices += pIdx*4;
-        for (int i=0; i<4; i++){
+        simpleVertices += pIdx*1;
+        for (int i=0; i<1; i++){
             simpleVertices[i].x = datum->x - m_systemOffset.x();
             simpleVertices[i].y = datum->y - m_systemOffset.y();
             simpleVertices[i].t = datum->t;
