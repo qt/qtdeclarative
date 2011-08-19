@@ -49,6 +49,7 @@
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativeexpression_p.h"
 #include "qdeclarativeglobal_p.h"
+#include "qv8domerrors_p.h"
 
 #include <QtCore/qobject.h>
 #include <QtDeclarative/qjsvalue.h>
