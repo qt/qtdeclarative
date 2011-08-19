@@ -136,8 +136,14 @@ public:
 
     virtual void preprocess();
 
+    QSGShaderEffectMaterial *shaderMaterial() { return &m_material; }
+
 private Q_SLOTS:
     void markDirtyTexture();
+
+private:
+    QSGShaderEffectMaterial m_material;
+
 
 };
 

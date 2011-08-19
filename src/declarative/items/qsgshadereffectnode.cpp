@@ -306,6 +306,7 @@ void QSGShaderEffectMaterial::updateTextures() const
 QSGShaderEffectNode::QSGShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
+    setMaterial(&m_material);
 }
 
 QSGShaderEffectNode::~QSGShaderEffectNode()

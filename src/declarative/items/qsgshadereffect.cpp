@@ -578,11 +578,12 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (!node) {
         node = new QSGShaderEffectNode;
-        node->setMaterial(&m_material);
         m_programDirty = true;
         m_dirtyData = true;
         m_dirtyGeometry = true;
     }
+
+    QSGShaderEffectMaterial *material = node->shaderMaterial();
 
     if (m_dirtyMesh) {
         node->setGeometry(0);
@@ -616,26 +617,26 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             s.vertexCode = qt_default_vertex_code;
         s.className = metaObject()->className();
 
-        m_material.setProgramSource(s);
+        material->setProgramSource(s);
         node->markDirty(QSGNode::DirtyMaterial);
         m_programDirty = false;
     }
 
     // Update blending
-    if (bool(m_material.flags() & QSGMaterial::Blending) != m_blending) {
-        m_material.setFlag(QSGMaterial::Blending, m_blending);
+    if (bool(material->flags() & QSGMaterial::Blending) != m_blending) {
+        material->setFlag(QSGMaterial::Blending, m_blending);
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
-    if (int(m_material.cullMode()) != int(m_cullMode)) {
-        m_material.setCullMode(QSGShaderEffectMaterial::CullMode(m_cullMode));
+    if (int(material->cullMode()) != int(m_cullMode)) {
+        material->setCullMode(QSGShaderEffectMaterial::CullMode(m_cullMode));
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
     if (m_dirtyData) {
         QVector<QPair<QByteArray, QVariant> > values;
         QVector<QPair<QByteArray, QPointer<QSGItem> > > textures;
-        const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = m_material.textureProviders();
+        const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = material->textureProviders();
 
         for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin(); 
              it != m_source.uniformNames.end(); ++it) {
@@ -653,8 +654,8 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             if (t && t->textureChangedSignal())
                 connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
         }
-        m_material.setUniforms(values);
-        m_material.setTextureProviders(textures);
+        material->setUniforms(values);
+        material->setTextureProviders(textures);
         node->markDirty(QSGNode::DirtyMaterial);
         m_dirtyData = false;
     }
