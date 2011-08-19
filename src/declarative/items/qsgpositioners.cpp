@@ -533,10 +533,11 @@ void QSGColumn::doPositioning(QSizeF *contentSize)
         contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
 
         voffset += child.item->height();
-        if (ii != positionedItems.count() - 1)
-            voffset += spacing();
+        voffset += spacing();
     }
 
+    if (voffset != 0)//If we positioned any items, undo the spacing from the last item
+        voffset -= spacing();
     contentSize->setHeight(voffset);
 }
 
@@ -734,10 +735,11 @@ void QSGRow::doPositioning(QSizeF *contentSize)
         contentSize->setHeight(qMax(contentSize->height(), child.item->height()));
 
         hoffset += child.item->width();
-        if (ii != positionedItems.count() - 1)
-            hoffset += spacing();
+        hoffset += spacing();
     }
 
+    if (hoffset != 0)//If we positioned any items, undo the extra spacing from the last item
+        hoffset -= spacing();
     contentSize->setWidth(hoffset);
 
     if (d->isLeftToRight())
