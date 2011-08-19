@@ -315,13 +315,15 @@ void QDeclarativeStatePrivate::complete()
     }
     reverting.clear();
 
+    if (group)
+        group->stateAboutToComplete();
     emit q->completed();
 }
 
 // Generate a list of actions for this state.  This includes coelescing state
 // actions that this state "extends"
 QDeclarativeStateOperation::ActionList
-QDeclarativeStatePrivate::generateActionList(QDeclarativeStateGroup *group) const
+QDeclarativeStatePrivate::generateActionList() const
 {
     QDeclarativeStateOperation::ActionList applyList;
     if (inState)
@@ -331,11 +333,11 @@ QDeclarativeStatePrivate::generateActionList(QDeclarativeStateGroup *group) cons
     inState = true;
 
     if (!extends.isEmpty()) {
-        QList<QDeclarativeState *> states = group->states();
+        QList<QDeclarativeState *> states = group ? group->states() : QList<QDeclarativeState *>();
         for (int ii = 0; ii < states.count(); ++ii)
             if (states.at(ii)->name() == extends) {
                 qmlExecuteDeferred(states.at(ii));
-                applyList = static_cast<QDeclarativeStatePrivate*>(states.at(ii)->d_func())->generateActionList(group);
+                applyList = static_cast<QDeclarativeStatePrivate*>(states.at(ii)->d_func())->generateActionList();
             }
     }
 
@@ -559,7 +561,7 @@ bool QDeclarativeState::isStateActive() const
     return stateGroup() && stateGroup()->state() == name();
 }
 
-void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransition *trans, QDeclarativeState *revert)
+void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *revert)
 {
     Q_D(QDeclarativeState);
 
@@ -579,7 +581,7 @@ void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransit
     }
 
     // List of actions caused by this state
-    QDeclarativeStateOperation::ActionList applyList = d->generateActionList(group);
+    QDeclarativeStateOperation::ActionList applyList = d->generateActionList();
 
     // List of actions that need to be reverted to roll back (just) this state
     QDeclarativeStatePrivate::SimpleActionList additionalReverts;

@@ -113,7 +113,7 @@ class QDeclarativeTransitionPrivate : public QObjectPrivate
 public:
     QDeclarativeTransitionPrivate()
     : fromState(QLatin1String("*")), toState(QLatin1String("*")),
-      reversed(false), reversible(false), enabled(true), endState(0)
+      reversed(false), reversible(false), enabled(true), manager(0)
     {
         group.trans = this;
     }
@@ -124,11 +124,11 @@ public:
     bool reversible;
     bool enabled;
     ParallelAnimationWrapper group;
-    QDeclarativeTransitionManager *endState;
+    QDeclarativeTransitionManager *manager;
 
     void complete()
     {
-        endState->complete();
+        manager->complete();
     }
     static void append_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list, QDeclarativeAbstractAnimation *a);
     static int animation_count(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list);
@@ -203,7 +203,7 @@ void QDeclarativeTransition::setReversed(bool r)
 
 void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &actions,
                             QList<QDeclarativeProperty> &after,
-                            QDeclarativeTransitionManager *endState)
+                            QDeclarativeTransitionManager *manager)
 {
     Q_D(QDeclarativeTransition);
 
@@ -219,7 +219,7 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
         }
     }
 
-    d->endState = endState;
+    d->manager = manager;
     d->group.setDirection(d->reversed ? QAbstractAnimation::Backward : QAbstractAnimation::Forward);
     d->group.start();
 }

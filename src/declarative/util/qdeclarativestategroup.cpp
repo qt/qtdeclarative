@@ -474,15 +474,17 @@ void QDeclarativeStateGroupPrivate::setCurrentStateInternal(const QString &state
     }
 
     if (oldState == 0 || newState == 0) {
-        if (!nullState) { nullState = new QDeclarativeState; QDeclarative_setParent_noEvent(nullState, q); }
+        if (!nullState) {
+            nullState = new QDeclarativeState;
+            QDeclarative_setParent_noEvent(nullState, q);
+            nullState->setStateGroup(q);
+        }
         if (!oldState) oldState = nullState;
         if (!newState) newState = nullState;
     }
 
-    newState->apply(q, transition, oldState);
-    applyingState = false;
-    if (!transition)
-        static_cast<QDeclarativeStatePrivate*>(QObjectPrivate::get(newState))->complete();
+    newState->apply(transition, oldState);
+    applyingState = false;  //### consider removing this (don't allow state changes in transition)
 }
 
 QDeclarativeState *QDeclarativeStateGroup::findState(const QString &name) const
@@ -501,6 +503,12 @@ void QDeclarativeStateGroup::removeState(QDeclarativeState *state)
 {
     Q_D(QDeclarativeStateGroup);
     d->states.removeOne(state);
+}
+
+void QDeclarativeStateGroup::stateAboutToComplete()
+{
+    Q_D(QDeclarativeStateGroup);
+    d->applyingState = false;
 }
 
 QT_END_NAMESPACE

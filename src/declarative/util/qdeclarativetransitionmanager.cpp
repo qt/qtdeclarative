@@ -246,7 +246,7 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     }
 #endif
     if (!transition)
-        d->applyBindings();
+        complete();
 }
 
 void QDeclarativeTransitionManager::cancel()
