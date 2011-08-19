@@ -794,7 +794,7 @@ void tst_qdeclarativevaluetypes::font()
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != 0);
 
-        QString tostring = QLatin1String("QFont(Arial,29,-1,0,63,1,1,1,0,0)");
+        QString tostring = QLatin1String("QFont(") + object->font().toString() + QLatin1Char(')');
         QCOMPARE(object->property("tostring").toString(), tostring);
         QCOMPARE(object->property("equalsString").toBool(), true);
         QCOMPARE(object->property("equalsColor").toBool(), false);
