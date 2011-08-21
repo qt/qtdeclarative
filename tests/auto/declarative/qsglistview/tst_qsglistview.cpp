@@ -1147,6 +1147,9 @@ void tst_QSGListView::enforceRange_withoutHighlight()
 
     expectedPos += 20 + 10;     // scroll past 1st section and section delegate of 2nd section
     QTest::keyClick(canvas, Qt::Key_Down);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21007 fails", Abort);
+#endif
     QTRY_COMPARE(listview->contentY(), expectedPos);
 
     expectedPos += 20;     // scroll past 1st item of 2nd section

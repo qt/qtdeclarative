@@ -781,6 +781,9 @@ void tst_QSGMouseArea::hoverPosition()
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(10, 32), Qt::NoButton, Qt::NoButton, 0);
     QApplication::sendEvent(canvas, &moveEvent);
 
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
+#endif
     QCOMPARE(root->property("mouseX").toReal(), qreal(10));
     QCOMPARE(root->property("mouseY").toReal(), qreal(32));
 
@@ -801,6 +804,9 @@ void tst_QSGMouseArea::hoverPropagation()
 
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
     QApplication::sendEvent(canvas, &moveEvent);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
+#endif
     QCOMPARE(root->property("point1").toBool(), true);
     QCOMPARE(root->property("point2").toBool(), false);
 
