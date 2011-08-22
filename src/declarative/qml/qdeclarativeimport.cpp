@@ -370,8 +370,9 @@ bool QDeclarativeImportsPrivate::importExtension(const QString &absoluteFilePath
     const QDeclarativeDirParser *qmldirParser = typeLoader->qmlDirParser(absoluteFilePath);
     if (qmldirParser->hasError()) {
         if (errors) {
-            for (int i = 0; i < qmldirParser->errors().size(); ++i)
-                errors->prepend(qmldirParser->errors().at(i));
+            const QList<QDeclarativeError> qmldirErrors = qmldirParser->errors(uri);
+            for (int i = 0; i < qmldirErrors.size(); ++i)
+                errors->prepend(qmldirErrors.at(i));
         }
         return false;
     }
