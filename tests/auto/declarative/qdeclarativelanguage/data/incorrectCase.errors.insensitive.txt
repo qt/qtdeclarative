@@ -1,2 +1,1 @@
-3:1:Type IncorrectCaseType unavailable
--1:-1:File name case mismatch
+3:1:IncorrectCaseType is not a type
