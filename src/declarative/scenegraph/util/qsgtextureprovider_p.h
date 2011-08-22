@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGTextureProvider : public QObject
+class Q_DECLARATIVE_EXPORT QSGTextureProvider : public QObject
 {
     Q_OBJECT
 public:
