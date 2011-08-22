@@ -68,6 +68,7 @@ private slots:
     void unknownSignals();
     void errors_data();
     void errors();
+    void moduleApiTarget();
 
 private:
     QDeclarativeEngine engine;
@@ -227,6 +228,69 @@ void tst_qdeclarativeconnection::errors()
     QList<QDeclarativeError> errors = c.errors();
     QVERIFY(errors.count() == 1);
     QCOMPARE(errors.at(0).description(), error);
+}
+
+
+class MyTestModuleApi : public QObject
+{
+Q_OBJECT
+Q_PROPERTY(int intProp READ intProp WRITE setIntProp NOTIFY intPropChanged)
+
+public:
+    MyTestModuleApi(QObject *parent = 0) : QObject(parent), m_intProp(0), m_changeCount(0) {}
+    ~MyTestModuleApi() {}
+
+    Q_INVOKABLE int otherMethod(int val) { return val + 4; }
+
+    int intProp() const { return m_intProp; }
+    void setIntProp(int val)
+    {
+        if (++m_changeCount % 3 == 0) emit otherSignal();
+        m_intProp = val; emit intPropChanged();
+    }
+
+signals:
+    void intPropChanged();
+    void otherSignal();
+
+private:
+    int m_intProp;
+    int m_changeCount;
+};
+
+static QObject *module_api_factory(QDeclarativeEngine *engine, QJSEngine *scriptEngine)
+{
+   Q_UNUSED(engine)
+   Q_UNUSED(scriptEngine)
+   MyTestModuleApi *api = new MyTestModuleApi();
+   return api;
+}
+
+// QTBUG-20937
+void tst_qdeclarativeconnection::moduleApiTarget()
+{
+    qmlRegisterModuleApi("MyTestModuleApi", 1, 0, module_api_factory);
+    QDeclarativeComponent component(&engine, QUrl(SRCDIR "/data/moduleapi-target.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 0);
+    QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 0);
+
+    QMetaObject::invokeMethod(object, "setModuleIntProp");
+    QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 1);
+    QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 0);
+
+    QMetaObject::invokeMethod(object, "setModuleIntProp");
+    QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 2);
+    QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 0);
+
+    // the module API emits otherSignal every 3 times the int property changes.
+    QMetaObject::invokeMethod(object, "setModuleIntProp");
+    QCOMPARE(object->property("moduleIntPropChangedCount").toInt(), 3);
+    QCOMPARE(object->property("moduleOtherSignalCount").toInt(), 1);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qdeclarativeconnection)

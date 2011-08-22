@@ -128,6 +128,34 @@ v8::Local<v8::Object> QV8TypeWrapper::newObject(QObject *o, QDeclarativeTypeName
     return rv;
 }
 
+QVariant QV8TypeWrapper::toVariant(QV8ObjectResource *r)
+{
+    Q_ASSERT(r->resourceType() == QV8ObjectResource::TypeType);
+    QV8TypeResource *resource = static_cast<QV8TypeResource *>(r);
+    QV8Engine *v8engine = resource->engine;
+
+    if (resource->typeNamespace) {
+        if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi(resource->importNamespace)) {
+            if (moduleApi->scriptCallback) {
+                moduleApi->scriptApi = moduleApi->scriptCallback(v8engine->engine(), v8engine->engine());
+                moduleApi->scriptCallback = 0;
+                moduleApi->qobjectCallback = 0;
+            } else if (moduleApi->qobjectCallback) {
+                moduleApi->qobjectApi = moduleApi->qobjectCallback(v8engine->engine(), v8engine->engine());
+                moduleApi->scriptCallback = 0;
+                moduleApi->qobjectCallback = 0;
+            }
+
+            if (moduleApi->qobjectApi) {
+                return QVariant::fromValue<QObject*>(moduleApi->qobjectApi);
+            }
+        }
+    }
+
+    // only QObject Module API can be converted to a variant.
+    return QVariant();
+}
+
 v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property, 
                                              const v8::AccessorInfo &info)
 {

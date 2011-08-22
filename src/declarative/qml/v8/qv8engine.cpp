@@ -208,7 +208,6 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
         if (r) {
             switch (r->resourceType()) {
             case QV8ObjectResource::ContextType:
-            case QV8ObjectResource::TypeType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:
             case QV8ObjectResource::SQLDatabaseType:
@@ -216,6 +215,8 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
             case QV8ObjectResource::Context2DType:
             case QV8ObjectResource::ParticleDataType:
                 return QVariant();
+            case QV8ObjectResource::TypeType:
+                return m_typeWrapper.toVariant(r);
             case QV8ObjectResource::QObjectType:
                 return qVariantFromValue<QObject *>(m_qobjectWrapper.toQObject(r));
             case QV8ObjectResource::ListType:

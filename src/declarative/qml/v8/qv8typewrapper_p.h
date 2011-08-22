@@ -75,6 +75,7 @@ public:
     v8::Local<v8::Object> newObject(QObject *, QDeclarativeType *, TypeNameMode = IncludeEnums);
     v8::Local<v8::Object> newObject(QObject *, QDeclarativeTypeNameCache *, const void *, 
                                     TypeNameMode = IncludeEnums);
+    QVariant toVariant(QV8ObjectResource *);
 
 private:
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
