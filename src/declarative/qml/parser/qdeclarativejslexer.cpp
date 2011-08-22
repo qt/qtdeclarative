@@ -390,6 +390,12 @@ again:
                     scanChar();
                     if (_char == QLatin1Char('/')) {
                         scanChar();
+
+                        if (_engine) {
+                            _engine->addComment(tokenOffset() + 2, _codePtr - _tokenStartPtr - 1 - 4,
+                                                tokenStartLine(), tokenStartColumn() + 2);
+                        }
+
                         goto again;
                     }
                 } else {
@@ -399,6 +405,10 @@ again:
         } else if (_char == QLatin1Char('/')) {
             while (!_char.isNull() && _char != QLatin1Char('\n')) {
                 scanChar();
+            }
+            if (_engine) {
+                _engine->addComment(tokenOffset() + 2, _codePtr - _tokenStartPtr - 1 - 2,
+                                    tokenStartLine(), tokenStartColumn() + 2);
             }
             goto again;
         } if (_char == QLatin1Char('=')) {
