@@ -3198,6 +3198,24 @@ qint64 QSGItemPrivate::restart(QElapsedTimer &t)
         return ((QElapsedTimerConsistentTimeHack*)&t)->restart();
 }
 
+/*!
+    \fn bool QSGItem::isTextureProvider() const
+
+    Returns true if this item is a texture provider. The default
+    implementation returns false.
+
+    This function can be called from any thread.
+ */
+
+/*!
+    \fn QSGTextureProvider *QSGItem::textureProvider() const
+
+    Returns the texture provider for an item. The default implementation
+    returns 0.
+
+    This function may only be called on the rendering thread.
+ */
+
 QT_END_NAMESPACE
 
 #include <moc_qsgitem.cpp>

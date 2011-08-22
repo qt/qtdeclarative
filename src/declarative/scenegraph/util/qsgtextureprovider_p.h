@@ -57,8 +57,6 @@ class QSGTextureProvider : public QObject
 public:
     virtual QSGTexture *texture() const = 0;
 
-    static QSGTextureProvider *from(QObject *object);
-
 Q_SIGNALS:
     void textureChanged();
 };

@@ -210,6 +210,7 @@ public:
     bool recursive() const;
     void setRecursive(bool enabled);
 
+    bool isTextureProvider() const { return true; }
     QSGTextureProvider *textureProvider() const;
 
     Q_INVOKABLE void scheduleUpdate();

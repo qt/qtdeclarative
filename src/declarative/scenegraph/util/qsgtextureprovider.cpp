@@ -58,21 +58,5 @@ QT_BEGIN_NAMESPACE
  */
 
 
-/*!
-    Convenience function for casting a QObject to a QSGTextureProvider
- */
-QSGTextureProvider *QSGTextureProvider::from(QObject *object)
-{
-    if (QSGImage *image = qobject_cast<QSGImage*>(object))
-        return image->textureProvider();
-    else if (QSGShaderEffectSource *source = qobject_cast<QSGShaderEffectSource *>(object))
-        return source->textureProvider();
-    else if (QSGTextureProvider *provider = qobject_cast<QSGTextureProvider *>(object))
-        return provider;
-
-    qDebug() << "QSGTextureProvider::from() not a texture provider" << object;
-    return 0;
-}
-
 
 QT_END_NAMESPACE

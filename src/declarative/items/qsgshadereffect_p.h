@@ -138,7 +138,7 @@ private:
     struct SourceData
     {
         QSignalMapper *mapper;
-        QPointer<QObject> sourceObject;
+        QPointer<QSGItem> sourceObject;
         QByteArray name;
     };
     QVector<SourceData> m_sources;

@@ -515,9 +515,10 @@ QSGShaderEffectSource::~QSGShaderEffectSource()
 QSGTextureProvider *QSGShaderEffectSource::textureProvider() const
 {
     if (!m_provider) {
-        Q_ASSERT(QSGItemPrivate::get(this)->sceneGraphContext());
         // Make sure it gets thread affinity on the rendering thread so deletion works properly..
-        Q_ASSERT_X(QThread::currentThread() == QSGItemPrivate::get(this)->sceneGraphContext()->thread(),
+        Q_ASSERT_X(QSGItemPrivate::get(this)->canvas
+                   && QSGItemPrivate::get(this)->sceneGraphContext()
+                   && QThread::currentThread() == QSGItemPrivate::get(this)->sceneGraphContext()->thread(),
                    "QSGShaderEffectSource::textureProvider",
                    "Cannot be used outside the GUI thread");
         const_cast<QSGShaderEffectSource *>(this)->m_provider = new QSGShaderEffectSourceTextureProvider();

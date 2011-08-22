@@ -544,9 +544,10 @@ QSGTextureProvider *QSGImage::textureProvider() const
 {
     Q_D(const QSGImage);
     if (!d->provider) {
-        Q_ASSERT(d->sceneGraphContext());
         // Make sure it gets thread affinity on the rendering thread so deletion works properly..
-        Q_ASSERT_X(QThread::currentThread() == d->sceneGraphContext()->thread(),
+        Q_ASSERT_X(d->canvas
+                   && d->sceneGraphContext()
+                   && QThread::currentThread() == d->sceneGraphContext()->thread(),
                    "QSGImage::textureProvider",
                    "Cannot be used outside the GUI thread");
         const_cast<QSGImagePrivate *>(d)->provider = new QSGImageTextureProvider(this);

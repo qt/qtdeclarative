@@ -95,6 +95,8 @@ class QSGEngine;
 class QTouchEvent;
 class QSGNode;
 class QSGTransformNode;
+class QSGTextureProvider;
+
 class Q_DECLARATIVE_EXPORT QSGItem : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
@@ -304,6 +306,9 @@ public:
        friend class QSGCanvasPrivate;
        UpdatePaintNodeData();
     };
+
+    virtual bool isTextureProvider() const { return false; }
+    virtual QSGTextureProvider *textureProvider() const { return 0; }
 
 public Q_SLOTS:
     void update();

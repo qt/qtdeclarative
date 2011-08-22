@@ -414,15 +414,15 @@ void QSGShaderEffect::setSource(const QVariant &var, int index)
     }
 
     QObject *obj = qVariantValue<QObject *>(var);
-    if (!QSGTextureProvider::from(obj)) {
+    QSGItem *item = qobject_cast<QSGItem *>(obj);
+    if (!item || !item->isTextureProvider()) {
         qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
                  qPrintable(source.name), qPrintable(obj->objectName()), obj->metaObject()->className());
         return;
     }
 
-    source.sourceObject = obj;
+    source.sourceObject = item;
 
-    QSGItem *item = qobject_cast<QSGItem *>(obj);
 
     // TODO: Find better solution.
     // 'item' needs a canvas to get a scenegraph node.
@@ -655,7 +655,7 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         }
         for (int i = 0; i < m_sources.size(); ++i) {
             const SourceData &source = m_sources.at(i);
-            QSGTextureProvider *t = QSGTextureProvider::from(source.sourceObject);
+            QSGTextureProvider *t = source.sourceObject->textureProvider();
             textures.append(qMakePair(source.name, t));
             if (t)
                 connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);

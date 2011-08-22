@@ -93,6 +93,7 @@ public:
     VAlignment verticalAlignment() const;
     void setVerticalAlignment(VAlignment align);
 
+    bool isTextureProvider() const { return true; }
     QSGTextureProvider *textureProvider() const;
 
 Q_SIGNALS:
