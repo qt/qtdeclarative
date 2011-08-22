@@ -1578,13 +1578,6 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         prop->value->metatype = type->attachedPropertiesType();
     } else {
         // Setup regular property data
-        if (prop->isDefault) {
-            QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
-
-            if (p.name())
-                prop->setName(p.name());
-        }
-
         bool notInRevision = false;
         QDeclarativePropertyCache::Data *d = 
             prop->name().isEmpty()?0:property(obj, prop->name(), &notInRevision);
@@ -1600,6 +1593,14 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeParser::Property *prop,
         } else if (d) {
             prop->index = d->coreIndex;
             prop->core = *d;
+        } else if (prop->isDefault) {
+            QMetaProperty p = QDeclarativeMetaType::defaultProperty(metaObject);
+            QDeclarativePropertyCache::Data defaultPropertyData;
+            defaultPropertyData.load(p, engine);
+            if (p.name())
+                prop->setName(p.name());
+            prop->core = defaultPropertyData;
+            prop->index = prop->core.coreIndex;
         }
 
         // We can't error here as the "id" property does not require a
