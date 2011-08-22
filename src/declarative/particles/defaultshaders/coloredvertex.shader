@@ -5,6 +5,7 @@ attribute lowp vec4 vColor;
 
 uniform highp mat4 qt_Matrix;
 uniform highp float timestamp;
+uniform highp float entry;
 
 varying lowp vec4 fColor;
 
@@ -19,6 +20,18 @@ void main() {
     if (t < 0. || t > 1.)
         currentSize = 0.;
 
+    lowp float fFade = 1.;
+
+    if (entry == 1.){
+        highp float fadeIn = min(t * 10., 1.);
+        highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
+        fFade = fadeIn * fadeOut;
+    }else if(entry == 2.){
+        highp float sizeIn = min(t * 10., 1.);
+        highp float sizeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
+        currentSize = currentSize * sizeIn * sizeOut;
+    }
+
     gl_PointSize = currentSize;
 
     highp vec2 pos = vPos
@@ -27,8 +40,5 @@ void main() {
 
     gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
 
-    highp float fadeIn = min(t * 10., 1.);
-    highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
-
-    fColor = vColor * (fadeIn * fadeOut);
+    fColor = vColor * (fFade);
 }

@@ -20,8 +20,6 @@ varying lowp vec4 fColor;
 
 
 void main() {
-    highp float size = vData.z;
-    highp float endSize = vData.w;
 
     highp float t = (timestamp - vData.x) / vData.y;
 
@@ -58,7 +56,7 @@ void main() {
         frameTex.y = 1. * ((vAnimData.x + 1.)/animcount);
     fTexB = frameTex;
 
-    highp float currentSize = mix(size, endSize, t * t);
+    highp float currentSize = mix(vData.z, vData.w, t * t);
 
     if (t < 0. || t > 1.)
         currentSize = 0.;
@@ -89,5 +87,4 @@ void main() {
 
     fColor = vColor;
     tt = t;
-
 }

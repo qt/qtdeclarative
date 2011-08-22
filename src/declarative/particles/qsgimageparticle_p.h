@@ -176,7 +176,10 @@ class QSGImageParticle : public QSGParticlePainter
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(QSGStochasticDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
+
+    Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
+    Q_ENUMS(EntryEffect)
 public:
     explicit QSGImageParticle(QSGItem *parent = 0);
     virtual ~QSGImageParticle();
@@ -184,6 +187,12 @@ public:
 
     QDeclarativeListProperty<QSGSprite> sprites();
     QSGSpriteEngine* spriteEngine() {return m_spriteEngine;}
+
+    enum EntryEffect {
+        None = 0,
+        Fade = 1,
+        Scale = 2
+    };
 
     enum PerformanceLevel{//TODO: Expose?
         Unknown = 0,
@@ -240,6 +249,8 @@ public:
 
     bool bloat() const { return m_bloat; }
 
+    EntryEffect entryEffect() const { return m_entryEffect; }
+
 signals:
 
     void imageChanged();
@@ -277,6 +288,8 @@ signals:
 
     void bloatChanged(bool arg);
 
+    void entryEffectChanged(EntryEffect arg);
+
 public slots:
     void reloadColor(const Color4ub &c, QSGParticleData* d);
     void setAlphaVariation(qreal arg);
@@ -304,6 +317,8 @@ public slots:
     void setYVector(QSGStochasticDirection* arg);
 
     void setBloat(bool arg);
+
+    void setEntryEffect(EntryEffect arg);
 
 protected:
     void reset();
@@ -385,6 +400,7 @@ private:
     MaterialData* getState(QSGMaterial* m){
         return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
     }
+    EntryEffect m_entryEffect;
 };
 
 QT_END_NAMESPACE

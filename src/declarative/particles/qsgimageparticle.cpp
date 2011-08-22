@@ -78,6 +78,7 @@ class ImageMaterialData
     QSGTexture *opacitytable;
 
     qreal timestamp;
+    qreal entry;
     qreal framecount;
     qreal animcount;
 };
@@ -120,6 +121,7 @@ public:
         program()->setUniformValue("opacitytable", 3);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
     }
 
     void updateState(const TabledMaterialData* d, const TabledMaterialData*) {
@@ -139,8 +141,10 @@ public:
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
         program()->setUniformValue("framecount", (float) 1);
         program()->setUniformValue("animcount", (float) 1);
+        program()->setUniformValue(m_entry_id, (float) d->entry);
     }
 
+    int m_entry_id;
     int m_timestamp_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
@@ -181,6 +185,7 @@ public:
         program()->setUniformValue("texture", 0);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
     }
 
     void updateState(const DeformableMaterialData* d, const DeformableMaterialData*) {
@@ -188,8 +193,10 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
+        program()->setUniformValue(m_entry_id, (float) d->entry);
     }
 
+    int m_entry_id;
     int m_timestamp_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
@@ -235,6 +242,7 @@ public:
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_framecount_id = program()->uniformLocation("framecount");
         m_animcount_id = program()->uniformLocation("animcount");
+        m_entry_id = program()->uniformLocation("entry");
     }
 
     void updateState(const SpriteMaterialData* d, const SpriteMaterialData*) {
@@ -254,11 +262,13 @@ public:
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
         program()->setUniformValue(m_framecount_id, (float) d->framecount);
         program()->setUniformValue(m_animcount_id, (float) d->animcount);
+        program()->setUniformValue(m_entry_id, (float) d->entry);
     }
 
     int m_timestamp_id;
     int m_framecount_id;
     int m_animcount_id;
+    int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
@@ -313,6 +323,7 @@ public:
         program()->setUniformValue("texture", 0);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
     }
 
     void updateState(const ColoredMaterialData* d, const ColoredMaterialData*) {
@@ -320,9 +331,11 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
+        program()->setUniformValue(m_entry_id, (float) d->entry);
     }
 
     int m_timestamp_id;
+    int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
@@ -377,6 +390,7 @@ public:
         program()->setUniformValue("texture", 0);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
+        m_entry_id = program()->uniformLocation("entry");
     }
 
     void updateState(const SimpleMaterialData* d, const SimpleMaterialData*) {
@@ -384,9 +398,11 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
+        program()->setUniformValue(m_entry_id, (float) d->entry);
     }
 
     int m_timestamp_id;
+    int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
@@ -463,6 +479,21 @@ public:
 /*!
     \qmlproperty list<Sprite> QtQuick.Particles2::ImageParticle::sprites
 */
+/*!
+    \qmlproperty EntryEffect QtQuick.Particles2::ImageParticle::entryEffect
+
+    This property provides basic and cheap entrance and exit effects for the particles.
+    For fine-grained control, see sizeTable and opacityTable.
+
+    Acceptable values are
+    \list
+    \o None: Particles just appear and disappear.
+    \o Fade: Particles fade in from 0. opacity at the start of their life, and fade out to 0. at the end.
+    \o Scale: Particles scale in from 0 size at the start of their life, and scale back to 0 at the end.
+    \endlist
+
+    Default value is Fade.
+*/
 
 
 QSGImageParticle::QSGImageParticle(QSGItem* parent)
@@ -488,6 +519,7 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , perfLevel(Unknown)
     , m_lastLevel(Unknown)
     , m_debugMode(false)
+    , m_entryEffect(Fade)
 {
     setFlag(ItemHasContents);
     m_debugMode = qmlParticlesDebug();
@@ -690,6 +722,16 @@ void QSGImageParticle::setBloat(bool arg)
         reset();
 }
 
+void QSGImageParticle::setEntryEffect(EntryEffect arg)
+{
+    if (m_entryEffect != arg) {
+        m_entryEffect = arg;
+        if (m_material)
+            getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
+        emit entryEffectChanged(arg);
+    }
+}
+
 void QSGImageParticle::reset()
 {
     QSGParticlePainter::reset();
@@ -859,6 +901,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
             m_material = SimpleMaterial::createMaterial();
         getState<ImageMaterialData>(m_material)->texture = sceneGraphEngine()->createTextureFromImage(image);
         getState<ImageMaterialData>(m_material)->texture->setFiltering(QSGTexture::Linear);
+        getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
         m_material->setFlag(QSGMaterial::Blending);
     }
 

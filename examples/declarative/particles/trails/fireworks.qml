@@ -114,6 +114,7 @@ Rectangle{
         ImageParticle{
             particles: ["works", "fire", "splode"]
             source: "content/particle.png"
+            entryEffect: ImageParticle.Scale
         }
     }
 }
