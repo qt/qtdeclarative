@@ -42,8 +42,6 @@
 #ifndef QSGTEXTUREPROVIDER_H
 #define QSGTEXTUREPROVIDER_H
 
-#include <qgl.h>
-
 #include "qsgtexture.h"
 #include "qobject.h"
 
@@ -53,15 +51,17 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGTextureProvider
+class QSGTextureProvider : public QObject
 {
+    Q_OBJECT
 public:
     virtual QSGTexture *texture() const = 0;
-    virtual const char *textureChangedSignal() const { return 0; }
 
     static QSGTextureProvider *from(QObject *object);
+
+Q_SIGNALS:
+    void textureChanged();
 };
-Q_DECLARE_INTERFACE(QSGTextureProvider, "QSGTextureProvider")
 
 QT_END_NAMESPACE
 

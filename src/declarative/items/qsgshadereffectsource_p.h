@@ -64,6 +64,8 @@ class QSGNode;
 class UpdatePaintNodeData;
 class QGLFramebufferObject;
 
+class QSGShaderEffectSourceTextureProvider;
+
 class QSGShaderEffectSourceNode : public QObject, public QSGDefaultImageNode
 {
     Q_OBJECT
@@ -150,7 +152,7 @@ private:
     uint m_grab : 1;
 };
 
-class QSGShaderEffectSource : public QSGItem, public QSGTextureProvider
+class QSGShaderEffectSource : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
@@ -162,7 +164,7 @@ class QSGShaderEffectSource : public QSGItem, public QSGTextureProvider
     Q_PROPERTY(bool hideSource READ hideSource WRITE setHideSource NOTIFY hideSourceChanged)
     Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged)
     Q_PROPERTY(bool recursive READ recursive WRITE setRecursive NOTIFY recursiveChanged)
-    Q_INTERFACES(QSGTextureProvider)
+
     Q_ENUMS(Format WrapMode)
 public:
     enum WrapMode {
@@ -208,8 +210,7 @@ public:
     bool recursive() const;
     void setRecursive(bool enabled);
 
-    QSGTexture *texture() const;
-    const char *textureChangedSignal() const { return SIGNAL(textureChanged()); }
+    QSGTextureProvider *textureProvider() const;
 
     Q_INVOKABLE void scheduleUpdate();
 
@@ -230,6 +231,7 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
+    QSGShaderEffectSourceTextureProvider *m_provider;
     QSGShaderEffectTexture *m_texture;
     WrapMode m_wrapMode;
     QPointer<QSGItem> m_sourceItem;

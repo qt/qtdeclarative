@@ -1963,6 +1963,9 @@ void QSGCanvasRenderThread::run()
         }
 
         unlock();
+
+        // Process any "deleteLater" objects...
+        QCoreApplication::processEvents();
     }
 
 #ifdef THREAD_DEBUG

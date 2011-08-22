@@ -54,6 +54,33 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFboOverlay, QML_FBO_OVERLAY)
 
+class QSGShaderEffectSourceTextureProvider : public QSGTextureProvider
+{
+    Q_OBJECT
+public:
+    QSGShaderEffectSourceTextureProvider()
+        : sourceTexture(0)
+    {
+    }
+
+    QSGTexture *texture() const {
+        sourceTexture->setMipmapFiltering(mipmapFiltering);
+        sourceTexture->setFiltering(filtering);
+        sourceTexture->setHorizontalWrapMode(horizontalWrap);
+        sourceTexture->setVerticalWrapMode(verticalWrap);
+        return sourceTexture;
+    }
+
+    QSGShaderEffectTexture *sourceTexture;
+
+    QSGTexture::Filtering mipmapFiltering;
+    QSGTexture::Filtering filtering;
+    QSGTexture::WrapMode horizontalWrap;
+    QSGTexture::WrapMode verticalWrap;
+};
+#include "qsgshadereffectsource.moc"
+
+
 QSGShaderEffectSourceNode::QSGShaderEffectSourceNode()
 {
     setFlag(UsePreprocess, true);
@@ -458,6 +485,7 @@ void QSGShaderEffectTexture::grab()
 
 QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     : QSGItem(parent)
+    , m_provider(0)
     , m_wrapMode(ClampToEdge)
     , m_sourceItem(0)
     , m_textureSize(0, 0)
@@ -470,7 +498,6 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
 {
     setFlag(ItemHasContents);
     m_texture = new QSGShaderEffectTexture(this);
-    connect(m_texture, SIGNAL(textureChanged()), this, SIGNAL(textureChanged()), Qt::DirectConnection);
     connect(m_texture, SIGNAL(textureChanged()), this, SLOT(update()));
 }
 
@@ -478,8 +505,26 @@ QSGShaderEffectSource::~QSGShaderEffectSource()
 {
     m_texture->scheduleForCleanup();
 
+    if (m_provider)
+        m_provider->deleteLater();
+
     if (m_sourceItem)
         QSGItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
+}
+
+QSGTextureProvider *QSGShaderEffectSource::textureProvider() const
+{
+    if (!m_provider) {
+        Q_ASSERT(QSGItemPrivate::get(this)->sceneGraphContext());
+        // Make sure it gets thread affinity on the rendering thread so deletion works properly..
+        Q_ASSERT_X(QThread::currentThread() == QSGItemPrivate::get(this)->sceneGraphContext()->thread(),
+                   "QSGShaderEffectSource::textureProvider",
+                   "Cannot be used outside the GUI thread");
+        const_cast<QSGShaderEffectSource *>(this)->m_provider = new QSGShaderEffectSourceTextureProvider();
+        connect(m_texture, SIGNAL(textureChanged()), m_provider, SIGNAL(textureChanged()), Qt::DirectConnection);
+        m_provider->sourceTexture = m_texture;
+    }
+    return m_provider;
 }
 
 /*!
@@ -764,17 +809,6 @@ static void get_wrap_mode(QSGShaderEffectSource::WrapMode mode, QSGTexture::Wrap
 }
 
 
-QSGTexture *QSGShaderEffectSource::texture() const
-{
-    m_texture->setMipmapFiltering(m_mipmap ? QSGTexture::Linear : QSGTexture::None);
-    m_texture->setFiltering(QSGItemPrivate::get(this)->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    QSGTexture::WrapMode h, v;
-    get_wrap_mode(m_wrapMode, &h, &v);
-    m_texture->setHorizontalWrapMode(h);
-    m_texture->setVerticalWrapMode(v);
-    return m_texture;
-}
-
 QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem) {
@@ -782,19 +816,7 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
         return 0;
     }
 
-    QSGShaderEffectSourceNode *node = static_cast<QSGShaderEffectSourceNode *>(oldNode);
-    if (!node) {
-        node = new QSGShaderEffectSourceNode;
-        node->setTexture(m_texture);
-        connect(m_texture, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
-    }
-
-    // If live and recursive, update continuously.
-    if (m_live && m_recursive)
-        node->markDirty(QSGNode::DirtyMaterial);
-
     QSGShaderEffectTexture *tex = qobject_cast<QSGShaderEffectTexture *>(m_texture);
-
     tex->setLive(m_live);
     tex->setItem(QSGItemPrivate::get(m_sourceItem)->itemNode());
     QRectF sourceRect = m_sourceRect.isNull()
@@ -817,12 +839,35 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
                                             ? QSGTexture::Linear
                                             : QSGTexture::Nearest;
     QSGTexture::Filtering mmFiltering = m_mipmap ? filtering : QSGTexture::None;
-    node->setMipmapFiltering(mmFiltering);
-    node->setFiltering(filtering);
-
     QSGTexture::WrapMode hWrap, vWrap;
     get_wrap_mode(m_wrapMode, &hWrap, &vWrap);
 
+    if (m_provider) {
+        m_provider->mipmapFiltering = mmFiltering;
+        m_provider->filtering = filtering;
+        m_provider->horizontalWrap = hWrap;
+        m_provider->verticalWrap = vWrap;
+    }
+
+    // Don't create the paint node if we're not spanning any area
+    if (width() == 0 || height() == 0) {
+        delete oldNode;
+        return 0;
+    }
+
+    QSGShaderEffectSourceNode *node = static_cast<QSGShaderEffectSourceNode *>(oldNode);
+    if (!node) {
+        node = new QSGShaderEffectSourceNode;
+        node->setTexture(m_texture);
+        connect(m_texture, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+    }
+
+    // If live and recursive, update continuously.
+    if (m_live && m_recursive)
+        node->markDirty(QSGNode::DirtyMaterial);
+
+    node->setMipmapFiltering(mmFiltering);
+    node->setFiltering(filtering);
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
     node->setTargetRect(QRectF(0, 0, width(), height()));

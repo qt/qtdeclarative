@@ -490,21 +490,21 @@ void QSGCustomParticle::buildData()
     if (!m_rootNode)
         return;
     QVector<QPair<QByteArray, QVariant> > values;
-    QVector<QPair<QByteArray, QPointer<QSGItem> > > textures;
-    const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = m_material.textureProviders();
+    QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
+    const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = m_material.textureProviders();
     for (int i = 0; i < oldTextures.size(); ++i) {
-        QSGTextureProvider *oldSource = QSGTextureProvider::from(oldTextures.at(i).second);
-        if (oldSource && oldSource->textureChangedSignal())
+        QSGTextureProvider *t = oldTextures.at(i).second;
+        if (t)
             foreach (QSGShaderEffectNode* node, m_nodes)
-                disconnect(oldTextures.at(i).second, oldSource->textureChangedSignal(), node, SLOT(markDirtyTexture()));
+                disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
     }
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
-        textures.append(qMakePair(source.name, source.item));
         QSGTextureProvider *t = QSGTextureProvider::from(source.item);
-        if (t && t->textureChangedSignal())
+        textures.append(qMakePair(source.name, t));
+        if (t)
             foreach (QSGShaderEffectNode* node, m_nodes)
-                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
          it != m_source.uniformNames.end(); ++it) {

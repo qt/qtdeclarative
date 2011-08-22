@@ -42,6 +42,8 @@
 #include "qsgimage_p.h"
 #include "qsgimage_p_p.h"
 
+#include <private/qsgtextureprovider_p.h>
+
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
@@ -50,6 +52,36 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGImageTextureProvider : public QSGTextureProvider
+{
+    Q_OBJECT
+public:
+    QSGImageTextureProvider(const QSGImage *imageItem)
+        : d((QSGImagePrivate *) QSGItemPrivate::get(imageItem))
+        , m_texture(0)
+        , m_smooth(false)
+    {
+    }
+
+    QSGTexture *texture() const {
+        if (m_texture) {
+            m_texture->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+            m_texture->setMipmapFiltering(QSGTexture::Nearest);
+            m_texture->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+            m_texture->setVerticalWrapMode(QSGTexture::ClampToEdge);
+        }
+        return m_texture;
+    }
+
+    friend class QSGImage;
+
+    QSGImagePrivate *d;
+    QSGTexture *m_texture;
+    bool m_smooth;
+};
+
+#include "qsgimage.moc"
+
 QSGImagePrivate::QSGImagePrivate()
     : fillMode(QSGImage::Stretch)
     , paintedWidth(0)
@@ -57,6 +89,7 @@ QSGImagePrivate::QSGImagePrivate()
     , pixmapChanged(false)
     , hAlign(QSGImage::AlignHCenter)
     , vAlign(QSGImage::AlignVCenter)
+    , provider(0)
 {
 }
 
@@ -128,6 +161,9 @@ QSGImage::QSGImage(QSGImagePrivate &dd, QSGItem *parent)
 
 QSGImage::~QSGImage()
 {
+    Q_D(QSGImage);
+    if (d->provider)
+        d->provider->deleteLater();
 }
 
 void QSGImagePrivate::setPixmap(const QPixmap &pixmap)
@@ -504,17 +540,19 @@ QRectF QSGImage::boundingRect() const
     return QRectF(0, 0, qMax(width(), d->paintedWidth), qMax(height(), d->paintedHeight));
 }
 
-QSGTexture *QSGImage::texture() const
+QSGTextureProvider *QSGImage::textureProvider() const
 {
     Q_D(const QSGImage);
-    QSGTexture *t = d->pix.texture(d->sceneGraphContext());
-    if (t) {
-        t->setFiltering(QSGItemPrivate::get(this)->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-        t->setMipmapFiltering(QSGTexture::None);
-        t->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        t->setVerticalWrapMode(QSGTexture::ClampToEdge);
+    if (!d->provider) {
+        Q_ASSERT(d->sceneGraphContext());
+        // Make sure it gets thread affinity on the rendering thread so deletion works properly..
+        Q_ASSERT_X(QThread::currentThread() == d->sceneGraphContext()->thread(),
+                   "QSGImage::textureProvider",
+                   "Cannot be used outside the GUI thread");
+        const_cast<QSGImagePrivate *>(d)->provider = new QSGImageTextureProvider(this);
     }
-    return t;
+
+    return d->provider;
 }
 
 QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -522,6 +560,12 @@ QSGNode *QSGImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     Q_D(QSGImage);
 
     QSGTexture *texture = d->pix.texture(d->sceneGraphContext());
+
+    // Copy over the current texture state into the texture provider...
+    if (d->provider) {
+        d->provider->m_smooth = d->smooth;
+        d->provider->m_texture = texture;
+    }
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
