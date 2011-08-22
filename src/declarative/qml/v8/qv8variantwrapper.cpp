@@ -159,7 +159,14 @@ QVariant QV8VariantWrapper::toVariant(QV8ObjectResource *r)
     return static_cast<QV8VariantResource *>(r)->data;
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> property, 
+QVariant &QV8VariantWrapper::variantValue(v8::Handle<v8::Value> value)
+{
+    Q_ASSERT(isVariant(value));
+    QV8VariantResource *r =  v8_resource_cast<QV8VariantResource>(value->ToObject());
+    return static_cast<QV8VariantResource *>(r)->data;
+}
+
+v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> property,
                                                 const v8::AccessorInfo &info)
 {
     return v8::Handle<v8::Value>();

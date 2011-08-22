@@ -2107,14 +2107,14 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
     }
 #endif
 
-    // Try to use magic.
+    // Try to use magic; for compatibility with qscriptvalue_cast.
 
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
     if (isVariant(value) && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant var = variantValue(value);
+        QVariant &var = variantValue(value);
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -2235,10 +2235,9 @@ QObject *QV8Engine::qtObjectFromJS(v8::Handle<v8::Value> value)
 }
 
 
-QVariant QV8Engine::variantValue(v8::Handle<v8::Value> value)
+QVariant &QV8Engine::variantValue(v8::Handle<v8::Value> value)
 {
-    Q_ASSERT(isVariant(value));
-    return QV8Engine::toVariant(value, -1 /*whateever magic hint is*/);
+    return variantWrapper()->variantValue(value);
 }
 
 // Creates a QVariant wrapper object.

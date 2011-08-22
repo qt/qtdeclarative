@@ -74,6 +74,7 @@ public:
     bool isVariant(v8::Handle<v8::Value>);
     QVariant toVariant(v8::Handle<v8::Object>);
     QVariant toVariant(QV8ObjectResource *);
+    QVariant &variantValue(v8::Handle<v8::Value>);
 
 private:
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 

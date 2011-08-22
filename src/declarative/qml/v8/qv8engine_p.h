@@ -387,7 +387,7 @@ public:
                                 const QByteArray &targetType,
                                 void **result);
 
-    QVariant variantValue(v8::Handle<v8::Value> value);
+    QVariant &variantValue(v8::Handle<v8::Value> value);
 
     QJSValue scriptValueFromInternal(v8::Handle<v8::Value>) const;
 
