@@ -92,13 +92,15 @@ class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 public:
     TabledMaterial()
     {
-        QFile vf(":defaultshaders/tabledvertex.shader");
+        QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
+        m_vertex_code = QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
+            + vf.readAll();
 
-        QFile ff(":defaultshaders/tabledfragment.shader");
+        QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
+        m_fragment_code = QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
+            + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -159,13 +161,15 @@ class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData
 public:
     DeformableMaterial()
     {
-        QFile vf(":defaultshaders/deformablevertex.shader");
+        QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
+        m_vertex_code = QByteArray("#define DEFORM\n#define COLOR\n")
+            + vf.readAll();
 
-        QFile ff(":defaultshaders/deformablefragment.shader");
+        QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
+        m_fragment_code = QByteArray("#define DEFORM\n#define COLOR\n")
+            + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -211,13 +215,15 @@ class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
 public:
     SpriteMaterial()
     {
-        QFile vf(":defaultshaders/spritevertex.shader");
+        QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
+        m_vertex_code = QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
+            + vf.readAll();
 
-        QFile ff(":defaultshaders/spritefragment.shader");
+        QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
+        m_fragment_code = QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
+            + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -282,13 +288,15 @@ class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
 public:
     ColoredMaterial()
     {
-        QFile vf(":defaultshaders/coloredvertex.shader");
+        QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
+        m_vertex_code = QByteArray("#define COLOR\n")
+            + vf.readAll();
 
-        QFile ff(":defaultshaders/coloredfragment.shader");
+        QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
+        m_fragment_code = QByteArray("#define COLOR\n")
+            + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -349,11 +357,11 @@ class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
 public:
     SimpleMaterial()
     {
-        QFile vf(":defaultshaders/simplevertex.shader");
+        QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
         m_vertex_code = vf.readAll();
 
-        QFile ff(":defaultshaders/simplefragment.shader");
+        QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
         m_fragment_code = ff.readAll();
 
