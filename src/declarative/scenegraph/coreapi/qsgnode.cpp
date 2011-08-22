@@ -1264,8 +1264,6 @@ void QSGNodeDumper::dump(QSGNode *n)
 
 void QSGNodeDumper::visitNode(QSGNode *n)
 {
-    if (n->isSubtreeBlocked())
-        return;
     qDebug() << QString(m_indent * 2, QLatin1Char(' ')) << n;
     QSGNodeVisitor::visitNode(n);
 }
