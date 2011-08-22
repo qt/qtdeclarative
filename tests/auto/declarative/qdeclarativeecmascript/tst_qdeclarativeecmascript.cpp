@@ -2815,6 +2815,17 @@ void tst_qdeclarativeecmascript::moduleApi_data()
             << (QStringList() << "readBack" << "unchanged")
             << (QVariantList() << 30 << 42);
 
+    QTest::newRow("qobject module API enum values in JS")
+            << TEST_FILE("moduleapi/qobjectModuleApiEnums.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "enumValue" << "enumMethod")
+            << (QVariantList() << 42 << 30)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
     QTest::newRow("qobject, invalid major version fail")
             << TEST_FILE("moduleapi/moduleApiMajorVersionFail.qml")
             << QString("QDeclarativeComponent: Component is not ready")

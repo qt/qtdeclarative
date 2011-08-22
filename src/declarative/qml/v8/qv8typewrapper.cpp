@@ -185,6 +185,24 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
             }
 
             if (moduleApi->qobjectApi) {
+                // check for enum value
+                if (QV8Engine::startsWithUpper(property)) {
+                    if (resource->mode == IncludeEnums) {
+                        QString name = v8engine->toString(property);
+
+                        // ### Optimize
+                        QByteArray enumName = name.toUtf8();
+                        const QMetaObject *metaObject = moduleApi->qobjectApi->metaObject();
+                        for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
+                            QMetaEnum e = metaObject->enumerator(ii);
+                            int value = e.keyToValue(enumName.constData());
+                            if (value != -1)
+                                return v8::Integer::New(value);
+                        }
+                    }
+                }
+
+                // check for property.
                 v8::Handle<v8::Value> rv = v8engine->qobjectWrapper()->getProperty(moduleApi->qobjectApi, propertystring, QV8QObjectWrapper::IgnoreRevision);
                 return rv;
             } else if (moduleApi->scriptApi.isValid()) {
