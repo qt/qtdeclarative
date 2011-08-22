@@ -1072,6 +1072,47 @@ private:
 };
 Q_DECLARE_METATYPE(CircularReferenceHandle*)
 
+class MyDynamicCreationDestructionObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY (int intProperty READ intProperty WRITE setIntProperty NOTIFY intPropertyChanged)
+
+public:
+    MyDynamicCreationDestructionObject(QObject *parent = 0) : QObject(parent), m_intProperty(0), m_dtorCount(0)
+    {
+    }
+
+    ~MyDynamicCreationDestructionObject()
+    {
+        if (m_dtorCount) {
+            (*m_dtorCount)++;
+        }
+    }
+
+    int intProperty() const { return m_intProperty; }
+    void setIntProperty(int val) { m_intProperty = val; emit intPropertyChanged(); }
+
+    Q_INVOKABLE MyDynamicCreationDestructionObject *createNew()
+    {
+        // no parent == ownership transfers to JS; same dtor counter.
+        MyDynamicCreationDestructionObject *retn = new MyDynamicCreationDestructionObject;
+        retn->setDtorCount(m_dtorCount);
+        return retn;
+    }
+
+    void setDtorCount(int *dtorCount)
+    {
+        m_dtorCount = dtorCount;
+    }
+
+signals:
+    void intPropertyChanged();
+
+private:
+    int m_intProperty;
+    int *m_dtorCount;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

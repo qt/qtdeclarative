@@ -164,6 +164,7 @@ private slots:
     void bug1();
     void bug2();
     void dynamicCreationCrash();
+    void dynamicCreationOwnership();
     void regExpBug();
     void nullObjectBinding();
     void deletedEngine();
@@ -1662,6 +1663,40 @@ void tst_qdeclarativeecmascript::dynamicCreationCrash()
     QVERIFY(created == 0);
 
     delete object;
+}
+
+// ownership transferred to JS, ensure that GC runs the dtor
+void tst_qdeclarativeecmascript::dynamicCreationOwnership()
+{
+    int dtorCount = 0;
+    int expectedDtorCount = 1; // start at 1 since we expect mdcdo to dtor too.
+
+    // allow the engine to go out of scope too.
+    {
+        QDeclarativeEngine dcoEngine;
+        QDeclarativeComponent component(&dcoEngine, TEST_FILE("dynamicCreationOwnership.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MyDynamicCreationDestructionObject *mdcdo = object->findChild<MyDynamicCreationDestructionObject*>("mdcdo");
+        QVERIFY(mdcdo != 0);
+        mdcdo->setDtorCount(&dtorCount);
+
+        for (int i = 1; i < 105; ++i, ++expectedDtorCount) {
+            QMetaObject::invokeMethod(object, "dynamicallyCreateJsOwnedObject");
+            if (i % 90 == 0) {
+                // we do this once manually, but it should be done automatically
+                // when the engine goes out of scope (since it should gc in dtor)
+                QMetaObject::invokeMethod(object, "performGc");
+            }
+            if (i % 10 == 0) {
+                QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+            }
+        }
+
+        delete object;
+    }
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
+    QCOMPARE(dtorCount, expectedDtorCount);
 }
 
 //QTBUG-9367

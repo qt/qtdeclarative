@@ -531,6 +531,9 @@ QDeclarativeEngine::~QDeclarativeEngine()
             d->moduleApiInstances.remove(key);
         }
     }
+
+    // ensure we clean up QObjects with JS ownership
+    d->v8engine()->gc();
 }
 
 /*! \fn void QDeclarativeEngine::quit()

@@ -192,6 +192,8 @@ void registerTypes()
 
     qmlRegisterType<CircularReferenceObject>("Qt.test", 1, 0, "CircularReferenceObject");
     qmlRegisterType<CircularReferenceHandle>("Qt.test", 1, 0, "CircularReferenceHandle");
+
+    qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
 }
 
 #include "testtypes.moc"
