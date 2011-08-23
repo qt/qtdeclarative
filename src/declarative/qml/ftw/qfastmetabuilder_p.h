@@ -181,7 +181,7 @@ int QFastMetaBuilder::StringRef::length() const
 
 void QFastMetaBuilder::StringRef::load(const QHashedStringRef &str)
 {
-    Q_ASSERT(str.length() == _l);
+    Q_ASSERT(str.utf8length() == _l);
     str.writeUtf8(data());
     *(data() + _l) = 0;
 }
