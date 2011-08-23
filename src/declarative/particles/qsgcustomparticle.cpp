@@ -411,10 +411,12 @@ void QSGCustomParticle::prepareNextFrame(){
 
 QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
 {
+#ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
-        printf("CustomParticle: Too many particles... \n");//####Why is this here?
+        printf("CustomParticle: Too many particles... \n");
         return 0;
     }
+#endif
 
     if (m_count <= 0) {
         printf("CustomParticle: Too few particles... \n");

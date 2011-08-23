@@ -846,10 +846,12 @@ static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 
 QSGGeometryNode* QSGImageParticle::buildParticleNodes()
 {
-    if (m_count * 4 > 0xffff) {//TODO: Lift this limit for desktop?
+#ifdef QT_OPENGL_ES_2
+    if (m_count * 4 > 0xffff) {
         printf("ImageParticle: Too many particles - maximum 16,000 per ImageParticle.\n");//ES 2 vertex count limit is ushort
         return 0;
     }
+#endif
 
     if (count() <= 0)
         return 0;
