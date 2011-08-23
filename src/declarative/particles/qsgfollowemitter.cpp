@@ -93,7 +93,21 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
 /*!
     \qmlproperty real QtQuick.Particles2::FollowEmitter::emitRatePerParticle
 */
+/*!
+    \qmlsignal QtQuick.Particles2::FollowEmitter::emitFollowParticle(particle, followed)
 
+    This handler is called when a particle is emitted. You can modify particle
+    attributes from within the handler. followed is the particle that this is being
+    emitted off of.
+
+    If you use this signal handler, emitParticle will not be emitted.
+*/
+
+bool QSGFollowEmitter::isEmitFollowConnected()
+{
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticle(QDeclarativeV8Handle,QDeclarativeV8Handle)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
+}
 
 void QSGFollowEmitter::recalcParticlesPerSecond(){
     if (!m_system)
@@ -193,8 +207,10 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 // Particle speed
                 const QPointF &speed = m_speed->sample(newPos);
-                datum->vx = speed.x();
+                datum->vx = speed.x()
+                    + m_speed_from_movement * d->vx;
                 datum->vy = speed.y();
+                    + m_speed_from_movement * d->vy;
 
                 // Particle acceleration
                 const QPointF &accel = m_acceleration->sample(newPos);
@@ -210,6 +226,11 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 datum->size = size * float(m_emitting);
                 datum->endSize = endSize * float(m_emitting);
+
+                if (isEmitFollowConnected())
+                    emitFollowParticle(datum->v8Value(), d->v8Value());//A chance for many arbitrary JS changes
+                else if (isEmitConnected())
+                    emitParticle(datum->v8Value());//A chance for arbitrary JS changes
 
                 m_system->emitParticle(datum);
             }

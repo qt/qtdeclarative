@@ -477,7 +477,7 @@ float QSGParticleData::curSize()
 {
     if (!system || !lifeSpan)
         return 0.0f;
-    return size + (endSize - size) * (lifeLeft() / lifeSpan);
+    return size + (endSize - size) * (1 - (lifeLeft() / lifeSpan));
 }
 
 float QSGParticleData::lifeLeft()

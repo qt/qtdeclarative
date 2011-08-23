@@ -181,7 +181,7 @@ QT_BEGIN_NAMESPACE
 */
 //TODO: Document particle 'type'
 /*!
-    \qmlsignal QtQuick.Particles2::Emitter::emitting(particle)
+    \qmlsignal QtQuick.Particles2::Emitter::emitParticle(particle)
 
     This handler is called when a particle is emitted. You can modify particle
     attributes from within the handler.
