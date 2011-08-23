@@ -43,7 +43,6 @@
 QT_BEGIN_NAMESPACE
 
 
-
 /*!
     \qmlclass Emitter QSGParticleEmitter
     \inqmlmodule QtQuick.Particles 2
@@ -180,6 +179,14 @@ QT_BEGIN_NAMESPACE
 
     Default value is 0.
 */
+//TODO: Document particle 'type'
+/*!
+    \qmlsignal QtQuick.Particles2::Emitter::emitting(particle)
+
+    This handler is called when a particle is emitted. You can modify particle
+    attributes from within the handler.
+*/
+
 
 QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
     QSGItem(parent)
@@ -219,6 +226,12 @@ QSGParticleEmitter::~QSGParticleEmitter()
 {
     if (m_defaultExtruder)
         delete m_defaultExtruder;
+}
+
+bool QSGParticleEmitter::isEmitConnected()
+{
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitParticle(QDeclarativeV8Handle)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
 void QSGParticleEmitter::componentComplete()
@@ -416,6 +429,8 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
             datum->size = size;// * float(m_emitting);
             datum->endSize = endSize;// * float(m_emitting);
 
+            if (isEmitConnected())
+                emitParticle(datum->v8Value());//A chance for arbitrary JS changes
             m_system->emitParticle(datum);
         }
         if (m_burstQueue.isEmpty()){

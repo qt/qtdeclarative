@@ -119,6 +119,7 @@ public:
     void setSpeedFromMovement(qreal s);
     virtual void componentComplete();
 signals:
+    void emitParticle(QDeclarativeV8Handle particle);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
     void emittingChanged(bool);
@@ -348,6 +349,7 @@ protected:
        QPointF m_last_last_emitter;
        QPointF m_last_last_last_emitter;
 
+       bool isEmitConnected();
 private:
        QSGStochasticDirection m_nullVector;
 

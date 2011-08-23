@@ -28,8 +28,6 @@ HEADERS += \
     $$PWD/qsgwander_p.h \
     $$PWD/qsgtargetaffector_p.h \
     $$PWD/qsgcumulativedirection_p.h \
-    $$PWD/qsgcustomemitter_p.h \
-    $$PWD/qsgcustomaffector_p.h \
     $$PWD/qsgv8particledata_p.h
 
 SOURCES += \
@@ -60,8 +58,6 @@ SOURCES += \
     $$PWD/qsgwander.cpp \
     $$PWD/qsgtargetaffector.cpp \
     $$PWD/qsgcumulativedirection.cpp \
-    $$PWD/qsgcustomemitter.cpp \
-    $$PWD/qsgcustomaffector.cpp \
     $$PWD/qsgv8particledata.cpp
 
 RESOURCES += \

@@ -94,11 +94,24 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool QtQuick.Particles2::Affector::signal
     If this is set to true, then an affected(x,y) signal will be emitted each
-    time this affector affects a particle.
+    time this affector would affect a particle.
+
+    For Affector only, this will happen irrespective of whether any changes
+    are made to the particle, for other Affectors the signal will only fire
+    if the particle is actually affected.
 
     Default value is false.
 */
 
+//TODO: Document particle 'type'
+/*!
+    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle, dt)
+
+    This handler is called when a particle is selected to be affected.
+
+    dt is the time since the last time it was affected. Use dt to normalize
+    trajectory manipulations to real time.
+*/
 QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
     QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
   , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this)), m_signal(false)
@@ -109,6 +122,12 @@ QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
             this, SLOT(updateOffsets()));
     connect(this, SIGNAL(yChanged()),
             this, SLOT(updateOffsets()));//TODO: in componentComplete and all relevant signals
+}
+
+bool QSGParticleAffector::isAffectConnected()
+{
+    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle, qreal)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
 void QSGParticleAffector::componentComplete()
@@ -161,8 +180,10 @@ void QSGParticleAffector::affectSystem(qreal dt)
 
 bool QSGParticleAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
-    Q_UNUSED(d);
-    Q_UNUSED(dt);
+    if (isAffectConnected()){
+        emit affectParticle(d->v8Value(), dt);
+        return true;
+    }
     return m_signal;//If signalling, then we always 'null affect' it.
 }
 

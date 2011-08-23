@@ -27,7 +27,7 @@ ParticleSystem{
         duration: 24000
     }
     function convert(a){return a*(Math.PI/180);}
-    CustomEmitter{
+    Emitter{
         lifeSpan: 4000
         emitRate: 120
         size: 12

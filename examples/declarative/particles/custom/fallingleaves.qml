@@ -25,7 +25,7 @@ Item {
         xVariance: 60
         pace: 60
     }
-    CustomAffector{
+    Affector{
         system: sys
         property real coefficient: 0.1
         property real speed: 1.5
@@ -56,7 +56,7 @@ Item {
         }
     }
 
-    CustomAffector{//Custom Friction, adds some 'randomness'
+    Affector{//Custom Friction, adds some 'randomness'
         system: sys
         //onceOff: true
         x: -60
