@@ -1273,7 +1273,7 @@ QDeclarativeType *QDeclarativeMetaType::qmlType(const QString &name, int version
     QDeclarativeMetaTypeData::Names::ConstIterator it = data->nameToType.find(name);
     while (it != data->nameToType.end()) {
         // XXX version_major<0 just a kludge for QDeclarativePropertyPrivate::initProperty
-        if (version_major<0 || (*it)->availableInVersion(version_major,version_minor))
+        if (it.key() == name && (version_major<0 || (*it)->availableInVersion(version_major,version_minor)))
             return (*it);
         ++it;
     }
