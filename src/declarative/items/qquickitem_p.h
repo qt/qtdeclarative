@@ -237,6 +237,7 @@ public:
     bool heightValid:1;
     bool componentComplete:1;
     bool keepMouse:1;
+    bool keepTouch:1;
     bool hoverEnabled:1;
     bool smooth:1;
     bool focus:1;
@@ -255,7 +256,6 @@ public:
     bool inheritMirrorFromParent:1;
     bool inheritMirrorFromItem:1;
     bool childrenDoNotOverlap:1;
-    quint32 dummy:1;
 
     QQuickCanvas *canvas;
     QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QQuickCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }

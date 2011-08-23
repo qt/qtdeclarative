@@ -1496,7 +1496,7 @@ bool QQuickCanvasPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     return accepted;
 }
 
-bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QMouseEvent *event)
+bool QQuickCanvasPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QEvent *event)
 {
     if (!target)
         return false;
@@ -1550,12 +1550,9 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
         // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
-        {
-            QMouseEvent *se = static_cast<QMouseEvent *>(e);
-            if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
-                se->accept();
-                QQuickItemPrivate::get(item)->deliverMouseEvent(se);
-            }
+        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            e->accept();
+            QQuickItemPrivate::get(item)->deliverMouseEvent(static_cast<QMouseEvent *>(e));
         }
         break;
     case QEvent::Wheel:
@@ -1569,7 +1566,11 @@ bool QQuickCanvas::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
-        QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
+        if (!d->sendFilteredMouseEvent(item->parentItem(), item, e)) {
+            e->accept();
+            QQuickItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
+        }
         break;
     case QEvent::DragEnter:
     case QEvent::DragMove:

@@ -153,8 +153,9 @@ protected:
         mousePressId = ++mousePressNum;
     }
 
-    bool childMouseEventFilter(QQuickItem *, QEvent *) {
-        mousePressId = ++mousePressNum;
+    bool childMouseEventFilter(QQuickItem *, QEvent *event) {
+        if (event->type() == QEvent::MouseButtonPress)
+            mousePressId = ++mousePressNum;
         return false;
     }
 

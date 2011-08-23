@@ -2185,7 +2185,7 @@ QQuickItemPrivate::QQuickItemPrivate()
 : _anchors(0), _contents(0), baselineOffset(0), _anchorLines(0), _stateGroup(0), origin(QQuickItem::Center),
 
   flags(0), widthValid(false), heightValid(false), componentComplete(true),
-  keepMouse(false), hoverEnabled(false), smooth(false), focus(false), activeFocus(false), notifiedFocus(false),
+  keepMouse(false), keepTouch(false), hoverEnabled(false), smooth(false), focus(false), activeFocus(false), notifiedFocus(false),
   notifiedActiveFocus(false), filtersChildMouseEvents(false), explicitVisible(true),
   effectiveVisible(true), explicitEnable(true), effectiveEnable(true), polishScheduled(false),
   inheritedLayoutMirror(false), effectiveLayoutMirror(false), isMirrorImplicit(true),
@@ -2852,6 +2852,11 @@ void QQuickItem::mouseDoubleClickEvent(QMouseEvent *event)
 }
 
 void QQuickItem::mouseUngrabEvent()
+{
+    // XXX todo
+}
+
+void QQuickItem::touchUngrabEvent()
 {
     // XXX todo
 }
@@ -4526,6 +4531,94 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 {
     Q_D(QQuickItem);
     d->keepMouse = keep;
+}
+
+/*!
+    Grabs the touch points specified by \a ids.
+
+    These touch points will be owned by the item until
+    they are released. Alternatively, the grab can be stolen
+    by a filtering item like Flickable. Use setKeepTouchGrab()
+    to prevent the grab from being stolen.
+
+    \sa ungrabTouchPoints(), setKeepTouchGrab()
+*/
+void QQuickItem::grabTouchPoints(const QList<int> &ids)
+{
+    Q_D(QQuickItem);
+    if (!d->canvas)
+        return;
+    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
+
+    QSet<QQuickItem*> ungrab;
+    for (int i = 0; i < ids.count(); ++i) {
+        QQuickItem *oldGrabber = canvasPriv->itemForTouchPointId.value(ids.at(i));
+        if (oldGrabber == this)
+            return;
+
+        canvasPriv->itemForTouchPointId[ids.at(i)] = this;
+        if (oldGrabber)
+            ungrab.insert(oldGrabber);
+    }
+    foreach (QQuickItem *oldGrabber, ungrab)
+        oldGrabber->touchUngrabEvent();
+}
+
+/*!
+    Ungrabs the touch points owned by this item.
+
+    \sa grabTouchPoints()
+*/
+void QQuickItem::ungrabTouchPoints()
+{
+    Q_D(QQuickItem);
+    if (!d->canvas)
+        return;
+    QQuickCanvasPrivate *canvasPriv = QQuickCanvasPrivate::get(d->canvas);
+
+    QMutableHashIterator<int, QQuickItem*> i(canvasPriv->itemForTouchPointId);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value() == this)
+            i.remove();
+    }
+    touchUngrabEvent();
+}
+
+/*!
+    Returns a value indicating whether the touch points grabbed by this item
+    should remain with this item exclusively.
+
+    \sa setKeepTouchGrab(), keepMouseGrab()
+*/
+bool QQuickItem::keepTouchGrab() const
+{
+    Q_D(const QQuickItem);
+    return d->keepTouch;
+}
+
+/*!
+  The flag indicating whether the touch points grabbed
+  by this item should remain with this item is set to \a keep.
+
+  This is useful for items that wish to grab and keep specific touch
+  points following a predefined gesture.  For example,
+  an item that is interested in horizontal touch point movement
+  may set setKeepTouchGrab to true once a threshold has been
+  exceeded.  Once setKeepTouchGrab has been set to true, filtering
+  items will not react to the relevant touch points.
+
+  If the item does not indicate that it wishes to retain touch point grab,
+  a filtering item may steal the grab. For example, Flickable may attempt
+  to steal a touch point grab if it detects that the user has begun to
+  move the viewport.
+
+  \sa keepTouchGrab(), setKeepMouseGrab()
+ */
+void QQuickItem::setKeepTouchGrab(bool keep)
+{
+    Q_D(QQuickItem);
+    d->keepTouch = keep;
 }
 
 /*!

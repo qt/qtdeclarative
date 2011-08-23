@@ -77,6 +77,7 @@ QUICKTESTS =  \
     qquicklistview \
     qquickloader \
     qquickmousearea \
+    qquickmultipointtoucharea \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \

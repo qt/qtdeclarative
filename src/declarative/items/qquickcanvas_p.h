@@ -110,7 +110,7 @@ public:
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
     bool deliverInitialMousePressEvent(QQuickItem *, QMouseEvent *);
     bool deliverMouseEvent(QMouseEvent *);
-    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QMouseEvent *);
+    bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *);
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
     bool deliverTouchPoints(QQuickItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QQuickItem *, QList<QTouchEvent::TouchPoint> > *);
