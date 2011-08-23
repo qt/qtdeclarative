@@ -42,14 +42,13 @@
 #include "private/qdeclarativecustomparser_p.h"
 #include "private/qdeclarativecustomparser_p_p.h"
 
-#include "private/qdeclarativeparser_p.h"
 #include "private/qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
-using namespace QDeclarativeParser;
+using namespace QDeclarativeScript;
 
 /*!
     \class QDeclarativeCustomParser
@@ -95,7 +94,7 @@ using namespace QDeclarativeParser;
 */
 
 QDeclarativeCustomParserNode 
-QDeclarativeCustomParserNodePrivate::fromObject(QDeclarativeParser::Object *root)
+QDeclarativeCustomParserNodePrivate::fromObject(QDeclarativeScript::Object *root)
 {
     QDeclarativeCustomParserNode rootNode;
     rootNode.d->name = root->typeName;
@@ -112,7 +111,7 @@ QDeclarativeCustomParserNodePrivate::fromObject(QDeclarativeParser::Object *root
 }
 
 QDeclarativeCustomParserProperty 
-QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeParser::Property *p)
+QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeScript::Property *p)
 {
     QDeclarativeCustomParserProperty prop;
     prop.d->name = p->name().toUtf8();
@@ -125,8 +124,8 @@ QDeclarativeCustomParserNodePrivate::fromProperty(QDeclarativeParser::Property *
         for (int ii = 0; ii < props.count(); ++ii)
             prop.d->values << QVariant::fromValue(props.at(ii));
     } else {
-        for (QDeclarativeParser::Value *v = p->values.first(); v; v = p->values.next(v)) {
-            v->type = QDeclarativeParser::Value::Literal;
+        for (QDeclarativeScript::Value *v = p->values.first(); v; v = p->values.next(v)) {
+            v->type = QDeclarativeScript::Value::Literal;
 
             if(v->object) {
                 QDeclarativeCustomParserNode node = fromObject(v->object);
@@ -175,7 +174,7 @@ QList<QDeclarativeCustomParserProperty> QDeclarativeCustomParserNode::properties
     return d->properties;
 }
 
-QDeclarativeParser::Location QDeclarativeCustomParserNode::location() const
+QDeclarativeScript::Location QDeclarativeCustomParserNode::location() const
 {
     return d->location;
 }
@@ -215,7 +214,7 @@ bool QDeclarativeCustomParserProperty::isList() const
     return d->isList;
 }
 
-QDeclarativeParser::Location QDeclarativeCustomParserProperty::location() const
+QDeclarativeScript::Location QDeclarativeCustomParserProperty::location() const
 {
     return d->location;
 }

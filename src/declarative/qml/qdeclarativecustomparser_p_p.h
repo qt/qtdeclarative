@@ -55,7 +55,7 @@
 
 #include "private/qdeclarativecustomparser_p.h"
 
-#include "private/qdeclarativeparser_p.h"
+#include "private/qdeclarativescript_p.h"
 
 #include <QtCore/qglobal.h>
 
@@ -66,10 +66,10 @@ class QDeclarativeCustomParserNodePrivate
 public:
     QByteArray name;
     QList<QDeclarativeCustomParserProperty> properties;
-    QDeclarativeParser::Location location;
+    QDeclarativeScript::Location location;
 
-    static QDeclarativeCustomParserNode fromObject(QDeclarativeParser::Object *);
-    static QDeclarativeCustomParserProperty fromProperty(QDeclarativeParser::Property *);
+    static QDeclarativeCustomParserNode fromObject(QDeclarativeScript::Object *);
+    static QDeclarativeCustomParserProperty fromProperty(QDeclarativeScript::Property *);
 };
 
 class QDeclarativeCustomParserPropertyPrivate
@@ -80,7 +80,7 @@ public:
 
     QByteArray name;
     bool isList;
-    QDeclarativeParser::Location location;
+    QDeclarativeScript::Location location;
     QList<QVariant> values;
 };
 

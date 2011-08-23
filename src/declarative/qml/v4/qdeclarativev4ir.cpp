@@ -496,7 +496,7 @@ Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaOb
     return name;
 }
 
-Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeParser::Object *object, quint32 line, quint32 column)
+Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeScript::Object *object, quint32 line, quint32 column)
 {
     Name *name = function->pool->New<Name>();
     name->init(/*base = */ 0, IR::ObjectType,

@@ -47,7 +47,7 @@
 #include <QtDeclarative/private/qdeclarativejsmemorypool_p.h>
 #include <QtDeclarative/private/qdeclarativejsparser_p.h>
 #include <QtDeclarative/private/qdeclarativejslexer_p.h>
-#include <QtDeclarative/private/qdeclarativescriptparser_p.h>
+#include <QtDeclarative/private/qdeclarativescript_p.h>
 
 #include <QFile>
 #include <QDebug>
@@ -154,7 +154,7 @@ void tst_compilation::scriptparser()
     QUrl url = QUrl::fromLocalFile(file);
 
     QBENCHMARK {
-        QDeclarativeScriptParser parser;
+        QDeclarativeScript::Parser parser;
         parser.parse(data, url);
         parser.tree();
     }

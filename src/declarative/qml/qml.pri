@@ -1,6 +1,5 @@
 INCLUDEPATH += $$PWD
 SOURCES += \
-    $$PWD/qdeclarativeparser.cpp \
     $$PWD/qdeclarativeinstruction.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \
     $$PWD/qdeclarativeengine.cpp \
@@ -23,7 +22,7 @@ SOURCES += \
     $$PWD/qdeclarativetypeloader.cpp \
     $$PWD/qdeclarativeinfo.cpp \
     $$PWD/qdeclarativeerror.cpp \
-    $$PWD/qdeclarativescriptparser.cpp \
+    $$PWD/qdeclarativescript.cpp \
     $$PWD/qdeclarativeenginedebug.cpp \
     $$PWD/qdeclarativerewrite.cpp \
     $$PWD/qdeclarativevaluetype.cpp \
@@ -47,7 +46,6 @@ SOURCES += \
     $$PWD/qdeclarativelist.cpp \
 
 HEADERS += \
-    $$PWD/qdeclarativeparser_p.h \
     $$PWD/qdeclarativeglobal_p.h \
     $$PWD/qdeclarativeinstruction_p.h \
     $$PWD/qdeclarativevmemetaobject_p.h \
@@ -82,7 +80,7 @@ HEADERS += \
     $$PWD/qdeclarativelist_p.h \
     $$PWD/qdeclarativedata_p.h \
     $$PWD/qdeclarativeerror.h \
-    $$PWD/qdeclarativescriptparser_p.h \
+    $$PWD/qdeclarativescript_p.h \
     $$PWD/qdeclarativeenginedebug_p.h \
     $$PWD/qdeclarativerewrite_p.h \
     $$PWD/qdeclarativevaluetype_p.h \

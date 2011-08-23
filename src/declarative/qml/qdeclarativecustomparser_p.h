@@ -55,7 +55,7 @@
 
 #include "private/qdeclarativemetatype_p.h"
 #include "qdeclarativeerror.h"
-#include "private/qdeclarativeparser_p.h"
+#include "private/qdeclarativescript_p.h"
 #include "private/qdeclarativebinding_p.h"
 
 #include <QtCore/qbytearray.h>
@@ -79,10 +79,10 @@ public:
     ~QDeclarativeCustomParserProperty();
 
     QByteArray name() const;
-    QDeclarativeParser::Location location() const;
+    QDeclarativeScript::Location location() const;
 
     bool isList() const;
-    // Will be one of QDeclarativeParser::Variant, QDeclarativeCustomParserProperty or 
+    // Will be one of QDeclarativeScript::Variant, QDeclarativeCustomParserProperty or 
     // QDeclarativeCustomParserNode
     QList<QVariant> assignedValues() const;
 
@@ -102,7 +102,7 @@ public:
     ~QDeclarativeCustomParserNode();
 
     QByteArray name() const;
-    QDeclarativeParser::Location location() const;
+    QDeclarativeScript::Location location() const;
 
     QList<QDeclarativeCustomParserProperty> properties() const;
 
@@ -147,7 +147,7 @@ protected:
 private:
     QList<QDeclarativeError> exceptions;
     QDeclarativeCompiler *compiler;
-    QDeclarativeParser::Object *object;
+    QDeclarativeScript::Object *object;
     Flags m_flags;
     friend class QDeclarativeCompiler;
 };

@@ -940,7 +940,7 @@ const QDeclarativeImports &QDeclarativeTypeData::imports() const
     return m_imports;
 }
 
-const QDeclarativeScriptParser &QDeclarativeTypeData::parser() const
+const QDeclarativeScript::Parser &QDeclarativeTypeData::parser() const
 {
     return scriptParser;
 }
@@ -1039,15 +1039,15 @@ void QDeclarativeTypeData::dataReceived(const QByteArray &data)
 
     m_imports.setBaseUrl(finalUrl());
 
-    foreach (const QDeclarativeScriptParser::Import &import, scriptParser.imports()) {
-        if (import.type == QDeclarativeScriptParser::Import::File && import.qualifier.isEmpty()) {
+    foreach (const QDeclarativeScript::Import &import, scriptParser.imports()) {
+        if (import.type == QDeclarativeScript::Import::File && import.qualifier.isEmpty()) {
             QUrl importUrl = finalUrl().resolved(QUrl(import.uri + QLatin1String("/qmldir")));
             if (QDeclarativeEnginePrivate::urlToLocalFileOrQrc(importUrl).isEmpty()) {
                 QDeclarativeQmldirData *data = typeLoader()->getQmldir(importUrl);
                 addDependency(data);
                 m_qmldirs << data;
             }
-        } else if (import.type == QDeclarativeScriptParser::Import::Script) {
+        } else if (import.type == QDeclarativeScript::Import::Script) {
             QUrl scriptUrl = finalUrl().resolved(QUrl(import.uri));
             QDeclarativeScriptBlob *blob = typeLoader()->getScript(scriptUrl);
             addDependency(blob);
@@ -1118,11 +1118,11 @@ void QDeclarativeTypeData::resolveTypes()
     QList<QDeclarativeError> errors;
     if (QDeclarativeQmldirData *qmldir = qmldirForUrl(finalUrl().resolved(QUrl(QLatin1String("./qmldir"))))) {
         m_imports.addImport(importDatabase, QLatin1String("."),
-                            QString(), -1, -1, QDeclarativeScriptParser::Import::File, 
+                            QString(), -1, -1, QDeclarativeScript::Import::File, 
                             qmldir->dirComponents(), &errors);
     } else {
         m_imports.addImport(importDatabase, QLatin1String("."), 
-                            QString(), -1, -1, QDeclarativeScriptParser::Import::File, 
+                            QString(), -1, -1, QDeclarativeScript::Import::File, 
                             QDeclarativeDirComponents(), &errors);
     }
 
@@ -1142,12 +1142,12 @@ void QDeclarativeTypeData::resolveTypes()
         return;
     }
 
-    foreach (const QDeclarativeScriptParser::Import &import, scriptParser.imports()) {
+    foreach (const QDeclarativeScript::Import &import, scriptParser.imports()) {
         QDeclarativeDirComponents qmldircomponentsnetwork;
-        if (import.type == QDeclarativeScriptParser::Import::Script)
+        if (import.type == QDeclarativeScript::Import::Script)
             continue;
 
-        if (import.type == QDeclarativeScriptParser::Import::File && import.qualifier.isEmpty()) {
+        if (import.type == QDeclarativeScript::Import::File && import.qualifier.isEmpty()) {
             QUrl qmldirUrl = finalUrl().resolved(QUrl(import.uri + QLatin1String("/qmldir")));
             if (QDeclarativeQmldirData *qmldir = qmldirForUrl(qmldirUrl))
                 qmldircomponentsnetwork = qmldir->dirComponents();
@@ -1178,7 +1178,7 @@ void QDeclarativeTypeData::resolveTypes()
         }
     }
 
-    foreach (QDeclarativeScriptParser::TypeReference *parserRef, scriptParser.referencedTypes()) {
+    foreach (QDeclarativeScript::TypeReference *parserRef, scriptParser.referencedTypes()) {
         TypeReference ref;
 
         QString url;
@@ -1210,7 +1210,7 @@ void QDeclarativeTypeData::resolveTypes()
             }
 
             if (!parserRef->refObjects.isEmpty()) {
-                QDeclarativeParser::Object *obj = parserRef->refObjects.first();
+                QDeclarativeScript::Object *obj = parserRef->refObjects.first();
                 error.setLine(obj->location.start.line);
                 error.setColumn(obj->location.start.column);
             }
@@ -1245,7 +1245,7 @@ QDeclarativeQmldirData *QDeclarativeTypeData::qmldirForUrl(const QUrl &url)
 }
 
 QDeclarativeScriptData::QDeclarativeScriptData(QDeclarativeEngine *engine)
-: QDeclarativeCleanup(engine), importCache(0), pragmas(QDeclarativeParser::Object::ScriptBlock::None),
+: QDeclarativeCleanup(engine), importCache(0), pragmas(QDeclarativeScript::Object::ScriptBlock::None),
   m_loaded(false)
 {
 }
@@ -1271,7 +1271,7 @@ void QDeclarativeScriptData::clear()
 }
 
 QDeclarativeScriptBlob::QDeclarativeScriptBlob(const QUrl &url, QDeclarativeTypeLoader *loader)
-: QDeclarativeDataBlob(url, JavaScriptFile), m_pragmas(QDeclarativeParser::Object::ScriptBlock::None),
+: QDeclarativeDataBlob(url, JavaScriptFile), m_pragmas(QDeclarativeScript::Object::ScriptBlock::None),
   m_imports(loader), m_scriptData(0), m_typeLoader(loader)
 {
 }
@@ -1284,7 +1284,7 @@ QDeclarativeScriptBlob::~QDeclarativeScriptBlob()
     }
 }
 
-QDeclarativeParser::Object::ScriptBlock::Pragmas QDeclarativeScriptBlob::pragmas() const
+QDeclarativeScript::Object::ScriptBlock::Pragmas QDeclarativeScriptBlob::pragmas() const
 {
     return m_pragmas;
 }
@@ -1316,17 +1316,17 @@ void QDeclarativeScriptBlob::dataReceived(const QByteArray &data)
 
     m_source = QString::fromUtf8(data);
 
-    QDeclarativeScriptParser::JavaScriptMetaData metadata =
-        QDeclarativeScriptParser::extractMetaData(m_source);
+    QDeclarativeScript::Parser::JavaScriptMetaData metadata =
+        QDeclarativeScript::Parser::extractMetaData(m_source);
 
     m_imports.setBaseUrl(finalUrl());
 
     m_pragmas = metadata.pragmas;
 
-    foreach (const QDeclarativeScriptParser::Import &import, metadata.imports) {
-        Q_ASSERT(import.type != QDeclarativeScriptParser::Import::File);
+    foreach (const QDeclarativeScript::Import &import, metadata.imports) {
+        Q_ASSERT(import.type != QDeclarativeScript::Import::File);
 
-        if (import.type == QDeclarativeScriptParser::Import::Script) {
+        if (import.type == QDeclarativeScript::Import::Script) {
             QUrl scriptUrl = finalUrl().resolved(QUrl(import.uri));
             QDeclarativeScriptBlob *blob = typeLoader()->getScript(scriptUrl);
             addDependency(blob);
@@ -1338,7 +1338,7 @@ void QDeclarativeScriptBlob::dataReceived(const QByteArray &data)
             blob->addref();
             m_scripts << ref;
         } else {
-            Q_ASSERT(import.type == QDeclarativeScriptParser::Import::Library);
+            Q_ASSERT(import.type == QDeclarativeScript::Import::Library);
             int vmaj = -1;
             int vmin = -1;
             import.extractVersion(&vmaj, &vmin);

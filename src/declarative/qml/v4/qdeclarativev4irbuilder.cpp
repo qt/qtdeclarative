@@ -435,7 +435,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
     } else if (m_engine->v8engine()->illegalNames().contains(name) ) {
         if (qmlVerboseCompiler()) qWarning() << "*** illegal symbol:" << name;
         return false;
-    } else if (const QDeclarativeParser::Object *obj = m_expression->ids->value(name)) {
+    } else if (const QDeclarativeScript::Object *obj = m_expression->ids->value(name)) {
         IR::Name *code = _block->ID_OBJECT(name, obj, line, column);
         if (obj == m_expression->component)
             code->storage = IR::Name::RootStorage;
@@ -622,7 +622,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 break;
 
             case IR::Name::IdObject: {
-                const QDeclarativeParser::Object *idObject = baseName->idObject;
+                const QDeclarativeScript::Object *idObject = baseName->idObject;
                 QDeclarativePropertyCache *cache = 
                     idObject->synthCache?idObject->synthCache:m_engine->cache(idObject->metaObject());
 

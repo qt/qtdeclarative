@@ -60,7 +60,7 @@
 #include "private/qdeclarativetypenamecache_p.h"
 #include "private/qdeclarativenotifier_p.h"
 #include "qdeclarativelist.h"
-#include "private/qdeclarativeparser_p.h"
+#include "private/qdeclarativescript_p.h"
 
 #include <QtCore/qhash.h>
 #include <QtDeclarative/qjsvalue.h>

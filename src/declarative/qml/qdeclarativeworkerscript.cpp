@@ -365,7 +365,7 @@ void QDeclarativeWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (f.open(QIODevice::ReadOnly)) {
         QByteArray data = f.readAll();
         QString sourceCode = QString::fromUtf8(data);
-        QDeclarativeScriptParser::extractPragmas(sourceCode);
+        QDeclarativeScript::Parser::extractPragmas(sourceCode);
 
         v8::HandleScope handle_scope;
         v8::Context::Scope scope(workerEngine->context());

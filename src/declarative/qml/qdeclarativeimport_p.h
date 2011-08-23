@@ -45,8 +45,9 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qset.h>
+#include <QtCore/qstringlist.h>
 #include <private/qdeclarativedirparser_p.h>
-#include <private/qdeclarativescriptparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativemetatype_p.h>
 
 //
@@ -93,7 +94,7 @@ public:
 
     bool addImport(QDeclarativeImportDatabase *, 
                    const QString& uri, const QString& prefix, int vmaj, int vmin, 
-                   QDeclarativeScriptParser::Import::Type importType,
+                   QDeclarativeScript::Import::Type importType,
                    const QDeclarativeDirComponents &qmldircomponentsnetwork, 
                    QList<QDeclarativeError> *errors);
 

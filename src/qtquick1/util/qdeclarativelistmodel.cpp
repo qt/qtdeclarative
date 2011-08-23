@@ -44,7 +44,7 @@
 #include "QtQuick1/private/qdeclarativeopenmetaobject_p.h"
 
 #include <QtDeclarative/private/qdeclarativecustomparser_p.h>
-#include <QtDeclarative/private/qdeclarativeparser_p.h>
+#include <QtDeclarative/private/qdeclarativescript_p.h>
 #include <QtDeclarative/private/qdeclarativeengine_p.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeinfo.h>

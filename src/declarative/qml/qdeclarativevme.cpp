@@ -1040,7 +1040,7 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
     QV8Engine *v8engine = ep->v8engine();
 
-    bool shared = script->pragmas & QDeclarativeParser::Object::ScriptBlock::Shared;
+    bool shared = script->pragmas & QDeclarativeScript::Object::ScriptBlock::Shared;
 
     QDeclarativeContextData *effectiveCtxt = parentCtxt;
     if (shared)

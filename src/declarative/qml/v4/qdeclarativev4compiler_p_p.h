@@ -55,7 +55,7 @@
 
 #include "qdeclarativev4instruction_p.h"
 #include "qdeclarativev4ir_p.h"
-#include <private/qdeclarativeparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
 

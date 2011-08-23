@@ -46,6 +46,7 @@
 #include <qdeclarativeinfo.h>
 
 #include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 
 #include <QtCore/qdebug.h>
@@ -196,7 +197,7 @@ QDeclarativeGestureAreaParser::compile(const QList<QDeclarativeCustomParserPrope
                 error(props.at(ii), QDeclarativeGestureArea::tr("GestureArea: syntax error"));
                 return QByteArray();
             } else {
-                QDeclarativeParser::Variant v = qvariant_cast<QDeclarativeParser::Variant>(value);
+                QDeclarativeScript::Variant v = qvariant_cast<QDeclarativeScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
                     ds << int(type);

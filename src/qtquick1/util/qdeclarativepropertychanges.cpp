@@ -48,7 +48,7 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtDeclarative/private/qdeclarativecustomparser_p.h>
-#include <QtDeclarative/private/qdeclarativeparser_p.h>
+#include <QtDeclarative/private/qdeclarativescript_p.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/private/qdeclarativebinding_p.h>
 #include <QtDeclarative/qdeclarativecontext.h>
@@ -282,22 +282,22 @@ QDeclarative1PropertyChangesParser::compile(const QList<QDeclarativeCustomParser
 
     ds << data.count();
     for(int ii = 0; ii < data.count(); ++ii) {
-        QDeclarativeParser::Variant v = qvariant_cast<QDeclarativeParser::Variant>(data.at(ii).second);
+        QDeclarativeScript::Variant v = qvariant_cast<QDeclarativeScript::Variant>(data.at(ii).second);
         QVariant var;
         bool isScript = v.isScript();
         QDeclarativeBinding::Identifier id = 0;
         switch(v.type()) {
-        case QDeclarativeParser::Variant::Boolean:
+        case QDeclarativeScript::Variant::Boolean:
             var = QVariant(v.asBoolean());
             break;
-        case QDeclarativeParser::Variant::Number:
+        case QDeclarativeScript::Variant::Number:
             var = QVariant(v.asNumber());
             break;
-        case QDeclarativeParser::Variant::String:
+        case QDeclarativeScript::Variant::String:
             var = QVariant(v.asString());
             break;
-        case QDeclarativeParser::Variant::Invalid:
-        case QDeclarativeParser::Variant::Script:
+        case QDeclarativeScript::Variant::Invalid:
+        case QDeclarativeScript::Variant::Script:
             var = QVariant(v.asScript());
             {
                 // Pre-rewrite the expression

@@ -55,7 +55,7 @@
 
 #include <private/qdeclarativejsast_p.h>
 #include <private/qdeclarativejsengine_p.h>
-#include <private/qdeclarativeparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativev4compiler_p.h>
@@ -267,7 +267,7 @@ struct Name: Expr {
         void *ptr;
         const QMetaObject *meta;
         const QDeclarativeType *declarativeType;
-        const QDeclarativeParser::Object *idObject;
+        const QDeclarativeScript::Object *idObject;
     };
     int index;
     Storage storage;
@@ -534,7 +534,7 @@ struct BasicBlock {
     Name *SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
     Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, quint32 line, quint32 column);
     Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
-    Name *ID_OBJECT(const QString &id, const QDeclarativeParser::Object *object, quint32 line, quint32 column);
+    Name *ID_OBJECT(const QString &id, const QDeclarativeScript::Object *object, quint32 line, quint32 column);
     Name *ATTACH_TYPE(const QString &id, const QDeclarativeType *attachType, Name::Storage storage, quint32 line, quint32 column);
 
     Expr *UNOP(AluOp op, Expr *expr);

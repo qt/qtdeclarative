@@ -121,7 +121,7 @@ public:
     QString resolvedUri(const QString &dir_arg, QDeclarativeImportDatabase *database);
     bool add(const QDeclarativeDirComponents &qmldircomponentsnetwork, 
              const QString& uri_arg, const QString& prefix, 
-             int vmaj, int vmin, QDeclarativeScriptParser::Import::Type importType, 
+             int vmaj, int vmin, QDeclarativeScript::Import::Type importType, 
              QDeclarativeImportDatabase *database, QList<QDeclarativeError> *errors);
     bool find(const QString& type, int *vmajor, int *vminor,
               QDeclarativeType** type_return, QString* url_return, QList<QDeclarativeError> *errors);
@@ -463,7 +463,7 @@ QString QDeclarativeImportsPrivate::resolvedUri(const QString &dir_arg, QDeclara
 
 bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomponentsnetwork, 
                                      const QString& uri_arg, const QString& prefix, int vmaj, int vmin, 
-                                     QDeclarativeScriptParser::Import::Type importType, 
+                                     QDeclarativeScript::Import::Type importType, 
                                      QDeclarativeImportDatabase *database, QList<QDeclarativeError> *errors)
 {
     static QLatin1String Slash_qmldir("/qmldir");
@@ -481,7 +481,7 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
     }
     QString url = uri;
     bool versionFound = false;
-    if (importType == QDeclarativeScriptParser::Import::Library) {
+    if (importType == QDeclarativeScript::Import::Library) {
 
         Q_ASSERT(vmaj >= 0 && vmin >= 0); // Versions are always specified for libraries
 
@@ -561,7 +561,7 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
             return false;
         }
     } else {
-        if (importType == QDeclarativeScriptParser::Import::File && qmldircomponents.isEmpty()) {
+        if (importType == QDeclarativeScript::Import::File && qmldircomponents.isEmpty()) {
             QString importUrl = resolveLocalUrl(base, uri + Slash_qmldir);
             QString localFileOrQrc = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(importUrl);
             if (!localFileOrQrc.isEmpty()) {
@@ -633,7 +633,7 @@ bool QDeclarativeImportsPrivate::add(const QDeclarativeDirComponents &qmldircomp
     data.url = url;
     data.majversion = vmaj;
     data.minversion = vmin;
-    data.isLibrary = importType == QDeclarativeScriptParser::Import::Library;
+    data.isLibrary = importType == QDeclarativeScript::Import::Library;
     data.qmlDirComponents = qmldircomponents;
     s->imports.prepend(data);
 
@@ -824,14 +824,14 @@ QDeclarativeImportDatabase::~QDeclarativeImportDatabase()
 */
 bool QDeclarativeImports::addImport(QDeclarativeImportDatabase *importDb, 
                                     const QString& uri, const QString& prefix, int vmaj, int vmin, 
-                                    QDeclarativeScriptParser::Import::Type importType, 
+                                    QDeclarativeScript::Import::Type importType, 
                                     const QDeclarativeDirComponents &qmldircomponentsnetwork, 
                                     QList<QDeclarativeError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QDeclarativeImports(" << qPrintable(baseUrl().toString()) << ")" << "::addImport: " 
                            << uri << " " << vmaj << '.' << vmin << " " 
-                           << (importType==QDeclarativeScriptParser::Import::Library? "Library" : "File") 
+                           << (importType==QDeclarativeScript::Import::Library? "Library" : "File") 
                            << " as " << prefix;
 
     return d->add(qmldircomponentsnetwork, uri, prefix, vmaj, vmin, importType, importDb, errors);
