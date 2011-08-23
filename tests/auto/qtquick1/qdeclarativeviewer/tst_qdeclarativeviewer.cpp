@@ -44,7 +44,7 @@
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QtDeclarative/qdeclarativecontext.h>
-#include <QtGui/qmenubar.h>
+#include <QtWidgets/qmenubar.h>
 #include <QSignalSpy>
 #include "../../../shared/util.h"
 #include "qmlruntime.h"

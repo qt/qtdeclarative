@@ -239,7 +239,8 @@ void tst_examples::sgexamples()
     QCOMPARE(view.status(), QSGView::Ready);
     view.show();
 
-    QTest::qWaitForWindowShown(&view);
+    QTest::qWait(100);
+
 }
 
 QTEST_MAIN(tst_examples)

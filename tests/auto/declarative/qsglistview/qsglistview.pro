@@ -14,5 +14,5 @@ symbian: {
 }
 
 CONFIG += parallel_test
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private widgets widgets-private
 QT += opengl-private
