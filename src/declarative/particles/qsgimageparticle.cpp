@@ -62,25 +62,27 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 #else
 #define SHADER_DEFINES ""
 #endif
+
+//TODO: Make it larger on desktop? Requires fixing up shader code with the same define
+#define UNIFORM_ARRAY_SIZE 64
+
 const float CONV = 0.017453292519943295;
 class ImageMaterialData
 {
     public:
     ImageMaterialData()
-        : texture(0), colortable(0), sizetable(0), opacitytable(0)
+        : texture(0), colorTable(0)
     {}
 
     ~ImageMaterialData(){
         delete texture;
-        delete colortable;
-        delete sizetable;
-        delete opacitytable;
+        delete colorTable;
     }
 
     QSGTexture *texture;
-    QSGTexture *colortable;
-    QSGTexture *sizetable;
-    QSGTexture *opacitytable;
+    QSGTexture *colorTable;
+    float sizeTable[UNIFORM_ARRAY_SIZE];
+    float opacityTable[UNIFORM_ARRAY_SIZE];
 
     qreal timestamp;
     qreal entry;
@@ -126,24 +128,17 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        program()->setUniformValue("sizetable", 2);
-        program()->setUniformValue("opacitytable", 3);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
+        m_sizetable_id = program()->uniformLocation("sizetable");
+        m_opacitytable_id = program()->uniformLocation("opacitytable");
     }
 
     void updateState(const TabledMaterialData* d, const TabledMaterialData*) {
         glFuncs->glActiveTexture(GL_TEXTURE1);
-        d->colortable->bind();
+        d->colorTable->bind();
 
-        glFuncs->glActiveTexture(GL_TEXTURE2);
-        d->sizetable->bind();
-
-        glFuncs->glActiveTexture(GL_TEXTURE3);
-        d->opacitytable->bind();
-
-        // make sure we end by setting GL_TEXTURE0 as active texture
         glFuncs->glActiveTexture(GL_TEXTURE0);
         d->texture->bind();
 
@@ -151,10 +146,14 @@ public:
         program()->setUniformValue("framecount", (float) 1);
         program()->setUniformValue("animcount", (float) 1);
         program()->setUniformValue(m_entry_id, (float) d->entry);
+        program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, UNIFORM_ARRAY_SIZE, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_entry_id;
     int m_timestamp_id;
+    int m_sizetable_id;
+    int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
@@ -253,24 +252,18 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        program()->setUniformValue("sizetable", 2);
-        program()->setUniformValue("opacitytable", 3);
         glFuncs = QGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_framecount_id = program()->uniformLocation("framecount");
         m_animcount_id = program()->uniformLocation("animcount");
         m_entry_id = program()->uniformLocation("entry");
+        m_sizetable_id = program()->uniformLocation("sizetable");
+        m_opacitytable_id = program()->uniformLocation("sizetable");
     }
 
     void updateState(const SpriteMaterialData* d, const SpriteMaterialData*) {
         glFuncs->glActiveTexture(GL_TEXTURE1);
-        d->colortable->bind();
-
-        glFuncs->glActiveTexture(GL_TEXTURE2);
-        d->sizetable->bind();
-
-        glFuncs->glActiveTexture(GL_TEXTURE3);
-        d->opacitytable->bind();
+        d->colorTable->bind();
 
         // make sure we end by setting GL_TEXTURE0 as active texture
         glFuncs->glActiveTexture(GL_TEXTURE0);
@@ -280,12 +273,16 @@ public:
         program()->setUniformValue(m_framecount_id, (float) d->framecount);
         program()->setUniformValue(m_animcount_id, (float) d->animcount);
         program()->setUniformValue(m_entry_id, (float) d->entry);
+        program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, 64, 1);
+        program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_timestamp_id;
     int m_framecount_id;
     int m_animcount_id;
     int m_entry_id;
+    int m_sizetable_id;
+    int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
@@ -430,6 +427,18 @@ public:
     QByteArray m_fragment_code;
     QGLFunctions* glFuncs;
 };
+
+void fillUniformArrayFromImage(float* array, const QImage& img, int size)
+{
+    if (img.isNull()){
+        for (int i=0; i<size; i++)
+            array[i] = 1;
+        return;
+    }
+    QImage scaled = img.scaled(size,1);
+    for (int i=0; i<size; i++)
+        array[i] = qAlpha(scaled.pixel(i,0))/255.0;
+}
 
 /*!
     \qmlclass ImageParticle QSGImageParticle
@@ -903,16 +912,10 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         opacitytable = QImage(m_opacitytable_name.toLocalFile());
         if (colortable.isNull())
             colortable = QImage(":defaultshaders/identitytable.png");
-        if (sizetable.isNull())
-            sizetable = QImage(":defaultshaders/identitytable.png");
-        if (opacitytable.isNull())
-            opacitytable = QImage(":defaultshaders/defaultFadeInOut.png");
         Q_ASSERT(!colortable.isNull());
-        Q_ASSERT(!sizetable.isNull());
-        Q_ASSERT(!opacitytable.isNull());
-        getState<ImageMaterialData>(m_material)->colortable = sceneGraphEngine()->createTextureFromImage(colortable);
-        getState<ImageMaterialData>(m_material)->sizetable = sceneGraphEngine()->createTextureFromImage(sizetable);
-        getState<ImageMaterialData>(m_material)->opacitytable = sceneGraphEngine()->createTextureFromImage(opacitytable);
+        getState<ImageMaterialData>(m_material)->colorTable = sceneGraphEngine()->createTextureFromImage(colortable);
+        fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
+        fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
     case Deformable:
         if (!m_material)
             m_material = DeformableMaterial::createMaterial();

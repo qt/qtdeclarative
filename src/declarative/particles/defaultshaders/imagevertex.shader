@@ -20,6 +20,8 @@ uniform highp mat4 qt_Matrix;
 uniform highp float timestamp;
 #ifdef TABLE
 varying lowp vec2 tt;//y is progress if Sprite mode
+uniform highp float sizetable[64];
+uniform highp float opacitytable[64];
 #endif
 #ifdef SPRITE
 varying highp vec4 fTexS;
@@ -69,6 +71,10 @@ void main() {
     highp float fadeIn = min(t * 10., 1.);
     highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);
 
+#ifdef TABLE
+    currentSize = currentSize * sizetable[int(floor(t*64.))];
+    fade = fade * opacitytable[int(floor(t*64.))];
+#endif
     if (entry == 1.)
         fade = fadeIn * fadeOut;
     else if(entry == 2.)

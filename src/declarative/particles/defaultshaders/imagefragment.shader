@@ -16,8 +16,6 @@ varying lowp float fFade;
 #ifdef TABLE
 varying lowp vec2 tt;
 uniform sampler2D colortable;
-uniform sampler2D opacitytable;
-uniform sampler2D sizetable;
 #endif
 
 void main() {
@@ -25,20 +23,13 @@ void main() {
     gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), tt.y)
             * fColor
             * texture2D(colortable, tt)
-            * (texture2D(opacitytable, tt).w * qt_Opacity);
+            * qt_Opacity;
 #else
 #ifdef TABLE
-    highp vec2 tex = (((fTex - 0.5) / texture2D(sizetable, tt).w) + 0.5);
-    lowp vec4 color;
-    if(tex.x < 1.0 && tex.x > 0.0 && tex.y < 1.0 && tex.y > 0.0){//No CLAMP_TO_BORDER in ES2, so have to do it ourselves
-        color = texture2D(texture, tex);//TODO: Replace with uniform array in vertex shader
-    }else{
-        color = vec4(0.,0.,0.,0.);
-    }
-    gl_FragColor = color
+    gl_FragColor = texture2D(texture, fTex)
             * fColor
             * texture2D(colortable, tt)
-            * (texture2D(opacitytable,tt).w * qt_Opacity);
+            * qt_Opacity;
 #else
 #ifdef DEFORM
     gl_FragColor = (texture2D(texture, fTex)) * fColor * qt_Opacity;
