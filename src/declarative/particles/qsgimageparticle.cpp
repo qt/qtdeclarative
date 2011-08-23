@@ -57,6 +57,11 @@ QT_BEGIN_NAMESPACE
 //###Switch to define later, for now user-friendly (no compilation) debugging is worth it
 DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
+#ifdef Q_WS_MAC
+#define SHADER_DEFINES "#version 120\n"
+#else
+#define SHADER_DEFINES ""
+#endif
 const float CONV = 0.017453292519943295;
 class ImageMaterialData
 {
@@ -94,12 +99,14 @@ public:
     {
         QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
+        m_vertex_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
         QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
+        m_fragment_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
             + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -163,12 +170,14 @@ public:
     {
         QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = QByteArray("#define DEFORM\n#define COLOR\n")
+        m_vertex_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
         QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = QByteArray("#define DEFORM\n#define COLOR\n")
+        m_fragment_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define DEFORM\n#define COLOR\n")
             + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -217,12 +226,14 @@ public:
     {
         QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
+        m_vertex_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
         QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
+        m_fragment_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
             + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -290,12 +301,14 @@ public:
     {
         QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = QByteArray("#define COLOR\n")
+        m_vertex_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define COLOR\n")
             + vf.readAll();
 
         QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = QByteArray("#define COLOR\n")
+        m_fragment_code = QByteArray(SHADER_DEFINES)
+            + QByteArray("#define COLOR\n")
             + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
@@ -359,11 +372,13 @@ public:
     {
         QFile vf(":defaultshaders/imagevertex.shader");
         vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
+        m_vertex_code = QByteArray(SHADER_DEFINES)
+            + vf.readAll();
 
         QFile ff(":defaultshaders/imagefragment.shader");
         ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
+        m_fragment_code = QByteArray(SHADER_DEFINES)
+            + ff.readAll();
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
