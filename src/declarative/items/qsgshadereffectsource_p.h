@@ -114,6 +114,8 @@ public:
 
     void scheduleUpdate();
 
+    QImage toImage() const;
+
 Q_SIGNALS:
     void textureChanged();
 

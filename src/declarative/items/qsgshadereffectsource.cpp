@@ -365,6 +365,14 @@ void QSGShaderEffectTexture::grab()
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
 }
 
+QImage QSGShaderEffectTexture::toImage() const
+{
+    if (m_fbo)
+        return m_fbo->toImage();
+
+    return QImage();
+}
+
 /*!
     \qmlclass ShaderEffectSource QSGShaderEffectSource
     \since 5.0
