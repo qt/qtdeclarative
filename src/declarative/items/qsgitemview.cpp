@@ -1098,7 +1098,7 @@ int QSGItemViewPrivate::mapFromModel(int modelIndex) const
     for (int i = 0; i < visibleItems.count(); ++i) {
         FxViewItem *item = visibleItems.at(i);
         if (item->index == modelIndex)
-            return i + visibleIndex;
+            return i;
         if (item->index > modelIndex)
             return -1;
     }
