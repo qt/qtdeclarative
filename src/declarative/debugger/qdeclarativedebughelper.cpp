@@ -58,6 +58,7 @@ void QDeclarativeDebugHelper::setAnimationSlowDownFactor(qreal factor)
 }
 
 void QDeclarativeDebugHelper::enableDebugging() {
+    qWarning("QDeclarativeDebugHelper::enableDebugging() is deprecated! Add CONFIG += declarative_debug to your .pro file instead.");
 #ifndef QDECLARATIVE_NO_DEBUG_PROTOCOL
     if (!QDeclarativeEnginePrivate::qml_debugging_enabled) {
         qWarning("Qml debugging is enabled. Only use this in a safe environment!");

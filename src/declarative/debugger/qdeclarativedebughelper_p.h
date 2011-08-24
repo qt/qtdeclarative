@@ -52,6 +52,10 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
 
+#ifndef QT_BUILD_DECLARATIVE_LIB
+#warning Use of this header file is deprecated! Add CONFIG += declarative_debug to your .pro file instead.
+#endif
+
 // Helper methods to access private API through a stable interface
 // This is used in the qmljsdebugger library of QtCreator.
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugHelper

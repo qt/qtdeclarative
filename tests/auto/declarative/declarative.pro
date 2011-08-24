@@ -33,7 +33,6 @@ PRIVATETESTS += \
     qdeclarativeconnection \
     qdeclarativedebug \
     qdeclarativedebugclient \
-    qdeclarativedebughelper \
     qdeclarativedebugservice \
     qdeclarativeecmascript \
     qdeclarativeimageprovider \

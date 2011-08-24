@@ -67,15 +67,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Copied from qdeclarativedebughelper_p.h in Qt, to avoid a dependency
-// on a private header from Qt.
-class Q_DECLARATIVE_EXPORT QDeclarativeDebugHelper
-{
-public:
-    static QJSEngine *getScriptEngine(QDeclarativeEngine *engine);
-    static void setAnimationSlowDownFactor(qreal factor);
-    static void enableDebugging();
-};
 
 class QTestRootObject : public QObject
 {
