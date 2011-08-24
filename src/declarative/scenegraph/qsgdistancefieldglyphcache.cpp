@@ -1053,10 +1053,7 @@ void QSGDistanceFieldGlyphCache::createTexture(int width, int height)
     glGenTextures(1, &m_textureData->texture);
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
 
-    QVarLengthArray<uchar> data(width * height);
-    for (int i = 0; i < data.size(); ++i)
-        data[i] = 0;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, &data[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, 0);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
