@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -38,22 +38,28 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "content"
+import QtQuick 2.0
 
-Rectangle {
-    width: 640; height: 240
-    color: "#646464"
+Image {
+    id: rootItem
 
-    Row {
-        anchors.centerIn: parent
-        Clock { city: "New York"; shift: -4 }
-        Clock { city: "Mumbai"; shift: 5.5 }
-        Clock { city: "Tokyo"; shift: 9 }
+    property bool created: false
+    property string image 
+
+    property double scaledBottom: y + (height + height*scale) / 2 
+    property bool onLand: scaledBottom > window.height / 2
+
+    source: image
+    opacity: onLand ? 1 : 0.25
+    scale: Math.max((y + height - 250) * 0.01, 0.3)
+    smooth: true
+
+    onCreatedChanged: {
+        if (created && !onLand)
+            rootItem.destroy();
+        else
+            z = scaledBottom;
     }
-    QuitButton {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 10
-    }
+
+    onYChanged: z = scaledBottom;
 }

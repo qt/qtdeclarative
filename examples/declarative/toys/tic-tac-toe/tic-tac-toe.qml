@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 import "content"
 import "content/tic-tac-toe.js" as Logic
 

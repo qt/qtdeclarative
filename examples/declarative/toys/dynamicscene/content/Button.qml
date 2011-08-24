@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -38,78 +38,43 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
-    width: 800; height: 480
-    color: "#464646"
+    id: container
 
-    ListModel {
-        id: list
+    property variant text
+    signal clicked
 
-        ListElement {
-            name: "Sunday"
-            notes: [ 
-                ListElement { noteText: "Lunch" },
-                ListElement { noteText: "Birthday Party" }
-            ]
+    height: text.height + 10; width: text.width + 20
+    border.width: 1
+    radius: 4
+    smooth: true
+
+    gradient: Gradient {
+        GradientStop {
+            position: 0.0
+            color: !mouseArea.pressed ? activePalette.light : activePalette.button
         }
-        
-        ListElement {
-            name: "Monday"
-            notes: [
-                ListElement { noteText: "Pickup kids from\nschool\n4.30pm" },
-                ListElement { noteText: "Checkout Qt" }, ListElement { noteText: "Read email" }
-            ]
-        }
-
-        ListElement {
-            name: "Tuesday"
-            notes: [
-                ListElement { noteText: "Walk dog" },
-                ListElement { noteText: "Buy newspaper" }
-            ]
-        }
-
-        ListElement {
-            name: "Wednesday"
-            notes: [ ListElement { noteText: "Cook dinner" } ]
-        }
-
-        ListElement {
-            name: "Thursday"
-            notes: [
-                ListElement { noteText: "Meeting\n5.30pm" },
-                ListElement { noteText: "Weed garden" }
-            ]
-        }
-
-        ListElement {
-            name: "Friday"
-            notes: [
-                ListElement { noteText: "More work" },
-                ListElement { noteText: "Grocery shopping" }
-            ]
-        }
-
-        ListElement {
-            name: "Saturday"
-            notes: [
-                ListElement { noteText: "Drink" },
-                ListElement { noteText: "Download Qt\nPlay with QML" }
-            ]
+        GradientStop {
+            position: 1.0
+            color: !mouseArea.pressed ? activePalette.button : activePalette.dark
         }
     }
 
-    ListView {
-        id: flickable
+    SystemPalette { id: activePalette }
 
+    MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        focus: true
-        highlightRangeMode: ListView.StrictlyEnforceRange
-        orientation: ListView.Horizontal
-        snapMode: ListView.SnapOneItem
-        model: list
-        delegate: Day { }
+        onClicked: container.clicked()
+    }
+
+    Text {
+        id: text
+        anchors.centerIn:parent
+        font.pointSize: 10
+        text: parent.text
+        color: activePalette.buttonText
     }
 }

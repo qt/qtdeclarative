@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,17 +38,12 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
-#include "qmlapplicationviewer.h"
+import QtQuick 2.0
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
+Image {
+    property bool created: false
+    property string image
 
-    QmlApplicationViewer viewer;
-    viewer.setOrientation(QmlApplicationViewer::ScreenOrientationLockLandscape);
-    viewer.setMainQmlFile(QLatin1String("qml/qml/clocks.qml"));
-    viewer.showExpanded();
+    source: image
 
-    return app.exec();
 }

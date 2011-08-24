@@ -38,22 +38,41 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "itemCreation.js" as Code
+import QtQuick 2.0
 
 Image {
-    id: paletteItem
+    id: sun
 
-    property string componentFile
-    property string image
+    property bool created: false
+    property string image: "images/sun.png"
 
     source: image
 
-    MouseArea { 
-        anchors.fill: parent
+    // once item is created, start moving offscreen
+    NumberAnimation on y {
+        to: window.height / 2
+        running: created
+        onRunningChanged: {
+            if (running)
+                duration = (window.height - sun.y) * 10;
+            else
+                state = "OffScreen"
+        }
+    }
 
-        onPressed: Code.startDrag(mouse);
-        onPositionChanged: Code.continueDrag(mouse);
-        onReleased: Code.endDrag(mouse);
+    states: State {
+        name: "OffScreen"
+        StateChangeScript {
+            script: { sun.created = false; sun.destroy() }
+        }
+    }
+
+    onCreatedChanged: {
+        if (created) {
+            sun.z = 1;    // above the sky but below the ground layer 
+            window.activeSuns++;
+        } else {
+            window.activeSuns--;
+        }
     }
 }
