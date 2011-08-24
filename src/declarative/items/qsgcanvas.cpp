@@ -1843,6 +1843,8 @@ QGLFramebufferObject *QSGCanvas::renderTarget() const
     This function might not work if the view is not visible.
 
     \warning Calling this function will cause performance problems.
+
+    \warning This function can only be called from the GUI thread.
  */
 QImage QSGCanvas::grabFrameBuffer()
 {
@@ -2192,6 +2194,11 @@ QImage QSGCanvasRenderThread::grab()
 {
     if (!isRunning())
         return QImage();
+
+    if (QThread::currentThread() != qApp->thread()) {
+        qWarning("QSGCanvas::grabFrameBuffer: can only be called from the GUI thread");
+        return QImage();
+    }
 
 #ifdef THREAD_DEBUG
     printf("GUI: doing a pixelwise grab..\n");
