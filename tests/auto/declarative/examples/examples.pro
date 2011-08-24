@@ -21,3 +21,4 @@ CONFIG += parallel_test
 QT += core-private gui-private declarative-private qtquick1-private
 
 qpa:CONFIG+=insignificant_test  # QTBUG-20990, aborts
+x11:CONFIG+=insignificant_test  # QTBUG-21078, unstably crashes
