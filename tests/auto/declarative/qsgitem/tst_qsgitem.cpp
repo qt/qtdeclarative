@@ -890,6 +890,8 @@ void tst_qsgitem::wheelEvent()
         QVERIFY(!event.isAccepted());
         QCOMPARE(item->wheelCount, 0);
     }
+
+    delete canvas;
 }
 
 QTEST_MAIN(tst_qsgitem)
