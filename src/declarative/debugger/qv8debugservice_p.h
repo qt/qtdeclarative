@@ -76,12 +76,14 @@ public:
     void addEngine(QDeclarativeEngine *);
     void removeEngine(QDeclarativeEngine *);
 
-    void debugMessageHandler(const QString &message);
-    void executionStopped();
+    void debugMessageHandler(const QString &message, bool willStartRunning);
 
     void appendSourcePath(const QString &message);
 
     void signalEmitted(const QString &signal);
+
+private slots:
+    void scheduledDebugBreak();
 
 protected:
     void messageReceived(const QByteArray &);

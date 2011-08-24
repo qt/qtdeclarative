@@ -83,6 +83,9 @@ protected:
     virtual void statusChanged(Status status);
     virtual void messageReceived(const QByteArray &);
 
+private slots:
+    void processMessage(const QByteArray &message);
+
 private:
     void updateStatus();
     void loadInspectorPlugins();

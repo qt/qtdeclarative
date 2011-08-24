@@ -133,6 +133,11 @@ void QDeclarativeInspectorService::updateStatus()
 
 void QDeclarativeInspectorService::messageReceived(const QByteArray &message)
 {
+    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+}
+
+void QDeclarativeInspectorService::processMessage(const QByteArray &message)
+{
     if (m_currentInspectorPlugin)
         m_currentInspectorPlugin->clientMessage(message);
 }

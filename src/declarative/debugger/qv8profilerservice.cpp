@@ -84,6 +84,7 @@ class QV8ProfilerServicePrivate : public QDeclarativeDebugServicePrivate
 public:
     QV8ProfilerServicePrivate()
         :initialized(false)
+        , isolate(0)
     {
     }
 
@@ -96,6 +97,7 @@ public:
 
     bool initialized;
     QList<QDeclarativeEngine *> engines;
+    v8::Isolate *isolate;
 };
 
 QV8ProfilerService::QV8ProfilerService(QObject *parent)
@@ -145,6 +147,14 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     QByteArray option;
     QByteArray title;
     ds >> command >> option;
+
+    if (!d->isolate) {
+        d->isolate = v8::Isolate::New();
+        v8::Isolate::Scope scope(d->isolate);
+        v8::V8::Initialize();
+    }
+
+    v8::Isolate::Scope scope(d->isolate);
 
     if (command == "V8PROFILER") {
         ds >>  title;

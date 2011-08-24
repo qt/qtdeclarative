@@ -53,6 +53,8 @@
 #include "../../shared/util.h"
 #include "../shared/debugutil_p.h"
 
+#define PORT 13769
+#define STR_PORT "13769"
 
 class tst_QDeclarativeDebugService : public QObject
 {
@@ -73,15 +75,22 @@ private slots:
 
 void tst_QDeclarativeDebugService::initTestCase()
 {
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Waiting for connection on port 13769...");
+    const QString waitingMsg = QString("QDeclarativeDebugServer: Waiting for connection on port %1...").arg(PORT);
+    QTest::ignoreMessage(QtWarningMsg, waitingMsg.toAscii().constData());
     new QDeclarativeEngine(this);
 
     m_conn = new QDeclarativeDebugConnection(this);
-    m_conn->connectToHost("127.0.0.1", 13769);
+
 
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
-    bool ok = m_conn->waitForConnected();
-    QVERIFY(ok);
+    for (int i = 0; i < 50; ++i) {
+        // try for 5 seconds ...
+        m_conn->connectToHost("127.0.0.1", PORT);
+        if (m_conn->waitForConnected())
+            break;
+        QTest::qSleep(100);
+    }
+    QVERIFY(m_conn->isConnected());
 
     QTRY_VERIFY(QDeclarativeDebugService::hasDebuggingClient());
 }
@@ -187,7 +196,7 @@ int main(int argc, char *argv[])
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-    char arg[] = "-qmljsdebugger=port:13769";
+    char arg[] = "-qmljsdebugger=port:" STR_PORT;
     _argv[_argc - 1] = arg;
 
     QGuiApplication app(_argc, _argv);

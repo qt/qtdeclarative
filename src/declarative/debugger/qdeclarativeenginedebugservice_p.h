@@ -104,6 +104,7 @@ protected:
     virtual void messageReceived(const QByteArray &);
 
 private Q_SLOTS:
+    void processMessage(const QByteArray &msg);
     void propertyChanged(int id, int objectId, const QMetaProperty &property, const QVariant &value);
 
 private:

@@ -387,6 +387,11 @@ QDeclarativeEngineDebugService::objectData(QObject *object)
 
 void QDeclarativeEngineDebugService::messageReceived(const QByteArray &message)
 {
+    QMetaObject::invokeMethod(this, "processMessage", Qt::QueuedConnection, Q_ARG(QByteArray, message));
+}
+
+void QDeclarativeEngineDebugService::processMessage(const QByteArray &message)
+{
     QDataStream ds(message);
 
     QByteArray type;
