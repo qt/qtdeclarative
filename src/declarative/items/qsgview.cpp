@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgview.h"
+#include "qsgview_p.h"
 
 #include "qsgcanvas_p.h"
 #include "qsgitem_p.h"
@@ -52,42 +53,12 @@
 #include <private/qdeclarativeengine_p.h>
 #include <QtCore/qbasictimer.h>
 
+
 // XXX todo - This whole class should probably be merged with QDeclarativeView for 
 // maximum seamlessness
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
-
-class QSGViewPrivate : public QSGCanvasPrivate, 
-                       public QSGItemChangeListener
-{
-    Q_DECLARE_PUBLIC(QSGView)
-public:
-    QSGViewPrivate();
-    ~QSGViewPrivate();
-
-    void execute();
-    void itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
-    void initResize();
-    void updateSize();
-    void setRootObject(QObject *);
-
-    void init();
-
-    QSize rootObjectSize() const;
-
-    QPointer<QSGItem> root;
-
-    QUrl source;
-
-    QDeclarativeEngine engine;
-    QDeclarativeComponent *component;
-    QBasicTimer resizetimer;
-
-    QSGView::ResizeMode resizeMode;
-    QSize initialSize;
-    QElapsedTimer frameTimer;
-};
 
 void QSGViewPrivate::init()
 {
