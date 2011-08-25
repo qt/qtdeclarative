@@ -4,7 +4,6 @@ HEADERS += \
     $$PWD/qsgangleddirection_p.h \
     $$PWD/qsgcustomparticle_p.h \
     $$PWD/qsgellipseextruder_p.h \
-    $$PWD/qsgemitter_p.h \
     $$PWD/qsgfollowemitter_p.h \
     $$PWD/qsgfriction_p.h \
     $$PWD/qsggravity_p.h \
@@ -29,15 +28,12 @@ HEADERS += \
     $$PWD/qsgwander_p.h \
     $$PWD/qsgtargetaffector_p.h \
     $$PWD/qsgcumulativedirection_p.h \
-    $$PWD/qsgcustomemitter_p.h \
-    $$PWD/qsgcustomaffector_p.h \
     $$PWD/qsgv8particledata_p.h
 
 SOURCES += \
     $$PWD/qsgangleddirection.cpp \
     $$PWD/qsgcustomparticle.cpp \
     $$PWD/qsgellipseextruder.cpp \
-    $$PWD/qsgemitter.cpp \
     $$PWD/qsgfollowemitter.cpp \
     $$PWD/qsgfriction.cpp \
     $$PWD/qsggravity.cpp \
@@ -62,8 +58,6 @@ SOURCES += \
     $$PWD/qsgwander.cpp \
     $$PWD/qsgtargetaffector.cpp \
     $$PWD/qsgcumulativedirection.cpp \
-    $$PWD/qsgcustomemitter.cpp \
-    $$PWD/qsgcustomaffector.cpp \
     $$PWD/qsgv8particledata.cpp
 
 RESOURCES += \

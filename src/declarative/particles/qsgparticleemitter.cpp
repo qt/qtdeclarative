@@ -41,7 +41,153 @@
 
 #include "qsgparticleemitter_p.h"
 QT_BEGIN_NAMESPACE
-//Not visible from QML, so not documented. Document subclasses.
+
+
+/*!
+    \qmlclass Emitter QSGParticleEmitter
+    \inqmlmodule QtQuick.Particles 2
+    \brief The Emitter element allows you to emit logical particles.
+
+    This element emits logical particles into the ParticleSystem, with the
+    given starting attributes.
+
+    Note that logical particles are not
+    automatically rendered, you will need to have one or more
+    ParticlePainter elements visualizing them.
+
+    Note that the given starting attributes can be modified at any point
+    in the particle's lifetime by any Affector element in the same
+    ParticleSystem. This includes attributes like lifespan.
+*/
+
+
+/*!
+    \qmlproperty ParticleSystem QtQuick.Particles2::Emitter::system
+
+    This is the Particle system that the Emitter will emit into.
+    This can be omitted if the Emitter is a direct child of the ParticleSystem
+*/
+/*!
+    \qmlproperty string QtQuick.Particles2::Emitter::particle
+
+    This is the type of logical particle which it will emit.
+
+    Default value is "" (empty string).
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::Emitter::shape
+
+    This shape is applied to the bounding box of the emitter. Particles are then emitting
+    from inside the area of the shape.
+
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Emitter::emitting
+
+    If set to false, the emitter will cease emissions until it is set to true.
+
+    Default value is true.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::emitRate
+
+    Number of particles emitted per second.
+
+    Default value is 10 particles per second.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpan
+
+    The time in milliseconds each emitted particle should last for.
+
+    Default value is 1000 (one second).
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::lifeSpanVariation
+
+    Particle lifespans will vary by up to this much in either direction.
+
+    Default value is 0.
+*/
+
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::emitCap
+
+    The maximum number of particles at a time that this emitter will have alive.
+
+    This can be set as a performance optimization (when using burst and pulse) or
+    to stagger emissions. The default value is emitRate * lifeSpan in seconds, which
+    is the number of particles that would be alive at any one time given the default settings.
+*/
+/*!
+    \qmlproperty bool QtQuick.Particles2::Emitter::noCap
+
+    If set to true, the emitCap will be ignored and this emitter will never skip emitting
+    a particle based on how many it has alive.
+
+    Default value is false.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Emitter::startTime
+
+    If this value is set when the emitter is loaded, then it will emit particles from the
+    past, up to startTime milliseconds ago. These will simulate as if they were emitted then,
+    but will not have any affectors applied to them. Affectors will take effect from the present time.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::size
+
+    The size in pixels of the particles at the start of their life.
+
+    Default value is 16.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::endSize
+
+    The size in pixels of the particles at the end of their life. Size will
+    be linearly interpolated during the life of the particle from this value and
+    size. If endSize is -1, then the size of the particle will remain constant at
+    the starting size.
+
+    Default value is -1.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Emitter::sizeVariation
+
+    The size of a particle can vary by this much up or down from size/endSize. The same
+    random addition is made to both size and endSize for a single particle.
+
+    Default value is 0.
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::speed
+
+    The starting speed of the particles emitted.
+*/
+/*!
+    \qmlproperty StochasticDirection QtQuick.Particles2::Emitter::acceleration
+
+    The starting acceleraton of the particles emitted.
+*/
+/*!
+    \qmlproperty qreal QtQuick.Particles2::Emitter::speedFromMovement
+
+    If this value is non-zero, then any movement of the emitter will provide additional
+    starting velocity to the particles based on the movement. The additional vector will be the
+    same angle as the emitter's movement, with a magnitude that is the magnitude of the emitters
+    movement multiplied by speedFromMovement.
+
+    Default value is 0.
+*/
+//TODO: Document particle 'type'
+/*!
+    \qmlsignal QtQuick.Particles2::Emitter::emitParticle(particle)
+
+    This handler is called when a particle is emitted. You can modify particle
+    attributes from within the handler.
+*/
+
+
 QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
     QSGItem(parent)
   , m_particlesPerSecond(10)
@@ -58,6 +204,13 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_particleSizeVariation(0)
   , m_maxParticleCount(-1)
   , m_burstLeft(0)
+  , m_speed_from_movement(0)
+  , m_particle_count(0)
+  , m_reset_last(true)
+  , m_last_timestamp(-1)
+  , m_last_emission(0)
+  , m_startTime(0)
+  , m_overwrite(false)
 
 {
     //TODO: Reset speed/acc back to null vector? Or allow null pointer?
@@ -75,6 +228,12 @@ QSGParticleEmitter::~QSGParticleEmitter()
         delete m_defaultExtruder;
 }
 
+bool QSGParticleEmitter::isEmitConnected()
+{
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitParticle(QDeclarativeV8Handle)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
+}
+
 void QSGParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
@@ -83,11 +242,6 @@ void QSGParticleEmitter::componentComplete()
         qWarning() << "Emitter created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
-void QSGParticleEmitter::emitWindow(int timeStamp)
-{
-    Q_UNUSED(timeStamp);
-}
-
 
 void QSGParticleEmitter::setEmitting(bool arg)
 {
@@ -154,5 +308,146 @@ int QSGParticleEmitter::particleCount() const
         return m_maxParticleCount;
     return m_particlesPerSecond*((m_particleDuration+m_particleDurationVariation)/1000.0);
 }
+
+void QSGParticleEmitter::setSpeedFromMovement(qreal t)
+{
+    if (t == m_speed_from_movement)
+        return;
+    m_speed_from_movement = t;
+    emit speedFromMovementChanged();
+}
+
+void QSGParticleEmitter::emitWindow(int timeStamp)
+{
+    if (m_system == 0)
+        return;
+    if ((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
+        m_reset_last = true;
+        return;
+    }
+
+    if (m_reset_last) {
+        m_last_emitter = m_last_last_emitter = QPointF(x(), y());
+        if (m_last_timestamp == -1)
+            m_last_timestamp = timeStamp/1000. - m_startTime;
+        else
+            m_last_timestamp = timeStamp/1000.;
+        m_last_emission = m_last_timestamp;
+        m_reset_last = false;
+    }
+
+    if (m_burstLeft){
+        m_burstLeft -= timeStamp - m_last_timestamp * 1000.;
+        if (m_burstLeft < 0){
+            if (!m_emitting)
+                timeStamp += m_burstLeft;
+            m_burstLeft = 0;
+        }
+    }
+
+    qreal time = timeStamp / 1000.;
+
+    qreal particleRatio = 1. / m_particlesPerSecond;
+    qreal pt = m_last_emission;
+
+    qreal opt = pt; // original particle time
+    qreal dt = time - m_last_timestamp; // timestamp delta...
+    if (!dt)
+        dt = 0.000001;
+
+    // emitter difference since last...
+    qreal dex = (x() - m_last_emitter.x());
+    qreal dey = (y() - m_last_emitter.y());
+
+    qreal ax = (m_last_last_emitter.x() + m_last_emitter.x()) / 2;
+    qreal bx = m_last_emitter.x();
+    qreal cx = (x() + m_last_emitter.x()) / 2;
+    qreal ay = (m_last_last_emitter.y() + m_last_emitter.y()) / 2;
+    qreal by = m_last_emitter.y();
+    qreal cy = (y() + m_last_emitter.y()) / 2;
+
+    qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
+    qreal emitter_x_offset = m_last_emitter.x() - x();
+    qreal emitter_y_offset = m_last_emitter.y() - y();
+    if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
+        pt = time;
+    while (pt < time || !m_burstQueue.isEmpty()) {
+        //int pos = m_last_particle % m_particle_count;
+        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle], !m_overwrite);
+        if (datum){//actually emit(otherwise we've been asked to skip this one)
+            datum->e = this;//###useful?
+            qreal t = 1 - (pt - opt) / dt;
+            qreal vx =
+              - 2 * ax * (1 - t)
+              + 2 * bx * (1 - 2 * t)
+              + 2 * cx * t;
+            qreal vy =
+              - 2 * ay * (1 - t)
+              + 2 * by * (1 - 2 * t)
+              + 2 * cy * t;
+
+
+            // Particle timestamp
+            datum->t = pt;
+            datum->lifeSpan = //TODO:Promote to base class?
+                    (m_particleDuration
+                     + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
+                    / 1000.0;
+
+            // Particle position
+            QRectF boundsRect;
+            if (!m_burstQueue.isEmpty()){
+                boundsRect = QRectF(m_burstQueue.first().second.x() - x(), m_burstQueue.first().second.y() - y(),
+                        width(), height());
+            } else {
+                boundsRect = QRectF(emitter_x_offset + dex * (pt - opt) / dt, emitter_y_offset + dey * (pt - opt) / dt
+                              , width(), height());
+            }
+            QPointF newPos = effectiveExtruder()->extrude(boundsRect);
+            datum->x = newPos.x();
+            datum->y = newPos.y();
+
+            // Particle speed
+            const QPointF &speed = m_speed->sample(newPos);
+            datum->vx = speed.x()
+                    + m_speed_from_movement * vx;
+            datum->vy = speed.y()
+                    + m_speed_from_movement * vy;
+
+            // Particle acceleration
+            const QPointF &accel = m_acceleration->sample(newPos);
+            datum->ax = accel.x();
+            datum->ay = accel.y();
+
+            // Particle size
+            float sizeVariation = -m_particleSizeVariation
+                    + rand() / float(RAND_MAX) * m_particleSizeVariation * 2;
+
+            float size = qMax((qreal)0.0 , m_particleSize + sizeVariation);
+            float endSize = qMax((qreal)0.0 , sizeAtEnd + sizeVariation);
+
+            datum->size = size;// * float(m_emitting);
+            datum->endSize = endSize;// * float(m_emitting);
+
+            if (isEmitConnected())
+                emitParticle(datum->v8Value());//A chance for arbitrary JS changes
+            m_system->emitParticle(datum);
+        }
+        if (m_burstQueue.isEmpty()){
+            pt += particleRatio;
+        }else{
+            m_burstQueue.first().first--;
+            if (m_burstQueue.first().first <= 0)
+                m_burstQueue.pop_front();
+        }
+    }
+    m_last_emission = pt;
+
+    m_last_last_last_emitter = m_last_last_emitter;
+    m_last_last_emitter = m_last_emitter;
+    m_last_emitter = QPointF(x(), y());
+    m_last_timestamp = time;
+}
+
 
 QT_END_NAMESPACE

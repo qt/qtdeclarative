@@ -57,6 +57,7 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qlistmodelinterface_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qdeclarativeproperty_p.h>
 #include <private/qobject_p.h>
 
 #include <QtCore/qhash.h>
@@ -122,10 +123,55 @@ public:
     QList<Item> children;
 };
 
+
+/*!
+    \qmlclass VisualItemModel QSGVisualItemModel
+    \inqmlmodule QtQuick 2
+    \ingroup qml-working-with-data
+    \brief The VisualItemModel allows items to be provided to a view.
+
+    A VisualItemModel contains the visual items to be used in a view.
+    When a VisualItemModel is used in a view, the view does not require
+    a delegate since the VisualItemModel already contains the visual
+    delegate (items).
+
+    An item can determine its index within the
+    model via the \l{VisualItemModel::index}{index} attached property.
+
+    The example below places three colored rectangles in a ListView.
+    \code
+    import QtQuick 1.0
+
+    Rectangle {
+        VisualItemModel {
+            id: itemModel
+            Rectangle { height: 30; width: 80; color: "red" }
+            Rectangle { height: 30; width: 80; color: "green" }
+            Rectangle { height: 30; width: 80; color: "blue" }
+        }
+
+        ListView {
+            anchors.fill: parent
+            model: itemModel
+        }
+    }
+    \endcode
+
+    \image visualitemmodel.png
+
+    \sa {declarative/modelviews/visualitemmodel}{VisualItemModel example}
+*/
 QSGVisualItemModel::QSGVisualItemModel(QObject *parent)
     : QSGVisualModel(*(new QSGVisualItemModelPrivate), parent)
 {
 }
+
+/*!
+    \qmlattachedproperty int QtQuick2::VisualItemModel::index
+    This attached property holds the index of this delegate's item within the model.
+
+    It is attached to each instance of the delegate.
+*/
 
 QDeclarativeListProperty<QSGItem> QSGVisualItemModel::children()
 {
@@ -134,6 +180,11 @@ QDeclarativeListProperty<QSGItem> QSGVisualItemModel::children()
                                                       d->children_count, d->children_at);
 }
 
+/*!
+    \qmlproperty int QtQuick2::VisualItemModel::count
+
+    The number of items in the model.  This property is readonly.
+*/
 int QSGVisualItemModel::count() const
 {
     Q_D(const QSGVisualItemModel);
@@ -198,20 +249,53 @@ QSGVisualItemModelAttached *QSGVisualItemModel::qmlAttachedProperties(QObject *o
 
 //============================================================================
 
-class VDMDelegateDataType : public QDeclarativeOpenMetaObjectType
+class VDMDelegateDataType : public QDeclarativeRefCount
 {
 public:
-    VDMDelegateDataType(const QMetaObject *base, QDeclarativeEngine *engine) : QDeclarativeOpenMetaObjectType(base, engine) {}
-
-    void propertyCreated(int, QMetaPropertyBuilder &prop) {
-        prop.setWritable(false);
+    VDMDelegateDataType()
+        : metaObject(0)
+        , propertyCache(0)
+        , propertyOffset(0)
+        , signalOffset(0)
+        , shared(true)
+    {
     }
+
+    VDMDelegateDataType(const VDMDelegateDataType &type)
+        : metaObject(0)
+        , propertyCache(0)
+        , propertyOffset(type.propertyOffset)
+        , signalOffset(type.signalOffset)
+        , shared(false)
+        , builder(type.metaObject, QMetaObjectBuilder::Properties
+                | QMetaObjectBuilder::Signals
+                | QMetaObjectBuilder::SuperClass
+                | QMetaObjectBuilder::ClassName)
+    {
+        builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+    }
+
+    ~VDMDelegateDataType()
+    {
+        if (propertyCache)
+            propertyCache->release();
+        qFree(metaObject);
+    }
+
+    QMetaObject *metaObject;
+    QDeclarativePropertyCache *propertyCache;
+    int propertyOffset;
+    int signalOffset;
+    bool shared : 1;
+    QMetaObjectBuilder builder;
 };
 
 class QSGVisualDataModelParts;
 class QSGVisualDataModelData;
+class QSGVisualDataModelDataMetaObject;
 class QSGVisualDataModelPrivate : public QObjectPrivate
 {
+    Q_DECLARE_PUBLIC(QSGVisualDataModel)
 public:
     QSGVisualDataModelPrivate(QDeclarativeContext *);
 
@@ -228,54 +312,29 @@ public:
     QDeclarativeGuard<QDeclarativeContext> m_context;
     QList<int> m_roles;
     QHash<QByteArray,int> m_roleNames;
-    void ensureRoles() {
-        if (m_roleNames.isEmpty()) {
-            if (m_listModelInterface) {
-                m_roles = m_listModelInterface->roles();
-                for (int ii = 0; ii < m_roles.count(); ++ii)
-                    m_roleNames.insert(m_listModelInterface->toString(m_roles.at(ii)).toUtf8(), m_roles.at(ii));
-            } else if (m_abstractItemModel) {
-                for (QHash<int,QByteArray>::const_iterator it = m_abstractItemModel->roleNames().begin();
-                        it != m_abstractItemModel->roleNames().end(); ++it) {
-                    m_roles.append(it.key());
-                    m_roleNames.insert(*it, it.key());
-                }
-                if (m_roles.count())
-                    m_roleNames.insert("hasModelChildren", -1);
-            } else if (m_listAccessor) {
-                m_roleNames.insert("modelData", 0);
-                if (m_listAccessor->type() == QDeclarativeListAccessor::Instance) {
-                    if (QObject *object = m_listAccessor->at(0).value<QObject*>()) {
-                        int count = object->metaObject()->propertyCount();
-                        for (int ii = 1; ii < count; ++ii) {
-                            const QMetaProperty &prop = object->metaObject()->property(ii);
-                            m_roleNames.insert(prop.name(), 0);
-                        }
-                    }
-                }
-            }
-        }
+
+    void addProperty(int role, int propertyId, const char *propertyName, const char *propertyType, bool isModelData = false);
+    template <typename T> void setModelDataType()
+    {
+        createModelData = &T::create;
+        m_delegateDataType->builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+        m_delegateDataType->builder.setClassName(T::staticMetaObject.className());
+        m_delegateDataType->builder.setSuperClass(&T::staticMetaObject);
+        m_delegateDataType->propertyOffset = T::staticMetaObject.propertyCount();
+        m_delegateDataType->signalOffset = T::staticMetaObject.methodCount();
+    }
+    QSGVisualDataModelData *createMetaObject(int index, QSGVisualDataModel *model);
+
+    static QSGVisualDataModelData *initializeModelData(int index, QSGVisualDataModel *model) {
+        return get(model)->createMetaObject(index, model);
     }
 
-    QHash<int,int> m_roleToPropId;
-    int m_modelDataPropId;
-    void createMetaData() {
-        if (!m_metaDataCreated) {
-            ensureRoles();
-            if (m_roleNames.count()) {
-                QHash<QByteArray, int>::const_iterator it = m_roleNames.begin();
-                while (it != m_roleNames.end()) {
-                    int propId = m_delegateDataType->createProperty(it.key()) - m_delegateDataType->propertyOffset();
-                    m_roleToPropId.insert(*it, propId);
-                    ++it;
-                }
-                // Add modelData property
-                if (m_roles.count() == 1 && !m_roleNames.contains("modelData"))
-                    m_modelDataPropId = m_delegateDataType->createProperty("modelData") - m_delegateDataType->propertyOffset();
-                m_metaDataCreated = true;
-            }
-        }
-    }
+    typedef QSGVisualDataModelData *(*CreateModelData)(int index, QSGVisualDataModel *model);
+
+    struct PropertyData {
+        int role;
+        bool isModelData : 1;
+    };
 
     struct ObjectRef {
         ObjectRef(QObject *object=0) : obj(object), ref(1) {}
@@ -338,11 +397,12 @@ public:
     friend class QSGVisualItemParts;
 
     VDMDelegateDataType *m_delegateDataType;
+    CreateModelData createModelData;
+
     friend class QSGVisualDataModelData;
-    bool m_metaDataCreated : 1;
-    bool m_metaDataCacheable : 1;
     bool m_delegateValidated : 1;
     bool m_completePending : 1;
+    bool m_objectList : 1;
 
     QSGVisualDataModelData *data(QObject *item);
 
@@ -352,164 +412,315 @@ public:
     QModelIndex m_root;
     QList<QByteArray> watchedRoles;
     QList<int> watchedRoleIds;
-};
 
-class QSGVisualDataModelDataMetaObject : public QDeclarativeOpenMetaObject
-{
-public:
-    QSGVisualDataModelDataMetaObject(QObject *parent, QDeclarativeOpenMetaObjectType *type)
-    : QDeclarativeOpenMetaObject(parent, type) {}
-
-    virtual QVariant initialValue(int);
-    virtual int createProperty(const char *, const char *);
-
-private:
-    friend class QSGVisualDataModelData;
+    QVector<PropertyData> m_propertyData;
 };
 
 class QSGVisualDataModelData : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
+    Q_PROPERTY(int index READ index NOTIFY indexChanged)
 public:
     QSGVisualDataModelData(int index, QSGVisualDataModel *model);
     ~QSGVisualDataModelData();
 
-    Q_PROPERTY(int index READ index NOTIFY indexChanged)
     int index() const;
     void setIndex(int index);
-
-    int propForRole(int) const;
-    int modelDataPropertyId() const {
-        QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_model);
-        return model->m_modelDataPropId;
-    }
-
-    void setValue(int, const QVariant &);
-    bool hasValue(int id) const {
-        return m_meta->hasValue(id);
-    }
-
-    void ensureProperties();
 
 Q_SIGNALS:
     void indexChanged();
 
-private:
-    friend class QSGVisualDataModelDataMetaObject;
+public:
     int m_index;
     QDeclarativeGuard<QSGVisualDataModel> m_model;
-    QSGVisualDataModelDataMetaObject *m_meta;
 };
 
-int QSGVisualDataModelData::propForRole(int id) const
+class QSGVisualDataModelDataMetaObject : public QAbstractDynamicMetaObject
 {
-    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_model);
-    QHash<int,int>::const_iterator it = model->m_roleToPropId.find(id);
-    if (it != model->m_roleToPropId.end())
-        return *it;
+public:
+    QSGVisualDataModelDataMetaObject(QSGVisualDataModelData *data, VDMDelegateDataType *type)
+        : m_data(data)
+        , m_type(type)
+    {
+        QObjectPrivate *op = QObjectPrivate::get(m_data);
+        *static_cast<QMetaObject *>(this) = *type->metaObject;
+        op->metaObject = this;
+        m_type->addref();
+    }
 
-    return -1;
-}
+    ~QSGVisualDataModelDataMetaObject() { m_type->release(); }
 
-void QSGVisualDataModelData::setValue(int id, const QVariant &val)
+    QSGVisualDataModelData *m_data;
+    VDMDelegateDataType *m_type;
+};
+
+class QSGVDMAbstractItemModelDataMetaObject : public QSGVisualDataModelDataMetaObject
 {
-    m_meta->setValue(id, val);
-}
+public:
+    QSGVDMAbstractItemModelDataMetaObject(QSGVisualDataModelData *object, VDMDelegateDataType *type)
+        : QSGVisualDataModelDataMetaObject(object, type) {}
 
-int QSGVisualDataModelDataMetaObject::createProperty(const char *name, const char *type)
-{
-    QSGVisualDataModelData *data =
-        static_cast<QSGVisualDataModelData *>(object());
-
-    if (!data->m_model)
-        return -1;
-
-    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(data->m_model);
-    if (data->m_index < 0 || data->m_index >= model->modelCount())
-        return -1;
-
-    if ((!model->m_listModelInterface || !model->m_abstractItemModel) && model->m_listAccessor) {
-        if (model->m_listAccessor->type() == QDeclarativeListAccessor::ListProperty) {
-            model->ensureRoles();
-            if (qstrcmp(name,"modelData") == 0)
-                return QDeclarativeOpenMetaObject::createProperty(name, type);
+    int metaCall(QMetaObject::Call call, int id, void **arguments)
+    {
+        if (call == QMetaObject::ReadProperty && id >= m_type->propertyOffset) {
+            QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_data->m_model);
+            if (m_data->m_index == -1 || !model->m_abstractItemModel)
+                return -1;
+            *static_cast<QVariant *>(arguments[0]) = model->m_abstractItemModel->index(
+                    m_data->m_index, 0, model->m_root).data(model->m_propertyData.at(id - m_type->propertyOffset).role);
+            return -1;
+        } else {
+            return m_data->qt_metacall(call, id, arguments);
         }
     }
-    return -1;
-}
+};
 
-QVariant QSGVisualDataModelDataMetaObject::initialValue(int propId)
+class QSGVDMAbstractItemModelData : public QSGVisualDataModelData
 {
-    QSGVisualDataModelData *data =
-        static_cast<QSGVisualDataModelData *>(object());
+    Q_OBJECT
+    Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
+public:
+    bool hasModelChildren() const
+    {
+        QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_model);
+        return model->m_abstractItemModel->hasChildren(model->m_abstractItemModel->index(m_index, 0, model->m_root));
+    }
 
-    Q_ASSERT(data->m_model);
-    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(data->m_model);
+    static QSGVisualDataModelData *create(int index, QSGVisualDataModel *model) {
+        return new QSGVDMAbstractItemModelData(index, model); }
+private:
+    QSGVDMAbstractItemModelData(int index, QSGVisualDataModel *model)
+        : QSGVisualDataModelData(index, model)
+    {
+        new QSGVDMAbstractItemModelDataMetaObject(
+                this, QSGVisualDataModelPrivate::get(m_model)->m_delegateDataType);
+    }
+};
 
-    QByteArray propName = name(propId);
-    if ((!model->m_listModelInterface || !model->m_abstractItemModel) && model->m_listAccessor) {
-        if (propName == "modelData") {
-            if (model->m_listAccessor->type() == QDeclarativeListAccessor::Instance) {
-                QObject *object = model->m_listAccessor->at(0).value<QObject*>();
-                return object->metaObject()->property(1).read(object); // the first property after objectName
-            }
-            return model->m_listAccessor->at(data->m_index);
+class QSGVDMListModelInterfaceDataMetaObject : public QSGVisualDataModelDataMetaObject
+{
+public:
+    QSGVDMListModelInterfaceDataMetaObject(QSGVisualDataModelData *object, VDMDelegateDataType *type)
+        : QSGVisualDataModelDataMetaObject(object, type) {}
+
+    int metaCall(QMetaObject::Call call, int id, void **arguments)
+    {
+        if (call == QMetaObject::ReadProperty && id >= m_type->propertyOffset) {
+            QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_data->m_model);
+            if (m_data->m_index == -1 || !model->m_listModelInterface)
+                return -1;
+            *static_cast<QVariant *>(arguments[0]) = model->m_listModelInterface->data(
+                    m_data->m_index, model->m_propertyData.at(id - m_type->propertyOffset).role);
+            return -1;
         } else {
-            // return any property of a single object instance.
-            QObject *object = model->m_listAccessor->at(data->m_index).value<QObject*>();
-            return object->property(propName);
-        }
-    } else if (model->m_listModelInterface) {
-        model->ensureRoles();
-        QHash<QByteArray,int>::const_iterator it = model->m_roleNames.find(propName);
-        if (it != model->m_roleNames.end()) {
-            QVariant value = model->m_listModelInterface->data(data->m_index, *it);
-            return value;
-        } else if (model->m_roles.count() == 1 && propName == "modelData") {
-            //for compatibility with other lists, assign modelData if there is only a single role
-            QVariant value = model->m_listModelInterface->data(data->m_index, model->m_roles.first());
-            return value;
-        }
-    } else if (model->m_abstractItemModel) {
-        model->ensureRoles();
-        QModelIndex index = model->m_abstractItemModel->index(data->m_index, 0, model->m_root);
-        if (propName == "hasModelChildren") {
-            return model->m_abstractItemModel->hasChildren(index);
-        } else {
-            QHash<QByteArray,int>::const_iterator it = model->m_roleNames.find(propName);
-            if (it != model->m_roleNames.end()) {
-                return model->m_abstractItemModel->data(index, *it);
-            } else if (model->m_roles.count() == 1 && propName == "modelData") {
-                //for compatibility with other lists, assign modelData if there is only a single role
-                return model->m_abstractItemModel->data(index, model->m_roles.first());
-            }
+            return m_data->qt_metacall(call, id, arguments);
         }
     }
-    Q_ASSERT(!"Can never be reached");
-    return QVariant();
+};
+
+class QSGVDMListModelInterfaceData : public QSGVisualDataModelData
+{
+public:
+    static QSGVisualDataModelData *create(int index, QSGVisualDataModel *model) {
+        return new QSGVDMListModelInterfaceData(index, model); }
+private:
+    QSGVDMListModelInterfaceData(int index, QSGVisualDataModel *model)
+        : QSGVisualDataModelData(index, model)
+    {
+        new QSGVDMListModelInterfaceDataMetaObject(
+                this, QSGVisualDataModelPrivate::get(m_model)->m_delegateDataType);
+    }
+};
+
+class QSGVDMListAccessorData : public QSGVisualDataModelData
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariant modelData READ modelData CONSTANT)
+public:
+    QVariant modelData() const {
+        return QSGVisualDataModelPrivate::get(m_model)->m_listAccessor->at(m_index); }
+
+    static QSGVisualDataModelData *create(int index, QSGVisualDataModel *model) {
+        return new QSGVDMListAccessorData(index, model); }
+private:
+    QSGVDMListAccessorData(int index, QSGVisualDataModel *model)
+        : QSGVisualDataModelData(index, model)
+    {
+    }
+};
+
+class QSGVDMObjectDataMetaObject : public QSGVisualDataModelDataMetaObject
+{
+public:
+    QSGVDMObjectDataMetaObject(QSGVisualDataModelData *data, VDMDelegateDataType *type)
+        : QSGVisualDataModelDataMetaObject(data, type)
+        , m_object(QSGVisualDataModelPrivate::get(data->m_model)->m_listAccessor->at(data->m_index).value<QObject *>())
+    {}
+
+    int metaCall(QMetaObject::Call call, int id, void **arguments)
+    {
+        if (id >= m_type->propertyOffset
+                && (call == QMetaObject::ReadProperty
+                || call == QMetaObject::WriteProperty
+                || call == QMetaObject::ResetProperty)) {
+            if (m_object)
+                QMetaObject::metacall(m_object, call, id - m_type->propertyOffset + 1, arguments);
+            return -1;
+        } else if (id >= m_type->signalOffset && call == QMetaObject::InvokeMetaMethod) {
+            QMetaObject::activate(m_data, this, id, 0);
+            return -1;
+        } else {
+            return m_data->qt_metacall(call, id, arguments);
+        }
+    }
+
+    int createProperty(const char *name, const char *)
+    {
+        if (!m_object)
+            return -1;
+        const QMetaObject *metaObject = m_object->metaObject();
+
+        const int previousPropertyCount = propertyCount() - propertyOffset();
+        int propertyIndex = metaObject->indexOfProperty(name);
+        if (propertyIndex == -1)
+            return -1;
+        if (previousPropertyCount + 1 == metaObject->propertyCount())
+            return propertyIndex + m_type->propertyOffset - 1;
+
+        if (m_type->shared) {
+            VDMDelegateDataType *type = m_type;
+            m_type = new VDMDelegateDataType(*m_type);
+            type->release();
+        }
+
+        const int previousMethodCount = methodCount();
+        int notifierId = previousMethodCount;
+        for (int propertyId = previousPropertyCount; propertyId < metaObject->propertyCount() - 1; ++propertyId) {
+            QMetaProperty property = metaObject->property(propertyId + 1);
+            QMetaPropertyBuilder propertyBuilder;
+            if (property.hasNotifySignal()) {
+                m_type->builder.addSignal("__" + QByteArray::number(propertyId) + "()");
+                propertyBuilder = m_type->builder.addProperty(property.name(), property.typeName(), notifierId);
+                ++notifierId;
+            } else {
+                propertyBuilder = m_type->builder.addProperty(property.name(), property.typeName());
+            }
+            propertyBuilder.setWritable(property.isWritable());
+            propertyBuilder.setResettable(property.isResettable());
+            propertyBuilder.setConstant(property.isConstant());
+        }
+
+        if (m_type->metaObject)
+            qFree(m_type->metaObject);
+        m_type->metaObject = m_type->builder.toMetaObject();
+        *static_cast<QMetaObject *>(this) = *m_type->metaObject;
+
+        notifierId = previousMethodCount;
+        for (int i = previousPropertyCount; i < metaObject->propertyCount(); ++i) {
+            QMetaProperty property = metaObject->property(i);
+            if (property.hasNotifySignal()) {
+                QDeclarativePropertyPrivate::connect(
+                        m_object, property.notifySignalIndex(), m_data, notifierId);
+                ++notifierId;
+            }
+        }
+        return propertyIndex + m_type->propertyOffset - 1;
+    }
+
+    QDeclarativeGuard<QObject> m_object;
+};
+
+class QSGVDMObjectData : public QSGVisualDataModelData
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *modelData READ modelData CONSTANT)
+public:
+    QObject *modelData() const { return m_metaObject->m_object; }
+
+    static QSGVisualDataModelData *create(int index, QSGVisualDataModel *model) {
+        return new QSGVDMObjectData(index, model); }
+
+private:
+    QSGVDMObjectData(int index, QSGVisualDataModel *model)
+        : QSGVisualDataModelData(index, model)
+        , m_metaObject(new QSGVDMObjectDataMetaObject(this, QSGVisualDataModelPrivate::get(m_model)->m_delegateDataType))
+    {
+    }
+
+    QSGVDMObjectDataMetaObject *m_metaObject;
+};
+
+void QSGVisualDataModelPrivate::addProperty(
+        int role, int propertyId, const char *propertyName, const char *propertyType, bool isModelData)
+{
+    PropertyData propertyData;
+    propertyData.role = role;
+    propertyData.isModelData = isModelData;
+    m_delegateDataType->builder.addSignal("__" + QByteArray::number(propertyId) + "()");
+    QMetaPropertyBuilder property = m_delegateDataType->builder.addProperty(
+            propertyName, propertyType, propertyId);
+    property.setWritable(false);
+
+    m_propertyData.append(propertyData);
 }
 
-QSGVisualDataModelData::QSGVisualDataModelData(int index,
-                                               QSGVisualDataModel *model)
-: m_index(index), m_model(model),
-m_meta(new QSGVisualDataModelDataMetaObject(this, QSGVisualDataModelPrivate::get(model)->m_delegateDataType))
+QSGVisualDataModelData *QSGVisualDataModelPrivate::createMetaObject(int index, QSGVisualDataModel *model)
 {
-    ensureProperties();
+    Q_ASSERT(!m_delegateDataType);
+
+    m_objectList = false;
+    m_propertyData.clear();
+    if (m_listAccessor
+            && m_listAccessor->type() != QDeclarativeListAccessor::ListProperty
+            && m_listAccessor->type() != QDeclarativeListAccessor::Instance) {
+        createModelData = &QSGVDMListAccessorData::create;
+        return QSGVDMListAccessorData::create(index, model);
+    }
+
+    m_delegateDataType = new VDMDelegateDataType;
+    if (m_listModelInterface) {
+        setModelDataType<QSGVDMListModelInterfaceData>();
+        QList<int> roles = m_listModelInterface->roles();
+        for (int propertyId = 0; propertyId < roles.count(); ++propertyId) {
+            const int role = roles.at(propertyId);
+            const QByteArray propertyName = m_listModelInterface->toString(role).toUtf8();
+            addProperty(role, propertyId, propertyName, "QVariant");
+            m_roleNames.insert(propertyName, role);
+        }
+        if (m_propertyData.count() == 1)
+            addProperty(roles.first(), 1, "modelData", "QVariant", true);
+    } else if (m_abstractItemModel) {
+        setModelDataType<QSGVDMAbstractItemModelData>();
+        QHash<int, QByteArray> roleNames = m_abstractItemModel->roleNames();
+        for (QHash<int, QByteArray>::const_iterator it = roleNames.begin(); it != roleNames.end(); ++it) {
+            addProperty(it.key(), m_propertyData.count(), it.value(), "QVariant");
+            m_roleNames.insert(it.value(), it.key());
+        }
+        if (m_propertyData.count() == 1)
+            addProperty(roleNames.begin().key(), 1, "modelData", "QVariant", true);
+    } else if (m_listAccessor) {
+        setModelDataType<QSGVDMObjectData>();
+        m_objectList = true;
+    } else {
+        Q_ASSERT(!"No model set on VisualDataModel");
+        return 0;
+    }
+    m_delegateDataType->metaObject = m_delegateDataType->builder.toMetaObject();
+    if (!m_objectList) {
+        m_delegateDataType->propertyCache = new QDeclarativePropertyCache(
+                m_context ? m_context->engine() : qmlEngine(q_func()), m_delegateDataType->metaObject);
+    }
+    return createModelData(index, model);
+}
+
+QSGVisualDataModelData::QSGVisualDataModelData(int index, QSGVisualDataModel *model)
+    : m_index(index)
+    , m_model(model)
+{
 }
 
 QSGVisualDataModelData::~QSGVisualDataModelData()
 {
-}
-
-void QSGVisualDataModelData::ensureProperties()
-{
-    QSGVisualDataModelPrivate *modelPriv = QSGVisualDataModelPrivate::get(m_model);
-    if (modelPriv->m_metaDataCacheable) {
-        if (!modelPriv->m_metaDataCreated)
-            modelPriv->createMetaData();
-        if (modelPriv->m_metaDataCreated)
-            m_meta->setCached(true);
-    }
 }
 
 int QSGVisualDataModelData::index() const
@@ -571,8 +782,8 @@ QSGVisualDataModelParts::QSGVisualDataModelParts(QSGVisualDataModel *parent)
 
 QSGVisualDataModelPrivate::QSGVisualDataModelPrivate(QDeclarativeContext *ctxt)
 : m_listModelInterface(0), m_abstractItemModel(0), m_visualItemModel(0), m_delegate(0)
-, m_context(ctxt), m_modelDataPropId(-1), m_parts(0), m_delegateDataType(0), m_metaDataCreated(false)
-, m_metaDataCacheable(false), m_delegateValidated(false), m_completePending(false), m_listAccessor(0)
+, m_context(ctxt), m_parts(0), m_delegateDataType(0), createModelData(&initializeModelData)
+, m_delegateValidated(false), m_completePending(false), m_objectList(false), m_listAccessor(0)
 {
 }
 
@@ -585,6 +796,26 @@ QSGVisualDataModelData *QSGVisualDataModelPrivate::data(QObject *item)
 }
 
 //---------------------------------------------------------------------------
+
+/*!
+    \qmlclass VisualDataModel QSGVisualDataModel
+    \inqmlmodule QtQuick 2
+    \ingroup qml-working-with-data
+    \brief The VisualDataModel encapsulates a model and delegate
+
+    A VisualDataModel encapsulates a model and the delegate that will
+    be instantiated for items in the model.
+
+    It is usually not necessary to create VisualDataModel elements.
+    However, it can be useful for manipulating and accessing the \l modelIndex
+    when a QAbstractItemModel subclass is used as the
+    model. Also, VisualDataModel is used together with \l Package to
+    provide delegates to multiple views.
+
+    The example below illustrates using a VisualDataModel with a ListView.
+
+    \snippet doc/src/snippets/declarative/visualdatamodel.qml 0
+*/
 
 QSGVisualDataModel::QSGVisualDataModel()
 : QSGVisualModel(*(new QSGVisualDataModelPrivate(0)))
@@ -605,6 +836,20 @@ QSGVisualDataModel::~QSGVisualDataModel()
         d->m_delegateDataType->release();
 }
 
+/*!
+    \qmlproperty model QtQuick2::VisualDataModel::model
+    This property holds the model providing data for the VisualDataModel.
+
+    The model provides a set of data that is used to create the items
+    for a view.  For large or dynamic datasets the model is usually
+    provided by a C++ model object.  The C++ model object must be a \l
+    {QAbstractItemModel} subclass or a simple list.
+
+    Models can also be created directly in QML, using a \l{ListModel} or
+    \l{XmlListModel}.
+
+    \sa {qmlmodels}{Data Models}
+*/
 QVariant QSGVisualDataModel::model() const
 {
     Q_D(const QSGVisualDataModel);
@@ -658,9 +903,8 @@ void QSGVisualDataModel::setModel(const QVariant &model)
     d->m_roleNames.clear();
     if (d->m_delegateDataType)
         d->m_delegateDataType->release();
-    d->m_metaDataCreated = 0;
-    d->m_metaDataCacheable = false;
-    d->m_delegateDataType = new VDMDelegateDataType(&QSGVisualDataModelData::staticMetaObject, d->m_context?d->m_context->engine():qmlEngine(this));
+    d->m_delegateDataType = 0;
+    d->createModelData = &QSGVisualDataModelPrivate::initializeModelData;
 
     QObject *object = qvariant_cast<QObject *>(model);
     if (object && (d->m_listModelInterface = qobject_cast<QListModelInterface *>(object))) {
@@ -672,7 +916,6 @@ void QSGVisualDataModel::setModel(const QVariant &model)
                          this, SLOT(_q_itemsRemoved(int,int)));
         QObject::connect(d->m_listModelInterface, SIGNAL(itemsMoved(int,int,int)),
                          this, SLOT(_q_itemsMoved(int,int,int)));
-        d->m_metaDataCacheable = true;
         if (d->m_delegate && d->m_listModelInterface->count())
             emit itemsInserted(0, d->m_listModelInterface->count());
         return;
@@ -687,7 +930,6 @@ void QSGVisualDataModel::setModel(const QVariant &model)
                             this, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
         QObject::connect(d->m_abstractItemModel, SIGNAL(modelReset()), this, SLOT(_q_modelReset()));
         QObject::connect(d->m_abstractItemModel, SIGNAL(layoutChanged()), this, SLOT(_q_layoutChanged()));
-        d->m_metaDataCacheable = true;
         if (d->m_abstractItemModel->canFetchMore(d->m_root))
             d->m_abstractItemModel->fetchMore(d->m_root);
         return;
@@ -710,13 +952,19 @@ void QSGVisualDataModel::setModel(const QVariant &model)
     d->m_listAccessor = new QDeclarativeListAccessor;
     d->m_listAccessor->setList(model, d->m_context?d->m_context->engine():qmlEngine(this));
     if (d->m_listAccessor->type() != QDeclarativeListAccessor::ListProperty)
-        d->m_metaDataCacheable = true;
     if (d->m_delegate && d->modelCount()) {
         emit itemsInserted(0, d->modelCount());
         emit countChanged();
     }
 }
 
+/*!
+    \qmlproperty Component QtQuick2::VisualDataModel::delegate
+
+    The delegate provides a template defining each item instantiated by a view.
+    The index is exposed as an accessible \c index property.  Properties of the
+    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+*/
 QDeclarativeComponent *QSGVisualDataModel::delegate() const
 {
     Q_D(const QSGVisualDataModel);
@@ -741,6 +989,35 @@ void QSGVisualDataModel::setDelegate(QDeclarativeComponent *delegate)
     }
 }
 
+/*!
+    \qmlproperty QModelIndex QtQuick2::VisualDataModel::rootIndex
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  \c rootIndex allows the children of
+    any node in a QAbstractItemModel to be provided by this model.
+
+    This property only affects models of type QAbstractItemModel that
+    are hierarchical (e.g, a tree model).
+
+    For example, here is a simple interactive file system browser.
+    When a directory name is clicked, the view's \c rootIndex is set to the
+    QModelIndex node of the clicked directory, thus updating the view to show
+    the new directory's contents.
+
+    \c main.cpp:
+    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/main.cpp 0
+
+    \c view.qml:
+    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/view.qml 0
+
+    If the \l model is a QAbstractItemModel subclass, the delegate can also
+    reference a \c hasModelChildren property (optionally qualified by a
+    \e model. prefix) that indicates whether the delegate's model item has
+    any child nodes.
+
+
+    \sa modelIndex(), parentModelIndex()
+*/
 QVariant QSGVisualDataModel::rootIndex() const
 {
     Q_D(const QSGVisualDataModel);
@@ -767,6 +1044,18 @@ void QSGVisualDataModel::setRootIndex(const QVariant &root)
     }
 }
 
+/*!
+    \qmlmethod QModelIndex QtQuick2::VisualDataModel::modelIndex(int index)
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  This function assists in using
+    tree models in QML.
+
+    Returns a QModelIndex for the specified index.
+    This value can be assigned to rootIndex.
+
+    \sa rootIndex
+*/
 QVariant QSGVisualDataModel::modelIndex(int idx) const
 {
     Q_D(const QSGVisualDataModel);
@@ -775,6 +1064,18 @@ QVariant QSGVisualDataModel::modelIndex(int idx) const
     return QVariant::fromValue(QModelIndex());
 }
 
+/*!
+    \qmlmethod QModelIndex QtQuick2::VisualDataModel::parentModelIndex()
+
+    QAbstractItemModel provides a hierarchical tree of data, whereas
+    QML only operates on list data.  This function assists in using
+    tree models in QML.
+
+    Returns a QModelIndex for the parent of the current rootIndex.
+    This value can be assigned to rootIndex.
+
+    \sa rootIndex
+*/
 QVariant QSGVisualDataModel::parentModelIndex() const
 {
     Q_D(const QSGVisualDataModel);
@@ -783,6 +1084,33 @@ QVariant QSGVisualDataModel::parentModelIndex() const
     return QVariant::fromValue(QModelIndex());
 }
 
+/*!
+    \qmlproperty object QtQuick2::VisualDataModel::parts
+
+    The \a parts property selects a VisualDataModel which creates
+    delegates from the part named.  This is used in conjunction with
+    the \l Package element.
+
+    For example, the code below selects a model which creates
+    delegates named \e list from a \l Package:
+
+    \code
+    VisualDataModel {
+        id: visualModel
+        delegate: Package {
+            Item { Package.name: "list" }
+        }
+        model: myModel
+    }
+
+    ListView {
+        width: 200; height:200
+        model: visualModel.parts.list
+    }
+    \endcode
+
+    \sa Package
+*/
 QString QSGVisualDataModel::part() const
 {
     Q_D(const QSGVisualDataModel);
@@ -881,12 +1209,11 @@ QSGItem *QSGVisualDataModel::item(int index, const QByteArray &viewId, bool comp
         QDeclarativeContext *ccontext = d->m_context;
         if (!ccontext) ccontext = qmlContext(this);
         QDeclarativeContext *ctxt = new QDeclarativeContext(ccontext);
-        QSGVisualDataModelData *data = new QSGVisualDataModelData(index, this);
-        if ((!d->m_listModelInterface || !d->m_abstractItemModel) && d->m_listAccessor
-            && d->m_listAccessor->type() == QDeclarativeListAccessor::ListProperty) {
-            ctxt->setContextObject(d->m_listAccessor->at(index).value<QObject*>());
-            ctxt = new QDeclarativeContext(ctxt, ctxt);
+        if (d->m_objectList) {
+            ctxt->setContextObject(d->m_listAccessor->at(index).value<QObject *>());
+            ctxt = new QDeclarativeContext(ctxt);
         }
+        QSGVisualDataModelData *data = d->createModelData(index, this);
         ctxt->setContextProperty(QLatin1String("model"), data);
         ctxt->setContextObject(data);
         d->m_completePending = false;
@@ -975,7 +1302,7 @@ QString QSGVisualDataModel::stringValue(int index, const QString &name)
     if (QObject *nobj = d->m_cache.item(index))
         data = d->data(nobj);
     if (!data) {
-        data = new QSGVisualDataModelData(index, this);
+        data = d->createModelData(index, this);
         tempData = true;
     }
 
@@ -1031,6 +1358,21 @@ void QSGVisualDataModel::_q_itemsChanged(int index, int count,
         }
     }
 
+    QVector<int> signalIndexes;
+    for (int i = 0; i < roles.count(); ++i) {
+        const int role = roles.at(i);
+        if (!changed && d->watchedRoleIds.contains(role))
+            changed = true;
+        for (int propertyId = 0; propertyId < d->m_propertyData.count(); ++propertyId) {
+            if (d->m_propertyData.at(propertyId).role == role)
+                signalIndexes.append(propertyId + d->m_delegateDataType->signalOffset);
+        }
+    }
+    if (roles.isEmpty()) {
+        for (int propertyId = 0; propertyId < d->m_propertyData.count(); ++propertyId)
+            signalIndexes.append(propertyId + d->m_delegateDataType->signalOffset);
+    }
+
     for (QHash<int,QSGVisualDataModelPrivate::ObjectRef>::ConstIterator iter = d->m_cache.begin();
         iter != d->m_cache.end(); ++iter) {
         const int idx = iter.key();
@@ -1038,41 +1380,8 @@ void QSGVisualDataModel::_q_itemsChanged(int index, int count,
         if (idx >= index && idx < index+count) {
             QSGVisualDataModelPrivate::ObjectRef objRef = *iter;
             QSGVisualDataModelData *data = d->data(objRef.obj);
-            for (int roleIdx = 0; roleIdx < roles.count(); ++roleIdx) {
-                int role = roles.at(roleIdx);
-                if (!changed && !d->watchedRoleIds.isEmpty() && d->watchedRoleIds.contains(role))
-                    changed = true;
-                int propId = data->propForRole(role);
-                if (propId != -1) {
-                    if (data->hasValue(propId)) {
-                        if (d->m_listModelInterface) {
-                            data->setValue(propId, d->m_listModelInterface->data(idx, role));
-                        } else if (d->m_abstractItemModel) {
-                            QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
-                            data->setValue(propId, d->m_abstractItemModel->data(index, role));
-                        }
-                    }
-                } else {
-                    QString roleName;
-                    if (d->m_listModelInterface)
-                        roleName = d->m_listModelInterface->toString(role);
-                    else if (d->m_abstractItemModel)
-                        roleName = QString::fromUtf8(d->m_abstractItemModel->roleNames().value(role));
-                    qmlInfo(this) << "Changing role not present in item: " << roleName;
-                }
-            }
-            if (d->m_modelDataPropId != -1) {
-                // Handle the modelData role we add if there is just one role.
-                if (data->hasValue(d->m_modelDataPropId)) {
-                    int role = d->m_roles.at(0);
-                    if (d->m_listModelInterface) {
-                        data->setValue(d->m_modelDataPropId, d->m_listModelInterface->data(idx, role));
-                    } else if (d->m_abstractItemModel) {
-                        QModelIndex index = d->m_abstractItemModel->index(idx, 0, d->m_root);
-                        data->setValue(d->m_modelDataPropId, d->m_abstractItemModel->data(index, role));
-                    }
-                }
-            }
+            for (int i = 0; i < signalIndexes.count(); ++i)
+                QMetaObject::activate(data, signalIndexes.at(i), 0);
         }
     }
     if (changed)

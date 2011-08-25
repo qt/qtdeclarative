@@ -72,6 +72,7 @@ private slots:
     void point();
     void size();
     void vector();
+    void vector4d();
     void lighter();
     void darker();
     void tint();
@@ -239,6 +240,26 @@ void tst_qdeclarativeqt::vector()
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test2")), QVector3D(102, -10, -982.1));
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test3")), QVector3D());
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test4")), QVector3D());
+
+    delete object;
+}
+
+void tst_qdeclarativeqt::vector4d()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("vector4.qml"));
+
+    QString warning1 = component.url().toString() + ":6: Error: Qt.vector4d(): Invalid arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Qt.vector4d(): Invalid arguments";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test1")), QVector4D(1, 0, 0.9, 0.6));
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test2")), QVector4D(102, -10, -982.1, 10));
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test3")), QVector4D());
+    QCOMPARE(qvariant_cast<QVector4D>(object->property("test4")), QVector4D());
 
     delete object;
 }

@@ -5,6 +5,6 @@ ListView {
     height: 100
     model: myModel
     delegate: Component {
-        Text { objectName: "name"; text: name }
+        Text { objectName: "name"; text: name; function getText() { return name; } }
     }
 }

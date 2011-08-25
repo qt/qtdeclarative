@@ -423,6 +423,7 @@ void tst_QSGPathView::dataModel()
     QTRY_COMPARE(findItems<QSGItem>(pathview, "wrapper").count(), 14);
 
     QVERIFY(pathview->currentIndex() == 0);
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 0));
 
     QSGText *text = findItem<QSGText>(pathview, "myText", 4);
     QVERIFY(text);
@@ -433,6 +434,7 @@ void tst_QSGPathView::dataModel()
     text = findItem<QSGText>(pathview, "myText", 2);
     QVERIFY(text);
     QCOMPARE(text->text(), model.name(2));
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 0));
 
     testObject->setPathItemCount(5);
     QMetaObject::invokeMethod(canvas->rootObject(), "checkProperties");
@@ -446,12 +448,15 @@ void tst_QSGPathView::dataModel()
     QVERIFY(testItem == 0);
 
     pathview->setCurrentIndex(1);
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 1));
+    QTest::qWait(100);
 
     model.insertItem(2, "pink", "2");
     QTest::qWait(100);
 
     QTRY_COMPARE(findItems<QSGItem>(pathview, "wrapper").count(), 5);
     QVERIFY(pathview->currentIndex() == 1);
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 1));
 
     text = findItem<QSGText>(pathview, "myText", 2);
     QVERIFY(text);
@@ -462,6 +467,7 @@ void tst_QSGPathView::dataModel()
     text = findItem<QSGText>(pathview, "myText", 3);
     QVERIFY(text);
     QCOMPARE(text->text(), model.name(3));
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 1));
 
     model.moveItem(3, 5);
     QTRY_COMPARE(findItems<QSGItem>(pathview, "wrapper").count(), 5);
@@ -469,6 +475,7 @@ void tst_QSGPathView::dataModel()
     foreach (QSGItem *item, items) {
         QVERIFY(item->property("onPath").toBool());
     }
+    QCOMPARE(pathview->currentItem(), findItem<QSGItem>(pathview, "wrapper", 1));
 
     // QTBUG-14199
     pathview->setOffset(7);
@@ -578,30 +585,81 @@ void tst_QSGPathView::setCurrentIndex()
     QTRY_COMPARE(firstItem->pos() + offset, start);
     QCOMPARE(canvas->rootObject()->property("currentA").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("currentB").toInt(), 2);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
     pathview->decrementCurrentIndex();
     QTRY_COMPARE(pathview->currentIndex(), 1);
     firstItem = findItem<QSGRectangle>(pathview, "wrapper", 1);
     QVERIFY(firstItem);
     QTRY_COMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
     pathview->decrementCurrentIndex();
     QTRY_COMPARE(pathview->currentIndex(), 0);
     firstItem = findItem<QSGRectangle>(pathview, "wrapper", 0);
     QVERIFY(firstItem);
     QTRY_COMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
     pathview->decrementCurrentIndex();
     QTRY_COMPARE(pathview->currentIndex(), 3);
     firstItem = findItem<QSGRectangle>(pathview, "wrapper", 3);
     QVERIFY(firstItem);
     QTRY_COMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
     pathview->incrementCurrentIndex();
     QTRY_COMPARE(pathview->currentIndex(), 0);
     firstItem = findItem<QSGRectangle>(pathview, "wrapper", 0);
     QVERIFY(firstItem);
     QTRY_COMPARE(firstItem->pos() + offset, start);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
+
+    // Check the current item is still created when outside the bounds of pathItemCount.
+    pathview->setPathItemCount(2);
+    pathview->setHighlightRangeMode(QSGPathView::NoHighlightRange);
+    QVERIFY(findItem<QSGRectangle>(pathview, "wrapper", 0));
+    QVERIFY(findItem<QSGRectangle>(pathview, "wrapper", 1));
+    QVERIFY(!findItem<QSGRectangle>(pathview, "wrapper", 2));
+    QVERIFY(!findItem<QSGRectangle>(pathview, "wrapper", 3));
+
+    pathview->setCurrentIndex(2);
+    firstItem = findItem<QSGRectangle>(pathview, "wrapper", 2);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(false));
+
+    pathview->decrementCurrentIndex();
+    QTRY_COMPARE(pathview->currentIndex(), 1);
+    firstItem = findItem<QSGRectangle>(pathview, "wrapper", 1);
+    QVERIFY(firstItem);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
+
+    pathview->decrementCurrentIndex();
+    QTRY_COMPARE(pathview->currentIndex(), 0);
+    firstItem = findItem<QSGRectangle>(pathview, "wrapper", 0);
+    QVERIFY(firstItem);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
+
+    pathview->decrementCurrentIndex();
+    QTRY_COMPARE(pathview->currentIndex(), 3);
+    firstItem = findItem<QSGRectangle>(pathview, "wrapper", 3);
+    QVERIFY(firstItem);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(false));
+
+    pathview->incrementCurrentIndex();
+    QTRY_COMPARE(pathview->currentIndex(), 0);
+    firstItem = findItem<QSGRectangle>(pathview, "wrapper", 0);
+    QVERIFY(firstItem);
+    QCOMPARE(pathview->currentItem(), firstItem);
+    QCOMPARE(firstItem->property("onPath"), QVariant(true));
 
     delete canvas;
 }
@@ -777,7 +835,7 @@ void tst_QSGPathView::modelChanges()
 
     QDeclarativeListModel *alternateModel = canvas->rootObject()->findChild<QDeclarativeListModel*>("alternateModel");
     QVERIFY(alternateModel);
-    QVariant modelVariant = QVariant::fromValue(alternateModel);
+    QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(pathView, SIGNAL(modelChanged()));
 
     pathView->setModel(modelVariant);

@@ -42,7 +42,6 @@
 #include "qsgangleddirection_p.h"
 #include "qsgcustomparticle_p.h"
 #include "qsgellipseextruder_p.h"
-#include "qsgemitter_p.h"
 #include "qsgfollowemitter_p.h"
 #include "qsgfriction_p.h"
 #include "qsggravity_p.h"
@@ -67,20 +66,12 @@
 #include "qsgwander_p.h"
 #include "qsgtargetaffector_p.h"
 #include "qsgcumulativedirection_p.h"
-#include "qsgcustomemitter_p.h"
-#include "qsgcustomaffector_p.h"
 
 QT_BEGIN_NAMESPACE
 
 void QSGParticlesModule::defineModule()
 {
     const char* uri = "QtQuick.Particles";
-    //Debugging only exposition
-    qmlRegisterType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter");
-    qmlRegisterType<QSGParticleEmitter>(uri, 2, 0, "ParticleEmitter");
-    qmlRegisterType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder");
-    qmlRegisterType<QSGStochasticDirection>(uri, 2, 0, "NullVector");
-    //Probably should be nocreate types
 
     qmlRegisterType<QSGParticleSystem>(uri, 2, 0, "ParticleSystem");
 
@@ -89,8 +80,7 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGItemParticle>(uri, 2, 0, "ItemParticle");
     qmlRegisterType<QSGModelParticle>(uri, 2, 0, "ModelParticle");
 
-    qmlRegisterType<QSGBasicEmitter>(uri, 2, 0, "Emitter");//TODO: Rename BasicEmitter?
-    qmlRegisterType<QSGCustomEmitter>(uri, 2, 0, "CustomEmitter");
+    qmlRegisterType<QSGParticleEmitter>(uri, 2, 0, "Emitter");
     qmlRegisterType<QSGFollowEmitter>(uri, 2, 0, "FollowEmitter");
 
     qmlRegisterType<QSGEllipseExtruder>(uri, 2, 0, "EllipseShape");
@@ -103,7 +93,6 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGCumulativeDirection>(uri, 2, 0, "CumulativeDirection");
 
     qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "Affector");//useful for the triggered signal
-    qmlRegisterType<QSGCustomAffector>(uri, 2, 0, "CustomAffector");
     qmlRegisterType<QSGWanderAffector>(uri, 2, 0, "Wander");
     qmlRegisterType<QSGFrictionAffector>(uri, 2, 0, "Friction");
     qmlRegisterType<QSGPointAttractorAffector>(uri, 2, 0, "PointAttractor");
@@ -112,6 +101,11 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
     qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
+
+    //Exposed just for completeness
+    qmlRegisterType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter");
+    qmlRegisterType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder");
+    qmlRegisterType<QSGStochasticDirection>(uri, 2, 0, "NullVector");
 }
 
 QT_END_NAMESPACE

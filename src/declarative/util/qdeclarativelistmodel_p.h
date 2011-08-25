@@ -125,6 +125,7 @@ Q_OBJECT
 class QDeclarativeListModelParser : public QDeclarativeCustomParser
 {
 public:
+    QDeclarativeListModelParser() : QDeclarativeCustomParser(QDeclarativeCustomParser::AcceptsSignalHandlers) {}
     QByteArray compile(const QList<QDeclarativeCustomParserProperty> &);
     void setCustomData(QObject *, const QByteArray &);
 

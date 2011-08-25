@@ -72,6 +72,26 @@ QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject 
     }
 }
 
+QDeclarativeDebugService::QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd,
+                                                   const QString &name, QObject *parent)
+    : QObject(dd, parent)
+{
+    Q_D(QDeclarativeDebugService);
+    d->name = name;
+    d->server = QDeclarativeDebugServer::instance();
+    d->status = QDeclarativeDebugService::NotConnected;
+
+    if (!d->server)
+        return;
+
+    if (d->server->serviceNames().contains(name)) {
+        qWarning() << "QDeclarativeDebugService: Conflicting plugin name" << name;
+        d->server = 0;
+    } else {
+        d->server->addService(this);
+    }
+}
+
 QDeclarativeDebugService::~QDeclarativeDebugService()
 {
     Q_D(const QDeclarativeDebugService);

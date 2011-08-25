@@ -59,6 +59,37 @@ QT_MODULE(Declarative)
 
 class QSGBasePositionerPrivate;
 
+class QSGPositionerAttached : public QObject
+{
+    Q_OBJECT
+
+public:
+    QSGPositionerAttached(QObject *parent);
+
+    Q_PROPERTY(int index READ index NOTIFY indexChanged)
+    Q_PROPERTY(bool isFirstItem READ isFirstItem NOTIFY isFirstItemChanged)
+    Q_PROPERTY(bool isLastItem READ isLastItem NOTIFY isLastItemChanged)
+
+    int index() const { return m_index; }
+    void setIndex(int index);
+
+    bool isFirstItem() const { return m_isFirstItem; }
+    void setIsFirstItem(bool isFirstItem);
+
+    bool isLastItem() const { return m_isLastItem; }
+    void setIsLastItem(bool isLastItem);
+
+Q_SIGNALS:
+    void indexChanged();
+    void isFirstItemChanged();
+    void isLastItemChanged();
+
+private:
+    int m_index;
+    bool m_isFirstItem;
+    bool m_isLastItem;
+};
+
 class Q_DECLARATIVE_PRIVATE_EXPORT QSGBasePositioner : public QSGImplicitSizeItem
 {
     Q_OBJECT
@@ -79,6 +110,10 @@ public:
 
     QDeclarativeTransition *add() const;
     void setAdd(QDeclarativeTransition *);
+
+    static QSGPositionerAttached *qmlAttachedProperties(QObject *obj);
+
+    void updateAttachedProperties(QSGPositionerAttached *specificProperty = 0, QSGItem *specificPropertyOwner = 0) const;
 
 protected:
     QSGBasePositioner(QSGBasePositionerPrivate &dd, PositionerType at, QSGItem *parent);
@@ -120,6 +155,7 @@ class Q_AUTOTEST_EXPORT QSGColumn : public QSGBasePositioner
     Q_OBJECT
 public:
     QSGColumn(QSGItem *parent=0);
+
 protected:
     virtual void doPositioning(QSizeF *contentSize);
     virtual void reportConflictingAnchors();
@@ -155,6 +191,8 @@ class Q_AUTOTEST_EXPORT QSGGrid : public QSGBasePositioner
     Q_OBJECT
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
     Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(int rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
+    Q_PROPERTY(int columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
@@ -167,6 +205,12 @@ public:
 
     int columns() const {return m_columns;}
     void setColumns(const int columns);
+
+    int rowSpacing() const { return m_rowSpacing; }
+    void setRowSpacing(int);
+
+    int columnSpacing() const { return m_columnSpacing; }
+    void setColumnSpacing(int);
 
     Q_ENUMS(Flow)
     enum Flow { LeftToRight, TopToBottom };
@@ -183,6 +227,8 @@ Q_SIGNALS:
     void flowChanged();
     void layoutDirectionChanged();
     void effectiveLayoutDirectionChanged();
+    void rowSpacingChanged();
+    void columnSpacingChanged();
 
 protected:
     virtual void doPositioning(QSizeF *contentSize);
@@ -191,6 +237,8 @@ protected:
 private:
     int m_rows;
     int m_columns;
+    int m_rowSpacing;
+    int m_columnSpacing;
     Flow m_flow;
     Q_DISABLE_COPY(QSGGrid)
 };
@@ -236,6 +284,9 @@ QML_DECLARE_TYPE(QSGColumn)
 QML_DECLARE_TYPE(QSGRow)
 QML_DECLARE_TYPE(QSGGrid)
 QML_DECLARE_TYPE(QSGFlow)
+
+QML_DECLARE_TYPE(QSGBasePositioner)
+QML_DECLARE_TYPEINFO(QSGBasePositioner, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 

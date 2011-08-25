@@ -98,6 +98,7 @@ private slots:
     void currentIndex();
     void noCurrentIndex();
     void enforceRange();
+    void enforceRange_withoutHighlight();
     void spacing();
     void sections();
     void sectionsDelegate();
@@ -120,6 +121,7 @@ private slots:
     void sizeLessThan1();
     void QTBUG_14821();
     void resizeDelegate();
+    void resizeFirstDelegate();
     void QTBUG_16037();
     void indexAt();
     void incrementalModel();
@@ -1113,6 +1115,54 @@ void tst_QSGListView::enforceRange()
     delete canvas;
 }
 
+void tst_QSGListView::enforceRange_withoutHighlight()
+{
+    // QTBUG-20287
+    // If no highlight is set but StrictlyEnforceRange is used, the content should still move
+    // to the correct position (i.e. to the next/previous item, not next/previous section)
+    // when moving up/down via incrementCurrentIndex() and decrementCurrentIndex()
+
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    model.addItem("Item 0", "a");
+    model.addItem("Item 1", "b");
+    model.addItem("Item 2", "b");
+    model.addItem("Item 3", "c");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-enforcerange-nohighlight.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    qreal expectedPos = -100.0;
+
+    expectedPos += 10.0;    // scroll past 1st section's delegate (10px height)
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20 + 10;     // scroll past 1st section and section delegate of 2nd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21007 fails", Abort);
+#endif
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20;     // scroll past 1st item of 2nd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    expectedPos += 20 + 10;     // scroll past 2nd item of 2nd section and section delegate of 3rd section
+    QTest::keyClick(canvas, Qt::Key_Down);
+    QTRY_COMPARE(listview->contentY(), expectedPos);
+
+    delete canvas;
+}
+
 void tst_QSGListView::spacing()
 {
     QSGView *canvas = createView();
@@ -1431,6 +1481,26 @@ void tst_QSGListView::currentIndex()
 
     QTRY_COMPARE(listview->contentY(), 0.0);
 
+
+    // footer should become visible if it is out of view, and then current index is set to count-1
+    canvas->rootObject()->setProperty("showFooter", true);
+    QTRY_VERIFY(listview->footerItem());
+    listview->setCurrentIndex(model.count()-2);
+    QTRY_VERIFY(listview->footerItem()->y() > listview->contentY() + listview->height());
+    listview->setCurrentIndex(model.count()-1);
+    QTRY_COMPARE(listview->contentY() + listview->height(), (20.0 * model.count()) + listview->footerItem()->height());
+    canvas->rootObject()->setProperty("showFooter", false);
+
+    // header should become visible if it is out of view, and then current index is set to 0
+    canvas->rootObject()->setProperty("showHeader", true);
+    QTRY_VERIFY(listview->headerItem());
+    listview->setCurrentIndex(1);
+    QTRY_VERIFY(listview->headerItem()->y() + listview->headerItem()->height() < listview->contentY());
+    listview->setCurrentIndex(0);
+    QTRY_COMPARE(listview->contentY(), -listview->headerItem()->height());
+    canvas->rootObject()->setProperty("showHeader", false);
+
+
     // Test keys
     canvas->show();
     qApp->setActiveWindow(canvas);
@@ -1440,6 +1510,8 @@ void tst_QSGListView::currentIndex()
 #endif
     QTRY_VERIFY(canvas->hasFocus());
     qApp->processEvents();
+
+    listview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
     QCOMPARE(listview->currentIndex(), 1);
@@ -1961,7 +2033,7 @@ void tst_QSGListView::modelChanges()
 
     QDeclarativeListModel *alternateModel = canvas->rootObject()->findChild<QDeclarativeListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
-    QVariant modelVariant = QVariant::fromValue(alternateModel);
+    QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(listView, SIGNAL(modelChanged()));
 
     listView->setModel(modelVariant);
@@ -2668,6 +2740,60 @@ void tst_QSGListView::resizeDelegate()
     QTRY_COMPARE(listview->currentItem()->y(), 70.0);
     QTRY_COMPARE(listview->highlightItem()->y(), 70.0);
 
+    delete canvas;
+}
+
+void tst_QSGListView::resizeFirstDelegate()
+{
+    // QTBUG-20712: Content Y jumps constantly if first delegate height == 0
+    // and other delegates have height > 0
+
+    QSGView *canvas = createView();
+    canvas->show();
+
+    // bug only occurs when all items in the model are visible
+    TestModel model;
+    for (int i = 0; i < 10; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QVERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    QSGItem *item = 0;
+    for (int i = 0; i < model.count(); ++i) {
+        item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY(item != 0);
+        QCOMPARE(item->y(), i*20.0);
+    }
+
+    item = findItem<QSGItem>(contentItem, "wrapper", 0);
+    item->setHeight(0);
+
+    // check the content y has not jumped up and down
+    QCOMPARE(listview->contentY(), 0.0);
+    QSignalSpy spy(listview, SIGNAL(contentYChanged()));
+    QTest::qWait(300);
+    QCOMPARE(spy.count(), 0);
+
+    for (int i = 1; i < model.count(); ++i) {
+        item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY(item != 0);
+        QTRY_COMPARE(item->y(), (i-1)*20.0);
+    }
+
+    delete testObject;
     delete canvas;
 }
 

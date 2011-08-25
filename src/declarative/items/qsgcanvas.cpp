@@ -332,7 +332,6 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
-    , hoverItem(0)
     , dirtyItemList(0)
     , context(0)
     , animationRunning(false)
@@ -785,7 +784,6 @@ QSGCanvas::~QSGCanvas()
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
-    rootItemPrivate->canvas = 0;
 
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
@@ -813,17 +811,19 @@ QSGItem *QSGCanvas::mouseGrabberItem() const
 }
 
 
-void QSGCanvasPrivate::clearHover()
+bool QSGCanvasPrivate::clearHover()
 {
     Q_Q(QSGCanvas);
-    if (!hoverItem)
-        return;
+    if (hoverItems.isEmpty())
+        return false;
 
     QPointF pos = QCursor::pos(); // ### refactor: q->mapFromGlobal(QCursor::pos());
 
-    QSGItem *item = hoverItem;
-    hoverItem = 0;
-    sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true);
+    bool accepted = false;
+    foreach (QSGItem* item, hoverItems)
+        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true) || accepted;
+    hoverItems.clear();
+    return accepted;
 }
 
 
@@ -873,6 +873,9 @@ bool QSGCanvas::event(QEvent *e)
     case QSGEvent::SGDragMove:
     case QSGEvent::SGDragDrop:
         d->deliverDragEvent(static_cast<QSGDragEvent *>(e));
+        break;
+    case QEvent::WindowDeactivate:
+        rootItem()->windowDeactivateEvent();
         break;
     default:
         break;
@@ -1063,11 +1066,7 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
         bool delivered = d->deliverHoverEvent(d->rootItem, event->pos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
-            if (d->hoverItem) {
-                QSGItem *item = d->hoverItem;
-                d->hoverItem = 0;
-                accepted = d->sendHoverEvent(QEvent::HoverLeave, item, event->pos(), last, event->modifiers(), accepted);
-            }
+            accepted = d->clearHover();
         }
         event->setAccepted(accepted);
         return;
@@ -1105,20 +1104,43 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
     if (itemPrivate->hoverEnabled) {
         QPointF p = item->mapFromScene(scenePos);
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-            if (hoverItem == item) {
+            if (!hoverItems.isEmpty() && hoverItems[0] == item) {
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
             } else {
-                //exit from previous
-                if (hoverItem) {
-                    QSGItem *item = hoverItem;
-                    hoverItem = 0;
-                    accepted = sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, accepted);
+                QList<QSGItem*> parents;
+                QSGItem* parent = item;
+                parents << item;
+                while ((parent = parent->parentItem()))
+                    parents << parent;
+
+                //exit from previous (excepting ancestors)
+                while (!hoverItems.isEmpty() && !parents.contains(hoverItems[0])){
+                    sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
+                    hoverItems.removeFirst();
                 }
 
-                //enter new item
-                hoverItem = item;
-                accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
+                if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
+                    accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
+                } else {
+                    //enter any ancestors that also wish to be hovered and aren't
+                    int startIdx = -1;
+                    if (!hoverItems.isEmpty())
+                        startIdx = parents.indexOf(hoverItems[0]);
+                    if (startIdx == -1)
+                        startIdx = parents.count() - 1;
+
+                    for (int i = startIdx; i >= 0; i--) {
+                        if (QSGItemPrivate::get(parents[i])->hoverEnabled) {
+                            hoverItems.prepend(parents[i]);
+                            sendHoverEvent(QEvent::HoverEnter, parents[i], scenePos, lastScenePos, modifiers, accepted);
+                        }
+                    }
+
+                    //enter new item
+                    hoverItems.prepend(item);
+                    accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
+                }
             }
             return true;
         }
@@ -1143,7 +1165,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
     QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QSGItem *child = children.at(ii);
-        if (!child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled())
             continue;
         if (deliverWheelEvent(child, event))
             return true;
@@ -1562,6 +1584,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode == 0);
             itemPriv->clipNode = new QSGDefaultClipNode(item->boundingRect());
+            itemPriv->clipNode->update();
 
             if (child)
                 parent->removeChildNode(child);
@@ -1646,7 +1669,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
         }
     }
 
-    if ((dirty & QSGItemPrivate::Size || clipEffectivelyChanged) && itemPriv->clipNode) {
+    if ((dirty & QSGItemPrivate::Size) && itemPriv->clipNode) {
         itemPriv->clipNode->setRect(item->boundingRect());
         itemPriv->clipNode->update();
     }

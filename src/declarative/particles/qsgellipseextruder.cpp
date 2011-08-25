@@ -45,7 +45,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass EllipseShape QSGEllipseExtruder
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Shape
     \brief The EllipseShape represents an ellipse to other particle system elements
 

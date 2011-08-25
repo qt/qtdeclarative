@@ -75,6 +75,7 @@ Rectangle{
             "../allsmiles/spritevariedparticles.qml",
             "../trails/velocityfrommotion.qml",
             "../trails/fireballs.qml",
+            "../trails/combustion.qml",
             "../trails/list.qml",
             "../trails/portal.qml",
             "../trails/rainbow.qml",

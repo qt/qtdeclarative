@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
     \bold Note: Unlike images, animated images are not cached or shared internally.
 
     \clearfloat
-    \snippet doc/src/snippets/declarative/animatedimage.qml document
+    \snippet doc/src/snippets/qtquick1/animatedimage.qml document
 
     \sa BorderImage, Image
 */

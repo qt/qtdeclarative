@@ -74,6 +74,7 @@ public:
     QDeclarativeListProperty<QDeclarativeTransition> transitionsProperty();
 
     QDeclarativeState *findState(const QString &name) const;
+    void removeState(QDeclarativeState *state);
 
     virtual void classBegin();
     virtual void componentComplete();
@@ -82,8 +83,9 @@ Q_SIGNALS:
 
 private:
     friend class QDeclarativeState;
+    friend class QDeclarativeStatePrivate;
     bool updateAutoState();
-    void removeState(QDeclarativeState *state);
+    void stateAboutToComplete();
 };
 
 QT_END_NAMESPACE

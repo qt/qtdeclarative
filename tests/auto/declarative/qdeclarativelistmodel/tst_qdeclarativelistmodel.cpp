@@ -107,6 +107,7 @@ private slots:
     void property_changes_worker();
     void property_changes_worker_data();
     void clear();
+    void signal_handlers();
 };
 
 int tst_qdeclarativelistmodel::roleFromName(const QDeclarativeListModel *model, const QString &roleName)
@@ -1190,6 +1191,18 @@ void tst_qdeclarativelistmodel::clear()
     QCOMPARE(model.toString(roles[0]), QString("propertyA"));
     QCOMPARE(model.toString(roles[1]), QString("propertyB"));
     QCOMPARE(model.toString(roles[2]), QString("propertyC"));
+}
+
+void tst_qdeclarativelistmodel::signal_handlers()
+{
+    QDeclarativeEngine eng;
+    QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/signalhandlers.qml"));
+    QObject *model = component.create();
+    QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
+    QVERIFY(model != 0);
+    QVERIFY(model->property("ok").toBool());
+
+    delete model;
 }
 
 QTEST_MAIN(tst_qdeclarativelistmodel)

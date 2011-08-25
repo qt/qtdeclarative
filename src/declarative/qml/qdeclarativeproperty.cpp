@@ -399,7 +399,7 @@ const char *QDeclarativeProperty::propertyTypeName() const
         return 0;
     if (d->isValueType()) {
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(d->engine);
+        QDeclarativeEnginePrivate *ep = d->engine?QDeclarativeEnginePrivate::get(d->engine):0;
         QDeclarativeValueType *valueType = 0;
         if (ep) valueType = ep->valueTypes[d->core.propType];
         else valueType = QDeclarativeValueTypeFactory::valueType(d->core.propType);
@@ -987,7 +987,7 @@ QVariant QDeclarativePropertyPrivate::readValueProperty()
 {
     if (isValueType()) {
 
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+        QDeclarativeEnginePrivate *ep = engine?QDeclarativeEnginePrivate::get(engine):0;
         QDeclarativeValueType *valueType = 0;
         if (ep) valueType = ep->valueTypes[core.propType];
         else valueType = QDeclarativeValueTypeFactory::valueType(core.propType);
@@ -1072,7 +1072,7 @@ bool QDeclarativePropertyPrivate::writeValueProperty(const QVariant &value, Writ
 
     bool rv = false;
     if (isValueType()) {
-        QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+        QDeclarativeEnginePrivate *ep = engine?QDeclarativeEnginePrivate::get(engine):0;
 
         QDeclarativeValueType *writeBack = 0;
         if (ep) {

@@ -1,7 +1,12 @@
 import QtQuick 2.0
 
 Rectangle {
+    id: root
+
     property int current: list.currentIndex
+    property bool showHeader: false
+    property bool showFooter: false
+
     width: 240
     height: 320
     color: "#ffffff"
@@ -36,6 +41,12 @@ Rectangle {
             }
         }
     ]
+
+    Component {
+        id: headerFooter
+        Rectangle { height: 30; width: 240; color: "blue" }
+    }
+
     ListView {
         id: list
         objectName: "list"
@@ -47,5 +58,7 @@ Rectangle {
         delegate: myDelegate
         highlightMoveSpeed: 1000
         model: testModel
+        header: root.showHeader ? headerFooter : null
+        footer: root.showFooter ? headerFooter : null
     }
 }

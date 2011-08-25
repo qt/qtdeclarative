@@ -91,6 +91,7 @@ public:
     QStringList clientPlugins;
     bool gotHello;
     QString waitingForMsgFromService;
+    bool waitingForMsgSucceeded;
 
 private:
     // private slot
@@ -100,7 +101,8 @@ private:
 
 QDeclarativeDebugServerPrivate::QDeclarativeDebugServerPrivate() :
     connection(0),
-    gotHello(false)
+    gotHello(false),
+    waitingForMsgSucceeded(false)
 {
 }
 
@@ -313,7 +315,7 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
             if (d->waitingForMsgFromService == name) {
                 // deliver directly so that it is delivered before waitForMessage is returning.
                 d->_q_deliverMessage(name, message);
-                d->waitingForMsgFromService.clear();
+                d->waitingForMsgSucceeded = true;
             } else {
                 // deliver message in next event loop run.
                 // Fixes the case that the service does start it's own event loop ...,
@@ -403,11 +405,13 @@ bool QDeclarativeDebugServer::waitForMessage(QDeclarativeDebugService *service)
             || !d->waitingForMsgFromService.isEmpty())
         return false;
 
+    d->waitingForMsgSucceeded = false;
     d->waitingForMsgFromService = service->name();
 
     do {
         d->connection->waitForMessage();
-    } while (!d->waitingForMsgFromService.isEmpty());
+    } while (!d->waitingForMsgSucceeded);
+    d->waitingForMsgFromService.clear();
     return true;
 }
 

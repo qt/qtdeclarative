@@ -31,7 +31,7 @@ Rectangle {
         }
         PropertyChanges {
             target: rectangle
-            opacity: 0
+            visible: false
         }
     }
 }

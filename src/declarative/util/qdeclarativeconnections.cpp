@@ -72,8 +72,8 @@ public:
 
 /*!
     \qmlclass Connections QDeclarativeConnections
+    \inqmlmodule QtQuick 2
     \ingroup qml-utility-elements
-    \since 4.7
     \brief A Connections element describes generalized connections to signals.
 
     A Connections object creates a connection to a QML signal.
@@ -137,7 +137,7 @@ QDeclarativeConnections::~QDeclarativeConnections()
 }
 
 /*!
-    \qmlproperty Object Connections::target
+    \qmlproperty Object QtQuick2::Connections::target
     This property holds the object that sends the signal.
 
     If this property is not set, the \c target defaults to the parent of the Connection.
@@ -172,7 +172,7 @@ void QDeclarativeConnections::setTarget(QObject *obj)
 }
 
 /*!
-    \qmlproperty bool Connections::ignoreUnknownSignals
+    \qmlproperty bool QtQuick2::Connections::ignoreUnknownSignals
 
     Normally, a connection to a non-existent signal produces runtime errors.
 

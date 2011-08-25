@@ -68,6 +68,7 @@ private slots:
     void test_horizontal_spacing_rightToLeft();
     void test_horizontal_animated();
     void test_horizontal_animated_rightToLeft();
+    void test_horizontal_animated_disabled();
     void test_vertical();
     void test_vertical_spacing();
     void test_vertical_animated();
@@ -75,6 +76,7 @@ private slots:
     void test_grid_topToBottom();
     void test_grid_rightToLeft();
     void test_grid_spacing();
+    void test_grid_row_column_spacing();
     void test_grid_animated();
     void test_grid_animated_rightToLeft();
     void test_grid_zero_columns();
@@ -89,6 +91,10 @@ private slots:
     void test_conflictinganchors();
     void test_mirroring();
     void test_allInvisible();
+    void test_attachedproperties();
+    void test_attachedproperties_data();
+    void test_attachedproperties_dynamic();
+
 private:
     QSGView *createView(const QString &filename);
 };
@@ -324,6 +330,46 @@ void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 
     QTRY_COMPARE(one->x(), 100.0);
     QTRY_COMPARE(two->x(), 50.0);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_horizontal_animated_disabled()
+{
+    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated-disabled.qml");
+
+    QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
+    QVERIFY(one != 0);
+
+    QSGRectangle *two = canvas->rootObject()->findChild<QSGRectangle*>("two");
+    QVERIFY(two != 0);
+
+    QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
+    QVERIFY(three != 0);
+
+    QSGItem *row = canvas->rootObject()->findChild<QSGItem*>("row");
+    QVERIFY(row);
+
+    qApp->processEvents();
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->isVisible(), false);
+    QCOMPARE(two->x(), -100.0);//Not 'in' yet
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 50.0);
+    QCOMPARE(three->y(), 0.0);
+
+    //Add 'two'
+    two->setVisible(true);
+    QCOMPARE(two->isVisible(), true);
+    qApp->processEvents();
+    QCOMPARE(row->width(), 150.0);
+    QCOMPARE(row->height(), 50.0);
+
+    qApp->processEvents();
+    QCOMPARE(two->x(), 50.0);
+    QCOMPARE(three->x(), 100.0);
 
     delete canvas;
 }
@@ -577,6 +623,39 @@ void tst_qsgpositioners::test_grid_spacing()
     QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
     QCOMPARE(grid->width(), 128.0);
     QCOMPARE(grid->height(), 104.0);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_grid_row_column_spacing()
+{
+    QSGView *canvas = createView(SRCDIR "/data/grid-row-column-spacing.qml");
+
+    QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
+    QVERIFY(one != 0);
+    QSGRectangle *two = canvas->rootObject()->findChild<QSGRectangle*>("two");
+    QVERIFY(two != 0);
+    QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
+    QVERIFY(three != 0);
+    QSGRectangle *four = canvas->rootObject()->findChild<QSGRectangle*>("four");
+    QVERIFY(four != 0);
+    QSGRectangle *five = canvas->rootObject()->findChild<QSGRectangle*>("five");
+    QVERIFY(five != 0);
+
+    QCOMPARE(one->x(), 0.0);
+    QCOMPARE(one->y(), 0.0);
+    QCOMPARE(two->x(), 61.0);
+    QCOMPARE(two->y(), 0.0);
+    QCOMPARE(three->x(), 92.0);
+    QCOMPARE(three->y(), 0.0);
+    QCOMPARE(four->x(), 0.0);
+    QCOMPARE(four->y(), 57.0);
+    QCOMPARE(five->x(), 61.0);
+    QCOMPARE(five->y(), 57.0);
+
+    QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
+    QCOMPARE(grid->width(), 142.0);
+    QCOMPARE(grid->height(), 107.0);
 
     delete canvas;
 }
@@ -1268,6 +1347,116 @@ void tst_qsgpositioners::test_allInvisible()
     QVERIFY(column != 0);
     QVERIFY(column->width() == 0);
     QVERIFY(column->height() == 0);
+}
+
+void tst_qsgpositioners::test_attachedproperties()
+{
+    QFETCH(QString, filename);
+
+    QSGView *canvas = createView(filename);
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGRectangle *greenRect = canvas->rootObject()->findChild<QSGRectangle *>("greenRect");
+    QVERIFY(greenRect != 0);
+
+    int posIndex = greenRect->property("posIndex").toInt();
+    QVERIFY(posIndex == 0);
+    bool isFirst = greenRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == true);
+    bool isLast = greenRect->property("isLastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *yellowRect = canvas->rootObject()->findChild<QSGRectangle *>("yellowRect");
+    QVERIFY(yellowRect != 0);
+
+    posIndex = yellowRect->property("posIndex").toInt();
+    QVERIFY(posIndex == -1);
+    isFirst = yellowRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = yellowRect->property("isLastItem").toBool();
+    QVERIFY(isLast == false);
+
+    yellowRect->metaObject()->invokeMethod(yellowRect, "onDemandPositioner");
+
+    posIndex = yellowRect->property("posIndex").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = yellowRect->property("isFirstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = yellowRect->property("isLastItem").toBool();
+    QVERIFY(isLast == true);
+
+    delete canvas;
+}
+
+void tst_qsgpositioners::test_attachedproperties_data()
+{
+    QTest::addColumn<QString>("filename");
+
+    QTest::newRow("column") << SRCDIR "/data/attachedproperties-column.qml";
+    QTest::newRow("row") << SRCDIR "/data/attachedproperties-row.qml";
+    QTest::newRow("grid") << SRCDIR "/data/attachedproperties-grid.qml";
+    QTest::newRow("flow") << SRCDIR "/data/attachedproperties-flow.qml";
+}
+
+void tst_qsgpositioners::test_attachedproperties_dynamic()
+{
+    QSGView *canvas = createView(SRCDIR "/data/attachedproperties-dynamic.qml");
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGRow *row = canvas->rootObject()->findChild<QSGRow *>("pos");
+    QVERIFY(row != 0);
+
+    QSGRectangle *rect0 = canvas->rootObject()->findChild<QSGRectangle *>("rect0");
+    QVERIFY(rect0 != 0);
+
+    int posIndex = rect0->property("index").toInt();
+    QVERIFY(posIndex == 0);
+    bool isFirst = rect0->property("firstItem").toBool();
+    QVERIFY(isFirst == true);
+    bool isLast = rect0->property("lastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *rect1 = canvas->rootObject()->findChild<QSGRectangle *>("rect1");
+    QVERIFY(rect1 != 0);
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    row->metaObject()->invokeMethod(row, "createSubRect");
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == false);
+
+    QSGRectangle *rect2 = canvas->rootObject()->findChild<QSGRectangle *>("rect2");
+    QVERIFY(rect2 != 0);
+
+    posIndex = rect2->property("index").toInt();
+    QVERIFY(posIndex == 2);
+    isFirst = rect2->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect2->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    row->metaObject()->invokeMethod(row, "destroySubRect");
+
+    qApp->processEvents(QEventLoop::DeferredDeletion);
+
+    posIndex = rect1->property("index").toInt();
+    QVERIFY(posIndex == 1);
+    isFirst = rect1->property("firstItem").toBool();
+    QVERIFY(isFirst == false);
+    isLast = rect1->property("lastItem").toBool();
+    QVERIFY(isLast == true);
+
+    delete canvas;
 }
 
 QSGView *tst_qsgpositioners::createView(const QString &filename)

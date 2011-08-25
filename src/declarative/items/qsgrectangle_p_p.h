@@ -66,7 +66,7 @@ class QSGRectanglePrivate : public QSGItemPrivate
 
 public:
     QSGRectanglePrivate() :
-    color(Qt::white), gradient(0), pen(0), radius(0), paintmargin(0)
+    color(Qt::white), gradient(0), pen(0), radius(0), penMargin(0), penOffset(0)
     {
     }
 
@@ -79,7 +79,8 @@ public:
     QSGGradient *gradient;
     QSGPen *pen;
     qreal radius;
-    qreal paintmargin;
+    qreal penMargin;
+    qreal penOffset;
     static int doUpdateSlotIdx;
 
     QSGPen *getPen() {
@@ -94,13 +95,6 @@ public:
             QMetaObject::connect(pen, penChangedSignalIdx, q, doUpdateSlotIdx);
         }
         return pen;
-    }
-
-    void setPaintMargin(qreal margin)
-    {
-        if (margin == paintmargin)
-            return;
-        paintmargin = margin;
     }
 };
 

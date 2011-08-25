@@ -176,6 +176,8 @@ public:
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
+    virtual bool showHeaderForIndex(int index) const;
+    virtual bool showFooterForIndex(int index) const;
     virtual void updateHeader();
     virtual void updateFooter();
 
@@ -602,7 +604,8 @@ void QSGGridViewPrivate::updateHighlight()
 {
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
-    if (currentItem && autoHighlight && highlight && !movingHorizontally && !movingVertically) {
+    bool strictHighlight = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
+    if (currentItem && autoHighlight && highlight && (!strictHighlight || !pressed)) {
         // auto-update highlight
         highlightXAnimator->to = currentItem->item->x();
         highlightYAnimator->to = currentItem->item->y();
@@ -635,6 +638,16 @@ qreal QSGGridViewPrivate::footerSize() const
     if (!footer)
         return 0.0;
     return flow == QSGGridView::LeftToRight? footer->item->height() : footer->item->width();
+}
+
+bool QSGGridViewPrivate::showHeaderForIndex(int index) const
+{
+    return index / columns == 0;
+}
+
+bool QSGGridViewPrivate::showFooterForIndex(int index) const
+{
+    return index / columns == (model->count()-1) / columns;
 }
 
 void QSGGridViewPrivate::updateFooter()
@@ -955,6 +968,80 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
 
 
 //----------------------------------------------------------------------------
+/*!
+    \qmlclass GridView QSGGridView
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+
+    \inherits Flickable
+    \brief The GridView item provides a grid view of items provided by a model.
+
+    A GridView displays data from models created from built-in QML elements like ListModel
+    and XmlListModel, or custom model classes defined in C++ that inherit from
+    QAbstractListModel.
+
+    A GridView has a \l model, which defines the data to be displayed, and
+    a \l delegate, which defines how the data should be displayed. Items in a
+    GridView are laid out horizontally or vertically. Grid views are inherently flickable
+    as GridView inherits from \l Flickable.
+
+    \section1 Example Usage
+
+    The following example shows the definition of a simple list model defined
+    in a file called \c ContactModel.qml:
+
+    \snippet doc/src/snippets/declarative/gridview/ContactModel.qml 0
+
+    \div {class="float-right"}
+    \inlineimage gridview-simple.png
+    \enddiv
+
+    This model can be referenced as \c ContactModel in other QML files. See \l{QML Modules}
+    for more information about creating reusable components like this.
+
+    Another component can display this model data in a GridView, as in the following
+    example, which creates a \c ContactModel component for its model, and a \l Column element
+    (containing \l Image and \l Text elements) for its delegate.
+
+    \clearfloat
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml import
+    \codeline
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs simple
+
+    \div {class="float-right"}
+    \inlineimage gridview-highlight.png
+    \enddiv
+
+    The view will create a new delegate for each item in the model. Note that the delegate
+    is able to access the model's \c name and \c portrait data directly.
+
+    An improved grid view is shown below. The delegate is visually improved and is moved
+    into a separate \c contactDelegate component.
+
+    \clearfloat
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml classdocs advanced
+
+    The currently selected item is highlighted with a blue \l Rectangle using the \l highlight property,
+    and \c focus is set to \c true to enable keyboard navigation for the grid view.
+    The grid view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+
+    Delegates are instantiated as needed and may be destroyed at any time.
+    State should \e never be stored in a delegate.
+
+    GridView attaches a number of properties to the root item of the delegate, for example
+    \c {GridView.isCurrentItem}.  In the following example, the root delegate item can access
+    this attached property directly as \c GridView.isCurrentItem, while the child
+    \c contactInfo object must refer to this property as \c wrapper.GridView.isCurrentItem.
+
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+
+    \note Views do not set the \l{Item::}{clip} property automatically.
+    If the view is not clipped by another item or the screen, it will be necessary
+    to set this property to true in order to clip the items that are partially or
+    fully outside the view.
+
+    \sa {declarative/modelviews/gridview}{GridView example}
+*/
 
 QSGGridView::QSGGridView(QSGItem *parent)
     : QSGItemView(*(new QSGGridViewPrivate), parent)
@@ -977,6 +1064,242 @@ void QSGGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
     }
 }
 
+/*!
+    \qmlattachedproperty bool QtQuick2::GridView::isCurrentItem
+    This attached property is true if this delegate is the current item; otherwise false.
+
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedproperty GridView QtQuick2::GridView::view
+    This attached property holds the view that manages this delegate instance.
+
+    It is attached to each instance of the delegate.
+
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml isCurrentItem
+*/
+
+/*!
+    \qmlattachedproperty bool QtQuick2::GridView::delayRemove
+    This attached property holds whether the delegate may be destroyed.
+
+    It is attached to each instance of the delegate.
+
+    It is sometimes necessary to delay the destruction of an item
+    until an animation completes.
+
+    The example below ensures that the animation completes before
+    the item is removed from the grid.
+
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml delayRemove
+*/
+
+/*!
+    \qmlattachedsignal QtQuick2::GridView::onAdd()
+    This attached handler is called immediately after an item is added to the view.
+*/
+
+/*!
+    \qmlattachedsignal QtQuick2::GridView::onRemove()
+    This attached handler is called immediately before an item is removed from the view.
+*/
+
+
+/*!
+  \qmlproperty model QtQuick2::GridView::model
+  This property holds the model providing data for the grid.
+
+    The model provides the set of data that is used to create the items
+    in the view. Models can be created directly in QML using \l ListModel, \l XmlListModel
+    or \l VisualItemModel, or provided by C++ model classes. If a C++ model class is
+    used, it must be a subclass of \l QAbstractItemModel or a simple list.
+
+  \sa {qmlmodels}{Data Models}
+*/
+
+/*!
+    \qmlproperty Component QtQuick2::GridView::delegate
+
+    The delegate provides a template defining each item instantiated by the view.
+    The index is exposed as an accessible \c index property.  Properties of the
+    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+
+    The number of elements in the delegate has a direct effect on the
+    flicking performance of the view.  If at all possible, place functionality
+    that is not needed for the normal display of the delegate in a \l Loader which
+    can load additional elements when needed.
+
+    The GridView will layout the items based on the size of the root item
+    in the delegate.
+
+    \note Delegates are instantiated as needed and may be destroyed at any time.
+    State should \e never be stored in a delegate.
+*/
+
+/*!
+  \qmlproperty int QtQuick2::GridView::currentIndex
+  \qmlproperty Item QtQuick2::GridView::currentItem
+
+    The \c currentIndex property holds the index of the current item, and
+    \c currentItem holds the current item.  Setting the currentIndex to -1
+    will clear the highlight and set currentItem to null.
+
+    If highlightFollowsCurrentItem is \c true, setting either of these
+    properties will smoothly scroll the GridView so that the current
+    item becomes visible.
+
+    Note that the position of the current item
+    may only be approximate until it becomes visible in the view.
+*/
+
+
+/*!
+  \qmlproperty Item QtQuick2::GridView::highlightItem
+
+  This holds the highlight item created from the \l highlight component.
+
+  The highlightItem is managed by the view unless
+  \l highlightFollowsCurrentItem is set to false.
+
+  \sa highlight, highlightFollowsCurrentItem
+*/
+
+
+/*!
+  \qmlproperty int QtQuick2::GridView::count
+  This property holds the number of items in the view.
+*/
+
+
+/*!
+  \qmlproperty Component QtQuick2::GridView::highlight
+  This property holds the component to use as the highlight.
+
+  An instance of the highlight component is created for each view.
+  The geometry of the resulting component instance will be managed by the view
+  so as to stay with the current item, unless the highlightFollowsCurrentItem property is false.
+
+  \sa highlightItem, highlightFollowsCurrentItem
+*/
+
+/*!
+  \qmlproperty bool QtQuick2::GridView::highlightFollowsCurrentItem
+  This property sets whether the highlight is managed by the view.
+
+    If this property is true (the default value), the highlight is moved smoothly
+    to follow the current item.  Otherwise, the
+    highlight is not moved by the view, and any movement must be implemented
+    by the highlight.
+
+    Here is a highlight with its motion defined by a \l {SpringAnimation} item:
+
+    \snippet doc/src/snippets/declarative/gridview/gridview.qml highlightFollowsCurrentItem
+*/
+
+
+/*!
+    \qmlproperty int QtQuick2::GridView::highlightMoveDuration
+    This property holds the move animation duration of the highlight delegate.
+
+    highlightFollowsCurrentItem must be true for this property
+    to have effect.
+
+    The default value for the duration is 150ms.
+
+    \sa highlightFollowsCurrentItem
+*/
+
+/*!
+    \qmlproperty real QtQuick2::GridView::preferredHighlightBegin
+    \qmlproperty real QtQuick2::GridView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick2::GridView::highlightRangeMode
+
+    These properties define the preferred range of the highlight (for the current item)
+    within the view. The \c preferredHighlightBegin value must be less than the
+    \c preferredHighlightEnd value.
+
+    These properties affect the position of the current item when the view is scrolled.
+    For example, if the currently selected item should stay in the middle of the
+    view when it is scrolled, set the \c preferredHighlightBegin and
+    \c preferredHighlightEnd values to the top and bottom coordinates of where the middle
+    item would be. If the \c currentItem is changed programmatically, the view will
+    automatically scroll so that the current item is in the middle of the view.
+    Furthermore, the behavior of the current item index will occur whether or not a
+    highlight exists.
+
+    Valid values for \c highlightRangeMode are:
+
+    \list
+    \o GridView.ApplyRange - the view attempts to maintain the highlight within the range.
+       However, the highlight can move outside of the range at the ends of the view or due
+       to mouse interaction.
+    \o GridView.StrictlyEnforceRange - the highlight never moves outside of the range.
+       The current item changes if a keyboard or mouse action would cause the highlight to move
+       outside of the range.
+    \o GridView.NoHighlightRange - this is the default value.
+    \endlist
+*/
+
+
+/*!
+  \qmlproperty enumeration QtQuick2::GridView::layoutDirection
+  This property holds the layout direction of the grid.
+
+    Possible values:
+
+  \list
+  \o Qt.LeftToRight (default) - Items will be laid out starting in the top, left corner. The flow is
+  dependent on the \l GridView::flow property.
+  \o Qt.RightToLeft - Items will be laid out starting in the top, right corner. The flow is dependent
+  on the \l GridView::flow property.
+  \endlist
+
+  \bold Note: If GridView::flow is set to GridView.LeftToRight, this is not to be confused if
+  GridView::layoutDirection is set to Qt.RightToLeft. The GridView.LeftToRight flow value simply
+  indicates that the flow is horizontal.
+*/
+
+
+/*!
+    \qmlproperty enumeration QtQuick2::GridView::effectiveLayoutDirection
+    This property holds the effective layout direction of the grid.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
+    the visual layout direction of the grid will be mirrored. However, the
+    property \l {GridView::layoutDirection}{layoutDirection} will remain unchanged.
+
+    \sa GridView::layoutDirection, {LayoutMirroring}{LayoutMirroring}
+*/
+/*!
+  \qmlproperty bool QtQuick2::GridView::keyNavigationWraps
+  This property holds whether the grid wraps key navigation
+
+    If this is true, key navigation that would move the current item selection
+    past one end of the view instead wraps around and moves the selection to
+    the other end of the view.
+
+    By default, key navigation is not wrapped.
+*/
+/*!
+    \qmlproperty int QtQuick2::GridView::cacheBuffer
+    This property determines whether delegates are retained outside the
+    visible area of the view.
+
+    If non-zero the view will keep as many delegates
+    instantiated as will fit within the buffer specified.  For example,
+    if in a vertical view the delegate is 20 pixels high and \c cacheBuffer is
+    set to 40, then up to 2 delegates above and 2 delegates below the visible
+    area may be retained.
+
+    Note that cacheBuffer is not a pixel buffer - it only maintains additional
+    instantiated delegates.
+
+    Setting this value can make scrolling the list smoother at the expense
+    of additional memory usage.  It is not a substitute for creating efficient
+    delegates; the fewer elements in a delegate, the faster a view may be
+    scrolled.
+*/
 void QSGGridView::setHighlightMoveDuration(int duration)
 {
     Q_D(QSGGridView);
@@ -989,6 +1312,17 @@ void QSGGridView::setHighlightMoveDuration(int duration)
     }
 }
 
+/*!
+  \qmlproperty enumeration QtQuick2::GridView::flow
+  This property holds the flow of the grid.
+
+    Possible values:
+
+    \list
+    \o GridView.LeftToRight (default) - Items are laid out from left to right, and the view scrolls vertically
+    \o GridView.TopToBottom - Items are laid out from top to bottom, and the view scrolls horizontally
+    \endlist
+*/
 QSGGridView::Flow QSGGridView::flow() const
 {
     Q_D(const QSGGridView);
@@ -1015,6 +1349,14 @@ void QSGGridView::setFlow(Flow flow)
 }
 
 
+/*!
+  \qmlproperty int QtQuick2::GridView::cellWidth
+  \qmlproperty int QtQuick2::GridView::cellHeight
+
+  These properties holds the width and height of each cell in the grid.
+
+  The default cell size is 100x100.
+*/
 int QSGGridView::cellWidth() const
 {
     Q_D(const QSGGridView);
@@ -1048,7 +1390,22 @@ void QSGGridView::setCellHeight(int cellHeight)
         d->layout();
     }
 }
+/*!
+    \qmlproperty enumeration QtQuick2::GridView::snapMode
 
+    This property determines how the view scrolling will settle following a drag or flick.
+    The possible values are:
+
+    \list
+    \o GridView.NoSnap (default) - the view stops anywhere within the visible area.
+    \o GridView.SnapToRow - the view settles with a row (or column for \c GridView.TopToBottom flow)
+    aligned with the start of the view.
+    \o GridView.SnapOneRow - the view will settle no more than one row (or column for \c GridView.TopToBottom flow)
+    away from the first visible row at the time the mouse button is released.
+    This mode is particularly useful for moving one page at a time.
+    \endlist
+
+*/
 QSGGridView::SnapMode QSGGridView::snapMode() const
 {
     Q_D(const QSGGridView);
@@ -1065,6 +1422,24 @@ void QSGGridView::setSnapMode(SnapMode mode)
 }
 
 
+/*!
+    \qmlproperty Component QtQuick2::GridView::footer
+    This property holds the component to use as the footer.
+
+    An instance of the footer component is created for each view.  The
+    footer is positioned at the end of the view, after any items.
+
+    \sa header
+*/
+/*!
+    \qmlproperty Component QtQuick2::GridView::header
+    This property holds the component to use as the header.
+
+    An instance of the header component is created for each view.  The
+    header is positioned at the beginning of the view, before any items.
+
+    \sa footer
+*/
 void QSGGridView::viewportMoved()
 {
     Q_D(QSGGridView);
@@ -1115,7 +1490,13 @@ void QSGGridView::viewportMoved()
             if (pos < viewPos + highlightStart)
                 pos = viewPos + highlightStart;
 
-            static_cast<FxGridItemSG*>(d->highlight)->setPosition(static_cast<FxGridItemSG*>(d->highlight)->colPos(), qRound(pos));
+            if (pos != d->highlight->position()) {
+                d->highlightXAnimator->stop();
+                d->highlightYAnimator->stop();
+                static_cast<FxGridItemSG*>(d->highlight)->setPosition(static_cast<FxGridItemSG*>(d->highlight)->colPos(), pos);
+            } else {
+                d->updateHighlight();
+            }
 
             // update current index
             int idx = d->snapIndex();
@@ -1164,6 +1545,16 @@ void QSGGridView::keyPressEvent(QKeyEvent *event)
     event->ignore();
     QSGItemView::keyPressEvent(event);
 }
+/*!
+    \qmlmethod QtQuick2::GridView::moveCurrentIndexUp()
+
+    Move the currentIndex up one item in the view.
+    The current index will wrap if keyNavigationWraps is true and it
+    is currently at the end. This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
+
 
 void QSGGridView::moveCurrentIndexUp()
 {
@@ -1184,6 +1575,15 @@ void QSGGridView::moveCurrentIndexUp()
     }
 }
 
+/*!
+    \qmlmethod QtQuick2::GridView::moveCurrentIndexDown()
+
+    Move the currentIndex down one item in the view.
+    The current index will wrap if keyNavigationWraps is true and it
+    is currently at the end. This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGGridView::moveCurrentIndexDown()
 {
     Q_D(QSGGridView);
@@ -1203,6 +1603,15 @@ void QSGGridView::moveCurrentIndexDown()
     }
 }
 
+/*!
+    \qmlmethod QtQuick2::GridView::moveCurrentIndexLeft()
+
+    Move the currentIndex left one item in the view.
+    The current index will wrap if keyNavigationWraps is true and it
+    is currently at the end. This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGGridView::moveCurrentIndexLeft()
 {
     Q_D(QSGGridView);
@@ -1236,6 +1645,16 @@ void QSGGridView::moveCurrentIndexLeft()
     }
 }
 
+
+/*!
+    \qmlmethod QtQuick2::GridView::moveCurrentIndexRight()
+
+    Move the currentIndex right one item in the view.
+    The current index will wrap if keyNavigationWraps is true and it
+    is currently at the end. This method has no effect if the \l count is zero.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGGridView::moveCurrentIndexRight()
 {
     Q_D(QSGGridView);
@@ -1273,7 +1692,7 @@ void QSGGridView::moveCurrentIndexRight()
 void QSGGridView::itemsInserted(int modelIndex, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     int index = d->visibleItems.count() ? d->mapFromModel(modelIndex) : 0;
@@ -1404,7 +1823,7 @@ void QSGGridView::itemsInserted(int modelIndex, int count)
 void QSGGridView::itemsRemoved(int modelIndex, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
         return;
 
     d->itemCount -= count;
@@ -1486,7 +1905,7 @@ void QSGGridView::itemsRemoved(int modelIndex, int count)
 void QSGGridView::itemsMoved(int from, int to, int count)
 {
     Q_D(QSGGridView);
-    if (!isComponentComplete())
+    if (!isComponentComplete() || !d->isValid())
         return;
     d->updateUnrequestedIndexes();
 
@@ -1614,7 +2033,71 @@ void QSGGridView::itemsMoved(int from, int to, int count)
     d->layout();
 }
 
+/*!
+    \qmlmethod QtQuick2::GridView::positionViewAtIndex(int index, PositionMode mode)
 
+    Positions the view such that the \a index is at the position specified by
+    \a mode:
+
+    \list
+    \o GridView.Beginning - position item at the top (or left for \c GridView.TopToBottom flow) of the view.
+    \o GridView.Center - position item in the center of the view.
+    \o GridView.End - position item at bottom (or right for horizontal orientation) of the view.
+    \o GridView.Visible - if any part of the item is visible then take no action, otherwise
+    bring the item into view.
+    \o GridView.Contain - ensure the entire item is visible.  If the item is larger than
+    the view the item is positioned at the top (or left for \c GridView.TopToBottom flow) of the view.
+    \endlist
+
+    If positioning the view at the index would cause empty space to be displayed at
+    the beginning or end of the view, the view will be positioned at the boundary.
+
+    It is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY} to position the view
+    at a particular index.  This is unreliable since removing items from the start
+    of the view does not cause all other items to be repositioned.
+    The correct way to bring an item into view is with \c positionViewAtIndex.
+
+    \bold Note: methods should only be called after the Component has completed.  To position
+    the view at startup, this method should be called by Component.onCompleted.  For
+    example, to position the view at the end:
+
+    \code
+    Component.onCompleted: positionViewAtIndex(count - 1, GridView.Beginning)
+    \endcode
+*/
+
+/*!
+    \qmlmethod QtQuick2::GridView::positionViewAtBeginning()
+    \qmlmethod QtQuick2::GridView::positionViewAtEnd()
+
+    Positions the view at the beginning or end, taking into account any header or footer.
+
+    It is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY} to position the view
+    at a particular index.  This is unreliable since removing items from the start
+    of the list does not cause all other items to be repositioned, and because
+    the actual start of the view can vary based on the size of the delegates.
+
+    \bold Note: methods should only be called after the Component has completed.  To position
+    the view at startup, this method should be called by Component.onCompleted.  For
+    example, to position the view at the end on startup:
+
+    \code
+    Component.onCompleted: positionViewAtEnd()
+    \endcode
+*/
+
+/*!
+    \qmlmethod int QtQuick2::GridView::indexAt(int x, int y)
+
+    Returns the index of the visible item containing the point \a x, \a y in content
+    coordinates.  If there is no item at the point specified, or the item is
+    not visible -1 is returned.
+
+    If the item is outside the visible area, -1 is returned, regardless of
+    whether an item will exist at that point when scrolled into view.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 QSGGridViewAttached *QSGGridView::qmlAttachedProperties(QObject *obj)
 {
     return new QSGGridViewAttached(obj);

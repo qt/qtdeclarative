@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 
     The following example shows the simplest usage of the Image element.
 
-    \snippet doc/src/snippets/declarative/image.qml document
+    \snippet doc/src/snippets/qtquick1/image.qml document
 
     \beginfloatleft
     \image declarative-qtlogo.png

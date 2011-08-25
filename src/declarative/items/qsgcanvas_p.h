@@ -119,11 +119,11 @@ public:
     bool deliverHoverEvent(QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, bool &accepted);
     bool sendHoverEvent(QEvent::Type, QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
-    void clearHover();
+    bool clearHover();
     void deliverDragEvent(QSGDragEvent *);
     bool deliverDragEvent(QSGItem *item, QSGDragEvent *);
 
-    QDeclarativeGuard<QSGItem> hoverItem;
+    QList<QSGItem*> hoverItems;
     enum FocusOption {
         DontChangeFocusProperty = 0x01,
     };

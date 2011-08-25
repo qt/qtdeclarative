@@ -71,7 +71,8 @@ private:
 tst_moduleqt47::tst_moduleqt47()
 {
     excludedFiles << "tests/auto/qtquick1/moduleqt47/data/importqt47.qml"
-                  << "doc/src/declarative/whatsnew.qdoc";
+                  << "doc/src/declarative/whatsnew.qdoc"
+                  << "doc/src/qtquick1/whatsnew.qdoc";
 }
 
 void tst_moduleqt47::create()

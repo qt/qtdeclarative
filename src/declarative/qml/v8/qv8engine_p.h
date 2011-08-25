@@ -7,29 +7,29 @@
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
-** No Commercial Usage
-** This file contains pre-release code and may not be distributed.
-** You may use this file in accordance with the terms and conditions
-** contained in the Technology Preview License Agreement accompanying
-** this package.
-**
 ** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
+** rights. These rights are described in the Nokia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
 **
-**
-**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
 **
 **
 **
@@ -63,6 +63,8 @@
 #include <private/qv8_p.h>
 #include <qjsengine.h>
 #include <qjsvalue.h>
+#include "qjsvalue_p.h"
+#include "qjsvalueiterator_p.h"
 #include "qscriptoriginalglobalobject_p.h"
 #include "qscripttools_p.h"
 
@@ -124,6 +126,7 @@ private:
         } \
         return rv; \
     } \
+
 
 class QV8Engine;
 class QV8ObjectResource : public v8::Object::ExternalResource
@@ -214,6 +217,7 @@ class QDeclarativeEngine;
 class QDeclarativeValueType;
 class QNetworkAccessManager;
 class QDeclarativeContextData;
+
 class Q_DECLARATIVE_EXPORT QV8Engine
 {
 public:
@@ -260,11 +264,16 @@ public:
     inline void unregisterValue(QJSValuePrivate *data);
     inline void invalidateAllValues();
 
+    inline void registerValueIterator(QJSValueIteratorPrivate *data);
+    inline void unregisterValueIterator(QJSValueIteratorPrivate *data);
+    inline void invalidateAllIterators();
+
     QV8ContextWrapper *contextWrapper() { return &m_contextWrapper; }
     QV8QObjectWrapper *qobjectWrapper() { return &m_qobjectWrapper; }
     QV8TypeWrapper *typeWrapper() { return &m_typeWrapper; }
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8VariantWrapper *variantWrapper() { return &m_variantWrapper; }
+    QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
     void *sqlDatabaseData() { return m_sqlDatabaseData; }
@@ -378,7 +387,7 @@ public:
                                 const QByteArray &targetType,
                                 void **result);
 
-    QVariant variantValue(v8::Handle<v8::Value> value);
+    QVariant &variantValue(v8::Handle<v8::Value> value);
 
     QJSValue scriptValueFromInternal(v8::Handle<v8::Value>) const;
 
@@ -427,6 +436,7 @@ protected:
     static v8::Handle<v8::Value> point(const v8::Arguments &args);
     static v8::Handle<v8::Value> size(const v8::Arguments &args);
     static v8::Handle<v8::Value> vector3d(const v8::Arguments &args);
+    static v8::Handle<v8::Value> vector4d(const v8::Arguments &args);
     static v8::Handle<v8::Value> lighter(const v8::Arguments &args);
     static v8::Handle<v8::Value> darker(const v8::Arguments &args);
     static v8::Handle<v8::Value> tint(const v8::Arguments &args);
@@ -452,10 +462,15 @@ protected:
 
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
+
 private:
-    QScriptBagContainer<QJSValuePrivate> m_values;
+    typedef QScriptIntrusiveList<QJSValuePrivate, &QJSValuePrivate::m_node> ValueList;
+    ValueList m_values;
+    typedef QScriptIntrusiveList<QJSValueIteratorPrivate, &QJSValueIteratorPrivate::m_node> ValueIteratorList;
+    ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
+    friend class QV8DebugService;
 };
 
 // Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated

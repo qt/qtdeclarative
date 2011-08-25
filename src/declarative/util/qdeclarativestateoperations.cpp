@@ -71,6 +71,7 @@ public:
 
 /*!
     \qmlclass StateChangeScript QDeclarativeStateChangeScript
+    \inqmlmodule QtQuick 2
     \ingroup qml-state-elements
     \brief The StateChangeScript element allows you to run a script in a state.
 
@@ -93,7 +94,7 @@ QDeclarativeStateChangeScript::~QDeclarativeStateChangeScript()
 }
 
 /*!
-    \qmlproperty script StateChangeScript::script
+    \qmlproperty script QtQuick2::StateChangeScript::script
     This property holds the script to run when the state is current.
 */
 QDeclarativeScriptString QDeclarativeStateChangeScript::script() const
@@ -109,7 +110,7 @@ void QDeclarativeStateChangeScript::setScript(const QDeclarativeScriptString &s)
 }
 
 /*!
-    \qmlproperty string StateChangeScript::name
+    \qmlproperty string QtQuick2::StateChangeScript::name
     This property holds the name of the script. This name can be used by a
     ScriptAction to target a specific script.
 

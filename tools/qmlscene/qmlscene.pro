@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = qmlscene
-DESTDIR= ../../bin
+DESTDIR= $$QT.declarative.bins
 
 QT += declarative declarative-private qtquick1
 
@@ -11,7 +11,7 @@ macx: CONFIG -= app_bundle
 
 SOURCES += main.cpp
 
-CONFIG += console
+CONFIG += console declarative_debug
 
 symbian {
     TARGET.EPOCHEAPSIZE = 0x20000 0x5000000

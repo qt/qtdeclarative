@@ -53,8 +53,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Transition QDeclarativeTransition
+    \inqmlmodule QtQuick 2
     \ingroup qml-animation-transition
-    \since 4.7
     \brief The Transition element defines animated transitions that occur on state changes.
 
     A Transition defines the animations to be applied when a \l State change occurs.
@@ -113,7 +113,7 @@ class QDeclarativeTransitionPrivate : public QObjectPrivate
 public:
     QDeclarativeTransitionPrivate()
     : fromState(QLatin1String("*")), toState(QLatin1String("*")),
-      reversed(false), reversible(false), endState(0)
+      reversed(false), reversible(false), enabled(true), manager(0)
     {
         group.trans = this;
     }
@@ -122,12 +122,13 @@ public:
     QString toState;
     bool reversed;
     bool reversible;
+    bool enabled;
     ParallelAnimationWrapper group;
-    QDeclarativeTransitionManager *endState;
+    QDeclarativeTransitionManager *manager;
 
     void complete()
     {
-        endState->complete();
+        manager->complete();
     }
     static void append_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list, QDeclarativeAbstractAnimation *a);
     static int animation_count(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list);
@@ -202,7 +203,7 @@ void QDeclarativeTransition::setReversed(bool r)
 
 void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &actions,
                             QList<QDeclarativeProperty> &after,
-                            QDeclarativeTransitionManager *endState)
+                            QDeclarativeTransitionManager *manager)
 {
     Q_D(QDeclarativeTransition);
 
@@ -218,14 +219,14 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
         }
     }
 
-    d->endState = endState;
+    d->manager = manager;
     d->group.setDirection(d->reversed ? QAbstractAnimation::Backward : QAbstractAnimation::Forward);
     d->group.start();
 }
 
 /*!
-    \qmlproperty string Transition::from
-    \qmlproperty string Transition::to
+    \qmlproperty string QtQuick2::Transition::from
+    \qmlproperty string QtQuick2::Transition::to
 
     These properties indicate the state changes that trigger the transition.
 
@@ -243,6 +244,8 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
 
     The animation would only be applied when changing from the default state to
     the "brighter" state (i.e. when the mouse is pressed, but not on release).
+
+    Multiple \c to and \from values can be set by using a comma-separated string.
 
     \sa reversible
 */
@@ -263,7 +266,7 @@ void QDeclarativeTransition::setFromState(const QString &f)
 }
 
 /*!
-    \qmlproperty bool Transition::reversible
+    \qmlproperty bool QtQuick2::Transition::reversible
     This property holds whether the transition should be automatically reversed when the conditions that triggered this transition are reversed.
 
     The default value is false.
@@ -319,7 +322,50 @@ void QDeclarativeTransition::setToState(const QString &t)
 }
 
 /*!
-    \qmlproperty list<Animation> Transition::animations
+    \qmlproperty bool QtQuick2::Transition::enabled
+
+    This property holds whether the Transition will be run when moving
+    from the \c from state to the \c to state.
+
+    By default a Transition is enabled.
+
+    Note that in some circumstances disabling a Transition may cause an
+    alternative Transition to be used in its place. In the following
+    example, the generic Transition will be used to animate the change
+    from \c state1 to \c state2, as the more specific Transition has
+    been disabled.
+
+    \qml
+    Item {
+        states: [
+            State { name: "state1" ... }
+            State { name: "state2" ... }
+        ]
+        transitions: [
+            Transition { from: "state1"; to: "state2"; enabled: false ... }
+            Transition { ... }
+        ]
+    }
+    \endqml
+*/
+
+bool QDeclarativeTransition::enabled() const
+{
+    Q_D(const QDeclarativeTransition);
+    return d->enabled;
+}
+
+void QDeclarativeTransition::setEnabled(bool enabled)
+{
+    Q_D(QDeclarativeTransition);
+    if (d->enabled == enabled)
+        return;
+    d->enabled = enabled;
+    emit enabledChanged();
+}
+
+/*!
+    \qmlproperty list<Animation> QtQuick2::Transition::animations
     \default
 
     This property holds a list of the animations to be run for this transition.

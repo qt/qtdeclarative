@@ -55,7 +55,7 @@ class QSGPointAttractorAffector : public QSGParticleAffector
     //Like Gravitational singularity, but linear to distance instead of quadratic
     //And affects ds/dt, not da/dt
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)//TODO: Change to pointX, pointY
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
     Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
     Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)

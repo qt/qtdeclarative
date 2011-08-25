@@ -31,6 +31,84 @@
 #include <QtCore/qregexp.h>
 #include <QtCore/qstring.h>
 
+/*!
+  \since 5.0
+  \class QJSValue
+
+  \brief The QJSValue class acts as a container for Qt/JavaScript data types.
+
+  \ingroup qtjavascript
+  \mainclass
+
+  QJSValue supports the types defined in the \l{ECMA-262}
+  standard: The primitive types, which are Undefined, Null, Boolean,
+  Number, and String; and the Object type. Additionally, built-in
+  support is provided for Qt/C++ types such as QVariant and QObject.
+
+  For the object-based types (including Date and RegExp), use the
+  newT() functions in QJSEngine (e.g. QJSEngine::newObject())
+  to create a QJSValue of the desired type. For the primitive types,
+  use one of the QJSValue constructor overloads.
+
+  The methods named isT() (e.g. isBool(), isUndefined()) can be
+  used to test if a value is of a certain type. The methods named
+  toT() (e.g. toBool(), toString()) can be used to convert a
+  QJSValue to another type. You can also use the generic
+  QJSValue_cast() function.
+
+  Object values have zero or more properties which are themselves
+  QJSValues. Use setProperty() to set a property of an object, and
+  call property() to retrieve the value of a property.
+
+  \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 0
+
+  The attributes of a property can be queried by calling the
+  propertyFlags() function.
+
+  If you want to iterate over the properties of a script object, use
+  the QJSValueIterator class.
+
+  Object values have an internal \c{prototype} property, which can be
+  accessed with prototype() and setPrototype().
+
+  Function objects (objects for which isFunction() returns true) can
+  be invoked by calling call(). Constructor functions can be used to
+  construct new objects by calling construct().
+
+  Use equals() or strictlyEquals() to compare a QJSValue to another.
+
+  Note that a QJSValue for which isObject() is true only carries a
+  reference to an actual object; copying the QJSValue will only
+  copy the object reference, not the object itself. If you want to
+  clone an object (i.e. copy an object's properties to another
+  object), you can do so with the help of a \c{for-in} statement in
+  script code, or QJSValueIterator in C++.
+
+  \sa QJSEngine, QJSValueIterator
+*/
+
+/*!
+    \enum QJSValue::SpecialValue
+
+    This enum is used to specify a single-valued type.
+
+    \value UndefinedValue An undefined value.
+
+    \value NullValue A null value.
+*/
+
+/*!
+    \enum QJSValue::PropertyFlag
+
+    This enum describes the attributes of a property.
+
+    \value ReadOnly The property is read-only. Attempts by Qt Script code to write to the property will be ignored.
+
+    \value Undeletable Attempts by Qt Script code to \c{delete} the property will be ignored.
+
+    \value SkipInEnumeration The property is not to be enumerated by a \c{for-in} enumeration.
+*/
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -48,28 +126,6 @@ QJSValue::QJSValue(bool value)
     : d_ptr(new QJSValuePrivate(value))
 {
 }
-
-/*!
-    \enum QJSValue::PropertyFlag
-
-    This enum describes the attributes of a property.
-
-    \value ReadOnly The property is read-only. Attempts by Qt Script code to write to the property will be ignored.
-
-    \value Undeletable Attempts by Qt Script code to \c{delete} the property will be ignored.
-
-    \value SkipInEnumeration The property is not to be enumerated by a \c{for-in} enumeration.
-
-    \value PropertyGetter The property is defined by a function which will be called to get the property value.
-
-    \value PropertySetter The property is defined by a function which will be called to set the property value.
-
-    \omitvalue QObjectMember This flag is used to indicate that an existing property is a QObject member (a property or method).
-
-    \value KeepExistingFlags This value is used to indicate to setProperty() that the property's flags should be left unchanged. If the property doesn't exist, the default flags (0) will be used.
-
-    \omitvalue UserRange Flags in this range are not used by Qt Script, and can be used for custom purposes.
-*/
 
 /*!
   Constructs a new QJSValue with a number \a value.
@@ -120,8 +176,6 @@ QJSValue::QJSValue(const QLatin1String &value)
 }
 
 /*!
-  \fn QJSValue::QJSValue(const QLatin1String &value)
-
   Constructs a new QJSValue with a string \a value.
 */
 #ifndef QT_NO_CAST_FROM_ASCII
@@ -383,8 +437,6 @@ bool QJSValue::isUndefined() const
 /*!
   Returns true if this QJSValue is an object of the Error class;
   otherwise returns false.
-
-  \sa QScriptContext::throwError()
 */
 bool QJSValue::isError() const
 {
@@ -654,7 +706,7 @@ QVariant QJSValue::toVariant() const
   QJSEngine::hasUncaughtException() to determine if an exception
   occurred.
 
-  \snippet doc/src/snippets/code/src_script_qscriptvalue.cpp 2
+  \snippet doc/src/snippets/code/src_script_qjsvalue.cpp 1
 
   \sa construct()
 */
@@ -773,7 +825,7 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
   toString()) in an attempt to convert the object to a primitive value
   (possibly resulting in an uncaught script exception).
 
-  \sa strictlyEquals(), lessThan()
+  \sa strictlyEquals()
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
@@ -830,9 +882,7 @@ bool QJSValue::instanceOf(const QJSValue &other) const
 }
 
 /*!
-  Returns the value of this QJSValue's property with the given \a name,
-  using the given \a mode to resolve the property.
-
+  Returns the value of this QJSValue's property with the given \a name.
   If no such property exists, an invalid QJSValue is returned.
 
   If the property is implemented using a getter function (i.e. has the
@@ -854,8 +904,7 @@ QJSValue QJSValue::property(const QString& name) const
 /*!
   \overload
 
-  Returns the property at the given \a arrayIndex, using the given \a
-  mode to resolve the property.
+  Returns the property at the given \a arrayIndex.
 
   This function is provided for convenience and performance when
   working with array objects.
@@ -878,8 +927,7 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
   If this QJSValue is not an object, this function does nothing.
 
   If this QJSValue does not already have a property with name \a name,
-  a new property is created; the given \a flags then specify how this
-  property may be accessed by script code.
+  a new property is created.
 
   If \a value is invalid, the property is removed.
 
@@ -922,8 +970,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 }
 
 /*!
-  Returns the flags of the property with the given \a name, using the
-  given \a mode to resolve the property.
+  Returns the flags of the property with the given \a name.
 
   \sa property()
 */

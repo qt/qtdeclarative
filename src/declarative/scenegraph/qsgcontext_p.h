@@ -102,6 +102,7 @@ public:
                                                      QSize *size,
                                                      const QSize &requestSize);
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
+    virtual QSize minimumFBOSize() const;
 
     static QSGContext *createDefaultContext();
 
@@ -113,6 +114,9 @@ public:
 
     void setRenderAlpha(qreal renderAlpha);
     qreal renderAlpha() const;
+
+    void setDistanceFieldEnabled(bool enabled);
+    bool isDistanceFieldEnabled() const;
 
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
 

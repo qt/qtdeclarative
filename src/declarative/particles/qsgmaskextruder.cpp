@@ -46,7 +46,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass MaskShape QSGMaskExtruder
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Shape
     \brief The MaskShape element allows you to represent an image as a shape to affectors and emitters.
 

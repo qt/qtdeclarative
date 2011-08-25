@@ -67,6 +67,7 @@ class QRectF;
 class QString;
 class QByteArray;
 class QVector3D;
+class QVector4D;
 
 // XXX - Bauhaus currently uses these methods which is why they're exported
 namespace QDeclarativeStringConverters
@@ -84,6 +85,7 @@ namespace QDeclarativeStringConverters
     QSizeF Q_DECLARATIVE_PRIVATE_EXPORT sizeFFromString(const QString &, bool *ok = 0);
     QRectF Q_DECLARATIVE_PRIVATE_EXPORT rectFFromString(const QString &, bool *ok = 0);
     QVector3D Q_DECLARATIVE_PRIVATE_EXPORT vector3DFromString(const QString &, bool *ok = 0);
+    QVector4D Q_DECLARATIVE_PRIVATE_EXPORT vector4DFromString(const QString &, bool *ok = 0);
 }
 
 QT_END_NAMESPACE

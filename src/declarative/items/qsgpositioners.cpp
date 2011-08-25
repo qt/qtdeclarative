@@ -50,6 +50,7 @@
 #include <private/qdeclarativestate_p.h>
 #include <private/qdeclarativestategroup_p.h>
 #include <private/qdeclarativestateoperations_p.h>
+#include <private/qdeclarativetransition_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,22 @@ QSGBasePositioner::QSGBasePositioner(PositionerType at, QSGItem *parent)
     Q_D(QSGBasePositioner);
     d->init(at);
 }
+/*!
+    \internal
+    \class QSGBasePositioner
+    \brief The QSGBasePositioner class provides a base for QSGGraphics layouts.
+
+    To create a QSGGraphics Positioner, simply subclass QSGBasePositioner and implement
+    doLayout(), which is automatically called when the layout might need
+    updating. In doLayout() use the setX and setY functions from QSGBasePositioner, and the
+    base class will apply the positions along with the appropriate transitions. The items to
+    position are provided in order as the protected member positionedItems.
+
+    You also need to set a PositionerType, to declare whether you are positioning the x, y or both
+    for the child items. Depending on the chosen type, only x or y changes will be applied.
+
+    Note that the subclass is responsible for adding the spacing in between items.
+*/
 
 QSGBasePositioner::QSGBasePositioner(QSGBasePositionerPrivate &dd, PositionerType at, QSGItem *parent)
     : QSGImplicitSizeItem(dd, parent)
@@ -213,7 +230,8 @@ void QSGBasePositioner::prePositioning()
     }
     QSizeF contentSize(0,0);
     doPositioning(&contentSize);
-    if(d->addTransition || d->moveTransition)
+    updateAttachedProperties();
+    if (!d->addActions.isEmpty() || !d->moveActions.isEmpty())
         finishApplyTransitions();
     d->doingPositioning = false;
     //Set implicit size to the size of its children
@@ -226,12 +244,12 @@ void QSGBasePositioner::positionX(int x, const PositionedItem &target)
     Q_D(QSGBasePositioner);
     if(d->type == Horizontal || d->type == Both){
         if (target.isNew) {
-            if (!d->addTransition)
+            if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setX(x);
             else
                 d->addActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
         } else if (x != target.item->x()) {
-            if (!d->moveTransition)
+            if (!d->moveTransition || !d->moveTransition->enabled())
                 target.item->setX(x);
             else
                 d->moveActions << QDeclarativeAction(target.item, QLatin1String("x"), QVariant(x));
@@ -244,12 +262,12 @@ void QSGBasePositioner::positionY(int y, const PositionedItem &target)
     Q_D(QSGBasePositioner);
     if(d->type == Vertical || d->type == Both){
         if (target.isNew) {
-            if (!d->addTransition)
+            if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setY(y);
             else
                 d->addActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));
         } else if (y != target.item->y()) {
-            if (!d->moveTransition)
+            if (!d->moveTransition || !d->moveTransition->enabled())
                 target.item->setY(y);
             else
                 d->moveActions << QDeclarativeAction(target.item, QLatin1String("y"), QVariant(y));
@@ -268,6 +286,233 @@ void QSGBasePositioner::finishApplyTransitions()
     d->moveActions.clear();
 }
 
+QSGPositionerAttached *QSGBasePositioner::qmlAttachedProperties(QObject *obj)
+{
+    return new QSGPositionerAttached(obj);
+}
+
+void QSGBasePositioner::updateAttachedProperties(QSGPositionerAttached *specificProperty, QSGItem *specificPropertyOwner) const
+{
+    // If this function is deemed too expensive or shows up in profiles, it could
+    // be changed to run only when there are attached properties present. This
+    // could be a flag in the positioner that is set by the attached property
+    // constructor.
+    QSGPositionerAttached *prevLastProperty = 0;
+    QSGPositionerAttached *lastProperty = 0;
+
+    int visibleItemIndex = 0;
+    for (int ii = 0; ii < positionedItems.count(); ++ii) {
+        const PositionedItem &child = positionedItems.at(ii);
+        if (!child.item)
+            continue;
+
+        QSGPositionerAttached *property = 0;
+
+        if (specificProperty) {
+            if (specificPropertyOwner == child.item) {
+                property = specificProperty;
+            }
+        } else {
+            property = static_cast<QSGPositionerAttached *>(qmlAttachedPropertiesObject<QSGBasePositioner>(child.item, false));
+        }
+
+        if (child.isVisible) {
+            if (property) {
+              property->setIndex(visibleItemIndex);
+              property->setIsFirstItem(visibleItemIndex == 0);
+
+              if (property->isLastItem())
+                prevLastProperty = property;
+            }
+
+            lastProperty = property;
+            ++visibleItemIndex;
+        } else if (property) {
+            property->setIndex(-1);
+            property->setIsFirstItem(false);
+            property->setIsLastItem(false);
+        }
+    }
+
+    if (prevLastProperty && prevLastProperty != lastProperty)
+        prevLastProperty->setIsLastItem(false);
+    if (lastProperty)
+      lastProperty->setIsLastItem(true);
+}
+
+/*!
+    \qmlclass Positioner QSGPositionerAttached
+    \inqmlmodule QtQuick 2
+    \ingroup qml-positioning-elements
+    \brief The Positioner type provides attached properties that contain details on where an item exists in a positioner.
+
+    Positioner items (such as Column, Row, Flow and Grid) provide automatic layout
+    for child items. Attaching this property allows a child item to determine
+    where it exists within the positioner.
+*/
+
+QSGPositionerAttached::QSGPositionerAttached(QObject *parent) : QObject(parent), m_index(-1), m_isFirstItem(false), m_isLastItem(false)
+{
+    QSGItem *attachedItem = qobject_cast<QSGItem *>(parent);
+    if (attachedItem) {
+        QSGBasePositioner *positioner = qobject_cast<QSGBasePositioner *>(attachedItem->parent());
+        if (positioner) {
+            positioner->updateAttachedProperties(this, attachedItem);
+        }
+    }
+}
+
+/*!
+    \qmlattachedproperty Item QtQuick2::Positioner::index
+
+    This property allows the item to determine
+    its index within the positioner.
+*/
+void QSGPositionerAttached::setIndex(int index)
+{
+    if (m_index == index)
+        return;
+    m_index = index;
+    emit indexChanged();
+}
+
+/*!
+    \qmlattachedproperty Item QtQuick2::Positioner::isFirstItem
+    \qmlattachedproperty Item QtQuick2::Positioner::isLastItem
+
+    These properties allow the item to determine if it
+    is the first or last item in the positioner, respectively.
+*/
+void QSGPositionerAttached::setIsFirstItem(bool isFirstItem)
+{
+    if (m_isFirstItem == isFirstItem)
+        return;
+    m_isFirstItem = isFirstItem;
+    emit isFirstItemChanged();
+}
+
+void QSGPositionerAttached::setIsLastItem(bool isLastItem)
+{
+    if (m_isLastItem == isLastItem)
+        return;
+    m_isLastItem = isLastItem;
+    emit isLastItemChanged();
+}
+
+/*!
+  \qmlclass Column QSGColumn
+    \inqmlmodule QtQuick 2
+  \ingroup qml-positioning-elements
+  \brief The Column item arranges its children vertically.
+  \inherits Item
+
+  The Column item positions its child items so that they are vertically
+  aligned and not overlapping.
+
+  Spacing between items can be added using the \l spacing property.
+  Transitions can be used for cases where items managed by a Column are
+  added or moved. These are stored in the \l add and \l move properties
+  respectively.
+
+  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
+  related items.
+
+  \section1 Example Usage
+
+  The following example positions differently shaped rectangles using a Column
+  item.
+
+  \image verticalpositioner_example.png
+
+  \snippet doc/src/snippets/declarative/column/vertical-positioner.qml document
+
+  \section1 Using Transitions
+
+  Transitions can be used to animate items that are added to, moved within,
+  or removed from a Column item. The \l add and \l move properties can be set to
+  the transitions that will be applied when items are added to, removed from,
+  or re-positioned within a Column item.
+
+  The use of transitions with positioners is described in more detail in the
+  \l{Using QML Positioner and Repeater Items#Using Transitions}{Using QML
+  Positioner and Repeater Items} document.
+
+  \image verticalpositioner_transition.gif
+
+  \qml
+  Column {
+      spacing: 2
+      add: Transition {
+          // Define an animation for adding a new item...
+      }
+      move: Transition {
+          // Define an animation for moving items within the column...
+      }
+      // ...
+  }
+  \endqml
+
+  \section1 Limitations
+
+  Note that the positioner assumes that the x and y positions of its children
+  will not change. If you manually change the x or y properties in script, bind
+  the x or y properties, use anchors on a child of a positioner, or have the
+  height of a child depend on the position of a child, then the
+  positioner may exhibit strange behavior. If you need to perform any of these
+  actions, consider positioning the items without the use of a Column.
+
+  Items with a width or height of 0 will not be positioned.
+
+  \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Column::add
+
+    This property holds the transition to be applied when adding an
+    item to the positioner. The transition will only be applied to the
+    added item(s).  Positioner transitions will only affect the
+    position (x, y) of items.
+
+    For a positioner, adding an item can mean that either the object
+    has been created or reparented, and thus is now a child or the
+    positioner, or that the object has had its opacity increased from
+    zero, and thus is now visible.
+
+    \sa move
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Column::move
+
+    This property holds the transition to apply when moving an item
+    within the positioner.  Positioner transitions will only affect
+    the position (x, y) of items.
+
+    This transition can be performed when other items are added or removed
+    from the positioner, or when items resize themselves.
+
+    \image positioner-move.gif
+
+    \qml
+    Column {
+        move: Transition {
+            NumberAnimation {
+                properties: "y"
+                duration: 1000
+            }
+        }
+    }
+    \endqml
+
+    \sa add, {declarative/positioners}{Positioners example}
+*/
+/*!
+  \qmlproperty int QtQuick2::Column::spacing
+
+  The spacing is the amount in pixels left empty between adjacent
+  items. The default spacing is 0.
+
+  \sa Grid::spacing
+*/
 QSGColumn::QSGColumn(QSGItem *parent)
 : QSGBasePositioner(Vertical, parent)
 {
@@ -288,10 +533,11 @@ void QSGColumn::doPositioning(QSizeF *contentSize)
         contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
 
         voffset += child.item->height();
-        if (ii != positionedItems.count() - 1)
-            voffset += spacing();
+        voffset += spacing();
     }
 
+    if (voffset != 0)//If we positioned any items, undo the spacing from the last item
+        voffset -= spacing();
     contentSize->setHeight(voffset);
 }
 
@@ -318,11 +564,119 @@ void QSGColumn::reportConflictingAnchors()
         qmlInfo(this) << "Cannot specify top, bottom, verticalCenter, fill or centerIn anchors for items inside Column";
     }
 }
+/*!
+  \qmlclass Row QSGRow
+    \inqmlmodule QtQuick 2
+  \ingroup qml-positioning-elements
+  \brief The Row item arranges its children horizontally.
+  \inherits Item
+
+  The Row item positions its child items so that they are horizontally
+  aligned and not overlapping.
+
+  Use \l spacing to set the spacing between items in a Row, and use the
+  \l add and \l move properties to set the transitions that should be applied
+  when items are added to, removed from, or re-positioned within the Row.
+
+  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
+  related items.
+
+  \section1 Example Usage
+
+  The following example lays out differently shaped rectangles using a Row.
+
+  \image horizontalpositioner_example.png
+
+  \snippet doc/src/snippets/declarative/row/row.qml document
+
+  \section1 Using Transitions
+
+  Transitions can be used to animate items that are added to, moved within,
+  or removed from a Grid item. The \l add and \l move properties can be set to
+  the transitions that will be applied when items are added to, removed from,
+  or re-positioned within a Row item.
+
+  \section1 Limitations
+
+  Note that the positioner assumes that the x and y positions of its children
+  will not change. If you manually change the x or y properties in script, bind
+  the x or y properties, use anchors on a child of a positioner, or have the
+  width of a child depend on the position of a child, then the
+  positioner may exhibit strange behaviour. If you need to perform any of these
+  actions, consider positioning the items without the use of a Row.
+
+  Items with a width or height of 0 will not be positioned.
+
+  \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Row::add
+
+    This property holds the transition to be applied when adding an
+    item to the positioner. The transition will only be applied to the
+    added item(s).  Positioner transitions will only affect the
+    position (x, y) of items.
+
+    For a positioner, adding an item can mean that either the object
+    has been created or reparented, and thus is now a child or the
+    positioner, or that the object has had its opacity increased from
+    zero, and thus is now visible.
+
+    \sa move
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Row::move
+
+    This property holds the transition to be applied when moving an
+    item within the positioner. Positioner transitions will only affect
+    the position (x, y) of items.
+
+    This transition can be performed when other items are added or removed
+    from the positioner, or when items resize themselves.
+
+    \qml
+    Row {
+        id: positioner
+        move: Transition {
+            NumberAnimation {
+                properties: "x"
+                duration: 1000
+            }
+        }
+    }
+    \endqml
+
+    \sa add, {declarative/positioners}{Positioners example}
+*/
+/*!
+  \qmlproperty int QtQuick2::Row::spacing
+
+  The spacing is the amount in pixels left empty between adjacent
+  items. The default spacing is 0.
+
+  \sa Grid::spacing
+*/
 
 QSGRow::QSGRow(QSGItem *parent)
 : QSGBasePositioner(Horizontal, parent)
 {
 }
+/*!
+    \qmlproperty enumeration QtQuick2::Row::layoutDirection
+
+    This property holds the layoutDirection of the row.
+
+    Possible values:
+
+    \list
+    \o Qt.LeftToRight (default) - Items are laid out from left to right. If the width of the row is explicitly set,
+    the left anchor remains to the left of the row.
+    \o Qt.RightToLeft - Items are laid out from right to left. If the width of the row is explicitly set,
+    the right anchor remains to the right of the row.
+    \endlist
+
+    \sa Grid::layoutDirection, Flow::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+*/
 
 Qt::LayoutDirection QSGRow::layoutDirection() const
 {
@@ -344,6 +698,16 @@ void QSGRow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
         emit effectiveLayoutDirectionChanged();
     }
 }
+/*!
+    \qmlproperty enumeration QtQuick2::Row::effectiveLayoutDirection
+    This property holds the effective layout direction of the row positioner.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
+    the visual layout direction of the row positioner will be mirrored. However, the
+    property \l {Row::layoutDirection}{layoutDirection} will remain unchanged.
+
+    \sa Row::layoutDirection, {LayoutMirroring}{LayoutMirroring}
+*/
 
 Qt::LayoutDirection QSGRow::effectiveLayoutDirection() const
 {
@@ -371,10 +735,11 @@ void QSGRow::doPositioning(QSizeF *contentSize)
         contentSize->setHeight(qMax(contentSize->height(), child.item->height()));
 
         hoffset += child.item->width();
-        if (ii != positionedItems.count() - 1)
-            hoffset += spacing();
+        hoffset += spacing();
     }
 
+    if (hoffset != 0)//If we positioned any items, undo the extra spacing from the last item
+        hoffset -= spacing();
     contentSize->setWidth(hoffset);
 
     if (d->isLeftToRight())
@@ -421,10 +786,137 @@ void QSGRow::reportConflictingAnchors()
         qmlInfo(this) << "Cannot specify left, right, horizontalCenter, fill or centerIn anchors for items inside Row";
 }
 
+/*!
+  \qmlclass Grid QSGGrid
+    \inqmlmodule QtQuick 2
+  \ingroup qml-positioning-elements
+  \brief The Grid item positions its children in a grid.
+  \inherits Item
+
+  The Grid item positions its child items so that they are
+  aligned in a grid and are not overlapping.
+
+  The grid positioner calculates a grid of rectangular cells of sufficient
+  size to hold all items, placing the items in the cells, from left to right
+  and top to bottom. Each item is positioned in the top-left corner of its
+  cell with position (0, 0).
+
+  A Grid defaults to four columns, and as many rows as are necessary to
+  fit all child items. The number of rows and columns can be constrained
+  by setting the \l rows and \l columns properties.
+
+  Spacing can be added between child items by setting the \l spacing
+  property. The amount of spacing applied will be the same in the
+  horizontal and vertical directions.
+
+  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
+  related items.
+
+  \section1 Example Usage
+
+  The following example demonstrates this.
+
+  \image gridLayout_example.png
+
+  \snippet doc/src/snippets/declarative/grid/grid.qml document
+
+  \section1 Using Transitions
+
+  Transitions can be used to animate items that are added to, moved within,
+  or removed from a Grid item. The \l add and \l move properties can be set to
+  the transitions that will be applied when items are added to, removed from,
+  or re-positioned within a Grid item.
+
+  \section1 Limitations
+
+  Note that the positioner assumes that the x and y positions of its children
+  will not change. If you manually change the x or y properties in script, bind
+  the x or y properties, use anchors on a child of a positioner, or have the
+  width or height of a child depend on the position of a child, then the
+  positioner may exhibit strange behaviour. If you need to perform any of these
+  actions, consider positioning the items without the use of a Grid.
+
+  Items with a width or height of 0 will not be positioned.
+
+  \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Grid::add
+
+    This property holds the transition to be applied when adding an
+    item to the positioner. The transition will only be applied to the
+    added item(s).  Positioner transitions will only affect the
+    position (x, y) of items.
+
+    For a positioner, adding an item can mean that either the object
+    has been created or reparented, and thus is now a child or the
+    positioner, or that the object has had its opacity increased from
+    zero, and thus is now visible.
+
+    \sa move
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Grid::move
+
+    This property holds the transition to be applied when moving an
+    item within the positioner. Positioner transitions will only affect
+    the position (x, y) of items.
+
+    This transition can be performed when other items are added or removed
+    from the positioner, or when items resize themselves.
+
+    \qml
+    Grid {
+        move: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: 1000
+            }
+        }
+    }
+    \endqml
+
+    \sa add, {declarative/positioners}{Positioners example}
+*/
+/*!
+  \qmlproperty int QtQuick2::Grid::spacing
+
+  The spacing is the amount in pixels left empty between adjacent
+  items. The default spacing is 0.
+
+  The below example places a Grid containing a red, a blue and a
+  green rectangle on a gray background. The area the grid positioner
+  occupies is colored white. The positioner on the left has the
+  no spacing (the default), and the positioner on the right has
+  a spacing of 6.
+
+  \inlineimage qml-grid-no-spacing.png
+  \inlineimage qml-grid-spacing.png
+
+  \sa rows, columns
+*/
 QSGGrid::QSGGrid(QSGItem *parent) :
-    QSGBasePositioner(Both, parent), m_rows(-1), m_columns(-1), m_flow(LeftToRight)
+    QSGBasePositioner(Both, parent), m_rows(-1), m_columns(-1), m_rowSpacing(-1), m_columnSpacing(-1), m_flow(LeftToRight)
 {
 }
+
+/*!
+    \qmlproperty int QtQuick2::Grid::columns
+
+    This property holds the number of columns in the grid. The default
+    number of columns is 4.
+
+    If the grid does not have enough items to fill the specified
+    number of columns, some columns will be of zero width.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::Grid::rows
+    This property holds the number of rows in the grid.
+
+    If the grid does not have enough items to fill the specified
+    number of rows, some rows will be of zero width.
+*/
 
 void QSGGrid::setColumns(const int columns)
 {
@@ -444,6 +936,19 @@ void QSGGrid::setRows(const int rows)
     emit rowsChanged();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Grid::flow
+    This property holds the flow of the layout.
+
+    Possible values are:
+
+    \list
+    \o Grid.LeftToRight (default) - Items are positioned next to
+       each other in the \l layoutDirection, then wrapped to the next line.
+    \o Grid.TopToBottom - Items are positioned next to each
+       other from top to bottom, then wrapped to the next column.
+    \endlist
+*/
 QSGGrid::Flow QSGGrid::flow() const
 {
     return m_flow;
@@ -458,6 +963,58 @@ void QSGGrid::setFlow(Flow flow)
     }
 }
 
+/*!
+    \qmlproperty int QtQuick2::Grid::rowSpacing
+
+    This property holds the spacing in pixels between rows.
+
+    \sa columnSpacing
+    \since QtQuick2.0
+*/
+void QSGGrid::setRowSpacing(const int rowSpacing)
+{
+    if (rowSpacing == m_rowSpacing)
+        return;
+    m_rowSpacing = rowSpacing;
+    prePositioning();
+    emit rowSpacingChanged();
+}
+
+/*!
+    \qmlproperty int QtQuick2::Grid::columnSpacing
+
+    This property holds the spacing in pixels between columns.
+
+    \sa rowSpacing
+    \since QtQuick2.0
+*/
+void QSGGrid::setColumnSpacing(const int columnSpacing)
+{
+    if (columnSpacing == m_columnSpacing)
+        return;
+    m_columnSpacing = columnSpacing;
+    prePositioning();
+    emit columnSpacingChanged();
+}
+
+/*!
+    \qmlproperty enumeration QtQuick2::Grid::layoutDirection
+
+    This property holds the layout direction of the layout.
+
+    Possible values are:
+
+    \list
+    \o Qt.LeftToRight (default) - Items are positioned from the top to bottom,
+    and left to right. The flow direction is dependent on the
+    \l Grid::flow property.
+    \o Qt.RightToLeft - Items are positioned from the top to bottom,
+    and right to left. The flow direction is dependent on the
+    \l Grid::flow property.
+    \endlist
+
+    \sa Flow::layoutDirection, Row::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+*/
 Qt::LayoutDirection QSGGrid::layoutDirection() const
 {
     return QSGBasePositionerPrivate::getLayoutDirection(this);
@@ -479,6 +1036,16 @@ void QSGGrid::setLayoutDirection(Qt::LayoutDirection layoutDirection)
     }
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Grid::effectiveLayoutDirection
+    This property holds the effective layout direction of the grid positioner.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
+    the visual layout direction of the grid positioner will be mirrored. However, the
+    property \l {Grid::layoutDirection}{layoutDirection} will remain unchanged.
+
+    \sa Grid::layoutDirection, {LayoutMirroring}{LayoutMirroring}
+*/
 Qt::LayoutDirection QSGGrid::effectiveLayoutDirection() const
 {
     return QSGBasePositionerPrivate::getEffectiveLayoutDirection(this);
@@ -550,17 +1117,25 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
         }
     }
 
+    int columnSpacing = m_columnSpacing;
+    if (columnSpacing == -1)
+        columnSpacing = spacing();
+
+    int rowSpacing = m_rowSpacing;
+    if (rowSpacing == -1)
+        rowSpacing = spacing();
+
     int widthSum = 0;
     for (int j=0; j < maxColWidth.size(); j++){
         if (j)
-            widthSum += spacing();
+            widthSum += columnSpacing;
         widthSum += maxColWidth[j];
     }
 
     int heightSum = 0;
     for (int i=0; i < maxRowHeight.size(); i++){
         if (i)
-            heightSum += spacing();
+            heightSum += rowSpacing;
         heightSum += maxRowHeight[i];
     }
 
@@ -591,13 +1166,13 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
 
         if (m_flow == LeftToRight) {
             if (d->isLeftToRight())
-                xoffset += maxColWidth[curCol]+spacing();
+                xoffset += maxColWidth[curCol]+columnSpacing;
             else
-                xoffset -= maxColWidth[curCol]+spacing();
+                xoffset -= maxColWidth[curCol]+columnSpacing;
             curCol++;
             curCol%=c;
             if (!curCol){
-                yoffset += maxRowHeight[curRow]+spacing();
+                yoffset += maxRowHeight[curRow]+rowSpacing;
                 if (d->isLeftToRight())
                     xoffset = 0;
                 else
@@ -607,14 +1182,14 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
                     break;
             }
         } else {
-            yoffset+=maxRowHeight[curRow]+spacing();
+            yoffset+=maxRowHeight[curRow]+rowSpacing;
             curRow++;
             curRow%=r;
             if (!curRow){
                 if (d->isLeftToRight())
-                    xoffset += maxColWidth[curCol]+spacing();
+                    xoffset += maxColWidth[curCol]+columnSpacing;
                 else
-                    xoffset -= maxColWidth[curCol]+spacing();
+                    xoffset -= maxColWidth[curCol]+columnSpacing;
                 yoffset=0;
                 curCol++;
                 if (curCol>=c)
@@ -641,6 +1216,105 @@ void QSGGrid::reportConflictingAnchors()
         qmlInfo(this) << "Cannot specify anchors for items inside Grid";
 }
 
+/*!
+  \qmlclass Flow QSGFlow
+    \inqmlmodule QtQuick 2
+  \ingroup qml-positioning-elements
+  \brief The Flow item arranges its children side by side, wrapping as necessary.
+  \inherits Item
+
+  The Flow item positions its child items like words on a page, wrapping them
+  to create rows or columns of items that do not overlap.
+
+  Spacing between items can be added using the \l spacing property.
+  Transitions can be used for cases where items managed by a Column are
+  added or moved. These are stored in the \l add and \l move properties
+  respectively.
+
+  See \l{Using QML Positioner and Repeater Items} for more details about this item and other
+  related items.
+
+  \section1 Example Usage
+
+  The following example positions \l Text items within a parent item using
+  a Flow item.
+
+  \image qml-flow-snippet.png
+
+  \snippet doc/src/snippets/declarative/flow.qml flow item
+
+  \section1 Using Transitions
+
+  Transitions can be used to animate items that are added to, moved within,
+  or removed from a Flow item. The \l add and \l move properties can be set to
+  the transitions that will be applied when items are added to, removed from,
+  or re-positioned within a Flow item.
+
+  The use of transitions with positioners is described in more detail in the
+  \l{Using QML Positioner and Repeater Items#Using Transitions}{Using QML
+  Positioner and Repeater Items} document.
+
+  \section1 Limitations
+
+  Note that the positioner assumes that the x and y positions of its children
+  will not change. If you manually change the x or y properties in script, bind
+  the x or y properties, use anchors on a child of a positioner, or have the
+  width or height of a child depend on the position of a child, then the
+  positioner may exhibit strange behaviour.  If you need to perform any of these
+  actions, consider positioning the items without the use of a Flow.
+
+  Items with a width or height of 0 will not be positioned.
+
+  \sa Column, Row, Grid, Positioner, {declarative/positioners}{Positioners example}
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Flow::add
+
+    This property holds the transition to be applied when adding an
+    item to the positioner. The transition will only be applied to the
+    added item(s).  Positioner transitions will only affect the
+    position (x, y) of items.
+
+    For a positioner, adding an item can mean that either the object
+    has been created or reparented, and thus is now a child or the
+    positioner, or that the object has had its opacity increased from
+    zero, and thus is now visible.
+
+    \sa move
+*/
+/*!
+    \qmlproperty Transition QtQuick2::Flow::move
+
+    This property holds the transition to be applied when moving an
+    item within the positioner. Positioner transitions will only affect
+    the position (x, y) of items.
+
+    This transition can be performed when other items are added or removed
+    from the positioner, or when items resize themselves.
+
+    \qml
+    Flow {
+        id: positioner
+        move: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                ease: "easeOutBounce"
+            }
+        }
+    }
+    \endqml
+
+    \sa add, {declarative/positioners}{Positioners example}
+*/
+/*!
+  \qmlproperty int QtQuick2::Flow::spacing
+
+  spacing is the amount in pixels left empty between each adjacent
+  item, and defaults to 0.
+
+  \sa Grid::spacing
+*/
+
 class QSGFlowPrivate : public QSGBasePositionerPrivate
 {
     Q_DECLARE_PUBLIC(QSGFlow)
@@ -661,6 +1335,21 @@ QSGFlow::QSGFlow(QSGItem *parent)
     d->addItemChangeListener(d, QSGItemPrivate::Geometry);
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Flow::flow
+    This property holds the flow of the layout.
+
+    Possible values are:
+
+    \list
+    \o Flow.LeftToRight (default) - Items are positioned next to
+    to each other according to the \l layoutDirection until the width of the Flow
+    is exceeded, then wrapped to the next line.
+    \o Flow.TopToBottom - Items are positioned next to each
+    other from top to bottom until the height of the Flow is exceeded,
+    then wrapped to the next column.
+    \endlist
+*/
 QSGFlow::Flow QSGFlow::flow() const
 {
     Q_D(const QSGFlow);
@@ -676,6 +1365,25 @@ void QSGFlow::setFlow(Flow flow)
         emit flowChanged();
     }
 }
+
+/*!
+    \qmlproperty enumeration QtQuick2::Flow::layoutDirection
+
+    This property holds the layout direction of the layout.
+
+    Possible values are:
+
+    \list
+    \o Qt.LeftToRight (default) - Items are positioned from the top to bottom,
+    and left to right. The flow direction is dependent on the
+    \l Flow::flow property.
+    \o Qt.RightToLeft - Items are positioned from the top to bottom,
+    and right to left. The flow direction is dependent on the
+    \l Flow::flow property.
+    \endlist
+
+    \sa Grid::layoutDirection, Row::layoutDirection, {declarative/righttoleft/layoutdirection}{Layout directions example}
+*/
 
 Qt::LayoutDirection QSGFlow::layoutDirection() const
 {
@@ -693,6 +1401,17 @@ void QSGFlow::setLayoutDirection(Qt::LayoutDirection layoutDirection)
         emit effectiveLayoutDirectionChanged();
     }
 }
+
+/*!
+    \qmlproperty enumeration QtQuick2::Flow::effectiveLayoutDirection
+    This property holds the effective layout direction of the flow positioner.
+
+    When using the attached property \l {LayoutMirroring::enabled}{LayoutMirroring::enabled} for locale layouts,
+    the visual layout direction of the grid positioner will be mirrored. However, the
+    property \l {Flow::layoutDirection}{layoutDirection} will remain unchanged.
+
+    \sa Flow::layoutDirection, {LayoutMirroring}{LayoutMirroring}
+*/
 
 Qt::LayoutDirection QSGFlow::effectiveLayoutDirection() const
 {

@@ -104,6 +104,6 @@ Rectangle{
         anchors.margins: 16
         text: "... can you be trusted with the power?"
         style: Text.Outline; styleColor: "#AAAAAA"
-        font.pixelSize: 32
+        font.pixelSize: width > 400 ? 32 : 16
     }
 }

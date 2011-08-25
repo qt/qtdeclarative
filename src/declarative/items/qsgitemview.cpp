@@ -7,28 +7,29 @@
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
-** No Commercial Usage
-** This file contains pre-release code and may not be distributed.
-** You may use this file in accordance with the terms and conditions
-** contained in the Technology Preview License Agreement accompanying ** this package.
-**
 ** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
+** rights. These rights are described in the Nokia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
 **
-**
-**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
 **
 **
 **
@@ -723,7 +724,6 @@ void QSGItemView::trackedPositionChanged()
         qreal trackedPos = d->trackedItem->position();
         qreal trackedSize = d->trackedItem->size();
         if (d->trackedItem != d->currentItem) {
-            trackedPos -= d->currentItem->sectionSize();
             trackedSize += d->currentItem->sectionSize();
         }
         qreal viewPos;
@@ -756,16 +756,32 @@ void QSGItemView::trackedPositionChanged()
                     pos = d->startPosition();
             }
         } else {
-            if (trackedPos < viewPos && d->currentItem->position() < viewPos) {
-                pos = qMax(trackedPos, d->currentItem->position());
-            } else if (d->trackedItem->endPosition() >= viewPos + d->size()
-                && d->currentItem->endPosition() >= viewPos + d->size()) {
-                if (d->trackedItem->endPosition() <= d->currentItem->endPosition()) {
-                    pos = d->trackedItem->endPosition() - d->size();
+            qreal trackedEndPos = d->trackedItem->endPosition();
+            qreal toItemPos = d->currentItem->position();
+            qreal toItemEndPos = d->currentItem->endPosition();
+
+            if (d->header && d->showHeaderForIndex(d->currentIndex)) {
+                trackedPos -= d->headerSize();
+                trackedEndPos -= d->headerSize();
+                toItemPos -= d->headerSize();
+                toItemEndPos -= d->headerSize();
+            } else if (d->footer && d->showFooterForIndex(d->currentIndex)) {
+                trackedPos += d->footerSize();
+                trackedEndPos += d->footerSize();
+                toItemPos += d->footerSize();
+                toItemEndPos += d->footerSize();
+            }
+
+            if (trackedPos < viewPos && toItemPos < viewPos) {
+                pos = qMax(trackedPos, toItemPos);
+            } else if (trackedEndPos >= viewPos + d->size()
+                && toItemEndPos >= viewPos + d->size()) {
+                if (trackedEndPos <= toItemEndPos) {
+                    pos = trackedEndPos - d->size();
                     if (trackedSize > d->size())
                         pos = trackedPos;
                 } else {
-                    pos = d->currentItem->endPosition() - d->size();
+                    pos = toItemEndPos - d->size();
                     if (d->currentItem->size() > d->size())
                         pos = d->currentItem->position();
                 }
@@ -1082,7 +1098,7 @@ int QSGItemViewPrivate::mapFromModel(int modelIndex) const
     for (int i = 0; i < visibleItems.count(); ++i) {
         FxViewItem *item = visibleItems.at(i);
         if (item->index == modelIndex)
-            return i + visibleIndex;
+            return i;
         if (item->index > modelIndex)
             return -1;
     }

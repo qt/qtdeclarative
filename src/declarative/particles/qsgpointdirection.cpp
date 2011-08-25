@@ -46,7 +46,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass PointDirection QSGPointDirection
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits StochasticDirection
     \brief The PointDirection element allows you to specify a direction that varies in x and y components
 

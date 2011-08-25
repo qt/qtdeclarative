@@ -57,7 +57,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass ParticleSystem QSGParticleSystem
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \brief The ParticleSystem brings together ParticlePainter, Emitter and Affector elements.
 
 */
@@ -478,7 +477,7 @@ float QSGParticleData::curSize()
 {
     if (!system || !lifeSpan)
         return 0.0f;
-    return size + (endSize - size) * (lifeLeft() / lifeSpan);
+    return size + (endSize - size) * (1 - (lifeLeft() / lifeSpan));
 }
 
 float QSGParticleData::lifeLeft()

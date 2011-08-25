@@ -173,6 +173,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
     bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
     bool sceneEventFilter(QGraphicsItem *, QEvent *);
+    bool sceneEvent(QEvent *event);
     bool event(QEvent *event);
     void componentComplete();
 

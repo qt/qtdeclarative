@@ -343,6 +343,9 @@ void tst_qsgimage::mirror()
         }
 
         QImage img = expected.toImage();
+#ifdef Q_WS_QPA
+        QEXPECT_FAIL("", "QTBUG-21005 fails", Continue);
+#endif
         QCOMPARE(screenshots[fillMode], img);
     }
 }
@@ -469,6 +472,9 @@ void tst_qsgimage::tiling_QTBUG_6716()
     QImage img = canvas->grabFrameBuffer();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
+#ifdef Q_WS_QPA
+            QEXPECT_FAIL("", "QTBUG-21005 fails", Abort);
+#endif
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }

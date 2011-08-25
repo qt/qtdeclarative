@@ -61,103 +61,104 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QDeclarativeChangeSet
 {
 public:
-    struct Insert
+    struct MoveKey
     {
-        Insert() {}
-        Insert(int start, int end) : start(start), end(end) {}
-
-        int count() const { return end - start; }
-
-        int start;
-        int end;
-    };
-
-    struct Remove
-    {
-        Remove() {}
-        Remove(int start, int end) : start(start), end(end) {}
-
-        int count() const { return end - start; }
-
-        int start;
-        int end;
-    };
-
-    struct Move
-    {
-        Move() {}
-        Move(int start, int end, int to) : fstart(start), fend(end), tstart(to), tend(to + end - start) {}
-
-        int minimum() const { return qMin(fstart, tstart); }
-        int maximum() const { return qMax(fend, tend); }
-        int count() const { return fend - fstart; }
-
-        union {
-            int start;
-            int fstart;
-        };
-        union {
-            int end;
-            int fend;
-        };
-        union {
-            int to;
-            int tstart;
-        };
-        int tend;
+        MoveKey() : moveId(-1), offset(0) {}
+        MoveKey(int moveId, int offset) : moveId(moveId), offset(offset) {}
+        int moveId;
+        int offset;
     };
 
     struct Change
     {
-        Change() {}
-        Change(int start, int end) : start(start), end(end) {}
+        Change() : index(0), count(0), moveId(-1) {}
+        Change(int index, int count) : index(index), count(count), moveId(-1) {}
+        Change(int index, int count, int moveId) : index(index), count(count), moveId(moveId) {}
 
-        int count() const { return end - start; }
+        int index;
+        int count;
+        int moveId;
 
-        int start;
-        int end;
+        bool isMove() const { return moveId >= 0; }
+
+        MoveKey moveKey(int index) const { return MoveKey(moveId, index - Change::index); }
+
+        int start() const { return index; }
+        int end() const { return index + count; }
     };
+
+
+    struct Insert : public Change
+    {
+        Insert() {}
+        Insert(int index, int count) : Change(index, count) {}
+        Insert(int index, int count, int moveId) : Change(index, count, moveId) {}
+    };
+
+    struct Remove : public Change
+    {
+        Remove() {}
+        Remove(int index, int count) : Change(index, count) {}
+        Remove(int index, int count, int moveId) : Change(index, count, moveId) {}
+    };
+
+    QDeclarativeChangeSet();
+    QDeclarativeChangeSet(
+            const QVector<Remove> &removals,
+            const QVector<Insert> &insertions,
+            const QVector<Change> &changes = QVector<Change>());
+    QDeclarativeChangeSet(const QDeclarativeChangeSet &changeSet);
+    ~QDeclarativeChangeSet();
+
+    QDeclarativeChangeSet &operator =(const QDeclarativeChangeSet &changeSet);
 
     const QVector<Remove> &removes() const { return m_removes; }
     const QVector<Insert> &inserts() const { return m_inserts; }
-    const QVector<Move> &moves() const { return m_moves; }
     const QVector<Change> &changes() const {return  m_changes; }
 
-    void insertInsert(int start, int end);
-    void insertRemove(int start, int end);
-    void insertMove(int start, int end, int to);
-    void insertChange(int start, int end);
+    void insert(int index, int count);
+    void remove(int index, int count);
+    void move(int from, int to, int count);
+    void change(int index, int count);
 
-    void appendInsert(int start, int end) { m_inserts.append(Insert(start, end)); }
-    void appendRemove(int start, int end) { m_removes.append(Remove(start, end)); }
-    void appendMove(int start, int end, int to) { m_moves.append(Move(start, end, to)); }
-    void appendChange(int start, int end) { m_changes.append(Change(start, end)); }
+    void apply(const QDeclarativeChangeSet &changeSet);
+    void apply(const QVector<Remove> &removals);
+    void apply(const QVector<Insert> &insertions);
+    void apply(const QVector<Change> &changes);
+    void apply(
+            const QVector<Remove> &removals,
+            const QVector<Insert> &insertions,
+            const QVector<Change> &changes = QVector<Change>());
 
-    void append(const QVector<Insert> &inserts) { m_inserts += inserts; }
-    void append(const QVector<Remove> &removes) { m_removes += removes; }
-    void append(const QVector<Move> &moves) { m_moves += moves; }
-    void append(const QVector<Change> &changes) { m_changes += changes; }
-
-    bool isEmpty() const {
-        return m_removes.empty() && m_inserts.empty() && m_moves.empty() && m_changes.empty();
-    }
+    bool isEmpty() const { return m_removes.empty() && m_inserts.empty() && m_changes.empty(); }
 
     void clear()
     {
         m_removes.clear();
         m_inserts.clear();
-        m_moves.clear();
         m_changes.clear();
+        m_moveCounter = 0;
     }
 
 private:
+    void applyRemovals(QVector<Remove> &removals, QVector<Insert> &insertions);
+    void applyInsertions(QVector<Insert> &insertions);
+    void applyChanges(QVector<Change> &changes);
+
     QVector<Remove> m_removes;
     QVector<Insert> m_inserts;
-    QVector<Move> m_moves;
     QVector<Change> m_changes;
+    int m_moveCounter;
 };
 
+inline uint qHash(const QDeclarativeChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
+inline bool operator ==(const QDeclarativeChangeSet::MoveKey &l, const QDeclarativeChangeSet::MoveKey &r) {
+    return l.moveId == r.moveId && l.offset == r.offset; }
+
 Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QDeclarativeChangeSet &change);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Remove &remove);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Insert &insert);
+Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Change &change);
 
 QT_END_NAMESPACE
 

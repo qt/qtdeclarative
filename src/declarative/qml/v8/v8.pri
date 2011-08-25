@@ -5,6 +5,7 @@ include(script.pri)
 
 HEADERS += \
     $$PWD/qv8_p.h \
+    $$PWD/qv8debug_p.h \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qhashedstring_p.h \
@@ -18,7 +19,8 @@ HEADERS += \
     $$PWD/qv8worker_p.h \
     $$PWD/qv8bindings_p.h \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.h \
-    $$PWD/qv8engine_impl_p.h
+    $$PWD/qv8engine_impl_p.h \
+    $$PWD/qv8domerrors_p.h
 
 SOURCES += \
     $$PWD/qv8stringwrapper.cpp \
@@ -34,3 +36,4 @@ SOURCES += \
     $$PWD/qv8worker.cpp \
     $$PWD/qv8bindings.cpp \
     $$PWD/../../../3rdparty/javascriptcore/DateMath.cpp \
+    $$PWD/qv8domerrors.cpp

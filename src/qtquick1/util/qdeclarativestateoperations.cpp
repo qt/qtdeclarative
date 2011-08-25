@@ -189,7 +189,7 @@ void QDeclarative1ParentChangePrivate::doChange(QDeclarativeItem *targetParent, 
     When the \c blueRect is clicked, it changes to the "reparented" state: its parent is changed to \c redRect and it is 
     positioned at (10, 10) within the red rectangle, as specified in the ParentChange.
 
-    \snippet doc/src/snippets/declarative/parentchange.qml 0
+    \snippet doc/src/snippets/qtquick1/parentchange.qml 0
 
     \image parentchange.png
 
@@ -703,7 +703,7 @@ QString QDeclarative1StateChangeScript::typeName() const
     using AnchorChanges, and the top and bottom anchor margins using
     PropertyChanges:
 
-    \snippet doc/src/snippets/declarative/anchorchanges.qml 0
+    \snippet doc/src/snippets/qtquick1/anchorchanges.qml 0
 
     \image anchorchanges.png
 

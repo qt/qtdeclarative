@@ -115,13 +115,13 @@ typedef QPair<int, int> QDeclarative1XmlListRange;
 
     For example, if there is an XML document like this:
 
-    \quotefile doc/src/snippets/declarative/xmlrole.xml
+    \quotefile doc/src/snippets/qtquick1/xmlrole.xml
         
     Here are some valid XPath expressions for XmlRole queries on this document:
 
-    \snippet doc/src/snippets/declarative/xmlrole.qml 0
+    \snippet doc/src/snippets/qtquick1/xmlrole.qml 0
     \dots 4
-    \snippet doc/src/snippets/declarative/xmlrole.qml 1
+    \snippet doc/src/snippets/qtquick1/xmlrole.qml 1
 
     See the \l{http://www.w3.org/TR/xpath20/}{W3C XPath 2.0 specification} for more information.
 */

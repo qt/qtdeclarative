@@ -167,6 +167,8 @@ QDeclarative1GridScaledImage::QDeclarative1GridScaledImage(QIODevice *data)
     _l = l; _r = r; _t = t; _b = b;
 
     _pix = imgFile;
+    if (_pix.startsWith(QLatin1Char('"')) && _pix.endsWith(QLatin1Char('"')))
+        _pix = _pix.mid(1, _pix.size() - 2); // remove leading/trailing quotes.
 }
 
 QDeclarative1BorderImage::TileMode QDeclarative1GridScaledImage::stringToRule(const QString &s)

@@ -44,6 +44,7 @@
 #include "qsgparticlepainter_p.h"
 #include "qsgstochasticdirection_p.h"
 #include <QDeclarativeListProperty>
+#include <qsgsimplematerial.h>
 
 QT_BEGIN_HEADER
 
@@ -51,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class UltraMaterial;
+class ImageMaterialData;
 class QSGGeometryNode;
 
 class QSGSprite;
@@ -60,8 +61,6 @@ class QSGSpriteEngine;
 struct SimpleVertex {
     float x;
     float y;
-    float tx;
-    float ty;
     float t;
     float lifeSpan;
     float size;
@@ -72,14 +71,21 @@ struct SimpleVertex {
     float ay;
 };
 
-struct SimpleVertices {
-    SimpleVertex v1;
-    SimpleVertex v2;
-    SimpleVertex v3;
-    SimpleVertex v4;
+struct ColoredVertex {
+    float x;
+    float y;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float vx;
+    float vy;
+    float ax;
+    float ay;
+    Color4ub color;
 };
 
-struct UltraVertex {
+struct DeformableVertex {
     float x;
     float y;
     float tx;
@@ -99,25 +105,42 @@ struct UltraVertex {
     float yy;
     float rotation;
     float rotationSpeed;
-    float autoRotate;//Assume that GPUs prefer floats to bools
+    float autoRotate;//Assumed that GPUs prefer floats to bools
+};
+
+struct SpriteVertex {
+    float x;
+    float y;
+    float tx;
+    float ty;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float vx;
+    float vy;
+    float ax;
+    float ay;
+    Color4ub color;
+    float xx;
+    float xy;
+    float yx;
+    float yy;
+    float rotation;
+    float rotationSpeed;
+    float autoRotate;//Assumed that GPUs prefer floats to bools
     float animIdx;
     float frameDuration;
     float frameCount;
     float animT;
 };
 
-struct UltraVertices {
-    UltraVertex v1;
-    UltraVertex v2;
-    UltraVertex v3;
-    UltraVertex v4;
-};
-
-struct IntermediateVertices {
-    UltraVertex* v1;
-    UltraVertex* v2;
-    UltraVertex* v3;
-    UltraVertex* v4;
+template <typename Vertex>
+struct Vertices {
+    Vertex v1;
+    Vertex v2;
+    Vertex v3;
+    Vertex v4;
 };
 
 class QSGImageParticle : public QSGParticlePainter
@@ -153,14 +176,23 @@ class QSGImageParticle : public QSGParticlePainter
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(QSGStochasticDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
+
+    Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
+    Q_ENUMS(EntryEffect)
 public:
     explicit QSGImageParticle(QSGItem *parent = 0);
-    virtual ~QSGImageParticle(){}
+    virtual ~QSGImageParticle();
 
 
     QDeclarativeListProperty<QSGSprite> sprites();
     QSGSpriteEngine* spriteEngine() {return m_spriteEngine;}
+
+    enum EntryEffect {
+        None = 0,
+        Fade = 1,
+        Scale = 2
+    };
 
     enum PerformanceLevel{//TODO: Expose?
         Unknown = 0,
@@ -217,6 +249,8 @@ public:
 
     bool bloat() const { return m_bloat; }
 
+    EntryEffect entryEffect() const { return m_entryEffect; }
+
 signals:
 
     void imageChanged();
@@ -254,6 +288,8 @@ signals:
 
     void bloatChanged(bool arg);
 
+    void entryEffectChanged(EntryEffect arg);
+
 public slots:
     void reloadColor(const Color4ub &c, QSGParticleData* d);
     void setAlphaVariation(qreal arg);
@@ -282,6 +318,8 @@ public slots:
 
     void setBloat(bool arg);
 
+    void setEntryEffect(EntryEffect arg);
+
 protected:
     void reset();
     virtual void initialize(int gIdx, int pIdx);
@@ -290,7 +328,6 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     void prepareNextFrame();
     QSGGeometryNode* buildParticleNodes();
-    QSGGeometryNode* buildSimpleParticleNodes();
 
 private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
@@ -312,7 +349,7 @@ private:
     QHash<int, QSGGeometryNode *> m_nodes;
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
     int m_lastIdxStart;
-    UltraMaterial *m_material;
+    QSGMaterial *m_material;
 
     // derived values...
 
@@ -337,6 +374,33 @@ private:
     PerformanceLevel perfLevel;
 
     PerformanceLevel m_lastLevel;
+    bool m_debugMode;
+
+    template<class Vertex>
+    void initTexCoords(Vertex* v, int count){
+        Vertex* end = v + count;
+        while (v < end){
+            v[0].tx = 0;
+            v[0].ty = 0;
+
+            v[1].tx = 1;
+            v[1].ty = 0;
+
+            v[2].tx = 0;
+            v[2].ty = 1;
+
+            v[3].tx = 1;
+            v[3].ty = 1;
+
+            v += 4;
+        }
+    }
+
+    template<class MaterialData>
+    MaterialData* getState(QSGMaterial* m){
+        return static_cast<QSGSimpleMaterial<MaterialData> *>(m)->state();
+    }
+    EntryEffect m_entryEffect;
 };
 
 QT_END_NAMESPACE

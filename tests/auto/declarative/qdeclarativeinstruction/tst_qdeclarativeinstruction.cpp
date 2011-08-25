@@ -63,6 +63,7 @@ private slots:
     void rect();
     void rectf();
     void vector3d();
+    void vector4d();
     void time();
 };
 
@@ -680,6 +681,24 @@ void tst_qdeclarativeinstruction::vector3d()
     QCOMPARE(vector.x(), (qreal)(float)8.2);
     QCOMPARE(vector.y(), (qreal)(float)99.3);
     QCOMPARE(vector.z(), (qreal)(float)12.0);
+}
+
+void tst_qdeclarativeinstruction::vector4d()
+{
+    QCOMPARE(sizeof(QDeclarativeInstruction::instr_storeVector4D::QVector4D), sizeof(QVector4D));
+    QCOMPARE(Q_ALIGNOF(QDeclarativeInstruction::instr_storeVector4D::QVector4D), Q_ALIGNOF(QVector4D));
+
+    QDeclarativeInstruction i;
+    i.storeVector4D.vector.xp = 8.2;
+    i.storeVector4D.vector.yp = 99.3;
+    i.storeVector4D.vector.zp = 12.0;
+    i.storeVector4D.vector.wp = 121.1;
+
+    const QVector4D &vector = (const QVector4D &)(i.storeVector4D.vector);
+    QCOMPARE(vector.x(), (qreal)(float)8.2);
+    QCOMPARE(vector.y(), (qreal)(float)99.3);
+    QCOMPARE(vector.z(), (qreal)(float)12.0);
+    QCOMPARE(vector.w(), (qreal)(float)121.1);
 }
 
 void tst_qdeclarativeinstruction::time()

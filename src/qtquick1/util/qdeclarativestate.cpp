@@ -151,7 +151,7 @@ QDeclarative1StateOperation::QDeclarative1StateOperation(QObjectPrivate &dd, QOb
     between the default state and the "clicked" state, thus toggling the color of the
     rectangle between black and red.
 
-    \snippet doc/src/snippets/declarative/state.qml 0
+    \snippet doc/src/snippets/qtquick1/state.qml 0
 
     Notice the default state is referred to using an empty string ("").
 
@@ -217,7 +217,7 @@ bool QDeclarative1State::isWhenKnown() const
     be applied. For example, the following \l Rectangle changes in and out of the "hidden"
     state when the \l MouseArea is pressed:
 
-    \snippet doc/src/snippets/declarative/state-when.qml 0
+    \snippet doc/src/snippets/qtquick1/state-when.qml 0
 
     If multiple states in a group have \c when clauses that evaluate to \c true
     at the same time, the first matching state will be applied. For example, in

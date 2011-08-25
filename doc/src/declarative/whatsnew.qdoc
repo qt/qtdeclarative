@@ -52,6 +52,11 @@ The Loader element now only emits the \c sourceChanged signal when the source is
 \c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one
 of the properties was changed.
 
+Grid now has rowSpacing and columnSpacing properties.
+
+Positioner now has an attached property that can be used to determine a subitem's location within a
+container such as Column or Row.
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
@@ -64,6 +69,13 @@ QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i
 "import QtQuick 1.0" loads the module dynamically.  To deploy QtQuick 1 applications
 the library (lib/libQtQuick1*) and plugin (imports/QtQuick/) must be installed.
 
+
+\section2 PathView
+
+Added the following properties:
+\list
+\o \l {PathView::}{currentItem}
+\endlist
 
 \section1 Qt 4.7.4 includes QtQuick 1.1
 

@@ -43,6 +43,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: page
+    anchors.centerIn: parent
 
     property Item text: dialogText
     property bool open: false

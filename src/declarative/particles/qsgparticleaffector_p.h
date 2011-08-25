@@ -103,6 +103,7 @@ public:
     }
 
 signals:
+    void affectParticle(QDeclarativeV8Handle particle, qreal dt);
 
     void systemChanged(QSGParticleSystem* arg);
 
@@ -189,6 +190,7 @@ protected:
     bool m_active;
     virtual void componentComplete();
     QPointF m_offset;
+    bool isAffectConnected();
 private:
     QSet<int> m_groups;
     QSet<QPair<int, int> > m_onceOffed;

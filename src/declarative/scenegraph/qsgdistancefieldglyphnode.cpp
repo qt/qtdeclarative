@@ -46,8 +46,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode()
+QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager)
     : m_material(0)
+    , m_glyph_cacheManager(cacheManager)
     , m_glyph_cache(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
     , m_style(QSGText::Normal)
@@ -58,10 +59,7 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode()
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
-
-#ifndef QT_OPENGL_ES
-    setPreferredAntialiasingMode(QSGGlyphNode::SubPixelAntialiasing);
-#endif
+    setPreferredAntialiasingMode(cacheManager->defaultAntialiasingMode());
 }
 
 QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
@@ -169,6 +167,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     QPointF margins(2, 2);
     QPointF texMargins = margins / m_glyph_cache->fontScale();
 
+    QVector<QPointF> glyphPositions = m_glyphs.positions();
     for (int i = 0; i < glyphIndexes.size(); ++i) {
         quint32 glyphIndex = glyphIndexes.at(i);
         QSGDistanceFieldGlyphCache::Metrics metrics = m_glyph_cache->glyphMetrics(glyphIndex);
@@ -185,9 +184,9 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
                 c.height += texMargins.y() * 2;
         }
 
-        QPointF glyphPosition = m_glyphs.positions().at(i) + m_position;
-        qreal x = glyphPosition.x() + metrics.baselineX;
-        qreal y = glyphPosition.y() - metrics.baselineY;
+        const QPointF &glyphPosition = glyphPositions.at(i);
+        qreal x = glyphPosition.x() + metrics.baselineX + m_position.x();
+        qreal y = glyphPosition.y() - metrics.baselineY + m_position.y();
 
         boundingRect |= QRectF(x, y, metrics.width, metrics.height);
 
@@ -245,7 +244,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
 void QSGDistanceFieldGlyphNode::updateFont()
 {
-    m_glyph_cache = QSGDistanceFieldGlyphCache::get(QGLContext::currentContext(), m_glyphs.rawFont());
+    m_glyph_cache = m_glyph_cacheManager->cache(m_glyphs.rawFont());
     m_dirtyFont = false;
 }
 
@@ -254,10 +253,18 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
     delete m_material;
 
     if (m_style == QSGText::Normal) {
-        if (m_antialiasingMode == SubPixelAntialiasing)
-            m_material = new QSGSubPixelDistanceFieldTextMaterial;
-        else
+        switch (m_antialiasingMode) {
+        case HighQualitySubPixelAntialiasing:
+            m_material = new QSGHiQSubPixelDistanceFieldTextMaterial;
+            break;
+        case LowQualitySubPixelAntialiasing:
+            m_material = new QSGLoQSubPixelDistanceFieldTextMaterial;
+            break;
+        case GrayAntialiasing:
+        default:
             m_material = new QSGDistanceFieldTextMaterial;
+            break;
+        }
     } else {
         QSGDistanceFieldStyledTextMaterial *material;
         if (m_style == QSGText::Outline) {

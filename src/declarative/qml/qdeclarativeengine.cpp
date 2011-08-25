@@ -67,7 +67,7 @@
 #include "private/qdeclarativenotifier_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeapplication_p.h"
-#include "private/qjsdebugservice_p.h"
+#include "private/qv8debugservice_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QNetworkReply>
@@ -174,12 +174,6 @@ void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
         item->setProperty("color", QColor(Qt::yellow));
     \endcode
 */
-
-struct StaticQtMetaObject : public QObject
-{
-    static const QMetaObject *get()
-        { return &static_cast<StaticQtMetaObject*> (0)->staticQtMetaObject; }
-};
 
 static bool qt_QmlQtModule_registered = false;
 bool QDeclarativeEnginePrivate::qml_debugging_enabled = false;
@@ -457,7 +451,7 @@ void QDeclarativeEnginePrivate::init()
         QDeclarativeEngineDebugServer::isDebuggingEnabled()) {
         isDebugging = true;
         QDeclarativeEngineDebugServer::instance()->addEngine(q);
-        QJSDebugService::instance()->addEngine(q);
+        QV8DebugService::instance()->addEngine(q);
     }
 }
 
@@ -991,6 +985,17 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
+
+QDeclarativeDebuggingEnabler::QDeclarativeDebuggingEnabler()
+{
+#ifndef QDECLARATIVE_NO_DEBUG_PROTOCOL
+    if (!QDeclarativeEnginePrivate::qml_debugging_enabled) {
+        qWarning("Qml debugging is enabled. Only use this in a safe environment!");
+    }
+    QDeclarativeEnginePrivate::qml_debugging_enabled = true;
+#endif
+}
+
 
 class QDeclarativeDataExtended {
 public:

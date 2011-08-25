@@ -50,6 +50,102 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass PinchEvent QSGPinchEvent
+    \inqmlmodule QtQuick 2
+    \ingroup qml-event-elements
+    \brief The PinchEvent object provides information about a pinch event.
+
+    \bold {The PinchEvent element was added in QtQuick 1.1}
+
+    The \c center, \c startCenter, \c previousCenter properties provide the center position between the two touch points.
+
+    The \c scale and \c previousScale properties provide the scale factor.
+
+    The \c angle, \c previousAngle and \c rotation properties provide the angle between the two points and the amount of rotation.
+
+    The \c point1, \c point2, \c startPoint1, \c startPoint2 properties provide the positions of the touch points.
+
+    The \c accepted property may be set to false in the \c onPinchStarted handler if the gesture should not
+    be handled.
+
+    \sa PinchArea
+*/
+
+/*!
+    \qmlproperty QPointF QtQuick2::PinchEvent::center
+    \qmlproperty QPointF QtQuick2::PinchEvent::startCenter
+    \qmlproperty QPointF QtQuick2::PinchEvent::previousCenter
+
+    These properties hold the position of the center point between the two touch points.
+
+    \list
+    \o \c center is the current center point
+    \o \c previousCenter is the center point of the previous event.
+    \o \c startCenter is the center point when the gesture began
+    \endlist
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PinchEvent::scale
+    \qmlproperty real QtQuick2::PinchEvent::previousScale
+
+    These properties hold the scale factor determined by the change in distance between the two touch points.
+
+    \list
+    \o \c scale is the current scale factor.
+    \o \c previousScale is the scale factor of the previous event.
+    \endlist
+
+    When a pinch gesture is started, the scale is 1.0.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::PinchEvent::angle
+    \qmlproperty real QtQuick2::PinchEvent::previousAngle
+    \qmlproperty real QtQuick2::PinchEvent::rotation
+
+    These properties hold the angle between the two touch points.
+
+    \list
+    \o \c angle is the current angle between the two points in the range -180 to 180.
+    \o \c previousAngle is the angle of the previous event.
+    \o \c rotation is the total rotation since the pinch gesture started.
+    \endlist
+
+    When a pinch gesture is started, the rotation is 0.0.
+*/
+
+/*!
+    \qmlproperty QPointF QtQuick2::PinchEvent::point1
+    \qmlproperty QPointF QtQuick2::PinchEvent::startPoint1
+    \qmlproperty QPointF QtQuick2::PinchEvent::point2
+    \qmlproperty QPointF QtQuick2::PinchEvent::startPoint2
+
+    These properties provide the actual touch points generating the pinch.
+
+    \list
+    \o \c point1 and \c point2 hold the current positions of the points.
+    \o \c startPoint1 and \c startPoint2 hold the positions of the points when the second point was touched.
+    \endlist
+*/
+
+/*!
+    \qmlproperty bool QtQuick2::PinchEvent::accepted
+
+    Setting this property to false in the \c PinchArea::onPinchStarted handler
+    will result in no further pinch events being generated, and the gesture
+    ignored.
+*/
+
+/*!
+    \qmlproperty int QtQuick2::PinchEvent::pointCount
+
+    Holds the number of points currently touched.  The PinchArea will not react
+    until two touch points have initited a gesture, but will remain active until
+    all touch points have been released.
+*/
+
 QSGPinch::QSGPinch()
     : m_target(0), m_minScale(1.0), m_maxScale(1.0)
     , m_minRotation(0.0), m_maxRotation(0.0)
@@ -63,6 +159,87 @@ QSGPinchAreaPrivate::~QSGPinchAreaPrivate()
     delete pinch;
 }
 
+/*!
+    \qmlclass PinchArea QSGPinchArea
+    \inqmlmodule QtQuick 2
+    \brief The PinchArea item enables simple pinch gesture handling.
+    \inherits Item
+
+    \bold {The PinchArea element was added in QtQuick 1.1}
+
+    A PinchArea is an invisible item that is typically used in conjunction with
+    a visible item in order to provide pinch gesture handling for that item.
+
+    The \l enabled property is used to enable and disable pinch handling for
+    the proxied item. When disabled, the pinch area becomes transparent to
+    mouse/touch events.
+
+    PinchArea can be used in two ways:
+
+    \list
+    \o setting a \c pinch.target to provide automatic interaction with an element
+    \o using the onPinchStarted, onPinchUpdated and onPinchFinished handlers
+    \endlist
+
+    \sa PinchEvent
+*/
+
+/*!
+    \qmlsignal QtQuick2::PinchArea::onPinchStarted()
+
+    This handler is called when the pinch area detects that a pinch gesture has started.
+
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
+    including the scale, center and angle of the pinch.
+
+    To ignore this gesture set the \c pinch.accepted property to false.  The gesture
+    will be cancelled and no further events will be sent.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PinchArea::onPinchUpdated()
+
+    This handler is called when the pinch area detects that a pinch gesture has changed.
+
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
+    including the scale, center and angle of the pinch.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PinchArea::onPinchFinished()
+
+    This handler is called when the pinch area detects that a pinch gesture has finished.
+
+    The \l {PinchEvent}{pinch} parameter provides information about the pinch gesture,
+    including the scale, center and angle of the pinch.
+*/
+
+
+/*!
+    \qmlproperty Item QtQuick2::PinchArea::pinch.target
+    \qmlproperty bool QtQuick2::PinchArea::pinch.active
+    \qmlproperty real QtQuick2::PinchArea::pinch.minimumScale
+    \qmlproperty real QtQuick2::PinchArea::pinch.maximumScale
+    \qmlproperty real QtQuick2::PinchArea::pinch.minimumRotation
+    \qmlproperty real QtQuick2::PinchArea::pinch.maximumRotation
+    \qmlproperty enumeration QtQuick2::PinchArea::pinch.dragAxis
+    \qmlproperty real QtQuick2::PinchArea::pinch.minimumX
+    \qmlproperty real QtQuick2::PinchArea::pinch.maximumX
+    \qmlproperty real QtQuick2::PinchArea::pinch.minimumY
+    \qmlproperty real QtQuick2::PinchArea::pinch.maximumY
+
+    \c pinch provides a convenient way to make an item react to pinch gestures.
+
+    \list
+    \i \c pinch.target specifies the id of the item to drag.
+    \i \c pinch.active specifies if the target item is currently being dragged.
+    \i \c pinch.minimumScale and \c pinch.maximumScale limit the range of the Item::scale property.
+    \i \c pinch.minimumRotation and \c pinch.maximumRotation limit the range of the Item::rotation property.
+    \i \c pinch.dragAxis specifies whether dragging in not allowed (\c Pinch.NoDrag), can be done horizontally (\c Pinch.XAxis), vertically (\c Pinch.YAxis), or both (\c Pinch.XandYAxis)
+    \i \c pinch.minimum and \c pinch.maximum limit how far the target can be dragged along the corresponding axes.
+    \endlist
+*/
+
 QSGPinchArea::QSGPinchArea(QSGItem *parent)
   : QSGItem(*(new QSGPinchAreaPrivate), parent)
 {
@@ -73,7 +250,12 @@ QSGPinchArea::QSGPinchArea(QSGItem *parent)
 QSGPinchArea::~QSGPinchArea()
 {
 }
+/*!
+    \qmlproperty bool QtQuick2::PinchArea::enabled
+    This property holds whether the item accepts pinch gestures.
 
+    This property defaults to true.
+*/
 bool QSGPinchArea::isEnabled() const
 {
     Q_D(const QSGPinchArea);

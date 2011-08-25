@@ -63,21 +63,21 @@ QT_BEGIN_NAMESPACE
 class QTextLayout;
 class QTextDocument;
 class QTextControl;
-class QSGTextEditPrivate : public QSGImplicitSizePaintedItemPrivate
+class QSGTextEditPrivate : public QSGImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QSGTextEdit)
 
 public:
     QSGTextEditPrivate()
       : color("black"), hAlign(QSGTextEdit::AlignLeft), vAlign(QSGTextEdit::AlignTop),
-      imgDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
+      documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       showInputPanelOnFocus(true), clickCausedFocus(false), persistentSelection(true),
       requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      hAlignImplicit(true), rightToLeftText(false),
+      hAlignImplicit(true), rightToLeftText(false), isComplexRichText(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QSGTextEdit::AutoText), document(0), wrapMode(QSGTextEdit::NoWrap),
       mouseSelectionMode(QSGTextEdit::SelectCharacters),
-      yoff(0)
+      yoff(0), nodeType(NodeIsNull), texture(0)
     {
 #ifdef Q_OS_SYMBIAN
         if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
@@ -104,12 +104,10 @@ public:
     QColor  selectedTextColor;
     QString style;
     QColor  styleColor;
-    QPixmap imgCache;
-    QPixmap imgStyleCache;
     QSGTextEdit::HAlignment hAlign;
     QSGTextEdit::VAlignment vAlign;
 
-    bool imgDirty : 1;
+    bool documentDirty : 1;
     bool dirty : 1;
     bool richText : 1;
     bool cursorVisible : 1;
@@ -122,6 +120,7 @@ public:
     bool canPaste:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
+    bool isComplexRichText:1;
 
     qreal textMargin;
     int lastSelectionStart;
@@ -136,6 +135,15 @@ public:
     int lineCount;
     int yoff;
     QSize paintedSize;
+
+    enum NodeType {
+        NodeIsNull,
+        NodeIsTexture,
+        NodeIsText
+    };
+    NodeType nodeType;
+    QSGTexture *texture;
+    QPixmap pixmapCache;
 };
 
 QT_END_NAMESPACE

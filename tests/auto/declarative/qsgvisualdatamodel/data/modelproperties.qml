@@ -6,6 +6,8 @@ ListView {
     model: myModel
     delegate: Item {
         objectName: "delegate"
+        width: 100
+        height: 2
         property variant test1: name
         property variant test2: model.name
         property variant test3: modelData

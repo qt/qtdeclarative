@@ -45,6 +45,7 @@
 #include <private/qsgtext_p.h>
 #include <private/qsgtext_p_p.h>
 #include <private/qdeclarativevaluetype_p.h>
+#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QFontMetrics>
 #include <QGraphicsSceneMouseEvent>
 #include <qmath.h>
@@ -60,6 +61,8 @@
 // In Symbian OS test data is located in applications private dir
 #define SRCDIR "."
 #endif
+
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 class tst_qsgtext : public QObject
 
@@ -261,14 +264,42 @@ void tst_qsgtext::width()
         delete textObject;
     }
 
+    bool requiresUnhintedMetrics = !qmlDisableDistanceField();
+
     for (int i = 0; i < standard.size(); i++)
     {
         QVERIFY(!Qt::mightBeRichText(standard.at(i))); // self-test
 
         QFont f;
-        QFontMetricsF fm(f);
-        qreal metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
-        metricWidth = qCeil(metricWidth);
+        qreal metricWidth = 0.0;
+
+        if (requiresUnhintedMetrics) {
+            QString s = standard.at(i);
+            s.replace(QLatin1Char('\n'), QChar::LineSeparator);
+
+            QTextLayout layout(s);
+            layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            forever {
+                QTextLine line = layout.createLine();
+                if (!line.isValid())
+                    break;
+            }
+
+            layout.endLayout();
+
+            metricWidth = qCeil(layout.boundingRect().width());
+        } else {
+            QFontMetricsF fm(f);
+            qreal metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
+            metricWidth = qCeil(metricWidth);
+        }
 
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
         QDeclarativeComponent textComponent(&engine);
@@ -1324,6 +1355,9 @@ void tst_qsgtext::lineHeight()
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21009 fails", Continue);
+#endif
     QVERIFY(myText->height() == h * 1.5);
 
     myText->setLineHeightMode(QSGText::FixedHeight);

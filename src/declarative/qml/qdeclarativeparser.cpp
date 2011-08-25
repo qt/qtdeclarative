@@ -191,7 +191,7 @@ QDeclarativeParser::Object::DynamicSignal::DynamicSignal()
 
 QDeclarativeParser::Object::DynamicSignal::DynamicSignal(const DynamicSignal &o)
 : name(o.name), parameterTypes(o.parameterTypes), 
-  parameterNames(o.parameterNames)
+  parameterNames(o.parameterNames), location(o.location)
 {
 }
 

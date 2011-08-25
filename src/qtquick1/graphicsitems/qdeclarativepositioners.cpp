@@ -349,7 +349,7 @@ void QDeclarative1BasePositioner::finishApplyTransitions()
 
   \image verticalpositioner_example.png
 
-  \snippet doc/src/snippets/declarative/column/vertical-positioner.qml document
+  \snippet doc/src/snippets/qtquick1/column/vertical-positioner.qml document
 
   \section1 Using Transitions
 
@@ -512,7 +512,7 @@ void QDeclarative1Column::reportConflictingAnchors()
 
   \image horizontalpositioner_example.png
 
-  \snippet doc/src/snippets/declarative/row/row.qml document
+  \snippet doc/src/snippets/qtquick1/row/row.qml document
 
   \section1 Using Transitions
 
@@ -743,7 +743,7 @@ void QDeclarative1Row::reportConflictingAnchors()
 
   \image gridLayout_example.png
 
-  \snippet doc/src/snippets/declarative/grid/grid.qml document
+  \snippet doc/src/snippets/qtquick1/grid/grid.qml document
 
   \section1 Using Transitions
 
@@ -1129,7 +1129,7 @@ void QDeclarative1Grid::reportConflictingAnchors()
 
   \image qml-flow-snippet.png
 
-  \snippet doc/src/snippets/declarative/flow.qml flow item
+  \snippet doc/src/snippets/qtquick1/flow.qml flow item
 
   \section1 Using Transitions
 

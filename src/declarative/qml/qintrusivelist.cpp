@@ -113,6 +113,12 @@ Remove \a object from the list.  \a object must not be null.
 */
 
 /*!
+\fn bool QIntrusiveList::contains(N *object) const
+
+Returns true if the list contains \a object; otherwise returns false.
+*/
+
+/*!
 \fn N *QIntrusiveList::first() const
 
 Returns the first entry in this list, or null if the list is empty.

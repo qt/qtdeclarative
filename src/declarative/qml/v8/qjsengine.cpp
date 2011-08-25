@@ -52,6 +52,97 @@ Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QObjectList)
 Q_DECLARE_METATYPE(QList<int>)
 
+/*!
+  \since 5.0
+  \class QJSEngine
+
+  \brief The QJSEngine class provides an environment for evaluating JavaScript code.
+
+  \ingroup qtjavascript
+  \mainclass
+
+  \section1 Evaluating Scripts
+
+  Use evaluate() to evaluate script code.
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 0
+
+  evaluate() returns a QJSValue that holds the result of the
+  evaluation. The QJSValue class provides functions for converting
+  the result to various C++ types (e.g. QJSValue::toString()
+  and QJSValue::toNumber()).
+
+  The following code snippet shows how a script function can be
+  defined and then invoked from C++ using QJSValue::call():
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 1
+
+  As can be seen from the above snippets, a script is provided to the
+  engine in the form of a string. One common way of loading scripts is
+  by reading the contents of a file and passing it to evaluate():
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 2
+
+  Here we pass the name of the file as the second argument to
+  evaluate().  This does not affect evaluation in any way; the second
+  argument is a general-purpose string that is used to identify the
+  script for debugging purposes (for example, our filename will now
+  show up in any uncaughtExceptionBacktrace() involving the script).
+
+  \section1 Engine Configuration
+
+  The globalObject() function returns the \bold {Global Object}
+  associated with the script engine. Properties of the Global Object
+  are accessible from any script code (i.e. they are global
+  variables). Typically, before evaluating "user" scripts, you will
+  want to configure a script engine by adding one or more properties
+  to the Global Object:
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 3
+
+  Adding custom properties to the scripting environment is one of the
+  standard means of providing a scripting API that is specific to your
+  application. Usually these custom properties are objects created by
+  the newQObject() or newObject() functions.
+
+  \section1 Script Exceptions
+
+  evaluate() can throw a script exception (e.g. due to a syntax
+  error); in that case, the return value is the value that was thrown
+  (typically an \c{Error} object). You can check whether the
+  evaluation caused an exception by calling hasUncaughtException(). In
+  that case, you can call toString() on the error object to obtain an
+  error message. The current uncaught exception is also available
+  through uncaughtException().
+  Calling clearExceptions() will cause any uncaught exceptions to be
+  cleared.
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 4
+
+  \section1 Script Object Creation
+
+  Use newObject() to create a JavaScript object; this is the
+  C++ equivalent of the script statement \c{new Object()}. You can use
+  the object-specific functionality in QJSValue to manipulate the
+  script object (e.g. QJSValue::setProperty()). Similarly, use
+  newArray() to create a JavaScript array object. Use newDate() to
+  create a \c{Date} object, and newRegExp() to create a \c{RegExp}
+  object.
+
+  \section1 QObject Integration
+
+  Use newQObject() to wrap a QObject (or subclass)
+  pointer. newQObject() returns a proxy script object; properties,
+  children, and signals and slots of the QObject are available as
+  properties of the proxy object. No binding code is needed because it
+  is done dynamically using the Qt meta object system.
+
+  \snippet doc/src/snippets/code/src_script_qjsengine.cpp 5
+
+  \sa QJSValue, {Making Applications Scriptable}
+
+*/
+
 QT_BEGIN_NAMESPACE
 
 
@@ -100,6 +191,11 @@ QJSEngine::~QJSEngine()
 {
     delete d;
 }
+
+/*!
+    \fn QV8Engine *QJSEngine::handle() const
+    \internal
+*/
 
 /*!
     Returns true if the last script evaluation resulted in an uncaught
@@ -201,6 +297,11 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     return QJSValuePrivate::get(d->evaluate(program, fileName, lineNumber));
 }
 
+/*!
+  Returns a QJSValue of the primitive type Null.
+
+  \sa nullValue()
+*/
 QJSValue QJSEngine::nullValue()
 {
     Q_D(QJSEngine);
@@ -209,6 +310,11 @@ QJSValue QJSEngine::nullValue()
     return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Null()));
 }
 
+/*!
+  Returns a QJSValue of the primitive type Undefined.
+
+  \sa nullValue()
+*/
 QJSValue QJSEngine::undefinedValue()
 {
     Q_D(QJSEngine);
@@ -217,6 +323,14 @@ QJSValue QJSEngine::undefinedValue()
     return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Undefined()));
 }
 
+/*!
+  Creates a JavaScript object of class Object.
+
+  The prototype of the created object will be the Object
+  prototype object.
+
+  \sa newArray(), QJSValue::setProperty()
+*/
 QJSValue QJSEngine::newObject()
 {
     Q_D(QJSEngine);
@@ -225,6 +339,11 @@ QJSValue QJSEngine::newObject()
     return QJSValuePrivate::get(new QJSValuePrivate(d, v8::Object::New()));
 }
 
+/*!
+  Creates a JavaScript object of class Array with the given \a length.
+
+  \sa newObject()
+*/
 QJSValue QJSEngine::newArray(uint length)
 {
     Q_D(QJSEngine);
@@ -234,13 +353,12 @@ QJSValue QJSEngine::newArray(uint length)
 }
 
 /*!
-  Creates a QtScript object that wraps the given QObject \a
+  Creates a JavaScript object that wraps the given QObject \a
   object, using the given \a ownership. The given \a options control
   various aspects of the interaction with the resulting script object.
 
   Signals and slots, properties and children of \a object are
-  available as properties of the created QJSValue. For more
-  information, see the \l{QtScript} documentation.
+  available as properties of the created QJSValue.
 
   If \a object is a null pointer, this function returns nullValue().
 
@@ -248,8 +366,8 @@ QJSValue QJSEngine::newArray(uint length)
   (or its superclass, recursively), the prototype of the new script
   object will be set to be that default prototype.
 
-  If the given \a object is deleted outside of QtScript's control, any
-  attempt to access the deleted QObject's members through the QtScript
+  If the given \a object is deleted outside of the engine's control, any
+  attempt to access the deleted QObject's members through the JavaScript
   wrapper object (either by script code or C++) will result in a
   script exception.
 
@@ -264,7 +382,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 }
 
 /*!
-  Creates a QtScript object holding the given variant \a value.
+  Creates a JavaScript object holding the given variant \a value.
 
   If a default prototype has been registered with the meta type id of
   \a value, then the prototype of the created object will be that
@@ -282,6 +400,16 @@ QJSValue QJSEngine::newVariant(const QVariant &value)
 }
 
 
+/*!
+  Returns this engine's Global Object.
+
+  By default, the Global Object contains the built-in objects that are
+  part of \l{ECMA-262}, such as Math, Date and String. Additionally,
+  you can set properties of the Global Object to make your own
+  extensions available to all script code. Non-local variables in
+  script code will be created as properties of the Global Object, as
+  well as local variables in global code.
+*/
 QJSValue QJSEngine::globalObject() const
 {
     Q_D(const QJSEngine);
@@ -290,6 +418,23 @@ QJSValue QJSEngine::globalObject() const
     return d->scriptValueFromInternal(d->global());
 }
 
+/*!
+  Converts the given \a value to an object, if such a conversion is
+  possible; otherwise returns an invalid QJSValue. The conversion
+  is performed according to the following table:
+
+    \table
+    \header \o Input Type \o Result
+    \row    \o Undefined  \o An invalid QJSValue.
+    \row    \o Null       \o An invalid QJSValue.
+    \row    \o Boolean    \o A new Boolean object whose internal value is set to the value of the boolean.
+    \row    \o Number     \o A new Number object whose internal value is set to the value of the number.
+    \row    \o String     \o A new String object whose internal value is set to the value of the string.
+    \row    \o Object     \o The result is the object itself (no conversion).
+    \endtable
+
+    \sa newObject()
+*/
 QJSValue QJSEngine::toObject(const QJSValue& value)
 {
     Q_D(QJSEngine);
@@ -299,7 +444,7 @@ QJSValue QJSEngine::toObject(const QJSValue& value)
 }
 
 /*!
-  Creates a QtScript object of class Date from the given \a value.
+  Creates a JavaScript object of class Date from the given \a value.
 
   \sa QJSValue::toDateTime()
 */
@@ -312,7 +457,7 @@ QJSValue QJSEngine::newDate(const QDateTime &dt)
 }
 
 /*!
-  Creates a QtScript object of class Date with the given
+  Creates a JavaScript object of class Date with the given
   \a value (the number of milliseconds since 01 January 1970,
   UTC).
 */
@@ -325,7 +470,7 @@ QJSValue QJSEngine::newDate(double date)
 }
 
 /*!
-  Creates a QtScript object of class RegExp with the given
+  Creates a JavaScript object of class RegExp with the given
   \a regexp.
 
   \sa QJSValue::toRegExp()
@@ -339,7 +484,7 @@ QJSValue QJSEngine::newRegExp(const QRegExp &regexp)
 }
 
 /*!
-  Creates a QtScript object of class RegExp with the given
+  Creates a JavaScript object of class RegExp with the given
   \a pattern and \a flags.
 
   The legal flags are 'g' (global), 'i' (ignore case), and 'm'
@@ -425,6 +570,19 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     }
 }
 
+/*! \fn QJSValue QJSEngine::toScriptValue(const T &value)
+
+    Creates a QJSValue with the given \a value.
+
+    \sa fromScriptValue()
+*/
+
+/*! \fn T QJSEngine::fromScriptValue(const QJSValue &value)
+
+    Returns the given \a value converted to the template type \c{T}.
+
+    \sa toScriptValue()
+*/
 
 QT_END_NAMESPACE
 

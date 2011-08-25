@@ -1,4 +1,5 @@
 /* This script file handles the game logic */
+.pragma library
 
 var maxColumn = 10;
 var maxRow = 15;
@@ -8,7 +9,10 @@ var blockSrc = "BoomBlock.qml";
 var scoresURL = "";
 var gameDuration;
 var component = Qt.createComponent(blockSrc);
-var highScoreBar = 0;
+var highScoreBar = -1;
+var gameCanvas;
+var nameInputDialog = null;
+var dialog = null;
 
 // Index function used instead of a 2D array
 function index(column, row)
@@ -24,8 +28,9 @@ function timeStr(msecs)
     return ret;
 }
 
-function startNewGame()
+function startNewGame(gc)
 {
+    gameCanvas = gc;
     // Delete blocks from previous game
     for (var i = 0; i < maxIndex; i++) {
         if (board[i] != null)
@@ -38,8 +43,10 @@ function startNewGame()
     maxIndex = maxRow * maxColumn;
 
     // Close dialogs
-    nameInputDialog.forceClose();
-    dialog.forceClose();
+    if(nameInputDialog != null)
+        nameInputDialog.forceClose();
+    if(dialog != null)
+        dialog.forceClose();
 
     // Initialize Board
     board = new Array(maxIndex);
@@ -59,6 +66,10 @@ var floodBoard; // Set to 1 if the floodFill reaches off that node
 // NOTE: Be careful with vars named x,y, as the calling object's x,y are still in scope
 function handleClick(x,y)
 {
+    if(gameCanvas == undefined){
+        console.log("But the game hasn't started yet!");
+        return;
+    }
     var column = Math.floor(x/gameCanvas.blockSize);
     var row = Math.floor(y/gameCanvas.blockSize);
     if (column >= maxColumn || column < 0 || row >= maxRow || row < 0)
@@ -153,11 +164,18 @@ function victoryCheck()
     // Checks for game over
     if (deservesBonus || !(floodMoveCheck(0, maxRow - 1, -1))) {
         gameDuration = new Date() - gameDuration;
+        if(nameInputDialog == null){
+            nameInputDialog = Qt.createQmlObject('import "."; import "samegame.js" as Logic; NameInputDialog{onAccepted: Logic.saveHighScore(name)}', gameCanvas, "highscoredialog.qml");
+        }
+        if(dialog == null){
+            dialog = Qt.createComponent("Dialog.qml").createObject(gameCanvas);
+        }
+        initHighScoreBar();
         if(gameCanvas.score > highScoreBar){
             nameInputDialog.show("You won! Please enter your name:                 ");
             nameInputDialog.initialWidth = nameInputDialog.text.width + 20;
             if (nameInputDialog.name == "")
-                nameInputDialog.width = nameInputDialog.initialWidth;
+               nameInputDialog.width = nameInputDialog.initialWidth;
             nameInputDialog.text.opacity = 0; // Just a spacer
         }else{
             dialog.show("You won!");
@@ -185,12 +203,13 @@ function createBlock(column,row)
     // only work if the block QML is a local file. Otherwise the component will
     // not be ready immediately. There is a statusChanged signal on the
     // component you could use if you want to wait to load remote files.
-    if(component.status == Component.Ready){
+    if(component.status == 1){
         var dynamicObject = component.createObject(gameCanvas,
                 {"type": Math.floor(Math.random() * 3),
                 "x": column*gameCanvas.blockSize,
                 "width": gameCanvas.blockSize,
-                "height": gameCanvas.blockSize});
+                "height": gameCanvas.blockSize,
+                "particleSystem": gameCanvas.ps});
         if(dynamicObject == null){
             console.log("error creating block");
             console.log(component.errorString());
@@ -210,8 +229,6 @@ function createBlock(column,row)
 
 function initHighScoreBar()
 {
-    if(scoresURL != "")
-        return true;//don't query remote scores
     var db = openDatabaseSync(
         "SameGameScores",
         "1.0",
@@ -269,20 +286,4 @@ function saveHighScore(name)
             dialog.show(r);
         }
     );
-}
-
-function sendHighScore(name)
-{
-    var postman = new XMLHttpRequest()
-    var postData = "name=" + name + "&score=" + gameCanvas.score
-        + "&gridSize=" + maxColumn + "x" + maxRow
-        + "&time=" + Math.floor(gameDuration / 1000);
-    postman.open("POST", scoresURL, true);
-    postman.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    postman.onreadystatechange = function() {
-        if (postman.readyState == postman.DONE) {
-            dialog.show("Your score has been uploaded.");
-        }
-    }
-    postman.send(postData);
 }

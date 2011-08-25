@@ -46,7 +46,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass PointAttractor QSGPointAttractorAffector
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Affector
     \brief The PointAttractor allows you to attract particles towards a specific point.
 

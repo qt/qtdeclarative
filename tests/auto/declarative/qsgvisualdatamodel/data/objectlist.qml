@@ -10,7 +10,7 @@ ListView {
             height: 25
             width: 100
             color: model.modelData.color
-            Text { objectName: "name"; text: name }
+            Text { objectName: "name"; text: name; function getText() { return name } }
             Text { objectName: "section"; text: parent.ListView.section }
         }
     }

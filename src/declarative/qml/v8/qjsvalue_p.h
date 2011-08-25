@@ -43,11 +43,13 @@
 #include <QtCore/qvarlengtharray.h>
 #include <qdebug.h>
 
-#include "qscripttools_p.h"
+#include <private/qintrusivelist_p.h>
 #include "qscriptshareddata_p.h"
 #include "qjsvalue.h"
 
 QT_BEGIN_NAMESPACE
+
+class QV8Engine;
 
 /*!
   \internal
@@ -55,7 +57,6 @@ QT_BEGIN_NAMESPACE
 */
 class QJSValuePrivate
         : public QSharedData
-        , public QScriptLinkedNode
 {
 public:
     inline QJSValuePrivate();
@@ -79,8 +80,7 @@ public:
     inline QJSValuePrivate(QV8Engine *engine, const QString& value);
     inline QJSValuePrivate(QV8Engine *engine, QJSValue::SpecialValue value);
     inline QJSValuePrivate(QV8Engine *engine, v8::Handle<v8::Value>);
-    inline void reinitialize();
-    inline void reinitialize(QV8Engine *engine, v8::Handle<v8::Value> value);
+    inline void invalidate();
 
     inline bool toBool() const;
     inline double toNumber() const;
@@ -147,6 +147,7 @@ public:
     inline operator v8::Handle<v8::Object>() const;
     inline v8::Handle<v8::Value> asV8Value(QV8Engine *engine);
 private:
+    QIntrusiveListNode m_node;
     QV8Engine *m_engine;
 
     // Please, update class documentation when you change the enum.
@@ -182,31 +183,9 @@ private:
     inline bool isNumberBased() const;
     inline bool isStringBased() const;
     inline bool prepareArgumentsForCall(v8::Handle<v8::Value> argv[], const QJSValueList& arguments) const;
+
+    friend class QV8Engine;
 };
-
-// This template is used indirectly by the Q_GLOBAL_STATIC macro below
-template<>
-class QGlobalStaticDeleter<QJSValuePrivate>
-{
-public:
-    QGlobalStatic<QJSValuePrivate> &globalStatic;
-    QGlobalStaticDeleter(QGlobalStatic<QJSValuePrivate> &_globalStatic)
-        : globalStatic(_globalStatic)
-    {
-        globalStatic.pointer->ref.ref();
-    }
-
-    inline ~QGlobalStaticDeleter()
-    {
-        if (!globalStatic.pointer->ref.deref()) { // Logic copy & paste from SharedDataPointer
-            delete globalStatic.pointer;
-        }
-        globalStatic.pointer = 0;
-        globalStatic.destroyed = true;
-    }
-};
-
-Q_GLOBAL_STATIC(QJSValuePrivate, InvalidValue)
 
 QT_END_NAMESPACE
 

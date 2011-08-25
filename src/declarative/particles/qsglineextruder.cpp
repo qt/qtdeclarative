@@ -44,7 +44,6 @@
 /*!
     \qmlclass LineShape QSGLineExtruder
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Shape
     \brief The LineShape represents a line to Affectors and Emitter
 

@@ -312,6 +312,13 @@ bool QDeclarativeCompiler::testLiteralAssignment(const QMetaProperty &prop,
             if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 3D vector expected"));
             }
             break;
+        case QVariant::Vector4D:
+            {
+            bool ok;
+            QDeclarativeStringConverters::vector4DFromString(string, &ok);
+            if (!ok) COMPILE_EXCEPTION(v, tr("Invalid property assignment: 4D vector expected"));
+            }
+            break;
         default:
             {
             int t = prop.userType();
@@ -467,7 +474,7 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.storeDateTime.propertyIndex = prop.propertyIndex();
             instr.storeDateTime.date = dateTime.date().toJulianDay();
             Q_ASSERT(sizeof(instr.storeDateTime.time) == sizeof(QTime));
-            ::memcmp(&instr.storeDateTime.time, &time, sizeof(QTime));
+            ::memcpy(&instr.storeDateTime.time, &time, sizeof(QTime));
             }
             break;
 #endif // QT_NO_DATESTRING
@@ -552,6 +559,18 @@ void QDeclarativeCompiler::genLiteralAssignment(const QMetaProperty &prop,
             instr.storeVector3D.vector.xp = vector.x();
             instr.storeVector3D.vector.yp = vector.y();
             instr.storeVector3D.vector.zp = vector.z();
+            }
+            break;
+    case QVariant::Vector4D:
+            {
+            bool ok;
+            QVector4D vector = QDeclarativeStringConverters::vector4DFromString(string, &ok);
+            instr.setType(QDeclarativeInstruction::StoreVector4D);
+            instr.storeVector4D.propertyIndex = prop.propertyIndex();
+            instr.storeVector4D.vector.xp = vector.x();
+            instr.storeVector4D.vector.yp = vector.y();
+            instr.storeVector4D.vector.zp = vector.z();
+            instr.storeVector4D.vector.wp = vector.w();
             }
             break;
         default:
@@ -856,6 +875,9 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeParser::Object *obj, const Bi
                 int ids = compileState.ids.count();
                 COMPILE_CHECK(buildProperty(prop, obj, objCtxt));
                 canDefer = ids == compileState.ids.count();
+            } else if (isSignalPropertyName(prop->name) && 
+                    (cp->flags() & QDeclarativeCustomParser::AcceptsSignalHandlers)) {
+                COMPILE_CHECK(buildSignal(prop,obj,objCtxt));
             } else {
                 customProps << QDeclarativeCustomParserNodePrivate::fromProperty(prop);
             }
@@ -2378,25 +2400,27 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeParser::Object *obj)
     }
 
     for (int ii = 0; ii < obj->dynamicSignals.count(); ++ii) {
-        QByteArray name = obj->dynamicSignals.at(ii).name;
+        const QDeclarativeParser::Object::DynamicSignal &currSig = obj->dynamicSignals.at(ii);
+        QByteArray name = currSig.name;
         if (methodNames.contains(name))
-            COMPILE_EXCEPTION(obj, tr("Duplicate signal name"));
+            COMPILE_EXCEPTION(&currSig, tr("Duplicate signal name"));
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
-            COMPILE_EXCEPTION(obj, tr("Signal names cannot begin with an upper case letter"));
+            COMPILE_EXCEPTION(&currSig, tr("Signal names cannot begin with an upper case letter"));
         if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
-            COMPILE_EXCEPTION(obj, tr("Illegal signal name"));
+            COMPILE_EXCEPTION(&currSig, tr("Illegal signal name"));
         methodNames.insert(name);
     }
     for (int ii = 0; ii < obj->dynamicSlots.count(); ++ii) {
-        QByteArray name = obj->dynamicSlots.at(ii).name;
+        const QDeclarativeParser::Object::DynamicSlot &currSlot = obj->dynamicSlots.at(ii);
+        QByteArray name = currSlot.name;
         if (methodNames.contains(name))
-            COMPILE_EXCEPTION(obj, tr("Duplicate method name"));
+            COMPILE_EXCEPTION(&currSlot, tr("Duplicate method name"));
         QString nameStr = QString::fromUtf8(name);
         if (nameStr.at(0).isUpper())
-            COMPILE_EXCEPTION(obj, tr("Method names cannot begin with an upper case letter"));
+            COMPILE_EXCEPTION(&currSlot, tr("Method names cannot begin with an upper case letter"));
         if (enginePrivate->v8engine()->illegalNames().contains(nameStr))
-            COMPILE_EXCEPTION(obj, tr("Illegal method name"));
+            COMPILE_EXCEPTION(&currSlot, tr("Illegal method name"));
         methodNames.insert(name);
     }
 
@@ -2747,6 +2771,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     int propIdx = -1;
     int flags = 0;
     bool writable = false;
+    bool resettable = false;
     if (alias.count() == 2 || alias.count() == 3) {
         propIdx = indexOfProperty(idObject, alias.at(1).toUtf8());
 
@@ -2761,6 +2786,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
             COMPILE_EXCEPTION(prop.defaultValue, tr("Invalid alias location"));
 
         writable = aliasProperty.isWritable();
+        resettable = aliasProperty.isResettable();
 
         if (alias.count() == 3) {
             QDeclarativeValueType *valueType = enginePrivate->valueTypes[aliasProperty.type()];
@@ -2805,6 +2831,7 @@ bool QDeclarativeCompiler::compileAlias(QMetaObjectBuilder &builder,
     QMetaPropertyBuilder propBuilder = 
         builder.addProperty(prop.name, typeName.constData(), builder.methodCount() - 1);
     propBuilder.setWritable(writable);
+    propBuilder.setResettable(resettable);
     return true;
 }
 

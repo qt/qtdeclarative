@@ -22,6 +22,7 @@
 ****************************************************************************/
 
 #include "qjsvalueiterator.h"
+#include "qjsvalueiterator_p.h"
 
 #include "qscriptisolate_p.h"
 #include "qjsvalue_p.h"
@@ -35,7 +36,7 @@ QT_BEGIN_NAMESPACE
 
     \brief The QJSValueIterator class provides a Java-style iterator for QJSValue.
 
-    \ingroup script
+    \ingroup qtjavascript
 
 
     The QJSValueIterator constructor takes a QJSValue as
@@ -43,168 +44,27 @@ QT_BEGIN_NAMESPACE
     beginning of the sequence of properties. Here's how to iterate over
     all the properties of a QJSValue:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 0
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 0
 
-    The next() advances the iterator. The name(), value() and flags()
-    functions return the name, value and flags of the last item that was
+    The next() advances the iterator. The name() and value()
+    functions return the name and value of the last item that was
     jumped over.
-
-    If you want to remove properties as you iterate over the
-    QJSValue, use remove(). If you want to modify the value of a
-    property, use setValue().
 
     Note that QJSValueIterator only iterates over the QJSValue's
     own properties; i.e. it does not follow the prototype chain. You can
     use a loop like this to follow the prototype chain:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 1
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 1
 
     Note that QJSValueIterator will not automatically skip over
     properties that have the QJSValue::SkipInEnumeration flag set;
     that flag only affects iteration in script code.  If you want, you
     can skip over such properties with code like the following:
 
-    \snippet doc/src/snippets/code/src_script_QJSValueIterator.cpp 2
+    \snippet doc/src/snippets/code/src_script_qjsvalueiterator.cpp 2
 
     \sa QJSValue::property()
 */
-
-using v8::Persistent;
-using v8::Local;
-using v8::Array;
-using v8::String;
-using v8::Handle;
-using v8::Object;
-using v8::Value;
-
-// FIXME (Qt5) This class should be refactored. It should use the common Iterator interface.
-// FIXME it could be faster!
-class QJSValueIteratorPrivate {
-public:
-    inline QJSValueIteratorPrivate(const QJSValuePrivate* value);
-    inline ~QJSValueIteratorPrivate();
-
-    inline bool hasNext() const;
-    inline bool next();
-
-    inline QString name() const;
-
-    inline QScriptPassPointer<QJSValuePrivate> value() const;
-
-    inline bool isValid() const;
-    inline QV8Engine* engine() const;
-private:
-    Q_DISABLE_COPY(QJSValueIteratorPrivate)
-    //void dump(QString) const;
-
-    QScriptSharedDataPointer<QJSValuePrivate> m_object;
-    QList<v8::Persistent<v8::String> > m_names;
-    QMutableListIterator<v8::Persistent<v8::String> > m_iterator;
-};
-
-inline QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValuePrivate* value)
-    : m_object(const_cast<QJSValuePrivate*>(value))
-    , m_iterator(m_names)
-{
-    Q_ASSERT(value);
-    QV8Engine *engine = m_object->engine();
-    QScriptIsolate api(engine);
-    if (!m_object->isObject())
-        m_object = 0;
-    else {
-        v8::HandleScope scope;
-        Handle<Value> tmp = *value;
-        Handle<Object> obj = Handle<Object>::Cast(tmp);
-        Local<Array> names;
-
-        // FIXME we need newer V8!
-        //names = obj->GetOwnPropertyNames();
-        names = engine->getOwnPropertyNames(obj);
-
-        // it is suboptimal, it would be better to write iterator instead
-        uint32_t count = names->Length();
-        Local<String> name;
-        m_names.reserve(count); // The count is the maximal count of values.
-        for (uint32_t i = count - 1; i < count; --i) {
-            name = names->Get(i)->ToString();
-            m_names.append(v8::Persistent<v8::String>::New(name));
-        }
-
-        // Reinitialize the iterator.
-        m_iterator = m_names;
-    }
-}
-
-inline QJSValueIteratorPrivate::~QJSValueIteratorPrivate()
-{
-    QMutableListIterator<v8::Persistent<v8::String> > it = m_names;
-    //FIXME: we need register this QJSVAlueIterator
-    if (engine()) {
-        while (it.hasNext()) {
-            it.next().Dispose();
-        }
-    } else {
-        // FIXME leak ?
-    }
-}
-
-inline bool QJSValueIteratorPrivate::hasNext() const
-{
-    //dump("hasNext()");
-    return isValid()
-            ? m_iterator.hasNext() : false;
-}
-
-inline bool QJSValueIteratorPrivate::next()
-{
-    //dump("next();");
-    if (m_iterator.hasNext()) {
-        m_iterator.next();
-        return true;
-    }
-    return false;
-}
-
-inline QString QJSValueIteratorPrivate::name() const
-{
-    //dump("name");
-    if (!isValid())
-        return QString();
-
-    return QJSConverter::toString(m_iterator.value());
-}
-
-inline QScriptPassPointer<QJSValuePrivate> QJSValueIteratorPrivate::value() const
-{
-    //dump("value()");
-    if (!isValid())
-        return InvalidValue();
-
-    return m_object->property(m_iterator.value());
-}
-
-inline bool QJSValueIteratorPrivate::isValid() const
-{
-    bool result = m_object ? m_object->isValid() : false;
-    // We know that if this object is still valid then it is an object
-    // if this assumption is not correct then some other logic in this class
-    // have to be changed too.
-    Q_ASSERT(!result || m_object->isObject());
-    return result;
-}
-
-inline QV8Engine* QJSValueIteratorPrivate::engine() const
-{
-    return m_object ? m_object->engine() : 0;
-}
-
-//void QJSValueIteratorPrivate::dump(QString fname) const
-//{
-//    qDebug() << "    *** " << fname << " ***";
-//    foreach (Persistent<String> name, m_names) {
-//        qDebug() << "        - " << QJSConverter::toString(name);
-//    }
-//}
 
 /*!
     Constructs an iterator for traversing \a object. The iterator is
@@ -226,7 +86,7 @@ QJSValueIterator::~QJSValueIterator()
     (i.e. the iterator is \e not at the back of the property sequence);
     otherwise returns false.
 
-    \sa next(), hasPrevious()
+    \sa next()
 */
 bool QJSValueIterator::hasNext() const
 {
@@ -237,11 +97,14 @@ bool QJSValueIterator::hasNext() const
 
 /*!
     Advances the iterator by one position.
+    Returns true if there is at least one item ahead of the iterator
+    (i.e. the iterator is \e not at the back of the property sequence);
+    otherwise returns false.
 
     Calling this function on an iterator located at the back of the
     container leads to undefined results.
 
-    \sa hasNext(), previous(), name()
+    \sa hasNext(), name()
 */
 bool QJSValueIterator::next()
 {
@@ -252,9 +115,9 @@ bool QJSValueIterator::next()
 
 /*!
     Returns the name of the last property that was jumped over using
-    next() or previous().
+    next().
 
-    \sa value(), flags()
+    \sa value()
 */
 QString QJSValueIterator::name() const
 {
@@ -266,9 +129,9 @@ QString QJSValueIterator::name() const
 
 /*!
     Returns the value of the last property that was jumped over using
-    next() or previous().
+    next().
 
-    \sa setValue(), name()
+    \sa name()
 */
 QJSValue QJSValueIterator::value() const
 {

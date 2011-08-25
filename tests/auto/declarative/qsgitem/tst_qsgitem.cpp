@@ -52,16 +52,18 @@ class TestItem : public QSGItem
 {
 Q_OBJECT
 public:
-    TestItem(QSGItem *parent = 0) : QSGItem(parent), focused(false), pressCount(0), releaseCount(0) {}
+    TestItem(QSGItem *parent = 0) : QSGItem(parent), focused(false), pressCount(0), releaseCount(0), wheelCount(0) {}
 
     bool focused;
     int pressCount;
     int releaseCount;
+    int wheelCount;
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++pressCount; }
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++releaseCount; }
+    virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
 };
 
 class TestPolishItem : public QSGItem
@@ -122,6 +124,9 @@ private slots:
 
     void mouseGrab();
     void polishOutsideAnimation();
+
+    void wheelEvent_data();
+    void wheelEvent();
 
 private:
     void ensureFocus(QWidget *w) {
@@ -842,6 +847,50 @@ void tst_qsgitem::polishOutsideAnimation()
     QTRY_VERIFY(item->wasPolished);
 
     delete item;
+    delete canvas;
+}
+
+void tst_qsgitem::wheelEvent_data()
+{
+    QTest::addColumn<bool>("visible");
+    QTest::addColumn<bool>("enabled");
+
+    QTest::newRow("visible and enabled") << true << true;
+    QTest::newRow("visible and disabled") << true << false;
+    QTest::newRow("invisible and enabled") << false << true;
+    QTest::newRow("invisible and disabled") << false << false;
+}
+
+void tst_qsgitem::wheelEvent()
+{
+    QFETCH(bool, visible);
+    QFETCH(bool, enabled);
+
+    const bool shouldReceiveWheelEvents = visible && enabled;
+
+    QSGCanvas *canvas = new QSGCanvas;
+    canvas->resize(200, 200);
+    canvas->show();
+
+    TestItem *item = new TestItem;
+    item->setSize(QSizeF(200, 100));
+    item->setParentItem(canvas->rootItem());
+
+    item->setEnabled(enabled);
+    item->setVisible(visible);
+
+    QWheelEvent event(QPoint(100, 50), -120, Qt::NoButton, Qt::NoModifier, Qt::Vertical);
+    event.setAccepted(false);
+    QApplication::sendEvent(canvas, &event);
+
+    if (shouldReceiveWheelEvents) {
+        QVERIFY(event.isAccepted());
+        QCOMPARE(item->wheelCount, 1);
+    } else {
+        QVERIFY(!event.isAccepted());
+        QCOMPARE(item->wheelCount, 0);
+    }
+
     delete canvas;
 }
 

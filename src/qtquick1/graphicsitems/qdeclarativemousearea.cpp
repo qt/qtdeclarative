@@ -226,9 +226,9 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
     The following example uses a MouseArea in a \l Rectangle that changes
     the \l Rectangle color to red when clicked:
 
-    \snippet doc/src/snippets/declarative/mousearea/mousearea.qml import
+    \snippet doc/src/snippets/qtquick1/mousearea/mousearea.qml import
     \codeline
-    \snippet doc/src/snippets/declarative/mousearea/mousearea.qml intro
+    \snippet doc/src/snippets/qtquick1/mousearea/mousearea.qml intro
 
     \clearfloat
     Many MouseArea signals pass a \l{MouseEvent}{mouse} parameter that contains
@@ -238,7 +238,7 @@ QDeclarative1MouseAreaPrivate::~QDeclarative1MouseAreaPrivate()
     Here is an extension of the previous example that produces a different
     color when the area is right clicked:
 
-    \snippet doc/src/snippets/declarative/mousearea/mousearea.qml intro-extended
+    \snippet doc/src/snippets/qtquick1/mousearea/mousearea.qml intro-extended
 
     \sa MouseEvent, {declarative/touchinteraction/mousearea}{MouseArea example}
 */
@@ -492,7 +492,7 @@ void QDeclarative1MouseArea::setPreventStealing(bool prevent)
 
     The code below displays "right" when the right mouse buttons is pressed:
 
-    \snippet doc/src/snippets/declarative/mousearea/mousearea.qml mousebuttons
+    \snippet doc/src/snippets/qtquick1/mousearea/mousearea.qml mousebuttons
 
     \sa acceptedButtons
 */
@@ -999,7 +999,7 @@ QDeclarative1Drag *QDeclarative1MouseArea::drag()
     The following example displays a \l Rectangle that can be dragged along the X-axis. The opacity
     of the rectangle is reduced when it is dragged to the right.
 
-    \snippet doc/src/snippets/declarative/mousearea/mousearea.qml drag
+    \snippet doc/src/snippets/qtquick1/mousearea/mousearea.qml drag
 
     \note Items cannot be dragged if they are anchored for the requested 
     \c drag.axis. For example, if \c anchors.left or \c anchors.right was set
@@ -1010,7 +1010,7 @@ QDeclarative1Drag *QDeclarative1MouseArea::drag()
     If \c drag.filterChildren is set to true, a drag can override descendant MouseAreas.  This
     enables a parent MouseArea to handle drags, for example, while descendants handle clicks:
 
-    \snippet doc/src/snippets/declarative/mousearea/mouseareadragfilter.qml dragfilter
+    \snippet doc/src/snippets/qtquick1/mousearea/mouseareadragfilter.qml dragfilter
 
 */
 

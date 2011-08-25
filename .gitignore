@@ -114,6 +114,7 @@ tests/auto/qlibrary/libmylib.so*
 tests/auto/qresourceengine/runtime_resource.rcc
 tools/qtestlib/chart/chart*
 tools/qtestlib/updater/updater*
+tools/qmltestrunner/qmltestrunner
 tools/activeqt/testcon/testcon.tlb
 translations/*.qm
 translations/*_untranslated.ts
@@ -261,3 +262,13 @@ src/xml/lib/
 *.dep
 *.map
 work
+
+#generated version headers
+src/qmltest/qtquicktestversion.h
+src/qtquick1/qtquick1version.h
+
+tests/auto/*/*.o
+tests/auto/*/*.moc
+tests/auto/*/*/*.o
+tests/auto/*/*/*.moc
+src/declarative/generated/

@@ -95,6 +95,7 @@ public:
     }
 
 signals:
+    void emitFollowParticle(QDeclarativeV8Handle particle, QDeclarativeV8Handle followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 
@@ -161,6 +162,7 @@ private:
     int m_followCount;
     QSGParticleExtruder* m_emissionExtruder;
     QSGParticleExtruder* m_defaultEmissionExtruder;
+    bool isEmitFollowConnected();
 };
 
 QT_END_NAMESPACE

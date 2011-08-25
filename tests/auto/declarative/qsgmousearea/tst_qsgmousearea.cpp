@@ -67,6 +67,7 @@ private slots:
     void updateMouseAreaPosOnResize();
     void noOnClickedWithPressAndHold();
     void onMousePressRejected();
+    void pressedCanceledOnWindowDeactivate();
     void doubleClick();
     void clickTwice();
     void pressedOrdering();
@@ -75,6 +76,7 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
     void hoverPosition();
+    void hoverPropagation();
 
 private:
     QSGView *createView();
@@ -417,7 +419,51 @@ void tst_QSGMouseArea::onMousePressRejected()
 
     delete canvas;
 }
+void tst_QSGMouseArea::pressedCanceledOnWindowDeactivate()
+{
+    QSGView *canvas = createView();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pressedCanceled.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
 
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &pressEvent);
+
+    QVERIFY(canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
+    QApplication::sendEvent(canvas, &windowDeactivateEvent);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    //press again
+    QApplication::sendEvent(canvas, &pressEvent);
+    QVERIFY(canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(!canvas->rootObject()->property("released").toBool());
+
+    QTest::qWait(200);
+
+    //release
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QApplication::sendEvent(canvas, &releaseEvent);
+    QVERIFY(!canvas->rootObject()->property("pressed").toBool());
+    QVERIFY(!canvas->rootObject()->property("canceled").toBool());
+    QVERIFY(canvas->rootObject()->property("released").toBool());
+
+    delete canvas;
+}
 void tst_QSGMouseArea::doubleClick()
 {
     QSGView *canvas = createView();
@@ -735,8 +781,39 @@ void tst_QSGMouseArea::hoverPosition()
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(10, 32), Qt::NoButton, Qt::NoButton, 0);
     QApplication::sendEvent(canvas, &moveEvent);
 
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
+#endif
     QCOMPARE(root->property("mouseX").toReal(), qreal(10));
     QCOMPARE(root->property("mouseY").toReal(), qreal(32));
+
+    delete canvas;
+}
+
+void tst_QSGMouseArea::hoverPropagation()
+{
+    //QTBUG-18175, to behave like GV did.
+    QSGView *canvas = createView();
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/hoverPropagation.qml"));
+
+    QSGItem *root = canvas->rootObject();
+    QVERIFY(root != 0);
+
+    QCOMPARE(root->property("point1").toBool(), false);
+    QCOMPARE(root->property("point2").toBool(), false);
+
+    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
+#endif
+    QCOMPARE(root->property("point1").toBool(), true);
+    QCOMPARE(root->property("point2").toBool(), false);
+
+    QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(232, 32), Qt::NoButton, Qt::NoButton, 0);
+    QApplication::sendEvent(canvas, &moveEvent2);
+    QCOMPARE(root->property("point1").toBool(), false);
+    QCOMPARE(root->property("point2").toBool(), true);
 
     delete canvas;
 }

@@ -49,7 +49,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass Turbulence QSGTurbulenceAffector
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
     \inherits Affector
     \brief The TurbulenceAffector is a bit of a hack and probably shouldn't be used yet.
 

@@ -62,6 +62,7 @@
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFlashMode, QML_FLASH_MODE)
 DEFINE_BOOL_CONFIG_OPTION(qmlTranslucentMode, QML_TRANSLUCENT_MODE)
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 /*
     Comments about this class from Gunnar:
@@ -90,12 +91,14 @@ public:
         : rootNode(0)
         , renderer(0)
         , gl(0)
+        , distanceFieldCacheManager(0)
         , flashMode(qmlFlashMode())
+        , distanceFieldDisabled(qmlDisableDistanceField())
     {
         renderAlpha = qmlTranslucentMode() ? 0.5 : 1;
     }
 
-    ~QSGContextPrivate() 
+    ~QSGContextPrivate()
     {
     }
 
@@ -108,11 +111,14 @@ public:
 
     QHash<QSGMaterialType *, QSGMaterialShader *> materials;
 
+    QSGDistanceFieldGlyphCacheManager *distanceFieldCacheManager;
+
     QMutex textureMutex;
     QList<QSGTexture *> texturesToClean;
 
     bool flashMode;
     float renderAlpha;
+    bool distanceFieldDisabled;
 };
 
 
@@ -142,6 +148,7 @@ QSGContext::~QSGContext()
     delete d->rootNode;
     cleanupTextures();
     qDeleteAll(d->materials.values());
+    delete d->distanceFieldCacheManager;
 }
 
 /*!
@@ -286,20 +293,28 @@ QSGImageNode *QSGContext::createImageNode()
  */
 QSGGlyphNode *QSGContext::createGlyphNode()
 {
+    Q_D(QSGContext);
+
     // ### Do something with these before final release...
     static bool doSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing"));
+    static bool doLowQualSubpixel = qApp->arguments().contains(QLatin1String("--text-subpixel-antialiasing-lowq"));
     static bool doGray = qApp->arguments().contains(QLatin1String("--text-gray-antialiasing"));
 
-    if (QSGDistanceFieldGlyphCache::distanceFieldEnabled()) {
-        QSGGlyphNode *node = new QSGDistanceFieldGlyphNode;
-
-        if (doSubpixel)
-            node->setPreferredAntialiasingMode(QSGGlyphNode::SubPixelAntialiasing);
-        else if (doGray)
-            node->setPreferredAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
-        return node;
-    } else {
+    if (d->distanceFieldDisabled) {
         return new QSGDefaultGlyphNode;
+    } else {
+        if (!d->distanceFieldCacheManager) {
+            d->distanceFieldCacheManager = new QSGDistanceFieldGlyphCacheManager(d->gl);
+            if (doSubpixel)
+                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::HighQualitySubPixelAntialiasing);
+            else if (doLowQualSubpixel)
+                d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::LowQualitySubPixelAntialiasing);
+            else if (doGray)
+               d->distanceFieldCacheManager->setDefaultAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
+        }
+
+        QSGGlyphNode *node = new QSGDistanceFieldGlyphNode(d->distanceFieldCacheManager);
+        return node;
     }
 }
 
@@ -383,6 +398,21 @@ QSGTexture *QSGContext::createTexture(const QImage &image) const
 
 
 /*!
+    Returns the minimum supported framebuffer object size.
+ */
+
+QSize QSGContext::minimumFBOSize() const
+{
+#ifdef Q_WS_MAC
+    return QSize(33, 33);
+#else
+    return QSize(1, 1);
+#endif
+}
+
+
+
+/*!
     Returns a material shader for the given material.
  */
 
@@ -446,6 +476,24 @@ void QSGContext::setRenderAlpha(qreal renderAlpha)
 qreal QSGContext::renderAlpha() const
 {
     return d_func()->renderAlpha;
+}
+
+
+/*!
+    Sets whether or not the scene graph should use the distance field technique to render text
+  */
+void QSGContext::setDistanceFieldEnabled(bool enabled)
+{
+    d_func()->distanceFieldDisabled = !enabled;
+}
+
+
+/*!
+    Returns true if the scene graph uses the distance field technique to render text
+ */
+bool QSGContext::isDistanceFieldEnabled() const
+{
+    return !d_func()->distanceFieldDisabled;
 }
 
 

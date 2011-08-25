@@ -54,7 +54,7 @@ QT_MODULE(Declarative)
 
 class QSGTextInputPrivate;
 class QValidator;
-class Q_AUTOTEST_EXPORT QSGTextInput : public QSGImplicitSizePaintedItem
+class Q_AUTOTEST_EXPORT QSGTextInput : public QSGImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(HAlignment)
@@ -204,7 +204,6 @@ public:
 
     bool hasAcceptableInput() const;
 
-    void paint(QPainter *p);
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 
     QRectF boundingRect() const;
@@ -261,6 +260,7 @@ protected:
     bool event(QEvent *e);
     void focusInEvent(QFocusEvent *event);
     virtual void itemChange(ItemChange, const ItemChangeData &);
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data);
 
 public Q_SLOTS:
     void selectAll();

@@ -64,6 +64,8 @@ class QSGParticleEmitter : public QSGItem
     Q_PROPERTY(QString particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)
     Q_PROPERTY(bool emitting READ emitting WRITE setEmitting NOTIFY emittingChanged)
+    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
+    Q_PROPERTY(bool noCap READ overwrite WRITE setOverWrite NOTIFY overwriteChanged)
 
     Q_PROPERTY(qreal emitRate READ particlesPerSecond WRITE setParticlesPerSecond NOTIFY particlesPerSecondChanged)
     Q_PROPERTY(int lifeSpan READ particleDuration WRITE setParticleDuration NOTIFY particleDurationChanged)
@@ -76,6 +78,8 @@ class QSGParticleEmitter : public QSGItem
 
     Q_PROPERTY(QSGStochasticDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged)
     Q_PROPERTY(QSGStochasticDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
+    Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
+
 public:
     explicit QSGParticleEmitter(QSGItem *parent = 0);
     virtual ~QSGParticleEmitter();
@@ -111,8 +115,11 @@ public:
         return m_particleDurationVariation;
     }
 
+    qreal speedFromMovement() const { return m_speed_from_movement; }
+    void setSpeedFromMovement(qreal s);
     virtual void componentComplete();
 signals:
+    void emitParticle(QDeclarativeV8Handle particle);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
     void emittingChanged(bool);
@@ -137,6 +144,12 @@ signals:
 
     void maxParticleCountChanged(int arg);
     void particleCountChanged();
+
+    void speedFromMovementChanged();
+
+    void startTimeChanged(int arg);
+
+    void overwriteChanged(bool arg);
 
 public slots:
     void pulse(qreal seconds);
@@ -235,6 +248,22 @@ public slots:
 
        void setMaxParticleCount(int arg);
 
+       void setStartTime(int arg)
+       {
+           if (m_startTime != arg) {
+               m_startTime = arg;
+               emit startTimeChanged(arg);
+           }
+       }
+
+       void setOverWrite(bool arg)
+{
+    if (m_overwrite != arg) {
+    m_overwrite = arg;
+emit overwriteChanged(arg);
+}
+}
+
 public:
        int particleCount() const;
 
@@ -274,6 +303,16 @@ public:
            return m_maxParticleCount;
        }
 
+       int startTime() const
+       {
+           return m_startTime;
+       }
+
+       bool overwrite() const
+       {
+           return m_overwrite;
+       }
+
 protected:
        qreal m_particlesPerSecond;
        int m_particleDuration;
@@ -290,11 +329,30 @@ protected:
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
 
+       qreal m_speedFromMovement;
+       int m_startTime;
+       bool m_overwrite;
+
        int m_burstLeft;//TODO: Rename to pulse
        QList<QPair<int, QPointF > > m_burstQueue;
        int m_maxParticleCount;
+
+       //Used in default implementation, but might be useful
+       qreal m_speed_from_movement;
+
+       int m_particle_count;
+       bool m_reset_last;
+       qreal m_last_timestamp;
+       qreal m_last_emission;
+
+       QPointF m_last_emitter;
+       QPointF m_last_last_emitter;
+       QPointF m_last_last_last_emitter;
+
+       bool isEmitConnected();
 private:
        QSGStochasticDirection m_nullVector;
+
 };
 
 QT_END_NAMESPACE

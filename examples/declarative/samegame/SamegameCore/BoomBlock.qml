@@ -47,6 +47,7 @@ Item {
     property bool dying: false
     property bool spawned: false
     property int type: 0
+    property ParticleSystem particleSystem
 
     Behavior on x {
         enabled: spawned;

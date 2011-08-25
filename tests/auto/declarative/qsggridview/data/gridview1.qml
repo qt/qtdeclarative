@@ -20,6 +20,7 @@ Rectangle {
                 width: 80
                 height: 60
                 border.color: "blue"
+                property string name: model.name
                 Text {
                     text: index
                 }

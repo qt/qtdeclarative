@@ -62,6 +62,7 @@ private slots:
     void whenAfterValue();
     void restoreBinding();
     void restoreBindingWithLoop();
+    void deletedObject();
 
 private:
     QDeclarativeEngine engine;
@@ -175,6 +176,22 @@ void tst_qdeclarativebinding::restoreBindingWithLoop()
 
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(49 + 100));
+
+    delete rect;
+}
+
+//QTBUG-20692
+void tst_qdeclarativebinding::deletedObject()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/deletedObject.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+
+    //don't crash
+    rect->setProperty("activateBinding", true);
 
     delete rect;
 }

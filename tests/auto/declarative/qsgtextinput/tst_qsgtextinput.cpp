@@ -51,7 +51,9 @@
 #include <QStyle>
 #include <QInputContext>
 #include <private/qapplication_p.h>
+#include <private/qsgdistancefieldglyphcache_p.h>
 #include <QtOpenGL/QGLShaderProgram>
+#include <math.h>
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -59,6 +61,7 @@
 #endif
 
 Q_DECLARE_METATYPE(QSGTextInput::SelectionMode)
+DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
@@ -221,11 +224,38 @@ void tst_qsgtextinput::width()
         delete textinputObject;
     }
 
+    bool requiresUnhintedMetrics = !qmlDisableDistanceField();
+
     for (int i = 0; i < standard.size(); i++)
     {
         QFont f;
-        QFontMetricsF fm(f);
-        qreal metricWidth = fm.width(standard.at(i));
+        qreal metricWidth = 0.0;
+        if (requiresUnhintedMetrics) {
+            QString s = standard.at(i);
+            s.replace(QLatin1Char('\n'), QChar::LineSeparator);
+
+            QTextLayout layout(s);
+            layout.setFlags(Qt::TextExpandTabs | Qt::TextShowMnemonic);
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            forever {
+                QTextLine line = layout.createLine();
+                if (!line.isValid())
+                    break;
+            }
+
+            layout.endLayout();
+
+            metricWidth = ceil(layout.boundingRect().width());
+        } else {
+            QFontMetricsF fm(f);
+            metricWidth = fm.width(standard.at(i));
+        }
 
         QString componentStr = "import QtQuick 2.0\nTextInput { text: \"" + standard.at(i) + "\" }";
         QDeclarativeComponent textinputComponent(&engine);
@@ -1048,7 +1078,6 @@ void tst_qsgtextinput::horizontalAlignment()
 
 void tst_qsgtextinput::horizontalAlignment_RightToLeft()
 {
-    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
     QSGTextInput *textInput = canvas.rootObject()->findChild<QSGTextInput*>("text");
     QVERIFY(textInput != 0);
@@ -1161,7 +1190,49 @@ void tst_qsgtextinput::positionAt()
     QFontMetrics fm(textinputObject->font());
 
     int pos = textinputObject->positionAt(textinputObject->width()/2);
-    int diff = abs(int(fm.width(textinputObject->text()) - (fm.width(textinputObject->text().left(pos))+textinputObject->width()/2)));
+    int textWidth = 0;
+    int textLeftWidth = 0;
+    if (!qmlDisableDistanceField()) {
+        {
+            QTextLayout layout(textinputObject->text().left(pos));
+
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            QTextLine line = layout.createLine();
+            layout.endLayout();
+
+            textLeftWidth = ceil(line.horizontalAdvance());
+        }
+        {
+            QTextLayout layout(textinputObject->text());
+
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            QTextLine line = layout.createLine();
+            layout.endLayout();
+
+            textWidth = ceil(line.horizontalAdvance());
+        }
+    } else {
+        textWidth = fm.width(textinputObject->text());
+        textLeftWidth = fm.width(textinputObject->text().left(pos));
+    }
+
+    int diff = abs(textWidth - (textLeftWidth+textinputObject->width()/2));
+
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21011 fails", Continue);
+#endif
 
     // some tollerance for different fonts.
 #ifdef Q_OS_LINUX
@@ -1177,7 +1248,32 @@ void tst_qsgtextinput::positionAt()
     // Check without autoscroll...
     textinputObject->setAutoScroll(false);
     pos = textinputObject->positionAt(textinputObject->width()/2);
-    diff = abs(int(fm.width(textinputObject->text().left(pos))-textinputObject->width()/2));
+
+    if (!qmlDisableDistanceField()) {
+        {
+            QTextLayout layout(textinputObject->text().left(pos));
+
+            {
+                QTextOption option;
+                option.setUseDesignMetrics(true);
+                layout.setTextOption(option);
+            }
+
+            layout.beginLayout();
+            QTextLine line = layout.createLine();
+            layout.endLayout();
+
+            textLeftWidth = ceil(line.horizontalAdvance());
+        }
+    } else {
+        textLeftWidth = fm.width(textinputObject->text().left(pos));
+    }
+
+    diff = abs(int(textLeftWidth-textinputObject->width()/2));
+
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21011 fails", Continue);
+#endif
 
     // some tollerance for different fonts.
 #ifdef Q_OS_LINUX
@@ -1442,7 +1538,6 @@ void tst_qsgtextinput::navigation()
 
 void tst_qsgtextinput::navigation_RTL()
 {
-    QSKIP("QTBUG-20017", SkipAll);
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
     canvas.setFocus();
@@ -2222,6 +2317,9 @@ void tst_qsgtextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     ic.sendPreeditText(preeditText.mid(0, 3), 1);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21011 fails", Abort);
+#endif
     QVERIFY(input->positionAt(0) != 0);
     QVERIFY(input->cursorRectangle().left() < input->boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);

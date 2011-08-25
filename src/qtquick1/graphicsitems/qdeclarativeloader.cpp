@@ -138,7 +138,7 @@ void QDeclarative1LoaderPrivate::initResize()
     Here is a Loader that loads "Page1.qml" as a component when the 
     \l MouseArea is clicked:
 
-    \snippet doc/src/snippets/declarative/loader/simple.qml 0
+    \snippet doc/src/snippets/qtquick1/loader/simple.qml 0
 
     The loaded item can be accessed using the \l item property.
 
@@ -170,8 +170,8 @@ void QDeclarative1LoaderPrivate::initResize()
     \o sizeloader.qml
     \o sizeitem.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/sizeloader.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/sizeitem.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/sizeloader.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/sizeitem.qml 0
     \row
     \o The red rectangle will be sized to the size of the root item.
     \o The red rectangle will be 50x50, centered in the root item.
@@ -190,8 +190,8 @@ void QDeclarative1LoaderPrivate::initResize()
     \o application.qml
     \o MyItem.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/connections.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/MyItem.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/connections.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/MyItem.qml 0
     \endtable
 
     Alternatively, since \c MyItem.qml is loaded within the scope of the
@@ -217,8 +217,8 @@ void QDeclarative1LoaderPrivate::initResize()
     \o application.qml
     \o KeyReader.qml
     \row
-    \o \snippet doc/src/snippets/declarative/loader/focus.qml 0
-    \o \snippet doc/src/snippets/declarative/loader/KeyReader.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/focus.qml 0
+    \o \snippet doc/src/snippets/qtquick1/loader/KeyReader.qml 0
     \endtable
 
     Once \c KeyReader.qml is loaded, it accepts key events and sets 

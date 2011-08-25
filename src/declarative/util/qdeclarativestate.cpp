@@ -130,8 +130,8 @@ QDeclarativeStateOperation::QDeclarativeStateOperation(QObjectPrivate &dd, QObje
 
 /*!
     \qmlclass State QDeclarativeState
+    \inqmlmodule QtQuick 2
     \ingroup qml-state-elements
-    \since 4.7
     \brief The State element defines configurations of objects and properties.
 
     A \e state is a set of batched changes from the default configuration.
@@ -176,7 +176,7 @@ QDeclarativeState::~QDeclarativeState()
 }
 
 /*!
-    \qmlproperty string State::name
+    \qmlproperty string QtQuick2::State::name
     This property holds the name of the state.
 
     Each state should have a unique name within its item.
@@ -207,7 +207,7 @@ bool QDeclarativeState::isWhenKnown() const
 }
 
 /*!
-    \qmlproperty bool State::when
+    \qmlproperty bool QtQuick2::State::when
     This property holds when the state should be applied.
 
     This should be set to an expression that evaluates to \c true when you want the state to
@@ -245,7 +245,7 @@ void QDeclarativeState::setWhen(QDeclarativeBinding *when)
 }
 
 /*!
-    \qmlproperty string State::extend
+    \qmlproperty string QtQuick2::State::extend
     This property holds the state that this state extends.
 
     When a state extends another state, it inherits all the changes of that state.
@@ -266,7 +266,7 @@ void QDeclarativeState::setExtends(const QString &extends)
 }
 
 /*!
-    \qmlproperty list<Change> State::changes
+    \qmlproperty list<Change> QtQuick2::State::changes
     This property holds the changes to apply for this state
     \default
 
@@ -315,13 +315,15 @@ void QDeclarativeStatePrivate::complete()
     }
     reverting.clear();
 
+    if (group)
+        group->stateAboutToComplete();
     emit q->completed();
 }
 
 // Generate a list of actions for this state.  This includes coelescing state
 // actions that this state "extends"
 QDeclarativeStateOperation::ActionList
-QDeclarativeStatePrivate::generateActionList(QDeclarativeStateGroup *group) const
+QDeclarativeStatePrivate::generateActionList() const
 {
     QDeclarativeStateOperation::ActionList applyList;
     if (inState)
@@ -331,11 +333,11 @@ QDeclarativeStatePrivate::generateActionList(QDeclarativeStateGroup *group) cons
     inState = true;
 
     if (!extends.isEmpty()) {
-        QList<QDeclarativeState *> states = group->states();
+        QList<QDeclarativeState *> states = group ? group->states() : QList<QDeclarativeState *>();
         for (int ii = 0; ii < states.count(); ++ii)
             if (states.at(ii)->name() == extends) {
                 qmlExecuteDeferred(states.at(ii));
-                applyList = static_cast<QDeclarativeStatePrivate*>(states.at(ii)->d_func())->generateActionList(group);
+                applyList = static_cast<QDeclarativeStatePrivate*>(states.at(ii)->d_func())->generateActionList();
             }
     }
 
@@ -559,7 +561,7 @@ bool QDeclarativeState::isStateActive() const
     return stateGroup() && stateGroup()->state() == name();
 }
 
-void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransition *trans, QDeclarativeState *revert)
+void QDeclarativeState::apply(QDeclarativeTransition *trans, QDeclarativeState *revert)
 {
     Q_D(QDeclarativeState);
 
@@ -579,7 +581,7 @@ void QDeclarativeState::apply(QDeclarativeStateGroup *group, QDeclarativeTransit
     }
 
     // List of actions caused by this state
-    QDeclarativeStateOperation::ActionList applyList = d->generateActionList(group);
+    QDeclarativeStateOperation::ActionList applyList = d->generateActionList();
 
     // List of actions that need to be reverted to roll back (just) this state
     QDeclarativeStatePrivate::SimpleActionList additionalReverts;

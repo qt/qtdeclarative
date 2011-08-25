@@ -76,14 +76,20 @@ private:
 tst_examples::tst_examples()
 {
     // Add directories you want excluded here
+
+    // These snippets are not expected to run on their own.
     excludedDirs << "doc/src/snippets/declarative/visualdatamodel_rootindex";
     excludedDirs << "doc/src/snippets/declarative/qtbinding";
     excludedDirs << "doc/src/snippets/declarative/imports";
+    excludedDirs << "doc/src/snippets/qtquick1/visualdatamodel_rootindex";
+    excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
+    excludedDirs << "doc/src/snippets/qtquick1/imports";
 
 #ifdef QT_NO_WEBKIT
     excludedDirs << "examples/declarative/modelviews/webview";
     excludedDirs << "examples/declarative/webbrowser";
     excludedDirs << "doc/src/snippets/declarative/webview";
+    excludedDirs << "doc/src/snippets/qtquick1/webview";
 #endif
 
 #ifdef QT_NO_XMLPATTERNS

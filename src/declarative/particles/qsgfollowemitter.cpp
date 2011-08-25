@@ -45,21 +45,13 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass Emitter QSGBasicEmitter
+    \qmlclass FollowEmitter QSGFollowEmitter
     \inqmlmodule QtQuick.Particles 2
-    \since QtQuick.Particles 2.0
-    \brief The Emitter element allows you to emit logical particles.
+    \inherits QSGParticleEmitter
+    \brief The FollowEmitter element allows you to emit logical particles from other logical particles.
 
     This element emits logical particles into the ParticleSystem, with the
-    given starting attributes.
-
-    Note that logical particles are not
-    automatically rendered, you will need to have one or more
-    ParticlePainter elements visualizing them.
-
-    Note that the given starting attributes can be modified at any point
-    in the particle's lifetime by any Affector element in the same
-    ParticleSystem. This includes attributes like lifespan.
+    starting positions based on those of other logical particles.
 */
 QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
     QSGParticleEmitter(parent)
@@ -80,24 +72,17 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
             this, SLOT(recalcParticlesPerSecond()));
 }
 
-
-/*!
-    \qmlproperty ParticleSystem QtQuick.Particles2::FollowEmitter::system
-
-    This is the Particle system that the FollowEmitter will emit into.
-    This can be omitted if the FollowEmitter is a direct child of the ParticleSystem
-*/
-/*!
-    \qmlproperty string QtQuick.Particles2::FollowEmitter::particle
-*/
 /*!
     \qmlproperty string QtQuick.Particles2::FollowEmitter::follow
+
+    The type of logical particle which this is emitting from.
 */
-/*!
-    \qmlproperty Shape QtQuick.Particles2::FollowEmitter::shape
-*/
+
 /*!
     \qmlproperty Shape QtQuick.Particles2::FollowEmitter::emitShape
+
+    As the area of a FollowEmitter is the area it follows, a separate shape can be provided
+    to be the shape it emits out of.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::FollowEmitter::emitWidth
@@ -106,38 +91,23 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
     \qmlproperty real QtQuick.Particles2::FollowEmitter::emitHeight
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::FollowEmitter::emitting
-*/
-/*!
     \qmlproperty real QtQuick.Particles2::FollowEmitter::emitRatePerParticle
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::FollowEmitter::lifeSpan
+    \qmlsignal QtQuick.Particles2::FollowEmitter::emitFollowParticle(particle, followed)
+
+    This handler is called when a particle is emitted. You can modify particle
+    attributes from within the handler. followed is the particle that this is being
+    emitted off of.
+
+    If you use this signal handler, emitParticle will not be emitted.
 */
-/*!
-    \qmlproperty int QtQuick.Particles2::FollowEmitter::lifeSpanVariation
-*/
-/*!
-    \qmlproperty int QtQuick.Particles2::FollowEmitter::emitCap
-*/
-/*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::size
-*/
-/*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::endSize
-*/
-/*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::sizeVariation
-*/
-/*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::FollowEmitter::speed
-*/
-/*!
-    \qmlproperty StochasticDirection QtQuick.Particles2::FollowEmitter::acceleration
-*/
-/*!
-    \qmlproperty qreal QtQuick.Particles2::FollowEmitter::speedFromMovement
-*/
+
+bool QSGFollowEmitter::isEmitFollowConnected()
+{
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticle(QDeclarativeV8Handle,QDeclarativeV8Handle)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
+}
 
 void QSGFollowEmitter::recalcParticlesPerSecond(){
     if (!m_system)
@@ -178,6 +148,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
         }
     }
 
+    //TODO: Implement startTime and speedFromMovement
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerParticlePerSecond;
     qreal pt;
@@ -202,7 +173,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
             continue;
         }
         while (pt < time || !m_burstQueue.isEmpty()){
-            QSGParticleData* datum = m_system->newDatum(gId2);
+            QSGParticleData* datum = m_system->newDatum(gId2, !m_overwrite);
             if (datum){//else, skip this emission
                 datum->e = this;//###useful?
 
@@ -236,8 +207,10 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 // Particle speed
                 const QPointF &speed = m_speed->sample(newPos);
-                datum->vx = speed.x();
+                datum->vx = speed.x()
+                    + m_speed_from_movement * d->vx;
                 datum->vy = speed.y();
+                    + m_speed_from_movement * d->vy;
 
                 // Particle acceleration
                 const QPointF &accel = m_acceleration->sample(newPos);
@@ -253,6 +226,11 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
 
                 datum->size = size * float(m_emitting);
                 datum->endSize = endSize * float(m_emitting);
+
+                if (isEmitFollowConnected())
+                    emitFollowParticle(datum->v8Value(), d->v8Value());//A chance for many arbitrary JS changes
+                else if (isEmitConnected())
+                    emitParticle(datum->v8Value());//A chance for arbitrary JS changes
 
                 m_system->emitParticle(datum);
             }

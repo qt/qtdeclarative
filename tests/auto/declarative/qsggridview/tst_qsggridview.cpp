@@ -641,8 +641,8 @@ void tst_QSGGridView::moved()
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
         QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
 
-        QTRY_VERIFY(item->x() == (i%3)*80);
-        QTRY_VERIFY(item->y() == (i/3)*60 + itemsOffsetAfterMove);
+        QTRY_COMPARE(item->x(), (i%3)*80.0);
+        QTRY_COMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
 
         name = findItem<QSGText>(contentItem, "textName", i);
         QVERIFY(name != 0);
@@ -725,17 +725,17 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 0.0;
+            << 60.0;    // moved 3 items (i.e. 1 row) down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 120.0     // show 6-23
             << 1 << 6 << 3
-            << 0.0;
+            << 60.0;    // top row moved, all items should shift down by 1 row
 
     QTest::newRow("move multiple forwards, from non-visible -> visible (move first item)")
             << 120.0     // show 6-23
             << 0 << 6 << 3
-            << 0.0;
+            << 60.0;    // top row moved, all items should shift down by 1 row
 
     QTest::newRow("move multiple forwards, from visible -> non-visible")
             << 0.0
@@ -745,7 +745,7 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 0.0;
+            << 60.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")
@@ -880,6 +880,26 @@ void tst_QSGGridView::currentIndex()
 
     QTRY_COMPARE(gridview->contentY(), 0.0);
 
+
+    // footer should become visible if it is out of view, and then current index moves to the first row
+    canvas->rootObject()->setProperty("showFooter", true);
+    QTRY_VERIFY(gridview->footerItem());
+    gridview->setCurrentIndex(model.count()-3);
+    QTRY_VERIFY(gridview->footerItem()->y() > gridview->contentY() + gridview->height());
+    gridview->setCurrentIndex(model.count()-2);
+    QTRY_COMPARE(gridview->contentY() + gridview->height(), (60.0 * model.count()/3) + gridview->footerItem()->height());
+    canvas->rootObject()->setProperty("showFooter", false);
+
+    // header should become visible if it is out of view, and then current index moves to the last row
+    canvas->rootObject()->setProperty("showHeader", true);
+    QTRY_VERIFY(gridview->headerItem());
+    gridview->setCurrentIndex(3);
+    QTRY_VERIFY(gridview->headerItem()->y() + gridview->headerItem()->height() < gridview->contentY());
+    gridview->setCurrentIndex(1);
+    QTRY_COMPARE(gridview->contentY(), -gridview->headerItem()->height());
+    canvas->rootObject()->setProperty("showHeader", false);
+
+
     // Test keys
     qApp->setActiveWindow(canvas);
 #ifdef Q_WS_X11
@@ -888,6 +908,8 @@ void tst_QSGGridView::currentIndex()
 #endif
     QTRY_VERIFY(canvas->hasFocus());
     qApp->processEvents();
+
+    gridview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
     QCOMPARE(gridview->currentIndex(), 3);
@@ -1344,7 +1366,7 @@ void tst_QSGGridView::modelChanges()
 
     QDeclarativeListModel *alternateModel = canvas->rootObject()->findChild<QDeclarativeListModel*>("alternateModel");
     QTRY_VERIFY(alternateModel);
-    QVariant modelVariant = QVariant::fromValue(alternateModel);
+    QVariant modelVariant = QVariant::fromValue<QObject *>(alternateModel);
     QSignalSpy modelSpy(gridView, SIGNAL(modelChanged()));
 
     gridView->setModel(modelVariant);

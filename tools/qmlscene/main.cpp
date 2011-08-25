@@ -56,7 +56,6 @@
 #include <QtWidgets/QGraphicsView>
 
 #include <QtDeclarative/qdeclarativecontext.h>
-#include <private/qdeclarativedebughelper_p.h>
 
 // ### This should be private API
 #include <qsgitem.h>
@@ -321,8 +320,8 @@ static void checkAndAdaptVersion(const QUrl &url)
         return;
     }
 
-    QRegExp quick1("import +QtQuick +1\\.");
-    QRegExp qt47("import +Qt +4\\.7");
+    QRegExp quick1("^\\s*import +QtQuick +1\\.");
+    QRegExp qt47("^\\s*import +Qt +4\\.7");
 
     QString envToWrite;
     QString compat;
@@ -418,7 +417,6 @@ int main(int argc, char ** argv)
 
     Options options;
 
-    QDeclarativeDebugHelper::enableDebugging();
     QStringList imports;
     for (int i = 1; i < argc; ++i) {
         if (*argv[i] != '-' && QFileInfo(argv[i]).exists())

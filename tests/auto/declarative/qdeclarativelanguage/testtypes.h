@@ -47,6 +47,7 @@
 #include <QtGui/qmatrix.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>
+#include <QtGui/qvector4d.h>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeparserstatus.h>
@@ -224,6 +225,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(bool boolProperty READ boolProperty WRITE setBoolProperty)
     Q_PROPERTY(QVariant variantProperty READ variantProperty WRITE setVariantProperty)
     Q_PROPERTY(QVector3D vectorProperty READ vectorProperty WRITE setVectorProperty)
+    Q_PROPERTY(QVector4D vector4Property READ vector4Property WRITE setVector4Property)
     Q_PROPERTY(QUrl urlProperty READ urlProperty WRITE setUrlProperty)
 
     Q_PROPERTY(QDeclarativeScriptString scriptProperty READ scriptProperty WRITE setScriptProperty)
@@ -440,6 +442,14 @@ public:
     }
     void setVectorProperty(const QVector3D &v) {
         vectorPropertyValue = v;
+    }
+
+    QVector4D vector4PropertyValue;
+    QVector4D vector4Property() const {
+        return vector4PropertyValue;
+    }
+    void setVector4Property(const QVector4D &v) {
+        vector4PropertyValue = v;
     }
 
     QUrl urlPropertyValue;

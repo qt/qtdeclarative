@@ -174,7 +174,7 @@ public:
 
     QDeclarativeState &operator<<(QDeclarativeStateOperation *);
 
-    void apply(QDeclarativeStateGroup *, QDeclarativeTransition *, QDeclarativeState *revert);
+    void apply(QDeclarativeTransition *, QDeclarativeState *revert);
     void cancel();
 
     QDeclarativeStateGroup *stateGroup() const;

@@ -41,379 +41,383 @@
 
 #include "qdeclarativechangeset_p.h"
 
-void QDeclarativeChangeSet::insertInsert(int start, int end)
+QDeclarativeChangeSet::QDeclarativeChangeSet()
+    : m_moveCounter(0)
 {
-    const int count = end - start;
-
-    // Moved signals.
-    QVector<Move>::iterator move = m_moves.begin();
-    for (; move != m_moves.end() && start >= move->maximum(); ++move) {}
-    for (; move != m_moves.end() && end >= move->minimum(); ++move) {
-        if (start <= move->tstart) {
-            move->tstart += count;
-            move->tend += count;
-        } else if (start < move->tend) {
-            int relativeStart = start - move->tstart;
-
-            move = m_moves.insert(move, Move(
-                    move->fstart + count, move->fstart + count + relativeStart, move->tstart));
-            ++move;
-            move->fstart += relativeStart;
-            move->tstart += count + relativeStart;
-            move->tend += count;
-
-            start -= relativeStart;
-            end -= relativeStart;
-        } else {
-            start -= move->count();
-            end -= move->count();
-        }
-
-        if (start <= move->fstart) {
-            move->fstart += count;
-            move->fend += count;
-        } else if (start < move->tstart) {
-            start += move->count();
-            end += move->count();
-        }
-
-    }
-    for (; move != m_moves.end(); ++move) {
-        move->fstart += count;
-        move->fend += count;
-        move->tstart += count;
-        move->tend += count;
-    }
-
-    // Inserted signals.
-    QVector<Insert>::iterator insert = m_inserts.begin();
-    for (; insert != m_inserts.end(); ++insert) {
-        if (start < insert->start) {
-            insert = m_inserts.insert(insert, Insert(start, end));
-            break;
-        } else if (start <= insert->end) {
-            insert->end += count;
-            break;
-        }
-    }
-    if (insert == m_inserts.end()) {
-        m_inserts.append(Insert(start, end));
-    } else for (++insert; insert != m_inserts.end(); ++insert) {
-        insert->start += count;
-        insert->end += count;
-    }
-
-
-    // Changed signals.
-    QVector<Change>::iterator change = m_changes.begin();
-    for (; change != m_changes.end() && start != change->start && start < change->end; ++change) {
-        if (start > change->start) {
-            int relativeStart = start - change->start;
-            change = m_changes.insert(change, Change(change->start, change->start + relativeStart));
-            ++change;
-            change->start += count + relativeStart;
-            change->end += count - relativeStart;
-            break;
-        }
-    }
-    for (; change != m_changes.end(); ++change) {
-        change->start += count;
-        change->end += count;
-    }
 }
 
-void QDeclarativeChangeSet::insertRemove(int start, int end)
+QDeclarativeChangeSet::QDeclarativeChangeSet(const QDeclarativeChangeSet &changeSet)
+    : m_removes(changeSet.m_removes)
+    , m_inserts(changeSet.m_inserts)
+    , m_changes(changeSet.m_changes)
+    , m_moveCounter(changeSet.m_moveCounter)
 {
-    // Changed Signals.
+}
+
+QDeclarativeChangeSet::~QDeclarativeChangeSet()
+{
+}
+
+QDeclarativeChangeSet &QDeclarativeChangeSet::operator =(const QDeclarativeChangeSet &changeSet)
+{
+    m_removes = changeSet.m_removes;
+    m_inserts = changeSet.m_inserts;
+    m_changes = changeSet.m_changes;
+    m_moveCounter = changeSet.m_moveCounter;
+    return *this;
+}
+
+void QDeclarativeChangeSet::insert(int index, int count)
+{
+    applyInsertions(QVector<Insert>() << Insert(index, count));
+}
+
+void QDeclarativeChangeSet::remove(int index, int count)
+{
+    QVector<Insert> i;
+    applyRemovals(QVector<Remove>() << Remove(index, count), i);
+}
+
+void QDeclarativeChangeSet::move(int from, int to, int count)
+{
+    apply(QVector<Remove>() << Remove(from, count, -2), QVector<Insert>() << Insert(to, count, -2));
+}
+
+void QDeclarativeChangeSet::change(int index, int count)
+{
+    applyChanges(QVector<Change>() << Change(index, count));
+}
+
+void QDeclarativeChangeSet::apply(const QDeclarativeChangeSet &changeSet)
+{
+    apply(changeSet.m_removes, changeSet.m_inserts, changeSet.m_changes);
+}
+
+void QDeclarativeChangeSet::apply(const QVector<Remove> &removals)
+{
+    QVector<Remove> r = removals;
+    QVector<Insert> i;
+    applyRemovals(r, i);
+}
+
+void QDeclarativeChangeSet::apply(const QVector<Insert> &insertions)
+{
+    QVector<Insert> i = insertions;
+    applyInsertions(i);
+}
+
+void QDeclarativeChangeSet::apply(const QVector<Change> &changes)
+{
+    QVector<Change> c = changes;
+    applyChanges(c);
+}
+
+void QDeclarativeChangeSet::apply(const QVector<Remove> &removals, const QVector<Insert> &insertions, const QVector<Change> &changes)
+{
+    QVector<Remove> r = removals;
+    QVector<Insert> i = insertions;
+    QVector<Change> c = changes;
+    applyRemovals(r, i);
+    applyInsertions(i);
+    applyChanges(c);
+}
+
+void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Insert> &insertions)
+{
+    int removeCount = 0;
+    int insertCount = 0;
+    QVector<Insert>::iterator insert = m_inserts.begin();
     QVector<Change>::iterator change = m_changes.begin();
-    for (; change != m_changes.end() && start >= change->end; ++change) {}
-    for (; change != m_changes.end() && end < change->start; ++change) {
-        const int removeCount = qMin(change->end, end) - qMax(change->start, start);
-        change->end -= removeCount;
-        if (change->start == change->end) {
-            change = m_changes.erase(change);
-        } else if (start < change->start) {
-            change->start = start;
-        }
-    }
-    const int count = end - start;
-    for (; change != m_changes.end(); ++change) {
-        change->start -= count;
-        change->end -= count;
-    }
+    QVector<Remove>::iterator rit = removals.begin();
+    for (; rit != removals.end(); ++rit) {
+        int index = rit->index + removeCount;
+        int count = rit->count;
 
-    QVector<Remove> removeChanges;
-
-    // Moved signals.
-    QVector<Move>::iterator move = m_moves.begin();
-    for (; move != m_moves.end() && start >= move->maximum(); ++move) {}
-    for (; move != m_moves.end() && end >= move->minimum(); ++move) {
-        if (move->fstart < move->tstart) {
-            if (start < move->fstart) {
-                const int difference = move->fstart - start;
-                move->fend -= difference;
-                move->fstart = start;
-                move->tstart -= difference;
-                move->tend -= difference;
-
-                removeChanges.append(Remove(start, start + difference));
-                end -= difference;
-            }
-            if (end < move->tstart) {
-                move->tstart -= end - start;
-                move->tend -= end - start;
-            } else if (start < move->tend) {
-                const int difference = qMin(move->tend, end) - move->tstart;
-                removeChanges.append(Remove(
-                        move->fstart , move->fstart + difference));
-                end -= difference;
-
-                move->fend -= difference;
-                move->tstart -= end - start;
-                move->tend -=  end - start + difference;
-            }
-            start += move->count();
-            end += move->count();
-        } else {
-            if (start < move->tend) {
-                const int offset = qMax(0, start - move->tstart);
-                const int difference = qMin(move->tend, end) - qMax(move->tstart, start);
-
-                removeChanges.append(Remove(
-                        move->fstart + offset, move->fstart + offset + difference));
-                start -= offset;
-                end -= offset + difference;
-
-                move->fend -= difference;
-                move->tstart = start;
-                move->tend = start + move->fend - move->fstart;
-            } else {
-                start -= move->count();
-                end -= move->count();
-            }
-
-            move->fstart -= end - start;
-            move->fend -= end - start;
-
-            if (start > move->fstart) {
-                const int offset = start - move->fstart;
-                const int difference = qMin(move->fend, end) - start;
-                removeChanges.append(Remove(
-                        move->fstart + end - start + offset + difference ,
-                        move->fend + end - start + offset));
-                end -= offset;
-                move->fstart += offset;
-                move->fend += offset;
+        QVector<Insert>::iterator iit = insertions.begin();
+        for (; rit->moveId != -1 && iit != insertions.end() && iit->moveId != rit->moveId; ++iit) {}
+        for (; change != m_changes.end() && change->end() < rit->index; ++change) {}
+        for (; change != m_changes.end() && change->index > rit->end(); ++change) {
+            change->count -= qMin(change->end(), rit->end()) - qMax(change->index, rit->index);
+            if (change->count == 0) {
+                change = m_changes.erase(change);
+            } else if (rit->index < change->index) {
+                change->index = rit->index;
             }
         }
-
-        if (move->tstart == move->tend || move->fstart == move->tstart) {
-            move = m_moves.erase(move);
-            --move;
+        for (; insert != m_inserts.end() && insert->end() <= index; ++insert) {
+            insertCount += insert->count;
+            insert->index -= removeCount;
         }
-    }
-    for (; move != m_moves.end(); ++move) {
-        move->fstart -= count;
-        move->fend -= count;
-        move->tstart -= count;
-        move->tend -= count;
-    }
-
-    if (start != end)
-        removeChanges.append(Remove(start, end));
-
-    foreach (const Remove &r, removeChanges) {
-        int start = r.start;
-        int end = r.end;
-
-        QVector<Insert>::iterator insert = m_inserts.end() - 1;
-        for (const int count = end - start; insert != m_inserts.begin() - 1 && insert->start >= end; --insert) {
-                insert->start -= count;
-                insert->end -= count;
-        }
-        for (; insert != m_inserts.begin() - 1 && insert->end > start; --insert) {
-            const int removeCount = qMin(insert->end, end) - qMax(insert->start, start);
-            insert->end -= removeCount;
-            if (insert->start == insert->end) {
-                insert = m_inserts.erase(insert);
-            } else if (start < insert->start) {
-                insert->end -= insert->start - start;
-                insert->start = start;
-            } else {
-                start -= insert->count();
-                end -= insert->count();
-            }
-            end -= removeCount;
-            if (start == end)
-                 return;
-         }
-        // Adjust the index to compensate for any inserts prior to the remove position..
-        for (; insert != m_inserts.begin() - 1; --insert) {
-            start -= insert->count();
-            end -= insert->count();
-        }
-
-        // Removed signals.
-        QVector<Remove>::iterator remove = m_removes.begin();
-        for (; remove != m_removes.end(); ++remove) {
-            if (end < remove->start) {
-                remove = m_removes.insert(remove, Remove(start, end));
-                break;
-            } else if (start <= remove->start) {
-                remove->end += end - remove->start;
-                remove->start = start;
-
-                QVector<Remove>::iterator rbegin = remove;
-                QVector<Remove>::iterator rend = ++rbegin;
-                for (; rend != m_removes.end() && rend->start <= remove->end; ++rend)
-                    remove->end += rend->count();
-                if (rbegin != rend) {
-                    remove = m_removes.erase(rbegin, rend);
+        for (; insert != m_inserts.end() && insert->index < index + count; ++insert) {
+            const int offset = insert->index - index;
+            const int difference = qMin(insert->end(), index + count) - qMax(insert->index, index);
+            const int moveId = rit->moveId != -1 ? m_moveCounter++ : -1;
+            if (insert->moveId != -1) {
+                QVector<Remove>::iterator remove = m_removes.begin();
+                for (; remove != m_removes.end() && remove->moveId != insert->moveId; ++remove) {}
+                Q_ASSERT(remove != m_removes.end());
+                const int offset = index - insert->index;
+                if (rit->moveId != -1 && offset < 0) {
+                    const int moveId = m_moveCounter++;
+                    iit = insertions.insert(iit, Insert(iit->index, -offset, moveId));
+                    ++iit;
+                    iit->index += -offset;
+                    iit->count -= -offset;
+                    rit = removals.insert(rit, Remove(rit->index, -offset, moveId));
+                    ++rit;
+                    rit->count -= -offset;
                 }
-                break;
+
+                if (offset > 0) {
+                    const int moveId = m_moveCounter++;
+                    insert = m_inserts.insert(insert, Insert(insert->index, offset, moveId));
+                    ++insert;
+                    insert->index += offset;
+                    insert->count -= offset;
+                    remove = m_removes.insert(remove, Remove(remove->index, offset, moveId));
+                    ++remove;
+                    remove->count -= offset;
+                    rit->index -= offset;
+                    index += offset;
+                    count -= offset;
+                }
+
+                if (remove->count == difference) {
+                    remove->moveId = moveId;
+                } else {
+                    remove = m_removes.insert(remove, Remove(remove->index, difference, moveId));
+                    ++remove;
+                    remove->count -= difference;
+                }
+            } else if (rit->moveId != -1 && offset > 0) {
+                const int moveId = m_moveCounter++;
+                iit = insertions.insert(iit, Insert(iit->index, offset, moveId));
+                ++iit;
+                iit->index += offset;
+                iit->count -= offset;
+                rit = removals.insert(rit, Remove(rit->index, offset, moveId));
+                ++rit;
+                rit->count -= offset;
+                index += offset;
+                count -= offset;
             }
-        }
-        if (remove != m_removes.end()) {
-            const int count = end - start;
-            for (++remove; remove != m_removes.end(); ++remove) {
-                remove->start -= count;
-                remove->end -= count;
+
+            if (rit->moveId != -1 && difference > 0) {
+                iit = insertions.insert(iit, Insert(iit->index, difference, moveId));
+                ++iit;
+                iit->index += difference;
+                iit->count -= difference;
             }
-        } else {
-            m_removes.append(Remove(start, end));
-        }
-    }
-}
 
-void QDeclarativeChangeSet::insertMove(int start, int end, int to)
-{
-    QVector<Insert> insertChanges;
-    QVector<Move> moveChanges;
-
-    int fStart = start;
-    int fTo = to;
-    int fEnd = end;
-    int &bStart = fTo;
-    int bEnd = to + end - start;
-
-    if (start > to) {
-        qSwap(fStart, bStart);
-        qSwap(fEnd, bEnd);
-    }
-
-    // Inserted signals.
-    QVector<Insert>::iterator insert = m_inserts.begin();
-    if (start < to) {
-        for (; insert != m_inserts.end() && fStart >= insert->end; ++insert) {}
-        for (; insert != m_inserts.end() && fEnd > insert->start; ++insert) {
-            const int removeCount = qMin(insert->end, fEnd) - qMax(insert->start, fStart);
-            const int relativeStart = fStart - insert->start;
-            const int relativeEnd = qMax(0, fEnd - insert->end);
-
-            insert->end -= removeCount;
-            if (insert->start == insert->end) {
+            insert->count -= difference;
+            rit->count -= difference;
+            if (insert->count == 0) {
                 insert = m_inserts.erase(insert);
                 --insert;
-            }
-
-            if (relativeStart < 0) {
-                moveChanges.append(Move(fStart, fStart - relativeStart, fTo + relativeEnd));
-                fTo -= relativeStart;
-            }
-
-            fTo += removeCount;
-            insertChanges.append(Insert(bEnd - removeCount, bEnd));
-        }
-    } else {
-        for (; insert != m_inserts.end() && bStart >= insert->end; ++insert) {}
-        for (; insert != m_inserts.end() && bEnd > insert->start; ++insert) {
-            const int removeCount = qMin(insert->end, bEnd) - qMax(insert->start, bStart);
-            const int relativeStart = bStart - insert->start;
-
-            insert->start += removeCount;
-            if (insert->start == insert->end) {
-                insert->start = fStart;
-                insert->end = insert->start + removeCount;
+            } else if (index <= insert->index) {
+                insert->index = rit->index;
             } else {
-                insert = m_inserts.insert(insert, Insert(fStart, fStart + removeCount));
-                ++insert;
+                rit->index -= insert->count;
             }
-            if (relativeStart < 0) {
-                moveChanges.append(Move(fStart, fStart - relativeStart, fTo + removeCount));
-                fStart -= relativeStart;
-                fTo -= relativeStart;
+            index += difference;
+            count -= difference;
+            removeCount += difference;
+        }
+        rit->index -= insertCount;
+        removeCount += rit->count;
+
+        if (rit->count == 0) {
+            if (rit->moveId != -1 && iit->count == 0)
+                insertions.erase(iit);
+            rit = removals.erase(rit);
+            --rit;
+        } else if (rit->moveId != -1) {
+            const int moveId = m_moveCounter++;
+            rit->moveId = moveId;
+            iit->moveId = moveId;
+        }
+    }
+    for (; change != m_changes.end(); ++change)
+        change->index -= removeCount;
+    for (; insert != m_inserts.end(); ++insert)
+        insert->index -= removeCount;
+
+    removeCount = 0;
+    QVector<Remove>::iterator remove = m_removes.begin();
+    for (rit = removals.begin(); rit != removals.end(); ++rit) {
+        QVector<Insert>::iterator iit = insertions.begin();
+        int index = rit->index + removeCount;
+        for (; rit->moveId != -1 && iit != insertions.end() && iit->moveId != rit->moveId; ++iit) {}
+        for (; remove != m_removes.end() && index > remove->index; ++remove)
+            remove->index -= removeCount;
+        while (remove != m_removes.end() && index + rit->count > remove->index) {
+            int count = 0;
+            const int offset = remove->index - index - removeCount;
+            QVector<Remove>::iterator rend = remove;
+            for (; rend != m_removes.end()
+                    && rit->moveId == -1
+                    && rend->moveId == -1
+                    && rit->index + rit->count > rend->index; ++rend) {
+                count += rend->count;
             }
-            fStart += removeCount;
-            fTo += removeCount;
-        }
-    }
+            if (remove != rend) {
+                const int difference = rend == m_removes.end() || rit->index + rit->count < rend->index - removeCount
+                        ? rit->count
+                        : offset;
+                count += difference;
 
-    if (fTo != bEnd)
-        moveChanges.append(Move(fStart, fStart + bEnd - fTo, fTo));
+                index += difference;
+                rit->count -= difference;
+                removeCount += difference;
 
-    QVector<Insert>::iterator it = insertChanges.begin();
-    for (insert = m_inserts.begin(); it != insertChanges.end() && insert != m_inserts.end();++insert) {
-        if (it->start < insert->start) {
-            insert = m_inserts.insert(insert, *it);
-            ++it;
-        } else if (it->start <= insert->end) {
-            insert->end += it->count();
-            ++it;
-        }
-    }
-    for (; it != insertChanges.end(); ++it)
-        m_inserts.append(*it);
+                remove->index = rit->index;
+                remove->count = count;
+                remove = m_removes.erase(++remove, rend);
+            } else if (rit->moveId != -1) {
+                if (offset > 0) {
+                    const int moveId = m_moveCounter++;
+                    iit = insertions.insert(iit, Insert(iit->index, offset, moveId));
+                    ++iit;
+                    iit->index += offset;
+                    iit->count -= offset;
+                    remove = m_removes.insert(remove, Remove(rit->index, offset, moveId));
+                    ++remove;
+                    rit->count -= offset;
+                }
+                remove->index = rit->index;
+                index += offset;
+                removeCount += offset;
 
-    // Insert queued moved signals ordered by destination position.
-    QVector<Move>::iterator move = m_moves.begin();
-    if (start > to) {
-        for (QVector<Move>::iterator it = moveChanges.begin(); it != moveChanges.end(); ++it) {
-            it->fend += it->tstart - it->fstart;
-            it->tend -=it->tstart - it->fstart;
-            qSwap(it->fstart, it->tstart);
-            for (; move != m_moves.end() && it->to >= qMin(move->fstart, move->tstart); ++move) {}
-            move = m_moves.insert(move, *it);
+                ++remove;
+            } else {
+                if (offset > 0) {
+                    remove = m_removes.insert(remove, Remove(rit->index, offset));
+                    ++remove;
+                    rit->count -= offset;
+                }
+                remove->index = rit->index;
+                index += offset;
+                removeCount += offset;
+
+                ++remove;
+            }
+            index += count;
+            rit->count -= count;
         }
-    } else {
-        for (QVector<Move>::iterator it = moveChanges.begin(); it != moveChanges.end(); ++it) {
-            for (; move != m_moves.end() && it->start >= qMin(move->fstart, move->tstart); ++move) {}
-            move = m_moves.insert(move, *it);
+
+        if (rit->count > 0) {
+            remove = m_removes.insert(remove, *rit);
+            ++remove;
         }
+        removeCount += rit->count;
     }
+    for (; remove != m_removes.end(); ++remove)
+        remove->index -= removeCount;
 }
 
-void QDeclarativeChangeSet::insertChange(int start, int end)
+void QDeclarativeChangeSet::applyInsertions(QVector<Insert> &insertions)
 {
-    QVector<Change> filteredChanges;
-
-    // Inserted signals (don't emit change signals on new items).
+    int insertCount = 0;
     QVector<Insert>::iterator insert = m_inserts.begin();
-    for (; insert != m_inserts.end() && start >= insert->end; ++insert) {}
-    for (; insert != m_inserts.end() && end > insert->start; ++insert) {
-        if (start < insert->start)
-            filteredChanges.append(Change(start, insert->start));
-        start = insert->end;
-    }
-    if (start < end)
-        filteredChanges.append(Change(start, end));
-
-    // Find the union of the existing and filtered sets of change signals.
     QVector<Change>::iterator change = m_changes.begin();
-    for (QVector<Change>::iterator it = filteredChanges.begin(); it != filteredChanges.end(); ++it) {
-        for (; change != m_changes.end() && change->end < it->start; ++change) {}
-        if (change == m_changes.end() || change->start > it->end) {
-            change = m_changes.insert(change, *it);
+    for (QVector<Insert>::iterator iit = insertions.begin(); iit != insertions.end(); ++iit) {
+        int index = iit->index - insertCount;
+        int count = iit->count;
+        for (; change != m_changes.end() && change->index >= index; ++change)
+            change->index += insertCount;
+        if (change != m_changes.end() && change->index < index + count) {
+                int offset = index - change->index;
+                change = m_changes.insert(change, Change(change->index + insertCount, offset));
+                ++change;
+                change->index += count + offset;
+                change->count -= offset;
+        }
+        for (; insert != m_inserts.end() && iit->index > insert->index + insert->count; ++insert)
+            insert->index += insertCount;
+        if (insert == m_inserts.end()) {
+            insert = m_inserts.insert(insert, *iit);
+            ++insert;
         } else {
-            if (it->start < change->start)
-                change->start = it->start;
+            const int offset = index - insert->index;
+            if (offset < 0 || (offset == 0 && (iit->moveId != -1 || insert->moveId != -1))) {
+                insert = m_inserts.insert(insert, *iit);
+                ++insert;
+            } else if (iit->moveId == -1 && insert->moveId == -1) {
+                insert->index -= iit->count;
+                insert->count += iit->count;
+            } else if (offset < insert->count) {
+                const int moveId = insert->moveId != -1 ? m_moveCounter++ : -1;
+                insert = m_inserts.insert(insert, Insert(insert->index + insertCount, offset, moveId));
+                ++insert;
+                insert->index += offset;
+                insert->count -= offset;
+                insert = m_inserts.insert(insert, *iit);
+                ++insert;
 
-            if (it->end > change->end) {
-                change->end = it->end;
+                if (insert->moveId != -1) {
+                    QVector<Remove>::iterator remove = m_removes.begin();
+                    for (; remove != m_removes.end() && remove->moveId != insert->moveId; ++remove) {}
+                    Q_ASSERT(remove != m_removes.end());
+                    if (remove->count == offset) {
+                        remove->moveId = moveId;
+                    } else {
+                        remove = m_removes.insert(remove, Remove(remove->index, offset, moveId));
+                        ++remove;
+                        remove->count -= offset;
+                    }
+                }
+            } else {
+                ++insert;
+                insert = m_inserts.insert(insert, *iit);
+                ++insert;
+            }
+            insertCount += iit->count;
+        }
+    }
+    for (; change != m_changes.end(); ++change)
+        change->index += insertCount;
+    for (; insert != m_inserts.end(); ++insert)
+        insert->index += insertCount;
+}
+
+void QDeclarativeChangeSet::applyChanges(QVector<Change> &changes)
+{
+    QVector<Insert>::iterator insert = m_inserts.begin();
+    QVector<Change>::iterator change = m_changes.begin();
+    for (QVector<Change>::iterator cit = changes.begin(); cit != changes.end(); ++cit) {
+        for (; insert != m_inserts.end() && insert->end() < cit->index; ++insert) {}
+        for (; insert != m_inserts.end() && insert->index < cit->end(); ++insert) {
+            const int offset = insert->index - cit->index;
+            const int count = cit->count + cit->index - insert->index - insert->count;
+            if (offset == 0) {
+                cit->index = insert->index + insert->count;
+                cit->count = count;
+            } else {
+                cit = changes.insert(++cit, Change(insert->index + insert->count, count));
+                --cit;
+                cit->count = offset;
+            }
+        }
+
+        for (; change != m_changes.end() && change->index + change->count < cit->index; ++change) {}
+        if (change == m_changes.end() || change->index > cit->index + cit->count) {
+            if (cit->count > 0) {
+                change = m_changes.insert(change, *cit);
+                ++change;
+            }
+        } else {
+            if (cit->index < change->index) {
+                change->count += change->index - cit->index;
+                change->index = cit->index;
+            }
+
+            if (cit->index + cit->count > change->index + change->count) {
+                change->count = cit->index + cit->count - change->index;
                 QVector<Change>::iterator rbegin = change;
                 QVector<Change>::iterator rend = ++rbegin;
-                for (; rend != m_changes.end() && rend->start <= change->end; ++rend) {
-                    if (rend->end > change->end)
-                        change->end = rend->end;
+                for (; rend != m_changes.end() && rend->index <= change->index + change->count; ++rend) {
+                    if (rend->index + rend->count > change->index + change->count)
+                        change->count = rend->index + rend->count - change->index;
                 }
                 if (rbegin != rend) {
                     change = m_changes.erase(rbegin, rend);
@@ -422,19 +426,29 @@ void QDeclarativeChangeSet::insertChange(int start, int end)
             }
         }
     }
-
 }
 
 QDebug operator <<(QDebug debug, const QDeclarativeChangeSet &set)
 {
-    foreach (const QDeclarativeChangeSet::Remove &remove, set.removes())
-        debug.nospace() << "QDeclarativeChangeSet::Remove(" << remove.start << "," << remove.end << ")";
-    foreach (const QDeclarativeChangeSet::Insert &insert, set.inserts())
-        debug.nospace() << "QDeclarativeChangeSet::Insert(" << insert.start << "," << insert.end << ")";
-    foreach (const QDeclarativeChangeSet::Move &move, set.moves())
-        debug.nospace() << "QDeclarativeChangeSet::Move(" << move.start << "," << move.end << "," << move.to << ")";
-    foreach (const QDeclarativeChangeSet::Change &change, set.changes())
-        debug.nospace() << "QDeclarativeChangeSet::Change(" << change.start << "," << change.end << ")";
-    return debug;
+    debug.nospace() << "QDeclarativeChangeSet(";
+    foreach (const QDeclarativeChangeSet::Remove &remove, set.removes()) debug << remove;
+    foreach (const QDeclarativeChangeSet::Insert &insert, set.inserts()) debug << insert;
+    foreach (const QDeclarativeChangeSet::Change &change, set.changes()) debug << change;
+    return debug.nospace() << ")";
+}
+
+QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Remove &remove)
+{
+    return (debug.nospace() << "Remove(" << remove.index << "," << remove.count << "," << remove.moveId << ")").space();
+}
+
+QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Insert &insert)
+{
+    return (debug.nospace() << "Insert(" << insert.index << "," << insert.count << "," << insert.moveId << ")").space();
+}
+
+QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Change &change)
+{
+    return (debug.nospace() << "Change(" << change.index << "," << change.count << ")").space();
 }
 

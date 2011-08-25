@@ -43,7 +43,21 @@
 
 QT_BEGIN_NAMESPACE
 
-QSGFocusScope::QSGFocusScope(QSGItem *parent) 
+/*!
+    \qmlclass FocusScope QSGFocusScope
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-interaction-elements
+
+    \brief The FocusScope object explicitly creates a focus scope.
+    \inherits Item
+
+    Focus scopes assist in keyboard focus handling when building reusable QML
+    components.  All the details are covered in the
+    \l {qmlfocus}{keyboard focus documentation}.
+
+    \sa {declarative/keyinteraction/focus}{Keyboard focus example}
+*/
+QSGFocusScope::QSGFocusScope(QSGItem *parent)
 : QSGItem(parent)
 {
     setFlag(ItemIsFocusScope);

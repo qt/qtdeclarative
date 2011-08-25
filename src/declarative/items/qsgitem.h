@@ -375,6 +375,7 @@ protected:
     virtual void dragExitEvent(QSGDragEvent *event);
     virtual void dragDropEvent(QSGDragEvent *event);
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);
+    virtual void windowDeactivateEvent();
 
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);

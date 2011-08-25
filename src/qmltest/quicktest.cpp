@@ -110,7 +110,10 @@ static inline QString stripQuotes(const QString &s)
 
 int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir)
 {
-    QApplication app(argc, argv);
+    QApplication* app = 0;
+    if (!QCoreApplication::instance()) {
+        app = new QApplication(argc, argv);
+    }
 
     // Look for QML-specific command-line options.
     //      -import dir         Specify an import directory.
@@ -143,6 +146,10 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     argv[outargc] = 0;
     argc = outargc;
 
+    // Parse the command-line arguments.
+    QuickTestResult::parseArgs(argc, argv);
+    QuickTestResult::setProgramName(name);
+
     // Determine where to look for the test data.
     if (testPath.isEmpty() && sourceDir)
         testPath = QString::fromLocal8Bit(sourceDir);
@@ -167,9 +174,6 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
         return 1;
     }
 
-    // Parse the command-line arguments.
-    QuickTestResult::parseArgs(argc, argv);
-    QuickTestResult::setProgramName(name);
 
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a QDeclarativeView.
@@ -287,6 +291,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
 
+    delete app;
     // Return the number of failures as the exit code.
     return QuickTestResult::exitCode();
 }

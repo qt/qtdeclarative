@@ -150,15 +150,10 @@ void QSGPaintedItem::update(const QRect &rect)
     Q_D(QSGPaintedItem);
     d->contentsDirty = true;
 
-    QRect srect(qCeil(rect.x()*d->contentsScale),
-            qCeil(rect.y()*d->contentsScale),
-            qCeil(rect.width()*d->contentsScale),
-            qCeil(rect.height()*d->contentsScale));
-
-    if (srect.isNull() && !d->dirtyRect.isNull())
+    if (rect.isNull() && !d->dirtyRect.isNull())
         d->dirtyRect = contentsBoundingRect().toAlignedRect();
     else
-        d->dirtyRect |= (contentsBoundingRect() & srect).toAlignedRect();
+        d->dirtyRect |= (contentsBoundingRect() & rect).toAlignedRect();
     QSGItem::update();
 }
 

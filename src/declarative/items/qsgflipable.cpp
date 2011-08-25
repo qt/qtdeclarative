@@ -87,6 +87,47 @@ public:
     bool wantBackYFlipped;
 };
 
+/*!
+    \qmlclass Flipable QSGFlipable
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-interaction-elements
+    \brief The Flipable item provides a surface that can be flipped.
+    \inherits Item
+
+    Flipable is an item that can be visibly "flipped" between its front and
+    back sides, like a card. It is used together with \l Rotation, \l State
+    and \l Transition elements to produce a flipping effect.
+
+    The \l front and \l back properties are used to hold the items that are
+    shown respectively on the front and back sides of the flipable item.
+
+    \section1 Example Usage
+
+    The following example shows a Flipable item that flips whenever it is
+    clicked, rotating about the y-axis.
+
+    This flipable item has a \c flipped boolean property that is toggled
+    whenever the MouseArea within the flipable is clicked. When
+    \c flipped is true, the item changes to the "back" state; in this
+    state, the \c angle of the \l Rotation item is changed to 180
+    degrees to produce the flipping effect. When \c flipped is false, the
+    item reverts to the default state, in which the \c angle value is 0.
+
+    \snippet doc/src/snippets/declarative/flipable/flipable.qml 0
+
+    \image flipable.gif
+
+    The \l Transition creates the animation that changes the angle over
+    four seconds. When the item changes between its "back" and
+    default states, the NumberAnimation animates the angle between
+    its old and new values.
+
+    See \l {QML States} for details on state changes and the default
+    state, and \l {QML Animation and Transitions} for more information on how
+    animations work within transitions.
+
+    \sa {declarative/ui-components/flipable}{Flipable example}
+*/
 QSGFlipable::QSGFlipable(QSGItem *parent)
 : QSGItem(*(new QSGFlipablePrivate), parent)
 {
@@ -95,6 +136,13 @@ QSGFlipable::QSGFlipable(QSGItem *parent)
 QSGFlipable::~QSGFlipable()
 {
 }
+
+/*!
+  \qmlproperty Item QtQuick2::Flipable::front
+  \qmlproperty Item QtQuick2::Flipable::back
+
+  The front and back sides of the flipable.
+*/
 
 QSGItem *QSGFlipable::front()
 {
@@ -153,6 +201,12 @@ void QSGFlipable::retransformBack()
         d->setBackTransform();
 }
 
+/*!
+  \qmlproperty enumeration QtQuick2::Flipable::side
+
+  The side of the Flipable currently visible. Possible values are \c
+  Flipable.Front and \c Flipable.Back.
+*/
 QSGFlipable::Side QSGFlipable::side() const
 {
     Q_D(const QSGFlipable);

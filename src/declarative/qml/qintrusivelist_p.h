@@ -68,6 +68,7 @@ public:
     inline bool isEmpty() const;
     inline void insert(N *n);
     inline void remove(N *n);
+    inline bool contains(N *) const;
 
     class iterator {
     public:
@@ -199,6 +200,18 @@ void QIntrusiveList<N, member>::remove(N *n)
 {
     QIntrusiveListNode *nnode = &(n->*member);
     nnode->remove();
+}
+
+template<class N, QIntrusiveListNode N::*member>
+bool QIntrusiveList<N, member>::contains(N *n) const
+{
+    QIntrusiveListNode *nnode = __first;
+    while (nnode) {
+        if (nodeToN(nnode) == n)
+            return true;
+        nnode = nnode->_next;
+    }
+    return false;
 }
 
 template<class N, QIntrusiveListNode N::*member>

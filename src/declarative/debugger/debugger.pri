@@ -10,8 +10,7 @@ SOURCES += \
     $$PWD/qdeclarativedebughelper.cpp \
     $$PWD/qdeclarativedebugserver.cpp \
     $$PWD/qdeclarativeinspectorservice.cpp \
-    $$PWD/qjsdebuggeragent.cpp \
-    $$PWD/qjsdebugservice.cpp
+    $$PWD/qv8debugservice.cpp
 
 HEADERS += \
     $$PWD/qdeclarativedebuggerstatus_p.h \
@@ -26,5 +25,4 @@ HEADERS += \
     $$PWD/qdeclarativedebugserverconnection_p.h \
     $$PWD/qdeclarativeinspectorservice_p.h \
     $$PWD/qdeclarativeinspectorinterface_p.h \
-    $$PWD/qjsdebuggeragent_p.h \
-    $$PWD/qjsdebugservice_p.h
+    $$PWD/qv8debugservice_p.h

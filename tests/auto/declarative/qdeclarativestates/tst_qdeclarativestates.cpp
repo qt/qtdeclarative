@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtDeclarative/qsgview.h>
 #include <private/qsgstateoperations_p.h>
 #include <private/qsganchors_p_p.h>
 #include <private/qsgrectangle_p.h>
@@ -49,6 +50,7 @@
 #include <private/qdeclarativestategroup_p.h>
 #include <private/qsgitem_p.h>
 #include <private/qdeclarativeproperty_p.h>
+#include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -953,10 +955,11 @@ void tst_qdeclarativestates::anchorChangesCrash()
 // QTBUG-12273
 void tst_qdeclarativestates::anchorRewindBug()
 {
-    QDeclarativeEngine engine;
+    QSGView *view = new QSGView;
+    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/anchorRewindBug.qml"));
+    qApp->processEvents();
 
-    QDeclarativeComponent rectComponent(&engine, SRCDIR "/data/anchorRewindBug.qml");
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(rectComponent.create());
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(view->rootObject());
     QVERIFY(rect != 0);
 
     QSGItem * column = rect->findChild<QSGItem*>("column");
@@ -971,7 +974,7 @@ void tst_qdeclarativestates::anchorRewindBug()
     // and column's implicit resizing should still work
     QVERIFY(!QSGItemPrivate::get(column)->heightValid);
     QVERIFY(!QSGItemPrivate::get(column)->widthValid);
-    QCOMPARE(column->height(), 100.0);
+    QTRY_COMPARE(column->height(), 100.0);
 
     QSGItemPrivate::get(rect)->setState("");
 
@@ -979,9 +982,9 @@ void tst_qdeclarativestates::anchorRewindBug()
     // and column's implicit resizing should still work
     QVERIFY(!QSGItemPrivate::get(column)->heightValid);
     QVERIFY(!QSGItemPrivate::get(column)->widthValid);
-    QCOMPARE(column->height(), 200.0);
+    QTRY_COMPARE(column->height(), 200.0);
 
-    delete rect;
+    delete view;
 }
 
 // QTBUG-11834

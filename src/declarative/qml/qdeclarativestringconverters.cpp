@@ -43,6 +43,7 @@
 
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>
+#include <QtGui/qvector4d.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
@@ -93,6 +94,8 @@ QVariant QDeclarativeStringConverters::variantFromString(const QString &s)
     if (ok) return QVariant(sz);
     QVector3D v = vector3DFromString(s, &ok);
     if (ok) return QVariant::fromValue(v);
+    QVector4D v4 = vector4DFromString(s, &ok);
+    if (ok) return QVariant::fromValue(v4);
 
     return QVariant(s);
 }
@@ -128,6 +131,8 @@ QVariant QDeclarativeStringConverters::variantFromString(const QString &s, int p
         return QVariant::fromValue(rectFFromString(s, ok).toRect());
     case QMetaType::QVector3D:
         return QVariant::fromValue(vector3DFromString(s, ok));
+    case QMetaType::QVector4D:
+        return QVariant::fromValue(vector4DFromString(s, ok));
     default:
         if (ok) *ok = false;
         return QVariant();
@@ -273,6 +278,34 @@ QVector3D QDeclarativeStringConverters::vector3DFromString(const QString &s, boo
     if (ok)
         *ok = true;
     return QVector3D(xCoord, yCoord, zCoord);
+}
+
+//expects input of "x,y,z,w"
+QVector4D QDeclarativeStringConverters::vector4DFromString(const QString &s, bool *ok)
+{
+    if (s.count(QLatin1Char(',')) != 3) {
+        if (ok)
+            *ok = false;
+        return QVector4D();
+    }
+
+    bool xGood, yGood, zGood, wGood;
+    int index = s.indexOf(QLatin1Char(','));
+    int index2 = s.indexOf(QLatin1Char(','), index+1);
+    int index3 = s.indexOf(QLatin1Char(','), index2+1);
+    qreal xCoord = s.left(index).toDouble(&xGood);
+    qreal yCoord = s.mid(index+1, index2-index-1).toDouble(&yGood);
+    qreal zCoord = s.mid(index2+1, index3-index2-1).toDouble(&zGood);
+    qreal wCoord = s.mid(index3+1).toDouble(&wGood);
+    if (!xGood || !yGood || !zGood || !wGood) {
+        if (ok)
+            *ok = false;
+        return QVector4D();
+    }
+
+    if (ok)
+        *ok = true;
+    return QVector4D(xCoord, yCoord, zCoord, wCoord);
 }
 
 QT_END_NAMESPACE

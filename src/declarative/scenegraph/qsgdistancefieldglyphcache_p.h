@@ -48,18 +48,59 @@
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
+#include <private/qsgadaptationlayer_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QGLShaderProgram;
+typedef float (*ThresholdFunc)(float glyphScale);
+typedef float (*AntialiasingSpreadFunc)(float glyphScale);
 
-class Q_DECLARATIVE_EXPORT QSGDistanceFieldGlyphCache : public QObject
+class QGLShaderProgram;
+class QSGDistanceFieldGlyphCache;
+
+class Q_DECLARATIVE_EXPORT QSGDistanceFieldGlyphCacheManager
 {
-    Q_OBJECT
+public:
+    QSGDistanceFieldGlyphCacheManager(const QGLContext *c);
+    ~QSGDistanceFieldGlyphCacheManager();
+
+    QSGDistanceFieldGlyphCache *cache(const QRawFont &font);
+
+    QSGGlyphNode::AntialiasingMode defaultAntialiasingMode() const { return m_defaultAntialiasingMode; }
+    void setDefaultAntialiasingMode(QSGGlyphNode::AntialiasingMode mode) { m_defaultAntialiasingMode = mode; }
+
+    ThresholdFunc thresholdFunc() const { return m_threshold_func; }
+    void setThresholdFunc(ThresholdFunc func) { m_threshold_func = func; }
+
+    AntialiasingSpreadFunc antialiasingSpreadFunc() const { return m_antialiasingSpread_func; }
+    void setAntialiasingSpreadFunc(AntialiasingSpreadFunc func) { m_antialiasingSpread_func = func; }
+
+    QGLShaderProgram *blitProgram() { return m_blitProgram; }
+    const GLfloat *blitVertexArray() const { return &m_vertexCoordinateArray[0]; }
+    const GLfloat *blitTextureArray() const { return &m_textureCoordinateArray[0]; }
+
+    int maxTextureSize() const;
+
+private:
+    QHash<QFontEngine *, QSGDistanceFieldGlyphCache *> m_caches;
+
+    const QGLContext *ctx;
+
+    QSGGlyphNode::AntialiasingMode m_defaultAntialiasingMode;
+    ThresholdFunc m_threshold_func;
+    AntialiasingSpreadFunc m_antialiasingSpread_func;
+
+    mutable int m_maxTextureSize;
+
+    QGLShaderProgram *m_blitProgram;
+    GLfloat m_vertexCoordinateArray[8];
+    GLfloat m_textureCoordinateArray[8];
+};
+
+class Q_DECLARATIVE_EXPORT QSGDistanceFieldGlyphCache
+{
 public:
     ~QSGDistanceFieldGlyphCache();
-
-    static QSGDistanceFieldGlyphCache *get(const QGLContext *ctx, const QRawFont &font);
 
     struct Metrics {
         qreal width;
@@ -85,9 +126,10 @@ public:
     };
     TexCoord glyphTexCoord(glyph_t glyph);
 
+    const QSGDistanceFieldGlyphCacheManager *manager() const { return m_manager; }
+
     GLuint texture();
     QSize textureSize() const;
-    int maxTextureSize() const;
     qreal fontScale() const;
     int distanceFieldRadius() const;
     QImage renderDistanceFieldGlyph(glyph_t glyph) const;
@@ -98,29 +140,23 @@ public:
     void derefGlyphs(int count, const glyph_t *glyphs);
     void updateCache();
 
-    bool cacheIsFull() const { return m_textureData->currY >= maxTextureSize(); }
+    bool cacheIsFull() const { return m_textureData->currY >= m_manager->maxTextureSize(); }
 
     bool useWorkaroundBrokenFBOReadback() const;
 
-    static bool distanceFieldEnabled();
-
-private Q_SLOTS:
-    void onContextDestroyed(const QGLContext *context);
-
 private:
-    QSGDistanceFieldGlyphCache(const QGLContext *c, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(QSGDistanceFieldGlyphCacheManager *man, const QGLContext *c, const QRawFont &font);
 
     void createTexture(int width, int height);
     void resizeTexture(int width, int height);
 
-    static QHash<QPair<const QGLContext *, QFontEngine *>, QSGDistanceFieldGlyphCache *> m_caches;
+    QSGDistanceFieldGlyphCacheManager *m_manager;
 
     QRawFont m_font;
     QRawFont m_referenceFont;
 
     int m_glyphCount;
     QHash<glyph_t, Metrics> m_metrics;
-    mutable int m_maxTextureSize;
 
     struct DistanceFieldTextureData {
         GLuint texture;
@@ -146,13 +182,11 @@ private:
     };
     DistanceFieldTextureData *textureData();
     DistanceFieldTextureData *m_textureData;
-    static QHash<QFontEngine *, QGLContextGroupResource<DistanceFieldTextureData> > m_textures_data;
+    static QHash<QString, QGLContextGroupResource<DistanceFieldTextureData> > m_textures_data;
 
     const QGLContext *ctx;
-    QGLShaderProgram *m_blitProgram;
-    GLfloat m_vertexCoordinateArray[8];
-    GLfloat m_textureCoordinateArray[8];
 
+    friend class QSGDistanceFieldGlyphCacheManager;
 };
 
 QT_END_NAMESPACE

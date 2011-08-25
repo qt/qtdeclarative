@@ -456,6 +456,107 @@ is finished.
     touch/mouse button is released then a flick will start.
 */
 
+/*!
+    \qmlclass Flickable QSGFlickable
+    \inqmlmodule QtQuick 2
+    \ingroup qml-basic-interaction-elements
+
+    \brief The Flickable item provides a surface that can be "flicked".
+    \inherits Item
+
+    The Flickable item places its children on a surface that can be dragged
+    and flicked, causing the view onto the child items to scroll. This
+    behavior forms the basis of Items that are designed to show large numbers
+    of child items, such as \l ListView and \l GridView.
+
+    In traditional user interfaces, views can be scrolled using standard
+    controls, such as scroll bars and arrow buttons. In some situations, it
+    is also possible to drag the view directly by pressing and holding a
+    mouse button while moving the cursor. In touch-based user interfaces,
+    this dragging action is often complemented with a flicking action, where
+    scrolling continues after the user has stopped touching the view.
+
+    Flickable does not automatically clip its contents. If it is not used as
+    a full-screen item, you should consider setting the \l{Item::}{clip} property
+    to true.
+
+    \section1 Example Usage
+
+    \div {class="float-right"}
+    \inlineimage flickable.gif
+    \enddiv
+
+    The following example shows a small view onto a large image in which the
+    user can drag or flick the image in order to view different parts of it.
+
+    \snippet doc/src/snippets/declarative/flickable.qml document
+
+    \clearfloat
+
+    Items declared as children of a Flickable are automatically parented to the
+    Flickable's \l contentItem.  This should be taken into account when
+    operating on the children of the Flickable; it is usually the children of
+    \c contentItem that are relevant.  For example, the bound of Items added
+    to the Flickable will be available by \c contentItem.childrenRect
+
+    \section1 Limitations
+
+    \note Due to an implementation detail, items placed inside a Flickable cannot anchor to it by
+    \c id. Use \c parent instead.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onMovementStarted()
+
+    This handler is called when the view begins moving due to user
+    interaction.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onMovementEnded()
+
+    This handler is called when the view stops moving due to user
+    interaction.  If a flick was generated, this handler will
+    be triggered once the flick stops.  If a flick was not
+    generated, the handler will be triggered when the
+    user stops dragging - i.e. a mouse or touch release.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onFlickStarted()
+
+    This handler is called when the view is flicked.  A flick
+    starts from the point that the mouse or touch is released,
+    while still in motion.
+*/
+
+/*!
+    \qmlsignal QtQuick2::Flickable::onFlickEnded()
+
+    This handler is called when the view stops moving due to a flick.
+*/
+
+/*!
+    \qmlproperty real QtQuick2::Flickable::visibleArea.xPosition
+    \qmlproperty real QtQuick2::Flickable::visibleArea.widthRatio
+    \qmlproperty real QtQuick2::Flickable::visibleArea.yPosition
+    \qmlproperty real QtQuick2::Flickable::visibleArea.heightRatio
+
+    These properties describe the position and size of the currently viewed area.
+    The size is defined as the percentage of the full view currently visible,
+    scaled to 0.0 - 1.0.  The page position is usually in the range 0.0 (beginning) to
+    1.0 minus size ratio (end), i.e. \c yPosition is in the range 0.0 to 1.0-\c heightRatio.
+    However, it is possible for the contents to be dragged outside of the normal
+    range, resulting in the page positions also being outside the normal range.
+
+    These properties are typically used to draw a scrollbar. For example:
+
+    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 0
+    \dots 8
+    \snippet doc/src/snippets/declarative/flickableScrollbar.qml 1
+
+    \sa {declarative/ui-components/scrollbar}{scrollbar example}
+*/
 QSGFlickable::QSGFlickable(QSGItem *parent)
   : QSGItem(*(new QSGFlickablePrivate), parent)
 {
@@ -474,6 +575,14 @@ QSGFlickable::~QSGFlickable()
 {
 }
 
+/*!
+    \qmlproperty real QtQuick2::Flickable::contentX
+    \qmlproperty real QtQuick2::Flickable::contentY
+
+    These properties hold the surface coordinate currently at the top-left
+    corner of the Flickable. For example, if you flick an image up 100 pixels,
+    \c contentY will be 100.
+*/
 qreal QSGFlickable::contentX() const
 {
     Q_D(const QSGFlickable);
@@ -510,6 +619,19 @@ void QSGFlickable::setContentY(qreal pos)
     }
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Flickable::interactive
+
+    This property describes whether the user can interact with the Flickable.
+    A user cannot drag or flick a Flickable that is not interactive.
+
+    By default, this property is true.
+
+    This property is useful for temporarily disabling flicking. This allows
+    special interaction with Flickable's children; for example, you might want
+    to freeze a flickable map while scrolling through a pop-up dialog that
+    is a child of the Flickable.
+*/
 bool QSGFlickable::isInteractive() const
 {
     Q_D(const QSGFlickable);
@@ -535,6 +657,14 @@ void QSGFlickable::setInteractive(bool interactive)
     }
 }
 
+/*!
+    \qmlproperty real QtQuick2::Flickable::horizontalVelocity
+    \qmlproperty real QtQuick2::Flickable::verticalVelocity
+
+    The instantaneous velocity of movement along the x and y axes, in pixels/sec.
+
+    The reported velocity is smoothed to avoid erratic output.
+*/
 qreal QSGFlickable::horizontalVelocity() const
 {
     Q_D(const QSGFlickable);
@@ -547,6 +677,15 @@ qreal QSGFlickable::verticalVelocity() const
     return d->vData.smoothVelocity.value();
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Flickable::atXBeginning
+    \qmlproperty bool QtQuick2::Flickable::atXEnd
+    \qmlproperty bool QtQuick2::Flickable::atYBeginning
+    \qmlproperty bool QtQuick2::Flickable::atYEnd
+
+    These properties are true if the flickable view is positioned at the beginning,
+    or end respecively.
+*/
 bool QSGFlickable::isAtXEnd() const
 {
     Q_D(const QSGFlickable);
@@ -576,6 +715,24 @@ void QSGFlickable::ticked()
     viewportMoved();
 }
 
+/*!
+    \qmlproperty Item QtQuick2::Flickable::contentItem
+
+    The internal item that contains the Items to be moved in the Flickable.
+
+    Items declared as children of a Flickable are automatically parented to the Flickable's contentItem.
+
+    Items created dynamically need to be explicitly parented to the \e contentItem:
+    \code
+    Flickable {
+        id: myFlickable
+        function addItem(file) {
+            var component = Qt.createComponent(file)
+            component.createObject(myFlickable.contentItem);
+        }
+    }
+    \endcode
+*/
 QSGItem *QSGFlickable::contentItem()
 {
     Q_D(QSGFlickable);
@@ -590,6 +747,21 @@ QSGFlickableVisibleArea *QSGFlickable::visibleArea()
     return d->visibleArea;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Flickable::flickableDirection
+
+    This property determines which directions the view can be flicked.
+
+    \list
+    \o Flickable.AutoFlickDirection (default) - allows flicking vertically if the
+    \e contentHeight is not equal to the \e height of the Flickable.
+    Allows flicking horizontally if the \e contentWidth is not equal
+    to the \e width of the Flickable.
+    \o Flickable.HorizontalFlick - allows flicking horizontally.
+    \o Flickable.VerticalFlick - allows flicking vertically.
+    \o Flickable.HorizontalAndVerticalFlick - allows flicking in both directions.
+    \endlist
+*/
 QSGFlickable::FlickableDirection QSGFlickable::flickableDirection() const
 {
     Q_D(const QSGFlickable);
@@ -1118,6 +1290,27 @@ QDeclarativeListProperty<QSGItem> QSGFlickable::flickableChildren()
     return QSGItemPrivate::get(d->contentItem)->children();
 }
 
+/*!
+    \qmlproperty enumeration QtQuick2::Flickable::boundsBehavior
+    This property holds whether the surface may be dragged
+    beyond the Fickable's boundaries, or overshoot the
+    Flickable's boundaries when flicked.
+
+    This enables the feeling that the edges of the view are soft,
+    rather than a hard physical boundary.
+
+    The \c boundsBehavior can be one of:
+
+    \list
+    \o Flickable.StopAtBounds - the contents can not be dragged beyond the boundary
+    of the flickable, and flicks will not overshoot.
+    \o Flickable.DragOverBounds - the contents can be dragged beyond the boundary
+    of the Flickable, but flicks will not overshoot.
+    \o Flickable.DragAndOvershootBounds (default) - the contents can be dragged
+    beyond the boundary of the Flickable, and can overshoot the
+    boundary when flicked.
+    \endlist
+*/
 QSGFlickable::BoundsBehavior QSGFlickable::boundsBehavior() const
 {
     Q_D(const QSGFlickable);
@@ -1133,6 +1326,23 @@ void QSGFlickable::setBoundsBehavior(BoundsBehavior b)
     emit boundsBehaviorChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick2::Flickable::contentWidth
+    \qmlproperty real QtQuick2::Flickable::contentHeight
+
+    The dimensions of the content (the surface controlled by Flickable).
+    This should typically be set to the combined size of the items placed in the
+    Flickable.
+
+    The following snippet shows how these properties are used to display
+    an image that is larger than the Flickable item itself:
+
+    \snippet doc/src/snippets/declarative/flickable.qml document
+
+    In some cases, the the content dimensions can be automatically set
+    using the \l {Item::childrenRect.width}{childrenRect.width}
+    and \l {Item::childrenRect.height}{childrenRect.height} properties.
+*/
 qreal QSGFlickable::contentWidth() const
 {
     Q_D(const QSGFlickable);
@@ -1189,6 +1399,19 @@ void QSGFlickable::setContentHeight(qreal h)
     d->updateBeginningEnd();
 }
 
+/*!
+    \qmlmethod QtQuick2::Flickable::resizeContent(real width, real height, QPointF center)
+    \preliminary
+
+    Resizes the content to \a width x \a height about \a center.
+
+    This does not scale the contents of the Flickable - it only resizes the \l contentWidth
+    and \l contentHeight.
+
+    Resizing the content may result in the content being positioned outside
+    the bounds of the Flickable.  Calling \l returnToBounds() will
+    move the content back within legal bounds.
+*/
 void QSGFlickable::resizeContent(qreal w, qreal h, QPointF center)
 {
     Q_D(QSGFlickable);
@@ -1215,6 +1438,15 @@ void QSGFlickable::resizeContent(qreal w, qreal h, QPointF center)
     d->updateBeginningEnd();
 }
 
+/*!
+    \qmlmethod QtQuick2::Flickable::returnToBounds()
+    \preliminary
+
+    Ensures the content is within legal bounds.
+
+    This may be called to ensure that the content is within legal bounds
+    after manually positioning the content.
+*/
 void QSGFlickable::returnToBounds()
 {
     Q_D(QSGFlickable);
@@ -1332,6 +1564,9 @@ bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         }
 
         return stealThisEvent || d->delayedPressEvent || disabledItem;
+    } else if (d->lastPosTime.isValid()) {
+        d->lastPosTime.invalidate();
+        returnToBounds();
     }
     if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease) {
         d->lastPosTime.invalidate();
@@ -1360,6 +1595,12 @@ bool QSGFlickable::childMouseEventFilter(QSGItem *i, QEvent *e)
     return QSGItem::childMouseEventFilter(i, e);
 }
 
+/*!
+    \qmlproperty real QtQuick2::Flickable::maximumFlickVelocity
+    This property holds the maximum velocity that the user can flick the view in pixels/second.
+
+    The default value is platform dependent.
+*/
 qreal QSGFlickable::maximumFlickVelocity() const
 {
     Q_D(const QSGFlickable);
@@ -1375,6 +1616,12 @@ void QSGFlickable::setMaximumFlickVelocity(qreal v)
     emit maximumFlickVelocityChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick2::Flickable::flickDeceleration
+    This property holds the rate at which a flick will decelerate.
+
+    The default value is platform dependent.
+*/
 qreal QSGFlickable::flickDeceleration() const
 {
     Q_D(const QSGFlickable);
@@ -1396,6 +1643,14 @@ bool QSGFlickable::isFlicking() const
     return d->flickingHorizontally ||  d->flickingVertically;
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Flickable::flicking
+    \qmlproperty bool QtQuick2::Flickable::flickingHorizontally
+    \qmlproperty bool QtQuick2::Flickable::flickingVertically
+
+    These properties describe whether the view is currently moving horizontally,
+    vertically or in either direction, due to the user flicking the view.
+*/
 bool QSGFlickable::isFlickingHorizontally() const
 {
     Q_D(const QSGFlickable);
@@ -1470,6 +1725,20 @@ void QSGFlickablePrivate::draggingEnding()
     }
 }
 
+/*!
+    \qmlproperty int QtQuick2::Flickable::pressDelay
+
+    This property holds the time to delay (ms) delivering a press to
+    children of the Flickable.  This can be useful where reacting
+    to a press before a flicking action has undesirable effects.
+
+    If the flickable is dragged/flicked before the delay times out
+    the press event will not be delivered.  If the button is released
+    within the timeout, both the press and release will be delivered.
+
+    Note that for nested Flickables with pressDelay set, the pressDelay of
+    inner Flickables is overridden by the outermost Flickable.
+*/
 int QSGFlickable::pressDelay() const
 {
     Q_D(const QSGFlickable);
@@ -1485,6 +1754,15 @@ void QSGFlickable::setPressDelay(int delay)
     emit pressDelayChanged();
 }
 
+/*!
+    \qmlproperty bool QtQuick2::Flickable::moving
+    \qmlproperty bool QtQuick2::Flickable::movingHorizontally
+    \qmlproperty bool QtQuick2::Flickable::movingVertically
+
+    These properties describe whether the view is currently moving horizontally,
+    vertically or in either direction, due to the user either dragging or
+    flicking the view.
+*/
 
 bool QSGFlickable::isMoving() const
 {

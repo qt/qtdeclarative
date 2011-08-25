@@ -116,7 +116,8 @@ class Q_DECLARATIVE_EXPORT QDeclarativeCustomParser
 public:
     enum Flag {
         NoFlag                    = 0x00000000,
-        AcceptsAttachedProperties = 0x00000001
+        AcceptsAttachedProperties = 0x00000001,
+        AcceptsSignalHandlers     = 0x00000002
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

@@ -1,7 +1,7 @@
 TEMPLATE = app
-CONFIG += qt uic
-DESTDIR = ../../bin
-QT += declarative qtquick1 qtquick1-private widgets widgets-private 
+CONFIG += qt uic declarative_debug
+DESTDIR = $$QT.declarative.bins
+QT += declarative qtquick1 qtquick1-private widgets widgets-private
 
 include(qml.pri)
 

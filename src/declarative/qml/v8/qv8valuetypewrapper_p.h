@@ -77,7 +77,12 @@ public:
     QVariant toVariant(v8::Handle<v8::Object>);
     QVariant toVariant(QV8ObjectResource *);
 
+    static bool isEqual(QV8ObjectResource *, const QVariant& value);
+
 private:
+    static v8::Handle<v8::Value> ToStringGetter(v8::Local<v8::String> property,
+                                                const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> ToString(const v8::Arguments &args);
     static v8::Handle<v8::Value> Getter(v8::Local<v8::String> property, 
                                         const v8::AccessorInfo &info);
     static v8::Handle<v8::Value> Setter(v8::Local<v8::String> property, 
@@ -86,6 +91,7 @@ private:
 
     QV8Engine *m_engine;
     v8::Persistent<v8::Function> m_constructor;
+    v8::Persistent<v8::Function> m_toString;
 };
 
 QT_END_NAMESPACE

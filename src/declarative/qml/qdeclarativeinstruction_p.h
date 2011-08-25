@@ -88,6 +88,7 @@ QT_BEGIN_NAMESPACE
     F(StoreRect, storeRect) \
     F(StoreRectF, storeRectF) \
     F(StoreVector3D, storeVector3D) \
+    F(StoreVector4D, storeVector4D) \
     F(StoreObject, storeObject) \
     F(AssignCustomType, assignCustomType) \
     F(AssignSignalObject, assignSignalObject) \
@@ -405,6 +406,16 @@ union QDeclarativeInstruction
             float zp;
         } vector;
     };
+    struct instr_storeVector4D {
+        QML_INSTR_HEADER
+        int propertyIndex;
+        struct QVector4D {
+            float xp;
+            float yp;
+            float zp;
+            float wp;
+        } vector;
+    };
 
     instr_common common;
     instr_init init;
@@ -440,6 +451,7 @@ union QDeclarativeInstruction
     instr_storeRect storeRect;
     instr_storeRectF storeRectF;
     instr_storeVector3D storeVector3D;
+    instr_storeVector4D storeVector4D;
     instr_storeObject storeObject;
     instr_assignCustomType assignCustomType;
     instr_storeSignal storeSignal;

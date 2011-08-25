@@ -66,6 +66,7 @@ class Q_DECLARATIVE_EXPORT QDeclarativeTransition : public QObject
     Q_PROPERTY(QString to READ toState WRITE setToState NOTIFY toChanged)
     Q_PROPERTY(bool reversible READ reversible WRITE setReversible NOTIFY reversibleChanged)
     Q_PROPERTY(QDeclarativeListProperty<QDeclarativeAbstractAnimation> animations READ animations)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_CLASSINFO("DefaultProperty", "animations")
     Q_CLASSINFO("DeferredPropertyNames", "animations")
 
@@ -82,6 +83,9 @@ public:
     bool reversible() const;
     void setReversible(bool);
 
+    bool enabled() const;
+    void setEnabled(bool enabled);
+
     QDeclarativeListProperty<QDeclarativeAbstractAnimation> animations();
 
     void prepare(QDeclarativeStateOperation::ActionList &actions,
@@ -95,6 +99,7 @@ Q_SIGNALS:
     void fromChanged();
     void toChanged();
     void reversibleChanged();
+    void enabledChanged();
 };
 
 QT_END_NAMESPACE

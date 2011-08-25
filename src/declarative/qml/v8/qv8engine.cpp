@@ -7,29 +7,29 @@
 ** This file is part of the QtDeclarative module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
-** No Commercial Usage
-** This file contains pre-release code and may not be distributed.
-** You may use this file in accordance with the terms and conditions
-** contained in the Technology Preview License Agreement accompanying
-** this package.
-**
 ** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** This file may be used under the terms of the GNU Lesser General Public
+** License version 2.1 as published by the Free Software Foundation and
+** appearing in the file LICENSE.LGPL included in the packaging of this
+** file. Please review the following information to ensure the GNU Lesser
+** General Public License version 2.1 requirements will be met:
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Nokia gives you certain additional
-** rights.  These rights are described in the Nokia Qt LGPL Exception
+** rights. These rights are described in the Nokia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** If you have questions regarding the use of this file, please contact
-** Nokia at qt-info@nokia.com.
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU General
+** Public License version 3.0 as published by the Free Software Foundation
+** and appearing in the file LICENSE.GPL included in the packaging of this
+** file. Please review the following information to ensure the GNU General
+** Public License version 3.0 requirements will be met:
+** http://www.gnu.org/copyleft/gpl.html.
 **
-**
-**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms and
+** conditions contained in a signed written agreement between you and Nokia.
 **
 **
 **
@@ -42,6 +42,7 @@
 #include "qv8engine_p.h"
 
 #include "qv8contextwrapper_p.h"
+#include "qv8valuetypewrapper_p.h"
 #include "qv8include_p.h"
 #include "../../../3rdparty/javascriptcore/DateMath.h"
 
@@ -63,6 +64,7 @@
 #include <private/qdeclarativesqldatabase_p.h>
 
 #include "qscript_impl_p.h"
+#include "qv8domerrors_p.h"
 
 Q_DECLARE_METATYPE(QJSValue)
 Q_DECLARE_METATYPE(QList<int>)
@@ -87,10 +89,20 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
         QV8ObjectResource::ResourceType rhst = rhsr->resourceType();
 
         switch (lhst) {
+        case QV8ObjectResource::ValueTypeType:
+            if (rhst == QV8ObjectResource::ValueTypeType) {
+                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->valueTypeWrapper()->toVariant(rhsr));
+            } else if (rhst == QV8ObjectResource::VariantType) {
+                return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->variantWrapper()->toVariant(rhsr));
+            }
+            break;
         case QV8ObjectResource::VariantType:
-            if (rhst == QV8ObjectResource::VariantType)
+            if (rhst == QV8ObjectResource::VariantType) {
                 return lhsr->engine->variantWrapper()->toVariant(lhsr) == 
                        lhsr->engine->variantWrapper()->toVariant(rhsr);
+            } else if (rhst == QV8ObjectResource::ValueTypeType) {
+                return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, rhsr->engine->variantWrapper()->toVariant(lhsr));
+            }
             break;
         default:
             break;
@@ -105,7 +117,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     , m_engine(0)
     , m_ownsV8Context(ownership == QJSEngine::CreateNewContext)
     , m_context((ownership == QJSEngine::CreateNewContext) ? v8::Context::New() : v8::Persistent<v8::Context>::New(v8::Context::GetCurrent()))
-    , m_originalGlobalObject(this, m_context)
+    , m_originalGlobalObject(m_context)
     , m_xmlHttpRequestData(0)
     , m_sqlDatabaseData(0)
     , m_listModelData(0)
@@ -265,55 +277,6 @@ static v8::Handle<v8::Object> objectFromVariantMap(QV8Engine *engine, const QVar
 
 Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
-// Converts a QRegExp to a JS RegExp.
-// The conversion is not 100% exact since ECMA regexp and QRegExp
-// have different semantics/flags, but we try to do our best.
-static v8::Handle<v8::RegExp> regexpFromQRegExp(QV8Engine *engine, const QRegExp &re)
-{
-    // Convert the pattern to a ECMAScript pattern.
-    QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
-    if (re.isMinimal()) {
-        QString ecmaPattern;
-        int len = pattern.length();
-        ecmaPattern.reserve(len);
-        int i = 0;
-        const QChar *wc = pattern.unicode();
-        bool inBracket = false;
-        while (i < len) {
-            QChar c = wc[i++];
-            ecmaPattern += c;
-            switch (c.unicode()) {
-            case '?':
-            case '+':
-            case '*':
-            case '}':
-                if (!inBracket)
-                    ecmaPattern += QLatin1Char('?');
-                break;
-            case '\\':
-                if (i < len)
-                    ecmaPattern += wc[i++];
-                break;
-            case '[':
-                inBracket = true;
-                break;
-            case ']':
-                inBracket = false;
-                break;
-            default:
-                break;
-            }
-        }
-        pattern = ecmaPattern;
-    }
-
-    int flags = v8::RegExp::kNone;
-    if (re.caseSensitivity() == Qt::CaseInsensitive)
-        flags |= v8::RegExp::kIgnoreCase;
-
-    return v8::RegExp::New(engine->toString(pattern), static_cast<v8::RegExp::Flags>(flags));
-}
-
 v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
 {
     int type = variant.userType();
@@ -356,7 +319,7 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QTime:
                 return v8::Date::New(qtDateTimeToJsDate(QDateTime(QDate(1970,1,1), *reinterpret_cast<const QTime *>(ptr))));
             case QMetaType::QRegExp:
-                return regexpFromQRegExp(this, *reinterpret_cast<const QRegExp *>(ptr));
+                return QJSConverter::toRegExp(*reinterpret_cast<const QRegExp *>(ptr));
             case QMetaType::QObjectStar:
             case QMetaType::QWidgetStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
@@ -464,13 +427,13 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 {
     if (value->IsNull() || value->IsUndefined())
         return QVariant();
-    else if (value->IsBoolean())
+    if (value->IsBoolean())
         return value->ToBoolean()->Value();
-    else if (value->IsInt32())
+    if (value->IsInt32())
         return value->ToInt32()->Value();
-    else if (value->IsNumber())
+    if (value->IsNumber())
         return value->ToNumber()->Value();
-    else if (value->IsString())
+    if (value->IsString())
         return m_stringWrapper.toString(value->ToString());
     if (value->IsDate())
         return qtDateTimeFromJsDate(v8::Handle<v8::Date>::Cast(value)->NumberValue());
@@ -480,17 +443,9 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
     if (value->IsRegExp()) {
         v8::Context::Scope scope(context());
-        v8::Handle<v8::RegExp> jsRegExp = v8::Handle<v8::RegExp>::Cast(value);
-        // Copied from QtScript
-        // Converts a JS RegExp to a QRegExp.
-        // The conversion is not 100% exact since ECMA regexp and QRegExp
-        // have different semantics/flags, but we try to do our best.
-        QString pattern = toString(jsRegExp->GetSource());
-        Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive;
-        if (jsRegExp->GetFlags() & v8::RegExp::kIgnoreCase)
-            caseSensitivity = Qt::CaseInsensitive;
-        return QRegExp(pattern, caseSensitivity, QRegExp::RegExp2);
-    } else if (value->IsArray()) {
+        return QJSConverter::toRegExp(v8::Handle<v8::RegExp>::Cast(value));
+    }
+    if (value->IsArray()) {
         v8::Context::Scope scope(context());
         QVariantList rv;
 
@@ -500,7 +455,8 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
             rv << toVariant(array->Get(ii), -1);
 
         return rv;
-    } else if (!value->IsFunction()) {
+    }
+    if (!value->IsFunction()) {
         v8::Context::Scope scope(context());
         v8::Handle<v8::Object> object = value->ToObject();
         v8::Local<v8::Array> properties = object->GetPropertyNames();
@@ -522,6 +478,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
 
 
 #include <QtGui/qvector3d.h>
+#include <QtGui/qvector4d.h>
 
 struct StaticQtMetaObject : public QObject
 {
@@ -556,6 +513,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     qt->Set(v8::String::New("point"), V8FUNCTION(point, this));
     qt->Set(v8::String::New("size"), V8FUNCTION(size, this));
     qt->Set(v8::String::New("vector3d"), V8FUNCTION(vector3d, this));
+    qt->Set(v8::String::New("vector4d"), V8FUNCTION(vector4d, this));
 
     qt->Set(v8::String::New("formatDate"), V8FUNCTION(formatDate, this));
     qt->Set(v8::String::New("formatTime"), V8FUNCTION(formatTime, this));
@@ -594,6 +552,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     v8::Local<v8::Object> stringPrototype = v8::Local<v8::Object>::Cast(string->Get(v8::String::New("prototype")));
     stringPrototype->Set(v8::String::New("arg"), V8FUNCTION(stringArg, this));
 
+    qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);
     m_sqlDatabaseData = qt_add_qmlsqldatabase(this);
 
@@ -888,6 +847,23 @@ v8::Handle<v8::Value> QV8Engine::vector3d(const v8::Arguments &args)
     double z = args[2]->ToNumber()->Value();
 
     return V8ENGINE()->fromVariant(QVariant::fromValue(QVector3D(x, y, z)));
+}
+
+/*!
+\qmlmethod Qt::vector4d(real x, real y, real z, real w)
+Returns a Vector4D with the specified \c x, \c y, \c z and \c w.
+*/
+v8::Handle<v8::Value> QV8Engine::vector4d(const v8::Arguments &args)
+{
+    if (args.Length() != 4)
+        V8THROW_ERROR("Qt.vector4d(): Invalid arguments");
+
+    double x = args[0]->NumberValue();
+    double y = args[1]->NumberValue();
+    double z = args[2]->NumberValue();
+    double w = args[3]->NumberValue();
+
+    return V8ENGINE()->fromVariant(QVariant::fromValue(QVector4D(x, y, z, w)));
 }
 
 /*!
@@ -2131,14 +2107,14 @@ bool QV8Engine::metaTypeFromJS(v8::Handle<v8::Value> value, int type, void *data
     }
 #endif
 
-    // Try to use magic.
+    // Try to use magic; for compatibility with qscriptvalue_cast.
 
     QByteArray name = QMetaType::typeName(type);
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
     if (isVariant(value) && name.endsWith('*')) {
         int valueType = QMetaType::type(name.left(name.size()-1));
-        QVariant var = variantValue(value);
+        QVariant &var = variantValue(value);
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
             *reinterpret_cast<void* *>(data) = var.data();
@@ -2201,9 +2177,9 @@ QVariant QV8Engine::variantFromJS(v8::Handle<v8::Value> value)
         return QVariant();
     if (value->IsBoolean())
         return value->ToBoolean()->Value();
-    else if (value->IsInt32())
+    if (value->IsInt32())
         return value->ToInt32()->Value();
-    else if (value->IsNumber())
+    if (value->IsNumber())
         return value->ToNumber()->Value();
     if (value->IsString())
         return QJSConverter::toString(value->ToString());
@@ -2259,10 +2235,9 @@ QObject *QV8Engine::qtObjectFromJS(v8::Handle<v8::Value> value)
 }
 
 
-QVariant QV8Engine::variantValue(v8::Handle<v8::Value> value)
+QVariant &QV8Engine::variantValue(v8::Handle<v8::Value> value)
 {
-    Q_ASSERT(isVariant(value));
-    return QV8Engine::toVariant(value, -1 /*whateever magic hint is*/);
+    return variantWrapper()->variantValue(value);
 }
 
 // Creates a QVariant wrapper object.

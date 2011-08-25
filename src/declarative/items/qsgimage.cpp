@@ -95,7 +95,6 @@ QSGImagePrivate::QSGImagePrivate()
 
 /*!
     \qmlclass Image QSGImage
-    \since QtQuick 1.0
     \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
     \brief The Image element displays an image in a declarative user interface
@@ -446,7 +445,6 @@ qreal QSGImage::paintedHeight() const
 
 /*!
     \qmlproperty bool QtQuick2::Image::cache
-    \since Quick 1.1
 
     Specifies whether the image should be cached. The default value is
     true. Setting \a cache to false is useful when dealing with large images,
@@ -455,7 +453,6 @@ qreal QSGImage::paintedHeight() const
 
 /*!
     \qmlproperty bool QtQuick2::Image::mirror
-    \since Quick 1.1
 
     This property holds whether the image should be horizontally inverted
     (effectively displaying a mirrored image).
@@ -466,7 +463,6 @@ qreal QSGImage::paintedHeight() const
 /*!
     \qmlproperty enumeration QtQuick2::Image::horizontalAlignment
     \qmlproperty enumeration QtQuick2::Image::verticalAlignment
-    \since Quick 2.0
 
     Sets the horizontal and vertical alignment of the image. By default, the image is top-left aligned.
 

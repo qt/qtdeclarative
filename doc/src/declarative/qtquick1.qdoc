@@ -32,6 +32,9 @@
     \brief The QML Elements
 
     This QML module contains all the QML elements that are
-    instantiated as objects of C++ classes in the QtDeclarative
-    module.
+    instantiated as objects of C++ classes in the QtQuick1
+    module. These elements are QGraphicsObject based, and
+    work with the Graphics View framework. In Qt 5, they
+    have been replaced by \l{QtQuick 2}, based on the
+    Scenegraph renderer.
  */

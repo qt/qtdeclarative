@@ -80,6 +80,7 @@ public:
     static bool hasDebuggingClient();
 
 protected:
+    QDeclarativeDebugService(QDeclarativeDebugServicePrivate &dd, const QString &, QObject *parent = 0);
     virtual void statusChanged(Status);
     virtual void messageReceived(const QByteArray &);
 

@@ -53,8 +53,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass PathElement QDeclarativePathElement
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief PathElement is the base path type.
 
     This type is the base for all path types.  It cannot
@@ -65,8 +65,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlclass Path QDeclarativePath
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief A Path object defines a path for use by \l PathView.
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
@@ -90,8 +90,8 @@ QDeclarativePath::~QDeclarativePath()
 }
 
 /*!
-    \qmlproperty real Path::startX
-    \qmlproperty real Path::startY
+    \qmlproperty real QtQuick2::Path::startX
+    \qmlproperty real QtQuick2::Path::startY
     These properties hold the starting position of the path.
 */
 qreal QDeclarativePath::startX() const
@@ -127,7 +127,7 @@ void QDeclarativePath::setStartY(qreal y)
 }
 
 /*!
-    \qmlproperty bool Path::closed
+    \qmlproperty bool QtQuick2::Path::closed
     This property holds whether the start and end of the path are identical.
 */
 bool QDeclarativePath::isClosed() const
@@ -137,7 +137,7 @@ bool QDeclarativePath::isClosed() const
 }
 
 /*!
-    \qmlproperty list<PathElement> Path::pathElements
+    \qmlproperty list<PathElement> QtQuick2::Path::pathElements
     This property holds the objects composing the path.
 
     \default
@@ -502,8 +502,8 @@ void QDeclarativeCurve::setY(qreal y)
 
 /*!
     \qmlclass PathAttribute QDeclarativePathAttribute
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief The PathAttribute allows setting an attribute at a given position in a Path.
 
     The PathAttribute object allows attributes consisting of a name and
@@ -533,7 +533,7 @@ void QDeclarativeCurve::setY(qreal y)
 */
 
 /*!
-    \qmlproperty string PathAttribute::name
+    \qmlproperty string QtQuick2::PathAttribute::name
     This property holds the name of the attribute to change.
 
     This attribute will be available to the delegate as PathView.<name>
@@ -562,7 +562,7 @@ void QDeclarativePathAttribute::setName(const QString &name)
 }
 
 /*!
-   \qmlproperty real PathAttribute::value
+   \qmlproperty real QtQuick2::PathAttribute::value
    This property holds the value for the attribute.
 
    The value specified can be used to influence the visual appearance
@@ -618,8 +618,8 @@ void QDeclarativePathAttribute::setValue(qreal value)
 
 /*!
     \qmlclass PathLine QDeclarativePathLine
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief The PathLine defines a straight line.
 
     The example below creates a path consisting of a straight line from
@@ -636,8 +636,8 @@ void QDeclarativePathAttribute::setValue(qreal value)
 */
 
 /*!
-    \qmlproperty real PathLine::x
-    \qmlproperty real PathLine::y
+    \qmlproperty real QtQuick2::PathLine::x
+    \qmlproperty real QtQuick2::PathLine::y
 
     Defines the end point of the line.
 */
@@ -651,8 +651,8 @@ void QDeclarativePathLine::addToPath(QPainterPath &path)
 
 /*!
     \qmlclass PathQuad QDeclarativePathQuad
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief The PathQuad defines a quadratic Bezier curve with a control point.
 
     The following QML produces the path shown below:
@@ -672,15 +672,15 @@ void QDeclarativePathLine::addToPath(QPainterPath &path)
 */
 
 /*!
-    \qmlproperty real PathQuad::x
-    \qmlproperty real PathQuad::y
+    \qmlproperty real QtQuick2::PathQuad::x
+    \qmlproperty real QtQuick2::PathQuad::y
 
     Defines the end point of the curve.
 */
 
 /*!
-   \qmlproperty real PathQuad::controlX
-   \qmlproperty real PathQuad::controlY
+   \qmlproperty real QtQuick2::PathQuad::controlX
+   \qmlproperty real QtQuick2::PathQuad::controlY
 
    Defines the position of the control point.
 */
@@ -729,8 +729,8 @@ void QDeclarativePathQuad::addToPath(QPainterPath &path)
 
 /*!
    \qmlclass PathCubic QDeclarativePathCubic
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
    \brief The PathCubic defines a cubic Bezier curve with two control points.
 
     The following QML produces the path shown below:
@@ -754,15 +754,15 @@ void QDeclarativePathQuad::addToPath(QPainterPath &path)
 */
 
 /*!
-    \qmlproperty real PathCubic::x
-    \qmlproperty real PathCubic::y
+    \qmlproperty real QtQuick2::PathCubic::x
+    \qmlproperty real QtQuick2::PathCubic::y
 
     Defines the end point of the curve.
 */
 
 /*!
-   \qmlproperty real PathCubic::control1X
-   \qmlproperty real PathCubic::control1Y
+   \qmlproperty real QtQuick2::PathCubic::control1X
+   \qmlproperty real QtQuick2::PathCubic::control1Y
 
     Defines the position of the first control point.
 */
@@ -795,8 +795,8 @@ void QDeclarativePathCubic::setControl1Y(qreal y)
 }
 
 /*!
-   \qmlproperty real PathCubic::control2X
-   \qmlproperty real PathCubic::control2Y
+   \qmlproperty real QtQuick2::PathCubic::control2X
+   \qmlproperty real QtQuick2::PathCubic::control2Y
 
     Defines the position of the second control point.
 */
@@ -837,8 +837,8 @@ void QDeclarativePathCubic::addToPath(QPainterPath &path)
 
 /*!
     \qmlclass PathPercent QDeclarativePathPercent
+    \inqmlmodule QtQuick 2
     \ingroup qml-view-elements
-    \since 4.7
     \brief The PathPercent manipulates the way a path is interpreted.
 
     PathPercent allows you to manipulate the spacing between items on a
@@ -886,7 +886,7 @@ void QDeclarativePathCubic::addToPath(QPainterPath &path)
 */
 
 /*!
-    \qmlproperty real PathPercent::value
+    \qmlproperty real QtQuick2::PathPercent::value
     The proporation of items that should be laid out up to this point.
 
     This value should always be higher than the last value specified

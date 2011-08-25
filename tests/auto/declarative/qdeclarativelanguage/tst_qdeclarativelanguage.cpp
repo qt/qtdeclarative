@@ -564,6 +564,7 @@ void tst_qdeclarativelanguage::assignBasicTypes()
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2));
+    QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2, 2.3));
     QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
     QVERIFY(object->objectProperty() != 0);
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
@@ -610,6 +611,7 @@ void tst_qdeclarativelanguage::assignLiteralToVariant()
     QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
     QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
     QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("test12").userType(), (int)QVariant::Vector4D);
 
     QVERIFY(object->property("test1") == QVariant(1));
     QVERIFY(object->property("test2") == QVariant((double)1.7));
@@ -622,6 +624,7 @@ void tst_qdeclarativelanguage::assignLiteralToVariant()
     QVERIFY(object->property("test9") == QVariant(QString(QLatin1String("#FF008800"))));
     QVERIFY(object->property("test10") == QVariant(bool(true)));
     QVERIFY(object->property("test11") == QVariant(bool(false)));
+    QVERIFY(object->property("test12") == QVariant(QVector4D(100, 100, 100, 100)));
 
     delete object;
 }

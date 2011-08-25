@@ -35,7 +35,7 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Script)
+QT_MODULE(Declarative)
 
 class QDateTime;
 class QV8Engine;
@@ -45,7 +45,7 @@ class QRegExp;
 template <typename T>
 inline T qjsvalue_cast(const QJSValue &);
 
-class Q_SCRIPT_EXPORT QJSEngine
+class Q_DECLARATIVE_EXPORT QJSEngine
     : public QObject
 {
     Q_OBJECT

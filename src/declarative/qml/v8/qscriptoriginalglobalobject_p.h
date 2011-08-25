@@ -49,7 +49,7 @@ class QV8Engine;
 class QScriptOriginalGlobalObject
 {
 public:
-    inline QScriptOriginalGlobalObject(const QV8Engine *engine, v8::Handle<v8::Context> context);
+    inline QScriptOriginalGlobalObject(v8::Handle<v8::Context> context);
     inline void destroy();
 
     inline QJSValue::PropertyFlags getPropertyFlags(v8::Handle<v8::Object> object, v8::Handle<v8::Value> property);
@@ -63,7 +63,7 @@ private:
     v8::Persistent<v8::Object> m_globalObject;
 };
 
-QScriptOriginalGlobalObject::QScriptOriginalGlobalObject(const QV8Engine *engine, v8::Handle<v8::Context> context)
+QScriptOriginalGlobalObject::QScriptOriginalGlobalObject(v8::Handle<v8::Context> context)
 {
     // Please notice that engine is not fully initialized at this point.
 

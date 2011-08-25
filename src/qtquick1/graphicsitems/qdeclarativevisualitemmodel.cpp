@@ -659,7 +659,7 @@ QDeclarative1VisualDataModelData *QDeclarative1VisualDataModelPrivate::data(QObj
 
     The example below illustrates using a VisualDataModel with a ListView.
 
-    \snippet doc/src/snippets/declarative/visualdatamodel.qml 0
+    \snippet doc/src/snippets/qtquick1/visualdatamodel.qml 0
 */
 
 QDeclarative1VisualDataModel::QDeclarative1VisualDataModel()
@@ -852,10 +852,10 @@ void QDeclarative1VisualDataModel::setDelegate(QDeclarativeComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/main.cpp 0
+    \snippet doc/src/snippets/qtquick1/visualdatamodel_rootindex/main.cpp 0
    
     \c view.qml:
-    \snippet doc/src/snippets/declarative/visualdatamodel_rootindex/view.qml 0
+    \snippet doc/src/snippets/qtquick1/visualdatamodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a

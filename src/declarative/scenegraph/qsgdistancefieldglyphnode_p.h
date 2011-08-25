@@ -53,11 +53,12 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGDistanceFieldGlyphCache;
+class QSGDistanceFieldGlyphCacheManager;
 class QSGDistanceFieldTextMaterial;
 class QSGDistanceFieldGlyphNode: public QSGGlyphNode
 {
 public:
-    QSGDistanceFieldGlyphNode();
+    QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheManager *cacheManager);
     ~QSGDistanceFieldGlyphNode();
 
     virtual QPointF baseLine() const { return m_baseLine; }
@@ -66,8 +67,8 @@ public:
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode mode);
 
-    void setStyle(QSGText::TextStyle style);
-    void setStyleColor(const QColor &color);
+    virtual void setStyle(QSGText::TextStyle style);
+    virtual void setStyleColor(const QColor &color);
 
     virtual void update();
 
@@ -81,6 +82,7 @@ private:
     QSGDistanceFieldTextMaterial *m_material;
     QPointF m_position;
     QGlyphRun m_glyphs;
+    QSGDistanceFieldGlyphCacheManager *m_glyph_cacheManager;
     QSGDistanceFieldGlyphCache *m_glyph_cache;
     QSGGeometry m_geometry;
     QSGText::TextStyle m_style;

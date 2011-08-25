@@ -246,7 +246,7 @@ public:
     mutable bool inState;
     QDeclarativeStateGroup *group;
 
-    QDeclarativeStateOperation::ActionList generateActionList(QDeclarativeStateGroup *) const;
+    QDeclarativeStateOperation::ActionList generateActionList() const;
     void complete();
 };
 

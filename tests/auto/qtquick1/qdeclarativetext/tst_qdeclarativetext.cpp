@@ -1329,6 +1329,9 @@ void tst_qdeclarativetext::lineHeight()
 
     qreal h = myText->height();
     myText->setLineHeight(1.5);
+#ifdef Q_WS_QPA
+    QEXPECT_FAIL("", "QTBUG-21015 fails", Continue);
+#endif
     QVERIFY(myText->height() == h * 1.5);
 
     myText->setLineHeightMode(QDeclarative1Text::FixedHeight);

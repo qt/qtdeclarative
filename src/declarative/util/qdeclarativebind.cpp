@@ -44,6 +44,7 @@
 #include "private/qdeclarativenullablevalue_p_p.h"
 #include "private/qdeclarativeproperty_p.h"
 #include "private/qdeclarativebinding_p.h"
+#include "private/qdeclarativeguard_p.h"
 
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
@@ -67,7 +68,7 @@ public:
 
     QDeclarativeNullableValue<bool> when;
     bool componentComplete;
-    QObject *obj;
+    QDeclarativeGuard<QObject> obj;
     QString propName;
     QDeclarativeNullableValue<QVariant> value;
     QDeclarativeProperty prop;
@@ -77,8 +78,8 @@ public:
 
 /*!
     \qmlclass Binding QDeclarativeBind
+    \inqmlmodule QtQuick 2
     \ingroup qml-working-with-data
-    \since 4.7
     \brief The Binding element allows arbitrary property bindings to be created.
 
     \section1 Binding to an inaccessible property
@@ -151,7 +152,7 @@ QDeclarativeBind::~QDeclarativeBind()
 }
 
 /*!
-    \qmlproperty bool Binding::when
+    \qmlproperty bool QtQuick2::Binding::when
 
     This property holds when the binding is active.
     This should be set to an expression that evaluates to true when you want the binding to be active.
@@ -183,7 +184,7 @@ void QDeclarativeBind::setWhen(bool v)
 }
 
 /*!
-    \qmlproperty Object Binding::target
+    \qmlproperty Object QtQuick2::Binding::target
 
     The object to be updated.
 */
@@ -196,9 +197,12 @@ QObject *QDeclarativeBind::object()
 void QDeclarativeBind::setObject(QObject *obj)
 {
     Q_D(QDeclarativeBind);
-    if (d->obj && d->obj != obj) {
-        qmlInfo(this) << tr("Cannot change the object assigned to a Binding.");
-        return;
+    if (d->obj && d->when.isValid() && d->when) {
+        /* if we switch the object at runtime, we need to restore the
+           previous binding on the old object before continuing */
+        d->when = false;
+        eval();
+        d->when = true;
     }
     d->obj = obj;
     if (d->componentComplete)
@@ -207,7 +211,7 @@ void QDeclarativeBind::setObject(QObject *obj)
 }
 
 /*!
-    \qmlproperty string Binding::property
+    \qmlproperty string QtQuick2::Binding::property
 
     The property to be updated.
 */
@@ -220,9 +224,12 @@ QString QDeclarativeBind::property() const
 void QDeclarativeBind::setProperty(const QString &p)
 {
     Q_D(QDeclarativeBind);
-    if (!d->propName.isEmpty() && d->propName != p) {
-        qmlInfo(this) << tr("Cannot change the property assigned to a Binding.");
-        return;
+    if (!d->propName.isEmpty() && d->when.isValid() && d->when) {
+        /* if we switch the property name at runtime, we need to restore the
+           previous binding on the old object before continuing */
+        d->when = false;
+        eval();
+        d->when = true;
     }
     d->propName = p;
     if (d->componentComplete)
@@ -231,7 +238,7 @@ void QDeclarativeBind::setProperty(const QString &p)
 }
 
 /*!
-    \qmlproperty any Binding::value
+    \qmlproperty any QtQuick2::Binding::value
 
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.

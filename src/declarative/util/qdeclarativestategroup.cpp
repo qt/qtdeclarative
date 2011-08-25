@@ -93,8 +93,8 @@ public:
 
 /*!
    \qmlclass StateGroup QDeclarativeStateGroup
+    \inqmlmodule QtQuick 2
    \ingroup qml-state-elements
-   \since 4.7
    \brief The StateGroup element provides state support for non-Item elements.
 
    Item (and all derived elements) provides built in support for states and transitions
@@ -140,7 +140,7 @@ QList<QDeclarativeState *> QDeclarativeStateGroup::states() const
 }
 
 /*!
-  \qmlproperty list<State> StateGroup::states
+  \qmlproperty list<State> QtQuick2::StateGroup::states
   This property holds a list of states defined by the state group.
 
   \qml
@@ -201,7 +201,7 @@ void QDeclarativeStateGroupPrivate::clear_states(QDeclarativeListProperty<QDecla
 }
 
 /*!
-  \qmlproperty list<Transition> StateGroup::transitions
+  \qmlproperty list<Transition> QtQuick2::StateGroup::transitions
   This property holds a list of transitions defined by the state group.
 
   \qml
@@ -255,7 +255,7 @@ void QDeclarativeStateGroupPrivate::clear_transitions(QDeclarativeListProperty<Q
 }
 
 /*!
-  \qmlproperty string StateGroup::state
+  \qmlproperty string QtQuick2::StateGroup::state
 
   This property holds the name of the current state of the state group.
 
@@ -372,6 +372,8 @@ QDeclarativeTransition *QDeclarativeStateGroupPrivate::findTransition(const QStr
 
     for (int ii = 0; !done && ii < transitions.count(); ++ii) {
         QDeclarativeTransition *t = transitions.at(ii);
+        if (!t->enabled())
+            continue;
         for (int ii = 0; ii < 2; ++ii)
         {
             if (ii && (!t->reversible() ||
@@ -382,7 +384,11 @@ QDeclarativeTransition *QDeclarativeStateGroupPrivate::findTransition(const QStr
             QStringList toState;
 
             fromState = t->fromState().split(QLatin1Char(','));
+            for (int jj = 0; jj < fromState.count(); ++jj)
+                fromState[jj] = fromState.at(jj).trimmed();
             toState = t->toState().split(QLatin1Char(','));
+            for (int jj = 0; jj < toState.count(); ++jj)
+                toState[jj] = toState.at(jj).trimmed();
             if (ii == 1)
                 qSwap(fromState, toState);
             int tScore = 0;
@@ -468,15 +474,17 @@ void QDeclarativeStateGroupPrivate::setCurrentStateInternal(const QString &state
     }
 
     if (oldState == 0 || newState == 0) {
-        if (!nullState) { nullState = new QDeclarativeState; QDeclarative_setParent_noEvent(nullState, q); }
+        if (!nullState) {
+            nullState = new QDeclarativeState;
+            QDeclarative_setParent_noEvent(nullState, q);
+            nullState->setStateGroup(q);
+        }
         if (!oldState) oldState = nullState;
         if (!newState) newState = nullState;
     }
 
-    newState->apply(q, transition, oldState);
-    applyingState = false;
-    if (!transition)
-        static_cast<QDeclarativeStatePrivate*>(QObjectPrivate::get(newState))->complete();
+    newState->apply(transition, oldState);
+    applyingState = false;  //### consider removing this (don't allow state changes in transition)
 }
 
 QDeclarativeState *QDeclarativeStateGroup::findState(const QString &name) const
@@ -495,6 +503,12 @@ void QDeclarativeStateGroup::removeState(QDeclarativeState *state)
 {
     Q_D(QDeclarativeStateGroup);
     d->states.removeOne(state);
+}
+
+void QDeclarativeStateGroup::stateAboutToComplete()
+{
+    Q_D(QDeclarativeStateGroup);
+    d->applyingState = false;
 }
 
 QT_END_NAMESPACE

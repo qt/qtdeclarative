@@ -42,6 +42,29 @@
 
 QT_BEGIN_NAMESPACE
 
+// This template is used indirectly by the Q_GLOBAL_STATIC macro below
+template<>
+class QGlobalStaticDeleter<QJSValuePrivate>
+{
+public:
+    QGlobalStatic<QJSValuePrivate> &globalStatic;
+    QGlobalStaticDeleter(QGlobalStatic<QJSValuePrivate> &_globalStatic)
+        : globalStatic(_globalStatic)
+    {
+        globalStatic.pointer->ref.ref();
+    }
+
+    inline ~QGlobalStaticDeleter()
+    {
+        if (!globalStatic.pointer->ref.deref()) { // Logic copy & paste from SharedDataPointer
+            delete globalStatic.pointer;
+        }
+        globalStatic.pointer = 0;
+        globalStatic.destroyed = true;
+    }
+};
+
+Q_GLOBAL_STATIC(QJSValuePrivate, InvalidValue)
 
 QJSValuePrivate* QJSValuePrivate::get(const QJSValue& q) { Q_ASSERT(q.d_ptr.data()); return q.d_ptr.data(); }
 
@@ -803,6 +826,8 @@ inline QScriptPassPointer<QJSValuePrivate> QJSValuePrivate::property(const QStri
 {
     if (!name.length())
         return InvalidValue();
+    if (!isObject())
+        return InvalidValue();
 
     v8::HandleScope handleScope;
     return property(QJSConverter::toString(name));
@@ -1013,12 +1038,14 @@ bool QJSValuePrivate::assignEngine(QV8Engine* engine)
 
 /*!
   \internal
-  reinitialize this value to an invalid value.
+  Invalidates this value.
+
+  Does not remove the value from the engine's list of
+  registered values; that's the responsibility of the caller.
 */
-void QJSValuePrivate::reinitialize()
+void QJSValuePrivate::invalidate()
 {
     if (isJSBased()) {
-        m_engine->unregisterValue(this);
         m_value.Dispose();
         m_value.Clear();
     } else if (isStringBased()) {
@@ -1026,26 +1053,6 @@ void QJSValuePrivate::reinitialize()
     }
     m_engine = 0;
     m_state = Invalid;
-}
-
-/*!
-  \internal
-  reinitialize this value to an JSValue.
-*/
-void QJSValuePrivate::reinitialize(QV8Engine* engine, v8::Handle<v8::Value> value)
-{
-    Q_ASSERT_X(this != InvalidValue(), Q_FUNC_INFO, "static invalid can't be reinitialized to a different value");
-    if (isJSBased()) {
-        m_value.Dispose();
-        // avoid double registration
-        m_engine->unregisterValue(this);
-    } else if (isStringBased()) {
-        delete u.m_string;
-    }
-    m_engine = engine;
-    m_state = JSValue;
-    m_value = v8::Persistent<v8::Value>::New(value);
-    m_engine->registerValue(this);
 }
 
 QV8Engine* QJSValuePrivate::engine() const

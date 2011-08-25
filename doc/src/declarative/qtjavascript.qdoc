@@ -1,0 +1,92 @@
+/****************************************************************************
+**
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** All rights reserved.
+** Contact: Nokia Corporation (qt-info@nokia.com)
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \group qtjavascript
+    \title Scripting Classes and Overviews
+
+    \brief Classes for embedding JavaScript in Qt/C++ applications.
+*/
+
+/*!
+  \page qtjavascript.html
+  \title Making Applications Scriptable
+  \ingroup frameworks-technologies
+
+  Qt provides support for application scripting with JavaScript.
+  The following guides and references cover aspects of programming with
+  JavaScript and Qt.
+
+  \tableofcontents
+
+  \section1 Scripting Classes
+
+  The following classes add scripting capabilities to Qt applications.
+
+  \annotatedlist qtjavascript
+
+  \section1 Basic Usage
+
+  To evaluate script code, you create a QJSEngine and call its
+  evaluate() function, passing the script code (text) to evaluate
+  as argument.
+
+  \snippet doc/src/snippets/qtjavascript/evaluation/main.cpp 0
+
+  The return value will be the result of the evaluation (represented
+  as a QJSValue object); this can be converted to standard C++
+  and Qt types.
+
+  Custom properties can be made available to scripts by registering
+  them with the script engine. This is most easily done by setting
+  properties of the script engine's \e{Global Object}:
+
+  \snippet doc/src/snippets/qtjavascript/registeringvalues/main.cpp 0
+
+  This places the properties in the script environment, thus making them
+  available to script code.
+
+  \section1 Making a QObject Available to the Script Engine
+
+  Any QObject-based instance can be made available for use with scripts.
+
+  When a QObject is passed to the QJSEngine::newQObject() function,
+  a Qt Script wrapper object is created that can be used to make the
+  QObject's signals, slots, properties, and child objects available
+  to scripts.
+
+  Here's an example of making an instance of a QObject subclass
+  available to script code under the name \c{"myObject"}:
+
+  \snippet doc/src/snippets/qtjavascript/registeringobjects/main.cpp 0
+
+  This will create a global variable called \c{myObject} in the
+  script environment. The variable serves as a proxy to the
+  underlying C++ object. Note that the name of the script variable
+  can be anything; i.e., it is not dependent upon QObject::objectName().
+
+ */

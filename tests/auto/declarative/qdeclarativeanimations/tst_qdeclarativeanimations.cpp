@@ -77,6 +77,7 @@ private slots:
     void mixedTypes();
     void properties();
     void propertiesTransition();
+    void disabledTransition();
     void invalidDuration();
     void attached();
     void propertyValueSourceDefaultStart();
@@ -574,6 +575,32 @@ void tst_qdeclarativeanimations::propertiesTransition()
         QTIMED_COMPARE(myRect->x(),qreal(200));
     }
 
+}
+
+void tst_qdeclarativeanimations::disabledTransition()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/disabledTransition.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QSGRectangle *myRect = rect->findChild<QSGRectangle*>("TheRect");
+    QVERIFY(myRect);
+
+    QDeclarativeTransition *trans = rect->findChild<QDeclarativeTransition*>();
+    QVERIFY(trans);
+
+    QCOMPARE(trans->enabled(), false);
+
+    QSGItemPrivate::get(rect)->setState("moved");
+    QCOMPARE(myRect->x(),qreal(200));
+
+    trans->setEnabled(true);
+
+    QSGItemPrivate::get(rect)->setState("");
+    QCOMPARE(myRect->x(),qreal(200));
+    QTest::qWait(300);
+    QTIMED_COMPARE(myRect->x(),qreal(100));
 }
 
 void tst_qdeclarativeanimations::invalidDuration()

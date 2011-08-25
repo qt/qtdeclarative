@@ -43,7 +43,7 @@ import QtQuick.Particles 2.0
 
 Rectangle{
     width: 360
-    height: 540
+    height: 600
     color: "#222222"
     id: root
     Image{
@@ -96,7 +96,7 @@ Rectangle{
     FollowEmitter{
         id: smoke1
         width: root.width
-        height: 232
+        height: 258
         system: ps
         particle: "smoke"
         follow: "flame"

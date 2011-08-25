@@ -32,7 +32,7 @@
   \brief A listing of standard QML elements.
 
 These are the functionally grouped lists of QML elements as part of
-\l{Qt Quick}.
+\l{Qt Quick}. You can also browse the module pages for \l{QtQuick 1}, \l{QtQuick 2} and \l{QtQuick.Particles 2}
 
 Elements are declared with the their name and two curly braces. Elements may
 be nested in elements, thereby creating a parent-child relationship between the

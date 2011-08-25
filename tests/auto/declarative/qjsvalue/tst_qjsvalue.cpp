@@ -3706,7 +3706,6 @@ void tst_QJSValue::castToPointer()
         int *ip = qjsvalue_cast<int*>(v);
         QVERIFY(ip != 0);
         QCOMPARE(*ip, 123);
-        QEXPECT_FAIL("", "Pointer magic for variants is currently not supported by QJSEngine", Abort);
         *ip = 456;
         QCOMPARE(qjsvalue_cast<int>(v), 456);
 

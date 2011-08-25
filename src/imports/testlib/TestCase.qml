@@ -176,7 +176,7 @@ Item {
                  || ((typeExp === "object" || typeExp == "declarativeitem") && typeAct === "string")) {
                     success = (act == exp)
                 }
-            } else if (typeExp === "string" || typeExp === "boolean" || typeExp === "number" ||
+            } else if (typeExp === "string" || typeExp === "boolean" ||
                        typeExp === "null" || typeExp === "undefined") {
                 if (exp instanceof act.constructor || act instanceof exp.constructor) {
                     // to catch short annotaion VS 'new' annotation of act declaration
@@ -188,7 +188,7 @@ Item {
                 }
             } else if (typeExp === "nan") {
                 success = isNaN(act);
-            } else if (typeExp == "number") {
+            } else if (typeExp === "number") {
                 // Use act fuzzy compare if the two values are floats
                 if (Math.abs(act - exp) <= 0.00001) {
                     success = true

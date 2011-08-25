@@ -111,7 +111,7 @@ void QSGPathViewPrivate::init()
                          q, movementEndingIdx, Qt::DirectConnection);
 }
 
-QSGItem *QSGPathViewPrivate::getItem(int modelIndex)
+QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)
 {
     Q_Q(QSGPathView);
     requestedIndex = modelIndex;
@@ -128,7 +128,7 @@ QSGItem *QSGPathViewPrivate::getItem(int modelIndex)
         qPathViewAttachedType = 0;
         if (att) {
             att->m_view = q;
-            att->setOnPath(true);
+            att->setOnPath(onPath);
         }
         item->setParentItem(q);
         QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
@@ -158,6 +158,10 @@ QSGPathViewAttached *QSGPathViewPrivate::attached(QSGItem *item)
 
 void QSGPathViewPrivate::clear()
 {
+    if (currentItem) {
+        releaseItem(currentItem);
+        currentItem = 0;
+    }
     for (int i=0; i<items.count(); i++){
         QSGItem *p = items[i];
         releaseItem(p);
@@ -345,6 +349,71 @@ void QSGPathViewPrivate::regenerate()
     q->refill();
 }
 
+/*!
+    \qmlclass PathView QSGPathView
+    \inqmlmodule QtQuick 2
+    \ingroup qml-view-elements
+    \brief The PathView element lays out model-provided items on a path.
+    \inherits Item
+
+    A PathView displays data from models created from built-in QML elements like ListModel
+    and XmlListModel, or custom model classes defined in C++ that inherit from
+    QAbstractListModel.
+
+    The view has a \l model, which defines the data to be displayed, and
+    a \l delegate, which defines how the data should be displayed.
+    The \l delegate is instantiated for each item on the \l path.
+    The items may be flicked to move them along the path.
+
+    For example, if there is a simple list model defined in a file \c ContactModel.qml like this:
+
+    \snippet doc/src/snippets/declarative/pathview/ContactModel.qml 0
+
+    This data can be represented as a PathView, like this:
+
+    \snippet doc/src/snippets/declarative/pathview/pathview.qml 0
+
+    \image pathview.gif
+
+    (Note the above example uses PathAttribute to scale and modify the
+    opacity of the items as they rotate. This additional code can be seen in the
+    PathAttribute documentation.)
+
+    PathView does not automatically handle keyboard navigation.  This is because
+    the keys to use for navigation will depend upon the shape of the path.  Navigation
+    can be added quite simply by setting \c focus to \c true and calling
+    \l decrementCurrentIndex() or \l incrementCurrentIndex(), for example to navigate
+    using the left and right arrow keys:
+
+    \qml
+    PathView {
+        // ...
+        focus: true
+        Keys.onLeftPressed: decrementCurrentIndex()
+        Keys.onRightPressed: incrementCurrentIndex()
+    }
+    \endqml
+
+    The path view itself is a focus scope (see \l{qmlfocus#Acquiring Focus and Focus Scopes}{the focus documentation page} for more details).
+
+    Delegates are instantiated as needed and may be destroyed at any time.
+    State should \e never be stored in a delegate.
+
+    PathView attaches a number of properties to the root item of the delegate, for example
+    \c {PathView.isCurrentItem}.  In the following example, the root delegate item can access
+    this attached property directly as \c PathView.isCurrentItem, while the child
+    \c nameText object must refer to this property as \c wrapper.PathView.isCurrentItem.
+
+    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+
+    \bold Note that views do not enable \e clip automatically.  If the view
+    is not clipped by another item or the screen, it will be necessary
+    to set \e {clip: true} in order to have the out of view items clipped
+    nicely.
+
+    \sa Path, {declarative/modelviews/pathview}{PathView example}
+*/
+
 QSGPathView::QSGPathView(QSGItem *parent)
   : QSGItem(*(new QSGPathViewPrivate), parent)
 {
@@ -362,6 +431,54 @@ QSGPathView::~QSGPathView()
         delete d->model;
 }
 
+/*!
+    \qmlattachedproperty PathView QtQuick2::PathView::view
+    This attached property holds the view that manages this delegate instance.
+
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedproperty bool QtQuick2::PathView::onPath
+    This attached property holds whether the item is currently on the path.
+
+    If a pathItemCount has been set, it is possible that some items may
+    be instantiated, but not considered to be currently on the path.
+    Usually, these items would be set invisible, for example:
+
+    \qml
+    Component {
+        Rectangle {
+            visible: PathView.onPath
+            // ...
+        }
+    }
+    \endqml
+
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedproperty bool QtQuick2::PathView::isCurrentItem
+    This attached property is true if this delegate is the current item; otherwise false.
+
+    It is attached to each instance of the delegate.
+
+    This property may be used to adjust the appearance of the current item.
+
+    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+*/
+
+/*!
+    \qmlproperty model QtQuick2::PathView::model
+    This property holds the model providing data for the view.
+
+    The model provides a set of data that is used to create the items for the view.
+    For large or dynamic datasets the model is usually provided by a C++ model object.
+    Models can also be created directly in QML, using the ListModel element.
+
+    \sa {qmlmodels}{Data Models}
+*/
 QVariant QSGPathView::model() const
 {
     Q_D(const QSGPathView);
@@ -426,12 +543,21 @@ void QSGPathView::setModel(const QVariant &model)
     emit modelChanged();
 }
 
+/*!
+    \qmlproperty int QtQuick2::PathView::count
+    This property holds the number of items in the model.
+*/
 int QSGPathView::count() const
 {
     Q_D(const QSGPathView);
     return d->model ? d->modelCount : 0;
 }
 
+/*!
+    \qmlproperty Path QtQuick2::PathView::path
+    This property holds the path used to lay out the items.
+    For more information see the \l Path documentation.
+*/
 QDeclarativePath *QSGPathView::path() const
 {
     Q_D(const QSGPathView);
@@ -458,6 +584,10 @@ void QSGPathView::setPath(QDeclarativePath *path)
     emit pathChanged();
 }
 
+/*!
+    \qmlproperty int QtQuick2::PathView::currentIndex
+    This property holds the index of the current item.
+*/
 int QSGPathView::currentIndex() const
 {
     Q_D(const QSGPathView);
@@ -470,28 +600,31 @@ void QSGPathView::setCurrentIndex(int idx)
     if (d->model && d->modelCount)
         idx = qAbs(idx % d->modelCount);
     if (d->model && idx != d->currentIndex) {
-        if (d->modelCount) {
-            int itemIndex = (d->currentIndex - d->firstIndex + d->modelCount) % d->modelCount;
-            if (itemIndex < d->items.count()) {
-                if (QSGItem *item = d->items.at(itemIndex)) {
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(false);
-                }
-            }
+        if (d->currentItem) {
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setIsCurrentItem(false);
+            d->releaseItem(d->currentItem);
         }
         d->currentItem = 0;
         d->moveReason = QSGPathViewPrivate::SetIndex;
         d->currentIndex = idx;
         if (d->modelCount) {
-            if (d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
-                d->snapToCurrent();
             int itemIndex = (idx - d->firstIndex + d->modelCount) % d->modelCount;
             if (itemIndex < d->items.count()) {
-                d->currentItem = d->items.at(itemIndex);
+                d->currentItem = d->model->item(d->currentIndex, true);
                 d->currentItem->setFocus(true);
                 if (QSGPathViewAttached *att = d->attached(d->currentItem))
                     att->setIsCurrentItem(true);
+            } else {
+                d->currentItem = d->getItem(d->currentIndex, false);
+                d->updateItem(d->currentItem, d->currentIndex < d->firstIndex ? 0.0 : 1.0);
+                if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                    att->setIsCurrentItem(true);
+                if (d->model->completePending())
+                    d->model->completeItem();
             }
+            if (d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
+                d->snapToCurrent();
             d->currentItemOffset = d->positionOfIndex(d->currentIndex);
             d->updateHighlight();
         }
@@ -499,6 +632,19 @@ void QSGPathView::setCurrentIndex(int idx)
     }
 }
 
+QSGItem *QSGPathView::currentItem() const
+{
+    Q_D(const QSGPathView);
+    return d->currentItem;
+}
+
+/*!
+    \qmlmethod QtQuick2::PathView::incrementCurrentIndex()
+
+    Increments the current index.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGPathView::incrementCurrentIndex()
 {
     Q_D(QSGPathView);
@@ -506,6 +652,13 @@ void QSGPathView::incrementCurrentIndex()
     setCurrentIndex(currentIndex()+1);
 }
 
+/*!
+    \qmlmethod QtQuick2::PathView::decrementCurrentIndex()
+
+    Decrements the current index.
+
+    \bold Note: methods should only be called after the Component has completed.
+*/
 void QSGPathView::decrementCurrentIndex()
 {
     Q_D(QSGPathView);
@@ -518,6 +671,12 @@ void QSGPathView::decrementCurrentIndex()
     }
 }
 
+/*!
+    \qmlproperty real QtQuick2::PathView::offset
+
+    The offset specifies how far along the path the items are from their initial positions.
+    This is a real number that ranges from 0.0 to the count of items in the model.
+*/
 qreal QSGPathView::offset() const
 {
     Q_D(const QSGPathView);
@@ -552,6 +711,30 @@ void QSGPathViewPrivate::setAdjustedOffset(qreal o)
     setOffset(o+offsetAdj);
 }
 
+/*!
+    \qmlproperty Component QtQuick2::PathView::highlight
+    This property holds the component to use as the highlight.
+
+    An instance of the highlight component will be created for each view.
+    The geometry of the resultant component instance will be managed by the view
+    so as to stay with the current item.
+
+    The below example demonstrates how to make a simple highlight.  Note the use
+    of the \l{PathView::onPath}{PathView.onPath} attached property to ensure that
+    the highlight is hidden when flicked away from the path.
+
+    \qml
+    Component {
+        Rectangle {
+            visible: PathView.onPath
+            // ...
+        }
+    }
+    \endqml
+
+    \sa highlightItem, highlightRangeMode
+*/
+
 QDeclarativeComponent *QSGPathView::highlight() const
 {
     Q_D(const QSGPathView);
@@ -569,12 +752,54 @@ void QSGPathView::setHighlight(QDeclarativeComponent *highlight)
     }
 }
 
+/*!
+  \qmlproperty Item QtQuick2::PathView::highlightItem
+
+  \c highlightItem holds the highlight item, which was created
+  from the \l highlight component.
+
+  \sa highlight
+*/
 QSGItem *QSGPathView::highlightItem()
 {
     Q_D(const QSGPathView);
     return d->highlightItem;
 }
+/*!
+    \qmlproperty real QtQuick2::PathView::preferredHighlightBegin
+    \qmlproperty real QtQuick2::PathView::preferredHighlightEnd
+    \qmlproperty enumeration QtQuick2::PathView::highlightRangeMode
 
+    These properties set the preferred range of the highlight (current item)
+    within the view.  The preferred values must be in the range 0.0-1.0.
+
+    If highlightRangeMode is set to \e PathView.NoHighlightRange
+
+    If highlightRangeMode is set to \e PathView.ApplyRange the view will
+    attempt to maintain the highlight within the range, however
+    the highlight can move outside of the range at the ends of the path
+    or due to a mouse interaction.
+
+    If highlightRangeMode is set to \e PathView.StrictlyEnforceRange the highlight will never
+    move outside of the range.  This means that the current item will change
+    if a keyboard or mouse action would cause the highlight to move
+    outside of the range.
+
+    Note that this is the correct way to influence where the
+    current item ends up when the view moves. For example, if you want the
+    currently selected item to be in the middle of the path, then set the
+    highlight range to be 0.5,0.5 and highlightRangeMode to PathView.StrictlyEnforceRange.
+    Then, when the path scrolls,
+    the currently selected item will be the item at that position. This also applies to
+    when the currently selected item changes - it will scroll to within the preferred
+    highlight range. Furthermore, the behaviour of the current item index will occur
+    whether or not a highlight exists.
+
+    The default value is \e PathView.StrictlyEnforceRange.
+
+    Note that a valid range requires preferredHighlightEnd to be greater
+    than or equal to preferredHighlightBegin.
+*/
 qreal QSGPathView::preferredHighlightBegin() const
 {
     Q_D(const QSGPathView);
@@ -625,6 +850,15 @@ void QSGPathView::setHighlightRangeMode(HighlightRangeMode mode)
     emit highlightRangeModeChanged();
 }
 
+/*!
+    \qmlproperty int QtQuick2::PathView::highlightMoveDuration
+    This property holds the move animation duration of the highlight delegate.
+
+    If the highlightRangeMode is StrictlyEnforceRange then this property
+    determines the speed that the items move along the path.
+
+    The default value for the duration is 300ms.
+*/
 int QSGPathView::highlightMoveDuration() const
 {
     Q_D(const QSGPathView);
@@ -640,6 +874,14 @@ void QSGPathView::setHighlightMoveDuration(int duration)
     emit highlightMoveDurationChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick2::PathView::dragMargin
+    This property holds the maximum distance from the path that initiate mouse dragging.
+
+    By default the path can only be dragged by clicking on an item.  If
+    dragMargin is greater than zero, a drag can be initiated by clicking
+    within dragMargin pixels of the path.
+*/
 qreal QSGPathView::dragMargin() const
 {
     Q_D(const QSGPathView);
@@ -655,6 +897,12 @@ void QSGPathView::setDragMargin(qreal dragMargin)
     emit dragMarginChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick2::PathView::flickDeceleration
+    This property holds the rate at which a flick will decelerate.
+
+    The default is 100.
+*/
 qreal QSGPathView::flickDeceleration() const
 {
     Q_D(const QSGPathView);
@@ -670,6 +918,14 @@ void QSGPathView::setFlickDeceleration(qreal dec)
     emit flickDecelerationChanged();
 }
 
+/*!
+    \qmlproperty bool QtQuick2::PathView::interactive
+
+    A user cannot drag or flick a PathView that is not interactive.
+
+    This property is useful for temporarily disabling flicking. This allows
+    special interaction with PathView's children.
+*/
 bool QSGPathView::isInteractive() const
 {
     Q_D(const QSGPathView);
@@ -687,18 +943,79 @@ void QSGPathView::setInteractive(bool interactive)
     }
 }
 
+/*!
+    \qmlproperty bool QtQuick2::PathView::moving
+
+    This property holds whether the view is currently moving
+    due to the user either dragging or flicking the view.
+*/
 bool QSGPathView::isMoving() const
 {
     Q_D(const QSGPathView);
     return d->moving;
 }
 
+/*!
+    \qmlproperty bool QtQuick2::PathView::flicking
+
+    This property holds whether the view is currently moving
+    due to the user flicking the view.
+*/
 bool QSGPathView::isFlicking() const
 {
     Q_D(const QSGPathView);
     return d->flicking;
 }
 
+/*!
+    \qmlsignal QtQuick2::PathView::onMovementStarted()
+
+    This handler is called when the view begins moving due to user
+    interaction.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PathView::onMovementEnded()
+
+    This handler is called when the view stops moving due to user
+    interaction.  If a flick was generated, this handler will
+    be triggered once the flick stops.  If a flick was not
+    generated, the handler will be triggered when the
+    user stops dragging - i.e. a mouse or touch release.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PathView::onFlickStarted()
+
+    This handler is called when the view is flicked.  A flick
+    starts from the point that the mouse or touch is released,
+    while still in motion.
+*/
+
+/*!
+    \qmlsignal QtQuick2::PathView::onFlickEnded()
+
+    This handler is called when the view stops moving due to a flick.
+*/
+
+/*!
+    \qmlproperty Component QtQuick2::PathView::delegate
+
+    The delegate provides a template defining each item instantiated by the view.
+    The index is exposed as an accessible \c index property.  Properties of the
+    model are also available depending upon the type of \l {qmlmodels}{Data Model}.
+
+    The number of elements in the delegate has a direct effect on the
+    flicking performance of the view when pathItemCount is specified.  If at all possible, place functionality
+    that is not needed for the normal display of the delegate in a \l Loader which
+    can load additional elements when needed.
+
+    Note that the PathView will layout the items based on the size of the root
+    item in the delegate.
+
+    Here is an example delegate:
+    \snippet doc/src/snippets/declarative/pathview/pathview.qml 1
+*/
 QDeclarativeComponent *QSGPathView::delegate() const
 {
     Q_D(const QSGPathView);
@@ -730,6 +1047,10 @@ void QSGPathView::setDelegate(QDeclarativeComponent *delegate)
     }
 }
 
+/*!
+  \qmlproperty int QtQuick2::PathView::pathItemCount
+  This property holds the number of items visible on the path at any one time.
+*/
 int QSGPathView::pathItemCount() const
 {
     Q_D(const QSGPathView);
@@ -976,6 +1297,7 @@ bool QSGPathView::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         return d->stealMouse;
     } else if (d->lastPosTime.isValid()) {
         d->lastPosTime.invalidate();
+        d->fixOffset();
     }
     if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease)
         d->stealMouse = false;
@@ -998,6 +1320,18 @@ bool QSGPathView::childMouseEventFilter(QSGItem *i, QEvent *e)
     }
 
     return QSGItem::childMouseEventFilter(i, e);
+}
+
+void QSGPathView::mouseUngrabEvent()
+{
+    Q_D(QSGPathView);
+    if (d->stealMouse) {
+        // if our mouse grab has been removed (probably by a Flickable),
+        // fix our state
+        d->stealMouse = false;
+        setKeepMouseGrab(false);
+        d->lastPosTime.invalidate();
+    }
 }
 
 void QSGPathView::updatePolish()
@@ -1079,12 +1413,8 @@ void QSGPathView::refill()
                 if (d->model->completePending())
                     item->setZ(idx+1);
                 if (d->currentIndex == idx) {
-                    item->setFocus(true);
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(true);
                     currentVisible = true;
                     d->currentItemOffset = pos;
-                    d->currentItem = item;
                 }
                 if (d->items.count() == 0)
                     d->firstIndex = idx;
@@ -1108,12 +1438,8 @@ void QSGPathView::refill()
                 if (d->model->completePending())
                     item->setZ(idx+1);
                 if (d->currentIndex == idx) {
-                    item->setFocus(true);
-                    if (QSGPathViewAttached *att = d->attached(item))
-                        att->setIsCurrentItem(true);
                     currentVisible = true;
                     d->currentItemOffset = pos;
-                    d->currentItem = item;
                 }
                 d->items.prepend(item);
                 d->updateItem(item, pos);
@@ -1128,8 +1454,25 @@ void QSGPathView::refill()
         }
     }
 
-    if (!currentVisible)
+    if (!currentVisible) {
         d->currentItemOffset = 1.0;
+        if (d->currentItem) {
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setOnPath(false);
+        } else if (d->currentIndex >= 0 && d->currentIndex < d->modelCount) {
+            d->currentItem = d->getItem(d->currentIndex, false);
+            d->updateItem(d->currentItem, d->currentIndex < d->firstIndex ? 0.0 : 1.0);
+            if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                att->setIsCurrentItem(true);
+            if (d->model->completePending())
+                d->model->completeItem();
+        }
+    } else if (!d->currentItem) {
+        d->currentItem = d->model->item(d->currentIndex, true);
+        d->currentItem->setFocus(true);
+        if (QSGPathViewAttached *att = d->attached(d->currentItem))
+            att->setIsCurrentItem(true);
+    }
 
     if (d->highlightItem && d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange) {
         d->updateItem(d->highlightItem, d->highlightRangeStart);
@@ -1193,6 +1536,8 @@ void QSGPathView::itemsRemoved(int modelIndex, int count)
         if (d->currentItem) {
             if (QSGPathViewAttached *att = d->attached(d->currentItem))
                 att->setIsCurrentItem(true);
+            d->releaseItem(d->currentItem);
+            d->currentItem = 0;
         }
         currentChanged = true;
     }
@@ -1332,21 +1677,26 @@ void QSGPathViewPrivate::updateCurrent()
 
     int idx = calcCurrentIndex();
     if (model && idx != currentIndex) {
-        int itemIndex = (currentIndex - firstIndex + modelCount) % modelCount;
-        if (itemIndex < items.count()) {
-            if (QSGItem *item = items.at(itemIndex)) {
-                if (QSGPathViewAttached *att = attached(item))
-                    att->setIsCurrentItem(false);
-            }
+        if (currentItem) {
+            if (QSGPathViewAttached *att = attached(currentItem))
+                att->setIsCurrentItem(false);
+            releaseItem(currentItem);
         }
         currentIndex = idx;
         currentItem = 0;
-        itemIndex = (idx - firstIndex + modelCount) % modelCount;
+        int itemIndex = (idx - firstIndex + modelCount) % modelCount;
         if (itemIndex < items.count()) {
-            currentItem = items.at(itemIndex);
+            currentItem = model->item(currentIndex, true);
             currentItem->setFocus(true);
             if (QSGPathViewAttached *att = attached(currentItem))
                 att->setIsCurrentItem(true);
+        } else if (currentIndex >= 0 && currentIndex < modelCount) {
+            currentItem = getItem(currentIndex, false);
+            updateItem(currentItem, currentIndex < firstIndex ? 0.0 : 1.0);
+            if (QSGPathViewAttached *att = attached(currentItem))
+                att->setIsCurrentItem(true);
+            if (model->completePending())
+                model->completeItem();
         }
         emit q->currentIndexChanged();
     }
