@@ -280,8 +280,8 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
 
     {
     v8::Local<v8::Object> prototype = engine->global()->Get(v8::String::New("Function"))->ToObject()->Get(v8::String::New("prototype"))->ToObject();
-    prototype->Set(v8::String::New("connect"), V8FUNCTION(Connect, engine));
-    prototype->Set(v8::String::New("disconnect"), V8FUNCTION(Disconnect, engine));
+    prototype->Set(v8::String::New("connect"), V8FUNCTION(Connect, engine), v8::DontEnum);
+    prototype->Set(v8::String::New("disconnect"), V8FUNCTION(Disconnect, engine), v8::DontEnum);
     }
 }
 
