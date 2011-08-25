@@ -41,8 +41,8 @@
 
 #include "qsgtexturematerial_p.h"
 
-#include <QtOpenGL/qglshaderprogram.h>
-#include <QtOpenGL/qglfunctions.h>
+#include <QtGui/qopenglshaderprogram.h>
+#include <QtGui/qopenglfunctions.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -103,7 +103,7 @@ void QSGOpaqueTextureMaterialShader::updateState(const RenderState &state, QSGMa
 
     t->setFiltering(tx->filtering());
 #ifdef QT_OPENGL_ES_2
-    bool npotSupported = state.context()->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+    bool npotSupported = QOpenGLFunctions(const_cast<QOpenGLContext *>(state.context())).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
     QSize size = t->textureSize();
     bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
     if (!npotSupported && isNpot) {

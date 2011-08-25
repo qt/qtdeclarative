@@ -42,7 +42,7 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include <private/qsgtexture_p.h>
-#include <qglfunctions.h>
+#include <qopenglfunctions.h>
 #include <private/qsgcontext_p.h>
 #include <qthread.h>
 
@@ -260,7 +260,7 @@ void QSGTexture::updateBindOptions(bool force)
     if (force || d->wrapChanged) {
 #if !defined(QT_NO_DEBUG) && defined(QT_OPENGL_ES_2)
         if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat) {
-            bool npotSupported = QGLContext::currentContext()->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+            bool npotSupported = QOpenGLFunctions(QOpenGLContext::currentContext()).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
             QSize size = textureSize();
             bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
             if (!npotSupported && isNpot)
@@ -341,7 +341,7 @@ void QSGPlainTexture::bind()
     if (!m_dirty_texture) {
         glBindTexture(GL_TEXTURE_2D, m_texture_id);
         if (m_has_mipmaps && !m_mipmaps_generated) {
-            const QGLContext *ctx = QGLContext::currentContext();
+            QOpenGLContext *ctx = QOpenGLContext::currentContext();
             ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
             m_mipmaps_generated = true;
         }
@@ -377,7 +377,7 @@ void QSGPlainTexture::bind()
 #endif
 
     if (m_has_mipmaps) {
-        const QGLContext *ctx = QGLContext::currentContext();
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
         ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmaps_generated = true;
     }

@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
 
-extern Q_OPENGL_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
 {
@@ -359,7 +359,7 @@ void QSGCanvasPrivate::initializeSceneGraph()
     if (context->isReady())
         return;
 
-    QGLContext *glctx = const_cast<QGLContext *>(QGLContext::currentContext());
+    QOpenGLContext *glctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
     context->initialize(glctx);
 
     Q_Q(QSGCanvas);
@@ -1894,7 +1894,7 @@ QSGEngine *QSGCanvas::sceneGraphEngine() const
     the rendering.
  */
 
-void QSGCanvas::setRenderTarget(QGLFramebufferObject *fbo)
+void QSGCanvas::setRenderTarget(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGCanvas);
     if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
@@ -1913,7 +1913,7 @@ void QSGCanvas::setRenderTarget(QGLFramebufferObject *fbo)
     The default is to render to the surface of the canvas, in which
     case the render target is 0.
  */
-QGLFramebufferObject *QSGCanvas::renderTarget() const
+QOpenGLFramebufferObject *QSGCanvas::renderTarget() const
 {
     Q_D(const QSGCanvas);
     return d->renderTarget;
@@ -1939,7 +1939,7 @@ QImage QSGCanvas::grabFrameBuffer()
 
 void QSGCanvasRenderLoop::createGLContext()
 {
-    gl = new QGuiGLContext();
+    gl = new QOpenGLContext();
     gl->create();
 }
 

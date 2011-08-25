@@ -45,7 +45,7 @@
 
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qmath.h>
-#include <QtOpenGL/qglfunctions.h>
+#include <QtGui/qopenglfunctions.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -194,8 +194,8 @@ void QSGDefaultImageNode::updateGeometry()
         bool isRepeating = hCells > 1 || vCells > 1;
 
 #ifdef QT_OPENGL_ES_2
-        const QGLContext *ctx = QGLContext::currentContext();
-        bool npotSupported = ctx->functions()->hasOpenGLFeature(QGLFunctions::NPOTTextures);
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
 
         QSize size = t->textureSize();
         bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());

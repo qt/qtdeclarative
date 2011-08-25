@@ -45,7 +45,7 @@
 #include <QtQuickTest/quicktestglobal.h>
 #include <QtWidgets/qwidget.h>
 #ifdef QT_OPENGL_LIB
-#include <QtOpenGL/qgl.h>
+#include <QtGui/qopengl.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -65,7 +65,7 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #define QUICK_TEST_OPENGL_MAIN(name) \
     static QWidget *name##_create_viewport() \
     { \
-        return new QGLWidget(); \
+        return new QOpenGLWidget(); \
     } \
     int main(int argc, char **argv) \
     { \
@@ -83,7 +83,7 @@ Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name,
 #define QUICK_TEST_OPENGL_MAIN(name) \
     static QWidget *name##_create_viewport() \
     { \
-        return new QGLWidget(); \
+        return new QOpenGLWidget(); \
     } \
     int main(int argc, char **argv) \
     { \

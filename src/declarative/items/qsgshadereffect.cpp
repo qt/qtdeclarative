@@ -53,7 +53,7 @@
 #include <qsgshadereffectsource_p.h>
 
 #include <QtCore/qsignalmapper.h>
-#include <QtOpenGL/qglframebufferobject.h>
+#include <QtGui/qopenglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
 

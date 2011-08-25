@@ -47,6 +47,7 @@
 #include <private/qsgtext_p.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
+#include <QtGui/qbrush.h>
 #include <QtGui/qcolor.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtGui/qglyphrun.h>

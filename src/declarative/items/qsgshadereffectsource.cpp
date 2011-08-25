@@ -46,7 +46,7 @@
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qsgrenderer_p.h>
 
-#include "qglframebufferobject.h"
+#include "qopenglframebufferobject.h"
 #include "qmath.h"
 #include <private/qsgtexture_p.h>
 
@@ -289,27 +289,27 @@ void QSGShaderEffectTexture::grab()
             // Don't delete the FBO right away in case it is used recursively.
             deleteFboLater = true;
             delete m_secondaryFbo;
-            QGLFramebufferObjectFormat format;
+            QOpenGLFramebufferObjectFormat format;
 
-            format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setSamples(8);
-            m_secondaryFbo = new QGLFramebufferObject(m_size, format);
+            m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
         } else {
-            QGLFramebufferObjectFormat format;
-            format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+            QOpenGLFramebufferObjectFormat format;
+            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             format.setInternalTextureFormat(m_format);
             format.setMipmap(m_mipmap);
             if (m_recursive) {
                 deleteFboLater = true;
                 delete m_secondaryFbo;
-                m_secondaryFbo = new QGLFramebufferObject(m_size, format);
+                m_secondaryFbo = new QOpenGLFramebufferObject(m_size, format);
                 glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
                 updateBindOptions(true);
             } else {
                 delete m_fbo;
                 delete m_secondaryFbo;
-                m_fbo = new QGLFramebufferObject(m_size, format);
+                m_fbo = new QOpenGLFramebufferObject(m_size, format);
                 m_secondaryFbo = 0;
                 glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
@@ -322,7 +322,7 @@ void QSGShaderEffectTexture::grab()
         Q_ASSERT(m_fbo);
         Q_ASSERT(!m_multisampling);
 
-        m_secondaryFbo = new QGLFramebufferObject(m_size, m_fbo->format());
+        m_secondaryFbo = new QOpenGLFramebufferObject(m_size, m_fbo->format());
         glBindTexture(GL_TEXTURE_2D, m_secondaryFbo->texture());
         updateBindOptions(true);
     }
@@ -347,7 +347,7 @@ void QSGShaderEffectTexture::grab()
 
     m_dirtyTexture = false;
 
-    const QGLContext *ctx = m_context->glContext();
+    QOpenGLContext *ctx = m_context->glContext();
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
     QRectF mirrored(m_rect.left(), m_rect.bottom(), m_rect.width(), -m_rect.height());
@@ -359,29 +359,29 @@ void QSGShaderEffectTexture::grab()
 
         if (deleteFboLater) {
             delete m_fbo;
-            QGLFramebufferObjectFormat format;
+            QOpenGLFramebufferObjectFormat format;
             format.setInternalTextureFormat(m_format);
-            format.setAttachment(QGLFramebufferObject::NoAttachment);
+            format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
             format.setMipmap(m_mipmap);
             format.setSamples(0);
-            m_fbo = new QGLFramebufferObject(m_size, format);
+            m_fbo = new QOpenGLFramebufferObject(m_size, format);
             glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
             updateBindOptions(true);
         }
 
         QRect r(QPoint(), m_size);
-        QGLFramebufferObject::blitFramebuffer(m_fbo, r, m_secondaryFbo, r);
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, r, m_secondaryFbo, r);
     } else {
         if (m_recursive) {
             m_renderer->renderScene(QSGBindableFbo(m_secondaryFbo));
 
             if (deleteFboLater) {
                 delete m_fbo;
-                QGLFramebufferObjectFormat format;
-                format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
                 format.setInternalTextureFormat(m_format);
                 format.setMipmap(m_mipmap);
-                m_fbo = new QGLFramebufferObject(m_size, format);
+                m_fbo = new QOpenGLFramebufferObject(m_size, format);
                 glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
                 updateBindOptions(true);
             }

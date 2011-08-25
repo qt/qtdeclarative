@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QGLFramebufferObject;
+class QOpenGLFramebufferObject;
 
 class Q_DECLARATIVE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
@@ -115,8 +115,8 @@ private:
 
     QSGPaintedItem *m_item;
 
-    QGLFramebufferObject *m_fbo;
-    QGLFramebufferObject *m_multisampledFbo;
+    QOpenGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_multisampledFbo;
     QImage m_image;
 
     QSGOpaqueTextureMaterial m_material;

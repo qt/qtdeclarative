@@ -1,9 +1,6 @@
 INCLUDEPATH += $$PWD/coreapi $$PWD/convenience $$PWD/3d
 !contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
 
-QT += opengl
-
-
 # Core API
 HEADERS += \
     $$PWD/coreapi/qsgdefaultrenderer_p.h \

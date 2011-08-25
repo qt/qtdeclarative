@@ -55,7 +55,7 @@
 #include <qsgengine.h>
 
 #include <QApplication>
-#include <QGLContext>
+#include <QOpenGLContext>
 
 #include <private/qobject_p.h>
 #include <qmutex.h>
@@ -105,7 +105,7 @@ public:
     QSGRootNode *rootNode;
     QSGRenderer *renderer;
 
-    QGLContext *gl;
+    QOpenGLContext *gl;
 
     QSGEngine engine;
 
@@ -127,7 +127,7 @@ public:
 
     \brief The QSGContext holds the scene graph entry points for one QML engine.
 
-    The context is not ready for use until it has a QGLContext. Once that happens,
+    The context is not ready for use until it has a QOpenGLContext. Once that happens,
     the scene graph population can start.
 
     \internal
@@ -214,7 +214,7 @@ QSGRootNode *QSGContext::rootNode() const
 }
 
 
-QGLContext *QSGContext::glContext() const
+QOpenGLContext *QSGContext::glContext() const
 {
     Q_D(const QSGContext);
     return d->gl;
@@ -224,7 +224,7 @@ QGLContext *QSGContext::glContext() const
     Initializes the scene graph context with the GL context \a context. This also
     emits the ready() signal so that the QML graph can start building scene graph nodes.
  */
-void QSGContext::initialize(QGLContext *context)
+void QSGContext::initialize(QOpenGLContext *context)
 {
     Q_D(QSGContext);
 
@@ -253,7 +253,7 @@ bool QSGContext::isReady() const
 }
 
 
-void QSGContext::renderNextFrame(QGLFramebufferObject *fbo)
+void QSGContext::renderNextFrame(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGContext);
 

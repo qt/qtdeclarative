@@ -42,7 +42,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include <qglshaderprogram.h>
+#include <qopenglshaderprogram.h>
 
 QT_BEGIN_HEADER
 
@@ -75,7 +75,7 @@ public:
         QRect viewportRect() const;
         QRect deviceRect() const;
 
-        const QGLContext *context() const;
+        QOpenGLContext *context() const;
 
     private:
         friend class QSGRenderer;
@@ -91,7 +91,7 @@ public:
     virtual void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial);
     virtual char const *const *attributeNames() const = 0; // Array must end with null.
 
-    inline QGLShaderProgram *program() { return &m_program; }
+    inline QOpenGLShaderProgram *program() { return &m_program; }
 
 protected:
 
@@ -104,7 +104,7 @@ protected:
     virtual const char *fragmentShader() const = 0;
 
 private:
-    QGLShaderProgram m_program;
+    QOpenGLShaderProgram m_program;
     void *m_reserved;
 };
 

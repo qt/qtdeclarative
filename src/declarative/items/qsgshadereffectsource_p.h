@@ -62,7 +62,7 @@ QT_MODULE(Declarative)
 
 class QSGNode;
 class UpdatePaintNodeData;
-class QGLFramebufferObject;
+class QOpenGLFramebufferObject;
 
 class QSGShaderEffectSourceTextureProvider;
 
@@ -134,8 +134,8 @@ private:
 
     QSGItem *m_shaderSource;
     QSGRenderer *m_renderer;
-    QGLFramebufferObject *m_fbo;
-    QGLFramebufferObject *m_secondaryFbo;
+    QOpenGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_secondaryFbo;
 
 #ifdef QSG_DEBUG_FBO_OVERLAY
     QSGRectangleNode *m_debugOverlay;

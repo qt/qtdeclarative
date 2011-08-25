@@ -65,9 +65,9 @@
 #include <QtCore/qwaitcondition.h>
 #include <private/qwidget_p.h>
 #include <private/qwindow_p.h>
-#include <private/qgl_p.h>
-#include <qguiglcontext_qpa.h>
-#include <QtOpenGL/qglframebufferobject.h>
+#include <private/qopengl_p.h>
+#include <qopenglcontext.h>
+#include <QtGui/qopenglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -169,7 +169,7 @@ public:
 
     QAnimationDriver *animationDriver;
 
-    QGLFramebufferObject *renderTarget;
+    QOpenGLFramebufferObject *renderTarget;
 
     QHash<int, QSGItem *> itemForTouchPointId;
 };
@@ -209,7 +209,7 @@ protected:
     void polishItems() { d->polishItems(); }
     QAnimationDriver *animationDriver() const { return d->animationDriver; }
 
-    inline QGuiGLContext *glContext() const { return gl; }
+    inline QOpenGLContext *glContext() const { return gl; }
     void createGLContext();
     void makeCurrent() { gl->makeCurrent(renderer); }
     void doneCurrent() { gl->doneCurrent(); }
@@ -222,7 +222,7 @@ private:
     QSGCanvasPrivate *d;
     QSGCanvas *renderer;
 
-    QGuiGLContext *gl;
+    QOpenGLContext *gl;
 };
 
 class QSGCanvasRenderThread : public QThread, public QSGCanvasRenderLoop

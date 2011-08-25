@@ -41,7 +41,7 @@
 
 #include "qsgvertexcolormaterial_p.h"
 
-#include <qglshaderprogram.h>
+#include <qopenglshaderprogram.h>
 
 QT_BEGIN_NAMESPACE
 

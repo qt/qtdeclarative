@@ -66,6 +66,7 @@
 #include <QtCore/qdebug.h>
 #include <private/qobject_p.h>
 #include <QSslError>
+#include <QOpenGLContext>
 
 #define IMAGEREQUEST_MAX_REQUEST_COUNT       8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16
@@ -724,7 +725,7 @@ QDeclarativePixmapStore::QDeclarativePixmapStore()
 void QDeclarativePixmapStore::cleanTextureForContext(QDeclarativePixmapData *data)
 {
     if (data->context) {
-        Q_ASSERT(QGLContext::currentContext());
+        Q_ASSERT(QOpenGLContext::currentContext());
         delete data->texture;
         data->context = 0;
         data->texture = 0;

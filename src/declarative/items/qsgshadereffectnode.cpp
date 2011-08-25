@@ -108,7 +108,7 @@ void QSGCustomMaterialShader::updateState(const RenderState &state, QSGMaterial 
         }
     }
 
-    QGLFunctions *functions = state.context()->functions();
+    QOpenGLFunctions *functions = state.context()->functions();
     for (int i = material->m_textures.size() - 1; i >= 0; --i) {
         functions->glActiveTexture(GL_TEXTURE0 + i);
         if (QSGTextureProvider *provider = material->m_textures.at(i).second) {

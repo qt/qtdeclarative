@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
     The QSGMaterial and QSGMaterialShader form a tight relationship. For one
     scene graph (including nested graphs), there is one unique QSGMaterialShader
-    instance which encapsulates the QGLShaderProgram the scene graph uses
+    instance which encapsulates the QOpenGLShaderProgram the scene graph uses
     to render that material, such as a shader to flat coloring of geometry.
     Each QSGGeometryNode can have a unique QSGMaterial containing the
     how the shader should be configured when drawing that node, such as
@@ -152,7 +152,7 @@ QSGMaterialShader::QSGMaterialShader()
 
 
 /*!
-    \fn QGLShaderProgram *QSGMaterialShader::program() const
+    \fn QOpenGLShaderProgram *QSGMaterialShader::program() const
 
     Returns the shader program used by this QSGMaterialShader.
  */
@@ -228,7 +228,7 @@ void QSGMaterialShader::updateState(const RenderState &state, QSGMaterial *newMa
 
 /*!
     This function is called when the shader is initialized to compile the
-    actual QGLShaderProgram. Do not call it explicitely.
+    actual QOpenGLShaderProgram. Do not call it explicitely.
 
     The default implementation will extract the vertexShader() and
     fragmentShader() and bind the names returned from attributeNames()
@@ -239,8 +239,8 @@ void QSGMaterialShader::compile()
 {
     Q_ASSERT_X(!m_program.isLinked(), "QSGSMaterialShader::compile()", "Compile called multiple times!");
 
-    program()->addShaderFromSourceCode(QGLShader::Vertex, vertexShader());
-    program()->addShaderFromSourceCode(QGLShader::Fragment, fragmentShader());
+    program()->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShader());
+    program()->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShader());
 
     char const *const *attr = attributeNames();
 #ifndef QT_NO_DEBUG
@@ -385,10 +385,10 @@ QRect QSGMaterialShader::RenderState::deviceRect() const
 
 
 /*!
-    Returns the QGLContext that is being used for rendering
+    Returns the QOpenGLContext that is being used for rendering
  */
 
-const QGLContext *QSGMaterialShader::RenderState::context() const
+QOpenGLContext *QSGMaterialShader::RenderState::context() const
 {
     return static_cast<const QSGRenderer *>(m_data)->glContext();
 }
@@ -417,7 +417,7 @@ static void qt_print_material_count()
 
     The QSGMaterial and QSGMaterialShader subclasses form a tight relationship. For
     one scene graph (including nested graphs), there is one unique QSGMaterialShader
-    instance which encapsulates the QGLShaderProgram the scene graph uses
+    instance which encapsulates the QOpenGLShaderProgram the scene graph uses
     to render that material, such as a shader to flat coloring of geometry.
     Each QSGGeometryNode can have a unique QSGMaterial containing the
     how the shader should be configured when drawing that node, such as

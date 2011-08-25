@@ -43,7 +43,7 @@
 #define QSGCANVAS_H
 
 #include <QtCore/qmetatype.h>
-#include <QtOpenGL/qgl.h>
+#include <QtGui/qopengl.h>
 #include <QtWidgets/qwidget.h>
 
 QT_BEGIN_HEADER
@@ -55,7 +55,7 @@ QT_MODULE(Declarative)
 class QSGItem;
 class QSGEngine;
 class QSGCanvasPrivate;
-class QGLFramebufferObject;
+class QOpenGLFramebufferObject;
 
 class Q_DECLARATIVE_EXPORT QSGCanvas : public QWindow
 {
@@ -82,8 +82,8 @@ public:
 
     QImage grabFrameBuffer();
 
-    void setRenderTarget(QGLFramebufferObject *fbo);
-    QGLFramebufferObject *renderTarget() const;
+    void setRenderTarget(QOpenGLFramebufferObject *fbo);
+    QOpenGLFramebufferObject *renderTarget() const;
 
 signals:
     void frameSwapped();

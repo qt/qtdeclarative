@@ -54,7 +54,7 @@
 #endif
 #include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qjsengine.h>
-#include <QtOpenGL/qgl.h>
+#include <QtGui/qopengl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>

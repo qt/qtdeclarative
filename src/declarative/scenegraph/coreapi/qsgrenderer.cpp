@@ -47,8 +47,8 @@
 
 #include "private/qsgadaptationlayer_p.h"
 
-#include <QGLShaderProgram>
-#include <qglframebufferobject.h>
+#include <QOpenGLShaderProgram>
+#include <qopenglframebufferobject.h>
 #include <QtWidgets/qapplication.h>
 
 #include <qdatetime.h>
@@ -81,7 +81,7 @@ void QSGBindable::reactivate() const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
-QSGBindableFbo::QSGBindableFbo(QGLFramebufferObject *fbo) : m_fbo(fbo)
+QSGBindableFbo::QSGBindableFbo(QOpenGLFramebufferObject *fbo) : m_fbo(fbo)
 {
 }
 
@@ -209,7 +209,7 @@ void QSGRenderer::renderScene()
     class B : public QSGBindable
     {
     public:
-        void bind() const { QGLFramebufferObject::bindDefault(); }
+        void bind() const { QOpenGLFramebufferObject::bindDefault(); }
     } b;
     renderScene(b);
 }
@@ -454,13 +454,13 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
         } else {
             if (!stencilEnabled) {
                 if (!m_clip_program.isLinked()) {
-                    m_clip_program.addShaderFromSourceCode(QGLShader::Vertex,
+                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
                         "attribute highp vec4 vCoord;       \n"
                         "uniform highp mat4 matrix;         \n"
                         "void main() {                      \n"
                         "    gl_Position = matrix * vCoord; \n"
                         "}");
-                    m_clip_program.addShaderFromSourceCode(QGLShader::Fragment,
+                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
                         "void main() {                                   \n"
                         "    gl_FragColor = vec4(0.81, 0.83, 0.12, 1.0); \n" // Trolltech green ftw!
                         "}");
@@ -555,7 +555,7 @@ public:
 
     ~QSGRendererVBOGeometryData()
     {
-        QGLFunctions *func = QGLContext::currentContext()->functions();
+        QOpenGLFunctions *func = QOpenGLContext::currentContext()->functions();
         if (vertexBuffer)
             func->glDeleteBuffers(1, &vertexBuffer);
         if (indexBuffer)

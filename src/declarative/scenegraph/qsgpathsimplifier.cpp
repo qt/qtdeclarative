@@ -48,7 +48,7 @@
 
 #include <math.h>
 
-#include <private/qgl_p.h>
+#include <private/qopengl_p.h>
 #include <private/qrbtree_p.h>
 
 QT_BEGIN_NAMESPACE

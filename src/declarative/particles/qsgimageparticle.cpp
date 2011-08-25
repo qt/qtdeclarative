@@ -49,7 +49,7 @@
 #include "qsgparticleemitter_p.h"
 #include "qsgsprite_p.h"
 #include "qsgspriteengine_p.h"
-#include <QGLFunctions>
+#include <QOpenGLFunctions>
 #include <qsgengine.h>
 
 QT_BEGIN_NAMESPACE
@@ -128,7 +128,7 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
@@ -156,7 +156,7 @@ public:
     int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class DeformableMaterialData : public ImageMaterialData {};
@@ -195,7 +195,7 @@ public:
         QSGSimpleMaterialShader<DeformableMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -212,7 +212,7 @@ public:
     int m_timestamp_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class SpriteMaterialData : public ImageMaterialData {};
@@ -252,7 +252,7 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_framecount_id = program()->uniformLocation("framecount");
         m_animcount_id = program()->uniformLocation("animcount");
@@ -285,7 +285,7 @@ public:
     int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class ColoredMaterialData : public ImageMaterialData {};
@@ -339,7 +339,7 @@ public:
         QSGSimpleMaterialShader<ColoredMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -356,7 +356,7 @@ public:
     int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class SimpleMaterialData : public ImageMaterialData {};
@@ -408,7 +408,7 @@ public:
         QSGSimpleMaterialShader<SimpleMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -425,7 +425,7 @@ public:
     int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 void fillUniformArrayFromImage(float* array, const QImage& img, int size)

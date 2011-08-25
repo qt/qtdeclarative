@@ -42,6 +42,7 @@
 #ifndef QSGCONTEXT_H
 #define QSGCONTEXT_H
 
+#include <QImage>
 #include <QObject>
 #include <qabstractanimation.h>
 
@@ -64,8 +65,8 @@ class QSGMaterial;
 class QSGMaterialShader;
 class QSGEngine;
 
-class QGLContext;
-class QGLFramebufferObject;
+class QOpenGLContext;
+class QOpenGLFramebufferObject;
 
 class Q_DECLARATIVE_EXPORT QSGContext : public QObject
 {
@@ -76,7 +77,7 @@ public:
     explicit QSGContext(QObject *parent = 0);
     ~QSGContext();
 
-    virtual void initialize(QGLContext *context);
+    virtual void initialize(QOpenGLContext *context);
 
     QSGRenderer *renderer() const;
 
@@ -84,13 +85,13 @@ public:
     QSGRootNode *rootNode() const;
 
     QSGEngine *engine() const;
-    QGLContext *glContext() const;
+    QOpenGLContext *glContext() const;
 
     bool isReady() const;
 
     QSGMaterialShader *prepareMaterial(QSGMaterial *material);
 
-    virtual void renderNextFrame(QGLFramebufferObject *fbo = 0);
+    virtual void renderNextFrame(QOpenGLFramebufferObject *fbo = 0);
 
     virtual QSGRectangleNode *createRectangleNode();
     virtual QSGImageNode *createImageNode();

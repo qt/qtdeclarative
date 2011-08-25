@@ -44,6 +44,7 @@
 
 #include <qsgnode.h>
 #include <qsgtext_p.h>
+#include <qglyphrun.h>
 
 QT_BEGIN_NAMESPACE
 

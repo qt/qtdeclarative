@@ -42,7 +42,8 @@
 #ifndef QSGGEOMETRY_H
 #define QSGGEOMETRY_H
 
-#include <QtOpenGL/qgl.h>
+#include <QtGui/qopengl.h>
+#include <QRectF>
 
 QT_BEGIN_HEADER
 

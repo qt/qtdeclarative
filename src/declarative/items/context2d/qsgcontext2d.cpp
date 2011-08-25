@@ -43,7 +43,7 @@
 #include "qsgcontext2d_p_p.h"
 #include "private/qsgadaptationlayer_p.h"
 #include "qsgcanvasitem_p.h"
-#include <QtOpenGL/qglframebufferobject.h>
+#include <QtGui/qopenglframebufferobject.h>
 #include <QtCore/qdebug.h>
 #include "private/qsgcontext_p.h"
 

@@ -6,7 +6,7 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_declarative.pri
 
-QT         = core-private gui-private network opengl opengl-private widgets-private sql
+QT = core-private gui gui-private network widgets-private sql
 
 contains(QT_CONFIG, svg): QT += svg
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING
