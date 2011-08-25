@@ -95,7 +95,7 @@ QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
 
 /*!
     \qmlclass ShaderEffect QSGShaderEffect
-    \since 5.0
+    \inqmlmodule QtQuick 2
     \ingroup qml-basic-visual-elements
     \brief The ShaderEffect element applies custom shaders to a rectangle.
     \inherits Item
@@ -211,7 +211,7 @@ void QSGShaderEffect::componentComplete()
 }
 
 /*!
-    \qmlproperty string ShaderEffect::fragmentShader
+    \qmlproperty string QtQuick2::ShaderEffect::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
     The default shader passes the texture coordinate along to the fragment
@@ -231,7 +231,7 @@ void QSGShaderEffect::setFragmentShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty string ShaderEffect::vertexShader
+    \qmlproperty string QtQuick2::ShaderEffect::vertexShader
 
     This property holds the vertex shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the
@@ -252,7 +252,7 @@ void QSGShaderEffect::setVertexShader(const QByteArray &code)
 }
 
 /*!
-    \qmlproperty bool ShaderEffect::blending
+    \qmlproperty bool QtQuick2::ShaderEffect::blending
 
     If this property is true, the output from the \l fragmentShader is blended
     with the background using source-over blend mode. If false, the background
@@ -272,7 +272,7 @@ void QSGShaderEffect::setBlending(bool enable)
 }
 
 /*!
-    \qmlproperty size ShaderEffect::mesh
+    \qmlproperty size QtQuick2::ShaderEffect::mesh
 
     This property holds the mesh resolution. The default resolution is 1x1
     which is the minimum and corresponds to a mesh with four vertices.
@@ -355,7 +355,7 @@ void QSGShaderEffect::setMesh(const QVariant &mesh)
 }
 
 /*!
-    \qmlproperty enumeration ShaderEffect::cullMode
+    \qmlproperty enumeration QtQuick2::ShaderEffect::cullMode
 
     This property defines which sides of the element should be visible.
 
