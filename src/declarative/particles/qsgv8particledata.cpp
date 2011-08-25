@@ -150,6 +150,7 @@ FLOAT_GETTER_AND_SETTER(frameDuration)
 FLOAT_GETTER_AND_SETTER(frameCount)
 FLOAT_GETTER_AND_SETTER(animT)
 FLOAT_GETTER_AND_SETTER(r)
+FLOAT_GETTER_AND_SETTER(update)
 FAKE_FLOAT_GETTER_AND_SETTER(curX, curX, setInstantaneousX)
 FAKE_FLOAT_GETTER_AND_SETTER(curVX, curVX, setInstantaneousVX)
 FAKE_FLOAT_GETTER_AND_SETTER(curAX, curAX, setInstantaneousAX)
@@ -157,7 +158,7 @@ FAKE_FLOAT_GETTER_AND_SETTER(curY, curY, setInstantaneousY)
 FAKE_FLOAT_GETTER_AND_SETTER(curVY, curVY, setInstantaneousVY)
 FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
 
-//TODO: Non-floats (color) and special floats (curX) once basic floats are working well
+//TODO: Non-floats (color, update?) once floats are working well
 
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
@@ -189,6 +190,7 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     FLOAT_REGISTER_ACCESSOR(ft, engine, frameCount);
     FLOAT_REGISTER_ACCESSOR(ft, engine, animT);
     FLOAT_REGISTER_ACCESSOR(ft, engine, r);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, update);
     FLOAT_REGISTER_ACCESSOR(ft, engine, curX);
     FLOAT_REGISTER_ACCESSOR(ft, engine, curVX);
     FLOAT_REGISTER_ACCESSOR(ft, engine, curAX);

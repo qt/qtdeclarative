@@ -202,6 +202,7 @@ public:
     float r;
     QSGItem* delegate;
     int modelIndex;
+    float update;//Used by custom affectors
 
     void debugDump();
     bool stillAlive();

@@ -42,6 +42,7 @@
 #include "qsgparticleaffector_p.h"
 #include <QDebug>
 QT_BEGIN_NAMESPACE
+
 /*!
     \qmlclass Affector QSGParticleAffector
     \inqmlmodule QtQuick.Particles 2
@@ -159,8 +160,10 @@ void QSGParticleAffector::affectSystem(qreal dt)
                 if ((m_onceOff && m_onceOffed.contains(qMakePair(d->group, d->index)))
                         || !d->stillAlive())
                     continue;
-                //Need to have previous location for affected. if signal || shape might be faster?
-                QPointF curPos = QPointF(d->curX(), d->curY());
+                //Need to have previous location for affected anyways
+                QPointF curPos;
+                if (m_signal || (width() && height()))
+                    curPos = QPointF(d->curX(), d->curY());
                 if (width() == 0 || height() == 0
                         || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()),curPos)){
                     if (m_collisionParticles.isEmpty() || isColliding(d)){
@@ -181,8 +184,9 @@ void QSGParticleAffector::affectSystem(qreal dt)
 bool QSGParticleAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     if (isAffectConnected()){
+        d->update = 0.0;
         emit affectParticle(d->v8Value(), dt);
-        return true;
+        return d->update == 1.0;
     }
     return m_signal;//If signalling, then we always 'null affect' it.
 }
