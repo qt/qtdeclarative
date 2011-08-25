@@ -1,7 +1,7 @@
 From f890f0d1a1e5bd62711815489c87755a4f382436 Mon Sep 17 00:00:00 2001
 From: Aaron Kennedy <aaron.kennedy@nokia.com>
 Date: Wed, 25 May 2011 10:36:13 +1000
-Subject: [PATCH 6/8] Allow access to the calling script data
+Subject: [PATCH 06/13] Allow access to the calling script data
 
 ---
  include/v8.h |    1 +

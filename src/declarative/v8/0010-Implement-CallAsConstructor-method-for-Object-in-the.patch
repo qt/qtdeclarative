@@ -1,7 +1,7 @@
-From fd2cc52576e8c89f3dffc2b4b5a9cc9c48a96f32 Mon Sep 17 00:00:00 2001
-From: "ager@chromium.org" <ager@chromium.org@ce2b1a6d-e550-0410-aec6-3dcde31c8c00>
+From 3d6d4249878f7960eac4c9c94e0f2529f9a58c4a Mon Sep 17 00:00:00 2001
+From: ager@chromium.org <ager@chromium.org>
 Date: Fri, 6 May 2011 11:07:52 +0000
-Subject: [PATCH] Implement CallAsConstructor method for Object in the API
+Subject: [PATCH 10/13] Implement CallAsConstructor method for Object in the API
 
 Patch by Peter Varga.
 
@@ -20,10 +20,10 @@ git-svn-id: https://v8.googlecode.com/svn/branches/bleeding_edge@7803 ce2b1a6d-e
  5 files changed, 276 insertions(+), 8 deletions(-)
 
 diff --git a/include/v8.h b/include/v8.h
-index 4921823..5fc8059 100644
+index 8a8e1cd..84462b5 100644
 --- a/include/v8.h
 +++ b/include/v8.h
-@@ -1614,6 +1614,14 @@ class Object : public Value {
+@@ -1765,6 +1765,14 @@ class Object : public Value {
                                         int argc,
                                         Handle<Value> argv[]);
  
@@ -39,10 +39,10 @@ index 4921823..5fc8059 100644
    static inline Object* Cast(Value* obj);
   private:
 diff --git a/src/api.cc b/src/api.cc
-index c5c66a7..9194641 100644
+index e412e51..1a585d6 100644
 --- a/src/api.cc
 +++ b/src/api.cc
-@@ -3262,7 +3262,7 @@ Local<v8::Value> Object::CallAsFunction(v8::Handle<v8::Object> recv, int argc,
+@@ -3266,7 +3266,7 @@ Local<v8::Value> Object::CallAsFunction(v8::Handle<v8::Object> recv, int argc,
               return Local<v8::Value>());
    LOG_API(isolate, "Object::CallAsFunction");
    ENTER_V8(isolate);
@@ -51,7 +51,7 @@ index c5c66a7..9194641 100644
    i::Handle<i::JSObject> obj = Utils::OpenHandle(this);
    i::Handle<i::Object> recv_obj = Utils::OpenHandle(*recv);
    STATIC_ASSERT(sizeof(v8::Handle<v8::Value>) == sizeof(i::Object**));
-@@ -3282,7 +3282,44 @@ Local<v8::Value> Object::CallAsFunction(v8::Handle<v8::Object> recv, int argc,
+@@ -3286,7 +3286,44 @@ Local<v8::Value> Object::CallAsFunction(v8::Handle<v8::Object> recv, int argc,
    i::Handle<i::Object> returned =
        i::Execution::Call(fun, recv_obj, argc, args, &has_pending_exception);
    EXCEPTION_BAILOUT_CHECK(isolate, Local<Value>());
@@ -98,10 +98,10 @@ index c5c66a7..9194641 100644
  
  
 diff --git a/src/execution.cc b/src/execution.cc
-index 4ab3e78..db74492 100644
+index 894d741..afb352c 100644
 --- a/src/execution.cc
 +++ b/src/execution.cc
-@@ -277,6 +277,34 @@ Handle<Object> Execution::GetConstructorDelegate(Handle<Object> object) {
+@@ -297,6 +297,34 @@ Handle<Object> Execution::GetConstructorDelegate(Handle<Object> object) {
  }
  
  
@@ -137,10 +137,10 @@ index 4ab3e78..db74492 100644
    ExecutionAccess access(isolate_);
    return (thread_local_.jslimit_ != kInterruptLimit &&
 diff --git a/src/execution.h b/src/execution.h
-index 74189a2..7b6a48c 100644
+index 0a0be51..ec2a195 100644
 --- a/src/execution.h
 +++ b/src/execution.h
-@@ -146,6 +146,8 @@ class Execution : public AllStatic {
+@@ -150,6 +150,8 @@ class Execution : public AllStatic {
    // Get a function delegate (or undefined) for the given non-function
    // object. Used for support calling objects as constructors.
    static Handle<Object> GetConstructorDelegate(Handle<Object> object);
@@ -150,10 +150,10 @@ index 74189a2..7b6a48c 100644
  
  
 diff --git a/test/cctest/test-api.cc b/test/cctest/test-api.cc
-index 1bcc232..f48d5b4 100644
+index 693d51e..1334f63 100644
 --- a/test/cctest/test-api.cc
 +++ b/test/cctest/test-api.cc
-@@ -6747,6 +6747,200 @@ THREADED_TEST(Constructor) {
+@@ -6746,6 +6746,200 @@ THREADED_TEST(Constructor) {
    CHECK(value->BooleanValue());
  }
  
@@ -354,7 +354,7 @@ index 1bcc232..f48d5b4 100644
  THREADED_TEST(FunctionDescriptorException) {
    v8::HandleScope handle_scope;
    LocalContext context;
-@@ -7029,9 +7223,8 @@ THREADED_TEST(CallAsFunction) {
+@@ -7028,9 +7222,8 @@ THREADED_TEST(CallAsFunction) {
      CHECK(value.IsEmpty());
      CHECK(try_catch.HasCaught());
      String::AsciiValue exception_value1(try_catch.Exception());
@@ -366,7 +366,7 @@ index 1bcc232..f48d5b4 100644
      try_catch.Reset();
  
      // Call an object without call-as-function handler through the API
-@@ -7041,7 +7234,7 @@ THREADED_TEST(CallAsFunction) {
+@@ -7040,7 +7233,7 @@ THREADED_TEST(CallAsFunction) {
      CHECK(value.IsEmpty());
      CHECK(try_catch.HasCaught());
      String::AsciiValue exception_value2(try_catch.Exception());
@@ -375,7 +375,7 @@ index 1bcc232..f48d5b4 100644
      try_catch.Reset();
    }
  
-@@ -7058,14 +7251,14 @@ THREADED_TEST(CallAsFunction) {
+@@ -7057,14 +7250,14 @@ THREADED_TEST(CallAsFunction) {
      value = CompileRun("obj3(22)");
      CHECK(try_catch.HasCaught());
      String::AsciiValue exception_value1(try_catch.Exception());
@@ -393,5 +393,5 @@ index 1bcc232..f48d5b4 100644
    }
  }
 -- 
-1.7.5.4
+1.7.2.3
 
