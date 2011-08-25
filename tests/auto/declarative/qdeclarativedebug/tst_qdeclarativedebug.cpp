@@ -1084,7 +1084,7 @@ void tst_QDeclarativeDebug::setBindingInStates()
 
 
     // change the binding
-    QDeclarativeDebugObjectReference state = obj.children()[0];
+    QDeclarativeDebugObjectReference state = obj.children()[1];
     QCOMPARE(state.className(), QString("State"));
     QVERIFY(state.children().count() > 0);
 
@@ -1168,7 +1168,7 @@ void tst_QDeclarativeDebug::queryObjectTree()
 
 
     // check state
-    QDeclarativeDebugObjectReference state = obj.children()[0];
+    QDeclarativeDebugObjectReference state = obj.children()[1];
     QCOMPARE(state.className(), QString("State"));
     QVERIFY(state.children().count() > 0);
 
@@ -1184,7 +1184,7 @@ void tst_QDeclarativeDebug::queryObjectTree()
 
 
     // check transition
-    QDeclarativeDebugObjectReference transition = obj.children()[1];
+    QDeclarativeDebugObjectReference transition = obj.children()[0];
     QCOMPARE(transition.className(), QString("Transition"));
     QCOMPARE(findProperty(transition.properties(),"from").value().toString(), QString("*"));
     QCOMPARE(findProperty(transition.properties(),"to").value(), findProperty(state.properties(),"name").value());
