@@ -75,8 +75,9 @@ void main() {
     currentSize = currentSize * sizetable[int(floor(t*64.))];
     fade = fade * opacitytable[int(floor(t*64.))];
 #endif
+
     if (entry == 1.)
-        fade = fadeIn * fadeOut;
+        fade = fade * fadeIn * fadeOut;
     else if(entry == 2.)
         currentSize = currentSize * fadeIn * fadeOut;
 
