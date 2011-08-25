@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += declarative
+QT += declarative qtquick1
 
 RESOURCES += abstractitemmodel.qrc
 

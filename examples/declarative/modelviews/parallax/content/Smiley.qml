@@ -38,50 +38,47 @@
 **
 ****************************************************************************/
 
-// This example shows how a ListView can be separated into sections using
-// the ListView.section attached property.
-
 import QtQuick 2.0
 
-//! [0]
-Rectangle {
-    id: container
-    width: 200
-    height: 250
+// This is taken from the declarative animation/basics/property-animation.qml
+// example
 
-    ListModel {
-        id: animalsModel
-        ListElement { name: "Parrot"; size: "Small" }
-        ListElement { name: "Guinea pig"; size: "Small" }
-        ListElement { name: "Dog"; size: "Medium" }
-        ListElement { name: "Cat"; size: "Medium" }
-        ListElement { name: "Elephant"; size: "Large" }
+Item {
+    id: window
+    width: 320; height: 480
+
+    Image {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: smiley.minHeight + 58
+        source: "pics/shadow.png"
+
+        scale: smiley.y * 0.5 / (smiley.minHeight - smiley.maxHeight)
     }
 
-    // The delegate for each section header
-    Component { 
-        id: sectionHeading
-        Rectangle {
-            width: container.width
-            height: childrenRect.height
-            color: "lightsteelblue"
+    Image {
+        id: smiley
+        property int maxHeight: window.height / 3
+        property int minHeight: 2 * window.height / 3
 
-            Text {
-                text: section
-                font.bold: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: minHeight
+        source: "pics/face-smile.png"
+
+        SequentialAnimation on y {
+            loops: Animation.Infinite
+
+            NumberAnimation {
+                from: smiley.minHeight; to: smiley.maxHeight
+                easing.type: Easing.OutExpo; duration: 300
             }
+
+            NumberAnimation {
+                from: smiley.maxHeight; to: smiley.minHeight
+                easing.type: Easing.OutBounce; duration: 1000
+            }
+
+            PauseAnimation { duration: 500 }
         }
     }
-
-    ListView {
-        anchors.fill: parent
-        model: animalsModel
-        delegate: Text { text: name }
-
-        section.property: "size"
-        section.criteria: ViewSection.FullString
-        section.delegate: sectionHeading
-    }
 }
-//! [0]
 

@@ -37,7 +37,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 1.0
+import QtQuick 2.0
 import "content"
 
 // This example shows how items can be dynamically added to and removed from

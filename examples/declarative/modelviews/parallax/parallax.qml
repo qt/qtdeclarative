@@ -38,9 +38,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 import "../../toys/clocks/content"  // for loading the Clock element
-import "qml"
+import "content"
 
 Rectangle {
     width: 320; height: 480
@@ -48,22 +48,22 @@ Rectangle {
     ParallaxView {
         id: parallax
         anchors.fill: parent
-        background: "pics/background.jpg"
+        background: "content/pics/background.jpg"
 
         Item {
-            property url icon: "pics/yast-wol.png"
+            property url icon: "content/pics/yast-wol.png"
             width: 320; height: 480
             Clock { anchors.centerIn: parent }
         }
 
         Item {
-            property url icon: "pics/home-page.svg"
+            property url icon: "content/pics/home-page.svg"
             width: 320; height: 480
             Smiley { }
         }
 
         Item {
-            property url icon: "pics/yast-joystick.png"
+            property url icon: "content/pics/yast-joystick.png"
             width: 320; height: 480
 
             Loader {

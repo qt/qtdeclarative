@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 #include "model.h"
-#include <QDeclarativeContext>
-#include <QDeclarativeView>
+#include <QtQuick1/QDeclarativeView>
+#include <QtDeclarative/QDeclarativeContext>
 
 #include <QApplication>
 

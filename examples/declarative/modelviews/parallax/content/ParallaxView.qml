@@ -40,68 +40,84 @@
 
 import QtQuick 2.0
 
-Rectangle {
-    width: 400; height: 240
-    color: "white"
+Item {
+    id: root
 
-    ListModel {
-        id: appModel
-        ListElement { name: "Music"; icon: "pics/AudioPlayer_48.png" }
-        ListElement { name: "Movies"; icon: "pics/VideoPlayer_48.png" }
-        ListElement { name: "Camera"; icon: "pics/Camera_48.png" }
-        ListElement { name: "Calendar"; icon: "pics/DateBook_48.png" }
-        ListElement { name: "Messaging"; icon: "pics/EMail_48.png" }
-        ListElement { name: "Todo List"; icon: "pics/TodoList_48.png" }
-        ListElement { name: "Contacts"; icon: "pics/AddressBook_48.png" }
+    property alias background: background.source
+    property int currentIndex: 0
+    default property alias content: visualModel.children
+
+    Image {
+        id: background
+        fillMode: Image.TileHorizontally
+        x: -list.contentX / 2
+        width: Math.max(list.contentWidth, parent.width)
     }
 
-    Component {
-        id: appDelegate
-        Item {
-            width: 100; height: 100
-            scale: PathView.iconScale
+    ListView {
+        id: list
+        anchors.fill: parent
+
+        currentIndex: root.currentIndex
+        onCurrentIndexChanged: root.currentIndex = currentIndex
+
+        orientation: Qt.Horizontal
+        boundsBehavior: Flickable.DragOverBounds
+        model: VisualItemModel { id: visualModel }
+
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        snapMode: ListView.SnapOneItem
+    }
+
+    ListView {
+        id: selector
+
+        height: 50
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(count * 50, parent.width - 20)
+        interactive: width == parent.width - 20
+        orientation: Qt.Horizontal
+
+        currentIndex: root.currentIndex
+        onCurrentIndexChanged: root.currentIndex = currentIndex
+
+        model: visualModel.children
+        delegate: Item {
+            width: 50; height: 50
+            id: delegateRoot
 
             Image {
-                id: myIcon
-                y: 20; anchors.horizontalCenter: parent.horizontalCenter
-                source: icon
+                id: image
+                source: modelData.icon
                 smooth: true
-            }
-            Text {
-                anchors { top: myIcon.bottom; horizontalCenter: parent.horizontalCenter }
-                text: name
-                smooth: true
+                scale: 0.8
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: view.currentIndex = index
+                onClicked: { root.currentIndex = index }
+            }
+
+            states: State {
+                name: "Selected"
+                when: delegateRoot.ListView.isCurrentItem == true
+                PropertyChanges {
+                    target: image
+                    scale: 1
+                    y: -5
+                }
+            }
+            transitions: Transition {
+                NumberAnimation { properties: "scale,y" }
             }
         }
-    }
 
-    Component {
-        id: appHighlight
-        Rectangle { width: 80; height: 80; color: "lightsteelblue" }
-    }
-
-    PathView {
-        id: view
-        anchors.fill: parent
-        highlight: appHighlight
-        preferredHighlightBegin: 0.5
-        preferredHighlightEnd: 0.5
-        focus: true
-        model: appModel
-        delegate: appDelegate
-        path: Path {
-            startX: 10
-            startY: 50
-            PathAttribute { name: "iconScale"; value: 0.5 }
-            PathQuad { x: 200; y: 150; controlX: 50; controlY: 200 }
-            PathAttribute { name: "iconScale"; value: 1.0 }
-            PathQuad { x: 390; y: 50; controlX: 350; controlY: 200 }
-            PathAttribute { name: "iconScale"; value: 0.5 }
+        Rectangle {
+            color: "#60FFFFFF"
+            x: -10; y: -10; z: -1
+            width: parent.width + 20; height: parent.height + 20
+            radius: 10
         }
     }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -38,50 +38,39 @@
 **
 ****************************************************************************/
 
-// This example shows how a ListView can be separated into sections using
-// the ListView.section attached property.
-
 import QtQuick 2.0
 
-//! [0]
 Rectangle {
-    id: container
-    width: 200
-    height: 250
+    color: "white"
+    width: 400
+    height: 200
 
     ListModel {
-        id: animalsModel
-        ListElement { name: "Parrot"; size: "Small" }
-        ListElement { name: "Guinea pig"; size: "Small" }
-        ListElement { name: "Dog"; size: "Medium" }
-        ListElement { name: "Cat"; size: "Medium" }
-        ListElement { name: "Elephant"; size: "Large" }
+        id: myModel
+        ListElement { display: "One" }
+        ListElement { display: "Two" }
+        ListElement { display: "Three" }
+        ListElement { display: "Four" }
+        ListElement { display: "Five" }
+        ListElement { display: "Six" }
+        ListElement { display: "Seven" }
+        ListElement { display: "Eight" }
     }
-
-    // The delegate for each section header
-    Component { 
-        id: sectionHeading
-        Rectangle {
-            width: container.width
-            height: childrenRect.height
-            color: "lightsteelblue"
-
-            Text {
-                text: section
-                font.bold: true
-            }
-        }
+    //![0]
+    VisualDataModel {
+        id: visualModel
+        delegate: Delegate {}
+        model: myModel
     }
 
     ListView {
-        anchors.fill: parent
-        model: animalsModel
-        delegate: Text { text: name }
-
-        section.property: "size"
-        section.criteria: ViewSection.FullString
-        section.delegate: sectionHeading
+        width: 200; height:200
+        model: visualModel.parts.list
     }
+    GridView {
+        x: 200; width: 200; height:200
+        cellHeight: 50
+        model: visualModel.parts.grid
+    }
+    //![0]
 }
-//! [0]
-
