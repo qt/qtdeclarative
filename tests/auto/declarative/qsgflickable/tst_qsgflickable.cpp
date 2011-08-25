@@ -460,7 +460,8 @@ void tst_qsgflickable::movingAndDragging()
     QCOMPARE(dragStartSpy.count(), 1);
     QCOMPARE(dragEndSpy.count(), 1);
 
-    // Don't test moving because a flick could occur
+    // wait for any motion to end
+    QTRY_VERIFY(flickable->isMoving() == false);
 
     //Horizontal
     vDragSpy.clear();
