@@ -39,28 +39,31 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import Qt.labs.particles 1.0
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
 Item {
     property bool explode : false
-
-    Particles {
-        id: particles
+    ParticleSystem {
         width: 40
         height: 40
-        lifeSpan: 1000
-        lifeSpanDeviation: 0
-        source: "pics/star.png"
-        count: 0
-        angle: 270
-        angleDeviation: 360
-        velocity: 100
-        velocityDeviation: 20
-        z: 100
+        ImageParticle {
+            particles: ["star"]
+            source: "file:MinehuntCore/pics/star.png" // TODO: Use qrc path once QTBUG-21129 is fixed
+        }
+        Emitter {
+            id: particles
+            emitting: false
+            anchors.centerIn: parent
+            particle: "star"
+            speed: AngledDirection { angleVariation: 360; magnitude: 150; magnitudeVariation: 50 }
+            emitRate: 200
+            z: 100
+            lifeSpan: 1000
+        }
     }
     states: State { name: "exploding"; when: explode
-        StateChangeScript {script: particles.burst(200); }
+        StateChangeScript { script: particles.burst(200); }
     }
 
 }

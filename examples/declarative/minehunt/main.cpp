@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtGui/QApplication>
-#include <QtQuick1/QDeclarativeView>
+#include <qsgview.h>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
 
@@ -49,23 +49,16 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    QDeclarativeView canvas;
-    
+    QSGView canvas;
+
     qmlRegisterType<TileData>();
     MinehuntGame* game = new MinehuntGame();
-    
-#ifdef Q_OS_SYMBIAN
-    canvas.setResizeMode(QDeclarativeView::SizeRootObjectToView);
-#endif
-    canvas.engine()->rootContext()->setContextObject(game);        
+
+    canvas.setResizeMode(QSGView::SizeRootObjectToView);
+    canvas.engine()->rootContext()->setContextObject(game);
     canvas.setSource(QString("qrc:minehunt.qml"));
     QObject::connect(canvas.engine(), SIGNAL(quit()), &app, SLOT(quit()));
-    
-#ifdef Q_OS_SYMBIAN
-    canvas.showFullScreen();
-#else
-    canvas.setGeometry(QRect(100, 100, 450, 450));
+
     canvas.show();
-#endif
     return app.exec();
 }

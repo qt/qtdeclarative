@@ -10,9 +10,4 @@ SOURCES += main.cpp \
 HEADERS += dataobject.h
 RESOURCES += objectlistmodel.qrc
 
-sources.files = $$SOURCES $$HEADERS $$RESOURCES objectlistmodel.pro view.qml
-sources.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/objectlistmodel
-target.path = $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/objectlistmodel
-
-INSTALLS += sources target
 

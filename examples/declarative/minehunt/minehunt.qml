@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "MinehuntCore" 1.0
+import QtQuick 2.0
+import "MinehuntCore" 2.0
 
 Item {
     id: field
