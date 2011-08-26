@@ -43,6 +43,7 @@
 
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
+#include "qv8gccallback_p.h"
 #include "qv8include_p.h"
 #include "../../../3rdparty/javascriptcore/DateMath.h"
 
@@ -134,6 +135,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     v8::Context::Scope context_scope(m_context);
 
     v8::V8::SetUserObjectComparisonCallbackFunction(ObjectComparisonCallback);
+    QV8GCCallback::registerGcPrologueCallback();
 
     m_stringWrapper.init();
     m_contextWrapper.init(this);
@@ -2291,6 +2293,143 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::newArray(uint length)
 void QV8Engine::emitSignalHandlerException()
 {
     emit q->signalHandlerException(scriptValueFromInternal(uncaughtException()));
+}
+
+QThreadStorage<QV8GCCallback::ThreadData *> QV8GCCallback::threadData;
+void QV8GCCallback::initializeThreadData()
+{
+    QV8GCCallback::ThreadData *newThreadData = new QV8GCCallback::ThreadData;
+    threadData.setLocalData(newThreadData);
+}
+
+void QV8GCCallback::registerGcPrologueCallback()
+{
+    if (!threadData.hasLocalData())
+        initializeThreadData();
+
+    QV8GCCallback::ThreadData *td = threadData.localData();
+    if (!td->gcPrologueCallbackRegistered) {
+        td->gcPrologueCallbackRegistered = true;
+        v8::V8::AddGCPrologueCallback(QV8GCCallback::garbageCollectorPrologueCallback, v8::kGCTypeMarkSweepCompact);
+    }
+}
+
+QV8GCCallback::Node::Node(PrologueCallback callback)
+    : prologueCallback(callback)
+{
+}
+
+QV8GCCallback::Node::~Node()
+{
+    node.remove();
+}
+
+QV8GCCallback::Referencer::Referencer()
+{
+    v8::HandleScope handleScope;
+    v8::Handle<v8::Context> context = v8::Context::New();
+    v8::Context::Scope contextScope(context);
+    strongReferencer = qPersistentNew(v8::Object::New());
+}
+
+void QV8GCCallback::Referencer::addRelationship(QObject *object, QObject *other)
+{
+    bool handleShouldBeStrong = false;
+    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    v8::Persistent<v8::Value> handle = QDeclarativeData::get(other, true)->v8object;
+    if (handleShouldBeStrong) {
+        v8::V8::AddImplicitReferences(strongReferencer, &handle, 1);
+    } else if (!implicitOwner->IsEmpty()) {
+        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    }
+}
+
+void QV8GCCallback::Referencer::addRelationship(QObject *object, v8::Persistent<v8::Value> handle)
+{
+    if (handle.IsEmpty())
+        return;
+
+    bool handleShouldBeStrong = false;
+    v8::Persistent<v8::Object> *implicitOwner = findOwnerAndStrength(object, &handleShouldBeStrong);
+    if (handleShouldBeStrong) {
+        v8::V8::AddImplicitReferences(strongReferencer, &handle, 1);
+    } else if (!implicitOwner->IsEmpty()) {
+        v8::V8::AddImplicitReferences(*implicitOwner, &handle, 1);
+    }
+}
+
+v8::Persistent<v8::Object> *QV8GCCallback::Referencer::findOwnerAndStrength(QObject *object, bool *shouldBeStrong)
+{
+    QObject *parent = object->parent();
+    if (!parent) {
+        // if the object has JS ownership, the object's v8object owns the lifetime of the persistent value.
+        if (QDeclarativeEngine::objectOwnership(object) == QDeclarativeEngine::JavaScriptOwnership) {
+            *shouldBeStrong = false;
+            return &(QDeclarativeData::get(object)->v8object);
+        }
+
+        // no parent, and has CPP ownership - doesn't have an implicit parent.
+        *shouldBeStrong = true;
+        return 0;
+    }
+
+    // if it is owned by CPP, it's root parent may still be owned by JS.
+    // in that case, the owner of the persistent handle is the root parent's v8object.
+    while (parent->parent())
+        parent = parent->parent();
+
+    if (QDeclarativeEngine::objectOwnership(parent) == QDeclarativeEngine::JavaScriptOwnership) {
+        // root parent is owned by JS.  It's v8object owns the persistent value in question.
+        *shouldBeStrong = false;
+        return &(QDeclarativeData::get(parent)->v8object);
+    } else {
+        // root parent has CPP ownership.  The persistent value should not be made weak.
+        *shouldBeStrong = true;
+        return 0;
+    }
+}
+
+/*
+   Ensure that each persistent handle is strong if it has CPP ownership
+   and has no implicitly JS owned object owner in its parent chain, and
+   weak otherwise.
+
+   Any weak handle whose parent object is still alive will have an implicit
+   reference (between the parent and the handle) added, so that it will
+   not be collected.
+
+   Note that this callback is registered only for kGCTypeMarkSweepCompact
+   collection cycles, as it is during collection cycles of that type
+   in which weak persistent handle callbacks are called when required.
+ */
+void QV8GCCallback::garbageCollectorPrologueCallback(v8::GCType, v8::GCCallbackFlags)
+{
+    if (!threadData.hasLocalData())
+        return;
+
+    QV8GCCallback::ThreadData *td = threadData.localData();
+    QV8GCCallback::Node *currNode = td->gcCallbackNodes.first();
+
+    while (currNode) {
+        // The client which adds itself to the list is responsible
+        // for maintaining the correct implicit references in the
+        // specified callback.
+        currNode->prologueCallback(&td->referencer, currNode);
+        currNode = td->gcCallbackNodes.next(currNode);
+    }
+}
+
+void QV8GCCallback::addGcCallbackNode(QV8GCCallback::Node *node)
+{
+    if (!threadData.hasLocalData())
+        initializeThreadData();
+
+    QV8GCCallback::ThreadData *td = threadData.localData();
+    td->gcCallbackNodes.insert(node);
+}
+
+QV8GCCallback::ThreadData::~ThreadData()
+{
 }
 
 QT_END_NAMESPACE

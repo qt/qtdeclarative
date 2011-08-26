@@ -57,6 +57,9 @@
 #include <QtDeclarative/qdeclarativescriptstring.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 
+#include <private/qv8gccallback_p.h>
+#include <private/qdeclarativeengine_p.h>
+
 class MyQmlAttachedObject : public QObject
 {
     Q_OBJECT
@@ -965,6 +968,108 @@ private:
     int m_testWritableProperty;
     int m_methodCallCount;
 };
+
+class CircularReferenceObject : public QObject,
+                                public QV8GCCallback::Node
+{
+    Q_OBJECT
+
+public:
+    CircularReferenceObject(QObject *parent = 0)
+        : QObject(parent), QV8GCCallback::Node(callback), m_referenced(0), m_dtorCount(0)
+    {
+        QV8GCCallback::addGcCallbackNode(this);
+    }
+
+    ~CircularReferenceObject()
+    {
+        if (m_dtorCount) *m_dtorCount = *m_dtorCount + 1;
+    }
+
+    Q_INVOKABLE void setDtorCount(int *dtorCount)
+    {
+        m_dtorCount = dtorCount;
+    }
+
+    Q_INVOKABLE CircularReferenceObject *generate(QObject *parent = 0)
+    {
+        CircularReferenceObject *retn = new CircularReferenceObject(parent);
+        retn->m_dtorCount = m_dtorCount;
+        return retn;
+    }
+
+    Q_INVOKABLE void addReference(QObject *other)
+    {
+        m_referenced = other;
+    }
+
+    static void callback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    {
+        CircularReferenceObject *cro = static_cast<CircularReferenceObject*>(n);
+        if (cro->m_referenced) {
+            r->addRelationship(cro, cro->m_referenced);
+        }
+    }
+
+private:
+    QObject *m_referenced;
+    int *m_dtorCount;
+};
+Q_DECLARE_METATYPE(CircularReferenceObject*)
+
+class CircularReferenceHandle : public QObject,
+                                public QV8GCCallback::Node
+{
+    Q_OBJECT
+
+public:
+    CircularReferenceHandle(QObject *parent = 0)
+        : QObject(parent), QV8GCCallback::Node(gccallback), m_dtorCount(0)
+    {
+        QV8GCCallback::addGcCallbackNode(this);
+    }
+
+    ~CircularReferenceHandle()
+    {
+        if (m_dtorCount) *m_dtorCount = *m_dtorCount + 1;
+    }
+
+    Q_INVOKABLE void setDtorCount(int *dtorCount)
+    {
+        m_dtorCount = dtorCount;
+    }
+
+    Q_INVOKABLE CircularReferenceHandle *generate(QObject *parent = 0)
+    {
+        CircularReferenceHandle *retn = new CircularReferenceHandle(parent);
+        retn->m_dtorCount = m_dtorCount;
+        return retn;
+    }
+
+    Q_INVOKABLE void addReference(v8::Persistent<v8::Value> handle)
+    {
+        m_referenced = qPersistentNew(handle);
+        m_referenced.MakeWeak(static_cast<void*>(this), wrcallback);
+    }
+
+    static void wrcallback(v8::Persistent<v8::Value> handle, void *params)
+    {
+        CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(params);
+        qPersistentDispose(handle);
+        crh->m_referenced.Clear();
+    }
+
+    static void gccallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *n)
+    {
+        CircularReferenceHandle *crh = static_cast<CircularReferenceHandle*>(n);
+        r->addRelationship(crh, crh->m_referenced);
+    }
+
+private:
+    v8::Persistent<v8::Value> m_referenced;
+    int *m_dtorCount;
+};
+Q_DECLARE_METATYPE(CircularReferenceHandle*)
 
 void registerTypes();
 
