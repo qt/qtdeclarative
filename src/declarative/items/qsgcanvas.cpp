@@ -860,7 +860,7 @@ void QSGCanvasPrivate::cleanup(QSGNode *n)
 static QGLFormat tweakFormat(const QGLFormat &format = QGLFormat::defaultFormat())
 {
     QGLFormat f = format;
-    f.setSwapInterval(0);
+    f.setSwapInterval(1);
     return f;
 }
 
