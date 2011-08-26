@@ -264,7 +264,6 @@ void QSGAnimatedImage::load()
         if (d->progress != oldProgress)
             emit progressChanged(d->progress);
     } else {
-#ifndef QT_NO_LOCALFILE_OPTIMIZED_QML
         QString lf = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(d->url);
         if (!lf.isEmpty()) {
             //### should be unified with movieRequestFinished
@@ -298,7 +297,7 @@ void QSGAnimatedImage::load()
                 emit progressChanged(d->progress);
             return;
         }
-#endif
+
         d->status = Loading;
         d->progress = 0;
         emit statusChanged(d->status);
