@@ -540,6 +540,19 @@ int main(int argc, char *argv[])
         engine.addImportPath(pluginImportPath);
     }
 
+    // load the QtQuick 1 plugin
+    {
+        QByteArray code("import QtQuick 1.0\nQtObject {}");
+        QDeclarativeComponent c(&engine);
+        c.setData(code, QUrl::fromLocalFile(pluginImportPath + "/loadqtquick1.qml"));
+        c.create();
+        if (!c.errors().isEmpty()) {
+            foreach (const QDeclarativeError &error, c.errors())
+                qWarning() << error.toString();
+            return EXIT_IMPORTERROR;
+        }
+    }
+
     // find all QMetaObjects reachable from the builtin module
     QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects();
     QList<QDeclarativeType *> defaultTypes = QDeclarativeMetaType::qmlTypes();
