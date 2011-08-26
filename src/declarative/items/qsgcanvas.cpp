@@ -975,6 +975,8 @@ bool QSGCanvas::event(QEvent *e)
     if (e->type() == QEvent::User) {
         if (!d->thread->syncAlreadyHappened)
             d->thread->sync(false);
+        else
+            d->renderThreadAwakened = false;
 
         d->thread->syncAlreadyHappened = false;
 
