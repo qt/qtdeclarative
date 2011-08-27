@@ -115,10 +115,12 @@ protected:
 private Q_SLOTS:
     void sceneGraphChanged();
     void maybeUpdate();
+    void animationStarted();
+    void animationStopped();
 
 private:
     friend class QSGItem;
-    friend class QSGCanvasRenderThread;
+    friend class QSGCanvasRenderLoop;
     Q_DISABLE_COPY(QSGCanvas)
 };
 

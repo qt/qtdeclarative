@@ -82,7 +82,7 @@ public:
 class QSGCanvasPrivate;
 
 class QTouchEvent;
-class QSGCanvasRenderThread;
+class QSGCanvasRenderLoop;
 
 class QSGCanvasPrivate : public QWindowPrivate
 {
@@ -161,12 +161,9 @@ public:
 
     QSGContext *context;
 
-    uint animationRunning: 1;
-    uint renderThreadAwakened : 1;
-
     uint vsyncAnimations : 1;
 
-    QSGCanvasRenderThread *thread;
+    QSGCanvasRenderLoop *thread;
     QSize widgetSize;
     QSize viewportSize;
 
@@ -177,15 +174,64 @@ public:
     QHash<int, QSGItem *> itemForTouchPointId;
 };
 
+class QSGCanvasRenderLoop
+{
+public:
+    QSGCanvasRenderLoop()
+        : d(0)
+        , renderer(0)
+        , gl(0)
+    {
+    }
+    virtual ~QSGCanvasRenderLoop()
+    {
+        delete gl;
+    }
 
+    friend class QSGCanvasPrivate;
 
-class QSGCanvasRenderThread : public QThread
+    virtual void paint() = 0;
+    virtual void resize(const QSize &size) = 0;
+    virtual void startRendering() = 0;
+    virtual void stopRendering() = 0;
+    virtual QImage grab() = 0;
+    virtual void setWindowSize(const QSize &size) = 0;
+    virtual void maybeUpdate() = 0;
+    virtual bool isRunning() const = 0;
+    virtual void animationStarted() = 0;
+    virtual void animationStopped() = 0;
+    virtual void moveCanvasToThread(QSGContext *) { }
+
+protected:
+    void initializeSceneGraph() { d->initializeSceneGraph(); }
+    void syncSceneGraph() { d->syncSceneGraph(); }
+    void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
+    void polishItems() { d->polishItems(); }
+    QAnimationDriver *animationDriver() const { return d->animationDriver; }
+
+    inline QGuiGLContext *glContext() const { return gl; }
+    void createGLContext();
+    void makeCurrent() { gl->makeCurrent(renderer); }
+    void doneCurrent() { gl->doneCurrent(); }
+    void swapBuffers() {
+        gl->swapBuffers(renderer);
+        emit renderer->frameSwapped();
+    }
+
+private:
+    QSGCanvasPrivate *d;
+    QSGCanvas *renderer;
+
+    QGuiGLContext *gl;
+};
+
+class QSGCanvasRenderThread : public QThread, public QSGCanvasRenderLoop
 {
     Q_OBJECT
 public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
-        , guiContext(0)
+        , animationRunning(false)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
         , isGuiBlockPending(false)
@@ -196,6 +242,7 @@ public:
         , doGrab(false)
         , shouldExit(false)
         , hasExited(false)
+        , renderThreadAwakened(false)
     {}
 
     inline void lock() { mutex.lock(); }
@@ -208,10 +255,16 @@ public:
 
     void paint();
     void resize(const QSize &size);
-    void startRenderThread();
-    void stopRenderThread();
+    void startRendering();
+    void stopRendering();
     void exhaustSyncEvent();
     void sync(bool guiAlreadyLocked);
+    bool isRunning() const { return QThread::isRunning(); }
+    void setWindowSize(const QSize &size) { windowSize = size; }
+    void maybeUpdate();
+    void moveCanvasToThread(QSGCanvas *c) { c->moveToThread(this); }
+
+    bool event(QEvent *);
 
     QImage grab();
 
@@ -226,11 +279,7 @@ public:
     QSize windowSize;
     QSize renderedSize;
 
-    QSGCanvas *renderer;
-    QSGCanvasPrivate *d;
-
-    QGuiGLContext *guiContext;
-
+    uint animationRunning: 1;
     int isGuiBlocked;
     uint isPaintCompleted : 1;
     uint isGuiBlockPending : 1;
@@ -238,10 +287,10 @@ public:
     uint isExternalUpdatePending : 1;
     uint syncAlreadyHappened : 1;
     uint inSync : 1;
-
     uint doGrab : 1;
     uint shouldExit : 1;
     uint hasExited : 1;
+    uint renderThreadAwakened : 1;
 
     QImage grabContent;
 

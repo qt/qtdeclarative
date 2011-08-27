@@ -178,28 +178,38 @@ void QSGCanvas::resizeEvent(QResizeEvent *e)
     d->thread->resize(size());
 }
 
+void QSGCanvas::animationStarted()
+{
+    d_func()->thread->animationStarted();
+}
+
+void QSGCanvas::animationStopped()
+{
+    d_func()->thread->animationStopped();
+}
+
 void QSGCanvas::showEvent(QShowEvent *e)
 {
     Q_D(QSGCanvas);
     if (d->vsyncAnimations) {
         if (!d->animationDriver) {
             d->animationDriver = d->context->createAnimationDriver(this);
-            connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
-            connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
+            connect(d->animationDriver, SIGNAL(started()), this, SLOT(animationStarted()), Qt::DirectConnection);
+            connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()), Qt::DirectConnection);
         }
         d->animationDriver->install();
     }
 
     if (!d->thread->isRunning()) {
-        d->thread->windowSize = size();
-        d->thread->startRenderThread();
+        d->thread->setWindowSize(size());
+        d->thread->startRendering();
     }
 }
 
 void QSGCanvas::hideEvent(QHideEvent *e)
 {
     Q_D(QSGCanvas);
-    d->thread->stopRenderThread();
+    d->thread->stopRendering();
 }
 
 
@@ -334,8 +344,6 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , mouseGrabberItem(0)
     , dirtyItemList(0)
     , context(0)
-    , animationRunning(false)
-    , renderThreadAwakened(false)
     , vsyncAnimations(false)
     , thread(0)
     , animationDriver(0)
@@ -369,7 +377,7 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     thread->d = this;
 
     context = QSGContext::createDefaultContext();
-    context->moveToThread(thread);
+    thread->moveCanvasToThread(context);
 }
 
 void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
@@ -775,7 +783,7 @@ QSGCanvas::~QSGCanvas()
     Q_D(QSGCanvas);
 
     if (d->thread->isRunning()) {
-        d->thread->stopRenderThread();
+        d->thread->stopRendering();
         delete d->thread;
         d->thread = 0;
     }
@@ -830,27 +838,6 @@ bool QSGCanvasPrivate::clearHover()
 bool QSGCanvas::event(QEvent *e)
 {
     Q_D(QSGCanvas);
-
-    if (e->type() == QEvent::User) {
-        if (!d->thread->syncAlreadyHappened)
-            d->thread->sync(false);
-
-        d->thread->syncAlreadyHappened = false;
-
-        if (d->animationRunning && d->animationDriver) {
-#ifdef THREAD_DEBUG
-            qDebug("GUI: Advancing animations...\n");
-#endif
-
-            d->animationDriver->advance();
-
-#ifdef THREAD_DEBUG
-            qDebug("GUI: Animations advanced...\n");
-#endif
-        }
-
-        return true;
-    }
 
     switch (e->type()) {
 
@@ -1775,26 +1762,8 @@ void QSGCanvas::maybeUpdate()
 {
     Q_D(QSGCanvas);
 
-    if (d->thread && d->thread->isRunning()) {
-        Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || d->thread->inSync,
-                   "QSGCanvas::update",
-                   "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
-
-        if (d->thread->inSync) {
-            d->thread->isExternalUpdatePending = true;
-
-        } else if (!d->renderThreadAwakened) {
-#ifdef THREAD_DEBUG
-            printf("GUI: doing update...\n");
-#endif
-            d->renderThreadAwakened = true;
-            d->thread->lockInGui();
-            d->thread->isExternalUpdatePending = true;
-            if (d->thread->isRenderBlocked)
-                d->thread->wake();
-            d->thread->unlockInGui();
-        }
-    }
+    if (d->thread && d->thread->isRunning())
+        d->thread->maybeUpdate();
 }
 
 /*!
@@ -1876,20 +1845,26 @@ QImage QSGCanvas::grabFrameBuffer()
 }
 
 
+
+void QSGCanvasRenderLoop::createGLContext()
+{
+    gl = new QGuiGLContext();
+    gl->create();
+}
+
+
 void QSGCanvasRenderThread::run()
 {
 #ifdef THREAD_DEBUG
     qDebug("QML Rendering Thread Started");
 #endif
 
-    if (!guiContext) {
-        guiContext = new QGuiGLContext();
-        guiContext->create();
-        guiContext->makeCurrent(renderer);
-
-        d->initializeSceneGraph();
+    if (!glContext()) {
+        createGLContext();
+        makeCurrent();
+        initializeSceneGraph();
     } else {
-        guiContext->makeCurrent(renderer);
+        makeCurrent();
     }
     
     while (!shouldExit) {
@@ -1916,7 +1891,7 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
-            QApplication::postEvent(renderer, new QEvent(QEvent::User));
+            QApplication::postEvent(this, new QEvent(QEvent::User));
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
 #endif
@@ -1929,7 +1904,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: Doing locked sync\n");
 #endif
         inSync = true;
-        d->syncSceneGraph();
+        syncSceneGraph();
         inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
@@ -1945,7 +1920,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: rendering... %d x %d\n", windowSize.width(), windowSize.height());
 #endif
 
-        d->renderSceneGraph(windowSize);
+        renderSceneGraph(windowSize);
 
         // The content of the target buffer is undefined after swap() so grab needs
         // to happen before swap();
@@ -1961,8 +1936,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: wait for swap...\n");
 #endif
 
-        guiContext->swapBuffers(renderer);
-        emit renderer->frameSwapped();//notify compositor that frame has been swapped
+        swapBuffers();
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
 #endif
@@ -1978,7 +1952,7 @@ void QSGCanvasRenderThread::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
+        if (!animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
@@ -1997,7 +1971,7 @@ void QSGCanvasRenderThread::run()
     printf("                RenderThread: render loop exited... Good Night!\n");
 #endif
 
-    guiContext->doneCurrent();
+    doneCurrent();
 
     lock();
     hasExited = true;
@@ -2010,6 +1984,36 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
     printf("                RenderThread: All done...\n");
 #endif
+}
+
+
+
+bool QSGCanvasRenderThread::event(QEvent *e)
+{
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+
+    if (e->type() == QEvent::User) {
+        if (!syncAlreadyHappened)
+            sync(false);
+
+        syncAlreadyHappened = false;
+
+        if (animationRunning && animationDriver()) {
+#ifdef THREAD_DEBUG
+            qDebug("GUI: Advancing animations...\n");
+#endif
+
+            animationDriver()->advance();
+
+#ifdef THREAD_DEBUG
+            qDebug("GUI: Animations advanced...\n");
+#endif
+        }
+
+        return true;
+    }
+
+    return QThread::event(e);
 }
 
 
@@ -2030,17 +2034,17 @@ void QSGCanvasRenderThread::sync(bool guiAlreadyLocked)
     printf("GUI: sync - %s\n", guiAlreadyLocked ? "outside event" : "inside event");
 #endif
     if (!guiAlreadyLocked)
-        d->thread->lockInGui();
+        lockInGui();
 
-    d->renderThreadAwakened = false;
+    renderThreadAwakened = false;
 
-    d->polishItems();
+    polishItems();
 
-    d->thread->wake();
-    d->thread->wait();
+    wake();
+    wait();
 
     if (!guiAlreadyLocked)
-        d->thread->unlockInGui();
+        unlockInGui();
 }
 
 
@@ -2090,7 +2094,7 @@ void QSGCanvasRenderThread::animationStarted()
 
     lockInGui();
 
-    d->animationRunning = true;
+    animationRunning = true;
 
     if (isRenderBlocked)
         wake();
@@ -2107,7 +2111,7 @@ void QSGCanvasRenderThread::animationStopped()
 #endif
 
     lockInGui();
-    d->animationRunning = false;
+    animationRunning = false;
     unlockInGui();
 }
 
@@ -2158,7 +2162,7 @@ void QSGCanvasRenderThread::resize(const QSize &size)
 
 
 
-void QSGCanvasRenderThread::startRenderThread()
+void QSGCanvasRenderThread::startRendering()
 {
 #ifdef THREAD_DEBUG
     printf("GUI: Starting Render Thread\n");
@@ -2172,7 +2176,7 @@ void QSGCanvasRenderThread::startRenderThread()
 
 
 
-void QSGCanvasRenderThread::stopRenderThread()
+void QSGCanvasRenderThread::stopRendering()
 {
 #ifdef THREAD_DEBUG
     printf("GUI: stopping render thread\n");
@@ -2244,6 +2248,30 @@ QImage QSGCanvasRenderThread::grab()
     unlockInGui();
 
     return grabbed;
+}
+
+
+
+void QSGCanvasRenderThread::maybeUpdate()
+{
+    Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || inSync,
+               "QSGCanvas::update",
+               "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
+
+    if (inSync) {
+        isExternalUpdatePending = true;
+
+    } else if (!renderThreadAwakened) {
+#ifdef THREAD_DEBUG
+        printf("GUI: doing update...\n");
+#endif
+        renderThreadAwakened = true;
+        lockInGui();
+        isExternalUpdatePending = true;
+        if (isRenderBlocked)
+            wake();
+        unlockInGui();
+    }
 }
 
 
