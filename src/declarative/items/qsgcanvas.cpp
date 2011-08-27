@@ -66,8 +66,88 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
+DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
 
 extern Q_OPENGL_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+
+class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
+{
+public:
+    QSGCanvasPlainRenderLoop()
+        : updatePending(false)
+        , animationRunning(false)
+    {
+        qWarning("QSGCanvas: using non-threaded render loop. Be very sure to not access scene graph "
+                 "objects outside the QSGItem::updatePaintNode() call. Failing to do so will cause "
+                 "your code to crash on other platforms!");
+    }
+
+    virtual void paint() {
+        if (animationRunning && animationDriver())
+            animationDriver()->advance();
+        syncSceneGraph();
+        makeCurrent();
+        glViewport(0, 0, size.width(), size.height());
+        renderSceneGraph(size);
+        swapBuffers();
+        updatePending = false;
+
+        if (animationRunning)
+            maybeUpdate();
+    }
+
+    virtual QImage grab() {
+        return qt_gl_read_framebuffer(size, false, false);
+    }
+
+    virtual void startRendering() {
+        if (!glContext()) {
+            createGLContext();
+            makeCurrent();
+            initializeSceneGraph();
+        } else {
+            makeCurrent();
+        }
+        maybeUpdate();
+    }
+
+    virtual void stopRendering() { }
+
+    virtual void maybeUpdate() {
+        if (!updatePending) {
+            QApplication::postEvent(this, new QEvent(QEvent::User));
+            updatePending = true;
+        }
+    }
+
+    virtual void animationStarted() {
+        animationRunning = true;
+        maybeUpdate();
+    }
+
+    virtual void animationStopped() {
+        animationRunning = false;
+    }
+
+    virtual bool isRunning() const { return glContext(); } // Event loop is always running...
+    virtual void resize(const QSize &s) { size = s; }
+    virtual void setWindowSize(const QSize &s) { size = s; }
+
+    bool event(QEvent *e) {
+        if (e->type() == QEvent::User) {
+            paint();
+            return true;
+        }
+        return QObject::event(e);
+    }
+
+    QSize size;
+
+    uint updatePending : 1;
+    uint animationRunning : 1;
+};
+
+
 
 /*
 Focus behavior
@@ -372,7 +452,9 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     // has a canvas..
     rootItem->setFocus(true);
 
-    thread = new QSGCanvasRenderThread;
+    thread = qmlNoThreadedRenderer()
+            ? static_cast<QSGCanvasRenderLoop *>(new QSGCanvasPlainRenderLoop())
+            : static_cast<QSGCanvasRenderLoop *>(new QSGCanvasRenderThread());
     thread->renderer = q;
     thread->d = this;
 
