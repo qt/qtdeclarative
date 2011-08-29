@@ -476,7 +476,7 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             instr.setType(QDeclarativeInstruction::StoreTime);
             instr.storeTime.propertyIndex = prop->index;
             Q_ASSERT(sizeof(instr.storeTime.time) == sizeof(QTime));
-            ::memcpy(&instr.storeTime.time, &time, sizeof(QTime));            }
+            ::memcpy(&instr.storeTime.time, &time, sizeof(QTime));
             }
             break;
         case QVariant::DateTime:
@@ -3033,8 +3033,14 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
     prop.resolvedCustomTypeName = pool->NewByteArray(typeName);
     prop.typeRef = builder.newString(typeName.length());
 
+    int propertyFlags = 0;
+    if (writable)
+        propertyFlags |= QFastMetaBuilder::Writable;
+    if (resettable)
+        propertyFlags |= QFastMetaBuilder::Resettable;
+
     builder.setProperty(propIndex, prop.nameRef, prop.typeRef, (QMetaType::Type)type, 
-                        (QFastMetaBuilder::PropertyFlag)(writable?int(QFastMetaBuilder::Writable):0), 
+                        (QFastMetaBuilder::PropertyFlag)propertyFlags,
                         propIndex);
 
     return true;

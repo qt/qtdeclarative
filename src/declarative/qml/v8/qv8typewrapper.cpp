@@ -228,7 +228,7 @@ v8::Handle<v8::Value> QV8TypeWrapper::Setter(v8::Local<v8::String> property,
             v8engine->qobjectWrapper()->setProperty(ao, propertystring, value, 
                                                     QV8QObjectWrapper::IgnoreRevision);
     } else if (resource->typeNamespace) {
-        if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi()) {
+        if (QDeclarativeMetaType::ModuleApiInstance *moduleApi = resource->typeNamespace->moduleApi(resource->importNamespace)) {
             if (moduleApi->scriptCallback) {
                 moduleApi->scriptApi = moduleApi->scriptCallback(v8engine->engine(), v8engine->engine());
                 moduleApi->scriptCallback = 0;

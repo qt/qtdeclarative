@@ -970,7 +970,7 @@ bool ProcessAST::visit(AST::UiPublicMember *node)
             index++;
         }
 
-        signal.location = location(node->typeToken, node->semicolonToken);
+        signal->location = location(node->typeToken, node->semicolonToken);
         _stateStack.top().object->dynamicSignals.append(signal);
     } else {
         const QStringRef &memberType = node->memberType;

@@ -968,20 +968,6 @@ int QDeclarativePrivate::qmlregister(RegistrationType type, void *data)
     return -1;
 }
 
-bool QDeclarativeMetaType::isAnyModule(const QByteArray &module)
-{
-    QDeclarativeMetaTypeData *data = metaTypeData();
-
-    QDeclarativeMetaTypeData::ModuleInfoHash::Iterator it = data->modules.begin();
-    while (it != data->modules.end()) {
-        if (it.key().first == module)
-            return true;
-        ++it;
-    }
-
-    return false;
-}
-
 /*
     Returns true if a module \a uri of any version is installed.
 */
