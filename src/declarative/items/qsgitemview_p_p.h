@@ -45,6 +45,7 @@
 #include "qsgitemview_p.h"
 #include "qsgflickable_p_p.h"
 #include "qsgvisualitemmodel_p.h"
+#include <private/qdeclarativechangeset_p.h>
 
 
 QT_BEGIN_HEADER
@@ -73,6 +74,30 @@ public:
     QSGItemViewAttached *attached;
 };
 
+class QSGItemViewChangeSet
+{
+public:
+    QSGItemViewChangeSet();
+
+    bool hasPendingChanges() const;
+    void prepare(int currentIndex, int count);
+    void reset();
+
+    void doInsert(int index, int count);
+    void doRemove(int index, int count);
+    void doMove(int from, int to, int count);
+    void doChange(int index, int count);
+
+    int itemCount;
+    int newCurrentIndex;
+    QDeclarativeChangeSet pendingChanges;
+    QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *> removedItems;
+
+    bool active : 1;
+    bool currentChanged : 1;
+    bool currentRemoved : 1;
+};
+
 class QSGItemViewPrivate : public QSGFlickablePrivate
 {
     Q_DECLARE_PUBLIC(QSGItemView)
@@ -92,7 +117,6 @@ public:
     FxViewItem *visibleItem(int modelIndex) const;
     FxViewItem *firstVisibleItem() const;
     int mapFromModel(int modelIndex) const;
-    void adjustMoveParameters(int *from, int *to, int *count) const;
 
     virtual void init();
     virtual void clear();
@@ -115,7 +139,10 @@ public:
     void updateTrackedItem();
     void updateUnrequestedIndexes();
     void updateUnrequestedPositions();
+    void updateVisibleIndex();
     void positionViewAtIndex(int index, int mode);
+    void applyPendingChanges();
+    bool applyModelChanges();
 
     void checkVisible() const;
 
@@ -135,6 +162,7 @@ public:
     FxViewItem *trackedItem;
     QHash<QSGItem*,int> unrequestedItems;
     int requestedIndex;
+    QSGItemViewChangeSet currentChanges;
 
     // XXX split into struct
     QDeclarativeComponent *highlightComponent;
@@ -157,7 +185,9 @@ public:
     bool lazyRelease : 1;
     bool deferredRelease : 1;
     bool layoutScheduled : 1;
+    bool inApplyModelChanges : 1;
     bool inViewportMoved : 1;
+    bool forceLayout : 1;
     bool currentIndexCleared : 1;
     bool haveHighlightRange : 1;
     bool autoHighlight : 1;
@@ -195,9 +225,13 @@ protected:
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item) = 0;
     virtual void repositionPackageItemAt(QSGItem *item, int index) = 0;
+    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem) = 0;
+    virtual void resetFirstItemPosition() = 0;
+    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &, const QList<FxViewItem *> &) = 0;
 
     virtual void layoutVisibleItems() = 0;
     virtual void changedVisibleIndex(int newIndex) = 0;
+    virtual bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *) = 0;
 
     virtual void initializeViewItem(FxViewItem *) {}
     virtual void initializeCurrentItem() {}

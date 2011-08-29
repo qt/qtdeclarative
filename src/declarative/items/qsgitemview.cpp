@@ -58,6 +58,102 @@ FxViewItem::~FxViewItem()
     }
 }
 
+
+QSGItemViewChangeSet::QSGItemViewChangeSet()
+    : active(false)
+{
+    reset();
+}
+
+bool QSGItemViewChangeSet::hasPendingChanges() const
+{
+    return !pendingChanges.isEmpty();
+}
+
+void QSGItemViewChangeSet::doInsert(int index, int count)
+{
+    pendingChanges.insert(index, count);
+
+    if (newCurrentIndex >= index) {
+        // adjust current item index
+        newCurrentIndex += count;
+        currentChanged = true;
+    } else if (newCurrentIndex < 0) {
+        newCurrentIndex = 0;
+        currentChanged = true;
+    }
+
+    itemCount += count;
+}
+
+void QSGItemViewChangeSet::doRemove(int index, int count)
+{
+    itemCount -= count;
+    pendingChanges.remove(index, count);
+
+    if (newCurrentIndex >= index + count) {
+        newCurrentIndex -= count;
+        currentChanged = true;
+    } else if (newCurrentIndex >= index && newCurrentIndex < index + count) {
+        // current item has been removed.
+        currentRemoved = true;
+        newCurrentIndex = -1;
+        if (itemCount)
+            newCurrentIndex = qMin(index, itemCount-1);
+        currentChanged = true;
+    }
+}
+
+void QSGItemViewChangeSet::doMove(int from, int to, int count)
+{
+    pendingChanges.move(from, to, count);
+
+    if (to > from) {
+        if (newCurrentIndex >= from) {
+            if (newCurrentIndex < from + count)
+                newCurrentIndex += (to-from);
+            else if (newCurrentIndex < to + count)
+                newCurrentIndex -= count;
+        }
+        currentChanged = true;
+    } else if (to < from) {
+        if (newCurrentIndex >= to) {
+            if (newCurrentIndex >= from && newCurrentIndex < from + count)
+                newCurrentIndex -= (from-to);
+            else if (newCurrentIndex < from)
+                newCurrentIndex += count;
+        }
+        currentChanged = true;
+    }
+}
+
+void QSGItemViewChangeSet::QSGItemViewChangeSet::doChange(int index, int count)
+{
+    pendingChanges.change(index, count);
+}
+
+void QSGItemViewChangeSet::prepare(int currentIndex, int count)
+{
+    if (active)
+        return;
+    reset();
+    active = true;
+    itemCount = count;
+    newCurrentIndex = currentIndex;
+}
+
+void QSGItemViewChangeSet::reset()
+{
+    itemCount = 0;
+    newCurrentIndex = -1;
+    pendingChanges.clear();
+    removedItems.clear();
+    active = false;
+    currentChanged = false;
+    currentRemoved = false;
+}
+
+
 QSGItemView::QSGItemView(QSGFlickablePrivate &dd, QSGItem *parent)
     : QSGFlickable(dd, parent)
 {
@@ -81,6 +177,7 @@ QSGItem *QSGItemView::currentItem() const
     Q_D(const QSGItemView);
     if (!d->currentItem)
         return 0;
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
     return d->currentItem->item;
 }
 
@@ -213,14 +310,16 @@ void QSGItemView::setDelegate(QDeclarativeComponent *delegate)
 int QSGItemView::count() const
 {
     Q_D(const QSGItemView);
-    if (d->model)
-        return d->model->count();
-    return 0;
+    if (!d->model)
+        return 0;
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
+    return d->model->count();
 }
 
 int QSGItemView::currentIndex() const
 {
     Q_D(const QSGItemView);
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
     return d->currentIndex;
 }
 
@@ -230,6 +329,8 @@ void QSGItemView::setCurrentIndex(int index)
     if (d->requestedIndex >= 0)  // currently creating item
         return;
     d->currentIndexCleared = (index == -1);
+
+    d->applyPendingChanges();
     if (index == d->currentIndex)
         return;
     if (isComponentComplete() && d->isValid()) {
@@ -313,6 +414,7 @@ QDeclarativeComponent *QSGItemView::header() const
 QSGItem *QSGItemView::headerItem() const
 {
     Q_D(const QSGItemView);
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
     return d->header ? d->header->item : 0;
 }
 
@@ -320,6 +422,7 @@ void QSGItemView::setHeader(QDeclarativeComponent *headerComponent)
 {
     Q_D(QSGItemView);
     if (d->headerComponent != headerComponent) {
+        d->applyPendingChanges();
         delete d->header;
         d->header = 0;
         d->headerComponent = headerComponent;
@@ -348,6 +451,7 @@ QDeclarativeComponent *QSGItemView::footer() const
 QSGItem *QSGItemView::footerItem() const
 {
     Q_D(const QSGItemView);
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
     return d->footer ? d->footer->item : 0;
 }
 
@@ -355,6 +459,7 @@ void QSGItemView::setFooter(QDeclarativeComponent *footerComponent)
 {
     Q_D(QSGItemView);
     if (d->footerComponent != footerComponent) {
+        d->applyPendingChanges();
         delete d->footer;
         d->footer = 0;
         d->footerComponent = footerComponent;
@@ -373,6 +478,7 @@ void QSGItemView::setFooter(QDeclarativeComponent *footerComponent)
 QDeclarativeComponent *QSGItemView::highlight() const
 {
     Q_D(const QSGItemView);
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
     return d->highlightComponent;
 }
 
@@ -380,6 +486,7 @@ void QSGItemView::setHighlight(QDeclarativeComponent *highlightComponent)
 {
     Q_D(QSGItemView);
     if (highlightComponent != d->highlightComponent) {
+        d->applyPendingChanges();
         d->highlightComponent = highlightComponent;
         d->createHighlight();
         if (d->currentItem)
@@ -391,9 +498,8 @@ void QSGItemView::setHighlight(QDeclarativeComponent *highlightComponent)
 QSGItem *QSGItemView::highlightItem() const
 {
     Q_D(const QSGItemView);
-    if (!d->highlight)
-        return 0;
-    return d->highlight->item;
+    const_cast<QSGItemViewPrivate*>(d)->applyPendingChanges();
+    return d->highlight ? d->highlight->item : 0;
 }
 
 bool QSGItemView::highlightFollowsCurrentItem() const
@@ -506,10 +612,10 @@ void QSGItemViewPrivate::positionViewAtIndex(int index, int mode)
         return;
     if (mode < QSGItemView::Beginning || mode > QSGItemView::Contain)
         return;
+
+    applyPendingChanges();
     int idx = qMax(qMin(index, model->count()-1), 0);
 
-    if (layoutScheduled)
-        layout();
     qreal pos = isContentFlowReversed() ? -position() - size() : position();
     FxViewItem *item = visibleItem(idx);
     qreal maxExtent;
@@ -614,6 +720,12 @@ int QSGItemView::indexAt(qreal x, qreal y) const
     return -1;
 }
 
+void QSGItemViewPrivate::applyPendingChanges()
+{
+    Q_Q(QSGItemView);
+    if (q->isComponentComplete() && currentChanges.hasPendingChanges())
+        layout();
+}
 
 // for debugging only
 void QSGItemViewPrivate::checkVisible() const
@@ -628,8 +740,6 @@ void QSGItemViewPrivate::checkVisible() const
         }
     }
 }
-
-
 
 void QSGItemViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
@@ -668,11 +778,51 @@ void QSGItemView::destroyRemoved()
     d->layout();
 }
 
-void QSGItemView::itemsChanged(int, int)
+void QSGItemView::itemsInserted(int index, int count)
 {
     Q_D(QSGItemView);
-    d->updateSections();
-    d->layout();
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
+        return;
+
+    d->currentChanges.prepare(d->currentIndex, d->itemCount);
+    d->currentChanges.doInsert(index, count);
+    d->scheduleLayout();
+}
+
+void QSGItemView::itemsRemoved(int index, int count)
+{
+    Q_D(QSGItemView);
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
+        return;
+
+    d->currentChanges.prepare(d->currentIndex, d->itemCount);
+    d->currentChanges.doRemove(index, count);
+    d->scheduleLayout();
+}
+
+void QSGItemView::itemsMoved(int from, int to, int count)
+{
+    Q_D(QSGItemView);
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
+        return;
+
+    if (from == to || count <= 0 || from < 0 || to < 0)
+        return;
+
+    d->currentChanges.prepare(d->currentIndex, d->itemCount);
+    d->currentChanges.doMove(from, to, count);
+    d->scheduleLayout();
+}
+
+void QSGItemView::itemsChanged(int index, int count)
+{
+    Q_D(QSGItemView);
+    if (!isComponentComplete() || !d->model || !d->model->isValid())
+        return;
+
+    d->currentChanges.prepare(d->currentIndex, d->itemCount);
+    d->currentChanges.doChange(index, count);
+    d->scheduleLayout();
 }
 
 void QSGItemView::modelReset()
@@ -795,7 +945,6 @@ void QSGItemView::trackedPositionChanged()
         }
     }
 }
-
 
 void QSGItemView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
@@ -1017,7 +1166,7 @@ QSGItemViewPrivate::QSGItemViewPrivate()
     , headerComponent(0), header(0), footerComponent(0), footer(0)
     , minExtent(0), maxExtent(0)
     , ownModel(false), wrap(false), lazyRelease(false), deferredRelease(false)
-    , layoutScheduled(false), inViewportMoved(false), currentIndexCleared(false)
+    , layoutScheduled(false), inApplyModelChanges(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , minExtentDirty(true), maxExtentDirty(true)
 {
@@ -1082,7 +1231,7 @@ FxViewItem *QSGItemViewPrivate::firstVisibleItem() const {
     const qreal pos = isContentFlowReversed() ? -position()-size() : position();
     for (int i = 0; i < visibleItems.count(); ++i) {
         FxViewItem *item = visibleItems.at(i);
-        if (item->index != -1 && item->endPosition() >= pos)
+        if (item->index != -1 && item->endPosition() > pos)
             return item;
     }
     return visibleItems.count() ? visibleItems.first() : 0;
@@ -1105,18 +1254,6 @@ int QSGItemViewPrivate::mapFromModel(int modelIndex) const
     return -1; // Not in visibleList
 }
 
-void QSGItemViewPrivate::adjustMoveParameters(int *from, int *to, int *count) const
-{
-    if (*from > *to) {
-        // Only move forwards - flip if backwards moving
-        int tfrom = *from;
-        int tto = *to;
-        *from = tto;
-        *to = tto + *count;
-        *count = tfrom - tto;
-    }
-}
-
 void QSGItemViewPrivate::init()
 {
     Q_Q(QSGItemView);
@@ -1130,6 +1267,8 @@ void QSGItemViewPrivate::init()
 void QSGItemViewPrivate::updateCurrent(int modelIndex)
 {
     Q_Q(QSGItemView);
+    applyPendingChanges();
+
     if (!q->isComponentComplete() || !isValid() || modelIndex < 0 || modelIndex >= model->count()) {
         if (currentItem) {
             currentItem->attached->setIsCurrentItem(false);
@@ -1168,6 +1307,7 @@ void QSGItemViewPrivate::updateCurrent(int modelIndex)
 
 void QSGItemViewPrivate::clear()
 {
+    currentChanges.reset();
     timeline.clear();
 
     for (int i = 0; i < visibleItems.count(); ++i)
@@ -1207,6 +1347,9 @@ void QSGItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
     if (!isValid() || !q->isComponentComplete())
         return;
 
+    currentChanges.reset();
+
+    int prevCount = itemCount;
     itemCount = model->count();
     qreal bufferFrom = from - buffer;
     qreal bufferTo = to + buffer;
@@ -1240,12 +1383,15 @@ void QSGItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
     }
 
     lazyRelease = false;
+    if (prevCount != itemCount)
+        emit q->countChanged();
 }
 
 void QSGItemViewPrivate::regenerate()
 {
     Q_Q(QSGItemView);
     if (q->isComponentComplete()) {
+        currentChanges.reset();
         delete header;
         header = 0;
         delete footer;
@@ -1290,6 +1436,10 @@ void QSGItemViewPrivate::layout()
         return;
     }
 
+    if (!applyModelChanges() && !forceLayout)
+        return;
+    forceLayout = false;
+
     layoutVisibleItems();
     refill();
 
@@ -1297,6 +1447,7 @@ void QSGItemViewPrivate::layout()
     maxExtentDirty = true;
 
     updateHighlight();
+
     if (!q->isMoving() && !q->isFlicking()) {
         fixupPosition();
         refill();
@@ -1306,6 +1457,132 @@ void QSGItemViewPrivate::layout()
     updateFooter();
     updateViewport();
     updateUnrequestedPositions();
+}
+
+bool QSGItemViewPrivate::applyModelChanges()
+{
+    Q_Q(QSGItemView);
+    if (!q->isComponentComplete() || !currentChanges.hasPendingChanges() || inApplyModelChanges)
+        return false;
+    inApplyModelChanges = true;
+
+    updateUnrequestedIndexes();
+    moveReason = QSGItemViewPrivate::Other;
+
+    int prevCount = itemCount;
+    bool removedVisible = false;
+
+    FxViewItem *firstVisible = firstVisibleItem();
+    FxViewItem *origVisibleItemsFirst = visibleItems.count() ? visibleItems.first() : 0;
+    int firstItemIndex = firstVisible ? firstVisible->index : -1;
+    QList<FxViewItem *> removedBeforeFirstVisible;
+
+    const QVector<QDeclarativeChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
+    for (int i=0; i<removals.count(); i++) {
+        itemCount -= removals[i].count;
+
+        // Remove the items from the visible list, skipping anything already marked for removal
+        QList<FxViewItem*>::Iterator it = visibleItems.begin();
+        while (it != visibleItems.end()) {
+            FxViewItem *item = *it;
+            if (item->index == -1 || item->index < removals[i].index) {
+                // already removed, or before removed items
+                if (item->index < removals[i].index && !removedVisible)
+                    removedVisible = true;
+                ++it;
+            } else if (item->index >= removals[i].index + removals[i].count) {
+                // after removed items
+                item->index -= removals[i].count;
+                ++it;
+            } else {
+                // removed item
+                removedVisible = true;
+                item->attached->emitRemove();
+                if (item->attached->delayRemove()) {
+                    item->index = -1;
+                    QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
+                    ++it;
+                } else {
+                    if (firstVisible && item->position() < firstVisible->position() && item != visibleItems.first())
+                        removedBeforeFirstVisible.append(item);
+                    if (removals[i].isMove()) {
+                        currentChanges.removedItems.insert(removals[i].moveKey(item->index), item);
+                    } else {
+                        if (item == firstVisible)
+                            firstVisible = 0;
+                        currentChanges.removedItems.insertMulti(QDeclarativeChangeSet::MoveKey(), item);
+                    }
+                    it = visibleItems.erase(it);
+                }
+            }
+        }
+
+    }
+    if (!removals.isEmpty())
+        updateVisibleIndex();
+
+    const QVector<QDeclarativeChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
+    bool addedVisible = false;
+    QList<FxViewItem *> addedItems;
+    QList<FxViewItem *> movedBackwards;
+
+    for (int i=0; i<insertions.count(); i++) {
+        bool wasEmpty = visibleItems.isEmpty();
+        if (applyInsertionChange(insertions[i], &movedBackwards, &addedItems, firstVisible))
+            addedVisible = true;
+        if (wasEmpty && !visibleItems.isEmpty())
+            resetFirstItemPosition();
+        itemCount += insertions[i].count;
+        updateVisibleIndex();
+    }
+    for (int i=0; i<addedItems.count(); ++i)
+        addedItems.at(i)->attached->emitAdd();
+
+    // if first visible item is moving but another item is moving up to replace it,
+    // do this positioning now to avoid shifting all content forwards
+    if (firstVisible && firstItemIndex >= 0) {
+        for (int i=0; i<movedBackwards.count(); i++) {
+            if (movedBackwards[i]->index == firstItemIndex) {
+                resetItemPosition(movedBackwards[i], firstVisible);
+                movedBackwards.removeAt(i);
+                break;
+            }
+        }
+    }
+
+    // Ensure we don't cause an ugly list scroll
+    if (firstVisible && visibleItems.count() && visibleItems.first() != firstVisible) {
+        // ensure first item is placed at correct postion if moving backward
+        // since it will be used to position all subsequent items
+        if (movedBackwards.count() && origVisibleItemsFirst)
+            resetItemPosition(visibleItems.first(), origVisibleItemsFirst);
+        moveItemBy(visibleItems.first(), removedBeforeFirstVisible, movedBackwards);
+    }
+
+    // Whatever removed/moved items remain are no longer visible items.
+    for (QHash<QDeclarativeChangeSet::MoveKey, FxViewItem *>::Iterator it = currentChanges.removedItems.begin();
+         it != currentChanges.removedItems.end(); ++it) {
+        releaseItem(it.value());
+    }
+    currentChanges.removedItems.clear();
+
+    if (currentChanges.currentChanged) {
+        if (currentChanges.currentRemoved && currentItem) {
+            currentItem->attached->setIsCurrentItem(false);
+            releaseItem(currentItem);
+            currentItem = 0;
+        }
+        if (!currentIndexCleared)
+            updateCurrent(currentChanges.newCurrentIndex);
+    }
+    currentChanges.reset();
+
+    updateSections();
+    if (prevCount != itemCount)
+        emit q->countChanged();
+
+    inApplyModelChanges = false;
+    return removedVisible || addedVisible || !currentChanges.pendingChanges.changes().isEmpty();
 }
 
 FxViewItem *QSGItemViewPrivate::createItem(int modelIndex)
@@ -1413,6 +1690,17 @@ void QSGItemViewPrivate::updateUnrequestedPositions()
 {
     for (QHash<QSGItem*,int>::const_iterator it = unrequestedItems.begin(); it != unrequestedItems.end(); ++it)
         repositionPackageItemAt(it.key(), it.value());
+}
+
+void QSGItemViewPrivate::updateVisibleIndex()
+{
+    visibleIndex = 0;
+    for (QList<FxViewItem*>::Iterator it = visibleItems.begin(); it != visibleItems.end(); ++it) {
+        if ((*it)->index != -1) {
+            visibleIndex = (*it)->index;
+            break;
+        }
+    }
 }
 
 QT_END_NAMESPACE

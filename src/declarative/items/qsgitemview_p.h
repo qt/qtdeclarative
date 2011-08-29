@@ -191,12 +191,16 @@ protected:
 protected slots:
     virtual void updateSections() {}
     void destroyRemoved();
-    void itemsChanged(int index, int count);
     void createdItem(int index, QSGItem *item);
     void modelReset();
     void destroyingItem(QSGItem *item);
     void animStopped();
     void trackedPositionChanged();
+
+    void itemsInserted(int index, int count);
+    void itemsRemoved(int index, int count);
+    void itemsMoved(int from, int to, int count);
+    void itemsChanged(int index, int count);
 
 private:
     Q_DECLARE_PRIVATE(QSGItemView)
