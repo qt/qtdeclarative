@@ -127,6 +127,8 @@ private slots:
 
     void wheelEvent_data();
     void wheelEvent();
+    void hoverEvent_data();
+    void hoverEvent();
     void hoverEventInParent();
 
 private:
@@ -925,11 +927,73 @@ protected:
     }
 };
 
+void tst_qsgitem::hoverEvent_data()
+{
+    QTest::addColumn<bool>("visible");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<bool>("acceptHoverEvents");
+
+    QTest::newRow("visible, enabled, accept hover") << true << true << true;
+    QTest::newRow("visible, disabled, accept hover") << true << false << true;
+    QTest::newRow("invisible, enabled, accept hover") << false << true << true;
+    QTest::newRow("invisible, disabled, accept hover") << false << false << true;
+
+    QTest::newRow("visible, enabled, not accept hover") << true << true << false;
+    QTest::newRow("visible, disabled, not accept hover") << true << false << false;
+    QTest::newRow("invisible, enabled, not accept hover") << false << true << false;
+    QTest::newRow("invisible, disabled, not accept hover") << false << false << false;
+}
+
 // ### For some unknown reason QTest::mouseMove() isn't working correctly.
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
     QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, 0);
     QApplication::sendEvent(object, &moveEvent);
+}
+
+void tst_qsgitem::hoverEvent()
+{
+    QFETCH(bool, visible);
+    QFETCH(bool, enabled);
+    QFETCH(bool, acceptHoverEvents);
+
+    QSGCanvas *canvas = new QSGCanvas();
+    canvas->resize(200, 200);
+    canvas->show();
+
+    HoverItem *item = new HoverItem;
+    item->setSize(QSizeF(100, 100));
+    item->setParentItem(canvas->rootItem());
+
+    item->setEnabled(enabled);
+    item->setVisible(visible);
+    item->setAcceptHoverEvents(acceptHoverEvents);
+
+    const QPoint outside(150, 150);
+    const QPoint inside(50, 50);
+    const QPoint anotherInside(51, 51);
+
+    sendMouseMove(canvas, outside);
+    item->resetCounters();
+
+    // Enter, then move twice inside, then leave.
+    sendMouseMove(canvas, inside);
+    sendMouseMove(canvas, anotherInside);
+    sendMouseMove(canvas, inside);
+    sendMouseMove(canvas, outside);
+
+    const bool shouldReceiveHoverEvents = visible && enabled && acceptHoverEvents;
+    if (shouldReceiveHoverEvents) {
+        QCOMPARE(item->hoverEnterCount, 1);
+        QCOMPARE(item->hoverMoveCount, 2);
+        QCOMPARE(item->hoverLeaveCount, 1);
+    } else {
+        QCOMPARE(item->hoverEnterCount, 0);
+        QCOMPARE(item->hoverMoveCount, 0);
+        QCOMPARE(item->hoverLeaveCount, 0);
+    }
+
+    delete canvas;
 }
 
 void tst_qsgitem::hoverEventInParent()

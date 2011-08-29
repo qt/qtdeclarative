@@ -1238,7 +1238,7 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
     QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QSGItem *child = children.at(ii);
-        if (!child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled())
             continue;
         if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
             return true;
