@@ -1124,6 +1124,7 @@ void tst_QSGListView::enforceRange_withoutHighlight()
 
     QSGView *canvas = createView();
     canvas->show();
+    QTest::qWaitForWindowShown(canvas);
 
     TestModel model;
     model.addItem("Item 0", "a");

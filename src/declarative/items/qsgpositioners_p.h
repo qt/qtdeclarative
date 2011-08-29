@@ -121,6 +121,8 @@ protected:
     virtual void itemChange(ItemChange, const ItemChangeData &);
     void finishApplyTransitions();
 
+    virtual void updatePolish();
+
 Q_SIGNALS:
     void spacingChanged();
     void moveChanged();
