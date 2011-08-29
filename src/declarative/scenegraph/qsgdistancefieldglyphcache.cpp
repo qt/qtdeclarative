@@ -799,7 +799,8 @@ static bool fontHasNarrowOutlines(const QRawFont &f)
 }
 
 QSGDistanceFieldGlyphCacheManager::QSGDistanceFieldGlyphCacheManager(QOpenGLContext *c)
-    : m_threshold_func(defaultThresholdFunc)
+    : ctx(c)
+    , m_threshold_func(defaultThresholdFunc)
     , m_antialiasingSpread_func(defaultAntialiasingSpreadFunc)
     , m_maxTextureSize(0)
 {
