@@ -1076,7 +1076,7 @@ bool QDeclarativeImportDatabase::importPlugin(const QString &filePath, const QSt
         if (!QDeclarative_isFileCaseCorrect(absoluteFilePath)) {
             if (errors) {
                 QDeclarativeError error;
-                error.setDescription(tr("File name case mismatch for \"%2\"").arg(absoluteFilePath));
+                error.setDescription(tr("File name case mismatch for \"%1\"").arg(absoluteFilePath));
                 errors->prepend(error);
             }
             return false;
