@@ -200,7 +200,7 @@ public:
     virtual bool isRunning() const = 0;
     virtual void animationStarted() = 0;
     virtual void animationStopped() = 0;
-    virtual void moveCanvasToThread(QSGContext *) { }
+    virtual void moveContextToThread(QSGContext *) { }
 
 protected:
     void initializeSceneGraph() { d->initializeSceneGraph(); }
@@ -262,7 +262,7 @@ public:
     bool isRunning() const { return QThread::isRunning(); }
     void setWindowSize(const QSize &size) { windowSize = size; }
     void maybeUpdate();
-    void moveCanvasToThread(QSGCanvas *c) { c->moveToThread(this); }
+    void moveContextToThread(QSGContext *c) { c->moveToThread(this); }
 
     bool event(QEvent *);
 

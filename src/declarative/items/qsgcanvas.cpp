@@ -452,14 +452,23 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     // has a canvas..
     rootItem->setFocus(true);
 
-    thread = qmlNoThreadedRenderer()
-            ? static_cast<QSGCanvasRenderLoop *>(new QSGCanvasPlainRenderLoop())
-            : static_cast<QSGCanvasRenderLoop *>(new QSGCanvasRenderThread());
+    bool threaded = !qmlNoThreadedRenderer();
+
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
+        qWarning("QSGCanvas: platform does not support threaded rendering!");
+        threaded = false;
+    }
+
+    if (threaded)
+        thread = new QSGCanvasRenderThread();
+    else
+        thread = new QSGCanvasPlainRenderLoop();
+
     thread->renderer = q;
     thread->d = this;
 
     context = QSGContext::createDefaultContext();
-    thread->moveCanvasToThread(context);
+    thread->moveContextToThread(context);
 }
 
 void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
