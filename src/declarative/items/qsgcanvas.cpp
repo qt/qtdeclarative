@@ -1251,38 +1251,36 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
             } else {
-                QList<QSGItem*> parents;
+                QList<QSGItem *> itemsToHover;
                 QSGItem* parent = item;
-                parents << item;
+                itemsToHover << item;
                 while ((parent = parent->parentItem()))
-                    parents << parent;
+                    itemsToHover << parent;
 
-                //exit from previous (excepting ancestors)
-                while (!hoverItems.isEmpty() && !parents.contains(hoverItems[0])){
+                // Leaving from previous hovered items until we reach the item or one of its ancestors.
+                while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
                     sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
                     hoverItems.removeFirst();
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
+                    // ### Shouldn't we send moves for the parent items as well?
                     accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
                 } else {
-                    //enter any ancestors that also wish to be hovered and aren't
+                    // Enter items that are not entered yet.
                     int startIdx = -1;
                     if (!hoverItems.isEmpty())
-                        startIdx = parents.indexOf(hoverItems[0]);
+                        startIdx = itemsToHover.indexOf(hoverItems[0]) - 1;
                     if (startIdx == -1)
-                        startIdx = parents.count() - 1;
+                        startIdx = itemsToHover.count() - 1;
 
                     for (int i = startIdx; i >= 0; i--) {
-                        if (QSGItemPrivate::get(parents[i])->hoverEnabled) {
-                            hoverItems.prepend(parents[i]);
-                            sendHoverEvent(QEvent::HoverEnter, parents[i], scenePos, lastScenePos, modifiers, accepted);
+                        QSGItem *itemToHover = itemsToHover[i];
+                        if (QSGItemPrivate::get(itemToHover)->hoverEnabled) {
+                            hoverItems.prepend(itemToHover);
+                            sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, accepted);
                         }
                     }
-
-                    //enter new item
-                    hoverItems.prepend(item);
-                    accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
                 }
             }
             return true;

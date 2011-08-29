@@ -127,6 +127,7 @@ private slots:
 
     void wheelEvent_data();
     void wheelEvent();
+    void hoverEventInParent();
 
 private:
     void ensureFocus(QWidget *w) {
@@ -890,6 +891,89 @@ void tst_qsgitem::wheelEvent()
         QVERIFY(!event.isAccepted());
         QCOMPARE(item->wheelCount, 0);
     }
+
+    delete canvas;
+}
+
+class HoverItem : public QSGItem
+{
+Q_OBJECT
+public:
+    HoverItem(QSGItem *parent = 0)
+        : QSGItem(parent), hoverEnterCount(0), hoverMoveCount(0), hoverLeaveCount(0)
+    { }
+    void resetCounters() {
+        hoverEnterCount = 0;
+        hoverMoveCount = 0;
+        hoverLeaveCount = 0;
+    }
+    int hoverEnterCount;
+    int hoverMoveCount;
+    int hoverLeaveCount;
+protected:
+    virtual void hoverEnterEvent(QHoverEvent *event) {
+        event->accept();
+        ++hoverEnterCount;
+    }
+    virtual void hoverMoveEvent(QHoverEvent *event) {
+        event->accept();
+        ++hoverMoveCount;
+    }
+    virtual void hoverLeaveEvent(QHoverEvent *event) {
+        event->accept();
+        ++hoverLeaveCount;
+    }
+};
+
+// ### For some unknown reason QTest::mouseMove() isn't working correctly.
+static void sendMouseMove(QObject *object, const QPoint &position)
+{
+    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, 0);
+    QApplication::sendEvent(object, &moveEvent);
+}
+
+void tst_qsgitem::hoverEventInParent()
+{
+    QSGCanvas *canvas = new QSGCanvas();
+    canvas->resize(200, 200);
+    canvas->show();
+
+    HoverItem *parentItem = new HoverItem(canvas->rootItem());
+    parentItem->setSize(QSizeF(200, 200));
+    parentItem->setAcceptHoverEvents(true);
+
+    HoverItem *leftItem = new HoverItem(parentItem);
+    leftItem->setSize(QSizeF(100, 200));
+    leftItem->setAcceptHoverEvents(true);
+
+    HoverItem *rightItem = new HoverItem(parentItem);
+    rightItem->setSize(QSizeF(100, 200));
+    rightItem->setPos(QPointF(100, 0));
+    rightItem->setAcceptHoverEvents(true);
+
+    const QPoint insideLeft(50, 100);
+    const QPoint insideRight(150, 100);
+
+    sendMouseMove(canvas, insideLeft);
+    parentItem->resetCounters();
+    leftItem->resetCounters();
+    rightItem->resetCounters();
+
+    sendMouseMove(canvas, insideRight);
+    QCOMPARE(parentItem->hoverEnterCount, 0);
+    QCOMPARE(parentItem->hoverLeaveCount, 0);
+    QCOMPARE(leftItem->hoverEnterCount, 0);
+    QCOMPARE(leftItem->hoverLeaveCount, 1);
+    QCOMPARE(rightItem->hoverEnterCount, 1);
+    QCOMPARE(rightItem->hoverLeaveCount, 0);
+
+    sendMouseMove(canvas, insideLeft);
+    QCOMPARE(parentItem->hoverEnterCount, 0);
+    QCOMPARE(parentItem->hoverLeaveCount, 0);
+    QCOMPARE(leftItem->hoverEnterCount, 1);
+    QCOMPARE(leftItem->hoverLeaveCount, 1);
+    QCOMPARE(rightItem->hoverEnterCount, 1);
+    QCOMPARE(rightItem->hoverLeaveCount, 1);
 
     delete canvas;
 }
