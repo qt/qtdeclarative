@@ -864,7 +864,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     } else if (m_autoRotation || m_rotation || m_rotationVariation
                || m_rotationSpeed || m_rotationSpeedVariation) {
         perfLevel = Deformable;
-    } else if (m_alphaVariation || m_alpha != 1.0 || m_color.isValid()
+    } else if (m_alphaVariation || m_alpha != 1.0 || m_color.isValid() || m_color_variation
                || m_redVariation || m_blueVariation || m_greenVariation) {
         perfLevel = Colored;
     } else {
