@@ -47,6 +47,8 @@
 #include "qsgtexture_p.h"
 #include "qsgpainteditem.h"
 
+#include <QtGui/qcolor.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE

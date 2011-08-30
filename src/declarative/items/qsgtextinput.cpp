@@ -44,25 +44,21 @@
 #include "qsgcanvas.h"
 
 #include <private/qdeclarativeglobal_p.h>
-#include <private/qwidget_p.h>
 #include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>
-#include <QtWidgets/qinputcontext.h>
 #include <QTextBoundaryFinder>
-#include <qstyle.h>
 #include <qsgtextnode_p.h>
 #include <qsgsimplerectnode.h>
 
 #include <QtGui/qplatforminputcontext_qpa.h>
 #include <private/qguiapplication_p.h>
+#include <QtGui/qstylehints.h>
 
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-Q_WIDGETS_EXPORT QWidgetPrivate *qt_widget_private(QWidget *widget);
 
 /*!
     \qmlclass TextInput QSGTextInput
@@ -408,7 +404,7 @@ bool QSGTextInputPrivate::determineHorizontalAlignment()
     if (hAlignImplicit) {
         // if no explicit alignment has been set, follow the natural layout direction of the text
         QString text = control->text();
-        bool isRightToLeft = text.isEmpty() ? QApplication::keyboardInputDirection() == Qt::RightToLeft : text.isRightToLeft();
+        bool isRightToLeft = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QSGTextInput::AlignRight : QSGTextInput::AlignLeft);
     }
     return false;
@@ -517,7 +513,7 @@ void QSGTextInput::setCursorVisible(bool on)
     if (d->cursorVisible == on)
         return;
     d->cursorVisible = on;
-    d->control->setCursorBlinkPeriod(on?QApplication::cursorFlashTime():0);
+    d->control->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
     QRect r = d->control->cursorRect();
     if (d->control->inputMask().isEmpty())
         updateRect(r);
@@ -1132,7 +1128,7 @@ void QSGTextInput::mouseMoveEvent(QMouseEvent *event)
     if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectPressed) {
-        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QApplication::startDragDistance())
+        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > qApp->styleHints()->startDragDistance())
             setKeepMouseGrab(true);
         moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
         event->setAccepted(true);
@@ -1363,7 +1359,7 @@ QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == PasswordEchoOnEdit && !d->control->passwordEchoEditing())
+        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit && !d->control->passwordEchoEditing())
             return QVariant(displayText());
         else
             return QVariant(text());
@@ -1738,7 +1734,7 @@ void QSGTextInput::openSoftwareInputPanel()
     if (qApp) {
         if (canvas()) {
             QEvent event(QEvent::RequestSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
+            QCoreApplication::sendEvent(canvas(), &event);
         }
     }
 }
@@ -1787,7 +1783,7 @@ void QSGTextInput::closeSoftwareInputPanel()
     if (qApp) {
         if (canvas()) {
             QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
+            QCoreApplication::sendEvent(canvas(), &event);
         }
     }
 }
@@ -1862,9 +1858,9 @@ void QSGTextInputPrivate::init()
 #ifndef QT_NO_CLIPBOARD
     q->connect(q, SIGNAL(readOnlyChanged(bool)),
             q, SLOT(q_canPasteChanged()));
-    q->connect(QApplication::clipboard(), SIGNAL(dataChanged()),
+    q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
             q, SLOT(q_canPasteChanged()));
-    canPaste = !control->isReadOnly() && QApplication::clipboard()->text().length() != 0;
+    canPaste = !control->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
 #endif // QT_NO_CLIPBOARD
     q->connect(control, SIGNAL(updateMicroFocus()),
                q, SLOT(updateCursorRectangle()));
@@ -2008,7 +2004,7 @@ void QSGTextInput::q_canPasteChanged()
     Q_D(QSGTextInput);
     bool old = d->canPaste;
 #ifndef QT_NO_CLIPBOARD
-    d->canPaste = !d->control->isReadOnly() && QApplication::clipboard()->text().length() != 0;
+    d->canPaste = !d->control->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
 #endif
     if(d->canPaste != old)
         emit canPasteChanged();

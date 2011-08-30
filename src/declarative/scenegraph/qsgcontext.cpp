@@ -54,7 +54,7 @@
 #include <private/qsgtexture_p.h>
 #include <qsgengine.h>
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QOpenGLContext>
 
 #include <private/qobject_p.h>

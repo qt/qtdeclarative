@@ -53,7 +53,6 @@
 #include "private/qdeclarativestate_p_p.h"
 
 #include <QtCore/qdebug.h>
-#include <QtWidgets/qgraphicsitem.h>
 #include <QtCore/qmath.h>
 
 #include <private/qobject_p.h>

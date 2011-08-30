@@ -61,7 +61,6 @@
 #include <QStack>
 #include <QStringList>
 #include <QtCore/qdebug.h>
-#include <QApplication>
 #include <qdeclarativeinfo.h>
 
 QT_BEGIN_NAMESPACE

@@ -46,6 +46,8 @@
 #include <qsgtext_p.h>
 #include <qglyphrun.h>
 
+#include <QtGui/qcolor.h>
+
 QT_BEGIN_NAMESPACE
 
 class QTextLayout;

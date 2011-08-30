@@ -43,7 +43,8 @@
 #include "qsgcanvas.h"
 
 #include <QtGui/qevent.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 #include <float.h>
 #include <math.h>
@@ -341,7 +342,7 @@ void QSGPinchArea::updatePinch()
         d->initPinch = true;
     }
     if (d->pinchActivated && !d->pinchRejected){
-        const int dragThreshold = QApplication::startDragDistance();
+        const int dragThreshold = qApp->styleHints()->startDragDistance();
         QPointF p1 = touchPoint1.scenePos();
         QPointF p2 = touchPoint2.scenePos();
         qreal dx = p1.x() - p2.x();

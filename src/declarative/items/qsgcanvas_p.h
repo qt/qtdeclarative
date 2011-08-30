@@ -63,11 +63,11 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
-#include <private/qwidget_p.h>
 #include <private/qwindow_p.h>
 #include <private/qopengl_p.h>
 #include <qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
+#include <QtGui/qevent.h>
 
 QT_BEGIN_NAMESPACE
 

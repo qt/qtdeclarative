@@ -115,7 +115,7 @@ public:
 
     virtual void maybeUpdate() {
         if (!updatePending) {
-            QApplication::postEvent(this, new QEvent(QEvent::User));
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
             updatePending = true;
         }
     }
@@ -839,7 +839,7 @@ bool QSGCanvasPrivate::clearHover()
 
     bool accepted = false;
     foreach (QSGItem* item, hoverItems)
-        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true) || accepted;
+        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), true) || accepted;
     hoverItems.clear();
     return accepted;
 }
@@ -1888,7 +1888,7 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
-            QApplication::postEvent(this, new QEvent(QEvent::User));
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
 #endif
@@ -2251,7 +2251,7 @@ QImage QSGCanvasRenderThread::grab()
 
 void QSGCanvasRenderThread::maybeUpdate()
 {
-    Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || inSync,
+    Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || inSync,
                "QSGCanvas::update",
                "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
 

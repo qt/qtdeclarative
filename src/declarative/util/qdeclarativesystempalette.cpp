@@ -41,7 +41,7 @@
 
 #include "private/qdeclarativesystempalette_p.h"
 
-#include <QApplication>
+#include <QGuiApplication>
 
 #include <private/qobject_p.h>
 
@@ -84,7 +84,7 @@ QDeclarativeSystemPalette::QDeclarativeSystemPalette(QObject *parent)
     : QObject(*(new QDeclarativeSystemPalettePrivate), parent)
 {
     Q_D(QDeclarativeSystemPalette);
-    d->palette = QApplication::palette();
+    d->palette = QGuiApplication::palette();
     d->group = QPalette::Active;
     qApp->installEventFilter(this);
 }
@@ -291,7 +291,7 @@ bool QDeclarativeSystemPalette::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == qApp) {
         if (event->type() == QEvent::ApplicationPaletteChange) {
-            QApplication::postEvent(this, new QEvent(QEvent::ApplicationPaletteChange));
+            QGuiApplication::postEvent(this, new QEvent(QEvent::ApplicationPaletteChange));
             return false;
         }
     }
@@ -302,7 +302,7 @@ bool QDeclarativeSystemPalette::event(QEvent *event)
 {
     Q_D(QDeclarativeSystemPalette);
     if (event->type() == QEvent::ApplicationPaletteChange) {
-        d->palette = QApplication::palette();
+        d->palette = QGuiApplication::palette();
         emit paletteChanged();
         return true;
     }

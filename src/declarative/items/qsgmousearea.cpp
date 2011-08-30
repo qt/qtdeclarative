@@ -47,6 +47,7 @@
 
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 #include <float.h>
 
@@ -760,7 +761,7 @@ void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
             curLocalPos = event->windowPos();
         }
 
-        const int dragThreshold = 20; // ### refactor: QGuiApplication::startDragDistance();
+        const int dragThreshold = qApp->styleHints()->startDragDistance();
         qreal dx = qAbs(curLocalPos.x() - startLocalPos.x());
         qreal dy = qAbs(curLocalPos.y() - startLocalPos.y());
 

@@ -47,6 +47,7 @@
 #include <QtCore/qmath.h>
 #include <QtCore/qsequentialanimationgroup.h>
 #include <QtCore/qparallelanimationgroup.h>
+#include <QtGui/qtransform.h>
 
 QT_BEGIN_NAMESPACE
 

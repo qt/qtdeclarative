@@ -45,6 +45,7 @@
 #include "qsgstochasticdirection_p.h"
 #include <QDeclarativeListProperty>
 #include <qsgsimplematerial.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_HEADER
 

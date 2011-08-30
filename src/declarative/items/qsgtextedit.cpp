@@ -47,7 +47,7 @@
 #include "qsgsimplerectnode.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qguiapplication.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
@@ -56,7 +56,6 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
-#include <private/qwidget_p.h>
 #include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -65,7 +64,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-Q_WIDGETS_EXPORT QWidgetPrivate *qt_widget_private(QWidget *widget);
 /*!
     \qmlclass TextEdit QSGTextEdit
     \inqmlmodule QtQuick 2
@@ -551,7 +549,7 @@ bool QSGTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QSGTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight = text.isEmpty() ? QApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
+        bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QSGTextEdit::AlignRight : QSGTextEdit::AlignLeft);
     }
     return false;
@@ -1636,7 +1634,7 @@ void QSGTextEditPrivate::init()
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
-    QObject::connect(QApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
+    QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
     canPaste = control->canPaste();
 #endif
 
@@ -1910,7 +1908,7 @@ void QSGTextEdit::openSoftwareInputPanel()
     if (qApp) {
         if (canvas()) {
             QEvent event(QEvent::RequestSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
+            QGuiApplication::sendEvent(canvas(), &event);
         }
     }
 }
@@ -1959,7 +1957,7 @@ void QSGTextEdit::closeSoftwareInputPanel()
     if (qApp) {
         if (canvas()) {
             QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
+            QGuiApplication::sendEvent(canvas(), &event);
         }
     }
 }

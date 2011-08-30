@@ -44,7 +44,7 @@
 
 #include <QtCore/qmetatype.h>
 #include <QtGui/qopengl.h>
-#include <QtWidgets/qwidget.h>
+#include <QtGui/qwindow.h>
 
 QT_BEGIN_HEADER
 

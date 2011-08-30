@@ -50,7 +50,6 @@
 #include <QtCore/QList>
 #include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
-#include <QtWidgets/qaction.h>
 
 QT_BEGIN_HEADER
 

@@ -49,7 +49,8 @@
 
 #include <QtGui/qevent.h>
 #include <QtGui/qevent.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
 #include <math.h>
 
@@ -1163,7 +1164,7 @@ void QSGPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
     QPointF pathPoint = pointNear(event->localPos(), &newPc);
     if (!stealMouse) {
         QPointF delta = pathPoint - startPoint;
-        if (qAbs(delta.x()) > QApplication::startDragDistance() || qAbs(delta.y()) > QApplication::startDragDistance()) {
+        if (qAbs(delta.x()) > qApp->styleHints()->startDragDistance() || qAbs(delta.y()) > qApp->styleHints()->startDragDistance()) {
             stealMouse = true;
             startPc = newPc;
         }

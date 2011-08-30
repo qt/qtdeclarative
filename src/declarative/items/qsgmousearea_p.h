@@ -45,6 +45,8 @@
 
 #include "qsgitem.h"
 
+#include <QtCore/qstringlist.h>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE

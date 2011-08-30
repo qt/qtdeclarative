@@ -41,7 +41,7 @@
 
 #include "qdeclarativeapplication_p.h"
 #include <private/qobject_p.h>
-#include <QtWidgets/QApplication>
+#include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,8 +49,8 @@ class QDeclarativeApplicationPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeApplication)
 public:
-    QDeclarativeApplicationPrivate() : active(QApplication::activeWindow() != 0),
-    layoutDirection(QApplication::layoutDirection()) {}
+    QDeclarativeApplicationPrivate() : active(QGuiApplication::activeWindow() != 0),
+    layoutDirection(QGuiApplication::layoutDirection()) {}
     bool active;
     Qt::LayoutDirection layoutDirection;
 };
@@ -100,7 +100,7 @@ bool QDeclarativeApplication::eventFilter(QObject *obj, QEvent *event)
         }
     }
     if (event->type() == QEvent::LayoutDirectionChange) {
-        Qt::LayoutDirection direction = QApplication::layoutDirection();
+        Qt::LayoutDirection direction = QGuiApplication::layoutDirection();
         if (d->layoutDirection != direction) {
             d->layoutDirection = direction;
             emit layoutDirectionChanged();

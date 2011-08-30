@@ -51,8 +51,8 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtWidgets/qgraphicstransform.h>
 #include <QtGui/qpen.h>
+#include <QtGui/qcursor.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
@@ -2240,8 +2240,6 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
     // This test is measurably (albeit only slightly) faster than qobject_cast<>()
     const QMetaObject *mo = o->metaObject();
     while (mo && mo != &QSGItem::staticMetaObject) {
-        if (mo == &QGraphicsObject::staticMetaObject)
-            qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         mo = mo->d.superdata;
     }
 
@@ -2249,6 +2247,9 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
         QSGItem *item = static_cast<QSGItem *>(o);
         item->setParentItem(that);
     } else {
+        if (o->inherits("QGraphicsItem"))
+            qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
+
         // XXX todo - do we really want this behavior?
         o->setParent(that);
     }

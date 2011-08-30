@@ -47,7 +47,6 @@
 #include <QDebug>
 #include <QStringList>
 #include <QMap>
-#include <QApplication>
 #include <QThread>
 #include <QXmlQuery>
 #include <QXmlResultItems>

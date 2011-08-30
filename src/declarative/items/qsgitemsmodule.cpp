@@ -157,9 +157,6 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QValidator>();
 #endif
     qmlRegisterType<QSGVisualModel>();
-#ifndef QT_NO_ACTION
-    qmlRegisterType<QAction>();
-#endif
     qmlRegisterType<QSGPen>();
     qmlRegisterType<QSGFlickableVisibleArea>();
     qRegisterMetaType<QSGAnchorLine>("QSGAnchorLine");

@@ -49,7 +49,7 @@
 #include <QtCore/QStringList>
 
 #include <private/qobject_p.h>
-#include <private/qapplication_p.h>
+#include <private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -167,7 +167,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
     if (!commandLineTested) {
         commandLineTested = true;
 
-        QApplicationPrivate *appD = static_cast<QApplicationPrivate*>(QObjectPrivate::get(qApp));
+        QGuiApplicationPrivate *appD = static_cast<QGuiApplicationPrivate*>(QObjectPrivate::get(qApp));
 #ifndef QDECLARATIVE_NO_DEBUG_PROTOCOL
         // ### remove port definition when protocol is changed
         int port = 0;

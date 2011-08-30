@@ -91,7 +91,6 @@
 #include <QtCore/qmutex.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector3d.h>
-#include <QtWidgets/qsound.h>
 #include <QtCore/qcryptographichash.h>
 
 #include <private/qobject_p.h>

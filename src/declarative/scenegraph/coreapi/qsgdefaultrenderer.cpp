@@ -46,7 +46,7 @@
 #include "qsgmaterial.h"
 
 #include <QtCore/qvarlengtharray.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qguiapplication.h>
 #include <QtCore/qpair.h>
 #include <QtCore/QElapsedTimer>
 

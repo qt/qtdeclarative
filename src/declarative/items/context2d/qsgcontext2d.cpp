@@ -47,9 +47,7 @@
 #include <QtCore/qdebug.h>
 #include "private/qsgcontext_p.h"
 
-#include <QtWidgets/qgraphicsitem.h>
-#include <QtWidgets/qapplication.h>
-#include <QtWidgets/qgraphicseffect.h>
+#include <QtGui/qguiapplication.h>
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
 #include "qdeclarativepixmapcache_p.h"
@@ -78,10 +76,6 @@ void copy_vector(QVector<T>* dst, const QVector<T>& src)
     }
 }
 
-// Note, this is exported but in a private header as qtopengl depends on it.
-// But it really should be considered private API
-void qt_blurImage(QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0);
-void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
 static bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
@@ -1322,6 +1316,8 @@ QImage QSGContext2DPrivate::makeShadowImage(const QPixmap& pix)
     tmpPainter.drawPixmap(shadowX, shadowY, pix);
     tmpPainter.end();
 
+#if 0
+    // ### refactor
     // blur the alpha channel
     if (state.shadowBlur > 0) {
         QImage blurred(shadowImg.size(), QImage::Format_ARGB32);
@@ -1331,6 +1327,7 @@ QImage QSGContext2DPrivate::makeShadowImage(const QPixmap& pix)
         blurPainter.end();
         shadowImg = blurred;
     }
+#endif
 
     // blacken the image with shadow color...
     tmpPainter.begin(&shadowImg);

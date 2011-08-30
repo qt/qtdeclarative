@@ -46,7 +46,8 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
@@ -821,7 +822,7 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     if (q->yflick()) {
         int dy = int(event->localPos().y() - pressPos.y());
-        if (qAbs(dy) > QApplication::startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
+        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
@@ -846,14 +847,14 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 vData.move.setValue(qRound(newY));
                 vMoved = true;
             }
-            if (qAbs(dy) > QApplication::startDragDistance())
+            if (qAbs(dy) > qApp->styleHints()->startDragDistance())
                 stealY = true;
         }
     }
 
     if (q->xflick()) {
         int dx = int(event->localPos().x() - pressPos.x());
-        if (qAbs(dx) > QApplication::startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
+        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
@@ -879,7 +880,7 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
                 hMoved = true;
             }
 
-            if (qAbs(dx) > QApplication::startDragDistance())
+            if (qAbs(dx) > qApp->styleHints()->startDragDistance())
                 stealX = true;
         }
     }

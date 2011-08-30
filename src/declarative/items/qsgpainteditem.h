@@ -43,6 +43,7 @@
 #define QSGPAINTEDITEM_P_H
 
 #include <qsgitem.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_HEADER
 
