@@ -786,7 +786,7 @@ void QSGItemView::itemsInserted(int index, int count)
 
     d->currentChanges.prepare(d->currentIndex, d->itemCount);
     d->currentChanges.doInsert(index, count);
-    d->scheduleLayout();
+    polish();
 }
 
 void QSGItemView::itemsRemoved(int index, int count)
@@ -797,7 +797,7 @@ void QSGItemView::itemsRemoved(int index, int count)
 
     d->currentChanges.prepare(d->currentIndex, d->itemCount);
     d->currentChanges.doRemove(index, count);
-    d->scheduleLayout();
+    polish();
 }
 
 void QSGItemView::itemsMoved(int from, int to, int count)
@@ -811,7 +811,7 @@ void QSGItemView::itemsMoved(int from, int to, int count)
 
     d->currentChanges.prepare(d->currentIndex, d->itemCount);
     d->currentChanges.doMove(from, to, count);
-    d->scheduleLayout();
+    polish();
 }
 
 void QSGItemView::itemsChanged(int index, int count)
@@ -822,7 +822,7 @@ void QSGItemView::itemsChanged(int index, int count)
 
     d->currentChanges.prepare(d->currentIndex, d->itemCount);
     d->currentChanges.doChange(index, count);
-    d->scheduleLayout();
+    polish();
 }
 
 void QSGItemView::modelReset()
@@ -1166,7 +1166,7 @@ QSGItemViewPrivate::QSGItemViewPrivate()
     , headerComponent(0), header(0), footerComponent(0), footer(0)
     , minExtent(0), maxExtent(0)
     , ownModel(false), wrap(false), lazyRelease(false), deferredRelease(false)
-    , layoutScheduled(false), inApplyModelChanges(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
+    , inApplyModelChanges(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
     , minExtentDirty(true), maxExtentDirty(true)
 {
@@ -1406,15 +1406,6 @@ void QSGItemViewPrivate::regenerate()
     }
 }
 
-void QSGItemViewPrivate::scheduleLayout()
-{
-    Q_Q(QSGItemView);
-    if (!layoutScheduled) {
-        layoutScheduled = true;
-        q->polish();
-    }
-}
-
 void QSGItemViewPrivate::updateViewport()
 {
     Q_Q(QSGItemView);
@@ -1429,7 +1420,6 @@ void QSGItemViewPrivate::updateViewport()
 void QSGItemViewPrivate::layout()
 {
     Q_Q(QSGItemView);
-    layoutScheduled = false;
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartPosition());

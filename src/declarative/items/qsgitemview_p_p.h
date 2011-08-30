@@ -126,7 +126,6 @@ public:
     void layout();
     void refill();
     void refill(qreal from, qreal to, bool doBuffer = false);
-    void scheduleLayout();
     void mirrorChange();
 
     FxViewItem *createItem(int modelIndex);
@@ -184,7 +183,6 @@ public:
     bool wrap : 1;
     bool lazyRelease : 1;
     bool deferredRelease : 1;
-    bool layoutScheduled : 1;
     bool inApplyModelChanges : 1;
     bool inViewportMoved : 1;
     bool forceLayout : 1;

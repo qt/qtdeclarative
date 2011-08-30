@@ -1037,7 +1037,7 @@ void QSGListViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
         if ((orient == QSGListView::Vertical && newGeometry.height() != oldGeometry.height())
             || (orient == QSGListView::Horizontal && newGeometry.width() != oldGeometry.width())) {
             forceLayout = true;
-            scheduleLayout();
+            q->polish();
         }
     }
 }
