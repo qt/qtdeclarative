@@ -66,7 +66,7 @@ Returns the set of QML files in path (qmldir, *.qml, *.js).  The caller
 is responsible for deleting the returned data.
 Returns 0 if the directory does not exist.
 */
-#if defined (Q_OS_UNIX)
+#if defined (Q_OS_UNIX) && !defined(Q_OS_DARWIN)
 static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
 {
     QByteArray name(QFile::encodeName(path));
@@ -127,8 +127,12 @@ static QStringHash<bool> *qmlFilesInDirectory(const QString &path)
                 || fileName.endsWith(QLatin1String(".so"))
                 || fileName.endsWith(QLatin1String(".sl"))
 #endif
-                )
+                ) {
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+            fileName = fileName.toLower();
+#endif
             files->insert(fileName, true);
+        }
     }
     return files;
 }
@@ -817,12 +821,22 @@ QString QDeclarativeTypeLoader::absoluteFilePath(const QString &path)
         QFileInfo fileInfo(path);
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+    QString lowPath = path.toLower();
+    int lastSlash = lowPath.lastIndexOf(QLatin1Char('/'));
+    QString dirPath = lowPath.left(lastSlash);
+#else
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
     QStringRef dirPath(&path, 0, lastSlash);
+#endif
 
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+        QHashedString dirPathString(dirPath);
+#else
         QHashedString dirPathString(dirPath.toString());
+#endif
         StringSet *files = qmlFilesInDirectory(dirPathString);
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);
@@ -830,7 +844,11 @@ QString QDeclarativeTypeLoader::absoluteFilePath(const QString &path)
     if (!(*fileSet))
         return QString();
 
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+    QString absoluteFilePath = (*fileSet)->contains(QHashedStringRef(lowPath.constData()+lastSlash+1, lowPath.length()-lastSlash-1)) ? path : QString();
+#else
     QString absoluteFilePath = (*fileSet)->contains(QHashedStringRef(path.constData()+lastSlash+1, path.length()-lastSlash-1)) ? path : QString();
+#endif
     if (absoluteFilePath.length() > 2 && absoluteFilePath.at(0) != QLatin1Char('/') && absoluteFilePath.at(1) != QLatin1Char(':'))
         absoluteFilePath = QFileInfo(absoluteFilePath).absoluteFilePath();
 
@@ -854,11 +872,19 @@ bool QDeclarativeTypeLoader::directoryExists(const QString &path)
     int length = path.length();
     if (path.endsWith(QLatin1Char('/')))
         --length;
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+    QString dirPath = path.left(length).toLower();
+#else
     QStringRef dirPath(&path, 0, length);
+#endif
 
     StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
     if (!fileSet) {
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_DARWIN)
+        QHashedString dirPathString(dirPath);
+#else
         QHashedString dirPathString(dirPath.toString());
+#endif
         StringSet *files = qmlFilesInDirectory(dirPathString);
         m_importDirCache.insert(dirPathString, files);
         fileSet = m_importDirCache.value(dirPathString);
