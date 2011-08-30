@@ -582,6 +582,13 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 {
     QSGShaderEffectNode *node = static_cast<QSGShaderEffectNode *>(oldNode);
 
+    // In the case of a bad vertex shader, don't try to create a node...
+    if (m_source.attributeNames.isEmpty()) {
+        if (node)
+            delete node;
+        return 0;
+    }
+
     if (!node) {
         node = new QSGShaderEffectNode;
         m_programDirty = true;
