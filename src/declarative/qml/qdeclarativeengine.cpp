@@ -50,7 +50,7 @@
 #include "qdeclarativecomponent.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativevme_p.h"
-#include "private/qdeclarativeenginedebug_p.h"
+#include "private/qdeclarativeenginedebugservice_p.h"
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativexmlhttprequest_p.h"
 #include "private/qdeclarativesqldatabase_p.h"
@@ -448,9 +448,9 @@ void QDeclarativeEnginePrivate::init()
     rootContext = new QDeclarativeContext(q,true);
 
     if (QCoreApplication::instance()->thread() == q->thread() &&
-        QDeclarativeEngineDebugServer::isDebuggingEnabled()) {
+        QDeclarativeEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
-        QDeclarativeEngineDebugServer::instance()->addEngine(q);
+        QDeclarativeEngineDebugService::instance()->addEngine(q);
         QV8DebugService::instance()->addEngine(q);
     }
 }
@@ -515,7 +515,7 @@ QDeclarativeEngine::~QDeclarativeEngine()
 {
     Q_D(QDeclarativeEngine);
     if (d->isDebugging)
-        QDeclarativeEngineDebugServer::instance()->remEngine(this);
+        QDeclarativeEngineDebugService::instance()->remEngine(this);
 
     // if we are the parent of any of the qobject module api instances,
     // we need to remove them from our internal list, in order to prevent

@@ -23,7 +23,6 @@ SOURCES += \
     $$PWD/qdeclarativeinfo.cpp \
     $$PWD/qdeclarativeerror.cpp \
     $$PWD/qdeclarativescript.cpp \
-    $$PWD/qdeclarativeenginedebug.cpp \
     $$PWD/qdeclarativerewrite.cpp \
     $$PWD/qdeclarativevaluetype.cpp \
     $$PWD/qdeclarativefastproperties.cpp \
@@ -81,7 +80,6 @@ HEADERS += \
     $$PWD/qdeclarativedata_p.h \
     $$PWD/qdeclarativeerror.h \
     $$PWD/qdeclarativescript_p.h \
-    $$PWD/qdeclarativeenginedebug_p.h \
     $$PWD/qdeclarativerewrite_p.h \
     $$PWD/qdeclarativevaluetype_p.h \
     $$PWD/qdeclarativefastproperties_p.h \

@@ -54,7 +54,6 @@
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativedebug_p.h>
-#include <private/qdeclarativeenginedebug_p.h>
 #include <private/qdeclarativedebugservice_p.h>
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativeproperty_p.h>
