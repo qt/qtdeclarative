@@ -1328,10 +1328,15 @@ void QSGText::resetMaximumLineCount()
     styling markup, in the style of html 3.2:
 
     \code
-    <font size="4" color="#ff0000">font size and color</font>
-    <b>bold</b>
-    <i>italic</i>
-    <br>
+    <b></b> - bold
+    <i></i> - italic
+    <br> - new line
+    <p> - paragraph
+    <u> - underlined text
+    <font color="color_name" size="1-7"></font>
+    <h1> to <h6> - headers
+    <a href=""> - anchor
+    <ol type="">, <ul type=""> and <li> - ordered and unordered lists
     &gt; &lt; &amp;
     \endcode
 

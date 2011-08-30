@@ -53,7 +53,12 @@
     <b></b> - bold
     <i></i> - italic
     <br> - new line
+    <p> - paragraph
+    <u> - underlined text
     <font color="color_name" size="1-7"></font>
+    <h1> to <h6> - headers
+    <a href=""> - anchor
+    <ol type="">, <ul type=""> and <li> - ordered and unordered lists
 
     The opening and closing tags must be correctly nested.
 */
@@ -63,13 +68,28 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeStyledTextPrivate
 {
 public:
-    QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l) : text(t), layout(l), baseFont(layout.font()) {}
+    enum ListType { Ordered, Unordered };
+    enum ListFormat { Bullet, Disc, Square, Decimal, LowerAlpha, UpperAlpha, LowerRoman, UpperRoman };
+
+    struct List {
+        int level;
+        ListType type;
+        ListFormat format;
+    };
+
+    QDeclarativeStyledTextPrivate(const QString &t, QTextLayout &l)
+        : text(t), layout(l), baseFont(layout.font()), hasNewLine(false)
+    {
+    }
 
     void parse();
     bool parseTag(const QChar *&ch, const QString &textIn, QString &textOut, QTextCharFormat &format);
-    bool parseCloseTag(const QChar *&ch, const QString &textIn);
+    bool parseCloseTag(const QChar *&ch, const QString &textIn, QString &textOut);
     void parseEntity(const QChar *&ch, const QString &textIn, QString &textOut);
     bool parseFontAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
+    bool parseOrderedListAttributes(const QChar *&ch, const QString &textIn);
+    bool parseUnorderedListAttributes(const QChar *&ch, const QString &textIn);
+    bool parseAnchorAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
     QPair<QStringRef,QStringRef> parseAttribute(const QChar *&ch, const QString &textIn);
     QStringRef parseValue(const QChar *&ch, const QString &textIn);
 
@@ -78,9 +98,14 @@ public:
             ++ch;
     }
 
+    static QString toAlpha(int value, bool upper);
+    static QString toRoman(int value, bool upper);
+
     QString text;
     QTextLayout &layout;
     QFont baseFont;
+    QStack<List> listStack;
+    bool hasNewLine;
 
     static const QChar lessThan;
     static const QChar greaterThan;
@@ -89,6 +114,10 @@ public:
     static const QChar doubleQuote;
     static const QChar slash;
     static const QChar ampersand;
+    static const QChar bullet;
+    static const QChar disc;
+    static const QChar square;
+    static const int tabsize = 6;
 };
 
 const QChar QDeclarativeStyledTextPrivate::lessThan(QLatin1Char('<'));
@@ -98,6 +127,9 @@ const QChar QDeclarativeStyledTextPrivate::singleQuote(QLatin1Char('\''));
 const QChar QDeclarativeStyledTextPrivate::doubleQuote(QLatin1Char('\"'));
 const QChar QDeclarativeStyledTextPrivate::slash(QLatin1Char('/'));
 const QChar QDeclarativeStyledTextPrivate::ampersand(QLatin1Char('&'));
+const QChar QDeclarativeStyledTextPrivate::bullet(0x2022);
+const QChar QDeclarativeStyledTextPrivate::disc(0x25e6);
+const QChar QDeclarativeStyledTextPrivate::square(0x25a1);
 
 QDeclarativeStyledText::QDeclarativeStyledText(const QString &string, QTextLayout &layout)
 : d(new QDeclarativeStyledTextPrivate(string, layout))
@@ -131,8 +163,19 @@ void QDeclarativeStyledTextPrivate::parse()
     const QChar *ch = text.constData();
     while (!ch->isNull()) {
         if (*ch == lessThan) {
-            if (textLength)
-                drawText.append(QStringRef(&text, textStart, textLength));
+            if (textLength) {
+                QStringRef ref = QStringRef(&text, textStart, textLength);
+                const QChar *c = ref.constData();
+                bool isWhiteSpace = true;
+                for (int i = 0; isWhiteSpace && (i < textLength); ++c, ++i) {
+                    if (!c->isSpace())
+                        isWhiteSpace = false;
+                }
+                if (!isWhiteSpace) {
+                    drawText.append(ref);
+                    hasNewLine = false;
+                }
+            }
             if (rangeStart != drawText.length() && formatStack.count()) {
                 QTextLayout::FormatRange formatRange;
                 formatRange.format = formatStack.top();
@@ -144,7 +187,7 @@ void QDeclarativeStyledTextPrivate::parse()
             ++ch;
             if (*ch == slash) {
                 ++ch;
-                if (parseCloseTag(ch, text)) {
+                if (parseCloseTag(ch, text, drawText)) {
                     if (formatStack.count())
                         formatStack.pop();
                 }
@@ -203,6 +246,71 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
             } else if (char0 == QLatin1Char('i')) {
                 if (tagLength == 1)
                     format.setFontItalic(true);
+            } else if (char0 == QLatin1Char('p')) {
+                if (tagLength == 1) {
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
+                }
+            } else if (char0 == QLatin1Char('u')) {
+                if (tagLength == 1)
+                    format.setFontUnderline(true);
+                else if (tag == QLatin1String("ul")) {
+                    List listItem;
+                    listItem.level = 0;
+                    listItem.type = Unordered;
+                    listItem.format = Bullet;
+                    listStack.push(listItem);
+                }
+            } else if (char0 == QLatin1Char('h') && tagLength == 2) {
+                int level = tag.at(1).digitValue();
+                if (level >= 1 && level <= 6) {
+                    static const qreal scaling[] = { 2.0, 1.5, 1.2, 1.0, 0.8, 0.7 };
+                    if (!hasNewLine)
+                        textOut.append(QChar::LineSeparator);
+                    format.setFontPointSize(baseFont.pointSize() * scaling[level - 1]);
+                    format.setFontWeight(QFont::Bold);
+                }
+            } else if (tag == QLatin1String("ol")) {
+                List listItem;
+                listItem.level = 0;
+                listItem.type = Ordered;
+                listItem.format = Decimal;
+                listStack.push(listItem);
+            } else if (tag == QLatin1String("li")) {
+                if (!hasNewLine)
+                    textOut.append(QChar(QChar::LineSeparator));
+                if (!listStack.isEmpty()) {
+                    int count = ++listStack.top().level;
+                    for (int i = 0; i < listStack.size(); ++i)
+                        textOut += QString(tabsize, QChar::Nbsp);
+                    switch (listStack.top().format) {
+                    case Decimal:
+                        textOut += QString::number(count) % QLatin1Char('.');
+                        break;
+                    case LowerAlpha:
+                        textOut += toAlpha(count, false) % QLatin1Char('.');
+                        break;
+                    case UpperAlpha:
+                        textOut += toAlpha(count, true) % QLatin1Char('.');
+                        break;
+                    case LowerRoman:
+                        textOut += toRoman(count, false) % QLatin1Char('.');
+                        break;
+                    case UpperRoman:
+                        textOut += toRoman(count, true) % QLatin1Char('.');
+                        break;
+                    case Bullet:
+                        textOut += bullet;
+                        break;
+                    case Disc:
+                        textOut += disc;
+                        break;
+                    case Square:
+                        textOut += square;
+                        break;
+                    }
+                    textOut += QString(2, QChar::Nbsp);
+                }
             }
             return true;
         } else if (ch->isSpace()) {
@@ -210,18 +318,24 @@ bool QDeclarativeStyledTextPrivate::parseTag(const QChar *&ch, const QString &te
             QStringRef tag(&textIn, tagStart, tagLength);
             if (tag == QLatin1String("font"))
                 return parseFontAttributes(ch, textIn, format);
+            if (tag == QLatin1String("ol"))
+                return parseOrderedListAttributes(ch, textIn);
+            if (tag == QLatin1String("ul"))
+                return parseUnorderedListAttributes(ch, textIn);
+            if (tag == QLatin1String("a")) {
+                return parseAnchorAttributes(ch, textIn, format);
+            }
             if (*ch == greaterThan || ch->isNull())
                 continue;
-        } else if (*ch != slash){
+        } else if (*ch != slash) {
             tagLength++;
         }
         ++ch;
     }
-
     return false;
 }
 
-bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &textIn)
+bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &textIn, QString &textOut)
 {
     skipSpace(ch);
 
@@ -231,6 +345,7 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
         if (*ch == greaterThan) {
             QStringRef tag(&textIn, tagStart, tagLength);
             const QChar char0 = tag.at(0);
+            hasNewLine = false;
             if (char0 == QLatin1Char('b')) {
                 if (tagLength == 1)
                     return true;
@@ -239,7 +354,40 @@ bool QDeclarativeStyledTextPrivate::parseCloseTag(const QChar *&ch, const QStrin
             } else if (char0 == QLatin1Char('i')) {
                 if (tagLength == 1)
                     return true;
+            } else if (char0 == QLatin1Char('a')) {
+                if (tagLength == 1)
+                    return true;
+            } else if (char0 == QLatin1Char('p')) {
+                if (tagLength == 1) {
+                    textOut.append(QChar::LineSeparator);
+                    hasNewLine = true;
+                    return true;
+                }
+            } else if (char0 == QLatin1Char('u')) {
+                if (tagLength == 1)
+                    return true;
+                else if (tag == QLatin1String("ul")) {
+                    if (!listStack.isEmpty()) {
+                        listStack.pop();
+                        if (!listStack.count())
+                            textOut.append(QChar::LineSeparator);
+                    }
+                    return true;
+                }
+            } else if (char0 == QLatin1Char('h') && tagLength == 2) {
+                textOut.append(QChar::LineSeparator);
+                hasNewLine = true;
+                return true;
             } else if (tag == QLatin1String("font")) {
+                return true;
+            } else if (tag == QLatin1String("ol")) {
+                if (!listStack.isEmpty()) {
+                    listStack.pop();
+                    if (!listStack.count())
+                        textOut.append(QChar::LineSeparator);
+                }
+                return true;
+            } else if (tag == QLatin1String("li")) {
                 return true;
             }
             return false;
@@ -296,6 +444,79 @@ bool QDeclarativeStyledTextPrivate::parseFontAttributes(const QChar *&ch, const 
     return valid;
 }
 
+bool QDeclarativeStyledTextPrivate::parseOrderedListAttributes(const QChar *&ch, const QString &textIn)
+{
+    bool valid = false;
+
+    List listItem;
+    listItem.level = 0;
+    listItem.type = Ordered;
+    listItem.format = Decimal;
+
+    QPair<QStringRef,QStringRef> attr;
+    do {
+        attr = parseAttribute(ch, textIn);
+        if (attr.first == QLatin1String("type")) {
+            valid = true;
+            if (attr.second == QLatin1String("a"))
+                listItem.format = LowerAlpha;
+            else if (attr.second == QLatin1String("A"))
+                listItem.format = UpperAlpha;
+            else if (attr.second == QLatin1String("i"))
+                listItem.format = LowerRoman;
+            else if (attr.second == QLatin1String("I"))
+                listItem.format = UpperRoman;
+        }
+    } while (!ch->isNull() && !attr.first.isEmpty());
+
+    listStack.push(listItem);
+    return valid;
+}
+
+bool QDeclarativeStyledTextPrivate::parseUnorderedListAttributes(const QChar *&ch, const QString &textIn)
+{
+    bool valid = false;
+
+    List listItem;
+    listItem.level = 0;
+    listItem.type = Unordered;
+    listItem.format = Bullet;
+
+    QPair<QStringRef,QStringRef> attr;
+    do {
+        attr = parseAttribute(ch, textIn);
+        if (attr.first == QLatin1String("type")) {
+            valid = true;
+            if (attr.second == QLatin1String("disc"))
+                listItem.format = Disc;
+            else if (attr.second == QLatin1String("square"))
+                listItem.format = Square;
+        }
+    } while (!ch->isNull() && !attr.first.isEmpty());
+
+    listStack.push(listItem);
+    return valid;
+}
+
+bool QDeclarativeStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format)
+{
+    bool valid = false;
+
+    QPair<QStringRef,QStringRef> attr;
+    do {
+        attr = parseAttribute(ch, textIn);
+        if (attr.first == QLatin1String("href")) {
+            format.setAnchorHref(attr.second.toString());
+            format.setAnchor(true);
+            format.setFontUnderline(true);
+            format.setForeground(QColor("blue"));
+            valid = true;
+        }
+    } while (!ch->isNull() && !attr.first.isEmpty());
+
+    return valid;
+}
+
 QPair<QStringRef,QStringRef> QDeclarativeStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)
 {
     skipSpace(ch);
@@ -342,6 +563,58 @@ QStringRef QDeclarativeStyledTextPrivate::parseValue(const QChar *&ch, const QSt
     ++ch; // skip quote
 
     return QStringRef(&textIn, valStart, valLength);
+}
+
+QString QDeclarativeStyledTextPrivate::toAlpha(int value, bool upper)
+{
+    const char baseChar = upper ? 'A' : 'a';
+
+    QString result;
+    int c = value;
+    while (c > 0) {
+        c--;
+        result.prepend(QChar(baseChar + (c % 26)));
+        c /= 26;
+    }
+    return result;
+}
+
+QString QDeclarativeStyledTextPrivate::toRoman(int value, bool upper)
+{
+    QString result = QLatin1String("?");
+    // works for up to 4999 items
+    if (value < 5000) {
+        QByteArray romanNumeral;
+
+        static const char romanSymbolsLower[] = "iiivixxxlxcccdcmmmm";
+        static const char romanSymbolsUpper[] = "IIIVIXXXLXCCCDCMMMM";
+        QByteArray romanSymbols;
+        if (!upper)
+            romanSymbols = QByteArray::fromRawData(romanSymbolsLower, sizeof(romanSymbolsLower));
+        else
+            romanSymbols = QByteArray::fromRawData(romanSymbolsUpper, sizeof(romanSymbolsUpper));
+
+        int c[] = { 1, 4, 5, 9, 10, 40, 50, 90, 100, 400, 500, 900, 1000 };
+        int n = value;
+        for (int i = 12; i >= 0; n %= c[i], i--) {
+            int q = n / c[i];
+            if (q > 0) {
+                int startDigit = i + (i + 3) / 4;
+                int numDigits;
+                if (i % 4) {
+                    if ((i - 2) % 4)
+                        numDigits = 2;
+                    else
+                        numDigits = 1;
+                }
+                else
+                    numDigits = q;
+                romanNumeral.append(romanSymbols.mid(startDigit, numDigits));
+            }
+        }
+        result = QString::fromLatin1(romanNumeral);
+    }
+    return result;
 }
 
 QT_END_NAMESPACE
