@@ -45,17 +45,17 @@
 
 QT_BEGIN_NAMESPACE
 
-//TODO: Can we make the code such that you don't have to copy the whole vertex shader just to add one little calculation?
 //Includes comments because the code isn't self explanatory
-static const char qt_particles_default_vertex_code[] =
+static const char qt_particles_template_vertex_code[] =
         "attribute highp vec2 vPos;                                                         \n"
         "attribute highp vec2 vTex;                                                         \n"
         "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize    \n"
         "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration            \n"
+        "attribute highp float r;                                                           \n"
         "uniform highp mat4 qt_Matrix;                                                      \n"
         "uniform highp float timestamp;                                                     \n"
         "varying highp vec2 fTex;                                                           \n"
-        "void main() {                                                                      \n"
+        "void defaultMain() {                                                               \n"
         "    fTex = vTex;                                                                   \n"
         "    highp float size = vData.z;                                                    \n"
         "    highp float endSize = vData.w;                                                 \n"
@@ -68,6 +68,10 @@ static const char qt_particles_default_vertex_code[] =
         "                   + vVec.xy * t * vData.y         // apply speed vector..         \n"
         "                   + 0.5 * vVec.zw * pow(t * vData.y, 2.);                         \n"
         "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);                            \n"
+        "}\n";
+static const char qt_particles_default_vertex_code[] =
+        "void main() {        \n"
+        "    defaultMain();   \n"
         "}";
 
 static const char qt_particles_default_fragment_code[] =//TODO: Default frag requires source?
@@ -77,9 +81,6 @@ static const char qt_particles_default_fragment_code[] =//TODO: Default frag req
         "void main() {                                              \n"
         "    gl_FragColor = texture2D(source, fTex) * qt_Opacity;   \n"
         "}";
-
-static const char qt_position_attribute_name[] = "qt_Vertex";
-static const char qt_texcoord_attribute_name[] = "qt_MultiTexCoord0";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {
     { 0, 2, GL_FLOAT },             // Position
@@ -148,8 +149,9 @@ void QSGCustomParticle::componentComplete()
     \qmlproperty string QtQuick.Particles2::CustomParticle::fragmentShader
 
     This property holds the fragment shader's GLSL source code.
-    The default shader passes the texture coordinate along to the fragment
-    shader as "varying highp vec2 qt_TexCoord0".
+    The default shader expects the texture coordinate to be passed from the
+    vertex shader as "varying highp vec2 fTex", and it samples from a
+    sampler2D named "source".
 */
 
 void QSGCustomParticle::setFragmentShader(const QByteArray &code)
@@ -167,9 +169,41 @@ void QSGCustomParticle::setFragmentShader(const QByteArray &code)
     \qmlproperty string QtQuick.Particles2::CustomParticle::vertexShader
 
     This property holds the vertex shader's GLSL source code.
-    The default shader expects the texture coordinate to be passed from the
-    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
-    sampler2D named "source".
+
+    The default shader passes the texture coordinate along to the fragment
+    shader as "varying highp vec2 fTex".
+
+    To aid writing a particle vertex shader, the following GLSL code is prepended
+    to your vertex shader:
+    \code
+        attribute highp vec2 vPos;
+        attribute highp vec2 vTex;
+        attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
+        attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
+        attribute highp float r;
+        uniform highp mat4 qt_Matrix;
+        uniform highp float timestamp;
+        varying highp vec2 fTex;
+        void defaultMain() {
+            fTex = vTex;
+            highp float size = vData.z;
+            highp float endSize = vData.w;
+            highp float t = (timestamp - vData.x) / vData.y;
+            highp float currentSize = mix(size, endSize, t * t);
+            if (t < 0. || t > 1.)
+                currentSize = 0.;
+            highp vec2 pos = vPos
+                           - currentSize / 2. + currentSize * vTex          // adjust size
+                           + vVec.xy * t * vData.y         // apply speed vector..
+                           + 0.5 * vVec.zw * pow(t * vData.y, 2.);
+            gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
+        }
+    \endcode
+
+    defaultMain() is the same code as in the default shader, you can call this for basic
+    particle functions and then add additional variables for custom effects. Note that
+    the vertex shader for particles is responsible for simulating the movement of particles
+    over time, the particle data itself only has the starting position and spawn time.
 */
 
 void QSGCustomParticle::setVertexShader(const QByteArray &code)
@@ -303,6 +337,7 @@ void QSGCustomParticle::updateProperties()
         vertexCode = qt_particles_default_vertex_code;
     if (fragmentCode.isEmpty())
         fragmentCode = qt_particles_default_fragment_code;
+    vertexCode = qt_particles_template_vertex_code + vertexCode;
 
     m_source.attributeNames.clear();
     m_source.attributeNames << "vPos" << "vTex" << "vData" << "vVec" << "r";
@@ -310,10 +345,6 @@ void QSGCustomParticle::updateProperties()
     lookThroughShaderCode(vertexCode);
     lookThroughShaderCode(fragmentCode);
 
-    if (!m_source.attributeNames.contains(qt_position_attribute_name))
-        qWarning("QSGCustomParticle: Missing reference to \'%s\'.", qt_position_attribute_name);
-    if (!m_source.attributeNames.contains(qt_texcoord_attribute_name))
-        qWarning("QSGCustomParticle: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
     if (!m_source.respectsMatrix)
         qWarning("QSGCustomParticle: Missing reference to \'qt_Matrix\'.");
     if (!m_source.respectsOpacity)
@@ -344,16 +375,12 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
         QByteArray name = re.cap(3).toLatin1(); // variable name
 
         if (decl == "attribute") {
-            if (!m_source.attributeNames.contains(name))//TODO: Can they add custom attributes?
+            if (!m_source.attributeNames.contains(name))
                 qWarning() << "Custom Particle: Unknown attribute " << name;
         } else {
             Q_ASSERT(decl == "uniform");//TODO: Shouldn't assert
 
             if (name == "qt_Matrix") {
-                m_source.respectsMatrix = true;
-            } else if (name == "qt_ModelViewProjectionMatrix") {
-                // TODO: Remove after grace period.
-                qWarning("ShaderEffect: qt_ModelViewProjectionMatrix is deprecated. Use qt_Matrix instead.");
                 m_source.respectsMatrix = true;
             } else if (name == "qt_Opacity") {
                 m_source.respectsOpacity = true;
@@ -430,6 +457,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
         s.fragmentCode = qt_particles_default_fragment_code;
     if (s.vertexCode.isEmpty())
         s.vertexCode = qt_particles_default_vertex_code;
+    s.vertexCode = qt_particles_template_vertex_code + s.vertexCode;
     m_material.setProgramSource(s);
     foreach (const QString &str, m_particles){
         int gIdx = m_system->m_groupIds[str];

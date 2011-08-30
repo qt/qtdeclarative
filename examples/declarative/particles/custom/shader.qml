@@ -27,19 +27,8 @@ ParticleSystem{
         acceleration: PointDirection{x: -root.width/40; y: -root.height/40; xVariation: -root.width/20; yVariation: -root.width/20}
     }
     CustomParticle{
-        //TODO: Someway that you don't have to rewrite the basics for a simple addition
         vertexShader:"
-            attribute highp vec2 vPos;
-            attribute highp vec2 vTex;
-            attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
-            attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
-            attribute highp float r;
-
-            uniform highp mat4 qt_Matrix;
-            uniform highp float timestamp;
             uniform lowp float qt_Opacity;
-
-            varying highp vec2 fTex;                                
             varying lowp float fFade;
             varying highp vec2 fPos;
 
