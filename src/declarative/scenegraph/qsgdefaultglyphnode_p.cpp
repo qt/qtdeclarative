@@ -43,7 +43,7 @@
 
 #include <qopenglshaderprogram.h>
 
-#include <QtGui/private/qtextureglyphcache_gl_p.h>
+#include <QtGui/private/qopengltextureglyphcache_p.h>
 #include <private/qfontengine_p.h>
 #include <private/qopenglextensions_p.h>
 
