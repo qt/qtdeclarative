@@ -37,7 +37,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     id: editor
@@ -105,85 +105,6 @@ Rectangle {
                     +"<p><b>Click inside the selection</b> to cut/copy/paste/cancel selection."
                     +"<p>It's too whacky to let you paste if there is no current selection."
 
-                MouseArea {
-                    property string drag: ""
-                    property int pressPos
-
-                    x: -startHandle.width
-                    y: 0
-                    width: parent.width+startHandle.width+endHandle.width
-                    height: parent.height
-
-                    onPressAndHold: {
-                        if (editor.state == "") {
-                            edit.cursorPosition = edit.positionAt(mouse.x+x,mouse.y+y);
-                            edit.selectWord();
-                            editor.state = "selection"
-                        }
-                    }
-
-                    onClicked: {
-                        if (editor.state == "") {
-                            edit.cursorPosition = edit.positionAt(mouse.x+x,mouse.y+y);
-                            if (!edit.focus)
-                                edit.focus = true;
-                            edit.openSoftwareInputPanel();
-                        }
-                    }
-
-                    function hitHandle(h,x,y) { 
-                        return x>=h.x+flick.contentX && x<h.x+flick.contentX+h.width && y>=h.y+flick.contentY && y<h.y+flick.contentY+h.height 
-                    }
-
-                    onPressed: {
-                        if (editor.state == "selection") {
-                            if (hitHandle(startHandle,mouse.x+x,mouse.y+y)) {
-                                drag = "start"
-                                flick.interactive = false
-                            } else if (hitHandle(endHandle,mouse.x+x,mouse.y+y)) {
-                                drag = "end"
-                                flick.interactive = false
-                            } else {
-                                var pos = edit.positionAt(mouse.x+x,mouse.y+y);
-                                if (pos >= edit.selectionStart && pos <= edit.selectionEnd) {
-                                    drag = "selection"
-                                    flick.interactive = false
-                                } else {
-                                    drag = ""
-                                    flick.interactive = true
-                                }
-                            }
-                        }
-                    }
-
-                    onReleased: {
-                        if (editor.state == "selection") {
-                            if (drag == "selection") {
-                                editor.state = "menu"
-                            }
-                            drag = ""
-                        }
-                        flick.interactive = true
-                    }
-
-                    onPositionChanged: {
-                        if (editor.state == "selection" && drag != "") {
-                            if (drag == "start") {
-                                var pos = edit.positionAt(mouse.x+x+startHandle.width/2,mouse.y+y);
-                                var e = edit.selectionEnd;
-                                if (e < pos)
-                                    e = pos;
-                                edit.select(pos,e);
-                            } else if (drag == "end") {
-                                var pos = edit.positionAt(mouse.x+x-endHandle.width/2,mouse.y+y);
-                                var s = edit.selectionStart;
-                                if (s > pos)
-                                    s = pos;
-                                edit.select(s,pos);
-                            }
-                        }
-                    }
-                }
             }
         }
 

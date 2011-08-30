@@ -48,7 +48,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
 #include <QtWidgets/qaction.h>
 
@@ -360,10 +360,10 @@ protected:
     virtual void inputMethodEvent(QInputMethodEvent *);
     virtual void focusInEvent(QFocusEvent *);
     virtual void focusOutEvent(QFocusEvent *);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent(); // XXX todo - params?
     virtual void wheelEvent(QWheelEvent *event);
     virtual void touchEvent(QTouchEvent *event);

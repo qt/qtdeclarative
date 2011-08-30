@@ -56,7 +56,7 @@
 
 #include "qsgitem_p.h"
 
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE
@@ -72,7 +72,7 @@ public:
     ~QSGMouseAreaPrivate();
     void init();
 
-    void saveEvent(QGraphicsSceneMouseEvent *event);
+    void saveEvent(QMouseEvent *event);
     enum PropagateType{
         Click,
         DoubleClick,
@@ -80,7 +80,6 @@ public:
     };
     void propagate(QSGMouseEvent* event, PropagateType);
     bool propagateHelper(QSGMouseEvent*, QSGItem*,const QPointF &, PropagateType);
-    void forwardEvent(QGraphicsSceneMouseEvent* event);
 
     bool isPressAndHoldConnected();
     bool isDoubleClickConnected();

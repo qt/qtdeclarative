@@ -45,8 +45,8 @@
 #include "qsgevent.h"
 #include "qsgevents_p_p.h"
 
-#include <QtWidgets/qgraphicssceneevent.h>
-#include <QtWidgets/qapplication.h>
+#include <QtGui/qevent.h>
+#include <QtGui/qguiapplication.h>
 
 #include <float.h>
 
@@ -272,19 +272,13 @@ void QSGMouseAreaPrivate::init()
     q->setFiltersChildMouseEvents(true);
 }
 
-void QSGMouseAreaPrivate::saveEvent(QGraphicsSceneMouseEvent *event)
+void QSGMouseAreaPrivate::saveEvent(QMouseEvent *event)
 {
-    lastPos = event->pos();
-    lastScenePos = event->scenePos();
+    lastPos = event->localPos();
+    lastScenePos = event->windowPos();
     lastButton = event->button();
     lastButtons = event->buttons();
     lastModifiers = event->modifiers();
-}
-
-void QSGMouseAreaPrivate::forwardEvent(QGraphicsSceneMouseEvent* event)
-{
-    Q_Q(QSGMouseArea);
-    event->setPos(q->mapFromScene(event->scenePos()));
 }
 
 bool QSGMouseAreaPrivate::isPressAndHoldConnected()
@@ -704,7 +698,7 @@ Qt::MouseButtons QSGMouseArea::pressedButtons() const
     return d->lastButtons;
 }
 
-void QSGMouseArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGMouseArea::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGMouseArea);
     d->moved = false;
@@ -722,7 +716,7 @@ void QSGMouseArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
         if (d->drag)
             d->drag->setActive(false);
         setHovered(true);
-        d->startScene = event->scenePos();
+        d->startScene = event->windowPos();
         d->pressAndHoldTimer.start(PressAndHoldDelay, this);
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(true));
@@ -730,7 +724,7 @@ void QSGMouseArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGMouseArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGMouseArea);
     if (!d->absorb) {
@@ -760,13 +754,13 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         QPointF curLocalPos;
         if (drag()->target()->parentItem()) {
             startLocalPos = drag()->target()->parentItem()->mapFromScene(d->startScene);
-            curLocalPos = drag()->target()->parentItem()->mapFromScene(event->scenePos());
+            curLocalPos = drag()->target()->parentItem()->mapFromScene(event->windowPos());
         } else {
             startLocalPos = d->startScene;
-            curLocalPos = event->scenePos();
+            curLocalPos = event->windowPos();
         }
 
-        const int dragThreshold = QApplication::startDragDistance();
+        const int dragThreshold = 20; // ### refactor: QGuiApplication::startDragDistance();
         qreal dx = qAbs(curLocalPos.x() - startLocalPos.x());
         qreal dy = qAbs(curLocalPos.y() - startLocalPos.y());
 
@@ -824,7 +818,7 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (d->drag->active()) {
             QSGDragEvent dragEvent(
                     QSGEvent::SGDragMove,
-                    event->scenePos(),
+                    event->windowPos(),
                     d->drag->data(),
                     d->drag->keys(),
                     d->drag->grabItem());
@@ -841,7 +835,7 @@ void QSGMouseArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     emit positionChanged(&me);
 }
 
-void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGMouseArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGMouseArea);
     d->stealMouse = false;
@@ -853,7 +847,7 @@ void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         if (d->drag && d->drag->active()) {
             QSGDragEvent dragEvent(
                     QSGEvent::SGDragDrop,
-                    event->scenePos(),
+                    event->windowPos(),
                     d->drag->data(),
                     d->drag->keys(),
                     d->drag->grabItem());
@@ -880,12 +874,10 @@ void QSGMouseArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     d->doubleClick = false;
 }
 
-void QSGMouseArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGMouseArea);
-    if (!d->absorb) {
-        QSGItem::mouseDoubleClickEvent(event);
-    } else {
+    if (d->absorb) {
         d->saveEvent(event);
         QSGMouseEvent me(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true, false);
         me.setAccepted(d->isDoubleClickConnected());
@@ -893,8 +885,8 @@ void QSGMouseArea::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         if (!me.isAccepted())
             d->propagate(&me, QSGMouseAreaPrivate::DoubleClick);
         d->doubleClick = d->isDoubleClickConnected() || me.isAccepted();
-        QSGItem::mouseDoubleClickEvent(event);
     }
+    QSGItem::mouseDoubleClickEvent(event);
 }
 
 void QSGMouseArea::hoverEnterEvent(QHoverEvent *event)
@@ -963,36 +955,27 @@ void QSGMouseArea::mouseUngrabEvent()
     ungrabMouse();
 }
 
-bool QSGMouseArea::sendMouseEvent(QGraphicsSceneMouseEvent *event)
+bool QSGMouseArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QSGMouseArea);
-    QGraphicsSceneMouseEvent mouseEvent(event->type());
     QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
 
     QSGCanvas *c = canvas();
     QSGItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->scenePos().toPoint())) && (!grabber || !grabber->keepMouseGrab())) {
+    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+                               event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
-        for (int i = 0x1; i <= 0x10; i <<= 1) {
-            if (event->buttons() & i) {
-                Qt::MouseButton button = Qt::MouseButton(i);
-                mouseEvent.setButtonDownPos(button, mapFromScene(event->buttonDownPos(button)));
-            }
-        }
-        mouseEvent.setScenePos(event->scenePos());
-        mouseEvent.setLastScenePos(event->lastScenePos());
-        mouseEvent.setPos(mapFromScene(event->scenePos()));
-        mouseEvent.setLastPos(mapFromScene(event->lastScenePos()));
 
-        switch(mouseEvent.type()) {
-        case QEvent::GraphicsSceneMouseMove:
+        switch (event->type()) {
+        case QEvent::MouseMove:
             mouseMoveEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMousePress:
+        case QEvent::MouseButtonPress:
             mousePressEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMouseRelease:
+        case QEvent::MouseButtonRelease:
             mouseReleaseEvent(&mouseEvent);
             break;
         default:
@@ -1004,7 +987,7 @@ bool QSGMouseArea::sendMouseEvent(QGraphicsSceneMouseEvent *event)
 
         return stealThisEvent;
     }
-    if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease) {
+    if (event->type() == QEvent::MouseButtonRelease) {
         if (d->pressed) {
             d->pressed = false;
             d->stealMouse = false;
@@ -1027,10 +1010,10 @@ bool QSGMouseArea::childMouseEventFilter(QSGItem *i, QEvent *e)
     if (!d->absorb || !isVisible() || !d->drag || !d->drag->filterChildren())
         return QSGItem::childMouseEventFilter(i, e);
     switch (e->type()) {
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseMove:
-    case QEvent::GraphicsSceneMouseRelease:
-        return sendMouseEvent(static_cast<QGraphicsSceneMouseEvent *>(e));
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonRelease:
+        return sendMouseEvent(static_cast<QMouseEvent *>(e));
     default:
         break;
     }
@@ -1108,7 +1091,6 @@ bool QSGMouseArea::hoverEnabled() const
 
 void QSGMouseArea::setHoverEnabled(bool h)
 {
-    Q_D(QSGMouseArea);
     if (h == acceptHoverEvents())
         return;
 

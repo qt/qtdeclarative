@@ -320,7 +320,7 @@ public:
     void deliverKeyEvent(QKeyEvent *);
     void deliverInputMethodEvent(QInputMethodEvent *);
     void deliverFocusEvent(QFocusEvent *);
-    void deliverMouseEvent(QGraphicsSceneMouseEvent *);
+    void deliverMouseEvent(QMouseEvent *);
     void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QHoverEvent *);

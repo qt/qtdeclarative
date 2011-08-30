@@ -211,12 +211,12 @@ Q_SIGNALS:
 protected:
     void setHovered(bool);
     bool setPressed(bool);
-    bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
+    bool sendMouseEvent(QMouseEvent *event);
 
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);

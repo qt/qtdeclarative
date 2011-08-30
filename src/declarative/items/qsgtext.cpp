@@ -50,7 +50,7 @@
 #include <private/qsgtexture_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qabstracttextdocumentlayout.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextdocument.h>
@@ -1679,15 +1679,15 @@ void QSGText::componentComplete()
 }
 
 /*!  \internal */
-void QSGText::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGText::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGText);
 
-    if (!d->richText || !d->doc || d->doc->documentLayout()->anchorAt(event->pos()).isEmpty()) {
+    if (!d->richText || !d->doc || d->doc->documentLayout()->anchorAt(event->localPos()).isEmpty()) {
         event->setAccepted(false);
         d->activeLink.clear();
     } else {
-        d->activeLink = d->doc->documentLayout()->anchorAt(event->pos());
+        d->activeLink = d->doc->documentLayout()->anchorAt(event->localPos());
     }
 
     // ### may malfunction if two of the same links are clicked & dragged onto each other)
@@ -1698,12 +1698,12 @@ void QSGText::mousePressEvent(QGraphicsSceneMouseEvent *event)
 }
 
 /*! \internal */
-void QSGText::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGText::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGText);
 
         // ### confirm the link, and send a signal out
-    if (d->richText && d->doc && d->activeLink == d->doc->documentLayout()->anchorAt(event->pos()))
+    if (d->richText && d->doc && d->activeLink == d->doc->documentLayout()->anchorAt(event->localPos()))
         emit linkActivated(d->activeLink);
     else
         event->setAccepted(false);

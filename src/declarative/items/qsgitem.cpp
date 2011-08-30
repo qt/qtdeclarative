@@ -2829,22 +2829,22 @@ void QSGItem::focusOutEvent(QFocusEvent *)
 {
 }
 
-void QSGItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mousePressEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseMoveEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseReleaseEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseDoubleClickEvent(QMouseEvent *event)
 {
     mousePressEvent(event);
 }
@@ -3341,7 +3341,7 @@ void QSGItemPrivate::deliverFocusEvent(QFocusEvent *e)
     }
 }
 
-void QSGItemPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *e)
+void QSGItemPrivate::deliverMouseEvent(QMouseEvent *e)
 {
     Q_Q(QSGItem);
 
@@ -3350,16 +3350,16 @@ void QSGItemPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *e)
     switch(e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
-    case QEvent::GraphicsSceneMouseMove:
+    case QEvent::MouseMove:
         q->mouseMoveEvent(e);
         break;
-    case QEvent::GraphicsSceneMousePress:
+    case QEvent::MouseButtonPress:
         q->mousePressEvent(e);
         break;
-    case QEvent::GraphicsSceneMouseRelease:
+    case QEvent::MouseButtonRelease:
         q->mouseReleaseEvent(e);
         break;
-    case QEvent::GraphicsSceneMouseDoubleClick:
+    case QEvent::MouseButtonDblClick:
         q->mouseDoubleClickEvent(e);
         break;
     }

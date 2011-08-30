@@ -48,7 +48,7 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtWidgets/qapplication.h>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtCore/qmath.h>
@@ -1328,7 +1328,7 @@ void QSGTextEdit::paste()
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     if (d->focusOnPress){
@@ -1354,12 +1354,12 @@ void QSGTextEdit::mousePressEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
+        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
             // ### refactor: port properly
             qDebug("QSGTextEdit: virtual keyboard handling not implemented");
 //            if (canvas() && canvas() == qApp->focusWidget()) {
@@ -1377,7 +1377,7 @@ void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
@@ -1389,7 +1389,7 @@ void QSGTextEdit::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));

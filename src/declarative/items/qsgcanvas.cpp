@@ -56,7 +56,7 @@
 #include <private/qabstractanimation_p.h>
 
 #include <QtGui/qpainter.h>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
@@ -471,19 +471,6 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     thread->moveContextToThread(context);
 }
 
-void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
-                                                   const QTransform &transform)
-{
-    sceneEvent.setPos(transform.map(sceneEvent.scenePos()));
-    sceneEvent.setLastPos(transform.map(sceneEvent.lastScenePos()));
-    for (int ii = 0; ii < 5; ++ii) {
-        if (sceneEvent.buttons() & (1 << ii)) {
-            sceneEvent.setButtonDownPos((Qt::MouseButton)(1 << ii),
-                                        transform.map(sceneEvent.buttonDownScenePos((Qt::MouseButton)(1 << ii))));
-        }
-    }
-}
-
 void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
 {
     for (int i=0; i<touchPoints.count(); i++) {
@@ -494,74 +481,6 @@ void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touc
     }
 }
 
-QEvent::Type QSGCanvasPrivate::sceneMouseEventTypeFromMouseEvent(QMouseEvent *event)
-{
-    switch(event->type()) {
-    default:
-        Q_ASSERT(!"Unknown event type");
-    case QEvent::MouseButtonPress:
-        return QEvent::GraphicsSceneMousePress;
-    case QEvent::MouseButtonRelease:
-        return QEvent::GraphicsSceneMouseRelease;
-    case QEvent::MouseButtonDblClick:
-        return QEvent::GraphicsSceneMouseDoubleClick;
-    case QEvent::MouseMove:
-        return QEvent::GraphicsSceneMouseMove;
-    }
-}
-
-/*!
-Fill in the data in \a sceneEvent based on \a event.  This method leaves the item local positions in
-\a sceneEvent untouched.  Use sceneMouseEventForTransform() to fill in those details.
-*/
-void QSGCanvasPrivate::sceneMouseEventFromMouseEvent(QGraphicsSceneMouseEvent &sceneEvent, QMouseEvent *event)
-{
-    Q_ASSERT(event);
-
-    if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) {
-        if ((event->button() & event->buttons()) == event->buttons()) {
-            lastMousePosition = event->pos();
-        }
-
-        switch (event->button()) {
-        default:
-            Q_ASSERT(!"Unknown button");
-        case Qt::LeftButton:
-            buttonDownPositions[0] = event->pos();
-            break;
-        case Qt::RightButton:
-            buttonDownPositions[1] = event->pos();
-            break;
-        case Qt::MiddleButton:
-            buttonDownPositions[2] = event->pos();
-            break;
-        case Qt::XButton1:
-            buttonDownPositions[3] = event->pos();
-            break;
-        case Qt::XButton2:
-            buttonDownPositions[4] = event->pos();
-            break;
-        }
-    }
-
-    sceneEvent.setScenePos(event->pos());
-    sceneEvent.setScreenPos(event->globalPos());
-    sceneEvent.setLastScenePos(lastMousePosition);
-    sceneEvent.setLastScreenPos(lastMousePosition); // ### refactor: should do mapToGlobal
-    sceneEvent.setButtons(event->buttons());
-    sceneEvent.setButton(event->button());
-    sceneEvent.setModifiers(event->modifiers());
-//    sceneEvent.setWidget(q); // ### refactor:
-
-    for (int ii = 0; ii < 5; ++ii) {
-        if (sceneEvent.buttons() & (1 << ii)) {
-            sceneEvent.setButtonDownScenePos((Qt::MouseButton)(1 << ii), buttonDownPositions[ii]);
-            sceneEvent.setButtonDownScreenPos((Qt::MouseButton)(1 << ii), buttonDownPositions[ii]); // ### refactor: should do mapToGlobal
-        }
-    }
-
-    lastMousePosition = event->pos();
-}
 
 /*!
 Translates the data in \a touchEvent to this canvas.  This method leaves the item local positions in
@@ -986,7 +905,7 @@ void QSGCanvas::inputMethodEvent(QInputMethodEvent *e)
         sendEvent(d->activeFocusItem, e);
 }
 
-bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSceneMouseEvent *event)
+bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QMouseEvent *event)
 {
     Q_Q(QSGCanvas);
 
@@ -995,7 +914,7 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(event->windowPos());
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1010,13 +929,15 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
     }
 
     if (itemPrivate->acceptedMouseButtons & event->button()) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(event->windowPos());
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-            sceneMouseEventForTransform(*event, itemPrivate->canvasToItemTransform());
-            event->accept();
+            QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
+                           event->button(), event->buttons(), event->modifiers());
+            me.accept();
             mouseGrabberItem = item;
-            q->sendEvent(item, event);
-            if (event->isAccepted())
+            q->sendEvent(item, &me);
+            event->setAccepted(me.isAccepted());
+            if (me.isAccepted())
                 return true;
             mouseGrabberItem->ungrabMouse();
             mouseGrabberItem = 0;
@@ -1026,24 +947,28 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
     return false;
 }
 
-bool QSGCanvasPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *sceneEvent)
+bool QSGCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 {
     Q_Q(QSGCanvas);
 
-    if (!mouseGrabberItem &&
-         sceneEvent->type() == QEvent::GraphicsSceneMousePress &&
-         (sceneEvent->button() & sceneEvent->buttons()) == sceneEvent->buttons()) {
+    lastMousePosition = event->windowPos();
 
-        return deliverInitialMousePressEvent(rootItem, sceneEvent);
+    if (!mouseGrabberItem && 
+         event->type() == QEvent::MouseButtonPress &&
+         (event->button() & event->buttons()) == event->buttons()) {
+        
+        return deliverInitialMousePressEvent(rootItem, event);
     }
 
     if (mouseGrabberItem) {
         QSGItemPrivate *mgPrivate = QSGItemPrivate::get(mouseGrabberItem);
-        sceneMouseEventForTransform(*sceneEvent, mgPrivate->canvasToItemTransform());
-
-        sceneEvent->accept();
-        q->sendEvent(mouseGrabberItem, sceneEvent);
-        if (sceneEvent->isAccepted())
+        const QTransform &transform = mgPrivate->canvasToItemTransform();
+        QMouseEvent me(event->type(), transform.map(event->windowPos()), event->windowPos(), event->screenPos(),
+                       event->button(), event->buttons(), event->modifiers());
+        me.accept();
+        q->sendEvent(mouseGrabberItem, &me);
+        event->setAccepted(me.isAccepted());
+        if (me.isAccepted())
             return true;
     }
 
@@ -1058,11 +983,7 @@ void QSGCanvas::mousePressEvent(QMouseEvent *event)
     qWarning() << "QSGCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 void QSGCanvas::mouseReleaseEvent(QMouseEvent *event)
@@ -1078,12 +999,7 @@ void QSGCanvas::mouseReleaseEvent(QMouseEvent *event)
         return;
     }
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
-
+    d->deliverMouseEvent(event);
     d->mouseGrabberItem = 0;
 }
 
@@ -1095,19 +1011,15 @@ void QSGCanvas::mouseDoubleClickEvent(QMouseEvent *event)
     qWarning() << "QSGCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
     if (!d->mouseGrabberItem && (event->button() & event->buttons()) == event->buttons()) {
-        if (d->deliverInitialMousePressEvent(d->rootItem, &sceneEvent))
+        if (d->deliverInitialMousePressEvent(d->rootItem, event))
             event->accept();
         else
             event->ignore();
         return;
     }
 
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 bool QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
@@ -1136,12 +1048,12 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
 
     if (!d->mouseGrabberItem) {
         if (d->lastMousePosition.isNull())
-            d->lastMousePosition = event->pos();
+            d->lastMousePosition = event->windowPos();
         QPointF last = d->lastMousePosition;
-        d->lastMousePosition = event->pos();
+        d->lastMousePosition = event->windowPos();
 
         bool accepted = event->isAccepted();
-        bool delivered = d->deliverHoverEvent(d->rootItem, event->pos(), last, event->modifiers(), accepted);
+        bool delivered = d->deliverHoverEvent(d->rootItem, event->windowPos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
             accepted = d->clearHover();
@@ -1150,11 +1062,7 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -1233,7 +1141,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->pos());
+        QPointF p = item->mapFromScene(event->posF());
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1247,7 +1155,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
             return true;
     }
 
-    QPointF p = item->mapFromScene(event->pos());
+    QPointF p = item->mapFromScene(event->posF());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
         QWheelEvent wheel(p, event->delta(), event->buttons(), event->modifiers(), event->orientation());
         wheel.accept();
@@ -1494,7 +1402,7 @@ bool QSGCanvasPrivate::deliverDragEvent(QSGItem *item, QSGDragEvent *event)
     return false;
 }
 
-bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QGraphicsSceneMouseEvent *event)
+bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QMouseEvent *event)
 {
     if (!target)
         return false;
@@ -1543,13 +1451,13 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::FocusOut:
         QSGItemPrivate::get(item)->deliverFocusEvent(static_cast<QFocusEvent *>(e));
         break;
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseRelease:
-    case QEvent::GraphicsSceneMouseDoubleClick:
-    case QEvent::GraphicsSceneMouseMove:
-        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+    case QEvent::MouseMove:
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events? 
         {
-            QGraphicsSceneMouseEvent *se = static_cast<QGraphicsSceneMouseEvent *>(e);
+            QMouseEvent *se = static_cast<QMouseEvent *>(e);
             if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
                 se->accept();
                 QSGItemPrivate::get(item)->deliverMouseEvent(se);

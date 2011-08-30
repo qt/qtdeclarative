@@ -42,7 +42,7 @@
 #include "qsgpincharea_p_p.h"
 #include "qsgcanvas.h"
 
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtWidgets/qapplication.h>
 
 #include <float.h>
@@ -462,7 +462,7 @@ void QSGPinchArea::updatePinch()
     }
 }
 
-void QSGPinchArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGPinchArea::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGPinchArea);
     d->stealMouse = false;
@@ -474,7 +474,7 @@ void QSGPinchArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPinchArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGPinchArea::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGPinchArea);
     if (!d->absorb) {
@@ -483,7 +483,7 @@ void QSGPinchArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPinchArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGPinchArea::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGPinchArea);
     d->stealMouse = false;
@@ -502,36 +502,27 @@ void QSGPinchArea::mouseUngrabEvent()
     setKeepMouseGrab(false);
 }
 
-bool QSGPinchArea::sendMouseEvent(QGraphicsSceneMouseEvent *event)
+bool QSGPinchArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QSGPinchArea);
-    QGraphicsSceneMouseEvent mouseEvent(event->type());
     QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
 
     QSGCanvas *c = canvas();
     QSGItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->scenePos().toPoint())) && (!grabber || !grabber->keepMouseGrab())) {
+    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+                               event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
-        for (int i = 0x1; i <= 0x10; i <<= 1) {
-            if (event->buttons() & i) {
-                Qt::MouseButton button = Qt::MouseButton(i);
-                mouseEvent.setButtonDownPos(button, mapFromScene(event->buttonDownPos(button)));
-            }
-        }
-        mouseEvent.setScenePos(event->scenePos());
-        mouseEvent.setLastScenePos(event->lastScenePos());
-        mouseEvent.setPos(mapFromScene(event->scenePos()));
-        mouseEvent.setLastPos(mapFromScene(event->lastScenePos()));
 
         switch(mouseEvent.type()) {
-        case QEvent::GraphicsSceneMouseMove:
+        case QEvent::MouseMove:
             mouseMoveEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMousePress:
+        case QEvent::MouseButtonPress:
             mousePressEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMouseRelease:
+        case QEvent::MouseButtonRelease:
             mouseReleaseEvent(&mouseEvent);
             break;
         default:
@@ -543,7 +534,7 @@ bool QSGPinchArea::sendMouseEvent(QGraphicsSceneMouseEvent *event)
 
         return stealThisEvent;
     }
-    if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease) {
+    if (event->type() == QEvent::MouseButtonRelease) {
         d->stealMouse = false;
         if (c && c->mouseGrabberItem() == this)
             ungrabMouse();
@@ -558,10 +549,10 @@ bool QSGPinchArea::childMouseEventFilter(QSGItem *i, QEvent *e)
     if (!d->absorb || !isVisible())
         return QSGItem::childMouseEventFilter(i, e);
     switch (e->type()) {
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseMove:
-    case QEvent::GraphicsSceneMouseRelease:
-        return sendMouseEvent(static_cast<QGraphicsSceneMouseEvent *>(e));
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonRelease:
+        return sendMouseEvent(static_cast<QMouseEvent *>(e));
         break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate: {

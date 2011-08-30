@@ -48,12 +48,15 @@
 #include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtWidgets/qinputcontext.h>
 #include <QTextBoundaryFinder>
 #include <qstyle.h>
 #include <qsgtextnode_p.h>
 #include <qsgsimplerectnode.h>
+
+#include <QtGui/qplatforminputcontext_qpa.h>
+#include <private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1079,13 +1082,13 @@ void QSGTextInput::inputMethodEvent(QInputMethodEvent *ev)
         emit inputMethodComposingChanged();
 }
 
-void QSGTextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonDblClick))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectByMouse) {
-        int cursor = d->xToPos(event->pos().x());
+        int cursor = d->xToPos(event->localPos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
     } else {
@@ -1093,10 +1096,10 @@ void QSGTextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGTextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonPress))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if(d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
@@ -1115,40 +1118,40 @@ void QSGTextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
-        d->pressPos = event->pos();
+        d->pressPos = event->localPos();
     }
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
-    int cursor = d->xToPos(event->pos().x());
+    int cursor = d->xToPos(event->localPos().x());
     d->control->moveCursor(cursor, mark);
     event->setAccepted(true);
 }
 
-void QSGTextInput::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseMove))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectPressed) {
-        if (qAbs(int(event->pos().x() - d->pressPos.x())) > QApplication::startDragDistance())
+        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QApplication::startDragDistance())
             setKeepMouseGrab(true);
-        moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
+        moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
         event->setAccepted(true);
     } else {
         QSGImplicitSizeItem::mouseMoveEvent(event);
     }
 }
 
-void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonRelease))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectPressed) {
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
     if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
+        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
             if (canvas() && canvas() == QGuiApplication::activeWindow()) {
                 // ### refactor: implement virtual keyboard properly..
                 qDebug("QSGTextInput: virtual keyboard no implemented...");
@@ -1162,33 +1165,23 @@ void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QSGImplicitSizeItem::mouseReleaseEvent(event);
 }
 
-bool QSGTextInputPrivate::sendMouseEventToInputContext(
-        QGraphicsSceneMouseEvent *event, QEvent::Type eventType)
+bool QSGTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (event->widget() && control->composeMode()) {
-        int tmp_cursor = xToPos(event->pos().x());
+    if (control->composeMode()) {
+        int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
         if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
             mousePos = -1;
             // don't send move events outside the preedit area
-            if (eventType == QEvent::MouseMove)
+            if (event->type() == QEvent::MouseMove)
                 return true;
         }
 
-        QInputContext *qic = event->widget()->inputContext();
-        if (qic) {
-            QMouseEvent mouseEvent(
-                    eventType,
-                    event->widget()->mapFromGlobal(event->screenPos()),
-                    event->screenPos(),
-                    event->button(),
-                    event->buttons(),
-                    event->modifiers());
+        QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
+        if (ic)
             // may be causing reset() in some input methods
-            qic->mouseHandler(mousePos, &mouseEvent);
-            event->setAccepted(mouseEvent.isAccepted());
-        }
+            ic->mouseHandler(mousePos, event);
         if (!control->preeditAreaText().isEmpty())
             return true;
     }
@@ -1216,10 +1209,10 @@ bool QSGTextInput::event(QEvent* ev)
         case QEvent::KeyPress:
         case QEvent::KeyRelease://###Should the control be doing anything with release?
         case QEvent::InputMethod:
-        case QEvent::GraphicsSceneMousePress:
-        case QEvent::GraphicsSceneMouseMove:
-        case QEvent::GraphicsSceneMouseRelease:
-        case QEvent::GraphicsSceneMouseDoubleClick:
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonRelease:
+        case QEvent::MouseButtonDblClick:
             break;
         default:
             handled = d->control->processEvent(ev);

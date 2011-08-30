@@ -102,16 +102,12 @@ public:
     QSGItem *mouseGrabberItem;
 
     // Mouse positions are saved in widget coordinates
-    QPoint lastMousePosition;
-    QPoint buttonDownPositions[5]; // Left, Right, Middle, XButton1, XButton2
-    void sceneMouseEventFromMouseEvent(QGraphicsSceneMouseEvent &, QMouseEvent *);
+    QPointF lastMousePosition;
     void translateTouchEvent(QTouchEvent *touchEvent);
-    static QEvent::Type sceneMouseEventTypeFromMouseEvent(QMouseEvent *);
-    static void sceneMouseEventForTransform(QGraphicsSceneMouseEvent &, const QTransform &);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
-    bool deliverInitialMousePressEvent(QSGItem *, QGraphicsSceneMouseEvent *);
-    bool deliverMouseEvent(QGraphicsSceneMouseEvent *);
-    bool sendFilteredMouseEvent(QSGItem *, QSGItem *, QGraphicsSceneMouseEvent *);
+    bool deliverInitialMousePressEvent(QSGItem *, QMouseEvent *);
+    bool deliverMouseEvent(QMouseEvent *);
+    bool sendFilteredMouseEvent(QSGItem *, QSGItem *, QMouseEvent *);
     bool deliverWheelEvent(QSGItem *, QWheelEvent *);
     bool deliverTouchPoints(QSGItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QSGItem *, QList<QTouchEvent::TouchPoint> > *);

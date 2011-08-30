@@ -48,7 +48,7 @@
 #include <private/qlistmodelinterface_p.h>
 
 #include <QtGui/qevent.h>
-#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtWidgets/qapplication.h>
 #include <QtCore/qmath.h>
 #include <math.h>
@@ -1095,7 +1095,7 @@ QPointF QSGPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) 
     return nearPoint;
 }
 
-void QSGPathView::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGPathView::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGPathView);
     if (d->interactive) {
@@ -1106,12 +1106,12 @@ void QSGPathView::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPathViewPrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QSGPathView);
     if (!interactive || !items.count())
         return;
-    QPointF scenePoint = q->mapToScene(event->pos());
+    QPointF scenePoint = q->mapToScene(event->localPos());
     int idx = 0;
     for (; idx < items.count(); ++idx) {
         QRectF rect = items.at(idx)->boundingRect();
@@ -1122,9 +1122,9 @@ void QSGPathViewPrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
     if (idx == items.count() && dragMargin == 0.)  // didn't click on an item
         return;
 
-    startPoint = pointNear(event->pos(), &startPc);
+    startPoint = pointNear(event->localPos(), &startPc);
     if (idx == items.count()) {
-        qreal distance = qAbs(event->pos().x() - startPoint.x()) + qAbs(event->pos().y() - startPoint.y());
+        qreal distance = qAbs(event->localPos().x() - startPoint.x()) + qAbs(event->localPos().y() - startPoint.y());
         if (distance > dragMargin)
             return;
     }
@@ -1140,7 +1140,7 @@ void QSGPathViewPrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
     tl.clear();
 }
 
-void QSGPathView::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGPathView::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGPathView);
     if (d->interactive) {
@@ -1153,14 +1153,14 @@ void QSGPathView::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPathViewPrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
 {
     Q_Q(QSGPathView);
     if (!interactive || !lastPosTime.isValid())
         return;
 
     qreal newPc;
-    QPointF pathPoint = pointNear(event->pos(), &newPc);
+    QPointF pathPoint = pointNear(event->localPos(), &newPc);
     if (!stealMouse) {
         QPointF delta = pathPoint - startPoint;
         if (qAbs(delta.x()) > QApplication::startDragDistance() || qAbs(delta.y()) > QApplication::startDragDistance()) {
@@ -1192,7 +1192,7 @@ void QSGPathViewPrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPathView::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGPathView::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGPathView);
     if (d->interactive) {
@@ -1204,7 +1204,7 @@ void QSGPathView::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGPathViewPrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *)
+void QSGPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *)
 {
     Q_Q(QSGPathView);
     stealMouse = false;
@@ -1255,36 +1255,27 @@ void QSGPathViewPrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *)
         q->movementEnding();
 }
 
-bool QSGPathView::sendMouseEvent(QGraphicsSceneMouseEvent *event)
+bool QSGPathView::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QSGPathView);
-    QGraphicsSceneMouseEvent mouseEvent(event->type());
     QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
     QSGCanvas *c = canvas();
     QSGItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->scenePos().toPoint())) && (!grabber || !grabber->keepMouseGrab())) {
+    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab())) {
+        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+                               event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
-        for (int i = 0x1; i <= 0x10; i <<= 1) {
-            if (event->buttons() & i) {
-                Qt::MouseButton button = Qt::MouseButton(i);
-                mouseEvent.setButtonDownPos(button, mapFromScene(event->buttonDownPos(button)));
-            }
-        }
-        mouseEvent.setScenePos(event->scenePos());
-        mouseEvent.setLastScenePos(event->lastScenePos());
-        mouseEvent.setPos(mapFromScene(event->scenePos()));
-        mouseEvent.setLastPos(mapFromScene(event->lastScenePos()));
 
         switch(mouseEvent.type()) {
-        case QEvent::GraphicsSceneMouseMove:
+        case QEvent::MouseMove:
             d->handleMouseMoveEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMousePress:
+        case QEvent::MouseButtonPress:
             d->handleMousePressEvent(&mouseEvent);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
-        case QEvent::GraphicsSceneMouseRelease:
+        case QEvent::MouseButtonRelease:
             d->handleMouseReleaseEvent(&mouseEvent);
             break;
         default:
@@ -1299,7 +1290,7 @@ bool QSGPathView::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         d->lastPosTime.invalidate();
         d->fixOffset();
     }
-    if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease)
+    if (event->type() == QEvent::MouseButtonRelease)
         d->stealMouse = false;
     return false;
 }
@@ -1311,10 +1302,10 @@ bool QSGPathView::childMouseEventFilter(QSGItem *i, QEvent *e)
         return QSGItem::childMouseEventFilter(i, e);
 
     switch (e->type()) {
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseMove:
-    case QEvent::GraphicsSceneMouseRelease:
-        return sendMouseEvent(static_cast<QGraphicsSceneMouseEvent *>(e));
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonRelease:
+        return sendMouseEvent(static_cast<QMouseEvent *>(e));
     default:
         break;
     }

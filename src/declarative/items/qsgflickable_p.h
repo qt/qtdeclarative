@@ -191,9 +191,9 @@ Q_SIGNALS:
 
 protected:
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
     virtual void timerEvent(QTimerEvent *event);
 
@@ -217,7 +217,7 @@ protected:
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     void mouseUngrabEvent();
-    bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
+    bool sendMouseEvent(QMouseEvent *event);
 
     bool xflick() const;
     bool yflick() const;
