@@ -49,7 +49,7 @@
 #include <QtDeclarative/qsgview.h>
 #include <private/qsglistview_p.h>
 #include <private/qsgtext_p.h>
-#include <private/qsgvisualitemmodel_p.h>
+#include <private/qsgvisualdatamodel_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
 #include <QtOpenGL/QGLShaderProgram>

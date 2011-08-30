@@ -41,7 +41,7 @@
 
 #include "qsgrepeater_p.h"
 #include "qsgrepeater_p_p.h"
-#include "qsgvisualitemmodel_p.h"
+#include "qsgvisualdatamodel_p.h"
 
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativelistaccessor_p.h>

@@ -45,20 +45,14 @@
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QtCore/qobject.h>
-#include <QtCore/qabstractitemmodel.h>
 
 QT_BEGIN_HEADER
-
-Q_DECLARE_METATYPE(QModelIndex)
 
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
 class QSGItem;
-class QDeclarativeComponent;
-class QDeclarativePackage;
-class QSGVisualDataModelPrivate;
 
 class Q_DECLARATIVE_EXPORT QSGVisualModel : public QObject
 {
@@ -137,75 +131,6 @@ private:
     Q_DISABLE_COPY(QSGVisualItemModel)
 };
 
-
-class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGVisualDataModel)
-
-    Q_PROPERTY(QVariant model READ model WRITE setModel)
-    Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
-    Q_PROPERTY(QString part READ part WRITE setPart)
-    Q_PROPERTY(QObject *parts READ parts CONSTANT)
-    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
-    Q_CLASSINFO("DefaultProperty", "delegate")
-public:
-    QSGVisualDataModel();
-    QSGVisualDataModel(QDeclarativeContext *, QObject *parent=0);
-    virtual ~QSGVisualDataModel();
-
-    QVariant model() const;
-    void setModel(const QVariant &);
-
-    QDeclarativeComponent *delegate() const;
-    void setDelegate(QDeclarativeComponent *);
-
-    QVariant rootIndex() const;
-    void setRootIndex(const QVariant &root);
-
-    Q_INVOKABLE QVariant modelIndex(int idx) const;
-    Q_INVOKABLE QVariant parentModelIndex() const;
-
-    QString part() const;
-    void setPart(const QString &);
-
-    int count() const;
-    bool isValid() const { return delegate() != 0; }
-    QSGItem *item(int index, bool complete=true);
-    QSGItem *item(int index, const QByteArray &, bool complete=true);
-    ReleaseFlags release(QSGItem *item);
-    bool completePending() const;
-    void completeItem();
-    virtual QString stringValue(int index, const QString &role);
-    virtual void setWatchedRoles(QList<QByteArray> roles);
-
-    int indexOf(QSGItem *item, QObject *objectContext) const;
-
-    QObject *parts();
-
-Q_SIGNALS:
-    void createdPackage(int index, QDeclarativePackage *package);
-    void destroyingPackage(QDeclarativePackage *package);
-    void rootIndexChanged();
-
-private Q_SLOTS:
-    void _q_itemsChanged(int, int, const QList<int> &);
-    void _q_itemsInserted(int index, int count);
-    void _q_itemsRemoved(int index, int count);
-    void _q_itemsMoved(int from, int to, int count);
-    void _q_rowsInserted(const QModelIndex &,int,int);
-    void _q_rowsRemoved(const QModelIndex &,int,int);
-    void _q_rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
-    void _q_dataChanged(const QModelIndex&,const QModelIndex&);
-    void _q_layoutChanged();
-    void _q_modelReset();
-    void _q_createdPackage(int index, QDeclarativePackage *package);
-    void _q_destroyingPackage(QDeclarativePackage *package);
-
-private:
-    Q_DISABLE_COPY(QSGVisualDataModel)
-};
-
 class QSGVisualItemModelAttached : public QObject
 {
     Q_OBJECT
@@ -250,7 +175,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QSGVisualModel)
 QML_DECLARE_TYPE(QSGVisualItemModel)
 QML_DECLARE_TYPEINFO(QSGVisualItemModel, QML_HAS_ATTACHED_PROPERTIES)
-QML_DECLARE_TYPE(QSGVisualDataModel)
 
 QT_END_HEADER
 

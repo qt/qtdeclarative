@@ -56,7 +56,7 @@
 
 #include "qsgpathview_p.h"
 #include "qsgitem_p.h"
-#include "qsgvisualitemmodel_p.h"
+#include "qsgvisualdatamodel_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
 #include <QtCore/qdatetime.h>

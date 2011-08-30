@@ -58,6 +58,7 @@
 #include "qsgflickable_p_p.h"
 #include "qsglistview_p.h"
 #include "qsgvisualitemmodel_p.h"
+#include "qsgvisualdatamodel_p.h"
 #include "qsggridview_p.h"
 #include "qsgpathview_p.h"
 #include <private/qdeclarativepath_p.h>

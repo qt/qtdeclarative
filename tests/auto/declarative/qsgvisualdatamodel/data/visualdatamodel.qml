@@ -8,4 +8,5 @@ VisualDataModel {
         rootIndex = parentModelIndex();
     }
     model: myModel
+    delegate: Item {}
 }

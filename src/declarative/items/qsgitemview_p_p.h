@@ -44,7 +44,7 @@
 
 #include "qsgitemview_p.h"
 #include "qsgflickable_p_p.h"
-#include "qsgvisualitemmodel_p.h"
+#include "qsgvisualdatamodel_p.h"
 #include <private/qdeclarativechangeset_p.h>
 
 

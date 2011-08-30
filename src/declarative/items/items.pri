@@ -37,6 +37,8 @@ HEADERS += \
     $$PWD/qsgflickable_p.h \
     $$PWD/qsgflickable_p_p.h \
     $$PWD/qsglistview_p.h \
+    $$PWD/qsgvisualadaptormodel_p.h \
+    $$PWD/qsgvisualdatamodel_p.h \
     $$PWD/qsgvisualitemmodel_p.h \
     $$PWD/qsgrepeater_p.h \
     $$PWD/qsgrepeater_p_p.h \
@@ -89,6 +91,8 @@ SOURCES += \
     $$PWD/qsgpincharea.cpp \
     $$PWD/qsgflickable.cpp \
     $$PWD/qsglistview.cpp \
+    $$PWD/qsgvisualadaptormodel.cpp \
+    $$PWD/qsgvisualdatamodel.cpp \
     $$PWD/qsgvisualitemmodel.cpp \
     $$PWD/qsgrepeater.cpp \
     $$PWD/qsggridview.cpp \
