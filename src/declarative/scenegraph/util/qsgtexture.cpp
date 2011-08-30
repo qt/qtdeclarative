@@ -45,6 +45,12 @@
 #include <qopenglfunctions.h>
 #include <private/qsgcontext_p.h>
 #include <qthread.h>
+#include <private/qdeclarativedebugtrace_p.h>
+
+#if !defined(QT_NO_DEBUG) && (defined(Q_OS_LINUX) || defined(Q_OS_MAC))
+#include <execinfo.h>
+#include <QHash>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -65,36 +71,108 @@ QSGTexturePrivate::QSGTexturePrivate()
 }
 
 #ifndef QT_NO_DEBUG
-static int qt_texture_count = 0;
 
-static void qt_print_texture_count()
+static int qt_debug_texture_count = 0;
+
+#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+DEFINE_BOOL_CONFIG_OPTION(qmlDebugLeakBacktrace, QML_DEBUG_LEAK_BACKTRACE)
+
+#define BACKTRACE_SIZE 20
+class SGTextureTraceItem
 {
-    qDebug("Number of leaked textures: %i", qt_texture_count);
-    qt_texture_count = -1;
-}
+public:
+    void *backTrace[BACKTRACE_SIZE];
+    size_t backTraceSize;
+};
+
+static QHash<QSGTexture*, SGTextureTraceItem*> qt_debug_allocated_textures;
 #endif
 
+inline static void qt_debug_print_texture_count()
+{
+    qDebug("Number of leaked textures: %i", qt_debug_texture_count);
+    qt_debug_texture_count = -1;
+
+#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+    if (qmlDebugLeakBacktrace()) {
+        while (!qt_debug_allocated_textures.isEmpty()) {
+            QHash<QSGTexture*, SGTextureTraceItem*>::Iterator it = qt_debug_allocated_textures.begin();
+            QSGTexture* texture = it.key();
+            SGTextureTraceItem* item = it.value();
+
+            qt_debug_allocated_textures.erase(it);
+
+            qDebug() << "------";
+            qDebug() << "Leaked" << texture << "backtrace:";
+
+            char** symbols = backtrace_symbols(item->backTrace, item->backTraceSize);
+
+            if (symbols) {
+                for (int i=0; i<(int) item->backTraceSize; i++)
+                    qDebug("Backtrace <%02d>: %s", i, symbols[i]);
+                free(symbols);
+            }
+
+            qDebug() << "------";
+
+            delete item;
+        }
+    }
+#endif
+}
+
+inline static void qt_debug_add_texture(QSGTexture* texture)
+{
+#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+    if (qmlDebugLeakBacktrace()) {
+        SGTextureTraceItem* item = new SGTextureTraceItem;
+        item->backTraceSize = backtrace(item->backTrace, BACKTRACE_SIZE);
+        qt_debug_allocated_textures.insert(texture, item);
+    }
+#endif // Q_OS_LINUX
+
+    ++qt_debug_texture_count;
+
+    static bool atexit_registered = false;
+    if (!atexit_registered) {
+        atexit(qt_debug_print_texture_count);
+        atexit_registered = true;
+    }
+}
+
+static void qt_debug_remove_texture(QSGTexture* texture)
+{
+#if defined(Q_OS_LINUX) || defined (Q_OS_MAC)
+    if (qmlDebugLeakBacktrace()) {
+        SGTextureTraceItem* item = qt_debug_allocated_textures.value(texture, 0);
+        if (item) {
+            qt_debug_allocated_textures.remove(texture);
+            delete item;
+        }
+    }
+#endif
+
+    --qt_debug_texture_count;
+
+    if (qt_debug_texture_count < 0)
+        qDebug("Material destroyed after qt_debug_print_texture_count() was called.");
+}
+
+#endif // QT_NO_DEBUG
 
 
 QSGTexture::QSGTexture()
     : QObject(*(new QSGTexturePrivate))
 {
 #ifndef QT_NO_DEBUG
-    ++qt_texture_count;
-    static bool atexit_registered = false;
-    if (!atexit_registered) {
-        atexit(qt_print_texture_count);
-        atexit_registered = true;
-    }
+    qt_debug_add_texture(this);
 #endif
 }
 
 QSGTexture::~QSGTexture()
 {
 #ifndef QT_NO_DEBUG
-    --qt_texture_count;
-    if (qt_texture_count < 0)
-        qDebug("Material destroyed after qt_print_texture_count() was called.");
+    qt_debug_remove_texture(this);
 #endif
 }
 
