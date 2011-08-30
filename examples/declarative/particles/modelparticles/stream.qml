@@ -149,8 +149,8 @@ Item{
     PointAttractor{
         id: force
         system: sys
-        x: root.width/2
-        y: root.height/2
+        pointX: root.width/2
+        pointY: root.height/2
         strength: -10000
         active: false
         anchors.centerIn: parent

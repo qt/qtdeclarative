@@ -146,7 +146,7 @@ Rectangle{
         colorVariation: 0.2
     }
     PointAttractor{
-        id: gs; x: root.width/2; y: root.height/2; strength: 4000000;
+        id: gs; pointX: root.width/2; pointY: root.height/2; strength: 4000000;
         system: particles
         physics: PointAttractor.Acceleration
         proportionalToDistance: PointAttractor.InverseQuadratic
