@@ -39,13 +39,10 @@
 ****************************************************************************/
 #include "piechart.h"
 #include <QPainter>
-#include <QDebug>
 
-PieChart::PieChart(QDeclarativeItem *parent)
-    : QDeclarativeItem(parent)
+PieChart::PieChart(QSGItem *parent)
+    : QSGPaintedItem(parent)
 {
-    // need to disable this flag to draw inside a QDeclarativeItem
-    setFlag(QGraphicsItem::ItemHasNoContents, false);
 }
 
 QString PieChart::name() const
@@ -68,11 +65,11 @@ void PieChart::setColor(const QColor &color)
     m_color = color;
 }
 
-void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+void PieChart::paint(QPainter *painter)
 {
     QPen pen(m_color, 2);
     painter->setPen(pen);
-    painter->setRenderHints(QPainter::Antialiasing, true);
+    painter->setRenderHints(QPainter::HighQualityAntialiasing, true);
     painter->drawPie(boundingRect(), 90 * 16, 290 * 16);
 }
 

@@ -39,8 +39,7 @@
 ****************************************************************************/
 //![0]
 #include "piechart.h"
-#include <qdeclarative.h>
-#include <QDeclarativeView>
+#include <QSGView>
 #include <QApplication>
 
 int main(int argc, char *argv[])
@@ -49,7 +48,8 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
 
-    QDeclarativeView view;
+    QSGView view;
+    view.setResizeMode(QSGView::SizeRootObjectToView);
     view.setSource(QUrl::fromLocalFile("app.qml"));
     view.show();
     return app.exec();

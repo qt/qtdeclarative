@@ -41,17 +41,17 @@
 #define PIECHART_H
 
 //![0]
-#include <QDeclarativeItem>
+#include <QtDeclarative/QSGPaintedItem>
 #include <QColor>
 
-class PieChart : public QDeclarativeItem
+class PieChart : public QSGPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(QColor color READ color WRITE setColor)
 
 public:
-    PieChart(QDeclarativeItem *parent = 0);
+    PieChart(QSGItem *parent = 0);
 
     QString name() const;
     void setName(const QString &name);
@@ -59,7 +59,7 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
+    void paint(QPainter *painter);
 
 private:
     QString m_name;

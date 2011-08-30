@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt plugin
-QT += declarative qtquick1
+QT += declarative
 
 DESTDIR = ImageProviderCore
 TARGET  = qmlimageproviderplugin

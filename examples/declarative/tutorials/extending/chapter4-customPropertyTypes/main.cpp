@@ -40,8 +40,7 @@
 #include "piechart.h"
 #include "pieslice.h"
 
-#include <qdeclarative.h>
-#include <QDeclarativeView>
+#include <QSGView>
 #include <QApplication>
 
 //![0]
@@ -56,7 +55,8 @@ int main(int argc, char *argv[])
     qmlRegisterType<PieSlice>("Charts", 1, 0, "PieSlice");
 //![1]
 
-    QDeclarativeView view;
+    QSGView view;
+    view.setResizeMode(QSGView::SizeRootObjectToView);
     view.setSource(QUrl::fromLocalFile("app.qml"));
     view.show();
     return app.exec();

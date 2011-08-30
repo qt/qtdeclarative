@@ -44,7 +44,7 @@
 
 #include <QDeclarativeEngine>
 #include <QDeclarativeNetworkAccessManagerFactory>
-#include <QDeclarativeView>
+#include <QSGView>
 
 
 /*
@@ -97,7 +97,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    QDeclarativeView view;
+    QSGView view;
     view.engine()->setNetworkAccessManagerFactory(new MyNetworkAccessManagerFactory);
 
     view.setSource(source);

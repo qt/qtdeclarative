@@ -38,20 +38,14 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
-#include "qmlruntime.h"
-#include <QDeclarativeView>
 #include <QSGView>
 #include <QDeclarativeError>
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class tst_examples : public QObject
 {
@@ -60,8 +54,6 @@ public:
     tst_examples();
 
 private slots:
-    void examples_data();
-    void examples();
     void sgexamples_data();
     void sgexamples();
 
@@ -185,7 +177,12 @@ that they start and exit cleanly.
 Examples are any .qml files under the examples/ directory that start
 with a lower case letter.
 */
-void tst_examples::examples_data()
+static void silentErrorsMsgHandler(QtMsgType, const char *)
+{
+}
+
+
+void tst_examples::sgexamples_data()
 {
     QTest::addColumn<QString>("file");
 
@@ -200,37 +197,8 @@ void tst_examples::examples_data()
         QTest::newRow(qPrintable(file)) << file;
 }
 
-static void silentErrorsMsgHandler(QtMsgType, const char *)
-{
-}
-
-void tst_examples::examples()
-{
-    QFETCH(QString, file);
-
-    QDeclarativeViewer viewer;
-
-    QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    QVERIFY(viewer.open(file));
-    qInstallMsgHandler(old);
-
-    if (viewer.view()->status() == QDeclarativeView::Error)
-        qWarning() << viewer.view()->errors();
-
-    QCOMPARE(viewer.view()->status(), QDeclarativeView::Ready);
-    viewer.show();
-
-    QTest::qWaitForWindowShown(&viewer);
-}
-
-void tst_examples::sgexamples_data()
-{
-    examples_data();
-}
-
 void tst_examples::sgexamples()
 {
-    qputenv("QMLSCENE_IMPORT_NAME", "quick1");
     QFETCH(QString, file);
 
     QSGView view;

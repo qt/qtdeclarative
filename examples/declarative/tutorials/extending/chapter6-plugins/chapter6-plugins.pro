@@ -1,8 +1,10 @@
 TEMPLATE = lib
 CONFIG += qt plugin
-QT += declarative qtquick1
+QT += declarative
 
-DESTDIR = lib
+DESTDIR = ChartsPlugin
+TARGET = chartsplugin
+
 OBJECTS_DIR = tmp
 MOC_DIR = tmp
 
@@ -14,8 +16,3 @@ SOURCES += piechart.cpp \
            pieslice.cpp \
            chartsplugin.cpp
 
-symbian {
-    CONFIG += qt_example
-    TARGET.EPOCALLOWDLLDATA = 1
-}
-maemo5: CONFIG += qt_example

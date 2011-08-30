@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = networkaccessmanagerfactory
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += declarative network qtquick1
+QT += declarative network
 
 # Input
 SOURCES += main.cpp 

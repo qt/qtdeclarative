@@ -40,11 +40,9 @@
 #include "piechart.h"
 #include "pieslice.h"
 
-PieChart::PieChart(QDeclarativeItem *parent)
-    : QDeclarativeItem(parent)
+PieChart::PieChart(QSGItem *parent)
+    : QSGItem(parent)
 {
-    // this doesn't need to disable QGraphicsItem::ItemHasNoContents
-    // anymore since the drawing is now done in PieSlice
 }
 
 QString PieChart::name() const

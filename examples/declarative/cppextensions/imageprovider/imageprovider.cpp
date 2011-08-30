@@ -42,10 +42,7 @@
 #include <qdeclarativeextensionplugin.h>
 
 #include <qdeclarativeengine.h>
-#include <qdeclarative.h>
-#include <qdeclarativeitem.h>
 #include <qdeclarativeimageprovider.h>
-#include <qdeclarativeview.h>
 #include <QImage>
 #include <QPainter>
 
