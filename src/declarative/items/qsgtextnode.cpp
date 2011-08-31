@@ -281,6 +281,8 @@ namespace {
 
         void addSelectedGlyphs(const QGlyphRun &glyphRun);
         void addUnselectedGlyphs(const QGlyphRun &glyphRun);
+        void addGlyphsInRange(int rangeStart, int rangeEnd, const QColor &color,
+                              int selectionStart, int selectionEnd);
 
         void addToSceneGraph(QSGTextNode *parent,
                              QSGText::TextStyle style = QSGText::Normal,
@@ -568,6 +570,45 @@ namespace {
         m_hasSelection = m_hasSelection || m_currentLineTree.size() > currentSize;
     }
 
+    void SelectionEngine::addGlyphsInRange(int rangeStart, int rangeLength,
+                                           const QColor &color,
+                                           int selectionStart, int selectionEnd)
+    {
+        QColor oldColor = m_textColor;
+        m_textColor = color;
+
+        QTextLine &line = m_currentLine;
+        int rangeEnd = rangeStart + rangeLength;
+        if (selectionStart > rangeEnd || selectionEnd < rangeStart) {
+            QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart, rangeLength);
+            for (int j=0; j<glyphRuns.size(); ++j)
+                addUnselectedGlyphs(glyphRuns.at(j));
+        } else {
+            if (rangeStart < selectionStart) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(rangeStart,
+                                                            qMin(selectionStart - rangeStart,
+                                                                 rangeLength));
+
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    addUnselectedGlyphs(glyphRuns.at(j));
+            }
+
+            if (rangeEnd >= selectionStart && selectionStart >= rangeStart) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionStart, selectionEnd - selectionStart + 1);
+
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    addSelectedGlyphs(glyphRuns.at(j));
+            }
+
+            if (selectionEnd >= rangeStart && selectionEnd < rangeEnd) {
+                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionEnd + 1, rangeEnd - selectionEnd);
+                for (int j=0; j<glyphRuns.size(); ++j)
+                    addUnselectedGlyphs(glyphRuns.at(j));
+            }
+        }
+        m_textColor = oldColor;
+    }
+
     void SelectionEngine::addToSceneGraph(QSGTextNode *parentNode,
                                           QSGText::TextStyle style,
                                           const QColor &styleColor)
@@ -761,38 +802,47 @@ void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout
     engine.setSelectionColor(selectionColor);
     engine.setPosition(position);
 
+    QList<QTextLayout::FormatRange> additionalFormats = textLayout->additionalFormats();
+    QVarLengthArray<QTextLayout::FormatRange> colorChanges;
+    for (int i=0; i<additionalFormats.size(); ++i) {
+        if (additionalFormats.at(i).format.hasProperty(QTextFormat::ForegroundBrush))
+            colorChanges.append(additionalFormats.at(i));
+    }
+
     for (int i=0; i<textLayout->lineCount(); ++i) {
         QTextLine line = textLayout->lineAt(i);
 
         engine.setCurrentLine(line);
 
-        int lineEnd = line.textStart() + line.textLength();
-        if (selectionStart > lineEnd || selectionEnd < line.textStart()) {
-            QList<QGlyphRun> glyphRuns = line.glyphRuns();
-            for (int j=0; j<glyphRuns.size(); ++j)
-                engine.addUnselectedGlyphs(glyphRuns.at(j));
-        } else {
-            if (line.textStart() < selectionStart) {
-                QList<QGlyphRun> glyphRuns = line.glyphRuns(line.textStart(),
-                                                            qMin(selectionStart - line.textStart(),
-                                                                 line.textLength()));
+        int currentPosition = line.textStart();
+        int remainingLength = line.textLength();
+        for (int j=0; j<colorChanges.size(); ++j) {
+            const QTextLayout::FormatRange &range = colorChanges.at(j);
+            if (range.start + range.length >= currentPosition
+                && range.start < currentPosition + remainingLength) {
 
-                for (int j=0; j<glyphRuns.size(); ++j)
-                    engine.addUnselectedGlyphs(glyphRuns.at(j));
+                if (range.start > currentPosition) {
+                    engine.addGlyphsInRange(currentPosition, range.start - currentPosition,
+                                            color, selectionStart, selectionEnd);
+                }
+
+                int rangeEnd = qMin(range.start + range.length, currentPosition + remainingLength);
+                QColor rangeColor = range.format.foreground().color();
+
+                engine.addGlyphsInRange(range.start, rangeEnd - range.start, rangeColor,
+                                        selectionStart, selectionEnd);
+
+                currentPosition = range.start + range.length;
+                remainingLength = line.textStart() + line.textLength() - currentPosition;
+
+            } else if (range.start > currentPosition + remainingLength || remainingLength <= 0) {
+                break;
             }
+        }
 
-            if (lineEnd >= selectionStart && selectionStart >= line.textStart()) {
-                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionStart, selectionEnd - selectionStart + 1);
-
-                for (int j=0; j<glyphRuns.size(); ++j)
-                    engine.addSelectedGlyphs(glyphRuns.at(j));
-            }
-
-            if (selectionEnd >= line.textStart() && selectionEnd < lineEnd) {
-                QList<QGlyphRun> glyphRuns = line.glyphRuns(selectionEnd + 1, lineEnd - selectionEnd);
-                for (int j=0; j<glyphRuns.size(); ++j)
-                    engine.addUnselectedGlyphs(glyphRuns.at(j));
-            }
+        if (remainingLength > 0) {
+            engine.addGlyphsInRange(currentPosition, remainingLength, color,
+                                    selectionStart, selectionEnd);
         }
     }
 
