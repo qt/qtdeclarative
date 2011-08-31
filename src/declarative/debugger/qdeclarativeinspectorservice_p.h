@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEOBSERVERSERVICE_H
-#define QDECLARATIVEOBSERVERSERVICE_H
+#ifndef QDECLARATIVEINSPECTORSERVICE_H
+#define QDECLARATIVEINSPECTORSERVICE_H
 
 #include "private/qdeclarativedebugservice_p.h"
 #include <private/qdeclarativeglobal_p.h>
@@ -87,4 +87,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEOBSERVERSERVICE_H
+#endif // QDECLARATIVEINSPECTORSERVICE_H

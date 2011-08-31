@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEOBSERVERINTERFACE_H
-#define QDECLARATIVEOBSERVERINTERFACE_H
+#ifndef QDECLARATIVEINSPECTORINTERFACE_H
+#define QDECLARATIVEINSPECTORINTERFACE_H
 
 #include <QtDeclarative/private/qdeclarativeglobal_p.h>
 
@@ -66,4 +66,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEOBSERVERINTERFACE_H
+#endif // QDECLARATIVEINSPECTORINTERFACE_H
