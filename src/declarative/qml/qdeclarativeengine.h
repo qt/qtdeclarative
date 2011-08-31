@@ -48,6 +48,7 @@
 #include <QtDeclarative/qjsengine.h>
 #include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativeerror.h>
+#include <QtDeclarative/qdeclarativedebug.h>
 
 QT_BEGIN_HEADER
 
