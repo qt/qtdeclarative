@@ -51,7 +51,7 @@ public:
 template<class N, QIntrusiveListNode N::*member>
 void QScriptIntrusiveList<N, member>::insert(N *n)
 {
-    Q_ASSERT_X(!contains(n), Q_FUNC_INFO, "Can't insert a value which is in the list already");
+    Q_ASSERT_X(!this->contains(n), Q_FUNC_INFO, "Can't insert a value which is in the list already");
     Q_ASSERT_X(!(n->*member).isInList(), Q_FUNC_INFO, "Can't insert a value which is in another list");
     QIntrusiveList<N, member>::insert(n);
 }
@@ -59,7 +59,7 @@ void QScriptIntrusiveList<N, member>::insert(N *n)
 template<class N, QIntrusiveListNode N::*member>
 void QScriptIntrusiveList<N, member>::remove(N *n)
 {
-    Q_ASSERT_X(contains(n), Q_FUNC_INFO, "Can't remove a value which is not in the list");
+    Q_ASSERT_X(this->contains(n), Q_FUNC_INFO, "Can't remove a value which is not in the list");
     QIntrusiveList<N, member>::remove(n);
 }
 
