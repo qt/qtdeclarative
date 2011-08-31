@@ -41,12 +41,12 @@
 
 #include "private/qpacketprotocol_p.h"
 
-#include <QBuffer>
-#include <QElapsedTimer>
+#include <QtCore/QBuffer>
+#include <QtCore/QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 
-#define MAX_PACKET_SIZE 0x7FFFFFFF
+static const unsigned int MAX_PACKET_SIZE = 0x7FFFFFFF;
 
 /*!
   \class QPacketProtocol
@@ -113,7 +113,7 @@ class QPacketProtocolPrivate : public QObject
 {
     Q_OBJECT
 public:
-    QPacketProtocolPrivate(QPacketProtocol * parent, QIODevice * _dev)
+    QPacketProtocolPrivate(QPacketProtocol *parent, QIODevice *_dev)
         : QObject(parent), inProgressSize(-1), maxPacketSize(MAX_PACKET_SIZE),
           waitingForPacket(false), dev(_dev)
     {
@@ -150,8 +150,8 @@ public Q_SLOTS:
     {
         Q_ASSERT(!sendingPackets.isEmpty());
 
-        while(bytes) {
-            if(sendingPackets.at(0) > bytes) {
+        while (bytes) {
+            if (sendingPackets.at(0) > bytes) {
                 sendingPackets[0] -= bytes;
                 bytes = 0;
             } else {
@@ -214,14 +214,14 @@ public:
     qint32 inProgressSize;
     qint32 maxPacketSize;
     bool waitingForPacket;
-    QIODevice * dev;
+    QIODevice *dev;
 };
 
 /*!
   Construct a QPacketProtocol instance that works on \a dev with the
   specified \a parent.
  */
-QPacketProtocol::QPacketProtocol(QIODevice * dev, QObject * parent)
+QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
     : QObject(parent), d(new QPacketProtocolPrivate(this, dev))
 {
     Q_ASSERT(dev);
@@ -255,7 +255,7 @@ qint32 QPacketProtocol::maximumPacketSize() const
  */
 qint32 QPacketProtocol::setMaximumPacketSize(qint32 max)
 {
-    if(max > (signed)sizeof(qint32))
+    if (max > (signed)sizeof(qint32))
         d->maxPacketSize = max;
     return d->maxPacketSize;
 }
@@ -282,7 +282,7 @@ QPacketAutoSend QPacketProtocol::send()
  */
 void QPacketProtocol::send(const QPacket & p)
 {
-    if(p.b.isEmpty())
+    if (p.b.isEmpty())
         return; // We don't send empty packets
 
     qint64 sendSize = p.b.size() + sizeof(qint32);
@@ -317,7 +317,7 @@ void QPacketProtocol::clear()
   */
 QPacket QPacketProtocol::read()
 {
-    if(0 == d->packets.count())
+    if (0 == d->packets.count())
         return QPacket();
 
     QPacket rv(d->packets.at(0));
@@ -370,7 +370,7 @@ bool QPacketProtocol::waitForReadyRead(int msecs)
 /*!
   Return the QIODevice passed to the QPacketProtocol constructor.
 */
-QIODevice * QPacketProtocol::device()
+QIODevice *QPacketProtocol::device()
 {
     return d->dev;
 }
@@ -458,7 +458,7 @@ QPacket::QPacket()
   */
 QPacket::~QPacket()
 {
-    if(buf) {
+    if (buf) {
         delete buf;
         buf = 0;
     }
@@ -534,14 +534,14 @@ void QPacket::clear()
 
   \internal
   */
-QPacketAutoSend::QPacketAutoSend(QPacketProtocol * _p)
+QPacketAutoSend::QPacketAutoSend(QPacketProtocol *_p)
     : QPacket(), p(_p)
 {
 }
 
 QPacketAutoSend::~QPacketAutoSend()
 {
-    if(!b.isEmpty())
+    if (!b.isEmpty())
         p->send(*this);
 }
 

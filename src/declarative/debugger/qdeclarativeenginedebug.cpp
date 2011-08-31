@@ -415,6 +415,10 @@ QDeclarativeEngineDebug::QDeclarativeEngineDebug(QDeclarativeDebugConnection *cl
 {
 }
 
+QDeclarativeEngineDebug::~QDeclarativeEngineDebug()
+{
+}
+
 QDeclarativeEngineDebug::Status QDeclarativeEngineDebug::status() const
 {
     Q_D(const QDeclarativeEngineDebug);

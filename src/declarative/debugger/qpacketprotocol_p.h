@@ -74,7 +74,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QPacketProtocol : public QObject
 {
     Q_OBJECT
 public:
-    explicit QPacketProtocol(QIODevice * dev, QObject * parent = 0);
+    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
     virtual ~QPacketProtocol();
 
     qint32 maximumPacketSize() const;
@@ -90,7 +90,7 @@ public:
 
     void clear();
 
-    QIODevice * device();
+    QIODevice *device();
 
 Q_SIGNALS:
     void readyRead();
@@ -98,7 +98,7 @@ Q_SIGNALS:
     void packetWritten();
 
 private:
-    QPacketProtocolPrivate * d;
+    QPacketProtocolPrivate *d;
 };
 
 
@@ -115,9 +115,9 @@ public:
 
 protected:
     friend class QPacketProtocol;
-    QPacket(const QByteArray & ba);
+    QPacket(const QByteArray &ba);
     QByteArray b;
-    QBuffer * buf;
+    QBuffer *buf;
 };
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QPacketAutoSend : public QPacket
@@ -128,7 +128,7 @@ public:
 private:
     friend class QPacketProtocol;
     QPacketAutoSend(QPacketProtocol *);
-    QPacketProtocol * p;
+    QPacketProtocol *p;
 };
 
 QT_END_NAMESPACE

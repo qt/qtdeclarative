@@ -86,6 +86,7 @@ public:
     enum Status { NotConnected, Unavailable, Enabled };
 
     explicit QDeclarativeEngineDebug(QDeclarativeDebugConnection *, QObject * = 0);
+    ~QDeclarativeEngineDebug();
 
     Status status() const;
 
@@ -193,8 +194,6 @@ public:
 
     State state() const;
     bool isWaiting() const;
-
-    //    bool waitUntilCompleted();
 
 Q_SIGNALS:
     void stateChanged(QDeclarativeDebugQuery::State);
