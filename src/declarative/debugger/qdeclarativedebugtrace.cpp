@@ -45,6 +45,8 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
 
+QT_BEGIN_NAMESPACE
+
 Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance);
 
 // convert to a QByteArray that can be sent to the debug client
@@ -223,3 +225,5 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
     if (!m_enabled)
         sendMessages();
 }
+
+QT_END_NAMESPACE
