@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 //###Switch to define later, for now user-friendly (no compilation) debugging is worth it
 DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
-#ifdef Q_WS_MAC
+#ifndef QT_OPENGL_ES_2
 #define SHADER_DEFINES "#version 120\n"
 #else
 #define SHADER_DEFINES ""
