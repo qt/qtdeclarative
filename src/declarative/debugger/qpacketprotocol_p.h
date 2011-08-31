@@ -61,7 +61,7 @@ class QPacketProtocolPrivate;
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QPacketProtocol : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit QPacketProtocol(QIODevice * dev, QObject * parent = 0);
     virtual ~QPacketProtocol();

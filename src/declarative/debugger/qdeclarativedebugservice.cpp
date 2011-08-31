@@ -49,12 +49,12 @@
 QT_BEGIN_NAMESPACE
 
 QDeclarativeDebugServicePrivate::QDeclarativeDebugServicePrivate()
-: server(0)
+    : server(0)
 {
 }
 
 QDeclarativeDebugService::QDeclarativeDebugService(const QString &name, QObject *parent)
-: QObject(*(new QDeclarativeDebugServicePrivate), parent)
+    : QObject(*(new QDeclarativeDebugServicePrivate), parent)
 {
     Q_D(QDeclarativeDebugService);
     d->name = name;
@@ -114,21 +114,21 @@ QDeclarativeDebugService::Status QDeclarativeDebugService::status() const
 
 namespace {
 
-    struct ObjectReference 
-    {
-        QPointer<QObject> object;
-        int id;
-    };
+struct ObjectReference
+{
+    QPointer<QObject> object;
+    int id;
+};
 
-    struct ObjectReferenceHash 
-    {
-        ObjectReferenceHash() : nextId(0) {}
+struct ObjectReferenceHash
+{
+    ObjectReferenceHash() : nextId(0) {}
 
-        QHash<QObject *, ObjectReference> objects;
-        QHash<int, QObject *> ids;
+    QHash<QObject *, ObjectReference> objects;
+    QHash<int, QObject *> ids;
 
-        int nextId;
-    };
+    int nextId;
+};
 
 }
 Q_GLOBAL_STATIC(ObjectReferenceHash, objectReferenceHash);
@@ -144,8 +144,8 @@ int QDeclarativeDebugService::idForObject(QObject *object)
         return -1;
 
     ObjectReferenceHash *hash = objectReferenceHash();
-    QHash<QObject *, ObjectReference>::Iterator iter = 
-        hash->objects.find(object);
+    QHash<QObject *, ObjectReference>::Iterator iter =
+            hash->objects.find(object);
 
     if (iter == hash->objects.end()) {
         int id = hash->nextId++;
@@ -162,7 +162,7 @@ int QDeclarativeDebugService::idForObject(QObject *object)
         hash->ids.insert(id, object);
         iter->object = object;
         iter->id = id;
-    } 
+    }
     return iter->id;
 }
 
@@ -180,8 +180,8 @@ QObject *QDeclarativeDebugService::objectForId(int id)
         return 0;
 
 
-    QHash<QObject *, ObjectReference>::Iterator objIter = 
-        hash->objects.find(*iter);
+    QHash<QObject *, ObjectReference>::Iterator objIter =
+            hash->objects.find(*iter);
     Q_ASSERT(objIter != hash->objects.end());
 
     if (objIter->object == 0) {
@@ -213,8 +213,8 @@ QString QDeclarativeDebugService::objectToString(QObject *obj)
     if(objectName.isEmpty())
         objectName = QLatin1String("<unnamed>");
 
-    QString rv = QString::fromUtf8(obj->metaObject()->className()) + 
-                 QLatin1String(": ") + objectName;
+    QString rv = QString::fromUtf8(obj->metaObject()->className()) +
+            QLatin1String(": ") + objectName;
 
     return rv;
 }

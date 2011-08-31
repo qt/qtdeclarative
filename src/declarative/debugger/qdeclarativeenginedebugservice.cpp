@@ -67,8 +67,8 @@ QDeclarativeEngineDebugService *QDeclarativeEngineDebugService::instance()
 }
 
 QDeclarativeEngineDebugService::QDeclarativeEngineDebugService(QObject *parent)
-: QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), parent),
-    m_watch(new QDeclarativeWatcher(this))
+    : QDeclarativeDebugService(QLatin1String("QDeclarativeEngine"), parent),
+      m_watch(new QDeclarativeWatcher(this))
 {
     QObject::connect(m_watch, SIGNAL(propertyChanged(int,int,QMetaProperty,QVariant)),
                      this, SLOT(propertyChanged(int,int,QMetaProperty,QVariant)));
@@ -112,7 +112,7 @@ static inline bool isSignalPropertyName(const QString &signalName)
 {
     // see QmlCompiler::isSignalPropertyName
     return signalName.length() >= 3 && signalName.startsWith(QLatin1String("on")) &&
-           signalName.at(2).isLetter() && signalName.at(2).isUpper();
+            signalName.at(2).isLetter() && signalName.at(2).isUpper();
 }
 
 static bool hasValidSignal(QObject *object, const QString &propertyName)
@@ -142,8 +142,8 @@ QDeclarativeEngineDebugService::propertyData(QObject *obj, int propIdx)
     rv.valueTypeName = QString::fromUtf8(prop.typeName());
     rv.name = QString::fromUtf8(prop.name());
     rv.hasNotifySignal = prop.hasNotifySignal();
-    QDeclarativeAbstractBinding *binding = 
-        QDeclarativePropertyPrivate::binding(QDeclarativeProperty(obj, rv.name));
+    QDeclarativeAbstractBinding *binding =
+            QDeclarativePropertyPrivate::binding(QDeclarativeProperty(obj, rv.name));
     if (binding)
         rv.binding = binding->expression();
 
@@ -193,8 +193,8 @@ QVariant QDeclarativeEngineDebugService::valueContents(const QVariant &value) co
     return QLatin1String("<unknown value>");
 }
 
-void QDeclarativeEngineDebugService::buildObjectDump(QDataStream &message,
-                                           QObject *object, bool recur, bool dumpProperties)
+void QDeclarativeEngineDebugService::buildObjectDump(QDataStream &message, 
+                                                     QObject *object, bool recur, bool dumpProperties)
 {
     message << objectData(object);
 
@@ -283,7 +283,7 @@ void QDeclarativeEngineDebugService::buildObjectList(QDataStream &message, QDecl
     QString ctxtName = ctxt->objectName();
     int ctxtId = QDeclarativeDebugService::idForObject(ctxt);
 
-    message << ctxtName << ctxtId; 
+    message << ctxtName << ctxtId;
 
     int count = 0;
 
@@ -336,7 +336,7 @@ void QDeclarativeEngineDebugService::buildStatesList(QDeclarativeContext *ctxt, 
 void QDeclarativeEngineDebugService::buildStatesList(QObject *obj)
 {
     if (QDeclarativeState *state = qobject_cast<QDeclarativeState *>(obj)) {
-            m_allStates.append(state);
+        m_allStates.append(state);
     }
 
     QObjectList children = obj->children();
@@ -416,8 +416,8 @@ void QDeclarativeEngineDebugService::messageReceived(const QByteArray &message)
         int engineId = -1;
         ds >> queryId >> engineId;
 
-        QDeclarativeEngine *engine = 
-            qobject_cast<QDeclarativeEngine *>(QDeclarativeDebugService::objectForId(engineId));
+        QDeclarativeEngine *engine =
+                qobject_cast<QDeclarativeEngine *>(QDeclarativeDebugService::objectForId(engineId));
 
         QByteArray reply;
         QDataStream rs(&reply, QIODevice::WriteOnly);
@@ -546,11 +546,11 @@ void QDeclarativeEngineDebugService::messageReceived(const QByteArray &message)
 }
 
 void QDeclarativeEngineDebugService::setBinding(int objectId,
-                                               const QString &propertyName,
-                                               const QVariant &expression,
-                                               bool isLiteralValue,
-                                               QString filename,
-                                               int line)
+                                                const QString &propertyName,
+                                                const QVariant &expression,
+                                                bool isLiteralValue,
+                                                QString filename,
+                                                int line)
 {
     QObject *object = objectForId(objectId);
     QDeclarativeContext *context = qmlContext(object);
@@ -656,7 +656,7 @@ void QDeclarativeEngineDebugService::resetBinding(int objectId, const QString &p
         } else if (hasValidSignal(object, propertyName)) {
             QDeclarativeProperty property(object, propertyName, context);
             QDeclarativePropertyPrivate::setSignalExpression(property, 0);
-    } else {
+        } else {
             if (QDeclarativePropertyChanges *propertyChanges = qobject_cast<QDeclarativePropertyChanges *>(object)) {
                 propertyChanges->removeProperty(propertyName);
             }
@@ -675,8 +675,8 @@ void QDeclarativeEngineDebugService::setMethodBody(int objectId, const QString &
         return;
 
     QDeclarativePropertyCache::Data dummy;
-    QDeclarativePropertyCache::Data *prop = 
-        QDeclarativePropertyCache::property(context->engine(), object, method, dummy);
+    QDeclarativePropertyCache::Data *prop =
+            QDeclarativePropertyCache::property(context->engine(), object, method, dummy);
 
     if (!prop || !prop->isVMEFunction())
         return;
@@ -690,13 +690,13 @@ void QDeclarativeEngineDebugService::setMethodBody(int objectId, const QString &
         paramStr.append(QString::fromUtf8(paramNames.at(ii)));
     }
 
-    QString jsfunction = QLatin1String("(function ") + method + QLatin1String("(") + paramStr + 
-                         QLatin1String(") {");
+    QString jsfunction = QLatin1String("(function ") + method + QLatin1String("(") + paramStr +
+            QLatin1String(") {");
     jsfunction += body;
     jsfunction += QLatin1String("\n})");
 
-    QDeclarativeVMEMetaObject *vmeMetaObject = 
-        static_cast<QDeclarativeVMEMetaObject*>(QObjectPrivate::get(object)->metaObject);
+    QDeclarativeVMEMetaObject *vmeMetaObject =
+            static_cast<QDeclarativeVMEMetaObject*>(QObjectPrivate::get(object)->metaObject);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
     int lineNumber = vmeMetaObject->vmeMethodLineNumber(prop->coreIndex);

@@ -84,7 +84,7 @@ public Q_SLOTS:
 };
 
 QDeclarativeDebugConnectionPrivate::QDeclarativeDebugConnectionPrivate(QDeclarativeDebugConnection *c)
-: QObject(c), q(c), protocol(0), gotHello(false)
+    : QObject(c), q(c), protocol(0), gotHello(false)
 {
     protocol = new QPacketProtocol(q, this);
     QObject::connect(c, SIGNAL(connected()), this, SLOT(connected()));
@@ -183,7 +183,7 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
             pack >> message;
 
             QHash<QString, QDeclarativeDebugClient *>::Iterator iter =
-                plugins.find(name);
+                    plugins.find(name);
             if (iter == plugins.end()) {
                 qWarning() << "QDeclarativeDebugConnection: Message received for missing plugin" << name;
             } else {
@@ -194,7 +194,7 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
 }
 
 QDeclarativeDebugConnection::QDeclarativeDebugConnection(QObject *parent)
-: QTcpSocket(parent), d(new QDeclarativeDebugConnectionPrivate(this))
+    : QTcpSocket(parent), d(new QDeclarativeDebugConnectionPrivate(this))
 {
 }
 
@@ -202,8 +202,8 @@ QDeclarativeDebugConnection::~QDeclarativeDebugConnection()
 {
     QHash<QString, QDeclarativeDebugClient*>::iterator iter = d->plugins.begin();
     for (; iter != d->plugins.end(); ++iter) {
-         iter.value()->d_func()->connection = 0;
-         iter.value()->statusChanged(QDeclarativeDebugClient::NotConnected);
+        iter.value()->d_func()->connection = 0;
+        iter.value()->statusChanged(QDeclarativeDebugClient::NotConnected);
     }
 }
 
@@ -213,13 +213,13 @@ bool QDeclarativeDebugConnection::isConnected() const
 }
 
 QDeclarativeDebugClientPrivate::QDeclarativeDebugClientPrivate()
-: connection(0)
+    : connection(0)
 {
 }
 
 QDeclarativeDebugClient::QDeclarativeDebugClient(const QString &name, 
-                                           QDeclarativeDebugConnection *parent)
-: QObject(*(new QDeclarativeDebugClientPrivate), parent)
+                                                 QDeclarativeDebugConnection *parent)
+    : QObject(*(new QDeclarativeDebugClientPrivate), parent)
 {
     Q_D(QDeclarativeDebugClient);
     d->name = name;
