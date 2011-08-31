@@ -57,6 +57,7 @@ class Q_AUTOTEST_EXPORT QSGLoader : public QSGImplicitSizeItem
     Q_OBJECT
     Q_ENUMS(Status)
 
+    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(QDeclarativeComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
     Q_PROPERTY(QSGItem *item READ item NOTIFY itemChanged)
@@ -66,6 +67,11 @@ class Q_AUTOTEST_EXPORT QSGLoader : public QSGImplicitSizeItem
 public:
     QSGLoader(QSGItem *parent = 0);
     virtual ~QSGLoader();
+
+    bool active() const;
+    void setActive(bool newVal);
+
+    Q_INVOKABLE void setSource(QDeclarativeV8Function *);
 
     QUrl source() const;
     void setSource(const QUrl &);
@@ -82,6 +88,7 @@ public:
 
 Q_SIGNALS:
     void itemChanged();
+    void activeChanged();
     void sourceChanged();
     void sourceComponentChanged();
     void statusChanged();
@@ -93,6 +100,9 @@ protected:
     void componentComplete();
 
 private:
+    void setSource(const QUrl &sourceUrl, bool needsClear);
+    void loadFromSource();
+    void loadFromSourceComponent();
     Q_DISABLE_COPY(QSGLoader)
     Q_DECLARE_PRIVATE(QSGLoader)
     Q_PRIVATE_SLOT(d_func(), void _q_sourceLoaded())

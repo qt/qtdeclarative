@@ -58,6 +58,8 @@
 #include "qsgimplicitsizeitem_p_p.h"
 #include "qsgitemchangelistener_p.h"
 
+#include <private/qv8_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeContext;
@@ -74,13 +76,22 @@ public:
     void initResize();
     void load();
 
+    void disposeInitialPropertyValues();
+    QUrl resolveSourceUrl(QDeclarativeV8Function *args);
+    v8::Handle<v8::Object> extractInitialPropertyValues(QDeclarativeV8Function *args, QObject *loader, bool *error);
+    void completeCreateWithInitialPropertyValues(QDeclarativeComponent *component, QObject *object, v8::Handle<v8::Object> initialPropertyValues, v8::Handle<v8::Object> qmlGlobal);
+
     QUrl source;
     QSGItem *item;
     QDeclarativeComponent *component;
+    v8::Persistent<v8::Object> initialPropertyValues;
+    v8::Persistent<v8::Object> qmlGlobalForIpv;
     bool ownComponent : 1;
     bool updatingSize: 1;
     bool itemWidthValid : 1;
     bool itemHeightValid : 1;
+    bool active : 1;
+    bool loadingFromSource : 1;
 
     void _q_sourceLoaded();
     void _q_updateSize(bool loaderGeometryChanged = true);

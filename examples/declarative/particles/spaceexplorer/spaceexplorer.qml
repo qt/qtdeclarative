@@ -275,51 +275,51 @@ Rectangle{
         system: foreground
     }
     PointAttractor{
-        id: gs1; x: vorteX; y: vorteY; strength: 800000;
         proportionalToDistance: PointAttractor.InverseQuadratic;
+        id: gs1; pointX: vorteX; pointY: vorteY; strength: 800000;
         system: foreground
     }
     Kill{
-        x: gs1.x - holeSize;
-        y: gs1.y - holeSize;
+        x: gs1.pointX - holeSize;
+        y: gs1.pointY - holeSize;
         width: holeSize * 2
         height: holeSize * 2
         system: foreground
     }
 
     PointAttractor{
-        id: gs2; x: vorteX2; y: vorteY2; strength: 800000;
         proportionalToDistance: PointAttractor.InverseQuadratic;
+        id: gs2; pointX: vorteX2; pointY: vorteY2; strength: 800000;
         system: foreground
     }
     Kill{
-        x: gs2.x - holeSize;
-        y: gs2.y - holeSize;
+        x: gs2.pointX - holeSize;
+        y: gs2.pointY - holeSize;
         width: holeSize * 2
         height: holeSize * 2
         system: foreground
     }
 
     PointAttractor{
-        id: gs3; x: vorteX3; y: vorteY3; strength: 800000;
         proportionalToDistance: PointAttractor.InverseQuadratic;
+        id: gs3; pointX: vorteX3; pointY: vorteY3; strength: 800000;
         system: foreground
     }
     Kill{
-        x: gs3.x - holeSize;
-        y: gs3.y - holeSize;
+        x: gs3.pointX - holeSize;
+        y: gs3.pointY - holeSize;
         width: holeSize * 2
         height: holeSize * 2
         system: foreground
     }
     PointAttractor{
-        id: gs4; x: vorteX4; y: vorteY4; strength: 800000;
-        proportionalToDistance: PointAttractor.Quadratic;
+        id: gs4; pointX: vorteX4; pointY: vorteY4; strength: 800000;
+        proportionalToDistance: PointAttractor.InverseQuadratic;
         system: foreground
     }
     Kill{
-        x: gs4.x - holeSize;
-        y: gs4.y - holeSize;
+        x: gs4.pointX - holeSize;
+        y: gs4.pointY - holeSize;
         width: holeSize * 2
         height: holeSize * 2
         system: foreground

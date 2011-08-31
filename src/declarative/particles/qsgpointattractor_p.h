@@ -52,11 +52,9 @@ QT_MODULE(Declarative)
 class QSGPointAttractorAffector : public QSGParticleAffector
 {
     Q_OBJECT
-    //Like Gravitational singularity, but linear to distance instead of quadratic
-    //And affects ds/dt, not da/dt
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)//TODO: Change to pointX, pointY
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
+    Q_PROPERTY(qreal pointX READ pointX WRITE setPointX NOTIFY pointXChanged)
+    Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged)
     Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
     Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
     Q_ENUMS(PhysicsAffects)
@@ -84,12 +82,12 @@ public:
         return m_strength;
     }
 
-    qreal x() const
+    qreal pointX() const
     {
         return m_x;
     }
 
-    qreal y() const
+    qreal pointY() const
     {
         return m_y;
     }
@@ -108,9 +106,9 @@ signals:
 
     void strengthChanged(qreal arg);
 
-    void xChanged(qreal arg);
+    void pointXChanged(qreal arg);
 
-    void yChanged(qreal arg);
+    void pointYChanged(qreal arg);
 
     void physicsChanged(PhysicsAffects arg);
 
@@ -125,19 +123,19 @@ void setStrength(qreal arg)
     }
 }
 
-void setX(qreal arg)
+void setPointX(qreal arg)
 {
     if (m_x != arg) {
         m_x = arg;
-        emit xChanged(arg);
+        emit pointXChanged(arg);
     }
 }
 
-void setY(qreal arg)
+void setPointY(qreal arg)
 {
     if (m_y != arg) {
         m_y = arg;
-        emit yChanged(arg);
+        emit pointYChanged(arg);
     }
 }
 void setPhysics(PhysicsAffects arg)

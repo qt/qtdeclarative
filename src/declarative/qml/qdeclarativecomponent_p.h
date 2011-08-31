@@ -55,6 +55,7 @@
 
 #include "qdeclarativecomponent.h"
 
+#include "private/qv8_p.h"
 #include "private/qdeclarativeengine_p.h"
 #include "private/qdeclarativetypeloader_p.h"
 #include "private/qbitfield_p.h"
@@ -68,6 +69,8 @@
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QV8Engine;
 
 class QDeclarativeComponent;
 class QDeclarativeEngine;
@@ -83,6 +86,8 @@ public:
 
     QObject *beginCreate(QDeclarativeContextData *, const QBitField &);
     void completeCreate();
+    QObject *createObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *parentObject);
+    QObject *completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
 
     QDeclarativeTypeData *typeData;
     virtual void typeDataReady(QDeclarativeTypeData *);
@@ -114,6 +119,7 @@ public:
     static void beginDeferred(QDeclarativeEnginePrivate *enginePriv, QObject *object, 
                               ConstructionState *state);
     static void complete(QDeclarativeEnginePrivate *enginePriv, ConstructionState *state);
+
 
     QDeclarativeEngine *engine;
     QDeclarativeGuardedContextData creationContext;

@@ -8,7 +8,6 @@ MODULE_PRI += ../../modules/qt_declarative.pri
 
 QT = core-private gui gui-private network widgets-private sql v8-private
 
-contains(QT_CONFIG, svg): QT += svg
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
