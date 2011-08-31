@@ -45,6 +45,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
+#include <QtNetwork/qnetworkproxy.h>
 
 #include <private/qobject_p.h>
 
@@ -71,20 +72,23 @@ public:
     QDeclarativeDebugConnectionPrivate(QDeclarativeDebugConnection *c);
     QDeclarativeDebugConnection *q;
     QPacketProtocol *protocol;
+    QIODevice *device;
 
     bool gotHello;
     QStringList serverPlugins;
     QHash<QString, QDeclarativeDebugClient *> plugins;
 
     void advertisePlugins();
+    void connectDeviceSignals();
 
 public Q_SLOTS:
     void connected();
     void readyRead();
+    void deviceAboutToClose();
 };
 
 QDeclarativeDebugConnectionPrivate::QDeclarativeDebugConnectionPrivate(QDeclarativeDebugConnection *c)
-    : QObject(c), q(c), protocol(0), gotHello(false)
+    : QObject(c), q(c), protocol(0), device(0), gotHello(false)
 {
     protocol = new QPacketProtocol(q, this);
     QObject::connect(c, SIGNAL(connected()), this, SLOT(connected()));
@@ -137,7 +141,6 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
             QObject::disconnect(protocol, SIGNAL(readyRead()), this, SLOT(readyRead()));
             return;
         }
-
         gotHello = true;
 
         QHash<QString, QDeclarativeDebugClient *>::Iterator iter = plugins.begin();
@@ -193,8 +196,15 @@ void QDeclarativeDebugConnectionPrivate::readyRead()
     }
 }
 
+void QDeclarativeDebugConnectionPrivate::deviceAboutToClose()
+{
+    // This is nasty syntax but we want to emit our own aboutToClose signal (by calling QIODevice::close())
+    // without calling the underlying device close fn as that would cause an infinite loop
+    q->QIODevice::close();
+}
+
 QDeclarativeDebugConnection::QDeclarativeDebugConnection(QObject *parent)
-    : QTcpSocket(parent), d(new QDeclarativeDebugConnectionPrivate(this))
+    : QIODevice(parent), d(new QDeclarativeDebugConnectionPrivate(this))
 {
 }
 
@@ -209,8 +219,91 @@ QDeclarativeDebugConnection::~QDeclarativeDebugConnection()
 
 bool QDeclarativeDebugConnection::isConnected() const
 {
-    return state() == ConnectedState;
+    return state() == QAbstractSocket::ConnectedState;
 }
+
+qint64 QDeclarativeDebugConnection::readData(char *data, qint64 maxSize)
+{
+    return d->device->read(data, maxSize);
+}
+
+qint64 QDeclarativeDebugConnection::writeData(const char *data, qint64 maxSize)
+{
+    return d->device->write(data, maxSize);
+}
+
+qint64 QDeclarativeDebugConnection::bytesAvailable() const
+{
+    return d->device->bytesAvailable();
+}
+
+bool QDeclarativeDebugConnection::isSequential() const
+{
+    return true;
+}
+
+void QDeclarativeDebugConnection::close()
+{
+    if (isOpen()) {
+        QIODevice::close();
+        d->device->close();
+        emit stateChanged(QAbstractSocket::UnconnectedState);
+
+        QHash<QString, QDeclarativeDebugClient*>::iterator iter = d->plugins.begin();
+        for (; iter != d->plugins.end(); ++iter) {
+            iter.value()->statusChanged(QDeclarativeDebugClient::NotConnected);
+        }
+    }
+}
+
+bool QDeclarativeDebugConnection::waitForConnected(int msecs)
+{
+    QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
+    if (socket)
+        return socket->waitForConnected(msecs);
+    return false;
+}
+
+QAbstractSocket::SocketState QDeclarativeDebugConnection::state() const
+{
+    QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
+    if (socket)
+        return socket->state();
+
+    return QAbstractSocket::UnconnectedState;
+}
+
+void QDeclarativeDebugConnection::flush()
+{
+    QAbstractSocket *socket = qobject_cast<QAbstractSocket*>(d->device);
+    if (socket) {
+        socket->flush();
+        return;
+    }
+}
+
+void QDeclarativeDebugConnection::connectToHost(const QString &hostName, quint16 port)
+{
+    QTcpSocket *socket = new QTcpSocket(d);
+    socket->setProxy(QNetworkProxy::NoProxy);
+    d->device = socket;
+    d->connectDeviceSignals();
+    d->gotHello = false;
+    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SIGNAL(stateChanged(QAbstractSocket::SocketState)));
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SIGNAL(error(QAbstractSocket::SocketError)));
+    connect(socket, SIGNAL(connected()), this, SIGNAL(connected()));
+    socket->connectToHost(hostName, port);
+    QIODevice::open(ReadWrite | Unbuffered);
+}
+
+void QDeclarativeDebugConnectionPrivate::connectDeviceSignals()
+{
+    connect(device, SIGNAL(bytesWritten(qint64)), q, SIGNAL(bytesWritten(qint64)));
+    connect(device, SIGNAL(readyRead()), q, SIGNAL(readyRead()));
+    connect(device, SIGNAL(aboutToClose()), this, SLOT(deviceAboutToClose()));
+}
+
+//
 
 QDeclarativeDebugClientPrivate::QDeclarativeDebugClientPrivate()
     : connection(0)
@@ -239,7 +332,7 @@ QDeclarativeDebugClient::QDeclarativeDebugClient(const QString &name,
 
 QDeclarativeDebugClient::~QDeclarativeDebugClient()
 {
-    Q_D(const QDeclarativeDebugClient);
+    Q_D(QDeclarativeDebugClient);
     if (d->connection && d->connection->d) {
         d->connection->d->plugins.remove(d->name);
         d->connection->d->advertisePlugins();
@@ -269,14 +362,13 @@ QDeclarativeDebugClient::Status QDeclarativeDebugClient::status() const
 void QDeclarativeDebugClient::sendMessage(const QByteArray &message)
 {
     Q_D(QDeclarativeDebugClient);
-
     if (status() != Enabled)
         return;
 
     QPacket pack;
     pack << d->name << message;
     d->connection->d->protocol->send(pack);
-    d->connection->d->q->flush();
+    d->connection->flush();
 }
 
 void QDeclarativeDebugClient::statusChanged(Status)
