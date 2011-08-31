@@ -58,7 +58,7 @@ QT_MODULE(Declarative)
 class QSGGeometry;
 class QRectF;
 
-class QSGShaderEffectMesh : public QObject
+class Q_DECLARATIVE_EXPORT QSGShaderEffectMesh : public QObject
 {
     Q_OBJECT
 public:

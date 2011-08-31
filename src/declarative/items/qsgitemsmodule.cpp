@@ -174,8 +174,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem"); // TODO: Remove after grace period.
     qmlRegisterType<QSGShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QSGShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
-    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh.")); // TODO: Remove after grace period.
-    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh"); // TODO: Remove after grace period.
+    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
+    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh");
 
     qmlRegisterUncreatableType<QSGPaintedItem>("QtQuick", 2, 0, "PaintedItem", QSGPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
