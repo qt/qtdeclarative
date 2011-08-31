@@ -231,6 +231,7 @@ public:
     TransformOrigin transformOrigin() const;
     void setTransformOrigin(TransformOrigin);
     QPointF transformOriginPoint() const;
+    void setTransformOriginPoint(const QPointF &);
 
     qreal z() const;
     void setZ(qreal);

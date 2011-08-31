@@ -39,50 +39,62 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEPATH_P_H
-#define QDECLARATIVEPATH_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "private/qdeclarativepath_p.h"
+#ifndef QDECLARATIVEPATHINTERPOLATOR_P_H
+#define QDECLARATIVEPATHINTERPOLATOR_P_H
 
 #include <qdeclarative.h>
-#include <QtCore/QStringList>
+#include <QObject>
 
-#include <private/qobject_p.h>
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativePathPrivate : public QObjectPrivate
+QT_MODULE(Declarative)
+
+class QDeclarativePath;
+class Q_AUTOTEST_EXPORT QDeclarativePathInterpolator : public QObject
 {
-    Q_DECLARE_PUBLIC(QDeclarativePath)
-
+    Q_OBJECT
+    Q_PROPERTY(QDeclarativePath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
+    Q_PROPERTY(qreal x READ x NOTIFY xChanged)
+    Q_PROPERTY(qreal y READ y NOTIFY yChanged)
+    Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged)
 public:
-    QDeclarativePathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
+    explicit QDeclarativePathInterpolator(QObject *parent = 0);
 
-    QPainterPath _path;
-    QList<QDeclarativePathElement*> _pathElements;
-    mutable QVector<QPointF> _pointCache;
-    QList<QDeclarativePath::AttributePoint> _attributePoints;
-    QStringList _attributes;
-    QList<QDeclarativeCurve*> _pathCurves;
-    mutable QDeclarativeCachedBezier prevBez;
-    QDeclarativeNullableValue<qreal> startX;
-    QDeclarativeNullableValue<qreal> startY;
-    qreal pathLength;
-    bool closed;
-    bool componentComplete;
+    QDeclarativePath *path() const;
+    void setPath(QDeclarativePath *path);
+
+    qreal progress() const;
+    void setProgress(qreal progress);
+
+    qreal x() const;
+    qreal y() const;
+    qreal angle() const;
+
+Q_SIGNALS:
+    void pathChanged();
+    void progressChanged();
+    void xChanged();
+    void yChanged();
+    void angleChanged();
+
+private Q_SLOTS:
+    void _q_pathUpdated();
+
+private:
+    QDeclarativePath *_path;
+    qreal _x;
+    qreal _y;
+    qreal _angle;
+    qreal _progress;
 };
 
 QT_END_NAMESPACE
 
-#endif
+QML_DECLARE_TYPE(QDeclarativePathInterpolator)
+
+QT_END_HEADER
+
+#endif // QDECLARATIVEPATHINTERPOLATOR_P_H

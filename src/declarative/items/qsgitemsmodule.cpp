@@ -61,6 +61,7 @@
 #include "qsggridview_p.h"
 #include "qsgpathview_p.h"
 #include <private/qdeclarativepath_p.h>
+#include <private/qdeclarativepathinterpolator_p.h>
 #include "qsgpositioners_p.h"
 #include "qsgrepeater_p.h"
 #include "qsgloader_p.h"
@@ -125,6 +126,9 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QDeclarativePathLine>(uri,major,minor,"PathLine");
     qmlRegisterType<QDeclarativePathPercent>(uri,major,minor,"PathPercent");
     qmlRegisterType<QDeclarativePathQuad>(uri,major,minor,"PathQuad");
+    qmlRegisterType<QDeclarativePathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
+    qmlRegisterType<QDeclarativePathArc>("QtQuick",2,0,"PathArc");
+    qmlRegisterType<QDeclarativePathSvg>("QtQuick",2,0,"PathSvg");
     qmlRegisterType<QSGPathView>(uri,major,minor,"PathView");
     qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner","Positioner is an abstract type that is only available as an attached property.");
 #ifndef QT_NO_VALIDATOR
@@ -191,6 +195,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGAnchorSet>();
     qmlRegisterType<QSGAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QSGParentAnimation>(uri, major, minor,"ParentAnimation");
+    qmlRegisterType<QSGPathAnimation>("QtQuick",2,0,"PathAnimation");
+    qmlRegisterType<QDeclarativePathInterpolator>("QtQuick",2,0,"PathInterpolator");
 
     qmlRegisterType<QSGDragTarget>("QtQuick", 2, 0, "DragTarget");
     qmlRegisterType<QSGDragTargetEvent>();

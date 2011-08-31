@@ -3458,7 +3458,19 @@ void QSGItem::setTransformOrigin(TransformOrigin origin)
 QPointF QSGItem::transformOriginPoint() const
 {
     Q_D(const QSGItem);
+    if (!d->transformOriginPoint.isNull())
+        return d->transformOriginPoint;
     return d->computeTransformOrigin();
+}
+
+void QSGItem::setTransformOriginPoint(const QPointF &point)
+{
+    Q_D(QSGItem);
+    if (d->transformOriginPoint == point)
+        return;
+
+    d->transformOriginPoint = point;
+    d->dirty(QSGItemPrivate::TransformOrigin);
 }
 
 qreal QSGItem::z() const

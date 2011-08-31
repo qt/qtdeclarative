@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtDeclaractive module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,50 +39,22 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEPATH_P_H
-#define QDECLARATIVEPATH_P_H
+#ifndef QDECLARATIVESVGPARSER_P_H
+#define QDECLARATIVESVGPARSER_P_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "private/qdeclarativepath_p.h"
-
-#include <qdeclarative.h>
-#include <QtCore/QStringList>
-
-#include <private/qobject_p.h>
+#include <QtCore/qstring.h>
+#include <QtGui/qpainterpath.h>
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativePathPrivate : public QObjectPrivate
+namespace QDeclarativeSvgParser
 {
-    Q_DECLARE_PUBLIC(QDeclarativePath)
-
-public:
-    QDeclarativePathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
-
-    QPainterPath _path;
-    QList<QDeclarativePathElement*> _pathElements;
-    mutable QVector<QPointF> _pointCache;
-    QList<QDeclarativePath::AttributePoint> _attributePoints;
-    QStringList _attributes;
-    QList<QDeclarativeCurve*> _pathCurves;
-    mutable QDeclarativeCachedBezier prevBez;
-    QDeclarativeNullableValue<qreal> startX;
-    QDeclarativeNullableValue<qreal> startY;
-    qreal pathLength;
-    bool closed;
-    bool componentComplete;
-};
+    bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
+    void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
+                 int large_arc_flag, int sweep_flag, qreal x, qreal y, qreal curx,
+                 qreal cury);
+}
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QDECLARATIVESVGPARSER_P_H

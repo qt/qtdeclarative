@@ -39,50 +39,84 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEPATH_P_H
-#define QDECLARATIVEPATH_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qdeclarativepathinterpolator_p.h"
 
 #include "private/qdeclarativepath_p.h"
 
-#include <qdeclarative.h>
-#include <QtCore/QStringList>
-
-#include <private/qobject_p.h>
-
 QT_BEGIN_NAMESPACE
 
-class QDeclarativePathPrivate : public QObjectPrivate
+QDeclarativePathInterpolator::QDeclarativePathInterpolator(QObject *parent) :
+    QObject(parent), _path(0), _x(0), _y(0), _angle(0), _progress(0)
 {
-    Q_DECLARE_PUBLIC(QDeclarativePath)
+}
 
-public:
-    QDeclarativePathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
+QDeclarativePath *QDeclarativePathInterpolator::path() const
+{
+    return _path;
+}
 
-    QPainterPath _path;
-    QList<QDeclarativePathElement*> _pathElements;
-    mutable QVector<QPointF> _pointCache;
-    QList<QDeclarativePath::AttributePoint> _attributePoints;
-    QStringList _attributes;
-    QList<QDeclarativeCurve*> _pathCurves;
-    mutable QDeclarativeCachedBezier prevBez;
-    QDeclarativeNullableValue<qreal> startX;
-    QDeclarativeNullableValue<qreal> startY;
-    qreal pathLength;
-    bool closed;
-    bool componentComplete;
-};
+void QDeclarativePathInterpolator::setPath(QDeclarativePath *path)
+{
+    if (_path == path)
+        return;
+    if (_path)
+        disconnect(_path, SIGNAL(changed()), this, SLOT(_q_pathUpdated()));
+    _path = path;
+    connect(_path, SIGNAL(changed()), this, SLOT(_q_pathUpdated()));
+    emit pathChanged();
+}
+
+qreal QDeclarativePathInterpolator::progress() const
+{
+    return _progress;
+}
+
+void QDeclarativePathInterpolator::setProgress(qreal progress)
+{
+    if (progress == _progress)
+        return;
+    _progress = progress;
+    emit progressChanged();
+    _q_pathUpdated();
+}
+
+qreal QDeclarativePathInterpolator::x() const
+{
+    return _x;
+}
+
+qreal QDeclarativePathInterpolator::y() const
+{
+    return _y;
+}
+
+qreal QDeclarativePathInterpolator::angle() const
+{
+    return _angle;
+}
+
+void QDeclarativePathInterpolator::_q_pathUpdated()
+{
+    if (! _path)
+        return;
+
+    qreal angle = 0;
+    const QPointF pt = _path->sequentialPointAt(_progress, &angle);
+
+    if (_x != pt.x()) {
+        _x = pt.x();
+        emit xChanged();
+    }
+
+    if (_y != pt.y()) {
+        _y = pt.y();
+        emit yChanged();
+    }
+
+    if (angle != _angle) {
+        _angle = angle;
+        emit angleChanged();
+    }
+}
 
 QT_END_NAMESPACE
-
-#endif
