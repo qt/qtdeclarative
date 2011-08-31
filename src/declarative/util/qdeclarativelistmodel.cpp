@@ -847,11 +847,11 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                         AST::StringLiteral *literal = 0;
                         if (AST::CallExpression *callExpr = AST::cast<AST::CallExpression *>(node)) {
                             if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(callExpr->base)) {
-                                if (idExpr->name == QLatin1String("QT_TR_NOOP")) {
+                                if (idExpr->name == QLatin1String("QT_TR_NOOP") || idExpr->name == QLatin1String("QT_TRID_NOOP")) {
                                     if (callExpr->arguments && !callExpr->arguments->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
                                     if (!literal) {
-                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified QT_TR_NOOP"));
+                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified %1").arg(idExpr->name.toString()));
                                         return false;
                                     }
                                 } else if (idExpr->name == QLatin1String("QT_TRANSLATE_NOOP")) {
