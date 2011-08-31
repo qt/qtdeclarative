@@ -131,7 +131,7 @@ QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
 
 bool QSGParticleAffector::isAffectConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle, qreal)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle,qreal)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
