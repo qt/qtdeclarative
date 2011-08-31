@@ -47,9 +47,6 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 
-#include <private/qdeclarativedebug_p.h>
-#include <private/qdeclarativedebugservice_p.h>
-
 #include "../../../shared/util.h"
 #include "../shared/debugutil_p.h"
 
