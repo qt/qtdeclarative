@@ -45,8 +45,9 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qset.h>
+#include <QtCore/qstringlist.h>
 #include <private/qdeclarativedirparser_p.h>
-#include <private/qdeclarativescriptparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativemetatype_p.h>
 
 //
@@ -68,11 +69,12 @@ class QDir;
 class QDeclarativeImportedNamespace;
 class QDeclarativeImportsPrivate;
 class QDeclarativeImportDatabase;
+class QDeclarativeTypeLoader;
 
 class QDeclarativeImports
 {
 public:
-    QDeclarativeImports();
+    QDeclarativeImports(QDeclarativeTypeLoader *);
     QDeclarativeImports(const QDeclarativeImports &);
     ~QDeclarativeImports();
     QDeclarativeImports &operator=(const QDeclarativeImports &);
@@ -80,19 +82,19 @@ public:
     void setBaseUrl(const QUrl &url);
     QUrl baseUrl() const;
 
-    bool resolveType(const QByteArray& type,
-                     QDeclarativeType** type_return, QUrl* url_return,
+    bool resolveType(const QString& type,
+                     QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor,
                      QDeclarativeImportedNamespace** ns_return,
                      QList<QDeclarativeError> *errors = 0) const;
     bool resolveType(QDeclarativeImportedNamespace*, 
-                     const QByteArray& type,
-                     QDeclarativeType** type_return, QUrl* url_return,
+                     const QString& type,
+                     QDeclarativeType** type_return, QString* url_return,
                      int *version_major, int *version_minor) const;
 
     bool addImport(QDeclarativeImportDatabase *, 
                    const QString& uri, const QString& prefix, int vmaj, int vmin, 
-                   QDeclarativeScriptParser::Import::Type importType,
+                   QDeclarativeScript::Import::Type importType,
                    const QDeclarativeDirComponents &qmldircomponentsnetwork, 
                    QList<QDeclarativeError> *errors);
 
@@ -122,10 +124,12 @@ public:
 
 private:
     friend class QDeclarativeImportsPrivate;
-    QString resolvePlugin(const QDir &qmldirPath, const QString &qmldirPluginPath, 
+    QString resolvePlugin(QDeclarativeTypeLoader *typeLoader,
+                          const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName, const QStringList &suffixes,
                           const QString &prefix = QString());
-    QString resolvePlugin(const QDir &qmldirPath, const QString &qmldirPluginPath, 
+    QString resolvePlugin(QDeclarativeTypeLoader *typeLoader,
+                          const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName);
 
 

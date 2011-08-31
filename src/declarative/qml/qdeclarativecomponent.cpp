@@ -51,7 +51,7 @@
 #include "private/qdeclarativebinding_p.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativescriptparser_p.h"
+#include "private/qdeclarativescript_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeenginedebug_p.h"
 

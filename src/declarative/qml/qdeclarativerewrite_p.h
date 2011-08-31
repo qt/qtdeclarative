@@ -56,7 +56,7 @@
 #include "rewriter/textwriter_p.h"
 #include "parser/qdeclarativejslexer_p.h"
 #include "parser/qdeclarativejsparser_p.h"
-#include "parser/qdeclarativejsnodepool_p.h"
+#include "parser/qdeclarativejsmemorypool_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -79,14 +79,14 @@ class RewriteBinding: protected AST::Visitor
 {
     unsigned _position;
     TextWriter *_writer;
-    QByteArray _name;
+    QString _name;
 
 public:
     QString operator()(const QString &code, bool *ok = 0, bool *sharable = 0);
     QString operator()(QDeclarativeJS::AST::Node *node, const QString &code, bool *sharable = 0);
 
     //name of the function:  used for the debugger
-    void setName(const QByteArray &name) { _name = name; }
+    void setName(const QString &name) { _name = name; }
 
 protected:
     using AST::Visitor::visit;

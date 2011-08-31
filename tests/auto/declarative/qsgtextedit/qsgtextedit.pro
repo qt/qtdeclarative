@@ -12,7 +12,7 @@ symbian: {
 } else {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
 }
-QT += core-private gui-private declarative-private
+QT += core-private gui-private v8-private declarative-private
 QT += opengl-private
 
 qpa:CONFIG+=insignificant_test  # QTBUG-21010, fails unstably

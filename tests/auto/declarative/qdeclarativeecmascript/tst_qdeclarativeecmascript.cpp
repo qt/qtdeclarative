@@ -145,6 +145,7 @@ private slots:
     void numberAssignment();
     void propertySplicing();
     void signalWithUnknownTypes();
+    void moduleApi_data();
     void moduleApi();
     void importScripts();
     void scarceResources();
@@ -2735,55 +2736,153 @@ void tst_qdeclarativeecmascript::signalWithUnknownTypes()
     delete object;
 }
 
+void tst_qdeclarativeecmascript::moduleApi_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::addColumn<QStringList>("warningMessages");
+    QTest::addColumn<QStringList>("readProperties");
+    QTest::addColumn<QVariantList>("readExpectedValues");
+    QTest::addColumn<QStringList>("writeProperties");
+    QTest::addColumn<QVariantList>("writeValues");
+    QTest::addColumn<QStringList>("readBackProperties");
+    QTest::addColumn<QVariantList>("readBackExpectedValues");
+
+    QTest::newRow("qobject, register + read + method")
+            << TEST_FILE("moduleapi/qobjectModuleApi.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "existingUriTest" << "qobjectTest" << "qobjectMethodTest"
+                   << "qobjectMinorVersionTest" << "qobjectMajorVersionTest" << "qobjectParentedTest")
+            << (QVariantList() << 20 << 20 << 1 << 20 << 20 << 26)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("script, register + read")
+            << TEST_FILE("moduleapi/scriptModuleApi.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "scriptTest")
+            << (QVariantList() << 13)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("qobject, caching + read")
+            << TEST_FILE("moduleapi/qobjectModuleApiCaching.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "existingUriTest" << "qobjectParentedTest")
+            << (QVariantList() << 20 << 26) // 26, shouldn't have incremented to 27.
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("script, caching + read")
+            << TEST_FILE("moduleapi/scriptModuleApiCaching.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "scriptTest")
+            << (QVariantList() << 13) // 13, shouldn't have incremented to 14.
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("qobject, writing + readonly constraints")
+            << TEST_FILE("moduleapi/qobjectModuleApiWriting.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("moduleapi/qobjectModuleApiWriting.qml").toLocalFile() + QLatin1String(":14: Error: Cannot assign to read-only property \"qobjectTestProperty\"")))
+            << (QStringList() << "readOnlyProperty" << "writableProperty")
+            << (QVariantList() << 20 << 50)
+            << (QStringList() << "firstProperty" << "writableProperty")
+            << (QVariantList() << 30 << 30)
+            << (QStringList() << "readOnlyProperty" << "writableProperty")
+            << (QVariantList() << 20 << 30);
+
+    QTest::newRow("script, writing + readonly constraints")
+            << TEST_FILE("moduleapi/scriptModuleApiWriting.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("moduleapi/scriptModuleApiWriting.qml").toLocalFile() + QLatin1String(":21: Error: Cannot assign to read-only property \"scriptTestProperty\"")))
+            << (QStringList() << "readBack" << "unchanged")
+            << (QVariantList() << 13 << 42)
+            << (QStringList() << "firstProperty" << "secondProperty")
+            << (QVariantList() << 30 << 30)
+            << (QStringList() << "readBack" << "unchanged")
+            << (QVariantList() << 30 << 42);
+
+    QTest::newRow("qobject module API enum values in JS")
+            << TEST_FILE("moduleapi/qobjectModuleApiEnums.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << "enumValue" << "enumMethod")
+            << (QVariantList() << 42 << 30)
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("qobject, invalid major version fail")
+            << TEST_FILE("moduleapi/moduleApiMajorVersionFail.qml")
+            << QString("QDeclarativeComponent: Component is not ready")
+            << QStringList()
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+
+    QTest::newRow("qobject, invalid minor version fail")
+            << TEST_FILE("moduleapi/moduleApiMinorVersionFail.qml")
+            << QString("QDeclarativeComponent: Component is not ready")
+            << QStringList()
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList()
+            << QStringList()
+            << QVariantList();
+}
+
 void tst_qdeclarativeecmascript::moduleApi()
 {
-    QDeclarativeComponent component(&engine, TEST_FILE("moduleApi.qml"));
+    QFETCH(QUrl, testfile);
+    QFETCH(QString, errorMessage);
+    QFETCH(QStringList, warningMessages);
+    QFETCH(QStringList, readProperties);
+    QFETCH(QVariantList, readExpectedValues);
+    QFETCH(QStringList, writeProperties);
+    QFETCH(QVariantList, writeValues);
+    QFETCH(QStringList, readBackProperties);
+    QFETCH(QVariantList, readBackExpectedValues);
+
+    QDeclarativeComponent component(&engine, testfile);
+
+    if (!errorMessage.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, errorMessage.toAscii().constData());
+
+    if (warningMessages.size())
+        foreach (const QString &warning, warningMessages)
+            QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+
     QObject *object = component.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("existingUriTest").toInt(), 20);
-
-    QEXPECT_FAIL("", "QTBUG-17318", Continue);
-    QCOMPARE(object->property("scriptTest").toInt(), 13);
-    QCOMPARE(object->property("qobjectTest").toInt(), 20);
-    QCOMPARE(object->property("qobjectMethodTest").toInt(), 1); // first call of method, so count = 1.
-    QCOMPARE(object->property("qobjectMinorVersionTest").toInt(), 20);
-    QCOMPARE(object->property("qobjectMajorVersionTest").toInt(), 20);
-    QCOMPARE(object->property("qobjectParentedTest").toInt(), 26);
-    delete object;
-
-    // test that caching of module apis works correctly.
-    QDeclarativeComponent componentTwo(&engine, TEST_FILE("moduleApiCaching.qml"));
-    object = componentTwo.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("existingUriTest").toInt(), 20);
-    QEXPECT_FAIL("", "QTBUG-17318", Continue);
-    QCOMPARE(object->property("scriptTest").toInt(), 13);            // shouldn't have incremented.
-    QCOMPARE(object->property("qobjectParentedTest").toInt(), 26);   // shouldn't have incremented.
-    delete object;
-
-    // test that writing to a property of module apis works correctly.
-    QDeclarativeComponent componentThree(&engine, TEST_FILE("moduleApiWriting.qml"));
-    QString expectedWarning = QLatin1String("file://") + TEST_FILE("moduleApiWriting.qml").toLocalFile() + QLatin1String(":15: Error: Cannot assign to read-only property \"qobjectTestProperty\"");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = componentThree.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("readOnlyProperty").toInt(), 20);
-    QCOMPARE(object->property("writableProperty").toInt(), 50);
-    QVERIFY(object->setProperty("firstProperty", QVariant(30))); // shouldn't affect value of readOnlyProperty
-    QVERIFY(object->setProperty("writableProperty", QVariant(30))); // SHOULD affect value of writableProperty
-    QCOMPARE(object->property("readOnlyProperty").toInt(), 20);
-    QCOMPARE(object->property("writableProperty").toInt(), 30);
-    delete object;
-
-    QDeclarativeComponent failOne(&engine, TEST_FILE("moduleApiMajorVersionFail.qml"));
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
-    object = failOne.create();
-    QVERIFY(object == 0); // should have failed: invalid major version
-
-    QDeclarativeComponent failTwo(&engine, TEST_FILE("moduleApiMinorVersionFail.qml"));
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeComponent: Component is not ready");
-    object = failTwo.create();
-    QVERIFY(object == 0); // should have failed: invalid minor version
+    if (!errorMessage.isEmpty()) {
+        QVERIFY(object == 0);
+    } else {
+        QVERIFY(object != 0);
+        for (int i = 0; i < readProperties.size(); ++i)
+            QCOMPARE(object->property(readProperties.at(i).toAscii().constData()), readExpectedValues.at(i));
+        for (int i = 0; i < writeProperties.size(); ++i)
+            QVERIFY(object->setProperty(writeProperties.at(i).toAscii().constData(), writeValues.at(i)));
+        for (int i = 0; i < readBackProperties.size(); ++i)
+            QCOMPARE(object->property(readBackProperties.at(i).toAscii().constData()), readBackExpectedValues.at(i));
+        delete object;
+    }
 }
 
 void tst_qdeclarativeecmascript::importScripts()

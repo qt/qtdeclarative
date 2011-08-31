@@ -223,7 +223,7 @@ QDeclarative1ConnectionsParser::compile(const QList<QDeclarativeCustomParserProp
                 error(props.at(ii), QDeclarative1Connections::tr("Connections: syntax error"));
                 return QByteArray();
             } else {
-                QDeclarativeParser::Variant v = qvariant_cast<QDeclarativeParser::Variant>(value);
+                QDeclarativeScript::Variant v = qvariant_cast<QDeclarativeScript::Variant>(value);
                 if (v.isScript()) {
                     ds << propName;
                     ds << v.asScript();

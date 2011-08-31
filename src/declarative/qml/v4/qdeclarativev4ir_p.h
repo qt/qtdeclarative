@@ -55,12 +55,13 @@
 
 #include <private/qdeclarativejsast_p.h>
 #include <private/qdeclarativejsengine_p.h>
-#include <private/qdeclarativeparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <private/qdeclarativev4compiler_p.h>
 
-#include <QtCore/qvector.h>
+#include <qdeclarativepool_p.h>
+#include <QtCore/qvarlengtharray.h>
 
 // #define DEBUG_IR_STRUCTURE
 
@@ -77,7 +78,6 @@ namespace IR {
 
 struct BasicBlock;
 struct Function;
-struct Module;
 
 struct Stmt;
 struct Expr;
@@ -175,10 +175,10 @@ struct StmtVisitor {
     virtual void visitRet(Ret *) {}
 };
 
-struct Expr {
+struct Expr: QDeclarativePool::POD {
     Type type;
 
-    Expr(Type type): type(type) {}
+    Expr(): type(InvalidType) {}
     virtual ~Expr() {}
     virtual void accept(ExprVisitor *) = 0;
     virtual Const *asConst() { return 0; }
@@ -191,9 +191,25 @@ struct Expr {
     virtual void dump(QTextStream &out) = 0;
 };
 
+struct ExprList: QDeclarativePool::POD {
+    Expr *expr;
+    ExprList *next;
+
+    void init(Expr *expr, ExprList *next = 0)
+    {
+        this->expr = expr;
+        this->next = next;
+    }
+};
+
 struct Const: Expr {
     double value;
-    Const(Type type, double value): Expr(type), value(value) {}
+
+    void init(Type type, double value)
+    {
+        this->type = type;
+        this->value = value;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitConst(this); }
     virtual Const *asConst() { return this; }
@@ -202,14 +218,19 @@ struct Const: Expr {
 };
 
 struct String: Expr {
-    QString value;
-    String(const QString &value): Expr(StringType), value(value) {}
+    QStringRef value;
+
+    void init(const QStringRef &value)
+    {
+        this->type = StringType;
+        this->value = value;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitString(this); }
     virtual String *asString() { return this; }
 
     virtual void dump(QTextStream &out);
-    static QString escape(const QString &s);
+    static QString escape(const QStringRef &s);
 };
 
 enum BuiltinSymbol {
@@ -240,13 +261,13 @@ struct Name: Expr {
     };
 
     Name *base;
-    QString id;
+    const QString *id;
     Symbol symbol;
     union {
         void *ptr;
         const QMetaObject *meta;
         const QDeclarativeType *declarativeType;
-        const QDeclarativeParser::Object *idObject;
+        const QDeclarativeScript::Object *idObject;
     };
     int index;
     Storage storage;
@@ -254,7 +275,7 @@ struct Name: Expr {
     quint32 line;
     quint32 column;
 
-    Name(Name *base, Type type, const QString &id, Symbol symbol, quint32 line, quint32 column);
+    void init(Name *base, Type type, const QString *id, Symbol symbol, quint32 line, quint32 column);
 
     inline bool is(Symbol s) const { return s == symbol; }
     inline bool isNot(Symbol s) const { return s != symbol; }
@@ -267,7 +288,12 @@ struct Name: Expr {
 
 struct Temp: Expr {
     int index;
-    Temp(Type type, int index): Expr(type), index(index) {}
+
+    void init(Type type, int index)
+    {
+        this->type = type;
+        this->index = index;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitTemp(this); }
     virtual Temp *asTemp() { return this; }
@@ -279,8 +305,12 @@ struct Unop: Expr {
     AluOp op;
     Expr *expr;
 
-    Unop(AluOp op, Expr *expr)
-        : Expr(typeForOp(op, expr)), op(op), expr(expr) {}
+    void init(AluOp op, Expr *expr)
+    {
+        this->typeForOp(op, expr);
+        this->op = op;
+        this->expr = expr;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitUnop(this); }
     virtual Unop *asUnop() { return this; }
@@ -295,8 +325,14 @@ struct Binop: Expr {
     AluOp op;
     Expr *left;
     Expr *right;
-    Binop(AluOp op, Expr *left, Expr *right)
-        : Expr(typeForOp(op, left, right)), op(op), left(left), right(right) {}
+
+    void init(AluOp op, Expr *left, Expr *right)
+    {
+        this->type = typeForOp(op, left, right);
+        this->op = op;
+        this->left = left;
+        this->right = right;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitBinop(this); }
     virtual Binop *asBinop() { return this; }
@@ -309,10 +345,20 @@ private:
 
 struct Call: Expr {
     Expr *base;
-    QVector<Expr *> args;
+    ExprList *args;
 
-    Call(Expr *base, const QVector<Expr *> &args)
-        : Expr(typeForFunction(base)), base(base), args(args) {}
+    void init(Expr *base, ExprList *args)
+    {
+        this->type = typeForFunction(base);
+        this->base = base;
+        this->args = args;
+    }
+
+    Expr *onlyArgument() const {
+        if (args && ! args->next)
+            return args->expr;
+        return 0;
+    }
 
     virtual void accept(ExprVisitor *v) { v->visitCall(this); }
     virtual Call *asCall() { return this; }
@@ -323,7 +369,7 @@ private:
     static Type typeForFunction(Expr *base);
 };
 
-struct Stmt {
+struct Stmt: QDeclarativePool::POD {
     enum Mode {
         HIR,
         MIR
@@ -343,7 +389,11 @@ struct Stmt {
 
 struct Exp: Stmt {
     Expr *expr;
-    Exp(Expr *expr): expr(expr) {}
+
+    void init(Expr *expr)
+    {
+        this->expr = expr;
+    }
 
     virtual void accept(StmtVisitor *v) { v->visitExp(this); }
     virtual Exp *asExp() { return this; }
@@ -355,7 +405,13 @@ struct Move: Stmt {
     Expr *target;
     Expr *source;
     bool isMoveForReturn;
-    Move(Expr *target, Expr *source, bool isMoveForReturn): target(target), source(source), isMoveForReturn(isMoveForReturn) {}
+
+    void init(Expr *target, Expr *source, bool isMoveForReturn)
+    {
+        this->target = target;
+        this->source = source;
+        this->isMoveForReturn = isMoveForReturn;
+    }
 
     virtual void accept(StmtVisitor *v) { v->visitMove(this); }
     virtual Move *asMove() { return this; }
@@ -365,7 +421,11 @@ struct Move: Stmt {
 
 struct Jump: Stmt {
     BasicBlock *target;
-    Jump(BasicBlock *target): target(target) {}
+
+    void init(BasicBlock *target)
+    {
+        this->target = target;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -379,8 +439,13 @@ struct CJump: Stmt {
     Expr *cond;
     BasicBlock *iftrue;
     BasicBlock *iffalse;
-    CJump(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
-        : cond(cond), iftrue(iftrue), iffalse(iffalse) {}
+
+    void init(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse)
+    {
+        this->cond = cond;
+        this->iftrue = iftrue;
+        this->iffalse = iffalse;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -395,7 +460,14 @@ struct Ret: Stmt {
     Type type;
     quint32 line;
     quint32 column;
-    Ret(Expr *expr, Type type, quint32 line, quint32 column): expr(expr), type(type), line(line), column(column) {}
+
+    void init(Expr *expr, Type type, quint32 line, quint32 column)
+    {
+        this->expr = expr;
+        this->type = type;
+        this->line = line;
+        this->column = column;
+    }
 
     virtual Stmt *asTerminator() { return this; }
 
@@ -406,19 +478,19 @@ struct Ret: Stmt {
 };
 
 struct Function {
-    Module *module;
-    const NameId *name;
+    QDeclarativePool *pool;
+    QVarLengthArray<BasicBlock *, 8> basicBlocks;
     int tempCount;
-    QVector<BasicBlock *> basicBlocks;
-    QVector<Expr *> temps;
 
-    template <typename BB> inline BB i(BB i) { basicBlocks.append(i); return i; }
-    template <typename E> inline E e(E e) { temps.append(e); return e; }
+    Function(QDeclarativePool *pool)
+      : pool(pool), tempCount(0) {}
 
-    Function(Module *module, const NameId *name = 0): module(module), name(name), tempCount(0) {}
     ~Function();
 
     BasicBlock *newBasicBlock();
+    QString *newString(const QString &text);
+
+    inline BasicBlock *i(BasicBlock *block) { basicBlocks.append(block); return block; }
 
     virtual void dump(QTextStream &out);
 };
@@ -426,11 +498,11 @@ struct Function {
 struct BasicBlock {
     Function *function;
     int index;
-    QVector<Stmt *> statements;
     int offset;
+    QVarLengthArray<Stmt *, 32> statements;
 
     BasicBlock(Function *function, int index): function(function), index(index), offset(-1) {}
-    ~BasicBlock() { qDeleteAll(statements); }
+    ~BasicBlock() {}
 
     template <typename Instr> inline Instr i(Instr i) { statements.append(i); return i; }
 
@@ -439,8 +511,8 @@ struct BasicBlock {
     }
 
     inline Stmt *terminator() const {
-        if (! statements.isEmpty() && statements.last()->asTerminator() != 0)
-            return statements.last();
+        if (! statements.isEmpty() && statements.at(statements.size() - 1)->asTerminator() != 0)
+            return statements.at(statements.size() - 1);
         return 0;
     }
 
@@ -455,19 +527,19 @@ struct BasicBlock {
 
     Expr *CONST(double value);
     Expr *CONST(Type type, double value);
-    Expr *STRING(const QString &value);
+    Expr *STRING(const QStringRef &value);
 
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name *base, const QString &id, quint32 line, quint32 column);
     Name *SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
     Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, quint32 line, quint32 column);
     Name *SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage, quint32 line, quint32 column);
-    Name *ID_OBJECT(const QString &id, const QDeclarativeParser::Object *object, quint32 line, quint32 column);
+    Name *ID_OBJECT(const QString &id, const QDeclarativeScript::Object *object, quint32 line, quint32 column);
     Name *ATTACH_TYPE(const QString &id, const QDeclarativeType *attachType, Name::Storage storage, quint32 line, quint32 column);
 
     Expr *UNOP(AluOp op, Expr *expr);
     Expr *BINOP(AluOp op, Expr *left, Expr *right);
-    Expr *CALL(Expr *base, const QVector<Expr *> &args);
+    Expr *CALL(Expr *base, ExprList *args);
 
     Stmt *EXP(Expr *expr);
     Stmt *MOVE(Expr *target, Expr *source, bool = false);
@@ -475,19 +547,6 @@ struct BasicBlock {
     Stmt *JUMP(BasicBlock *target);
     Stmt *CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse);
     Stmt *RET(Expr *expr, Type type, quint32 line, quint32 column);
-
-    virtual void dump(QTextStream &out);
-};
-
-struct Module {
-    QVector<Function *> functions;
-
-    Module() {}
-    ~Module() { qDeleteAll(functions); }
-
-    template <typename BB> inline BB i(BB i) { functions.append(i); return i; }
-
-    Function *newFunction(const NameId *name = 0) { return i(new Function(this, name)); }
 
     virtual void dump(QTextStream &out);
 };

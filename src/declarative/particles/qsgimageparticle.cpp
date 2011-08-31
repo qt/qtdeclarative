@@ -258,7 +258,7 @@ public:
         m_animcount_id = program()->uniformLocation("animcount");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
-        m_opacitytable_id = program()->uniformLocation("sizetable");
+        m_opacitytable_id = program()->uniformLocation("opacitytable");
     }
 
     void updateState(const SpriteMaterialData* d, const SpriteMaterialData*) {
@@ -432,7 +432,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 {
     if (img.isNull()){
         for (int i=0; i<size; i++)
-            array[i] = 1;
+            array[i] = 1.0;
         return;
     }
     QImage scaled = img.scaled(size,1);

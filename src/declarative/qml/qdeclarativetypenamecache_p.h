@@ -59,6 +59,8 @@
 
 #include <private/qhashedstring_p.h>
 
+#include <QtCore/qvector.h>
+
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeType;
@@ -69,78 +71,89 @@ public:
     QDeclarativeTypeNameCache(QDeclarativeEngine *);
     virtual ~QDeclarativeTypeNameCache();
 
-    struct Data {
-        inline Data();
-        inline Data(const Data &);
-        inline ~Data();
-        inline Data &operator=(const Data &);
-        QDeclarativeType *type;
-        QDeclarativeTypeNameCache *typeNamespace;
-        int importedScriptIndex;
-    };
-
-    void add(const QString &, int);
-    void add(const QString &, QDeclarativeType *);
-    void add(const QString &, QDeclarativeTypeNameCache *);
-
-    Data *data(const QString &) const;
-    inline Data *data(const QHashedV8String &) const;
     inline bool isEmpty() const;
 
-    inline QDeclarativeMetaType::ModuleApiInstance *moduleApi() const;
-    void setModuleApi(QDeclarativeMetaType::ModuleApiInstance *);
+    void add(const QHashedString &, int);
+
+    struct Result {
+        inline Result();
+        inline Result(const void *importNamespace);
+        inline Result(QDeclarativeType *type);
+        inline Result(int scriptIndex);
+        inline Result(const Result &);
+
+        inline bool isValid() const;
+
+        QDeclarativeType *type;
+        const void *importNamespace;
+        int scriptIndex;
+    };
+    Result query(const QHashedStringRef &);
+    Result query(const QHashedStringRef &, const void *importNamespace);
+    Result query(const QHashedV8String &);
+    Result query(const QHashedV8String &, const void *importNamespace);
+    QDeclarativeMetaType::ModuleApiInstance *moduleApi(const void *importNamespace);
 
 protected:
     virtual void clear();
 
 private:
-    typedef QStringHash<Data> StringCache;
+    friend class QDeclarativeImports;
 
-    StringCache stringCache;
+    struct Import {
+        inline Import();
+        // Imported module
+        QDeclarativeMetaType::ModuleApiInstance *moduleApi;
+        QVector<QDeclarativeTypeModuleVersion> modules;
+
+        // Or, imported script
+        int scriptIndex;
+    };
+
+    QStringHash<Import> m_namedImports;
+    QVector<QDeclarativeTypeModuleVersion> m_anonymousImports;
 
     QDeclarativeEngine *engine;
-    QDeclarativeMetaType::ModuleApiInstance *m_moduleApi;
 };
 
-QDeclarativeTypeNameCache::Data::Data()
-: type(0), typeNamespace(0), importedScriptIndex(-1)
+QDeclarativeTypeNameCache::Result::Result()
+: type(0), importNamespace(0), scriptIndex(-1)
 {
 }
 
-QDeclarativeTypeNameCache::Data::~Data()
+QDeclarativeTypeNameCache::Result::Result(const void *importNamespace)
+: type(0), importNamespace(importNamespace), scriptIndex(-1)
 {
-    if (typeNamespace) typeNamespace->release();
+}
+
+QDeclarativeTypeNameCache::Result::Result(QDeclarativeType *type)
+: type(type), importNamespace(0), scriptIndex(-1)
+{
+}
+
+QDeclarativeTypeNameCache::Result::Result(int scriptIndex)
+: type(0), importNamespace(0), scriptIndex(scriptIndex)
+{
+}
+
+QDeclarativeTypeNameCache::Result::Result(const Result &o)
+: type(o.type), importNamespace(o.importNamespace), scriptIndex(o.scriptIndex)
+{
+}
+
+bool QDeclarativeTypeNameCache::Result::isValid() const
+{
+    return type || importNamespace || scriptIndex != -1;
+}
+
+QDeclarativeTypeNameCache::Import::Import()
+: scriptIndex(-1)
+{
 }
 
 bool QDeclarativeTypeNameCache::isEmpty() const
 {
-    return stringCache.isEmpty();
-}
-
-QDeclarativeTypeNameCache::Data::Data(const QDeclarativeTypeNameCache::Data &o)
-: type(o.type), typeNamespace(o.typeNamespace), importedScriptIndex(o.importedScriptIndex)
-{
-    if (typeNamespace) typeNamespace->addref();
-}
-
-QDeclarativeTypeNameCache::Data &QDeclarativeTypeNameCache::Data::operator=(const QDeclarativeTypeNameCache::Data &o)
-{
-    if (o.typeNamespace) o.typeNamespace->addref();
-    if (typeNamespace) typeNamespace->release();
-    type = o.type;
-    typeNamespace = o.typeNamespace;
-    importedScriptIndex = o.importedScriptIndex;
-    return *this;
-}
-
-QDeclarativeMetaType::ModuleApiInstance *QDeclarativeTypeNameCache::moduleApi() const
-{
-    return m_moduleApi;
-}
-
-QDeclarativeTypeNameCache::Data *QDeclarativeTypeNameCache::data(const QHashedV8String &name) const
-{
-    return stringCache.value(name);
+    return m_namedImports.isEmpty() && m_anonymousImports.isEmpty();
 }
 
 QT_END_NAMESPACE

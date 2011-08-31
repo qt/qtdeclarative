@@ -46,7 +46,7 @@
 #include "parser/qdeclarativejsengine_p.h"
 
 #include <qdeclarativecustomparser_p.h>
-#include <qdeclarativeparser_p.h>
+#include <qdeclarativescript_p.h>
 #include <qdeclarativeengine_p.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarativeinfo.h>
@@ -822,8 +822,8 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
 
         } else {
 
-            QDeclarativeParser::Variant variant =
-                qvariant_cast<QDeclarativeParser::Variant>(value);
+            QDeclarativeScript::Variant variant =
+                qvariant_cast<QDeclarativeScript::Variant>(value);
 
             int ref = data.count();
 
@@ -837,7 +837,7 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                 d += char(variant.asBoolean());
             } else if (variant.isScript()) {
                 if (definesEmptyList(variant.asScript())) {
-                    d[0] = char(QDeclarativeParser::Variant::Invalid); // marks empty list
+                    d[0] = char(QDeclarativeScript::Variant::Invalid); // marks empty list
                 } else {
                     QByteArray script = variant.asScript().toUtf8();
                     int v = evaluateEnum(script);
@@ -847,14 +847,14 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                         AST::StringLiteral *literal = 0;
                         if (AST::CallExpression *callExpr = AST::cast<AST::CallExpression *>(node)) {
                             if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(callExpr->base)) {
-                                if (idExpr->name->asString() == QLatin1String("QT_TR_NOOP")) {
+                                if (idExpr->name == QLatin1String("QT_TR_NOOP") || idExpr->name == QLatin1String("QT_TRID_NOOP")) {
                                     if (callExpr->arguments && !callExpr->arguments->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->expression);
                                     if (!literal) {
-                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified QT_TR_NOOP"));
+                                        error(prop, QDeclarativeListModel::tr("ListElement: improperly specified %1").arg(idExpr->name.toString()));
                                         return false;
                                     }
-                                } else if (idExpr->name->asString() == QLatin1String("QT_TRANSLATE_NOOP")) {
+                                } else if (idExpr->name == QLatin1String("QT_TRANSLATE_NOOP")) {
                                     if (callExpr->arguments && callExpr->arguments->next && !callExpr->arguments->next->next)
                                         literal = AST::cast<AST::StringLiteral *>(callExpr->arguments->next->expression);
                                     if (!literal) {
@@ -866,14 +866,14 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                         }
 
                         if (literal) {
-                            d[0] = char(QDeclarativeParser::Variant::String);
-                            d += literal->value->asString().toUtf8();
+                            d[0] = char(QDeclarativeScript::Variant::String);
+                            d += literal->value.toUtf8();
                         } else {
                             error(prop, QDeclarativeListModel::tr("ListElement: cannot use script for property value"));
                             return false;
                         }
                     } else {
-                        d[0] = char(QDeclarativeParser::Variant::Number);
+                        d[0] = char(QDeclarativeScript::Variant::Number);
                         d += QByteArray::number(v);
                     }
                 }
@@ -932,6 +932,7 @@ void QDeclarativeListModelParser::setCustomData(QObject *obj, const QByteArray &
     QDeclarativeListModel *rv = static_cast<QDeclarativeListModel *>(obj);
 
     ModelNode *root = new ModelNode(rv->m_nested);
+    rv->m_nested->m_ownsRoot = true;
     rv->m_nested->_root = root;
     QStack<ModelNode *> nodes;
     nodes << root;
@@ -963,17 +964,17 @@ void QDeclarativeListModelParser::setCustomData(QObject *obj, const QByteArray &
         case ListInstruction::Value:
             {
                 ModelNode *n = nodes.top();
-                switch (QDeclarativeParser::Variant::Type(data[instr.dataIdx])) {
-                 case QDeclarativeParser::Variant::Invalid:
+                switch (QDeclarativeScript::Variant::Type(data[instr.dataIdx])) {
+                 case QDeclarativeScript::Variant::Invalid:
                     n->isArray = true;
                     break;
-                 case QDeclarativeParser::Variant::Boolean:
+                 case QDeclarativeScript::Variant::Boolean:
                     n->values.append(bool(data[1 + instr.dataIdx]));
                     break;
-                 case QDeclarativeParser::Variant::Number:
+                 case QDeclarativeScript::Variant::Number:
                     n->values.append(QByteArray(data + 1 + instr.dataIdx).toDouble());
                     break;
-                 case QDeclarativeParser::Variant::String:
+                 case QDeclarativeScript::Variant::String:
                     n->values.append(QString::fromUtf8(data + 1 + instr.dataIdx));
                     break;
                  default:

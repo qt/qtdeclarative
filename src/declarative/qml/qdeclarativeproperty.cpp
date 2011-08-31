@@ -235,63 +235,71 @@ void QDeclarativePropertyPrivate::initProperty(QObject *obj, const QString &name
     for (int ii = 0; ii < path.count() - 1; ++ii) {
         const QString &pathName = path.at(ii);
 
-        if (QDeclarativeTypeNameCache::Data *data = typeNameCache?typeNameCache->data(pathName):0) {
-            if (data->type) {
-                QDeclarativeAttachedPropertiesFunc func = data->type->attachedPropertiesFunction();
-                if (!func) return; // Not an attachable type
+        if (typeNameCache) {
+            QDeclarativeTypeNameCache::Result r = typeNameCache->query(pathName);
+            if (r.isValid()) {
+                if (r.type) {
+                    QDeclarativeAttachedPropertiesFunc func = r.type->attachedPropertiesFunction();
+                    if (!func) return; // Not an attachable type
 
-                currentObject = qmlAttachedPropertiesObjectById(data->type->attachedPropertiesId(), currentObject);
-                if (!currentObject) return; // Something is broken with the attachable type
-            } else {
-                Q_ASSERT(data->typeNamespace);
-                if ((ii + 1) == path.count()) return; // No type following the namespace
+                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(), currentObject);
+                    if (!currentObject) return; // Something is broken with the attachable type
+                } else if (r.importNamespace) {
+                    if ((ii + 1) == path.count()) return; // No type following the namespace
+
+                    ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
+                    if (!r.type) return; // Invalid type in namespace
                 
-                ++ii; data = data->typeNamespace->data(path.at(ii));
-                if (!data || !data->type) return; // Invalid type in namespace 
+                    QDeclarativeAttachedPropertiesFunc func = r.type->attachedPropertiesFunction();
+                    if (!func) return; // Not an attachable type
 
-                QDeclarativeAttachedPropertiesFunc func = data->type->attachedPropertiesFunction();
-                if (!func) return; // Not an attachable type
+                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(), currentObject);
+                    if (!currentObject) return; // Something is broken with the attachable type
 
-                currentObject = qmlAttachedPropertiesObjectById(data->type->attachedPropertiesId(), currentObject);
-                if (!currentObject) return; // Something is broken with the attachable type
+                } else if (r.scriptIndex != -1) {
+                    return; // Not a type
+                } else {
+                    Q_ASSERT(!"Unreachable");
+                }
+                continue;
             }
+
+        }
+
+        QDeclarativePropertyCache::Data local;
+        QDeclarativePropertyCache::Data *property = 
+            QDeclarativePropertyCache::property(engine, obj, pathName, local);
+
+        if (!property) return; // Not a property
+        if (property->isFunction())
+            return; // Not an object property 
+
+        if (ii == (path.count() - 2) && QDeclarativeValueTypeFactory::isValueType(property->propType)) {
+            // We're now at a value type property.  We can use a global valuetypes array as we 
+            // never actually use the objects, just look up their properties.
+            QObject *typeObject = (*qmlValueTypes())[property->propType];
+            if (!typeObject) return; // Not a value type
+
+            int idx = typeObject->metaObject()->indexOfProperty(path.last().toUtf8().constData());
+            if (idx == -1) return; // Value type property does not exist
+
+            QMetaProperty vtProp = typeObject->metaObject()->property(idx);
+
+            object = currentObject;
+            core = *property;
+            valueType.flags = QDeclarativePropertyCache::Data::flagsForProperty(vtProp);
+            valueType.valueTypeCoreIdx = idx;
+            valueType.valueTypePropType = vtProp.userType();
+
+            return; 
         } else {
+            if (!property->isQObject())
+                return; // Not an object property
 
-            QDeclarativePropertyCache::Data local;
-            QDeclarativePropertyCache::Data *property = 
-                QDeclarativePropertyCache::property(engine, obj, pathName, local);
+            void *args[] = { &currentObject, 0 };
+            QMetaObject::metacall(currentObject, QMetaObject::ReadProperty, property->coreIndex, args);
+            if (!currentObject) return; // No value
 
-            if (!property) return; // Not a property
-            if (property->isFunction())
-                return; // Not an object property 
-
-            if (ii == (path.count() - 2) && QDeclarativeValueTypeFactory::isValueType(property->propType)) {
-                // We're now at a value type property.  We can use a global valuetypes array as we 
-                // never actually use the objects, just look up their properties.
-                QObject *typeObject = (*qmlValueTypes())[property->propType];
-                if (!typeObject) return; // Not a value type
-
-                int idx = typeObject->metaObject()->indexOfProperty(path.last().toUtf8().constData());
-                if (idx == -1) return; // Value type property does not exist
-
-                QMetaProperty vtProp = typeObject->metaObject()->property(idx);
-
-                object = currentObject;
-                core = *property;
-                valueType.flags = QDeclarativePropertyCache::Data::flagsForProperty(vtProp);
-                valueType.valueTypeCoreIdx = idx;
-                valueType.valueTypePropType = vtProp.userType();
-
-                return; 
-            } else {
-                if (!property->isQObject())
-                    return; // Not an object property
-
-                void *args[] = { &currentObject, 0 };
-                QMetaObject::metacall(currentObject, QMetaObject::ReadProperty, property->coreIndex, args);
-                if (!currentObject) return; // No value
-
-            }
         }
 
     }

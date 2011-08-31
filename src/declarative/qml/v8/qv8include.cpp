@@ -130,7 +130,7 @@ void QV8Include::finished()
         QByteArray data = m_reply->readAll();
 
         QString code = QString::fromUtf8(data);
-        QDeclarativeScriptParser::extractPragmas(code);
+        QDeclarativeScript::Parser::extractPragmas(code);
 
         QDeclarativeContextData *importContext = new QDeclarativeContextData;
         importContext->isInternal = true;
@@ -203,7 +203,7 @@ v8::Handle<v8::Value> QV8Include::include(const v8::Arguments &args)
         if (f.open(QIODevice::ReadOnly)) {
             QByteArray data = f.readAll();
             QString code = QString::fromUtf8(data);
-            QDeclarativeScriptParser::extractPragmas(code);
+            QDeclarativeScript::Parser::extractPragmas(code);
 
             QDeclarativeContextData *importContext = new QDeclarativeContextData;
             importContext->isInternal = true;

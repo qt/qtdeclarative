@@ -165,10 +165,11 @@ void String::dump(QTextStream &out)
     out << '"' << escape(value) << '"';
 }
 
-QString String::escape(const QString &s)
+QString String::escape(const QStringRef &s)
 {
     QString r;
-    foreach (const QChar &ch, s) {
+    for (int i = 0; i < s.length(); ++i) {
+        const QChar ch = s.at(i);
         if (ch == QLatin1Char('\n'))
             r += QLatin1String("\\n");
         else if (ch == QLatin1Char('\r'))
@@ -185,29 +186,30 @@ QString String::escape(const QString &s)
     return r;
 }
 
-Name::Name(Name *base, Type type, const QString &id, Symbol symbol, quint32 line, quint32 column)
-: Expr(type)
-  , base(base)
-  , id(id)
-  , symbol(symbol)
-  , ptr(0)
-  , index(-1)
-  , storage(MemberStorage)
-  , builtin(NoBuiltinSymbol)
-  , line(line)
-  , column(column)
+void Name::init(Name *base, Type type, const QString *id, Symbol symbol, quint32 line, quint32 column)
 {
-    if (id.length() == 8 && id == QLatin1String("Math.sin")) {
+    this->type = type;
+    this->base = base;
+    this->id = id;
+    this->symbol = symbol;
+    this->ptr = 0;
+    this->index = -1;
+    this->storage = MemberStorage;
+    this->builtin = NoBuiltinSymbol;
+    this->line = line;
+    this->column = column;
+
+    if (id->length() == 8 && *id == QLatin1String("Math.sin")) {
         builtin = MathSinBultinFunction;
-    } else if (id.length() == 8 && id == QLatin1String("Math.cos")) {
+    } else if (id->length() == 8 && *id == QLatin1String("Math.cos")) {
         builtin = MathCosBultinFunction;
-    } else if (id.length() == 10 && id == QLatin1String("Math.round")) {
+    } else if (id->length() == 10 && *id == QLatin1String("Math.round")) {
         builtin = MathRoundBultinFunction;
-    } else if (id.length() == 10 && id == QLatin1String("Math.floor)")) {
+    } else if (id->length() == 10 && *id == QLatin1String("Math.floor)")) {
         builtin = MathFloorBultinFunction;
-    } else if (id.length() == 7 && id == QLatin1String("Math.PI")) {
+    } else if (id->length() == 7 && *id == QLatin1String("Math.PI")) {
         builtin = MathPIBuiltinConstant;
-        type = RealType;
+        this->type = RealType;
     }
 }
 
@@ -218,7 +220,7 @@ void Name::dump(QTextStream &out)
         out << '.';
     }
 
-    out << id;
+    out << *id;
 }
 
 void Temp::dump(QTextStream &out)
@@ -318,10 +320,10 @@ void Call::dump(QTextStream &out)
 {
     base->dump(out);
     out << '(';
-    for (int i = 0; i < args.size(); ++i) {
-        if (i)
+    for (ExprList *it = args; it; it = it->next) {
+        if (it != args)
             out << ", ";
-        args.at(i)->dump(out);
+        it->expr->dump(out);
     }
     out << ')';
 }
@@ -396,7 +398,11 @@ void Ret::dump(QTextStream &out, Mode)
 Function::~Function()
 {
     qDeleteAll(basicBlocks);
-    qDeleteAll(temps);
+}
+
+QString *Function::newString(const QString &text)
+{
+    return pool->NewString(text);
 }
 
 BasicBlock *Function::newBasicBlock()
@@ -407,12 +413,7 @@ BasicBlock *Function::newBasicBlock()
 
 void Function::dump(QTextStream &out)
 {
-    QString fname;
-    if (name)
-        fname = name->asString();
-    else
-        fname = QLatin1String("$anonymous");
-    out << "function " << fname << "() {" << endl;
+    out << "function () {" << endl;
     foreach (BasicBlock *bb, basicBlocks) {
         bb->dump(out);
     }
@@ -421,7 +422,9 @@ void Function::dump(QTextStream &out)
 
 Temp *BasicBlock::TEMP(Type type, int index) 
 { 
-    return function->e(new Temp(type, index)); 
+    Temp *e = function->pool->New<Temp>();
+    e->init(type, index);
+    return e;
 }
 
 Temp *BasicBlock::TEMP(Type type) 
@@ -436,12 +439,16 @@ Expr *BasicBlock::CONST(double value)
 
 Expr *BasicBlock::CONST(Type type, double value) 
 { 
-    return function->e(new Const(type, value)); 
+    Const *e = function->pool->New<Const>();
+    e->init(type, value);
+    return e;
 }
 
-Expr *BasicBlock::STRING(const QString &value) 
-{ 
-    return function->e(new String(value)); 
+Expr *BasicBlock::STRING(const QStringRef &value)
+{
+    String *e = function->pool->New<String>();
+    e->init(value);
+    return e;
 }
 
 Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
@@ -451,7 +458,11 @@ Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
 
 Name *BasicBlock::NAME(Name *base, const QString &id, quint32 line, quint32 column)
 { 
-    return function->e(new Name(base, InvalidType, id, Name::Unbound, line, column));
+    Name *e = function->pool->New<Name>();
+    e->init(base, InvalidType,
+            function->newString(id),
+            Name::Unbound, line, column);
+    return e;
 }
 
 Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
@@ -465,44 +476,56 @@ Name *BasicBlock::SYMBOL(Type type, const QString &id, const QMetaObject *meta, 
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index, Name::Storage storage,
                          quint32 line, quint32 column)
 {
-    Name *name = new Name(base, type, id, Name::Property, line, column);
+    Name *name = function->pool->New<Name>();
+    name->init(base, type, function->newString(id),
+               Name::Property, line, column);
     name->meta = meta;
     name->index = index;
     name->storage = storage;
-    return function->e(name);
+    return name;
 }
 
 Name *BasicBlock::SYMBOL(Name *base, Type type, const QString &id, const QMetaObject *meta, int index,
                          quint32 line, quint32 column)
 {
-    Name *name = new Name(base, type, id, Name::Property, line, column);
+    Name *name = function->pool->New<Name>();
+    name->init(base, type, function->newString(id),
+               Name::Property, line, column);
     name->meta = meta;
     name->index = index;
-    return function->e(name);
+    return name;
 }
 
-Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeParser::Object *object, quint32 line, quint32 column)
+Name *BasicBlock::ID_OBJECT(const QString &id, const QDeclarativeScript::Object *object, quint32 line, quint32 column)
 {
-    Name *name = new Name(/*base = */ 0, IR::ObjectType, id, Name::IdObject, line, column);
+    Name *name = function->pool->New<Name>();
+    name->init(/*base = */ 0, IR::ObjectType,
+               function->newString(id),
+               Name::IdObject, line, column);
     name->idObject = object;
     name->index = object->idIndex;
     name->storage = Name::IdStorage;
-    return function->e(name);
+    return name;
 }
 
 Name *BasicBlock::ATTACH_TYPE(const QString &id, const QDeclarativeType *attachType, Name::Storage storage,
                               quint32 line, quint32 column)
 { 
-    Name *name = new Name(/*base = */ 0, IR::AttachType, id, Name::AttachType, line, column);
+    Name *name = function->pool->New<Name>();
+    name->init(/*base = */ 0, IR::AttachType,
+               function->newString(id),
+               Name::AttachType, line, column);
     name->declarativeType = attachType;
     name->storage = storage;
-    return function->e(name);
+    return name;
 }
 
 
 Expr *BasicBlock::UNOP(AluOp op, Expr *expr) 
 { 
-    return function->e(new Unop(op, expr)); 
+    Unop *e = function->pool->New<Unop>();
+    e->init(op, expr);
+    return e;
 }
 
 Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
@@ -545,45 +568,65 @@ Expr *BasicBlock::BINOP(AluOp op, Expr *left, Expr *right)
         }
     }
 
-    return function->e(new Binop(op, left, right));
+    Binop *e = function->pool->New<Binop>();
+    e->init(op, left, right);
+    return e;
 }
 
-Expr *BasicBlock::CALL(Expr *base, const QVector<Expr *> &args) 
+Expr *BasicBlock::CALL(Expr *base, ExprList *args)
 { 
-    return function->e(new Call(base, args));
+    Call *e = function->pool->New<Call>();
+    e->init(base, args);
+    return e;
 }
 
 Stmt *BasicBlock::EXP(Expr *expr) 
 { 
-    return i(new Exp(expr));
+    Exp *s = function->pool->New<Exp>();
+    s->init(expr);
+    statements.append(s);
+    return s;
 }
 
 Stmt *BasicBlock::MOVE(Expr *target, Expr *source, bool isMoveForReturn) 
 { 
-    return i(new Move(target, source, isMoveForReturn));
+    Move *s = function->pool->New<Move>();
+    s->init(target, source, isMoveForReturn);
+    statements.append(s);
+    return s;
 }
 
 Stmt *BasicBlock::JUMP(BasicBlock *target) 
 {
     if (isTerminated())
         return 0;
-    else
-        return i(new Jump(target));
+
+    Jump *s = function->pool->New<Jump>();
+    s->init(target);
+    statements.append(s);
+    return s;
 }
 
 Stmt *BasicBlock::CJUMP(Expr *cond, BasicBlock *iftrue, BasicBlock *iffalse) 
 {
     if (isTerminated())
         return 0;
-    return i(new CJump(cond, iftrue, iffalse));
+
+    CJump *s = function->pool->New<CJump>();
+    s->init(cond, iftrue, iffalse);
+    statements.append(s);
+    return s;
 }
 
 Stmt *BasicBlock::RET(Expr *expr, Type type, quint32 line, quint32 column)
 {
     if (isTerminated())
         return 0;
-    else
-        return i(new Ret(expr, type, line, column));
+
+    Ret *s = function->pool->New<Ret>();
+    s->init(expr, type, line, column);
+    statements.append(s);
+    return s;
 }
 
 void BasicBlock::dump(QTextStream &out)
@@ -592,14 +635,6 @@ void BasicBlock::dump(QTextStream &out)
     foreach (Stmt *s, statements) {
         out << '\t';
         s->dump(out);
-        out << endl;
-    }
-}
-
-void Module::dump(QTextStream &out)
-{
-    foreach (Function *fun, functions) {
-        fun->dump(out);
         out << endl;
     }
 }

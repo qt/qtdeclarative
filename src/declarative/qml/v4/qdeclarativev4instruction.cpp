@@ -530,12 +530,6 @@ void Bytecode::append(const Instr &instr)
     d.append(it, instr.size());
 }
 
-void Bytecode::append(const QVector<Instr> &instrs)
-{
-    foreach (const Instr &i, instrs)
-        append(i);
-}
-
 int Bytecode::remove(int offset)
 {
     const Instr *instr = (const Instr *) (d.begin() + offset);

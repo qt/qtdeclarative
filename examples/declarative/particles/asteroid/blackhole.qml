@@ -149,7 +149,7 @@ Rectangle{
         id: gs; x: root.width/2; y: root.height/2; strength: 4000000;
         system: particles
         physics: PointAttractor.Acceleration
-        proportionalToDistance: PointAttractor.Quadratic
+        proportionalToDistance: PointAttractor.InverseQuadratic
     }
     Kill{
         system: particles

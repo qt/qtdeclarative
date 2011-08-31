@@ -8,9 +8,9 @@ HEADERS += \
     $$PWD/qdeclarativejsgrammar_p.h \
     $$PWD/qdeclarativejslexer_p.h \
     $$PWD/qdeclarativejsmemorypool_p.h \
-    $$PWD/qdeclarativejsnodepool_p.h \
     $$PWD/qdeclarativejsparser_p.h \
-    $$PWD/qdeclarativejsglobal_p.h
+    $$PWD/qdeclarativejsglobal_p.h \
+    $$PWD/qdeclarativejskeywords_p.h
 
 SOURCES += \
     $$PWD/qdeclarativejsast.cpp \

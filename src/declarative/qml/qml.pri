@@ -1,6 +1,5 @@
 INCLUDEPATH += $$PWD
 SOURCES += \
-    $$PWD/qdeclarativeparser.cpp \
     $$PWD/qdeclarativeinstruction.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \
     $$PWD/qdeclarativeengine.cpp \
@@ -17,21 +16,19 @@ SOURCES += \
     $$PWD/qdeclarativecompiler.cpp \
     $$PWD/qdeclarativecompileddata.cpp \
     $$PWD/qdeclarativeboundsignal.cpp \
-    $$PWD/qdeclarativerefcount.cpp \
     $$PWD/qdeclarativemetatype.cpp \
     $$PWD/qdeclarativestringconverters.cpp \
     $$PWD/qdeclarativeparserstatus.cpp \
     $$PWD/qdeclarativetypeloader.cpp \
     $$PWD/qdeclarativeinfo.cpp \
     $$PWD/qdeclarativeerror.cpp \
-    $$PWD/qdeclarativescriptparser.cpp \
+    $$PWD/qdeclarativescript.cpp \
     $$PWD/qdeclarativeenginedebug.cpp \
     $$PWD/qdeclarativerewrite.cpp \
     $$PWD/qdeclarativevaluetype.cpp \
     $$PWD/qdeclarativefastproperties.cpp \
     $$PWD/qdeclarativexmlhttprequest.cpp \
     $$PWD/qdeclarativesqldatabase.cpp \
-    $$PWD/qmetaobjectbuilder.cpp \
     $$PWD/qdeclarativewatcher.cpp \
     $$PWD/qdeclarativecleanup.cpp \
     $$PWD/qdeclarativepropertycache.cpp \
@@ -47,10 +44,8 @@ SOURCES += \
     $$PWD/qdeclarativeextensionplugin.cpp \
     $$PWD/qdeclarativeimport.cpp \
     $$PWD/qdeclarativelist.cpp \
-    $$PWD/qintrusivelist.cpp \
 
 HEADERS += \
-    $$PWD/qdeclarativeparser_p.h \
     $$PWD/qdeclarativeglobal_p.h \
     $$PWD/qdeclarativeinstruction_p.h \
     $$PWD/qdeclarativevmemetaobject_p.h \
@@ -72,7 +67,6 @@ HEADERS += \
     $$PWD/qdeclarativeengine_p.h \
     $$PWD/qdeclarativeexpression_p.h \
     $$PWD/qdeclarativeprivate.h \
-    $$PWD/qdeclarativerefcount_p.h \
     $$PWD/qdeclarativemetatype_p.h \
     $$PWD/qdeclarativeengine.h \
     $$PWD/qdeclarativecontext.h \
@@ -86,16 +80,13 @@ HEADERS += \
     $$PWD/qdeclarativelist_p.h \
     $$PWD/qdeclarativedata_p.h \
     $$PWD/qdeclarativeerror.h \
-    $$PWD/qdeclarativescriptparser_p.h \
+    $$PWD/qdeclarativescript_p.h \
     $$PWD/qdeclarativeenginedebug_p.h \
     $$PWD/qdeclarativerewrite_p.h \
-    $$PWD/qpodvector_p.h \
-    $$PWD/qbitfield_p.h \
     $$PWD/qdeclarativevaluetype_p.h \
     $$PWD/qdeclarativefastproperties_p.h \
     $$PWD/qdeclarativexmlhttprequest_p.h \
     $$PWD/qdeclarativesqldatabase_p.h \
-    $$PWD/qmetaobjectbuilder_p.h \
     $$PWD/qdeclarativewatcher_p.h \
     $$PWD/qdeclarativecleanup_p.h \
     $$PWD/qdeclarativepropertycache_p.h \
@@ -113,11 +104,11 @@ HEADERS += \
     $$PWD/qdeclarativeimport_p.h \
     $$PWD/qdeclarativeextensionplugin.h \
     $$PWD/qdeclarativenullablevalue_p_p.h \
-    $$PWD/qintrusivelist_p.h \
     $$PWD/qdeclarativescriptstring_p.h
 
 QT += sql
 include(parser/parser.pri)
 include(rewriter/rewriter.pri)
+include(ftw/ftw.pri)
 include(v4/v4.pri)
 include(v8/v8.pri)

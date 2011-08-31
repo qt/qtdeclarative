@@ -59,9 +59,10 @@
 #include <QtDeclarative/qdeclarativeerror.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <private/qdeclarativecleanup_p.h>
-#include <private/qdeclarativescriptparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativedirparser_p.h>
 #include <private/qdeclarativeimport_p.h>
+#include "private/qhashedstring_p.h"
 
 #include <private/qv8_p.h>
 
@@ -202,14 +203,24 @@ public:
 
     QDeclarativeScriptBlob *getScript(const QUrl &);
     QDeclarativeQmldirData *getQmldir(const QUrl &);
+
+    QString absoluteFilePath(const QString &path);
+    bool directoryExists(const QString &path);
+    const QDeclarativeDirParser *qmlDirParser(const QString &absoluteFilePath);
+
 private:
     typedef QHash<QUrl, QDeclarativeTypeData *> TypeCache;
     typedef QHash<QUrl, QDeclarativeScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QDeclarativeQmldirData *> QmldirCache;
+    typedef QStringHash<bool> StringSet;
+    typedef QStringHash<StringSet*> ImportDirCache;
+    typedef QStringHash<QDeclarativeDirParser*> ImportQmlDirCache;
 
     TypeCache m_typeCache;
     ScriptCache m_scriptCache;
     QmldirCache m_qmldirCache;
+    ImportDirCache m_importDirCache;
+    ImportQmlDirCache m_importQmlDirCache;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativeTypeLoader::Options)
@@ -221,7 +232,7 @@ public:
     {
         TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0) {}
 
-        QDeclarativeParser::Location location;
+        QDeclarativeScript::Location location;
         QDeclarativeType *type;
         int majorVersion;
         int minorVersion;
@@ -232,7 +243,7 @@ public:
     {
         ScriptReference() : script(0) {}
 
-        QDeclarativeParser::Location location;
+        QDeclarativeScript::Location location;
         QString qualifier;
         QDeclarativeScriptBlob *script;
     };
@@ -243,7 +254,7 @@ public:
     QDeclarativeTypeLoader *typeLoader() const;
 
     const QDeclarativeImports &imports() const;
-    const QDeclarativeScriptParser &parser() const;
+    const QDeclarativeScript::Parser &parser() const;
 
     const QList<TypeReference> &resolvedTypes() const;
     const QList<ScriptReference> &resolvedScripts() const;
@@ -273,7 +284,7 @@ private:
 
     QDeclarativeQmldirData *qmldirForUrl(const QUrl &);
 
-    QDeclarativeScriptParser scriptParser;
+    QDeclarativeScript::Parser scriptParser;
     QDeclarativeImports m_imports;
 
     QList<ScriptReference> m_scripts;
@@ -298,7 +309,7 @@ public:
     QUrl url;
     QDeclarativeTypeNameCache *importCache;
     QList<QDeclarativeScriptBlob *> scripts;
-    QDeclarativeParser::Object::ScriptBlock::Pragmas pragmas;
+    QDeclarativeScript::Object::ScriptBlock::Pragmas pragmas;
 
 protected:
     virtual void clear(); // From QDeclarativeCleanup
@@ -324,12 +335,12 @@ public:
     {
         ScriptReference() : script(0) {}
 
-        QDeclarativeParser::Location location;
+        QDeclarativeScript::Location location;
         QString qualifier;
         QDeclarativeScriptBlob *script;
     };
 
-    QDeclarativeParser::Object::ScriptBlock::Pragmas pragmas() const;
+    QDeclarativeScript::Object::ScriptBlock::Pragmas pragmas() const;
     QString scriptSource() const;
 
     QDeclarativeTypeLoader *typeLoader() const;
@@ -342,7 +353,7 @@ protected:
     virtual void done();
 
 private:
-    QDeclarativeParser::Object::ScriptBlock::Pragmas m_pragmas;
+    QDeclarativeScript::Object::ScriptBlock::Pragmas m_pragmas;
     QString m_source;
 
     QDeclarativeImports m_imports;

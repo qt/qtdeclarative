@@ -85,17 +85,18 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
     currentBlockMask = 0x00000001;
 
 
-    for (int i = 0; i < blocks.size(); ++i) {
+    for (int i = 0; !_discarded && i < blocks.size(); ++i) {
         IR::BasicBlock *block = blocks.at(i);
         IR::BasicBlock *next = i + 1 < blocks.size() ? blocks.at(i + 1) : 0;
         if (IR::Stmt *terminator = block->terminator()) {
             if (IR::CJump *cj = terminator->asCJump()) {
                 if (cj->iffalse != next) {
-                    block->i(new IR::Jump(cj->iffalse));
+                    IR::Jump *jump = _function->pool->New<IR::Jump>();
+                    jump->init(cj->iffalse);
+                    block->statements.append(jump);
                 }
             } else if (IR::Jump *j = terminator->asJump()) {
                 if (j->target == next) {
-                    delete block->statements.back();
                     block->statements.resize(block->statements.size() - 1);
                 }
             }
@@ -136,8 +137,10 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
         blockop.block(currentBlockMask);
         gen(blockop);
 
-        foreach (IR::Stmt *s, block->statements)
-            s->accept(this);
+        foreach (IR::Stmt *s, block->statements) {
+            if (! _discarded)
+                s->accept(this);
+        }
 
         qSwap(usedSubscriptionIdsChanged, usic);
 
@@ -147,7 +150,7 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
                 return;
             }
             currentBlockMask <<= 1;
-        } else {
+        } else if (! _discarded) {
             const int adjust = bytecode.remove(blockopIndex);
             // Correct patches
             for (int ii = patchesCount; ii < patches.count(); ++ii) 
@@ -163,20 +166,21 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
 #endif
 
 
-    // back patching
-    foreach (const Patch &patch, patches) {
-        Instr &instr = bytecode[patch.offset];
-        instr.branchop.offset = patch.block->offset - patch.offset - instr.size();
-    }
+    if (! _discarded) {
+        // back patching
+        foreach (const Patch &patch, patches) {
+            Instr &instr = bytecode[patch.offset];
+            instr.branchop.offset = patch.block->offset - patch.offset - instr.size();
+        }
 
-    patches.clear();
+        patches.clear();
+    }
 }
 
 void QDeclarativeV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
 {
-    QList<IR::BasicBlock *> todo = QList<IR::BasicBlock *>::fromVector(_function->basicBlocks);
-    while (! todo.isEmpty()) {
-        IR::BasicBlock *block = todo.takeFirst();
+    for (int i = 0; i < _function->basicBlocks.size(); ++i) {
+        IR::BasicBlock *block = _function->basicBlocks.at(i);
 
         while (! blocks->contains(block)) {
             blocks->append(block);
@@ -270,7 +274,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
         instr.load_id(currentReg, e->index);
         gen(instr);
 
-        _subscribeName << QLatin1String("$$$ID_") + e->id;
+        _subscribeName << QLatin1String("$$$ID_") + *e->id;
 
         if (blockNeedsSubscription(_subscribeName)) {
             Instr sub;
@@ -293,7 +297,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
     } break;
 
     case IR::Name::AttachType: {
-        _subscribeName << e->id;
+        _subscribeName << *e->id;
 
         Instr attached;
         attached.common.type = Instr::LoadAttached;
@@ -306,7 +310,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
     } break;
 
     case IR::Name::Property: {
-        _subscribeName << e->id;
+        _subscribeName << *e->id;
 
         QMetaProperty prop = e->meta->property(e->index);
         int fastFetchIndex = QDeclarativeFastProperties::instance()->accessorIndexForProperty(e->meta, e->index);
@@ -763,8 +767,9 @@ void QDeclarativeV4CompilerPrivate::visitBinop(IR::Binop *e)
 void QDeclarativeV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
-        if (call->args.size() == 1 && call->args.at(0)->type == IR::RealType) {
-            traceExpression(call->args.at(0), currentReg);
+        IR::Expr *arg = call->onlyArgument();
+        if (arg != 0 && arg->type == IR::RealType) {
+            traceExpression(arg, currentReg);
 
             Instr instr;
             instr.common.type = Instr::Noop;
@@ -981,7 +986,6 @@ This does not clear the global "committed binding" states.
 */
 void QDeclarativeV4CompilerPrivate::resetInstanceState()
 {
-    registerCleanups.clear();
     data = committed.data;
     exceptions = committed.exceptions;
     usedSubscriptionIds.clear();
@@ -989,6 +993,7 @@ void QDeclarativeV4CompilerPrivate::resetInstanceState()
     registeredStrings = committed.registeredStrings;
     bytecode.clear();
     patches.clear();
+    pool.clear();
     currentReg = 0;
 }
 
@@ -1003,7 +1008,7 @@ int QDeclarativeV4CompilerPrivate::commitCompile()
     int rv = committed.count();
     committed.offsets << committed.bytecode.count();
     committed.dependencies << usedSubscriptionIds;
-    committed.bytecode += bytecode.code();
+    committed.bytecode.append(bytecode.constData(), bytecode.size());
     committed.data = data;
     committed.exceptions = exceptions;
     committed.subscriptionIds = subscriptionIds;
@@ -1032,11 +1037,10 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
         return false;
     }
 
-    IR::Module module;
-    IR::Function *function = 0;
+    IR::Function thisFunction(&pool), *function = &thisFunction;
 
     QDeclarativeV4IRBuilder irBuilder(expression, engine);
-    if (!(function = irBuilder(&module, node)))
+    if (!irBuilder(function, node))
         return false;
 
     bool discarded = false;
@@ -1067,7 +1071,7 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
 }
 
 // Returns a reg
-int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QString &str)
+int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
 {
     // ### string cleanup
 
@@ -1090,9 +1094,9 @@ int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
 {
     Q_ASSERT(!string.isEmpty());
 
-    QHash<QString, QPair<int, int> >::ConstIterator iter = registeredStrings.find(string);
+    QPair<int, int> *iter = registeredStrings.value(string);
 
-    if (iter == registeredStrings.end()) {
+    if (!iter) {
         quint32 len = string.length();
         QByteArray lendata((const char *)&len, sizeof(quint32));
         QByteArray strdata((const char *)string.constData(), string.length() * sizeof(QChar));
@@ -1100,7 +1104,8 @@ int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
         int rv = data.count();
         data += strdata;
 
-        iter = registeredStrings.insert(string, qMakePair(registeredStrings.count(), rv));
+        iter = &registeredStrings[string];
+        *iter = qMakePair(registeredStrings.count(), rv);
     } 
 
     Instr reg;
@@ -1118,12 +1123,12 @@ bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &su
 {
     QString str = sub.join(QLatin1String("."));
 
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    if (iter == subscriptionIds.end())
+    int *iter = subscriptionIds.value(str);
+    if (!iter)
         return true;
 
-    QHash<int, quint32>::ConstIterator uiter = usedSubscriptionIds.find(*iter);
-    if (uiter == usedSubscriptionIds.end())
+    quint32 *uiter = usedSubscriptionIds.value(*iter);
+    if (!uiter)
         return true;
     else
         return !(*uiter & currentBlockMask);
@@ -1132,11 +1137,15 @@ bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &su
 int QDeclarativeV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
 {
     QString str = sub.join(QLatin1String("."));
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    if (iter == subscriptionIds.end()) 
-        iter = subscriptionIds.insert(str, subscriptionIds.count());
-    if (!(usedSubscriptionIds[*iter] & currentBlockMask)) {
-        usedSubscriptionIds[*iter] |= currentBlockMask;
+    int *iter = subscriptionIds.value(str);
+    if (!iter) {
+        int count = subscriptionIds.count();
+        iter = &subscriptionIds[str];
+        *iter = count;
+    }
+    quint32 &u = usedSubscriptionIds[*iter];
+    if (!(u & currentBlockMask)) {
+        u |= currentBlockMask;
         usedSubscriptionIdsChanged = true;
     }
     return *iter;
@@ -1146,11 +1155,11 @@ quint32 QDeclarativeV4CompilerPrivate::subscriptionBlockMask(const QStringList &
 {
     QString str = sub.join(QLatin1String("."));
 
-    QHash<QString, int>::ConstIterator iter = subscriptionIds.find(str);
-    Q_ASSERT(iter != subscriptionIds.end());
+    int *iter = subscriptionIds.value(str);
+    Q_ASSERT(iter != 0);
 
-    QHash<int, quint32>::ConstIterator uiter = usedSubscriptionIds.find(*iter);
-    Q_ASSERT(uiter != usedSubscriptionIds.end());
+    quint32 *uiter = usedSubscriptionIds.value(*iter);
+    Q_ASSERT(uiter != 0);
 
     return *uiter;
 }
@@ -1225,9 +1234,9 @@ QByteArray QDeclarativeV4CompilerPrivate::buildSignalTable() const
     QHash<int, QList<QPair<int, quint32> > > table;
 
     for (int ii = 0; ii < committed.count(); ++ii) {
-        const QHash<int, quint32> &deps = committed.dependencies.at(ii);
-        for (QHash<int, quint32>::ConstIterator iter = deps.begin(); iter != deps.end(); ++iter) 
-            table[iter.key()].append(qMakePair(ii, iter.value()));
+        const QDeclarativeAssociationList<int, quint32> &deps = committed.dependencies.at(ii);
+        for (QDeclarativeAssociationList<int, quint32>::const_iterator iter = deps.begin(); iter != deps.end(); ++iter)
+            table[iter->first].append(qMakePair(ii, iter->second));
     }
 
     QVector<quint32> header;
@@ -1278,8 +1287,10 @@ QByteArray QDeclarativeV4Compiler::program() const
         }
 
 
-        QByteArray bytecode = bc.code();
-        bytecode += d->committed.bytecode;
+        QByteArray bytecode;
+        bytecode.reserve(bc.size() + d->committed.bytecode.size());
+        bytecode.append(bc.constData(), bc.size());
+        bytecode.append(d->committed.bytecode.constData(), d->committed.bytecode.size());
 
         QByteArray data = d->committed.data;
         while (data.count() % 4) data.append('\0');
@@ -1308,12 +1319,11 @@ QByteArray QDeclarativeV4Compiler::program() const
     if (bindingsDump()) {
         qWarning().nospace() << "Subscription slots:";
 
-        for (QHash<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
+        for (QDeclarativeAssociationList<QString, int>::ConstIterator iter = d->committed.subscriptionIds.begin();
                 iter != d->committed.subscriptionIds.end();
                 ++iter) {
-            qWarning().nospace() << "    " << iter.value() << "\t-> " << iter.key();
+            qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
         }
-
 
         QDeclarativeV4Compiler::dump(programData);
     }

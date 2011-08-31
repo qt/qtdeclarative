@@ -8,7 +8,6 @@ HEADERS += \
     $$PWD/qv8debug_p.h \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
-    $$PWD/qhashedstring_p.h \
     $$PWD/qv8contextwrapper_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
     $$PWD/qv8typewrapper_p.h \
@@ -25,7 +24,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/qv8stringwrapper.cpp \
     $$PWD/qv8engine.cpp \
-    $$PWD/qhashedstring.cpp \
     $$PWD/qv8contextwrapper.cpp \
     $$PWD/qv8qobjectwrapper.cpp \
     $$PWD/qv8typewrapper.cpp \

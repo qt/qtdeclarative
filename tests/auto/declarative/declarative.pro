@@ -33,7 +33,6 @@ PRIVATETESTS += \
     qdeclarativeconnection \
     qdeclarativedebug \
     qdeclarativedebugclient \
-    qdeclarativedebughelper \
     qdeclarativedebugservice \
     qdeclarativeecmascript \
     qdeclarativeimageprovider \
@@ -54,8 +53,7 @@ PRIVATETESTS += \
     qdeclarativeworkerscript \
     qdeclarativexmllistmodel \
     qpacketprotocol \
-    qdeclarativev4 \
-    v8
+    qdeclarativev4
 
 SGTESTS =  \
     qsganimatedimage \

@@ -93,6 +93,9 @@ QSGBasePositioner::QSGBasePositioner(PositionerType at, QSGItem *parent)
     for the child items. Depending on the chosen type, only x or y changes will be applied.
 
     Note that the subclass is responsible for adding the spacing in between items.
+
+    Positioning is usually delayed until before a frame is rendered, to batch multiple repositioning
+    changes into one calculation.
 */
 
 QSGBasePositioner::QSGBasePositioner(QSGBasePositionerPrivate &dd, PositionerType at, QSGItem *parent)
@@ -110,6 +113,13 @@ QSGBasePositioner::~QSGBasePositioner()
     positionedItems.clear();
 }
 
+void QSGBasePositioner::updatePolish()
+{
+    Q_D(QSGBasePositioner);
+    if (d->positioningDirty)
+        prePositioning();
+}
+
 int QSGBasePositioner::spacing() const
 {
     Q_D(const QSGBasePositioner);
@@ -122,7 +132,7 @@ void QSGBasePositioner::setSpacing(int s)
     if (s==d->spacing)
         return;
     d->spacing = s;
-    prePositioning();
+    d->setPositioningDirty();
     emit spacingChanged();
 }
 
@@ -169,7 +179,7 @@ void QSGBasePositioner::itemChange(ItemChange change, const ItemChangeData &valu
 {
     Q_D(QSGBasePositioner);
     if (change == ItemChildAddedChange){
-        prePositioning();
+        d->setPositioningDirty();
     } else if (change == ItemChildRemovedChange) {
         QSGItem *child = value.item;
         QSGBasePositioner::PositionedItem posItem(child);
@@ -178,7 +188,7 @@ void QSGBasePositioner::itemChange(ItemChange change, const ItemChangeData &valu
             d->unwatchChanges(child);
             positionedItems.remove(idx);
         }
-        prePositioning();
+        d->setPositioningDirty();
     }
 
     QSGItem::itemChange(change, value);
@@ -193,7 +203,7 @@ void QSGBasePositioner::prePositioning()
     if (d->doingPositioning)
         return;
 
-    d->queuedPositioning = false;
+    d->positioningDirty = false;
     d->doingPositioning = true;
     //Need to order children by creation order modified by stacking order
     QList<QSGItem *> children = childItems();
@@ -463,6 +473,10 @@ void QSGPositionerAttached::setIsLastItem(bool isLastItem)
 
   Items with a width or height of 0 will not be positioned.
 
+  Positioning is batched and syncronized with painting to reduce the number of
+  calculations needed. This means that positioners may not reposition items immediately
+  when changes occur, but it will have moved by the next frame.
+
   \sa Row, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
 /*!
@@ -606,6 +620,10 @@ void QSGColumn::reportConflictingAnchors()
   actions, consider positioning the items without the use of a Row.
 
   Items with a width or height of 0 will not be positioned.
+
+  Positioning is batched and syncronized with painting to reduce the number of
+  calculations needed. This means that positioners may not reposition items immediately
+  when changes occur, but it will have moved by the next frame.
 
   \sa Column, Grid, Flow, Positioner, {declarative/positioners}{Positioners example}
 */
@@ -837,6 +855,10 @@ void QSGRow::reportConflictingAnchors()
   actions, consider positioning the items without the use of a Grid.
 
   Items with a width or height of 0 will not be positioned.
+
+  Positioning is batched and syncronized with painting to reduce the number of
+  calculations needed. This means that positioners may not reposition items immediately
+  when changes occur, but it will have moved by the next frame.
 
   \sa Flow, Row, Column, Positioner, {declarative/positioners}{Positioners example}
 */
@@ -1264,6 +1286,10 @@ void QSGGrid::reportConflictingAnchors()
   actions, consider positioning the items without the use of a Flow.
 
   Items with a width or height of 0 will not be positioned.
+
+  Positioning is batched and syncronized with painting to reduce the number of
+  calculations needed. This means that positioners may not reposition items immediately
+  when changes occur, but it will have moved by the next frame.
 
   \sa Column, Row, Grid, Positioner, {declarative/positioners}{Positioners example}
 */

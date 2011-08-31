@@ -306,15 +306,12 @@ void QSGBorderImage::load()
     } else {
         d->status = Loading;
         if (d->url.path().endsWith(QLatin1String("sci"))) {
-#ifndef QT_NO_LOCALFILE_OPTIMIZED_QML
             QString lf = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
                 file.open(QIODevice::ReadOnly);
                 setGridScaledImage(QSGGridScaledImage(&file));
-            } else
-#endif
-            {
+            } else {
                 QNetworkRequest req(d->url);
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
 

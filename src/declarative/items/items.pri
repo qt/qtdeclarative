@@ -53,6 +53,7 @@ HEADERS += \
     $$PWD/qsgtranslate_p.h \
     $$PWD/qsgclipnode_p.h \
     $$PWD/qsgview.h \
+    $$PWD/qsgview_p.h \
     $$PWD/qsganimation_p.h \
     $$PWD/qsganimation_p_p.h \
     $$PWD/qsgstateoperations_p.h \

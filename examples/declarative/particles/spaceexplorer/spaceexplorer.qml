@@ -276,7 +276,7 @@ Rectangle{
     }
     PointAttractor{
         id: gs1; x: vorteX; y: vorteY; strength: 800000;
-        proportionalToDistance: PointAttractor.Quadratic;
+        proportionalToDistance: PointAttractor.InverseQuadratic;
         system: foreground
     }
     Kill{
@@ -289,7 +289,7 @@ Rectangle{
 
     PointAttractor{
         id: gs2; x: vorteX2; y: vorteY2; strength: 800000;
-        proportionalToDistance: PointAttractor.Quadratic;
+        proportionalToDistance: PointAttractor.InverseQuadratic;
         system: foreground
     }
     Kill{
@@ -302,7 +302,7 @@ Rectangle{
 
     PointAttractor{
         id: gs3; x: vorteX3; y: vorteY3; strength: 800000;
-        proportionalToDistance: PointAttractor.Quadratic;
+        proportionalToDistance: PointAttractor.InverseQuadratic;
         system: foreground
     }
     Kill{

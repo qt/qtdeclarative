@@ -325,6 +325,7 @@ private slots:
     void dateRoundtripQtJSQt();
     void dateConversionJSQt();
     void dateConversionQtJS();
+    void functionPrototypeExtensions();
 };
 
 tst_QJSEngine::tst_QJSEngine()
@@ -6477,6 +6478,24 @@ void tst_QJSEngine::scriptValueFromQMetaObject()
     }
 }
 #endif
+
+void tst_QJSEngine::functionPrototypeExtensions()
+{
+    // QJS adds connect and disconnect properties to Function.prototype.
+    QJSEngine eng;
+    QJSValue funProto = eng.globalObject().property("Function").property("prototype");
+    QVERIFY(funProto.isFunction());
+    QVERIFY(funProto.property("connect").isFunction());
+    QCOMPARE(funProto.propertyFlags("connect"), QJSValue::SkipInEnumeration);
+    QVERIFY(funProto.property("disconnect").isFunction());
+    QCOMPARE(funProto.propertyFlags("disconnect"), QJSValue::SkipInEnumeration);
+
+    // No properties should appear in for-in statements.
+    QJSValue props = eng.evaluate("props = []; for (var p in Function.prototype) props.push(p); props");
+    QVERIFY(!eng.hasUncaughtException());
+    QVERIFY(props.isArray());
+    QCOMPARE(props.property("length").toInt32(), 0);
+}
 
 QTEST_MAIN(tst_QJSEngine)
 

@@ -42,15 +42,18 @@
 #include <QtDeclarative/qdeclarativeprivate.h>
 #include "private/qdeclarativemetatype_p.h"
 
-#include "private/qdeclarativeproxymetaobject_p.h"
-#include "private/qdeclarativecustomparser_p.h"
-#include "private/qdeclarativeguard_p.h"
+#include <private/qdeclarativeproxymetaobject_p.h>
+#include <private/qdeclarativecustomparser_p.h>
+#include <private/qdeclarativeguard_p.h>
+#include <private/qhashedstring_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qbitarray.h>
 #include <QtCore/qreadwritelock.h>
+#include <QtCore/private/qmetaobject_p.h>
+
 #include <qmetatype.h>
 #include <qobjectdefs.h>
 #include <qdatetime.h>
@@ -93,31 +96,35 @@ struct QDeclarativeMetaTypeData
     QList<QDeclarativeType *> types;
     typedef QHash<int, QDeclarativeType *> Ids;
     Ids idToType;
-    typedef QHash<QByteArray, QDeclarativeType *> Names;
+    typedef QHash<QString, QDeclarativeType *> Names;
     Names nameToType;
     typedef QHash<const QMetaObject *, QDeclarativeType *> MetaObjects;
     MetaObjects metaObjectToType;
     typedef QHash<int, QDeclarativeMetaType::StringConverter> StringConverters;
     StringConverters stringConverters;
+
+    struct VersionedUri {
+        VersionedUri()
+        : majorVersion(0) {}
+        VersionedUri(const QString &uri, int majorVersion)
+        : uri(uri), majorVersion(majorVersion) {}
+        bool operator==(const VersionedUri &other) const {
+            return other.majorVersion == majorVersion && other.uri == uri;
+        }
+        QString uri;
+        int majorVersion;
+    };
+    typedef QHash<VersionedUri, QDeclarativeTypeModule *> TypeModules;
+    TypeModules uriToModule;
+
     struct ModuleApiList {
         ModuleApiList() : sorted(true) {}
         QList<QDeclarativeMetaType::ModuleApi> moduleApis;
         bool sorted;
     };
-    typedef QHash<QByteArray, ModuleApiList> ModuleApis;
+    typedef QHash<QString, ModuleApiList> ModuleApis;
     ModuleApis moduleApis;
     int moduleApiCount;
-
-    struct ModuleInfo {
-        ModuleInfo(int major, int minor)
-            : vmajor(major), vminor_min(minor), vminor_max(minor) {}
-        ModuleInfo(int major, int minor_min, int minor_max)
-            : vmajor(major), vminor_min(minor_min), vminor_max(minor_max) {}
-        int vmajor;
-        int vminor_min, vminor_max;
-    };
-    typedef QHash<QPair<QByteArray,int>, ModuleInfo> ModuleInfoHash;
-    ModuleInfoHash modules;
 
     QBitArray objects;
     QBitArray interfaces;
@@ -125,8 +132,31 @@ struct QDeclarativeMetaTypeData
 
     QList<QDeclarativePrivate::AutoParentFunction> parentFunctions;
 };
+
+class QDeclarativeTypeModulePrivate
+{
+public:
+    QDeclarativeTypeModulePrivate() 
+    : minMinorVersion(INT_MAX), maxMinorVersion(0) {}
+
+    QDeclarativeMetaTypeData::VersionedUri uri;
+
+    int minMinorVersion;
+    int maxMinorVersion;
+
+    void add(QDeclarativeType *);
+
+    QStringHash<QList<QDeclarativeType *> > typeHash;
+    QList<QDeclarativeType *> types;
+};
+
 Q_GLOBAL_STATIC(QDeclarativeMetaTypeData, metaTypeData)
 Q_GLOBAL_STATIC(QReadWriteLock, metaTypeDataLock)
+
+static uint qHash(const QDeclarativeMetaTypeData::VersionedUri &v)
+{
+    return qHash(v.uri) ^ qHash(v.majorVersion);
+}
 
 QDeclarativeMetaTypeData::QDeclarativeMetaTypeData()
 : moduleApiCount(0)
@@ -145,11 +175,13 @@ public:
     QDeclarativeTypePrivate();
 
     void init() const;
+    void initEnums() const;
 
     bool m_isInterface : 1;
     const char *m_iid;
-    QByteArray m_module;
+    QString m_module;
     QByteArray m_name;
+    QString m_elementName;
     int m_version_maj;
     int m_version_min;
     int m_typeId; int m_listId; 
@@ -173,8 +205,10 @@ public:
     int m_index;
     QDeclarativeCustomParser *m_customParser;
     mutable volatile bool m_isSetup:1;
-    mutable bool m_haveSuperType : 1;
+    mutable volatile bool m_isEnumSetup:1;
+    mutable bool m_haveSuperType:1;
     mutable QList<QDeclarativeProxyMetaObject::ProxyData> m_metaObjects;
+    mutable QStringHash<int> m_enums;
 
     static QHash<const QMetaObject *, int> m_attachedPropertyIds;
 };
@@ -186,7 +220,7 @@ QDeclarativeTypePrivate::QDeclarativeTypePrivate()
   m_superType(0), m_allocationSize(0), m_newFunc(0), m_baseMetaObject(0), m_attachedPropertiesFunc(0), 
   m_attachedPropertiesType(0), m_parserStatusCast(-1), m_propertyValueSourceCast(-1), 
   m_propertyValueInterceptorCast(-1), m_extFunc(0), m_extMetaObject(0), m_index(-1), m_customParser(0), 
-  m_isSetup(false), m_haveSuperType(false)
+  m_isSetup(false), m_isEnumSetup(false), m_haveSuperType(false)
 {
 }
 
@@ -212,7 +246,7 @@ QDeclarativeType::QDeclarativeType(int index, const QDeclarativePrivate::Registe
     if (type.uri) name += '/';
     name += type.elementName;
 
-    d->m_module = type.uri;
+    d->m_module = QString::fromUtf8(type.uri);
     d->m_name = name;
     d->m_version_maj = type.versionMajor;
     d->m_version_min = type.versionMinor;
@@ -251,7 +285,7 @@ QDeclarativeType::~QDeclarativeType()
     delete d;
 }
 
-QByteArray QDeclarativeType::module() const
+QString QDeclarativeType::module() const
 {
     return d->m_module;
 }
@@ -268,11 +302,13 @@ int QDeclarativeType::minorVersion() const
 
 bool QDeclarativeType::availableInVersion(int vmajor, int vminor) const
 {
+    Q_ASSERT(vmajor >= 0 && vminor >= 0);
     return vmajor == d->m_version_maj && vminor >= d->m_version_min;
 }
 
-bool QDeclarativeType::availableInVersion(const QByteArray &module, int vmajor, int vminor) const
+bool QDeclarativeType::availableInVersion(const QString &module, int vmajor, int vminor) const
 {
+    Q_ASSERT(vmajor >= 0 && vminor >= 0);
     return module == d->m_module && vmajor == d->m_version_maj && vminor >= d->m_version_min;
 }
 
@@ -364,6 +400,24 @@ static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
     }
 }
 
+static bool isPropertyRevisioned(const QMetaObject *mo, int index)
+{
+    int i = index;
+    i -= mo->propertyOffset();
+    if (i < 0 && mo->d.superdata)
+        return isPropertyRevisioned(mo->d.superdata, index);
+
+    const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate*>(mo->d.data);
+    if (i >= 0 && i < mop->propertyCount) {
+        int handle = mop->propertyData + 3*i;
+        int flags = mo->d.data[handle + 2];
+
+        return (flags & Revisioned);
+    }
+
+    return false;
+}
+
 void QDeclarativeTypePrivate::init() const
 {
     if (m_isSetup) return;
@@ -417,7 +471,7 @@ void QDeclarativeTypePrivate::init() const
             mo = m_metaObjects.first().metaObject;
 
         for (int ii = 0; !m_containsRevisionedAttributes && ii < mo->propertyCount(); ++ii) {
-            if (mo->property(ii).revision() != 0)
+            if (isPropertyRevisioned(mo, ii))
                 m_containsRevisionedAttributes = true;
         }
 
@@ -431,6 +485,27 @@ void QDeclarativeTypePrivate::init() const
     lock.unlock();
 }
 
+void QDeclarativeTypePrivate::initEnums() const
+{
+    if (m_isEnumSetup) return;
+
+    init();
+
+    QWriteLocker lock(metaTypeDataLock());
+    if (m_isEnumSetup) return;
+
+    const QMetaObject *metaObject = m_baseMetaObject;
+    for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
+
+        QMetaEnum e = metaObject->enumerator(ii);
+
+        for (int jj = 0; jj < e.keyCount(); ++jj) 
+            m_enums.insert(QString::fromUtf8(e.key(jj)), e.value(jj));
+    }
+
+    m_isEnumSetup = true;
+}
+
 QByteArray QDeclarativeType::typeName() const
 {
     if (d->m_baseMetaObject)
@@ -439,7 +514,17 @@ QByteArray QDeclarativeType::typeName() const
         return QByteArray();
 }
 
-QByteArray QDeclarativeType::qmlTypeName() const
+const QString &QDeclarativeType::elementName() const
+{
+    if (d->m_elementName.isEmpty()) {
+        QByteArray n = qmlTypeName();
+        int idx = n.lastIndexOf('/');
+        d->m_elementName = QString::fromUtf8(n.mid(idx + 1));
+    }
+    return d->m_elementName;
+}
+
+const QByteArray &QDeclarativeType::qmlTypeName() const
 {
     return d->m_name;
 }
@@ -591,6 +676,164 @@ int QDeclarativeType::index() const
     return d->m_index;
 }
 
+int QDeclarativeType::enumValue(const QHashedStringRef &name) const
+{
+    d->initEnums();
+
+    int *rv = d->m_enums.value(name);
+    return rv?*rv:-1;
+}
+
+int QDeclarativeType::enumValue(const QHashedV8String &name) const
+{
+    d->initEnums();
+
+    int *rv = d->m_enums.value(name);
+    return rv?*rv:-1;
+}
+
+QDeclarativeTypeModule::QDeclarativeTypeModule()
+: d(new QDeclarativeTypeModulePrivate)
+{
+}
+
+QDeclarativeTypeModule::~QDeclarativeTypeModule()
+{
+    delete d; d = 0;
+}
+
+QString QDeclarativeTypeModule::module() const
+{
+    return d->uri.uri;
+}
+
+int QDeclarativeTypeModule::majorVersion() const
+{
+    return d->uri.majorVersion;
+}
+
+int QDeclarativeTypeModule::minimumMinorVersion() const
+{
+    return d->minMinorVersion;
+}
+
+int QDeclarativeTypeModule::maximumMinorVersion() const
+{
+    return d->maxMinorVersion;
+}
+
+void QDeclarativeTypeModulePrivate::add(QDeclarativeType *type)
+{
+    types << type;
+
+    minMinorVersion = qMin(minMinorVersion, type->minorVersion());
+    maxMinorVersion = qMax(maxMinorVersion, type->minorVersion());
+
+    QList<QDeclarativeType *> &list = typeHash[type->elementName()];
+    for (int ii = 0; ii < list.count(); ++ii) {
+        if (list.at(ii)->minorVersion() < type->minorVersion()) {
+            list.insert(ii, type);
+            return;
+        }
+    }
+    list.append(type);
+}
+
+QList<QDeclarativeType *> QDeclarativeTypeModule::types()
+{
+    QList<QDeclarativeType *> rv;
+    QReadLocker lock(metaTypeDataLock());
+    rv = d->types;
+    return rv;
+}
+
+QList<QDeclarativeType *> QDeclarativeTypeModule::type(const QString &name)
+{
+    QReadLocker lock(metaTypeDataLock());
+    QList<QDeclarativeType *> rv;
+    for (int ii = 0; ii < d->types.count(); ++ii) {
+        if (d->types.at(ii)->elementName() == name)
+            rv << d->types.at(ii);
+    }
+    return rv;
+}
+
+QDeclarativeType *QDeclarativeTypeModule::type(const QHashedStringRef &name, int minor)
+{
+    QReadLocker lock(metaTypeDataLock());
+
+    QList<QDeclarativeType *> *types = d->typeHash.value(name);
+    if (!types) return 0;
+
+    for (int ii = 0; ii < types->count(); ++ii)
+        if (types->at(ii)->minorVersion() <= minor)
+            return types->at(ii);
+
+    return 0;
+}
+
+QDeclarativeType *QDeclarativeTypeModule::type(const QHashedV8String &name, int minor)
+{
+    QReadLocker lock(metaTypeDataLock());
+
+    QList<QDeclarativeType *> *types = d->typeHash.value(name);
+    if (!types) return 0;
+
+    for (int ii = 0; ii < types->count(); ++ii)
+        if (types->at(ii)->minorVersion() <= minor)
+            return types->at(ii);
+
+    return 0;
+}
+
+
+QDeclarativeTypeModuleVersion::QDeclarativeTypeModuleVersion()
+: m_module(0), m_minor(0)
+{
+}
+
+QDeclarativeTypeModuleVersion::QDeclarativeTypeModuleVersion(QDeclarativeTypeModule *module, int minor)
+: m_module(module), m_minor(minor)
+{
+    Q_ASSERT(m_module);
+    Q_ASSERT(m_minor >= 0);
+}
+
+QDeclarativeTypeModuleVersion::QDeclarativeTypeModuleVersion(const QDeclarativeTypeModuleVersion &o)
+: m_module(o.m_module), m_minor(o.m_minor)
+{
+}
+
+QDeclarativeTypeModuleVersion &QDeclarativeTypeModuleVersion::operator=(const QDeclarativeTypeModuleVersion &o)
+{
+    m_module = o.m_module;
+    m_minor = o.m_minor;
+    return *this;
+}
+
+QDeclarativeTypeModule *QDeclarativeTypeModuleVersion::module() const
+{
+    return m_module;
+}
+
+int QDeclarativeTypeModuleVersion::minorVersion() const
+{
+    return m_minor;
+}
+
+QDeclarativeType *QDeclarativeTypeModuleVersion::type(const QHashedStringRef &name) const
+{
+    if (m_module) return m_module->type(name, m_minor);
+    else return 0;
+}
+
+QDeclarativeType *QDeclarativeTypeModuleVersion::type(const QHashedV8String &name) const
+{
+    if (m_module) return m_module->type(name, m_minor);
+    else return 0;
+}
+
+
 int registerAutoParentFunction(QDeclarativePrivate::RegisterAutoParent &autoparent)
 {
     QWriteLocker lock(metaTypeDataLock());
@@ -618,7 +861,7 @@ int registerInterface(const QDeclarativePrivate::RegisterInterface &interface)
     data->idToType.insert(type->qListTypeId(), type);
     // XXX No insertMulti, so no multi-version interfaces?
     if (!type->qmlTypeName().isEmpty())
-        data->nameToType.insert(type->qmlTypeName(), type);
+        data->nameToType.insert(QString::fromUtf8(type->qmlTypeName()), type);
 
     if (data->interfaces.size() <= interface.typeId)
         data->interfaces.resize(interface.typeId + 16);
@@ -652,7 +895,7 @@ int registerType(const QDeclarativePrivate::RegisterType &type)
     if (dtype->qListTypeId()) data->idToType.insert(dtype->qListTypeId(), dtype);
 
     if (!dtype->qmlTypeName().isEmpty())
-        data->nameToType.insertMulti(dtype->qmlTypeName(), dtype);
+        data->nameToType.insertMulti(QString::fromUtf8(dtype->qmlTypeName()), dtype);
 
     data->metaObjectToType.insertMulti(dtype->baseMetaObject(), dtype);
 
@@ -664,21 +907,16 @@ int registerType(const QDeclarativePrivate::RegisterType &type)
     if (type.listId) data->lists.setBit(type.listId, true);
 
     if (type.uri) {
-        QByteArray mod(type.uri);
-        QPair<QByteArray,int> key(mod,type.versionMajor);
-        QDeclarativeMetaTypeData::ModuleInfoHash::Iterator it = data->modules.find(key);
-        if (it == data->modules.end()) {
-            // New module
-            data->modules.insert(key, QDeclarativeMetaTypeData::ModuleInfo(type.versionMajor,type.versionMinor));
-        } else {
-            if ((*it).vminor_max < type.versionMinor) {
-                // Newer module
-                data->modules.insert(key, QDeclarativeMetaTypeData::ModuleInfo((*it).vmajor, (*it).vminor_min, type.versionMinor));
-            } else if ((*it).vminor_min > type.versionMinor) {
-                // Older module
-                data->modules.insert(key, QDeclarativeMetaTypeData::ModuleInfo((*it).vmajor, type.versionMinor, (*it).vminor_min));
-            }
+        QString mod = QString::fromUtf8(type.uri);
+
+        QDeclarativeMetaTypeData::VersionedUri versionedUri(mod, type.versionMajor);
+        QDeclarativeTypeModule *module = data->uriToModule.value(versionedUri);
+        if (!module) {
+            module = new QDeclarativeTypeModule;
+            module->d->uri = versionedUri;
+            data->uriToModule.insert(versionedUri, module);
         }
+        module->d->add(dtype);
     }
 
     return index;
@@ -689,7 +927,7 @@ int registerModuleApi(const QDeclarativePrivate::RegisterModuleApi &api)
     QWriteLocker lock(metaTypeDataLock());
 
     QDeclarativeMetaTypeData *data = metaTypeData();
-    QByteArray uri(api.uri);
+    QString uri = QString::fromUtf8(api.uri);
     QDeclarativeMetaType::ModuleApi import;
     import.major = api.versionMajor;
     import.minor = api.versionMinor;
@@ -730,15 +968,18 @@ int QDeclarativePrivate::qmlregister(RegistrationType type, void *data)
     return -1;
 }
 
-bool QDeclarativeMetaType::isAnyModule(const QByteArray &module)
+/*
+    Returns true if a module \a uri of any version is installed.
+*/
+bool QDeclarativeMetaType::isAnyModule(const QString &uri)
 {
+    QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
 
-    QDeclarativeMetaTypeData::ModuleInfoHash::Iterator it = data->modules.begin();
-    while (it != data->modules.end()) {
-        if (it.key().first == module)
+    for (QDeclarativeMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.begin();
+         iter != data->uriToModule.end(); ++iter) {
+        if ((*iter)->module() == uri)
             return true;
-        ++it;
     }
 
     return false;
@@ -751,25 +992,33 @@ bool QDeclarativeMetaType::isAnyModule(const QByteArray &module)
 
     So if only 4.7 and 4.9 have been registered, 4.7,4.8, and 4.9 are valid, but not 4.6 nor 4.10.
 */
-bool QDeclarativeMetaType::isModule(const QByteArray &module, int versionMajor, int versionMinor)
+bool QDeclarativeMetaType::isModule(const QString &module, int versionMajor, int versionMinor)
 {
+    Q_ASSERT(versionMajor >= 0 && versionMinor >= 0);
+    QReadLocker lock(metaTypeDataLock());
+
     QDeclarativeMetaTypeData *data = metaTypeData();
 
     // first, check Types
-    QDeclarativeMetaTypeData::ModuleInfoHash::Iterator it = data->modules.find(QPair<QByteArray,int>(module,versionMajor));
-    if (it != data->modules.end()) {
-        if (((*it).vminor_max >= versionMinor && (*it).vminor_min <= versionMinor))
-            return true;
-    }
+    QDeclarativeTypeModule *tm = 
+        data->uriToModule.value(QDeclarativeMetaTypeData::VersionedUri(module, versionMajor));
+    if (tm && tm->minimumMinorVersion() <= versionMinor && tm->maximumMinorVersion() >= versionMinor)
+        return true;
 
     // then, check ModuleApis
     foreach (const QDeclarativeMetaType::ModuleApi &mApi, data->moduleApis.value(module).moduleApis) {
-        if (mApi.major == versionMajor && mApi.minor == versionMinor) {
+        if (mApi.major == versionMajor && mApi.minor == versionMinor) // XXX is this correct?
             return true;
-        }
     }
 
     return false;
+}
+
+QDeclarativeTypeModule *QDeclarativeMetaType::typeModule(const QString &uri, int majorVersion)
+{
+    QReadLocker lock(metaTypeDataLock());
+    QDeclarativeMetaTypeData *data = metaTypeData();
+    return data->uriToModule.value(QDeclarativeMetaTypeData::VersionedUri(uri, majorVersion));
 }
 
 QList<QDeclarativePrivate::AutoParentFunction> QDeclarativeMetaType::parentFunctions()
@@ -785,7 +1034,7 @@ static bool operator<(const QDeclarativeMetaType::ModuleApi &lhs, const QDeclara
 }
 
 QDeclarativeMetaType::ModuleApi
-QDeclarativeMetaType::moduleApi(const QByteArray &uri, int versionMajor, int versionMinor)
+QDeclarativeMetaType::moduleApi(const QString &uri, int versionMajor, int versionMinor)
 {
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
@@ -1001,17 +1250,20 @@ QDeclarativeMetaType::StringConverter QDeclarativeMetaType::customStringConverte
     Returns the type (if any) of URI-qualified named \a name in version specified
     by \a version_major and \a version_minor.
 */
-QDeclarativeType *QDeclarativeMetaType::qmlType(const QByteArray &name, int version_major, int version_minor)
+QDeclarativeType *QDeclarativeMetaType::qmlType(const QString &name, int version_major, int version_minor)
 {
+    Q_ASSERT(version_major >= 0 && version_minor >= 0);
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
 
-    QList<QDeclarativeType*> types = data->nameToType.values(name);
-    foreach (QDeclarativeType *t, types) {
+    QDeclarativeMetaTypeData::Names::ConstIterator it = data->nameToType.find(name);
+    while (it != data->nameToType.end()) {
         // XXX version_major<0 just a kludge for QDeclarativePropertyPrivate::initProperty
-        if (version_major<0 || t->availableInVersion(version_major,version_minor))
-            return t;
+        if (it.key() == name && (version_major<0 || (*it)->availableInVersion(version_major,version_minor)))
+            return (*it);
+        ++it;
     }
+
     return 0;
 }
 
@@ -1032,8 +1284,9 @@ QDeclarativeType *QDeclarativeMetaType::qmlType(const QMetaObject *metaObject)
     by \a version_major and \a version_minor in module specified by \a uri.  Returns null if no
     type is registered.
 */
-QDeclarativeType *QDeclarativeMetaType::qmlType(const QMetaObject *metaObject, const QByteArray &module, int version_major, int version_minor)
+QDeclarativeType *QDeclarativeMetaType::qmlType(const QMetaObject *metaObject, const QString &module, int version_major, int version_minor)
 {
+    Q_ASSERT(version_major >= 0 && version_minor >= 0);
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();
 
@@ -1067,7 +1320,7 @@ QDeclarativeType *QDeclarativeMetaType::qmlType(int userType)
 /*!
     Returns the list of registered QML type names.
 */
-QList<QByteArray> QDeclarativeMetaType::qmlTypeNames()
+QList<QString> QDeclarativeMetaType::qmlTypeNames()
 {
     QReadLocker lock(metaTypeDataLock());
     QDeclarativeMetaTypeData *data = metaTypeData();

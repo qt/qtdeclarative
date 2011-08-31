@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgview.h"
+#include "qsgview_p.h"
 
 #include "qsgcanvas_p.h"
 #include "qsgitem_p.h"
@@ -52,44 +53,12 @@
 #include <private/qdeclarativeengine_p.h>
 #include <QtCore/qbasictimer.h>
 
-// XXX todo - This whole class should probably be merged with QDeclarativeView for 
+
+// XXX todo - This whole class should probably be merged with QDeclarativeView for
 // maximum seamlessness
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
-
-class QSGViewPrivate : public QSGCanvasPrivate, 
-                       public QSGItemChangeListener
-{
-    Q_DECLARE_PUBLIC(QSGView)
-public:
-    QSGViewPrivate();
-    ~QSGViewPrivate();
-
-    void execute();
-    void itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
-    void initResize();
-    void updateSize();
-    void setRootObject(QObject *);
-
-    void init();
-
-    QSize rootObjectSize() const;
-
-    QPointer<QSGItem> root;
-
-    QUrl source;
-
-    QDeclarativeEngine engine;
-    QDeclarativeComponent *component;
-    QBasicTimer resizetimer;
-
-    QSGView::ResizeMode resizeMode;
-    QSize initialSize;
-    QElapsedTimer frameTimer;
-
-    bool resized;
-};
 
 void QSGViewPrivate::init()
 {
@@ -103,8 +72,8 @@ QSGViewPrivate::QSGViewPrivate()
 {
 }
 
-QSGViewPrivate::~QSGViewPrivate() 
-{ 
+QSGViewPrivate::~QSGViewPrivate()
+{
     QDeclarativeInspectorService::instance()->removeView(q_func());
 
     delete root;
@@ -126,7 +95,7 @@ void QSGViewPrivate::execute()
         if (!component->isLoading()) {
             q->continueExecute();
         } else {
-            QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)), 
+            QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)),
                              q, SLOT(continueExecute()));
         }
     }
@@ -397,9 +366,9 @@ QSGItem *QSGView::rootObject() const
 void QSGView::resizeEvent(QResizeEvent *e)
 {
     Q_D(QSGView);
-    if (d->resizeMode == SizeRootObjectToView) 
+    if (d->resizeMode == SizeRootObjectToView)
         d->updateSize();
-    
+
     QSGCanvas::resizeEvent(e);
 }
 

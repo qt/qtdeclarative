@@ -64,8 +64,11 @@ class QSGPointAttractorAffector : public QSGParticleAffector
 
 public:
     enum Proportion{
+        Constant,
         Linear,
-        Quadratic
+        Quadratic,
+        InverseLinear,
+        InverseQuadratic
     };
 
     enum PhysicsAffects {

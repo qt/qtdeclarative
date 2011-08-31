@@ -55,7 +55,7 @@
 
 #include "qdeclarativev4instruction_p.h"
 #include "qdeclarativev4ir_p.h"
-#include <private/qdeclarativeparser_p.h>
+#include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
 
@@ -93,6 +93,54 @@ inline bool operator==(const QDeclarative1AnchorLine& a, const QDeclarative1Anch
 }
 
 
+template <typename _Key, typename _Value>
+class QDeclarativeAssociationList
+{
+public:
+    typedef QVarLengthArray<QPair<_Key, _Value>, 8> Container;
+    typedef typename Container::const_iterator const_iterator;
+    typedef typename Container::const_iterator ConstIterator;
+
+    const_iterator begin() const { return _container.begin(); }
+    const_iterator end() const { return _container.end(); }
+    int count() const { return _container.count(); }
+    void clear() { _container.clear(); }
+
+    _Value *value(const _Key &key) {
+        for (int i = 0; i < _container.size(); ++i) {
+            QPair<_Key, _Value> &p = _container[i];
+            if (p.first == key)
+                return &p.second;
+        }
+        return 0;
+    }
+
+    _Value &operator[](const _Key &key) {
+        for (int i = 0; i < _container.size(); ++i) {
+            QPair<_Key, _Value> &p = _container[i];
+            if (p.first == key)
+                return p.second;
+        }
+        int index = _container.size();
+        _container.append(qMakePair(key, _Value()));
+        return _container[index].second;
+    }
+
+    void insert(const _Key &key, _Value &value) {
+        for (int i = 0; i < _container.size(); ++i) {
+            QPair<_Key, _Value> &p = _container[i];
+            if (p.first == key) {
+                p.second = value;
+                return;
+            }
+        }
+        _container.append(qMakePair(key, value));
+    }
+
+private:
+    Container _container;
+};
+
 class QDeclarativeV4CompilerPrivate: protected QDeclarativeJS::IR::ExprVisitor, 
                                      protected QDeclarativeJS::IR::StmtVisitor
 {
@@ -109,11 +157,9 @@ public:
 
     bool compile(QDeclarativeJS::AST::Node *);
 
-    QHash<int, QPair<int, int> > registerCleanups;
-
-    int registerLiteralString(quint8 reg, const QString &);
+    int registerLiteralString(quint8 reg, const QStringRef &);
     int registerString(const QString &);
-    QHash<QString, QPair<int, int> > registeredStrings;
+    QDeclarativeAssociationList<QString, QPair<int, int> > registeredStrings;
     QByteArray data;
 
     bool blockNeedsSubscription(const QStringList &);
@@ -124,9 +170,9 @@ public:
     quint8 exceptionId(QDeclarativeJS::AST::ExpressionNode *);
     QVector<quint64> exceptions;
 
-    QHash<int, quint32> usedSubscriptionIds;
+    QDeclarativeAssociationList<int, quint32> usedSubscriptionIds;
 
-    QHash<QString, int> subscriptionIds;
+    QDeclarativeAssociationList<QString, int> subscriptionIds;
     QDeclarativeJS::Bytecode bytecode;
 
     // back patching
@@ -137,19 +183,20 @@ public:
             : block(block), offset(index) {}
     };
     QVector<Patch> patches;
+    QDeclarativePool pool;
 
     // Committed binding data
     struct {
         QList<int> offsets;
-        QList<QHash<int, quint32> > dependencies;
+        QList<QDeclarativeAssociationList<int, quint32> > dependencies;
 
         //QDeclarativeJS::Bytecode bytecode;
         QByteArray bytecode;
         QByteArray data;
-        QHash<QString, int> subscriptionIds;
+        QDeclarativeAssociationList<QString, int> subscriptionIds;
         QVector<quint64> exceptions;
 
-        QHash<QString, QPair<int, int> > registeredStrings;
+        QDeclarativeAssociationList<QString, QPair<int, int> > registeredStrings;
 
         int count() const { return offsets.count(); }
     } committed;

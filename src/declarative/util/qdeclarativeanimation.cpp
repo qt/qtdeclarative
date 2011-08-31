@@ -827,12 +827,8 @@ void QDeclarativeScriptActionPrivate::execute()
 
     QDeclarativeScriptString scriptStr = hasRunScriptScript ? runScriptScript : script;
 
-    const QString &str = scriptStr.script();
-    if (!str.isEmpty()) {
-        QDeclarativeExpression expr(scriptStr.context(), scriptStr.scopeObject(), str);
-        QDeclarativeData *ddata = QDeclarativeData::get(q);
-        if (ddata && ddata->outerContext && !ddata->outerContext->url.isEmpty())
-            expr.setSourceLocation(ddata->outerContext->url.toString(), ddata->lineNumber);
+    if (!scriptStr.script().isEmpty()) {
+        QDeclarativeExpression expr(scriptStr);
         expr.evaluate();
         if (expr.hasError())
             qmlInfo(q) << expr.error();

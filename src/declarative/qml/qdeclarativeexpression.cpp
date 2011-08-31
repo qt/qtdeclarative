@@ -242,7 +242,7 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
     } else {
         QDeclarativeContextData *ctxtdata = QDeclarativeContextData::get(script.context());
 
-        QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(qmlEngine(script.scopeObject()));
+        QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(script.context()->engine());
         QDeclarativeCompiledData *cdata = 0;
         QDeclarativeTypeData *typeData = 0;
         if (engine && ctxtdata && !ctxtdata->url.isEmpty()) {
@@ -251,7 +251,7 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
         }
 
         if (cdata)
-            d->init(ctxtdata, cdata->primitives.at(id), cdata, script.scopeObject(),
+            d->init(ctxtdata, cdata->primitives.at(id), true, script.scopeObject(),
                     cdata->name, script.d.data()->lineNumber);
         else
            defaultConstruction = true;

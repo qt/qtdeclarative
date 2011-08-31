@@ -61,6 +61,11 @@ QString QDeclarativeIntegerCache::findId(int value) const
     return QString();
 }
 
+void QDeclarativeIntegerCache::reserve(int size)
+{ 
+    stringCache.reserve(size);
+}
+
 void QDeclarativeIntegerCache::add(const QString &id, int value)
 {
     Q_ASSERT(!stringCache.contains(id));

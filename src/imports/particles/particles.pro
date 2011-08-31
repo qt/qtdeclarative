@@ -9,7 +9,7 @@ SOURCES += \
     particles.cpp \
     V1/qdeclarativeparticles.cpp 
 
-QT += declarative opengl core gui declarative-private core-private gui-private qtquick1 qtquick1-private widgets-private
+QT += declarative opengl core gui declarative-private core-private gui-private qtquick1 qtquick1-private widgets-private v8-private
 
 OTHER_FILES += \
     qmldir

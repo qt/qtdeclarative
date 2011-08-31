@@ -153,17 +153,17 @@ public:
 Focus behavior
 ==============
 
-Prior to being added to a valid canvas items can set and clear focus with no 
+Prior to being added to a valid canvas items can set and clear focus with no
 effect.  Only once items are added to a canvas (by way of having a parent set that
-already belongs to a canvas) do the focus rules apply.  Focus goes back to 
+already belongs to a canvas) do the focus rules apply.  Focus goes back to
 having no effect if an item is removed from a canvas.
 
 When an item is moved into a new focus scope (either being added to a canvas
-for the first time, or having its parent changed), if the focus scope already has 
+for the first time, or having its parent changed), if the focus scope already has
 a scope focused item that takes precedence over the item being added.  Otherwise,
-the focus of the added tree is used.  In the case of of a tree of items being 
+the focus of the added tree is used.  In the case of of a tree of items being
 added to a canvas for the first time, which may have a conflicted focus state (two
-or more items in one scope having focus set), the same rule is applied item by item - 
+or more items in one scope having focus set), the same rule is applied item by item -
 thus the first item that has focus will get it (assuming the scope doesn't already
 have a scope focused item), and the other items will have their focus cleared.
 */
@@ -478,7 +478,7 @@ void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sce
     sceneEvent.setLastPos(transform.map(sceneEvent.lastScenePos()));
     for (int ii = 0; ii < 5; ++ii) {
         if (sceneEvent.buttons() & (1 << ii)) {
-            sceneEvent.setButtonDownPos((Qt::MouseButton)(1 << ii), 
+            sceneEvent.setButtonDownPos((Qt::MouseButton)(1 << ii),
                                         transform.map(sceneEvent.buttonDownScenePos((Qt::MouseButton)(1 << ii))));
         }
     }
@@ -692,7 +692,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
         updateInputMethodData();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
-        q->sendEvent(newActiveFocusItem, &event); 
+        q->sendEvent(newActiveFocusItem, &event);
     } else {
         updateInputMethodData();
     }
@@ -778,12 +778,12 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         updateInputMethodData();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
-        q->sendEvent(newActiveFocusItem, &event); 
+        q->sendEvent(newActiveFocusItem, &event);
     } else {
         updateInputMethodData();
     }
 
-    if (!changed.isEmpty()) 
+    if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
 }
 
@@ -807,7 +807,7 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
             itemPrivate->itemChange(QSGItem::ItemActiveFocusHasChanged, itemPrivate->activeFocus);
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }
-    } 
+    }
 }
 
 void QSGCanvasPrivate::updateInputMethodData()
@@ -891,21 +891,21 @@ QSGCanvas::~QSGCanvas()
 QSGItem *QSGCanvas::rootItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->rootItem;
 }
 
 QSGItem *QSGCanvas::activeFocusItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->activeFocusItem;
 }
 
 QSGItem *QSGCanvas::mouseGrabberItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->mouseGrabberItem;
 }
 
@@ -1016,7 +1016,7 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
             event->accept();
             mouseGrabberItem = item;
             q->sendEvent(item, event);
-            if (event->isAccepted()) 
+            if (event->isAccepted())
                 return true;
             mouseGrabberItem->ungrabMouse();
             mouseGrabberItem = 0;
@@ -1030,10 +1030,10 @@ bool QSGCanvasPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *sceneEvent)
 {
     Q_Q(QSGCanvas);
 
-    if (!mouseGrabberItem && 
+    if (!mouseGrabberItem &&
          sceneEvent->type() == QEvent::GraphicsSceneMousePress &&
          (sceneEvent->button() & sceneEvent->buttons()) == sceneEvent->buttons()) {
-        
+
         return deliverInitialMousePressEvent(rootItem, sceneEvent);
     }
 
@@ -1053,7 +1053,7 @@ bool QSGCanvasPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *sceneEvent)
 void QSGCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1068,7 +1068,7 @@ void QSGCanvas::mousePressEvent(QMouseEvent *event)
 void QSGCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseReleaseEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1090,7 +1090,7 @@ void QSGCanvas::mouseReleaseEvent(QMouseEvent *event)
 void QSGCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1104,7 +1104,7 @@ void QSGCanvas::mouseDoubleClickEvent(QMouseEvent *event)
         else
             event->ignore();
         return;
-    } 
+    }
 
     d->deliverMouseEvent(&sceneEvent);
     event->setAccepted(sceneEvent.isAccepted());
@@ -1129,7 +1129,7 @@ bool QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
 void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseMoveEvent()" << event->pos() << event->button() << event->buttons();
 #endif
@@ -1173,7 +1173,7 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
     QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QSGItem *child = children.at(ii);
-        if (!child->isEnabled())
+        if (!child->isVisible() || !child->isEnabled())
             continue;
         if (deliverHoverEvent(child, scenePos, lastScenePos, modifiers, accepted))
             return true;
@@ -1186,38 +1186,36 @@ bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos,
                 //move
                 accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
             } else {
-                QList<QSGItem*> parents;
+                QList<QSGItem *> itemsToHover;
                 QSGItem* parent = item;
-                parents << item;
+                itemsToHover << item;
                 while ((parent = parent->parentItem()))
-                    parents << parent;
+                    itemsToHover << parent;
 
-                //exit from previous (excepting ancestors)
-                while (!hoverItems.isEmpty() && !parents.contains(hoverItems[0])){
+                // Leaving from previous hovered items until we reach the item or one of its ancestors.
+                while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems[0])) {
                     sendHoverEvent(QEvent::HoverLeave, hoverItems[0], scenePos, lastScenePos, modifiers, accepted);
                     hoverItems.removeFirst();
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems[0] == item){//Not entering a new Item
+                    // ### Shouldn't we send moves for the parent items as well?
                     accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, accepted);
                 } else {
-                    //enter any ancestors that also wish to be hovered and aren't
+                    // Enter items that are not entered yet.
                     int startIdx = -1;
                     if (!hoverItems.isEmpty())
-                        startIdx = parents.indexOf(hoverItems[0]);
+                        startIdx = itemsToHover.indexOf(hoverItems[0]) - 1;
                     if (startIdx == -1)
-                        startIdx = parents.count() - 1;
+                        startIdx = itemsToHover.count() - 1;
 
                     for (int i = startIdx; i >= 0; i--) {
-                        if (QSGItemPrivate::get(parents[i])->hoverEnabled) {
-                            hoverItems.prepend(parents[i]);
-                            sendHoverEvent(QEvent::HoverEnter, parents[i], scenePos, lastScenePos, modifiers, accepted);
+                        QSGItem *itemToHover = itemsToHover[i];
+                        if (QSGItemPrivate::get(itemToHover)->hoverEnabled) {
+                            hoverItems.prepend(itemToHover);
+                            sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, accepted);
                         }
                     }
-
-                    //enter new item
-                    hoverItems.prepend(item);
-                    accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, accepted);
                 }
             }
             return true;
@@ -1505,17 +1503,17 @@ bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QG
         return true;
 
     QSGItemPrivate *targetPrivate = QSGItemPrivate::get(target);
-    if (targetPrivate->filtersChildMouseEvents) 
+    if (targetPrivate->filtersChildMouseEvents)
         if (target->childMouseEventFilter(item, event))
             return true;
 
     return false;
 }
 
-bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e) 
-{ 
+bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
+{
     Q_D(QSGCanvas);
-    
+
     if (!item) {
         qWarning("QSGCanvas::sendEvent: Cannot send event to a null item");
         return false;
@@ -1549,7 +1547,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::GraphicsSceneMouseRelease:
     case QEvent::GraphicsSceneMouseDoubleClick:
     case QEvent::GraphicsSceneMouseMove:
-        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events? 
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
         {
             QGraphicsSceneMouseEvent *se = static_cast<QGraphicsSceneMouseEvent *>(e);
             if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
@@ -1581,7 +1579,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
         break;
     }
 
-    return false; 
+    return false;
 }
 
 void QSGCanvasPrivate::cleanupNodes()
@@ -1626,12 +1624,12 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
     itemPriv->dirtyAttributes = 0;
 
     if ((dirty & QSGItemPrivate::TransformUpdateMask) ||
-        (dirty & QSGItemPrivate::Size && itemPriv->origin != QSGItem::TopLeft && 
+        (dirty & QSGItemPrivate::Size && itemPriv->origin != QSGItem::TopLeft &&
          (itemPriv->scale != 1. || itemPriv->rotation != 0.))) {
 
         QMatrix4x4 matrix;
 
-        if (itemPriv->x != 0. || itemPriv->y != 0.) 
+        if (itemPriv->x != 0. || itemPriv->y != 0.)
             matrix.translate(itemPriv->x, itemPriv->y);
 
         for (int ii = itemPriv->transforms.count() - 1; ii >= 0; --ii)
@@ -1779,10 +1777,10 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
     if (dirty & QSGItemPrivate::ContentUpdateMask) {
 
         if (itemPriv->flags & QSGItem::ItemHasContents) {
-            updatePaintNodeData.transformNode = itemPriv->itemNode(); 
+            updatePaintNodeData.transformNode = itemPriv->itemNode();
             itemPriv->paintNode = item->updatePaintNode(itemPriv->paintNode, &updatePaintNodeData);
 
-            Q_ASSERT(itemPriv->paintNode == 0 || 
+            Q_ASSERT(itemPriv->paintNode == 0 ||
                      itemPriv->paintNode->parent() == 0 ||
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
@@ -1957,7 +1955,7 @@ void QSGCanvasRenderThread::run()
     } else {
         makeCurrent();
     }
-    
+
     while (!shouldExit) {
         lock();
 

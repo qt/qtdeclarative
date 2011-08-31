@@ -391,7 +391,7 @@ QNetworkAccessManager *QV8Engine::networkAccessManager()
     return QDeclarativeEnginePrivate::get(m_engine)->getNetworkAccessManager();
 }
 
-const QSet<QString> &QV8Engine::illegalNames() const
+const QStringHash<bool> &QV8Engine::illegalNames() const
 {
     return m_illegalNames;
 }
@@ -561,7 +561,7 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     v8::Local<v8::Value> names = m_getOwnPropertyNames->Call(global, 1, args);
     v8::Local<v8::Array> namesArray = v8::Local<v8::Array>::Cast(names);
     for (quint32 ii = 0; ii < namesArray->Length(); ++ii) 
-        m_illegalNames.insert(toString(namesArray->Get(ii)));
+        m_illegalNames.insert(toString(namesArray->Get(ii)), true);
     }
 
     {

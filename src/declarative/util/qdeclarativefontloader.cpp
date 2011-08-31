@@ -193,10 +193,9 @@ void QDeclarativeFontLoader::setSource(const QUrl &url)
     Q_D(QDeclarativeFontLoader);
     if (url == d->url)
         return;
-    d->url = qmlContext(this)->resolvedUrl(url);
+    d->url = url;
     emit sourceChanged();
 
-#ifndef QT_NO_LOCALFILE_OPTIMIZED_QML
     QString localFile = QDeclarativeEnginePrivate::urlToLocalFileOrQrc(d->url);
     if (!localFile.isEmpty()) {
         if (!d->fonts.contains(d->url)) {
@@ -211,9 +210,7 @@ void QDeclarativeFontLoader::setSource(const QUrl &url)
         } else {
             updateFontInfo(QFontDatabase::applicationFontFamilies(d->fonts[d->url]->id).at(0), Ready);
         }
-    } else
-#endif
-    {
+    } else {
         if (!d->fonts.contains(d->url)) {
             QDeclarativeFontObject *fo = new QDeclarativeFontObject;
             d->fonts[d->url] = fo;

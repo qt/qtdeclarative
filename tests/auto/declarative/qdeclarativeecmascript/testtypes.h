@@ -934,6 +934,7 @@ private:
 class testQObjectApi : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(MyEnum)
     Q_PROPERTY (int qobjectTestProperty READ qobjectTestProperty NOTIFY qobjectTestPropertyChanged)
     Q_PROPERTY (int qobjectTestWritableProperty READ qobjectTestWritableProperty WRITE setQObjectTestWritableProperty NOTIFY qobjectTestWritablePropertyChanged)
 
@@ -945,7 +946,9 @@ public:
 
     ~testQObjectApi() {}
 
-    Q_INVOKABLE int qobjectTestMethod() { m_methodCallCount += 1; return m_methodCallCount; }
+    enum MyEnum { EnumValue1 = 25, EnumValue2 = 42 };
+    Q_INVOKABLE int qobjectEnumTestMethod(MyEnum val) { return (static_cast<int>(val) + 5); }
+    Q_INVOKABLE int qobjectTestMethod(int increment = 1) { m_methodCallCount += increment; return m_methodCallCount; }
 
     int qobjectTestProperty() const { return m_testProperty; }
     void setQObjectTestProperty(int tp) { m_testProperty = tp; emit qobjectTestPropertyChanged(tp); }

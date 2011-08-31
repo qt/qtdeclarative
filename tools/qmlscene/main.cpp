@@ -321,6 +321,7 @@ static void checkAndAdaptVersion(const QUrl &url)
     }
 
     QRegExp quick1("^\\s*import +QtQuick +1\\.");
+    QRegExp quick2("^\\s*import +QtQuick +2\\.");
     QRegExp qt47("^\\s*import +Qt +4\\.7");
 
     QString envToWrite;
@@ -328,16 +329,20 @@ static void checkAndAdaptVersion(const QUrl &url)
 
     QTextStream stream(&f);
     bool codeFound= false;
-    while (!codeFound && envToWrite.isEmpty()) {
+    while (!codeFound) {
         QString line = stream.readLine();
         if (line.contains("{"))
             codeFound = true;
-        if (quick1.indexIn(line) >= 0) {
+        if (envToWrite.isEmpty() && quick1.indexIn(line) >= 0) {
             envToWrite = QLatin1String("quick1");
             compat = QLatin1String("QtQuick 1.0");
-        } else if (qt47.indexIn(line) >= 0) {
+        } else if (envToWrite.isEmpty() && qt47.indexIn(line) >= 0) {
             envToWrite = QLatin1String("qt");
             compat = QLatin1String("Qt 4.7");
+        } else if (quick2.indexIn(line) >= 0) {
+            envToWrite.clear();
+            compat.clear();
+            break;
         }
     }
 

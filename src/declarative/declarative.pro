@@ -6,7 +6,7 @@ QPRO_PWD   = $$PWD
 CONFIG += module
 MODULE_PRI += ../../modules/qt_declarative.pri
 
-QT = core-private gui gui-private network widgets-private sql
+QT = core-private gui gui-private network widgets-private sql v8-private
 
 contains(QT_CONFIG, svg): QT += svg
 DEFINES   += QT_BUILD_DECLARATIVE_LIB QT_NO_URL_CAST_FROM_STRING
@@ -34,7 +34,6 @@ include(debugger/debugger.pri)
 include(scenegraph/scenegraph.pri)
 include(items/items.pri)
 include(particles/particles.pri)
-include(v8/v8.pri)
 
 symbian: {
     TARGET.UID3=0x2001E623

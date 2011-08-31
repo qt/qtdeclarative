@@ -56,6 +56,7 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_HEADER
 
@@ -414,21 +415,27 @@ class Bytecode
 public:
     Bytecode();
 
-    QByteArray code() const { return d; }
     const char *constData() const { return d.constData(); }
     int size() const { return d.size(); }
     int count() const { return d.count(); }
     void clear() { d.clear(); }
     bool isEmpty() const { return d.isEmpty(); }
     void append(const Instr &instr);
-    void append(const QVector<Instr> &instrs);
+
+    template <typename _It>
+    void append(_It it, _It last)
+    {
+        for (; it != last; ++it)
+            append(*it);
+    }
+
     int remove(int index);
 
     const Instr &operator[](int offset) const;
     Instr &operator[](int offset);
 
 private:
-    QByteArray d;
+    QVarLengthArray<char, 4 * 1024> d;
 #ifdef QML_THREADED_INTERPRETER
     void **decodeInstr;
 #endif

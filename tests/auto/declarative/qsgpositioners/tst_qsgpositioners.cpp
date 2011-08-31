@@ -160,7 +160,7 @@ void tst_qsgpositioners::test_horizontal_rtl()
 
     // Change the width of the row and check that items stay to the right
     row->setWidth(200);
-    QCOMPARE(one->x(), 150.0);
+    QTRY_COMPARE(one->x(), 150.0);
     QCOMPARE(one->y(), 0.0);
     QCOMPARE(two->x(), 130.0);
     QCOMPARE(two->y(), 0.0);
@@ -580,7 +580,7 @@ void tst_qsgpositioners::test_grid_rightToLeft()
 
     // Change the width of the grid and check that items stay to the right
     grid->setWidth(200);
-    QCOMPARE(one->x(), 150.0);
+    QTRY_COMPARE(one->x(), 150.0);
     QCOMPARE(one->y(), 0.0);
     QCOMPARE(two->x(), 130.0);
     QCOMPARE(two->y(), 0.0);
@@ -1086,16 +1086,16 @@ void tst_qsgpositioners::test_flow_resize()
     QSGRectangle *five = canvas->rootObject()->findChild<QSGRectangle*>("five");
     QVERIFY(five != 0);
 
-    QCOMPARE(one->x(), 0.0);
-    QCOMPARE(one->y(), 0.0);
-    QCOMPARE(two->x(), 50.0);
-    QCOMPARE(two->y(), 0.0);
-    QCOMPARE(three->x(), 70.0);
-    QCOMPARE(three->y(), 0.0);
-    QCOMPARE(four->x(), 0.0);
-    QCOMPARE(four->y(), 50.0);
-    QCOMPARE(five->x(), 50.0);
-    QCOMPARE(five->y(), 50.0);
+    QTRY_COMPARE(one->x(), 0.0);
+    QTRY_COMPARE(one->y(), 0.0);
+    QTRY_COMPARE(two->x(), 50.0);
+    QTRY_COMPARE(two->y(), 0.0);
+    QTRY_COMPARE(three->x(), 70.0);
+    QTRY_COMPARE(three->y(), 0.0);
+    QTRY_COMPARE(four->x(), 0.0);
+    QTRY_COMPARE(four->y(), 50.0);
+    QTRY_COMPARE(five->x(), 50.0);
+    QTRY_COMPARE(five->y(), 50.0);
 
     delete canvas;
 }
@@ -1110,7 +1110,7 @@ void tst_qsgpositioners::test_flow_resize_rightToLeft()
     root->setProperty("testRightToLeft", true);
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
-    QVERIFY(one != 0);
+    QTRY_VERIFY(one != 0);
     QSGRectangle *two = canvas->rootObject()->findChild<QSGRectangle*>("two");
     QVERIFY(two != 0);
     QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
@@ -1294,7 +1294,7 @@ void tst_qsgpositioners::test_mirroring()
                 break;
             QSGItem *itemA = rootA->findChild<QSGItem*>(objectName);
             QSGItem *itemB = rootB->findChild<QSGItem*>(objectName);
-            QVERIFY(itemA->x() != itemB->x());
+            QTRY_VERIFY(itemA->x() != itemB->x());
         }
 
         QSGItemPrivate* rootPrivateB = QSGItemPrivate::get(rootB);
@@ -1311,7 +1311,7 @@ void tst_qsgpositioners::test_mirroring()
                 break;
             QSGItem *itemA = rootA->findChild<QSGItem*>(objectName);
             QSGItem *itemB = rootB->findChild<QSGItem*>(objectName);
-            QCOMPARE(itemA->x(), itemB->x());
+            QTRY_COMPARE(itemA->x(), itemB->x());
         }
 
         rootA->setProperty("testRightToLeft", false); // layoutDirection: Qt.LeftToRight
@@ -1324,7 +1324,7 @@ void tst_qsgpositioners::test_mirroring()
                 break;
             QSGItem *itemA = rootA->findChild<QSGItem*>(objectName);
             QSGItem *itemB = rootB->findChild<QSGItem*>(objectName);
-            QCOMPARE(itemA->x(), itemB->x());
+            QTRY_COMPARE(itemA->x(), itemB->x());
         }
         delete canvasA;
         delete canvasB;
@@ -1428,12 +1428,9 @@ void tst_qsgpositioners::test_attachedproperties_dynamic()
 
     row->metaObject()->invokeMethod(row, "createSubRect");
 
-    posIndex = rect1->property("index").toInt();
-    QVERIFY(posIndex == 1);
-    isFirst = rect1->property("firstItem").toBool();
-    QVERIFY(isFirst == false);
-    isLast = rect1->property("lastItem").toBool();
-    QVERIFY(isLast == false);
+    QTRY_VERIFY(rect1->property("index").toInt() == 1);
+    QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
+    QTRY_VERIFY(rect1->property("lastItem").toBool() == false);
 
     QSGRectangle *rect2 = canvas->rootObject()->findChild<QSGRectangle *>("rect2");
     QVERIFY(rect2 != 0);
@@ -1449,12 +1446,9 @@ void tst_qsgpositioners::test_attachedproperties_dynamic()
 
     qApp->processEvents(QEventLoop::DeferredDeletion);
 
-    posIndex = rect1->property("index").toInt();
-    QVERIFY(posIndex == 1);
-    isFirst = rect1->property("firstItem").toBool();
-    QVERIFY(isFirst == false);
-    isLast = rect1->property("lastItem").toBool();
-    QVERIFY(isLast == true);
+    QTRY_VERIFY(rect1->property("index").toInt() == 1);
+    QTRY_VERIFY(rect1->property("firstItem").toBool() == false);
+    QTRY_VERIFY(rect1->property("lastItem").toBool() == true);
 
     delete canvas;
 }
@@ -1464,6 +1458,8 @@ QSGView *tst_qsgpositioners::createView(const QString &filename)
     QSGView *canvas = new QSGView(0);
 
     canvas->setSource(QUrl::fromLocalFile(filename));
+    canvas->show();
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     return canvas;
 }

@@ -44,6 +44,7 @@
 
 #include <private/qsganchors_p_p.h> // For AnchorLine
 #include <private/qdeclarativetypenamecache_p.h>
+#include <private/qdeclarativeutils_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlVerboseCompiler, QML_VERBOSE_COMPILER)
 
@@ -85,19 +86,15 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
 
 QDeclarativeV4IRBuilder::QDeclarativeV4IRBuilder(const QDeclarativeV4Compiler::Expression *expr, 
                                                              QDeclarativeEnginePrivate *engine)
-: m_expression(expr), m_engine(engine), _module(0), _function(0), _block(0), _discard(false)
+: m_expression(expr), m_engine(engine), _function(0), _block(0), _discard(false)
 {
 }
 
-QDeclarativeJS::IR::Function *
-QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Module *module, 
+bool QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Function *function,
                                          QDeclarativeJS::AST::Node *ast)
 {
     bool discarded = false;
 
-    qSwap(_module, module);
-
-    IR::Function *function = _module->newFunction();
     IR::BasicBlock *block = function->newBasicBlock();
 
     qSwap(_discard, discarded);
@@ -130,17 +127,15 @@ QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Module *module,
     qSwap(_function, function);
     qSwap(_discard, discarded);
 
-    qSwap(_module, module);
-
-    return discarded?0:function;
+    return !discarded;
 }
 
-bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
+bool QDeclarativeV4IRBuilder::buildName(QList<QStringRef> &name,
                                               AST::Node *node,
                                               QList<AST::ExpressionNode *> *nodes)
 {
     if (node->kind == AST::Node::Kind_IdentifierExpression) {
-        name << static_cast<AST::IdentifierExpression*>(node)->name->asString();
+        name << static_cast<AST::IdentifierExpression*>(node)->name;
         if (nodes) *nodes << static_cast<AST::IdentifierExpression*>(node);
     } else if (node->kind == AST::Node::Kind_FieldMemberExpression) {
         AST::FieldMemberExpression *expr =
@@ -149,7 +144,7 @@ bool QDeclarativeV4IRBuilder::buildName(QStringList &name,
         if (!buildName(name, expr->base, nodes))
             return false;
 
-        name << expr->name->asString();
+        name << expr->name;
         if (nodes) *nodes << expr;
     } else {
         return false;
@@ -341,27 +336,28 @@ bool QDeclarativeV4IRBuilder::visit(AST::UiFormal *)
 
 
 // JS
-bool QDeclarativeV4IRBuilder::visit(AST::Program *ast)
+bool QDeclarativeV4IRBuilder::visit(AST::Program *)
 {
-    _function = _module->newFunction();
-    _block = _function->newBasicBlock();
-    accept(ast->elements);
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::SourceElements *)
 {
+    Q_ASSERT(!"unreachable");
     return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::FunctionSourceElement *)
 {
-    return true; // look inside
+    Q_ASSERT(!"unreachable");
+    return false;
 }
 
 bool QDeclarativeV4IRBuilder::visit(AST::StatementSourceElement *)
 {
-    return true; // look inside
+    Q_ASSERT(!"unreachable");
+    return false;
 }
 
 // object literals
@@ -432,76 +428,75 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
     const quint32 line = ast->identifierToken.startLine;
     const quint32 column = ast->identifierToken.startColumn;
 
-    const QString name = ast->name->asString();
+    const QString name = ast->name.toString();
 
     if (name.at(0) == QLatin1Char('u') && name.length() == 9 && name == QLatin1String("undefined")) {
         _expr.code = _block->CONST(IR::UndefinedType, 0); // ### undefined value
     } else if (m_engine->v8engine()->illegalNames().contains(name) ) {
         if (qmlVerboseCompiler()) qWarning() << "*** illegal symbol:" << name;
         return false;
-    } else if (const QDeclarativeParser::Object *obj = m_expression->ids.value(name)) {
+    } else if (const QDeclarativeScript::Object *obj = m_expression->ids->value(name)) {
         IR::Name *code = _block->ID_OBJECT(name, obj, line, column);
         if (obj == m_expression->component)
             code->storage = IR::Name::RootStorage;
         _expr.code = code;
-    } else if (QDeclarativeTypeNameCache::Data *typeNameData = m_expression->importCache->data(name)) {
-        if (typeNameData->importedScriptIndex != -1) {
-            // We don't support invoking imported scripts
-        } else if (typeNameData->type) {
-            _expr.code = _block->ATTACH_TYPE(name, typeNameData->type, IR::Name::ScopeStorage, line, column);
-        } else if (typeNameData->typeNamespace) {
-            // We don't support namespaces
-        } else {
-            Q_ASSERT(!"Unreachable");
-        }
     } else {
-        bool found = false;
 
-        if (m_expression->context != m_expression->component) {
-            // RootStorage is more efficient than ScopeStorage, so prefer that if they are the same
-            QDeclarativePropertyCache *cache = m_expression->context->synthCache;
-            const QMetaObject *metaObject = m_expression->context->metaObject();
-            if (!cache) cache = m_engine->cache(metaObject);
+        QDeclarativeTypeNameCache::Result r = m_expression->importCache->query(name);
+        if (r.isValid()) {
+            if (r.type) {
+                _expr.code = _block->ATTACH_TYPE(name, r.type, IR::Name::ScopeStorage, line, column);
+            }
+            // We don't support anything else
+        } else {
+            bool found = false;
 
-            QDeclarativePropertyCache::Data *data = cache->property(name);
+            if (m_expression->context != m_expression->component) {
+                // RootStorage is more efficient than ScopeStorage, so prefer that if they are the same
+                QDeclarativePropertyCache *cache = m_expression->context->synthCache;
+                const QMetaObject *metaObject = m_expression->context->metaObject();
+                if (!cache) cache = m_engine->cache(metaObject);
 
-            if (data && data->revision != 0) {
-                if (qmlVerboseCompiler()) 
-                    qWarning() << "*** versioned symbol:" << name;
-                discard();
-                return false;
+                QDeclarativePropertyCache::Data *data = cache->property(name);
+
+                if (data && data->revision != 0) {
+                    if (qmlVerboseCompiler()) 
+                        qWarning() << "*** versioned symbol:" << name;
+                    discard();
+                    return false;
+                }
+
+                if (data && !data->isFunction()) {
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
+                    found = true;
+                } 
             }
 
-            if (data && !data->isFunction()) {
-                IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::ScopeStorage, line, column);
-                found = true;
-            } 
-        }
+            if (!found) {
+                QDeclarativePropertyCache *cache = m_expression->component->synthCache;
+                const QMetaObject *metaObject = m_expression->component->metaObject();
+                if (!cache) cache = m_engine->cache(metaObject);
 
-        if (!found) {
-            QDeclarativePropertyCache *cache = m_expression->component->synthCache;
-            const QMetaObject *metaObject = m_expression->component->metaObject();
-            if (!cache) cache = m_engine->cache(metaObject);
+                QDeclarativePropertyCache::Data *data = cache->property(name);
 
-            QDeclarativePropertyCache::Data *data = cache->property(name);
+                if (data && data->revision != 0) {
+                    if (qmlVerboseCompiler()) 
+                        qWarning() << "*** versioned symbol:" << name;
+                    discard();
+                    return false;
+                }
 
-            if (data && data->revision != 0) {
-                if (qmlVerboseCompiler()) 
-                    qWarning() << "*** versioned symbol:" << name;
-                discard();
-                return false;
+                if (data && !data->isFunction()) {
+                    IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
+                    _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
+                    found = true;
+                } 
             }
 
-            if (data && !data->isFunction()) {
-                IR::Type irType = irTypeFromVariantType(data->propType, m_engine, metaObject);
-                _expr.code = _block->SYMBOL(irType, name, metaObject, data->coreIndex, IR::Name::RootStorage, line, column);
-                found = true;
-            } 
+            if (!found && qmlVerboseCompiler())
+                qWarning() << "*** unknown symbol:" << name;
         }
-
-        if (!found && qmlVerboseCompiler())
-            qWarning() << "*** unknown symbol:" << name;
     }
 
     if (_expr.code && _expr.hint == ExprResult::cx) {
@@ -544,7 +539,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FalseLiteral *)
 bool QDeclarativeV4IRBuilder::visit(AST::StringLiteral *ast)
 {
     // ### TODO: cx format
-    _expr.code = _block->STRING(ast->value->asString());
+    _expr.code = _block->STRING(ast->value);
     return false;
 }
 
@@ -581,14 +576,14 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
             const quint32 line = ast->identifierToken.startLine;
             const quint32 column = ast->identifierToken.startColumn;
 
-            QString name = ast->name->asString();
+            QString name = ast->name.toString();
 
             switch(baseName->symbol) {
             case IR::Name::Unbound:
                 break;
 
             case IR::Name::AttachType:
-                if (name.at(0).isUpper()) {
+                if (QDeclarativeUtils::isUpper(name.at(0))) {
                     QByteArray utf8Name = name.toUtf8();
                     const char *enumName = utf8Name.constData();
 
@@ -606,7 +601,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 
                     if (!found && qmlVerboseCompiler())
                         qWarning() << "*** unresolved enum:" 
-                                   << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                   << (*baseName->id + QLatin1String(".") + ast->name.toString());
                 } else if(const QMetaObject *attachedMeta = baseName->declarativeType->attachedPropertiesType()) {
                     QDeclarativePropertyCache *cache = m_engine->cache(attachedMeta);
                     QDeclarativePropertyCache::Data *data = cache->property(name);
@@ -617,7 +612,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final attached property:"
-                                       << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                       << (*baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -627,7 +622,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                 break;
 
             case IR::Name::IdObject: {
-                const QDeclarativeParser::Object *idObject = baseName->idObject;
+                const QDeclarativeScript::Object *idObject = baseName->idObject;
                 QDeclarativePropertyCache *cache = 
                     idObject->synthCache?idObject->synthCache:m_engine->cache(idObject->metaObject());
 
@@ -663,7 +658,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
                     if(!data->isFinal()) {
                         if (qmlVerboseCompiler())
                             qWarning() << "*** non-final property access:"
-                                << (baseName->id + QLatin1String(".") + ast->name->asString());
+                                << (*baseName->id + QLatin1String(".") + ast->name.toString());
                         return false; // We don't know enough about this property
                     }
 
@@ -683,6 +678,11 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
     return false;
 }
 
+bool QDeclarativeV4IRBuilder::preVisit(AST::Node *)
+{
+    return ! _discard;
+}
+
 bool QDeclarativeV4IRBuilder::visit(AST::NewMemberExpression *)
 {
     return false;
@@ -695,18 +695,30 @@ bool QDeclarativeV4IRBuilder::visit(AST::NewExpression *)
 
 bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
 {
-    QStringList names;
+    QList<QStringRef> names;
     QList<AST::ExpressionNode *> nameNodes;
+
+    names.reserve(4);
+    nameNodes.reserve(4);
+
     if (buildName(names, ast->base, &nameNodes)) {
         //ExprResult base = expression(ast->base);
-        const QString id = names.join(QLatin1String("."));
-        const quint32 line = nameNodes.last()->firstSourceLocation().startLine;
-        const quint32 column = nameNodes.last()->firstSourceLocation().startColumn;
-        IR::Expr *base = _block->NAME(id, line, column);
+        QString id;
+        for (int i = 0; i < names.size(); ++i) {
+            if (! i)
+                id += QLatin1Char('.');
+            id += names.at(i);
+        }
+        const AST::SourceLocation loc = nameNodes.last()->firstSourceLocation();
+        IR::Expr *base = _block->NAME(id, loc.startLine, loc.startColumn);
 
-        QVector<IR::Expr *> args;
-        for (AST::ArgumentList *it = ast->arguments; it; it = it->next)
-            args.append(expression(it->expression));
+        IR::ExprList *args = 0, **argsInserter = &args;
+        for (AST::ArgumentList *it = ast->arguments; it; it = it->next) {
+            IR::Expr *arg = expression(it->expression);
+            *argsInserter = _function->pool->New<IR::ExprList>();
+            (*argsInserter)->init(arg);
+            argsInserter = &(*argsInserter)->next;
+        }
 
         IR::Temp *r = _block->TEMP(IR::InvalidType);
         IR::Expr *call = _block->CALL(base, args);

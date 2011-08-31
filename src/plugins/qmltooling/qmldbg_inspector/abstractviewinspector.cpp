@@ -47,7 +47,7 @@
 
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/private/qdeclarativedebughelper_p.h>
+#include <QtCore/private/qabstractanimation_p.h>
 #include "QtDeclarative/private/qdeclarativeinspectorservice_p.h"
 
 #include <QtWidgets/QVBoxLayout>
@@ -180,7 +180,8 @@ void AbstractViewInspector::animationSpeedChangeRequested(qreal factor)
     }
 
     const float effectiveFactor = m_animationPaused ? 0 : factor;
-    QDeclarativeDebugHelper::setAnimationSlowDownFactor(effectiveFactor);
+    QUnifiedTimer::instance()->setSlowModeEnabled(effectiveFactor != 1.0);
+    QUnifiedTimer::instance()->setSlowdownFactor(effectiveFactor);
 }
 
 void AbstractViewInspector::animationPausedChangeRequested(bool paused)
@@ -191,7 +192,8 @@ void AbstractViewInspector::animationPausedChangeRequested(bool paused)
     }
 
     const float effectiveFactor = paused ? 0 : m_slowDownFactor;
-    QDeclarativeDebugHelper::setAnimationSlowDownFactor(effectiveFactor);
+    QUnifiedTimer::instance()->setSlowModeEnabled(effectiveFactor != 1.0);
+    QUnifiedTimer::instance()->setSlowdownFactor(effectiveFactor);
 }
 
 void AbstractViewInspector::setShowAppOnTop(bool appOnTop)

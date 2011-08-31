@@ -46,7 +46,6 @@
 #include "sgselectiontool.h"
 
 #include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
-#include <QtDeclarative/private/qdeclarativedebughelper_p.h>
 #include <QtDeclarative/private/qsgitem_p.h>
 
 #include <QtDeclarative/QSGView>

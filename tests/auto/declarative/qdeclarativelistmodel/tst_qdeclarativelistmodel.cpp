@@ -219,6 +219,11 @@ void tst_qdeclarativelistmodel::static_i18n_data()
         << QVariant(QString("hello"))
         << QString();
 
+    QTest::newRow("QT_TRID_NOOP")
+        << QString::fromUtf8("ListElement { foo: QT_TRID_NOOP(\"qtn_1st_text\") }")
+        << QVariant(QString("qtn_1st_text"))
+        << QString();
+
     QTest::newRow("QT_TR_NOOP extra param")
             << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"hello\",\"world\") }")
             << QVariant(QString())
@@ -228,6 +233,11 @@ void tst_qdeclarativelistmodel::static_i18n_data()
         << "ListElement { foo: QT_TRANSLATE_NOOP() }"
         << QVariant(QString())
         << QString("ListElement: improperly specified QT_TRANSLATE_NOOP");
+
+    QTest::newRow("QT_TRID_NOOP missing param")
+        << QString::fromUtf8("ListElement { foo: QT_TRID_NOOP() }")
+        << QVariant(QString())
+        << QString("ListElement: improperly specified QT_TRID_NOOP");
 }
 
 void tst_qdeclarativelistmodel::static_i18n()

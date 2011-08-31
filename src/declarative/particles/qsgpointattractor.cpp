@@ -65,21 +65,31 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     if (m_strength == 0.0)
         return false;
-    qreal dx = m_y - d->curX();
-    qreal dy = m_x - d->curY();
+    qreal dx = m_x - d->curX();
+    qreal dy = m_y - d->curY();
     qreal r = sqrt((dx*dx) + (dy*dy));
     qreal theta = atan2(dy,dx);
     qreal ds = 0;
     switch (m_proportionalToDistance){
-    case Quadratic:
-        ds = (m_strength / qMax<qreal>(1.,r*r)) * dt;
+    case InverseQuadratic:
+        ds = (m_strength / qMax<qreal>(1.,r*r));
         break;
-    case Linear://also default
-    default:
-        ds = (m_strength / qMax<qreal>(1.,r)) * dt;
+    case InverseLinear:
+        ds = (m_strength / qMax<qreal>(1.,r));
+        break;
+    case Quadratic:
+        ds = (m_strength * qMax<qreal>(1.,r*r));
+        break;
+    case Linear:
+        ds = (m_strength * qMax<qreal>(1.,r));
+        break;
+    default: //also Constant
+        ds = m_strength;
     }
+    ds *= dt;
     dx = ds * cos(theta);
     dy = ds * sin(theta);
+    qreal vx,vy;
     switch (m_physics){
     case Position:
         d->x = (d->x + dx);
@@ -91,8 +101,10 @@ bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
         break;
     case Velocity: //also default
     default:
-        d->setInstantaneousVX(d->vx + dx);
-        d->setInstantaneousVY(d->vy + dy);
+        vx = d->curVX();
+        vy = d->curVY();
+        d->setInstantaneousVX(vx + dx);
+        d->setInstantaneousVY(vy + dy);
     }
 
     return true;

@@ -172,7 +172,7 @@ public:
 
     void update(QDeclarativeEngine *, const QMetaObject *);
 
-    QDeclarativePropertyCache *copy();
+    QDeclarativePropertyCache *copy(int reserve = 0);
     void append(QDeclarativeEngine *, const QMetaObject *, Data::Flag propertyFlags = Data::NoFlags,
                 Data::Flag methodFlags = Data::NoFlags, Data::Flag signalFlags = Data::NoFlags);
     void append(QDeclarativeEngine *, const QMetaObject *, int revision, Data::Flag propertyFlags = Data::NoFlags,
@@ -181,6 +181,8 @@ public:
     static Data create(const QMetaObject *, const QString &);
 
     inline Data *property(const QHashedV8String &) const;
+    Data *property(const QHashedStringRef &) const;
+    Data *property(const QHashedCStringRef &) const;
     Data *property(const QString &) const;
     Data *property(int) const;
     Data *method(int) const;

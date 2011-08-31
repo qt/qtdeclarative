@@ -74,7 +74,7 @@ class QSGBasePositionerPrivate : public QSGImplicitSizeItemPrivate, public QSGIt
 public:
     QSGBasePositionerPrivate()
         : spacing(0), type(QSGBasePositioner::None)
-        , moveTransition(0), addTransition(0), queuedPositioning(false)
+        , moveTransition(0), addTransition(0), positioningDirty(false)
         , doingPositioning(false), anchorConflict(false), layoutDirection(Qt::LeftToRight)
     {
     }
@@ -97,25 +97,23 @@ public:
 
     void watchChanges(QSGItem *other);
     void unwatchChanges(QSGItem* other);
-    bool queuedPositioning : 1;
+    void setPositioningDirty() {
+        Q_Q(QSGBasePositioner);
+        if (!positioningDirty) {
+            positioningDirty = true;
+            q->polish();
+        }
+    }
+
+    bool positioningDirty : 1;
     bool doingPositioning : 1;
     bool anchorConflict : 1;
 
     Qt::LayoutDirection layoutDirection;
 
-    void schedulePositioning()
-    {
-        Q_Q(QSGBasePositioner);
-        if(!queuedPositioning){
-            QTimer::singleShot(0,q,SLOT(prePositioning()));
-            queuedPositioning = true;
-        }
-    }
-
     void mirrorChange() {
-        Q_Q(QSGBasePositioner);
         if (type != QSGBasePositioner::Vertical)
-            q->prePositioning();
+            setPositioningDirty();
     }
     bool isLeftToRight() const {
         if (type == QSGBasePositioner::Vertical)
@@ -127,26 +125,18 @@ public:
     virtual void itemSiblingOrderChanged(QSGItem* other)
     {
         Q_UNUSED(other);
-        //Delay is due to many children often being reordered at once
-        //And we only want to reposition them all once
-        schedulePositioning();
+        setPositioningDirty();
     }
 
     void itemGeometryChanged(QSGItem *, const QRectF &newGeometry, const QRectF &oldGeometry)
     {
-        Q_Q(QSGBasePositioner);
         if (newGeometry.size() != oldGeometry.size())
-            q->prePositioning();
+            setPositioningDirty();
     }
 
     virtual void itemVisibilityChanged(QSGItem *)
     {
-        schedulePositioning();
-    }
-    virtual void itemOpacityChanged(QSGItem *)
-    {
-        Q_Q(QSGBasePositioner);
-        q->prePositioning();
+        setPositioningDirty();
     }
 
     void itemDestroyed(QSGItem *item)
