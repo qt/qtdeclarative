@@ -1178,7 +1178,7 @@ void QSGDistanceFieldGlyphCache::updateCache()
     glBindTexture(GL_TEXTURE_2D, m_textureData->texture);
 
     // ### Remove before final release
-    static bool cacheDistanceFields = QGuiApplication::arguments().contains("--cache-distance-fields");
+    static bool cacheDistanceFields = QGuiApplication::arguments().contains(QLatin1String("--cache-distance-fields"));
 
 // #define QSGDISTANCEFIELDS_TIME_CREATION
 #ifdef QSGDISTANCEFIELDS_TIME_CREATION

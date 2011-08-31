@@ -122,7 +122,7 @@ public:
     QByteArray toData() const { return m_data; }
     static void fromData(QMetaObject *, const QMetaObject *parent, const QByteArray &);
 private:
-    friend class StringRef;
+    friend struct StringRef;
 
     QByteArray m_data;
     int m_zeroPtr;

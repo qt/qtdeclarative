@@ -252,7 +252,7 @@ void QSGCanvas::exposeEvent(QExposeEvent *)
     d->thread->paint();
 }
 
-void QSGCanvas::resizeEvent(QResizeEvent *e)
+void QSGCanvas::resizeEvent(QResizeEvent *)
 {
     Q_D(QSGCanvas);
     d->thread->resize(size());
@@ -268,7 +268,7 @@ void QSGCanvas::animationStopped()
     d_func()->thread->animationStopped();
 }
 
-void QSGCanvas::showEvent(QShowEvent *e)
+void QSGCanvas::showEvent(QShowEvent *)
 {
     Q_D(QSGCanvas);
     if (d->vsyncAnimations) {
@@ -286,7 +286,7 @@ void QSGCanvas::showEvent(QShowEvent *e)
     }
 }
 
-void QSGCanvas::hideEvent(QHideEvent *e)
+void QSGCanvas::hideEvent(QHideEvent *)
 {
     Q_D(QSGCanvas);
     d->thread->stopRendering();

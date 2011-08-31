@@ -59,7 +59,7 @@ class QDeclarativeExpression;
 QT_MODULE(Declarative)
 
 class QDeclarative1ActionEvent;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Action
+class Q_QTQUICK1_EXPORT QDeclarative1Action
 {
 public:
     QDeclarative1Action();
@@ -116,7 +116,7 @@ public:
 class QDeclarative1StateGroup;
 class QDeclarative1State;
 class QDeclarative1StateOperationPrivate;
-class Q_DECLARATIVE_EXPORT QDeclarative1StateOperation : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1StateOperation : public QObject
 {
     Q_OBJECT
 public:
@@ -141,7 +141,7 @@ typedef QDeclarative1StateOperation::ActionList QDeclarative1StateActions;
 
 class QDeclarative1Transition;
 class QDeclarative1StatePrivate;
-class Q_DECLARATIVE_EXPORT QDeclarative1State : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1State : public QObject
 {
     Q_OBJECT
 

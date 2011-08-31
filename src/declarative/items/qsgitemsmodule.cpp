@@ -126,7 +126,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QDeclarativePathPercent>(uri,major,minor,"PathPercent");
     qmlRegisterType<QDeclarativePathQuad>(uri,major,minor,"PathQuad");
     qmlRegisterType<QSGPathView>(uri,major,minor,"PathView");
-    qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner","Positioner is an abstract type that is only available as an attached property.");
+    qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
 #ifndef QT_NO_VALIDATOR
     qmlRegisterType<QIntValidator>(uri,major,minor,"IntValidator");
     qmlRegisterType<QDoubleValidator>(uri,major,minor,"DoubleValidator");

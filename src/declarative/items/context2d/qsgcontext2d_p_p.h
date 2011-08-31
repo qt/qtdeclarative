@@ -58,7 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 class QSGCanvasItem;
-struct QSGContext2DWorkerAgent {
+class QSGContext2DWorkerAgent {
+public:
     QSGContext2DWorkerAgent()
         :ref(1)
         , orig(0)

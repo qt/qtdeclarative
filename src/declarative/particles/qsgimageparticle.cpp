@@ -66,7 +66,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
 
-const float CONV = 0.017453292519943295;
+const qreal CONV = 0.017453292519943295;
 class ImageMaterialData
 {
     public:
@@ -99,13 +99,13 @@ class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 public:
     TabledMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
@@ -167,13 +167,13 @@ class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData
 public:
     DeformableMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
@@ -223,13 +223,13 @@ class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
 public:
     SpriteMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
@@ -296,13 +296,13 @@ class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
 public:
     ColoredMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
@@ -317,7 +317,7 @@ public:
 
     void activate() {
         QSGSimpleMaterialShader<ColoredMaterialData>::activate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -325,7 +325,7 @@ public:
 
     void deactivate() {
         QSGSimpleMaterialShader<ColoredMaterialData>::deactivate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -367,12 +367,12 @@ class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
 public:
     SimpleMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + ff.readAll();
@@ -386,7 +386,7 @@ public:
 
     void activate() {
         QSGSimpleMaterialShader<SimpleMaterialData>::activate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -394,7 +394,7 @@ public:
 
     void deactivate() {
         QSGSimpleMaterialShader<SimpleMaterialData>::deactivate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -913,7 +913,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         sizetable = QImage(m_sizetable_name.toLocalFile());
         opacitytable = QImage(m_opacitytable_name.toLocalFile());
         if (colortable.isNull())
-            colortable = QImage(":defaultshaders/identitytable.png");
+            colortable = QImage(QStringLiteral(":defaultshaders/identitytable.png"));
         Q_ASSERT(!colortable.isNull());
         getState<ImageMaterialData>(m_material)->colorTable = sceneGraphEngine()->createTextureFromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);

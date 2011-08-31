@@ -58,7 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativePool
+// Exported for QtQuick1
+class Q_DECLARATIVE_EXPORT QDeclarativePool
 {
 public:
     // The class has a destructor that needs to be called

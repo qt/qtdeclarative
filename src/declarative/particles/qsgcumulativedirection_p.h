@@ -60,5 +60,6 @@ public:
     const QPointF &sample(const QPointF &from);
 private:
     QList<QSGStochasticDirection*> m_directions;
+    QPointF m_ret;
 };
 #endif // QSGCUMULATIVEDIRECTION_P_H

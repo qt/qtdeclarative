@@ -1018,8 +1018,9 @@ QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::
     return qMakePair((QObject *)0, -1);
 }
 
-struct QV8QObjectConnectionList : public QObject, public QDeclarativeGuard<QObject>
+class QV8QObjectConnectionList : public QObject, public QDeclarativeGuard<QObject>
 {
+public:
     QV8QObjectConnectionList(QObject *object, QV8Engine *engine);
     ~QV8QObjectConnectionList();
 

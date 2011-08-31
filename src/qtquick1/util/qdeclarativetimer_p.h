@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarative1TimerPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Timer : public QObject, public QDeclarativeParserStatus
+class Q_QTQUICK1_EXPORT QDeclarative1Timer : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarative1Timer)

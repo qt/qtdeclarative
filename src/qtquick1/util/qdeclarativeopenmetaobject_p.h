@@ -59,7 +59,7 @@ class QMetaPropertyBuilder;
 QT_MODULE(Declarative)
 
 class QDeclarative1OpenMetaObjectTypePrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1OpenMetaObjectType : public QDeclarativeRefCount
+class Q_QTQUICK1_EXPORT QDeclarative1OpenMetaObjectType : public QDeclarativeRefCount
 {
 public:
     QDeclarative1OpenMetaObjectType(const QMetaObject *base, QDeclarativeEngine *engine);
@@ -80,7 +80,7 @@ private:
 };
 
 class QDeclarative1OpenMetaObjectPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1OpenMetaObject : public QAbstractDynamicMetaObject
+class Q_QTQUICK1_EXPORT QDeclarative1OpenMetaObject : public QAbstractDynamicMetaObject
 {
 public:
     QDeclarative1OpenMetaObject(QObject *, bool = true);

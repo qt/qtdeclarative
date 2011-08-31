@@ -60,7 +60,7 @@ class QDeclarativeError;
 QT_MODULE(Declarative)
 
 class QDeclarativeViewPrivate;
-class Q_DECLARATIVE_EXPORT QDeclarativeView : public QGraphicsView
+class Q_QTQUICK1_EXPORT QDeclarativeView : public QGraphicsView
 {
     Q_OBJECT
     Q_PROPERTY(ResizeMode resizeMode READ resizeMode WRITE setResizeMode)

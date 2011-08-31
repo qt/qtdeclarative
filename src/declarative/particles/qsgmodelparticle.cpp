@@ -213,7 +213,7 @@ void QSGModelParticle::processPending()
     m_requests.clear();
 }
 
-void QSGModelParticle::commit(int gIdx, int pIdx)
+void QSGModelParticle::commit(int /* gIdx */, int /* pIdx */)
 {
     //No-op unless we start copying the data.
 }

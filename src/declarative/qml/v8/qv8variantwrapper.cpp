@@ -166,13 +166,13 @@ QVariant &QV8VariantWrapper::variantValue(v8::Handle<v8::Value> value)
     return static_cast<QV8VariantResource *>(r)->data;
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> property,
+v8::Handle<v8::Value> QV8VariantWrapper::Getter(v8::Local<v8::String> /* property */,
                                                 const v8::AccessorInfo &info)
 {
     return v8::Handle<v8::Value>();
 }
 
-v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Local<v8::String> property, 
+v8::Handle<v8::Value> QV8VariantWrapper::Setter(v8::Local<v8::String> /* property */,
                                                 v8::Local<v8::Value> value,
                                                 const v8::AccessorInfo &info)
 {

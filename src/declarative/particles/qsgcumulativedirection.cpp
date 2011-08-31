@@ -61,10 +61,10 @@ QDeclarativeListProperty<QSGStochasticDirection> QSGCumulativeDirection::directi
 
 const QPointF &QSGCumulativeDirection::sample(const QPointF &from)
 {
-    QPointF ret;
+    m_ret = QPointF();
     foreach (QSGStochasticDirection* dir, m_directions)
-        ret += dir->sample(from);
-    return ret;
+        m_ret += dir->sample(from);
+    return m_ret;
 }
 
 QT_END_NAMESPACE

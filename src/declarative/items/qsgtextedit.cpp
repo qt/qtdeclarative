@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-QWidgetPrivate *qt_widget_private(QWidget *widget);
+Q_WIDGETS_EXPORT QWidgetPrivate *qt_widget_private(QWidget *widget);
 /*!
     \qmlclass TextEdit QSGTextEdit
     \inqmlmodule QtQuick 2

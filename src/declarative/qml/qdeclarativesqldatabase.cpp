@@ -145,7 +145,7 @@ public:
     bool forwardOnly; // type == Rows
 };
 
-static v8::Handle<v8::Value> qmlsqldatabase_version(v8::Local<v8::String> property, const v8::AccessorInfo& info)
+static v8::Handle<v8::Value> qmlsqldatabase_version(v8::Local<v8::String> /* property */, const v8::AccessorInfo& info)
 {
     QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
     if (!r || r->type != QV8SqlDatabaseResource::Database)
@@ -154,7 +154,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_version(v8::Local<v8::String> proper
     return r->engine->toString(r->version);
 }
 
-static v8::Handle<v8::Value> qmlsqldatabase_rows_length(v8::Local<v8::String> property, const v8::AccessorInfo& info)
+static v8::Handle<v8::Value> qmlsqldatabase_rows_length(v8::Local<v8::String> /* property */, const v8::AccessorInfo& info)
 {
     QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
     if (!r || r->type != QV8SqlDatabaseResource::Rows)
@@ -172,7 +172,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_length(v8::Local<v8::String> pr
     return v8::Integer::New(s);
 }
 
-static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Local<v8::String> property, 
+static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Local<v8::String> /* property */,
                                                              const v8::AccessorInfo& info)
 {
     QV8SqlDatabaseResource *r = v8_resource_cast<QV8SqlDatabaseResource>(info.This());
@@ -182,7 +182,7 @@ static v8::Handle<v8::Value> qmlsqldatabase_rows_forwardOnly(v8::Local<v8::Strin
     return v8::Boolean::New(r->query.isForwardOnly());
 }
 
-static void qmlsqldatabase_rows_setForwardOnly(v8::Local<v8::String> property,
+static void qmlsqldatabase_rows_setForwardOnly(v8::Local<v8::String> /* property */,
                                                v8::Local<v8::Value> value,
                                                const v8::AccessorInfo& info)
 {
@@ -568,7 +568,7 @@ void *qt_add_qmlsqldatabase(QV8Engine *engine)
     return (void *)new QDeclarativeSqlDatabaseData(engine);
 }
 
-void qt_rem_qmlsqldatabase(QV8Engine *engine, void *d)
+void qt_rem_qmlsqldatabase(QV8Engine * /* engine */, void *d)
 {
     QDeclarativeSqlDatabaseData *data = (QDeclarativeSqlDatabaseData *)d;
     delete data;

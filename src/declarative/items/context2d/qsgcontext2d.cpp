@@ -546,6 +546,7 @@ static v8::Handle<v8::Value> ctx2d_valid(v8::Local<v8::String>, const v8::Access
 
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
+    Q_UNUSED(engine)
 
     return v8::Boolean::New(r->context->valid());
 }

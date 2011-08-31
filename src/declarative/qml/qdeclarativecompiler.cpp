@@ -1595,7 +1595,7 @@ bool QDeclarativeCompiler::buildProperty(QDeclarativeScript::Property *prop,
             QDeclarativePropertyCache::Data defaultPropertyData;
             defaultPropertyData.load(p, engine);
             if (p.name())
-                prop->setName(p.name());
+                prop->setName(QLatin1String(p.name()));
             prop->core = defaultPropertyData;
             prop->index = prop->core.coreIndex;
         }
@@ -2406,7 +2406,7 @@ const QMetaObject *QDeclarativeCompiler::resolveType(const QByteArray& name) con
 int QDeclarativeCompiler::rewriteBinding(const QString& expression, const QString& name)
 {
     QDeclarativeRewrite::RewriteBinding rewriteBinding;
-    rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf('.') + 1));
+    rewriteBinding.setName(QLatin1Char('$') + name.mid(name.lastIndexOf(QLatin1Char('.')) + 1));
 
     QString rewrite = rewriteBinding(expression, 0, 0);
 

@@ -105,7 +105,8 @@ private:
     QDeclarativeValueType *valueTypes[QVariant::UserType - 1]; 
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativePointFValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativePointFValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -129,7 +130,8 @@ private:
     QPointF point;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativePointValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativePointValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(int x READ x WRITE setX)
     Q_PROPERTY(int y READ y WRITE setY)
@@ -153,7 +155,8 @@ private:
     QPoint point;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeSizeFValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeSizeFValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal width READ width WRITE setWidth)
     Q_PROPERTY(qreal height READ height WRITE setHeight)
@@ -177,7 +180,8 @@ private:
     QSizeF size;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeSizeValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeSizeValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(int width READ width WRITE setWidth)
     Q_PROPERTY(int height READ height WRITE setHeight)
@@ -201,7 +205,8 @@ private:
     QSize size;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeRectFValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeRectFValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -232,7 +237,8 @@ private:
     QRectF rect;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeRectValueType : public QDeclarativeValueType
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeRectValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(int x READ x WRITE setX)
     Q_PROPERTY(int y READ y WRITE setY)
@@ -263,7 +269,7 @@ private:
     QRect rect;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeVector2DValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeVector2DValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -287,7 +293,7 @@ private:
     QVector2D vector;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeVector3DValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeVector3DValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -314,7 +320,7 @@ private:
     QVector3D vector;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeVector4DValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeVector4DValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
@@ -344,7 +350,7 @@ private:
     QVector4D vector;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeQuaternionValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeQuaternionValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal scalar READ scalar WRITE setScalar)
     Q_PROPERTY(qreal x READ x WRITE setX)
@@ -374,7 +380,7 @@ private:
     QQuaternion quaternion;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeMatrix4x4ValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeMatrix4x4ValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal m11 READ m11 WRITE setM11)
     Q_PROPERTY(qreal m12 READ m12 WRITE setM12)
@@ -441,7 +447,7 @@ private:
     QMatrix4x4 matrix;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeEasingValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeEasingValueType : public QDeclarativeValueType
 {
     Q_OBJECT
     Q_ENUMS(Type)
@@ -499,7 +505,7 @@ private:
     QEasingCurve easing;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeFontValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeFontValueType : public QDeclarativeValueType
 {
     Q_OBJECT
     Q_ENUMS(FontWeight)
@@ -582,7 +588,7 @@ private:
     mutable QDeclarativeNullableValue<int> dpi;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeColorValueType : public QDeclarativeValueType
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeColorValueType : public QDeclarativeValueType
 {
     Q_PROPERTY(qreal r READ r WRITE setR)
     Q_PROPERTY(qreal g READ g WRITE setG)

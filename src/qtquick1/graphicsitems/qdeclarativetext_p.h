@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 class QDeclarative1TextPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Text : public QDeclarative1ImplicitSizeItem
+class Q_QTQUICK1_EXPORT QDeclarative1Text : public QDeclarative1ImplicitSizeItem
 {
     Q_OBJECT
     Q_ENUMS(HAlignment)

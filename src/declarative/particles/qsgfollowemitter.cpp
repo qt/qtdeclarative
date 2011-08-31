@@ -209,7 +209,7 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 const QPointF &speed = m_speed->sample(newPos);
                 datum->vx = speed.x()
                     + m_speed_from_movement * d->vx;
-                datum->vy = speed.y();
+                datum->vy = speed.y()
                     + m_speed_from_movement * d->vy;
 
                 // Particle acceleration

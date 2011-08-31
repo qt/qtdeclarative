@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 class QDeclarative1BasePositionerPrivate;
 
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1BasePositioner : public QDeclarative1ImplicitSizeItem
+class Q_QTQUICK1_EXPORT QDeclarative1BasePositioner : public QDeclarative1ImplicitSizeItem
 {
     Q_OBJECT
 

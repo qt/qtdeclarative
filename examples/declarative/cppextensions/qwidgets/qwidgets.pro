@@ -1,6 +1,6 @@
 TEMPLATE = lib
 CONFIG += qt plugin
-QT += declarative
+QT += widgets declarative
 
 DESTDIR = QWidgets
 TARGET = qmlqwidgetsplugin

@@ -58,7 +58,9 @@
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeEngine;
-class QDeclarativeCleanup
+
+// Exported for QtQuick1
+class Q_DECLARATIVE_EXPORT QDeclarativeCleanup
 {
 public:
     QDeclarativeCleanup(QDeclarativeEngine *);

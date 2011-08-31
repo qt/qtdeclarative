@@ -75,6 +75,7 @@
 #include <limits>
 #include <stdint.h>
 #include <time.h>
+#include <math.h>
 
 //#if HAVE(SYS_TIME_H)
 #if defined(EXISTS_SYS_TIME)
@@ -340,11 +341,15 @@ static const struct KnownZone {
 
 double timeClip(double t)
 {
-    if (!isfinite(t))
-        return NaN;
-    if (fabs(t) > maxECMAScriptTime)
+#if defined(_MSC_VER)
+    if (!_finite(t)  || fabs(t) > maxECMAScriptTime)
+        return  NaN;
+    return t >= 0 ? floor(t) : ceil(t);
+#else
+    if (!isfinite(t) || fabs(t) > maxECMAScriptTime)
         return NaN;
     return trunc(t);
+#endif
 }
 } // namespace WTF
 

@@ -102,7 +102,7 @@ QSGAngledDirection::QSGAngledDirection(QObject *parent) :
 
 }
 
-const QPointF &QSGAngledDirection::sample(const QPointF &from)
+const QPointF &QSGAngledDirection::sample(const QPointF &)
 {
     //TODO: Faster
     qreal theta = m_angle*CONV - m_angleVariation*CONV + rand()/float(RAND_MAX) * m_angleVariation*CONV * 2;

@@ -600,7 +600,7 @@ static inline GLenum qt_drawTypeForPattern(QSGGeometry::DataPattern p)
 void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 {
     // ### remove before final release...
-    static bool use_vbo = !QApplication::arguments().contains("--no-vbo");
+    static bool use_vbo = !QApplication::arguments().contains(QLatin1String("--no-vbo"));
 
     const void *vertexData;
     int vertexByteSize = g->vertexCount() * g->stride();

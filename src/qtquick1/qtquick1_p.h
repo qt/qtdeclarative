@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class Q_DECLARATIVE_EXPORT QDeclarativeQtQuick1Module
+class Q_QTQUICK1_EXPORT QDeclarativeQtQuick1Module
 {
 public:
     enum Module { QtQuick1, Qt47 };

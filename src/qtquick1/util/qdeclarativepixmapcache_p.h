@@ -56,7 +56,7 @@ class QDeclarativeEngine;
 QT_MODULE(Declarative)
 
 class QDeclarative1PixmapData;
-class Q_DECLARATIVE_EXPORT QDeclarative1Pixmap
+class Q_QTQUICK1_EXPORT QDeclarative1Pixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QDeclarative1Pixmap)
 public:

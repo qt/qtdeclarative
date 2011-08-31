@@ -64,7 +64,7 @@ QT_MODULE(Declarative)
 class QDeclarativeItem;
 class QDeclarative1AbstractAnimationPrivate;
 class QDeclarative1AnimationGroup;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1AbstractAnimation : public QObject, public QDeclarativePropertyValueSource, public QDeclarativeParserStatus
+class Q_QTQUICK1_EXPORT QDeclarative1AbstractAnimation : public QObject, public QDeclarativePropertyValueSource, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarative1AbstractAnimation)
@@ -166,7 +166,7 @@ protected:
 };
 
 class QDeclarative1ScriptActionPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1ScriptAction : public QDeclarative1AbstractAnimation
+class Q_QTQUICK1_EXPORT QDeclarative1ScriptAction : public QDeclarative1AbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarative1ScriptAction)

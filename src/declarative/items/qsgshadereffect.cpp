@@ -417,7 +417,7 @@ void QSGShaderEffect::setSource(const QVariant &var, int index)
     QSGItem *item = qobject_cast<QSGItem *>(obj);
     if (!item || !item->isTextureProvider()) {
         qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
-                 qPrintable(source.name), qPrintable(obj->objectName()), obj->metaObject()->className());
+                 source.name.constData(), qPrintable(obj->objectName()), obj->metaObject()->className());
         return;
     }
 
