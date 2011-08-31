@@ -57,6 +57,7 @@
 
 #include <QtCore/QtGlobal>
 #include <QtCore/QHash>
+#include <QtCore/QRectF>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,7 +109,7 @@ public:
     void refFromEffectItem(QSGItem *referencedItem, bool hide = true);
     void derefFromEffectItem(QSGItem *referencedItem, bool unhide = true);
 
-    QImage renderImageForItem(QSGItem *referencedItem);
+    QImage renderImageForItem(QSGItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize);
 
     static bool isDirty(QSGItem *referencedItem, DirtyType dirtyType);
     static void resetDirty(QSGItem *referencedItem);

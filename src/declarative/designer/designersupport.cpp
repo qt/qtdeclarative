@@ -101,7 +101,7 @@ void DesignerSupport::derefFromEffectItem(QSGItem *referencedItem, bool unhide)
     QSGItemPrivate::get(referencedItem)->derefFromEffectItem(unhide);
 }
 
-QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem)
+QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
 {
     if (referencedItem == 0 || referencedItem->parentItem() == 0) {
         qDebug() << __FILE__ << __LINE__ << "Warning: Item can be rendered.";
@@ -113,8 +113,8 @@ QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem)
     Q_ASSERT(renderTexture);
     if (renderTexture == 0)
          return QImage();
-    renderTexture->setRect(referencedItem->boundingRect());
-    renderTexture->setSize(referencedItem->boundingRect().size().toSize());
+    renderTexture->setRect(boundingRect);
+    renderTexture->setSize(imageSize);
     renderTexture->updateTexture();
 
     QImage renderImage = renderTexture->toImage();
@@ -122,8 +122,6 @@ QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem)
 
     if (renderImage.size().isEmpty())
         qDebug() << __FILE__ << __LINE__ << "Warning: Image is empty.";
-
-    qDebug() << __FUNCTION__ << renderImage.size();
 
     return renderImage;
 }
