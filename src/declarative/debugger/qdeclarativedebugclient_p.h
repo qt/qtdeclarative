@@ -42,6 +42,17 @@
 #ifndef QDECLARATIVEDEBUGCLIENT_H
 #define QDECLARATIVEDEBUGCLIENT_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtNetwork/qtcpsocket.h>
 
 #include <private/qdeclarativeglobal_p.h>
