@@ -188,6 +188,7 @@ private slots:
     void realToInt();
     void dynamicString();
     void include();
+    void signalHandlers();
 
     void callQtInvokables();
     void invokableObjectArg();
@@ -3595,6 +3596,36 @@ void tst_qdeclarativeecmascript::include()
 
     delete o;
     }
+}
+
+void tst_qdeclarativeecmascript::signalHandlers()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("signalHandlers.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    QVERIFY(o->property("count").toInt() == 0);
+    QMetaObject::invokeMethod(o, "testSignalCall");
+    QCOMPARE(o->property("count").toInt(), 1);
+
+    QMetaObject::invokeMethod(o, "testSignalHandlerCall");
+    QCOMPARE(o->property("count").toInt(), 1);
+    QCOMPARE(o->property("errorString").toString(), QLatin1String("TypeError: Property 'onTestSignal' of object [object Object] is not a function"));
+
+    QVERIFY(o->property("funcCount").toInt() == 0);
+    QMetaObject::invokeMethod(o, "testSignalConnection");
+    QCOMPARE(o->property("funcCount").toInt(), 1);
+
+    QMetaObject::invokeMethod(o, "testSignalHandlerConnection");
+    QCOMPARE(o->property("funcCount").toInt(), 2);
+
+    QMetaObject::invokeMethod(o, "testSignalDefined");
+    QCOMPARE(o->property("definedResult").toBool(), true);
+
+    QMetaObject::invokeMethod(o, "testSignalHandlerDefined");
+    QCOMPARE(o->property("definedHandlerResult").toBool(), true);
+
+    delete o;
 }
 
 void tst_qdeclarativeecmascript::qtbug_10696()

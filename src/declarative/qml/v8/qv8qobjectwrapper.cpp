@@ -109,6 +109,16 @@ public:
     QV8QObjectWrapper *wrapper;
 };
 
+class QV8SignalHandlerResource : public QV8ObjectResource
+{
+    V8_RESOURCE_TYPE(SignalHandlerType)
+public:
+    QV8SignalHandlerResource(QV8Engine *engine, QObject *object, int index);
+
+    QDeclarativeGuard<QObject> object;
+    int index;
+};
+
 namespace {
 struct MetaCallArgument {
     inline MetaCallArgument();
@@ -152,6 +162,11 @@ QV8QObjectResource::QV8QObjectResource(QV8Engine *engine, QObject *object)
 {
 }
 
+QV8SignalHandlerResource::QV8SignalHandlerResource(QV8Engine *engine, QObject *object, int index)
+: QV8ObjectResource(engine), object(object), index(index)
+{
+}
+
 static QAtomicInt objectIdCounter(1);
 
 QV8QObjectWrapper::QV8QObjectWrapper()
@@ -177,6 +192,7 @@ void QV8QObjectWrapper::destroy()
     qPersistentDispose(m_hiddenObject);
     qPersistentDispose(m_destroySymbol);
     qPersistentDispose(m_toStringSymbol);
+    qPersistentDispose(m_signalHandlerConstructor);
     qPersistentDispose(m_methodConstructor);
     qPersistentDispose(m_constructor);
 }
@@ -278,10 +294,21 @@ void QV8QObjectWrapper::init(QV8Engine *engine)
     m_methodConstructor = qPersistentNew<v8::Function>(createFn);
     }
 
+    v8::Local<v8::Function> connect = V8FUNCTION(Connect, engine);
+    v8::Local<v8::Function> disconnect = V8FUNCTION(Disconnect, engine);
+
+    {
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->Set(v8::String::New("connect"), connect, v8::DontEnum);
+    ft->PrototypeTemplate()->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
+    m_signalHandlerConstructor = qPersistentNew<v8::Function>(ft->GetFunction());
+    }
+
     {
     v8::Local<v8::Object> prototype = engine->global()->Get(v8::String::New("Function"))->ToObject()->Get(v8::String::New("prototype"))->ToObject();
-    prototype->Set(v8::String::New("connect"), V8FUNCTION(Connect, engine), v8::DontEnum);
-    prototype->Set(v8::String::New("disconnect"), V8FUNCTION(Disconnect, engine), v8::DontEnum);
+    prototype->Set(v8::String::New("connect"), connect, v8::DontEnum);
+    prototype->Set(v8::String::New("disconnect"), disconnect, v8::DontEnum);
     }
 }
 
@@ -461,6 +488,11 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             return ((QDeclarativeVMEMetaObject *)(object->metaObject()))->vmeMethod(result->coreIndex);
         } else if (result->isV8Function()) {
             return MethodClosure::createWithGlobal(engine, object, objectHandle, result->coreIndex);
+        } else if (result->isSignalHandler()) {
+            v8::Local<v8::Object> handler = engine->qobjectWrapper()->m_signalHandlerConstructor->NewInstance();
+            QV8SignalHandlerResource *r = new QV8SignalHandlerResource(engine, object, result->coreIndex);
+            handler->SetExternalResource(r);
+            return handler;
         } else {
             return MethodClosure::create(engine, object, objectHandle, result->coreIndex);
         }
@@ -998,6 +1030,17 @@ v8::Handle<v8::Value> QV8QObjectWrapper::newQObject(QObject *object)
     }
 }
 
+QPair<QObject *, int> QV8QObjectWrapper::ExtractQtSignal(QV8Engine *engine, v8::Handle<v8::Object> object)
+{
+    if (object->IsFunction())
+        return ExtractQtMethod(engine, v8::Handle<v8::Function>::Cast(object));
+
+    if (QV8SignalHandlerResource *resource = v8_resource_cast<QV8SignalHandlerResource>(object))
+        return qMakePair(resource->object.data(), resource->index);
+
+    return qMakePair((QObject *)0, -1);
+}
+
 QPair<QObject *, int> QV8QObjectWrapper::ExtractQtMethod(QV8Engine *engine, v8::Handle<v8::Function> function)
 {
     v8::ScriptOrigin origin = function->GetScriptOrigin();
@@ -1166,10 +1209,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Connect(const v8::Arguments &args)
 
     QV8Engine *engine = V8ENGINE();
 
-    if (!args.This()->IsFunction())
-        V8THROW_ERROR("Function.prototype.connect: this object is not a signal");
-
-    QPair<QObject *, int> signalInfo = ExtractQtMethod(engine, v8::Handle<v8::Function>::Cast(args.This()));
+    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, args.This());
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -1228,10 +1268,7 @@ v8::Handle<v8::Value> QV8QObjectWrapper::Disconnect(const v8::Arguments &args)
 
     QV8Engine *engine = V8ENGINE();
 
-    if (!args.This()->IsFunction())
-        V8THROW_ERROR("Function.prototype.disconnect: this object is not a signal");
-
-    QPair<QObject *, int> signalInfo = ExtractQtMethod(engine, v8::Handle<v8::Function>::Cast(args.This()));
+    QPair<QObject *, int> signalInfo = ExtractQtSignal(engine, args.This());
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
