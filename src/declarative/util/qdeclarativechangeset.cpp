@@ -135,6 +135,22 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
 
         QVector<Insert>::iterator iit = insertions.begin();
         for (; rit->moveId != -1 && iit != insertions.end() && iit->moveId != rit->moveId; ++iit) {}
+
+        for (QVector<Remove>::iterator nrit = rit + 1; nrit != removals.end(); nrit = rit + 1) {
+            if (nrit->index != rit->index || (rit->moveId == -1) != (nrit->moveId == -1))
+                break;
+            if (nrit->moveId != -1) {
+                QVector<Insert>::iterator niit = iit + 1;
+                if (niit->moveId != nrit->moveId || niit->index != iit->index + iit->count)
+                    break;
+                niit->index = iit->index;
+                niit->count += iit->count;
+                iit = insertions.erase(iit);
+            }
+            nrit->count += rit->count;
+            rit = removals.erase(rit);
+        }
+
         for (; change != m_changes.end() && change->end() < rit->index; ++change) {}
         for (; change != m_changes.end() && change->index > rit->end(); ++change) {
             change->count -= qMin(change->end(), rit->end()) - qMax(change->index, rit->index);
