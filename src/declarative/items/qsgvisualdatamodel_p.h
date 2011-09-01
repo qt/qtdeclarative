@@ -1,3 +1,4 @@
+// Commit: ac5c099cc3c5b8c7eec7a49fdeb8a21037230350
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
@@ -42,8 +43,12 @@
 #ifndef QSGVISUALDATAMODEL_P_H
 #define QSGVISUALDATAMODEL_P_H
 
+#include <private/qdeclarativelistcompositor_p.h>
 #include <private/qsgvisualitemmodel_p.h>
+
+
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qstringlist.h>
 
 QT_BEGIN_HEADER
 
@@ -53,23 +58,38 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+
+class QDeclarativeChangeSet;
 class QDeclarativeComponent;
 class QDeclarativePackage;
+class QDeclarativeV8Function;
+class QDeclarativeV8Handle;
+class QSGVisualDataGroup;
+class QSGVisualDataModelAttached;
 class QSGVisualDataModelPrivate;
-class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel
+
+
+class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSGVisualDataModel)
 
     Q_PROPERTY(QVariant model READ model WRITE setModel)
     Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
+    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
+    Q_PROPERTY(QSGVisualDataGroup *items READ items CONSTANT)
+    Q_PROPERTY(QDeclarativeListProperty<QSGVisualDataGroup> groups READ groups CONSTANT)
     Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
+    Q_INTERFACES(QDeclarativeParserStatus)
 public:
     QSGVisualDataModel();
     QSGVisualDataModel(QDeclarativeContext *, QObject *parent=0);
     virtual ~QSGVisualDataModel();
+
+    void classBegin();
+    void componentComplete();
 
     QVariant model() const;
     void setModel(const QVariant &);
@@ -94,13 +114,21 @@ public:
 
     int indexOf(QSGItem *item, QObject *objectContext) const;
 
+    QString filterGroup() const;
+    void setFilterGroup(const QString &group);
+    void resetFilterGroup();
+
+    QSGVisualDataGroup *items();
+    QDeclarativeListProperty<QSGVisualDataGroup> groups();
     QObject *parts();
 
     bool event(QEvent *);
 
+    static QSGVisualDataModelAttached *qmlAttachedProperties(QObject *obj);
+
 Q_SIGNALS:
-    void createdPackage(int index, QDeclarativePackage *package);
-    void destroyingPackage(QDeclarativePackage *package);
+    void filterGroupChanged();
+    void defaultGroupsChanged();
     void rootIndexChanged();
 
 private Q_SLOTS:
@@ -113,9 +141,95 @@ private:
     Q_DISABLE_COPY(QSGVisualDataModel)
 };
 
+class QSGVisualDataGroupPrivate;
+class Q_AUTOTEST_EXPORT QSGVisualDataGroup : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
+public:
+    QSGVisualDataGroup(QObject *parent = 0);
+    QSGVisualDataGroup(const QString &name, QSGVisualDataModel *model, int compositorType, QObject *parent = 0);
+    ~QSGVisualDataGroup();
+
+    QString name() const;
+    void setName(const QString &name);
+
+    int count() const;
+
+    bool defaultInclude() const;
+    void setDefaultInclude(bool include);
+
+public Q_SLOTS:
+    void remove(QDeclarativeV8Function *);
+    void addGroups(QDeclarativeV8Function *);
+    void removeGroups(QDeclarativeV8Function *);
+    void setGroups(QDeclarativeV8Function *);
+    void move(QDeclarativeV8Function *);
+
+Q_SIGNALS:
+    void countChanged();
+    void nameChanged();
+    void defaultIncludeChanged();
+    void changed(const QDeclarativeV8Handle &removed, const QDeclarativeV8Handle &inserted);
+private:
+    Q_DECLARE_PRIVATE(QSGVisualDataGroup)
+};
+
+class QSGVisualDataModelCacheItem;
+class QSGVisualDataModelAttachedMetaObject;
+class QSGVisualDataModelAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QSGVisualDataModel *model READ model NOTIFY modelChanged)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
+public:
+    QSGVisualDataModelAttached(QObject *parent)
+        : QObject(parent)
+        , m_cacheItem(0)
+        , m_previousGroups(0)
+        , m_modelChanged(false)
+    {}
+    ~QSGVisualDataModelAttached() { attachedProperties.remove(parent()); }
+
+    QSGVisualDataModel *model() const;
+
+    QStringList groups() const;
+    void setGroups(const QStringList &groups);
+
+    void emitChanges();
+
+    static QSGVisualDataModelAttached *properties(QObject *obj)
+    {
+        QSGVisualDataModelAttached *rv = attachedProperties.value(obj);
+        if (!rv) {
+            rv = new QSGVisualDataModelAttached(obj);
+            attachedProperties.insert(obj, rv);
+        }
+        return rv;
+    }
+
+Q_SIGNALS:
+    void modelChanged();
+    void groupsChanged();
+
+public:
+    QSGVisualDataModelCacheItem *m_cacheItem;
+    int m_previousGroups;
+    int m_previousIndex[QDeclarativeListCompositor::MaximumGroupCount];
+    bool m_modelChanged;
+
+    static QHash<QObject*, QSGVisualDataModelAttached*> attachedProperties;
+
+    friend class QSGVisualDataModelAttachedMetaObject;
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QSGVisualDataModel)
+QML_DECLARE_TYPEINFO(QSGVisualDataModel, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPE(QSGVisualDataGroup)
 
 QT_END_HEADER
 

@@ -42,6 +42,7 @@ PRIVATETESTS += \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
     qdeclarativelanguage \
+    qdeclarativelistcompositor \
     qdeclarativelistmodel \
     qdeclarativeproperty \
     qdeclarativepropertymap \

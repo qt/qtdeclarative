@@ -29,6 +29,7 @@ SOURCES += \
     $$PWD/qdeclarativelistmodelworkeragent.cpp \
     $$PWD/qdeclarativepath.cpp \
     $$PWD/qdeclarativechangeset.cpp \
+    $$PWD/qdeclarativelistcompositor.cpp \
     $$PWD/qlistmodelinterface.cpp \
     $$PWD/qdeclarativepathinterpolator.cpp \
     $$PWD/qdeclarativesvgparser.cpp
@@ -67,6 +68,7 @@ HEADERS += \
     $$PWD/qdeclarativepath_p.h \
     $$PWD/qdeclarativepath_p_p.h \
     $$PWD/qdeclarativechangeset_p.h \
+    $$PWD/qdeclarativelistcompositor_p.h \
     $$PWD/qlistmodelinterface_p.h \
     $$PWD/qdeclarativepathinterpolator_p.h \
     $$PWD/qdeclarativesvgparser_p.h

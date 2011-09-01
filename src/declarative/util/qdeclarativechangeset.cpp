@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
 
 QDeclarativeChangeSet::QDeclarativeChangeSet()
     : m_moveCounter(0)
+    , m_difference(0)
 {
 }
 
@@ -53,6 +54,7 @@ QDeclarativeChangeSet::QDeclarativeChangeSet(const QDeclarativeChangeSet &change
     , m_inserts(changeSet.m_inserts)
     , m_changes(changeSet.m_changes)
     , m_moveCounter(changeSet.m_moveCounter)
+    , m_difference(0)
 {
 }
 
@@ -66,6 +68,7 @@ QDeclarativeChangeSet &QDeclarativeChangeSet::operator =(const QDeclarativeChang
     m_inserts = changeSet.m_inserts;
     m_changes = changeSet.m_changes;
     m_moveCounter = changeSet.m_moveCounter;
+    m_difference = changeSet.m_difference;
     return *this;
 }
 
@@ -330,6 +333,7 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
     }
     for (; remove != m_removes.end(); ++remove)
         remove->index -= removeCount;
+    m_difference -= removeCount;
 }
 
 void QDeclarativeChangeSet::applyInsertions(QVector<Insert> &insertions)
@@ -354,6 +358,7 @@ void QDeclarativeChangeSet::applyInsertions(QVector<Insert> &insertions)
         if (insert == m_inserts.end()) {
             insert = m_inserts.insert(insert, *iit);
             ++insert;
+            insertCount += iit->count;
         } else {
             const int offset = index - insert->index;
             if (offset < 0 || (offset == 0 && (iit->moveId != -1 || insert->moveId != -1))) {
@@ -395,6 +400,7 @@ void QDeclarativeChangeSet::applyInsertions(QVector<Insert> &insertions)
         change->index += insertCount;
     for (; insert != m_inserts.end(); ++insert)
         insert->index += insertCount;
+    m_difference += insertCount;
 }
 
 void QDeclarativeChangeSet::applyChanges(QVector<Change> &changes)

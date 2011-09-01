@@ -149,6 +149,7 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGTextInput>(uri,major,minor,"TextInput");
     qmlRegisterType<QSGViewSection>(uri,major,minor,"ViewSection");
     qmlRegisterType<QSGVisualDataModel>(uri,major,minor,"VisualDataModel");
+    qmlRegisterType<QSGVisualDataGroup>(uri,major,minor,"VisualDataGroup");
     qmlRegisterType<QSGVisualItemModel>(uri,major,minor,"VisualItemModel");
 
     qmlRegisterType<QSGAnchors>();
