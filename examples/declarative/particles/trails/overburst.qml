@@ -45,7 +45,10 @@ Rectangle{
     color: "black"
     width: 360
     height: 540
-    ParticleSystem{ id: sys }
+    ParticleSystem{
+        id: sys
+        onClearChanged: if (clear) sys.pause();
+    }
     ImageParticle{
         system: sys
         id: cp
@@ -69,6 +72,7 @@ Rectangle{
     }
     MouseArea{
         anchors.fill: parent
+        onPressed: sys.resume()
         id: ma
     }
     MouseArea{

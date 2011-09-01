@@ -80,7 +80,22 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
     paused is set to false again, the simulation will resume from the same point it was
     paused.
 
+    The simulation will automatically pause if it detects that there are no live particles
+    left, and unpause when new live particles are added.
+
     It can also be controlled with the pause() and resume() methods.
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::ParticleSystem::clear
+
+    clear is set to true when there are no live particles left in the system.
+
+    You can use this to pause the system, keeping it from spending any time updating,
+    but you will need to resume it in order for additional particles to be generated
+    by the system.
+
+    To kill all the particles in the system, use a Kill affector.
 */
 
 /*!
@@ -267,7 +282,8 @@ void QSGParticleGroupData::initList()
     dataHeap.clear();
 }
 
-void QSGParticleGroupData::kill(QSGParticleData* d){
+void QSGParticleGroupData::kill(QSGParticleData* d)
+{
     Q_ASSERT(d->group == index);
     d->lifeSpan = 0;//Kill off
     foreach (QSGParticlePainter* p, painters)
@@ -275,21 +291,14 @@ void QSGParticleGroupData::kill(QSGParticleData* d){
     reusableIndexes << d->index;
 }
 
-QSGParticleData* QSGParticleGroupData::newDatum(bool respectsLimits){
-    while (dataHeap.top() <= m_system->m_timeInt){
-        foreach (QSGParticleData* datum, dataHeap.pop()){
-            if (!datum->stillAlive()){
-                reusableIndexes << datum->index;
-            }else{
-                prepareRecycler(datum); //ttl has been altered mid-way, put it back
-            }
-        }
-    }
+QSGParticleData* QSGParticleGroupData::newDatum(bool respectsLimits)
+{
+    //recycle();//Extra recycler round to be sure?
 
     while (!reusableIndexes.empty()){
         int idx = *(reusableIndexes.begin());
         reusableIndexes.remove(idx);
-        if (data[idx]->stillAlive()){// ### This means resurrection of dead particles. Is that allowed?
+        if (data[idx]->stillAlive()){// ### This means resurrection of 'dead' particles. Is that allowed?
             prepareRecycler(data[idx]);
             continue;
         }
@@ -302,6 +311,22 @@ QSGParticleData* QSGParticleGroupData::newDatum(bool respectsLimits){
     setSize(oldSize + 10);//###+1,10%,+10? Choose something non-arbitrarily
     reusableIndexes.remove(oldSize);
     return data[oldSize];
+}
+
+bool QSGParticleGroupData::recycle()
+{
+    while (dataHeap.top() <= m_system->m_timeInt){
+        foreach (QSGParticleData* datum, dataHeap.pop()){
+            if (!datum->stillAlive()){
+                reusableIndexes << datum->index;
+            }else{
+                prepareRecycler(datum); //ttl has been altered mid-way, put it back
+            }
+        }
+    }
+
+    //TODO: If the data is clear, gc (consider shrinking stack size)?
+    return reusableIndexes.count() == m_size;
 }
 
 void QSGParticleGroupData::prepareRecycler(QSGParticleData* d){
@@ -870,6 +895,7 @@ QSGParticleData* QSGParticleSystem::newDatum(int groupId, bool respectLimits, in
     if (m_spriteEngine)
         m_spriteEngine->startSprite(ret->systemIndex, ret->group);
 
+    m_clear = false;
     return ret;
 }
 
@@ -899,8 +925,6 @@ void QSGParticleSystem::finishNewDatum(QSGParticleData *pd){
 
 void QSGParticleSystem::updateCurrentTime( int currentTime )
 {
-    if (!m_running)
-        return;
     if (!m_initialized)
         return;//error in initialization
 
@@ -910,6 +934,12 @@ void QSGParticleSystem::updateCurrentTime( int currentTime )
     qreal time =  m_timeInt / 1000.;
     dt = time - dt;
     m_needsReset.clear();
+
+    bool oldClear = m_clear;
+    m_clear = true;
+    foreach (QSGParticleGroupData* gd, m_groupData)//Recycle all groups and see if they're out of live particles
+        m_clear = m_clear && gd->recycle();
+
     if (m_spriteEngine)
         m_spriteEngine->updateSprites(m_timeInt);
 
@@ -923,6 +953,9 @@ void QSGParticleSystem::updateCurrentTime( int currentTime )
         foreach (QSGParticlePainter* p, m_groupData[d->group]->painters)
             if (p && d)
                 p->reload(d);
+
+    if (oldClear != m_clear)
+        clearChanged(m_clear);
 }
 
 int QSGParticleSystem::systemSync(QSGParticlePainter* p)

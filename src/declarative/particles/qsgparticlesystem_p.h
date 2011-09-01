@@ -117,6 +117,7 @@ public:
     QVector<QSGParticleData*> data;
     QSGParticleDataHeap dataHeap;
     QSet<int> reusableIndexes;
+    bool recycle(); //Force recycling round, reutrns true if all indexes are now reusable
 
     void initList();
     void kill(QSGParticleData* d);
@@ -219,6 +220,7 @@ class QSGParticleSystem : public QSGItem
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(bool clear READ isClear NOTIFY clearChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
@@ -249,6 +251,8 @@ signals:
 
 
     void pausedChanged(bool arg);
+
+    void clearChanged(bool arg);
 
 public slots:
     void start(){setRunning(true);}
@@ -315,6 +319,11 @@ public://###but only really for related class usage. Perhaps we should all be fr
         return m_paused;
     }
 
+    bool isClear() const
+    {
+        return m_clear;
+    }
+
 private:
     void initializeSystem();
     void initGroups();
@@ -337,6 +346,8 @@ private:
     QSGParticleSystemAnimation* m_animation;
     bool m_paused;
     bool m_debugMode;
+    bool m_allDead;
+    bool m_clear;
 };
 
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode
