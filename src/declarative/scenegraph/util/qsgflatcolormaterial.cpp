@@ -189,4 +189,12 @@ QSGMaterialShader *QSGFlatColorMaterial::createShader() const
     return new FlatColorMaterialShader;
 }
 
+
+int QSGFlatColorMaterial::compare(const QSGMaterial *other) const
+{
+    const QSGFlatColorMaterial *flat = static_cast<const QSGFlatColorMaterial *>(other);
+    return m_color.rgba() - flat->color().rgba();
+
+}
+
 QT_END_NAMESPACE

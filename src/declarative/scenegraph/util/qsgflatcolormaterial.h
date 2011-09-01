@@ -61,6 +61,8 @@ public:
     void setColor(const QColor &color);
     const QColor &color() const { return m_color; }
 
+    int compare(const QSGMaterial *other) const;
+
 private:
     QColor m_color;
 };
