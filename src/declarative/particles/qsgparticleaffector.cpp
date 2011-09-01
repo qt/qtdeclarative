@@ -117,12 +117,6 @@ QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
     QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
   , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this)), m_signal(false)
 {
-    connect(this, SIGNAL(systemChanged(QSGParticleSystem*)),
-            this, SLOT(updateOffsets()));
-    connect(this, SIGNAL(xChanged()),
-            this, SLOT(updateOffsets()));
-    connect(this, SIGNAL(yChanged()),
-            this, SLOT(updateOffsets()));//TODO: in componentComplete and all relevant signals
 }
 
 bool QSGParticleAffector::isAffectConnected()
@@ -152,6 +146,7 @@ void QSGParticleAffector::affectSystem(qreal dt)
             m_groups << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
         m_updateIntSet = false;
     }
+    updateOffsets();//### Needed if an ancestor is transformed.
     foreach (QSGParticleGroupData* gd, m_system->m_groupData){
         foreach (QSGParticleData* d, gd->data){
             if (!d)
