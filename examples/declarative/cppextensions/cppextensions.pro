@@ -4,7 +4,5 @@ SUBDIRS += \
     imageprovider \
     plugins \
     networkaccessmanagerfactory \
-    qwidgets \
-    qgraphicslayouts \
     referenceexamples
 

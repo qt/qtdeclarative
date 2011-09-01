@@ -69,6 +69,9 @@ tst_examples::tst_examples()
 {
     // Add directories you want excluded here
 
+    // Not run in QSGView
+    excludedDirs << "examples/declarative/qtquick1";
+
     // These snippets are not expected to run on their own.
     excludedDirs << "doc/src/snippets/declarative/visualdatamodel_rootindex";
     excludedDirs << "doc/src/snippets/declarative/qtbinding";
