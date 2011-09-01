@@ -34,6 +34,7 @@ PRIVATETESTS += \
     qdeclarativeenginedebug \
     qdeclarativedebugclient \
     qdeclarativedebugservice \
+    qdeclarativedebugjs \
     qdeclarativeecmascript \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
