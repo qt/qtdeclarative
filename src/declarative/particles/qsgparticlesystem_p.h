@@ -80,6 +80,7 @@ class QSGParticleDataHeap {
 public:
     QSGParticleDataHeap();
     void insert(QSGParticleData* data);
+    void insertTimed(QSGParticleData* data, int time);
 
     int top();
 
@@ -211,6 +212,7 @@ public:
     float curSize();
     void clone(const QSGParticleData& other);//Not =, leaves meta-data like index
     QDeclarativeV8Handle v8Value();
+    void extendLife(float time);
 private:
     QSGV8ParticleData* v8Datum;
 };
@@ -241,6 +243,8 @@ public:
     }
 
     int count(){ return m_particle_count; }
+
+    static const int maxLife = 600000;
 
 signals:
 

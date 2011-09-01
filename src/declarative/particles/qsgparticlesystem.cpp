@@ -147,9 +147,13 @@ void QSGParticleDataHeap::grow() //###Consider automatic growth vs resize() call
     m_data.resize(1 << ++m_size);
 }
 
-void QSGParticleDataHeap::insert(QSGParticleData* data)//TODO: Optimize 0 lifespan (or already dead) case
+void QSGParticleDataHeap::insert(QSGParticleData* data)
 {
-    int time = roundedTime(data->t + data->lifeSpan);
+    insertTimed(data, roundedTime(data->t + data->lifeSpan));
+}
+
+void QSGParticleDataHeap::insertTimed(QSGParticleData* data, int time){
+    //TODO: Optimize 0 lifespan (or already dead) case
     if (m_lookups.contains(time)){
         m_data[m_lookups[time]].data << data;
         return;
@@ -330,7 +334,13 @@ bool QSGParticleGroupData::recycle()
 }
 
 void QSGParticleGroupData::prepareRecycler(QSGParticleData* d){
-    dataHeap.insert(d);
+    if (d->lifeSpan*1000 < m_system->maxLife){
+        dataHeap.insert(d);
+    } else {
+        while ((roundedTime(d->t) + 2*m_system->maxLife/3) <= m_system->m_timeInt)
+            d->extendLife(m_system->maxLife/3000.0);
+        dataHeap.insertTimed(d, roundedTime(d->t) + 2*m_system->maxLife/3);
+    }
 }
 
 QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
@@ -527,6 +537,28 @@ float QSGParticleData::lifeLeft()
     if (!system)
         return 0.0f;
     return (t + lifeSpan) - (system->m_timeInt/1000.0);
+}
+
+void QSGParticleData::extendLife(float time)
+{
+    qreal newX = curX();
+    qreal newY = curY();
+    qreal newVX = curVX();
+    qreal newVY = curVY();
+
+    t += time;
+    animT += time;
+
+    qreal elapsed = (system->m_timeInt / 1000.0) - t;
+    qreal evy = newVY - elapsed*ay;
+    qreal ey = newY - elapsed*evy - 0.5 * elapsed*elapsed*ay;
+    qreal evx = newVX - elapsed*ax;
+    qreal ex = newX - elapsed*evx - 0.5 * elapsed*elapsed*ax;
+
+    x = ex;
+    vx = evx;
+    y = ey;
+    vy = evy;
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :

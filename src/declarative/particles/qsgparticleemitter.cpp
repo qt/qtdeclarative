@@ -100,6 +100,12 @@ QT_BEGIN_NAMESPACE
 
     The time in milliseconds each emitted particle should last for.
 
+    If you do not want particles to automatically die after a time, for example if
+    you wish to dispose of them manually, set lifeSpan to Emitter.InfiniteLife.
+
+    lifeSpans greater than or equal to 600000 (10 minutes) will be treated as infinite.
+    Particles with lifeSpans less than or equal to 0 will start out dead.
+
     Default value is 1000 (one second).
 */
 /*!
@@ -205,7 +211,6 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_maxParticleCount(-1)
   , m_burstLeft(0)
   , m_speed_from_movement(0)
-  , m_particle_count(0)
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
@@ -339,6 +344,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
             m_last_timestamp = timeStamp/1000.;
         m_last_emission = m_last_timestamp;
         m_reset_last = false;
+        m_emitCap = particleCount();
     }
 
     if (m_burstLeft){
@@ -375,7 +381,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal emitter_y_offset = m_last_emitter.y() - y();
     if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
         pt = time;
-    while (pt < time || !m_burstQueue.isEmpty()) {
+    while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
         QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
@@ -393,10 +399,15 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 
             // Particle timestamp
             datum->t = pt;
-            datum->lifeSpan = //TODO:Promote to base class?
+            datum->lifeSpan =
                     (m_particleDuration
                      + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
                     / 1000.0;
+
+            if (datum->lifeSpan >= m_system->maxLife){
+                datum->lifeSpan = m_system->maxLife;
+                m_emitCap--;//emitCap keeps us from reemitting 'infinite' particles after their life. Unless you reset the emitter.
+            }
 
             // Particle position
             QRectF boundsRect;

@@ -166,7 +166,7 @@ void QSGParticleAffector::affectSystem(qreal dt)
                             m_system->m_needsReset << d;
                             if (m_onceOff)
                                 m_onceOffed << qMakePair(d->group, d->index);
-                            if (m_signal)
+                            if (m_signal)//###Make signal based on if connected, and then m_signal just affects AffectParticle for base?
                                 emit affected(curPos.x(), curPos.y());
                         }
                     }

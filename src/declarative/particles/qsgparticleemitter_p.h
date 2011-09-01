@@ -80,10 +80,15 @@ class QSGParticleEmitter : public QSGItem
     Q_PROPERTY(QSGStochasticDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
     Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
 
+    Q_ENUMS(Lifetime)
 public:
     explicit QSGParticleEmitter(QSGItem *parent = 0);
     virtual ~QSGParticleEmitter();
     virtual void emitWindow(int timeStamp);
+
+    enum Lifetime {
+        InfiniteLife = QSGParticleSystem::maxLife
+    };
 
     bool emitting() const
     {
@@ -264,10 +269,10 @@ public slots:
            }
        }
 
+       virtual void reset();
 public:
        int particleCount() const;
 
-       virtual void reset();
        QSGParticleExtruder* extruder() const
        {
            return m_extruder;
@@ -340,7 +345,7 @@ protected:
        //Used in default implementation, but might be useful
        qreal m_speed_from_movement;
 
-       int m_particle_count;
+       int m_emitCap;
        bool m_reset_last;
        qreal m_last_timestamp;
        qreal m_last_emission;
