@@ -46,6 +46,7 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativelistaccessor_p.h>
 #include <private/qlistmodelinterface_p.h>
+#include <private/qdeclarativechangeset_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -185,10 +186,8 @@ void QSGRepeater::setModel(const QVariant &model)
 
     clear();
     if (d->model) {
-        disconnect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        disconnect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        disconnect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        disconnect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         /*
         disconnect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         disconnect(d->model, SIGNAL(destroyingItem(QSGItem*)), this, SLOT(destroyingItem(QSGItem*)));
@@ -212,10 +211,8 @@ void QSGRepeater::setModel(const QVariant &model)
             dataModel->setModel(model);
     }
     if (d->model) {
-        connect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        connect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        connect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        connect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         /*
         connect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         connect(d->model, SIGNAL(destroyingItem(QSGItem*)), this, SLOT(destroyingItem(QSGItem*)));
@@ -368,72 +365,67 @@ void QSGRepeater::regenerate()
     }
 }
 
-void QSGRepeater::itemsInserted(int index, int count)
+void QSGRepeater::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
 {
     Q_D(QSGRepeater);
+
     if (!isComponentComplete())
         return;
-    for (int i = 0; i < count; ++i) {
-        int modelIndex = index + i;
-        QSGItem *item = d->model->item(modelIndex);
-        if (item) {
-            QDeclarative_setParent_noEvent(item, parentItem());
-            item->setParentItem(parentItem());
-            if (modelIndex < d->deletables.count())
-                item->stackBefore(d->deletables.at(modelIndex));
-            else
-                item->stackBefore(this);
-            d->deletables.insert(modelIndex, item);
-            emit itemAdded(modelIndex, item);
-        }
-    }
-    emit countChanged();
-}
 
-void QSGRepeater::itemsRemoved(int index, int count)
-{
-    Q_D(QSGRepeater);
-    if (!isComponentComplete() || count <= 0)
-        return;
-    while (count--) {
-        QSGItem *item = d->deletables.takeAt(index);
-        emit itemRemoved(index, item);
-        if (item)
-            d->model->release(item);
-        else
-            break;
-    }
-    emit countChanged();
-}
-
-void QSGRepeater::itemsMoved(int from, int to, int count)
-{
-    Q_D(QSGRepeater);
-    if (!isComponentComplete() || count <= 0)
-        return;
-    if (from + count > d->deletables.count()) {
+    if (reset) {
         regenerate();
-        return;
+        emit countChanged();
     }
-    QList<QSGItem*> removed;
-    int removedCount = count;
-    while (removedCount--)
-        removed << d->deletables.takeAt(from);
-    for (int i = 0; i < count; ++i)
-        d->deletables.insert(to + i, removed.at(i));
-    d->deletables.last()->stackBefore(this);
-    for (int i = d->model->count()-1; i > 0; --i) {
-        QSGItem *item = d->deletables.at(i-1);
-        item->stackBefore(d->deletables.at(i));
-    }
-}
 
-void QSGRepeater::modelReset()
-{
-    if (!isComponentComplete())
-        return;
-    regenerate();
-    emit countChanged();
+    int difference = 0;
+    QHash<int, QList<QPointer<QSGItem> > > moved;
+    foreach (const QDeclarativeChangeSet::Remove &remove, changeSet.removes()) {
+        int index = qMin(remove.index, d->deletables.count());
+        int count = qMin(remove.index + remove.count, d->deletables.count()) - index;
+        if (remove.isMove()) {
+            moved.insert(remove.moveId, d->deletables.mid(index, count));
+            d->deletables.erase(
+                    d->deletables.begin() + index,
+                    d->deletables.begin() + index + count);
+        } else while (count--) {
+            QSGItem *item = d->deletables.takeAt(index);
+            emit itemRemoved(index, item);
+            if (item)
+                d->model->release(item);
+        }
+
+        difference -= remove.count;
+    }
+
+    foreach (const QDeclarativeChangeSet::Insert &insert, changeSet.inserts()) {
+        int index = qMin(insert.index, d->deletables.count());
+        if (insert.isMove()) {
+            QList<QPointer<QSGItem> > items = moved.value(insert.moveId);
+            d->deletables = d->deletables.mid(0, index) + items + d->deletables.mid(index);
+            QSGItem *stackBefore = index + items.count() < d->deletables.count()
+                    ? d->deletables.at(index + items.count())
+                    : this;
+            for (int i = index; i < index + items.count(); ++i)
+                d->deletables.at(i)->stackBefore(stackBefore);
+        } else for (int i = 0; i < insert.count; ++i) {
+            int modelIndex = index + i;
+            QSGItem *item = d->model->item(modelIndex);
+            if (item) {
+                QDeclarative_setParent_noEvent(item, parentItem());
+                item->setParentItem(parentItem());
+                if (modelIndex < d->deletables.count())
+                    item->stackBefore(d->deletables.at(modelIndex));
+                else
+                    item->stackBefore(this);
+                d->deletables.insert(modelIndex, item);
+                emit itemAdded(modelIndex, item);
+            }
+        }
+        difference += insert.count;
+    }
+
+    if (difference != 0)
+        emit countChanged();
 }
 
 QT_END_NAMESPACE

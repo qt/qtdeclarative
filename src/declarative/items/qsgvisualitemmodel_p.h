@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGItem;
+class QDeclarativeChangeSet;
 
 class Q_DECLARATIVE_EXPORT QSGVisualModel : public QObject
 {
@@ -79,11 +80,7 @@ public:
 
 Q_SIGNALS:
     void countChanged();
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int from, int to, int count);
-    void itemsChanged(int index, int count);
-    void modelReset();
+    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
     void createdItem(int index, QSGItem *item);
     void destroyingItem(QSGItem *item);
 

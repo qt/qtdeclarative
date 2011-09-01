@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QDeclarativeChangeSet;
 
 class QSGItemViewPrivate;
 
@@ -192,15 +193,12 @@ protected slots:
     virtual void updateSections() {}
     void destroyRemoved();
     void createdItem(int index, QSGItem *item);
-    void modelReset();
+    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
     void destroyingItem(QSGItem *item);
     void animStopped();
     void trackedPositionChanged();
 
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int from, int to, int count);
-    void itemsChanged(int index, int count);
+
 
 private:
     Q_DECLARE_PRIVATE(QSGItemView)

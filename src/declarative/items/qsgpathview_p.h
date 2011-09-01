@@ -53,6 +53,8 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QDeclarativeChangeSet;
+
 class QSGPathViewPrivate;
 class QSGPathViewAttached;
 class Q_AUTOTEST_EXPORT QSGPathView : public QSGItem
@@ -186,10 +188,7 @@ private Q_SLOTS:
     void refill();
     void ticked();
     void movementEnding();
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int,int,int);
-    void modelReset();
+    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
     void createdItem(int index, QSGItem *item);
     void destroyingItem(QSGItem *item);
     void pathUpdated();

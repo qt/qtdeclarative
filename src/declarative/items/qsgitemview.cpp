@@ -70,66 +70,46 @@ bool QSGItemViewChangeSet::hasPendingChanges() const
     return !pendingChanges.isEmpty();
 }
 
-void QSGItemViewChangeSet::doInsert(int index, int count)
+void QSGItemViewChangeSet::applyChanges(const QDeclarativeChangeSet &changeSet)
 {
-    pendingChanges.insert(index, count);
+    pendingChanges.apply(changeSet);
 
-    if (newCurrentIndex >= index) {
-        // adjust current item index
-        newCurrentIndex += count;
-        currentChanged = true;
-    } else if (newCurrentIndex < 0) {
-        newCurrentIndex = 0;
-        currentChanged = true;
-    }
+    int moveId = -1;
+    int moveOffset;
 
-    itemCount += count;
-}
-
-void QSGItemViewChangeSet::doRemove(int index, int count)
-{
-    itemCount -= count;
-    pendingChanges.remove(index, count);
-
-    if (newCurrentIndex >= index + count) {
-        newCurrentIndex -= count;
-        currentChanged = true;
-    } else if (newCurrentIndex >= index && newCurrentIndex < index + count) {
-        // current item has been removed.
-        currentRemoved = true;
-        newCurrentIndex = -1;
-        if (itemCount)
-            newCurrentIndex = qMin(index, itemCount-1);
-        currentChanged = true;
-    }
-}
-
-void QSGItemViewChangeSet::doMove(int from, int to, int count)
-{
-    pendingChanges.move(from, to, count);
-
-    if (to > from) {
-        if (newCurrentIndex >= from) {
-            if (newCurrentIndex < from + count)
-                newCurrentIndex += (to-from);
-            else if (newCurrentIndex < to + count)
-                newCurrentIndex -= count;
+    foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
+        itemCount -= r.count;
+        if (moveId == -1 && newCurrentIndex >= r.index + r.count) {
+            newCurrentIndex -= r.count;
+            currentChanged = true;
+        } else if (moveId == -1 && newCurrentIndex >= r.index && newCurrentIndex < r.index + r.count) {
+            // current item has been removed.
+            if (r.isMove()) {
+                moveId = r.moveId;
+                moveOffset = newCurrentIndex - r.index;
+            } else {
+                currentRemoved = true;
+                newCurrentIndex = -1;
+                if (itemCount)
+                    newCurrentIndex = qMin(r.index, itemCount - 1);
+            }
+            currentChanged = true;
         }
-        currentChanged = true;
-    } else if (to < from) {
-        if (newCurrentIndex >= to) {
-            if (newCurrentIndex >= from && newCurrentIndex < from + count)
-                newCurrentIndex -= (from-to);
-            else if (newCurrentIndex < from)
-                newCurrentIndex += count;
-        }
-        currentChanged = true;
     }
-}
-
-void QSGItemViewChangeSet::QSGItemViewChangeSet::doChange(int index, int count)
-{
-    pendingChanges.change(index, count);
+    foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
+        itemCount += i.count;
+        if (moveId == -1) {
+            if (newCurrentIndex >= i.index) {
+                newCurrentIndex += i.count;
+                currentChanged = true;
+            } else if (newCurrentIndex < 0) {
+                newCurrentIndex = 0;
+                currentChanged = true;
+            }
+        } else if (moveId == i.moveId) {
+            newCurrentIndex = i.index + moveOffset;
+        }
+    }
 }
 
 void QSGItemViewChangeSet::prepare(int currentIndex, int count)
@@ -193,11 +173,8 @@ void QSGItemView::setModel(const QVariant &model)
     if (d->modelVariant == model)
         return;
     if (d->model) {
-        disconnect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        disconnect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        disconnect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        disconnect(d->model, SIGNAL(itemsChanged(int,int)), this, SLOT(itemsChanged(int,int)));
-        disconnect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         disconnect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         disconnect(d->model, SIGNAL(destroyingItem(QSGItem*)), this, SLOT(destroyingItem(QSGItem*)));
     }
@@ -247,11 +224,8 @@ void QSGItemView::setModel(const QVariant &model)
             }
             d->updateViewport();
         }
-        connect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        connect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        connect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        connect(d->model, SIGNAL(itemsChanged(int,int)), this, SLOT(itemsChanged(int,int)));
-        connect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         connect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         connect(d->model, SIGNAL(destroyingItem(QSGItem*)), this, SLOT(destroyingItem(QSGItem*)));
         emit countChanged();
@@ -788,66 +762,25 @@ void QSGItemView::destroyRemoved()
     d->layout();
 }
 
-void QSGItemView::itemsInserted(int index, int count)
+void QSGItemView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
 {
     Q_D(QSGItemView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
+    if (reset) {
+        d->moveReason = QSGItemViewPrivate::SetIndex;
+        d->regenerate();
+        if (d->highlight && d->currentItem) {
+            if (d->autoHighlight)
+                d->resetHighlightPosition();
+            d->updateTrackedItem();
+        }
+        d->moveReason = QSGItemViewPrivate::Other;
 
-    d->currentChanges.prepare(d->currentIndex, d->itemCount);
-    d->currentChanges.doInsert(index, count);
-    polish();
-}
-
-void QSGItemView::itemsRemoved(int index, int count)
-{
-    Q_D(QSGItemView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-
-    d->currentChanges.prepare(d->currentIndex, d->itemCount);
-    d->currentChanges.doRemove(index, count);
-    polish();
-}
-
-void QSGItemView::itemsMoved(int from, int to, int count)
-{
-    Q_D(QSGItemView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-
-    if (from == to || count <= 0 || from < 0 || to < 0)
-        return;
-
-    d->currentChanges.prepare(d->currentIndex, d->itemCount);
-    d->currentChanges.doMove(from, to, count);
-    polish();
-}
-
-void QSGItemView::itemsChanged(int index, int count)
-{
-    Q_D(QSGItemView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-
-    d->currentChanges.prepare(d->currentIndex, d->itemCount);
-    d->currentChanges.doChange(index, count);
-    polish();
-}
-
-void QSGItemView::modelReset()
-{
-    Q_D(QSGItemView);
-    d->moveReason = QSGItemViewPrivate::SetIndex;
-    d->regenerate();
-    if (d->highlight && d->currentItem) {
-        if (d->autoHighlight)
-            d->resetHighlightPosition();
-        d->updateTrackedItem();
+        emit countChanged();
+    } else {
+        d->currentChanges.prepare(d->currentIndex, d->itemCount);
+        d->currentChanges.applyChanges(changeSet);
+        polish();
     }
-    d->moveReason = QSGItemViewPrivate::Other;
-
-    emit countChanged();
 }
 
 void QSGItemView::createdItem(int index, QSGItem *item)

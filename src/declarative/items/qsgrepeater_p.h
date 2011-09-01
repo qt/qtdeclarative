@@ -51,6 +51,8 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QDeclarativeChangeSet;
+
 class QSGRepeaterPrivate;
 class Q_AUTOTEST_EXPORT QSGRepeater : public QSGItem
 {
@@ -92,10 +94,7 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value);
 
 private Q_SLOTS:
-    void itemsInserted(int,int);
-    void itemsRemoved(int,int);
-    void itemsMoved(int,int,int);
-    void modelReset();
+    void modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset);
 
 private:
     Q_DISABLE_COPY(QSGRepeater)

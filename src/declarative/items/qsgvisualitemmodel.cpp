@@ -46,6 +46,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 
+#include <private/qdeclarativechangeset_p.h>
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qobject_p.h>
 
@@ -82,7 +83,9 @@ public:
         Q_Q(QSGVisualItemModel);
         QSGVisualItemModelAttached *attached = QSGVisualItemModelAttached::properties(children.last().item);
         attached->setIndex(children.count()-1);
-        emit q->itemsInserted(children.count()-1, 1);
+        QDeclarativeChangeSet changeSet;
+        changeSet.insert(children.count() - 1, 1);
+        emit q->modelUpdated(changeSet, false);
         emit q->countChanged();
     }
 

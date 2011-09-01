@@ -46,6 +46,7 @@
 #include <private/qdeclarativestate_p.h>
 #include <private/qdeclarativeopenmetaobject_p.h>
 #include <private/qlistmodelinterface_p.h>
+#include <private/qdeclarativechangeset_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtGui/qevent.h>
@@ -493,10 +494,8 @@ void QSGPathView::setModel(const QVariant &model)
         return;
 
     if (d->model) {
-        disconnect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        disconnect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        disconnect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        disconnect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        disconnect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         disconnect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         for (int i=0; i<d->items.count(); i++){
             QSGItem *p = d->items[i];
@@ -524,10 +523,8 @@ void QSGPathView::setModel(const QVariant &model)
     }
     d->modelCount = 0;
     if (d->model) {
-        connect(d->model, SIGNAL(itemsInserted(int,int)), this, SLOT(itemsInserted(int,int)));
-        connect(d->model, SIGNAL(itemsRemoved(int,int)), this, SLOT(itemsRemoved(int,int)));
-        connect(d->model, SIGNAL(itemsMoved(int,int,int)), this, SLOT(itemsMoved(int,int,int)));
-        connect(d->model, SIGNAL(modelReset()), this, SLOT(modelReset()));
+        connect(d->model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+                this, SLOT(modelUpdated(QDeclarativeChangeSet,bool)));
         connect(d->model, SIGNAL(createdItem(int,QSGItem*)), this, SLOT(createdItem(int,QSGItem*)));
         d->modelCount = d->model->count();
         if (d->model->count())
@@ -1479,121 +1476,98 @@ void QSGPathView::refill()
         d->releaseItem(d->itemCache.takeLast());
 }
 
-void QSGPathView::itemsInserted(int modelIndex, int count)
+void QSGPathView::modelUpdated(const QDeclarativeChangeSet &changeSet, bool reset)
 {
-    //XXX support animated insertion
     Q_D(QSGPathView);
-    if (!d->isValid() || !isComponentComplete())
+    if (!d->model || !d->model->isValid() || !d->path || !isComponentComplete())
         return;
 
-    if (d->modelCount) {
-        d->itemCache += d->items;
-        d->items.clear();
-        if (modelIndex <= d->currentIndex) {
-            d->currentIndex += count;
-            emit currentIndexChanged();
-        } else if (d->offset != 0) {
-            d->offset += count;
-            d->offsetAdj += count;
-        }
-    }
-
-    d->modelCount += count;
-    if (d->flicking || d->moving) {
+    if (reset) {
+        d->modelCount = d->model->count();
         d->regenerate();
-        d->updateCurrent();
-    } else {
-        d->firstIndex = -1;
-        d->updateMappedRange();
-        d->scheduleLayout();
+        emit countChanged();
+        return;
     }
-    emit countChanged();
-}
 
-void QSGPathView::itemsRemoved(int modelIndex, int count)
-{
-    //XXX support animated removal
-    Q_D(QSGPathView);
-    if (!d->model || !d->modelCount || !d->model->isValid() || !d->path || !isComponentComplete())
+    if (changeSet.removes().isEmpty() && changeSet.inserts().isEmpty())
         return;
 
-    // fix current
+    const int modelCount = d->modelCount;
+    int moveId = -1;
+    int moveOffset;
     bool currentChanged = false;
-    if (d->currentIndex >= modelIndex + count) {
-        d->currentIndex -= count;
-        currentChanged = true;
-    } else if (d->currentIndex >= modelIndex && d->currentIndex < modelIndex + count) {
-        // current item has been removed.
-        d->currentIndex = qMin(modelIndex, d->modelCount-count-1);
-        if (d->currentItem) {
-            if (QSGPathViewAttached *att = d->attached(d->currentItem))
-                att->setIsCurrentItem(true);
-            d->releaseItem(d->currentItem);
-            d->currentItem = 0;
+    bool changedOffset = false;
+    bool removed = false;
+    bool inserted = false;
+    foreach (const QDeclarativeChangeSet::Remove &r, changeSet.removes()) {
+        removed = true;
+        if (moveId == -1 && d->currentIndex >= r.index + r.count) {
+            d->currentIndex -= r.count;
+            currentChanged = true;
+        } else if (moveId == -1 && d->currentIndex >= r.index && d->currentIndex < r.index + r.count) {
+            // current item has been removed.
+            d->currentIndex = qMin(r.index, d->modelCount - r.count - 1);
+            if (r.isMove()) {
+                moveId = r.moveId;
+                moveOffset = d->currentIndex - r.index;
+            } else if (d->currentItem) {
+                if (QSGPathViewAttached *att = d->attached(d->currentItem))
+                    att->setIsCurrentItem(true);
+                d->releaseItem(d->currentItem);
+                d->currentItem = 0;
+            }
+            currentChanged = true;
         }
-        currentChanged = true;
+
+        if (r.index > d->currentIndex) {
+            if (d->offset >= r.count) {
+                changedOffset = true;
+                d->offset -= r.count;
+                d->offsetAdj -= r.count;
+            }
+        }
+        d->modelCount -= r.count;
+    }
+    foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
+        inserted = true;
+        if (d->modelCount) {
+            if (moveId == -1 && i.index <= d->currentIndex) {
+                d->currentIndex += i.count;
+            } else if (d->offset != 0) {
+                if (moveId != -1 && moveId == i.moveId)
+                    d->currentIndex = i.index + moveOffset;
+                d->offset += i.count;
+                d->offsetAdj += i.count;
+            }
+        }
+        d->modelCount += i.count;
     }
 
     d->itemCache += d->items;
     d->items.clear();
 
-    bool changedOffset = false;
-    if (modelIndex > d->currentIndex) {
-        if (d->offset >= count) {
-            changedOffset = true;
-            d->offset -= count;
-            d->offsetAdj -= count;
-        }
-    }
-
-    d->modelCount -= count;
     if (!d->modelCount) {
         while (d->itemCache.count())
             d->releaseItem(d->itemCache.takeLast());
         d->offset = 0;
         changedOffset = true;
         d->tl.reset(d->moveOffset);
-    } else {
+    } else if (removed) {
         d->regenerate();
         d->updateCurrent();
         if (!d->flicking && !d->moving && d->haveHighlightRange && d->highlightRangeMode == QSGPathView::StrictlyEnforceRange)
             d->snapToCurrent();
+    } else if (inserted) {
+        d->firstIndex = -1;
+        d->updateMappedRange();
+        d->scheduleLayout();
     }
     if (changedOffset)
         emit offsetChanged();
     if (currentChanged)
         emit currentIndexChanged();
-    emit countChanged();
-}
-
-void QSGPathView::itemsMoved(int /*from*/, int /*to*/, int /*count*/)
-{
-    Q_D(QSGPathView);
-    if (!d->isValid() || !isComponentComplete())
-        return;
-
-    QList<QSGItem *> removedItems = d->items;
-    d->items.clear();
-    d->regenerate();
-    while (removedItems.count())
-        d->releaseItem(removedItems.takeLast());
-
-    // Fix current index
-    if (d->currentIndex >= 0 && d->currentItem) {
-        int oldCurrent = d->currentIndex;
-        d->currentIndex = d->model->indexOf(d->currentItem, this);
-        if (oldCurrent != d->currentIndex)
-            emit currentIndexChanged();
-    }
-    d->updateCurrent();
-}
-
-void QSGPathView::modelReset()
-{
-    Q_D(QSGPathView);
-    d->modelCount = d->model->count();
-    d->regenerate();
-    emit countChanged();
+    if (d->modelCount != modelCount)
+        emit countChanged();
 }
 
 void QSGPathView::createdItem(int index, QSGItem *item)

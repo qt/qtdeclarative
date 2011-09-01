@@ -58,6 +58,7 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativechangeset_p.h>
 #include <private/qsgvisualadaptormodel_p.h>
 #include <private/qobject_p.h>
 
@@ -89,6 +90,8 @@ public:
         emit q_func()->createdPackage(index, package); }
     void emitDestroyingPackage(QDeclarativePackage *package) {
         emit q_func()->destroyingPackage(package); }
+
+    void emitChanges();
 
     QSGVisualAdaptorModel *m_adaptorModel;
     QDeclarativeComponent *m_delegate;
@@ -145,6 +148,9 @@ public:
     friend class QSGVisualDataModelData;
     bool m_delegateValidated : 1;
     bool m_completePending : 1;
+    bool m_reset : 1;
+
+    QDeclarativeChangeSet m_absoluteChangeSet;
 
     QList<QByteArray> watchedRoles;
 };
@@ -229,6 +235,7 @@ QSGVisualDataModelPrivate::QSGVisualDataModelPrivate(QDeclarativeContext *ctxt)
     , m_parts(0)
     , m_delegateValidated(false)
     , m_completePending(false)
+    , m_reset(false)
 {
 }
 
@@ -340,14 +347,10 @@ void QSGVisualDataModel::setDelegate(QDeclarativeComponent *delegate)
     bool wasValid = d->m_delegate != 0;
     d->m_delegate = delegate;
     d->m_delegateValidated = false;
-    if (!wasValid && d->m_adaptorModel->count() && d->m_delegate) {
-        emit itemsInserted(0, d->m_adaptorModel->count());
-        emit countChanged();
-    }
-    if (wasValid && !d->m_delegate && d->m_adaptorModel->count()) {
+    if (!wasValid && d->m_adaptorModel->count() && d->m_delegate)
+        _q_itemsInserted(0, d->m_adaptorModel->count());
+    if (wasValid && !d->m_delegate && d->m_adaptorModel->count())
         _q_itemsRemoved(0, d->m_adaptorModel->count());
-        emit countChanged();
-    }
 }
 
 /*!
@@ -620,7 +623,8 @@ void QSGVisualDataModel::_q_itemsChanged(int index, int count)
     Q_D(QSGVisualDataModel);
     if (!d->m_delegate)
         return;
-    emit itemsChanged(index, count);
+    d->m_absoluteChangeSet.change(index, count);
+    d->emitChanges();
 }
 
 void QSGVisualDataModel::_q_itemsInserted(int index, int count)
@@ -646,7 +650,8 @@ void QSGVisualDataModel::_q_itemsInserted(int index, int count)
     }
     d->m_cache.unite(items);
 
-    emit itemsInserted(index, count);
+    d->m_absoluteChangeSet.insert(index, count);
+    d->emitChanges();
     emit countChanged();
 }
 
@@ -674,7 +679,8 @@ void QSGVisualDataModel::_q_itemsRemoved(int index, int count)
     }
     d->m_cache.unite(items);
 
-    emit itemsRemoved(index, count);
+    d->m_absoluteChangeSet.remove(index, count);
+    d->emitChanges();
     emit countChanged();
 }
 
@@ -710,15 +716,29 @@ void QSGVisualDataModel::_q_itemsMoved(int from, int to, int count)
         }
     }
     d->m_cache.unite(items);
-    emit itemsMoved(from, to, count);
+    d->m_absoluteChangeSet.move(from, to, count);
+    d->emitChanges();
 }
 
-void QSGVisualDataModel::_q_modelReset(int, int)
+void QSGVisualDataModelPrivate::emitChanges()
+{
+    Q_Q(QSGVisualDataModel);
+    if (!m_absoluteChangeSet.isEmpty()) {
+        emit q->modelUpdated(m_absoluteChangeSet, m_reset);
+        m_absoluteChangeSet.clear();
+        m_reset = false;
+    }
+}
+
+void QSGVisualDataModel::_q_modelReset(int oldCount, int newCount)
 {
     Q_D(QSGVisualDataModel);
     if (!d->m_delegate)
         return;
-    emit modelReset();
+    d->m_absoluteChangeSet.remove(0, oldCount);
+    d->m_absoluteChangeSet.insert(0, newCount);
+    d->m_reset = true;
+    d->emitChanges();
     emit countChanged();
 }
 
@@ -729,11 +749,8 @@ QSGVisualPartsModel::QSGVisualPartsModel(QSGVisualDataModel *model, const QStrin
     , m_model(model)
     , m_part(part)
 {
-    connect(m_model, SIGNAL(modelReset()), this, SIGNAL(modelReset()));
-    connect(m_model, SIGNAL(itemsInserted(int,int)), this, SIGNAL(itemsInserted(int,int)));
-    connect(m_model, SIGNAL(itemsRemoved(int,int)), this, SIGNAL(itemsRemoved(int,int)));
-    connect(m_model, SIGNAL(itemsChanged(int,int)), this, SIGNAL(itemsChanged(int,int)));
-    connect(m_model, SIGNAL(itemsMoved(int,int,int)), this, SIGNAL(itemsMoved(int,int,int)));
+    connect(m_model, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)),
+            this, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)));
     connect(m_model, SIGNAL(createdPackage(int,QDeclarativePackage*)),
             this, SLOT(createdPackage(int,QDeclarativePackage*)));
     connect(m_model, SIGNAL(destroyingPackage(QDeclarativePackage*)),

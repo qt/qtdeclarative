@@ -51,6 +51,7 @@
 #include <private/qsgtext_p.h>
 #include <private/qsgvisualdatamodel_p.h>
 #include <private/qdeclarativevaluetype_p.h>
+#include <private/qdeclarativechangeset_p.h>
 #include <math.h>
 #include <QtOpenGL/QGLShaderProgram>
 
@@ -138,8 +139,12 @@ private:
     template<typename T>
     T *findItem(QSGItem *parent, const QString &objectName, int index);
 };
+
+Q_DECLARE_METATYPE(QDeclarativeChangeSet)
+
 void tst_qsgvisualdatamodel::initTestCase()
 {
+    qRegisterMetaType<QDeclarativeChangeSet>();
 }
 
 void tst_qsgvisualdatamodel::cleanupTestCase()
@@ -566,14 +571,28 @@ void tst_qsgvisualdatamodel::qaimRowsMoved()
     QSGVisualDataModel *obj = qobject_cast<QSGVisualDataModel*>(c.create());
     QVERIFY(obj != 0);
 
-    QSignalSpy spy(obj, SIGNAL(itemsMoved(int,int,int)));
+    QSignalSpy spy(obj, SIGNAL(modelUpdated(QDeclarativeChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
-    QTRY_COMPARE(spy.count(), 1);
+    // QAbstractItemModel also emits the changed signal when items are moved.
+    QCOMPARE(spy.count(), 2);
 
-    QCOMPARE(spy[0].count(), 3);
-    QCOMPARE(spy[0][0].toInt(), expectFrom);
-    QCOMPARE(spy[0][1].toInt(), expectTo);
-    QCOMPARE(spy[0][2].toInt(), expectCount);
+    bool move = false;
+    for (int i = 0; i < 2; ++i) {
+        QCOMPARE(spy[1].count(), 2);
+        QDeclarativeChangeSet changeSet = spy[i][0].value<QDeclarativeChangeSet>();
+        if (!changeSet.changes().isEmpty())
+            continue;
+        move = true;
+        QCOMPARE(changeSet.removes().count(), 1);
+        QCOMPARE(changeSet.removes().at(0).index, expectFrom);
+        QCOMPARE(changeSet.removes().at(0).count, expectCount);
+        QCOMPARE(changeSet.inserts().count(), 1);
+        QCOMPARE(changeSet.inserts().at(0).index, expectTo);
+        QCOMPARE(changeSet.inserts().at(0).count, expectCount);
+        QCOMPARE(changeSet.removes().at(0).moveId, changeSet.inserts().at(0).moveId);
+        QCOMPARE(spy[i][1].toBool(), false);
+    }
+    QVERIFY(move);
 
     delete obj;
 }

@@ -83,10 +83,7 @@ public:
     void prepare(int currentIndex, int count);
     void reset();
 
-    void doInsert(int index, int count);
-    void doRemove(int index, int count);
-    void doMove(int from, int to, int count);
-    void doChange(int index, int count);
+    void applyChanges(const QDeclarativeChangeSet &changeSet);
 
     int itemCount;
     int newCurrentIndex;
