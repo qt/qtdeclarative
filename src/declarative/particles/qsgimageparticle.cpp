@@ -53,7 +53,6 @@
 #include <qsgengine.h>
 
 QT_BEGIN_NAMESPACE
-
 //###Switch to define later, for now user-friendly (no compilation) debugging is worth it
 DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
@@ -1024,13 +1023,14 @@ QSGNode *QSGImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         m_pleaseReset = false;
     }
 
-    if (m_system && m_system->isRunning())
+    if (m_system && m_system->isRunning() && !m_system->isPaused()){
         prepareNextFrame();
-    if (m_rootNode){
-        update();
-        //### Should I be using dirty geometry too/instead?
-        foreach (QSGGeometryNode* node, m_nodes)
-            node->markDirty(QSGNode::DirtyMaterial);
+        if (m_rootNode) {
+            update();
+            //### Should I be using dirty geometry too/instead?
+            foreach (QSGGeometryNode* node, m_nodes)
+                node->markDirty(QSGNode::DirtyMaterial);
+        }
     }
 
     return m_rootNode;

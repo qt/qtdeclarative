@@ -218,6 +218,7 @@ class QSGParticleSystem : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
@@ -247,10 +248,18 @@ signals:
     void startTimeChanged(int arg);
 
 
+    void pausedChanged(bool arg);
+
 public slots:
+    void start(){setRunning(true);}
+    void stop(){setRunning(false);}
+    void restart(){setRunning(false);setRunning(true);}
+    void pause(){setPaused(true);}
+    void resume(){setPaused(false);}
+
     void reset();
     void setRunning(bool arg);
-
+    void setPaused(bool arg);
 
     void setStartTime(int arg)
     {
@@ -263,6 +272,7 @@ public slots:
     }
 
     virtual int duration() const { return -1; }
+
 
 protected:
     //This one only once per frame (effectively)
@@ -300,12 +310,18 @@ public://###but only really for related class usage. Perhaps we should all be fr
 
     int m_particle_count;
     static void stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);//From QSGSprite
+    bool isPaused() const
+    {
+        return m_paused;
+    }
+
 private:
     void initializeSystem();
+    void initGroups();
     bool m_running;
     QList<QPointer<QSGParticleEmitter> > m_emitters;
     QList<QPointer<QSGParticleAffector> > m_affectors;
-    QList<QPointer<QSGParticlePainter> > m_particlePainters;
+    QList<QPointer<QSGParticlePainter> > m_painters;
     QList<QPointer<QSGParticlePainter> > m_syncList;
     qint64 m_startTime;
     int m_nextGroupId;
@@ -319,6 +335,8 @@ private:
     friend class QSGParticleSystemAnimation;
     void updateCurrentTime( int currentTime );
     QSGParticleSystemAnimation* m_animation;
+    bool m_paused;
+    bool m_debugMode;
 };
 
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode

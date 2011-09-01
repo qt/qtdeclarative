@@ -47,7 +47,13 @@ Rectangle{
     color: "black"
     MouseArea{
         anchors.fill: parent
-        onClicked: particles.running = !particles.running
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {
+            if (mouse.button == Qt.LeftButton)
+                particles.running = !particles.running
+            else
+                particles.paused = !particles.paused;
+        }
     }
     ParticleSystem{ 
         id: particles 

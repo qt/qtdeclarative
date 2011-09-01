@@ -317,6 +317,11 @@ void QSGParticleEmitter::setSpeedFromMovement(qreal t)
     emit speedFromMovementChanged();
 }
 
+void QSGParticleEmitter::reset()
+{
+    m_reset_last = true;
+}
+
 void QSGParticleEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
@@ -346,7 +351,6 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     }
 
     qreal time = timeStamp / 1000.;
-
     qreal particleRatio = 1. / m_particlesPerSecond;
     qreal pt = m_last_emission;
 

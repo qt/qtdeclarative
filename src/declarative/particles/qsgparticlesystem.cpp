@@ -54,6 +54,8 @@
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
+//###Switch to define later, for now user-friendly (no compilation) debugging is worth it
+DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 /*!
     \qmlclass ParticleSystem QSGParticleSystem
     \inqmlmodule QtQuick.Particles 2
@@ -64,8 +66,23 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool QtQuick.Particles2::ParticleSystem::running
 
-    If running is set to false, the particle system will not advance the simulation.
+    If running is set to false, the particle system will stop the simulation. All particles
+    will be destroyed when the system is set to running again.
+
+    It can also be controlled with the start() and stop() methods.
 */
+
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::ParticleSystem::paused
+
+    If paused is set to true, the particle system will not advance the simulation. When
+    paused is set to false again, the simulation will resume from the same point it was
+    paused.
+
+    It can also be controlled with the pause() and resume() methods.
+*/
+
 /*!
     \qmlproperty int QtQuick.Particles2::ParticleSystem::startTime
 
@@ -491,13 +508,10 @@ QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
     QSGItem(parent), m_particle_count(0), m_running(true)
   , m_startTime(0), m_nextIndex(0), m_componentComplete(false), m_spriteEngine(0)
 {
-    QSGParticleGroupData* gd = new QSGParticleGroupData(0, this);//Default group
-    m_groupData.insert(0,gd);
-    m_groupIds.insert("",0);
-    m_nextGroupId = 1;
-
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));
+
+    m_debugMode = qmlParticlesDebug();
 }
 
 QSGParticleSystem::~QSGParticleSystem()
@@ -506,7 +520,22 @@ QSGParticleSystem::~QSGParticleSystem()
         delete gd;
 }
 
-QDeclarativeListProperty<QSGSprite> QSGParticleSystem::particleStates()
+void QSGParticleSystem::initGroups()
+{
+    m_reusableIndexes.clear();
+    m_nextIndex = 0;
+
+    qDeleteAll(m_groupData);
+    m_groupData.clear();
+    m_groupIds.clear();
+
+    QSGParticleGroupData* gd = new QSGParticleGroupData(0, this);//Default group
+    m_groupData.insert(0,gd);
+    m_groupIds.insert("",0);
+    m_nextGroupId = 1;
+}
+
+    QDeclarativeListProperty<QSGSprite> QSGParticleSystem::particleStates()
 {
     return QDeclarativeListProperty<QSGSprite>(this, &m_states, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
@@ -514,11 +543,10 @@ QDeclarativeListProperty<QSGSprite> QSGParticleSystem::particleStates()
 void QSGParticleSystem::registerParticlePainter(QSGParticlePainter* p)
 {
     //TODO: a way to Unregister emitters, painters and affectors
-    m_particlePainters << QPointer<QSGParticlePainter>(p);//###Set or uniqueness checking?
+    m_painters << QPointer<QSGParticlePainter>(p);//###Set or uniqueness checking?
     connect(p, SIGNAL(particlesChanged(QStringList)),
             &m_painterMapper, SLOT(map()));
     loadPainter(p);
-    p->update();//###Initial update here?
 }
 
 void QSGParticleSystem::registerParticleEmitter(QSGParticleEmitter* e)
@@ -536,6 +564,120 @@ void QSGParticleSystem::registerParticleAffector(QSGParticleAffector* a)
 {
     m_affectors << QPointer<QSGParticleAffector>(a);
 }
+
+void QSGParticleSystem::setRunning(bool arg)
+{
+    if (m_running != arg) {
+        m_running = arg;
+        emit runningChanged(arg);
+        setPaused(false);
+        if (m_animation)//Not created until componentCompleted
+            m_running ? m_animation->start() : m_animation->stop();
+        reset();
+    }
+}
+
+void QSGParticleSystem::setPaused(bool arg){
+    if (m_paused != arg) {
+        m_paused = arg;
+        if (m_animation && m_animation->state() != QAbstractAnimation::Stopped)
+            m_paused ? m_animation->pause() : m_animation->resume();
+        if (!m_paused){
+            foreach (QSGParticlePainter *p, m_painters)
+                p->update();
+        }
+        emit pausedChanged(arg);
+    }
+}
+
+void QSGParticleSystem::stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
+{
+    //Hooks up automatic state-associated stuff
+    QSGParticleSystem* sys = qobject_cast<QSGParticleSystem*>(prop->object->parent());
+    QSGSprite* sprite = qobject_cast<QSGSprite*>(prop->object);
+    if (!sprite || !sys)
+        return;
+    QStringList list;
+    list << sprite->name();
+    QSGParticleAffector* a = qobject_cast<QSGParticleAffector*>(value);
+    if (a){
+        a->setParentItem(sys);
+        a->setParticles(list);
+        a->setSystem(sys);
+        return;
+    }
+    QSGFollowEmitter* fe = qobject_cast<QSGFollowEmitter*>(value);
+    if (fe){
+        fe->setParentItem(sys);
+        fe->setFollow(sprite->name());
+        fe->setSystem(sys);
+        return;
+    }
+    QSGParticleEmitter* e = qobject_cast<QSGParticleEmitter*>(value);
+    if (e){
+        e->setParentItem(sys);
+        e->setParticle(sprite->name());
+        e->setSystem(sys);
+        return;
+    }
+    QSGParticlePainter* p = qobject_cast<QSGParticlePainter*>(value);
+    if (p){
+        p->setParentItem(sys);
+        p->setParticles(list);
+        p->setSystem(sys);
+        return;
+    }
+    qWarning() << value << " was placed inside a particle system state but cannot be taken into the particle system. It will be lost.";
+}
+
+void QSGParticleSystem::componentComplete()
+
+{
+    QSGItem::componentComplete();
+    m_componentComplete = true;
+    m_animation = new QSGParticleSystemAnimation(this);
+    reset();//restarts animation as well
+}
+
+void QSGParticleSystem::reset()
+{
+    if (!m_componentComplete)
+        return;
+
+    m_timeInt = 0;
+    //Clear guarded pointers which have been deleted
+    int cleared = 0;
+    cleared += m_emitters.removeAll(0);
+    cleared += m_painters.removeAll(0);
+    cleared += m_affectors.removeAll(0);
+
+    m_bySysIdx.resize(0);
+    initGroups();//Also clears all logical particles
+
+    if (!m_running)
+        return;
+
+    foreach (QSGParticleEmitter* e, m_emitters)
+        e->reset();
+
+    emittersChanged();
+
+    foreach (QSGParticlePainter *p, m_painters){
+        loadPainter(p);
+        p->reset();
+    }
+
+    //### Do affectors need reset too?
+
+    if (m_animation){//reset restarts animation (if running)
+        m_animation->stop();
+        m_animation->start();
+        if (m_paused)
+            m_animation->pause();
+    }
+    m_initialized = true;
+}
+
 
 void QSGParticleSystem::loadPainter(QObject *p)
 {
@@ -566,7 +708,7 @@ void QSGParticleSystem::loadPainter(QObject *p)
         }
     }
     painter->setCount(particleCount);
-    painter->update();//###Initial update here?
+    painter->update();//Initial update here
     return;
 }
 
@@ -609,101 +751,14 @@ void QSGParticleSystem::emittersChanged()
     Q_ASSERT(m_particle_count >= m_bySysIdx.size());//XXX when GC done right
     m_bySysIdx.resize(m_particle_count);
 
-    foreach (QSGParticlePainter *p, m_particlePainters)
+    foreach (QSGParticlePainter *p, m_painters)
         loadPainter(p);
 
     if (!m_states.isEmpty())
         createEngine();
 
-    if (m_particle_count > 16000)//###Investigate if these limits are worth warning about?
-        qWarning() << "Particle system arbitarily believes it has a vast number of particles (>16000). Expect poor performance";
-}
-
-void QSGParticleSystem::setRunning(bool arg)
-{
-    if (m_running != arg) {
-        m_running = arg;
-        emit runningChanged(arg);
-        reset();
-    }
-}
-
-void QSGParticleSystem::stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value)
-{
-    //Hooks up automatic state-associated stuff
-    QSGParticleSystem* sys = qobject_cast<QSGParticleSystem*>(prop->object->parent());
-    QSGSprite* sprite = qobject_cast<QSGSprite*>(prop->object);
-    if (!sprite || !sys)
-        return;
-    QStringList list;
-    list << sprite->name();
-    QSGParticleAffector* a = qobject_cast<QSGParticleAffector*>(value);
-    if (a){
-        a->setParentItem(sys);
-        a->setParticles(list);
-        a->setSystem(sys);
-        return;
-    }
-    QSGFollowEmitter* e = qobject_cast<QSGFollowEmitter*>(value);
-    if (e){
-        e->setParentItem(sys);
-        e->setFollow(sprite->name());
-        e->setSystem(sys);
-        return;
-    }
-    QSGParticlePainter* p = qobject_cast<QSGParticlePainter*>(value);
-    if (p){
-        p->setParentItem(sys);
-        p->setParticles(list);
-        p->setSystem(sys);
-        return;
-    }
-    qWarning() << value << " was placed inside a particle system state but cannot be taken into the particle system. It will be lost.";
-}
-
-void QSGParticleSystem::componentComplete()
-
-{
-    QSGItem::componentComplete();
-    m_componentComplete = true;
-    m_animation = new QSGParticleSystemAnimation(this);
-    reset();//restarts animation as well
-}
-
-void QSGParticleSystem::reset()//TODO: Needed? Or just in component complete?
-{
-    if (!m_componentComplete)
-        return;
-
-    m_timeInt = 0;
-    //Clear guarded pointers which have been deleted
-    int cleared = 0;
-    cleared += m_emitters.removeAll(0);
-    cleared += m_particlePainters.removeAll(0);
-    cleared += m_affectors.removeAll(0);
-
-    emittersChanged();
-
-    //TODO: Reset data
-//    foreach (QSGParticlePainter* p, m_particlePainters)
-//        p->reset();
-//    foreach (QSGParticleEmitter* e, m_emitters)
-//        e->reset();
-    //### Do affectors need reset too?
-
-    if (!m_running)
-        return;
-
-    foreach (QSGParticlePainter *p, m_particlePainters){
-        loadPainter(p);
-        p->reset();
-    }
-
-    if (m_animation){
-        m_animation->stop();
-        m_animation->start();
-    }
-    m_initialized = true;
+    if (m_debugMode)
+        qDebug() << "Particle system emitters changed. New particle count: " << m_particle_count;
 }
 
 void QSGParticleSystem::createEngine()

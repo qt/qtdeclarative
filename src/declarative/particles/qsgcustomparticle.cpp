@@ -413,13 +413,14 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         m_dirtyData = false;
     }
 
-    if (m_system && m_system->isRunning())
+    if (m_system && m_system->isRunning() && !m_system->isPaused()){
         prepareNextFrame();
-    if (m_rootNode){
-        update();
-        //### Should I be using dirty geometry too/instead?
-        foreach (QSGShaderEffectNode* node, m_nodes)
-            node->markDirty(QSGNode::DirtyMaterial); //done in buildData?
+        if (m_rootNode) {
+            update();
+            //### Should I be using dirty geometry too/instead?
+            foreach (QSGGeometryNode* node, m_nodes)
+                node->markDirty(QSGNode::DirtyMaterial);//done in buildData?
+        }
     }
 
     return m_rootNode;

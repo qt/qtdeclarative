@@ -257,17 +257,17 @@ public slots:
        }
 
        void setOverWrite(bool arg)
-{
-    if (m_overwrite != arg) {
-    m_overwrite = arg;
-emit overwriteChanged(arg);
-}
-}
+       {
+           if (m_overwrite != arg) {
+               m_overwrite = arg;
+               emit overwriteChanged(arg);
+           }
+       }
 
 public:
        int particleCount() const;
 
-       virtual void reset(){;}
+       virtual void reset();
        QSGParticleExtruder* extruder() const
        {
            return m_extruder;
