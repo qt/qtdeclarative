@@ -51,14 +51,22 @@ const qreal CONV = 0.017453292520444443;
 
     This element will set the acceleration of all affected particles to a vector of
     the specified magnitude in the specified angle.
+
+    This element models the gravity of a massive object whose center of
+    gravity is far away (and thus the gravitational pull is effectively constant
+    across the scene). To model the gravity of an object near or inside the scene,
+    use PointAttractor.
 */
 
 /*!
     \qmlproperty real QtQuick.Particles2::Gravity::acceleration
 
+    Pixels per second that objects will be accelerated by.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::Gravity::angle
+
+    Angle of acceleration.
 */
 
 QSGGravityAffector::QSGGravityAffector(QSGItem *parent) :

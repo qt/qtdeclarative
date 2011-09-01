@@ -51,9 +51,48 @@ QT_BEGIN_NAMESPACE
 
     Note that the size and position of this element affects which particles it affects.
     The size of the point attracted to is always 0x0, and the location of that point
-    is specified by the x and y properties that badly need renaming.
+    is specified by the pointX and pointY properties.
+
+    Note that PointAttractor has the standard Item x,y,width and height properties.
+    Like other affectors, these represent the affected area. They
+    do not represent the 0x0 point which is the target of the attraction.
 
 */
+
+
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::pointX
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::pointY
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::strength
+*/
+/*!
+    \qmlproperty PhysicsAffects QtQuick.Particles2::PointAttractor::physics
+
+    What attribute of particles is directly affected.
+    \list
+    \o PointAttractor.Position
+    \o PointAttractor.Velocity
+    \o PointAttractor.Acceleration
+    \endlist
+*/
+/*!
+    \qmlproperty Proportion QtQuick.Particles2::PointAttractor::proportionalToDistance
+
+    How the distance from the particle to the point affects the strength of the attraction.
+
+    \list
+    \o PointAttractor.Constant
+    \o PointAttractor.Linear
+    \o PointAttractor.InverseLinear
+    \o PointAttractor.Quadratic
+    \o PointAttractor.InverseQuadratic
+    \endlist
+*/
+
 
 QSGPointAttractorAffector::QSGPointAttractorAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_strength(0.0), m_x(0), m_y(0)

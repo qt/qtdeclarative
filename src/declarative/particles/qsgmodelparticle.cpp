@@ -55,6 +55,43 @@ QT_BEGIN_NAMESPACE
 */
 
 
+/*!
+    \qmlmethod void QtQuick.Particles2::ModelParticle::freeze(Item item)
+
+    Suspends the flow of time for the logical particle which item represents, allowing you to control its movement.
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ModelParticle::unfreeze(Item item)
+
+    Restarts the flow of time for the logical particle which item represents, allowing it to be moved by the particle system again.
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::ModelParticle::fade
+
+    If true, the item will automatically be faded in and out
+    at the ends of its lifetime. If false, you will have to
+    implement any entry effect yourself.
+
+    Default is true.
+*/
+
+/*!
+    \qmlproperty model QtQuick.Particles2::ModelParticle::model
+
+    The model to use as a data source. Every time a particle is
+    emitted, the next model entry will be used with a delegate
+    to visualize it.
+*/
+
+/*!
+    \qmlproperty Component QtQuick.Particles2::ModelParticle::delegate
+
+    An instance of the delegate will be created for every model
+    entry, and moved along with it.
+*/
+
 QSGModelParticle::QSGModelParticle(QSGItem *parent) :
     QSGParticlePainter(parent), m_ownModel(false), m_comp(0), m_model(0), m_fade(true), m_modelCount(0)
 {

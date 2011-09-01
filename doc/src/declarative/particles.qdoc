@@ -33,7 +33,7 @@
 
   This QML module contains a particle system for Qt Quick.
 
-  For a simple overview of how the system can be used, see \l{qml-particles.html}{Using the Qt Quick Particle System}.
+  For a simple overview of how the system can be used, see \l{qml-particlesystem.html}{Using the Qt Quick Particle System}.
 
 */
 

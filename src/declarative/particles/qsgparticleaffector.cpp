@@ -112,6 +112,16 @@ QT_BEGIN_NAMESPACE
 
     dt is the time since the last time it was affected. Use dt to normalize
     trajectory manipulations to real time.
+
+    This handler is usually not available on inherited types.
+*/
+/*!
+    \qmlsignal QtQuick.Particles2::Affector::affected(x, y)
+
+    This handler is called when a particle is selected to be affected. It will
+    only be called if signal is set to true.
+
+    x,y is the particles current position.
 */
 QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
     QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
