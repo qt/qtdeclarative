@@ -2164,7 +2164,8 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
                 item = createItem(modelIndex + i);
 
             visibleItems.insert(insertionIdx, item);
-            addedItems->append(item);
+            if (!change.isMove())
+                addedItems->append(item);
             pos -= item->size() + spacing;
             index++;
         }
@@ -2182,7 +2183,8 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
                 item = createItem(modelIndex + i);
 
             visibleItems.insert(index, item);
-            addedItems->append(item);
+            if (!change.isMove())
+                addedItems->append(item);
             pos += item->size() + spacing;
             ++index;
         }

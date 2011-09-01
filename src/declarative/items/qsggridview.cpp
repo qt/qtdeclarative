@@ -1792,7 +1792,8 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
         if (!item)
             item = createItem(modelIndex + i);
         visibleItems.insert(index, item);
-        addedItems->append(item);
+        if (!change.isMove())
+            addedItems->append(item);
         colPos += colSize();
         if (colPos > colSize() * (columns-1)) {
             colPos = 0;

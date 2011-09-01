@@ -1487,8 +1487,10 @@ bool QSGItemViewPrivate::applyModelChanges()
             } else {
                 // removed item
                 removedVisible = true;
-                item->attached->emitRemove();
-                if (item->attached->delayRemove()) {
+                if (!removals[i].isMove())
+                    item->attached->emitRemove();
+
+                if (item->attached->delayRemove() && !removals[i].isMove()) {
                     item->index = -1;
                     QObject::connect(item->attached, SIGNAL(delayRemoveChanged()), q, SLOT(destroyRemoved()), Qt::QueuedConnection);
                     ++it;
