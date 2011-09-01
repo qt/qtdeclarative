@@ -1235,7 +1235,8 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     default:
         d << "QSGNode(" << hex << (void *) n << dec
-          << "dirty=" << hex << (int) n->dirtyFlags() << dec
+          << "dirty=" << hex << (int) n->dirtyFlags()
+          << "flags=" << (int) n->flags() << dec
           << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QML_RUNTIME_TESTING
         d << n->description;
