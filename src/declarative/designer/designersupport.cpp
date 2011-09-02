@@ -85,7 +85,11 @@ void DesignerSupport::refFromEffectItem(QSGItem *referencedItem, bool hide)
         texture->setRect(referencedItem->boundingRect());
         texture->setSize(referencedItem->boundingRect().size().toSize());
         texture->setRecursive(true);
+#ifndef QT_OPENGL_ES
         texture->setFormat(GL_RGBA8);
+#else
+        texture->setFormat(GL_RGBA);
+#endif
         texture->setHasMipmaps(false);
 
         m_itemTextureHash.insert(referencedItem, texture);
