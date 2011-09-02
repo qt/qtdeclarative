@@ -775,6 +775,7 @@ void QSGItemView::destroyRemoved()
 
     // Correct the positioning of the items
     d->updateSections();
+    d->forceLayout = true;
     d->layout();
 }
 
