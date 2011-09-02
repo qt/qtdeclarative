@@ -470,7 +470,6 @@ private:
     ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
-    friend class QV8DebugService;
 };
 
 // Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated
