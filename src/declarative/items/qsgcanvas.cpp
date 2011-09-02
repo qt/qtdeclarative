@@ -775,7 +775,7 @@ void QSGCanvasPrivate::cleanup(QSGNode *n)
 
 
 QSGCanvas::QSGCanvas(QWindow *parent)
-    : QWindow(parent)
+    : QWindow(*(new QSGCanvasPrivate), parent)
 {
     Q_D(QSGCanvas);
     d->init(this);
