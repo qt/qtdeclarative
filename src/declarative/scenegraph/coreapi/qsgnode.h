@@ -339,19 +339,6 @@ Q_DECLARATIVE_EXPORT QDebug operator<<(QDebug, const QSGTransformNode *n);
 Q_DECLARATIVE_EXPORT QDebug operator<<(QDebug, const QSGOpacityNode *n);
 Q_DECLARATIVE_EXPORT QDebug operator<<(QDebug, const QSGRootNode *n);
 
-class QSGNodeDumper : public QSGNodeVisitor {
-
-public:
-    static void dump(QSGNode *n);
-
-    QSGNodeDumper() : m_indent(0) {}
-    void visitNode(QSGNode *n);
-    void visitChildren(QSGNode *n);
-
-private:
-    int m_indent;
-};
-
 #endif
 
 QT_END_NAMESPACE

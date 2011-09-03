@@ -1247,35 +1247,6 @@ QDebug operator<<(QDebug d, const QSGNode *n)
     return d;
 }
 
-
-/*!
-    \class QSGNodeDumper
-    \brief The QSGNodeDumper class provides a way of dumping a scene grahp to the console.
-
-    This class is solely for debugging purposes.
-
-    \internal
- */
-
-void QSGNodeDumper::dump(QSGNode *n)
-{
-    QSGNodeDumper dump;
-    dump.visitNode(n);
-}
-
-void QSGNodeDumper::visitNode(QSGNode *n)
-{
-    qDebug() << QString(m_indent * 2, QLatin1Char(' ')) << n;
-    QSGNodeVisitor::visitNode(n);
-}
-
-void QSGNodeDumper::visitChildren(QSGNode *n)
-{
-    ++m_indent;
-    QSGNodeVisitor::visitChildren(n);
-    --m_indent;
-}
-
 #endif
 
 QT_END_NAMESPACE

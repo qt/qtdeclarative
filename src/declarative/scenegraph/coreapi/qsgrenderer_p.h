@@ -212,6 +212,21 @@ QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState
 }
 
 
+class Q_DECLARATIVE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+
+public:
+    static void dump(QSGNode *n);
+
+    QSGNodeDumper() : m_indent(0) {}
+    void visitNode(QSGNode *n);
+    void visitChildren(QSGNode *n);
+
+private:
+    int m_indent;
+};
+
+
+
 QT_END_NAMESPACE
 
 QT_END_HEADER
