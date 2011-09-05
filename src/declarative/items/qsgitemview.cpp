@@ -973,7 +973,7 @@ qreal QSGItemView::minYExtent() const
 
     if (d->minExtentDirty) {
         d->minExtent = -d->startPosition();
-        if (d->header && d->visibleItems.count())
+        if (d->header)
             d->minExtent += d->headerSize();
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
             d->minExtent += d->highlightRangeStart;
@@ -1044,7 +1044,7 @@ qreal QSGItemView::minXExtent() const
             endPositionFirstItem = d->endPositionAt(0);
             highlightStart = d->highlightRangeStart;
             highlightEnd = d->highlightRangeEnd;
-            if (d->header && d->visibleItems.count())
+            if (d->header)
                 d->minExtent += d->headerSize();
         }
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
@@ -1093,7 +1093,7 @@ qreal QSGItemView::maxXExtent() const
             d->maxExtent = -(d->endPosition() - width());
         }
         if (d->isContentFlowReversed()) {
-            if (d->header && d->visibleItems.count())
+            if (d->header)
                 d->maxExtent -= d->headerSize();
         } else {
             if (d->footer)

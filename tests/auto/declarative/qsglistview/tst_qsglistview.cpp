@@ -2463,17 +2463,15 @@ void tst_QSGListView::header()
     QFETCH(QPointF, changedContentPos);
     QFETCH(QPointF, resizeContentPos);
 
-    QSGView *canvas = createView();
-
     TestModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QDeclarativeContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-
+    QSGView *canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
-    qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2520,6 +2518,27 @@ void tst_QSGListView::header()
     QCOMPARE(header->height(), 20.);
     QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
     QCOMPARE(item->pos(), firstDelegatePos);
+
+    delete canvas;
+
+
+    // QTBUG-21207 header should become visible if view resizes from initial empty size
+
+    canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 0.0);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 0.0);
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+
+    listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+
+    listview->setWidth(240);
+    listview->setHeight(320);
+    QTRY_COMPARE(listview->headerItem()->pos(), initialHeaderPos);
+    QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
 
     header->setHeight(10);
     header->setWidth(40);
@@ -2800,8 +2819,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->y(), 0.);
 
-        QVERIFY(static_cast<LVAccessor*>(listview)->minY() == 0);
-        QVERIFY(static_cast<LVAccessor*>(listview)->maxY() == 0);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minY(), header->height());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxY(), header->height());
 
         delete canvas;
     }
@@ -2831,8 +2850,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->x(), 0.);
 
-        QVERIFY(static_cast<LVAccessor*>(listview)->minX() == 0);
-        QVERIFY(static_cast<LVAccessor*>(listview)->maxX() == 0);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), header->width());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), header->width());
 
         delete canvas;
     }
@@ -2863,8 +2882,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->x(), -footer->width());
 
-        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240.);
-        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240.);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240. - header->width());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240. - header->width());
 
         delete canvas;
     }

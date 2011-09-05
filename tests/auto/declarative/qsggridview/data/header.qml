@@ -24,8 +24,8 @@ Rectangle {
     GridView {
         id: grid
         objectName: "grid"
-        width: 240
-        height: 320
+        width: initialViewWidth
+        height: initialViewHeight
         cellWidth: 80
         cellHeight: 60
         model: testModel

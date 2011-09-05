@@ -24,8 +24,8 @@ Rectangle {
         id: list
         objectName: "list"
         focus: true
-        width: 240
-        height: 320
+        width: initialViewWidth
+        height: initialViewHeight
         snapMode: ListView.SnapToItem
         model: testModel
         delegate: myDelegate

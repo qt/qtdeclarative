@@ -2459,17 +2459,15 @@ void tst_QSGGridView::header()
     QFETCH(QPointF, firstDelegatePos);
     QFETCH(QPointF, resizeContentPos);
 
-    QSGView *canvas = createView();
-
     TestModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QDeclarativeContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-
+    QSGView *canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
-    qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -2523,6 +2521,27 @@ void tst_QSGGridView::header()
     header->setHeight(10);
     header->setWidth(40);
     QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), resizeContentPos);
+
+    delete canvas;
+
+
+    // QTBUG-21207 header should become visible if view resizes from initial empty size
+
+    canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+
+    gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+
+    gridview->setWidth(240);
+    gridview->setHeight(320);
+    QTRY_COMPARE(gridview->headerItem()->pos(), initialHeaderPos);
+    QCOMPARE(QPointF(gridview->contentX(), gridview->contentY()), initialContentPos);
 
     delete canvas;
 }
