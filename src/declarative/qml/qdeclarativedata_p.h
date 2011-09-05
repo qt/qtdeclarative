@@ -53,13 +53,13 @@
 // We mean it.
 //
 
-#include <QtDeclarative/qjsvalue.h>
 #include <private/qobject_p.h>
 
 #include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
 
+template <class Key, class T> class QHash;
 class QDeclarativeGuardImpl;
 class QDeclarativeCompiledData;
 class QDeclarativeAbstractBinding;
