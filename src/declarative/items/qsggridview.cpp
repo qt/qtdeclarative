@@ -160,8 +160,8 @@ public:
     FxViewItem *snapItemAt(qreal pos) const;
     int snapIndex() const;
 
-    virtual bool addVisibleItems(int fillFrom, int fillTo, bool doBuffer);
-    virtual bool removeNonVisibleItems(int bufferFrom, int bufferTo);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
     virtual void visibleItemsChanged();
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item);
@@ -387,7 +387,7 @@ FxViewItem *QSGGridViewPrivate::newViewItem(int modelIndex, QSGItem *item)
     return new FxGridItemSG(item, q, false);
 }
 
-bool QSGGridViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer)
+bool QSGGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
 {
     int colPos = colPosAt(visibleIndex);
     int rowPos = rowPosAt(visibleIndex);
@@ -479,7 +479,7 @@ bool QSGGridViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer
     return changed;
 }
 
-bool QSGGridViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
+bool QSGGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
     FxGridItemSG *item = 0;
     bool changed = false;

@@ -217,8 +217,8 @@ protected:
     virtual void setPosition(qreal pos) = 0;
     virtual void fixupPosition() = 0;
 
-    virtual bool addVisibleItems(int fillFrom, int fillTo, bool doBuffer) = 0;
-    virtual bool removeNonVisibleItems(int bufferFrom, int bufferTo) = 0;
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer) = 0;
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo) = 0;
     virtual void visibleItemsChanged() = 0;
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item) = 0;

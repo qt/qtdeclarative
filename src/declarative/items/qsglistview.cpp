@@ -201,8 +201,8 @@ public:
     virtual void init();
     virtual void clear();
 
-    virtual bool addVisibleItems(int fillFrom, int fillTo, bool doBuffer);
-    virtual bool removeNonVisibleItems(int bufferFrom, int bufferTo);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
     virtual void visibleItemsChanged();
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item);
@@ -539,7 +539,7 @@ void QSGListViewPrivate::releaseItem(FxViewItem *item)
     QSGItemViewPrivate::releaseItem(item);
 }
 
-bool QSGListViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer)
+bool QSGListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
 {
     qreal itemEnd = visiblePos;
     if (visibleItems.count()) {
@@ -603,7 +603,7 @@ bool QSGListViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer
     return changed;
 }
 
-bool QSGListViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
+bool QSGListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
     FxViewItem *item = 0;
     bool changed = false;
