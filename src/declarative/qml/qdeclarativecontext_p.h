@@ -108,6 +108,7 @@ public:
     static QObject *context_at(QDeclarativeListProperty<QObject> *, int);
 };
 
+class QDeclarativeVME;
 class QDeclarativeComponentAttached;
 class QDeclarativeGuardedContextData;
 class Q_DECLARATIVE_EXPORT QDeclarativeContextData
@@ -144,6 +145,10 @@ public:
     quint32 isPragmaLibraryContext:1;
     quint32 dummy:28;
     QDeclarativeContext *publicContext;
+
+    // VME that is constructing this context if any
+    // XXX remove if possible
+    QDeclarativeVME *activeVME;
 
     // Property name cache
     QDeclarativeIntegerCache *propertyNames;

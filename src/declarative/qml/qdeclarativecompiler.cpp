@@ -650,7 +650,14 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
     Q_ASSERT(out);
     reset(out);
 
-    output = out;
+    QDeclarativeScript::Object *root = unit->parser().tree();
+    Q_ASSERT(root);
+
+    this->engine = engine;
+    this->enginePrivate = QDeclarativeEnginePrivate::get(engine);
+    this->unit = unit;
+    this->unitRoot = root;
+    this->output = out;
 
     // Compile types
     const QList<QDeclarativeTypeData::TypeReference>  &resolvedTypes = unit->resolvedTypes();
@@ -673,12 +680,10 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
             
             if (ref.type->containsRevisionedAttributes()) {
                 QDeclarativeError cacheError;
-                ref.typePropertyCache = 
-                    QDeclarativeEnginePrivate::get(engine)->cache(ref.type, resolvedTypes.at(ii).minorVersion, cacheError);
-
-                if (!ref.typePropertyCache) {
+                ref.typePropertyCache = enginePrivate->cache(ref.type, resolvedTypes.at(ii).minorVersion, 
+                                                             cacheError);
+                if (!ref.typePropertyCache) 
                     COMPILE_EXCEPTION(parserRef->refObjects.first(), cacheError.description());
-                }
                 ref.typePropertyCache->addref();
             }
 
@@ -689,13 +694,6 @@ bool QDeclarativeCompiler::compile(QDeclarativeEngine *engine,
         out->types << ref;
     }
 
-    QDeclarativeScript::Object *root = unit->parser().tree();
-    Q_ASSERT(root);
-
-    this->engine = engine;
-    this->enginePrivate = QDeclarativeEnginePrivate::get(engine);
-    this->unit = unit;
-    this->unitRoot = root;
     compileTree(root);
 
     if (!isError()) {
@@ -731,20 +729,12 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
 
     foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
         importedScriptIndexes.append(script.qualifier);
-
-        Instruction::StoreImportedScript import;
-        import.value = output->scripts.count();
-
-        QDeclarativeScriptData *scriptData = script.script->scriptData();
-        scriptData->addref();
-        output->scripts << scriptData;
-        output->addInstruction(import);
     }
 
     // We generate the importCache before we build the tree so that
     // it can be used in the binding compiler.  Given we "expect" the
     // QML compilation to succeed, this isn't a waste.
-    output->importCache = new QDeclarativeTypeNameCache(engine);
+    output->importCache = new QDeclarativeTypeNameCache();
     for (int ii = 0; ii < importedScriptIndexes.count(); ++ii) 
         output->importCache->add(importedScriptIndexes.at(ii), ii);
     unit->imports().populateCache(output->importCache, engine);
@@ -753,14 +743,26 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
         return;
 
     Instruction::Init init;
-    init.bindingsSize = compileState->bindings.count();
+    init.bindingsSize = compileState->totalBindingsCount;
     init.parserStatusSize = compileState->parserStatusCount;
     init.contextCache = genContextCache();
+    init.objectStackSize = compileState->objectDepth.maxDepth();
+    init.listStackSize = compileState->listDepth.maxDepth();
     if (compileState->compiledBindingData.isEmpty())
         init.compiledBinding = -1;
     else
         init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
+
+    foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
+        Instruction::StoreImportedScript import;
+        import.value = output->scripts.count();
+
+        QDeclarativeScriptData *scriptData = script.script->scriptData();
+        scriptData->addref();
+        output->scripts << scriptData;
+        output->addInstruction(import);
+    }
 
     if (!compileState->v8BindingProgram.isEmpty()) {
         Instruction::InitV8Bindings bindings;
@@ -805,8 +807,7 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeScript::Object *obj, const Bi
         componentStats->componentStat.objects++;
 
     Q_ASSERT (obj->type != -1);
-    const QDeclarativeCompiledData::TypeReference &tr =
-        output->types.at(obj->type);
+    const QDeclarativeCompiledData::TypeReference &tr = output->types.at(obj->type);
     obj->metatype = tr.metaObject();
 
     if (tr.type) 
@@ -817,6 +818,20 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeScript::Object *obj, const Bi
         COMPILE_CHECK(buildComponent(obj, ctxt));
         return true;
     } 
+
+    if (tr.component) {
+        typedef QDeclarativeInstruction I; 
+        const I *init = ((const I *)tr.component->bytecode.constData());
+        Q_ASSERT(init && tr.component->instructionType(init) == QDeclarativeInstruction::Init);
+ 
+        // Adjust stack depths to include nested components
+        compileState->objectDepth.pushPop(init->init.objectStackSize);
+        compileState->listDepth.pushPop(init->init.listStackSize);
+        compileState->parserStatusCount += init->init.parserStatusSize;
+        compileState->totalBindingsCount += init->init.bindingsSize;
+    }
+
+    compileState->objectDepth.push();
 
     // Object instantiations reset the binding context
     BindingContext objCtxt(obj);
@@ -1006,6 +1021,8 @@ bool QDeclarativeCompiler::buildObject(QDeclarativeScript::Object *obj, const Bi
         }
     }
 
+    compileState->objectDepth.pop();
+
     return true;
 }
 
@@ -1031,23 +1048,35 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
 
     } else {
 
-        Instruction::CreateObject create;
-        create.line = obj->location.start.line;
-        create.column = obj->location.start.column;
-        create.data = -1;
-        if (!obj->custom.isEmpty())
-            create.data = output->indexForByteArray(obj->custom);
-        create.type = obj->type;
-        if (!output->types.at(create.type).type &&
-            !obj->bindingBitmask.isEmpty()) {
-            Q_ASSERT(obj->bindingBitmask.size() % 4 == 0);
-            create.bindingBits =
-                output->indexForByteArray(obj->bindingBitmask);
+        if (output->types.at(obj->type).type) {
+            Instruction::CreateCppObject create;
+            create.line = obj->location.start.line;
+            create.column = obj->location.start.column;
+            create.data = -1;
+            if (!obj->custom.isEmpty())
+                create.data = output->indexForByteArray(obj->custom);
+            create.type = obj->type;
+            create.isRoot = (compileState->root == obj);
+            output->addInstruction(create);
         } else {
-            create.bindingBits = -1;
-        }
-        output->addInstruction(create);
+            Instruction::CreateQMLObject create;
+            create.type = obj->type;
+            create.isRoot = (compileState->root == obj);
 
+            if (!obj->bindingBitmask.isEmpty()) {
+                Q_ASSERT(obj->bindingBitmask.size() % 4 == 0);
+                create.bindingBits = output->indexForByteArray(obj->bindingBitmask);
+            } else {
+                create.bindingBits = -1;
+            }
+            output->addInstruction(create);
+
+            Instruction::CompleteQMLObject complete;
+            complete.line = obj->location.start.line;
+            complete.column = obj->location.start.column;
+            complete.isRoot = (compileState->root == obj);
+            output->addInstruction(complete);
+        }
     }
 
     // Setup the synthesized meta object if necessary
@@ -1132,12 +1161,13 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
         int deferIdx = output->addInstruction(defer);
         int nextInstructionIndex = output->nextInstructionIndex();
 
-        Instruction::Init init;
-        init.bindingsSize = compileState->bindings.count(); // XXX - bigger than necessary
-        init.parserStatusSize = compileState->parserStatusCount; // XXX - bigger than necessary
-        init.contextCache = -1;
-        init.compiledBinding = -1;
-        output->addInstruction(init);
+        Instruction::DeferInit dinit;
+        // XXX - these are now massive over allocations
+        dinit.bindingsSize = compileState->totalBindingsCount;
+        dinit.parserStatusSize = compileState->parserStatusCount; 
+        dinit.objectStackSize = compileState->objectDepth.maxDepth(); 
+        dinit.listStackSize = compileState->listDepth.maxDepth(); 
+        output->addInstruction(dinit);
 
         for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
             if (!prop->isDeferred)
@@ -1269,6 +1299,7 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
     create.line = root->location.start.line;
     create.column = root->location.start.column;
     create.endLine = root->location.end.line;
+    create.isRoot = (compileState->root == obj);
     int createInstruction = output->addInstruction(create);
     int nextInstructionIndex = output->nextInstructionIndex();
 
@@ -1276,9 +1307,11 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
     compileState = componentState(root);
 
     Instruction::Init init;
-    init.bindingsSize = compileState->bindings.count();
+    init.bindingsSize = compileState->totalBindingsCount;
     init.parserStatusSize = compileState->parserStatusCount;
     init.contextCache = genContextCache();
+    init.objectStackSize = compileState->objectDepth.maxDepth();
+    init.listStackSize = compileState->listDepth.maxDepth();
     if (compileState->compiledBindingData.isEmpty())
         init.compiledBinding = -1;
     else
@@ -1325,6 +1358,8 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeScript::Object *obj,
     // The special "Component" element can only have the id property and a
     // default property, that actually defines the component's tree
 
+    compileState->objectDepth.push();
+
     // Find, check and set the "id" property (if any)
     Property *idProp = 0;
     if (obj->properties.isMany() ||
@@ -1370,6 +1405,8 @@ bool QDeclarativeCompiler::buildComponent(QDeclarativeScript::Object *obj,
 
     // Build the component tree
     COMPILE_CHECK(buildComponentFromRoot(root, ctxt));
+
+    compileState->objectDepth.pop();
 
     return true;
 }
@@ -1849,6 +1886,7 @@ bool QDeclarativeCompiler::buildIdProperty(QDeclarativeScript::Property *prop,
 
 void QDeclarativeCompiler::addId(const QString &id, QDeclarativeScript::Object *obj)
 {
+    Q_UNUSED(id);
     Q_ASSERT(!compileState->ids.value(id));
     Q_ASSERT(obj->id == id);
     obj->idIndex = compileState->ids.count();
@@ -1859,6 +1897,7 @@ void QDeclarativeCompiler::addBindingReference(BindingReference *ref)
 {
     Q_ASSERT(ref->value && !ref->value->bindingReference);
     ref->value->bindingReference = ref;
+    compileState->totalBindingsCount++;
     compileState->bindings.prepend(ref);
 }
 
@@ -1892,9 +1931,13 @@ bool QDeclarativeCompiler::buildAttachedProperty(QDeclarativeScript::Property *p
     Q_ASSERT(prop->value);
     Q_ASSERT(prop->index != -1); // This is set in buildProperty()
 
+    compileState->objectDepth.push();
+
     obj->addAttachedProperty(prop);
 
     COMPILE_CHECK(buildSubObject(prop->value, ctxt.incr()));
+
+    compileState->objectDepth.pop();
 
     return true;
 }
@@ -1953,7 +1996,11 @@ bool QDeclarativeCompiler::buildGroupedProperty(QDeclarativeScript::Property *pr
 
         obj->addGroupedProperty(prop);
 
+        compileState->objectDepth.push();
+
         COMPILE_CHECK(buildSubObject(prop->value, ctxt.incr()));
+
+        compileState->objectDepth.pop();
     }
 
     return true;
@@ -1964,6 +2011,8 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
                                                   QDeclarativeScript::Object *baseObj,
                                                   const BindingContext &ctxt)
 {
+    compileState->objectDepth.push();
+
     if (obj->defaultProperty)
         COMPILE_EXCEPTION(obj, tr("Invalid property use"));
     obj->metatype = type->metaObject();
@@ -2026,6 +2075,8 @@ bool QDeclarativeCompiler::buildValueTypeProperty(QObject *type,
         obj->addValueProperty(prop);
     }
 
+    compileState->objectDepth.pop();
+
     return true;
 }
 
@@ -2037,6 +2088,8 @@ bool QDeclarativeCompiler::buildListProperty(QDeclarativeScript::Property *prop,
                                              const BindingContext &ctxt)
 {
     Q_ASSERT(prop->core.isQList());
+
+    compileState->listDepth.push();
 
     int t = prop->type;
 
@@ -2070,6 +2123,8 @@ bool QDeclarativeCompiler::buildListProperty(QDeclarativeScript::Property *prop,
             COMPILE_EXCEPTION(v, tr("Cannot assign primitives to lists"));
         }
     }
+
+    compileState->listDepth.pop();
 
     return true;
 }
@@ -2408,7 +2463,6 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
     QHashField methodNames;
 
     // Check properties
-    int dpCount = obj->dynamicProperties.count();
     for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
         const QDeclarativeScript::Object::DynamicProperty &prop = *p;
 
@@ -2983,7 +3037,7 @@ bool QDeclarativeCompiler::compileAlias(QFastMetaBuilder &builder,
 
             // update the property type
             type = aliasProperty.type();
-            if (type >= QVariant::UserType)
+            if (type >= (int)QVariant::UserType)
                 type = 0;
         }
 
@@ -3070,6 +3124,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
                              ((prop->index & 0xFF) << 24);
         else 
             store.property = prop->index;
+        store.isRoot = (compileState->root == obj);
         store.line = binding->location.start.line;
         output->addInstruction(store);
     } else if (ref.dataType == BindingReference::V8) {
@@ -3077,6 +3132,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.value = ref.compiledIndex;
         store.context = ref.bindingContext.stack;
         store.owner = ref.bindingContext.owner;
+        store.isRoot = (compileState->root == obj);
         store.line = binding->location.start.line;
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
@@ -3093,6 +3149,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.assignBinding.value = output->indexForString(ref.rewrittenExpression);
         store.assignBinding.context = ref.bindingContext.stack;
         store.assignBinding.owner = ref.bindingContext.owner;
+        store.assignBinding.isRoot = (compileState->root == obj);
         store.assignBinding.line = binding->location.start.line;
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
@@ -3241,6 +3298,10 @@ bool QDeclarativeCompiler::completeComponentBuild()
     if (bindingCompiler.isValid()) 
         compileState->compiledBindingData = bindingCompiler.program();
 
+    // Check pop()'s matched push()'s
+    Q_ASSERT(compileState->objectDepth.depth() == 0);
+    Q_ASSERT(compileState->listDepth.depth() == 0);
+
     saveComponentState();
 
     return true;
@@ -3302,8 +3363,7 @@ void QDeclarativeCompiler::dumpStats()
 */
 bool QDeclarativeCompiler::canCoerce(int to, QDeclarativeScript::Object *from)
 {
-    const QMetaObject *toMo = 
-        enginePrivate->rawMetaObjectForType(to);
+    const QMetaObject *toMo = enginePrivate->rawMetaObjectForType(to);
     const QMetaObject *fromMo = from->metaObject();
 
     while (fromMo) {

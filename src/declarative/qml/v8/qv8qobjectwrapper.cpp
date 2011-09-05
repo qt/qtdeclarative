@@ -861,6 +861,7 @@ static void WeakQObjectInstanceCallback(v8::Persistent<v8::Value> handle, void *
 v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8Engine *engine)
 {
     Q_ASSERT(object);
+    Q_ASSERT(this->engine);
 
     Q_ASSERT(QDeclarativeData::get(object, false));
     Q_ASSERT(QDeclarativeData::get(object, false)->propertyCache == this);
@@ -938,6 +939,8 @@ v8::Local<v8::Object> QDeclarativePropertyCache::newQObject(QObject *object, QV8
             ft->InstanceTemplate()->SetHasExternalResource(true);
             constructor = qPersistentNew<v8::Function>(ft->GetFunction());
         }
+
+        QDeclarativeCleanup::addToEngine(this->engine);
     }
 
     v8::Local<v8::Object> result = constructor->NewInstance();

@@ -213,19 +213,10 @@ void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDecla
             QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(data.uri, data.majversion, data.minversion);
             if (moduleApi.script || moduleApi.qobject) {
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-                QDeclarativeMetaType::ModuleApiInstance *a = ep->moduleApiInstances.value(moduleApi);
-                if (!a) {
-                    a = new QDeclarativeMetaType::ModuleApiInstance;
-                    a->scriptCallback = moduleApi.script;
-                    a->qobjectCallback = moduleApi.qobject;
-                    ep->moduleApiInstances.insert(moduleApi, a);
-                }
-                import.moduleApi = a;
+                import.moduleApi = ep->moduleApiInstance(moduleApi);
             }
         }
     }
-
-
 }
 
 /*!
@@ -1092,22 +1083,29 @@ bool QDeclarativeImportDatabase::importPlugin(const QString &filePath, const QSt
             return false;
         }
 
-        if (QDeclarativeExtensionInterface *iface = qobject_cast<QDeclarativeExtensionInterface *>(loader.instance())) {
+        QObject *instance = loader.instance();
+        if (QDeclarativeTypesExtensionInterface *iface = qobject_cast<QDeclarativeExtensionInterface *>(instance)) {
 
             const QByteArray bytes = uri.toUtf8();
             const char *moduleId = bytes.constData();
             if (!typesRegistered) {
 
-                // ### this code should probably be protected with a mutex.
+                // XXX thread this code should probably be protected with a mutex.
                 qmlEnginePluginsWithRegisteredTypes()->insert(absoluteFilePath, uri);
                 iface->registerTypes(moduleId);
             }
             if (!engineInitialized) {
-                // things on the engine (eg. adding new global objects) have to be done for every engine.
-
-                // protect against double initialization
+                // things on the engine (eg. adding new global objects) have to be done for every 
+                // engine.  
+                // XXX protect against double initialization
                 initializedPlugins.insert(absoluteFilePath);
-                iface->initializeEngine(engine, moduleId);
+
+                QDeclarativeExtensionInterface *eiface = 
+                    qobject_cast<QDeclarativeExtensionInterface *>(instance);
+                if (eiface) {
+                    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+                    ep->typeLoader.initializeEngine(eiface, moduleId);
+                }
             }
         } else {
             if (errors) {

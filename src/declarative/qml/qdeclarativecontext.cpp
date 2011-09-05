@@ -510,17 +510,19 @@ QObject *QDeclarativeContextPrivate::context_at(QDeclarativeListProperty<QObject
 
 
 QDeclarativeContextData::QDeclarativeContextData()
-: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), isPragmaLibraryContext(false),
-  publicContext(0), propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0), 
-  expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), 
-  componentAttached(0), v4bindings(0), v8bindings(0)
+: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
+  isPragmaLibraryContext(false), publicContext(0), activeVME(0), propertyNames(0), contextObject(0), 
+  imports(0), childContexts(0), nextChild(0), prevChild(0), expressions(0), contextObjects(0), 
+  contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), componentAttached(0), 
+  v4bindings(0), v8bindings(0)
 {
 }
 
 QDeclarativeContextData::QDeclarativeContextData(QDeclarativeContext *ctxt)
-: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), isPragmaLibraryContext(false),
-  publicContext(ctxt), propertyNames(0), contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0), 
-  expressions(0), contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), 
+: parent(0), engine(0), isInternal(false), ownedByParent(false), isJSContext(false), 
+  isPragmaLibraryContext(false), publicContext(ctxt), activeVME(0), propertyNames(0), 
+  contextObject(0), imports(0), childContexts(0), nextChild(0), prevChild(0), expressions(0), 
+  contextObjects(0), contextGuards(0), idValues(0), idValueCount(0), linkedContext(0), 
   componentAttached(0), v4bindings(0), v8bindings(0)
 {
 }

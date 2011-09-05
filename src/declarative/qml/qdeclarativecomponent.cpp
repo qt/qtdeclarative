@@ -54,6 +54,8 @@
 #include "private/qdeclarativescript_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeenginedebugservice_p.h"
+#include "qdeclarativeincubator.h"
+#include "private/qdeclarativeincubator_p.h"
 
 #include "private/qv8engine_p.h"
 #include "private/qv8include_p.h"
@@ -65,7 +67,45 @@
 
 QT_BEGIN_NAMESPACE
 
-class QByteArray;
+class QDeclarativeComponentExtension : public QV8Engine::Deletable
+{
+public:
+    QDeclarativeComponentExtension(QV8Engine *);
+    virtual ~QDeclarativeComponentExtension();
+
+    v8::Persistent<v8::Function> incubationConstructor;
+    v8::Persistent<v8::Script> initialProperties;
+    v8::Persistent<v8::Function> forceIncubation;
+};
+static V8_DEFINE_EXTENSION(QDeclarativeComponentExtension, componentExtension);
+
+/*
+    Try to do what's necessary for a reasonable display of the type
+    name, but no more (just enough for the client to do more extensive cleanup).
+
+    Should only be called when debugging is enabled.
+*/
+static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
+{
+    static const QString qmlMarker(QLatin1String("_QML"));
+    static const QChar underscore(QLatin1Char('_'));
+    static const QChar asterisk(QLatin1Char('*'));
+    QDeclarativeType *type = QDeclarativeMetaType::qmlType(metaObject);
+    QString typeName = type ? QLatin1String(type->qmlTypeName()) : QLatin1String(metaObject->className());
+    if (!type) {
+        //### optimize further?
+        int marker = typeName.indexOf(qmlMarker);
+        if (marker != -1 && marker < typeName.count() - 1) {
+            if (typeName[marker + 1] == underscore) {
+                const QString className = typeName.left(marker) + asterisk;
+                type = QDeclarativeMetaType::qmlType(QMetaType::type(className.toLatin1()));
+                if (type)
+                    typeName = QLatin1String(type->qmlTypeName());
+            }
+        }
+    }
+    return typeName;
+}
 
 /*!
     \class QDeclarativeComponent
@@ -615,165 +655,6 @@ QDeclarativeComponent::QDeclarativeComponent(QDeclarativeComponentPrivate &dd, Q
 }
 
 /*!
-    \qmlmethod object Component::createObject(Item parent, object properties)
-
-    Creates and returns an object instance of this component that will have
-    the given \a parent and \a properties. The \a properties argument is optional.
-    Returns null if object creation fails.
-
-    The object will be created in the same context as the one in which the component
-    was created. This function will always return null when called on components
-    which were not created in QML.
-
-    If you wish to create an object without setting a parent, specify \c null for
-    the \a parent value. Note that if the returned object is to be displayed, you 
-    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent} 
-    property, or else the object will not be visible.
-
-    If a \a parent is not provided to createObject(), a reference to the returned object must be held so that
-    it is not destroyed by the garbage collector.  This is true regardless of whether \l{Item::parent} is set afterwards,
-    since setting the Item parent does not change object ownership; only the graphical parent is changed.
-
-    As of QtQuick 1.1, this method accepts an optional \a properties argument that specifies a
-    map of initial property values for the created object. These values are applied before object
-    creation is finalized. (This is more efficient than setting property values after object creation,
-    particularly where large sets of property values are defined, and also allows property bindings
-    to be set up before the object is created.)
-
-    The \a properties argument is specified as a map of property-value items. For example, the code
-    below creates an object with initial \c x and \c y values of 100 and 200, respectively:
-
-    \js
-        var component = Qt.createComponent("Button.qml");
-        if (component.status == Component.Ready)
-            component.createObject(parent, {"x": 100, "y": 100});
-    \endjs
-
-    Dynamically created instances can be deleted with the \c destroy() method.
-    See \l {Dynamic Object Management in QML} for more information.
-*/
-
-/*!
-    \internal
-    A version of create which returns a scriptObject, for use in script.
-    This function will only work on components created in QML.
-
-    Sets graphics object parent because forgetting to do this is a frequent
-    and serious problem.
-*/
-void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
-{
-    Q_ASSERT(args);
-
-    Q_D(QDeclarativeComponent);
-
-    Q_ASSERT(d->engine);
-
-    QObject *parent = args->Length()?QDeclarativeEnginePrivate::get(d->engine)->v8engine()->toQObject((*args)[0]):0;
-
-    v8::Local<v8::Object> valuemap;
-    if (args->Length() >= 2) {
-        v8::Local<v8::Value> v = (*args)[1];
-        if (!v->IsObject() || v->IsArray()) {
-            qmlInfo(this) << tr("createObject: value is not an object");
-            args->returnValue(v8::Null());
-            return;
-        }
-        valuemap = v8::Local<v8::Object>::Cast(v);
-    }
-
-    QV8Engine *v8engine = QDeclarativeEnginePrivate::get(d->engine)->v8engine();
-    QObject *retn = d->createObjectWithInitialProperties(args->qmlGlobal(), valuemap, parent);
-    if (!retn)
-        args->returnValue(v8::Null());
-    else
-        args->returnValue(v8engine->newQObject(retn));
-}
-
-QObject *QDeclarativeComponentPrivate::createObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *parentObject)
-{
-    Q_Q(QDeclarativeComponent);
-    Q_ASSERT(engine);
-
-    QDeclarativeContext *ctxt = q->creationContext();
-    if (!ctxt) ctxt = engine->rootContext();
-
-    QObject *parent = parentObject;
-
-    QObject *ret = q->beginCreate(ctxt);
-    if (!ret) {
-        q->completeCreate();
-        return 0;
-    }
-
-    if (parent) {
-        ret->setParent(parent);
-
-        QList<QDeclarativePrivate::AutoParentFunction> functions = QDeclarativeMetaType::parentFunctions();
-
-        bool needParent = false;
-
-        for (int ii = 0; ii < functions.count(); ++ii) {
-            QDeclarativePrivate::AutoParentResult res = functions.at(ii)(ret, parent);
-            if (res == QDeclarativePrivate::Parented) {
-                needParent = false;
-                break;
-            } else if (res == QDeclarativePrivate::IncompatibleParent) {
-                needParent = true;
-            }
-        }
-
-        if (needParent)
-            qWarning("QDeclarativeComponent: Created graphical object was not placed in the graphics scene.");
-    }
-
-    return completeCreateObjectWithInitialProperties(qmlGlobal, valuemap, ret);
-}
-
-QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate)
-{
-    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-    v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
-    Q_ASSERT(ov->IsObject());
-    v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
-
-    if (!valuemap.IsEmpty()) {
-
-#define SET_ARGS_SOURCE \
-        "(function(object, values) {"\
-            "try {"\
-                "for(var property in values) {"\
-                    "try {"\
-                        "var properties = property.split(\".\");"\
-                        "var o = object;"\
-                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
-                            "o = o[properties[ii]];"\
-                        "}"\
-                        "o[properties[properties.length - 1]] = values[property];"\
-                    "} catch(e) {}"\
-                "}"\
-            "} catch(e) {}"\
-        "})"
-
-        v8::Local<v8::Script> script = v8engine->qmlModeCompile(SET_ARGS_SOURCE);
-        v8::Local<v8::Function> function = v8::Local<v8::Function>::Cast(script->Run(qmlGlobal));
-
-        // Try catch isn't needed as the function itself is loaded with try/catch
-        v8::Handle<v8::Value> args[] = { object, valuemap };
-        function->Call(v8engine->global(), 2, args);
-    }
-
-    completeCreate();
-
-    QDeclarativeData *ddata = QDeclarativeData::get(toCreate);
-    Q_ASSERT(ddata);
-    ddata->setImplicitDestructible();
-
-    return v8engine->toQObject(object);
-}
-
-/*!
     Create an object instance from this component.  Returns 0 if creation
     failed.  \a context specifies the context within which to create the object
     instance.  
@@ -799,7 +680,7 @@ QObject *QDeclarativeComponent::create(QDeclarativeContext *context)
     component.
 
     Create an object instance from this component.  Returns 0 if creation
-    failed.  \a context specifies the context within which to create the object
+    failed.  \a publicContext specifies the context within which to create the object
     instance.  
 
     When QDeclarativeComponent constructs an instance, it occurs in three steps:
@@ -816,20 +697,18 @@ QObject *QDeclarativeComponent::create(QDeclarativeContext *context)
     communicate information to an instantiated component, as it allows their
     initial values to be configured before property bindings take effect.
 */
-QObject *QDeclarativeComponent::beginCreate(QDeclarativeContext *context)
+QObject *QDeclarativeComponent::beginCreate(QDeclarativeContext *publicContext)
 {
     Q_D(QDeclarativeComponent);
-    QObject *rv = d->beginCreate(context?QDeclarativeContextData::get(context):0, QBitField());
-    if (rv) {
-        QDeclarativeData *ddata = QDeclarativeData::get(rv);
-        Q_ASSERT(ddata);
-        ddata->indestructible = true;
-    }
-    return rv;
+
+    Q_ASSERT(publicContext);
+    QDeclarativeContextData *context = QDeclarativeContextData::get(publicContext);
+
+    return d->beginCreate(context);
 }
 
 QObject *
-QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context, const QBitField &bindings)
+QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
 {
     Q_Q(QDeclarativeComponent);
     if (!context) {
@@ -857,105 +736,61 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context, cons
         return 0;
     }
 
-    return begin(context, creationContext, cc, start, &state, 0, bindings);
-}
+    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
 
-/*
-    Try to do what's necessary for a reasonable display of the type
-    name, but no more (just enough for the client to do more extensive cleanup).
+    bool isRoot = enginePriv->inProgressCreations == 0;
+    enginePriv->inProgressCreations++;
+    state.errors.clear();
+    state.completePending = true;
 
-    Should only be called when debugging is enabled.
-*/
-static inline QString buildTypeNameForDebug(const QMetaObject *metaObject)
-{
-    static const QString qmlMarker(QLatin1String("_QML"));
-    static const QChar underscore(QLatin1Char('_'));
-    static const QChar asterisk(QLatin1Char('*'));
-    QDeclarativeType *type = QDeclarativeMetaType::qmlType(metaObject);
-    QString typeName = type ? QLatin1String(type->qmlTypeName()) : QLatin1String(metaObject->className());
-    if (!type) {
-        //### optimize further?
-        int marker = typeName.indexOf(qmlMarker);
-        if (marker != -1 && marker < typeName.count() - 1) {
-            if (typeName[marker + 1] == underscore) {
-                const QString className = typeName.left(marker) + asterisk;
-                type = QDeclarativeMetaType::qmlType(QMetaType::type(className.toLatin1()));
-                if (type)
-                    typeName = QLatin1String(type->qmlTypeName());
-            }
-        }
-    }
-    return typeName;
-}
-
-QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentContext, 
-                                              QDeclarativeContextData *componentCreationContext,
-                                              QDeclarativeCompiledData *component, int start, 
-                                              ConstructionState *state, QList<QDeclarativeError> *errors,
-                                              const QBitField &bindings)
-{
-    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(parentContext->engine);
-    bool isRoot = !enginePriv->inBeginCreate;
-
-    Q_ASSERT(!isRoot || state); // Either this isn't a root component, or a state data must be provided
-    Q_ASSERT((state != 0) ^ (errors != 0)); // One of state or errors (but not both) must be provided
-
-    if (isRoot)
+    if (isRoot) 
         QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
 
-    QDeclarativeContextData *ctxt = new QDeclarativeContextData;
-    ctxt->isInternal = true;
-    ctxt->url = component->url;
-    ctxt->imports = component->importCache;
+    enginePriv->referenceScarceResources();
+    state.vme.init(context, cc, start);
+    QObject *rv = state.vme.execute(&state.errors);
+    enginePriv->dereferenceScarceResources();
 
-    // Nested global imports
-    if (componentCreationContext && start != -1) {
-        ctxt->importedScripts = componentCreationContext->importedScripts;
-        for (int ii = 0; ii < ctxt->importedScripts.count(); ++ii)
-            ctxt->importedScripts[ii] = qPersistentNew<v8::Object>(ctxt->importedScripts[ii]);
+    if (rv && creationContext && start != -1) {
+        // A component that is logically created within another component instance shares the same
+        // instances of script imports.  For example:
+        //
+        //     import QtQuick 1.0
+        //     import "test.js" as Test
+        //     ListView {
+        //         model: Test.getModel()
+        //         delegate: Component {
+        //             Text { text: Test.getValue(index); }
+        //         }
+        //     }
+        //
+        // Has the same "Test" instance.  To implement this, we simply copy the v8 handles into
+        // the inner context.  We have to create a fresh persistent handle for each to prevent 
+        // double dispose.  It is possible we could do this more efficiently using some form of
+        // referencing instead.
+        QDeclarativeContextData *objectContext = QDeclarativeData::get(rv, false)->outerContext;
+        objectContext->importedScripts = creationContext->importedScripts;
+        for (int ii = 0; ii < objectContext->importedScripts.count(); ++ii)
+            objectContext->importedScripts[ii] = qPersistentNew<v8::Object>(objectContext->importedScripts[ii]);
     }
 
-    component->importCache->addref();
-    ctxt->setParent(parentContext);
-
-    enginePriv->inBeginCreate = true;
-
-    QDeclarativeVME vme;
-    enginePriv->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-    QObject *rv = vme.run(ctxt, component, start, bindings);
-    enginePriv->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-
-    if (vme.isError()) {
-       if(errors) *errors = vme.errors();
-       else state->errors = vme.errors();
-    }
-
-    if (isRoot) {
-        enginePriv->inBeginCreate = false;
-
-        state->bindValues = enginePriv->bindValues;
-        state->parserStatus = enginePriv->parserStatus;
-        state->finalizedParserStatus = enginePriv->finalizedParserStatus;
-        state->componentAttached = enginePriv->componentAttached;
-        if (state->componentAttached)
-            state->componentAttached->prev = &state->componentAttached;
-
-        enginePriv->componentAttached = 0;
-        enginePriv->bindValues.clear();
-        enginePriv->parserStatus.clear();
-        enginePriv->finalizedParserStatus.clear();
-        state->completePending = true;
-        enginePriv->inProgressCreations++;
+    if (rv) {
+        QDeclarativeData *ddata = QDeclarativeData::get(rv);
+        Q_ASSERT(ddata);
+        ddata->indestructible = true;
     }
 
     if (enginePriv->isDebugging && rv) {
-        if  (!parentContext->isInternal)
-            parentContext->asQDeclarativeContextPrivate()->instances.append(rv);
-        QDeclarativeEngineDebugService::instance()->objectCreated(parentContext->engine, rv);
+        if (!context->isInternal)
+            context->asQDeclarativeContextPrivate()->instances.append(rv);
+        QDeclarativeEngineDebugService::instance()->objectCreated(engine, rv);
         if (isRoot) {
-            QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, buildTypeNameForDebug(rv->metaObject()));
+            QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, 
+                                              buildTypeNameForDebug(rv->metaObject()));
             QDeclarativeData *data = QDeclarativeData::get(rv);
-            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, component->url, data ? data->lineNumber : -1);
+            Q_ASSERT(data);
+            QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, 
+                                                  cc->url, data->lineNumber);
         }
     }
 
@@ -965,106 +800,23 @@ QObject * QDeclarativeComponentPrivate::begin(QDeclarativeContextData *parentCon
 void QDeclarativeComponentPrivate::beginDeferred(QDeclarativeEnginePrivate *enginePriv,
                                                  QObject *object, ConstructionState *state)
 {
-    bool isRoot = !enginePriv->inBeginCreate;
-    enginePriv->inBeginCreate = true;
+    enginePriv->inProgressCreations++;
+    state->errors.clear();
+    state->completePending = true;
 
-    QDeclarativeVME vme;
-    vme.runDeferred(object);
-
-    if (vme.isError()) 
-        state->errors = vme.errors();
-
-    if (isRoot) {
-        enginePriv->inBeginCreate = false;
-
-        state->bindValues = enginePriv->bindValues;
-        state->parserStatus = enginePriv->parserStatus;
-        state->finalizedParserStatus = enginePriv->finalizedParserStatus;
-        state->componentAttached = enginePriv->componentAttached;
-        if (state->componentAttached)
-            state->componentAttached->prev = &state->componentAttached;
-
-        enginePriv->componentAttached = 0;
-        enginePriv->bindValues.clear();
-        enginePriv->parserStatus.clear();
-        enginePriv->finalizedParserStatus.clear();
-        state->completePending = true;
-        enginePriv->inProgressCreations++;
-    }
+    state->vme.initDeferred(object);
+    state->vme.execute(&state->errors);
 }
 
 void QDeclarativeComponentPrivate::complete(QDeclarativeEnginePrivate *enginePriv, ConstructionState *state)
 {
     if (state->completePending) {
+        state->vme.complete();
 
-        for (int ii = 0; ii < state->bindValues.count(); ++ii) {
-            QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding> bv = 
-                state->bindValues.at(ii);
-            for (int jj = 0; jj < bv.count; ++jj) {
-                if(bv.at(jj)) {
-                    bv.at(jj)->m_mePtr = 0;
-                    bv.at(jj)->setEnabled(true, QDeclarativePropertyPrivate::BypassInterceptor | 
-                                                QDeclarativePropertyPrivate::DontRemoveBinding);
-                }
-            }
-            QDeclarativeEnginePrivate::clear(bv);
-        }
-
-        for (int ii = 0; ii < state->parserStatus.count(); ++ii) {
-            QDeclarativeEnginePrivate::SimpleList<QDeclarativeParserStatus> ps = 
-                state->parserStatus.at(ii);
-
-            for (int jj = ps.count - 1; jj >= 0; --jj) {
-                QDeclarativeParserStatus *status = ps.at(jj);
-                if (status && status->d) {
-                    status->d = 0;
-                    status->componentComplete();
-                }
-            }
-            QDeclarativeEnginePrivate::clear(ps);
-        }
-
-        for (int ii = 0; ii < state->finalizedParserStatus.count(); ++ii) {
-            QPair<QDeclarativeGuard<QObject>, int> status = state->finalizedParserStatus.at(ii);
-            QObject *obj = status.first;
-            if (obj) {
-                void *args[] = { 0 };
-                QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
-                                      status.second, args);
-            }
-        }
-
-        //componentComplete() can register additional finalization objects
-        //that are then never handled. Handle them manually here.
-        if (1 == enginePriv->inProgressCreations) {
-            for (int ii = 0; ii < enginePriv->finalizedParserStatus.count(); ++ii) {
-                QPair<QDeclarativeGuard<QObject>, int> status = enginePriv->finalizedParserStatus.at(ii);
-                QObject *obj = status.first;
-                if (obj) {
-                    void *args[] = { 0 };
-                    QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
-                                          status.second, args);
-                }
-            }
-            enginePriv->finalizedParserStatus.clear();
-        }
-
-        while (state->componentAttached) {
-            QDeclarativeComponentAttached *a = state->componentAttached;
-            a->rem();
-            QDeclarativeData *d = QDeclarativeData::get(a->parent());
-            Q_ASSERT(d);
-            Q_ASSERT(d->context);
-            a->add(&d->context->componentAttached);
-            emit a->completed();
-        }
-
-        state->bindValues.clear();
-        state->parserStatus.clear();
-        state->finalizedParserStatus.clear();
         state->completePending = false;
 
         enginePriv->inProgressCreations--;
+
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
                 enginePriv->warning(enginePriv->erroredBindings->error);
@@ -1121,9 +873,9 @@ QDeclarativeComponentAttached *QDeclarativeComponent::qmlAttachedProperties(QObj
     if (!engine)
         return a;
 
-    if (QDeclarativeEnginePrivate::get(engine)->inBeginCreate) {
+    if (QDeclarativeEnginePrivate::get(engine)->activeVME) { // XXX should only be allowed during begin
         QDeclarativeEnginePrivate *p = QDeclarativeEnginePrivate::get(engine);
-        a->add(&p->componentAttached);
+        a->add(&p->activeVME->componentAttached);
     } else {
         QDeclarativeData *d = QDeclarativeData::get(obj);
         Q_ASSERT(d);
@@ -1132,6 +884,429 @@ QDeclarativeComponentAttached *QDeclarativeComponent::qmlAttachedProperties(QObj
     }
 
     return a;
+}
+
+void QDeclarativeComponent::create(QDeclarativeIncubator &i, QDeclarativeContext *context,
+                                   QDeclarativeContext *forContext)
+{
+    Q_D(QDeclarativeComponent);
+
+    if (!context) {
+        qWarning("QDeclarativeComponent: Cannot create a component in a null context");
+        return;
+    }
+
+    QDeclarativeContextData *contextData = QDeclarativeContextData::get(context);
+    QDeclarativeContextData *forContextData = contextData;
+    if (forContext) forContextData = QDeclarativeContextData::get(forContext);
+
+    if (!contextData->isValid()) {
+        qWarning("QDeclarativeComponent: Cannot create a component in an invalid context");
+        return;
+    }
+
+    if (contextData->engine != d->engine) {
+        qWarning("QDeclarativeComponent: Must create component in context from the same QDeclarativeEngine");
+        return;
+    }
+
+    if (!isReady()) {
+        qWarning("QDeclarativeComponent: Component is not ready");
+        return;
+    }
+
+    i.clear();
+    QDeclarativeIncubatorPrivate *p = i.d;
+
+    QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(d->engine);
+
+    p->component = d->cc; p->component->addref();
+    p->vme.init(contextData, d->cc, d->start);
+
+    enginePriv->incubate(i, forContextData);
+}
+
+class QV8IncubatorResource : public QV8ObjectResource,
+                             public QDeclarativeIncubator
+{
+V8_RESOURCE_TYPE(IncubatorType)
+public:
+    QV8IncubatorResource(QV8Engine *engine, IncubationMode = Asynchronous);
+
+    static v8::Handle<v8::Value> StatusChangedGetter(v8::Local<v8::String>, 
+                                                     const v8::AccessorInfo& info);
+    static v8::Handle<v8::Value> StatusGetter(v8::Local<v8::String>, 
+                                              const v8::AccessorInfo& info);
+    static v8::Handle<v8::Value> ObjectGetter(v8::Local<v8::String>, 
+                                              const v8::AccessorInfo& info);
+    static v8::Handle<v8::Value> ForceIncubationGetter(v8::Local<v8::String>, 
+                                                       const v8::AccessorInfo& info);
+    static v8::Handle<v8::Value> ForceIncubation(const v8::Arguments &args);
+
+    static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+                                    const v8::AccessorInfo& info);
+
+    v8::Persistent<v8::Object> me;
+    QDeclarativeGuard<QObject> parent;
+    v8::Persistent<v8::Value> valuemap;
+    v8::Persistent<v8::Object> qmlGlobal;
+protected:
+    virtual void statusChanged(Status);
+    virtual void setInitialState(QObject *);
+};
+
+static void QDeclarativeComponent_setQmlParent(QObject *me, QObject *parent)
+{
+    if (parent) {
+        me->setParent(parent);
+        typedef QDeclarativePrivate::AutoParentFunction APF;
+        QList<APF> functions = QDeclarativeMetaType::parentFunctions();
+
+        bool needParent = false;
+        for (int ii = 0; ii < functions.count(); ++ii) {
+            QDeclarativePrivate::AutoParentResult res = functions.at(ii)(me, parent);
+            if (res == QDeclarativePrivate::Parented) {
+                needParent = false;
+                break;
+            } else if (res == QDeclarativePrivate::IncompatibleParent) {
+                needParent = true;
+            }
+        }
+        if (needParent) 
+            qWarning("QDeclarativeComponent: Created graphical object was not "
+                     "placed in the graphics scene.");
+    }
+}
+
+/*!
+    \qmlmethod object Component::createObject(Item parent, object properties)
+
+    Creates and returns an object instance of this component that will have
+    the given \a parent and \a properties. The \a properties argument is optional.
+    Returns null if object creation fails.
+
+    The object will be created in the same context as the one in which the component
+    was created. This function will always return null when called on components
+    which were not created in QML.
+
+    If you wish to create an object without setting a parent, specify \c null for
+    the \a parent value. Note that if the returned object is to be displayed, you 
+    must provide a valid \a parent value or set the returned object's \l{Item::parent}{parent} 
+    property, or else the object will not be visible.
+
+    If a \a parent is not provided to createObject(), a reference to the returned object must be held so that
+    it is not destroyed by the garbage collector.  This is true regardless of whether \l{Item::parent} is set afterwards,
+    since setting the Item parent does not change object ownership; only the graphical parent is changed.
+
+    As of QtQuick 1.1, this method accepts an optional \a properties argument that specifies a
+    map of initial property values for the created object. These values are applied before object
+    creation is finalized. (This is more efficient than setting property values after object creation,
+    particularly where large sets of property values are defined, and also allows property bindings
+    to be set up before the object is created.)
+
+    The \a properties argument is specified as a map of property-value items. For example, the code
+    below creates an object with initial \c x and \c y values of 100 and 200, respectively:
+
+    \js
+        var component = Qt.createComponent("Button.qml");
+        if (component.status == Component.Ready)
+            component.createObject(parent, {"x": 100, "y": 100});
+    \endjs
+
+    Dynamically created instances can be deleted with the \c destroy() method.
+    See \l {Dynamic Object Management in QML} for more information.
+*/
+void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
+{
+    Q_D(QDeclarativeComponent);
+    Q_ASSERT(d->engine);
+    Q_ASSERT(args);
+
+    QObject *parent = 0;
+    v8::Local<v8::Object> valuemap;
+
+    if (args->Length() >= 1) 
+        parent = args->engine()->toQObject((*args)[0]);
+
+    if (args->Length() >= 2) {
+        v8::Local<v8::Value> v = (*args)[1];
+        if (!v->IsObject() || v->IsArray()) {
+            qmlInfo(this) << tr("createObject: value is not an object");
+            args->returnValue(v8::Null());
+            return;
+        }
+        valuemap = v8::Local<v8::Object>::Cast(v);
+    }
+
+    QV8Engine *v8engine = args->engine();
+
+    QDeclarativeContext *ctxt = creationContext();
+    if (!ctxt) ctxt = d->engine->rootContext();
+
+    QObject *rv = beginCreate(ctxt);
+
+    if (!rv) {
+        args->returnValue(v8::Null());
+        return;
+    }
+
+    QDeclarativeComponent_setQmlParent(rv, parent);
+
+    v8::Handle<v8::Value> ov = v8engine->newQObject(rv);
+    Q_ASSERT(ov->IsObject());
+    v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
+
+    if (!valuemap.IsEmpty()) {
+        QDeclarativeComponentExtension *e = componentExtension(v8engine);
+        // Try catch isn't needed as the function itself is loaded with try/catch
+        v8::Handle<v8::Value> function = e->initialProperties->Run(args->qmlGlobal());
+        v8::Handle<v8::Value> args[] = { object, valuemap };
+        v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
+    }
+
+    d->completeCreate();
+
+    Q_ASSERT(QDeclarativeData::get(rv));
+    QDeclarativeData::get(rv)->setImplicitDestructible();
+
+    if (!rv)
+        args->returnValue(v8::Null());
+    else
+        args->returnValue(object);
+}
+
+void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
+{
+    Q_D(QDeclarativeComponent);
+    Q_ASSERT(d->engine);
+    Q_ASSERT(args);
+
+    QObject *parent = 0;
+    v8::Local<v8::Object> valuemap;
+    QDeclarativeIncubator::IncubationMode mode = QDeclarativeIncubator::Asynchronous;
+
+    if (args->Length() >= 1) 
+        parent = args->engine()->toQObject((*args)[0]);
+
+    if (args->Length() >= 2) {
+        v8::Local<v8::Value> v = (*args)[1];
+        if (!v->IsObject() || v->IsArray()) {
+            qmlInfo(this) << tr("createObject: value is not an object");
+            args->returnValue(v8::Null());
+            return;
+        }
+        valuemap = v8::Local<v8::Object>::Cast(v);
+    }
+
+    if (args->Length() >= 3) {
+        quint32 v = (*args)[2]->Uint32Value();
+        if (v == QDeclarativeIncubator::Asynchronous) 
+            mode = QDeclarativeIncubator::Asynchronous;
+        else if (v == QDeclarativeIncubator::AsynchronousIfNested) 
+            mode = QDeclarativeIncubator::AsynchronousIfNested;
+        else if (v == QDeclarativeIncubator::Synchronous) 
+            mode = QDeclarativeIncubator::Synchronous;
+    }
+
+    QDeclarativeComponentExtension *e = componentExtension(args->engine());
+    
+    QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
+    if (!valuemap.IsEmpty()) {
+        r->valuemap = qPersistentNew(valuemap);
+        r->qmlGlobal = qPersistentNew(args->qmlGlobal());
+    }
+    r->parent = parent;
+
+    create(*r, creationContext());
+
+    if (r->status() == QDeclarativeIncubator::Null) {
+        delete r;
+        args->returnValue(v8::Null());
+    } else {
+        v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
+        o->SetExternalResource(r);
+
+        if (r->status() == QDeclarativeIncubator::Loading) 
+            r->me = qPersistentNew(o);
+
+        args->returnValue(o);
+    }
+}
+
+// XXX used by QSGLoader
+QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate)
+{
+    QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
+    QV8Engine *v8engine = ep->v8engine();
+    v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
+    Q_ASSERT(ov->IsObject());
+    v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);
+
+    if (!valuemap.IsEmpty()) {
+        QDeclarativeComponentExtension *e = componentExtension(v8engine);
+        // Try catch isn't needed as the function itself is loaded with try/catch
+        v8::Handle<v8::Value> function = e->initialProperties->Run(qmlGlobal);
+        v8::Handle<v8::Value> args[] = { object, valuemap };
+        v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
+    }
+
+    completeCreate();
+
+    QDeclarativeData *ddata = QDeclarativeData::get(toCreate);
+    Q_ASSERT(ddata);
+    ddata->setImplicitDestructible();
+
+    return v8engine->toQObject(object);
+}
+
+
+QDeclarativeComponentExtension::QDeclarativeComponentExtension(QV8Engine *engine)
+{
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(engine->context());
+
+    forceIncubation = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceIncubation, engine));
+
+    {
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->InstanceTemplate()->SetInternalFieldCount(1);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("onStatusChanged"), 
+                                        QV8IncubatorResource::StatusChangedGetter, 
+                                        QV8IncubatorResource::StatusChangedSetter);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("status"),
+                                        QV8IncubatorResource::StatusGetter);
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("object"), 
+                                        QV8IncubatorResource::ObjectGetter); 
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("forceIncubation"), 
+                                        QV8IncubatorResource::ForceIncubationGetter); 
+    incubationConstructor = qPersistentNew(ft->GetFunction());
+    }
+
+    {
+#define INITIALPROPERTIES_SOURCE \
+        "(function(object, values) {"\
+            "try {"\
+                "for(var property in values) {"\
+                    "try {"\
+                        "var properties = property.split(\".\");"\
+                        "var o = object;"\
+                        "for (var ii = 0; ii < properties.length - 1; ++ii) {"\
+                            "o = o[properties[ii]];"\
+                        "}"\
+                        "o[properties[properties.length - 1]] = values[property];"\
+                    "} catch(e) {}"\
+                "}"\
+            "} catch(e) {}"\
+        "})"
+    initialProperties = qPersistentNew(engine->qmlModeCompile(QLatin1String(INITIALPROPERTIES_SOURCE)));
+#undef INITIALPROPERTIES_SOURCE
+    }
+}
+
+v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Local<v8::String>, 
+                                                          const v8::AccessorInfo& info)
+{
+    QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
+    return r->engine->newQObject(r->object());
+}
+
+v8::Handle<v8::Value> QV8IncubatorResource::ForceIncubationGetter(v8::Local<v8::String>, 
+                                                                  const v8::AccessorInfo& info)
+{
+    QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
+    return componentExtension(r->engine)->forceIncubation;
+}
+
+v8::Handle<v8::Value> QV8IncubatorResource::ForceIncubation(const v8::Arguments &args) 
+{
+    QV8IncubatorResource *r = v8_resource_cast<QV8IncubatorResource>(args.This());
+    if (!r)
+        V8THROW_TYPE("Not an incubator object");
+
+    r->forceIncubation();
+
+    return v8::Undefined();
+}
+
+v8::Handle<v8::Value> QV8IncubatorResource::StatusGetter(v8::Local<v8::String>, 
+                                                         const v8::AccessorInfo& info)
+{
+    QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
+    return v8::Integer::NewFromUnsigned(r->status());
+}
+
+v8::Handle<v8::Value> QV8IncubatorResource::StatusChangedGetter(v8::Local<v8::String>, 
+                                                                 const v8::AccessorInfo& info)
+{
+    return info.This()->GetInternalField(0);
+}
+
+void QV8IncubatorResource::StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
+                                                const v8::AccessorInfo& info)
+{
+    info.This()->SetInternalField(0, value);
+}
+
+QDeclarativeComponentExtension::~QDeclarativeComponentExtension()
+{
+    qPersistentDispose(incubationConstructor);
+    qPersistentDispose(initialProperties);
+}
+
+QV8IncubatorResource::QV8IncubatorResource(QV8Engine *engine, IncubationMode m)
+: QV8ObjectResource(engine), QDeclarativeIncubator(m)
+{
+}
+
+void QV8IncubatorResource::setInitialState(QObject *o)
+{
+    QDeclarativeComponent_setQmlParent(o, parent);
+
+    if (!valuemap.IsEmpty()) {
+        QDeclarativeComponentExtension *e = componentExtension(engine);
+
+        v8::HandleScope handle_scope;
+        v8::Context::Scope scope(engine->context());
+
+        v8::Handle<v8::Value> function = e->initialProperties->Run(qmlGlobal);
+        v8::Handle<v8::Value> args[] = { me, valuemap };
+        v8::Handle<v8::Function>::Cast(function)->Call(engine->global(), 2, args);
+
+        qPersistentDispose(valuemap);
+        qPersistentDispose(qmlGlobal);
+    }
+}
+
+void QV8IncubatorResource::statusChanged(Status s)
+{
+    if (s == Ready) {
+        Q_ASSERT(QDeclarativeData::get(object()));
+        QDeclarativeData::get(object())->setImplicitDestructible();
+    }
+
+    if (!me.IsEmpty()) { // Will be false in synchronous mode
+        v8::HandleScope scope;
+        v8::Local<v8::Value> callback = me->GetInternalField(0);
+
+        if (!callback.IsEmpty() && !callback->IsUndefined()) {
+
+            if (callback->IsFunction()) {
+                v8::Context::Scope context_scope(engine->context());
+                v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
+                v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
+                // XXX TryCatch
+                f->Call(me, 1, args);
+            }
+        }
+    }
+
+    if (s == Ready || s == Error) {
+        qPersistentDispose(valuemap);
+        qPersistentDispose(qmlGlobal);
+        // No further status changes are forthcoming, so we no long need a self reference
+        qPersistentDispose(me);
+    }
 }
 
 QT_END_NAMESPACE

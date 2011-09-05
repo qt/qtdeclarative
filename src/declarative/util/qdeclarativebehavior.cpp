@@ -220,7 +220,7 @@ void QDeclarativeBehavior::setTarget(const QDeclarativeProperty &property)
         d->animation->setDefaultTarget(property);
 
     QDeclarativeEnginePrivate *engPriv = QDeclarativeEnginePrivate::get(qmlEngine(this));
-    engPriv->registerFinalizedParserStatusObject(this, this->metaObject()->indexOfSlot("componentFinalized()"));
+    engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
 }
 
 void QDeclarativeBehavior::componentFinalized()

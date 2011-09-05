@@ -307,7 +307,6 @@ bool QDeclarativeScript::Variant::asBoolean() const
 QString QDeclarativeScript::Variant::asString() const
 {
     if (t == String) {
-        // XXX aakenned
         return l->value.toString();
     } else {
         return asWritten.toString();
@@ -379,7 +378,6 @@ QString QDeclarativeScript::Variant::asScript() const
         return escapedString(asString());
     case Script:
         if (AST::IdentifierExpression *i = AST::cast<AST::IdentifierExpression *>(n)) {
-            // XXX aakenned
             return i->name.toString();
         } else
             return asWritten.toString();

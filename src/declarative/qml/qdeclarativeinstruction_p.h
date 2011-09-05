@@ -59,8 +59,11 @@ QT_BEGIN_NAMESPACE
 
 #define FOR_EACH_QML_INSTR(F) \
     F(Init, init) \
+    F(DeferInit, deferInit) \
     F(Done, common) \
-    F(CreateObject, create) \
+    F(CreateCppObject, create) \
+    F(CreateQMLObject, createQml) \
+    F(CompleteQMLObject, completeQml) \
     F(CreateSimpleObject, createSimple) \
     F(SetId, setId) \
     F(SetDefault, common) \
@@ -151,14 +154,35 @@ union QDeclarativeInstruction
         int parserStatusSize;
         int contextCache;
         int compiledBinding;
+        int objectStackSize;
+        int listStackSize;
+    };
+    struct instr_deferInit {
+        QML_INSTR_HEADER
+        int bindingsSize;
+        int parserStatusSize;
+        int objectStackSize;
+        int listStackSize;
+    };
+    struct instr_createQml {
+        QML_INSTR_HEADER
+        int type;
+        int bindingBits;
+        bool isRoot;
+    };
+    struct instr_completeQml {
+        QML_INSTR_HEADER
+        ushort column;
+        ushort line; 
+        bool isRoot;
     };
     struct instr_create {
         QML_INSTR_HEADER
         int type;
         int data;
-        int bindingBits;
         ushort column;
         ushort line; 
+        bool isRoot;
     };
     struct instr_createSimple {
         QML_INSTR_HEADER
@@ -203,6 +227,7 @@ union QDeclarativeInstruction
         int value;
         short context;
         short owner;
+        bool isRoot;
         ushort line;
     };
     struct instr_fetch {
@@ -357,6 +382,7 @@ union QDeclarativeInstruction
         int metaObject;
         ushort column;
         ushort line;
+        bool isRoot;
     };
     struct instr_fetchAttached {
         QML_INSTR_HEADER
@@ -425,7 +451,10 @@ union QDeclarativeInstruction
 
     instr_common common;
     instr_init init;
+    instr_deferInit deferInit;
     instr_create create;
+    instr_createQml createQml;
+    instr_completeQml completeQml;
     instr_createSimple createSimple;
     instr_storeMeta storeMeta;
     instr_setId setId;

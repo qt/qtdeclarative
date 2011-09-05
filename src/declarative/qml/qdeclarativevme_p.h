@@ -57,10 +57,14 @@
 #include "private/qbitfield_p.h"
 #include "private/qdeclarativeinstruction_p.h"
 
-#include <QtCore/QString>
 #include <QtCore/QStack>
+#include <QtCore/QString>
+#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qcoreapplication.h>
 
 #include <private/qv8_p.h>
+#include <private/qdeclarativeengine_p.h>
+#include <private/qfinitestack_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,38 +74,126 @@ class QDeclarativeScriptData;
 class QDeclarativeCompiledData;
 class QDeclarativeCompiledData;
 class QDeclarativeContextData;
-class QDeclarativeVMEObjectStack;
+
+namespace QDeclarativeVMETypes {
+    struct List
+    {
+        List() : type(0) {}
+        List(int t) : type(t) {}
+
+        int type;
+        QDeclarativeListProperty<void> qListProperty;
+    };
+}
+Q_DECLARE_TYPEINFO(QDeclarativeVMETypes::List, Q_PRIMITIVE_TYPE  | Q_MOVABLE_TYPE);
 
 class QDeclarativeVME
 {
+    Q_DECLARE_TR_FUNCTIONS(QDeclarativeVME)
 public:
-    QDeclarativeVME();
+    class Interrupt {
+    public:
+        inline Interrupt();
+        inline Interrupt(bool *runWhile);
+        inline Interrupt(int nsecs);
 
-    QObject *run(QDeclarativeContextData *, QDeclarativeCompiledData *, 
-                 int start = -1, const QBitField & = QBitField());
+        inline void reset();
+        inline bool shouldInterrupt() const;
+    private:
+        enum Mode { None, Time, Flag };
+        Mode mode;
+        union {
+            struct {
+                QElapsedTimer timer;
+                int nsecs;
+            };
+            bool *runWhile;
+        };
+    };
 
-    void runDeferred(QObject *);
+    QDeclarativeVME() : data(0), componentAttached(0) {}
+    QDeclarativeVME(void *data) : data(data), componentAttached(0) {}
 
-    bool isError() const;
-    QList<QDeclarativeError> errors() const;
+    void *data;
+    QDeclarativeComponentAttached *componentAttached;
+    QList<QDeclarativeEnginePrivate::FinalizeCallback> finalizeCallbacks;
+
+    void init(QDeclarativeContextData *, QDeclarativeCompiledData *, int start);
+    bool initDeferred(QObject *);
+
+    QObject *execute(QList<QDeclarativeError> *errors, const Interrupt & = Interrupt());
+    bool complete(const Interrupt & = Interrupt());
 
 private:
-    v8::Persistent<v8::Object> run(QDeclarativeContextData *, QDeclarativeScriptData *);
-
-    QObject *run(QDeclarativeVMEObjectStack &, 
-                 QDeclarativeContextData *, QDeclarativeCompiledData *, 
-                 int start, const QBitField &
+    QObject *run(QList<QDeclarativeError> *errors, const Interrupt &
 #ifdef QML_THREADED_VME_INTERPRETER
                  , void ***storeJumpTable = 0
 #endif
-                 );
-    QList<QDeclarativeError> vmeErrors;
+                );
+    v8::Persistent<v8::Object> run(QDeclarativeContextData *, QDeclarativeScriptData *);
 
 #ifdef QML_THREADED_VME_INTERPRETER
     static void **instructionJumpTable();
     friend class QDeclarativeCompiledData;
 #endif
+
+    QDeclarativeEngine *engine;
+    QFiniteStack<QObject *> objects;
+    QFiniteStack<QDeclarativeVMETypes::List> lists;
+
+    int bindValuesCount;
+    int parserStatusCount;
+    QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
+    QFiniteStack<QDeclarativeParserStatus *> parserStatus;
+    QDeclarativeContextData *rootContext;
+
+    struct State {
+        State() : context(0), compiledData(0), instructionStream(0) {}
+        QDeclarativeContextData *context;
+        QDeclarativeCompiledData *compiledData;
+        const char *instructionStream;
+        QBitField bindingSkipList;
+    };
+
+    QStack<State> states;
+
+    static void blank(QFiniteStack<QDeclarativeParserStatus *> &);
+    static void blank(QFiniteStack<QDeclarativeAbstractBinding *> &);
 };
+
+QDeclarativeVME::Interrupt::Interrupt()
+: mode(None)
+{
+}
+
+QDeclarativeVME::Interrupt::Interrupt(bool *runWhile)
+: mode(Flag), runWhile(runWhile)
+{
+}
+
+QDeclarativeVME::Interrupt::Interrupt(int nsecs)
+: mode(Time), nsecs(nsecs)
+{
+}
+
+void QDeclarativeVME::Interrupt::reset()
+{
+    if (mode == Time) 
+        timer.start();
+}
+
+bool QDeclarativeVME::Interrupt::shouldInterrupt() const
+{
+    if (mode == None) {
+        return false;
+    } else if (mode == Time) {
+        return timer.nsecsElapsed() > nsecs;
+    } else if (mode == Flag) {
+        return !*runWhile;
+    } else {
+        return false;
+    }
+}
 
 QT_END_NAMESPACE
 

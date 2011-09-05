@@ -54,17 +54,17 @@
 //
 
 #include <QtCore/qobject.h>
+#include <QtCore/qatomic.h>
 #include <QtNetwork/qnetworkreply.h>
-#include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativeerror.h>
 #include <QtDeclarative/qdeclarativeengine.h>
-#include <private/qdeclarativecleanup_p.h>
-#include <private/qdeclarativescript_p.h>
-#include <private/qdeclarativedirparser_p.h>
-#include <private/qdeclarativeimport_p.h>
-#include "private/qhashedstring_p.h"
 
 #include <private/qv8_p.h>
+#include <private/qhashedstring_p.h>
+#include <private/qdeclarativescript_p.h>
+#include <private/qdeclarativeimport_p.h>
+#include <private/qdeclarativecleanup_p.h>
+#include <private/qdeclarativedirparser_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -76,6 +76,7 @@ class QDeclarativeCompiledData;
 class QDeclarativeComponentPrivate;
 class QDeclarativeTypeData;
 class QDeclarativeDataLoader;
+class QDeclarativeExtensionInterface;
 
 // Exported for QtQuick1
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDataBlob : public QDeclarativeRefCount
@@ -115,33 +116,53 @@ public:
 
     QList<QDeclarativeError> errors() const;
 
+protected:
+    // Can be called from within callbacks
     void setError(const QDeclarativeError &);
     void setError(const QList<QDeclarativeError> &errors);
-
     void addDependency(QDeclarativeDataBlob *);
 
-protected:
+    // Callbacks made in load thread
     virtual void dataReceived(const QByteArray &) = 0;
-
     virtual void done();
     virtual void networkError(QNetworkReply::NetworkError);
-
     virtual void dependencyError(QDeclarativeDataBlob *);
     virtual void dependencyComplete(QDeclarativeDataBlob *);
     virtual void allDependenciesDone();
-    
-    virtual void downloadProgressChanged(qreal);
 
+    // Callbacks made in main thread
+    virtual void downloadProgressChanged(qreal);
+    virtual void completed();
 private:
     friend class QDeclarativeDataLoader;
+    friend class QDeclarativeDataLoaderThread;
+
     void tryDone();
     void cancelAllWaitingFor();
     void notifyAllWaitingOnMe();
     void notifyComplete(QDeclarativeDataBlob *);
 
+    struct ThreadData {
+        inline ThreadData();
+        inline QDeclarativeDataBlob::Status status() const;
+        inline void setStatus(QDeclarativeDataBlob::Status);
+        inline bool isAsync() const;
+        inline void setIsAsync(bool);
+        inline quint8 progress() const;
+        inline void setProgress(quint8);
+
+    private:
+        QAtomicInt _p;
+    };
+    ThreadData m_data;
+
+    // m_errors should *always* be written before the status is set to Error.
+    // We use the status change as a memory fence around m_errors so that locking
+    // isn't required.  Once the status is set to Error (or Complete), m_errors 
+    // cannot be changed.
+    QList<QDeclarativeError> m_errors;
+
     Type m_type;
-    Status m_status;
-    qreal m_progress;
 
     QUrl m_url;
     QUrl m_finalUrl;
@@ -157,39 +178,52 @@ private:
     int m_redirectCount:30;
     bool m_inCallback:1;
     bool m_isDone:1;
-
-    QList<QDeclarativeError> m_errors;
 };
 
+class QDeclarativeDataLoaderThread;
 // Exported for QtQuick1
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDataLoader : public QObject
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDataLoader 
 {
-    Q_OBJECT
 public:
     QDeclarativeDataLoader(QDeclarativeEngine *);
     ~QDeclarativeDataLoader();
 
-    void load(QDeclarativeDataBlob *);
-    void loadWithStaticData(QDeclarativeDataBlob *, const QByteArray &);
+    void lock();
+    void unlock();
+
+    bool isConcurrent() const { return true; }
+
+    enum Mode { PreferSynchronous, Asynchronous };
+
+    void load(QDeclarativeDataBlob *, Mode = PreferSynchronous);
+    void loadWithStaticData(QDeclarativeDataBlob *, const QByteArray &, Mode = PreferSynchronous);
 
     QDeclarativeEngine *engine() const;
-
-private slots:
-    void networkReplyFinished();
-    void networkReplyProgress(qint64,qint64);
+    void initializeEngine(QDeclarativeExtensionInterface *, const char *);
 
 private:
+    friend class QDeclarativeDataBlob;
+    friend class QDeclarativeDataLoaderThread;
+    friend class QDeclarativeDataLoaderNetworkReplyProxy;
+
+    void loadThread(QDeclarativeDataBlob *);
+    void loadWithStaticDataThread(QDeclarativeDataBlob *, const QByteArray &);
+    void networkReplyFinished(QNetworkReply *);
+    void networkReplyProgress(QNetworkReply *, qint64, qint64);
+    
+    typedef QHash<QNetworkReply *, QDeclarativeDataBlob *> NetworkReplies;
+
     void setData(QDeclarativeDataBlob *, const QByteArray &);
 
     QDeclarativeEngine *m_engine;
-    typedef QHash<QNetworkReply *, QDeclarativeDataBlob *> NetworkReplies;
+    QDeclarativeDataLoaderThread *m_thread;
     NetworkReplies m_networkReplies;
 };
 
 // Exported for QtQuick1
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeTypeLoader : public QDeclarativeDataLoader
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(QDeclarativeTypeLoader)
 public:
     QDeclarativeTypeLoader(QDeclarativeEngine *);
     ~QDeclarativeTypeLoader();
@@ -210,7 +244,6 @@ public:
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
     const QDeclarativeDirParser *qmlDirParser(const QString &absoluteFilePath);
-
 private:
     typedef QHash<QUrl, QDeclarativeTypeData *> TypeCache;
     typedef QHash<QUrl, QDeclarativeScriptBlob *> ScriptCache;
@@ -275,6 +308,7 @@ public:
 
 protected:
     virtual void done();
+    virtual void completed();
     virtual void dataReceived(const QByteArray &);
     virtual void allDependenciesDone();
     virtual void downloadProgressChanged(qreal);
@@ -303,16 +337,27 @@ private:
     QDeclarativeTypeLoader *m_typeLoader;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeScriptData : public QDeclarativeRefCount, public QDeclarativeCleanup
+// QDeclarativeScriptData instances are created, uninitialized, by the loader in the 
+// load thread.  The first time they are used by the VME, they are initialized which
+// creates their v8 objects and they are referenced and added to the  engine's cleanup
+// list.  During QDeclarativeCleanup::clear() all v8 resources are destroyed, and the 
+// reference that was created is released but final deletion only occurs once all the
+// references as released.  This is all intended to ensure that the v8 resources are
+// only created and destroyed in the main thread :)
+class Q_AUTOTEST_EXPORT QDeclarativeScriptData : public QDeclarativeCleanup, 
+                                                 public QDeclarativeRefCount
 {
 public:
-    QDeclarativeScriptData(QDeclarativeEngine *);
+    QDeclarativeScriptData();
     ~QDeclarativeScriptData();
 
     QUrl url;
     QDeclarativeTypeNameCache *importCache;
     QList<QDeclarativeScriptBlob *> scripts;
     QDeclarativeScript::Object::ScriptBlock::Pragmas pragmas;
+
+    bool isInitialized() const { return hasEngine(); }
+    void initialize(QDeclarativeEngine *);
 
 protected:
     virtual void clear(); // From QDeclarativeCleanup
@@ -322,10 +367,9 @@ private:
     friend class QDeclarativeScriptBlob;
 
     bool m_loaded;
+    QString m_programSource;
     v8::Persistent<v8::Script> m_program;
     v8::Persistent<v8::Object> m_value;
-//    QScriptProgram m_program;
-//    QScriptValue m_value;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativeScriptBlob : public QDeclarativeDataBlob

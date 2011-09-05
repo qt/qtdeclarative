@@ -39,32 +39,58 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativerefcount_p.h"
+#ifndef QDECLARATIVEINCUBATOR_P_H
+#define QDECLARATIVEINCUBATOR_P_H
+
+#include <private/qintrusivelist_p.h>
+#include <private/qdeclarativevme_p.h>
+#include <private/qdeclarativeengine_p.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-QDeclarativeRefCount::QDeclarativeRefCount()
-: refCount(1)
+class QDeclarativeCompiledData;
+class QDeclarativeIncubator;
+class QDeclarativeIncubatorPrivate : public QDeclarativeEnginePrivate::Incubator
 {
-}
+    QIntrusiveListNode nextWaitingFor;
+public:
+    QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, QDeclarativeIncubator::IncubationMode m);
+    ~QDeclarativeIncubatorPrivate();
 
-QDeclarativeRefCount::~QDeclarativeRefCount()
-{
-}
+    QDeclarativeIncubator *q;
 
-void QDeclarativeRefCount::addref()
-{
-    Q_ASSERT(refCount > 0);
-    ++refCount;
-}
+    QDeclarativeIncubator::IncubationMode mode;
 
-void QDeclarativeRefCount::release()
-{
-    Q_ASSERT(refCount > 0);
-    --refCount;
-    if (refCount == 0)
-        delete this;
-}
+    QList<QDeclarativeError> errors;
+
+    enum Progress { Execute, Completing, Completed };
+    Progress progress;
+
+    QObject *result;
+    QDeclarativeCompiledData *component;
+    QDeclarativeVME vme;
+
+    typedef QDeclarativeIncubatorPrivate QIP;
+    QIP *waitingOnMe;
+    QIntrusiveList<QIP, &QIP::nextWaitingFor> waitingFor;
+
+    void clear();
+
+    void incubate(QDeclarativeVME::Interrupt &i);
+};
 
 QT_END_NAMESPACE
+
+#endif // QDECLARATIVEINCUBATOR_P_H
 

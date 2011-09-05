@@ -101,13 +101,25 @@ int QDeclarativeCompiledData::indexForUrl(const QUrl &data)
 }
 
 QDeclarativeCompiledData::QDeclarativeCompiledData(QDeclarativeEngine *engine)
-: QDeclarativeCleanup(engine), importCache(0), root(0), rootPropertyCache(0)
+: engine(engine), importCache(0), root(0), rootPropertyCache(0)
 {
+    Q_ASSERT(engine);
+
     bytecode.reserve(1024);
+}
+
+void QDeclarativeCompiledData::destroy()
+{
+    if (engine && hasEngine())
+        QDeclarativeEnginePrivate::deleteInEngineThread(engine, this);
+    else
+        delete this;
 }
 
 QDeclarativeCompiledData::~QDeclarativeCompiledData()
 {
+    clear();
+
     for (int ii = 0; ii < types.count(); ++ii) {
         if (types.at(ii).component)
             types.at(ii).component->release();
@@ -129,18 +141,13 @@ QDeclarativeCompiledData::~QDeclarativeCompiledData()
 
     if (rootPropertyCache)
         rootPropertyCache->release();
-
-    qDeleteAll(cachedClosures);
-
-    for (int ii = 0; ii < v8bindings.count(); ++ii)
-        qPersistentDispose(v8bindings[ii]);
 }
 
 void QDeclarativeCompiledData::clear()
 {
-    qDeleteAll(cachedClosures);
-    for (int ii = 0; ii < cachedClosures.count(); ++ii)
-        cachedClosures[ii] = 0;
+    for (int ii = 0; ii < v8bindings.count(); ++ii)
+        qPersistentDispose(v8bindings[ii]);
+    v8bindings.clear();
 }
 
 const QMetaObject *QDeclarativeCompiledData::TypeReference::metaObject() const
@@ -244,6 +251,12 @@ QDeclarativeInstruction::Type QDeclarativeCompiledData::instructionType(const QD
 #else
     return static_cast<QDeclarativeInstruction::Type>(instr->common.instructionType);
 #endif
+}
+
+void QDeclarativeCompiledData::initialize(QDeclarativeEngine *engine)
+{
+    Q_ASSERT(!hasEngine());
+    QDeclarativeCleanup::addToEngine(engine);
 }
 
 QT_END_NAMESPACE

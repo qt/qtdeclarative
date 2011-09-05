@@ -65,10 +65,10 @@ QT_BEGIN_NAMESPACE
 
 class QDeclarativeType;
 class QDeclarativeEngine;
-class QDeclarativeTypeNameCache : public QDeclarativeRefCount, public QDeclarativeCleanup
+class QDeclarativeTypeNameCache : public QDeclarativeRefCount
 {
 public:
-    QDeclarativeTypeNameCache(QDeclarativeEngine *);
+    QDeclarativeTypeNameCache();
     virtual ~QDeclarativeTypeNameCache();
 
     inline bool isEmpty() const;
@@ -93,9 +93,6 @@ public:
     Result query(const QHashedV8String &);
     Result query(const QHashedV8String &, const void *importNamespace);
     QDeclarativeMetaType::ModuleApiInstance *moduleApi(const void *importNamespace);
-
-protected:
-    virtual void clear();
 
 private:
     friend class QDeclarativeImports;

@@ -45,21 +45,12 @@
 
 QT_BEGIN_NAMESPACE
 
-QDeclarativeTypeNameCache::QDeclarativeTypeNameCache(QDeclarativeEngine *e)
-: QDeclarativeCleanup(e), engine(e)
+QDeclarativeTypeNameCache::QDeclarativeTypeNameCache()
 {
 }
 
 QDeclarativeTypeNameCache::~QDeclarativeTypeNameCache()
 {
-    clear();
-}
-
-void QDeclarativeTypeNameCache::clear()
-{
-    m_namedImports.clear();
-    m_anonymousImports.clear();
-    engine = 0;
 }
 
 void QDeclarativeTypeNameCache::add(const QHashedString &name, int importedScriptIndex)

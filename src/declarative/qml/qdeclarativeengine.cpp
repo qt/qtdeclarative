@@ -68,6 +68,7 @@
 #include "private/qdeclarativedebugtrace_p.h"
 #include "private/qdeclarativeapplication_p.h"
 #include "private/qv8debugservice_p.h"
+#include "qdeclarativeincubator.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QNetworkReply>
@@ -90,6 +91,7 @@
 #include <QtCore/qmutex.h>
 #include <QtGui/qcolor.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtNetwork/qnetworkconfigmanager.h>
 
 #include <private/qobject_p.h>
 
@@ -340,10 +342,10 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 : captureProperties(false), rootContext(0), isDebugging(false),
   outputWarningsToStdErr(true), sharedContext(0), sharedScope(0),
   cleanup(0), erroredBindings(0), inProgressCreations(0), 
-  workerScriptEngine(0), componentAttached(0), inBeginCreate(false), 
+  workerScriptEngine(0), activeVME(0),
   networkAccessManager(0), networkAccessManagerFactory(0),
   scarceResourcesRefCount(0), typeLoader(e), importDatabase(e), uniqueId(1),
-  sgContext(0)
+  incubatorCount(0), incubationController(0), sgContext(0), mutex(QMutex::Recursive)
 {
     if (!qt_QmlQtModule_registered) {
         qt_QmlQtModule_registered = true;
@@ -358,8 +360,6 @@ QDeclarativeEnginePrivate::QDeclarativeEnginePrivate(QDeclarativeEngine *e)
 QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
 {
     Q_ASSERT(inProgressCreations == 0);
-    Q_ASSERT(bindValues.isEmpty());
-    Q_ASSERT(parserStatus.isEmpty());
 
     while (cleanup) {
         QDeclarativeCleanup *c = cleanup;
@@ -369,6 +369,11 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
         c->prev = 0;
         c->clear();
     }
+
+    doDeleteInEngineThread();
+
+    if (incubationController) incubationController->d = 0;
+    incubationController = 0;
 
     delete rootContext;
     rootContext = 0;
@@ -383,21 +388,6 @@ QDeclarativeEnginePrivate::~QDeclarativeEnginePrivate()
         delete (*iter)->qobjectApi;
         delete *iter;
     }
-}
-
-void QDeclarativeEnginePrivate::clear(SimpleList<QDeclarativeAbstractBinding> &bvs)
-{
-    bvs.clear();
-}
-
-void QDeclarativeEnginePrivate::clear(SimpleList<QDeclarativeParserStatus> &pss)
-{
-    for (int ii = 0; ii < pss.count; ++ii) {
-        QDeclarativeParserStatus *ps = pss.at(ii);
-        if(ps)
-            ps->d = 0;
-    }
-    pss.clear();
 }
 
 void QDeclarativePrivate::qdeclarativeelement_destructor(QObject *o)
@@ -430,6 +420,18 @@ void QDeclarativeData::objectNameChanged(QAbstractDeclarativeData *d, QObject *o
 void QDeclarativeEnginePrivate::init()
 {
     Q_Q(QDeclarativeEngine);
+
+    static bool firstTime = true;
+    if (firstTime) {
+        // This is a nasty hack as QNetworkAccessManager will issue a 
+        // BlockingQueuedConnection to the main thread if it is initialized for the
+        // first time on a non-main thread.  This can cause a lockup if the main thread
+        // is blocking on the thread that initialize the network access manager.
+        QNetworkConfigurationManager man;
+
+        firstTime = false;
+    }
+
     qRegisterMetaType<QVariant>("QVariant");
     qRegisterMetaType<QDeclarativeScriptString>("QDeclarativeScriptString");
     qRegisterMetaType<QJSValue>("QJSValue");
@@ -595,6 +597,16 @@ QDeclarativeNetworkAccessManagerFactory *QDeclarativeEngine::networkAccessManage
 {
     Q_D(const QDeclarativeEngine);
     return d->networkAccessManagerFactory;
+}
+
+void QDeclarativeEnginePrivate::registerFinalizeCallback(QObject *obj, int index) 
+{
+    if (activeVME) {
+        activeVME->finalizeCallbacks.append(qMakePair(QDeclarativeGuard<QObject>(obj), index));
+    } else {
+        void *args[] = { 0 };
+        QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
+    }
 }
 
 QNetworkAccessManager *QDeclarativeEnginePrivate::createNetworkAccessManager(QObject *parent) const
@@ -910,6 +922,26 @@ QDeclarativeEngine::ObjectOwnership QDeclarativeEngine::objectOwnership(QObject 
         return CppOwnership;
     else
         return ddata->indestructible?CppOwnership:JavaScriptOwnership;
+}
+
+bool QDeclarativeEngine::event(QEvent *e)
+{
+    Q_D(QDeclarativeEngine);
+    if (e->type() == QEvent::User) 
+        d->doDeleteInEngineThread();
+
+    return QJSEngine::event(e);
+}
+
+void QDeclarativeEnginePrivate::doDeleteInEngineThread()
+{
+    QFieldList<Deletable, &Deletable::next> list;
+    mutex.lock();
+    list.copyAndClear(toDeleteInEngineThread);
+    mutex.unlock();
+
+    while (Deletable *d = list.takeFirst())
+        delete d;
 }
 
 Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
@@ -1468,6 +1500,7 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     int maxMinorVersion = 0;
 
     const QMetaObject *metaObject = type->metaObject();
+
     while (metaObject) {
         QDeclarativeType *t = QDeclarativeMetaType::qmlType(metaObject, type->module(),
                                                             type->majorVersion(), minorVersion);
@@ -1562,6 +1595,91 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     return raw;
 }
 
+QDeclarativeMetaType::ModuleApiInstance *
+QDeclarativeEnginePrivate::moduleApiInstance(const QDeclarativeMetaType::ModuleApi &module)
+{
+    Locker locker(this);
+
+    QDeclarativeMetaType::ModuleApiInstance *a = moduleApiInstances.value(module);
+    if (!a) {
+        a = new QDeclarativeMetaType::ModuleApiInstance;
+        a->scriptCallback = module.script;
+        a->qobjectCallback = module.qobject;
+        moduleApiInstances.insert(module, a);
+    }
+
+    return a;
+}
+
+bool QDeclarativeEnginePrivate::isQObject(int t)
+{
+    Locker locker(this);
+    return m_compositeTypes.contains(t) || QDeclarativeMetaType::isQObject(t);
+}
+
+QObject *QDeclarativeEnginePrivate::toQObject(const QVariant &v, bool *ok) const
+{
+    Locker locker(this);
+    int t = v.userType();
+    if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
+        if (ok) *ok = true;
+        return *(QObject **)(v.constData());
+    } else {
+        return QDeclarativeMetaType::toQObject(v, ok);
+    }
+}
+
+QDeclarativeMetaType::TypeCategory QDeclarativeEnginePrivate::typeCategory(int t) const
+{
+    Locker locker(this);
+    if (m_compositeTypes.contains(t))
+        return QDeclarativeMetaType::Object;
+    else if (m_qmlLists.contains(t))
+        return QDeclarativeMetaType::List;
+    else
+        return QDeclarativeMetaType::typeCategory(t);
+}
+
+bool QDeclarativeEnginePrivate::isList(int t) const
+{
+    Locker locker(this);
+    return m_qmlLists.contains(t) || QDeclarativeMetaType::isList(t);
+}
+
+int QDeclarativeEnginePrivate::listType(int t) const
+{
+    Locker locker(this);
+    QHash<int, int>::ConstIterator iter = m_qmlLists.find(t);
+    if (iter != m_qmlLists.end())
+        return *iter;
+    else
+        return QDeclarativeMetaType::listType(t);
+}
+
+const QMetaObject *QDeclarativeEnginePrivate::rawMetaObjectForType(int t) const
+{
+    Locker locker(this);
+    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    if (iter != m_compositeTypes.end()) {
+        return (*iter)->root;
+    } else {
+        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
+        return type?type->baseMetaObject():0;
+    }
+}
+
+const QMetaObject *QDeclarativeEnginePrivate::metaObjectForType(int t) const
+{
+    Locker locker(this);
+    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
+    if (iter != m_compositeTypes.end()) {
+        return (*iter)->root;
+    } else {
+        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
+        return type?type->metaObject():0;
+    }
+}
+
 void QDeclarativeEnginePrivate::registerCompositeType(QDeclarativeCompiledData *data)
 {
     QByteArray name = data->root->className();
@@ -1574,71 +1692,11 @@ void QDeclarativeEnginePrivate::registerCompositeType(QDeclarativeCompiledData *
     int lst_type = QMetaType::registerType(lst.constData(), voidptr_destructor,
                                            voidptr_constructor);
 
+    data->addref();
+
+    Locker locker(this);
     m_qmlLists.insert(lst_type, ptr_type);
     m_compositeTypes.insert(ptr_type, data);
-    data->addref();
-}
-
-bool QDeclarativeEnginePrivate::isList(int t) const
-{
-    return m_qmlLists.contains(t) || QDeclarativeMetaType::isList(t);
-}
-
-int QDeclarativeEnginePrivate::listType(int t) const
-{
-    QHash<int, int>::ConstIterator iter = m_qmlLists.find(t);
-    if (iter != m_qmlLists.end())
-        return *iter;
-    else
-        return QDeclarativeMetaType::listType(t);
-}
-
-bool QDeclarativeEnginePrivate::isQObject(int t)
-{
-    return m_compositeTypes.contains(t) || QDeclarativeMetaType::isQObject(t);
-}
-
-QObject *QDeclarativeEnginePrivate::toQObject(const QVariant &v, bool *ok) const
-{
-    int t = v.userType();
-    if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
-        if (ok) *ok = true;
-        return *(QObject **)(v.constData());
-    } else {
-        return QDeclarativeMetaType::toQObject(v, ok);
-    }
-}
-
-QDeclarativeMetaType::TypeCategory QDeclarativeEnginePrivate::typeCategory(int t) const
-{
-    if (m_compositeTypes.contains(t))
-        return QDeclarativeMetaType::Object;
-    else if (m_qmlLists.contains(t))
-        return QDeclarativeMetaType::List;
-    else
-        return QDeclarativeMetaType::typeCategory(t);
-}
-
-const QMetaObject *QDeclarativeEnginePrivate::rawMetaObjectForType(int t) const
-{
-    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
-    } else {
-        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
-        return type?type->baseMetaObject():0;
-    }
-}
-
-const QMetaObject *QDeclarativeEnginePrivate::metaObjectForType(int t) const
-{
-    QHash<int, QDeclarativeCompiledData*>::ConstIterator iter = m_compositeTypes.find(t);
-    if (iter != m_compositeTypes.end()) {
-        return (*iter)->root;
-    } else {
-        QDeclarativeType *type = QDeclarativeMetaType::qmlType(t);
-        return type?type->metaObject():0;
-    }
 }
 
 bool QDeclarative_isFileCaseCorrect(const QString &fileName)

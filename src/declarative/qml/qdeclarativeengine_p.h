@@ -70,11 +70,12 @@
 #include "private/qdeclarativedirparser_p.h"
 #include "private/qintrusivelist_p.h"
 
-#include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qthread.h>
 
 #include <private/qobject_p.h>
 
@@ -87,7 +88,6 @@ class QDeclarativeEngine;
 class QDeclarativeContextPrivate;
 class QDeclarativeExpression;
 class QDeclarativeImportDatabase;
-class ScarceResourceData;
 class QNetworkReply;
 class QNetworkAccessManager;
 class QDeclarativeNetworkAccessManagerFactory;
@@ -97,8 +97,10 @@ class QDeclarativeComponentAttached;
 class QDeclarativeCleanup;
 class QDeclarativeDelayedError;
 class QDeclarativeWorkerScriptEngine;
+class QDeclarativeVME;
 class QDir;
 class QSGTexture;
+class QDeclarativeIncubator;
 class QSGContext;
 
 class Q_DECLARATIVE_EXPORT QDeclarativeEnginePrivate : public QObjectPrivate
@@ -146,42 +148,10 @@ public:
 
     QUrl baseUrl;
 
-    template<class T>
-    struct SimpleList {
-        SimpleList()
-            : count(0), values(0) {}
-        SimpleList(int r)
-            : count(0), values(new T*[r]) {}
+    typedef QPair<QDeclarativeGuard<QObject>,int> FinalizeCallback;
+    void registerFinalizeCallback(QObject *obj, int index);
 
-        int count;
-        T **values;
-
-        void append(T *v) {
-            values[count++] = v;
-        }
-
-        T *at(int idx) const {
-            return values[idx];
-        }
-
-        void clear() {
-            delete [] values;
-        }
-    };
-
-    static void clear(SimpleList<QDeclarativeAbstractBinding> &);
-    static void clear(SimpleList<QDeclarativeParserStatus> &);
-
-    QList<SimpleList<QDeclarativeAbstractBinding> > bindValues;
-    QList<SimpleList<QDeclarativeParserStatus> > parserStatus;
-    QList<QPair<QDeclarativeGuard<QObject>,int> > finalizedParserStatus;
-    QDeclarativeComponentAttached *componentAttached;
-
-    void registerFinalizedParserStatusObject(QObject *obj, int index) {
-        finalizedParserStatus.append(qMakePair(QDeclarativeGuard<QObject>(obj), index));
-    }
-
-    bool inBeginCreate;
+    QDeclarativeVME *activeVME;
 
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;
     QNetworkAccessManager *getNetworkAccessManager() const;
@@ -211,32 +181,43 @@ public:
     void referenceScarceResources();
     void dereferenceScarceResources();
 
-    mutable QMutex mutex;
-
     QDeclarativeTypeLoader typeLoader;
     QDeclarativeImportDatabase importDatabase;
 
     QString offlineStoragePath;
 
     mutable quint32 uniqueId;
-    quint32 getUniqueId() const {
+    inline quint32 getUniqueId() const {
         return uniqueId++;
     }
 
     QDeclarativeValueTypeFactory valueTypes;
 
-    QHash<QDeclarativeMetaType::ModuleApi, QDeclarativeMetaType::ModuleApiInstance *> moduleApiInstances;
+    // Unfortunate workaround to avoid a circular dependency between 
+    // qdeclarativeengine_p.h and qdeclarativeincubator_p.h
+    struct Incubator { QIntrusiveListNode next; };
+    QIntrusiveList<Incubator, &Incubator::next> incubatorList;
+    unsigned int incubatorCount;
+    QDeclarativeIncubationController *incubationController;
+    void incubate(QDeclarativeIncubator &, QDeclarativeContextData *);
 
-    QHash<const QMetaObject *, QDeclarativePropertyCache *> propertyCache;
-    QHash<QPair<QDeclarativeType *, int>, QDeclarativePropertyCache *> typePropertyCache;
+    // These methods may be called from any thread
+    inline bool isEngineThread() const;
+    inline static bool isEngineThread(const QDeclarativeEngine *);
+    template<typename T>
+    inline void deleteInEngineThread(T *);
+    template<typename T>
+    inline static void deleteInEngineThread(QDeclarativeEngine *, T *);
+
+    // These methods may be called from the loader thread
+    QDeclarativeMetaType::ModuleApiInstance *moduleApiInstance(const QDeclarativeMetaType::ModuleApi &module);
+
+    // These methods may be called from the loader thread
     inline QDeclarativePropertyCache *cache(QObject *obj);
     inline QDeclarativePropertyCache *cache(const QMetaObject *);
     inline QDeclarativePropertyCache *cache(QDeclarativeType *, int, QDeclarativeError &error);
-    QDeclarativePropertyCache *createCache(const QMetaObject *);
-    QDeclarativePropertyCache *createCache(QDeclarativeType *, int, QDeclarativeError &error);
 
-    void registerCompositeType(QDeclarativeCompiledData *);
-
+    // These methods may be called from the loader thread
     bool isQObject(int);
     QObject *toQObject(const QVariant &, bool *ok = 0) const;
     QDeclarativeMetaType::TypeCategory typeCategory(int) const;
@@ -244,8 +225,7 @@ public:
     int listType(int) const;
     const QMetaObject *rawMetaObjectForType(int) const;
     const QMetaObject *metaObjectForType(int) const;
-    QHash<int, int> m_qmlLists;
-    QHash<int, QDeclarativeCompiledData *> m_compositeTypes;
+    void registerCompositeType(QDeclarativeCompiledData *);
 
     void sendQuit();
     void warning(const QDeclarativeError &);
@@ -255,11 +235,12 @@ public:
     static void warning(QDeclarativeEnginePrivate *, const QDeclarativeError &);
     static void warning(QDeclarativeEnginePrivate *, const QList<QDeclarativeError> &);
 
-    static QV8Engine *getV8Engine(QDeclarativeEngine *e) { return e->d_func()->v8engine(); }
-    static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e) { return e->d_func(); }
-    static QDeclarativeEnginePrivate *get(QDeclarativeContext *c) { return (c && c->engine()) ? QDeclarativeEnginePrivate::get(c->engine()) : 0; }
-    static QDeclarativeEnginePrivate *get(QDeclarativeContextData *c) { return (c && c->engine) ? QDeclarativeEnginePrivate::get(c->engine) : 0; }
-    static QDeclarativeEngine *get(QDeclarativeEnginePrivate *p) { return p->q_func(); }
+    inline static QV8Engine *getV8Engine(QDeclarativeEngine *e);
+    inline static QDeclarativeEnginePrivate *get(QDeclarativeEngine *e);
+    inline static const QDeclarativeEnginePrivate *get(const QDeclarativeEngine *e);
+    inline static QDeclarativeEnginePrivate *get(QDeclarativeContext *c);
+    inline static QDeclarativeEnginePrivate *get(QDeclarativeContextData *c);
+    inline static QDeclarativeEngine *get(QDeclarativeEnginePrivate *p);
 
     static QString urlToLocalFileOrQrc(const QUrl& url);
     static QString urlToLocalFileOrQrc(const QString& url);
@@ -270,7 +251,148 @@ public:
     static bool qml_debugging_enabled;
 
     QSGContext *sgContext;
+
+    mutable QMutex mutex;
+
+private:
+    // Locker locks the QDeclarativeEnginePrivate data structures for read and write, if necessary.  
+    // Currently, locking is only necessary if the threaded loader is running concurrently.  If it is 
+    // either idle, or is running with the main thread blocked, no locking is necessary.  This way
+    // we only pay for locking when we have to.
+    // Consequently, this class should only be used to protect simple accesses or modifications of the 
+    // QDeclarativeEnginePrivate structures or operations that can be guarenteed not to start activity
+    // on the loader thread.
+    // The Locker API is identical to QMutexLocker.  Locker reuses the QDeclarativeEnginePrivate::mutex 
+    // QMutex instance and multiple Lockers are recursive in the same thread.
+    class Locker 
+    {
+    public:
+        inline Locker(const QDeclarativeEngine *);
+        inline Locker(const QDeclarativeEnginePrivate *);
+        inline ~Locker();
+
+        inline void unlock();
+        inline void relock();
+
+    private:
+        const QDeclarativeEnginePrivate *m_ep;
+        quint32 m_locked:1;
+    };
+
+    // Must be called locked
+    QDeclarativePropertyCache *createCache(const QMetaObject *);
+    QDeclarativePropertyCache *createCache(QDeclarativeType *, int, QDeclarativeError &error);
+
+    // These members must be protected by a QDeclarativeEnginePrivate::Locker as they are required by
+    // the threaded loader.  Only access them through their respective accessor methods.
+    QHash<QDeclarativeMetaType::ModuleApi, QDeclarativeMetaType::ModuleApiInstance *> moduleApiInstances;
+    QHash<const QMetaObject *, QDeclarativePropertyCache *> propertyCache;
+    QHash<QPair<QDeclarativeType *, int>, QDeclarativePropertyCache *> typePropertyCache;
+    QHash<int, int> m_qmlLists;
+    QHash<int, QDeclarativeCompiledData *> m_compositeTypes;
+
+    // These members is protected by the full QDeclarativeEnginePrivate::mutex mutex
+    struct Deletable { Deletable():next(0) {} virtual ~Deletable() {} Deletable *next; };
+    QFieldList<Deletable, &Deletable::next> toDeleteInEngineThread;
+    void doDeleteInEngineThread();
 };
+
+QDeclarativeEnginePrivate::Locker::Locker(const QDeclarativeEngine *e)
+: m_ep(QDeclarativeEnginePrivate::get(e))
+{
+    relock();
+}
+
+QDeclarativeEnginePrivate::Locker::Locker(const QDeclarativeEnginePrivate *e)
+: m_ep(e), m_locked(false)
+{
+    relock();
+}
+
+QDeclarativeEnginePrivate::Locker::~Locker()
+{
+    unlock();
+}
+
+void QDeclarativeEnginePrivate::Locker::unlock()
+{
+    if (m_locked) { 
+        m_ep->mutex.unlock();
+        m_locked = false;
+    }
+}
+
+void QDeclarativeEnginePrivate::Locker::relock()
+{
+    Q_ASSERT(!m_locked);
+    if (m_ep->typeLoader.isConcurrent()) {
+        m_ep->mutex.lock();
+        m_locked = true;
+    }
+}
+
+/*!
+Returns true if the calling thread is the QDeclarativeEngine thread.
+*/
+bool QDeclarativeEnginePrivate::isEngineThread() const
+{
+    Q_Q(const QDeclarativeEngine);
+    return QThread::currentThread() == q->thread();
+}
+
+/*!
+Returns true if the calling thread is the QDeclarativeEngine \a engine thread.
+*/
+bool QDeclarativeEnginePrivate::isEngineThread(const QDeclarativeEngine *engine)
+{
+    Q_ASSERT(engine);
+    return QDeclarativeEnginePrivate::get(engine)->isEngineThread();
+}
+
+/*!
+Delete \a value in the engine thread.  If the calling thread is the engine
+thread, \a value will be deleted immediately.
+
+This method should be used for *any* type that has resources that need to
+be freed in the engine thread.  This is generally types that use V8 handles.
+As there is some small overhead in checking the current thread, it is best
+practice to check if any V8 handles actually need to be freed and delete 
+the instance directly if not.
+*/
+template<typename T>
+void QDeclarativeEnginePrivate::deleteInEngineThread(T *value)
+{
+    Q_Q(QDeclarativeEngine);
+
+    Q_ASSERT(value);
+    if (isEngineThread()) {
+        delete value;
+    } else { 
+        struct I : public Deletable {
+            I(T *value) : value(value) {}
+            ~I() { delete value; }
+            T *value;
+        };
+        I *i = new I(value);
+        mutex.lock();
+        bool wasEmpty = toDeleteInEngineThread.isEmpty();
+        toDeleteInEngineThread.append(i);
+        mutex.unlock();
+        if (wasEmpty)
+            QCoreApplication::postEvent(q, new QEvent(QEvent::User));
+    }
+}
+
+/*!
+Delete \a value in the \a engine thread.  If the calling thread is the engine
+thread, \a value will be deleted immediately.
+*/
+template<typename T>
+void QDeclarativeEnginePrivate::deleteInEngineThread(QDeclarativeEngine *engine, T *value)
+{
+    Q_ASSERT(engine);
+    QDeclarativeEnginePrivate::get(engine)->deleteInEngineThread<T>(value);
+}
 
 /*!
 Returns a QDeclarativePropertyCache for \a obj if one is available.
@@ -279,12 +401,20 @@ If \a obj is null, being deleted or contains a dynamic meta object 0
 is returned.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
+
+XXX thread There is a potential future race condition in this and all the cache()
+functions.  As the QDeclarativePropertyCache is returned unreferenced, when called 
+from the loader thread, it is possible that the cache will have been dereferenced 
+and deleted before the loader thread has a chance to use or reference it.  This
+can't currently happen as the cache holds a reference to the 
+QDeclarativePropertyCache until the QDeclarativeEngine is destroyed.
 */
 QDeclarativePropertyCache *QDeclarativeEnginePrivate::cache(QObject *obj)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
         return 0;
 
+    Locker locker(this);
     const QMetaObject *mo = obj->metaObject();
     QDeclarativePropertyCache *rv = propertyCache.value(mo);
     if (!rv) rv = createCache(mo);
@@ -304,6 +434,7 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::cache(const QMetaObject *m
 {
     Q_ASSERT(metaObject);
 
+    Locker locker(this);
     QDeclarativePropertyCache *rv = propertyCache.value(metaObject);
     if (!rv) rv = createCache(metaObject);
     return rv;
@@ -321,9 +452,40 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::cache(QDeclarativeType *ty
     if (minorVersion == -1 || !type->containsRevisionedAttributes())
         return cache(type->metaObject());
 
+    Locker locker(this);
     QDeclarativePropertyCache *rv = typePropertyCache.value(qMakePair(type, minorVersion));
     if (!rv) rv = createCache(type, minorVersion, error);
     return rv;
+}
+
+QV8Engine *QDeclarativeEnginePrivate::getV8Engine(QDeclarativeEngine *e) 
+{ 
+    return e->d_func()->v8engine(); 
+}
+
+QDeclarativeEnginePrivate *QDeclarativeEnginePrivate::get(QDeclarativeEngine *e) 
+{ 
+    return e->d_func(); 
+}
+
+const QDeclarativeEnginePrivate *QDeclarativeEnginePrivate::get(const QDeclarativeEngine *e) 
+{ 
+    return e->d_func(); 
+}
+
+QDeclarativeEnginePrivate *QDeclarativeEnginePrivate::get(QDeclarativeContext *c) 
+{ 
+    return (c && c->engine()) ? QDeclarativeEnginePrivate::get(c->engine()) : 0; 
+}
+
+QDeclarativeEnginePrivate *QDeclarativeEnginePrivate::get(QDeclarativeContextData *c) 
+{ 
+    return (c && c->engine) ? QDeclarativeEnginePrivate::get(c->engine) : 0; 
+}
+
+QDeclarativeEngine *QDeclarativeEnginePrivate::get(QDeclarativeEnginePrivate *p) 
+{ 
+    return p->q_func(); 
 }
 
 QT_END_NAMESPACE

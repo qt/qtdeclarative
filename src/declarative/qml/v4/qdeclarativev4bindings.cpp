@@ -749,9 +749,12 @@ void **QDeclarativeV4Bindings::getDecodeInstrTable()
 {
     static void **decode_instr;
     if (!decode_instr) {
-        QDeclarativeV4Bindings dummy(0, 0, 0);
+        QDeclarativeV4Bindings *dummy = new QDeclarativeV4Bindings(0, 0, 0);
         quint32 executedBlocks = 0;
-        dummy.d_func()->run(0, executedBlocks, 0, 0, 0, 0, QDeclarativePropertyPrivate::BypassInterceptor, &decode_instr);
+        dummy->d_func()->run(0, executedBlocks, 0, 0, 0, 0, 
+                             QDeclarativePropertyPrivate::BypassInterceptor, 
+                             &decode_instr);
+        dummy->release();
     }
     return decode_instr;
 }
@@ -786,7 +789,6 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
 
     executedBlocks = 0;
 
-    QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(context->engine);
     const char *code = program->instructions();
     code += instrIndex * QML_V4_INSTR_SIZE(Jump, jump);
     const V4Instr *instr = reinterpret_cast<const V4Instr *>(code);

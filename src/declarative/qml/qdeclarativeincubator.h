@@ -39,49 +39,92 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVECLEANUP_P_H
-#define QDECLARATIVECLEANUP_P_H
+#ifndef QDECLARATIVEINCUBATOR_H
+#define QDECLARATIVEINCUBATOR_H
 
-#include <QtCore/qglobal.h>
+#include <QtDeclarative/qdeclarativeerror.h>
 
-// 
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
+QT_MODULE(Declarative)
+
 class QDeclarativeEngine;
 
-// Exported for QtQuick1
-class Q_DECLARATIVE_EXPORT QDeclarativeCleanup
+class QDeclarativeIncubatorPrivate;
+class Q_DECLARATIVE_EXPORT QDeclarativeIncubator
 {
+    Q_DISABLE_COPY(QDeclarativeIncubator);
 public:
-    QDeclarativeCleanup();
-    QDeclarativeCleanup(QDeclarativeEngine *);
-    virtual ~QDeclarativeCleanup();
+    enum IncubationMode {
+        Asynchronous,
+        AsynchronousIfNested,
+        Synchronous
+    };
+    enum Status { 
+        Null, 
+        Ready, 
+        Loading, 
+        Error 
+    };
 
-    bool hasEngine() const { return prev != 0; }
-    void addToEngine(QDeclarativeEngine *);
+    QDeclarativeIncubator(IncubationMode = Asynchronous);
+    virtual ~QDeclarativeIncubator();
+
+    void clear();
+    void forceIncubation();
+
+    bool isNull() const;
+    bool isReady() const;
+    bool isError() const;
+    bool isLoading() const;
+
+    QList<QDeclarativeError> errors() const;
+
+    IncubationMode incubationMode() const;
+
+    Status status() const;
+
+    QObject *object() const;
+
 protected:
-    virtual void clear() = 0;
+    virtual void statusChanged(Status);
+    virtual void setInitialState(QObject *);
 
 private:
+    friend class QDeclarativeComponent;
     friend class QDeclarativeEnginePrivate;
-    QDeclarativeCleanup **prev;
-    QDeclarativeCleanup  *next;
+    friend class QDeclarativeIncubatorPrivate;
+    QDeclarativeIncubatorPrivate *d;
+};
 
-    // Only used for asserts
-    QDeclarativeEngine *engine;
+class QDeclarativeEnginePrivate;
+class Q_DECLARATIVE_EXPORT QDeclarativeIncubationController
+{
+    Q_DISABLE_COPY(QDeclarativeIncubationController);
+public:
+    QDeclarativeIncubationController();
+    virtual ~QDeclarativeIncubationController();
+
+    QDeclarativeEngine *engine() const;
+    int incubatingObjectCount() const;
+
+    void incubateFor(int msecs);
+    void incubateWhile(bool *flag);
+
+protected:
+    virtual void incubatingObjectCountChanged(int);
+
+private:
+    friend class QDeclarativeEngine;
+    friend class QDeclarativeEnginePrivate;
+    friend class QDeclarativeIncubatorPrivate;
+    QDeclarativeEnginePrivate *d;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVECLEANUP_P_H
+QT_END_HEADER
 
+#endif // QDECLARATIVEINCUBATOR_H

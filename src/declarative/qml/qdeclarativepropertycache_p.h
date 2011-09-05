@@ -198,7 +198,9 @@ public:
     static Data *property(QDeclarativeEngine *, QObject *, const QHashedV8String &, Data &);
 
     static bool isDynamicMetaObject(const QMetaObject *);
+
 protected:
+    virtual void destroy();
     virtual void clear();
 
 private:
