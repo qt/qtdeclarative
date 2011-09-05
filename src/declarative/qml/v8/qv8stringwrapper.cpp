@@ -44,17 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8StringResource : public v8::String::ExternalStringResource
-{
-public:
-    QV8StringResource(const QString &str) : str(str) {}
-    virtual const uint16_t* data() const { return (uint16_t*)str.constData(); }
-    virtual size_t length() const { return str.length(); }
-    virtual void Dispose() { delete this; }
-
-    QString str;
-};
-
 QV8StringWrapper::QV8StringWrapper()
 {
 }
@@ -73,7 +62,6 @@ void QV8StringWrapper::destroy()
 
 v8::Local<v8::String> QV8StringWrapper::toString(const QString &qstr)
 {
-//    return v8::String::NewExternal(new QV8StringResource(qstr));
     return QJSConverter::toString(qstr);
 }
 
@@ -81,9 +69,6 @@ QString QV8StringWrapper::toString(v8::Handle<v8::String> jsstr)
 {
     if (jsstr.IsEmpty()) {
         return QString();
-    } else if (jsstr->IsExternal()) {
-        QV8StringResource *r = (QV8StringResource *)jsstr->GetExternalStringResource();
-        return r->str;
     } else {
         return QJSConverter::toString(jsstr);
     }
