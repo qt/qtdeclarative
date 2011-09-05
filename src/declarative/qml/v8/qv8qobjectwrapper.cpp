@@ -120,6 +120,17 @@ public:
 };
 
 namespace {
+
+template<typename A, typename B, typename C, typename D, typename E>
+class MaxSizeOf5 {
+    template<typename Z, typename X>
+    struct SMax {
+        static const size_t Size = sizeof(Z) > sizeof(X) ? sizeof(Z) : sizeof(X);
+    };
+public:
+    static const size_t Size = SMax<A, SMax<B, SMax<C, SMax<D, E> > > >::Size;
+};
+
 struct MetaCallArgument {
     inline MetaCallArgument();
     inline ~MetaCallArgument();
@@ -141,7 +152,12 @@ private:
         bool boolValue;
         QObject *qobjectPtr;
 
-        char allocData[sizeof(QVariant)];
+        char allocData[MaxSizeOf5<QVariant,
+                                QString,
+                                QList<QObject *>,
+                                QJSValue,
+                                QDeclarativeV8Handle>::Size];
+        qint64 q_for_alignment;
     };
 
     // Pointers to allocData
