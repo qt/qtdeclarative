@@ -83,11 +83,11 @@ static const char qt_particles_default_fragment_code[] =//TODO: Default frag req
         "}";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT },             // Vectors
-    { 4, 1, GL_FLOAT }              // r
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),       // Position
+    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(4, 1, GL_FLOAT)              // r
 };
 
 static QSGGeometry::AttributeSet PlainParticle_AttributeSet =

@@ -56,11 +56,17 @@ class QSGGeometryData;
 class Q_DECLARATIVE_EXPORT QSGGeometry
 {
 public:
+
     struct Attribute
     {
         int position;
         int tupleSize;
         int type;
+
+        uint isVertexCoordinate : 1;
+        uint migrateYourCodeToUseTheCreateFunction: 31; // ### Remove before release
+
+        static Attribute create(int pos, int tupleSize, int primitiveType, bool isPosition = false);
     };
 
     struct AttributeSet {
@@ -132,6 +138,8 @@ public:
     void *indexData();
     inline uint *indexDataAsUInt();
     inline quint16 *indexDataAsUShort();
+
+    inline int sizeOfIndex() const;
 
     const void *indexData() const;
     inline const uint *indexDataAsUInt() const;
@@ -270,6 +278,16 @@ inline const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 4);
     Q_ASSERT(m_attributes.attributes[1].type == GL_UNSIGNED_BYTE);
     return (const ColoredPoint2D *) m_data;
+}
+
+int QSGGeometry::sizeOfIndex() const
+{
+    if (m_index_type == GL_UNSIGNED_SHORT) return 2;
+    else if (m_index_type == GL_UNSIGNED_BYTE) return 1;
+#ifndef QT_OPENGL_ES
+    else if (m_index_type == GL_UNSIGNED_INT) return 4;
+#endif
+    return 0;
 }
 
 QT_END_NAMESPACE

@@ -45,6 +45,13 @@
 QT_BEGIN_NAMESPACE
 
 
+QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tupleSize, int primitiveType, bool isPrimitive)
+{
+    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, 0 };
+    return a;
+}
+
+
 /*!
     Convenience function which returns attributes to be used for 2D solid
     color drawing.
@@ -53,7 +60,7 @@ QT_BEGIN_NAMESPACE
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true)
     };
     static AttributeSet attrs = { 1, sizeof(float) * 2, data };
     return attrs;
@@ -66,8 +73,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT },
-        { 1, 2, GL_FLOAT }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+        QSGGeometry::Attribute::create(1, 2, GL_FLOAT)
     };
     static AttributeSet attrs = { 2, sizeof(float) * 4, data };
     return attrs;
@@ -80,8 +87,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D(
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT },
-        { 1, 4, GL_UNSIGNED_BYTE }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+        QSGGeometry::Attribute::create(1, 4, GL_UNSIGNED_BYTE)
     };
     static AttributeSet attrs = { 2, 2 * sizeof(float) + 4 * sizeof(char), data };
     return attrs;
@@ -131,10 +138,32 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
 
+    if (indexType != GL_UNSIGNED_BYTE
+        && indexType != GL_UNSIGNED_SHORT
+#ifndef QT_OPENGL_ES
+        && indexType != GL_UNSIGNED_INT
+#endif
+            ) {
+        qFatal("QSGGeometry: Unsupported index type, %x.%s\n",
+               indexType,
+               indexType == GL_UNSIGNED_INT ? " GL_UNSIGNED_INT is not supported on OpenGL ES." : "");
+    }
+
+
     // Because allocate reads m_vertex_count, m_index_count and m_owns_data, these
     // need to be set before calling allocate...
     allocate(vertexCount, indexCount);
 }
+
+/*!
+    \fn int QSGGeometry::sizeOfIndexType() const
+
+    Returns the byte size of the index type.
+
+    This value is either 1 when index type is GL_UNSIGNED_BYTE or 2 when
+    index type is GL_UNSIGNED_SHORT. For Desktop OpenGL, GL_UNSIGNED_INT
+    with the value 4 is also supported.
+ */
 
 QSGGeometry::~QSGGeometry()
 {
