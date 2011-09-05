@@ -100,7 +100,7 @@ const char *V8FLAGS = "v8flags";
 const char *VERSION = "version";
 const char *DISCONNECT = "disconnect";
 const char *LISTBREAKPOINTS = "listbreakpoints";
-const char *GC = "gc";
+const char *GARBAGECOLLECTOR = "gc";
 //const char *PROFILE = "profile";
 
 const char *CONNECT = "connect";
@@ -916,7 +916,7 @@ void QJSDebugClient::gc()
     //                    }
     //    }
     VARIANTMAPINIT;
-    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(GC)));
+    jsonVal.setProperty(QLatin1String(COMMAND),QJSValue(QLatin1String(GARBAGECOLLECTOR)));
 
     QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
 
