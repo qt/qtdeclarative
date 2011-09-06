@@ -84,9 +84,7 @@ private:
 
 void tst_QSGMouseArea::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("MouseArea needs OpenGL 2.0", SkipAll);
+
 }
 
 void tst_QSGMouseArea::cleanupTestCase()
@@ -97,9 +95,10 @@ void tst_QSGMouseArea::cleanupTestCase()
 void tst_QSGMouseArea::dragProperties()
 {
     QSGView *canvas = createView();
+
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragproperties.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGMouseArea *mouseRegion = canvas->rootObject()->findChild<QSGMouseArea*>("mouseregion");
@@ -185,7 +184,7 @@ void tst_QSGMouseArea::resetDrag()
     canvas->rootContext()->setContextProperty("haveTarget", QVariant(true));
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragreset.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGMouseArea *mouseRegion = canvas->rootObject()->findChild<QSGMouseArea*>("mouseregion");
@@ -215,7 +214,7 @@ void tst_QSGMouseArea::dragging()
 
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragging.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGMouseArea *mouseRegion = canvas->rootObject()->findChild<QSGMouseArea*>("mouseregion");
@@ -261,7 +260,7 @@ void tst_QSGMouseArea::dragging()
 QSGView *tst_QSGMouseArea::createView()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     return canvas;
 }
@@ -271,7 +270,7 @@ void tst_QSGMouseArea::updateMouseAreaPosOnClick()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/updateMousePosOnClick.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGMouseArea *mouseRegion = canvas->rootObject()->findChild<QSGMouseArea*>("mouseregion");
@@ -300,7 +299,7 @@ void tst_QSGMouseArea::updateMouseAreaPosOnResize()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/updateMousePosOnResize.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGMouseArea *mouseRegion = canvas->rootObject()->findChild<QSGMouseArea*>("mouseregion");
@@ -338,7 +337,7 @@ void tst_QSGMouseArea::noOnClickedWithPressAndHold()
         QSGView *canvas = createView();
         canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clickandhold.qml"));
         canvas->show();
-        canvas->setFocus();
+        canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -363,7 +362,7 @@ void tst_QSGMouseArea::noOnClickedWithPressAndHold()
         QSGView *canvas = createView();
         canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/noclickandhold.qml"));
         canvas->show();
-        canvas->setFocus();
+        canvas->requestActivateWindow();
         QVERIFY(canvas->rootObject() != 0);
 
         QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -387,7 +386,7 @@ void tst_QSGMouseArea::onMousePressRejected()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/rejectEvent.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
     QVERIFY(canvas->rootObject()->property("enabled").toBool());
 
@@ -424,7 +423,7 @@ void tst_QSGMouseArea::pressedCanceledOnWindowDeactivate()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pressedCanceled.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
     QVERIFY(!canvas->rootObject()->property("pressed").toBool());
     QVERIFY(!canvas->rootObject()->property("canceled").toBool());
@@ -469,7 +468,7 @@ void tst_QSGMouseArea::doubleClick()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/doubleclick.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -498,7 +497,7 @@ void tst_QSGMouseArea::clickTwice()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clicktwice.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -529,7 +528,7 @@ void tst_QSGMouseArea::pressedOrdering()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/pressedOrdering.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QCOMPARE(canvas->rootObject()->property("value").toString(), QLatin1String("base"));
@@ -557,7 +556,7 @@ void tst_QSGMouseArea::preventStealing()
 
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/preventstealing.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
@@ -628,7 +627,7 @@ void tst_QSGMouseArea::clickThrough()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clickThrough.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
@@ -666,7 +665,7 @@ void tst_QSGMouseArea::clickThrough()
     canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/clickThrough2.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     pressEvent = QMouseEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
