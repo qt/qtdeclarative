@@ -43,6 +43,7 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qsgfocusscope_p.h"
 #include "../../../shared/util.h"
 #include <QDebug>
@@ -132,9 +133,10 @@ private slots:
     void hoverEventInParent();
 
 private:
-    void ensureFocus(QWidget *w) {
+
+    void ensureFocus(QWindow *w) {
         w->show();
-        qApp->setActiveWindow(w);
+        w->requestActivateWindow();
         qApp->processEvents();
 
 #ifdef Q_WS_X11
