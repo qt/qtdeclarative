@@ -748,10 +748,19 @@ void QSGItemViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
     if (!q->isComponentComplete())
         return;
 
-    if (header && header->item == item)
+    if (header && header->item == item) {
         updateHeader();
-    else if (footer && footer->item == item)
+        minExtentDirty = true;
+        maxExtentDirty = true;
+        if (!q->isMoving() && !q->isFlicking())
+            fixupPosition();
+    } else if (footer && footer->item == item) {
         updateFooter();
+        minExtentDirty = true;
+        maxExtentDirty = true;
+        if (!q->isMoving() && !q->isFlicking())
+            fixupPosition();
+    }
 
     if (currentItem && currentItem->item == item)
         updateHighlight();

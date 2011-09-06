@@ -2296,6 +2296,7 @@ void tst_QSGGridView::footer()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedContentPos);
     QFETCH(QPointF, firstDelegatePos);
+    QFETCH(QPointF, resizeContentPos);
 
     QSGView *canvas = createView();
     canvas->show();
@@ -2385,6 +2386,11 @@ void tst_QSGGridView::footer()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    gridview->positionViewAtEnd();
+    footer->setHeight(10);
+    footer->setWidth(40);
+    QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), resizeContentPos);
+
     delete canvas;
 }
 
@@ -2397,11 +2403,13 @@ void tst_QSGGridView::footer_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // footer1 = 100 x 30
-    // footer2 = 100 x 20
+    // footer2 = 50 x 20
     // cells = 80 * 60
     // view width = 240
+    // view height = 320
 
     // footer below items, bottom left
     QTest::newRow("flow left to right") << QSGGridView::LeftToRight << Qt::LeftToRight
@@ -2409,7 +2417,8 @@ void tst_QSGGridView::footer_data()
         << QPointF(0, 10 * 60)  // 30 items = 10 rows
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, 10 * 60 - 320 + 10);
 
     // footer below items, bottom right
     QTest::newRow("flow left to right, layout right to left") << QSGGridView::LeftToRight << Qt::RightToLeft
@@ -2417,7 +2426,8 @@ void tst_QSGGridView::footer_data()
         << QPointF((240 - 100) + 50, 10 * 60)     // 50 = width diff between old and new footers
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(240 - 80, 0);
+        << QPointF(240 - 80, 0)
+        << QPointF(0, 10 * 60 - 320 + 10);
 
     // footer to right of items
     QTest::newRow("flow top to bottom, layout left to right") << QSGGridView::TopToBottom << Qt::LeftToRight
@@ -2425,7 +2435,8 @@ void tst_QSGGridView::footer_data()
         << QPointF(6 * 80, 0)      // 30 items = 6 columns
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(6 * 80 - 240 + 40, 0);
 
     // footer to left of items
     QTest::newRow("flow top to bottom, layout right to left") << QSGGridView::TopToBottom << Qt::RightToLeft
@@ -2433,7 +2444,8 @@ void tst_QSGGridView::footer_data()
         << QPointF(-(6 * 80) - 50, 0)     // 50 = new footer width
         << QPointF(-240, 0)
         << QPointF(-240, 0)    // unchanged, footer change doesn't change content pos
-        << QPointF(-80, 0);
+        << QPointF(-80, 0)
+        << QPointF(-(6 * 80) - 40, 0);
 }
 
 void tst_QSGGridView::header()
@@ -2445,6 +2457,7 @@ void tst_QSGGridView::header()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedContentPos);
     QFETCH(QPointF, firstDelegatePos);
+    QFETCH(QPointF, resizeContentPos);
 
     QSGView *canvas = createView();
 
@@ -2507,6 +2520,10 @@ void tst_QSGGridView::header()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    header->setHeight(10);
+    header->setWidth(40);
+    QTRY_COMPARE(QPointF(gridview->contentX(), gridview->contentY()), resizeContentPos);
+
     delete canvas;
 }
 
@@ -2519,9 +2536,10 @@ void tst_QSGGridView::header_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // header1 = 100 x 30
-    // header2 = 100 x 20
+    // header2 = 50 x 20
     // cells = 80 x 60
     // view width = 240
 
@@ -2531,7 +2549,8 @@ void tst_QSGGridView::header_data()
         << QPointF(0, -20)
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, -10);
 
     // header above items, top right
     QTest::newRow("flow left to right, layout right to left") << QSGGridView::LeftToRight << Qt::RightToLeft
@@ -2539,7 +2558,8 @@ void tst_QSGGridView::header_data()
         << QPointF((240 - 100) + 50, -20)     // 50 = width diff between old and new headers
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(160, 0);
+        << QPointF(160, 0)
+        << QPointF(0, -10);
 
     // header to left of items
     QTest::newRow("flow top to bottom, layout left to right") << QSGGridView::TopToBottom << Qt::LeftToRight
@@ -2547,7 +2567,8 @@ void tst_QSGGridView::header_data()
         << QPointF(-50, 0)
         << QPointF(-100, 0)
         << QPointF(-50, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(-40, 0);
 
     // header to right of items
     QTest::newRow("flow top to bottom, layout right to left") << QSGGridView::TopToBottom << Qt::RightToLeft
@@ -2555,7 +2576,8 @@ void tst_QSGGridView::header_data()
         << QPointF(0, 0)
         << QPointF(-(240 - 100), 0)
         << QPointF(-(240 - 50), 0)
-        << QPointF(-80, 0);
+        << QPointF(-80, 0)
+        << QPointF(-(240 - 40), 0);
 }
 
 void tst_QSGGridView::indexAt()

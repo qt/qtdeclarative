@@ -2461,6 +2461,7 @@ void tst_QSGListView::header()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedHeaderPos);
     QFETCH(QPointF, changedContentPos);
+    QFETCH(QPointF, resizeContentPos);
 
     QSGView *canvas = createView();
 
@@ -2520,6 +2521,10 @@ void tst_QSGListView::header()
     QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), changedContentPos);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    header->setHeight(10);
+    header->setWidth(40);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), resizeContentPos);
+
     delete canvas;
 }
 
@@ -2532,6 +2537,7 @@ void tst_QSGListView::header_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // header1 = 100 x 30
     // header2 = 50 x 20
@@ -2544,7 +2550,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, -20)
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, -10);
 
     // header above items, top right
     QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
@@ -2552,7 +2559,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, -20)
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, -10);
 
     // header to left of items
     QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
@@ -2560,7 +2568,8 @@ void tst_QSGListView::header_data()
         << QPointF(-50, 0)
         << QPointF(-100, 0)
         << QPointF(-50, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(-40, 0);
 
     // header to right of items
     QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
@@ -2568,7 +2577,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, 0)
         << QPointF(-240 + 100, 0)
         << QPointF(-240 + 50, 0)
-        << QPointF(-240, 0);
+        << QPointF(-240, 0)
+        << QPointF(-240 + 40, 0);
 }
 
 void tst_QSGListView::header_delayItemCreation()
@@ -2607,6 +2617,7 @@ void tst_QSGListView::footer()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedFooterPos);
     QFETCH(QPointF, changedContentPos);
+    QFETCH(QPointF, resizeContentPos);
 
     QSGView *canvas = createView();
 
@@ -2691,6 +2702,11 @@ void tst_QSGListView::footer()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    listview->positionViewAtEnd();
+    footer->setHeight(10);
+    footer->setWidth(40);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), resizeContentPos);
+
     delete canvas;
 }
 
@@ -2703,11 +2719,13 @@ void tst_QSGListView::footer_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // footer1 = 100 x 30
-    // footer2 = 100 x 20
+    // footer2 = 50 x 20
     // delegates = 40 x 20
     // view width = 240
+    // view height = 320
 
     // footer below items, bottom left
     QTest::newRow("vertical, layout left to right") << QSGListView::Vertical << Qt::LeftToRight
@@ -2715,7 +2733,8 @@ void tst_QSGListView::footer_data()
         << QPointF(0, 30 * 20)  // added 30 items
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer below items, bottom right
     QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
@@ -2723,7 +2742,8 @@ void tst_QSGListView::footer_data()
         << QPointF(0, 30 * 20)
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer to right of items
     QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
@@ -2731,7 +2751,8 @@ void tst_QSGListView::footer_data()
         << QPointF(40 * 30, 0)
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(40 * 30 - 240 + 40, 0);
 
     // footer to left of items
     QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
@@ -2739,7 +2760,8 @@ void tst_QSGListView::footer_data()
         << QPointF(-(40 * 30) - 50, 0)     // 50 = new footer width
         << QPointF(-240, 0)
         << QPointF(-240, 0)
-        << QPointF(-40, 0);
+        << QPointF(-40, 0)
+        << QPointF(-(40 * 30) - 40, 0);
 }
 
 class LVAccessor : public QSGListView
