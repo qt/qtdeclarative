@@ -61,6 +61,7 @@ private slots:
     void count();
 
     void crashBug();
+    void QTBUG_17868();
 };
 
 void tst_QDeclarativePropertyMap::insert()
@@ -216,6 +217,23 @@ void tst_QDeclarativePropertyMap::crashBug()
     c.setData("import QtQuick 2.0\nBinding { target: map; property: \"myProp\"; value: 10 + 23 }",QUrl());
     QObject *obj = c.create(&context);
     delete obj;
+}
+
+void tst_QDeclarativePropertyMap::QTBUG_17868()
+{
+    QDeclarativePropertyMap map;
+
+    QDeclarativeEngine engine;
+    QDeclarativeContext context(&engine);
+    context.setContextProperty("map", &map);
+    map.insert("key", 1);
+    QDeclarativeComponent c(&engine);
+    c.setData("import QtQuick 2.0\nItem {property bool error:false; Component.onCompleted: {try{console.log(map.keys());}catch(e) {error=true;}}}",QUrl());
+    QObject *obj = c.create(&context);
+    QVERIFY(obj);
+    QVERIFY(!obj->property("error").toBool());
+    delete obj;
+
 }
 
 QTEST_MAIN(tst_QDeclarativePropertyMap)
