@@ -39,26 +39,25 @@
 **
 ****************************************************************************/
 
-#ifndef QSGCUMULATIVEDIRECTION_P_H
-#define QSGCUMULATIVEDIRECTION_P_H
 #include "qsgdirection_p.h"
-#include <QDeclarativeListProperty>
-QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass Direction QSGDirection
+    \inqmlmodule QtQuick.Particles 2
+    \brief The Direction elements allow you to specify a vector space.
 
-QT_MODULE(Declarative)
+*/
 
-class QSGCumulativeDirection : public QSGDirection
+
+QSGDirection::QSGDirection(QObject *parent) :
+    QObject(parent)
 {
-    Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QSGDirection> directions READ directions)
-    Q_CLASSINFO("DefaultProperty", "directions")
-public:
-    explicit QSGCumulativeDirection(QObject *parent = 0);
-    QDeclarativeListProperty<QSGDirection> directions();
-    const QPointF &sample(const QPointF &from);
-private:
-    QList<QSGDirection*> m_directions;
-};
-#endif // QSGCUMULATIVEDIRECTION_P_H
+}
+
+const QPointF &QSGDirection::sample(const QPointF &from)
+{
+    return m_ret;
+}
+
+QT_END_NAMESPACE

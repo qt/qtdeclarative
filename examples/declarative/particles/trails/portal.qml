@@ -52,7 +52,6 @@ Rectangle{
     }
     ParticleSystem{ 
         id: particles 
-        startTime: 2000
     }
     ImageParticle{
         particles: ["center","edge"]
@@ -68,12 +67,11 @@ Rectangle{
         system: particles
         emitRate: 200
         lifeSpan: 2000
-        emitting: true
         size: 20
         sizeVariation: 2
         endSize: 0
         shape: EllipseShape{fill: false}
-        speed: TargetedDirection{
+        speed: TargetDirection{
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true
@@ -83,22 +81,22 @@ Rectangle{
     Emitter{
         anchors.fill: parent
         particle: "edge"
+        startTime: 2000
         system: particles
         emitRate: 4000
         lifeSpan: 2000
-        emitting: true
         size: 20
         sizeVariation: 2
         endSize: 0
         shape: EllipseShape{fill: false}
-        speed: TargetedDirection{
+        speed: TargetDirection{
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true
             magnitude: 0.1
             magnitudeVariation: 0.1
         }
-        acceleration: TargetedDirection{
+        acceleration: TargetDirection{
             targetX: root.width/2 
             targetY: root.height/2
             targetVariation: 200

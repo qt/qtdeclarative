@@ -63,12 +63,11 @@ Rectangle{
             Emitter{
                 id: emitMore
                 system: sys
-                emitting: true
                 emitRate: 128
                 lifeSpan: 600
                 size: 16
                 endSize: 8
-                speed: AngledDirection{angleVariation:360; magnitude: 60}
+                speed: AngleDirection{angleVariation:360; magnitude: 60}
             }
 
             property int life: 2600
@@ -77,10 +76,9 @@ Rectangle{
             function go(){
                 xAnim.start();
                 yAnim.start();
-                container.emitting = true
+                container.enabled = true
             }
             system: sys
-            emitting: true
             emitRate: 32
             lifeSpan: 600
             size: 24

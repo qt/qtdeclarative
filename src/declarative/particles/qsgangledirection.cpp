@@ -39,21 +39,21 @@
 **
 ****************************************************************************/
 
-#include "qsgangleddirection_p.h"
+#include "qsgangledirection_p.h"
 #include <cmath>
 QT_BEGIN_NAMESPACE
 const qreal CONV = 0.017453292519943295;
 /*!
-    \qmlclass AngledDirection QSGAngledDirection
+    \qmlclass AngleDirection QSGAngleDirection
     \inqmlmodule QtQuick.Particles 2
-    \inherits StochasticDirection
-    \brief The AngledDirection element allows you to specify a direction that varies in angle
+    \inherits Direction
+    \brief The AngleDirection element allows you to specify a direction that varies in angle
 
     The AngledDirection element allows both the specification of a direction by angle and magnitude,
     as well as varying the parameters by angle or magnitude.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::AngledDirection::angle
+    \qmlproperty real QtQuick.Particles2::AngleDirection::angle
     This property specifies the base angle for the direction.
     The angle of this direction will vary by no more than angleVariation
     from this angle.
@@ -63,7 +63,7 @@ const qreal CONV = 0.017453292519943295;
     The default value is zero.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::AngledDirection::magnitude
+    \qmlproperty real QtQuick.Particles2::AngleDirection::magnitude
     This property specifies the base magnitude for the direction.
     The magnitude of this direction will vary by no more than magnitudeVariation
     from this magnitude.
@@ -73,7 +73,7 @@ const qreal CONV = 0.017453292519943295;
     The default value is zero.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::AngledDirection::angleVariation
+    \qmlproperty real QtQuick.Particles2::AngleDirection::angleVariation
     This property specifies the maximum angle variation for the direction.
     The angle of the direction will vary by up to angleVariation clockwise
     and anticlockwise from the value specified in angle.
@@ -83,7 +83,7 @@ const qreal CONV = 0.017453292519943295;
     The default value is zero.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::AngledDirection::magnitudeVariation
+    \qmlproperty real QtQuick.Particles2::AngleDirection::magnitudeVariation
     This property specifies the base magnitude for the direction.
     The magnitude of this direction will vary by no more than magnitudeVariation
     from the base magnitude.
@@ -92,8 +92,8 @@ const qreal CONV = 0.017453292519943295;
 
     The default value is zero.
 */
-QSGAngledDirection::QSGAngledDirection(QObject *parent) :
-    QSGStochasticDirection(parent)
+QSGAngleDirection::QSGAngleDirection(QObject *parent) :
+    QSGDirection(parent)
   , m_angle(0)
   , m_magnitude(0)
   , m_angleVariation(0)
@@ -102,7 +102,7 @@ QSGAngledDirection::QSGAngledDirection(QObject *parent) :
 
 }
 
-const QPointF &QSGAngledDirection::sample(const QPointF &from)
+const QPointF &QSGAngleDirection::sample(const QPointF &from)
 {
     //TODO: Faster
     qreal theta = m_angle*CONV - m_angleVariation*CONV + rand()/float(RAND_MAX) * m_angleVariation*CONV * 2;

@@ -46,7 +46,7 @@
 #include <QDebug>
 #include "qsgparticlesystem_p.h"
 #include "qsgparticleextruder_p.h"
-#include "qsgstochasticdirection_p.h"
+#include "qsgdirection_p.h"
 
 #include <QList>
 #include <QPair>
@@ -63,21 +63,20 @@ class QSGParticleEmitter : public QSGItem
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QString particle READ particle WRITE setParticle NOTIFY particleChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)
-    Q_PROPERTY(bool emitting READ emitting WRITE setEmitting NOTIFY emittingChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
-    Q_PROPERTY(bool noCap READ overwrite WRITE setOverWrite NOTIFY overwriteChanged)
 
     Q_PROPERTY(qreal emitRate READ particlesPerSecond WRITE setParticlesPerSecond NOTIFY particlesPerSecondChanged)
     Q_PROPERTY(int lifeSpan READ particleDuration WRITE setParticleDuration NOTIFY particleDurationChanged)
     Q_PROPERTY(int lifeSpanVariation READ particleDurationVariation WRITE setParticleDurationVariation NOTIFY particleDurationVariationChanged)
-    Q_PROPERTY(int emitCap READ maxParticleCount WRITE setMaxParticleCount NOTIFY maxParticleCountChanged)
+    Q_PROPERTY(int maximumEmitted READ maxParticleCount WRITE setMaxParticleCount NOTIFY maximumEmittedChanged)
 
     Q_PROPERTY(qreal size READ particleSize WRITE setParticleSize NOTIFY particleSizeChanged)
     Q_PROPERTY(qreal endSize READ particleEndSize WRITE setParticleEndSize NOTIFY particleEndSizeChanged)
     Q_PROPERTY(qreal sizeVariation READ particleSizeVariation WRITE setParticleSizeVariation NOTIFY particleSizeVariationChanged)
 
-    Q_PROPERTY(QSGStochasticDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged)
-    Q_PROPERTY(QSGStochasticDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
+    Q_PROPERTY(QSGDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged)
+    Q_PROPERTY(QSGDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
     Q_PROPERTY(qreal speedFromMovement READ speedFromMovement WRITE setSpeedFromMovement NOTIFY speedFromMovementChanged)
 
     Q_ENUMS(Lifetime)
@@ -90,9 +89,9 @@ public:
         InfiniteLife = QSGParticleSystem::maxLife
     };
 
-    bool emitting() const
+    bool enabled() const
     {
-        return m_emitting;
+        return m_enabled;
     }
 
     qreal particlesPerSecond() const
@@ -127,7 +126,7 @@ signals:
     void emitParticle(QDeclarativeV8Handle particle);
     void particlesPerSecondChanged(qreal);
     void particleDurationChanged(int);
-    void emittingChanged(bool);
+    void enabledChanged(bool);
 
     void systemChanged(QSGParticleSystem* arg);
 
@@ -143,25 +142,23 @@ signals:
 
     void particleSizeVariationChanged(qreal arg);
 
-    void speedChanged(QSGStochasticDirection * arg);
+    void speedChanged(QSGDirection * arg);
 
-    void accelerationChanged(QSGStochasticDirection * arg);
+    void accelerationChanged(QSGDirection * arg);
 
-    void maxParticleCountChanged(int arg);
+    void maximumEmittedChanged(int arg);
     void particleCountChanged();
 
     void speedFromMovementChanged();
 
     void startTimeChanged(int arg);
 
-    void overwriteChanged(bool arg);
-
 public slots:
     void pulse(qreal seconds);
     void burst(int num);
     void burst(int num, qreal x, qreal y);
 
-    void setEmitting(bool arg);
+    void setEnabled(bool arg);
 
     void setParticlesPerSecond(qreal arg)
     {
@@ -179,95 +176,87 @@ public slots:
         }
     }
 
-       void setSystem(QSGParticleSystem* arg)
+    void setSystem(QSGParticleSystem* arg)
     {
         if (m_system != arg) {
             m_system = arg;
             m_system->registerParticleEmitter(this);
             emit systemChanged(arg);
         }
-       }
+    }
 
-       void setParticle(QString arg)
-       {
-           if (m_particle != arg) {
-               m_particle = arg;
-               emit particleChanged(arg);
-           }
-       }
+    void setParticle(QString arg)
+    {
+        if (m_particle != arg) {
+            m_particle = arg;
+            emit particleChanged(arg);
+        }
+    }
 
-       void setParticleDurationVariation(int arg)
-       {
-           if (m_particleDurationVariation != arg) {
-               m_particleDurationVariation = arg;
-               emit particleDurationVariationChanged(arg);
-           }
-       }
-       void setExtruder(QSGParticleExtruder* arg)
-       {
-           if (m_extruder != arg) {
-               m_extruder = arg;
-               emit extruderChanged(arg);
-           }
-       }
+    void setParticleDurationVariation(int arg)
+    {
+        if (m_particleDurationVariation != arg) {
+            m_particleDurationVariation = arg;
+            emit particleDurationVariationChanged(arg);
+        }
+    }
+    void setExtruder(QSGParticleExtruder* arg)
+    {
+        if (m_extruder != arg) {
+            m_extruder = arg;
+            emit extruderChanged(arg);
+        }
+    }
 
-       void setParticleSize(qreal arg)
-       {
-           if (m_particleSize != arg) {
-               m_particleSize = arg;
-               emit particleSizeChanged(arg);
-           }
-       }
+    void setParticleSize(qreal arg)
+    {
+        if (m_particleSize != arg) {
+            m_particleSize = arg;
+            emit particleSizeChanged(arg);
+        }
+    }
 
-       void setParticleEndSize(qreal arg)
-       {
-           if (m_particleEndSize != arg) {
-               m_particleEndSize = arg;
-               emit particleEndSizeChanged(arg);
-           }
-       }
+    void setParticleEndSize(qreal arg)
+    {
+        if (m_particleEndSize != arg) {
+            m_particleEndSize = arg;
+            emit particleEndSizeChanged(arg);
+        }
+    }
 
-       void setParticleSizeVariation(qreal arg)
-       {
-           if (m_particleSizeVariation != arg) {
-               m_particleSizeVariation = arg;
-               emit particleSizeVariationChanged(arg);
-           }
-       }
+    void setParticleSizeVariation(qreal arg)
+    {
+        if (m_particleSizeVariation != arg) {
+            m_particleSizeVariation = arg;
+            emit particleSizeVariationChanged(arg);
+        }
+    }
 
-       void setSpeed(QSGStochasticDirection * arg)
-       {
-           if (m_speed != arg) {
-               m_speed = arg;
-               emit speedChanged(arg);
-           }
-       }
+    void setSpeed(QSGDirection * arg)
+    {
+        if (m_speed != arg) {
+            m_speed = arg;
+            emit speedChanged(arg);
+        }
+    }
 
-       void setAcceleration(QSGStochasticDirection * arg)
-       {
-           if (m_acceleration != arg) {
-               m_acceleration = arg;
-               emit accelerationChanged(arg);
-           }
-       }
+    void setAcceleration(QSGDirection * arg)
+    {
+        if (m_acceleration != arg) {
+            m_acceleration = arg;
+            emit accelerationChanged(arg);
+        }
+    }
 
-       void setMaxParticleCount(int arg);
+    void setMaxParticleCount(int arg);
 
-       void setStartTime(int arg)
-       {
-           if (m_startTime != arg) {
-               m_startTime = arg;
-               emit startTimeChanged(arg);
-           }
-       }
-
-       void setOverWrite(bool arg)
-       {
-           if (m_overwrite != arg) {
-               m_overwrite = arg;
-               emit overwriteChanged(arg);
-           }
-       }
+    void setStartTime(int arg)
+    {
+        if (m_startTime != arg) {
+            m_startTime = arg;
+            emit startTimeChanged(arg);
+        }
+    }
 
        virtual void reset();
 public:
@@ -293,12 +282,12 @@ public:
            return m_particleSizeVariation;
        }
 
-       QSGStochasticDirection * speed() const
+       QSGDirection * speed() const
        {
            return m_speed;
        }
 
-       QSGStochasticDirection * acceleration() const
+       QSGDirection * acceleration() const
        {
            return m_acceleration;
        }
@@ -313,23 +302,18 @@ public:
            return m_startTime;
        }
 
-       bool overwrite() const
-       {
-           return m_overwrite;
-       }
-
 protected:
        qreal m_particlesPerSecond;
        int m_particleDuration;
        int m_particleDurationVariation;
-       bool m_emitting;
+       bool m_enabled;
        QSGParticleSystem* m_system;
        QString m_particle;
        QSGParticleExtruder* m_extruder;
        QSGParticleExtruder* m_defaultExtruder;
        QSGParticleExtruder* effectiveExtruder();
-       QSGStochasticDirection * m_speed;
-       QSGStochasticDirection * m_acceleration;
+       QSGDirection * m_speed;
+       QSGDirection * m_acceleration;
        qreal m_particleSize;
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
@@ -356,7 +340,7 @@ protected:
 
        bool isEmitConnected();
 private:
-       QSGStochasticDirection m_nullVector;
+       QSGDirection m_nullVector;
 
 };
 

@@ -61,7 +61,7 @@ Item {
         size: 92
         emitRate: 1
         lifeSpan: 4800
-        emitting: hp > 0
+        enabled: hp > 0
     }
     Emitter{
         system: container.system
@@ -76,7 +76,7 @@ Item {
         endSize: 8
         emitRate: hp > 0 ?  hp * 1 + 20 : 0 
         lifeSpan: 1200
-        emitCap: (maxHP * 1 + 20)*2
+        maximumEmitted: (maxHP * 1 + 20)*2
     }
     Timer{
         id: fireControl

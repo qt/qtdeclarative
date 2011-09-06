@@ -66,11 +66,11 @@ class QSGWanderAffector : public QSGParticleAffector
     Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged)
     Q_PROPERTY(qreal xVariance READ xVariance WRITE setXVariance NOTIFY xVarianceChanged)
     Q_PROPERTY(qreal yVariance READ yVariance WRITE setYVariance NOTIFY yVarianceChanged)
-    Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
-    Q_ENUMS(PhysicsAffects)
+    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
+    Q_ENUMS(AffectableParameters)
 
 public:
-    enum PhysicsAffects {
+    enum AffectableParameters {
         Position,
         Velocity,
         Acceleration
@@ -95,9 +95,9 @@ public:
         return m_pace;
     }
 
-    PhysicsAffects physics() const
+    AffectableParameters affectedParameter() const
     {
-        return m_physics;
+        return m_affectedParameter;
     }
 
 protected:
@@ -111,7 +111,7 @@ signals:
     void paceChanged(qreal arg);
 
 
-    void physicsChanged(PhysicsAffects arg);
+    void affectedParameterChanged(AffectableParameters arg);
 
 public slots:
 void setXVariance(qreal arg)
@@ -139,11 +139,11 @@ void setPace(qreal arg)
 }
 
 
-void setPhysics(PhysicsAffects arg)
+void setAffectedParameter(AffectableParameters arg)
 {
-    if (m_physics != arg) {
-        m_physics = arg;
-        emit physicsChanged(arg);
+    if (m_affectedParameter != arg) {
+        m_affectedParameter = arg;
+        emit affectedParameterChanged(arg);
     }
 }
 
@@ -153,7 +153,7 @@ private:
     qreal m_xVariance;
     qreal m_yVariance;
     qreal m_pace;
-    PhysicsAffects m_physics;
+    AffectableParameters m_affectedParameter;
 };
 
 QT_END_NAMESPACE

@@ -57,11 +57,10 @@ class QSGParticleAffector : public QSGItem
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QStringList particles READ particles WRITE setParticles NOTIFY particlesChanged)
-    Q_PROPERTY(QStringList collisionParticles READ collisionParticles WRITE setCollisionParticles NOTIFY collisionParticlesChanged)
-    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
-    Q_PROPERTY(bool onceOff READ onceOff WRITE setOnceOff NOTIFY onceOffChanged)
+    Q_PROPERTY(QStringList whenCollidingWith READ whenCollidingWith WRITE setWhenCollidingWith NOTIFY whenCollidingWithChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool once READ onceOff WRITE setOnceOff NOTIFY onceChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
-    Q_PROPERTY(bool signal READ signal WRITE setSignal NOTIFY signalChanged)//TODO: Determine by whether it's connected
 
 public:
     explicit QSGParticleAffector(QSGItem *parent = 0);
@@ -77,9 +76,9 @@ public:
         return m_particles;
     }
 
-    bool active() const
+    bool enabled() const
     {
-        return m_active;
+        return m_enabled;
     }
 
     bool onceOff() const
@@ -92,33 +91,26 @@ public:
         return m_shape;
     }
 
-    bool signal() const
+    QStringList whenCollidingWith() const
     {
-        return m_signal;
-    }
-
-    QStringList collisionParticles() const
-    {
-        return m_collisionParticles;
+        return m_whenCollidingWith;
     }
 
 signals:
-    void affectParticle(QDeclarativeV8Handle particle, qreal dt);
 
     void systemChanged(QSGParticleSystem* arg);
 
     void particlesChanged(QStringList arg);
 
-    void activeChanged(bool arg);
+    void enabledChanged(bool arg);
 
-    void onceOffChanged(bool arg);
+    void onceChanged(bool arg);
 
     void shapeChanged(QSGParticleExtruder* arg);
 
     void affected(qreal x, qreal y);
-    void signalChanged(bool arg);
 
-    void collisionParticlesChanged(QStringList arg);
+    void whenCollidingWithChanged(QStringList arg);
 
 public slots:
 void setSystem(QSGParticleSystem* arg)
@@ -139,11 +131,11 @@ void setParticles(QStringList arg)
     }
 }
 
-void setActive(bool arg)
+void setEnabled(bool arg)
 {
-    if (m_active != arg) {
-        m_active = arg;
-        emit activeChanged(arg);
+    if (m_enabled != arg) {
+        m_enabled = arg;
+        emit enabledChanged(arg);
     }
 }
 
@@ -152,7 +144,7 @@ void setOnceOff(bool arg)
     if (m_onceOff != arg) {
         m_onceOff = arg;
         m_needsReset = true;
-        emit onceOffChanged(arg);
+        emit onceChanged(arg);
     }
 }
 
@@ -164,19 +156,11 @@ void setShape(QSGParticleExtruder* arg)
     }
 }
 
-void setSignal(bool arg)
+void setWhenCollidingWith(QStringList arg)
 {
-    if (m_signal != arg) {
-        m_signal = arg;
-        emit signalChanged(arg);
-    }
-}
-
-void setCollisionParticles(QStringList arg)
-{
-    if (m_collisionParticles != arg) {
-        m_collisionParticles = arg;
-        emit collisionParticlesChanged(arg);
+    if (m_whenCollidingWith != arg) {
+        m_whenCollidingWith = arg;
+        emit whenCollidingWithChanged(arg);
     }
 }
 
@@ -187,10 +171,10 @@ protected:
     QSGParticleSystem* m_system;
     QStringList m_particles;
     bool activeGroup(int g) {return m_groups.isEmpty() || m_groups.contains(g);}
-    bool m_active;
+    bool m_enabled;
     virtual void componentComplete();
     QPointF m_offset;
-    bool isAffectConnected();
+    bool isAffectedConnected();
 private:
     QSet<int> m_groups;
     QSet<QPair<int, int> > m_onceOffed;
@@ -200,9 +184,7 @@ private:
 
     QSGParticleExtruder* m_shape;
 
-    bool m_signal;
-
-    QStringList m_collisionParticles;
+    QStringList m_whenCollidingWith;
 
     bool isColliding(QSGParticleData* d);
 private slots:

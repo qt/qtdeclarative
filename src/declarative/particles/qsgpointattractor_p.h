@@ -49,15 +49,15 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGPointAttractorAffector : public QSGParticleAffector
+class QSGAttractorAffector : public QSGParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
     Q_PROPERTY(qreal pointX READ pointX WRITE setPointX NOTIFY pointXChanged)
     Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged)
-    Q_PROPERTY(PhysicsAffects physics READ physics WRITE setPhysics NOTIFY physicsChanged)
+    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
     Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
-    Q_ENUMS(PhysicsAffects)
+    Q_ENUMS(AffectableParameters)
     Q_ENUMS(Proportion)
 
 public:
@@ -69,13 +69,13 @@ public:
         InverseQuadratic
     };
 
-    enum PhysicsAffects {
+    enum AffectableParameters {
         Position,
         Velocity,
         Acceleration
     };
 
-    explicit QSGPointAttractorAffector(QSGItem *parent = 0);
+    explicit QSGAttractorAffector(QSGItem *parent = 0);
 
     qreal strength() const
     {
@@ -92,7 +92,7 @@ public:
         return m_y;
     }
 
-    PhysicsAffects physics() const
+    AffectableParameters affectedParameter() const
     {
         return m_physics;
     }
@@ -110,7 +110,7 @@ signals:
 
     void pointYChanged(qreal arg);
 
-    void physicsChanged(PhysicsAffects arg);
+    void affectedParameterChanged(AffectableParameters arg);
 
     void proportionalToDistanceChanged(Proportion arg);
 
@@ -138,11 +138,11 @@ void setPointY(qreal arg)
         emit pointYChanged(arg);
     }
 }
-void setPhysics(PhysicsAffects arg)
+void setAffectedParameter(AffectableParameters arg)
 {
     if (m_physics != arg) {
         m_physics = arg;
-        emit physicsChanged(arg);
+        emit affectedParameterChanged(arg);
     }
 }
 
@@ -160,7 +160,7 @@ private:
 qreal m_strength;
 qreal m_x;
 qreal m_y;
-PhysicsAffects m_physics;
+AffectableParameters m_physics;
 Proportion m_proportionalToDistance;
 };
 

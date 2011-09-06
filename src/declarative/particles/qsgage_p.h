@@ -39,26 +39,49 @@
 **
 ****************************************************************************/
 
-#ifndef QSGCUMULATIVEDIRECTION_P_H
-#define QSGCUMULATIVEDIRECTION_P_H
-#include "qsgdirection_p.h"
-#include <QDeclarativeListProperty>
+#ifndef KILLAFFECTOR_H
+#define KILLAFFECTOR_H
+#include "qsgparticleaffector_p.h"
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGCumulativeDirection : public QSGDirection
+
+class QSGAgeAffector : public QSGParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QSGDirection> directions READ directions)
-    Q_CLASSINFO("DefaultProperty", "directions")
+    Q_PROPERTY(int lifeLeft READ lifeLeft WRITE setLifeLeft NOTIFY lifeLeftChanged)
+
 public:
-    explicit QSGCumulativeDirection(QObject *parent = 0);
-    QDeclarativeListProperty<QSGDirection> directions();
-    const QPointF &sample(const QPointF &from);
+    explicit QSGAgeAffector(QSGItem *parent = 0);
+
+    int lifeLeft() const
+    {
+        return m_lifeLeft;
+    }
+
+protected:
+    virtual bool affectParticle(QSGParticleData *d, qreal dt);
+signals:
+    void lifeLeftChanged(int arg);
+
+public slots:
+    void setLifeLeft(int arg)
+    {
+        if (m_lifeLeft != arg) {
+            m_lifeLeft = arg;
+            emit lifeLeftChanged(arg);
+        }
+    }
+
 private:
-    QList<QSGDirection*> m_directions;
+
+int m_lifeLeft;
 };
-#endif // QSGCUMULATIVEDIRECTION_P_H
+
+QT_END_NAMESPACE
+QT_END_HEADER
+#endif // KILLAFFECTOR_H

@@ -65,12 +65,6 @@ Package {
         id: streamwrapper;
         width: 80; height: 80
         Package.name: "stream"
-        function pleaseFreeze(){
-            ModelParticle.particle.freeze(streamwrapper);
-        }
-        function pleaseUnfreeze(){
-            ModelParticle.particle.unfreeze(streamwrapper);
-        }
     }
     Item {
         //anchors.centerIn: parent//Doesn't animate :(
@@ -112,7 +106,6 @@ Package {
         transitions: [
             Transition {
                 from: "Show"; to: "Details"
-                ScriptAction{ script: streamwrapper.pleaseFreeze(); }
                 ParentAnimation {
                     via: foreground
                     NumberAnimation { properties: "x,y"; duration: 500; easing.type: Easing.InOutQuad }
@@ -125,7 +118,6 @@ Package {
                         via: foreground
                         NumberAnimation { properties: "x,y"; duration: 500; easing.type: Easing.InOutQuad }
                     }
-                    ScriptAction{ script: streamwrapper.pleaseUnfreeze(); }
                 }
             }
         ]

@@ -61,14 +61,13 @@ Rectangle{
         id: wanderer
         system: particles
         anchors.fill: parent
-        xVariance: 360/(wanderer.physics+1);
-        pace: 100*(wanderer.physics+1);
+        xVariance: 360/(wanderer.affectedParameter+1);
+        pace: 100*(wanderer.affectedParameter+1);
     }
     Emitter {
         system: particles
         emitRate: 20
         lifeSpan: 7000
-        emitting: true
         speed: PointDirection{ y:80; yVariation: 40; }
         acceleration: PointDirection{ y: 4 }
         size: 20
@@ -81,15 +80,15 @@ Rectangle{
         anchors.horizontalCenter: parent.horizontalCenter
         UI.Button{
             text:"dx/dt"
-            onClicked: wanderer.physics = Wander.Position;
+            onClicked: wanderer.affectedParameter = Wander.Position;
         }
         UI.Button{
             text:"dv/dt"
-            onClicked: wanderer.physics = Wander.Velocity;
+            onClicked: wanderer.affectedParameter = Wander.Velocity;
         }
         UI.Button{
             text:"da/dt"
-            onClicked: wanderer.physics = Wander.Acceleration;
+            onClicked: wanderer.affectedParameter = Wander.Acceleration;
         }
     }
 }

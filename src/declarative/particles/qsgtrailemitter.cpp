@@ -39,21 +39,20 @@
 **
 ****************************************************************************/
 
-#include "qsgfollowemitter_p.h"
-#include "qsgparticlepainter_p.h"//TODO: What was this for again?
+#include "qsgtrailemitter_p.h"
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass FollowEmitter QSGFollowEmitter
+    \qmlclass TrailEmitter QSGTrailEmitter
     \inqmlmodule QtQuick.Particles 2
     \inherits QSGParticleEmitter
-    \brief The FollowEmitter element allows you to emit logical particles from other logical particles.
+    \brief The TrailEmitter element allows you to emit logical particles from other logical particles.
 
     This element emits logical particles into the ParticleSystem, with the
     starting positions based on those of other logical particles.
 */
-QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
+QSGTrailEmitter::QSGTrailEmitter(QSGItem *parent) :
     QSGParticleEmitter(parent)
   , m_particlesPerParticlePerSecond(0)
   , m_lastTimeStamp(0)
@@ -73,28 +72,37 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
 }
 
 /*!
-    \qmlproperty string QtQuick.Particles2::FollowEmitter::follow
+    \qmlproperty string QtQuick.Particles2::TrailEmitter::follow
 
     The type of logical particle which this is emitting from.
 */
-
 /*!
-    \qmlproperty Shape QtQuick.Particles2::FollowEmitter::emitShape
+    \qmlproperty qreal QtQuick.Particles2::TrailEmitter::speedFromMovement
 
-    As the area of a FollowEmitter is the area it follows, a separate shape can be provided
+    If this value is non-zero, then any movement of the emitter will provide additional
+    starting velocity to the particles based on the movement. The additional vector will be the
+    same angle as the emitter's movement, with a magnitude that is the magnitude of the emitters
+    movement multiplied by speedFromMovement.
+
+    Default value is 0.
+*/
+/*!
+    \qmlproperty Shape QtQuick.Particles2::TrailEmitter::emitShape
+
+    As the area of a TrailEmitter is the area it follows, a separate shape can be provided
     to be the shape it emits out of.
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitWidth
+    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitWidth
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitHeight
+    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitHeight
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::FollowEmitter::emitRatePerParticle
+    \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles2::FollowEmitter::emitFollowParticle(particle, followed)
+    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticle(particle, followed)
 
     This handler is called when a particle is emitted. You can modify particle
     attributes from within the handler. followed is the particle that this is being
@@ -103,13 +111,13 @@ QSGFollowEmitter::QSGFollowEmitter(QSGItem *parent) :
     If you use this signal handler, emitParticle will not be emitted.
 */
 
-bool QSGFollowEmitter::isEmitFollowConnected()
+bool QSGTrailEmitter::isEmitFollowConnected()
 {
     static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticle(QDeclarativeV8Handle,QDeclarativeV8Handle)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
-void QSGFollowEmitter::recalcParticlesPerSecond(){
+void QSGTrailEmitter::recalcParticlesPerSecond(){
     if (!m_system)
         return;
     m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size();
@@ -122,16 +130,16 @@ void QSGFollowEmitter::recalcParticlesPerSecond(){
     }
 }
 
-void QSGFollowEmitter::reset()
+void QSGTrailEmitter::reset()
 {
     m_followCount = 0;
 }
 
-void QSGFollowEmitter::emitWindow(int timeStamp)
+void QSGTrailEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if (!m_emitting && !m_burstLeft && m_burstQueue.isEmpty())
+    if (!m_enabled && !m_burstLeft && m_burstQueue.isEmpty())
         return;
     if (m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size()){
         qreal oldPPS = m_particlesPerSecond;
@@ -224,8 +232,8 @@ void QSGFollowEmitter::emitWindow(int timeStamp)
                 float size = qMax((qreal)0.0, m_particleSize + sizeVariation);
                 float endSize = qMax((qreal)0.0, sizeAtEnd + sizeVariation);
 
-                datum->size = size * float(m_emitting);
-                datum->endSize = endSize * float(m_emitting);
+                datum->size = size * float(m_enabled);
+                datum->endSize = endSize * float(m_enabled);
 
                 if (isEmitFollowConnected())
                     emitFollowParticle(datum->v8Value(), d->v8Value());//A chance for many arbitrary JS changes

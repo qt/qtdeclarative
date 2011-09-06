@@ -39,34 +39,43 @@
 **
 ****************************************************************************/
 
-#ifndef VARYINGVECTOR_H
-#define VARYINGVECTOR_H
-
-#include <QObject>
-#include <QPointF>
-
-QT_BEGIN_HEADER
-
+#include "qsgage_p.h"
+#include "qsgparticleemitter_p.h"
 QT_BEGIN_NAMESPACE
+/*!
+    \qmlclass Age QSGAgeAffector
+    \inqmlmodule QtQuick.Particles 2
+    \inherits Affector
+    \brief The Age affector allows you to prematurely age particles
 
-QT_MODULE(Declarative)
+    The Age affector allows you to alter where the particle is in its lifecycle. Common uses
+    are to expire particles prematurely, possibly giving them time to animate out.
 
+    The Age affector only applies to particles which are still alive.
+*/
+/*!
+    \qmlproperty int QtQuick.Particles2::Age::lifeLeft
 
-class QSGStochasticDirection : public QObject
+    The amount of life to set the particle to have. Affected particles
+    will jump to a point in their life where they will have this many
+    milliseconds left to live.
+*/
+
+QSGAgeAffector::QSGAgeAffector(QSGItem *parent) :
+    QSGParticleAffector(parent), m_lifeLeft(0)
 {
-    Q_OBJECT
-public:
-    explicit QSGStochasticDirection(QObject *parent = 0);
+}
 
-    virtual const QPointF &sample(const QPointF &from);
-signals:
 
-public slots:
-
-protected:
-    QPointF m_ret;
-};
-
+bool QSGAgeAffector::affectParticle(QSGParticleData *d, qreal dt)
+{
+    Q_UNUSED(dt);
+    if (d->stillAlive()){
+        qreal curT = (qreal)m_system->m_timeInt/1000.0;
+        qreal ttl = (qreal)m_lifeLeft/1000.0;
+        d->t = curT - (d->lifeSpan - ttl) + 1;
+        return true;
+    }
+    return false;
+}
 QT_END_NAMESPACE
-QT_END_HEADER
-#endif // VARYINGVECTOR_H

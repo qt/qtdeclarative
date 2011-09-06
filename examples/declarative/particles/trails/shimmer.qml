@@ -72,7 +72,6 @@ Rectangle{
         system: particles
         emitRate: 2000
         lifeSpan: 2000
-        emitting: true
         size: 30
         sizeVariation: 10
     }

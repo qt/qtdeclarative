@@ -144,21 +144,21 @@ Item{
             }
         ]
     }
-    FollowEmitter{
+    TrailEmitter{
         system: sys
         particle: "cannonWake"
         follow: "cannon"
         emitRatePerParticle: 64
         lifeSpan: 600
-        speed: AngledDirection{ angleVariation: 360; magnitude: 48}
+        speed: AngleDirection{ angleVariation: 360; magnitude: 48}
         size: 16
         endSize: 8
         sizeVariation: 2
-        emitting: true
+        enabled: true
         width: 1000//XXX: Terrible hack
         height: 1000
     }
-    FollowEmitter{
+    TrailEmitter{
         system: sys
         particle: "cannonCore"
         follow: "cannon"
@@ -166,7 +166,7 @@ Item{
         lifeSpan: 128
         size: 24
         endSize: 8
-        emitting: true
+        enabled: true
         width: 1000//XXX: Terrible hack
         height: 1000
     }

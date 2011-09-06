@@ -33,21 +33,21 @@ ParticleSystem{
             varying highp vec2 fPos;
 
             void main() {                                           
-                fTex = vTex;                                        
-                highp float size = vData.z;
-                highp float endSize = vData.w;
+                qt_TexCoord0 = qt_ParticleTex;
+                highp float size = qt_ParticleData.z;
+                highp float endSize = qt_ParticleData.w;
 
-                highp float t = (timestamp - vData.x) / vData.y;
+                highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;
 
                 highp float currentSize = mix(size, endSize, t * t);
 
                 if (t < 0. || t > 1.)
                 currentSize = 0.;
 
-                highp vec2 pos = vPos
-                - currentSize / 2. + currentSize * vTex          // adjust size
-                + vVec.xy * t * vData.y         // apply speed vector..
-                + 0.5 * vVec.zw * pow(t * vData.y, 2.);
+                highp vec2 pos = qt_ParticlePos
+                - currentSize / 2. + currentSize * qt_ParticleTex          // adjust size
+                + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..
+                + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);
 
                 gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
 
@@ -61,9 +61,9 @@ ParticleSystem{
         fragmentShader: "
             varying highp vec2 fPos;
             varying lowp float fFade;
-            varying highp vec2 fTex;
+            varying highp vec2 qt_TexCoord0;
             void main() {//*2 because this generates dark colors mostly
-                highp vec2 circlePos = fTex*2.0 - vec2(1.0,1.0);
+                highp vec2 circlePos = qt_TexCoord0*2.0 - vec2(1.0,1.0);
                 highp float dist = length(circlePos);
                 highp float circleFactor = max(min(1.0 - dist, 1.0), 0.0);
                 gl_FragColor = vec4(fPos.x*2.0 - fPos.y, fPos.y*2.0 - fPos.x, fPos.x*fPos.y*2.0, 0.0) * circleFactor * fFade;

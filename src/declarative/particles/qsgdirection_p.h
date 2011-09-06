@@ -39,26 +39,34 @@
 **
 ****************************************************************************/
 
-#ifndef QSGCUMULATIVEDIRECTION_P_H
-#define QSGCUMULATIVEDIRECTION_P_H
-#include "qsgdirection_p.h"
-#include <QDeclarativeListProperty>
+#ifndef VARYINGVECTOR_H
+#define VARYINGVECTOR_H
+
+#include <QObject>
+#include <QPointF>
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGCumulativeDirection : public QSGDirection
+
+class QSGDirection : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QSGDirection> directions READ directions)
-    Q_CLASSINFO("DefaultProperty", "directions")
 public:
-    explicit QSGCumulativeDirection(QObject *parent = 0);
-    QDeclarativeListProperty<QSGDirection> directions();
-    const QPointF &sample(const QPointF &from);
-private:
-    QList<QSGDirection*> m_directions;
+    explicit QSGDirection(QObject *parent = 0);
+
+    virtual const QPointF &sample(const QPointF &from);
+signals:
+
+public slots:
+
+protected:
+    QPointF m_ret;
 };
-#endif // QSGCUMULATIVEDIRECTION_P_H
+
+QT_END_NAMESPACE
+QT_END_HEADER
+#endif // VARYINGVECTOR_H

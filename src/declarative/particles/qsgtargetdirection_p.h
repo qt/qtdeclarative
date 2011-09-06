@@ -41,7 +41,7 @@
 
 #ifndef DIRECTEDVECTOR_H
 #define DIRECTEDVECTOR_H
-#include "qsgstochasticdirection_p.h"
+#include "qsgdirection_p.h"
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGItem;
-class QSGTargetedDirection : public QSGStochasticDirection
+class QSGTargetDirection : public QSGDirection
 {
     Q_OBJECT
     Q_PROPERTY(qreal targetX READ targetX WRITE setTargetX NOTIFY targetXChanged)
@@ -65,7 +65,7 @@ class QSGTargetedDirection : public QSGStochasticDirection
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
 
 public:
-    explicit QSGTargetedDirection(QObject *parent = 0);
+    explicit QSGTargetDirection(QObject *parent = 0);
     virtual const QPointF &sample(const QPointF &from);
 
     qreal targetX() const

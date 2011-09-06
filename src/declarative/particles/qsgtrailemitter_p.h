@@ -51,21 +51,20 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 
-class QSGFollowEmitter : public QSGParticleEmitter
+class QSGTrailEmitter : public QSGParticleEmitter
 {
     Q_OBJECT
     Q_PROPERTY(QString follow READ follow WRITE setFollow NOTIFY followChanged)
-    //### Remove, and just document that particles per second is per particle? But has count issues
     Q_PROPERTY(int emitRatePerParticle READ particlesPerParticlePerSecond WRITE setParticlesPerParticlePerSecond NOTIFY particlesPerParticlePerSecondChanged)
 
-    //TODO: Document that FollowEmitter's box is where it follows. It emits in a rect centered on the followed particle
+    //TODO: Document that TrailEmitter's box is where it follows. It emits in a rect centered on the followed particle
     //TODO: A set of properties that can involve the particle size of the followed
     Q_PROPERTY(QSGParticleExtruder* emitShape READ emissonShape WRITE setEmissionShape NOTIFY emissionShapeChanged)
     Q_PROPERTY(qreal emitHeight READ emitterYVariation WRITE setEmitterYVariation NOTIFY emitterYVariationChanged)
     Q_PROPERTY(qreal emitWidth READ emitterXVariation WRITE setEmitterXVariation NOTIFY emitterXVariationChanged)
 
 public:
-    explicit QSGFollowEmitter(QSGItem *parent = 0);
+    explicit QSGTrailEmitter(QSGItem *parent = 0);
     virtual void emitWindow(int timeStamp);
     virtual void reset();
 

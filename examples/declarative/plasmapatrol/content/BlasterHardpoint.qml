@@ -57,10 +57,10 @@ Item {
         id: visualization
         particle: "blaster"
         system: container.system
-        emitting: show
+        enabled: show
         anchors.fill: parent
         shape: EllipseShape{}
-        speed: TargetedDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true}
+        speed: TargetDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true}
         lifeSpan: 1000
         emitRate: 64 
 
@@ -115,17 +115,17 @@ Item {
     Emitter{
         id: emitter
         particle: "blaster"
-        emitting: false
+        enabled: false
         system: container.system
         anchors.centerIn: parent
 
         lifeSpan: 1000
         emitRate: 16
-        emitCap: blasts
+        maximumEmitted: blasts
         size: 24
         endSize:16
         sizeVariation: 8
-        speed: TargetedDirection{
+        speed: TargetDirection{
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true
         }

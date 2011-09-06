@@ -55,17 +55,12 @@ Rectangle{
     VisualDataModel{//TODO: Transitions between modes
         id: vdm
         model: [
-            "../spaceexplorer/spaceexplorer.qml",
             "../snow/snow.qml",
             "../asteroid/asteroid.qml",
             "../asteroid/blackhole.qml",
             "../custom/blurparticles.qml",
             "../custom/custom.qml",
             "../custom/fallingleaves.qml",
-            "../modelparticles/bubbles.qml",
-            "../modelparticles/gridsplosion.qml",
-            "../modelparticles/package.qml",
-            "../modelparticles/stream.qml",
             "../allsmiles/plain.qml",
             "../allsmiles/smile.qml",
             "../allsmiles/smilefactory.qml",

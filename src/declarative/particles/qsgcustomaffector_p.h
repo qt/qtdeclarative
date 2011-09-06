@@ -39,8 +39,12 @@
 **
 ****************************************************************************/
 
-#ifndef KILLAFFECTOR_H
-#define KILLAFFECTOR_H
+#ifndef CUSTOMAFFECTOR_H
+#define CUSTOMAFFECTOR_H
+
+#include <QObject>
+#include "qsgparticlesystem_p.h"
+#include "qsgparticleextruder_p.h"
 #include "qsgparticleaffector_p.h"
 
 QT_BEGIN_HEADER
@@ -49,20 +53,22 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-class QSGKillAffector : public QSGParticleAffector
+class QSGCustomAffector : public QSGParticleAffector
 {
     Q_OBJECT
+
 public:
-    explicit QSGKillAffector(QSGItem *parent = 0);
-protected:
-    virtual bool affectParticle(QSGParticleData *d, qreal dt);
+    explicit QSGCustomAffector(QSGItem *parent = 0);
+
 signals:
-
+    void affectParticle(QDeclarativeV8Handle particle, qreal dt);
 public slots:
-
+protected:
+    bool isAffectConnected();
+    virtual bool affectParticle(QSGParticleData *d, qreal dt);
+private:
 };
 
 QT_END_NAMESPACE
 QT_END_HEADER
-#endif // KILLAFFECTOR_H
+#endif // CUSTOMAFFECTOR_H

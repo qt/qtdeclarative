@@ -222,8 +222,7 @@ class QSGParticleSystem : public QSGItem
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(bool clear READ isClear NOTIFY clearChanged)
-    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
+    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
 public:
@@ -237,11 +236,6 @@ public:
         return m_running;
     }
 
-    int startTime() const
-    {
-        return m_startTime;
-    }
-
     int count(){ return m_particle_count; }
 
     static const int maxLife = 600000;
@@ -250,13 +244,8 @@ signals:
 
     void systemInitialized();
     void runningChanged(bool arg);
-
-    void startTimeChanged(int arg);
-
-
     void pausedChanged(bool arg);
-
-    void clearChanged(bool arg);
+    void emptyChanged(bool arg);
 
 public slots:
     void start(){setRunning(true);}
@@ -268,16 +257,6 @@ public slots:
     void reset();
     void setRunning(bool arg);
     void setPaused(bool arg);
-
-    void setStartTime(int arg)
-    {
-        m_startTime = arg;
-    }
-
-    void fastForward(int ms)
-    {
-        m_startTime += ms;
-    }
 
     virtual int duration() const { return -1; }
 
@@ -323,9 +302,9 @@ public://###but only really for related class usage. Perhaps we should all be fr
         return m_paused;
     }
 
-    bool isClear() const
+    bool isEmpty() const
     {
-        return m_clear;
+        return m_empty;
     }
 
 private:
@@ -336,7 +315,6 @@ private:
     QList<QPointer<QSGParticleAffector> > m_affectors;
     QList<QPointer<QSGParticlePainter> > m_painters;
     QList<QPointer<QSGParticlePainter> > m_syncList;
-    qint64 m_startTime;
     int m_nextGroupId;
     int m_nextIndex;
     QSet<int> m_reusableIndexes;
@@ -351,7 +329,7 @@ private:
     bool m_paused;
     bool m_debugMode;
     bool m_allDead;
-    bool m_clear;
+    bool m_empty;
 };
 
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode

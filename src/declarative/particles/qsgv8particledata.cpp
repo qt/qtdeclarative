@@ -128,7 +128,7 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> SETTER ( value->NumberValue() );\
 }
 
-#define FLOAT_REGISTER_ACCESSOR(FT, ENGINE, VARIABLE) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #VARIABLE ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
+#define FLOAT_REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
 
 FLOAT_GETTER_AND_SETTER(x)
 FLOAT_GETTER_AND_SETTER(y)
@@ -169,34 +169,34 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     ft->InstanceTemplate()->SetHasExternalResource(true);
     ft->PrototypeTemplate()->Set(v8::String::New("discard"), V8FUNCTION(particleData_discard, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("lifeLeft"), V8FUNCTION(particleData_lifeLeft, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("curSize"), V8FUNCTION(particleData_curSize, engine));
-    FLOAT_REGISTER_ACCESSOR(ft, engine, x);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, y);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, t);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, lifeSpan);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, size);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, endSize);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, vx);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, vy);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, ax);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, ay);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, xx);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, xy);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, rotation);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, rotationSpeed);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, autoRotate);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, animIdx);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, frameDuration);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, frameCount);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, animT);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, r);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, update);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curVX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curAX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curY);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curVY);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curAY);
+    ft->PrototypeTemplate()->Set(v8::String::New("currentSize"), V8FUNCTION(particleData_curSize, engine));
+    FLOAT_REGISTER_ACCESSOR(ft, engine, x, initialX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, y, initialY);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, t, t);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, lifeSpan, lifeSpan);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, size, startSize);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, endSize, endSize);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, vx, initialVX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, vy, initialVY);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, ax, initialAX);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, ay, initialAY);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, xx, xDeformationVector);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, xy, yDeformationVector);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, rotation, rotation);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, rotationSpeed, rotationSpeed);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, frameCount, frameCount);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, animT, animationT);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, r, r);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, update, update);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curX, x);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curVX, vx);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curAX, ax);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curY, y);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curVY, vy);
+    FLOAT_REGISTER_ACCESSOR(ft, engine, curAY, ay);
 
     constructor = qPersistentNew(ft->GetFunction());
 }

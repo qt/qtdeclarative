@@ -39,95 +39,50 @@
 **
 ****************************************************************************/
 
-#ifndef QSGANGLEDDIRECTION_H
-#define QSGANGLEDDIRECTION_H
-#include "qsgstochasticdirection_p.h"
+#ifndef RECTANGLEEXTRUDER_H
+#define RECTANGLEEXTRUDER_H
+
+#include "qsgparticleextruder_p.h"
+
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGAngledDirection : public QSGStochasticDirection
+class QSGRectangleExtruder : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
-    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
-    Q_PROPERTY(qreal angleVariation READ angleVariation WRITE setAngleVariation NOTIFY angleVariationChanged)
-    Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
+    Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)
+
 public:
-    explicit QSGAngledDirection(QObject *parent = 0);
-    const QPointF &sample(const QPointF &from);
-    qreal angle() const
+    explicit QSGRectangleExtruder(QObject *parent = 0);
+    virtual QPointF extrude(const QRectF &);
+    virtual bool contains(const QRectF &bounds, const QPointF &point);
+    bool fill() const
     {
-        return m_angle;
-    }
-
-    qreal magnitude() const
-    {
-        return m_magnitude;
-    }
-
-    qreal angleVariation() const
-    {
-        return m_angleVariation;
-    }
-
-    qreal magnitudeVariation() const
-    {
-        return m_magnitudeVariation;
+        return m_fill;
     }
 
 signals:
 
-    void angleChanged(qreal arg);
-
-    void magnitudeChanged(qreal arg);
-
-    void angleVariationChanged(qreal arg);
-
-    void magnitudeVariationChanged(qreal arg);
+    void fillChanged(bool arg);
 
 public slots:
-void setAngle(qreal arg)
-{
-    if (m_angle != arg) {
-        m_angle = arg;
-        emit angleChanged(arg);
-    }
-}
 
-void setMagnitude(qreal arg)
-{
-    if (m_magnitude != arg) {
-        m_magnitude = arg;
-        emit magnitudeChanged(arg);
+    void setFill(bool arg)
+    {
+        if (m_fill != arg) {
+            m_fill = arg;
+            emit fillChanged(arg);
+        }
     }
-}
-
-void setAngleVariation(qreal arg)
-{
-    if (m_angleVariation != arg) {
-        m_angleVariation = arg;
-        emit angleVariationChanged(arg);
-    }
-}
-
-void setMagnitudeVariation(qreal arg)
-{
-    if (m_magnitudeVariation != arg) {
-        m_magnitudeVariation = arg;
-        emit magnitudeVariationChanged(arg);
-    }
-}
-
-private:
-qreal m_angle;
-qreal m_magnitude;
-qreal m_angleVariation;
-qreal m_magnitudeVariation;
+protected:
+    bool m_fill;
 };
 
 QT_END_NAMESPACE
+
 QT_END_HEADER
-#endif // QSGANGLEDDIRECTION_H
+
+#endif // RectangleEXTRUDER_H

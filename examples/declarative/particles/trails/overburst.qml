@@ -47,7 +47,7 @@ Rectangle{
     height: 540
     ParticleSystem{
         id: sys
-        onClearChanged: if (clear) sys.pause();
+        onEmptyChanged: if (empty) sys.pause();
     }
     ImageParticle{
         system: sys
@@ -60,12 +60,12 @@ Rectangle{
         //burst on click
         id: bursty
         system: sys
-        emitting: ma.pressed
+        enabled: ma.pressed
         x: ma.mouseX
         y: ma.mouseY
         emitRate: 16000
-        emitCap: 4000
-        acceleration: AngledDirection{angleVariation: 360; magnitude: 360; }
+        maximumEmitted: 4000
+        acceleration: AngleDirection{angleVariation: 360; magnitude: 360; }
         size: 8
         endSize: 16
         sizeVariation: 4
@@ -78,7 +78,7 @@ Rectangle{
     MouseArea{
         width: 100
         height: 100
-        onClicked: bursty.noCap = true;
+        onClicked: bursty.maximumEmitted = -1;
         id: ma2
         Rectangle{
             anchors.fill: parent

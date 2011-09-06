@@ -138,7 +138,7 @@ void QSGTurbulenceAffector::mapUpdate()
 
 void QSGTurbulenceAffector::affectSystem(qreal dt)
 {
-    if (!m_system || !m_active)
+    if (!m_system || !m_enabled)
         return;
     ensureInit();
     qreal period = 1.0/m_frequency;

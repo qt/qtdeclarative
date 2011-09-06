@@ -70,7 +70,7 @@ Rectangle{
         system: particles
         emitRate: 40
         lifeSpan: 4000
-        emitting: true
+        enabled: true
         size: 30
         sizeVariation: 10
         speed: PointDirection{ x: 220; xVariation: 40 }
@@ -81,7 +81,7 @@ Rectangle{
         system: particles
         emitRate: 10
         lifeSpan: 4000
-        emitting: true
+        enabled: true
         size: 30
         sizeVariation: 10
         speed: PointDirection{ x: 220; xVariation: 40 }
@@ -145,16 +145,16 @@ Rectangle{
 
         colorVariation: 0.2
     }
-    PointAttractor{
+    Attractor{
         id: gs; pointX: root.width/2; pointY: root.height/2; strength: 4000000;
         system: particles
-        physics: PointAttractor.Acceleration
-        proportionalToDistance: PointAttractor.InverseQuadratic
+        affectedParameter: Attractor.Acceleration
+        proportionalToDistance: Attractor.InverseQuadratic
     }
-    Kill{
+    Age{
         system: particles
-        x: gs.x - 8;
-        y: gs.y - 8;
+        x: gs.pointX - 8;
+        y: gs.pointY - 8;
         width: 16
         height: 16
     }
@@ -174,7 +174,6 @@ Rectangle{
             system: particles
             emitRate: 200
             lifeSpan: 1000
-            emitting: true
             size: 10
             endSize: 4
             sizeVariation: 4
@@ -187,7 +186,7 @@ Rectangle{
             system: particles
             emitRate: 32
             lifeSpan: 2000
-            emitting: spacePressed
+            enabled: spacePressed
             size: 40
             speed: PointDirection{ x: 256; }
             x: parent.width

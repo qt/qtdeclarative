@@ -94,7 +94,6 @@ Item {
         particle: "meteor"
         emitRate: 12
         lifeSpan: 5000
-        emitting: true
         acceleration: PointDirection{ xVariation: 80; yVariation: 80; }
         size: 15
         endSize: 300

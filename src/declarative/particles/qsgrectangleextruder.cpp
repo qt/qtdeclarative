@@ -39,30 +39,48 @@
 **
 ****************************************************************************/
 
-#include "qsgkill_p.h"
-#include "qsgparticleemitter_p.h"
-QT_BEGIN_NAMESPACE
-/*!
-    \qmlclass Kill QSGKillAffector
-    \inqmlmodule QtQuick.Particles 2
-    \inherits Affector
-    \brief The Kill affector allows you to expire affected particles
+#include "qsgrectangleextruder_p.h"
 
+QT_BEGIN_NAMESPACE
+
+/*!
+    \qmlclass RectangleShape QSGRectangleExtruder
+    \inqmlmodule QtQuick.Particles 2
+    \brief The RectangleShape element allows you to specify an area for affectors and emitter.
+
+    Just a rectangle.
 */
 
-QSGKillAffector::QSGKillAffector(QSGItem *parent) :
-    QSGParticleAffector(parent)
+QSGRectangleExtruder::QSGRectangleExtruder(QObject *parent) :
+    QObject(parent), m_fill(true)
 {
 }
 
-
-bool QSGKillAffector::affectParticle(QSGParticleData *d, qreal dt)
+QPointF QSGRectangleExtruder::extrude(const QRectF &rect)
 {
-    Q_UNUSED(dt);
-    if (d->stillAlive()){
-        d->t -= d->lifeSpan + 1;
-        return true;
+    if (m_fill)
+        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
+                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+    int side = rand() % 4;
+    switch (side){//TODO: Doesn't this overlap the corners?
+    case 0:
+        return QPointF(rect.x(),
+                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+    case 1:
+        return QPointF(rect.width() + rect.x(),
+                       ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+    case 2:
+        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
+                       rect.y());
+    default:
+        return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
+                       rect.height() + rect.y());
     }
-    return false;
 }
+
+bool QSGRectangleExtruder::contains(const QRectF &bounds, const QPointF &point)
+{
+    return bounds.contains(point);
+}
+
 QT_END_NAMESPACE

@@ -86,8 +86,7 @@ Rectangle{
         id: particles
         emitRate: 200
         lifeSpan: 6000
-        emitting: true
-        speed: AngledDirection{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+        speed: AngleDirection{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
         size: 40
         endSize: 80
     }

@@ -75,7 +75,7 @@ Rectangle{
 
             void main() {                                           
                 defaultMain();
-                highp float t = (timestamp - vData.x) / vData.y;
+                highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;
                 highp float fadeIn = min(t * 10., 1.);
                 highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
 
@@ -126,11 +126,11 @@ Rectangle{
         fragmentShader: "
             uniform sampler2D source;
             uniform sampler2D blurred;
-            varying highp vec2 fTex;
+            varying highp vec2 qt_TexCoord0;
             varying highp float fBlur;
             varying highp float fFade;
             void main() {
-                gl_FragColor = mix(texture2D(source, fTex), texture2D(blurred, fTex), min(1.0,fBlur*3.0)) * fFade;
+                gl_FragColor = mix(texture2D(source, qt_TexCoord0), texture2D(blurred, qt_TexCoord0), min(1.0,fBlur*3.0)) * fFade;
             }"
 
     }

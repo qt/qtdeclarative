@@ -96,7 +96,7 @@ Rectangle {
                     Emitter{
                         anchors.fill: parent
                         system: particles
-                        emitting: true
+                        enabled: true
                         particle: "default"
                         emitRate: 1200
                         lifeSpan: 1200
@@ -104,7 +104,7 @@ Rectangle {
                         size: 16
                         endSize: 0
                         sizeVariation: 8
-                        speed: AngledDirection{angleVariation:360; magnitudeVariation: 6}
+                        speed: AngleDirection{angleVariation:360; magnitudeVariation: 6}
                     }
                 }
                 Button{

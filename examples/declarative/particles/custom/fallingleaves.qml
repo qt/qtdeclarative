@@ -53,6 +53,7 @@ Item {
             particle.r -= particle.rotation * coefficient;
             if (particle.r == 0.0)
                 particle.r -= particle.rotation * 0.000001;
+            particle.update = 1;
         }
     }
 
@@ -65,16 +66,17 @@ Item {
         anchors.bottom: parent.bottom
         onAffectParticle:{
             var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;
-            var yslow = pseudoRand * 0.001 + 1.01;
-            var xslow = pseudoRand * 0.0005 + 1.0;
-            if (particle.curVY < 1)
-                particle.curVY == 0;
+            var yslow = pseudoRand * 0.01 + 1.01;
+            var xslow = pseudoRand * 0.005 + 1.0;
+            if (particle.vy < 1)
+                particle.vy = 0;
             else
-                particle.curVY = (particle.curVY / yslow);
-            if (particle.curVX < 1)
-                particle.curVX == 0;
+                particle.vy = (particle.vy / yslow);
+            if (particle.vx < 1)
+                particle.vx = 0;
             else
-                particle.curVX = (particle.curVX / xslow);
+                particle.vx = (particle.vx / xslow);
+            particle.update = 1;
         }
     }
     ImageParticle{

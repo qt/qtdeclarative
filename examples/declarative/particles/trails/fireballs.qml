@@ -98,7 +98,7 @@ Rectangle {
         sizeVariation: 8
         endSize: 4
     }
-    FollowEmitter{
+    TrailEmitter{
         id: fireSmoke
         particle: "B"
         system: particles
@@ -116,7 +116,7 @@ Rectangle {
         sizeVariation: 8
         endSize: 16
     }
-    FollowEmitter{
+    TrailEmitter{
         id: fireballFlame
         anchors.fill: parent
         system: particles
@@ -133,7 +133,7 @@ Rectangle {
         endSize: 4
     }
     
-    FollowEmitter{
+    TrailEmitter{
         id: fireballSmoke
         anchors.fill: parent
         system: particles

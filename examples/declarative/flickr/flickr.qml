@@ -45,7 +45,7 @@ import "content"
 
 Item {
     id: screen; width: 320; height: 480
-    property bool inGridView : false
+    property bool inGridView : true
 
     Rectangle {
         id: background
@@ -54,40 +54,38 @@ Item {
         Image { source: "content/images/stripes.png"; fillMode: Image.Tile; anchors.fill: parent; opacity: 0.3 }
         ParticleSystem {
             id: bgParticles
-            startTime: 16000
-        }
-        ImageParticle {
-            particles: ["trail"]
-            source: "content/images/particle.png"
-            color: "#1A1A6F"
-            alpha: 0.1
-            colorVariation: 0.01
-            blueVariation: 0.8
-            system: bgParticles
-        }
-        Emitter {
-            particle: "drops"
-            width: parent.width
-            emitRate: 0.5
-            lifeSpan: 20000
-            speed: PointDirection{
-                y: {screen.height/18} 
-            }
-            system: bgParticles
-        }
-        FollowEmitter {
-            follow: "drops"
-            particle: "trail"
-            emitRatePerParticle: 18
-            size: 32
-            endSize: 0
-            sizeVariation: 4
-            lifeSpan: 1200
-            system: bgParticles
             anchors.fill: parent
-            emitWidth: 16
-            emitHeight: 16
-            emitShape: EllipseShape{}
+            ImageParticle {
+                particles: ["trail"]
+                source: "content/images/particle.png"
+                color: "#1A1A6F"
+                alpha: 0.1
+                colorVariation: 0.01
+                blueVariation: 0.8
+            }
+            Emitter {
+                particle: "drops"
+                width: parent.width
+                emitRate: 0.5
+                lifeSpan: 20000
+                startTime: 16000
+                speed: PointDirection{
+                    y: {screen.height/18}
+                }
+            }
+            TrailEmitter {
+                follow: "drops"
+                particle: "trail"
+                emitRatePerParticle: 18
+                size: 32
+                endSize: 0
+                sizeVariation: 4
+                lifeSpan: 1200
+                anchors.fill: parent
+                emitWidth: 16
+                emitHeight: 16
+                emitShape: EllipseShape{}
+            }
         }
 
         VisualDataModel{
@@ -107,14 +105,8 @@ Item {
                 cellWidth: (parent.width-2)/4; cellHeight: cellWidth; width: parent.width; height: parent.height
             }
 
-            StreamView{
-                id: photoStreamView
-                model: vdm.parts.stream
-                width: parent.width; height: parent.height
-            }
-
             states: State {
-                name: "GridView"; when: screen.inGridView == true
+                name: "GridView"; when: state.inGridView == true
             }
 
             transitions: Transition {

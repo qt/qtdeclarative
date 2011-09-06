@@ -65,9 +65,9 @@ Item {
 
         emitRate: hp > 0 ?  hp + 20 : 0 
         lifeSpan: blinkInterval
-        emitCap: (maxHP + 20)
+        maximumEmitted: (maxHP + 20)
 
-        acceleration: AngledDirection{angleVariation: 360; magnitude: 8}
+        acceleration: AngleDirection{angleVariation: 360; magnitude: 8}
 
         size: 24
         endSize: 4

@@ -48,7 +48,7 @@
 #include "qsgsprite_p.h"
 #include "qsgv8particledata_p.h"
 
-#include "qsgfollowemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
+#include "qsgtrailemitter_p.h"//###For auto-follow on states, perhaps should be in emitter?
 #include <private/qdeclarativeengine_p.h>
 #include <cmath>
 #include <QDebug>
@@ -99,13 +99,6 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlproperty int QtQuick.Particles2::ParticleSystem::startTime
-
-    If start time is specified, then the system will simulate up to this time
-    before the system starts playing. This allows you to appear to start with a
-    fully populated particle system, instead of starting with no particles visible.
-*/
-/*!
     \qmlproperty list<Sprite> QtQuick.Particles2::ParticleSystem::particleStates
 
     You can define a sub-set of particle groups in this property in order to provide them
@@ -113,10 +106,55 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 
     Each QtQuick2::Sprite in this list is interpreted as corresponding to the particle group
     with ths same name. Any transitions defined in these sprites will take effect on the particle
-    groups as well. Additionally FollowEmitters, Affectors and ParticlePainters definined
+    groups as well. Additionally TrailEmitters, Affectors and ParticlePainters definined
     inside one of these sprites are automatically associated with the corresponding particle group.
 */
 
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::pause
+
+    Pauses the simulation if it is running.
+
+    \sa resume, paused
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::resume
+
+    Resumes the simulation if it is paused.
+
+    \sa pause, paused
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::start
+
+    Starts the simulation if it has not already running.
+
+    \sa stop, restart, running
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::stop
+
+    Stops the simulation if it is running.
+
+    \sa start, restart, running
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::restart
+
+    Stops the simulation if it is running, and then starts it.
+
+    \sa stop, restart, running
+*/
+/*!
+    \qmlmethod void QtQuick.Particles2::ParticleSystem::reset
+
+    Discards all currently existing particles.
+
+*/
 const qreal EPSILON = 0.001;
 //Utility functions for when within 1ms is close enough
 bool timeEqualOrGreater(qreal a, qreal b){
@@ -562,8 +600,8 @@ void QSGParticleData::extendLife(float time)
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent), m_particle_count(0), m_running(true)
-  , m_startTime(0), m_nextIndex(0), m_componentComplete(false), m_spriteEngine(0)
+    QSGItem(parent), m_particle_count(0), m_running(true), m_paused(false)
+  , m_nextIndex(0), m_componentComplete(false), m_spriteEngine(0)
 {
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));
@@ -663,7 +701,7 @@ void QSGParticleSystem::stateRedirect(QDeclarativeListProperty<QObject> *prop, Q
         a->setSystem(sys);
         return;
     }
-    QSGFollowEmitter* fe = qobject_cast<QSGFollowEmitter*>(value);
+    QSGTrailEmitter* fe = qobject_cast<QSGTrailEmitter*>(value);
     if (fe){
         fe->setParentItem(sys);
         fe->setFollow(sprite->name());
@@ -726,8 +764,9 @@ void QSGParticleSystem::reset()
 
     //### Do affectors need reset too?
 
-    if (m_animation){//reset restarts animation (if running)
-        m_animation->stop();
+    if (m_running) {//reset restarts animation (if running)
+        if ((m_animation->state() == QAbstractAnimation::Running))
+            m_animation->stop();
         m_animation->start();
         if (m_paused)
             m_animation->pause();
@@ -927,7 +966,7 @@ QSGParticleData* QSGParticleSystem::newDatum(int groupId, bool respectLimits, in
     if (m_spriteEngine)
         m_spriteEngine->startSprite(ret->systemIndex, ret->group);
 
-    m_clear = false;
+    m_empty = false;
     return ret;
 }
 
@@ -962,15 +1001,15 @@ void QSGParticleSystem::updateCurrentTime( int currentTime )
 
     //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
     qreal dt = m_timeInt / 1000.;
-    m_timeInt = currentTime + m_startTime;
+    m_timeInt = currentTime;
     qreal time =  m_timeInt / 1000.;
     dt = time - dt;
     m_needsReset.clear();
 
-    bool oldClear = m_clear;
-    m_clear = true;
+    bool oldClear = m_empty;
+    m_empty = true;
     foreach (QSGParticleGroupData* gd, m_groupData)//Recycle all groups and see if they're out of live particles
-        m_clear = m_clear && gd->recycle();
+        m_empty = m_empty && gd->recycle();
 
     if (m_spriteEngine)
         m_spriteEngine->updateSprites(m_timeInt);
@@ -986,8 +1025,8 @@ void QSGParticleSystem::updateCurrentTime( int currentTime )
             if (p && d)
                 p->reload(d);
 
-    if (oldClear != m_clear)
-        clearChanged(m_clear);
+    if (oldClear != m_empty)
+        emptyChanged(m_empty);
 }
 
 int QSGParticleSystem::systemSync(QSGParticlePainter* p)

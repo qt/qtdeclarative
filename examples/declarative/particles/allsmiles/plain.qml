@@ -17,7 +17,7 @@ Rectangle{
         emitRate: 1000
         size: 20
         lifeSpan: 10000
-        speed: AngledDirection{angleVariation: 360; magnitudeVariation: 100;}
+        speed: AngleDirection{angleVariation: 360; magnitudeVariation: 100;}
     }
     MouseArea{
         anchors.fill: parent

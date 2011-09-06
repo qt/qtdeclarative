@@ -39,18 +39,17 @@
 **
 ****************************************************************************/
 
-#include "qsgangleddirection_p.h"
+#include "qsgangledirection_p.h"
 #include "qsgcustomparticle_p.h"
 #include "qsgellipseextruder_p.h"
-#include "qsgfollowemitter_p.h"
+#include "qsgtrailemitter_p.h"
 #include "qsgfriction_p.h"
 #include "qsggravity_p.h"
 #include "qsgimageparticle_p.h"
 #include "qsgitemparticle_p.h"
-#include "qsgkill_p.h"
+#include "qsgage_p.h"
 #include "qsglineextruder_p.h"
 #include "qsgmaskextruder_p.h"
-#include "qsgmodelparticle_p.h"
 #include "qsgparticleaffector_p.h"
 #include "qsgparticleemitter_p.h"
 #include "qsgparticleextruder_p.h"
@@ -60,12 +59,14 @@
 #include "qsgpointattractor_p.h"
 #include "qsgpointdirection_p.h"
 #include "qsgspritegoal_p.h"
-#include "qsgstochasticdirection_p.h"
-#include "qsgtargeteddirection_p.h"
+#include "qsgdirection_p.h"
+#include "qsgtargetdirection_p.h"
 #include "qsgturbulence_p.h"
 #include "qsgwander_p.h"
 #include "qsgtargetaffector_p.h"
 #include "qsgcumulativedirection_p.h"
+#include "qsgcustomaffector_p.h"
+#include "qsgrectangleextruder_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -78,34 +79,35 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGImageParticle>(uri, 2, 0, "ImageParticle");
     qmlRegisterType<QSGCustomParticle>(uri, 2, 0, "CustomParticle");
     qmlRegisterType<QSGItemParticle>(uri, 2, 0, "ItemParticle");
-    qmlRegisterType<QSGModelParticle>(uri, 2, 0, "ModelParticle");
 
     qmlRegisterType<QSGParticleEmitter>(uri, 2, 0, "Emitter");
-    qmlRegisterType<QSGFollowEmitter>(uri, 2, 0, "FollowEmitter");
+    qmlRegisterType<QSGTrailEmitter>(uri, 2, 0, "TrailEmitter");
 
     qmlRegisterType<QSGEllipseExtruder>(uri, 2, 0, "EllipseShape");
+    qmlRegisterType<QSGRectangleExtruder>(uri, 2, 0, "RectangleShape");
     qmlRegisterType<QSGLineExtruder>(uri, 2, 0, "LineShape");
     qmlRegisterType<QSGMaskExtruder>(uri, 2, 0, "MaskShape");
 
     qmlRegisterType<QSGPointDirection>(uri, 2, 0, "PointDirection");
-    qmlRegisterType<QSGAngledDirection>(uri, 2, 0, "AngledDirection");
-    qmlRegisterType<QSGTargetedDirection>(uri, 2, 0, "TargetedDirection");
+    qmlRegisterType<QSGAngleDirection>(uri, 2, 0, "AngleDirection");
+    qmlRegisterType<QSGTargetDirection>(uri, 2, 0, "TargetDirection");
     qmlRegisterType<QSGCumulativeDirection>(uri, 2, 0, "CumulativeDirection");
 
-    qmlRegisterType<QSGParticleAffector>(uri, 2, 0, "Affector");//useful for the triggered signal
+    qmlRegisterType<QSGCustomAffector>(uri, 2, 0, "Affector");
     qmlRegisterType<QSGWanderAffector>(uri, 2, 0, "Wander");
     qmlRegisterType<QSGFrictionAffector>(uri, 2, 0, "Friction");
-    qmlRegisterType<QSGPointAttractorAffector>(uri, 2, 0, "PointAttractor");
+    qmlRegisterType<QSGAttractorAffector>(uri, 2, 0, "Attractor");
     qmlRegisterType<QSGGravityAffector>(uri, 2, 0, "Gravity");
-    qmlRegisterType<QSGKillAffector>(uri, 2, 0, "Kill");
+    qmlRegisterType<QSGAgeAffector>(uri, 2, 0, "Age");
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
     qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
 
     //Exposed just for completeness
-    qmlRegisterType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter");
-    qmlRegisterType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder");
-    qmlRegisterType<QSGStochasticDirection>(uri, 2, 0, "NullVector");
+    qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector", "Abstract type. Use one of the inheriting types instead.");
+    qmlRegisterUncreatableType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter", "Abstract type. Use one of the inheriting types instead.");
+    qmlRegisterUncreatableType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder", "Abstract type. Use one of the inheriting types instead.");
+    qmlRegisterUncreatableType<QSGDirection>(uri, 2, 0, "NullVector", "Abstract type. Use one of the inheriting types instead.");
 }
 
 QT_END_NAMESPACE

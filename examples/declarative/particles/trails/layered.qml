@@ -53,7 +53,6 @@ Rectangle{
     }
     ParticleSystem{
         id: sys
-        startTime: 4000
     }
     Emitter{
         system: sys
@@ -61,6 +60,7 @@ Rectangle{
         width: root.width
         emitRate: 200
         lifeSpan: 4000
+        startTime: 4000
         speed: PointDirection{ y: -120; }
     }
     ImageParticle{

@@ -98,8 +98,7 @@ Rectangle{
         width: parent.width
         emitRate: 16
         lifeSpan: 8000
-        emitting: true
-        speed: AngledDirection{angle: 90; magnitude: 300; magnitudeVariation: 100; angleVariation: 5}
+        speed: AngleDirection{angle: 90; magnitude: 300; magnitudeVariation: 100; angleVariation: 5}
         acceleration: PointDirection{ y: 10 }
         size: 30
         sizeVariation: 10

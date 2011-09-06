@@ -57,10 +57,10 @@ Rectangle{
     //burst on click
         id: bursty
         system: sys
-        emitting: false
+        enabled: false
         emitRate: 2000
         lifeSpan: 500
-        acceleration: AngledDirection{ angle: 90; angleVariation: 360; magnitude: 640; }
+        acceleration: AngleDirection{ angle: 90; angleVariation: 360; magnitude: 640; }
         size: 8
         endSize: 16
         sizeVariation: 4
@@ -68,12 +68,12 @@ Rectangle{
     Emitter{
         system: sys
         speedFromMovement: 4.0
-        emitting: ma.pressed
+        enabled: ma.pressed
         x: ma.mouseX
         y: ma.mouseY
         emitRate: 400
         lifeSpan: 2000
-        acceleration: AngledDirection{ angle: 90; angleVariation: 22; magnitude: 32; }
+        acceleration: AngleDirection{ angle: 90; angleVariation: 22; magnitude: 32; }
         size: 8
         endSize: 16
         sizeVariation: 8

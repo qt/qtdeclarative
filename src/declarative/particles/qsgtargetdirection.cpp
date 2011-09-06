@@ -39,41 +39,41 @@
 **
 ****************************************************************************/
 
-#include "qsgtargeteddirection_p.h"
+#include "qsgtargetdirection_p.h"
 #include "qsgparticleemitter_p.h"
 #include <cmath>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass TargetedDirection QSGTargetedDirection
+    \qmlclass TargetDirection QSGTargetDirection
     \inqmlmodule QtQuick.Particles 2
-    \inherits StochasticDirection
-    \brief The TargetedDirection element allows you to specify a direction towards the target point
+    \inherits Direction
+    \brief The TargetDirection element allows you to specify a direction towards the target point
 
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetX
+    \qmlproperty real QtQuick.Particles2::TargetDirection::targetX
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetY
+    \qmlproperty real QtQuick.Particles2::TargetDirection::targetY
 */
 /*!
-    \qmlproperty Item QtQuick.Particles2::TargetedDirection::targetItem
+    \qmlproperty Item QtQuick.Particles2::TargetDirection::targetItem
     If specified, this will take precedence over targetX and targetY.
     The targeted point will be the center of the specified Item
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TargetedDirection::targetVariation
+    \qmlproperty real QtQuick.Particles2::TargetDirection::targetVariation
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TargetedDirection::magnitude
+    \qmlproperty real QtQuick.Particles2::TargetDirection::magnitude
 */
 /*!
-    \qmlproperty real QtQuick.Particles2::TargetedDirection::magnitudeVariation
+    \qmlproperty real QtQuick.Particles2::TargetDirection::magnitudeVariation
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::TargetedDirection::proportionalMagnitude
+    \qmlproperty bool QtQuick.Particles2::TargetDirection::proportionalMagnitude
 
     If true, then the value of magnitude and magnitudeVariation shall be interpreted as multiples
     of the distance between the source point and the target point, per second.
@@ -82,8 +82,8 @@ QT_BEGIN_NAMESPACE
     pixels per second.
 */
 
-QSGTargetedDirection::QSGTargetedDirection(QObject *parent) :
-    QSGStochasticDirection(parent)
+QSGTargetDirection::QSGTargetDirection(QObject *parent) :
+    QSGDirection(parent)
   , m_targetX(0)
   , m_targetY(0)
   , m_targetVariation(0)
@@ -94,7 +94,7 @@ QSGTargetedDirection::QSGTargetedDirection(QObject *parent) :
 {
 }
 
-const QPointF &QSGTargetedDirection::sample(const QPointF &from)
+const QPointF &QSGTargetDirection::sample(const QPointF &from)
 {
     //###This approach loses interpolating the last position of the target (like we could with the emitter) is it worthwhile?
     qreal targetX;

@@ -73,16 +73,16 @@ QT_BEGIN_NAMESPACE
     By default, no groups are specified.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::active
-    If active is set to false, this affector will not affect any particles.
+    \qmlproperty bool QtQuick.Particles2::Affector::enabled
+    If enabled is set to false, this affector will not affect any particles.
 
     Usually this is used to conditionally turn an affector on or off.
 
     Default value is true.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::onceOff
-    If onceOff is set to true, this affector will only affect each particle
+    \qmlproperty bool QtQuick.Particles2::Affector::once
+    If once is set to true, this affector will only affect each particle
     once in their lifetimes.
 
     Default value is false.
@@ -93,27 +93,24 @@ QT_BEGIN_NAMESPACE
     non-rectangular area.
 */
 /*!
-    \qmlproperty bool QtQuick.Particles2::Affector::signal
-    If this is set to true, then an affected(x,y) signal will be emitted each
-    time this affector would affect a particle.
+    \qmlsignal QtQuick.Particles2::Affector::onAffected(x, y)
 
-    For Affector only, this will happen irrespective of whether any changes
-    are made to the particle, for other Affectors the signal will only fire
-    if the particle is actually affected.
+    This signal is emitted each time the affector actually affects a particle.
 
-    Default value is false.
+    x,y are the coordinates of the affected particle, relative to the ParticleSystem.
+
 */
-
 //TODO: Document particle 'type'
 /*!
     \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle, dt)
 
-    This handler is called when a particle is selected to be affected.
+    This handler is called when particles are selected to be affected.
 
     dt is the time since the last time it was affected. Use dt to normalize
     trajectory manipulations to real time.
 
-    This handler is usually not available on inherited types.
+    Note that JS is slower to execute, so it is not recommended to use this in
+    high-volume particle systems.
 */
 /*!
     \qmlsignal QtQuick.Particles2::Affector::affected(x, y)
@@ -124,32 +121,32 @@ QT_BEGIN_NAMESPACE
     x,y is the particles current position.
 */
 QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
-    QSGItem(parent), m_needsReset(false), m_system(0), m_active(true)
-  , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this)), m_signal(false)
+    QSGItem(parent), m_needsReset(false), m_system(0), m_enabled(true)
+  , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this))
 {
 }
 
-bool QSGParticleAffector::isAffectConnected()
+bool QSGParticleAffector::isAffectedConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle,qreal)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("affected(qreal,qreal)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
+
 
 void QSGParticleAffector::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    if (!m_system)
-        qWarning() << "Affector created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
 
 void QSGParticleAffector::affectSystem(qreal dt)
 {
-    if (!m_active)
+    if (!m_enabled)
         return;
     //If not reimplemented, calls affect particle per particle
     //But only on particles in targeted system/area
+    bool affectedConnected = isAffectedConnected();
     if (m_updateIntSet){
         m_groups.clear();
         foreach (const QString &p, m_particles)
@@ -167,16 +164,16 @@ void QSGParticleAffector::affectSystem(qreal dt)
                     continue;
                 //Need to have previous location for affected anyways
                 QPointF curPos;
-                if (m_signal || (width() && height()))
+                if (affectedConnected || (width() && height()))
                     curPos = QPointF(d->curX(), d->curY());
                 if (width() == 0 || height() == 0
                         || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()),curPos)){
-                    if (m_collisionParticles.isEmpty() || isColliding(d)){
+                    if (m_whenCollidingWith.isEmpty() || isColliding(d)){
                         if (affectParticle(d, dt)){
                             m_system->m_needsReset << d;
                             if (m_onceOff)
                                 m_onceOffed << qMakePair(d->group, d->index);
-                            if (m_signal)//###Make signal based on if connected, and then m_signal just affects AffectParticle for base?
+                            if (affectedConnected)
                                 emit affected(curPos.x(), curPos.y());
                         }
                     }
@@ -188,12 +185,7 @@ void QSGParticleAffector::affectSystem(qreal dt)
 
 bool QSGParticleAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
-    if (isAffectConnected()){
-        d->update = 0.0;
-        emit affectParticle(d->v8Value(), dt);
-        return d->update == 1.0;
-    }
-    return m_signal;//If signalling, then we always 'null affect' it.
+    return true;
 }
 
 void QSGParticleAffector::reset(QSGParticleData* pd)
@@ -214,7 +206,7 @@ bool QSGParticleAffector::isColliding(QSGParticleData *d)
     qreal myCurX = d->curX();
     qreal myCurY = d->curY();
     qreal myCurSize = d->curSize()/2;
-    foreach (const QString &group, m_collisionParticles){
+    foreach (const QString &group, m_whenCollidingWith){
         foreach (QSGParticleData* other, m_system->m_groupData[m_system->m_groupIds[group]]->data){
             if (!other->stillAlive())
                 continue;

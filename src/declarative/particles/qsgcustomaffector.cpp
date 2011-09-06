@@ -39,25 +39,42 @@
 **
 ****************************************************************************/
 
-#include "qsgstochasticdirection_p.h"
-
+#include "qsgcustomaffector_p.h"
+#include <QDebug>
 QT_BEGIN_NAMESPACE
+
+//TODO: Move docs (and inherit) to real base when docs can propagate
+//TODO: Document particle 'type'
 /*!
-    \qmlclass StochasticDirection QSGStochasticDirection
-    \inqmlmodule QtQuick.Particles 2
-    \brief The StochasticDirection elements allow you to specify a vector space.
+    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle, dt)
 
+    This handler is called when particles are selected to be affected.
+
+    dt is the time since the last time it was affected. Use dt to normalize
+    trajectory manipulations to real time.
+
+    Note that JS is slower to execute, so it is not recommended to use this in
+    high-volume particle systems.
 */
-
-
-QSGStochasticDirection::QSGStochasticDirection(QObject *parent) :
-    QObject(parent)
+QSGCustomAffector::QSGCustomAffector(QSGItem *parent) :
+    QSGParticleAffector(parent)
 {
 }
 
-const QPointF &QSGStochasticDirection::sample(const QPointF &from)
+bool QSGCustomAffector::isAffectConnected()
 {
-    return m_ret;
+    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle,qreal)");
+    return QObjectPrivate::get(this)->isSignalConnected(idx);
+}
+
+bool QSGCustomAffector::affectParticle(QSGParticleData *d, qreal dt)
+{
+    if (isAffectConnected()){
+        d->update = 0.0;
+        emit affectParticle(d->v8Value(), dt);
+        return d->update == 1.0;
+    }
+    return true;
 }
 
 QT_END_NAMESPACE
