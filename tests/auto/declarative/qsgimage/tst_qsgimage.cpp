@@ -53,6 +53,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtTest/QSignalSpy>
+#include <QtGui/QPainter>
 
 #include "../../../shared/util.h"
 #include "../shared/testhttpserver.h"
@@ -647,8 +648,7 @@ void tst_qsgimage::nullPixmapPaint()
     QtMsgHandler previousMsgHandler = qInstallMsgHandler(checkWarnings);
 
     // used to print "QTransform::translate with NaN called"
-    QPixmap pm = canvas->renderPixmap();
-
+    QPixmap pm = QPixmap::fromImage(canvas->grabFrameBuffer());
     qInstallMsgHandler(previousMsgHandler);
     QVERIFY(numberOfWarnings == 0);
     delete image;
