@@ -50,8 +50,6 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
-#include <QtDeclarative/qjsvalue.h>
-#include <QtDeclarative/qjsengine.h>
 
 #include <private/qobject_p.h>
 

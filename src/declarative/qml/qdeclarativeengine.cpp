@@ -73,7 +73,6 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
-#include <QDesktopServices>
 #include <QTimer>
 #include <QList>
 #include <QPair>
@@ -90,7 +89,6 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
 #include <QtGui/qcolor.h>
-#include <QtGui/qvector3d.h>
 #include <QtCore/qcryptographichash.h>
 
 #include <private/qobject_p.h>

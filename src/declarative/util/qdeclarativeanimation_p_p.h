@@ -64,7 +64,6 @@
 #include <QtCore/QPauseAnimation>
 #include <QtCore/QVariantAnimation>
 #include <QtCore/QAnimationGroup>
-#include <QtGui/QColor>
 #include <QDebug>
 
 #include <private/qobject_p.h>

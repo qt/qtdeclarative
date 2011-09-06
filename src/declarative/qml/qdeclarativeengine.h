@@ -46,7 +46,6 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qmap.h>
 #include <QtDeclarative/qjsengine.h>
-#include <QtDeclarative/qjsvalue.h>
 #include <QtDeclarative/qdeclarativeerror.h>
 #include <QtDeclarative/qdeclarativedebug.h>
 
@@ -63,7 +62,6 @@ class QDeclarativeExpression;
 class QDeclarativeContext;
 class QDeclarativeType;
 class QUrl;
-class QJSEngine;
 class QScriptContext;
 class QDeclarativeImageProvider;
 class QNetworkAccessManager;
