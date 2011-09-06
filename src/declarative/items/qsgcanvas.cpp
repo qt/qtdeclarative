@@ -860,6 +860,7 @@ bool QSGCanvas::event(QEvent *e)
         d->deliverTouchEvent(touch);
         if (!touch->isAccepted())
             return false;
+        break;
     }
     case QEvent::Leave:
         d->clearHover();
