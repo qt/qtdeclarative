@@ -1349,6 +1349,10 @@ QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     Q_D(const QSGTextInput);
     switch(property) {
+    case Qt::ImEnabled:
+        return QVariant((bool)(flags() & ItemAcceptsInputMethod));
+    case Qt::ImHints:
+        return QVariant((int)inputMethodHints());
     case Qt::ImMicroFocus:
         return cursorRectangle();
     case Qt::ImFont:

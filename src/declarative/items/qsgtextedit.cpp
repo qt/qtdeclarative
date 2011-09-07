@@ -1424,7 +1424,21 @@ Returns the value of the given \a property.
 QVariant QSGTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     Q_D(const QSGTextEdit);
-    return d->control->inputMethodQuery(property);
+
+    QVariant v;
+    switch (property) {
+    case Qt::ImEnabled:
+        v = (bool)(flags() & ItemAcceptsInputMethod);
+        break;
+    case Qt::ImHints:
+        v = (int)inputMethodHints();
+        break;
+    default:
+        v = d->control->inputMethodQuery(property);
+        break;
+    }
+    return v;
+
 }
 
 void QSGTextEdit::updateImageCache(const QRectF &)
