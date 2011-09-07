@@ -47,7 +47,7 @@ import "test.js" as Script
 Rectangle {
     id: root
     width: 10; height: 10;
-    Component.onCompleted: doSomethingElse()
+    Component.onCompleted: print("onCompleted")
 
     property int result:0
 
@@ -59,10 +59,11 @@ Rectangle {
         var c = [1,2,3];
         var d = Script.add(a,c[2]);
         result += d;
+        doSomethingElse();
     }
 
     Timer {
-        interval: 200; running: true; repeat: false
+        interval: 4000; running: true; repeat: true
         onTriggered: {
             doSomething();
             Script.printMessage("onTriggered");
@@ -75,18 +76,11 @@ Rectangle {
     }
 
     function doSomethingElse() {
-        result = Script.add(result,5);
+        result = Script.add(result,8);
         eval("print(root.result)");
-    }
-
-    Timer {
-        interval: 4000; running: true; repeat: true
-        onTriggered: {
-            doSomethingElse();
+        if (root.result > 15)
             dummy();
-        }
     }
-
 
 }
 

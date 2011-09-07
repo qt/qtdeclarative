@@ -297,7 +297,6 @@ void QJSDebugProcess::processAppOutput()
                 continue;
             }
         }
-        qDebug() << line;
     }
     m_mutex.unlock();
 }
@@ -1177,7 +1176,7 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnTimerCallback()
 {
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine = 66;
+    int sourceLine = 67;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
@@ -1262,14 +1261,23 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptWithCondition()
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
-    //Verify the value of 'out'
-    client->evaluate(QLatin1String("out"));
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
-
-    QString jsonString(client->response);
+    //Get the frame index
+    QString jsonString = client->response;
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
+
+    int frameIndex = body.value("index").toInt();
+
+    //Verify the value of 'result'
+    client->evaluate(QLatin1String("out"),frameIndex);
+
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
+
+    jsonString = client->response;
+    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    body = value.value("body").toMap();
 
     QVERIFY(body.value("value").toInt() > out);
 }
@@ -1339,9 +1347,9 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
 {
     //void changeBreakpoint(int breakpoint, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
 
-    int sourceLine1 = 77;
-    int sourceLine2 = 78;
-    int result = 5;
+    int sourceLine1 = 56;
+    int sourceLine2 = 60;
+    int result = 0;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine2, -1, true);
@@ -1356,7 +1364,7 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
     QList<QVariant> breakpointsHit = body.value("breakpoints").toList();
 
     int breakpoint = breakpointsHit.at(0).toInt();
-    client->changeBreakpoint(breakpoint,false,QLatin1String("result > 5"));
+    client->changeBreakpoint(breakpoint,false,QLatin1String("a = 0"));
 
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
@@ -1376,8 +1384,20 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine2);
 
+    client->frame();
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
+
+    //Get the frame index
+    jsonString = client->response;
+    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    body = value.value("body").toMap();
+
+    int frameIndex = body.value("index").toInt();
+
     //Verify the value of 'result'
-    client->evaluate(QLatin1String("result"));
+    client->evaluate(QLatin1String("root.result"),frameIndex);
+
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
     jsonString = client->response;
@@ -1441,21 +1461,21 @@ void tst_QDeclarativeDebugJS::setExceptionBreak()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
     client->continueDebugging(QJSDebugClient::Continue);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 }
 
 void tst_QDeclarativeDebugJS::stepNext()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 72;
+    int sourceLine = 57;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Next);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1477,7 +1497,7 @@ void tst_QDeclarativeDebugJS::stepNextWithCount()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Next,2);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1492,7 +1512,7 @@ void tst_QDeclarativeDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 66;
+    int sourceLine = 67;
     int actualLine = 56;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
@@ -1500,7 +1520,7 @@ void tst_QDeclarativeDebugJS::stepIn()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::In);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1516,14 +1536,14 @@ void tst_QDeclarativeDebugJS::stepOut()
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
     int sourceLine = 56;
-    int actualLine = 67;
+    int actualLine = 68;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Out);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1547,7 +1567,7 @@ void tst_QDeclarativeDebugJS::continueDebugging()
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     client->continueDebugging(QJSDebugClient::Continue);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1627,14 +1647,25 @@ void tst_QDeclarativeDebugJS::evaluateInLocalScope()
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
-    client->evaluate(QLatin1String("root.someValue"));
+    client->frame();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
 
-    //Verify the value of 'root.someValue'
+    //Get the frame index
     QString jsonString(client->response);
     QVariantMap value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
 
     QVariantMap body = value.value("body").toMap();
+
+    int frameIndex = body.value("index").toInt();
+
+    client->evaluate(QLatin1String("root.someValue"),frameIndex);
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
+
+    //Verify the value of 'root.someValue'
+    jsonString = client->response;
+    value = client->parser.call(QJSValue(), QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
+
+    body = value.value("body").toMap();
 
     QCOMPARE(body.value("value").toInt(),10);
 }
