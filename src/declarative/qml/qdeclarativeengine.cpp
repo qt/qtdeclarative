@@ -663,6 +663,8 @@ void QDeclarativeEngine::addImageProvider(const QString &providerId, QDeclarativ
 
 /*!
   Returns the QDeclarativeImageProvider set for \a providerId.
+
+  Returns the provider if it was found; otherwise returns 0.
 */
 QDeclarativeImageProvider *QDeclarativeEngine::imageProvider(const QString &providerId) const
 {
@@ -673,8 +675,6 @@ QDeclarativeImageProvider *QDeclarativeEngine::imageProvider(const QString &prov
 
 /*!
   Removes the QDeclarativeImageProvider for \a providerId.
-
-  Returns the provider if it was found; otherwise returns 0.
 
   \sa addImageProvider()
 */
