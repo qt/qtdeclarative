@@ -142,7 +142,6 @@ public:
     void renderSceneGraph(const QSize &size);
 
     void updateInputContext();
-    void resetInputContext();
 
     QSGItem::UpdatePaintNodeData updatePaintNodeData;
 

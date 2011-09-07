@@ -349,15 +349,6 @@ void QSGCanvasPrivate::updateInputContext()
     // ### finer grained updates would be good
     qApp->inputPanel()->update(Qt::ImQueryAll);
 }
-/*!
-    This function is an attempt to localize all uses of QInputContext::reset in
-    one place up until the point where we have public API for the QInputContext API.
- */
-void QSGCanvasPrivate::resetInputContext()
-{
-    qApp->inputPanel()->reset();
-}
-
 
 void QSGCanvasPrivate::initializeSceneGraph()
 {
@@ -552,7 +543,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            resetInputContext();
+            qApp->inputPanel()->commit();
 #endif
 
             activeFocusItem = 0;
@@ -661,7 +652,7 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        resetInputContext();
+        qApp->inputPanel()->commit();
 #endif
 
         activeFocusItem = 0;
