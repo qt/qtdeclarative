@@ -74,7 +74,7 @@ void QSGCanvasRenderLoop::updateFocusItemTransform()
 {
     QSGItem *focus = renderer->activeFocusItem();
     if (focus && qApp->inputPanel()->inputItem() == focus)
-        qApp->inputPanel()->setInputItemTranform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
+        qApp->inputPanel()->setInputItemTransform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
 }
 
 class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
@@ -737,7 +737,6 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
 void QSGCanvasPrivate::updateInputMethodData()
 {
     qApp->inputPanel()->setInputItem(activeFocusItem);
-    qApp->inputPanel()->setInputItemTranform(QSGItemPrivate::get(activeFocusItem)->itemToCanvasTransform());
 }
 
 QVariant QSGCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
