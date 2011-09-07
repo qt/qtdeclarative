@@ -96,6 +96,14 @@ public:
 class QSGPathAnimationUpdater : public QDeclarativeBulkValueUpdater
 {
 public:
+    QSGPathAnimationUpdater() : path(0), target(0), reverse(false),
+        fromSourced(false), fromDefined(false), toDefined(false),
+        toX(0), toY(0), currentV(0), orientation(QSGPathAnimation::Fixed),
+        entryInterval(0), exitInterval(0) {}
+    ~QSGPathAnimationUpdater() {}
+
+        void setValue(qreal v);
+
     QDeclarativePath *path;
 
     QPainterPath painterPath;
@@ -107,14 +115,18 @@ public:
     bool reverse;
     bool fromSourced;
     bool fromDefined;
+    bool toDefined;
     qreal toX;
     qreal toY;
+    qreal currentV;
+    QDeclarativeNullableValue<qreal> interruptStart;
+    //TODO: bundle below into common struct
     QSGPathAnimation::Orientation orientation;
     QPointF anchorPoint;
-    QSGPathAnimationUpdater() : path(0), target(0), reverse(false),
-        fromSourced(false), fromDefined(false), toX(0), toY(0), orientation(QSGPathAnimation::Fixed) {}
-    ~QSGPathAnimationUpdater() {}
-    void setValue(qreal v);
+    qreal entryInterval;
+    qreal exitInterval;
+    QDeclarativeNullableValue<qreal> endRotation;
+    QDeclarativeNullableValue<qreal> startRotation;
 };
 
 class QSGPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -122,13 +134,16 @@ class QSGPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QSGPathAnimation)
 public:
     QSGPathAnimationPrivate() : path(0), target(0),
-        rangeIsSet(false), orientation(QSGPathAnimation::Fixed), pa(0) {}
+        rangeIsSet(false), orientation(QSGPathAnimation::Fixed), entryInterval(0), exitInterval(0), pa(0) {}
 
     QDeclarativePath *path;
     QSGItem *target;
     bool rangeIsSet;
     QSGPathAnimation::Orientation orientation;
     QPointF anchorPoint;
+    qreal entryInterval;
+    qreal exitInterval;
+    QDeclarativeNullableValue<qreal> endRotation;
     QDeclarativeBulkValueAnimator *pa;
 };
 

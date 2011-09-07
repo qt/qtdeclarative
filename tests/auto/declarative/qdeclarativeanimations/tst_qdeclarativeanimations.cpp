@@ -50,6 +50,9 @@
 #include <QVariantAnimation>
 #include <QEasingCurve>
 
+#include <limits.h>
+#include <math.h>
+
 #include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN
@@ -72,6 +75,7 @@ private slots:
     void simpleRotation();
     void simplePath();
     void pathInterpolator();
+    void pathWithNoStart();
     void alwaysRunToEnd();
     void complete();
     void resume();
@@ -220,33 +224,71 @@ void tst_qdeclarativeanimations::simpleRotation()
 
 void tst_qdeclarativeanimations::simplePath()
 {
-    QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathAnimation.qml"));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
-    QVERIFY(rect);
+    {
+        QDeclarativeEngine engine;
+        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathAnimation.qml"));
+        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QVERIFY(rect);
 
-    QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
-    QVERIFY(redRect);
-    QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
-    QVERIFY(pathAnim);
+        QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+        QVERIFY(redRect);
+        QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+        QVERIFY(pathAnim);
 
-    pathAnim->start();
-    pathAnim->pause();
+        pathAnim->start();
+        pathAnim->pause();
 
-    pathAnim->setCurrentTime(50);
-    QCOMPARE(redRect->x(), qreal(175));
-    QCOMPARE(redRect->y(), qreal(175));
+        pathAnim->setCurrentTime(30);
+        QCOMPARE(redRect->x(), qreal(167));
+        QCOMPARE(redRect->y(), qreal(104));
 
-    pathAnim->setCurrentTime(100);
-    QCOMPARE(redRect->x(), qreal(300));
-    QCOMPARE(redRect->y(), qreal(300));
+        pathAnim->setCurrentTime(100);
+        QCOMPARE(redRect->x(), qreal(300));
+        QCOMPARE(redRect->y(), qreal(300));
 
-    //verify animation runs to end
-    pathAnim->start();
-    QCOMPARE(redRect->x(), qreal(50));
-    QCOMPARE(redRect->y(), qreal(50));
-    QTRY_COMPARE(redRect->x(), qreal(300));
-    QCOMPARE(redRect->y(), qreal(300));
+        //verify animation runs to end
+        pathAnim->start();
+        QCOMPARE(redRect->x(), qreal(50));
+        QCOMPARE(redRect->y(), qreal(50));
+        QTRY_COMPARE(redRect->x(), qreal(300));
+        QCOMPARE(redRect->y(), qreal(300));
+
+        pathAnim->setOrientation(QSGPathAnimation::RightFirst);
+        QCOMPARE(pathAnim->orientation(), QSGPathAnimation::RightFirst);
+        pathAnim->start();
+        QTRY_VERIFY(redRect->rotation() != 0);
+        pathAnim->stop();
+    }
+
+    {
+        QDeclarativeEngine engine;
+        QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathAnimation2.qml"));
+        QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+        QVERIFY(rect);
+
+        QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+        QVERIFY(redRect);
+        QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+        QVERIFY(pathAnim);
+
+        QCOMPARE(pathAnim->orientation(), QSGPathAnimation::RightFirst);
+
+        pathAnim->start();
+        pathAnim->pause();
+        QCOMPARE(redRect->x(), qreal(50));
+        QCOMPARE(redRect->y(), qreal(50));
+        QCOMPARE(redRect->rotation(), qreal(-360));
+
+        pathAnim->setCurrentTime(50);
+        QCOMPARE(redRect->x(), qreal(175));
+        QCOMPARE(redRect->y(), qreal(175));
+        QCOMPARE(redRect->rotation(), qreal(-315));
+
+        pathAnim->setCurrentTime(100);
+        QCOMPARE(redRect->x(), qreal(300));
+        QCOMPARE(redRect->y(), qreal(300));
+        QCOMPARE(redRect->rotation(), qreal(0));
+    }
 }
 
 void tst_qdeclarativeanimations::pathInterpolator()
@@ -272,6 +314,40 @@ void tst_qdeclarativeanimations::pathInterpolator()
     QCOMPARE(interpolator->x(), qreal(300));
     QCOMPARE(interpolator->y(), qreal(300));
     QCOMPARE(interpolator->angle(), qreal(0));
+}
+
+void tst_qdeclarativeanimations::pathWithNoStart()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathAnimationNoStart.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+    QVERIFY(redRect);
+    QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+    QVERIFY(pathAnim);
+
+    pathAnim->start();
+    pathAnim->pause();
+    QCOMPARE(redRect->x(), qreal(50));
+    QCOMPARE(redRect->y(), qreal(50));
+
+    pathAnim->setCurrentTime(50);
+    QCOMPARE(redRect->x(), qreal(175));
+    QCOMPARE(redRect->y(), qreal(175));
+
+    pathAnim->setCurrentTime(100);
+    QCOMPARE(redRect->x(), qreal(300));
+    QCOMPARE(redRect->y(), qreal(300));
+
+    redRect->setX(100);
+    redRect->setY(100);
+    pathAnim->start();
+    QCOMPARE(redRect->x(), qreal(100));
+    QCOMPARE(redRect->y(), qreal(100));
+    QTRY_COMPARE(redRect->x(), qreal(300));
+    QCOMPARE(redRect->y(), qreal(300));
 }
 
 void tst_qdeclarativeanimations::alwaysRunToEnd()

@@ -156,6 +156,10 @@ public:
         animValue = value;
         policy = p;
     }
+    QDeclarativeBulkValueUpdater *getAnimValue() const
+    {
+        return animValue;
+    }
     void setFromSourcedValue(bool *value)
     {
         fromSourced = value;

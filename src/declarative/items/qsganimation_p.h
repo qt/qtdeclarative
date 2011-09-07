@@ -136,6 +136,9 @@ class Q_AUTOTEST_EXPORT QSGPathAnimation : public QDeclarativeAbstractAnimation
     Q_PROPERTY(QSGItem *target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
     Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged)
+    Q_PROPERTY(qreal orientationEntryInterval READ orientationEntryInterval WRITE setOrientationEntryInterval NOTIFY orientationEntryIntervalChanged)
+    Q_PROPERTY(qreal orientationExitInterval READ orientationExitInterval WRITE setOrientationExitInterval NOTIFY orientationExitIntervalChanged)
+    Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged)
 
 public:
     QSGPathAnimation(QObject *parent=0);
@@ -168,6 +171,15 @@ public:
     QPointF anchorPoint() const;
     void setAnchorPoint(const QPointF &point);
 
+    qreal orientationEntryInterval() const;
+    void setOrientationEntryInterval(qreal);
+
+    qreal orientationExitInterval() const;
+    void setOrientationExitInterval(qreal);
+
+    qreal endRotation() const;
+    void setEndRotation(qreal);
+
 protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
@@ -181,6 +193,9 @@ Q_SIGNALS:
     void targetChanged();
     void orientationChanged(Orientation);
     void anchorPointChanged(const QPointF &);
+    void orientationEntryIntervalChanged(qreal);
+    void orientationExitIntervalChanged(qreal);
+    void endRotationChanged(qreal);
 };
 
 QT_END_NAMESPACE

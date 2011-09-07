@@ -554,6 +554,53 @@ void QSGPathAnimation::setAnchorPoint(const QPointF &point)
     emit anchorPointChanged(point);
 }
 
+qreal QSGPathAnimation::orientationEntryInterval() const
+{
+    Q_D(const QSGPathAnimation);
+    return d->entryInterval;
+}
+
+void QSGPathAnimation::setOrientationEntryInterval(qreal interval)
+{
+    Q_D(QSGPathAnimation);
+    if (d->entryInterval == interval)
+        return;
+    d->entryInterval = interval;
+    emit orientationEntryIntervalChanged(interval);
+}
+
+qreal QSGPathAnimation::orientationExitInterval() const
+{
+    Q_D(const QSGPathAnimation);
+    return d->exitInterval;
+}
+
+void QSGPathAnimation::setOrientationExitInterval(qreal interval)
+{
+    Q_D(QSGPathAnimation);
+    if (d->exitInterval == interval)
+        return;
+    d->exitInterval = interval;
+    emit orientationExitIntervalChanged(interval);
+}
+
+qreal QSGPathAnimation::endRotation() const
+{
+    Q_D(const QSGPathAnimation);
+    return d->endRotation.isNull ? qreal(0) : d->endRotation.value;
+}
+
+void QSGPathAnimation::setEndRotation(qreal rotation)
+{
+    Q_D(QSGPathAnimation);
+    if (!d->endRotation.isNull && d->endRotation == rotation)
+        return;
+
+    d->endRotation = rotation;
+    emit endRotationChanged(d->endRotation);
+}
+
+
 QAbstractAnimation *QSGPathAnimation::qtAnimation()
 {
     Q_D(QSGPathAnimation);
@@ -569,9 +616,13 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
 
     data->orientation = d->orientation;
     data->anchorPoint = d->anchorPoint;
+    data->entryInterval = d->entryInterval;
+    data->exitInterval = d->exitInterval;
+    data->endRotation = d->endRotation;
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
-    data->fromDefined = d->path ? !d->path->hasStartX() || !d->path->hasStartY() ? false : true : false;   //### handle x/y separately, as well as endpoint specification?
+    data->fromDefined = (d->path && d->path->hasStartX() && d->path->hasStartY()) ? true : false;
+    data->toDefined = d->path ? d->path->hasEnd() : false;
     int origModifiedSize = modified.count();
 
     for (int i = 0; i < actions.count(); ++i) {
@@ -591,13 +642,41 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
     }
 
     if (d->target && d->path &&
-        (modified.count() > origModifiedSize || data->fromDefined)) {
+        (modified.count() > origModifiedSize || data->toDefined)) {
         data->target = d->target;
         data->path = d->path;
         if (!d->rangeIsSet) {
             d->pa->setStartValue(qreal(0));
             d->pa->setEndValue(qreal(1));
             d->rangeIsSet = true;
+        }
+        /*
+            NOTE: The following block relies on the fact that the previous value hasn't
+            yet been deleted, and has the same target, etc, which may be a bit fragile.
+         */
+        if (d->pa->getAnimValue()) {
+            QSGPathAnimationUpdater *prevData = static_cast<QSGPathAnimationUpdater*>(d->pa->getAnimValue());
+
+            // get the original start angle that was used (so we can exactly reverse).
+            data->startRotation = prevData->startRotation;
+
+            // treat interruptions specially, otherwise we end up with strange paths
+            if ((data->reverse || prevData->reverse) && prevData->currentV > 0 && prevData->currentV < 1) {
+                if (!data->fromDefined && !data->toDefined && !prevData->painterPath.isEmpty()) {
+                    QPointF pathPos = QDeclarativePath::sequentialPointAt(prevData->painterPath, prevData->pathLength, prevData->attributePoints, prevData->prevBez, prevData->currentV);
+                    if (!prevData->anchorPoint.isNull())
+                        pathPos -= prevData->anchorPoint;
+                    if (pathPos == data->target->pos()) {   //only treat as interruption if we interrupted ourself
+                        data->painterPath = prevData->painterPath;
+                        data->toDefined = data->fromDefined = data->fromSourced = true;
+                        data->prevBez.isValid = false;
+                        data->interruptStart = prevData->currentV;
+                        data->startRotation = prevData->startRotation;
+                        data->pathLength = prevData->pathLength;
+                        data->attributePoints = prevData->attributePoints;
+                    }
+                }
+            }
         }
         d->pa->setFromSourcedValue(&data->fromSourced);
         d->pa->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
@@ -610,7 +689,15 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
 
 void QSGPathAnimationUpdater::setValue(qreal v)
 {
-    if (!fromSourced && !fromDefined) { //### check if !toDefined?
+    if (interruptStart.isValid()) {
+        if (reverse)
+            v = 1 - v;
+        qreal end = reverse ? 0.0 : 1.0;
+        v = interruptStart + v * (end-interruptStart);
+    }
+    currentV = v;
+    bool atStart = ((reverse && v == 1.0) || (!reverse && v == 0.0));
+    if (!fromSourced && (!fromDefined || !toDefined)) {
         qreal startX = reverse ? toX + anchorPoint.x() : target->x() + anchorPoint.x();
         qreal startY = reverse ? toY + anchorPoint.y() : target->y() + anchorPoint.y();
         qreal endX = reverse ? target->x() + anchorPoint.x() : toX + anchorPoint.x();
@@ -628,13 +715,13 @@ void QSGPathAnimationUpdater::setValue(qreal v)
     //adjust position according to anchor point
     if (!anchorPoint.isNull()) {
         currentPos -= anchorPoint;
-        if ((reverse && v == 1.0) || (!reverse && v == 0.0)) {
+        if (atStart) {
             if (!anchorPoint.isNull() && !fixed)
                 target->setTransformOriginPoint(anchorPoint);
         }
     }
 
-    //### too expensive to reconstruct properties each time?
+    //### could cache properties rather than reconstructing each time
     QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "x"), currentPos.x(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
     QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "y"), currentPos.y(), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
 
@@ -644,27 +731,62 @@ void QSGPathAnimationUpdater::setValue(qreal v)
             case QSGPathAnimation::RightFirst:
                 angle = -angle;
                 break;
+            case QSGPathAnimation::TopFirst:
+                angle = -angle + 90;
+                break;
             case QSGPathAnimation::LeftFirst:
                 angle = -angle + 180;
                 break;
             case QSGPathAnimation::BottomFirst:
                 angle = -angle + 270;
                 break;
-            case QSGPathAnimation::TopFirst:
-                angle = -angle + 450;
-                break;
             default:
                 angle = 0;
                 break;
         }
+
+        if (atStart && !reverse) {
+            startRotation = target->rotation();
+
+            //shortest distance to correct orientation
+            qreal diff = angle - startRotation;
+            while (diff > 180.0) {
+                startRotation.value += 360.0;
+                diff -= 360.0;
+            }
+            while (diff < -180.0) {
+                startRotation.value -= 360.0;
+                diff += 360.0;
+            }
+        }
+
+        //smoothly transition to the desired orientation
+        if (startRotation.isValid()) {
+            if (reverse && v == 0.0)
+                angle = startRotation;
+            else if (v < entryInterval)
+                angle = angle * v / entryInterval + startRotation * (entryInterval - v) / entryInterval;
+        }
+        if (endRotation.isValid()) {
+            qreal exitStart = 1 - exitInterval;
+            if (!reverse && v == 1.0)
+                angle = endRotation;
+            else if (v > exitStart)
+                angle = endRotation * (v - exitStart) / exitInterval + angle * (exitInterval - (v - exitStart)) / exitInterval;
+        }
         QDeclarativePropertyPrivate::write(QDeclarativeProperty(target, "rotation"), angle, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
     }
 
-    //### resetting transform causes visual jump if ending on an angle
-//    if ((reverse && v == 0.0) || (!reverse && v == 1.0)) {
-//        if (!anchorPoint.isNull() && !fixed)
-//            target->setTransformOriginPoint(QPointF());
-//    }
+    /*
+        NOTE: we don't always reset the transform origin, as it can cause a
+        visual jump if ending on an angle. This means that in some cases
+        (anchor point and orientation both specified, and ending at an angle)
+        the transform origin will always be set after running the path animation.
+     */
+    if ((reverse && v == 0.0) || (!reverse && v == 1.0)) {
+        if (!anchorPoint.isNull() && !fixed && qFuzzyIsNull(angle))
+            target->setTransformOriginPoint(QPointF());
+    }
 }
 
 QT_END_NAMESPACE

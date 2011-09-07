@@ -149,6 +149,20 @@ bool QDeclarativePath::isClosed() const
     return d->closed;
 }
 
+bool QDeclarativePath::hasEnd() const
+{
+    Q_D(const QDeclarativePath);
+    for (int i = d->_pathElements.count() - 1; i > -1; --i) {
+        if (QDeclarativeCurve *curve = qobject_cast<QDeclarativeCurve *>(d->_pathElements.at(i))) {
+            if ((!curve->hasX() && !curve->hasRelativeX()) || (!curve->hasY() && !curve->hasRelativeY()))
+                return false;
+            else
+                return true;
+        }
+    }
+    return hasStartX() && hasStartY();
+}
+
 /*!
     \qmlproperty list<PathElement> QtQuick2::Path::pathElements
     This property holds the objects composing the path.
@@ -400,10 +414,11 @@ QStringList QDeclarativePath::attributes() const
     return d->_attributes;
 }
 
-static inline QBezier nextBezier(const QPainterPath &path, int *from, qreal *bezLength, bool reverse = false)
+static inline QBezier nextBezier(const QPainterPath &path, int *current, qreal *bezLength, bool reverse = false)
 {
     const int lastElement = reverse ? 0 : path.elementCount() - 1;
-    for (int i=*from; reverse ? i >= lastElement : i <= lastElement; reverse ? --i : ++i) {
+    const int start = reverse ? *current - 1 : *current + 1;
+    for (int i=start; reverse ? i >= lastElement : i <= lastElement; reverse ? --i : ++i) {
         const QPainterPath::Element &e = path.elementAt(i);
 
         switch (e.type) {
@@ -415,7 +430,7 @@ static inline QBezier nextBezier(const QPainterPath &path, int *from, qreal *bez
             *bezLength = line.length();
             QPointF a = path.elementAt(i-1);
             QPointF delta = e - a;
-            *from = reverse ? i-1 : i+1;
+            *current = i;
             return QBezier::fromPoints(a, a + delta / 3, a + 2 * delta / 3, e);
         }
         case QPainterPath::CurveToElement:
@@ -425,14 +440,14 @@ static inline QBezier nextBezier(const QPainterPath &path, int *from, qreal *bez
                                             path.elementAt(i+1),
                                             path.elementAt(i+2));
             *bezLength = b.length();
-            *from = reverse ? i-1 : i+3;
+            *current = i;
             return b;
         }
         default:
             break;
         }
     }
-    *from = lastElement;
+    *current = lastElement;
     *bezLength = 0;
     return QBezier();
 }
@@ -455,7 +470,7 @@ void QDeclarativePath::createPointCache() const
     const int lastElement = d->_path.elementCount() - 1;
     d->_pointCache.resize(points+1);
 
-    int currElement = 0;
+    int currElement = -1;
     qreal bezLength = 0;
     QBezier currBez = nextBezier(d->_path, &currElement, &bezLength);
     qreal currLength = bezLength;
@@ -518,7 +533,7 @@ QPointF QDeclarativePath::forwardsPointAt(const QPainterPath &path, const qreal 
 
     const int lastElement = path.elementCount() - 1;
     bool haveCachedBez = prevBez.isValid;
-    int currElement = haveCachedBez ? prevBez.element : 0;
+    int currElement = haveCachedBez ? prevBez.element : -1;
     qreal bezLength = haveCachedBez ? prevBez.bezLength : 0;
     QBezier currBez = haveCachedBez ? prevBez.bezier : nextBezier(path, &currElement, &bezLength);
     qreal currLength = haveCachedBez ? prevBez.currLength : bezLength;
@@ -536,14 +551,8 @@ QPointF QDeclarativePath::forwardsPointAt(const QPainterPath &path, const qreal 
             qreal spc = prevOrigPercent + elementPercent * point.scale;
 
             while (spc > epc) {
-                if (currElement > lastElement)
-                    break;
+                Q_ASSERT(!(currElement > lastElement));
                 currBez = nextBezier(path, &currElement, &bezLength);
-                /*if (bezLength == 0.0) {
-                    currLength = pathLength;
-                    epc = 1.0;
-                    break;
-                }*/
                 currLength += bezLength;
                 epc = currLength / pathLength;
             }
@@ -579,7 +588,7 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
 
     const int firstElement = 0;
     bool haveCachedBez = prevBez.isValid;
-    int currElement = haveCachedBez ? prevBez.element : path.elementCount() - 1;
+    int currElement = haveCachedBez ? prevBez.element : path.elementCount();
     qreal bezLength = haveCachedBez ? prevBez.bezLength : 0;
     QBezier currBez = haveCachedBez ? prevBez.bezier : nextBezier(path, &currElement, &bezLength, true /*reverse*/);
     qreal currLength = haveCachedBez ? prevBez.currLength : pathLength;
@@ -596,14 +605,8 @@ QPointF QDeclarativePath::backwardsPointAt(const QPainterPath &path, const qreal
             qreal spc = prevPoint.origpercent + elementPercent * point.scale;
 
             while (spc < epc) {
-                if (currElement < firstElement)
-                    break;
+                Q_ASSERT(!(currElement < firstElement));
                 currBez = nextBezier(path, &currElement, &bezLength, true /*reverse*/);
-                /*if (bezLength == 0.0) {
-                    currLength = 0;
-                    epc = 0.0;
-                    break;
-                }*/
                 currLength = prevLength;
                 epc = (currLength - bezLength) / pathLength;
             }
