@@ -58,12 +58,14 @@ QT_BEGIN_NAMESPACE
 //#define RENDERER_DEBUG
 //#define QT_GL_NO_SCISSOR_TEST
 
-// #define QSG_RENDERER_TIMING
+
+
+#define QSG_RENDERER_TIMING
 #ifdef QSG_RENDERER_TIMING
+static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
 static QTime frameTimer;
 static int preprocessTime;
 static int updatePassTime;
-static int frameNumber = 0;
 #endif
 
 void QSGBindable::clear(QSGRenderer::ClearMode mode) const
@@ -220,8 +222,13 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         return;
 
     m_is_rendering = true;
+
+
 #ifdef QSG_RENDERER_TIMING
-    frameTimer.start();
+    if (qsg_render_timing)
+        frameTimer.start();
+    int bindTime;
+    int renderTime;
 #endif
 
     m_bindable = &bindable;
@@ -229,7 +236,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     bindable.bind();
 #ifdef QSG_RENDERER_TIMING
-    int bindTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        bindTime = frameTimer.elapsed();
 #endif
 
 #ifndef QT_NO_DEBUG
@@ -249,7 +257,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     render();
 #ifdef QSG_RENDERER_TIMING
-    int renderTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        renderTime = frameTimer.elapsed();
 #endif
 
     glDisable(GL_SCISSOR_TEST);
@@ -268,12 +277,14 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     }
 
 #ifdef QSG_RENDERER_TIMING
-    printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
-           preprocessTime,
-           updatePassTime - preprocessTime,
-           bindTime - updatePassTime,
-           renderTime - bindTime,
-           renderTime);
+    if (qsg_render_timing) {
+        printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
+               preprocessTime,
+               updatePassTime - preprocessTime,
+               bindTime - updatePassTime,
+               renderTime - bindTime,
+               renderTime);
+    }
 #endif
 }
 
@@ -353,14 +364,16 @@ void QSGRenderer::preprocess()
     }
 
 #ifdef QSG_RENDERER_TIMING
-    preprocessTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        preprocessTime = frameTimer.elapsed();
 #endif
 
     nodeUpdater()->setToplevelOpacity(context()->renderAlpha());
     nodeUpdater()->updateStates(m_root_node);
 
 #ifdef QSG_RENDERER_TIMING
-    updatePassTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        updatePassTime = frameTimer.elapsed();
 #endif
 
 }
