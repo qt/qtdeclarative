@@ -103,7 +103,7 @@ QSGShaderEffectTexture::QSGShaderEffectTexture(QSGItem *shaderSource)
 #ifdef QSG_DEBUG_FBO_OVERLAY
     , m_debugOverlay(0)
 #endif
-    , m_context(0)
+    , m_context(QSGItemPrivate::get(shaderSource)->sceneGraphContext())
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -123,18 +123,6 @@ QSGShaderEffectTexture::~QSGShaderEffectTexture()
     delete m_debugOverlay;
 #endif
 }
-
-void QSGShaderEffectTexture::scheduleForCleanup()
-{
-    if (m_context)
-        m_context->scheduleTextureForCleanup(this);
-    else {
-        // Never really been used, hence we can delete it right away..
-        Q_ASSERT(!m_fbo);
-        delete this;
-    }
-}
-
 
 int QSGShaderEffectTexture::textureId() const
 {
@@ -264,10 +252,6 @@ void QSGShaderEffectTexture::grab()
         m_secondaryFbo = m_fbo = 0;
         return;
     }
-
-    if (!m_context)
-        m_context = QSGItemPrivate::get(m_shaderSource)->sceneGraphContext();
-    Q_ASSERT(QSGItemPrivate::get(m_shaderSource)->sceneGraphContext() == m_context);
 
     if (!m_renderer) {
         m_renderer = m_context->createRenderer();
@@ -494,6 +478,7 @@ QImage QSGShaderEffectTexture::toImage() const
 QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     : QSGItem(parent)
     , m_provider(0)
+    , m_texture(0)
     , m_wrapMode(ClampToEdge)
     , m_sourceItem(0)
     , m_textureSize(0, 0)
@@ -505,19 +490,33 @@ QSGShaderEffectSource::QSGShaderEffectSource(QSGItem *parent)
     , m_grab(true)
 {
     setFlag(ItemHasContents);
-    m_texture = new QSGShaderEffectTexture(this);
-    connect(m_texture, SIGNAL(textureChanged()), this, SLOT(update()));
 }
 
 QSGShaderEffectSource::~QSGShaderEffectSource()
 {
-    m_texture->scheduleForCleanup();
+    if (m_texture)
+        m_texture->deleteLater();
 
     if (m_provider)
         m_provider->deleteLater();
 
     if (m_sourceItem)
         QSGItemPrivate::get(m_sourceItem)->derefFromEffectItem(m_hideSource);
+}
+
+void QSGShaderEffectSource::ensureTexture()
+{
+    if (m_texture)
+        return;
+
+    Q_ASSERT_X(QSGItemPrivate::get(this)->canvas
+               && QSGItemPrivate::get(this)->sceneGraphContext()
+               && QThread::currentThread() == QSGItemPrivate::get(this)->sceneGraphContext()->thread(),
+               "QSGShaderEffectSource::ensureTexture",
+               "Cannot be used outside the rendering thread");
+
+    m_texture = new QSGShaderEffectTexture(this);
+    connect(m_texture, SIGNAL(textureChanged()), this, SLOT(update()));
 }
 
 QSGTextureProvider *QSGShaderEffectSource::textureProvider() const
@@ -528,8 +527,10 @@ QSGTextureProvider *QSGShaderEffectSource::textureProvider() const
                    && QSGItemPrivate::get(this)->sceneGraphContext()
                    && QThread::currentThread() == QSGItemPrivate::get(this)->sceneGraphContext()->thread(),
                    "QSGShaderEffectSource::textureProvider",
-                   "Cannot be used outside the GUI thread");
+                   "Cannot be used outside the rendering thread");
         const_cast<QSGShaderEffectSource *>(this)->m_provider = new QSGShaderEffectSourceTextureProvider();
+
+        const_cast<QSGShaderEffectSource *>(this)->ensureTexture();
         connect(m_texture, SIGNAL(textureChanged()), m_provider, SIGNAL(textureChanged()), Qt::DirectConnection);
         m_provider->sourceTexture = m_texture;
     }
@@ -828,6 +829,8 @@ QSGNode *QSGShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNod
         delete oldNode;
         return 0;
     }
+
+    ensureTexture();
 
     QSGShaderEffectTexture *tex = qobject_cast<QSGShaderEffectTexture *>(m_texture);
     tex->setLive(m_live);

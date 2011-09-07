@@ -116,7 +116,6 @@ public:
 
     void scheduleUpdate();
 
-    void scheduleForCleanup();
     QImage toImage() const;
 
 Q_SIGNALS:
@@ -233,6 +232,8 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
+    void ensureTexture();
+
     QSGShaderEffectSourceTextureProvider *m_provider;
     QSGShaderEffectTexture *m_texture;
     WrapMode m_wrapMode;
