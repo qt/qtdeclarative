@@ -45,6 +45,154 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmlclass Particle
+    \inqmlmodule QtQuick.Particles 2
+    \brief Particle elements can be manipulated in custom emitters and affectors.
+
+    Particle elements are always managed internally by the ParticleSystem and cannot be created in QML.
+    However, sometimes they are exposed via signals so as to allow arbitrary changes to the particle state
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialX
+    The x coordinate of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialVX
+    The x velocity of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialAX
+    The x acceleration of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialY
+    The y coordinate of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialVY
+    The y velocity of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::initialAY
+    The y acceleration of the particle at the beginning of its lifetime.
+
+    The method of simulation prefers to have the initial values changed, rather
+    than determining and changing the value at a given time. Change initial
+    values in CustomEmitters instead of the current values.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::x
+    The current x coordinate of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::vx
+    The current x velocity of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::ax
+    The current x acceleration of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::y
+    The current y coordinate of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::vy
+    The current y velocity of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::ay
+    The current y acceleration of the particle.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::t
+    The time, in seconds since the beginning of the simulation, that the particle was born.
+*/
+
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::startSize
+    The size in pixels that the particle image is at the start
+    of its life.
+*/
+
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::endSize
+    The size in pixels that the particle image is at the end
+    of its life. If this value is less than 0, then it is
+    disregarded and the particle will have its startSize for the
+    entire lifetime.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::lifeSpan
+    The time in seconds that the particle will live for.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::rotation
+    Degrees clockwise that the particle image is rotated at
+    the beginning of its life.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::rotationSpeed
+    Degrees clockwise per second that the particle image is rotated at while alive.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::autoRotate
+    If autoRotate == 1.0, then the particle's rotation will be
+    set so that it faces the direction of travel, plus any
+    rotation from the rotation or rotationSpeed properties.
+*/
+/*!
+    \qmlmethod real QtQuick.Particles2::Particle::lifeLeft
+    The time in seconds that the particle has left to live at
+    the current point in time.
+*/
+/*!
+    \qmlmethod real QtQuick.Particles2::Particle::currentSize
+    The currentSize of the particle, interpolating between startSize and endSize based on the currentTime.
+*/
+
+
+
 //### Particle data handles are not locked to within certain scopes like QSGContext2D, but there's no way to reload either...
 class QV8ParticleDataResource : public QV8ObjectResource
 {
