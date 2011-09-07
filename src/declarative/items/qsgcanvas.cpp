@@ -833,7 +833,6 @@ QSGItem *QSGCanvas::mouseGrabberItem() const
 
 bool QSGCanvasPrivate::clearHover()
 {
-    Q_Q(QSGCanvas);
     if (hoverItems.isEmpty())
         return false;
 
