@@ -427,39 +427,6 @@ protected:
 
     void initializeGlobal(v8::Handle<v8::Object>);
 
-    static v8::Handle<v8::Value> gc(const v8::Arguments &args);
-    static v8::Handle<v8::Value> print(const v8::Arguments &args);
-    static v8::Handle<v8::Value> isQtObject(const v8::Arguments &args);
-    static v8::Handle<v8::Value> rgba(const v8::Arguments &args);
-    static v8::Handle<v8::Value> hsla(const v8::Arguments &args);
-    static v8::Handle<v8::Value> rect(const v8::Arguments &args);
-    static v8::Handle<v8::Value> point(const v8::Arguments &args);
-    static v8::Handle<v8::Value> size(const v8::Arguments &args);
-    static v8::Handle<v8::Value> vector3d(const v8::Arguments &args);
-    static v8::Handle<v8::Value> vector4d(const v8::Arguments &args);
-    static v8::Handle<v8::Value> lighter(const v8::Arguments &args);
-    static v8::Handle<v8::Value> darker(const v8::Arguments &args);
-    static v8::Handle<v8::Value> tint(const v8::Arguments &args);
-    static v8::Handle<v8::Value> formatDate(const v8::Arguments &args);
-    static v8::Handle<v8::Value> formatTime(const v8::Arguments &args);
-    static v8::Handle<v8::Value> formatDateTime(const v8::Arguments &args);
-    static v8::Handle<v8::Value> openUrlExternally(const v8::Arguments &args);
-    static v8::Handle<v8::Value> fontFamilies(const v8::Arguments &args);
-    static v8::Handle<v8::Value> md5(const v8::Arguments &args);
-    static v8::Handle<v8::Value> btoa(const v8::Arguments &args);
-    static v8::Handle<v8::Value> atob(const v8::Arguments &args);
-    static v8::Handle<v8::Value> quit(const v8::Arguments &args);
-    static v8::Handle<v8::Value> resolvedUrl(const v8::Arguments &args);
-    static v8::Handle<v8::Value> createQmlObject(const v8::Arguments &args);
-    static v8::Handle<v8::Value> createComponent(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTranslate(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTranslateNoOp(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTr(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTrNoOp(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTrId(const v8::Arguments &args);
-    static v8::Handle<v8::Value> qsTrIdNoOp(const v8::Arguments &args);
-    static v8::Handle<v8::Value> stringArg(const v8::Arguments &args);
-
     double qtDateTimeToJsDate(const QDateTime &dt);
     QDateTime qtDateTimeFromJsDate(double jsDate);
 
