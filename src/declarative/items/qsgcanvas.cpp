@@ -51,7 +51,7 @@
 #include <private/qsgflashnode_p.h>
 
 #include <private/qguiapplication_p.h>
-#include <QtGui/QPlatformInputContext>
+#include <QtGui/QInputPanel>
 
 #include <private/qabstractanimation_p.h>
 
@@ -335,9 +335,8 @@ bool QSGCanvas::vsyncAnimations() const
  */
 void QSGCanvasPrivate::updateInputContext()
 {
-   QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
-   if (ic)
-       ic->update();
+    // ### finer grained updates would be good
+    qApp->inputPanel()->update(Qt::ImQueryAll);
 }
 /*!
     This function is an attempt to localize all uses of QInputContext::reset in
@@ -345,9 +344,7 @@ void QSGCanvasPrivate::updateInputContext()
  */
 void QSGCanvasPrivate::resetInputContext()
 {
-    QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
-    if (ic)
-        ic->reset();
+    qApp->inputPanel()->reset();
 }
 
 
@@ -731,12 +728,8 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
 
 void QSGCanvasPrivate::updateInputMethodData()
 {
-    // Q_Q(QSGCanvas);
-    // ### refactor: port..
-//    bool enabled = activeFocusItem
-//                   && (QSGItemPrivate::get(activeFocusItem)->flags & QSGItem::ItemAcceptsInputMethod);
-//    q->setAttribute(Qt::WA_InputMethodEnabled, enabled);
-//    q->setInputMethodHints(enabled ? activeFocusItem->inputMethodHints() : Qt::ImhNone);
+    qApp->inputPanel()->setInputItem(activeFocusItem);
+    qApp->inputPanel()->setInputItemTranform(QSGItemPrivate::get(activeFocusItem)->itemToCanvasTransform());
 }
 
 QVariant QSGCanvas::inputMethodQuery(Qt::InputMethodQuery query) const

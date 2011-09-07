@@ -52,9 +52,8 @@
 #include <qsgtextnode_p.h>
 #include <qsgsimplerectnode.h>
 
-#include <QtGui/qplatforminputcontext_qpa.h>
-#include <private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
+#include <QtGui/qinputpanel.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1164,7 +1163,7 @@ void QSGTextInput::mouseReleaseEvent(QMouseEvent *event)
 bool QSGTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (control->composeMode()) {
+    if (control->composeMode() && event->type() == QEvent::KeyRelease) {
         int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
         if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
@@ -1174,10 +1173,8 @@ bool QSGTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
                 return true;
         }
 
-        QPlatformInputContext *ic = QGuiApplicationPrivate::platformIntegration()->inputContext();
-        if (ic)
-            // may be causing reset() in some input methods
-            ic->mouseHandler(mousePos, event);
+        // may be causing reset() in some input methods
+        qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
         if (!control->preeditAreaText().isEmpty())
             return true;
     }

@@ -53,6 +53,8 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qpen.h>
 #include <QtGui/qcursor.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qinputpanel.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
@@ -2926,20 +2928,16 @@ void QSGItem::setInputMethodHints(Qt::InputMethodHints hints)
     if (!d->canvas || d->canvas->activeFocusItem() != this)
         return;
 
-    QSGCanvasPrivate *cd = QSGCanvasPrivate::get(d->canvas);
-    cd->updateInputMethodData();
-#ifndef QT_NO_IM
-    cd->updateInputContext();
-#endif
+    QInputPanel *p = qApp->inputPanel();
+    if (p->inputItem() == this)
+        qApp->inputPanel()->update(Qt::ImHints);
 }
 
 void QSGItem::updateMicroFocus()
 {
-#ifndef QT_NO_IM
-    Q_D(QSGItem);
-    if (d->canvas)
-        QSGCanvasPrivate::get(d->canvas)->updateInputContext();
-#endif
+    QInputPanel *p = qApp->inputPanel();
+    if (p->inputItem() == this)
+        qApp->inputPanel()->update(Qt::ImMicroFocus);
 }
 
 QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -2947,8 +2945,26 @@ QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
     Q_D(const QSGItem);
     QVariant v;
 
-    if (d->keyHandler)
-        v = d->keyHandler->inputMethodQuery(query);
+    switch (query) {
+    case Qt::ImEnabled:
+        v = (bool)(flags() & ItemAcceptsInputMethod);
+        break;
+    case Qt::ImHints:
+        v = (int)inputMethodHints();
+        break;
+    case Qt::ImMicroFocus:
+    case Qt::ImFont:
+    case Qt::ImCursorPosition:
+    case Qt::ImSurroundingText:
+    case Qt::ImCurrentSelection:
+    case Qt::ImMaximumTextLength:
+    case Qt::ImAnchorPosition:
+    case Qt::ImPreferredLanguage:
+        if (d->keyHandler)
+            v = d->keyHandler->inputMethodQuery(query);
+    default:
+        break;
+    }
 
     return v;
 }
@@ -4876,8 +4892,6 @@ QRectF QSGItem::mapRectFromScene(const QRectF &rect) const
 
 bool QSGItem::event(QEvent *ev)
 {
-    return QObject::event(ev);
-
 #if 0
     if (ev->type() == QEvent::PolishRequest) {
         Q_D(QSGItem);
@@ -4888,6 +4902,16 @@ bool QSGItem::event(QEvent *ev)
         return QObject::event(ev);
     }
 #endif
+    if (ev->type() == QEvent::InputMethodQuery) {
+        QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
+        query->setValue(inputMethodQuery(query->query()));
+        ev->accept();
+        return true;
+    } else if (ev->type() == QEvent::InputMethod) {
+        inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
+        return true;
+    }
+    return QObject::event(ev);
 }
 
 #ifndef QT_NO_DEBUG_STREAM
