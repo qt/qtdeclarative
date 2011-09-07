@@ -68,6 +68,7 @@
 #include <qopenglcontext.h>
 #include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qinputpanel.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -204,6 +205,7 @@ protected:
     void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
     void polishItems() { d->polishItems(); }
     QAnimationDriver *animationDriver() const { return d->animationDriver; }
+    void updateFocusItemTransform();
 
     inline QOpenGLContext *glContext() const { return gl; }
     void createGLContext();

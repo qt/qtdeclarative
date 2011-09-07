@@ -70,6 +70,13 @@ DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
+void QSGCanvasRenderLoop::updateFocusItemTransform()
+{
+    QSGItem *focus = renderer->activeFocusItem();
+    if (focus && qApp->inputPanel()->inputItem() == focus)
+        qApp->inputPanel()->setInputItemTranform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
+}
+
 class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
 {
 public:
@@ -85,6 +92,7 @@ public:
     virtual void paint() {
         if (animationRunning && animationDriver())
             animationDriver()->advance();
+        updateFocusItemTransform();
         syncSceneGraph();
         makeCurrent();
         glViewport(0, 0, size.width(), size.height());
@@ -2030,6 +2038,7 @@ void QSGCanvasRenderThread::sync(bool guiAlreadyLocked)
     renderThreadAwakened = false;
 
     polishItems();
+    updateFocusItemTransform();
 
     wake();
     wait();
