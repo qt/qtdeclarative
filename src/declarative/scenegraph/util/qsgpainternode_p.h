@@ -56,6 +56,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QOpenGLFramebufferObject;
+class QOpenGLPaintDevice;
 
 class Q_DECLARATIVE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
@@ -125,6 +126,7 @@ private:
     QSGTextureMaterial m_materialO;
     QSGGeometry m_geometry;
     QSGPainterTexture *m_texture;
+    QOpenGLPaintDevice *m_gl_device;
 
     QSize m_size;
     QSize m_fboSize;

@@ -45,6 +45,7 @@
 #include <private/qsgcontext_p.h>
 #include <qopenglframebufferobject.h>
 #include <qopenglfunctions.h>
+#include <qopenglpaintdevice.h>
 #include <qmath.h>
 #include <qpainter.h>
 
@@ -111,6 +112,7 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_multisampledFbo(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_texture(0)
+    , m_gl_device(0)
     , m_size(1, 1)
     , m_dirtyContents(false)
     , m_opaquePainting(false)
@@ -135,6 +137,7 @@ QSGPainterNode::~QSGPainterNode()
     delete m_texture;
     delete m_fbo;
     delete m_multisampledFbo;
+    delete m_gl_device;
 }
 
 void QSGPainterNode::paint()
@@ -144,10 +147,17 @@ void QSGPainterNode::paint()
     QPainter painter;
     if (m_actualRenderTarget == QSGPaintedItem::Image)
         painter.begin(&m_image);
-    else if (m_multisampledFbo)
-        painter.begin(m_multisampledFbo);
-    else
-        painter.begin(m_fbo);
+    else {
+        if (!m_gl_device)
+            m_gl_device = new QOpenGLPaintDevice(m_fboSize);
+
+        if (m_multisampledFbo)
+            m_multisampledFbo->bind();
+        else
+            m_fbo->bind();
+
+        painter.begin(m_gl_device);
+    }
 
     if (m_smoothPainting) {
         painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
@@ -177,6 +187,11 @@ void QSGPainterNode::paint()
     } else if (m_multisampledFbo) {
         QOpenGLFramebufferObject::blitFramebuffer(m_fbo, dirtyRect, m_multisampledFbo, dirtyRect);
     }
+
+    if (m_multisampledFbo)
+        m_multisampledFbo->release();
+    else if (m_fbo)
+        m_fbo->release();
 
     m_dirtyRect = QRect();
 }
