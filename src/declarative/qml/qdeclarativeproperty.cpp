@@ -1215,7 +1215,16 @@ bool QDeclarativePropertyPrivate::write(QObject *object, const QDeclarativePrope
 
         prop.clear(&prop);
 
-        if (value.userType() == qMetaTypeId<QList<QObject *> >()) {
+        if (value.userType() == qMetaTypeId<QDeclarativeListReference>()) {
+            QDeclarativeListReference qdlr = value.value<QDeclarativeListReference>();
+
+            for (int ii = 0; ii < qdlr.count(); ++ii) {
+                QObject *o = qdlr.at(ii);
+                if (o && !canConvert(o->metaObject(), listType))
+                    o = 0;
+                prop.append(&prop, (void *)o);
+            }
+        } else if (value.userType() == qMetaTypeId<QList<QObject *> >()) {
             const QList<QObject *> &list = qvariant_cast<QList<QObject *> >(value);
 
             for (int ii = 0; ii < list.count(); ++ii) {

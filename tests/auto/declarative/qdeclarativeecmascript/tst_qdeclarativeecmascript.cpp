@@ -131,6 +131,7 @@ private slots:
     void jsObject();
     void undefinedResetsProperty();
     void listToVariant();
+    void listAssignment();
     void multiEngineObject();
     void deletedObject();
     void attachedPropertyScope();
@@ -2231,6 +2232,21 @@ void tst_qdeclarativeecmascript::listToVariant()
     QVERIFY(qvariant_cast<QDeclarativeListReference>(v).object() == &container);
 
     delete object;
+}
+
+// QTBUG-16316
+Q_DECLARE_METATYPE(QDeclarativeListProperty<MyQmlObject>)
+void tst_qdeclarativeecmascript::listAssignment()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("listAssignment.qml"));
+    QObject *obj = component.create();
+    QCOMPARE(obj->property("list1length").toInt(), 2);
+    QDeclarativeListProperty<MyQmlObject> list1 = obj->property("list1").value<QDeclarativeListProperty<MyQmlObject> >();
+    QDeclarativeListProperty<MyQmlObject> list2 = obj->property("list2").value<QDeclarativeListProperty<MyQmlObject> >();
+    QCOMPARE(list1.count(&list1), list2.count(&list2));
+    QCOMPARE(list1.at(&list1, 0), list2.at(&list2, 0));
+    QCOMPARE(list1.at(&list1, 1), list2.at(&list2, 1));
+    delete obj;
 }
 
 // QTBUG-7957
