@@ -4904,8 +4904,15 @@ bool QSGItem::event(QEvent *ev)
 #endif
     if (ev->type() == QEvent::InputMethodQuery) {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
-        query->setValue(inputMethodQuery(query->query()));
-        ev->accept();
+        Qt::InputMethodQueries queries = query->queries();
+        for (uint i = 0; i < 32; ++i) {
+            Qt::InputMethodQuery q = (Qt::InputMethodQuery)(int)(queries & (1<<i));
+            if (q) {
+                QVariant v = inputMethodQuery(q);
+                query->setValue(q, v);
+            }
+        }
+        query->accept();
         return true;
     } else if (ev->type() == QEvent::InputMethod) {
         inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
