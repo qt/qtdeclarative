@@ -1919,12 +1919,8 @@ void QSGTextEditPrivate::updateDefaultTextOption()
 */
 void QSGTextEdit::openSoftwareInputPanel()
 {
-    if (qApp) {
-        if (canvas()) {
-            QEvent event(QEvent::RequestSoftwareInputPanel);
-            QGuiApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 /*!
@@ -1968,12 +1964,8 @@ void QSGTextEdit::openSoftwareInputPanel()
 */
 void QSGTextEdit::closeSoftwareInputPanel()
 {  
-    if (qApp) {
-        if (canvas()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QGuiApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 void QSGTextEdit::focusInEvent(QFocusEvent *event)

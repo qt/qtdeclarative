@@ -1732,12 +1732,8 @@ void QSGTextInput::moveCursorSelection(int pos, SelectionMode mode)
 */
 void QSGTextInput::openSoftwareInputPanel()
 {
-    if (qApp) {
-        if (canvas()) {
-            QEvent event(QEvent::RequestSoftwareInputPanel);
-            QCoreApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 /*!
@@ -1781,12 +1777,8 @@ void QSGTextInput::openSoftwareInputPanel()
 */
 void QSGTextInput::closeSoftwareInputPanel()
 {
-    if (qApp) {
-        if (canvas()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QCoreApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->hide();
 }
 
 void QSGTextInput::focusInEvent(QFocusEvent *event)
