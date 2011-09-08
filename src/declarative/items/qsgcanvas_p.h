@@ -131,6 +131,7 @@ public:
     void notifyFocusChangesRecur(QSGItem **item, int remaining);
 
     void updateInputMethodData();
+    void updateFocusItemTransform();
 
     void dirtyItem(QSGItem *);
     void cleanup(QSGNode *);
@@ -205,7 +206,6 @@ protected:
     void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
     void polishItems() { d->polishItems(); }
     QAnimationDriver *animationDriver() const { return d->animationDriver; }
-    void updateFocusItemTransform();
 
     inline QOpenGLContext *glContext() const { return gl; }
     void createGLContext();
