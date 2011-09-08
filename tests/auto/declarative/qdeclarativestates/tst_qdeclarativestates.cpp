@@ -149,6 +149,7 @@ private slots:
     void extendsBug();
     void editProperties();
     void QTBUG_14830();
+    void avoidFastForward();
 };
 
 void tst_qdeclarativestates::initTestCase()
@@ -1511,6 +1512,20 @@ void tst_qdeclarativestates::QTBUG_14830()
     QSGItem *item = rect->findChild<QSGItem*>("area");
 
     QCOMPARE(item->width(), qreal(171));
+}
+
+void tst_qdeclarativestates::avoidFastForward()
+{
+    QDeclarativeEngine engine;
+
+    //shouldn't fast forward if there isn't a transition
+    QDeclarativeComponent c(&engine, SRCDIR "/data/avoidFastForward.qml");
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect != 0);
+
+    QSGItemPrivate *rectPrivate = QSGItemPrivate::get(rect);
+    rectPrivate->setState("a");
+    QCOMPARE(rect->property("updateCount").toInt(), 1);
 }
 
 QTEST_MAIN(tst_qdeclarativestates)
