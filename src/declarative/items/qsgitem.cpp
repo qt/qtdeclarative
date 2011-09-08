@@ -2200,7 +2200,7 @@ QSGItemPrivate::QSGItemPrivate()
   z(0), scale(1), rotation(0), opacity(1),
 
   attachedLayoutDirection(0), acceptedMouseButtons(0),
-  imHints(Qt::ImhNone),
+  imHints(Qt::ImhMultiLine),
 
   keyHandler(0),
 
@@ -2937,7 +2937,7 @@ void QSGItem::updateMicroFocus()
 {
     QInputPanel *p = qApp->inputPanel();
     if (p->inputItem() == this)
-        qApp->inputPanel()->update(Qt::ImMicroFocus);
+        qApp->inputPanel()->update(Qt::ImCursorRectangle);
 }
 
 QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -2952,7 +2952,7 @@ QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
     case Qt::ImHints:
         v = (int)inputMethodHints();
         break;
-    case Qt::ImMicroFocus:
+    case Qt::ImCursorRectangle:
     case Qt::ImFont:
     case Qt::ImCursorPosition:
     case Qt::ImSurroundingText:
