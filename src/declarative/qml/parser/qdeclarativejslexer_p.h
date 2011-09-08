@@ -193,6 +193,7 @@ private:
     int _stackToken;
 
     int _patternFlags;
+    int _tokenKind;
     int _tokenLength;
     int _tokenLine;
 

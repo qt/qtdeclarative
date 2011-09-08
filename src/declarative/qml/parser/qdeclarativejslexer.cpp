@@ -104,6 +104,7 @@ Lexer::Lexer(Engine *engine)
     , _parenthesesCount(0)
     , _stackToken(-1)
     , _patternFlags(0)
+    , _tokenKind(0)
     , _tokenLength(0)
     , _tokenLine(0)
     , _validTokenText(false)
@@ -175,14 +176,14 @@ void Lexer::scanChar()
 int Lexer::lex()
 {
     _tokenSpell = QStringRef();
-    int token = scanToken();
+    _tokenKind = scanToken();
     _tokenLength = _codePtr - _tokenStartPtr - 1;
 
     _delimited = false;
     _restrictedKeyword = false;
 
     // update the flags
-    switch (token) {
+    switch (_tokenKind) {
     case T_LBRACE:
     case T_SEMICOLON:
         _delimited = true;
@@ -214,11 +215,11 @@ int Lexer::lex()
         break;
 
     case CountParentheses:
-        if (token == T_RPAREN) {
+        if (_tokenKind == T_RPAREN) {
             --_parenthesesCount;
             if (_parenthesesCount == 0)
                 _parenthesesState = BalancedParentheses;
-        } else if (token == T_LPAREN) {
+        } else if (_tokenKind == T_LPAREN) {
             ++_parenthesesCount;
         }
         break;
@@ -228,7 +229,7 @@ int Lexer::lex()
         break;
     } // switch
 
-    return token;
+    return _tokenKind;
 }
 
 bool Lexer::isUnicodeEscapeSequence(const QChar *chars)
@@ -541,8 +542,6 @@ again:
     case '\'':
     case '"': {
         const QChar quote = ch;
-        _validTokenText = true;
-
         bool multilineStringLiteral = false;
 
         const QChar *startCode = _codePtr;
@@ -561,6 +560,7 @@ again:
             }
         }
 
+        _validTokenText = true;
         _tokenText.resize(0);
         startCode--;
         while (startCode != _codePtr - 1) 
@@ -1009,6 +1009,9 @@ QString Lexer::tokenText() const
 {
     if (_validTokenText)
         return _tokenText;
+
+    if (_tokenKind == T_STRING_LITERAL)
+        return QString(_tokenStartPtr + 1, _tokenLength - 2);
 
     return QString(_tokenStartPtr, _tokenLength);
 }
