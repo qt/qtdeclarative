@@ -56,6 +56,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QDebug>
 #include <QPainter>
+#include <QtGui/QInputPanel>
 
 #include <private/qtextcontrol_p.h>
 
@@ -1807,11 +1808,10 @@ void QDeclarative1TextEditPrivate::updateDefaultTextOption()
 */
 void QDeclarative1TextEdit::openSoftwareInputPanel()
 {
-    QEvent event(QEvent::RequestSoftwareInputPanel);
     if (qApp) {
         if (QGraphicsView * view = qobject_cast<QGraphicsView*>(qApp->focusWidget())) {
             if (view->scene() && view->scene() == scene()) {
-                QApplication::sendEvent(view, &event);
+                qApp->inputPanel()->show();
             }
         }
     }
@@ -1858,11 +1858,10 @@ void QDeclarative1TextEdit::openSoftwareInputPanel()
 */
 void QDeclarative1TextEdit::closeSoftwareInputPanel()
 {
-    QEvent event(QEvent::CloseSoftwareInputPanel);
     if (qApp) {
         if (QGraphicsView * view = qobject_cast<QGraphicsView*>(qApp->focusWidget())) {
             if (view->scene() && view->scene() == scene()) {
-                QApplication::sendEvent(view, &event);
+                qApp->inputPanel()->hide();
             }
         }
     }
