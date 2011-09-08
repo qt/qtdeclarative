@@ -585,14 +585,9 @@ void tst_QSGMouseArea::preventStealing()
     // Without preventStealing, mouse movement over MouseArea would
     // cause the Flickable to steal mouse and trigger content movement.
 
-    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(70, 70), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(60, 60), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 50), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QTest::mouseMove(canvas,QPoint(69,69));
+    QTest::mouseMove(canvas,QPoint(58,58));
+    QTest::mouseMove(canvas,QPoint(47,47));
 
     // We should have received all three move events
     QCOMPARE(mousePositionSpy.count(), 3);
@@ -602,7 +597,7 @@ void tst_QSGMouseArea::preventStealing()
     QCOMPARE(flickable->contentX(), 0.);
     QCOMPARE(flickable->contentY(), 0.);
 
-    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(47, 47));
 
     // Now allow stealing and confirm Flickable does its thing.
     canvas->rootObject()->setProperty("stealing", false);
@@ -611,14 +606,10 @@ void tst_QSGMouseArea::preventStealing()
 
     // Without preventStealing, mouse movement over MouseArea would
     // cause the Flickable to steal mouse and trigger content movement.
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(70, 70), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
 
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(60, 60), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 50), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QTest::mouseMove(canvas,QPoint(69,69));
+    QTest::mouseMove(canvas,QPoint(58,58));
+    QTest::mouseMove(canvas,QPoint(47,47));
 
     // We should only have received the first move event
     QCOMPARE(mousePositionSpy.count(), 4);
@@ -626,8 +617,9 @@ void tst_QSGMouseArea::preventStealing()
     QVERIFY(!mouseArea->pressed());
 
     // Flickable content should have moved.
-    QCOMPARE(flickable->contentX(), 10.);
-    QCOMPARE(flickable->contentY(), 10.);
+
+    QCOMPARE(flickable->contentX(), 11.);
+    QCOMPARE(flickable->contentY(), 11.);
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 50));
 
@@ -790,12 +782,9 @@ void tst_QSGMouseArea::hoverPosition()
     QCOMPARE(root->property("mouseX").toReal(), qreal(0));
     QCOMPARE(root->property("mouseY").toReal(), qreal(0));
 
-    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(10, 32), Qt::NoButton, Qt::NoButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QTest::mouseMove(canvas,QPoint(10,32));
 
-#ifdef Q_WS_QPA
-    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
-#endif
+
     QCOMPARE(root->property("mouseX").toReal(), qreal(10));
     QCOMPARE(root->property("mouseY").toReal(), qreal(32));
 
@@ -816,9 +805,7 @@ void tst_QSGMouseArea::hoverPropagation()
 
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(32, 32), Qt::NoButton, Qt::NoButton, 0);
     QApplication::sendEvent(canvas, &moveEvent);
-#ifdef Q_WS_QPA
-    QEXPECT_FAIL("", "QTBUG-21008 fails", Abort);
-#endif
+
     QCOMPARE(root->property("point1").toBool(), true);
     QCOMPARE(root->property("point2").toBool(), false);
 
