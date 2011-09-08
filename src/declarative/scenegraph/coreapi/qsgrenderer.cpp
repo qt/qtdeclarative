@@ -502,7 +502,7 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
             const QSGGeometry *g = clip->geometry();
             Q_ASSERT(g->attributeCount() > 0);
             const QSGGeometry::Attribute *a = g->attributes();
-            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->stride(), g->vertexData());
+            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), g->vertexData());
 
             m_clip_program.setUniformValue(m_clip_matrix_id, m);
             if (g->indexCount()) {
@@ -616,7 +616,7 @@ void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
     static bool use_vbo = !QGuiApplication::arguments().contains(QLatin1String("--no-vbo"));
 
     const void *vertexData;
-    int vertexByteSize = g->vertexCount() * g->stride();
+    int vertexByteSize = g->vertexCount() * g->sizeOfVertex();
     if (use_vbo && g->vertexDataPattern() != QSGGeometry::AlwaysUploadPattern && vertexByteSize > 1024) {
 
         // The base pointer for a VBO is 0
@@ -661,7 +661,7 @@ void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 #else
         GLboolean normalize = a.type != GL_FLOAT && a.type != GL_DOUBLE;
 #endif
-        glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->stride(), (char *) vertexData + offset);
+        glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (char *) vertexData + offset);
         offset += a.tupleSize * size_of_type(a.type);
     }
 
@@ -684,7 +684,7 @@ void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 
         if (updateData) {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         g->indexCount() * (g->indexType() == GL_UNSIGNED_SHORT ? 2 : 4),
+                         g->indexCount() * g->sizeOfIndex(),
                          g->indexData(),
                          qt_drawTypeForPattern(g->indexDataPattern()));
             QSGGeometryData::clearDirtyIndexData(g);

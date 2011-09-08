@@ -147,7 +147,7 @@ public:
 
     inline int attributeCount() const { return m_attributes.count; }
     inline const Attribute *attributes() const { return m_attributes.attributes; }
-    inline int stride() const { return m_attributes.stride; }
+    inline int sizeOfVertex() const { return m_attributes.stride; }
 
     static void updateRectGeometry(QSGGeometry *g, const QRectF &rect);
     static void updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &sourceRect);
@@ -284,9 +284,7 @@ int QSGGeometry::sizeOfIndex() const
 {
     if (m_index_type == GL_UNSIGNED_SHORT) return 2;
     else if (m_index_type == GL_UNSIGNED_BYTE) return 1;
-#ifndef QT_OPENGL_ES
     else if (m_index_type == GL_UNSIGNED_INT) return 4;
-#endif
     return 0;
 }
 

@@ -42,6 +42,10 @@
 #include "qsggeometry.h"
 #include "qsggeometry_p.h"
 
+#include <qopenglcontext.h>
+#include <qopenglfunctions.h>
+#include <private/qopenglextensions_p.h>
+
 QT_BEGIN_NAMESPACE
 
 
@@ -138,15 +142,17 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
 
+    Q_ASSERT_X(indexType != GL_UNSIGNED_INT
+               || static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions())
+                  ->hasOpenGLExtension(QOpenGLExtensions::ElementIndexUint),
+               "QSGGeometry::QSGGeometry",
+               "GL_UNSIGNED_INT is not supported, geometry will not render"
+               );
+
     if (indexType != GL_UNSIGNED_BYTE
         && indexType != GL_UNSIGNED_SHORT
-#ifndef QT_OPENGL_ES
-        && indexType != GL_UNSIGNED_INT
-#endif
-            ) {
-        qFatal("QSGGeometry: Unsupported index type, %x.%s\n",
-               indexType,
-               indexType == GL_UNSIGNED_INT ? " GL_UNSIGNED_INT is not supported on OpenGL ES." : "");
+        && indexType != GL_UNSIGNED_INT) {
+        qFatal("QSGGeometry: Unsupported index type, %x.\n", indexType);
     }
 
 
@@ -156,7 +162,15 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
 }
 
 /*!
-    \fn int QSGGeometry::sizeOfIndexType() const
+    \fn int QSGGeometry::sizeOfVertex() const
+
+    Returns the size in bytes of one vertex.
+
+    This value comes from the attributes.
+ */
+
+/*!
+    \fn int QSGGeometry::sizeOfIndex() const
 
     Returns the byte size of the index type.
 

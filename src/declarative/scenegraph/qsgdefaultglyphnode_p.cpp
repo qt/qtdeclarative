@@ -200,7 +200,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
     QVector4D *vp = (QVector4D *)geometry->vertexDataAsTexturedPoint2D();
-    Q_ASSERT(geometry->stride() == sizeof(QVector4D));
+    Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));
     ushort *ip = geometry->indexDataAsUShort();
 
     QPointF position(p.x(), p.y() - m_font.ascent());

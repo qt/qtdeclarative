@@ -1102,7 +1102,7 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 
          if (g->attributeCount() > 0 && g->attributes()->type == GL_FLOAT) {
              float x1 = 1e10, x2 = -1e10, y1=1e10, y2=-1e10;
-             int stride = g->stride();
+             int stride = g->sizeOfVertex();
              for (int i = 0; i < g->vertexCount(); ++i) {
                  float x = ((float *)((char *)const_cast<QSGGeometry *>(g)->vertexData() + i * stride))[0];
                  float y = ((float *)((char *)const_cast<QSGGeometry *>(g)->vertexData() + i * stride))[1];
