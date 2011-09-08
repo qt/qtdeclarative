@@ -163,6 +163,12 @@ void QSGImageBase::setCache(bool cache)
         load();
 }
 
+QPixmap QSGImageBase::pixmap() const
+{
+    Q_D(const QSGImageBase);
+    return d->pix.pixmap();
+}
+
 void QSGImageBase::setMirror(bool mirror)
 {
     Q_D(QSGImageBase);
