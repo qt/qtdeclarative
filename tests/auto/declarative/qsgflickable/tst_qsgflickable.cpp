@@ -93,9 +93,7 @@ tst_qsgflickable::tst_qsgflickable()
 
 void tst_qsgflickable::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("Flickable item needs OpenGL 2.0", SkipAll);
+
 }
 
 void tst_qsgflickable::cleanupTestCase()
@@ -267,7 +265,7 @@ void tst_qsgflickable::nestedPressDelay()
     QSGView *canvas = new QSGView;
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/nestedPressDelay.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *outer = qobject_cast<QSGFlickable*>(canvas->rootObject());
@@ -372,7 +370,7 @@ void tst_qsgflickable::wheel()
     QSGView *canvas = new QSGView;
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/wheel.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flick = canvas->rootObject()->findChild<QSGFlickable*>("flick");
@@ -407,7 +405,7 @@ void tst_qsgflickable::movingAndDragging()
     QSGView *canvas = new QSGView;
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
@@ -519,7 +517,7 @@ void tst_qsgflickable::disabled()
     QSGView *canvas = new QSGView;
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/disabled.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flick = canvas->rootObject()->findChild<QSGFlickable*>("flickable");

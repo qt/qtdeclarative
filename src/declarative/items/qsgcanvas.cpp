@@ -95,6 +95,7 @@ public:
             animationDriver()->advance();
         polishItems();
         syncSceneGraph();
+        polishItems();
         makeCurrent();
         glViewport(0, 0, size.width(), size.height());
         renderSceneGraph(size);
@@ -144,6 +145,7 @@ public:
 
     bool event(QEvent *e) {
         if (e->type() == QEvent::User) {
+            polishItems();
             paint();
             return true;
         }
