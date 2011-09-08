@@ -13,6 +13,7 @@ HEADERS += \
     $$PWD/qjsvalueiterator.h \
     $$PWD/qjsvalue_impl_p.h \
     $$PWD/qjsconverter_p.h \
+    $$PWD/qjsconverter_impl_p.h \
     $$PWD/qscriptisolate_p.h \
     $$PWD/qscriptshareddata_p.h \
     $$PWD/qscripttools_p.h \

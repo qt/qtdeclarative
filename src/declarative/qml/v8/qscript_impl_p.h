@@ -38,5 +38,6 @@
 #include "qv8engine_impl_p.h"
 #include "qjsvalue_impl_p.h"
 #include "qjsvalueiterator_impl_p.h"
+#include "qjsconverter_impl_p.h"
 
 #endif //QSCRIPT_IMPL_P_H
