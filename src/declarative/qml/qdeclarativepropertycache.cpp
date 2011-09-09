@@ -375,7 +375,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             if (data->isSignal()) {
                 int length = methodName.length();
 
-                char str[length + 3];
+                QVarLengthArray<char, 128> str(length+3);
                 str[0] = 'o';
                 str[1] = 'n';
                 str[2] = toupper(signature[0]);
@@ -383,7 +383,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
                     memcpy(&str[3], &signature[1], length - 1);
                 str[length + 2] = '\0';
 
-                QHashedString on(QString::fromLatin1(str));
+                QHashedString on(QString::fromLatin1(str.data()));
                 stringCache.insert(on, sigdata);
                 ++signalHandlerIndex;
             }
