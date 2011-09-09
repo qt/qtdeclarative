@@ -80,7 +80,7 @@ Rectangle{
                 highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
 
                 fFade = fadeIn * fadeOut * qt_Opacity;
-                fBlur = max(0.2 * t, t * r);
+                fBlur = max(0.2 * t, t * qt_ParticleR);
             }
         "
         property variant source: theSource
