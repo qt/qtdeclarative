@@ -170,7 +170,7 @@ protected:
     bool m_needsReset;//### What is this really saving?
     QSGParticleSystem* m_system;
     QStringList m_particles;
-    bool activeGroup(int g) {return m_groups.isEmpty() || m_groups.contains(g);}
+    bool activeGroup(int g);
     bool m_enabled;
     virtual void componentComplete();
     QPointF m_offset;

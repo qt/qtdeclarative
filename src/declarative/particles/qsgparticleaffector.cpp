@@ -140,6 +140,16 @@ void QSGParticleAffector::componentComplete()
     QSGItem::componentComplete();
 }
 
+bool QSGParticleAffector::activeGroup(int g) {
+    if (m_updateIntSet){
+        m_groups.clear();
+        foreach (const QString &p, m_particles)
+            m_groups << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
+        m_updateIntSet = false;
+    }
+    return m_groups.isEmpty() || m_groups.contains(g);
+}
+
 void QSGParticleAffector::affectSystem(qreal dt)
 {
     if (!m_enabled)
@@ -147,18 +157,12 @@ void QSGParticleAffector::affectSystem(qreal dt)
     //If not reimplemented, calls affect particle per particle
     //But only on particles in targeted system/area
     bool affectedConnected = isAffectedConnected();
-    if (m_updateIntSet){
-        m_groups.clear();
-        foreach (const QString &p, m_particles)
-            m_groups << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
-        m_updateIntSet = false;
-    }
     updateOffsets();//### Needed if an ancestor is transformed.
     foreach (QSGParticleGroupData* gd, m_system->m_groupData){
         foreach (QSGParticleData* d, gd->data){
             if (!d)
                 continue;
-            if (m_groups.isEmpty() || m_groups.contains(d->group)){
+            if (activeGroup(d->group)){
                 if ((m_onceOff && m_onceOffed.contains(qMakePair(d->group, d->index)))
                         || !d->stillAlive())
                     continue;
