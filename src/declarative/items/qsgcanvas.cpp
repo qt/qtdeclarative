@@ -91,6 +91,7 @@ public:
     }
 
     virtual void paint() {
+        updatePending = false;
         if (animationRunning && animationDriver())
             animationDriver()->advance();
         polishItems();
@@ -99,7 +100,6 @@ public:
         glViewport(0, 0, size.width(), size.height());
         renderSceneGraph(size);
         swapBuffers();
-        updatePending = false;
 
         if (animationRunning)
             maybeUpdate();
