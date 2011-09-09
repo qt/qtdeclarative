@@ -42,6 +42,7 @@
 #include "qsgpainternode_p.h"
 
 #include "qsgpainteditem.h"
+#include <private/qsgpainteditem_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qopenglextensions_p.h>
 #include <qopenglframebufferobject.h>
@@ -52,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QT_MINIMUM_FBO_SIZE 64
+#define QT_MINIMUM_DYNAMIC_FBO_SIZE 64
 
 static inline int qt_next_power_of_two(int v)
 {
@@ -122,12 +123,15 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_smoothPainting(false)
     , m_extensionsChecked(false)
     , m_multisamplingSupported(false)
+    , m_fastFBOResizing(false)
     , m_fillColor(Qt::transparent)
     , m_contentsScale(1.0)
     , m_dirtyGeometry(false)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
 {
+    m_context = static_cast<QSGPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphContext();
+
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
     setGeometry(&m_geometry);
@@ -268,7 +272,7 @@ void QSGPainterNode::updateRenderTarget()
     }
 
     if (m_actualRenderTarget == QSGPaintedItem::FramebufferObject) {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        const QOpenGLContext *ctx = m_context->glContext();
         if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;
 
@@ -323,8 +327,17 @@ void QSGPainterNode::updateRenderTarget()
 
 void QSGPainterNode::updateFBOSize()
 {
-    int fboWidth = qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(m_size.width()));
-    int fboHeight = qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(m_size.height()));
+    int fboWidth;
+    int fboHeight;
+    if (m_fastFBOResizing) {
+        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qt_next_power_of_two(m_size.width()));
+        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qt_next_power_of_two(m_size.height()));
+    } else {
+        QSize minimumFBOSize = m_context->minimumFBOSize();
+        fboWidth = qMax(minimumFBOSize.width(), m_size.width());
+        fboHeight = qMax(minimumFBOSize.height(), m_size.height());
+    }
+
     m_fboSize = QSize(fboWidth, fboHeight);
 }
 
@@ -424,6 +437,11 @@ void QSGPainterNode::setContentsScale(qreal s)
 
     m_contentsScale = s;
     markDirty(DirtyMaterial);
+}
+
+void QSGPainterNode::setFastFBOResizing(bool dynamic)
+{
+    m_fastFBOResizing = dynamic;
 }
 
 QImage QSGPainterNode::toImage() const

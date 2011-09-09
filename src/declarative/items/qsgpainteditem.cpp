@@ -93,6 +93,19 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \enum QSGPaintedItem::PerformanceHint
+
+    This enum describes flags that you can enable to improve rendering
+    performance in QSGPaintedItem. By default, none of these flags are set.
+
+    \value FastFBOResizing If your item gets resized often and you are using the
+    QSGPaintedItem::FramebufferObject render target, set this flag to true to reduce the
+    item resizing time at the cost of using more graphics memory. Resizing a Framebuffer object
+    is a costly operation, by enabling this property the Framebuffer Object will use a texture
+    larger than the actual size of the item to avoid as much as possible resizing it.
+*/
+
+/*!
     \internal
 */
 QSGPaintedItemPrivate::QSGPaintedItemPrivate()
@@ -100,6 +113,7 @@ QSGPaintedItemPrivate::QSGPaintedItemPrivate()
     , contentsScale(1.0)
     , fillColor(Qt::transparent)
     , renderTarget(QSGPaintedItem::Image)
+    , performanceHints(0)
     , geometryDirty(false)
     , contentsDirty(false)
     , opaquePainting(false)
@@ -253,6 +267,55 @@ void QSGPaintedItem::setMipmap(bool enable)
         return;
 
     d->mipmap = enable;
+    update();
+}
+
+/*!
+    Returns the performance hints.
+
+    By default, no performance hint is enabled/
+
+    \sa setPerformanceHint(), setPerformanceHints()
+*/
+QSGPaintedItem::PerformanceHints QSGPaintedItem::performanceHints() const
+{
+    Q_D(const QSGPaintedItem);
+    return d->performanceHints;
+}
+
+/*!
+    Sets the given performance \a hint on the item if \a enabled is true;
+    otherwise clears the performance hint.
+
+    By default, no performance hint is enabled/
+
+    \sa setPerformanceHints(), performanceHints()
+*/
+void QSGPaintedItem::setPerformanceHint(QSGPaintedItem::PerformanceHint hint, bool enabled)
+{
+    Q_D(QSGPaintedItem);
+    PerformanceHints oldHints = d->performanceHints;
+    if (enabled)
+        d->performanceHints |= hint;
+    else
+        d->performanceHints &= ~hint;
+    if (oldHints != d->performanceHints)
+       update();
+}
+
+/*!
+    Sets the performance hints to \a hints
+
+    By default, no performance hint is enabled/
+
+    \sa setPerformanceHint(), performanceHints()
+*/
+void QSGPaintedItem::setPerformanceHints(QSGPaintedItem::PerformanceHints hints)
+{
+    Q_D(QSGPaintedItem);
+    if (d->performanceHints == hints)
+        return;
+    d->performanceHints = hints;
     update();
 }
 
@@ -450,6 +513,7 @@ QSGNode *QSGPaintedItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     QRectF br = contentsBoundingRect();
 
     node->setPreferredRenderTarget(d->renderTarget);
+    node->setFastFBOResizing(d->performanceHints & FastFBOResizing);
     node->setSize(QSize(qRound(br.width()), qRound(br.height())));
     node->setSmoothPainting(d->antialiasing);
     node->setLinearFiltering(d->smooth);

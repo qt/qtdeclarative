@@ -57,6 +57,7 @@ public:
     qreal contentsScale;
     QColor fillColor;
     QSGPaintedItem::RenderTarget renderTarget;
+    QSGPaintedItem::PerformanceHints performanceHints;
 
     QRect dirtyRect;
 

@@ -102,6 +102,9 @@ public:
     void setContentsScale(qreal s);
     qreal contentsScale() const { return m_contentsScale; }
 
+    void setFastFBOResizing(bool dynamic);
+    bool fastFBOResizing() const { return m_fastFBOResizing; }
+
     QImage toImage() const;
     void update();
 
@@ -112,6 +115,8 @@ private:
     void updateGeometry();
     void updateRenderTarget();
     void updateFBOSize();
+
+    QSGContext *m_context;
 
     QSGPaintedItem::RenderTarget m_preferredRenderTarget;
     QSGPaintedItem::RenderTarget m_actualRenderTarget;
@@ -138,6 +143,7 @@ private:
     bool m_smoothPainting;
     bool m_extensionsChecked;
     bool m_multisamplingSupported;
+    bool m_fastFBOResizing;
     QColor m_fillColor;
     qreal m_contentsScale;
 

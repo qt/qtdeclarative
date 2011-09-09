@@ -68,6 +68,11 @@ public:
         FramebufferObject
     };
 
+    enum PerformanceHint {
+        FastFBOResizing = 0x1
+    };
+    Q_DECLARE_FLAGS(PerformanceHints, PerformanceHint)
+
     void update(const QRect &rect = QRect());
 
     bool opaquePainting() const;
@@ -78,6 +83,10 @@ public:
 
     bool mipmap() const;
     void setMipmap(bool enable);
+
+    PerformanceHints performanceHints() const;
+    void setPerformanceHint(PerformanceHint hint, bool enabled = true);
+    void setPerformanceHints(PerformanceHints hints);
 
     QRectF contentsBoundingRect() const;
 
@@ -111,6 +120,8 @@ private:
     Q_DISABLE_COPY(QSGPaintedItem)
     Q_DECLARE_PRIVATE(QSGPaintedItem)
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGPaintedItem::PerformanceHints)
 
 QT_END_NAMESPACE
 
