@@ -64,7 +64,7 @@
 #include <QtCore/qeventloop.h>
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
-
+#include <QtGui/QGuiApplication>
 QT_BEGIN_NAMESPACE
 
 
@@ -101,9 +101,9 @@ static inline QString stripQuotes(const QString &s)
 
 int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport_create createViewport, const char *sourceDir)
 {
-    QApplication* app = 0;
+    QGuiApplication* app = 0;
     if (!QCoreApplication::instance()) {
-        app = new QApplication(argc, argv);
+        app = new QGuiApplication(argc, argv);
     }
 
     // Look for QML-specific command-line options.
@@ -215,7 +215,8 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 // an asynchronous test and we need to show the window
                 // and wait for the quit indication.
                 view.show();
-                QTest::qWaitForWindowShown(&view);
+                //QTest::qWaitForWindowShown(&view);
+                QTest::qWait(50);
                 rootobj.setWindowShown(true);
                 if (!rootobj.hasQuit)
                     eventLoop.exec();

@@ -44,7 +44,7 @@
 
 #include <QtQuickTest/quicktestglobal.h>
 #include <QtCore/qobject.h>
-
+#include <QtGui/QWindow>
 QT_BEGIN_NAMESPACE
 
 class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
@@ -70,7 +70,7 @@ public Q_SLOTS:
     bool mouseMove(QObject *item, qreal x, qreal y, int delay);
 
 private:
-    QWidget *eventWidget();
+    QWindow *eventWindow();
 };
 
 QT_END_NAMESPACE
