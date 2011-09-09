@@ -948,8 +948,10 @@ QDeclarativeContext *qmlContext(const QObject *obj)
 
 QDeclarativeEngine *qmlEngine(const QObject *obj)
 {
-    QDeclarativeContext *context = QDeclarativeEngine::contextForObject(obj);
-    return context?context->engine():0;
+    QDeclarativeData *data = QDeclarativeData::get(obj, false);
+    if (!data || !data->context)
+        return 0;
+    return data->context->engine;
 }
 
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
@@ -1680,5 +1682,21 @@ bool QDeclarative_isFileCaseCorrect(const QString &fileName)
 #endif
     return true;
 }
+
+/*!
+    \fn QDeclarativeEngine *qmlEngine(const QObject *object)
+    \relates QDeclarativeEngine
+
+    Returns the QDeclarativeEngine associated with \a object, if any.  This is equivalent to
+    QDeclarativeEngine::contextForObject(object)->engine(), but more efficient.
+*/
+
+/*!
+    \fn QDeclarativeContext *qmlContext(const QObject *object)
+    \relates QDeclarativeEngine
+
+    Returns the QDeclarativeContext associated with \a object, if any.  This is equivalent to
+    QDeclarativeEngine::contextForObject(object).
+*/
 
 QT_END_NAMESPACE
