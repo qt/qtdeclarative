@@ -50,27 +50,43 @@ QT_BEGIN_NAMESPACE
     \qmlclass Turbulence QSGTurbulenceAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The TurbulenceAffector is a bit of a hack and probably shouldn't be used yet.
+    \brief Turbulence provides fluid like forces based on a noise image.
 
+    The Turbulence Element scales the noise source over the area it affects,
+    and uses the curl of that source to generate force vectors.
+
+    Turbulence requires a fixed size. Unlike other affectors, a 0x0 Turbulence element
+    will affect no particles.
+
+    The source should be relatively smooth black and white noise, such as perlin noise.
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Turbulence::strength
-    Maximum magnitude of a point in the vector field.
+    \qmlproperty real QtQuick.Particles2::Turbulence::strength
+
+    The magnitude of the velocity vector at any point varies between zero and
+    the square root of two. It will then be multiplied by strength to get the
+    velocity per second for the particles affected by the turbulence.
 */
 /*!
-    \qmlproperty int QtQuick.Particles2::Turbulence::frequency
-    Times per second vector field is perturbed.
-*/
-/*!
-    \qmlproperty int QtQuick.Particles2::Turbulence::gridSize
-    Square root of the number of points in the vector field simulcrum.
+    \qmlproperty url QtQuick.Particles2::Turbulence::noiseSource
+
+    The source image to generate the turbulence from. It will be scaled to the size of the element,
+    so equal or larger sizes will give better results. Tweaking this image is the only way to tweak
+    behavior such as where vortices are or how many exist.
+
+    The source should be a relatively smooth black and white noise image, such as perlin noise.
+    A default image will be used if none is provided.
 */
 
 QSGTurbulenceAffector::QSGTurbulenceAffector(QSGItem *parent) :
     QSGParticleAffector(parent),
-    m_strength(10), m_lastT(0), m_frequency(64), m_gridSize(10), m_field(0), m_inited(false)
+    m_strength(10), m_lastT(0), m_gridSize(0), m_field(0), m_vectorField(0), m_inited(false)
 {
-    //TODO: Update grid on size change
+}
+
+void QSGTurbulenceAffector::geometryChanged(const QRectF &, const QRectF &)
+{
+    initializeGrid();
 }
 
 QSGTurbulenceAffector::~QSGTurbulenceAffector()
@@ -80,6 +96,11 @@ QSGTurbulenceAffector::~QSGTurbulenceAffector()
             free(m_field[i]);
         free(m_field);
     }
+    if (m_vectorField) {
+        for (int i=0; i<m_gridSize; i++)
+            free(m_vectorField[i]);
+        free(m_vectorField);
+    }
 }
 
 static qreal magnitude(qreal x, qreal y)
@@ -87,8 +108,12 @@ static qreal magnitude(qreal x, qreal y)
     return sqrt(x*x + y*y);
 }
 
-void QSGTurbulenceAffector::setSize(int arg)
+void QSGTurbulenceAffector::initializeGrid()
 {
+    if (!m_inited)
+        return;
+
+    int arg = qMax(width(), height());
     if (m_gridSize != arg) {
         if (m_field){ //deallocate and then reallocate grid
             for (int i=0; i<m_gridSize; i++)
@@ -96,9 +121,47 @@ void QSGTurbulenceAffector::setSize(int arg)
             free(m_field);
             m_system = 0;
         }
+        if (m_vectorField) {
+            for (int i=0; i<m_gridSize; i++)
+                free(m_vectorField[i]);
+            free(m_vectorField);
+        }
         m_gridSize = arg;
-        emit sizeChanged(arg);
     }
+
+    m_field = (qreal**)malloc(m_gridSize * sizeof(qreal*));
+    for (int i=0; i<m_gridSize; i++)
+        m_field[i] = (qreal*)malloc(m_gridSize * sizeof(qreal));
+    m_vectorField = (QPointF**)malloc(m_gridSize * sizeof(QPointF*));
+    for (int i=0; i<m_gridSize; i++)
+        m_vectorField[i] = (QPointF*)malloc(m_gridSize * sizeof(QPointF));
+
+    QImage image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
+    if (image.isNull())
+        image = QImage(":defaultshaders/noise.png").scaled(QSize(m_gridSize, m_gridSize));
+
+    for (int i=0; i<m_gridSize; i++)
+        for (int j=0; j<m_gridSize; j++)
+            m_field[i][j] = qRed(image.pixel(QPoint(i,j)));//Red as proxy for Value
+    for (int i=0; i<m_gridSize; i++){
+        for (int j=0; j<m_gridSize; j++){
+            m_vectorField[i][j].setX(boundsRespectingField(i,j) - boundsRespectingField(i,j-1));
+            m_vectorField[i][j].setY(boundsRespectingField(i-1,j) - boundsRespectingField(i,j));
+        }
+    }
+}
+
+qreal QSGTurbulenceAffector::boundsRespectingField(int x, int y)
+{
+    if (x < 0)
+        x = 0;
+    if (x >= m_gridSize)
+        x = m_gridSize - 1;
+    if (y < 0)
+        y = 0;
+    if (y >= m_gridSize)
+        y = m_gridSize - 1;
+    return m_field[x][y];
 }
 
 void QSGTurbulenceAffector::ensureInit()
@@ -106,71 +169,29 @@ void QSGTurbulenceAffector::ensureInit()
     if (m_inited)
         return;
     m_inited = true;
-    m_field = (QPointF**)malloc(m_gridSize * sizeof(QPointF*));
-    for (int i=0; i<m_gridSize; i++)
-        m_field[i]  = (QPointF*)malloc(m_gridSize * sizeof(QPointF));
-    for (int i=0; i<m_gridSize; i++)
-        for (int j=0; j<m_gridSize; j++)
-            m_field[i][j] = QPointF();
-    m_spacing = QPointF(width()/m_gridSize, height()/m_gridSize);
-    m_magSum = magnitude(m_spacing.x(), m_spacing.y())*2;
+    initializeGrid();
 }
-
-void QSGTurbulenceAffector::mapUpdate()
-{
-    QPoint pos(rand() % m_gridSize, rand() % m_gridSize);
-    QPointF vector(m_strength  - (((qreal)rand() / RAND_MAX) * m_strength*2),
-                   m_strength  - (((qreal)rand() / RAND_MAX) * m_strength*2));
-    for (int i = 0; i < m_gridSize; i++){
-        for (int j = 0; j < m_gridSize; j++){
-            qreal dist = magnitude(i-pos.x(), j-pos.y());
-            m_field[i][j] += vector/(dist + 1);
-            if (magnitude(m_field[i][j].x(), m_field[i][j].y()) > m_strength){
-                //Speed limit
-                qreal theta = atan2(m_field[i][j].y(), m_field[i][j].x());
-                m_field[i][j].setX(m_strength * cos(theta));
-                m_field[i][j].setY(m_strength * sin(theta));
-            }
-        }
-    }
-}
-
 
 void QSGTurbulenceAffector::affectSystem(qreal dt)
 {
     if (!m_system || !m_enabled)
         return;
     ensureInit();
-    qreal period = 1.0/m_frequency;
-    qreal time = m_system->m_timeInt / 1000.0;
-    while ( m_lastT < time ){
-        mapUpdate();
-        m_lastT += period;
-    }
 
+    QRectF boundsRect(0, 0, width()-1, height()-1);
     foreach (QSGParticleGroupData *gd, m_system->m_groupData){
         if (!activeGroup(m_system->m_groupData.key(gd)))//TODO: Surely this can be done better
-            return;
+            continue;
         foreach (QSGParticleData *d, gd->data){
-            if (!d || !activeGroup(d->group))
-                return;
+            if (!d || !activeGroup(d->group) || !d->stillAlive())
+                continue;
+            QPoint pos = (QPointF(d->curX(), d->curY()) - m_offset).toPoint();
+            if (!boundsRect.contains(pos))
+                continue;
             qreal fx = 0.0;
             qreal fy = 0.0;
-            QPointF pos = QPointF(d->curX() - x(), d->curY() - y());//TODO: Offset
-            QPointF nodePos = QPointF(pos.x() / m_spacing.x(), pos.y() / m_spacing.y());
-            QSet<QPair<int, int> > nodes;
-            nodes << qMakePair((int)ceil(nodePos.x()), (int)ceil(nodePos.y()));
-            nodes << qMakePair((int)ceil(nodePos.x()), (int)floor(nodePos.y()));
-            nodes << qMakePair((int)floor(nodePos.x()), (int)ceil(nodePos.y()));
-            nodes << qMakePair((int)floor(nodePos.x()), (int)floor(nodePos.y()));
-            typedef QPair<int, int> intPair;
-            foreach (const intPair &p, nodes){
-                if (!QRect(0,0,m_gridSize-1,m_gridSize-1).contains(QPoint(p.first, p.second)))
-                    continue;
-                qreal dist = magnitude(pos.x() - p.first*m_spacing.x(), pos.y() - p.second*m_spacing.y());//TODO: Mathematically valid
-                fx += m_field[p.first][p.second].x() * ((m_magSum - dist)/m_magSum);//Proportionally weight nodes
-                fy += m_field[p.first][p.second].y() * ((m_magSum - dist)/m_magSum);
-            }
+            fx += m_vectorField[pos.x()][pos.y()].x() * m_strength;
+            fy += m_vectorField[pos.x()][pos.y()].y() * m_strength;
             if (fx || fy){
                 d->setInstantaneousVX(d->curVX()+ fx * dt);
                 d->setInstantaneousVY(d->curVY()+ fy * dt);

@@ -6,5 +6,6 @@
         <file>defaultshaders/spriteimagevertex.shader</file>
         <file>defaultshaders/identitytable.png</file>
         <file>defaultshaders/defaultFadeInOut.png</file>
+        <file>defaultshaders/noise.png</file>
     </qresource>
 </RCC>

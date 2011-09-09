@@ -162,8 +162,7 @@ Flipable {
                     id: turbulence
                     system: imageSystem
                     anchors.fill: parent 
-                    frequency: 100
-                    strength: 250
+                    strength: 240
                     enabled: false
                 }
 

@@ -56,68 +56,61 @@ class QSGParticlePainter;
 class QSGTurbulenceAffector : public QSGParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(int strength READ strength WRITE setStrength NOTIFY strengthChanged)
-    Q_PROPERTY(int frequency READ frequency WRITE setFrequency NOTIFY frequencyChanged)
-    Q_PROPERTY(int gridSize READ size WRITE setSize NOTIFY sizeChanged)
-public:
+    Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
+    Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged)
+    public:
     explicit QSGTurbulenceAffector(QSGItem *parent = 0);
     ~QSGTurbulenceAffector();
     virtual void affectSystem(qreal dt);
 
-    int strength() const
+    qreal strength() const
     {
         return m_strength;
     }
 
-    int frequency() const
+    QUrl noiseSource() const
     {
-        return m_frequency;
+        return m_noiseSource;
     }
-
-    int size() const
-    {
-        return m_gridSize;
-    }
-
 signals:
 
-    void strengthChanged(int arg);
+    void strengthChanged(qreal arg);
 
-    void frequencyChanged(int arg);
-
-    void sizeChanged(int arg);
+    void noiseSourceChanged(QUrl arg);
 
 public slots:
+        void initializeGrid();
 
-void setStrength(int arg)
-{
-    if (m_strength != arg) {
-        m_strength = arg;
-        emit strengthChanged(arg);
+    void setStrength(qreal arg)
+    {
+        if (m_strength != arg) {
+            m_strength = arg;
+            emit strengthChanged(arg);
+        }
     }
-}
 
-void setFrequency(int arg)
-{
-    if (m_frequency != arg) {
-        m_frequency = arg;
-        emit frequencyChanged(arg);
+    void setNoiseSource(QUrl arg)
+    {
+        if (m_noiseSource != arg) {
+            m_noiseSource = arg;
+            emit noiseSourceChanged(arg);
+        }
     }
-}
 
-void setSize(int arg);
-
+protected:
+    virtual void geometryChanged(const QRectF &newGeometry,
+                                 const QRectF &oldGeometry);
 private:
     void ensureInit();
     void mapUpdate();
-    int m_strength;
+    qreal boundsRespectingField(int x, int y);
+    qreal m_strength;
     qreal m_lastT;
-    int m_frequency;
     int m_gridSize;
-    QPointF** m_field;
-    QPointF m_spacing;
-    qreal m_magSum;
+    qreal** m_field;
+    QPointF** m_vectorField;
     bool m_inited;
+    QUrl m_noiseSource;
 };
 
 QT_END_NAMESPACE

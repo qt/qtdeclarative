@@ -56,15 +56,19 @@ Rectangle{
     ParticleSystem{
         id: ps
     }
+    MouseArea{
+        anchors.fill: parent
+        onClicked: turb.enabled = !turb.enabled
+    }
     Turbulence{
+        id: turb
         system: ps
+        enabled: true
         height: (parent.height / 2)
         width: parent.width / 2
         x: parent. width / 4
         anchors.fill: parent
-        strength: 16
-        frequency: 64
-        gridSize: 16
+        strength: 32
     }
     ImageParticle{
         particles: ["smoke"]
@@ -79,7 +83,7 @@ Rectangle{
         source: "content/particle.png"
         color: "#11ff400f"
         colorVariation: 0.1
-        }
+    }
     Emitter{
         anchors.centerIn: parent
         system: ps
@@ -96,12 +100,12 @@ Rectangle{
     TrailEmitter{
         id: smoke1
         width: root.width
-        height: 258
+        height: root.height/2 - 20
         system: ps
         particle: "smoke"
         follow: "flame"
 
-        emitRatePerParticle: 4
+        emitRatePerParticle: 1
         lifeSpan: 2400
         lifeSpanVariation: 400
         size: 16
@@ -113,16 +117,16 @@ Rectangle{
     TrailEmitter{
         id: smoke2
         width: root.width
-        height: 232
+        height: root.height/2 - 40
         system: ps
         particle: "smoke"
         follow: "flame"
         
-        emitRatePerParticle: 1
+        emitRatePerParticle: 4
         lifeSpan: 2400
         size: 36
         endSize: 24
-        sizeVariation: 8
+        sizeVariation: 12
         acceleration: PointDirection{ y: -40 }
         speed: AngleDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
