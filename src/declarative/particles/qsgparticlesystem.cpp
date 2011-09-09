@@ -1009,7 +1009,7 @@ void QSGParticleSystem::updateCurrentTime( int currentTime )
     bool oldClear = m_empty;
     m_empty = true;
     foreach (QSGParticleGroupData* gd, m_groupData)//Recycle all groups and see if they're out of live particles
-        m_empty = m_empty && gd->recycle();
+        m_empty = gd->recycle() && m_empty;
 
     if (m_spriteEngine)
         m_spriteEngine->updateSprites(m_timeInt);
