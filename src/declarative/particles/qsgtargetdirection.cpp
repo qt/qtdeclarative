@@ -94,9 +94,10 @@ QSGTargetDirection::QSGTargetDirection(QObject *parent) :
 {
 }
 
-const QPointF &QSGTargetDirection::sample(const QPointF &from)
+const QPointF QSGTargetDirection::sample(const QPointF &from)
 {
     //###This approach loses interpolating the last position of the target (like we could with the emitter) is it worthwhile?
+    QPointF ret;
     qreal targetX;
     qreal targetY;
     if (m_targetItem){
@@ -108,9 +109,9 @@ const QPointF &QSGTargetDirection::sample(const QPointF &from)
             targetX += m_targetItem->x();
             targetY += m_targetItem->y();
         }else{
-            m_ret = parentEmitter->mapFromItem(m_targetItem, QPointF(targetX, targetY));
-            targetX = m_ret.x();
-            targetY = m_ret.y();
+            ret = parentEmitter->mapFromItem(m_targetItem, QPointF(targetX, targetY));
+            targetX = ret.x();
+            targetY = ret.y();
         }
     }else{
         targetX = m_targetX;
@@ -122,9 +123,9 @@ const QPointF &QSGTargetDirection::sample(const QPointF &from)
     qreal mag = m_magnitude + rand()/(float)RAND_MAX * m_magnitudeVariation * 2 - m_magnitudeVariation;
     if (m_proportionalMagnitude)
         mag *= sqrt(targetX * targetX + targetY * targetY);
-    m_ret.setX(mag * cos(theta));
-    m_ret.setY(mag * sin(theta));
-    return m_ret;
+    ret.setX(mag * cos(theta));
+    ret.setY(mag * sin(theta));
+    return ret;
 }
 
 QT_END_NAMESPACE

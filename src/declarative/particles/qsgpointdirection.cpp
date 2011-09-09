@@ -74,11 +74,12 @@ QSGPointDirection::QSGPointDirection(QObject *parent) :
 {
 }
 
-const QPointF &QSGPointDirection::sample(const QPointF &)
+const QPointF QSGPointDirection::sample(const QPointF &)
 {
-    m_ret.setX(m_x - m_xVariation + rand() / float(RAND_MAX) * m_xVariation * 2);
-    m_ret.setY(m_y - m_yVariation + rand() / float(RAND_MAX) * m_yVariation * 2);
-    return m_ret;
+    QPointF ret;
+    ret.setX(m_x - m_xVariation + rand() / float(RAND_MAX) * m_xVariation * 2);
+    ret.setY(m_y - m_yVariation + rand() / float(RAND_MAX) * m_yVariation * 2);
+    return ret;
 }
 
 QT_END_NAMESPACE

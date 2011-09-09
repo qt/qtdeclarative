@@ -187,7 +187,7 @@ void QSGParticleAffector::affectSystem(qreal dt)
     }
 }
 
-bool QSGParticleAffector::affectParticle(QSGParticleData *d, qreal dt)
+bool QSGParticleAffector::affectParticle(QSGParticleData *, qreal )
 {
     return true;
 }

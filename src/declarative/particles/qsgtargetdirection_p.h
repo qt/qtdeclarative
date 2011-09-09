@@ -66,7 +66,7 @@ class QSGTargetDirection : public QSGDirection
 
 public:
     explicit QSGTargetDirection(QObject *parent = 0);
-    virtual const QPointF &sample(const QPointF &from);
+    virtual const QPointF sample(const QPointF &from);
 
     qreal targetX() const
     {

@@ -55,9 +55,10 @@ QSGDirection::QSGDirection(QObject *parent) :
 {
 }
 
-const QPointF &QSGDirection::sample(const QPointF &from)
+const QPointF QSGDirection::sample(const QPointF &from)
 {
-    return m_ret;
+    Q_UNUSED(from);
+    return QPointF();
 }
 
 QT_END_NAMESPACE

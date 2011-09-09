@@ -57,7 +57,7 @@ class QSGAngleDirection : public QSGDirection
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
 public:
     explicit QSGAngleDirection(QObject *parent = 0);
-    const QPointF &sample(const QPointF &from);
+    const QPointF sample(const QPointF &from);
     qreal angle() const
     {
         return m_angle;

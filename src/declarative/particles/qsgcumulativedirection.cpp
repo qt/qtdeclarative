@@ -59,7 +59,7 @@ QDeclarativeListProperty<QSGDirection> QSGCumulativeDirection::directions()
     return QDeclarativeListProperty<QSGDirection>(this, m_directions);//TODO: Proper list property
 }
 
-const QPointF &QSGCumulativeDirection::sample(const QPointF &from)
+const QPointF QSGCumulativeDirection::sample(const QPointF &from)
 {
     QPointF ret;
     foreach (QSGDirection* dir, m_directions)

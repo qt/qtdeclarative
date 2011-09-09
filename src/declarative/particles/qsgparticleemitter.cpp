@@ -223,13 +223,13 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_particleSize(16)
   , m_particleEndSize(-1)
   , m_particleSizeVariation(0)
-  , m_maxParticleCount(-1)
+  , m_startTime(0)
   , m_burstLeft(0)
+  , m_maxParticleCount(-1)
   , m_speed_from_movement(0)
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
-  , m_startTime(0)
   , m_overwrite(true)
 
 {

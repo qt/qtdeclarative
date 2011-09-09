@@ -406,6 +406,7 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
 
 QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
+    Q_UNUSED(oldNode);
     if (m_pleaseReset){
 
         //delete m_material;//Shader effect item doesn't regen material?

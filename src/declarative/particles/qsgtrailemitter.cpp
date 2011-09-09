@@ -196,7 +196,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 // Note that burst location doesn't get used for follow emitter
                 qreal followT =  pt - d->t;
                 qreal followT2 = followT * followT * 0.5;
-                qreal sizeOffset = d->size/2;//TODO: Current size? As an option
+                //qreal sizeOffset = d->size/2;//TODO: Current size? As an option
                 //TODO: Set variations
                 //Subtract offset, because PS expects this in emitter coordinates
                 QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - m_emitterXVariation/2,
@@ -217,7 +217,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 const QPointF &speed = m_speed->sample(newPos);
                 datum->vx = speed.x()
                     + m_speed_from_movement * d->vx;
-                datum->vy = speed.y();
+                datum->vy = speed.y()
                     + m_speed_from_movement * d->vy;
 
                 // Particle acceleration

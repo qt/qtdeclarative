@@ -58,7 +58,7 @@ class QSGPointDirection : public QSGDirection
     Q_PROPERTY(qreal yVariation READ yVariation WRITE setYVariation NOTIFY yVariationChanged)
 public:
     explicit QSGPointDirection(QObject *parent = 0);
-    virtual const QPointF &sample(const QPointF &from);
+    virtual const QPointF sample(const QPointF &from);
     qreal x() const
     {
         return m_x;

@@ -57,7 +57,7 @@ class QSGCumulativeDirection : public QSGDirection
 public:
     explicit QSGCumulativeDirection(QObject *parent = 0);
     QDeclarativeListProperty<QSGDirection> directions();
-    const QPointF &sample(const QPointF &from);
+    const QPointF sample(const QPointF &from);
 private:
     QList<QSGDirection*> m_directions;
 };

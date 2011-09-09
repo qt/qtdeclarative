@@ -58,13 +58,12 @@ class QSGDirection : public QObject
 public:
     explicit QSGDirection(QObject *parent = 0);
 
-    virtual const QPointF &sample(const QPointF &from);
+    virtual const QPointF sample(const QPointF &from);
 signals:
 
 public slots:
 
 protected:
-    QPointF m_ret;
 };
 
 QT_END_NAMESPACE

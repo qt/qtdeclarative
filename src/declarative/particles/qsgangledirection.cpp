@@ -102,14 +102,15 @@ QSGAngleDirection::QSGAngleDirection(QObject *parent) :
 
 }
 
-const QPointF &QSGAngleDirection::sample(const QPointF &from)
+const QPointF QSGAngleDirection::sample(const QPointF &from)
 {
-    //TODO: Faster
+    Q_UNUSED(from);
+    QPointF ret;
     qreal theta = m_angle*CONV - m_angleVariation*CONV + rand()/float(RAND_MAX) * m_angleVariation*CONV * 2;
     qreal mag = m_magnitude- m_magnitudeVariation + rand()/float(RAND_MAX) * m_magnitudeVariation * 2;
-    m_ret.setX(mag * cos(theta));
-    m_ret.setY(mag * sin(theta));
-    return m_ret;
+    ret.setX(mag * cos(theta));
+    ret.setY(mag * sin(theta));
+    return ret;
 }
 
 QT_END_NAMESPACE
