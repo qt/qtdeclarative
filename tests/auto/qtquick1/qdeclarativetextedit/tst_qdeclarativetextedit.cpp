@@ -58,7 +58,7 @@
 #include <QInputContext>
 #include <QClipboard>
 #include <QMimeData>
-#include <private/qapplication_p.h>
+#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
 
 #ifdef Q_OS_SYMBIAN

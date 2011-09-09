@@ -1182,7 +1182,7 @@ void QDeclarativeViewer::sceneResized(QSize)
 void QDeclarativeViewer::initialSizeChanged(QSize size)
 {
     if (!isFullScreen() && !isMaximized()) {
-        canvas->setFixedSize(size);
+        canvas->setGeometry(0,0,size.width(),size.height());
         layout()->setSizeConstraint(QLayout::SetFixedSize);
         layout()->activate();
     }
@@ -1532,7 +1532,7 @@ void QDeclarativeViewer::updateSizeHints(bool initial)
         QSize newWindowSize = initial ? initialSize : canvas->sizeHint();
         //qWarning() << "USH:" << (initial ? "INIT:" : "V2R:") << "setting fixed size " << newWindowSize;
         if (!isFullScreen() && !isMaximized()) {
-            canvas->setFixedSize(newWindowSize);
+            canvas->setGeometry(0,0,newWindowSize.width(),newWindowSize.height());
             resize(1, 1);
             layout()->setSizeConstraint(QLayout::SetFixedSize);
             layout()->activate();

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include <QtGui/QGraphicsWidget>
-#include <QtGui/QGraphicsScene>
+#include <QtWidgets/QGraphicsWidget>
+#include <QtWidgets/QGraphicsScene>
 
 #include <QSignalSpy>
 #include <QtDeclarative/qdeclarativeengine.h>

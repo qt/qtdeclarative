@@ -49,7 +49,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <qmath.h>
 #include <QtQuick1/QDeclarativeView>
-#include <private/qapplication_p.h>
+#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <limits.h>
 
 #include "../../../shared/util.h"

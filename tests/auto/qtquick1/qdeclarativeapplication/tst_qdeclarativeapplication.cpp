@@ -44,8 +44,8 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtQuick1/qdeclarativeitem.h>
-#include <QtGui/qgraphicsview.h>
-#include <QtGui/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsview.h>
+#include <QtWidgets/QGraphicsScene>
 
 class tst_qdeclarativeapplication : public QObject
 {
