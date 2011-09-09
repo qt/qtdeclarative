@@ -128,14 +128,10 @@ void tst_qsgfocusscope::basic()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -174,14 +170,10 @@ void tst_qsgfocusscope::nested()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
 
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == true);
@@ -207,14 +199,10 @@ void tst_qsgfocusscope::noFocus()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -251,14 +239,10 @@ void tst_qsgfocusscope::textEdit()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -309,14 +293,10 @@ void tst_qsgfocusscope::forceFocus()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -383,17 +363,13 @@ void tst_qsgfocusscope::signalEmission()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVariant blue(QColor("blue"));
     QVariant red(QColor("red"));
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     item1->setFocus(true);
     QCOMPARE(item1->property("color"), red);
     QCOMPARE(item2->property("color"), blue);
@@ -435,14 +411,10 @@ void tst_qsgfocusscope::qtBug13380()
     view->show();
     QVERIFY(view->rootObject());
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->rootObject()->property("noFocus").toBool());
 
     view->rootObject()->setProperty("showRect", true);
@@ -614,12 +586,8 @@ void tst_qsgfocusscope::canvasFocus()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     // Now the canvas has focus, active focus given to item1
     QTRY_COMPARE(view->hasFocus(), true);
