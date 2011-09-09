@@ -140,9 +140,6 @@ private:
 };
 void tst_qsgvisualdatamodel::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("VisualDatamodel item needs OpenGL 2.0", SkipAll);
 }
 
 void tst_qsgvisualdatamodel::cleanupTestCase()

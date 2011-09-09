@@ -151,9 +151,6 @@ private:
 
 void tst_QSGListView::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("QSGListView needs OpenGL 2.0", SkipAll);
 }
 
 void tst_QSGListView::cleanupTestCase()
@@ -1430,7 +1427,7 @@ void tst_QSGListView::currentIndex()
         model.addItem("Item" + QString::number(i), QString::number(i));
 
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
@@ -1504,12 +1501,12 @@ void tst_QSGListView::currentIndex()
 
     // Test keys
     canvas->show();
-    qApp->setActiveWindow(canvas);
+    canvas->requestActivateWindow();
 #ifdef Q_WS_X11
     // to be safe and avoid failing setFocus with window managers
     qt_x11_wait_for_window_manager(canvas);
 #endif
-    QTRY_VERIFY(canvas->hasFocus());
+    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
     qApp->processEvents();
 
     listview->setCurrentIndex(0);
@@ -1571,7 +1568,7 @@ void tst_QSGListView::noCurrentIndex()
         model.addItem("Item" + QString::number(i), QString::number(i));
 
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
@@ -2088,7 +2085,7 @@ void tst_QSGListView::QTBUG_9791()
 void tst_QSGListView::manualHighlight()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     QString filename(SRCDIR "/data/manual-highlight.qml");
     canvas->setSource(QUrl::fromLocalFile(filename));
@@ -2890,7 +2887,7 @@ void tst_QSGListView::onAdd()
         model.addItem("dummy value", "dummy value");
 
     QSGView *canvas = createView();
-    canvas->setFixedSize(200, delegateHeight * (initialItemCount + itemsToAdd));
+    canvas->setGeometry(0,0,200, delegateHeight * (initialItemCount + itemsToAdd));
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
     ctxt->setContextProperty("delegateHeight", delegateHeight);
@@ -2987,7 +2984,7 @@ void tst_QSGListView::onRemove_data()
 void tst_QSGListView::rightToLeft()
 {
     QSGView *canvas = createView();
-    canvas->setFixedSize(640,320);
+    canvas->setGeometry(0,0,640,320);
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/rightToLeft.qml"));
     qApp->processEvents();
 
@@ -3171,7 +3168,7 @@ void tst_QSGListView::qAbstractItemModel_clear()
 QSGView *tst_QSGListView::createView()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     return canvas;
 }

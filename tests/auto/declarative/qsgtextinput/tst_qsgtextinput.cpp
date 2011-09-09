@@ -50,7 +50,7 @@
 #include <QDir>
 #include <QStyle>
 #include <QInputContext>
-#include <private/qapplication_p.h>
+#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <private/qsgdistancefieldglyphcache_p.h>
 #include <QtOpenGL/QGLShaderProgram>
 #include <math.h>
@@ -151,9 +151,6 @@ private:
 };
 void tst_qsgtextinput::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("TextInput item needs OpenGL 2.0", SkipAll);
 }
 
 void tst_qsgtextinput::cleanupTestCase()
@@ -959,9 +956,10 @@ void tst_qsgtextinput::dragMouseSelection()
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextInput *textInputObject = qobject_cast<QSGTextInput *>(canvas.rootObject());
@@ -1017,9 +1015,9 @@ void tst_qsgtextinput::mouseSelectionMode()
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextInput *textInputObject = qobject_cast<QSGTextInput *>(canvas.rootObject());
@@ -1061,9 +1059,9 @@ void tst_qsgtextinput::horizontalAlignment()
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment.qml"));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
     QObject *ob = canvas.rootObject();
     QVERIFY(ob != 0);
     ob->setProperty("horizontalAlignment",hAlign);
@@ -1179,8 +1177,7 @@ void tst_qsgtextinput::positionAt()
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
-    canvas.setFocus();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
 
     QSGTextInput *textinputObject = qobject_cast<QSGTextInput *>(canvas.rootObject());
@@ -1311,8 +1308,7 @@ void tst_qsgtextinput::maxLength()
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/maxLength.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
-    canvas.setFocus();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
 
     QSGTextInput *textinputObject = qobject_cast<QSGTextInput *>(canvas.rootObject());
@@ -1341,7 +1337,7 @@ void tst_qsgtextinput::masks()
     //QString componentStr = "import QtQuick 2.0\nTextInput {  inputMask: 'HHHHhhhh'; }";
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/masks.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
     QVERIFY(canvas.rootObject() != 0);
     QSGTextInput *textinputObject = qobject_cast<QSGTextInput *>(canvas.rootObject());
     QVERIFY(textinputObject != 0);
@@ -1365,7 +1361,7 @@ void tst_qsgtextinput::validators()
 
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/validators.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1453,8 +1449,7 @@ void tst_qsgtextinput::inputMethods()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/inputmethods.qml"));
     canvas.show();
-    canvas.setFocus();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
 
     // test input method hints
@@ -1501,7 +1496,7 @@ void tst_qsgtextinput::navigation()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1540,7 +1535,7 @@ void tst_qsgtextinput::navigation_RTL()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1712,7 +1707,7 @@ void tst_qsgtextinput::cursorDelegate()
 {
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorTest.qml"));
     view.show();
-    view.setFocus();
+    view.requestActivateWindow();
     QSGTextInput *textInputObject = view.rootObject()->findChild<QSGTextInput*>("textInputObject");
     QVERIFY(textInputObject != 0);
     QVERIFY(textInputObject->findChild<QSGItem*>("cursorInstance"));
@@ -1738,10 +1733,9 @@ void tst_qsgtextinput::cursorVisible()
 {
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorVisible.qml"));
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
-    view.setFocus();
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
 
     QSGTextInput input;
     QSignalSpy spy(&input, SIGNAL(cursorVisibleChanged(bool)));
@@ -1772,11 +1766,11 @@ void tst_qsgtextinput::cursorVisible()
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    view.clearFocus();
+    view.setWindowState(Qt::WindowNoState);
     QCOMPARE(input.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
-    view.setFocus();
+    view.requestActivateWindow();
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
 
@@ -1788,8 +1782,8 @@ void tst_qsgtextinput::cursorVisible()
     QCOMPARE(input.isCursorVisible(), false);
     QCOMPARE(spy.count(), 8);
 
-    QApplication::setActiveWindow(&view);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
+    view.requestActivateWindow();
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
     QCOMPARE(input.isCursorVisible(), true);
     QCOMPARE(spy.count(), 9);
 #endif
@@ -1852,7 +1846,7 @@ void tst_qsgtextinput::readOnly()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/readOnly.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1879,10 +1873,9 @@ void tst_qsgtextinput::echoMode()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/echoMode.qml"));
     canvas.show();
-    canvas.setFocus();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
 

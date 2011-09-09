@@ -154,9 +154,10 @@ void tst_qsganimatedimage::mirror_running()
     int width = anim->property("width").toInt();
 
     QCOMPARE(anim->currentFrame(), 0);
-    QPixmap frame0 = canvas->renderPixmap();
+    QPixmap frame0 = QPixmap::fromImage(canvas->grabFrameBuffer());
+
     anim->setCurrentFrame(1);
-    QPixmap frame1 = canvas->renderPixmap();
+    QPixmap frame1 = QPixmap::fromImage(canvas->grabFrameBuffer());
 
     anim->setCurrentFrame(0);
 
@@ -167,11 +168,11 @@ void tst_qsganimatedimage::mirror_running()
     anim->setProperty("mirror", true);
 
     QCOMPARE(anim->currentFrame(), 1);
-    QPixmap frame1_flipped = canvas->renderPixmap();
+    QPixmap frame1_flipped = QPixmap::fromImage(canvas->grabFrameBuffer());
 
     QTRY_VERIFY(spy.count() == 1); spy.clear();
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
-    QPixmap frame0_flipped = canvas->renderPixmap();
+    QPixmap frame0_flipped = QPixmap::fromImage(canvas->grabFrameBuffer());
 
     QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
 
@@ -198,7 +199,7 @@ void tst_qsganimatedimage::mirror_notRunning()
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
-    QPixmap screenshot = canvas->renderPixmap();
+    QPixmap screenshot = QPixmap::fromImage(canvas->grabFrameBuffer());
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -209,7 +210,7 @@ void tst_qsganimatedimage::mirror_notRunning()
     bool paused = anim->isPlaying();
 
     anim->setProperty("mirror", true);
-    screenshot = canvas->renderPixmap();
+    screenshot = QPixmap::fromImage(canvas->grabFrameBuffer());
 
     QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
     QCOMPARE(screenshot, expected);

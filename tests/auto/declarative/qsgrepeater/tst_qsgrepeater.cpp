@@ -642,7 +642,7 @@ void tst_QSGRepeater::properties()
 QSGView *tst_QSGRepeater::createView()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     return canvas;
 }

@@ -1,7 +1,7 @@
 TEMPLATE=subdirs
 SUBDIRS=\
-    declarative \
-    qtquick1 \
+    declarative
+
 
 contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
 

@@ -231,8 +231,6 @@ void tst_qsgcanvas::touchEvent_basic()
     QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas);
     QTest::qWait(50);
 
-
-
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
 
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
