@@ -3181,6 +3181,18 @@ void QSGItemPrivate::setState(const QString &state)
     _states()->setState(state);
 }
 
+QString QSGItem::state() const
+{
+    Q_D(const QSGItem);
+    return d->state();
+}
+
+void QSGItem::setState(const QString &state)
+{
+    Q_D(QSGItem);
+    d->setState(state);
+}
+
 QDeclarativeListProperty<QSGTransform> QSGItem::transform()
 {
     Q_D(QSGItem);
