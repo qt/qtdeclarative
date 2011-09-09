@@ -111,6 +111,7 @@ Lexer::Lexer(Engine *engine)
     , _restrictedKeyword(false)
     , _terminator(false)
     , _delimited(false)
+    , _qmlMode(true)
 {
     if (engine)
         engine->setLexer(this);
@@ -121,11 +122,12 @@ QString Lexer::code() const
     return _code;
 }
 
-void Lexer::setCode(const QString &code, int lineno)
+void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
 {
     if (_engine)
         _engine->setCode(code);
 
+    _qmlMode = qmlMode;
     _code = code;
     _tokenText.clear();
     _tokenText.reserve(1024);
@@ -708,7 +710,7 @@ again:
                     int kind = T_IDENTIFIER;
 
                     if (! identifierWithEscapeChars)
-                        kind = classify(_tokenStartPtr, _tokenLength);
+                        kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
 
                     if (_engine) {
                         if (kind == T_IDENTIFIER && identifierWithEscapeChars)

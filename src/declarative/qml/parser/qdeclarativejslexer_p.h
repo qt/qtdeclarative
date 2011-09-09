@@ -118,7 +118,7 @@ public:
     Lexer(Engine *engine);
 
     QString code() const;
-    void setCode(const QString &code, int lineno);
+    void setCode(const QString &code, int lineno, bool qmlMode = true);
 
     int lex();
 
@@ -155,7 +155,7 @@ private:
     inline void scanChar();
     int scanToken();
 
-    int classify(const QChar *s, int n);
+    int classify(const QChar *s, int n, bool qmlMode);
 
     bool isLineTerminator() const;
     static bool isIdentLetter(QChar c);
@@ -201,6 +201,7 @@ private:
     bool _restrictedKeyword;
     bool _terminator;
     bool _delimited;
+    bool _qmlMode;
 };
 
 } // end of namespace QDeclarativeJS

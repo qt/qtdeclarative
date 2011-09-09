@@ -53,10 +53,10 @@
 // We mean it.
 //
 
-static inline int classify2(const QChar *s) {
+static inline int classify2(const QChar *s, bool qmlMode) {
   if (s[0].unicode() == 'a') {
     if (s[1].unicode() == 's') {
-      return Lexer::T_AS;
+      return qmlMode ? Lexer::T_AS : Lexer::T_RESERVED_WORD;
     }
   }
   else if (s[0].unicode() == 'd') {
@@ -72,7 +72,7 @@ static inline int classify2(const QChar *s) {
       return Lexer::T_IN;
     }
   }
-  else if (s[0].unicode() == 'o') {
+  else if (qmlMode && s[0].unicode() == 'o') {
     if (s[1].unicode() == 'n') {
       return Lexer::T_ON;
     }
@@ -80,7 +80,7 @@ static inline int classify2(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify3(const QChar *s) {
+static inline int classify3(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'f') {
     if (s[1].unicode() == 'o') {
       if (s[2].unicode() == 'r') {
@@ -119,7 +119,7 @@ static inline int classify3(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify4(const QChar *s) {
+static inline int classify4(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'b') {
     if (s[1].unicode() == 'y') {
       if (s[2].unicode() == 't') {
@@ -225,7 +225,7 @@ static inline int classify4(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify5(const QChar *s) {
+static inline int classify5(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'b') {
     if (s[1].unicode() == 'r') {
       if (s[2].unicode() == 'e') {
@@ -340,7 +340,7 @@ static inline int classify5(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify6(const QChar *s) {
+static inline int classify6(const QChar *s, bool qmlMode) {
   if (s[0].unicode() == 'd') {
     if (s[1].unicode() == 'e') {
       if (s[2].unicode() == 'l') {
@@ -384,7 +384,7 @@ static inline int classify6(const QChar *s) {
         if (s[3].unicode() == 'o') {
           if (s[4].unicode() == 'r') {
             if (s[5].unicode() == 't') {
-              return Lexer::T_IMPORT;
+              return qmlMode ? Lexer::T_IMPORT : Lexer::T_RESERVED_WORD;
             }
           }
         }
@@ -410,7 +410,7 @@ static inline int classify6(const QChar *s) {
         if (s[3].unicode() == 'l') {
           if (s[4].unicode() == 'i') {
             if (s[5].unicode() == 'c') {
-              return Lexer::T_PUBLIC;
+              return qmlMode ? Lexer::T_PUBLIC : Lexer::T_RESERVED_WORD;
             }
           }
         }
@@ -431,7 +431,7 @@ static inline int classify6(const QChar *s) {
     }
   }
   else if (s[0].unicode() == 's') {
-    if (s[1].unicode() == 'i') {
+    if (qmlMode && s[1].unicode() == 'i') {
       if (s[2].unicode() == 'g') {
         if (s[3].unicode() == 'n') {
           if (s[4].unicode() == 'a') {
@@ -492,7 +492,7 @@ static inline int classify6(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify7(const QChar *s) {
+static inline int classify7(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'b') {
     if (s[1].unicode() == 'o') {
       if (s[2].unicode() == 'o') {
@@ -584,7 +584,7 @@ static inline int classify7(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify8(const QChar *s) {
+static inline int classify8(const QChar *s, bool qmlMode) {
   if (s[0].unicode() == 'a') {
     if (s[1].unicode() == 'b') {
       if (s[2].unicode() == 's') {
@@ -653,7 +653,7 @@ static inline int classify8(const QChar *s) {
       }
     }
   }
-  else if (s[0].unicode() == 'p') {
+  else if (qmlMode && s[0].unicode() == 'p') {
     if (s[1].unicode() == 'r') {
       if (s[2].unicode() == 'o') {
         if (s[3].unicode() == 'p') {
@@ -670,7 +670,7 @@ static inline int classify8(const QChar *s) {
       }
     }
   }
-  else if (s[0].unicode() == 'r') {
+  else if (qmlMode && s[0].unicode() == 'r') {
     if (s[1].unicode() == 'e') {
       if (s[2].unicode() == 'a') {
         if (s[3].unicode() == 'd') {
@@ -707,7 +707,7 @@ static inline int classify8(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify9(const QChar *s) {
+static inline int classify9(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'i') {
     if (s[1].unicode() == 'n') {
       if (s[2].unicode() == 't') {
@@ -768,7 +768,7 @@ static inline int classify9(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify10(const QChar *s) {
+static inline int classify10(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 'i') {
     if (s[1].unicode() == 'm') {
       if (s[2].unicode() == 'p') {
@@ -812,7 +812,7 @@ static inline int classify10(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-static inline int classify12(const QChar *s) {
+static inline int classify12(const QChar *s, bool /*qmlMode*/) {
   if (s[0].unicode() == 's') {
     if (s[1].unicode() == 'y') {
       if (s[2].unicode() == 'n') {
@@ -841,18 +841,18 @@ static inline int classify12(const QChar *s) {
   return Lexer::T_IDENTIFIER;
 }
 
-int Lexer::classify(const QChar *s, int n) {
+int Lexer::classify(const QChar *s, int n, bool qmlMode) {
   switch (n) {
-    case 2: return classify2(s);
-    case 3: return classify3(s);
-    case 4: return classify4(s);
-    case 5: return classify5(s);
-    case 6: return classify6(s);
-    case 7: return classify7(s);
-    case 8: return classify8(s);
-    case 9: return classify9(s);
-    case 10: return classify10(s);
-    case 12: return classify12(s);
+    case 2: return classify2(s, qmlMode);
+    case 3: return classify3(s, qmlMode);
+    case 4: return classify4(s, qmlMode);
+    case 5: return classify5(s, qmlMode);
+    case 6: return classify6(s, qmlMode);
+    case 7: return classify7(s, qmlMode);
+    case 8: return classify8(s, qmlMode);
+    case 9: return classify9(s, qmlMode);
+    case 10: return classify10(s, qmlMode);
+    case 12: return classify12(s, qmlMode);
     default: return Lexer::T_IDENTIFIER;
   } // switch
 }
