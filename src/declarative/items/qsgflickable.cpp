@@ -174,6 +174,7 @@ QSGFlickablePrivate::QSGFlickablePrivate()
     , hMoved(false), vMoved(false)
     , movingHorizontally(false), movingVertically(false)
     , stealMouse(false), pressed(false), interactive(true), calcVelocity(false)
+    , pixelAligned(false)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
     , delayedPressEvent(0), delayedPressTarget(0), pressDelay(0), fixupDuration(400)
@@ -777,6 +778,21 @@ void QSGFlickable::setFlickableDirection(FlickableDirection direction)
     }
 }
 
+bool QSGFlickable::pixelAligned() const
+{
+    Q_D(const QSGFlickable);
+    return d->pixelAligned;
+}
+
+void QSGFlickable::setPixelAligned(bool align)
+{
+    Q_D(QSGFlickable);
+    if (align != d->pixelAligned) {
+        d->pixelAligned = align;
+        emit pixelAlignedChanged();
+    }
+}
+
 void QSGFlickablePrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_Q(QSGFlickable);
@@ -1097,14 +1113,15 @@ void QSGFlickablePrivate::clearDelayedPress()
     }
 }
 
+//XXX pixelAligned ignores the global position of the Flickable, i.e. assumes Flickable itself is pixel aligned.
 void QSGFlickablePrivate::setViewportX(qreal x)
 {
-    contentItem->setX(x);
+    contentItem->setX(pixelAligned ? qRound(x) : x);
 }
 
 void QSGFlickablePrivate::setViewportY(qreal y)
 {
-    contentItem->setY(y);
+    contentItem->setY(pixelAligned ? qRound(y) : y);
 }
 
 void QSGFlickable::timerEvent(QTimerEvent *event)
