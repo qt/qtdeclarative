@@ -174,7 +174,7 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
             setGeometry(g);
             setFlag(OwnsGeometry);
         }
-        static_cast<QSGVertexColorMaterial *>(material())->setColorsAreOpaque(m_gradient_is_opaque);
+        static_cast<QSGVertexColorMaterial *>(material())->setFlag(QSGMaterial::Blending, !m_gradient_is_opaque);
     }
 
     m_dirty_geometry = true;

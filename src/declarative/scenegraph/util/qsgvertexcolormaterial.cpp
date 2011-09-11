@@ -134,19 +134,19 @@ QSGVertexColorMaterial::QSGVertexColorMaterial()
 }
 
 
-
 /*!
-    Sets if the renderer should treat colors as opaque.
+    int QSGVertexColorMaterial::compare() const
 
-    Setting this flag can in some cases improve performance.
+    As the vertex color material has all its state in the vertex attributes,
+    all materials will be equal.
+
+    \internal
  */
 
-void QSGVertexColorMaterial::setColorsAreOpaque(bool opaqueHint)
+int QSGVertexColorMaterial::compare(const QSGMaterial *other) const
 {
-    setFlag(Blending, !opaqueHint);
+    return 0;
 }
-
-
 
 /*!
     \internal
