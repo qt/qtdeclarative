@@ -43,6 +43,7 @@
 
 #include "qsgpainteditem.h"
 #include <private/qsgcontext_p.h>
+#include <private/qopenglextensions_p.h>
 #include <qopenglframebufferobject.h>
 #include <qopenglfunctions.h>
 #include <qopenglpaintdevice.h>
@@ -148,8 +149,10 @@ void QSGPainterNode::paint()
     if (m_actualRenderTarget == QSGPaintedItem::Image)
         painter.begin(&m_image);
     else {
-        if (!m_gl_device)
+        if (!m_gl_device) {
             m_gl_device = new QOpenGLPaintDevice(m_fboSize);
+            m_gl_device->setPaintFlipped(true);
+        }
 
         if (m_multisampledFbo)
             m_multisampledFbo->bind();
@@ -230,7 +233,7 @@ void QSGPainterNode::updateGeometry()
     if (m_actualRenderTarget == QSGPaintedItem::Image)
         source = QRectF(0, 0, 1, 1);
     else
-        source = QRectF(0, 1, qreal(m_size.width()) / m_fboSize.width(), qreal(-m_size.height()) / m_fboSize.height());
+        source = QRectF(0, 0, qreal(m_size.width()) / m_fboSize.width(), qreal(m_size.height()) / m_fboSize.height());
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
                                             QRectF(0, 0, m_size.width(), m_size.height()),
                                             source);
@@ -280,7 +283,7 @@ void QSGPainterNode::updateRenderTarget()
             {
                 QOpenGLFramebufferObjectFormat format;
                 format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-                format.setSamples(ctx->format().samples());
+                format.setSamples(8);
                 m_multisampledFbo = new QOpenGLFramebufferObject(m_fboSize, format);
             }
             {
