@@ -55,10 +55,10 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
-#include "qsgevent.h"
 #include <private/qdeclarativeguard_p.h>
 
 #include <private/qsgcontext_p.h>
+#include <private/qsgdrag_p.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
@@ -102,6 +102,7 @@ public:
 
     QSGItem *activeFocusItem;
     QSGItem *mouseGrabberItem;
+    QSGDragGrabber dragGrabber;
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
@@ -118,8 +119,8 @@ public:
     bool sendHoverEvent(QEvent::Type, QSGItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, bool accepted);
     bool clearHover();
-    void deliverDragEvent(QSGDragEvent *);
-    bool deliverDragEvent(QSGItem *item, QSGDragEvent *);
+    void deliverDragEvent(QSGDragGrabber *, QEvent *);
+    bool deliverDragEvent(QSGDragGrabber *, QSGItem *, QDragMoveEvent *);
 
     QList<QSGItem*> hoverItems;
     enum FocusOption {
@@ -299,7 +300,6 @@ public:
 
     void run();
 };
-
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGCanvasPrivate::FocusOptions)
 

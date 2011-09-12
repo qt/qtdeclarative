@@ -44,7 +44,6 @@
 #include "qsgcanvas.h"
 #include <QtDeclarative/qjsengine.h>
 #include "qsgcanvas_p.h"
-#include "qsgevent.h"
 
 #include "qsgevents_p_p.h"
 
@@ -2882,24 +2881,26 @@ void QSGItem::hoverLeaveEvent(QHoverEvent *event)
     Q_UNUSED(event);
 }
 
-void QSGItem::dragMoveEvent(QSGDragEvent *event)
+void QSGItem::dragEnterEvent(QDragEnterEvent *event)
 {
-    event->setAccepted(false);
+    Q_UNUSED(event);
 }
 
-void QSGItem::dragEnterEvent(QSGDragEvent *event)
+void QSGItem::dragMoveEvent(QDragMoveEvent *event)
 {
-    event->setAccepted(false);
+
+    Q_UNUSED(event);
 }
 
-void QSGItem::dragExitEvent(QSGDragEvent *event)
+void QSGItem::dragLeaveEvent(QDragLeaveEvent *event)
 {
-    event->setAccepted(false);
+
+    Q_UNUSED(event);
 }
 
-void QSGItem::dragDropEvent(QSGDragEvent *event)
+void QSGItem::dropEvent(QDropEvent *event)
 {
-    event->setAccepted(false);
+    Q_UNUSED(event);
 }
 
 bool QSGItem::childMouseEventFilter(QSGItem *, QEvent *)
@@ -3424,23 +3425,23 @@ void QSGItemPrivate::deliverHoverEvent(QHoverEvent *e)
     }
 }
 
-void QSGItemPrivate::deliverDragEvent(QSGDragEvent *e)
+void QSGItemPrivate::deliverDragEvent(QEvent *e)
 {
     Q_Q(QSGItem);
     switch (e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
-    case QSGEvent::SGDragEnter:
-        q->dragEnterEvent(e);
+    case QEvent::DragEnter:
+        q->dragEnterEvent(static_cast<QDragEnterEvent *>(e));
         break;
-    case QSGEvent::SGDragExit:
-        q->dragExitEvent(e);
+    case QEvent::DragLeave:
+        q->dragLeaveEvent(static_cast<QDragLeaveEvent *>(e));
         break;
-    case QSGEvent::SGDragMove:
-        q->dragMoveEvent(e);
+    case QEvent::DragMove:
+        q->dragMoveEvent(static_cast<QDragMoveEvent *>(e));
         break;
-    case QSGEvent::SGDragDrop:
-        q->dragDropEvent(e);
+    case QEvent::Drop:
+        q->dropEvent(static_cast<QDropEvent *>(e));
         break;
     }
 }

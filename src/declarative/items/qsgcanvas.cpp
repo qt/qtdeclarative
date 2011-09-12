@@ -45,8 +45,6 @@
 #include "qsgitem.h"
 #include "qsgitem_p.h"
 
-#include "qsgevent.h"
-
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
@@ -897,11 +895,11 @@ bool QSGCanvas::event(QEvent *e)
         d->clearHover();
         d->lastMousePosition = QPoint();
         break;
-    case QSGEvent::SGDragEnter:
-    case QSGEvent::SGDragExit:
-    case QSGEvent::SGDragMove:
-    case QSGEvent::SGDragDrop:
-        d->deliverDragEvent(static_cast<QSGDragEvent *>(e));
+    case QEvent::DragEnter:
+    case QEvent::DragLeave:
+    case QEvent::DragMove:
+    case QEvent::Drop:
+        d->deliverDragEvent(&d->dragGrabber, e);
         break;
     case QEvent::WindowDeactivate:
         rootItem()->windowDeactivateEvent();
@@ -1362,76 +1360,124 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
     return false;
 }
 
-void QSGCanvasPrivate::deliverDragEvent(QSGDragEvent *event)
+void QSGCanvasPrivate::deliverDragEvent(QSGDragGrabber *grabber, QEvent *event)
 {
     Q_Q(QSGCanvas);
-    if (event->type() == QSGEvent::SGDragExit || event->type() == QSGEvent::SGDragDrop) {
-        if (QSGItem *grabItem = event->grabItem()) {
-            event->setPosition(grabItem->mapFromScene(event->scenePosition()));
-            q->sendEvent(grabItem, event);
+    grabber->resetTarget();
+    QSGDragGrabber::iterator grabItem = grabber->begin();
+    if (grabItem != grabber->end()) {
+        Q_ASSERT(event->type() != QEvent::DragEnter);
+        if (event->type() == QEvent::Drop) {
+            QDropEvent *e = static_cast<QDropEvent *>(event);
+            for (e->setAccepted(false); !e->isAccepted() && grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+                QPointF p = (**grabItem)->mapFromScene(e->pos());
+                QDropEvent translatedEvent(
+                        p.toPoint(),
+                        e->possibleActions(),
+                        e->mimeData(),
+                        e->mouseButtons(),
+                        e->keyboardModifiers());
+                QSGDropEventEx::copyActions(&translatedEvent, *e);
+                q->sendEvent(**grabItem, &translatedEvent);
+                e->setAccepted(translatedEvent.isAccepted());
+                e->setDropAction(translatedEvent.dropAction());
+                grabber->setTarget(**grabItem);
+            }
         }
-    } else if (!deliverDragEvent(rootItem, event)) {
-        if (QSGItem *grabItem = event->grabItem()) {
-            QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
-            exitEvent.setPosition(grabItem->mapFromScene(event->scenePosition()));
-            q->sendEvent(grabItem, &exitEvent);
-            event->setDropItem(0);
-            event->setGrabItem(0);
+        if (event->type() != QEvent::DragMove) {    // Either an accepted drop or a leave.
+            QDragLeaveEvent leaveEvent;
+            for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
+                q->sendEvent(**grabItem, &leaveEvent);
+            return;
+        } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+            QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
+            if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
+                moveEvent->setAccepted(true);
+                for (++grabItem; grabItem != grabber->end();) {
+                    QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
+                    if (QRectF(0, 0, (**grabItem)->width(), (**grabItem)->height()).contains(p)) {
+                        QDragMoveEvent translatedEvent(
+                                p.toPoint(),
+                                moveEvent->possibleActions(),
+                                moveEvent->mimeData(),
+                                moveEvent->mouseButtons(),
+                                moveEvent->keyboardModifiers());
+                        QSGDropEventEx::copyActions(&translatedEvent, *moveEvent);
+                        q->sendEvent(**grabItem, &translatedEvent);
+                        ++grabItem;
+                    } else {
+                        QDragLeaveEvent leaveEvent;
+                        q->sendEvent(**grabItem, &leaveEvent);
+                        grabItem = grabber->release(grabItem);
+                    }
+                }
+                return;
+            } else {
+                QDragLeaveEvent leaveEvent;
+                q->sendEvent(**grabItem, &leaveEvent);
+            }
         }
-        event->setAccepted(false);
+    }
+    if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
+        QDragMoveEvent *e = static_cast<QDragMoveEvent *>(event);
+        QDragEnterEvent enterEvent(
+                e->pos(),
+                e->possibleActions(),
+                e->mimeData(),
+                e->mouseButtons(),
+                e->keyboardModifiers());
+        QSGDropEventEx::copyActions(&enterEvent, *e);
+        event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent));
     }
 }
 
-bool QSGCanvasPrivate::deliverDragEvent(QSGItem *item, QSGDragEvent *event)
+bool QSGCanvasPrivate::deliverDragEvent(QSGDragGrabber *grabber, QSGItem *item, QDragMoveEvent *event)
 {
     Q_Q(QSGCanvas);
+    bool accepted = false;
     QSGItemPrivate *itemPrivate = QSGItemPrivate::get(item);
-    if (itemPrivate->opacity == 0.0)
+    if (itemPrivate->opacity == 0.0 || !item->isVisible() || !item->isEnabled())
         return false;
 
-    if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePosition());
-        if (!QRectF(0, 0, item->width(), item->height()).contains(p))
-            return false;
-    }
-
-    QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QSGItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled())
-            continue;
-        if (deliverDragEvent(child, event))
-            return true;
-    }
-
-    QPointF p = item->mapFromScene(event->scenePosition());
+    QPointF p = item->mapFromScene(event->pos());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-        event->setPosition(p);
-
-        if (event->type() == QSGEvent::SGDragMove && item != event->grabItem()) {
-            QSGDragEvent enterEvent(QSGEvent::SGDragEnter, *event);
-            q->sendEvent(item, &enterEvent);
-            if (enterEvent.isAccepted()) {
-                if (QSGItem *grabItem = event->grabItem()) {
-                    QSGDragEvent exitEvent(QSGEvent::SGDragExit, *event);
-                    q->sendEvent(grabItem, &exitEvent);
+        if (event->type() == QEvent::DragMove || itemPrivate->flags & QSGItem::ItemAcceptsDrops) {
+            QDragMoveEvent translatedEvent(
+                    p.toPoint(),
+                    event->possibleActions(),
+                    event->mimeData(),
+                    event->mouseButtons(),
+                    event->keyboardModifiers(),
+                    event->type());
+            QSGDropEventEx::copyActions(&translatedEvent, *event);
+            q->sendEvent(item, &translatedEvent);
+            if (event->type() == QEvent::DragEnter) {
+                if (translatedEvent.isAccepted()) {
+                    grabber->grab(item);
+                    accepted = true;
                 }
-                event->setDropItem(enterEvent.dropItem());
-                event->setGrabItem(item);
             } else {
-                return false;
+                accepted = true;
             }
         }
-
-        q->sendEvent(item, event);
-        if (event->isAccepted()) {
-            event->setGrabItem(item);
-            return true;
-        }
-        event->setAccepted(true);
+    } else if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
+        return false;
     }
 
-    return false;
+    QDragEnterEvent enterEvent(
+            event->pos(),
+            event->possibleActions(),
+            event->mimeData(),
+            event->mouseButtons(),
+            event->keyboardModifiers());
+    QSGDropEventEx::copyActions(&enterEvent, *event);
+    QList<QSGItem *> children = itemPrivate->paintOrderChildItems();
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
+            return true;
+    }
+
+    return accepted;
 }
 
 bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QMouseEvent *event)
@@ -1509,11 +1555,11 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::TouchEnd:
         QSGItemPrivate::get(item)->deliverTouchEvent(static_cast<QTouchEvent *>(e));
         break;
-    case QSGEvent::SGDragEnter:
-    case QSGEvent::SGDragExit:
-    case QSGEvent::SGDragMove:
-    case QSGEvent::SGDragDrop:
-        QSGItemPrivate::get(item)->deliverDragEvent(static_cast<QSGDragEvent *>(e));
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+    case QEvent::Drop:
+        QSGItemPrivate::get(item)->deliverDragEvent(e);
         break;
     default:
         break;

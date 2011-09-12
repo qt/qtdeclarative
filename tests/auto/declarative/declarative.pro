@@ -64,6 +64,8 @@ SGTESTS =  \
     qsganimatedimage \
     qsgborderimage \
     qsgcanvas \
+    qsgdrag \
+    qsgdroparea \
     qsgflickable \
     qsgflipable \
     qsgfocusscope \

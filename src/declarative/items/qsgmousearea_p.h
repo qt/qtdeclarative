@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QSGDragAttached;
 class QSGMouseEvent;
 class Q_AUTOTEST_EXPORT QSGDrag : public QObject
 {
@@ -60,8 +61,6 @@ class Q_AUTOTEST_EXPORT QSGDrag : public QObject
 
     Q_ENUMS(Axis)
     Q_PROPERTY(QSGItem *target READ target WRITE setTarget NOTIFY targetChanged RESET resetTarget)
-    Q_PROPERTY(QSGItem *dropItem READ dropItem NOTIFY dropItemChanged)
-    Q_PROPERTY(QVariant data READ data WRITE setData NOTIFY dataChanged RESET resetData)
     Q_PROPERTY(Axis axis READ axis WRITE setAxis NOTIFY axisChanged)
     Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
     Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
@@ -69,7 +68,6 @@ class Q_AUTOTEST_EXPORT QSGDrag : public QObject
     Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(bool filterChildren READ filterChildren WRITE setFilterChildren NOTIFY filterChildrenChanged)
-    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
     //### consider drag and drop
 
 public:
@@ -77,18 +75,8 @@ public:
     ~QSGDrag();
 
     QSGItem *target() const;
-    void setTarget(QSGItem *);
+    void setTarget(QSGItem *target);
     void resetTarget();
-
-    QSGItem *dropItem() const;
-    void setDropItem(QSGItem *item);
-
-    QSGItem *grabItem() const;
-    void setGrabItem(QSGItem *grabItem);
-
-    QVariant data() const;
-    void setData(const QVariant &data);
-    void resetData();
 
     enum Axis { XAxis=0x01, YAxis=0x02, XandYAxis=0x03 };
     Axis axis() const;
@@ -109,17 +97,10 @@ public:
     bool filterChildren() const;
     void setFilterChildren(bool);
 
-    QStringList keys() const;
-    void setKeys(const QStringList &keys);
-
-    void emitDragged(QSGMouseEvent *event) { emit dragged(event); }
-    void emitDropped(QSGItem *dropItem) { emit dropped(dropItem); }
-    void emitCanceled() { emit canceled(); }
+    static QSGDragAttached *qmlAttachedProperties(QObject *obj);
 
 Q_SIGNALS:
     void targetChanged();
-    void dropItemChanged();
-    void dataChanged();
     void axisChanged();
     void minimumXChanged();
     void maximumXChanged();
@@ -127,17 +108,9 @@ Q_SIGNALS:
     void maximumYChanged();
     void activeChanged();
     void filterChildrenChanged();
-    void keysChanged();
-    void dragged(QSGMouseEvent *mouse);
-    void dropped(QSGItem *dropItem);
-    void canceled();
 
 private:
-    QStringList _keys;
-    QVariant _data;
     QSGItem *_target;
-    QSGItem *_dropItem;
-    QSGItem *_grabItem;
     Axis _axis;
     qreal _xmin;
     qreal _xmax;
@@ -245,6 +218,7 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QSGDrag)
+QML_DECLARE_TYPEINFO(QSGDrag, QML_HAS_ATTACHED_PROPERTIES)
 QML_DECLARE_TYPE(QSGMouseArea)
 
 QT_END_HEADER

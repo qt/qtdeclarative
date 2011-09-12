@@ -39,11 +39,15 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDRAGTARGET_P_H
-#define QSGDRAGTARGET_P_H
+#ifndef QSGDROPAREA_P_H
+#define QSGDROPAREA_P_H
 
 #include "qsgitem.h"
-#include "qsgevent.h"
+
+#include <private/qdeclarativeguard_p.h>
+#include <private/qv8engine_p.h>
+
+#include <QtGui/qevent.h>
 
 QT_BEGIN_HEADER
 
@@ -51,44 +55,78 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGDragTargetEvent : public QObject
+class QSGDropAreaPrivate;
+class QSGDropEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x)
     Q_PROPERTY(qreal y READ y)
-    Q_PROPERTY(QVariant data READ data)
+    Q_PROPERTY(QObject *source READ source)
     Q_PROPERTY(QStringList keys READ keys)
+    Q_PROPERTY(Qt::DropActions supportedActions READ supportedActions)
+    Q_PROPERTY(Qt::DropAction action READ action WRITE setAction RESET resetAction)
     Q_PROPERTY(bool accepted READ accepted WRITE setAccepted)
 public:
-    QSGDragTargetEvent(QSGDragEvent *event) : _event(event) {}
+    QSGDropEvent(QSGDropAreaPrivate *d, QDropEvent *event) : d(d), event(event) {}
 
-    qreal x() const { return _event->x(); }
-    qreal y() const { return _event->y(); }
+    qreal x() const { return event->pos().x(); }
+    qreal y() const { return event->pos().y(); }
 
-    QVariant data() const { return _event->data(); }
-    QStringList keys() const { return _event->keys(); }
+    QObject *source();
 
-    bool accepted() const { return _event->isAccepted(); }
-    void setAccepted(bool accepted) { _event->setAccepted(accepted); }
+    Qt::DropActions supportedActions() const { return event->possibleActions(); }
+    Qt::DropAction action() const { return event->dropAction(); }
+    void setAction(Qt::DropAction action) { event->setDropAction(action); }
+    void resetAction() { event->setDropAction(event->proposedAction()); }
+
+    QStringList keys() const;
+
+    bool accepted() const { return event->isAccepted(); }
+    void setAccepted(bool accepted) { event->setAccepted(accepted); }
+
+    Q_INVOKABLE void accept(QDeclarativeV8Function *);
 
 private:
-    QSGDragEvent *_event;
+    QSGDropAreaPrivate *d;
+    QDropEvent *event;
 };
 
-class QSGDragTargetPrivate;
-class Q_AUTOTEST_EXPORT QSGDragTarget : public QSGItem
+class QSGDropAreaDrag : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal x READ x NOTIFY positionChanged)
+    Q_PROPERTY(qreal y READ y NOTIFY positionChanged)
+    Q_PROPERTY(QObject *source READ source NOTIFY sourceChanged)
+public:
+    QSGDropAreaDrag(QSGDropAreaPrivate *d, QObject *parent = 0);
+    ~QSGDropAreaDrag();
+
+    qreal x() const;
+    qreal y() const;
+    QObject *source() const;
+
+Q_SIGNALS:
+    void positionChanged();
+    void sourceChanged();
+
+private:
+    QSGDropAreaPrivate *d;
+
+    friend class QSGDropArea;
+    friend class QSGDropAreaPrivate;
+};
+
+class QSGDropAreaPrivate;
+class Q_AUTOTEST_EXPORT QSGDropArea : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged)
-    Q_PROPERTY(QSGItem *dropItem READ dropItem WRITE setDropItem NOTIFY dropItemChanged RESET resetDropItem)
     Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
-    Q_PROPERTY(qreal dragX READ dragX NOTIFY dragPositionChanged)
-    Q_PROPERTY(qreal dragY READ dragY NOTIFY dragPositionChanged)
-    Q_PROPERTY(QVariant dragData READ dragData NOTIFY dragDataChanged)
+    Q_PROPERTY(QSGDropAreaDrag *drag READ drag CONSTANT)
 
 public:
-    QSGDragTarget(QSGItem *parent=0);
-    ~QSGDragTarget();
+    QSGDropArea(QSGItem *parent=0);
+    ~QSGDropArea();
 
     bool containsDrag() const;
     void setContainsDrag(bool drag);
@@ -96,41 +134,33 @@ public:
     QStringList keys() const;
     void setKeys(const QStringList &keys);
 
-    QSGItem *dropItem() const;
-    void setDropItem(QSGItem *item);
-    void resetDropItem();
-
-    qreal dragX() const;
-    qreal dragY() const;
-    QVariant dragData() const;
+    QSGDropAreaDrag *drag();
 
 Q_SIGNALS:
     void containsDragChanged();
     void keysChanged();
-    void dropItemChanged();
-    void dragPositionChanged();
-    void dragDataChanged();
+    void sourceChanged();
 
-    void entered(QSGDragTargetEvent *drag);
-    void exited(QSGDragTargetEvent *drag);
-    void positionChanged(QSGDragTargetEvent *drag);
-    void dropped(QSGDragTargetEvent *drag);
+    void entered(QSGDropEvent *drag);
+    void exited();
+    void positionChanged(QSGDropEvent *drag);
+    void dropped(QSGDropEvent *drop);
 
 protected:
-    void dragMoveEvent(QSGDragEvent *event);
-    void dragEnterEvent(QSGDragEvent *event);
-    void dragExitEvent(QSGDragEvent *event);
-    void dragDropEvent(QSGDragEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dropEvent(QDropEvent *event);
 
 private:
-    Q_DISABLE_COPY(QSGDragTarget)
-    Q_DECLARE_PRIVATE(QSGDragTarget)
+    Q_DISABLE_COPY(QSGDropArea)
+    Q_DECLARE_PRIVATE(QSGDropArea)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QSGDragTargetEvent)
-QML_DECLARE_TYPE(QSGDragTarget)
+QML_DECLARE_TYPE(QSGDropEvent)
+QML_DECLARE_TYPE(QSGDropArea)
 
 QT_END_HEADER
 

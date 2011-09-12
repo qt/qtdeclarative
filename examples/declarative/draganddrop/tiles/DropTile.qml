@@ -40,31 +40,29 @@
 
 import QtQuick 2.0
 
-Rectangle {
-    id: dropRectangle
+DropArea {
+    id: dragTarget
 
     property string colorKey
-
-    color: colorKey
+    property alias dropProxy: dragTarget
 
     width: 100; height: 100
+    keys: [ colorKey ]
 
-    DragTarget {
-        id: dragTarget
+    Rectangle {
+        id: dropRectangle
 
         anchors.fill: parent
+        color: colorKey
 
-        keys: [ colorKey ]
-        dropItem: dropRectangle
-    }
-
-    states: [
-        State {
-            when: dragTarget.containsDrag
-            PropertyChanges {
-                target: dropRectangle
-                color: "grey"
+        states: [
+            State {
+                when: dragTarget.containsDrag
+                PropertyChanges {
+                    target: dropRectangle
+                    color: "grey"
+                }
             }
-        }
-    ]
+        ]
+    }
 }

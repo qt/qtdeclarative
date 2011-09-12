@@ -232,7 +232,7 @@ public:
     QDeclarativeStateGroup *_stateGroup;
 
     QSGItem::TransformOrigin origin:5;
-    quint32 flags:4;
+    quint32 flags:5;
     bool widthValid:1;
     bool heightValid:1;
     bool componentComplete:1;
@@ -326,7 +326,7 @@ public:
     void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QHoverEvent *);
-    void deliverDragEvent(QSGDragEvent *);
+    void deliverDragEvent(QEvent *);
 
     bool calcEffectiveVisible() const;
     void setEffectiveVisibleRecur(bool);

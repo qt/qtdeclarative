@@ -69,6 +69,8 @@ Item {
                     width: 64
                     height: 64
 
+                    Drag.active: visibleContainer.drag.active
+
                     anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
 
                     states: State {
@@ -79,7 +81,7 @@ Item {
                         ParentChange { target: draggable; parent: root }
                     }
                 }
-                DragTarget {
+                DropArea {
                     anchors.fill: parent
                     onEntered: visualModel.items.move(selectedItems, 0, packageRoot.VisualDataModel.itemsIndex, selectedItems.count)
                 }

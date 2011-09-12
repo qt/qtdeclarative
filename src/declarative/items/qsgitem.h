@@ -154,7 +154,8 @@ public:
         ItemClipsChildrenToShape  = 0x01,
         ItemAcceptsInputMethod    = 0x02,
         ItemIsFocusScope          = 0x04,
-        ItemHasContents           = 0x08
+        ItemHasContents           = 0x08,
+        ItemAcceptsDrops          = 0x10
         // Remember to increment the size of QSGItemPrivate::flags
     };
     Q_DECLARE_FLAGS(Flags, Flag)
@@ -373,10 +374,10 @@ protected:
     virtual void hoverEnterEvent(QHoverEvent *event);
     virtual void hoverMoveEvent(QHoverEvent *event);
     virtual void hoverLeaveEvent(QHoverEvent *event);
-    virtual void dragMoveEvent(QSGDragEvent *event);
-    virtual void dragEnterEvent(QSGDragEvent *event);
-    virtual void dragExitEvent(QSGDragEvent *event);
-    virtual void dragDropEvent(QSGDragEvent *event);
+    virtual void dragEnterEvent(QDragEnterEvent *);
+    virtual void dragMoveEvent(QDragMoveEvent *);
+    virtual void dragLeaveEvent(QDragLeaveEvent *);
+    virtual void dropEvent(QDropEvent *);
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);
     virtual void windowDeactivateEvent();
 

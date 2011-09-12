@@ -48,12 +48,6 @@ Rectangle {
 
     color: "black"
 
-    DragTarget {
-        id: resetTarget
-
-        anchors.fill: parent
-    }
-
     Grid {
         id: redDestination
 
@@ -61,22 +55,16 @@ Rectangle {
         anchors.margins: 5
         width: 300
         height: 300
-
         opacity: 0.5
-
         columns: 3
 
         Repeater {
-            model: 9
-            delegate: DropTile {
-                colorKey: "red"
-            }
+            model: 9;
+            delegate: DropTile { colorKey: "red" }
         }
     }
 
     Grid {
-        id: blueDestination
-
         anchors.right: blueSource.left; anchors.bottom: parent.bottom;
         anchors.margins: 5
         width: 300
@@ -88,9 +76,7 @@ Rectangle {
 
         Repeater {
             model: 9
-            delegate: DropTile {
-                colorKey: "blue"
-            }
+            delegate: DropTile { colorKey: "blue" }
         }
     }
 
@@ -100,12 +86,11 @@ Rectangle {
         anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
         anchors.margins: 5
         width: 100
+        spacing: -60
 
         Repeater {
             model: 9
-            delegate: DragTile {
-                colorKey: "red"
-            }
+            delegate: DragTile { colorKey: "red" }
         }
     }
     Column {
@@ -114,12 +99,11 @@ Rectangle {
         anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom
         anchors.margins: 5
         width: 100
+        spacing: -60
 
         Repeater {
             model: 9
-            delegate: DragTile {
-                colorKey: "blue"
-            }
+            delegate: DragTile { colorKey: "blue" }
         }
     }
 }

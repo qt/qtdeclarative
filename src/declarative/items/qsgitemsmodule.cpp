@@ -78,7 +78,8 @@
 #include "qsgcontext2d_p.h"
 #include "qsgsprite_p.h"
 #include "qsgspriteimage_p.h"
-#include "qsgdragtarget_p.h"
+#include "qsgdrag_p.h"
+#include "qsgdroparea_p.h"
 
 static QDeclarativePrivate::AutoParentResult qsgitem_autoParent(QObject *obj, QObject *parent)
 {
@@ -106,7 +107,6 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
 #endif
     qmlRegisterType<QSGBorderImage>(uri,major,minor,"BorderImage");
     qmlRegisterType<QSGColumn>(uri,major,minor,"Column");
-    qmlRegisterType<QSGDrag>(uri,major,minor,"Drag");
     qmlRegisterType<QSGFlickable>(uri,major,minor,"Flickable");
     qmlRegisterType<QSGFlipable>(uri,major,minor,"Flipable");
     qmlRegisterType<QSGFlow>(uri,major,minor,"Flow");
@@ -196,8 +196,10 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGPathAnimation>("QtQuick",2,0,"PathAnimation");
     qmlRegisterType<QDeclarativePathInterpolator>("QtQuick",2,0,"PathInterpolator");
 
-    qmlRegisterType<QSGDragTarget>("QtQuick", 2, 0, "DragTarget");
-    qmlRegisterType<QSGDragTargetEvent>();
+    qmlRegisterType<QSGDropArea>("QtQuick", 2, 0, "DropArea");
+    qmlRegisterType<QSGDropEvent>();
+    qmlRegisterType<QSGDropAreaDrag>();
+    qmlRegisterUncreatableType<QSGDrag>("QtQuick", 2, 0, "Drag", QSGDragAttached::tr("Drag is only available via attached properties"));
 }
 
 void QSGItemsModule::defineModule()

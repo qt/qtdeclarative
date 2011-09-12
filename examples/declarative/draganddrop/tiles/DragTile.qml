@@ -40,60 +40,50 @@
 
 import QtQuick 2.0
 
-Rectangle {
-    id: dragRectangle
-
-    property Item dropTarget
-
+Item {
+    id: root
     property string colorKey
-
-    color: colorKey
 
     width: 100; height: 100
 
-    Text {
-        anchors.fill: parent
-        color: "white"
-        font.pixelSize: 90
-        text: modelData + 1
-        horizontalAlignment:Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-
     MouseArea {
-        id: draggable
+        id: mouseArea
 
-        anchors.fill: parent
+        width: 100; height: 100
+        anchors.centerIn: parent
 
-        drag.target: parent
-        drag.keys: [ colorKey ]
+        drag.target: tile
 
-        drag.onDropped: dropTarget = dropItem
+        onReleased: parent = tile.Drag.target !== null ? tile.Drag.target : root
 
-        states: [
-            State {
-                when: dragRectangle.dropTarget != undefined && !draggable.drag.active
-                ParentChange {
-                    target: dragRectangle
-                    parent: dropTarget
-                    x: 0
-                    y: 0
-                }
-            },
-            State {
-                when: dragRectangle.dropTarget != undefined && draggable.drag.active
-                ParentChange {
-                    target: dragRectangle
-                    parent: dropTarget
-                }
-            },
-            State {
-                when:  !draggable.drag.active
-                AnchorChanges {
-                    target: dragRectangle
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+        Rectangle {
+            id: tile
+
+            width: 100; height: 100
+
+            anchors.horizontalCenter: parent.horizontalCenter; anchors.verticalCenter: parent.verticalCenter
+            color: colorKey
+
+            Drag.keys: [ colorKey ]
+            Drag.active: mouseArea.drag.active
+            Drag.hotSpot.x: 50
+            Drag.hotSpot.y: 50
+
+            Text {
+                anchors.fill: parent
+                color: "white"
+                font.pixelSize: 90
+                text: modelData + 1
+                horizontalAlignment:Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
-        ]
+
+            states: State {
+                when: mouseArea.drag.active
+                ParentChange { target: tile; parent: root }
+                AnchorChanges { target: tile; anchors.verticalCenter: undefined; anchors.horizontalCenter: undefined }
+            }
+        }
     }
 }
+
