@@ -338,16 +338,6 @@ bool QSGCanvas::vsyncAnimations() const
     return d->vsyncAnimations;
 }
 
-/*!
-    This function is an attempt to localize all uses of QInputContext::update in
-    one place up until the point where we have public API for the QInputContext API.
- */
-void QSGCanvasPrivate::updateInputContext()
-{
-    // ### finer grained updates would be good
-    qApp->inputPanel()->update(Qt::ImQueryAll);
-}
-
 void QSGCanvasPrivate::initializeSceneGraph()
 {
     if (!context)
