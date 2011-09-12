@@ -30,7 +30,7 @@ HEADERS += \
     $$PWD/util/qsgsimpletexturenode.h \
     $$PWD/util/qsgtexturematerial.h \
     $$PWD/util/qsgtexturematerial_p.h \
-    $$PWD/util/qsgvertexcolormaterial_p.h \
+    $$PWD/util/qsgvertexcolormaterial.h \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider_p.h \
