@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qsgvertexcolormaterial_p.h"
+#include "qsgvertexcolormaterial.h"
 
 #include <qopenglshaderprogram.h>
 

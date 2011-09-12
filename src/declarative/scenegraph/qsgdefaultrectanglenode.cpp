@@ -44,7 +44,7 @@
 
 #include "qsgdefaultrectanglenode_p.h"
 
-#include <private/qsgvertexcolormaterial_p.h>
+#include <qsgvertexcolormaterial.h>
 #include "qsgtexturematerial.h"
 
 #include <private/qsgcontext_p.h>
