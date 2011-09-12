@@ -2937,7 +2937,7 @@ void QSGItem::updateMicroFocus()
 {
     QInputPanel *p = qApp->inputPanel();
     if (p->inputItem() == this)
-        qApp->inputPanel()->update(Qt::ImCursorRectangle);
+        qApp->inputPanel()->update(Qt::ImQueryInput);
 }
 
 QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
