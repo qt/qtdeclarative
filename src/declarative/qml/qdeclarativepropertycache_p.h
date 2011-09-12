@@ -104,9 +104,10 @@ public:
                     IsSignal          = 0x00008000, // Function is a signal
                     IsVMESignal       = 0x00010000, // Signal was added by QML
                     IsV8Function      = 0x00020000, // Function takes QDeclarativeV8Function* args
+                    IsSignalHandler   = 0x00040000, // Function is a signal handler
 
                     // Internal QDeclarativePropertyCache flags
-                    NotFullyResolved  = 0x00040000  // True if the type data is to be lazily resolved 
+                    NotFullyResolved  = 0x00080000  // True if the type data is to be lazily resolved
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -133,6 +134,7 @@ public:
         bool isSignal() const { return flags & IsSignal; }
         bool isVMESignal() const { return flags & IsVMESignal; }
         bool isV8Function() const { return flags & IsV8Function; }
+        bool isSignalHandler() const { return flags & IsSignalHandler; }
 
         union {
             int propType;             // When !NotFullyResolved
@@ -221,6 +223,7 @@ private:
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
+    IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
     v8::Persistent<v8::Function> constructor;

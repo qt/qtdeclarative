@@ -45,26 +45,26 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlclass CumulativeDirection QSGCumulativeDirection
     \inqmlmodule QtQuick.Particles 2
-    \inherits StochasticDirection
+    \inherits Direction
     \brief The CumulativeDirection element allows you to specify a direction made of other directions
 
     The CumulativeDirection element will act as a direction that sums the directions within it.
 */
-QSGCumulativeDirection::QSGCumulativeDirection(QObject *parent):QSGStochasticDirection(parent)
+QSGCumulativeDirection::QSGCumulativeDirection(QObject *parent):QSGDirection(parent)
 {
 }
 
-QDeclarativeListProperty<QSGStochasticDirection> QSGCumulativeDirection::directions()
+QDeclarativeListProperty<QSGDirection> QSGCumulativeDirection::directions()
 {
-    return QDeclarativeListProperty<QSGStochasticDirection>(this, m_directions);//TODO: Proper list property
+    return QDeclarativeListProperty<QSGDirection>(this, m_directions);//TODO: Proper list property
 }
 
 const QPointF &QSGCumulativeDirection::sample(const QPointF &from)
 {
-    m_ret = QPointF();
-    foreach (QSGStochasticDirection* dir, m_directions)
-        m_ret += dir->sample(from);
-    return m_ret;
+    QPointF ret;
+    foreach (QSGDirection* dir, m_directions)
+        ret += dir->sample(from);
+    return ret;
 }
 
 QT_END_NAMESPACE

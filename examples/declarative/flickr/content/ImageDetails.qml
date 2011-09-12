@@ -164,7 +164,7 @@ Flipable {
                     anchors.fill: parent 
                     frequency: 100
                     strength: 250
-                    active: false
+                    enabled: false
                 }
 
                 Item{
@@ -180,7 +180,7 @@ Flipable {
                     function imageOutAnim(){
                         bigImage.visible = false;
                         noiseIn.visible = false;
-                        turbulence.active = true;
+                        turbulence.enabled = true;
                         endEffectTimer.start();
                         pixelEmitter.burst(2048);
                     }
@@ -190,7 +190,7 @@ Flipable {
                         repeat: false
                         running: false
                         onTriggered:{
-                            turbulence.active = false;
+                            turbulence.enabled = false;
                             noiseIn.visible = false;
                             bigImage.visible = true;
                         }
@@ -245,7 +245,7 @@ Flipable {
                         size: 4
                         lifeSpan: flipDuration
                         emitRate: 2048
-                        emitting: false
+                        enabled: false
                     }
                     CustomParticle{
                         id: blowOut
@@ -253,54 +253,23 @@ Flipable {
                         property real maxWidth: effectBox.width
                         property real maxHeight: effectBox.height
                         vertexShader:"
-                            attribute highp vec2 vPos;
-                            attribute highp vec2 vTex;
-                            attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
-                            attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
-                            attribute highp float r;
-
                             uniform highp float maxWidth;
                             uniform highp float maxHeight;
 
-                            uniform highp mat4 qt_Matrix;
-                            uniform highp float timestamp;
-                            uniform lowp float qt_Opacity;
-
                             varying highp vec2 fTex2;
-                            varying lowp float fFade;
 
                             void main() {
-                                fTex2 = vec2(vPos.x / maxWidth, vPos.y / maxHeight);
-                                highp float size = vData.z;
-                                highp float endSize = vData.w;
-
-                                highp float t = (timestamp - vData.x) / vData.y;
-
-                                highp float currentSize = mix(size, endSize, t * t);
-
-                                if (t < 0. || t > 1.)
-                                currentSize = 0.;
-
-                                highp vec2 pos = vPos
-                                - currentSize / 2. + currentSize * vTex          // adjust size
-                                + vVec.xy * t * vData.y         // apply speed vector..
-                                + 0.5 * vVec.zw * pow(t * vData.y, 2.);
-
-                                gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
-
-                                highp float fadeIn = min(t * 10., 1.);
-                                highp float fadeOut = 1. - max(0., min((t - 0.75) * 4., 1.));
-
-                                fFade = 1.0;//fadeIn * fadeOut * qt_Opacity;
+                                defaultMain();
+                                fTex2 = vec2(qt_ParticlePos.x / maxWidth, qt_ParticlePos.y / maxHeight);
                             }
                         "
                         property variant pictureTexture: pictureSource
                         fragmentShader: "
+                            uniform lowp float qt_Opacity;
                             uniform sampler2D pictureTexture;
                             varying highp vec2 fTex2;
-                            varying highp float fFade;
                             void main() {
-                                gl_FragColor = texture2D(pictureTexture, fTex2) * fFade;
+                                gl_FragColor = texture2D(pictureTexture, fTex2) * qt_Opacity;
                         }"
                     }
 

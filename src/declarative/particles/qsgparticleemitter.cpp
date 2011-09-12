@@ -100,6 +100,12 @@ QT_BEGIN_NAMESPACE
 
     The time in milliseconds each emitted particle should last for.
 
+    If you do not want particles to automatically die after a time, for example if
+    you wish to dispose of them manually, set lifeSpan to Emitter.InfiniteLife.
+
+    lifeSpans greater than or equal to 600000 (10 minutes) will be treated as infinite.
+    Particles with lifeSpans less than or equal to 0 will start out dead.
+
     Default value is 1000 (one second).
 */
 /*!
@@ -111,21 +117,17 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty int QtQuick.Particles2::Emitter::emitCap
+    \qmlproperty int QtQuick.Particles2::Emitter::maximumEmitted
 
     The maximum number of particles at a time that this emitter will have alive.
 
     This can be set as a performance optimization (when using burst and pulse) or
-    to stagger emissions. The default value is emitRate * lifeSpan in seconds, which
-    is the number of particles that would be alive at any one time given the default settings.
-*/
-/*!
-    \qmlproperty bool QtQuick.Particles2::Emitter::noCap
+    to stagger emissions.
 
-    If set to true, the emitCap will be ignored and this emitter will never skip emitting
-    a particle based on how many it has alive.
+    If this is set to a number below zero, then there is no maximum limit on the number
+    of particles this emitter can have alive.
 
-    Default value is false.
+    The default value is -1.
 */
 /*!
     \qmlproperty int QtQuick.Particles2::Emitter::startTime
@@ -181,19 +183,38 @@ QT_BEGIN_NAMESPACE
 */
 //TODO: Document particle 'type'
 /*!
-    \qmlsignal QtQuick.Particles2::Emitter::emitParticle(particle)
+    \qmlsignal QtQuick.Particles2::Emitter::onEmitParticle(Particle particle)
 
     This handler is called when a particle is emitted. You can modify particle
     attributes from within the handler.
+
+    Note that JS is slower to execute, so it is not recommended to use this in
+    high-volume particle systems.
 */
 
+/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int count)
+
+    Emits count particles from this emitter immediately.
+*/
+
+/*! \qmlmethod QtQuick.Particles2::Emitter::burst(int x, int y, int count)
+
+    Emits count particles from this emitter immediately. The particles are emitted
+    as if the Emitter was positioned at x,y but all other properties are the same.
+*/
+
+/*! \qmlmethod QtQuick.Particles2::Emitter::pulse(real duration)
+
+    If the emitter is not enabled, enables it for duration seconds and then switches
+    it back off.
+*/
 
 QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
     QSGItem(parent)
   , m_particlesPerSecond(10)
   , m_particleDuration(1000)
   , m_particleDurationVariation(0)
-  , m_emitting(true)
+  , m_enabled(true)
   , m_system(0)
   , m_extruder(0)
   , m_defaultExtruder(0)
@@ -205,16 +226,15 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_maxParticleCount(-1)
   , m_burstLeft(0)
   , m_speed_from_movement(0)
-  , m_particle_count(0)
   , m_reset_last(true)
   , m_last_timestamp(-1)
   , m_last_emission(0)
   , m_startTime(0)
-  , m_overwrite(false)
+  , m_overwrite(true)
 
 {
     //TODO: Reset speed/acc back to null vector? Or allow null pointer?
-    connect(this, SIGNAL(maxParticleCountChanged(int)),
+    connect(this, SIGNAL(maximumEmittedChanged(int)),
             this, SIGNAL(particleCountChanged()));
     connect(this, SIGNAL(particlesPerSecondChanged(qreal)),
             this, SIGNAL(particleCountChanged()));
@@ -238,16 +258,14 @@ void QSGParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    if (!m_system)
-        qWarning() << "Emitter created without a particle system specified";//TODO: useful QML warnings, like line number?
     QSGItem::componentComplete();
 }
 
-void QSGParticleEmitter::setEmitting(bool arg)
+void QSGParticleEmitter::setEnabled(bool arg)
 {
-    if (m_emitting != arg) {
-        m_emitting = arg;
-        emit emittingChanged(arg);
+    if (m_enabled != arg) {
+        m_enabled = arg;
+        emit enabledChanged(arg);
     }
 }
 
@@ -265,7 +283,7 @@ void QSGParticleEmitter::pulse(qreal seconds)
 {
     if (!particleCount())
         qWarning() << "pulse called on an emitter with a particle count of zero";
-    if (!m_emitting)
+    if (!m_enabled)
         m_burstLeft = seconds*1000.0;//TODO: Change name to match
 }
 
@@ -297,8 +315,9 @@ void QSGParticleEmitter::setMaxParticleCount(int arg)
             disconnect(this, SIGNAL(particleDurationChanged(int)),
                     this, SIGNAL(particleCountChanged()));
         }
+        m_overwrite = arg < 0;
         m_maxParticleCount = arg;
-        emit maxParticleCountChanged(arg);
+        emit maximumEmittedChanged(arg);
     }
 }
 
@@ -317,11 +336,16 @@ void QSGParticleEmitter::setSpeedFromMovement(qreal t)
     emit speedFromMovementChanged();
 }
 
+void QSGParticleEmitter::reset()
+{
+    m_reset_last = true;
+}
+
 void QSGParticleEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if ((!m_emitting || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
+    if ((!m_enabled || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
         m_reset_last = true;
         return;
     }
@@ -329,24 +353,23 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     if (m_reset_last) {
         m_last_emitter = m_last_last_emitter = QPointF(x(), y());
         if (m_last_timestamp == -1)
-            m_last_timestamp = timeStamp/1000. - m_startTime;
+            m_last_timestamp = (timeStamp - m_startTime)/1000.;
         else
             m_last_timestamp = timeStamp/1000.;
         m_last_emission = m_last_timestamp;
         m_reset_last = false;
+        m_emitCap = particleCount();
     }
 
     if (m_burstLeft){
         m_burstLeft -= timeStamp - m_last_timestamp * 1000.;
         if (m_burstLeft < 0){
-            if (!m_emitting)
+            if (!m_enabled)
                 timeStamp += m_burstLeft;
             m_burstLeft = 0;
         }
     }
-
     qreal time = timeStamp / 1000.;
-
     qreal particleRatio = 1. / m_particlesPerSecond;
     qreal pt = m_last_emission;
 
@@ -369,9 +392,9 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
     qreal emitter_x_offset = m_last_emitter.x() - x();
     qreal emitter_y_offset = m_last_emitter.y() - y();
-    if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_emitting)//'outside time' emissions only
+    if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_enabled)//'outside time' emissions only
         pt = time;
-    while (pt < time || !m_burstQueue.isEmpty()) {
+    while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
         QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
@@ -389,10 +412,15 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 
             // Particle timestamp
             datum->t = pt;
-            datum->lifeSpan = //TODO:Promote to base class?
+            datum->lifeSpan =
                     (m_particleDuration
                      + ((rand() % ((m_particleDurationVariation*2) + 1)) - m_particleDurationVariation))
                     / 1000.0;
+
+            if (datum->lifeSpan >= m_system->maxLife){
+                datum->lifeSpan = m_system->maxLife;
+                m_emitCap--;//emitCap keeps us from reemitting 'infinite' particles after their life. Unless you reset the emitter.
+            }
 
             // Particle position
             QRectF boundsRect;

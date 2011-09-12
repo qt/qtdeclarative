@@ -42,6 +42,17 @@
 #ifndef QDECLARATIVEDEBUGCLIENT_H
 #define QDECLARATIVEDEBUGCLIENT_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtNetwork/qtcpsocket.h>
 
 #include <private/qdeclarativeglobal_p.h>
@@ -53,7 +64,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarativeDebugConnectionPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugConnection : public QTcpSocket
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDebugConnection : public QIODevice
 {
     Q_OBJECT
     Q_DISABLE_COPY(QDeclarativeDebugConnection)
@@ -61,7 +72,25 @@ public:
     QDeclarativeDebugConnection(QObject * = 0);
     ~QDeclarativeDebugConnection();
 
+    void connectToHost(const QString &hostName, quint16 port);
+
+    qint64 bytesAvailable() const;
     bool isConnected() const;
+    QAbstractSocket::SocketState state() const;
+    void flush();
+    bool isSequential() const;
+    void close();
+    bool waitForConnected(int msecs = 30000);
+
+signals:
+    void connected();
+    void stateChanged(QAbstractSocket::SocketState socketState);
+    void error(QAbstractSocket::SocketError socketError);
+
+protected:
+    qint64 readData(char *data, qint64 maxSize);
+    qint64 writeData(const char *data, qint64 maxSize);
+
 private:
     QDeclarativeDebugConnectionPrivate *d;
     friend class QDeclarativeDebugClient;
@@ -85,7 +114,7 @@ public:
 
     Status status() const;
 
-    void sendMessage(const QByteArray &);
+    virtual void sendMessage(const QByteArray &);
 
 protected:
     virtual void statusChanged(Status);

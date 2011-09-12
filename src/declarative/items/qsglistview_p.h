@@ -166,11 +166,6 @@ protected:
 
 protected Q_SLOTS:
     void updateSections();
-
-private Q_SLOTS:
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int from, int to, int count);
 };
 
 class QSGListViewAttached : public QSGItemViewAttached

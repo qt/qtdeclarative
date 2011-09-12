@@ -56,6 +56,49 @@ QT_BEGIN_NAMESPACE
 
 */
 
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ItemParticle::freeze(Item item)
+
+    Suspends the flow of time for the logical particle which item represents, allowing you to control its movement.
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ItemParticle::unfreeze(Item item)
+
+    Restarts the flow of time for the logical particle which item represents, allowing it to be moved by the particle system again.
+*/
+
+/*!
+    \qmlmethod void QtQuick.Particles2::ItemParticle::take(Item item, bool prioritize)
+
+    Asks the ItemParticle to take over control of item. It will be emitted when there is a logical particle available.
+
+    By default items form a queue when waiting for a logical particle, but if prioritize is true then it will go immediately to the
+    head of the queue.
+*/
+/*!
+    \qmlmethod void QtQuick.Particles2::ItemParticle::give(Item item)
+
+    Orders the ItemParticle to give you control of the item. It will cease controlling it and the item will lose its association to the logical particle.
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::ItemParticle::fade
+
+    If true, the item will automatically be faded in and out
+    at the ends of its lifetime. If false, you will have to
+    implement any entry effect yourself.
+
+    Default is true.
+*/
+/*!
+    \qmlproperty Component QtQuick.Particles2::ItemParticle::delegate
+
+    An instance of the delegate will be created for every logical
+    particle, and moved along with it.
+*/
+
 QSGItemParticle::QSGItemParticle(QSGItem *parent) :
     QSGParticlePainter(parent), m_fade(true), m_delegate(0)
 {

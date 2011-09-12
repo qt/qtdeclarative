@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import "TwitterCore" 1.0 as Twitter
+import QtQuick 2.0
+import "TwitterCore" 2.0 as Twitter
 
 Item {
     id: screen; width: 320; height: 480

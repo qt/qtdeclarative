@@ -51,6 +51,7 @@
 #include <QtDeclarative/private/qsgvisualitemmodel_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
+#include <QtDeclarative/private/qdeclarativechangeset_p.h>
 #include "../../../shared/util.h"
 #include "incrementalmodel.h"
 #include <QtOpenGL/QGLShaderProgram>
@@ -89,6 +90,9 @@ private slots:
     void qListModelInterface_moved_data();
     void qAbstractItemModel_moved();
     void qAbstractItemModel_moved_data();
+
+    void multipleChanges();
+    void multipleChanges_data();
 
     void qListModelInterface_clear();
     void qAbstractItemModel_clear();
@@ -291,6 +295,12 @@ public:
         emit itemsInserted(index, 1);
     }
 
+    void insertItems(int index, const QList<QPair<QString, QString> > &items) {
+        for (int i=0; i<items.count(); i++)
+            list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
+        emit itemsInserted(index, items.count());
+    }
+
     void removeItem(int index) {
         list.removeAt(index);
         emit itemsRemoved(index, 1);
@@ -372,6 +382,13 @@ public:
     void insertItem(int index, const QString &name, const QString &number) {
         emit beginInsertRows(QModelIndex(), index, index);
         list.insert(index, QPair<QString,QString>(name, number));
+        emit endInsertRows();
+    }
+
+    void insertItems(int index, const QList<QPair<QString, QString> > &items) {
+        emit beginInsertRows(QModelIndex(), index, index+items.count()-1);
+        for (int i=0; i<items.count(); i++)
+            list.insert(index + i, QPair<QString,QString>(items[i].first, items[i].second));
         emit endInsertRows();
     }
 
@@ -541,6 +558,7 @@ template <class T>
 void tst_QSGListView::inserted()
 {
     QSGView *canvas = createView();
+    canvas->show();
 
     T model;
     model.addItem("Fred", "12345");
@@ -564,6 +582,7 @@ void tst_QSGListView::inserted()
 
     model.insertItem(1, "Will", "9876");
 
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     QSGText *name = findItem<QSGText>(contentItem, "textName", 1);
@@ -581,7 +600,7 @@ void tst_QSGListView::inserted()
 
     model.insertItem(0, "Foo", "1111"); // zero index, and current item
 
-    QCOMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
     QTRY_COMPARE(contentItem->childItems().count(), model.count()+1); // assumes all are visible, +1 for the (default) highlight item
 
     name = findItem<QSGText>(contentItem, "textName", 0);
@@ -622,6 +641,8 @@ void tst_QSGListView::inserted()
     // QTBUG-19675
     model.clear();
     model.insertItem(0, "Hello", "1234");
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+
     QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", 0);
     QVERIFY(item);
     QCOMPARE(item->y(), 0.);
@@ -657,7 +678,7 @@ void tst_QSGListView::removed(bool animated)
     QTRY_VERIFY(contentItem != 0);
 
     model.removeItem(1);
-    QCOMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     QSGText *name = findItem<QSGText>(contentItem, "textName", 1);
     QTRY_VERIFY(name != 0);
@@ -677,8 +698,7 @@ void tst_QSGListView::removed(bool animated)
 
     // Remove first item (which is the current item);
     model.removeItem(0);  // post: top item starts at 20
-
-    QTest::qWait(300);
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     name = findItem<QSGText>(contentItem, "textName", 0);
     QTRY_VERIFY(name != 0);
@@ -698,7 +718,7 @@ void tst_QSGListView::removed(bool animated)
 
     // Remove items not visible
     model.removeItem(18);
-    qApp->processEvents();
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
     itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
@@ -714,7 +734,7 @@ void tst_QSGListView::removed(bool animated)
     listview->setCurrentIndex(10);
 
     model.removeItem(1); // post: top item will be at 40
-    qApp->processEvents();
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     // Confirm items positioned correctly
     for (int i = 2; i < 18; ++i) {
@@ -766,7 +786,7 @@ void tst_QSGListView::removed(bool animated)
 
     // remove all visible items
     model.removeItems(1, 18);
-    QTest::qWait(300);
+    QTRY_COMPARE(listview->count() , model.count());
 
     // Confirm items positioned correctly
     itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
@@ -778,10 +798,13 @@ void tst_QSGListView::removed(bool animated)
     }
 
     model.removeItems(1, 17);
-//    QTest::qWait(300);
+    QTRY_COMPARE(listview->count() , model.count());
 
     model.removeItems(2, 1);
+    QTRY_COMPARE(listview->count() , model.count());
+
     model.addItem("New", "1");
+    QTRY_COMPARE(listview->count() , model.count());
 
     QTRY_VERIFY(name = findItem<QSGText>(contentItem, "textName", model.count()-1));
     QCOMPARE(name->text(), QString("New"));
@@ -886,12 +909,23 @@ void tst_QSGListView::moved()
 
     listview->setContentY(contentY);
     model.moveItems(from, to, count);
-    qApp->processEvents();
+
+    // wait for items to move
+    QTest::qWait(300);
+
+    QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
-    int firstVisibleIndex = qCeil(contentY / 20.0);
     int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
-
     for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         if (i >= firstVisibleIndex + 16)    // index has moved out of view
             continue;
@@ -934,12 +968,12 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move 1 forwards, from non-visible -> visible")
             << 80.0     // show 4-19
             << 1 << 18 << 1
-            << 20.0;
+            << 20.0;    // removed 1 item above the first visible, so item 0 should drop down by 1 to minimize movement
 
     QTest::newRow("move 1 forwards, from non-visible -> visible (move first item)")
             << 80.0     // show 4-19
             << 0 << 4 << 1
-            << 20.0;
+            << 20.0;    // first item has moved to below item4, everything drops down by size of 1 item
 
     QTest::newRow("move 1 forwards, from visible -> non-visible")
             << 0.0
@@ -957,6 +991,11 @@ void tst_QSGListView::moved_data()
             << 4 << 1 << 1
             << 0.0;
 
+    QTest::newRow("move 1 backwards, within visible items (to first index)")
+            << 0.0
+            << 4 << 0 << 1
+            << 0.0;
+
     QTest::newRow("move 1 backwards, from non-visible -> visible")
             << 0.0
             << 20 << 4 << 1
@@ -970,12 +1009,12 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move 1 backwards, from visible -> non-visible")
             << 80.0     // show 4-19
             << 16 << 1 << 1
-            << 20.0 * 15;   // this results in a forward movement that removes 15 items
+            << -20.0;   // to minimize movement, item 0 moves to -20, and other items do not move
 
     QTest::newRow("move 1 backwards, from visible -> non-visible (move first item)")
             << 80.0     // show 4-19
             << 16 << 0 << 1
-            << 20.0 * 16;   // everything should move to after item 16
+            << -20.0;   // to minimize movement, item 16 (now at 0) moves to -20, and other items do not move
 
 
     QTest::newRow("move multiple forwards, within visible items")
@@ -1022,12 +1061,248 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move multiple backwards, from visible -> non-visible")
             << 80.0     // show 4-19
             << 16 << 1 << 3
-            << 20.0 * 15;   // this results in a forward movement that removes 15 items
+            << -20.0 * 3;   // to minimize movement, 0 moves by -60, and other items do not move
 
     QTest::newRow("move multiple backwards, from visible -> non-visible (move first item)")
             << 80.0     // show 4-19
             << 16 << 0 << 3
-            << 20.0 * 16;
+            << -20.0 * 3;   // to minimize movement, 16,17,18 move to above item 0, and other items do not move
+}
+
+
+struct ListChange {
+    enum { Inserted, Removed, Moved, SetCurrent } type;
+    int index;
+    int count;
+    int to;     // Move
+
+    static ListChange insert(int index, int count = 1) { ListChange c = { Inserted, index, count, -1 }; return c; }
+    static ListChange remove(int index, int count = 1) { ListChange c = { Removed, index, count, -1 }; return c; }
+    static ListChange move(int index, int to, int count) { ListChange c = { Moved, index, count, to }; return c; }
+    static ListChange setCurrent(int index) { ListChange c = { SetCurrent, index, -1, -1 }; return c; }
+};
+Q_DECLARE_METATYPE(QList<ListChange>)
+
+void tst_QSGListView::multipleChanges()
+{
+    QFETCH(int, startCount);
+    QFETCH(QList<ListChange>, changes);
+    QFETCH(int, newCount);
+    QFETCH(int, newCurrentIndex);
+
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < startCount; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listviewtest.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    for (int i=0; i<changes.count(); i++) {
+        switch (changes[i].type) {
+            case ListChange::Inserted:
+            {
+                QList<QPair<QString, QString> > items;
+                for (int j=changes[i].index; j<changes[i].index + changes[i].count; ++j)
+                    items << qMakePair(QString("new item " + j), QString::number(j));
+                model.insertItems(changes[i].index, items);
+                break;
+            }
+            case ListChange::Removed:
+                model.removeItems(changes[i].index, changes[i].count);
+                break;
+            case ListChange::Moved:
+                model.moveItems(changes[i].index, changes[i].to, changes[i].count);
+                break;
+            case ListChange::SetCurrent:
+                listview->setCurrentIndex(changes[i].index);
+                break;
+        }
+    }
+
+    QTRY_COMPARE(listview->count(), newCount);
+    QCOMPARE(listview->count(), model.count());
+    QTRY_COMPARE(listview->currentIndex(), newCurrentIndex);
+
+    QSGText *name;
+    QSGText *number;
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
+    for (int i=0; i < model.count() && i < itemCount; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        name = findItem<QSGText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+        number = findItem<QSGText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QTRY_COMPARE(number->text(), model.number(i));
+    }
+
+    delete testObject;
+    delete canvas;
+}
+
+void tst_QSGListView::multipleChanges_data()
+{
+    QTest::addColumn<int>("startCount");
+    QTest::addColumn<QList<ListChange> >("changes");
+    QTest::addColumn<int>("newCount");
+    QTest::addColumn<int>("newCurrentIndex");
+
+    QList<ListChange> changes;
+
+    for (int i=1; i<30; i++)
+        changes << ListChange::remove(0);
+    QTest::newRow("remove all but 1, first->last") << 30 << changes << 1 << 0;
+
+    changes << ListChange::remove(0);
+    QTest::newRow("remove all") << 30 << changes << 0 << -1;
+
+    changes.clear();
+    changes << ListChange::setCurrent(29);
+    for (int i=29; i>0; i--)
+        changes << ListChange::remove(i);
+    QTest::newRow("remove last (current) -> first") << 30 << changes << 1 << 0;
+
+    QTest::newRow("remove then insert at 0") << 10 << (QList<ListChange>()
+            << ListChange::remove(0, 1)
+            << ListChange::insert(0, 1)
+            ) << 10 << 1;
+
+    QTest::newRow("remove then insert at non-zero index") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(2)
+            << ListChange::remove(2, 1)
+            << ListChange::insert(2, 1)
+            ) << 10 << 3;
+
+    QTest::newRow("remove current then insert below it") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(1)
+            << ListChange::remove(1, 3)
+            << ListChange::insert(2, 2)
+            ) << 9 << 1;
+
+    QTest::newRow("remove current index then move it down") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(2)
+            << ListChange::remove(1, 3)
+            << ListChange::move(1, 5, 1)
+            ) << 7 << 5;
+
+    QTest::newRow("remove current index then move it up") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(5)
+            << ListChange::remove(4, 3)
+            << ListChange::move(4, 1, 1)
+            ) << 7 << 1;
+
+
+    QTest::newRow("insert multiple times") << 0 << (QList<ListChange>()
+            << ListChange::insert(0, 2)
+            << ListChange::insert(0, 4)
+            << ListChange::insert(0, 6)
+            ) << 12 << 10;
+
+    QTest::newRow("insert multiple times with current index changes") << 0 << (QList<ListChange>()
+            << ListChange::insert(0, 2)
+            << ListChange::insert(0, 4)
+            << ListChange::insert(0, 6)
+            << ListChange::setCurrent(3)
+            << ListChange::insert(3, 2)
+            ) << 14 << 5;
+
+    QTest::newRow("insert and remove all") << 0 << (QList<ListChange>()
+            << ListChange::insert(0, 30)
+            << ListChange::remove(0, 30)
+            ) << 0 << -1;
+
+    QTest::newRow("insert and remove current") << 30 << (QList<ListChange>()
+            << ListChange::insert(1)
+            << ListChange::setCurrent(1)
+            << ListChange::remove(1)
+            ) << 30 << 1;
+
+    QTest::newRow("insert before 0, then remove cross section of new and old items") << 10 << (QList<ListChange>()
+            << ListChange::insert(0, 10)
+            << ListChange::remove(5, 10)
+            ) << 10 << 5;
+
+    QTest::newRow("insert multiple, then move new items to end") << 10 << (QList<ListChange>()
+            << ListChange::insert(0, 3)
+            << ListChange::move(0, 10, 3)
+            ) << 13 << 0;
+
+    QTest::newRow("insert multiple, then move new and some old items to end") << 10 << (QList<ListChange>()
+            << ListChange::insert(0, 3)
+            << ListChange::move(0, 8, 5)
+            ) << 13 << 11;
+
+    QTest::newRow("insert multiple at end, then move new and some old items to start") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(9)
+            << ListChange::insert(10, 3)
+            << ListChange::move(8, 0, 5)
+            ) << 13 << 1;
+
+
+    QTest::newRow("move back and forth to same index") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(1)
+            << ListChange::move(1, 2, 2)
+            << ListChange::move(2, 1, 2)
+            ) << 10 << 1;
+
+    QTest::newRow("move forwards then back") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(2)
+            << ListChange::move(1, 2, 3)
+            << ListChange::move(3, 0, 5)
+            ) << 10 << 0;
+
+    QTest::newRow("move current, then remove it") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(5)
+            << ListChange::move(5, 0, 1)
+            << ListChange::remove(0)
+            ) << 9 << 0;
+
+    QTest::newRow("move current, then insert before it") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(5)
+            << ListChange::move(5, 0, 1)
+            << ListChange::insert(0)
+            ) << 11 << 1;
+
+    QTest::newRow("move multiple, then remove them") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(1)
+            << ListChange::move(5, 1, 3)
+            << ListChange::remove(1, 3)
+            ) << 7 << 1;
+
+    QTest::newRow("move multiple, then insert before them") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(5)
+            << ListChange::move(5, 1, 3)
+            << ListChange::insert(1, 5)
+            ) << 15 << 6;
+
+    QTest::newRow("move multiple, then insert after them") << 10 << (QList<ListChange>()
+            << ListChange::setCurrent(3)
+            << ListChange::move(0, 1, 2)
+            << ListChange::insert(3, 5)
+            ) << 15 << 8;
+
+
+    QTest::newRow("clear current") << 0 << (QList<ListChange>()
+            << ListChange::insert(0, 5)
+            << ListChange::setCurrent(-1)
+            << ListChange::remove(0, 5)
+            << ListChange::insert(0, 5)
+            ) << 5 << -1;
 }
 
 void tst_QSGListView::swapWithFirstItem()
@@ -1164,6 +1439,7 @@ void tst_QSGListView::enforceRange_withoutHighlight()
 void tst_QSGListView::spacing()
 {
     QSGView *canvas = createView();
+    canvas->show();
 
     TestModel model;
     for (int i = 0; i < 30; i++)
@@ -1223,6 +1499,7 @@ void tst_QSGListView::spacing()
 void tst_QSGListView::sections()
 {
     QSGView *canvas = createView();
+    canvas->show();
 
     TestModel model;
     for (int i = 0; i < 30; i++)
@@ -1254,6 +1531,7 @@ void tst_QSGListView::sections()
 
     // Remove section boundary
     model.removeItem(5);
+    QTRY_COMPARE(listview->count(), model.count());
 
     // New section header created
     QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", 5);
@@ -1261,6 +1539,7 @@ void tst_QSGListView::sections()
     QTRY_COMPARE(item->height(), 40.0);
 
     model.insertItem(3, "New Item", "0");
+    QTRY_COMPARE(listview->count(), model.count());
 
     // Section header moved
     item = findItem<QSGItem>(contentItem, "wrapper", 5);
@@ -1273,6 +1552,7 @@ void tst_QSGListView::sections()
 
     // insert item which will become a section header
     model.insertItem(6, "Replace header", "1");
+    QTRY_COMPARE(listview->count(), model.count());
 
     item = findItem<QSGItem>(contentItem, "wrapper", 6);
     QTRY_VERIFY(item);
@@ -1301,6 +1581,7 @@ void tst_QSGListView::sections()
     // check that headers change when item changes
     listview->setContentY(0);
     model.modifyItem(0, "changed", "2");
+    QTest::qWait(300);
 
     item = findItem<QSGItem>(contentItem, "wrapper", 1);
     QTRY_VERIFY(item);
@@ -1312,6 +1593,7 @@ void tst_QSGListView::sections()
 void tst_QSGListView::sectionsDelegate()
 {
     QSGView *canvas = createView();
+    canvas->show();
 
     TestModel model;
     for (int i = 0; i < 30; i++)
@@ -1350,6 +1632,7 @@ void tst_QSGListView::sectionsDelegate()
     model.modifyItem(2, "Three", "aaa");
     model.modifyItem(3, "Four", "aaa");
     model.modifyItem(4, "Five", "aaa");
+    QTest::qWait(300);
 
     for (int i = 0; i < 3; ++i) {
         QSGItem *item = findItem<QSGItem>(contentItem,
@@ -1360,7 +1643,7 @@ void tst_QSGListView::sectionsDelegate()
 
     // remove section boundary
     model.removeItem(5);
-    qApp->processEvents();
+    QTRY_COMPARE(listview->count(), model.count());
     for (int i = 0; i < 3; ++i) {
         QSGItem *item = findItem<QSGItem>(contentItem,
                 "sect_" + (i == 0 ? QString("aaa") : QString::number(i)));
@@ -2175,18 +2458,17 @@ void tst_QSGListView::header()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedHeaderPos);
     QFETCH(QPointF, changedContentPos);
-
-    QSGView *canvas = createView();
+    QFETCH(QPointF, resizeContentPos);
 
     TestModel model;
     for (int i = 0; i < 30; i++)
         model.addItem("Item" + QString::number(i), "");
 
-    QDeclarativeContext *ctxt = canvas->rootContext();
-    ctxt->setContextProperty("testModel", &model);
-
+    QSGView *canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 240);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 320);
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
-    qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2235,6 +2517,31 @@ void tst_QSGListView::header()
     QCOMPARE(item->pos(), firstDelegatePos);
 
     delete canvas;
+
+
+    // QTBUG-21207 header should become visible if view resizes from initial empty size
+
+    canvas = createView();
+    canvas->rootContext()->setContextProperty("testModel", &model);
+    canvas->rootContext()->setContextProperty("initialViewWidth", 0.0);
+    canvas->rootContext()->setContextProperty("initialViewHeight", 0.0);
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header.qml"));
+
+    listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+
+    listview->setWidth(240);
+    listview->setHeight(320);
+    QTRY_COMPARE(listview->headerItem()->pos(), initialHeaderPos);
+    QCOMPARE(QPointF(listview->contentX(), listview->contentY()), initialContentPos);
+
+    header->setHeight(10);
+    header->setWidth(40);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), resizeContentPos);
+
+    delete canvas;
 }
 
 void tst_QSGListView::header_data()
@@ -2246,6 +2553,7 @@ void tst_QSGListView::header_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // header1 = 100 x 30
     // header2 = 50 x 20
@@ -2258,7 +2566,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, -20)
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, -10);
 
     // header above items, top right
     QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
@@ -2266,7 +2575,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, -20)
         << QPointF(0, -30)
         << QPointF(0, -20)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, -10);
 
     // header to left of items
     QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
@@ -2274,7 +2584,8 @@ void tst_QSGListView::header_data()
         << QPointF(-50, 0)
         << QPointF(-100, 0)
         << QPointF(-50, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(-40, 0);
 
     // header to right of items
     QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
@@ -2282,7 +2593,8 @@ void tst_QSGListView::header_data()
         << QPointF(0, 0)
         << QPointF(-240 + 100, 0)
         << QPointF(-240 + 50, 0)
-        << QPointF(-240, 0);
+        << QPointF(-240, 0)
+        << QPointF(-240 + 40, 0);
 }
 
 void tst_QSGListView::header_delayItemCreation()
@@ -2321,6 +2633,7 @@ void tst_QSGListView::footer()
     QFETCH(QPointF, initialContentPos);
     QFETCH(QPointF, changedFooterPos);
     QFETCH(QPointF, changedContentPos);
+    QFETCH(QPointF, resizeContentPos);
 
     QSGView *canvas = createView();
 
@@ -2405,6 +2718,11 @@ void tst_QSGListView::footer()
     QVERIFY(item);
     QCOMPARE(item->pos(), firstDelegatePos);
 
+    listview->positionViewAtEnd();
+    footer->setHeight(10);
+    footer->setWidth(40);
+    QTRY_COMPARE(QPointF(listview->contentX(), listview->contentY()), resizeContentPos);
+
     delete canvas;
 }
 
@@ -2417,11 +2735,13 @@ void tst_QSGListView::footer_data()
     QTest::addColumn<QPointF>("initialContentPos");
     QTest::addColumn<QPointF>("changedContentPos");
     QTest::addColumn<QPointF>("firstDelegatePos");
+    QTest::addColumn<QPointF>("resizeContentPos");
 
     // footer1 = 100 x 30
-    // footer2 = 100 x 20
+    // footer2 = 50 x 20
     // delegates = 40 x 20
     // view width = 240
+    // view height = 320
 
     // footer below items, bottom left
     QTest::newRow("vertical, layout left to right") << QSGListView::Vertical << Qt::LeftToRight
@@ -2429,7 +2749,8 @@ void tst_QSGListView::footer_data()
         << QPointF(0, 30 * 20)  // added 30 items
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer below items, bottom right
     QTest::newRow("vertical, layout right to left") << QSGListView::Vertical << Qt::RightToLeft
@@ -2437,7 +2758,8 @@ void tst_QSGListView::footer_data()
         << QPointF(0, 30 * 20)
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(0, 30 * 20 - 320 + 10);
 
     // footer to right of items
     QTest::newRow("horizontal, layout left to right") << QSGListView::Horizontal << Qt::LeftToRight
@@ -2445,7 +2767,8 @@ void tst_QSGListView::footer_data()
         << QPointF(40 * 30, 0)
         << QPointF(0, 0)
         << QPointF(0, 0)
-        << QPointF(0, 0);
+        << QPointF(0, 0)
+        << QPointF(40 * 30 - 240 + 40, 0);
 
     // footer to left of items
     QTest::newRow("horizontal, layout right to left") << QSGListView::Horizontal << Qt::RightToLeft
@@ -2453,7 +2776,8 @@ void tst_QSGListView::footer_data()
         << QPointF(-(40 * 30) - 50, 0)     // 50 = new footer width
         << QPointF(-240, 0)
         << QPointF(-240, 0)
-        << QPointF(-40, 0);
+        << QPointF(-40, 0)
+        << QPointF(-(40 * 30) - 40, 0);
 }
 
 class LVAccessor : public QSGListView
@@ -2492,8 +2816,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->y(), 0.);
 
-        QVERIFY(static_cast<LVAccessor*>(listview)->minY() == 0);
-        QVERIFY(static_cast<LVAccessor*>(listview)->maxY() == 0);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minY(), header->height());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxY(), header->height());
 
         delete canvas;
     }
@@ -2523,8 +2847,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->x(), 0.);
 
-        QVERIFY(static_cast<LVAccessor*>(listview)->minX() == 0);
-        QVERIFY(static_cast<LVAccessor*>(listview)->maxX() == 0);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), header->width());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), header->width());
 
         delete canvas;
     }
@@ -2555,8 +2879,8 @@ void tst_QSGListView::headerFooter()
         QVERIFY(footer);
         QCOMPARE(footer->x(), -footer->width());
 
-        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240.);
-        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240.);
+        QCOMPARE(static_cast<LVAccessor*>(listview)->minX(), 240. - header->width());
+        QCOMPARE(static_cast<LVAccessor*>(listview)->maxX(), 240. - header->width());
 
         delete canvas;
     }
@@ -2691,6 +3015,7 @@ void tst_QSGListView::resizeDelegate()
 
     listview->setCurrentIndex(25);
     listview->setContentY(0);
+    QTest::qWait(300);
 
     for (int i = 0; i < 16; ++i) {
         QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
@@ -2902,8 +3227,7 @@ void tst_QSGListView::onAdd()
     for (int i=0; i<itemsToAdd; i++)
         items << qMakePair(QString("value %1").arg(i), QString::number(i));
     model.addItems(items);
-
-    qApp->processEvents();
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
 
     QVariantList result = object->property("addedDelegates").toList();
     QCOMPARE(result.count(), items.count());
@@ -2949,10 +3273,9 @@ void tst_QSGListView::onRemove()
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/attachedSignals.qml"));
     QObject *object = canvas->rootObject();
 
-    qApp->processEvents();
-
     model.removeItems(indexToRemove, removeCount);
-    qApp->processEvents();
+    QTRY_COMPARE(canvas->rootObject()->property("count").toInt(), model.count());
+
     QCOMPARE(object->property("removedDelegateCount"), QVariant(removeCount));
 
     delete canvas;

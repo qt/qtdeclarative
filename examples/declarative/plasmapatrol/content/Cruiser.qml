@@ -66,20 +66,20 @@ Item {
 
         emitRate: hp > 0 ?  hp * 1 + 20 : 0 
         lifeSpan: 2400
-        emitCap: (maxHP * 1 + 20)*2.4
+        maximumEmitted: (maxHP * 1 + 20)*2.4
 
         size: 48
         sizeVariation: 16
         endSize: 16
 
-        speed: AngledDirection{angleVariation:360; magnitudeVariation: 32}
+        speed: AngleDirection{angleVariation:360; magnitudeVariation: 32}
     }
     Emitter{
         system: container.system
         particle: "cruiserArmor"
         anchors.fill: parent
         shape: EllipseShape{ fill: false }
-        emitting: hp>0
+        enabled: hp>0
         
         emitRate: 16
         lifeSpan: 2000
@@ -90,12 +90,12 @@ Item {
         SpriteGoal{
             id: destructor
             system: container.system
-            active: container.hp <=0
+            enabled: container.hp <=0
             anchors.fill: parent
             particles: ["cruiserArmor"]
             goalState: "death"
 //            jump: true
-            onceOff: true
+            once: true
         }
     }
 

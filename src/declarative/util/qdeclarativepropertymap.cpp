@@ -58,7 +58,7 @@ public:
 protected:
     virtual void propertyWritten(int index);
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
-
+    virtual int createProperty(const char *, const char *);
 private:
     QDeclarativePropertyMap *map;
     QDeclarativePropertyMapPrivate *priv;
@@ -71,7 +71,18 @@ public:
     QDeclarativePropertyMapMetaObject *mo;
     QStringList keys;
     void emitChanged(const QString &key, const QVariant &value);
+    bool validKeyName(const QString& name);
 };
+
+bool QDeclarativePropertyMapPrivate::validKeyName(const QString& name)
+{
+    //The following strings shouldn't be used as property names
+    return  name != QLatin1String("keys")
+         && name != QLatin1String("valueChanged")
+         && name != QLatin1String("QObject")
+         && name != QLatin1String("destroyed")
+         && name != QLatin1String("deleteLater");
+}
 
 void QDeclarativePropertyMapPrivate::emitChanged(const QString &key, const QVariant &value)
 {
@@ -93,6 +104,13 @@ void QDeclarativePropertyMapMetaObject::propertyWritten(int index)
 void QDeclarativePropertyMapMetaObject::propertyCreated(int, QMetaPropertyBuilder &b)
 {
     priv->keys.append(QString::fromUtf8(b.name()));
+}
+
+int QDeclarativePropertyMapMetaObject::createProperty(const char *name, const char *value)
+{
+    if (!priv->validKeyName(name))
+        return -1;
+    return QDeclarativeOpenMetaObject::createProperty(name, value);
 }
 
 /*!
@@ -181,12 +199,8 @@ QVariant QDeclarativePropertyMap::value(const QString &key) const
 void QDeclarativePropertyMap::insert(const QString &key, const QVariant &value)
 {
     Q_D(QDeclarativePropertyMap);
-    //The following strings shouldn't be used as property names
-    if (key != QLatin1String("keys")
-     && key != QLatin1String("valueChanged")
-     && key != QLatin1String("QObject")
-     && key != QLatin1String("destroyed")
-     && key != QLatin1String("deleteLater")) {
+
+    if (d->validKeyName(key)) {
         d->mo->setValue(key.toUtf8(), value);
     } else {
         qWarning() << "Creating property with name"

@@ -160,12 +160,15 @@ public:
     FxViewItem *snapItemAt(qreal pos) const;
     int snapIndex() const;
 
-    virtual bool addVisibleItems(int fillFrom, int fillTo, bool doBuffer);
-    virtual bool removeNonVisibleItems(int bufferFrom, int bufferTo);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
     virtual void visibleItemsChanged();
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item);
     virtual void repositionPackageItemAt(QSGItem *item, int index);
+    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
+    virtual void resetFirstItemPosition();
+    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -173,6 +176,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *>*, FxViewItem *);
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
@@ -383,7 +387,7 @@ FxViewItem *QSGGridViewPrivate::newViewItem(int modelIndex, QSGItem *item)
     return new FxGridItemSG(item, q, false);
 }
 
-bool QSGGridViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer)
+bool QSGGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
 {
     int colPos = colPosAt(visibleIndex);
     int rowPos = rowPosAt(visibleIndex);
@@ -475,7 +479,7 @@ bool QSGGridViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer
     return changed;
 }
 
-bool QSGGridViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
+bool QSGGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
     FxGridItemSG *item = 0;
     bool changed = false;
@@ -560,6 +564,24 @@ void QSGGridViewPrivate::repositionPackageItemAt(QSGItem *item, int index)
     }
 }
 
+void QSGGridViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
+{
+    FxGridItemSG *toGridItem = static_cast<FxGridItemSG*>(toItem);
+    static_cast<FxGridItemSG*>(item)->setPosition(toGridItem->colPos(), toGridItem->rowPos());
+}
+
+void QSGGridViewPrivate::resetFirstItemPosition()
+{
+    FxGridItemSG *item = static_cast<FxGridItemSG*>(visibleItems.first());
+    item->setPosition(0, 0);
+}
+
+void QSGGridViewPrivate::moveItemBy(FxViewItem *item, const QList<FxViewItem *> &forwards, const QList<FxViewItem *> &backwards)
+{
+    int moveCount = forwards.count() - backwards.count();
+    FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
+    gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
+}
 
 void QSGGridViewPrivate::createHighlight()
 {
@@ -602,6 +624,8 @@ void QSGGridViewPrivate::createHighlight()
 
 void QSGGridViewPrivate::updateHighlight()
 {
+    applyPendingChanges();
+
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
     bool strictHighlight = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
@@ -750,7 +774,7 @@ void QSGGridViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
     if (item == q) {
         if (newGeometry.height() != oldGeometry.height() || newGeometry.width() != oldGeometry.width()) {
             updateViewport();
-            scheduleLayout();
+            q->polish();
         }
     }
 }
@@ -1370,6 +1394,7 @@ void QSGGridView::setCellWidth(int cellWidth)
         d->cellWidth = qMax(1, cellWidth);
         d->updateViewport();
         emit cellWidthChanged();
+        d->forceLayout = true;
         d->layout();
     }
 }
@@ -1387,6 +1412,7 @@ void QSGGridView::setCellHeight(int cellHeight)
         d->cellHeight = qMax(1, cellHeight);
         d->updateViewport();
         emit cellHeightChanged();
+        d->forceLayout = true;
         d->layout();
     }
 }
@@ -1688,349 +1714,96 @@ void QSGGridView::moveCurrentIndexRight()
     }
 }
 
-
-void QSGGridView::itemsInserted(int modelIndex, int count)
+bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, QList<FxViewItem *> *movedBackwards, QList<FxViewItem *> *addedItems, FxViewItem *firstVisible)
 {
-    Q_D(QSGGridView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
+    Q_Q(QSGGridView);
 
-    int index = d->visibleItems.count() ? d->mapFromModel(modelIndex) : 0;
+    int modelIndex = change.index;
+    int count = change.count;
+
+    int index = visibleItems.count() ? mapFromModel(modelIndex) : 0;
+
     if (index < 0) {
-        int i = d->visibleItems.count() - 1;
-        while (i > 0 && d->visibleItems.at(i)->index == -1)
+        int i = visibleItems.count() - 1;
+        while (i > 0 && visibleItems.at(i)->index == -1)
             --i;
-        if (d->visibleItems.at(i)->index + 1 == modelIndex) {
+        if (visibleItems.at(i)->index + 1 == modelIndex) {
             // Special case of appending an item to the model.
-            index = d->visibleIndex + d->visibleItems.count();
+            index = visibleIndex + visibleItems.count();
         } else {
-            if (modelIndex <= d->visibleIndex) {
+            if (modelIndex <= visibleIndex) {
                 // Insert before visible items
-                d->visibleIndex += count;
-                for (int i = 0; i < d->visibleItems.count(); ++i) {
-                    FxViewItem *item = d->visibleItems.at(i);
+                visibleIndex += count;
+                for (int i = 0; i < visibleItems.count(); ++i) {
+                    FxViewItem *item = visibleItems.at(i);
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
             }
-            if (d->currentIndex >= modelIndex) {
-                // adjust current item index
-                d->currentIndex += count;
-                if (d->currentItem)
-                    d->currentItem->index = d->currentIndex;
-                emit currentIndexChanged();
-            }
-            d->scheduleLayout();
-            d->itemCount += count;
-            emit countChanged();
-            return;
+            return true;
         }
     }
 
     int insertCount = count;
-    if (index < d->visibleIndex && d->visibleItems.count()) {
-        insertCount -= d->visibleIndex - index;
-        index = d->visibleIndex;
-        modelIndex = d->visibleIndex;
+    if (index < visibleIndex && visibleItems.count()) {
+        insertCount -= visibleIndex - index;
+        index = visibleIndex;
+        modelIndex = visibleIndex;
     }
 
-    qreal tempPos = d->isRightToLeftTopToBottom() ? -d->position()-d->size()+width()+1 : d->position();
-    int to = d->buffer+tempPos+d->size()-1;
+    qreal tempPos = isRightToLeftTopToBottom() ? -position()-size()+q->width()+1 : position();
+    int to = buffer+tempPos+size()-1;
     int colPos = 0;
     int rowPos = 0;
-    if (d->visibleItems.count()) {
-        index -= d->visibleIndex;
-        if (index < d->visibleItems.count()) {
-            FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(d->visibleItems.at(index));
+    if (visibleItems.count()) {
+        index -= visibleIndex;
+        if (index < visibleItems.count()) {
+            FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index));
             colPos = gridItem->colPos();
             rowPos = gridItem->rowPos();
         } else {
             // appending items to visible list
-            FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(d->visibleItems.at(index-1));
-            colPos = gridItem->colPos() + d->colSize();
+            FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index-1));
+            colPos = gridItem->colPos() + colSize();
             rowPos = gridItem->rowPos();
-            if (colPos > d->colSize() * (d->columns-1)) {
+            if (colPos > colSize() * (columns-1)) {
                 colPos = 0;
-                rowPos += d->rowSize();
+                rowPos += rowSize();
             }
         }
     }
 
     // Update the indexes of the following visible items.
-    for (int i = 0; i < d->visibleItems.count(); ++i) {
-        FxViewItem *item = d->visibleItems.at(i);
+    for (int i = 0; i < visibleItems.count(); ++i) {
+        FxViewItem *item = visibleItems.at(i);
         if (item->index != -1 && item->index >= modelIndex)
             item->index += count;
     }
 
-    bool addedVisible = false;
-    QList<FxGridItemSG*> added;
     int i = 0;
-    while (i < insertCount && rowPos <= to + d->rowSize()*(d->columns - (colPos/d->colSize()))/qreal(d->columns)) {
-        if (!addedVisible) {
-            d->scheduleLayout();
-            addedVisible = true;
+    bool prevAddedCount = addedItems->count();
+    while (i < insertCount && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
+        FxViewItem *item = 0;
+        if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+            if (item->index > modelIndex + i)
+                movedBackwards->append(item);
+            item->index = modelIndex + i;
         }
-        FxGridItemSG *item = static_cast<FxGridItemSG*>(d->createItem(modelIndex + i));
-        d->visibleItems.insert(index, item);
-        item->setPosition(colPos, rowPos);
-        added.append(item);
-        colPos += d->colSize();
-        if (colPos > d->colSize() * (d->columns-1)) {
+        if (!item)
+            item = createItem(modelIndex + i);
+        visibleItems.insert(index, item);
+        if (!change.isMove())
+            addedItems->append(item);
+        colPos += colSize();
+        if (colPos > colSize() * (columns-1)) {
             colPos = 0;
-            rowPos += d->rowSize();
+            rowPos += rowSize();
         }
         ++index;
         ++i;
     }
-    if (i < insertCount) {
-        // We didn't insert all our new items, which means anything
-        // beyond the current index is not visible - remove it.
-        while (d->visibleItems.count() > index) {
-            d->releaseItem(d->visibleItems.takeLast());
-        }
-    }
 
-    // update visibleIndex
-    d->visibleIndex = 0;
-    for (QList<FxViewItem*>::Iterator it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            break;
-        }
-    }
-
-    if (d->itemCount && d->currentIndex >= modelIndex) {
-        // adjust current item index
-        d->currentIndex += count;
-        if (d->currentItem) {
-            d->currentItem->index = d->currentIndex;
-            static_cast<FxGridItemSG*>(d->currentItem)->setPosition(d->colPosAt(d->currentIndex), d->rowPosAt(d->currentIndex));
-        }
-        emit currentIndexChanged();
-    } else if (d->itemCount == 0 && (!d->currentIndex || (d->currentIndex < 0 && !d->currentIndexCleared))) {
-        setCurrentIndex(0);
-    }
-
-    // everything is in order now - emit add() signal
-    for (int j = 0; j < added.count(); ++j)
-        added.at(j)->attached->emitAdd();
-
-    d->itemCount += count;
-    emit countChanged();
-}
-
-void QSGGridView::itemsRemoved(int modelIndex, int count)
-{
-    Q_D(QSGGridView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-
-    d->itemCount -= count;
-    bool currentRemoved = d->currentIndex >= modelIndex && d->currentIndex < modelIndex + count;
-    bool removedVisible = false;
-
-    // Remove the items from the visible list, skipping anything already marked for removal
-    QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (item->index == -1 || item->index < modelIndex) {
-            // already removed, or before removed items
-            if (item->index < modelIndex && !removedVisible) {
-                d->scheduleLayout();
-                removedVisible = true;
-            }
-            ++it;
-        } else if (item->index >= modelIndex + count) {
-            // after removed items
-            item->index -= count;
-            ++it;
-        } else {
-            // removed item
-            if (!removedVisible) {
-                d->scheduleLayout();
-                removedVisible = true;
-            }
-            item->attached->emitRemove();
-            if (item->attached->delayRemove()) {
-                item->index = -1;
-                connect(item->attached, SIGNAL(delayRemoveChanged()), this, SLOT(destroyRemoved()), Qt::QueuedConnection);
-                ++it;
-            } else {
-                it = d->visibleItems.erase(it);
-                d->releaseItem(item);
-            }
-        }
-    }
-
-    // update visibleIndex
-    d->visibleIndex = 0;
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            break;
-        }
-    }
-
-    // fix current
-    if (d->currentIndex >= modelIndex + count) {
-        d->currentIndex -= count;
-        if (d->currentItem)
-            d->currentItem->index -= count;
-        emit currentIndexChanged();
-    } else if (currentRemoved) {
-        // current item has been removed.
-        d->releaseItem(d->currentItem);
-        d->currentItem = 0;
-        d->currentIndex = -1;
-        if (d->itemCount)
-            d->updateCurrent(qMin(modelIndex, d->itemCount-1));
-        else
-            emit currentIndexChanged();
-    }
-
-    if (removedVisible && d->visibleItems.isEmpty()) {
-        d->timeline.clear();
-        if (d->itemCount == 0) {
-            d->setPosition(d->contentStartPosition());
-            d->updateHeader();
-            d->updateFooter();
-        }
-    }
-
-    emit countChanged();
-}
-
-
-void QSGGridView::itemsMoved(int from, int to, int count)
-{
-    Q_D(QSGGridView);
-    if (!isComponentComplete() || !d->isValid())
-        return;
-    d->updateUnrequestedIndexes();
-
-    if (d->visibleItems.isEmpty()) {
-        d->refill();
-        return;
-    }
-
-    d->moveReason = QSGGridViewPrivate::Other;
-
-    bool movingBackwards = from > to;
-    d->adjustMoveParameters(&from, &to, &count);
-
-    QHash<int,FxGridItemSG*> moved;
-    int moveByCount = 0;
-    FxGridItemSG *firstVisible = static_cast<FxGridItemSG*>(d->firstVisibleItem());
-    int firstItemIndex = firstVisible ? firstVisible->index : -1;
-
-    // if visibleItems.first() is above the content start pos, and the items
-    // beneath it are moved, ensure this first item is later repositioned correctly
-    // (to above the next visible item) so that subsequent layout() is correct
-    bool repositionFirstItem = firstVisible
-            && d->visibleItems.first()->position() < firstVisible->position()
-            && from > d->visibleItems.first()->index;
-
-    QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (item->index >= from && item->index < from + count) {
-            // take the items that are moving
-            item->index += (to-from);
-            moved.insert(item->index, static_cast<FxGridItemSG*>(item));
-            if (repositionFirstItem)
-                moveByCount++;
-            it = d->visibleItems.erase(it);
-        } else {
-            if (item->index > from && item->index != -1) {
-                // move everything after the moved items.
-                item->index -= count;
-                if (item->index < d->visibleIndex)
-                    d->visibleIndex = item->index;
-            }
-            ++it;
-        }
-    }
-
-    int movedCount = 0;
-    int endIndex = d->visibleIndex;
-    it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (movedCount < count && item->index >= to && item->index < to + count) {
-            // place items in the target position, reusing any existing items
-            int targetIndex = item->index + movedCount;
-            FxGridItemSG *movedItem = moved.take(targetIndex);
-            if (!movedItem)
-                movedItem = static_cast<FxGridItemSG*>(d->createItem(targetIndex));
-            it = d->visibleItems.insert(it, movedItem);
-            ++it;
-            ++movedCount;
-        } else {
-            if (item->index != -1) {
-                if (item->index >= to) {
-                    // update everything after the moved items.
-                    item->index += count;
-                }
-                endIndex = item->index;
-            }
-            ++it;
-        }
-    }
-
-    // If we have moved items to the end of the visible items
-    // then add any existing moved items that we have
-    while (FxGridItemSG *item = moved.take(endIndex+1)) {
-        d->visibleItems.append(item);
-        ++endIndex;
-    }
-
-    // update visibleIndex
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            break;
-        }
-    }
-
-    // if first visible item is moving but another item is moving up to replace it,
-    // do this positioning now to avoid shifting all content forwards
-    if (movingBackwards && firstItemIndex >= 0) {
-        for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-            if ((*it)->index == firstItemIndex) {
-                static_cast<FxGridItemSG*>(*it)->setPosition(firstVisible->colPos(),
-                                                             firstVisible->rowPos());
-                break;
-            }
-        }
-    }
-
-    // Fix current index
-    if (d->currentIndex >= 0 && d->currentItem) {
-        int oldCurrent = d->currentIndex;
-        d->currentIndex = d->model->indexOf(d->currentItem->item, this);
-        if (oldCurrent != d->currentIndex) {
-            d->currentItem->index = d->currentIndex;
-            emit currentIndexChanged();
-        }
-    }
-
-    // Whatever moved items remain are no longer visible items.
-    while (moved.count()) {
-        int idx = moved.begin().key();
-        FxGridItemSG *item = moved.take(idx);
-        if (d->currentItem && item->item == d->currentItem->item)
-            item->setPosition(d->colPosAt(idx), d->rowPosAt(idx));
-        d->releaseItem(item);
-    }
-
-    // Ensure we don't cause an ugly list scroll.
-    if (d->visibleItems.count() && moveByCount > 0) {
-        FxGridItemSG *first = static_cast<FxGridItemSG*>(d->visibleItems.first());
-        first->setPosition(first->colPos(), first->rowPos() + ((moveByCount / d->columns) * d->rowSize()));
-    }
-
-    d->layout();
+    return addedItems->count() > prevAddedCount;
 }
 
 /*!
@@ -2098,6 +1871,7 @@ void QSGGridView::itemsMoved(int from, int to, int count)
 
     \bold Note: methods should only be called after the Component has completed.
 */
+
 QSGGridViewAttached *QSGGridView::qmlAttachedProperties(QObject *obj)
 {
     return new QSGGridViewAttached(obj);

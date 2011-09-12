@@ -1537,7 +1537,7 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
             itemPriv->transforms.at(ii)->applyTo(&matrix);
 
         if (itemPriv->scale != 1. || itemPriv->rotation != 0.) {
-            QPointF origin = itemPriv->computeTransformOrigin();
+            QPointF origin = item->transformOriginPoint();
             matrix.translate(origin.x(), origin.y());
             if (itemPriv->scale != 1.)
                 matrix.scale(itemPriv->scale, itemPriv->scale);

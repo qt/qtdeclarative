@@ -86,12 +86,12 @@ Item {
         }
         anchors.fill: parent
 
-        speed: TargetedDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
+        speed: TargetDirection{targetX: block.width/2; targetY: block.height/2; magnitude: -60; magnitudeVariation: 60}
         shape: EllipseShape{fill:true}
-        emitting: false;
+        enabled: false;
         lifeSpan: 700; lifeSpanVariation: 100
         emitRate: 1000
-        emitCap: 100 //only fires 0.1s bursts (still 2x old number, ImageParticle wants less than 16000 max though)
+        maximumEmitted: 100 //only fires 0.1s bursts (still 2x old number)
         size: 28
         endSize: 14
     }

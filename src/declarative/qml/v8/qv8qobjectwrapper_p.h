@@ -111,11 +111,13 @@ private:
     static v8::Handle<v8::Value> Disconnect(const v8::Arguments &args);
     static v8::Handle<v8::Value> Invoke(const v8::Arguments &args);
     static QPair<QObject *, int> ExtractQtMethod(QV8Engine *, v8::Handle<v8::Function>);
+    static QPair<QObject *, int> ExtractQtSignal(QV8Engine *, v8::Handle<v8::Object>);
 
     QV8Engine *m_engine;
     quint32 m_id;
     v8::Persistent<v8::Function> m_constructor;
     v8::Persistent<v8::Function> m_methodConstructor;
+    v8::Persistent<v8::Function> m_signalHandlerConstructor;
     v8::Persistent<v8::String> m_toStringSymbol;
     v8::Persistent<v8::String> m_destroySymbol;
     QHashedV8String m_toStringString;

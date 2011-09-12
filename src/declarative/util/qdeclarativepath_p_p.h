@@ -56,28 +56,33 @@
 #include "private/qdeclarativepath_p.h"
 
 #include <qdeclarative.h>
+#include <QtCore/QStringList>
 
-#include <qstringlist.h>
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
 class QDeclarativePathPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativePath)
 
 public:
-    QDeclarativePathPrivate() : startX(0), startY(0), closed(false), componentComplete(true) { }
+    QDeclarativePathPrivate() : pathLength(0), closed(false), componentComplete(true) { }
 
     QPainterPath _path;
     QList<QDeclarativePathElement*> _pathElements;
     mutable QVector<QPointF> _pointCache;
     QList<QDeclarativePath::AttributePoint> _attributePoints;
     QStringList _attributes;
-    int startX;
-    int startY;
+    QList<QDeclarativeCurve*> _pathCurves;
+    mutable QDeclarativeCachedBezier prevBez;
+    QDeclarativeNullableValue<qreal> startX;
+    QDeclarativeNullableValue<qreal> startY;
+    qreal pathLength;
     bool closed;
     bool componentComplete;
 };
 
 QT_END_NAMESPACE
+
 #endif

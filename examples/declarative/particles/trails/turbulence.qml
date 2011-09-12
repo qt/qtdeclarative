@@ -91,9 +91,9 @@ Rectangle{
         endSize: 10
         sizeVariation: 10
         acceleration: PointDirection{ y: -40 }
-        speed: AngledDirection{ angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
+        speed: AngleDirection{ angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
     }
-    FollowEmitter{
+    TrailEmitter{
         id: smoke1
         width: root.width
         height: 258
@@ -108,9 +108,9 @@ Rectangle{
         endSize: 8
         sizeVariation: 8
         acceleration: PointDirection{ y: -40 }
-        speed: AngledDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        speed: AngleDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
-    FollowEmitter{
+    TrailEmitter{
         id: smoke2
         width: root.width
         height: 232
@@ -124,6 +124,6 @@ Rectangle{
         endSize: 24
         sizeVariation: 8
         acceleration: PointDirection{ y: -40 }
-        speed: AngledDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        speed: AngleDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
 }

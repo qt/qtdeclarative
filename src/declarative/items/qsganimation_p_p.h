@@ -56,6 +56,7 @@
 
 #include "qsganimation_p.h"
 
+#include <private/qdeclarativepath_p.h>
 #include <private/qdeclarativeanimation_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -91,6 +92,46 @@ public:
     QVariantAnimation::Interpolator interpolator;
     QList<QSGItem*> targets;
 };
+
+class QSGPathAnimationUpdater : public QDeclarativeBulkValueUpdater
+{
+public:
+    QDeclarativePath *path;
+
+    QPainterPath painterPath;
+    QDeclarativeCachedBezier prevBez;
+    qreal pathLength;
+    QList<QDeclarativePath::AttributePoint> attributePoints;
+
+    QSGItem *target;
+    bool reverse;
+    bool fromSourced;
+    bool fromDefined;
+    qreal toX;
+    qreal toY;
+    QSGPathAnimation::Orientation orientation;
+    QPointF anchorPoint;
+    QSGPathAnimationUpdater() : path(0), target(0), reverse(false),
+        fromSourced(false), fromDefined(false), toX(0), toY(0), orientation(QSGPathAnimation::Fixed) {}
+    ~QSGPathAnimationUpdater() {}
+    void setValue(qreal v);
+};
+
+class QSGPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
+{
+    Q_DECLARE_PUBLIC(QSGPathAnimation)
+public:
+    QSGPathAnimationPrivate() : path(0), target(0),
+        rangeIsSet(false), orientation(QSGPathAnimation::Fixed), pa(0) {}
+
+    QDeclarativePath *path;
+    QSGItem *target;
+    bool rangeIsSet;
+    QSGPathAnimation::Orientation orientation;
+    QPointF anchorPoint;
+    QDeclarativeBulkValueAnimator *pa;
+};
+
 
 QT_END_NAMESPACE
 

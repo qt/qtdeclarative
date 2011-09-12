@@ -38,7 +38,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
+import "content"
 
 Rectangle {
     width: 800; height: 480

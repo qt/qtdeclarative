@@ -78,7 +78,6 @@ public:
     }
 
     QByteArray intern(const QString &str);
-    void updateTestObjectName();
 
     QString testCaseName;
     QString functionName;
@@ -94,25 +93,6 @@ QByteArray QuickTestResultPrivate::intern(const QString &str)
 {
     QByteArray bstr = str.toUtf8();
     return *(internedStrings.insert(bstr));
-}
-
-void QuickTestResultPrivate::updateTestObjectName()
-{
-    // In plain logging mode we use the TestCase name as the
-    // class name so that multiple TestCase elements will report
-    // results with "testCase::function".  In XML logging mode,
-    // we use the program name as the class name and report test
-    // functions as "testCase__function".
-    if (QTestLog::logMode() == QTestLog::Plain) {
-        if (testCaseName.isEmpty()) {
-            QTestResult::setCurrentTestObject(globalProgramName);
-        } else if (QTestLog::logMode() == QTestLog::Plain) {
-            QTestResult::setCurrentTestObject
-                (intern(testCaseName).constData());
-        }
-    } else {
-        QTestResult::setCurrentTestObject(globalProgramName);
-    }
 }
 
 QuickTestResult::QuickTestResult(QObject *parent)
@@ -144,7 +124,6 @@ void QuickTestResult::setTestCaseName(const QString &name)
 {
     Q_D(QuickTestResult);
     d->testCaseName = name;
-    d->updateTestObjectName();
     emit testCaseNameChanged();
 }
 
@@ -167,15 +146,11 @@ void QuickTestResult::setFunctionName(const QString &name)
 {
     Q_D(QuickTestResult);
     if (!name.isEmpty()) {
-        // In plain logging mode, we use the function name directly.
-        // In XML logging mode, we use "testCase__functionName" as the
-        // program name is acting as the class name.
-        if (QTestLog::logMode() == QTestLog::Plain ||
-                d->testCaseName.isEmpty()) {
+        if (d->testCaseName.isEmpty()) {
             QTestResult::setCurrentTestFunction
                 (d->intern(name).constData());
         } else {
-            QString fullName = d->testCaseName + QLatin1String("__") + name;
+            QString fullName = d->testCaseName + QLatin1String("::") + name;
             QTestResult::setCurrentTestFunction
                 (d->intern(fullName).constData());
         }
@@ -342,15 +317,7 @@ void QuickTestResult::startLogging()
     Q_D(QuickTestResult);
     if (loggingStarted)
         return;
-    const char *saved = QTestResult::currentTestObjectName();
-    if (globalProgramName) {
-        QTestResult::setCurrentTestObject(globalProgramName);
-    } else {
-        QTestResult::setCurrentTestObject
-            (d->intern(d->testCaseName).constData());
-    }
     QTestLog::startLogging();
-    QTestResult::setCurrentTestObject(saved);
     loggingStarted = true;
 }
 
@@ -366,10 +333,8 @@ void QuickTestResult::stopLogging()
     Q_D(QuickTestResult);
     if (globalProgramName)
         return;     // Logging will be stopped by setProgramName(0).
-    const char *saved = QTestResult::currentTestObjectName();
     QTestResult::setCurrentTestObject(d->intern(d->testCaseName).constData());
     QTestLog::stopLogging();
-    QTestResult::setCurrentTestObject(saved);
 }
 
 void QuickTestResult::initTestTable()
@@ -614,6 +579,7 @@ void QuickTestResult::setProgramName(const char *name)
         QTestResult::setCurrentTestObject(0);
     }
     globalProgramName = name;
+    QTestResult::setCurrentTestObject(globalProgramName);
 }
 
 int QuickTestResult::exitCode()

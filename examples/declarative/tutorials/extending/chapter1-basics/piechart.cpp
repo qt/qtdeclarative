@@ -41,11 +41,9 @@
 #include <QPainter>
 
 //![0]
-PieChart::PieChart(QDeclarativeItem *parent)
-    : QDeclarativeItem(parent)
+PieChart::PieChart(QSGItem *parent)
+    : QSGPaintedItem(parent)
 {
-    // need to disable this flag to draw inside a QDeclarativeItem
-    setFlag(QGraphicsItem::ItemHasNoContents, false);
 }
 //![0]
 
@@ -70,11 +68,11 @@ void PieChart::setColor(const QColor &color)
 }
 
 //![1]
-void PieChart::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+void PieChart::paint(QPainter *painter)
 {
     QPen pen(m_color, 2);
     painter->setPen(pen);
-    painter->setRenderHints(QPainter::Antialiasing, true);
+    painter->setRenderHints(QPainter::HighQualityAntialiasing, true);
     painter->drawPie(boundingRect(), 90 * 16, 290 * 16);
 }
 //![1]

@@ -44,6 +44,8 @@
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/private/qsgrectangle_p.h>
 #include <QtDeclarative/private/qdeclarativeanimation_p.h>
+#include <QtDeclarative/private/qsganimation_p.h>
+#include <QtDeclarative/private/qdeclarativepathinterpolator_p.h>
 #include <QtDeclarative/private/qsgitem_p.h>
 #include <QVariantAnimation>
 #include <QEasingCurve>
@@ -68,6 +70,8 @@ private slots:
     void simpleNumber();
     void simpleColor();
     void simpleRotation();
+    void simplePath();
+    void pathInterpolator();
     void alwaysRunToEnd();
     void complete();
     void resume();
@@ -77,6 +81,7 @@ private slots:
     void mixedTypes();
     void properties();
     void propertiesTransition();
+    void pathTransition();
     void disabledTransition();
     void invalidDuration();
     void attached();
@@ -211,6 +216,62 @@ void tst_qdeclarativeanimations::simpleRotation()
     animation.setCurrentTime(125);
     QVERIFY(animation.currentTime() == 125);
     QCOMPARE(rect.rotation(), qreal(135));
+}
+
+void tst_qdeclarativeanimations::simplePath()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathAnimation.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QSGRectangle *redRect = rect->findChild<QSGRectangle*>();
+    QVERIFY(redRect);
+    QSGPathAnimation *pathAnim = rect->findChild<QSGPathAnimation*>();
+    QVERIFY(pathAnim);
+
+    pathAnim->start();
+    pathAnim->pause();
+
+    pathAnim->setCurrentTime(50);
+    QCOMPARE(redRect->x(), qreal(175));
+    QCOMPARE(redRect->y(), qreal(175));
+
+    pathAnim->setCurrentTime(100);
+    QCOMPARE(redRect->x(), qreal(300));
+    QCOMPARE(redRect->y(), qreal(300));
+
+    //verify animation runs to end
+    pathAnim->start();
+    QCOMPARE(redRect->x(), qreal(50));
+    QCOMPARE(redRect->y(), qreal(50));
+    QTRY_COMPARE(redRect->x(), qreal(300));
+    QCOMPARE(redRect->y(), qreal(300));
+}
+
+void tst_qdeclarativeanimations::pathInterpolator()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathInterpolator.qml"));
+    QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
+    QVERIFY(interpolator);
+
+    QCOMPARE(interpolator->progress(), qreal(0));
+    QCOMPARE(interpolator->x(), qreal(50));
+    QCOMPARE(interpolator->y(), qreal(50));
+    QCOMPARE(interpolator->angle(), qreal(0));
+
+    interpolator->setProgress(.5);
+    QCOMPARE(interpolator->progress(), qreal(.5));
+    QCOMPARE(interpolator->x(), qreal(175));
+    QCOMPARE(interpolator->y(), qreal(175));
+    QCOMPARE(interpolator->angle(), qreal(270));
+
+    interpolator->setProgress(1);
+    QCOMPARE(interpolator->progress(), qreal(1));
+    QCOMPARE(interpolator->x(), qreal(300));
+    QCOMPARE(interpolator->y(), qreal(300));
+    QCOMPARE(interpolator->angle(), qreal(0));
 }
 
 void tst_qdeclarativeanimations::alwaysRunToEnd()
@@ -575,6 +636,26 @@ void tst_qdeclarativeanimations::propertiesTransition()
         QTIMED_COMPARE(myRect->x(),qreal(200));
     }
 
+}
+
+void tst_qdeclarativeanimations::pathTransition()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathTransition.qml"));
+    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QVERIFY(rect);
+
+    QSGRectangle *myRect = rect->findChild<QSGRectangle*>("redRect");
+    QVERIFY(myRect);
+
+    QSGItemPrivate::get(rect)->setState("moved");
+    QTRY_VERIFY(myRect->x() < 500 && myRect->x() > 100 && myRect->y() > 50 && myRect->y() < 700 );  //animation started
+    QTRY_VERIFY(qFuzzyCompare(myRect->x(), qreal(100)) && qFuzzyCompare(myRect->y(), qreal(700)));
+    QTest::qWait(100);
+
+    QSGItemPrivate::get(rect)->setState("");
+    QTRY_VERIFY(myRect->x() < 500 && myRect->x() > 100 && myRect->y() > 50 && myRect->y() < 700 );  //animation started
+    QTRY_VERIFY(qFuzzyCompare(myRect->x(), qreal(500)) && qFuzzyCompare(myRect->y(), qreal(50)));
 }
 
 void tst_qdeclarativeanimations::disabledTransition()

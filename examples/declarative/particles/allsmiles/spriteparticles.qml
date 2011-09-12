@@ -78,7 +78,6 @@ Rectangle{
         id: particles2
         emitRate: 6000
         lifeSpan: 720
-        emitting: true
         size: 10
         shape: mask
     }
@@ -89,7 +88,6 @@ Rectangle{
         id: particles
         emitRate: 60
         lifeSpan: 1440
-        emitting: true
         speed: PointDirection{xVariation: 10; yVariation: 10;}
         size: 30
         sizeVariation: 10

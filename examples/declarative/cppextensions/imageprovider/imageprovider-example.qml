@@ -37,13 +37,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 1.0
+import QtQuick 2.0
 import "ImageProviderCore" // import the plugin that registers the color image provider
 
 //![0]
 Column {
-    Image { source: "source://colors/yellow" }
-    Image { source: "source://colors/red" }
+    Image { source: "image://colors/yellow" }
+    Image { source: "image://colors/red" }
 }
 //![0]
 

@@ -57,6 +57,7 @@ Rectangle {
         source: "content/star.png"
         color: "white"
         colorVariation: 0.0
+        rotationSpeed: 360
     }
 
     // Define a delegate component.  A component will be
@@ -95,11 +96,12 @@ Rectangle {
             Emitter{
                 anchors.fill: parent
                 system: particles;
-                emitting: anim.running
+                enabled: anim.running
                 emitRate: 600
                 lifeSpan: 600
                 size: 16
                 endSize: 8
+                sizeVariation: 8
             }
         }
     }

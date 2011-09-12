@@ -90,6 +90,8 @@ class Q_AUTOTEST_EXPORT QSGFlickable : public QSGItem
 
     Q_PROPERTY(QSGFlickableVisibleArea *visibleArea READ visibleArea CONSTANT)
 
+    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
+
     Q_PROPERTY(QDeclarativeListProperty<QObject> flickableData READ flickableData)
     Q_PROPERTY(QDeclarativeListProperty<QSGItem> flickableChildren READ flickableChildren)
     Q_CLASSINFO("DefaultProperty", "flickableData")
@@ -156,6 +158,9 @@ public:
     FlickableDirection flickableDirection() const;
     void setFlickableDirection(FlickableDirection);
 
+    bool pixelAligned() const;
+    void setPixelAligned(bool align);
+
     Q_INVOKABLE void resizeContent(qreal w, qreal h, QPointF center);
     Q_INVOKABLE void returnToBounds();
 
@@ -188,6 +193,7 @@ Q_SIGNALS:
     void flickEnded();
     void dragStarted();
     void dragEnded();
+    void pixelAlignedChanged();
 
 protected:
     virtual bool childMouseEventFilter(QSGItem *, QEvent *);

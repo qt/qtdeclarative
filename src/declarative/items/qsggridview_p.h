@@ -109,11 +109,6 @@ Q_SIGNALS:
 protected:
     virtual void viewportMoved();
     virtual void keyPressEvent(QKeyEvent *);
-
-private Q_SLOTS:
-    void itemsInserted(int index, int count);
-    void itemsRemoved(int index, int count);
-    void itemsMoved(int from, int to, int count);
 };
 
 class QSGGridViewAttached : public QSGItemViewAttached

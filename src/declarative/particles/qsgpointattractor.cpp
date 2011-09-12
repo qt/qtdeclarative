@@ -44,24 +44,75 @@
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 /*!
-    \qmlclass PointAttractor QSGPointAttractorAffector
+    \qmlclass Attractor QSGAttractorAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The PointAttractor allows you to attract particles towards a specific point.
+    \brief The Attractor allows you to attract particles towards a specific point.
 
     Note that the size and position of this element affects which particles it affects.
     The size of the point attracted to is always 0x0, and the location of that point
-    is specified by the x and y properties that badly need renaming.
+    is specified by the pointX and pointY properties.
+
+    Note that Attractor has the standard Item x,y,width and height properties.
+    Like other affectors, these represent the affected area. They
+    do not represent the 0x0 point which is the target of the attraction.
 
 */
 
-QSGPointAttractorAffector::QSGPointAttractorAffector(QSGItem *parent) :
+
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::pointX
+
+    The x coordinate of the attracting point. This is relative
+    to the x coordinate of the Attractor.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::pointY
+
+    The x coordinate of the attracting point. This is relative
+    to the x coordinate of the Attractor.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::PointAttractor::strength
+
+    The pull, in units per second, to be exerted on an item one pixel away.
+
+    Depending on how the attraction is proportionalToDistance this may have to
+    be very high or very low to have a reasonable effect on particles at a
+    distance.
+*/
+/*!
+    \qmlproperty AffectableParameter QtQuick.Particles2::Attractor::affectedParameter
+
+    What attribute of particles is directly affected.
+    \list
+    \o Attractor.Position
+    \o Attractor.Velocity
+    \o Attractor.Acceleration
+    \endlist
+*/
+/*!
+    \qmlproperty Proportion QtQuick.Particles2::Attractor::proportionalToDistance
+
+    How the distance from the particle to the point affects the strength of the attraction.
+
+    \list
+    \o Attractor.Constant
+    \o Attractor.Linear
+    \o Attractor.InverseLinear
+    \o Attractor.Quadratic
+    \o Attractor.InverseQuadratic
+    \endlist
+*/
+
+
+QSGAttractorAffector::QSGAttractorAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_strength(0.0), m_x(0), m_y(0)
   , m_physics(Velocity), m_proportionalToDistance(Linear)
 {
 }
 
-bool QSGPointAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
+bool QSGAttractorAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     if (m_strength == 0.0)
         return false;

@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qv8debug_p.h \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
+    $$PWD/qv8gccallback_p.h \
     $$PWD/qv8contextwrapper_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
     $$PWD/qv8typewrapper_p.h \

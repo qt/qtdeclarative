@@ -256,6 +256,8 @@ QDeclarativeExpression::QDeclarativeExpression(const QDeclarativeScriptString &s
         else
            defaultConstruction = true;
 
+        if (cdata)
+            cdata->release();
         if (typeData)
             typeData->release();
     }

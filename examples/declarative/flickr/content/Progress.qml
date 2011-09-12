@@ -69,14 +69,14 @@ Item{
     Emitter{
         y: 2; height: parent.height-4;
         x: 2; width: Math.max(parent.width * progress - 4, 0);
-        speed: AngledDirection{ angleVariation: 180; magnitudeVariation: 12 }
+        speed: AngleDirection{ angleVariation: 180; magnitudeVariation: 12 }
         system: barSys
         emitRate: width;
         lifeSpan: 1000
         size: 20
         sizeVariation: 4
         endSize: 12
-        emitCap: parent.width;
+        maximumEmitted: parent.width;
     }
 
     Text {

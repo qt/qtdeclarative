@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
     property string myText: "The quick brown fox jumps over the lazy dog."
@@ -47,7 +47,7 @@ Rectangle {
     color: "steelblue"
 
     FontLoader { id: fixedFont; name: "Courier" }
-    FontLoader { id: localFont; source: "fonts/tarzeau_ocr_a.ttf" }
+    FontLoader { id: localFont; source: "content/fonts/tarzeau_ocr_a.ttf" }
     FontLoader { id: webFont; source: "http://www.princexml.com/fonts/steffmann/Starburst.ttf" }
 
     Column {

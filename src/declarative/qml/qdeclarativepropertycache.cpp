@@ -313,10 +313,14 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
     allowedRevisionCache.append(0);
 
     int methodCount = metaObject->methodCount();
+    Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 4);
+    int signalCount = QMetaObjectPrivate::get(metaObject)->signalCount;
     // 3 to block the destroyed signal and the deleteLater() slot
     int methodOffset = qMax(3, metaObject->methodOffset()); 
 
     methodIndexCache.resize(methodCount - methodIndexCacheStart);
+    signalHandlerIndexCache.resize(signalCount);
+    int signalHandlerIndex = 0;
     for (int ii = methodOffset; ii < methodCount; ++ii) {
         QMetaMethod m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private) 
@@ -329,6 +333,7 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         while (*cptr != '(') { Q_ASSERT(*cptr != 0); utf8 |= *cptr & 0x80; ++cptr; }
 
         Data *data = &methodIndexCache[ii - methodIndexCacheStart];
+        Data *sigdata = 0;
 
         data->lazyLoad(m);
 
@@ -342,6 +347,12 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
 
         data->metaObjectOffset = allowedRevisionCache.count() - 1;
 
+        if (data->isSignal()) {
+            sigdata = &signalHandlerIndexCache[signalHandlerIndex];
+            *sigdata = *data;
+            sigdata->flags |= Data::IsSignalHandler;
+        }
+
         Data *old = 0;
 
         if (utf8) {
@@ -349,11 +360,33 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             if (Data **it = stringCache.value(methodName))
                 old = *it;
             stringCache.insert(methodName, data);
+
+            if (data->isSignal()) {
+                QHashedString on(QStringLiteral("on") % methodName.at(0).toUpper() % methodName.midRef(1));
+                stringCache.insert(on, sigdata);
+                ++signalHandlerIndex;
+            }
         } else {
             QHashedCStringRef methodName(signature, cptr - signature);
             if (Data **it = stringCache.value(methodName))
                 old = *it;
             stringCache.insert(methodName, data);
+
+            if (data->isSignal()) {
+                int length = methodName.length();
+
+                QVarLengthArray<char, 128> str(length+3);
+                str[0] = 'o';
+                str[1] = 'n';
+                str[2] = toupper(signature[0]);
+                if (length > 1)
+                    memcpy(&str[3], &signature[1], length - 1);
+                str[length + 2] = '\0';
+
+                QHashedString on(QString::fromLatin1(str.data()));
+                stringCache.insert(on, sigdata);
+                ++signalHandlerIndex;
+            }
         }
 
         if (old) {

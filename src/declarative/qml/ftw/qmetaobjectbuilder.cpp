@@ -155,6 +155,7 @@ struct QMetaObjectPrivate
     int enumeratorCount, enumeratorData;
     int constructorCount, constructorData;
     int flags;
+    int signalCount;
 };
 
 static inline const QMetaObjectPrivate *priv(const uint* data)
@@ -1206,7 +1207,7 @@ static int buildMetaObject(QMetaObjectBuilderPrivate *d, char *buf,
     QMetaObjectPrivate *pmeta
         = reinterpret_cast<QMetaObjectPrivate *>(buf + size);
     int pmetaSize = size;
-    dataIndex = 13;     // Number of fields in the QMetaObjectPrivate.
+    dataIndex = 14;     // Number of fields in the QMetaObjectPrivate.
     for (index = 0; index < d->properties.size(); ++index) {
         if (d->properties[index].notifySignal != -1) {
             hasNotifySignals = true;
@@ -1214,9 +1215,10 @@ static int buildMetaObject(QMetaObjectBuilderPrivate *d, char *buf,
         }
     }
     if (buf) {
-        pmeta->revision = 3;
+        pmeta->revision = 4;
         pmeta->flags = d->flags;
         pmeta->className = 0;   // Class name is always the first string.
+        //pmeta->signalCount is handled in the "output method loop" as an optimization.
 
         pmeta->classInfoCount = d->classInfoNames.size();
         pmeta->classInfoData = dataIndex;
@@ -1274,7 +1276,7 @@ static int buildMetaObject(QMetaObjectBuilderPrivate *d, char *buf,
     }
 
     // Reset the current data position to just past the QMetaObjectPrivate.
-    dataIndex = 13;
+    dataIndex = 14;
 
     // Add the class name to the string table.
     int offset = 0;
@@ -1312,6 +1314,8 @@ static int buildMetaObject(QMetaObjectBuilderPrivate *d, char *buf,
             data[dataIndex + 2] = ret;
             data[dataIndex + 3] = tag;
             data[dataIndex + 4] = attrs;
+            if (method->methodType() == QMetaMethod::Signal)
+                pmeta->signalCount++;
         }
         dataIndex += 5;
     }

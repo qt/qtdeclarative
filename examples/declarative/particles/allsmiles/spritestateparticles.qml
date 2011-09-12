@@ -172,8 +172,7 @@ Rectangle{
         system: sys
         emitRate: 16
         lifeSpan: 10000
-        emitting: true
-        speed: AngledDirection{angle: 90; magnitude: 60; angleVariation: 5}
+        speed: AngleDirection{angle: 90; magnitude: 60; angleVariation: 5}
         acceleration: PointDirection{ y: 10 }
         size: 30
         sizeVariation: 10

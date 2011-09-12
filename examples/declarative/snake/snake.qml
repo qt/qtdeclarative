@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 import "content" as Content
 import "content/snake.js" as Logic
 
@@ -76,7 +76,7 @@ Rectangle {
     Timer {
         id: heartbeat;
         interval: heartbeatInterval;
-        running: activeGame && runtime.isActiveWindow
+        running: activeGame && Qt.application.active
         repeat: true
         onTriggered: { Logic.move() }
     }

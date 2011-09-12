@@ -50,7 +50,7 @@
 #include "qdeclarativecomponent.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativevme_p.h"
-#include "private/qdeclarativeenginedebug_p.h"
+#include "private/qdeclarativeenginedebugservice_p.h"
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativexmlhttprequest_p.h"
 #include "private/qdeclarativesqldatabase_p.h"
@@ -447,9 +447,9 @@ void QDeclarativeEnginePrivate::init()
     rootContext = new QDeclarativeContext(q,true);
 
     if (QCoreApplication::instance()->thread() == q->thread() &&
-        QDeclarativeEngineDebugServer::isDebuggingEnabled()) {
+        QDeclarativeEngineDebugService::isDebuggingEnabled()) {
         isDebugging = true;
-        QDeclarativeEngineDebugServer::instance()->addEngine(q);
+        QDeclarativeEngineDebugService::instance()->addEngine(q);
         QV8DebugService::instance()->addEngine(q);
     }
 }
@@ -514,7 +514,7 @@ QDeclarativeEngine::~QDeclarativeEngine()
 {
     Q_D(QDeclarativeEngine);
     if (d->isDebugging)
-        QDeclarativeEngineDebugServer::instance()->remEngine(this);
+        QDeclarativeEngineDebugService::instance()->remEngine(this);
 
     // if we are the parent of any of the qobject module api instances,
     // we need to remove them from our internal list, in order to prevent
@@ -662,6 +662,8 @@ void QDeclarativeEngine::addImageProvider(const QString &providerId, QDeclarativ
 
 /*!
   Returns the QDeclarativeImageProvider set for \a providerId.
+
+  Returns the provider if it was found; otherwise returns 0.
 */
 QDeclarativeImageProvider *QDeclarativeEngine::imageProvider(const QString &providerId) const
 {
@@ -672,8 +674,6 @@ QDeclarativeImageProvider *QDeclarativeEngine::imageProvider(const QString &prov
 
 /*!
   Removes the QDeclarativeImageProvider for \a providerId.
-
-  Returns the provider if it was found; otherwise returns 0.
 
   \sa addImageProvider()
 */
@@ -947,8 +947,10 @@ QDeclarativeContext *qmlContext(const QObject *obj)
 
 QDeclarativeEngine *qmlEngine(const QObject *obj)
 {
-    QDeclarativeContext *context = QDeclarativeEngine::contextForObject(obj);
-    return context?context->engine():0;
+    QDeclarativeData *data = QDeclarativeData::get(obj, false);
+    if (!data || !data->context)
+        return 0;
+    return data->context->engine;
 }
 
 QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
@@ -1679,5 +1681,21 @@ bool QDeclarative_isFileCaseCorrect(const QString &fileName)
 #endif
     return true;
 }
+
+/*!
+    \fn QDeclarativeEngine *qmlEngine(const QObject *object)
+    \relates QDeclarativeEngine
+
+    Returns the QDeclarativeEngine associated with \a object, if any.  This is equivalent to
+    QDeclarativeEngine::contextForObject(object)->engine(), but more efficient.
+*/
+
+/*!
+    \fn QDeclarativeContext *qmlContext(const QObject *object)
+    \relates QDeclarativeEngine
+
+    Returns the QDeclarativeContext associated with \a object, if any.  This is equivalent to
+    QDeclarativeEngine::contextForObject(object).
+*/
 
 QT_END_NAMESPACE

@@ -135,7 +135,7 @@ public:
     QV8ObjectResource(QV8Engine *engine) : engine(engine) { Q_ASSERT(engine); }
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
-                        ListModelType, Context2DType, ParticleDataType };
+                        ListModelType, Context2DType, ParticleDataType, SignalHandlerType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
@@ -470,7 +470,6 @@ private:
     ValueIteratorList m_valueIterators;
 
     Q_DISABLE_COPY(QV8Engine)
-    friend class QV8DebugService;
 };
 
 // Allocate a new Persistent handle.  *ALL* persistent handles in QML must be allocated

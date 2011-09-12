@@ -119,7 +119,7 @@ class Q_DECLARATIVE_EXPORT QSGItem : public QObject, public QDeclarativeParserSt
 
     Q_PRIVATE_PROPERTY(QSGItem::d_func(), QDeclarativeListProperty<QDeclarativeState> states READ states DESIGNABLE false)
     Q_PRIVATE_PROPERTY(QSGItem::d_func(), QDeclarativeListProperty<QDeclarativeTransition> transitions READ transitions DESIGNABLE false)
-    Q_PRIVATE_PROPERTY(QSGItem::d_func(), QString state READ state WRITE setState NOTIFY stateChanged)
+    Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
     Q_PROPERTY(QRectF childrenRect READ childrenRect NOTIFY childrenRectChanged DESIGNABLE false FINAL)
     Q_PRIVATE_PROPERTY(QSGItem::d_func(), QSGAnchors * anchors READ anchors DESIGNABLE false CONSTANT FINAL)
     Q_PRIVATE_PROPERTY(QSGItem::d_func(), QSGAnchorLine left READ left CONSTANT FINAL)
@@ -205,6 +205,9 @@ public:
     bool clip() const;
     void setClip(bool);
 
+    QString state() const;
+    void setState(const QString &);
+
     qreal baselineOffset() const;
     void setBaselineOffset(qreal);
 
@@ -232,6 +235,7 @@ public:
     TransformOrigin transformOrigin() const;
     void setTransformOrigin(TransformOrigin);
     QPointF transformOriginPoint() const;
+    void setTransformOriginPoint(const QPointF &);
 
     qreal z() const;
     void setZ(qreal);

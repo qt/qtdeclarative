@@ -1,8 +1,10 @@
 TEMPLATE = app
-
+TARGET = abstractitemmodel
+DEPENDPATH += .
+INCLUDEPATH += .
 QT += declarative
 
-RESOURCES += abstractitemmodel.qrc
-
 HEADERS = model.h
-SOURCES = main.cpp model.cpp
+SOURCES = main.cpp \
+          model.cpp
+RESOURCES += abstractitemmodel.qrc

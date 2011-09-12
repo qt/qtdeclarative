@@ -44,6 +44,9 @@
 
 #include <qdeclarative.h>
 
+#include "private/qdeclarativenullablevalue_p_p.h"
+#include <private/qbezier_p.h>
+
 #include <QtCore/QObject>
 #include <QtGui/QPainterPath>
 
@@ -52,6 +55,15 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
+
+class QDeclarativeCurve;
+struct QDeclarativePathData
+{
+    int index;
+    QPointF endPoint;
+    QList<QDeclarativeCurve*> curves;
+};
+
 class Q_AUTOTEST_EXPORT QDeclarativePathElement : public QObject
 {
     Q_OBJECT
@@ -92,24 +104,40 @@ class Q_AUTOTEST_EXPORT QDeclarativeCurve : public QDeclarativePathElement
 
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
+    Q_PROPERTY(qreal relativeX READ relativeX WRITE setRelativeX NOTIFY relativeXChanged)
+    Q_PROPERTY(qreal relativeY READ relativeY WRITE setRelativeY NOTIFY relativeYChanged)
 public:
-    QDeclarativeCurve(QObject *parent=0) : QDeclarativePathElement(parent), _x(0), _y(0) {}
+    QDeclarativeCurve(QObject *parent=0) : QDeclarativePathElement(parent) {}
 
     qreal x() const;
     void setX(qreal x);
+    bool hasX();
 
     qreal y() const;
     void setY(qreal y);
+    bool hasY();
 
-    virtual void addToPath(QPainterPath &) {}
+    qreal relativeX() const;
+    void setRelativeX(qreal x);
+    bool hasRelativeX();
+
+    qreal relativeY() const;
+    void setRelativeY(qreal y);
+    bool hasRelativeY();
+
+    virtual void addToPath(QPainterPath &, const QDeclarativePathData &) {}
 
 Q_SIGNALS:
     void xChanged();
     void yChanged();
+    void relativeXChanged();
+    void relativeYChanged();
 
 private:
-    qreal _x;
-    qreal _y;
+    QDeclarativeNullableValue<qreal> _x;
+    QDeclarativeNullableValue<qreal> _y;
+    QDeclarativeNullableValue<qreal> _relativeX;
+    QDeclarativeNullableValue<qreal> _relativeY;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativePathLine : public QDeclarativeCurve
@@ -118,7 +146,7 @@ class Q_AUTOTEST_EXPORT QDeclarativePathLine : public QDeclarativeCurve
 public:
     QDeclarativePathLine(QObject *parent=0) : QDeclarativeCurve(parent) {}
 
-    void addToPath(QPainterPath &path);
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativePathQuad : public QDeclarativeCurve
@@ -127,6 +155,8 @@ class Q_AUTOTEST_EXPORT QDeclarativePathQuad : public QDeclarativeCurve
 
     Q_PROPERTY(qreal controlX READ controlX WRITE setControlX NOTIFY controlXChanged)
     Q_PROPERTY(qreal controlY READ controlY WRITE setControlY NOTIFY controlYChanged)
+    Q_PROPERTY(qreal relativeControlX READ relativeControlX WRITE setRelativeControlX NOTIFY relativeControlXChanged)
+    Q_PROPERTY(qreal relativeControlY READ relativeControlY WRITE setRelativeControlY NOTIFY relativeControlYChanged)
 public:
     QDeclarativePathQuad(QObject *parent=0) : QDeclarativeCurve(parent), _controlX(0), _controlY(0) {}
 
@@ -136,15 +166,27 @@ public:
     qreal controlY() const;
     void setControlY(qreal y);
 
-    void addToPath(QPainterPath &path);
+    qreal relativeControlX() const;
+    void setRelativeControlX(qreal x);
+    bool hasRelativeControlX();
+
+    qreal relativeControlY() const;
+    void setRelativeControlY(qreal y);
+    bool hasRelativeControlY();
+
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
 
 Q_SIGNALS:
     void controlXChanged();
     void controlYChanged();
+    void relativeControlXChanged();
+    void relativeControlYChanged();
 
 private:
     qreal _controlX;
     qreal _controlY;
+    QDeclarativeNullableValue<qreal> _relativeControlX;
+    QDeclarativeNullableValue<qreal> _relativeControlY;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativePathCubic : public QDeclarativeCurve
@@ -155,6 +197,10 @@ class Q_AUTOTEST_EXPORT QDeclarativePathCubic : public QDeclarativeCurve
     Q_PROPERTY(qreal control1Y READ control1Y WRITE setControl1Y NOTIFY control1YChanged)
     Q_PROPERTY(qreal control2X READ control2X WRITE setControl2X NOTIFY control2XChanged)
     Q_PROPERTY(qreal control2Y READ control2Y WRITE setControl2Y NOTIFY control2YChanged)
+    Q_PROPERTY(qreal relativeControl1X READ relativeControl1X WRITE setRelativeControl1X NOTIFY relativeControl1XChanged)
+    Q_PROPERTY(qreal relativeControl1Y READ relativeControl1Y WRITE setRelativeControl1Y NOTIFY relativeControl1YChanged)
+    Q_PROPERTY(qreal relativeControl2X READ relativeControl2X WRITE setRelativeControl2X NOTIFY relativeControl2XChanged)
+    Q_PROPERTY(qreal relativeControl2Y READ relativeControl2Y WRITE setRelativeControl2Y NOTIFY relativeControl2YChanged)
 public:
     QDeclarativePathCubic(QObject *parent=0) : QDeclarativeCurve(parent), _control1X(0), _control1Y(0), _control2X(0), _control2Y(0) {}
 
@@ -170,19 +216,113 @@ public:
     qreal control2Y() const;
     void setControl2Y(qreal y);
 
-    void addToPath(QPainterPath &path);
+    qreal relativeControl1X() const;
+    void setRelativeControl1X(qreal x);
+    bool hasRelativeControl1X();
+
+    qreal relativeControl1Y() const;
+    void setRelativeControl1Y(qreal y);
+    bool hasRelativeControl1Y();
+
+    qreal relativeControl2X() const;
+    void setRelativeControl2X(qreal x);
+    bool hasRelativeControl2X();
+
+    qreal relativeControl2Y() const;
+    void setRelativeControl2Y(qreal y);
+    bool hasRelativeControl2Y();
+
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
 
 Q_SIGNALS:
     void control1XChanged();
     void control1YChanged();
     void control2XChanged();
     void control2YChanged();
+    void relativeControl1XChanged();
+    void relativeControl1YChanged();
+    void relativeControl2XChanged();
+    void relativeControl2YChanged();
 
 private:
     qreal _control1X;
     qreal _control1Y;
     qreal _control2X;
     qreal _control2Y;
+    QDeclarativeNullableValue<qreal> _relativeControl1X;
+    QDeclarativeNullableValue<qreal> _relativeControl1Y;
+    QDeclarativeNullableValue<qreal> _relativeControl2X;
+    QDeclarativeNullableValue<qreal> _relativeControl2Y;
+};
+
+class Q_AUTOTEST_EXPORT QDeclarativePathCatmullRomCurve : public QDeclarativeCurve
+{
+    Q_OBJECT
+public:
+    QDeclarativePathCatmullRomCurve(QObject *parent=0) : QDeclarativeCurve(parent) {}
+
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
+};
+
+class Q_AUTOTEST_EXPORT QDeclarativePathArc : public QDeclarativeCurve
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged)
+    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
+    Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged)
+    Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
+
+public:
+    QDeclarativePathArc(QObject *parent=0)
+        : QDeclarativeCurve(parent), _radiusX(0), _radiusY(0), _useLargeArc(false), _direction(Clockwise) {}
+
+    enum ArcDirection { Clockwise, Counterclockwise };
+    Q_ENUMS(ArcDirection)
+
+    qreal radiusX() const;
+    void setRadiusX(qreal);
+
+    qreal radiusY() const;
+    void setRadiusY(qreal);
+
+    bool useLargeArc() const;
+    void setUseLargeArc(bool);
+
+    ArcDirection direction() const;
+    void setDirection(ArcDirection direction);
+
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
+
+Q_SIGNALS:
+    void radiusXChanged();
+    void radiusYChanged();
+    void useLargeArcChanged();
+    void directionChanged();
+
+private:
+    qreal _radiusX;
+    qreal _radiusY;
+    bool _useLargeArc;
+    ArcDirection _direction;
+};
+
+class Q_AUTOTEST_EXPORT QDeclarativePathSvg : public QDeclarativeCurve
+{
+    Q_OBJECT
+    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
+public:
+    QDeclarativePathSvg(QObject *parent=0) : QDeclarativeCurve(parent) {}
+
+    QString path() const;
+    void setPath(const QString &path);
+
+    void addToPath(QPainterPath &path, const QDeclarativePathData &);
+
+Q_SIGNALS:
+    void pathChanged();
+
+private:
+    QString _path;
 };
 
 class Q_AUTOTEST_EXPORT QDeclarativePathPercent : public QDeclarativePathElement
@@ -200,6 +340,17 @@ signals:
 
 private:
     qreal _value;
+};
+
+struct QDeclarativeCachedBezier
+{
+    QDeclarativeCachedBezier() : isValid(false) {}
+    QBezier bezier;
+    int element;
+    qreal bezLength;
+    qreal currLength;
+    qreal p;
+    bool isValid;
 };
 
 class QDeclarativePathPrivate;
@@ -222,9 +373,11 @@ public:
 
     qreal startX() const;
     void setStartX(qreal x);
+    bool hasStartX() const;
 
     qreal startY() const;
     void setStartY(qreal y);
+    bool hasStartY() const;
 
     bool isClosed() const;
 
@@ -232,6 +385,7 @@ public:
     QStringList attributes() const;
     qreal attributeAt(const QString &, qreal) const;
     QPointF pointAt(qreal) const;
+    QPointF sequentialPointAt(qreal p, qreal *angle = 0) const;
 
 Q_SIGNALS:
     void changed();
@@ -263,9 +417,19 @@ private:
     void endpoint(const QString &name);
     void createPointCache() const;
 
+    static void interpolate(QList<AttributePoint> &points, int idx, const QString &name, qreal value);
+    static void endpoint(QList<AttributePoint> &attributePoints, const QString &name);
+    static QPointF forwardsPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QDeclarativeCachedBezier &prevBez, qreal p, qreal *angle = 0);
+    static QPointF backwardsPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QDeclarativeCachedBezier &prevBez, qreal p, qreal *angle = 0);
+
 private:
     Q_DISABLE_COPY(QDeclarativePath)
     Q_DECLARE_PRIVATE(QDeclarativePath)
+    friend class QSGPathAnimationUpdater;
+
+public:
+    QPainterPath createPath(const QPointF &startPoint, const QPointF &endPoint, const QStringList &attributes, qreal &pathLength, QList<AttributePoint> &attributePoints, bool *closed = 0);
+    static QPointF sequentialPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QDeclarativeCachedBezier &prevBez, qreal p, qreal *angle = 0);
 };
 
 QT_END_NAMESPACE
@@ -276,6 +440,9 @@ QML_DECLARE_TYPE(QDeclarativeCurve)
 QML_DECLARE_TYPE(QDeclarativePathLine)
 QML_DECLARE_TYPE(QDeclarativePathQuad)
 QML_DECLARE_TYPE(QDeclarativePathCubic)
+QML_DECLARE_TYPE(QDeclarativePathCatmullRomCurve)
+QML_DECLARE_TYPE(QDeclarativePathArc)
+QML_DECLARE_TYPE(QDeclarativePathSvg)
 QML_DECLARE_TYPE(QDeclarativePathPercent)
 QML_DECLARE_TYPE(QDeclarativePath)
 

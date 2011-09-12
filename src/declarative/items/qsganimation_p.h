@@ -122,10 +122,72 @@ protected:
     virtual QAbstractAnimation *qtAnimation();
 };
 
+class QSGItem;
+class QDeclarativePath;
+class QSGPathAnimationPrivate;
+class Q_AUTOTEST_EXPORT QSGPathAnimation : public QDeclarativeAbstractAnimation
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QSGPathAnimation)
+
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
+    Q_PROPERTY(QDeclarativePath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QSGItem *target READ target WRITE setTarget NOTIFY targetChanged)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
+    Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged)
+
+public:
+    QSGPathAnimation(QObject *parent=0);
+    virtual ~QSGPathAnimation();
+
+    enum Orientation {
+        Fixed,
+        RightFirst,
+        LeftFirst,
+        BottomFirst,
+        TopFirst
+    };
+    Q_ENUMS(Orientation)
+
+    int duration() const;
+    void setDuration(int);
+
+    QEasingCurve easing() const;
+    void setEasing(const QEasingCurve &);
+
+    QDeclarativePath *path() const;
+    void setPath(QDeclarativePath *);
+
+    QSGItem *target() const;
+    void setTarget(QSGItem *);
+
+    Orientation orientation() const;
+    void setOrientation(Orientation orientation);
+
+    QPointF anchorPoint() const;
+    void setAnchorPoint(const QPointF &point);
+
+protected:
+    virtual void transition(QDeclarativeStateActions &actions,
+                            QDeclarativeProperties &modified,
+                            TransitionDirection direction);
+    virtual QAbstractAnimation *qtAnimation();
+
+Q_SIGNALS:
+    void durationChanged(int);
+    void easingChanged(const QEasingCurve &);
+    void pathChanged();
+    void targetChanged();
+    void orientationChanged(Orientation);
+    void anchorPointChanged(const QPointF &);
+};
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QSGParentAnimation)
 QML_DECLARE_TYPE(QSGAnchorAnimation)
+QML_DECLARE_TYPE(QSGPathAnimation)
 
 QT_END_HEADER
 

@@ -145,7 +145,6 @@ Item {
             if ("mapFromItem" in o && "mapToItem" in o) {
                 return "declarativeitem";  // @todo improve detection of declarative items
             } else if ("x" in o && "y" in o && "z" in o) {
-                console.log("typeof debug:" + o);
                 return "vector3d"; // Qt3D vector
             }
             return "object";

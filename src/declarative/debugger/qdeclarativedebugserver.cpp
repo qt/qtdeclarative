@@ -120,7 +120,7 @@ void QDeclarativeDebugServerPrivate::advertisePlugins()
 }
 
 QDeclarativeDebugServerConnection *QDeclarativeDebugServerPrivate::loadConnectionPlugin(
-    const QString &pluginName)
+        const QString &pluginName)
 {
     QStringList pluginCandidates;
     const QStringList paths = QCoreApplication::libraryPaths();
@@ -178,9 +178,9 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             if (!QDeclarativeEnginePrivate::qml_debugging_enabled) {
                 const QString message =
-                    QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                              "Debugging has not been enabled.").arg(
-                                  appD->qmljsDebugArgumentsString());
+                        QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                           "Debugging has not been enabled.").arg(
+                            appD->qmljsDebugArgumentsString());
                 qWarning("%s", qPrintable(message));
                 return 0;
             }
@@ -231,7 +231,7 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
 }
 
 QDeclarativeDebugServer::QDeclarativeDebugServer()
-: QObject(*(new QDeclarativeDebugServerPrivate))
+    : QObject(*(new QDeclarativeDebugServerPrivate))
 {
 }
 

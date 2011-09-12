@@ -300,6 +300,8 @@ public:
     Qt::MouseButtons acceptedMouseButtons;
     Qt::InputMethodHints imHints;
 
+    QPointF transformOriginPoint;
+
     virtual qreal getImplicitWidth() const;
     virtual qreal getImplicitHeight() const;
     virtual void implicitWidthChanged();

@@ -80,6 +80,7 @@ class QSGParticleDataHeap {
 public:
     QSGParticleDataHeap();
     void insert(QSGParticleData* data);
+    void insertTimed(QSGParticleData* data, int time);
 
     int top();
 
@@ -117,6 +118,7 @@ public:
     QVector<QSGParticleData*> data;
     QSGParticleDataHeap dataHeap;
     QSet<int> reusableIndexes;
+    bool recycle(); //Force recycling round, reutrns true if all indexes are now reusable
 
     void initList();
     void kill(QSGParticleData* d);
@@ -210,6 +212,7 @@ public:
     float curSize();
     void clone(const QSGParticleData& other);//Not =, leaves meta-data like index
     QDeclarativeV8Handle v8Value();
+    void extendLife(float time);
 private:
     QSGV8ParticleData* v8Datum;
 };
@@ -218,7 +221,8 @@ class QSGParticleSystem : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
-    Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
 public:
@@ -232,37 +236,30 @@ public:
         return m_running;
     }
 
-    int startTime() const
-    {
-        return m_startTime;
-    }
-
     int count(){ return m_particle_count; }
+
+    static const int maxLife = 600000;
 
 signals:
 
     void systemInitialized();
     void runningChanged(bool arg);
-
-    void startTimeChanged(int arg);
-
+    void pausedChanged(bool arg);
+    void emptyChanged(bool arg);
 
 public slots:
+    void start(){setRunning(true);}
+    void stop(){setRunning(false);}
+    void restart(){setRunning(false);setRunning(true);}
+    void pause(){setPaused(true);}
+    void resume(){setPaused(false);}
+
     void reset();
     void setRunning(bool arg);
-
-
-    void setStartTime(int arg)
-    {
-        m_startTime = arg;
-    }
-
-    void fastForward(int ms)
-    {
-        m_startTime += ms;
-    }
+    void setPaused(bool arg);
 
     virtual int duration() const { return -1; }
+
 
 protected:
     //This one only once per frame (effectively)
@@ -300,14 +297,24 @@ public://###but only really for related class usage. Perhaps we should all be fr
 
     int m_particle_count;
     static void stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);//From QSGSprite
+    bool isPaused() const
+    {
+        return m_paused;
+    }
+
+    bool isEmpty() const
+    {
+        return m_empty;
+    }
+
 private:
     void initializeSystem();
+    void initGroups();
     bool m_running;
     QList<QPointer<QSGParticleEmitter> > m_emitters;
     QList<QPointer<QSGParticleAffector> > m_affectors;
-    QList<QPointer<QSGParticlePainter> > m_particlePainters;
+    QList<QPointer<QSGParticlePainter> > m_painters;
     QList<QPointer<QSGParticlePainter> > m_syncList;
-    qint64 m_startTime;
     int m_nextGroupId;
     int m_nextIndex;
     QSet<int> m_reusableIndexes;
@@ -319,6 +326,10 @@ private:
     friend class QSGParticleSystemAnimation;
     void updateCurrentTime( int currentTime );
     QSGParticleSystemAnimation* m_animation;
+    bool m_paused;
+    bool m_debugMode;
+    bool m_allDead;
+    bool m_empty;
 };
 
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode

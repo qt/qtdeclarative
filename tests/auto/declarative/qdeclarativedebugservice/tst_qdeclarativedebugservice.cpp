@@ -47,8 +47,6 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 
-#include <private/qdeclarativedebug_p.h>
-#include <private/qdeclarativeenginedebug_p.h>
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
 
@@ -189,7 +187,8 @@ int main(int argc, char *argv[])
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-    _argv[_argc - 1] = "-qmljsdebugger=port:13769";
+    char arg[] = "-qmljsdebugger=port:13769";
+    _argv[_argc - 1] = arg;
 
     QApplication app(_argc, _argv);
     tst_QDeclarativeDebugService tc;

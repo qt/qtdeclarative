@@ -201,14 +201,17 @@ public:
     virtual void init();
     virtual void clear();
 
-    virtual bool addVisibleItems(int fillFrom, int fillTo, bool doBuffer);
-    virtual bool removeNonVisibleItems(int bufferFrom, int bufferTo);
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
     virtual void visibleItemsChanged();
 
     virtual FxViewItem *newViewItem(int index, QSGItem *item);
     virtual void initializeViewItem(FxViewItem *item);
     virtual void releaseItem(FxViewItem *item);
     virtual void repositionPackageItemAt(QSGItem *item, int index);
+    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
+    virtual void resetFirstItemPosition();
+    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -216,6 +219,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *firstVisible);
 
     virtual void updateSections();
     void createSection(FxListItemSG *);
@@ -535,7 +539,7 @@ void QSGListViewPrivate::releaseItem(FxViewItem *item)
     QSGItemViewPrivate::releaseItem(item);
 }
 
-bool QSGListViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer)
+bool QSGListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer)
 {
     qreal itemEnd = visiblePos;
     if (visibleItems.count()) {
@@ -599,7 +603,7 @@ bool QSGListViewPrivate::addVisibleItems(int fillFrom, int fillTo, bool doBuffer
     return changed;
 }
 
-bool QSGListViewPrivate::removeNonVisibleItems(int bufferFrom, int bufferTo)
+bool QSGListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
     FxViewItem *item = 0;
     bool changed = false;
@@ -684,6 +688,27 @@ void QSGListViewPrivate::repositionPackageItemAt(QSGItem *item, int index)
     }
 }
 
+void QSGListViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
+{
+    static_cast<FxListItemSG*>(item)->setPosition(toItem->position());
+}
+
+void QSGListViewPrivate::resetFirstItemPosition()
+{
+    FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.first());
+    item->setPosition(0);
+}
+
+void QSGListViewPrivate::moveItemBy(FxViewItem *item, const QList<FxViewItem *> &forwards, const QList<FxViewItem *> &backwards)
+{
+    qreal pos = 0;
+    for (int i=0; i<forwards.count(); i++)
+        pos += forwards[i]->size();
+    for (int i=0; i<backwards.count(); i++)
+        pos -= backwards[i]->size();
+    static_cast<FxListItemSG*>(item)->setPosition(item->position() + pos);
+}
+
 void QSGListViewPrivate::createHighlight()
 {
     Q_Q(QSGListView);
@@ -733,6 +758,8 @@ void QSGListViewPrivate::createHighlight()
 
 void QSGListViewPrivate::updateHighlight()
 {
+    applyPendingChanges();
+
     if ((!currentItem && highlight) || (currentItem && !highlight))
         createHighlight();
     bool strictHighlight = haveHighlightRange && highlightRange == QSGListView::StrictlyEnforceRange;
@@ -1009,7 +1036,8 @@ void QSGListViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
     if (item != contentItem && (!highlight || item != highlight->item)) {
         if ((orient == QSGListView::Vertical && newGeometry.height() != oldGeometry.height())
             || (orient == QSGListView::Horizontal && newGeometry.width() != oldGeometry.width())) {
-            scheduleLayout();
+            forceLayout = true;
+            q->polish();
         }
     }
 }
@@ -1565,6 +1593,7 @@ void QSGListView::setSpacing(qreal spacing)
     Q_D(QSGListView);
     if (spacing != d->spacing) {
         d->spacing = spacing;
+        d->forceLayout = true;
         d->layout();
         emit spacingChanged();
     }
@@ -2067,373 +2096,109 @@ void QSGListView::updateSections()
             roles << d->sectionCriteria->property().toUtf8();
         d->model->setWatchedRoles(roles);
         d->updateSections();
-        if (d->itemCount)
+        if (d->itemCount) {
+            d->forceLayout = true;
             d->layout();
+        }
     }
 }
 
-void QSGListView::itemsInserted(int modelIndex, int count)
+bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, QList<FxViewItem *> *movedBackwards, QList<FxViewItem *> *addedItems, FxViewItem *firstVisible)
 {
-    Q_D(QSGListView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-    d->updateUnrequestedIndexes();
-    d->moveReason = QSGListViewPrivate::Other;
+    Q_Q(QSGListView);
 
-    qreal tempPos = d->isRightToLeft() ? -d->position()-d->size() : d->position();
-    int index = d->visibleItems.count() ? d->mapFromModel(modelIndex) : 0;
+    int modelIndex = change.index;
+    int count = change.count;
+
+
+    qreal tempPos = isRightToLeft() ? -position()-size() : position();
+    int index = visibleItems.count() ? mapFromModel(modelIndex) : 0;
+
     if (index < 0) {
-        int i = d->visibleItems.count() - 1;
-        while (i > 0 && d->visibleItems.at(i)->index == -1)
+        int i = visibleItems.count() - 1;
+        while (i > 0 && visibleItems.at(i)->index == -1)
             --i;
-        if (i == 0 && d->visibleItems.first()->index == -1) {
+        if (i == 0 && visibleItems.first()->index == -1) {
             // there are no visible items except items marked for removal
-            index = d->visibleItems.count();
-        } else if (d->visibleItems.at(i)->index + 1 == modelIndex
-            && d->visibleItems.at(i)->endPosition() <= d->buffer+tempPos+d->size()) {
+            index = visibleItems.count();
+        } else if (visibleItems.at(i)->index + 1 == modelIndex
+            && visibleItems.at(i)->endPosition() <= buffer+tempPos+size()) {
             // Special case of appending an item to the model.
-            index = d->visibleItems.count();
+            index = visibleItems.count();
         } else {
-            if (modelIndex < d->visibleIndex) {
+            if (modelIndex < visibleIndex) {
                 // Insert before visible items
-                d->visibleIndex += count;
-                for (int i = 0; i < d->visibleItems.count(); ++i) {
-                    FxViewItem *item = d->visibleItems.at(i);
+                visibleIndex += count;
+                for (int i = 0; i < visibleItems.count(); ++i) {
+                    FxViewItem *item = visibleItems.at(i);
                     if (item->index != -1 && item->index >= modelIndex)
                         item->index += count;
                 }
             }
-            if (d->currentIndex >= modelIndex) {
-                // adjust current item index
-                d->currentIndex += count;
-                if (d->currentItem)
-                    d->currentItem->index = d->currentIndex;
-                emit currentIndexChanged();
-            }
-            d->scheduleLayout();
-            d->itemCount += count;
-            emit countChanged();
-            return;
+            return true;
         }
     }
 
     // index can be the next item past the end of the visible items list (i.e. appended)
     int pos = 0;
-    if (d->visibleItems.count()) {
-        pos = index < d->visibleItems.count() ? d->visibleItems.at(index)->position()
-                                                : d->visibleItems.last()->endPosition()+d->spacing;
+    if (visibleItems.count()) {
+        pos = index < visibleItems.count() ? visibleItems.at(index)->position()
+                                                : visibleItems.last()->endPosition()+spacing;
     }
 
-    int initialPos = pos;
-    int diff = 0;
-    QList<FxListItemSG*> added;
-    bool addedVisible = false;
-    FxViewItem *firstVisible = d->firstVisibleItem();
+    int prevAddedCount = addedItems->count();
     if (firstVisible && pos < firstVisible->position()) {
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = 0;
-        int from = tempPos - d->buffer;
+        int from = tempPos - buffer;
+
         for (i = count-1; i >= 0 && pos > from; --i) {
-            if (!addedVisible) {
-                d->scheduleLayout();
-                addedVisible = true;
+            FxViewItem *item = 0;
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                if (item->index > modelIndex + i)
+                    movedBackwards->append(item);
+                item->index = modelIndex + i;
             }
-            FxListItemSG *item = static_cast<FxListItemSG*>(d->createItem(modelIndex + i));
-            d->visibleItems.insert(insertionIdx, item);
-            pos -= item->size() + d->spacing;
-            item->setPosition(pos);
+            if (!item)
+                item = createItem(modelIndex + i);
+
+            visibleItems.insert(insertionIdx, item);
+            if (!change.isMove())
+                addedItems->append(item);
+            pos -= item->size() + spacing;
             index++;
-        }
-        if (i >= 0) {
-            // If we didn't insert all our new items - anything
-            // before the current index is not visible - remove it.
-            while (insertionIdx--) {
-                FxListItemSG *item = static_cast<FxListItemSG*>(d->visibleItems.takeFirst());
-                if (item->index != -1)
-                    d->visibleIndex++;
-                d->releaseItem(item);
-            }
-        } else {
-            // adjust pos of items before inserted items.
-            for (int i = insertionIdx-1; i >= 0; i--) {
-                FxListItemSG *listItem = static_cast<FxListItemSG*>(d->visibleItems.at(i));
-                listItem->setPosition(listItem->position() - (initialPos - pos));
-            }
         }
     } else {
         int i = 0;
-        int to = d->buffer+tempPos+d->size();
+        int to = buffer+tempPos+size();
         for (i = 0; i < count && pos <= to; ++i) {
-            if (!addedVisible) {
-                d->scheduleLayout();
-                addedVisible = true;
+            FxViewItem *item = 0;
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                if (item->index > modelIndex + i)
+                    movedBackwards->append(item);
+                item->index = modelIndex + i;
             }
-            FxListItemSG *item = static_cast<FxListItemSG*>(d->createItem(modelIndex + i));
-            d->visibleItems.insert(index, item);
-            item->setPosition(pos);
-            added.append(item);
-            pos += item->size() + d->spacing;
+            if (!item)
+                item = createItem(modelIndex + i);
+
+            visibleItems.insert(index, item);
+            if (!change.isMove())
+                addedItems->append(item);
+            pos += item->size() + spacing;
             ++index;
         }
-        if (i != count) {
-            // We didn't insert all our new items, which means anything
-            // beyond the current index is not visible - remove it.
-            while (d->visibleItems.count() > index)
-                d->releaseItem(d->visibleItems.takeLast());
-        }
-        diff = pos - initialPos;
     }
-    if (d->itemCount && d->currentIndex >= modelIndex) {
-        // adjust current item index
-        d->currentIndex += count;
-        if (d->currentItem) {
-            d->currentItem->index = d->currentIndex;
-            static_cast<FxListItemSG *>(d->currentItem)->setPosition(static_cast<FxListItemSG *>(d->currentItem)->position() + diff);
-        }
-        emit currentIndexChanged();
-    } else if (!d->itemCount && (!d->currentIndex || (d->currentIndex < 0 && !d->currentIndexCleared))) {
-        d->updateCurrent(0);
-    }
-    // Update the indexes of the following visible items.
-    for (; index < d->visibleItems.count(); ++index) {
-        FxViewItem *item = d->visibleItems.at(index);
-        if (d->currentItem && item->item != d->currentItem->item)
-            static_cast<FxListItemSG*>(item)->setPosition(item->position() + diff);
+
+    for (; index < visibleItems.count(); ++index) {
+        FxViewItem *item = visibleItems.at(index);
         if (item->index != -1)
             item->index += count;
     }
-    // everything is in order now - emit add() signal
-    for (int j = 0; j < added.count(); ++j)
-        added.at(j)->attached->emitAdd();
 
-    d->updateSections();
-    d->itemCount += count;
-    emit countChanged();
+    return addedItems->count() > prevAddedCount;
 }
 
-void QSGListView::itemsRemoved(int modelIndex, int count)
-{
-    Q_D(QSGListView);
-    if (!isComponentComplete() || !d->model || !d->model->isValid())
-        return;
-    d->moveReason = QSGListViewPrivate::Other;
-    d->updateUnrequestedIndexes();
-    d->itemCount -= count;
-
-    FxViewItem *firstVisible = d->firstVisibleItem();
-    int preRemovedSize = 0;
-    bool removedVisible = false;
-    // Remove the items from the visible list, skipping anything already marked for removal
-    QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (item->index == -1 || item->index < modelIndex) {
-            // already removed, or before removed items
-            ++it;
-        } else if (item->index >= modelIndex + count) {
-            // after removed items
-            item->index -= count;
-            ++it;
-        } else {
-            // removed item
-            if (!removedVisible) {
-                d->scheduleLayout();
-                removedVisible = true;
-            }
-            item->attached->emitRemove();
-            if (item->attached->delayRemove()) {
-                item->index = -1;
-                connect(item->attached, SIGNAL(delayRemoveChanged()), this, SLOT(destroyRemoved()), Qt::QueuedConnection);
-                ++it;
-            } else {
-                if (item == firstVisible)
-                    firstVisible = 0;
-                if (firstVisible && item->position() < firstVisible->position())
-                    preRemovedSize += item->size();
-                it = d->visibleItems.erase(it);
-                d->releaseItem(item);
-            }
-        }
-    }
-
-    if (firstVisible && d->visibleItems.first() != firstVisible)
-        static_cast<FxListItemSG*>(d->visibleItems.first())->setPosition(d->visibleItems.first()->position() + preRemovedSize);
-
-    // update visibleIndex
-    bool haveVisibleIndex = false;
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            haveVisibleIndex = true;
-            break;
-        }
-    }
-
-    // fix current
-    if (d->currentIndex >= modelIndex + count) {
-        d->currentIndex -= count;
-        if (d->currentItem)
-            d->currentItem->index -= count;
-        emit currentIndexChanged();
-    } else if (d->currentIndex >= modelIndex && d->currentIndex < modelIndex + count) {
-        // current item has been removed.
-        if (d->currentItem) {
-            d->currentItem->attached->setIsCurrentItem(false);
-            d->releaseItem(d->currentItem);
-            d->currentItem = 0;
-        }
-        d->currentIndex = -1;
-        if (d->itemCount)
-            d->updateCurrent(qMin(modelIndex, d->itemCount-1));
-        else
-            emit currentIndexChanged();
-    }
-
-    if (!haveVisibleIndex) {
-        d->timeline.clear();
-        if (removedVisible && d->itemCount == 0) {
-            d->visibleIndex = 0;
-            d->visiblePos = 0;
-            d->setPosition(d->contentStartPosition());
-            d->updateHeader();
-            d->updateFooter();
-        } else {
-            if (modelIndex < d->visibleIndex)
-                d->visibleIndex = modelIndex+1;
-            d->visibleIndex = qMax(qMin(d->visibleIndex, d->itemCount-1), 0);
-        }
-    }
-
-    d->updateSections();
-    emit countChanged();
-}
-
-void QSGListView::itemsMoved(int from, int to, int count)
-{
-    Q_D(QSGListView);
-    if (!isComponentComplete() || !d->isValid())
-        return;
-    d->updateUnrequestedIndexes();
-
-    if (d->visibleItems.isEmpty()) {
-        d->refill();
-        return;
-    }
-
-    d->moveReason = QSGListViewPrivate::Other;
-
-    bool movingBackwards = from > to;
-    d->adjustMoveParameters(&from, &to, &count);
-
-    QHash<int,FxViewItem*> moved;
-    int moveBy = 0;
-    FxViewItem *firstVisible = d->firstVisibleItem();
-    int firstItemIndex = firstVisible ? firstVisible->index : -1;
-
-    // if visibleItems.first() is above the content start pos, and the items
-    // beneath it are moved, ensure this first item is later repositioned correctly
-    // (to above the next visible item) so that subsequent layout() is correct
-    bool repositionFirstItem = firstVisible
-            && d->visibleItems.first()->position() < firstVisible->position()
-            && from > d->visibleItems.first()->index;
-
-    QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (item->index >= from && item->index < from + count) {
-            // take the items that are moving
-            item->index += (to-from);
-            moved.insert(item->index, item);
-            if (repositionFirstItem)
-                moveBy += item->size();
-            it = d->visibleItems.erase(it);
-        } else {
-            // move everything after the moved items.
-            if (item->index > from && item->index != -1)
-                item->index -= count;
-            ++it;
-        }
-    }
-
-    int movedCount = 0;
-    int endIndex = d->visibleIndex;
-    it = d->visibleItems.begin();
-    while (it != d->visibleItems.end()) {
-        FxViewItem *item = *it;
-        if (movedCount < count && item->index >= to && item->index < to + count) {
-            // place items in the target position, reusing any existing items
-            int targetIndex = item->index + movedCount;
-            FxViewItem *movedItem = moved.take(targetIndex);
-            if (!movedItem)
-                movedItem = d->createItem(targetIndex);
-            it = d->visibleItems.insert(it, movedItem);
-            ++it;
-            ++movedCount;
-        } else {
-            if (item->index != -1) {
-                if (item->index >= to) {
-                    // update everything after the moved items.
-                    item->index += count;
-                }
-                endIndex = item->index;
-            }
-            ++it;
-        }
-    }
-
-    // If we have moved items to the end of the visible items
-    // then add any existing moved items that we have
-    while (FxViewItem *item = moved.take(endIndex+1)) {
-        d->visibleItems.append(item);
-        ++endIndex;
-    }
-
-    // update visibleIndex
-    for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-        if ((*it)->index != -1) {
-            d->visibleIndex = (*it)->index;
-            break;
-        }
-    }
-
-    // if first visible item is moving but another item is moving up to replace it,
-    // do this positioning now to avoid shifting all content forwards
-    if (movingBackwards && firstItemIndex >= 0) {
-        for (it = d->visibleItems.begin(); it != d->visibleItems.end(); ++it) {
-            if ((*it)->index == firstItemIndex) {
-                static_cast<FxListItemSG*>(*it)->setPosition(firstVisible->position());
-                break;
-            }
-        }
-    }
-
-    // Fix current index
-    if (d->currentIndex >= 0 && d->currentItem) {
-        int oldCurrent = d->currentIndex;
-        d->currentIndex = d->model->indexOf(d->currentItem->item, this);
-        if (oldCurrent != d->currentIndex) {
-            d->currentItem->index = d->currentIndex;
-            emit currentIndexChanged();
-        }
-    }
-
-    // Whatever moved items remain are no longer visible items.
-    while (moved.count()) {
-        int idx = moved.begin().key();
-        FxViewItem *item = moved.take(idx);
-        if (d->currentItem && item->item == d->currentItem->item)
-            static_cast<FxListItemSG*>(item)->setPosition(d->positionAt(idx));
-        d->releaseItem(item);
-    }
-
-    // Ensure we don't cause an ugly list scroll.
-    if (d->visibleItems.count())
-        static_cast<FxListItemSG*>(d->visibleItems.first())->setPosition(d->visibleItems.first()->position() + moveBy);
-
-    d->updateSections();
-    d->layout();
-}
 
 /*!
     \qmlmethod QtQuick2::ListView::positionViewAtIndex(int index, PositionMode mode)

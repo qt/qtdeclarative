@@ -43,8 +43,9 @@
 #ifndef QSGVIEW_H
 #define QSGVIEW_H
 
-#include <QtCore/qurl.h>
 #include <qsgcanvas.h>
+#include <QtCore/qurl.h>
+#include <QtDeclarative/qdeclarativedebug.h>
 
 QT_BEGIN_HEADER
 

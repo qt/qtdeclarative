@@ -119,7 +119,7 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     cancel();
 
     QDeclarativeStateOperation::ActionList applyList = list;
-    // Determine which actions are binding changes.
+    // Determine which actions are binding changes and disable any current bindings
     foreach(const QDeclarativeAction &action, applyList) {
         if (action.toBinding)
             d->bindingsList << action;
@@ -139,8 +139,11 @@ void QDeclarativeTransitionManager::transition(const QList<QDeclarativeAction> &
     //
     // This doesn't catch everything, and it might be a little fragile in
     // some cases - but whatcha going to do?
+    //
+    // Note that we only fast forward if both a transition and bindings are
+    // present, as it is unneccessary (and potentially expensive) otherwise.
 
-    if (!d->bindingsList.isEmpty()) {
+    if (transition && !d->bindingsList.isEmpty()) {
 
         // Apply all the property and binding changes
         for (int ii = 0; ii < applyList.size(); ++ii) {

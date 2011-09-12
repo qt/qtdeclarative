@@ -48,5 +48,6 @@ Clock { // this class is defined in QML (com/nokia/TimeExample/Clock.qml)
 
     hours: time.hour
     minutes: time.minute
+
 }
 //![0]

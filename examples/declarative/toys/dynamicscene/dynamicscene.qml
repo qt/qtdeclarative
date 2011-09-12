@@ -38,9 +38,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import Qt.labs.particles 1.0
-import "qml"
+import QtQuick 2.0
+import QtQuick.Particles 2.0
+import "content"
 
 Item {
     id: window
@@ -97,15 +97,24 @@ Item {
     }
 
     // stars (when there's no sun)
-    Particles {
-        id: stars
-        x: 0; y: 0; width: parent.width; height: parent.height / 2
-        source: "images/star.png"
-        angleDeviation: 360
-        velocity: 0; velocityDeviation: 0
-        count: parent.width / 10
-        fadeInDuration: 2800
-        opacity: 1
+    ParticleSystem {
+        id: particlesystem
+        anchors.fill: sky
+
+        ImageParticle {
+            id: stars
+            source: "content/images/star.png"
+            particles: ["stars"]
+            opacity: .5
+        }
+
+        Emitter {
+            id: starsemitter
+            anchors.fill: parent
+            emitRate: parent.width / 50
+            lifeSpan: 5000
+            particle: "stars"
+        }
     }
 
     // ground
@@ -147,27 +156,32 @@ Item {
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "Sun.qml"
-                        source: "../images/sun.png"
+                        source: "content/images/sun.png"
+                        image: "images/sun.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "GenericSceneItem.qml"
-                        source: "../images/moon.png"
+                        source: "content/images/moon.png"
+                        image: "images/moon.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "../images/tree_s.png"
+                        source: "content/images/tree_s.png"
+                        image: "images/tree_s.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "../images/rabbit_brown.png"
+                        source: "content/images/rabbit_brown.png"
+                        image: "images/rabbit_brown.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "../images/rabbit_bw.png"
+                        source: "content/images/rabbit_bw.png"
+                        image: "images/rabbit_bw.png"
                     }
                 }
             }
@@ -188,7 +202,7 @@ Item {
                     font.pixelSize: 14
                     wrapMode: TextEdit.WordWrap
 
-                    text: "import QtQuick 1.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 180 * Math.random() \n    source: 'images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
+                    text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 180 * Math.random() \n    source: 'content/images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
                 }
             }
 

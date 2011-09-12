@@ -47,36 +47,36 @@ QT_BEGIN_NAMESPACE
 
 //Includes comments because the code isn't self explanatory
 static const char qt_particles_template_vertex_code[] =
-        "attribute highp vec2 vPos;                                                         \n"
-        "attribute highp vec2 vTex;                                                         \n"
-        "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize    \n"
-        "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration            \n"
-        "attribute highp float r;                                                           \n"
-        "uniform highp mat4 qt_Matrix;                                                      \n"
-        "uniform highp float timestamp;                                                     \n"
-        "varying highp vec2 fTex;                                                           \n"
-        "void defaultMain() {                                                               \n"
-        "    fTex = vTex;                                                                   \n"
-        "    highp float size = vData.z;                                                    \n"
-        "    highp float endSize = vData.w;                                                 \n"
-        "    highp float t = (timestamp - vData.x) / vData.y;                               \n"
-        "    highp float currentSize = mix(size, endSize, t * t);                           \n"
-        "    if (t < 0. || t > 1.)                                                          \n"
-        "        currentSize = 0.;                                                          \n"
-        "    highp vec2 pos = vPos                                                          \n"
-        "                   - currentSize / 2. + currentSize * vTex          // adjust size \n"
-        "                   + vVec.xy * t * vData.y         // apply speed vector..         \n"
-        "                   + 0.5 * vVec.zw * pow(t * vData.y, 2.);                         \n"
-        "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);                            \n"
-        "}\n";
+        "attribute highp vec2 qt_ParticlePos;\n"
+        "attribute highp vec2 qt_ParticleTex;\n"
+        "attribute highp vec4 qt_ParticleData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
+        "attribute highp vec4 qt_ParticleVec; // x,y = constant speed,  z,w = acceleration\n"
+        "attribute highp float qt_ParticleR;\n"
+        "uniform highp mat4 qt_Matrix;\n"
+        "uniform highp float qt_Timestamp;\n"
+        "varying highp vec2 qt_TexCoord0;\n"
+        "void defaultMain() {\n"
+        "    qt_TexCoord0 = qt_ParticleTex;\n"
+        "    highp float size = qt_ParticleData.z;\n"
+        "    highp float endSize = qt_ParticleData.w;\n"
+        "    highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;\n"
+        "    highp float currentSize = mix(size, endSize, t * t);\n"
+        "    if (t < 0. || t > 1.)\n"
+        "        currentSize = 0.;\n"
+        "    highp vec2 pos = qt_ParticlePos\n"
+        "                   - currentSize / 2. + currentSize * qt_ParticleTex   // adjust size\n"
+        "                   + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..\n"
+        "                   + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);\n"
+        "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);\n"
+        "}";
 static const char qt_particles_default_vertex_code[] =
         "void main() {        \n"
         "    defaultMain();   \n"
         "}";
 
-static const char qt_particles_default_fragment_code[] =//TODO: Default frag requires source?
+static const char qt_particles_default_fragment_code[] =
         "uniform sampler2D source;                                  \n"
-        "varying highp vec2 fTex;                                   \n"
+        "varying highp vec2 qt_TexCoord0;                           \n"
         "uniform lowp float qt_Opacity;                             \n"
         "void main() {                                              \n"
         "    gl_FragColor = texture2D(source, fTex) * qt_Opacity;   \n"
@@ -159,7 +159,7 @@ void QSGCustomParticle::componentComplete()
 
     This property holds the fragment shader's GLSL source code.
     The default shader expects the texture coordinate to be passed from the
-    vertex shader as "varying highp vec2 fTex", and it samples from a
+    vertex shader as "varying highp vec2 qt_TexCoord0", and it samples from a
     sampler2D named "source".
 */
 
@@ -180,31 +180,31 @@ void QSGCustomParticle::setFragmentShader(const QByteArray &code)
     This property holds the vertex shader's GLSL source code.
 
     The default shader passes the texture coordinate along to the fragment
-    shader as "varying highp vec2 fTex".
+    shader as "varying highp vec2 qt_TexCoord0".
 
     To aid writing a particle vertex shader, the following GLSL code is prepended
     to your vertex shader:
     \code
-        attribute highp vec2 vPos;
-        attribute highp vec2 vTex;
-        attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize
-        attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration
-        attribute highp float r;
+        attribute highp vec2 qt_ParticlePos;
+        attribute highp vec2 qt_ParticleTex;
+        attribute highp vec4 qt_ParticleData; //  x = time,  y = lifeSpan, z = size,  w = endSize
+        attribute highp vec4 qt_ParticleVec; // x,y = constant speed,  z,w = acceleration
+        attribute highp float qt_ParticleR;
         uniform highp mat4 qt_Matrix;
-        uniform highp float timestamp;
-        varying highp vec2 fTex;
+        uniform highp float qt_Timestamp;
+        varying highp vec2 qt_TexCoord0;
         void defaultMain() {
-            fTex = vTex;
-            highp float size = vData.z;
-            highp float endSize = vData.w;
-            highp float t = (timestamp - vData.x) / vData.y;
+            qt_TexCoord0 = qt_ParticleTex;
+            highp float size = qt_ParticleData.z;
+            highp float endSize = qt_ParticleData.w;
+            highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;
             highp float currentSize = mix(size, endSize, t * t);
             if (t < 0. || t > 1.)
                 currentSize = 0.;
-            highp vec2 pos = vPos
-                           - currentSize / 2. + currentSize * vTex          // adjust size
-                           + vVec.xy * t * vData.y         // apply speed vector..
-                           + 0.5 * vVec.zw * pow(t * vData.y, 2.);
+            highp vec2 pos = qt_ParticlePos
+                           - currentSize / 2. + currentSize * qt_ParticleTex   // adjust size
+                           + qt_ParticleVec.xy * t * qt_ParticleData.y         // apply speed vector..
+                           + 0.5 * qt_ParticleVec.zw * pow(t * qt_ParticleData.y, 2.);
             gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);
         }
     \endcode
@@ -348,7 +348,11 @@ void QSGCustomParticle::updateProperties()
     vertexCode = qt_particles_template_vertex_code + vertexCode;
 
     m_source.attributeNames.clear();
-    m_source.attributeNames << "vPos" << "vTex" << "vData" << "vVec" << "r";
+    m_source.attributeNames << "qt_ParticlePos"
+                            << "qt_ParticleTex"
+                            << "qt_ParticleData"
+                            << "qt_ParticleVec"
+                            << "qt_ParticleR";
 
     lookThroughShaderCode(vertexCode);
     lookThroughShaderCode(fragmentCode);
@@ -392,8 +396,8 @@ void QSGCustomParticle::lookThroughShaderCode(const QByteArray &code)
                 m_source.respectsMatrix = true;
             } else if (name == "qt_Opacity") {
                 m_source.respectsOpacity = true;
-            } else if (name == "timestamp") {
-                //TODO: Copy the whole thing just because I have one more uniform?
+            } else if (name == "qt_Timestamp") {
+                //Not strictly necessary
             } else {
                 m_source.uniformNames.insert(name);
                 if (type == "sampler2D") {
@@ -421,13 +425,14 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         m_dirtyData = false;
     }
 
-    if (m_system && m_system->isRunning())
+    if (m_system && m_system->isRunning() && !m_system->isPaused()){
         prepareNextFrame();
-    if (m_rootNode){
-        update();
-        //### Should I be using dirty geometry too/instead?
-        foreach (QSGShaderEffectNode* node, m_nodes)
-            node->markDirty(QSGNode::DirtyMaterial); //done in buildData?
+        if (m_rootNode) {
+            update();
+            //### Should I be using dirty geometry too/instead?
+            foreach (QSGGeometryNode* node, m_nodes)
+                node->markDirty(QSGNode::DirtyMaterial);//done in buildData?
+        }
     }
 
     return m_rootNode;
@@ -526,12 +531,12 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
     return *(m_nodes.begin());
 }
 
-static const QByteArray timestampName("timestamp");
 
 void QSGCustomParticle::buildData()
 {
     if (!m_rootNode)
         return;
+    const QByteArray timestampName("qt_Timestamp");
     QVector<QPair<QByteArray, QVariant> > values;
     QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
     const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = m_material->textureProviders();

@@ -37,7 +37,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 1.0
+import QtQuick 2.0
+import "ChartsPlugin" 1.0
 
 Item {
     width: 300; height: 200

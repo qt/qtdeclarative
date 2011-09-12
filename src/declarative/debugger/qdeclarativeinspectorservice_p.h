@@ -39,8 +39,19 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEOBSERVERSERVICE_H
-#define QDECLARATIVEOBSERVERSERVICE_H
+#ifndef QDECLARATIVEINSPECTORSERVICE_H
+#define QDECLARATIVEINSPECTORSERVICE_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include "private/qdeclarativedebugservice_p.h"
 #include <private/qdeclarativeglobal_p.h>
@@ -87,4 +98,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEOBSERVERSERVICE_H
+#endif // QDECLARATIVEINSPECTORSERVICE_H

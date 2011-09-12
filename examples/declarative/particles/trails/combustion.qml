@@ -70,7 +70,7 @@ Rectangle {
                     color: "#2060160f"
                 }
                 SpriteGoal{
-                    collisionParticles: ["lit"]
+                    whenCollidingWith: ["lit"]
                     goalState: "lighting"
                     jump: true
                     systemStates: true
@@ -85,7 +85,7 @@ Rectangle {
                 name: "lit"
                 duration: 10000
                 onEntered: score++;
-                FollowEmitter{
+                TrailEmitter{
                     id: fireballFlame
                     particle: "flame"
 
@@ -99,7 +99,7 @@ Rectangle {
                     endSize: 4
                 }
 
-                FollowEmitter{
+                TrailEmitter{
                     id: fireballSmoke
                     particle: "smoke"
 
@@ -185,7 +185,7 @@ Rectangle {
             goalState: "lighting"
             jump: true
             systemStates: true
-            active: ma.pressed
+            enabled: ma.pressed
             width: 18
             height: 18
             x: ma.mouseX - width/2

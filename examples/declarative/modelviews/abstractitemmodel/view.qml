@@ -37,12 +37,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 1.0
+import QtQuick 2.0
 
 //![0]
 ListView {
     width: 200; height: 250
-    anchors.fill: parent
 
     model: myModel
     delegate: Text { text: "Animal: " + type + ", " + size }

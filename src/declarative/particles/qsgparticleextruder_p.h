@@ -55,32 +55,15 @@ QT_MODULE(Declarative)
 class QSGParticleExtruder : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool fill READ fill WRITE setFill NOTIFY fillChanged)//###Should this be base class, or a BoxExtruder?
 
 public:
     explicit QSGParticleExtruder(QObject *parent = 0);
     virtual QPointF extrude(const QRectF &);
-    virtual bool contains(const QRectF &bounds, const QPointF &point);//###Needed for follow emitter, but does it belong? Only marginally conceptually valid, and that's from user's perspective
-    bool fill() const
-    {
-        return m_fill;
-    }
+    virtual bool contains(const QRectF &bounds, const QPointF &point);
 
 signals:
-
-    void fillChanged(bool arg);
-
 public slots:
-
-    void setFill(bool arg)
-    {
-        if (m_fill != arg) {
-            m_fill = arg;
-            emit fillChanged(arg);
-        }
-    }
 protected:
-    bool m_fill;
 };
 
 QT_END_NAMESPACE

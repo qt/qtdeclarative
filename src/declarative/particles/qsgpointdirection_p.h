@@ -41,7 +41,7 @@
 
 #ifndef POINTVECTOR_H
 #define POINTVECTOR_H
-#include "qsgstochasticdirection_p.h"
+#include "qsgdirection_p.h"
 
 QT_BEGIN_HEADER
 
@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGPointDirection : public QSGStochasticDirection
+class QSGPointDirection : public QSGDirection
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)

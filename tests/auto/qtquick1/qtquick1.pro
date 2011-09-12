@@ -43,6 +43,7 @@ contains(QT_CONFIG, private_tests) {
            qdeclarativetimer \
            qdeclarativevisualdatamodel \
            qdeclarativexmllistmodel \
+           examples
 
 }
 

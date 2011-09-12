@@ -52,7 +52,7 @@ Item {
     Emitter{
         id: visualization
         particle: "cannon"
-        emitting: container.show
+        enabled: container.show
         system: container.system
         anchors.centerIn: parent
         lifeSpan: 2000
@@ -81,7 +81,7 @@ Item {
     Emitter{
         id: emitter
         particle: "cannon"
-        emitting: false
+        enabled: false
         system: container.system
         anchors.centerIn: parent
 
@@ -89,7 +89,7 @@ Item {
         emitRate: 1
         size: 8
         endSize: 4
-        speed: TargetedDirection{
+        speed: TargetDirection{
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true
         }

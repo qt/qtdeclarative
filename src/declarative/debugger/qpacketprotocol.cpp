@@ -41,12 +41,12 @@
 
 #include "private/qpacketprotocol_p.h"
 
-#include <QBuffer>
-#include <QElapsedTimer>
+#include <QtCore/QBuffer>
+#include <QtCore/QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 
-#define MAX_PACKET_SIZE 0x7FFFFFFF
+static const unsigned int MAX_PACKET_SIZE = 0x7FFFFFFF;
 
 /*!
   \class QPacketProtocol
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
   \brief The QPacketProtocol class encapsulates communicating discrete packets
   across fragmented IO channels, such as TCP sockets.
 
-  QPacketProtocol makes it simple to send arbitrary sized data "packets" across 
+  QPacketProtocol makes it simple to send arbitrary sized data "packets" across
   fragmented transports such as TCP and UDP.
 
   As transmission boundaries are not respected, sending packets over protocols
@@ -111,11 +111,11 @@ QT_BEGIN_NAMESPACE
 
 class QPacketProtocolPrivate : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
-    QPacketProtocolPrivate(QPacketProtocol * parent, QIODevice * _dev)
-    : QObject(parent), inProgressSize(-1), maxPacketSize(MAX_PACKET_SIZE),
-      waitingForPacket(false), dev(_dev)
+    QPacketProtocolPrivate(QPacketProtocol *parent, QIODevice *_dev)
+        : QObject(parent), inProgressSize(-1), maxPacketSize(MAX_PACKET_SIZE),
+          waitingForPacket(false), dev(_dev)
     {
         Q_ASSERT(4 == sizeof(qint32));
 
@@ -150,8 +150,8 @@ public Q_SLOTS:
     {
         Q_ASSERT(!sendingPackets.isEmpty());
 
-        while(bytes) {
-            if(sendingPackets.at(0) > bytes) {
+        while (bytes) {
+            if (sendingPackets.at(0) > bytes) {
                 sendingPackets[0] -= bytes;
                 bytes = 0;
             } else {
@@ -214,15 +214,15 @@ public:
     qint32 inProgressSize;
     qint32 maxPacketSize;
     bool waitingForPacket;
-    QIODevice * dev;
+    QIODevice *dev;
 };
 
 /*!
   Construct a QPacketProtocol instance that works on \a dev with the
   specified \a parent.
  */
-QPacketProtocol::QPacketProtocol(QIODevice * dev, QObject * parent)
-: QObject(parent), d(new QPacketProtocolPrivate(this, dev))
+QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
+    : QObject(parent), d(new QPacketProtocolPrivate(this, dev))
 {
     Q_ASSERT(dev);
 }
@@ -236,7 +236,7 @@ QPacketProtocol::~QPacketProtocol()
 
 /*!
   Returns the maximum packet size allowed.  By default this is
-  2,147,483,647 bytes.  
+  2,147,483,647 bytes.
   
   If a packet claiming to be larger than the maximum packet size is received,
   the QPacketProtocol::invalidPacket() signal is emitted.
@@ -255,7 +255,7 @@ qint32 QPacketProtocol::maximumPacketSize() const
  */
 qint32 QPacketProtocol::setMaximumPacketSize(qint32 max)
 {
-    if(max > (signed)sizeof(qint32))
+    if (max > (signed)sizeof(qint32))
         d->maxPacketSize = max;
     return d->maxPacketSize;
 }
@@ -267,7 +267,7 @@ qint32 QPacketProtocol::setMaximumPacketSize(qint32 max)
   protocol.send() << "Hello world" << 123;
   \endcode
 
-  will send a packet containing "Hello world" and 123.  To construct more 
+  will send a packet containing "Hello world" and 123.  To construct more
   complex packets, explicitly construct a QPacket instance.
  */
 QPacketAutoSend QPacketProtocol::send()
@@ -282,7 +282,7 @@ QPacketAutoSend QPacketProtocol::send()
  */
 void QPacketProtocol::send(const QPacket & p)
 {
-    if(p.b.isEmpty())
+    if (p.b.isEmpty())
         return; // We don't send empty packets
 
     qint64 sendSize = p.b.size() + sizeof(qint32);
@@ -317,7 +317,7 @@ void QPacketProtocol::clear()
   */
 QPacket QPacketProtocol::read()
 {
-    if(0 == d->packets.count())
+    if (0 == d->packets.count())
         return QPacket();
 
     QPacket rv(d->packets.at(0));
@@ -370,7 +370,7 @@ bool QPacketProtocol::waitForReadyRead(int msecs)
 /*!
   Return the QIODevice passed to the QPacketProtocol constructor.
 */
-QIODevice * QPacketProtocol::device()
+QIODevice *QPacketProtocol::device()
 {
     return d->dev;
 }
@@ -433,8 +433,8 @@ QIODevice * QPacketProtocol::device()
   \endcode
 
   Only packets returned from QPacketProtocol::read() may be read from.  QPacket
-  instances constructed by directly by applications are for transmission only 
-  and are considered "write only".  Attempting to read data from them will 
+  instances constructed by directly by applications are for transmission only
+  and are considered "write only".  Attempting to read data from them will
   result in undefined behavior.
 
   \ingroup io
@@ -445,7 +445,7 @@ QIODevice * QPacketProtocol::device()
   Constructs an empty write-only packet.
   */
 QPacket::QPacket()
-: QDataStream(), buf(0)
+    : QDataStream(), buf(0)
 {
     buf = new QBuffer(&b);
     buf->open(QIODevice::WriteOnly);
@@ -458,7 +458,7 @@ QPacket::QPacket()
   */
 QPacket::~QPacket()
 {
-    if(buf) {
+    if (buf) {
         delete buf;
         buf = 0;
     }
@@ -469,7 +469,7 @@ QPacket::~QPacket()
   two packets are otherwise independent.
  */
 QPacket::QPacket(const QPacket & other)
-: QDataStream(), b(other.b), buf(0)
+    : QDataStream(), b(other.b), buf(0)
 {
     buf = new QBuffer(&b);
     buf->open(other.buf->openMode());
@@ -480,7 +480,7 @@ QPacket::QPacket(const QPacket & other)
   \internal
   */
 QPacket::QPacket(const QByteArray & ba)
-: QDataStream(), b(ba), buf(0)
+    : QDataStream(), b(ba), buf(0)
 {
     buf = new QBuffer(&b);
     buf->open(QIODevice::ReadOnly);
@@ -534,14 +534,14 @@ void QPacket::clear()
 
   \internal
   */
-QPacketAutoSend::QPacketAutoSend(QPacketProtocol * _p)
-: QPacket(), p(_p)
+QPacketAutoSend::QPacketAutoSend(QPacketProtocol *_p)
+    : QPacket(), p(_p)
 {
 }
 
 QPacketAutoSend::~QPacketAutoSend()
 {
-    if(!b.isEmpty())
+    if (!b.isEmpty())
         p->send(*this);
 }
 

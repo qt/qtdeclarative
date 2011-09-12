@@ -103,12 +103,16 @@ void QSGParticlePainter::setSystem(QSGParticleSystem *arg)
 
 void QSGParticlePainter::load(QSGParticleData* d)
 {
+    if (m_pleaseReset)
+        return;
     initialize(d->group, d->index);
     m_pendingCommits << qMakePair<int, int>(d->group, d->index);
 }
 
 void QSGParticlePainter::reload(QSGParticleData* d)
 {
+    if (m_pleaseReset)
+        return;
     m_pendingCommits << qMakePair<int, int>(d->group, d->index);
 }
 

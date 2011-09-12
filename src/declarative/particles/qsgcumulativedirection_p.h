@@ -41,7 +41,7 @@
 
 #ifndef QSGCUMULATIVEDIRECTION_P_H
 #define QSGCUMULATIVEDIRECTION_P_H
-#include "qsgstochasticdirection_p.h"
+#include "qsgdirection_p.h"
 #include <QDeclarativeListProperty>
 QT_BEGIN_HEADER
 
@@ -49,17 +49,16 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGCumulativeDirection : public QSGStochasticDirection
+class QSGCumulativeDirection : public QSGDirection
 {
     Q_OBJECT
-    Q_PROPERTY(QDeclarativeListProperty<QSGStochasticDirection> directions READ directions)
+    Q_PROPERTY(QDeclarativeListProperty<QSGDirection> directions READ directions)
     Q_CLASSINFO("DefaultProperty", "directions")
 public:
     explicit QSGCumulativeDirection(QObject *parent = 0);
-    QDeclarativeListProperty<QSGStochasticDirection> directions();
+    QDeclarativeListProperty<QSGDirection> directions();
     const QPointF &sample(const QPointF &from);
 private:
-    QList<QSGStochasticDirection*> m_directions;
-    QPointF m_ret;
+    QList<QSGDirection*> m_directions;
 };
 #endif // QSGCUMULATIVEDIRECTION_P_H

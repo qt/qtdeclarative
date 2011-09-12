@@ -38,7 +38,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
+import "content"
 
 Rectangle {
     id: page
@@ -58,6 +59,7 @@ Rectangle {
 
         Rectangle {
             id: blueV1
+            visible: opacity != 0
             width: 100; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -69,6 +71,7 @@ Rectangle {
 
         Rectangle {
             id: blueV2
+            visible: opacity != 0
             width: 100; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -93,6 +96,7 @@ Rectangle {
 
         Rectangle {
             id: blueH1
+            visible: opacity != 0
             width: 50; height: 100
             color: "lightsteelblue"
             border.color: "black"
@@ -104,6 +108,7 @@ Rectangle {
 
         Rectangle {
             id: blueH2
+            visible: opacity != 0
             width: 50; height: 100
             color: "lightsteelblue"
             border.color: "black"
@@ -168,6 +173,7 @@ Rectangle {
 
         Rectangle {
             id: blueG1
+            visible: opacity != 0
             width: 50; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -179,6 +185,7 @@ Rectangle {
 
         Rectangle {
             id: blueG2
+            visible: opacity != 0
             width: 50; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -190,6 +197,7 @@ Rectangle {
 
         Rectangle {
             id: blueG3
+            visible: opacity != 0
             width: 50; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -218,6 +226,7 @@ Rectangle {
 
         Rectangle {
             id: blueF1
+            visible: opacity != 0
             width: 60; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -229,6 +238,7 @@ Rectangle {
 
         Rectangle {
             id: blueF2
+            visible: opacity != 0
             width: 60; height: 50
             color: "lightsteelblue"
             border.color: "black"
@@ -240,6 +250,7 @@ Rectangle {
 
         Rectangle { 
             id: blueF3
+            visible: opacity != 0
             width: 40; height: 50
             color: "lightsteelblue"
             border.color: "black"

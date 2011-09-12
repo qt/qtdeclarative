@@ -51,6 +51,8 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmlproperty real QtQuick.Particles2::Friction::factor
+
+    A drag will be applied to moving objects which is this factor of their current velocity.
 */
 
 QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :

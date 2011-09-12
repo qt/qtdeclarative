@@ -191,7 +191,7 @@ QSGShaderEffectItem::QSGShaderEffectItem(QSGItem *parent)
 QSGShaderEffect::QSGShaderEffect(QSGItem *parent)
     : QSGItem(parent)
     , m_meshResolution(1, 1)
-    , m_deprecatedMesh(0)
+    , m_mesh(0)
     , m_cullMode(NoCulling)
     , m_blending(true)
     , m_dirtyData(true)
@@ -275,63 +275,34 @@ void QSGShaderEffect::setBlending(bool enable)
 }
 
 /*!
-    \qmlproperty size QtQuick2::ShaderEffect::mesh
+    \qmlproperty variant QtQuick2::ShaderEffect::mesh
 
-    This property holds the mesh resolution. The default resolution is 1x1
-    which is the minimum and corresponds to a mesh with four vertices.
-    For non-linear vertex transformations, you probably want to set the
-    resolution higher.
+    This property defines the mesh used to draw the ShaderEffect. It can hold
+    any mesh object deriving from \l QSGShaderEffectMesh, such as \l GridMesh.
+    If a size value is assigned to this property, the ShaderEffect implicitly
+    uses a \l GridMesh with the value as
+    \l{GridMesh::resolution}{mesh resolution}. By default, this property is
+    the size 1x1.
 
-    \row
-    \o \image declarative-gridmesh.png
-    \o \qml
-        import QtQuick 2.0
-
-        ShaderEffect {
-            width: 200
-            height: 200
-            mesh: Qt.size(20, 20)
-            property variant source: Image {
-                source: "qt-logo.png"
-                sourceSize { width: 200; height: 200 }
-                smooth: true
-            }
-            vertexShader: "
-                uniform highp mat4 qt_Matrix;
-                attribute highp vec4 qt_Vertex;
-                attribute highp vec2 qt_MultiTexCoord0;
-                varying highp vec2 qt_TexCoord0;
-                uniform highp float width;
-                void main() {
-                    highp vec4 pos = qt_Vertex;
-                    highp float d = .5 * smoothstep(0., 1., qt_MultiTexCoord0.y);
-                    pos.x = width * mix(d, 1.0 - d, qt_MultiTexCoord0.x);
-                    gl_Position = qt_Matrix * pos;
-                    qt_TexCoord0 = qt_MultiTexCoord0;
-                }"
-        }
-        \endqml
-    \endrow
+    \sa GridMesh
 */
 
 QVariant QSGShaderEffect::mesh() const
 {
-    return m_deprecatedMesh ? qVariantFromValue(static_cast<QObject *>(m_deprecatedMesh))
-                            : qVariantFromValue(m_meshResolution);
+    return m_mesh ? qVariantFromValue(static_cast<QObject *>(m_mesh))
+                  : qVariantFromValue(m_meshResolution);
 }
 
 void QSGShaderEffect::setMesh(const QVariant &mesh)
 {
-    // TODO: Replace QVariant with QSize after grace period.
     QSGShaderEffectMesh *newMesh = qobject_cast<QSGShaderEffectMesh *>(qVariantValue<QObject *>(mesh));
-    if (newMesh && newMesh == m_deprecatedMesh)
+    if (newMesh && newMesh == m_mesh)
         return;
-    if (m_deprecatedMesh)
-        disconnect(m_deprecatedMesh, SIGNAL(geometryChanged()), this, 0);
-    m_deprecatedMesh = newMesh;
-    if (m_deprecatedMesh) {
-        qWarning("ShaderEffect: Setting the mesh to something other than a size is deprecated.");
-        connect(m_deprecatedMesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
+    if (m_mesh)
+        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
+    m_mesh = newMesh;
+    if (m_mesh) {
+        connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
     } else {
         if (qVariantCanConvert<QSize>(mesh)) {
             m_meshResolution = mesh.toSize();
@@ -347,7 +318,7 @@ void QSGShaderEffect::setMesh(const QVariant &mesh)
                 }
             }
             if (!ok)
-                qWarning("ShaderEffect: mesh resolution must be a size.");
+                qWarning("ShaderEffect: mesh property must be size or object deriving from QSGShaderEffectMesh.");
         }
         m_defaultMesh.setResolution(m_meshResolution);
     }
@@ -511,10 +482,9 @@ void QSGShaderEffect::updateProperties()
     lookThroughShaderCode(vertexCode);
     lookThroughShaderCode(fragmentCode);
 
-    // TODO: Remove !m_deprecatedMesh check after grace period.
-    if (!m_deprecatedMesh && !m_source.attributeNames.contains(qt_position_attribute_name))
+    if (!m_mesh && !m_source.attributeNames.contains(qt_position_attribute_name))
         qWarning("QSGShaderEffect: Missing reference to \'%s\'.", qt_position_attribute_name);
-    if (!m_deprecatedMesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name))
+    if (!m_mesh && !m_source.attributeNames.contains(qt_texcoord_attribute_name))
         qWarning("QSGShaderEffect: Missing reference to \'%s\'.", qt_texcoord_attribute_name);
     if (!m_source.respectsMatrix)
         qWarning("QSGShaderEffect: Missing reference to \'qt_Matrix\'.");
@@ -608,7 +578,7 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
         node->setFlag(QSGNode::OwnsGeometry, false);
         QSGGeometry *geometry = node->geometry();
         QRectF rect(0, 0, width(), height());
-        QSGShaderEffectMesh *mesh = m_deprecatedMesh ? m_deprecatedMesh : &m_defaultMesh;
+        QSGShaderEffectMesh *mesh = m_mesh ? m_mesh : &m_defaultMesh;
 
         geometry = mesh->updateGeometry(geometry, m_source.attributeNames, rect);
         if (!geometry) {

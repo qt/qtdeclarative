@@ -45,6 +45,8 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
 
+QT_BEGIN_NAMESPACE
+
 Q_GLOBAL_STATIC(QDeclarativeDebugTrace, traceInstance);
 
 // convert to a QByteArray that can be sent to the debug client
@@ -64,8 +66,8 @@ QByteArray QDeclarativeDebugData::toByteArray() const
 }
 
 QDeclarativeDebugTrace::QDeclarativeDebugTrace()
-: QDeclarativeDebugService(QLatin1String("CanvasFrameRate")),
-  m_enabled(false), m_deferredSend(true), m_messageReceived(false)
+    : QDeclarativeDebugService(QLatin1String("CanvasFrameRate")),
+      m_enabled(false), m_deferredSend(true), m_messageReceived(false)
 {
     m_timer.start();
     if (status() == Enabled) {
@@ -77,19 +79,19 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
 
 void QDeclarativeDebugTrace::addEvent(EventType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled()) 
+    if (QDeclarativeDebugService::isDebuggingEnabled())
         traceInstance()->addEventImpl(t);
 }
 
 void QDeclarativeDebugTrace::startRange(RangeType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled()) 
+    if (QDeclarativeDebugService::isDebuggingEnabled())
         traceInstance()->startRangeImpl(t);
 }
 
 void QDeclarativeDebugTrace::rangeData(RangeType t, const QString &data)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled()) 
+    if (QDeclarativeDebugService::isDebuggingEnabled())
         traceInstance()->rangeDataImpl(t, data);
 }
 
@@ -113,7 +115,7 @@ void QDeclarativeDebugTrace::rangeLocation(RangeType t, const QUrl &fileName, in
 
 void QDeclarativeDebugTrace::endRange(RangeType t)
 {
-    if (QDeclarativeDebugService::isDebuggingEnabled()) 
+    if (QDeclarativeDebugService::isDebuggingEnabled())
         traceInstance()->endRangeImpl(t);
 }
 
@@ -223,3 +225,5 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
     if (!m_enabled)
         sendMessages();
 }
+
+QT_END_NAMESPACE

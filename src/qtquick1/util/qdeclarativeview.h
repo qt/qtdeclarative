@@ -47,6 +47,7 @@
 #include <QtWidgets/qgraphicssceneevent.h>
 #include <QtWidgets/qgraphicsview.h>
 #include <QtWidgets/qwidget.h>
+#include <QtDeclarative/qdeclarativedebug.h>
 
 QT_BEGIN_HEADER
 

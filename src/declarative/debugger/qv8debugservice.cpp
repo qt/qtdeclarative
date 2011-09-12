@@ -56,7 +56,9 @@ Q_GLOBAL_STATIC(QV8DebugService, v8ServiceInstance)
 void DebugMessageHandler(const v8::Debug::Message& message)
 {
     v8::DebugEvent event = message.GetEvent();
-    if (event != v8::Break && event != v8::Exception && event != v8::AfterCompile) {
+
+    if (event != v8::Break && event != v8::Exception &&
+            event != v8::AfterCompile && event != v8::BeforeCompile) {
         return;
     }
 
@@ -65,7 +67,8 @@ void DebugMessageHandler(const v8::Debug::Message& message)
     QV8DebugService *service = QV8DebugService::instance();
     service->debugMessageHandler(response);
 
-    if (event == v8::Break && !message.WillStartRunning()) {
+    if ((event == v8::Break || event == v8::Exception) &&
+            !message.WillStartRunning()) {
         service->executionStopped();
     } else if (event == v8::AfterCompile) {
         service->appendSourcePath(response);

@@ -77,8 +77,8 @@ Rectangle{
             uniform lowp float qt_Opacity;
 
             void main() {                                           
-                fTex2 = vec2(vPos.x / maxWidth, vPos.y / maxHeight);
-                highp float t = (timestamp - vData.x) / vData.y;
+                fTex2 = vec2(qt_ParticlePos.x / maxWidth, qt_ParticlePos.y / maxHeight);
+                highp float t = (qt_Timestamp - qt_ParticleData.x) / qt_ParticleData.y;
                 fFade = min(t*4., (1.-t*t)*.75) * qt_Opacity;
                 defaultMain();
             }
@@ -88,19 +88,19 @@ Rectangle{
         fragmentShader: "
             uniform sampler2D particleTexture;
             uniform sampler2D pictureTexture;
-            varying highp vec2 fTex;
+            varying highp vec2 qt_TexCoord0;
             varying highp vec2 fTex2;
             varying lowp float fFade;
             void main() {
-                gl_FragColor = texture2D(pictureTexture, fTex2) * texture2D(particleTexture, fTex).w * fFade;
+                gl_FragColor = texture2D(pictureTexture, fTex2) * texture2D(particleTexture, qt_TexCoord0).w * fFade;
         }"
     }
     Emitter{
         id: emitter
         system: sys
-        emitting: false
+        enabled: false
         lifeSpan: 4000
-        emitCap: 1200
+        maximumEmitted: 1200
         anchors.fill: parent
         size: 32
         speed: PointDirection{ xVariation: 12; yVariation: 12 }

@@ -189,6 +189,9 @@ void registerTypes()
 
     qRegisterMetaType<MyQmlObject::MyType>("MyEnum2");
     qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
+
+    qmlRegisterType<CircularReferenceObject>("Qt.test", 1, 0, "CircularReferenceObject");
+    qmlRegisterType<CircularReferenceHandle>("Qt.test", 1, 0, "CircularReferenceHandle");
 }
 
 #include "testtypes.moc"

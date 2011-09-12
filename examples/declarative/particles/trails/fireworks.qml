@@ -59,13 +59,13 @@ Rectangle{
                 name: "splode"
                 duration: 400
                 to: {"dead":1}
-                FollowEmitter{
+                TrailEmitter{
                     particle: "works"
                     emitRatePerParticle: 100
                     lifeSpan: 1000
-                    emitCap: 1200
+                    maximumEmitted: 1200
                     size: 8
-                    speed: AngledDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
+                    speed: AngleDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
                     acceleration: PointDirection{y:100; yVariation: 20}
                 }
             },
@@ -73,8 +73,7 @@ Rectangle{
                 name: "dead"
                 duration: 1000
                 Affector{
-                    onceOff: true
-                    signal: true
+                    once: true
                     onAffected: worksEmitter.burst(400,x,y)
                 }
             }
@@ -91,7 +90,7 @@ Rectangle{
             particle: "fire"
             width: parent.width
             y: parent.height
-            emitting: false
+            enabled: false
             emitRate: 80
             lifeSpan: 6000
             speed: PointDirection{y:-100;}
@@ -100,14 +99,14 @@ Rectangle{
         Emitter{
             id: worksEmitter
             particle: "works"
-            emitting: false
+            enabled: false
             emitRate: 100
             lifeSpan: 1600
-            emitCap: 6400
+            maximumEmitted: 6400
             size: 8
             speed: CumulativeDirection{
                 PointDirection{y:-100}
-                AngledDirection{angleVariation: 360; magnitudeVariation: 80;}
+                AngleDirection{angleVariation: 360; magnitudeVariation: 80;}
             }
             acceleration: PointDirection{y:100; yVariation: 20}
         }

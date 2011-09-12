@@ -61,6 +61,7 @@
 #include "qsggridview_p.h"
 #include "qsgpathview_p.h"
 #include <private/qdeclarativepath_p.h>
+#include <private/qdeclarativepathinterpolator_p.h>
 #include "qsgpositioners_p.h"
 #include "qsgrepeater_p.h"
 #include "qsgloader_p.h"
@@ -125,6 +126,9 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QDeclarativePathLine>(uri,major,minor,"PathLine");
     qmlRegisterType<QDeclarativePathPercent>(uri,major,minor,"PathPercent");
     qmlRegisterType<QDeclarativePathQuad>(uri,major,minor,"PathQuad");
+    qmlRegisterType<QDeclarativePathCatmullRomCurve>("QtQuick",2,0,"PathCurve");
+    qmlRegisterType<QDeclarativePathArc>("QtQuick",2,0,"PathArc");
+    qmlRegisterType<QDeclarativePathSvg>("QtQuick",2,0,"PathSvg");
     qmlRegisterType<QSGPathView>(uri,major,minor,"PathView");
     qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner",
                                                   QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
@@ -172,8 +176,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGShaderEffectItem>("QtQuick", 2, 0, "ShaderEffectItem"); // TODO: Remove after grace period.
     qmlRegisterType<QSGShaderEffect>("QtQuick", 2, 0, "ShaderEffect");
     qmlRegisterType<QSGShaderEffectSource>("QtQuick", 2, 0, "ShaderEffectSource");
-    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh.")); // TODO: Remove after grace period.
-    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh"); // TODO: Remove after grace period.
+    qmlRegisterUncreatableType<QSGShaderEffectMesh>("QtQuick", 2, 0, "ShaderEffectMesh", QSGShaderEffectMesh::tr("Cannot create instance of abstract class ShaderEffectMesh."));
+    qmlRegisterType<QSGGridMesh>("QtQuick", 2, 0, "GridMesh");
 
     qmlRegisterUncreatableType<QSGPaintedItem>("QtQuick", 2, 0, "PaintedItem", QSGPaintedItem::tr("Cannot create instance of abstract class PaintedItem"));
 
@@ -189,6 +193,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QSGAnchorSet>();
     qmlRegisterType<QSGAnchorAnimation>(uri, major, minor,"AnchorAnimation");
     qmlRegisterType<QSGParentAnimation>(uri, major, minor,"ParentAnimation");
+    qmlRegisterType<QSGPathAnimation>("QtQuick",2,0,"PathAnimation");
+    qmlRegisterType<QDeclarativePathInterpolator>("QtQuick",2,0,"PathInterpolator");
 
     qmlRegisterType<QSGDragTarget>("QtQuick", 2, 0, "DragTarget");
     qmlRegisterType<QSGDragTargetEvent>();

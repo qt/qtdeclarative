@@ -38,8 +38,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import Qt.labs.particles 1.0
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
 Item {
     id: window
@@ -80,14 +80,25 @@ Item {
             source: "images/moon.png"; y: parent.height - 74; anchors.horizontalCenter: parent.horizontalCenter
             rotation: -parent.rotation
         }
-        Particles {
-            x: 0; y: parent.height/2; width: parent.width; height: parent.height/2
-            source: "images/star.png"; angleDeviation: 360; velocity: 0
-            velocityDeviation: 0; count: parent.width / 10; fadeInDuration: 2800
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                NumberAnimation { from: 0; to: 1; duration: 5000 }
-                NumberAnimation { from: 1; to: 0; duration: 5000 }
+        ParticleSystem {
+            id: particlesystem
+            x: 0; y: parent.height/2
+            width: parent.width; height: parent.height/2
+            ImageParticle {
+                source: "images/star.png"
+                particles: ["star"]
+                color: "#00333333"
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0; to: 1; duration: 5000 }
+                    NumberAnimation { from: 1; to: 0; duration: 5000 }
+                }
+            }
+            Emitter {
+                particle: "star"
+                anchors.fill: parent
+                emitRate: parent.width / 50
+                lifeSpan: 5000
             }
         }
     }

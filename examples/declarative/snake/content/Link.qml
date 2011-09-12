@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
-import Qt.labs.particles 1.0
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
 Item { id:link
     property bool dying: false
@@ -93,19 +93,20 @@ Item { id:link
         opacity: 0
     }
 
-
-    Particles { id: particles
+    ParticleSystem {
         width:1; height:1; anchors.centerIn: parent;
-        emissionRate: 0;
-        lifeSpan: 700; lifeSpanDeviation: 600;
-        angle: 0; angleDeviation: 360;
-        velocity: 100; velocityDeviation:30;
-        source: {
-            if(type == 1){
-                "pics/blueStar.png";
-            } else {
-                "pics/redStar.png";
-            }
+        ImageParticle {
+            particles: ["star"]
+            source: type == 1 ? "pics/blueStar.png" : "pics/redStar.png"
+        }
+        Emitter {
+            id: particles
+            anchors.fill: parent
+            particle: "star"
+            emitRate: 50
+            emitting: false
+            lifeSpan: 700
+            acceleration: AngledDirection { angleVariation: 360; magnitude: 200 }
         }
     }
 

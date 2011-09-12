@@ -1675,6 +1675,7 @@ void QSGTextEdit::q_textChanged()
 void QSGTextEdit::moveCursorDelegate()
 {
     Q_D(QSGTextEdit);
+    d->determineHorizontalAlignment();
     updateMicroFocus();
     emit cursorRectangleChanged();
     if(!d->cursor)

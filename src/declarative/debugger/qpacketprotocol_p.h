@@ -42,6 +42,17 @@
 #ifndef QPACKETPROTOCOL_H
 #define QPACKETPROTOCOL_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtCore/qobject.h>
 #include <QtCore/qdatastream.h>
 
@@ -61,9 +72,9 @@ class QPacketProtocolPrivate;
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QPacketProtocol : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
-    explicit QPacketProtocol(QIODevice * dev, QObject * parent = 0);
+    explicit QPacketProtocol(QIODevice *dev, QObject *parent = 0);
     virtual ~QPacketProtocol();
 
     qint32 maximumPacketSize() const;
@@ -79,7 +90,7 @@ public:
 
     void clear();
 
-    QIODevice * device();
+    QIODevice *device();
 
 Q_SIGNALS:
     void readyRead();
@@ -87,7 +98,7 @@ Q_SIGNALS:
     void packetWritten();
 
 private:
-    QPacketProtocolPrivate * d;
+    QPacketProtocolPrivate *d;
 };
 
 
@@ -104,9 +115,9 @@ public:
 
 protected:
     friend class QPacketProtocol;
-    QPacket(const QByteArray & ba);
+    QPacket(const QByteArray &ba);
     QByteArray b;
-    QBuffer * buf;
+    QBuffer *buf;
 };
 
 class Q_DECLARATIVE_PRIVATE_EXPORT QPacketAutoSend : public QPacket
@@ -117,7 +128,7 @@ public:
 private:
     friend class QPacketProtocol;
     QPacketAutoSend(QPacketProtocol *);
-    QPacketProtocol * p;
+    QPacketProtocol *p;
 };
 
 QT_END_NAMESPACE

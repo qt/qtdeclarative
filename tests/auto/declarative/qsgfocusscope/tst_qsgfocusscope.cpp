@@ -127,10 +127,7 @@ void tst_qsgfocusscope::basic()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->isTopLevel());
     QVERIFY(item0->hasActiveFocus() == true);
@@ -173,10 +170,7 @@ void tst_qsgfocusscope::nested()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->windowState() == Qt::WindowActive);
 
@@ -206,10 +200,7 @@ void tst_qsgfocusscope::noFocus()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == false);
@@ -250,10 +241,7 @@ void tst_qsgfocusscope::textEdit()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == true);
@@ -308,10 +296,7 @@ void tst_qsgfocusscope::forceFocus()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == true);
@@ -382,10 +367,7 @@ void tst_qsgfocusscope::signalEmission()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVariant blue(QColor("blue"));
     QVariant red(QColor("red"));
@@ -434,10 +416,7 @@ void tst_qsgfocusscope::qtBug13380()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(view->rootObject()->property("noFocus").toBool());
@@ -613,10 +592,7 @@ void tst_qsgfocusscope::canvasFocus()
     view->requestActivateWindow();
     qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     // Now the canvas has focus, active focus given to item1
     QTRY_COMPARE((view->windowState() == Qt::WindowActive), true);

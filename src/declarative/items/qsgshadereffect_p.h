@@ -131,7 +131,7 @@ private:
 
     QSGShaderEffectProgram m_source;
     QSize m_meshResolution;
-    QSGShaderEffectMesh *m_deprecatedMesh; // TODO: Remove after grace period.
+    QSGShaderEffectMesh *m_mesh;
     QSGGridMesh m_defaultMesh;
     CullMode m_cullMode;
 

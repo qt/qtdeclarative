@@ -58,33 +58,33 @@ Rectangle{
         system: sys
         particles: ["goingDown"]
         source: "content/squarefacespriteXX.png"
-        rotation: 180
         yVector: PointDirection{ y: 0.5; yVariation: 0.25; xVariation: 0.25; }
+        rotation: 180
     }
     Timer{
         running: true
         repeat: false
         interval: 100
-        onTriggered: emitA.emitting = true;
+        onTriggered: emitA.enabled = true;
     }
     Timer{
         running: true
         repeat: false
         interval: 4200
-        onTriggered: emitB.emitting = true;
+        onTriggered: emitB.enabled = true;
     }
     Timer{
         running: true
         repeat: false
         interval: 8400
-        onTriggered: emitC.emitting = true;
+        onTriggered: emitC.enabled = true;
     }
     Emitter{
         id: emitA
         x: 0
         y: 120
         system: sys
-        emitting: false
+        enabled: false
         particle: "goingRight"
         speed: PointDirection{ x: 100 }
         lifeSpan: 4000
@@ -96,7 +96,7 @@ Rectangle{
         x: 400
         y: 240
         system: sys
-        emitting: false
+        enabled: false
         particle: "goingLeft"
         speed: PointDirection{ x: -100 }
         lifeSpan: 4000
@@ -108,7 +108,7 @@ Rectangle{
         x: 0
         y: 360
         system: sys
-        emitting: false
+        enabled: false
         particle: "goingDown"
         speed: PointDirection{ x: 100 }
         lifeSpan: 4000

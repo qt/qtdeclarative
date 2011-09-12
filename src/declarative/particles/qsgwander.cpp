@@ -49,10 +49,39 @@ QT_BEGIN_NAMESPACE
     \brief The Wander affector allows particles to randomly vary their trajectory.
 
 */
+/*!
+    \qmlproperty real QtQuick.Particles2::Wander::pace
+
+    Maximum attribute change per second.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Wander::xVariance
+
+    Maximum attribute x value (as a result of Wander).
+
+    If unset, Wander will not affect x values.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Wander::yVariance
+
+    Maximum attribute y value (as a result of Wander).
+
+    If unset, Wander will not affect y values.
+*/
+/*!
+    \qmlproperty AffectableParameter QtQuick.Particles2::Wander::affectedParameter
+
+    What attribute of particles is directly affected.
+    \list
+    \o PointAttractor.Position
+    \o PointAttractor.Velocity
+    \o PointAttractor.Acceleration
+    \endlist
+*/
 
 QSGWanderAffector::QSGWanderAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_xVariance(0), m_yVariance(0), m_pace(0)
-    , m_physics(Velocity)
+    , m_affectedParameter(Velocity)
 {
     m_needsReset = true;
 }
@@ -119,7 +148,7 @@ bool QSGWanderAffector::affectParticle(QSGParticleData* data, qreal dt)
     qreal dx = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
     qreal dy = dt * m_pace * (2 * qreal(qrand())/RAND_MAX - 1);
     qreal newX, newY;
-    switch (m_physics){
+    switch (m_affectedParameter){
     case Position:
         newX = data->curX() + dx;
         if (m_xVariance > qAbs(newX) )

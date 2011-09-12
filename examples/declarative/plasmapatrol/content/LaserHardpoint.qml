@@ -54,9 +54,9 @@ Item {
         particle: "laser"
         system: container.system
         anchors.fill: parent
-        emitting: container.show
+        enabled: container.show
         shape: EllipseShape{}
-        speed: TargetedDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
+        speed: TargetDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
         lifeSpan: 1000
         emitRate: 64
 
@@ -87,7 +87,7 @@ Item {
     Emitter{
         id: emitter
         particle: "laser"
-        emitting: false
+        enabled: false
         system: container.system
         x: Math.min(container.width/2, target.x);
         width: Math.max(container.width/2, target.x) - x;
@@ -99,7 +99,7 @@ Item {
 
         lifeSpan: 1000
         emitRate: 8000
-        emitCap: 800
+        maximumEmitted: 800
         size: 16
         endSize: 0
 

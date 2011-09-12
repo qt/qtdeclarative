@@ -42,7 +42,7 @@
 #ifndef ULTRAPARTICLE_H
 #define ULTRAPARTICLE_H
 #include "qsgparticlepainter_p.h"
-#include "qsgstochasticdirection_p.h"
+#include "qsgdirection_p.h"
 #include <QDeclarativeListProperty>
 #include <qsgsimplematerial.h>
 #include <QtGui/qcolor.h>
@@ -173,9 +173,9 @@ class QSGImageParticle : public QSGParticlePainter
 
     //###Call i/j? Makes more sense to those with vector calculus experience, and I could even add the cirumflex in QML?
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
-    Q_PROPERTY(QSGStochasticDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged)
+    Q_PROPERTY(QSGDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged)
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
-    Q_PROPERTY(QSGStochasticDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
+    Q_PROPERTY(QSGDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
@@ -244,9 +244,9 @@ public:
 
     bool autoRotation() const { return m_autoRotation; }
 
-    QSGStochasticDirection* xVector() const { return m_xVector; }
+    QSGDirection* xVector() const { return m_xVector; }
 
-    QSGStochasticDirection* yVector() const { return m_yVector; }
+    QSGDirection* yVector() const { return m_yVector; }
 
     bool bloat() const { return m_bloat; }
 
@@ -283,9 +283,9 @@ signals:
 
     void autoRotationChanged(bool arg);
 
-    void xVectorChanged(QSGStochasticDirection* arg);
+    void xVectorChanged(QSGDirection* arg);
 
-    void yVectorChanged(QSGStochasticDirection* arg);
+    void yVectorChanged(QSGDirection* arg);
 
     void bloatChanged(bool arg);
 
@@ -313,9 +313,9 @@ public slots:
 
     void setAutoRotation(bool arg);
 
-    void setXVector(QSGStochasticDirection* arg);
+    void setXVector(QSGDirection* arg);
 
-    void setYVector(QSGStochasticDirection* arg);
+    void setYVector(QSGDirection* arg);
 
     void setBloat(bool arg);
 
@@ -365,8 +365,8 @@ private:
     qreal m_rotationSpeed;
     qreal m_rotationSpeedVariation;
     bool m_autoRotation;
-    QSGStochasticDirection* m_xVector;
-    QSGStochasticDirection* m_yVector;
+    QSGDirection* m_xVector;
+    QSGDirection* m_yVector;
 
     QList<QSGSprite*> m_sprites;
     QSGSpriteEngine* m_spriteEngine;
