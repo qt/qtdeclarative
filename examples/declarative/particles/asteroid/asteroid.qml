@@ -67,7 +67,7 @@ Item {
     }
     ImageParticle {
         system: sys
-        particles: ["starfield"]
+        groups: ["starfield"]
         source: "content/star.png"
         colorVariation: 0.3
         color: "white"
@@ -75,7 +75,7 @@ Item {
     Emitter {
         id: starField
         system: sys
-        particle: "starfield"
+        group: "starfield"
 
         emitRate: 80
         lifeSpan: 2500
@@ -91,7 +91,7 @@ Item {
     }
     Emitter{
         system: sys
-        particle: "meteor"
+        group: "meteor"
         emitRate: 12
         lifeSpan: 5000
         acceleration: PointDirection{ xVariation: 80; yVariation: 80; }
@@ -101,7 +101,7 @@ Item {
      }
     ImageParticle{
         system: sys
-        particles: ["meteor"]
+        groups: ["meteor"]
         sprites:[Sprite{
                 id: spinState
                 name: "spinning"
@@ -126,7 +126,7 @@ Item {
         ]
     }
     SpriteGoal{
-        particles: ["meteor"]
+        groups: ["meteor"]
         system: sys
         goalState: "explode"
         jump: true
@@ -170,7 +170,7 @@ Item {
     ImageParticle{
         z:0 
         system: sys
-        particles: ["exhaust"]
+        groups: ["exhaust"]
         source: "content/particle4.png"
 
         color: "orange"
@@ -193,7 +193,7 @@ Item {
     Emitter{
         id: trailsNormal2
         system: sys
-        particle: "exhaust"
+        group: "exhaust"
 
         emitRate: 300
         lifeSpan: 500

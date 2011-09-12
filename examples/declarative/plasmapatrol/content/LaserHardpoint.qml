@@ -51,7 +51,7 @@ Item {
     height: 24
     Emitter{
         id: visualization
-        particle: "laser"
+        group: "laser"
         system: container.system
         anchors.fill: parent
         enabled: container.show
@@ -86,7 +86,7 @@ Item {
     }
     Emitter{
         id: emitter
-        particle: "laser"
+        group: "laser"
         enabled: false
         system: container.system
         x: Math.min(container.width/2, target.x);

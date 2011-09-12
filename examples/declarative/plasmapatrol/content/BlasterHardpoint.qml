@@ -55,7 +55,7 @@ Item {
     height: 24
     Emitter{
         id: visualization
-        particle: "blaster"
+        group: "blaster"
         system: container.system
         enabled: show
         anchors.fill: parent
@@ -114,7 +114,7 @@ Item {
     }
     Emitter{
         id: emitter
-        particle: "blaster"
+        group: "blaster"
         enabled: false
         system: container.system
         anchors.centerIn: parent

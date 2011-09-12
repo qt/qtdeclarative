@@ -60,7 +60,7 @@ Item {
         //TODO: Cooler would be an 'orbiting' affector
         //TODO: On the subject, opacity and size should be grouped type 'overLife' if we can cram that in the particles
         system: container.system
-        particle: container.shipParticle
+        group: container.shipParticle
         shape: EllipseShape{}
 
         emitRate: hp > 0 ?  hp + 20 : 0 

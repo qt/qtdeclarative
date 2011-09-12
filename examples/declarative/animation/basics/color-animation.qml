@@ -86,7 +86,7 @@ Item {
             width: parent.width; height: parent.height/2
             ImageParticle {
                 source: "images/star.png"
-                particles: ["star"]
+                groups: ["star"]
                 color: "#00333333"
                 SequentialAnimation on opacity {
                     loops: Animation.Infinite
@@ -95,7 +95,7 @@ Item {
                 }
             }
             Emitter {
-                particle: "star"
+                group: "star"
                 anchors.fill: parent
                 emitRate: parent.width / 50
                 lifeSpan: 5000

@@ -1021,7 +1021,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         m_material->setFlag(QSGMaterial::Blending);
     }
 
-    foreach (const QString &str, m_particles){
+    foreach (const QString &str, m_groups){
         int gIdx = m_system->m_groupIds[str];
         int count = m_system->m_groupData[gIdx]->size();
         QSGGeometryNode* node = new QSGGeometryNode();
@@ -1151,7 +1151,7 @@ void QSGImageParticle::prepareNextFrame()
         //Advance State
         getState<ImageMaterialData>(m_material)->animcount = m_spriteEngine->spriteCount();
         m_spriteEngine->updateSprites(timeStamp);
-        foreach (const QString &str, m_particles){
+        foreach (const QString &str, m_groups){
             int gIdx = m_system->m_groupIds[str];
             int count = m_system->m_groupData[gIdx]->size();
 
@@ -1199,7 +1199,7 @@ void QSGImageParticle::initialize(int gIdx, int pIdx)
             datum->animT = datum->t;
             datum->animIdx = 0;
             if (m_spriteEngine){
-                m_spriteEngine->startSprite(spriteIdx);
+                m_spriteEngine->start(spriteIdx);
                 datum->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                 datum->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
             }else{

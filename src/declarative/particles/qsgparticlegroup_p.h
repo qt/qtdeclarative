@@ -38,86 +38,70 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QSGPARTICLEGROUP
+#define QSGPARTICLEGROUP
+#include "qsgspriteengine_p.h"
+#include "qsgparticlesystem_p.h"
+#include "qdeclarativeparserstatus.h"
 
-#ifndef SPRITEGOALAFFECTOR_H
-#define SPRITEGOALAFFECTOR_H
-#include "qsgparticleaffector_p.h"
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QSGStochasticEngine;
-
-class QSGSpriteGoalAffector : public QSGParticleAffector
+class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserStatus
 {
     Q_OBJECT
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
-    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
+    //### Would setting limits per group be useful? Or clutter the API?
+    //Q_PROPERTY(int maximumAlive READ maximumAlive WRITE setMaximumAlive NOTIFY maximumAliveChanged)
+
+    Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
+
+    //Intercept children requests and assign to the group & system
+    Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
+    Q_CLASSINFO("DefaultProperty", "particleChildren")
+
 public:
-    explicit QSGSpriteGoalAffector(QSGItem *parent = 0);
+    explicit QSGParticleGroup(QObject* parent = 0);
 
-    QString goalState() const
+    QDeclarativeListProperty<QObject> particleChildren();
+
+    int maximumAlive() const
     {
-        return m_goalState;
+        return m_maximumAlive;
     }
 
-    bool jump() const
+    QSGParticleSystem* system() const
     {
-        return m_jump;
+        return m_system;
     }
-    bool systemStates() const
-    {
-        return m_systemStates;
-    }
-
-protected:
-    virtual bool affectParticle(QSGParticleData *d, qreal dt);
-signals:
-
-    void goalStateChanged(QString arg);
-
-    void jumpChanged(bool arg);
-
-    void affected(const QPointF &pos);
-    void systemStatesChanged(bool arg);
 
 public slots:
 
-void setGoalState(QString arg);
-
-void setJump(bool arg)
-{
-    if (m_jump != arg) {
-        m_jump = arg;
-        emit jumpChanged(arg);
+    void setMaximumAlive(int arg)
+    {
+        if (m_maximumAlive != arg) {
+            m_maximumAlive = arg;
+            emit maximumAliveChanged(arg);
+        }
     }
-}
 
-void setSystemStates(bool arg)
-{
-    if (m_systemStates != arg) {
-        m_systemStates = arg;
-        emit systemStatesChanged(arg);
-    }
-}
+    void setSystem(QSGParticleSystem* arg);
+
+    void delayRedirect(QObject* obj);
+
+signals:
+
+    void maximumAliveChanged(int arg);
+
+    void systemChanged(QSGParticleSystem* arg);
+
+protected:
+    virtual void componentComplete();
+    virtual void classBegin(){;}
 
 private:
-    void updateStateIndex(QSGStochasticEngine* e);
-    QString m_goalState;
-    int m_goalIdx;
-    QSGStochasticEngine* m_lastEngine;
-    bool m_jump;
-    bool m_systemStates;
 
-    bool m_notUsingEngine;
+    void performDelayedRedirects();
+
+    int m_maximumAlive;
+    QSGParticleSystem* m_system;
+    QList<QObject*> m_delayedRedirects;
 };
 
-QT_END_NAMESPACE
-
-QT_END_HEADER
-
-#endif // SPRITEGOALAFFECTOR_H
+#endif

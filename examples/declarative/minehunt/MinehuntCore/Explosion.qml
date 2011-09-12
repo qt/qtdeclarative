@@ -48,14 +48,14 @@ Item {
         width: 40
         height: 40
         ImageParticle {
-            particles: ["star"]
+            groups: ["star"]
             source: "file:MinehuntCore/pics/star.png" // TODO: Use qrc path once QTBUG-21129 is fixed
         }
         Emitter {
             id: particles
             emitting: false
             anchors.centerIn: parent
-            particle: "star"
+            group: "star"
             speed: AngledDirection { angleVariation: 360; magnitude: 150; magnitudeVariation: 50 }
             emitRate: 200
             z: 100

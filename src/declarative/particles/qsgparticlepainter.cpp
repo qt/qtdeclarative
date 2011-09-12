@@ -58,10 +58,10 @@ QT_BEGIN_NAMESPACE
     If the ParticlePainter is a direct child of a ParticleSystem, it will automatically be associated with it.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::ParticlePainter::particles
+    \qmlproperty list<string> QtQuick.Particles2::ParticlePainter::groups
     Which logical particle groups will be painted.
 
-    If empty, it will paint the default particle ("").
+    If empty, it will paint the default particle group ("").
 */
 QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
@@ -144,7 +144,7 @@ void QSGParticlePainter::calcSystemOffset(bool resetPending)
     m_systemOffset = -1 * this->mapFromItem(m_system, QPointF(0.0, 0.0));
     if (lastOffset != m_systemOffset && !resetPending){
         //Reload all particles//TODO: Necessary?
-        foreach (const QString &g, m_particles){
+        foreach (const QString &g, m_groups){
             int gId = m_system->m_groupIds[g];
             foreach (QSGParticleData* d, m_system->m_groupData[gId]->data)
                 reload(d);

@@ -48,36 +48,34 @@ Rectangle{
     ParticleSystem{
         anchors.fill: parent
         id: syssy
-        particleStates:[
-            Sprite{
-                name: "fire"
-                duration: 2000
-                durationVariation: 2000
-                to: {"splode":1}
-            },
-            Sprite{
-                name: "splode"
-                duration: 400
-                to: {"dead":1}
-                TrailEmitter{
-                    particle: "works"
-                    emitRatePerParticle: 100
-                    lifeSpan: 1000
-                    maximumEmitted: 1200
-                    size: 8
-                    speed: AngleDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
-                    acceleration: PointDirection{y:100; yVariation: 20}
-                }
-            },
-            Sprite{
-                name: "dead"
-                duration: 1000
-                Affector{
-                    once: true
-                    onAffected: worksEmitter.burst(400,x,y)
-                }
+        ParticleGroup{
+            name: "fire"
+            duration: 2000
+            durationVariation: 2000
+            to: {"splode":1}
+        }
+        ParticleGroup{
+            name: "splode"
+            duration: 400
+            to: {"dead":1}
+            TrailEmitter{
+                group: "works"
+                emitRatePerParticle: 100
+                lifeSpan: 1000
+                maximumEmitted: 1200
+                size: 8
+                speed: AngleDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
+                acceleration: PointDirection{y:100; yVariation: 20}
             }
-        ]
+        }
+        ParticleGroup{
+            name: "dead"
+            duration: 1000
+            Affector{
+                once: true
+                onAffected: worksEmitter.burst(400,x,y)
+            }
+        }
         Timer{
             interval: 6000
             running: true
@@ -87,7 +85,7 @@ Rectangle{
         }
         Emitter{
             id: startingEmitter
-            particle: "fire"
+            group: "fire"
             width: parent.width
             y: parent.height
             enabled: false
@@ -98,7 +96,7 @@ Rectangle{
         }
         Emitter{
             id: worksEmitter
-            particle: "works"
+            group: "works"
             enabled: false
             emitRate: 100
             lifeSpan: 1600
@@ -111,7 +109,7 @@ Rectangle{
             acceleration: PointDirection{y:100; yVariation: 20}
         }
         ImageParticle{
-            particles: ["works", "fire", "splode"]
+            groups: ["works", "fire", "splode"]
             source: "content/particle.png"
             entryEffect: ImageParticle.Scale
         }

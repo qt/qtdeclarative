@@ -67,6 +67,7 @@
 #include "qsgcumulativedirection_p.h"
 #include "qsgcustomaffector_p.h"
 #include "qsgrectangleextruder_p.h"
+#include "qsgparticlegroup_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -75,6 +76,7 @@ void QSGParticlesModule::defineModule()
     const char* uri = "QtQuick.Particles";
 
     qmlRegisterType<QSGParticleSystem>(uri, 2, 0, "ParticleSystem");
+    qmlRegisterType<QSGParticleGroup>(uri, 2, 0, "ParticleGroup");
 
     qmlRegisterType<QSGImageParticle>(uri, 2, 0, "ImageParticle");
     qmlRegisterType<QSGCustomParticle>(uri, 2, 0, "CustomParticle");

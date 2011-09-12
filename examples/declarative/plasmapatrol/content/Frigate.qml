@@ -56,7 +56,7 @@ Item {
     height: 128
     Emitter{
         system: container.system
-        particle: "frigateShield"
+        group: "frigateShield"
         anchors.centerIn: parent
         size: 92
         emitRate: 1
@@ -65,7 +65,7 @@ Item {
     }
     Emitter{
         system: container.system
-        particle: container.shipParticle
+        group: container.shipParticle
         anchors.centerIn: parent
         width: 64 
         height: 16

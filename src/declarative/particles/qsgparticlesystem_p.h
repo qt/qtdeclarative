@@ -65,9 +65,10 @@ class QSGParticleEmitter;
 class QSGParticlePainter;
 class QSGParticleData;
 class QSGParticleSystemAnimation;
-class QSGSpriteEngine;
+class QSGStochasticEngine;
 class QSGSprite;
 class QSGV8ParticleData;
+class QSGParticleGroup;
 
 struct QSGParticleDataHeapNode{
     int time;//in ms
@@ -223,12 +224,10 @@ class QSGParticleSystem : public QSGItem
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
-    Q_PROPERTY(QDeclarativeListProperty<QSGSprite> particleStates READ particleStates)
 
 public:
     explicit QSGParticleSystem(QSGItem *parent = 0);
     ~QSGParticleSystem();
-    QDeclarativeListProperty<QSGSprite> particleStates();
 
     //TODO: Hook up running and temporal manipulators to the animation
     bool isRunning() const
@@ -286,7 +285,7 @@ public://###but only really for related class usage. Perhaps we should all be fr
     QVector<QSGParticleData*> m_bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QHash<QString, int> m_groupIds;
     QHash<int, QSGParticleGroupData*> m_groupData;
-    QSGSpriteEngine* m_spriteEngine;
+    QSGStochasticEngine* m_stateEngine;
 
     int m_timeInt;
     bool m_initialized;
@@ -294,9 +293,11 @@ public://###but only really for related class usage. Perhaps we should all be fr
     void registerParticlePainter(QSGParticlePainter* p);
     void registerParticleEmitter(QSGParticleEmitter* e);
     void registerParticleAffector(QSGParticleAffector* a);
+    void registerParticleGroup(QSGParticleGroup* g);
 
     int m_particle_count;
-    static void stateRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);//From QSGSprite
+    static void statePropertyRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);
+    static void stateRedirect(QSGParticleGroup* group, QSGParticleSystem* sys, QObject *value);
     bool isPaused() const
     {
         return m_paused;
@@ -315,11 +316,11 @@ private:
     QList<QPointer<QSGParticleAffector> > m_affectors;
     QList<QPointer<QSGParticlePainter> > m_painters;
     QList<QPointer<QSGParticlePainter> > m_syncList;
+    QList<QSGParticleGroup*> m_groups;
     int m_nextGroupId;
     int m_nextIndex;
     QSet<int> m_reusableIndexes;
     bool m_componentComplete;
-    QList<QSGSprite*> m_states;
 
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;

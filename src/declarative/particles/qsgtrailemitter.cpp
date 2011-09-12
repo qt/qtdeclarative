@@ -166,7 +166,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
 
     int gId = m_system->m_groupIds[m_follow];
-    int gId2 = m_system->m_groupIds[m_particle];
+    int gId2 = m_system->m_groupIds[m_group];
     foreach (QSGParticleData *d, m_system->m_groupData[gId]->data){
         if (!d || !d->stillAlive()){
             m_lastEmission[d->index] = time; //Should only start emitting when it returns to life

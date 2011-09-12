@@ -58,7 +58,7 @@ Item {
         //TODO: Cooler would be an 'orbiting' affector
         //TODO: On the subject, opacity and size should be grouped type 'overLife' if we can cram that in the particles
         system: container.system
-        particle: container.shipParticle
+        group: container.shipParticle
         anchors.centerIn: parent
         width: 64
         height: 64
@@ -76,7 +76,7 @@ Item {
     }
     Emitter{
         system: container.system
-        particle: "cruiserArmor"
+        group: "cruiserArmor"
         anchors.fill: parent
         shape: EllipseShape{ fill: false }
         enabled: hp>0
@@ -92,7 +92,7 @@ Item {
             system: container.system
             enabled: container.hp <=0
             anchors.fill: parent
-            particles: ["cruiserArmor"]
+            groups: ["cruiserArmor"]
             goalState: "death"
 //            jump: true
             once: true

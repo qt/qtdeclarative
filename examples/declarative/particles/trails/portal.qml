@@ -54,7 +54,7 @@ Rectangle{
         id: particles 
     }
     ImageParticle{
-        particles: ["center","edge"]
+        groups: ["center","edge"]
         anchors.fill: parent
         system: particles
         source: "content/particle.png"
@@ -63,7 +63,7 @@ Rectangle{
     }
     Emitter{
         anchors.fill: parent
-        particle: "center"
+        group: "center"
         system: particles
         emitRate: 200
         lifeSpan: 2000
@@ -80,7 +80,7 @@ Rectangle{
     }
     Emitter{
         anchors.fill: parent
-        particle: "edge"
+        group: "edge"
         startTime: 2000
         system: particles
         emitRate: 4000

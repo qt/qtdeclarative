@@ -45,7 +45,7 @@ Item{
     property ParticleSystem sys
     ImageParticle{
         system: sys
-        particles: ["default"]
+        groups: ["default"]
         source: "pics/blur-circle3.png"
         color: "#003A3A3A"
         colorVariation: 0.1
@@ -53,7 +53,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["redTeam"]
+        groups: ["redTeam"]
         source: "pics/blur-circle3.png"
         color: "#0028060A"
         colorVariation: 0.1
@@ -61,7 +61,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["greenTeam"]
+        groups: ["greenTeam"]
         source: "pics/blur-circle3.png"
         color: "#0006280A"
         colorVariation: 0.1
@@ -69,7 +69,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["blaster"]
+        groups: ["blaster"]
         source: "pics/star2.png"
         //color: "#0F282406"
         color: "#0F484416"
@@ -78,7 +78,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["laser"]
+        groups: ["laser"]
         source: "pics/star3.png"
         //color: "#00123F68"
         color: "#00428FF8"
@@ -87,7 +87,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["cannon"]
+        groups: ["cannon"]
         source: "pics/particle.png"
         color: "#80FFAAFF"
         colorVariation: 0.1
@@ -95,7 +95,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["cannonCore"]
+        groups: ["cannonCore"]
         source: "pics/particle.png"
         color: "#00666666"
         colorVariation: 0.8
@@ -103,7 +103,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["cannonWake"]
+        groups: ["cannonWake"]
         source: "pics/star.png"
         color: "#00CCCCCC"
         colorVariation: 0.2
@@ -111,7 +111,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["frigateShield"]
+        groups: ["frigateShield"]
         source: "pics/blur-circle2.png"
         color: "#00000000"
         colorVariation: 0.05
@@ -121,7 +121,7 @@ Item{
     }
     ImageParticle{
         system: sys
-        particles: ["cruiserArmor"]
+        groups: ["cruiserArmor"]
         z: 1
         sprites:[Sprite{
                 id: spinState
@@ -146,7 +146,7 @@ Item{
     }
     TrailEmitter{
         system: sys
-        particle: "cannonWake"
+        group: "cannonWake"
         follow: "cannon"
         emitRatePerParticle: 64
         lifeSpan: 600
@@ -160,7 +160,7 @@ Item{
     }
     TrailEmitter{
         system: sys
-        particle: "cannonCore"
+        group: "cannonCore"
         follow: "cannon"
         emitRatePerParticle: 256
         lifeSpan: 128

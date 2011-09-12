@@ -57,71 +57,67 @@ Rectangle {
     ParticleSystem{
         id: particles
         anchors.fill: parent
-
-
-        particleStates:[
-            Sprite{
-                name: "unlit"
-                duration: 1000
-                to: {"lighting":1, "unlit":99}
-                ImageParticle{
-                    source: "content/particleA.png"
-                    colorVariation: 0.1
-                    color: "#2060160f"
-                }
-                SpriteGoal{
-                    whenCollidingWith: ["lit"]
-                    goalState: "lighting"
-                    jump: true
-                    systemStates: true
-                }
-            },
-            Sprite{
-                name: "lighting"
-                duration: 100
-                to: {"lit":1}
-            },
-            Sprite{
-                name: "lit"
-                duration: 10000
-                onEntered: score++;
-                TrailEmitter{
-                    id: fireballFlame
-                    particle: "flame"
-
-                    emitRatePerParticle: 48
-                    lifeSpan: 200
-                    emitWidth: 8
-                    emitHeight: 8
-
-                    size: 24
-                    sizeVariation: 8
-                    endSize: 4
-                }
-
-                TrailEmitter{
-                    id: fireballSmoke
-                    particle: "smoke"
-
-                    emitRatePerParticle: 120
-                    lifeSpan: 2000
-                    emitWidth: 16
-                    emitHeight: 16
-
-                    speed: PointDirection{yVariation: 16; xVariation: 16}
-                    acceleration: PointDirection{y: -16}
-
-                    size: 24
-                    sizeVariation: 8
-                    endSize: 8
-                }
+        ParticleGroup{
+            name: "unlit"
+            duration: 1000
+            to: {"lighting":1, "unlit":99}
+            ImageParticle{
+                source: "content/particleA.png"
+                colorVariation: 0.1
+                color: "#2060160f"
             }
-        ]
+            SpriteGoal{
+                whenCollidingWith: ["lit"]
+                goalState: "lighting"
+                jump: true
+                systemStates: true
+            }
+        }
+        ParticleGroup{
+            name: "lighting"
+            duration: 100
+            to: {"lit":1}
+        }
+        ParticleGroup{
+            name: "lit"
+            duration: 10000
+            onEntered: score++;
+            TrailEmitter{
+                id: fireballFlame
+                group: "flame"
+
+                emitRatePerParticle: 48
+                lifeSpan: 200
+                emitWidth: 8
+                emitHeight: 8
+
+                size: 24
+                sizeVariation: 8
+                endSize: 4
+            }
+
+            TrailEmitter{
+                id: fireballSmoke
+                group: "smoke"
+
+                emitRatePerParticle: 120
+                lifeSpan: 2000
+                emitWidth: 16
+                emitHeight: 16
+
+                speed: PointDirection{yVariation: 16; xVariation: 16}
+                acceleration: PointDirection{y: -16}
+
+                size: 24
+                sizeVariation: 8
+                endSize: 8
+            }
+        }
 
         ImageParticle{
             id: smoke
             anchors.fill: parent
-            particles: ["smoke"]
+            groups: ["smoke"]
             source: "content/particle.png"
             colorVariation: 0
             color: "#00111111"
@@ -129,7 +125,7 @@ Rectangle {
         ImageParticle{
             id: pilot
             anchors.fill: parent
-            particles: ["pilot"]
+            groups: ["pilot"]
             source: "content/particle.png"
             redVariation: 0.01
             blueVariation: 0.4
@@ -138,7 +134,7 @@ Rectangle {
         ImageParticle{
             id: flame
             anchors.fill: parent
-            particles: ["flame", "lit", "lighting"]
+            groups: ["flame", "lit", "lighting"]
             source: "content/particleA.png"
             colorVariation: 0.1
             color: "#00ff400f"
@@ -152,14 +148,14 @@ Rectangle {
             sizeVariation: 4
             speed: PointDirection{x:120; xVariation: 80; yVariation: 50}
             acceleration: PointDirection{y:120}
-            particle: "unlit"
+            group: "unlit"
         }
 
         Emitter{
             id: flamer
             x: 100
             y: 300
-            particle: "pilot"
+            group: "pilot"
             emitRate: 80
             lifeSpan: 600
             size: 24
@@ -167,7 +163,7 @@ Rectangle {
             endSize: 0
             speed: PointDirection{ y:-100; yVariation: 4; xVariation: 4 }
             SpriteGoal{
-                particles: ["unlit"]
+                groups: ["unlit"]
                 goalState: "lit"
                 jump: true
                 systemStates: true
@@ -181,7 +177,7 @@ Rectangle {
         }
         //Click to enflame
         SpriteGoal{//TODO: Aux emiiters in the state definition (which allows the occasional ball to spontaneously combust)
-            particles: ["unlit"]
+            groups: ["unlit"]
             goalState: "lighting"
             jump: true
             systemStates: true

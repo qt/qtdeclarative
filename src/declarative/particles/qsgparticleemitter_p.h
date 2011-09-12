@@ -61,7 +61,7 @@ class QSGParticleEmitter : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
-    Q_PROPERTY(QString particle READ particle WRITE setParticle NOTIFY particleChanged)
+    Q_PROPERTY(QString group READ group WRITE setGroup NOTIFY groupChanged)
     Q_PROPERTY(QSGParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
@@ -109,9 +109,9 @@ public:
         return m_system;
     }
 
-    QString particle() const
+    QString group() const
     {
-        return m_particle;
+        return m_group;
     }
 
     int particleDurationVariation() const
@@ -130,7 +130,7 @@ signals:
 
     void systemChanged(QSGParticleSystem* arg);
 
-    void particleChanged(QString arg);
+    void groupChanged(QString arg);
 
     void particleDurationVariationChanged(int arg);
 
@@ -185,11 +185,11 @@ public slots:
         }
     }
 
-    void setParticle(QString arg)
+    void setGroup(QString arg)
     {
-        if (m_particle != arg) {
-            m_particle = arg;
-            emit particleChanged(arg);
+        if (m_group != arg) {
+            m_group = arg;
+            emit groupChanged(arg);
         }
     }
 
@@ -308,7 +308,7 @@ protected:
        int m_particleDurationVariation;
        bool m_enabled;
        QSGParticleSystem* m_system;
-       QString m_particle;
+       QString m_group;
        QSGParticleExtruder* m_extruder;
        QSGParticleExtruder* m_defaultExtruder;
        QSGParticleExtruder* effectiveExtruder();

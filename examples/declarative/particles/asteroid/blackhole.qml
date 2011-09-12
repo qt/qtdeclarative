@@ -66,7 +66,7 @@ Rectangle{
     }
 
     Emitter{
-        particle: "stars"
+        group: "stars"
         system: particles
         emitRate: 40
         lifeSpan: 4000
@@ -77,7 +77,7 @@ Rectangle{
         height: parent.height
     }
     Emitter{
-        particle: "roids"
+        group: "roids"
         system: particles
         emitRate: 10
         lifeSpan: 4000
@@ -93,7 +93,7 @@ Rectangle{
     }
     ImageParticle{
         id: stars
-        particles: ["stars"]
+        groups: ["stars"]
         system: particles
         source: "content/star.png"
         color: "white"
@@ -102,7 +102,7 @@ Rectangle{
     }
     ImageParticle{
         id: roids
-        particles: ["roids"]
+        groups: ["roids"]
         system: particles
         sprites: Sprite{
             id: spinState
@@ -115,7 +115,7 @@ Rectangle{
     }
     ImageParticle{
         id: shot
-        particles: ["shot"]
+        groups: ["shot"]
         system: particles
         source: "content/star.png"
 
@@ -124,7 +124,7 @@ Rectangle{
     }
     ImageParticle{
         id: engine
-        particles: ["engine"]
+        groups: ["engine"]
         system: particles
         source: "content/particle4.png"
 
@@ -170,7 +170,7 @@ Rectangle{
             drag.target: ship
         }
         Emitter{
-            particle: "engine"
+            group: "engine"
             system: particles
             emitRate: 200
             lifeSpan: 1000
@@ -182,7 +182,7 @@ Rectangle{
             width: 20
         }
         Emitter{
-            particle: "shot"
+            group: "shot"
             system: particles
             emitRate: 32
             lifeSpan: 2000

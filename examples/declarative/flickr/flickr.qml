@@ -56,7 +56,7 @@ Item {
             id: bgParticles
             anchors.fill: parent
             ImageParticle {
-                particles: ["trail"]
+                groups: ["trail"]
                 source: "content/images/particle.png"
                 color: "#1A1A6F"
                 alpha: 0.1
@@ -64,7 +64,7 @@ Item {
                 blueVariation: 0.8
             }
             Emitter {
-                particle: "drops"
+                group: "drops"
                 width: parent.width
                 emitRate: 0.5
                 lifeSpan: 20000
@@ -75,7 +75,7 @@ Item {
             }
             TrailEmitter {
                 follow: "drops"
-                particle: "trail"
+                group: "trail"
                 emitRatePerParticle: 18
                 size: 32
                 endSize: 0

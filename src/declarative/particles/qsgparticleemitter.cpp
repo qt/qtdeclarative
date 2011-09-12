@@ -68,9 +68,9 @@ QT_BEGIN_NAMESPACE
     This can be omitted if the Emitter is a direct child of the ParticleSystem
 */
 /*!
-    \qmlproperty string QtQuick.Particles2::Emitter::particle
+    \qmlproperty string QtQuick.Particles2::Emitter::group
 
-    This is the type of logical particle which it will emit.
+    This is the logical particle group which it will emit into.
 
     Default value is "" (empty string).
 */
@@ -396,7 +396,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
         pt = time;
     while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
-        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_particle], !m_overwrite);
+        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_group], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;

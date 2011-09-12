@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
    Also solve the state data initialization/transfer issue so as to not need to make friends
 */
 
-QSGSpriteEngine::QSGSpriteEngine(QObject *parent) :
+QSGStochasticEngine::QSGStochasticEngine(QObject *parent) :
     QObject(parent), m_timeOffset(0)
 {
     //Default size 1
@@ -61,7 +61,7 @@ QSGSpriteEngine::QSGSpriteEngine(QObject *parent) :
     m_advanceTime.start();
 }
 
-QSGSpriteEngine::QSGSpriteEngine(QList<QSGSprite*> states, QObject *parent) :
+QSGStochasticEngine::QSGStochasticEngine(QList<QSGStochasticState*> states, QObject *parent) :
     QObject(parent), m_states(states), m_timeOffset(0)
 {
     //Default size 1
@@ -69,9 +69,26 @@ QSGSpriteEngine::QSGSpriteEngine(QList<QSGSprite*> states, QObject *parent) :
     m_advanceTime.start();
 }
 
+QSGStochasticEngine::~QSGStochasticEngine()
+{
+}
+
+QSGSpriteEngine::QSGSpriteEngine(QObject *parent)
+    : QSGStochasticEngine(parent)
+{
+}
+
+QSGSpriteEngine::QSGSpriteEngine(QList<QSGSprite*> sprites, QObject *parent)
+    : QSGStochasticEngine(parent)
+{
+    foreach (QSGSprite* sprite, sprites)
+        m_states << (QSGStochasticState*)sprite;
+}
+
 QSGSpriteEngine::~QSGSpriteEngine()
 {
 }
+
 
 int QSGSpriteEngine::maxFrames()
 {
@@ -87,46 +104,46 @@ TODO: Above idea needs to have the varying duration offset added to it
 */
 int QSGSpriteEngine::spriteState(int sprite)
 {
-    int state = m_sprites[sprite];
-    if (!m_states[state]->m_generatedCount)
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
         return state;
-    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     return state + extra;
 }
 
 int QSGSpriteEngine::spriteStart(int sprite)
 {
-    int state = m_sprites[sprite];
-    if (!m_states[state]->m_generatedCount)
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
         return m_startTimes[sprite];
-    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
     return state + extra*rowDuration;
 }
 
 int QSGSpriteEngine::spriteFrames(int sprite)
 {
-    int state = m_sprites[sprite];
-    if (!m_states[state]->m_generatedCount)
-        return m_states[state]->frames();
-    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
+        return m_sprites[state]->frames();
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    if (extra == m_states[state]->m_generatedCount - 1)//last state
-        return m_states[state]->frames() % m_states[state]->m_framesPerRow;
+    if (extra == m_sprites[state]->m_generatedCount - 1)//last state
+        return m_sprites[state]->frames() % m_sprites[state]->m_framesPerRow;
     else
-        return m_states[state]->m_framesPerRow;
+        return m_sprites[state]->m_framesPerRow;
 }
 
 int QSGSpriteEngine::spriteDuration(int sprite)
 {
-    int state = m_sprites[sprite];
-    if (!m_states[state]->m_generatedCount)
+    int state = m_things[sprite];
+    if (!m_sprites[state]->m_generatedCount)
         return m_duration[sprite];
-    int rowDuration = m_duration[sprite] * m_states[state]->m_framesPerRow;
+    int rowDuration = m_duration[sprite] * m_sprites[state]->m_framesPerRow;
     int extra = (m_timeOffset - m_startTimes[sprite])/rowDuration;
-    if (extra == m_states[state]->m_generatedCount - 1)//last state
-        return (m_duration[sprite] * m_states[state]->frames()) % rowDuration;
+    if (extra == m_sprites[state]->m_generatedCount - 1)//last state
+        return (m_duration[sprite] * m_sprites[state]->frames()) % rowDuration;
     else
         return rowDuration;
 }
@@ -136,21 +153,21 @@ int QSGSpriteEngine::spriteCount()//TODO: Actually image state count, need to re
     return m_imageStateCount;
 }
 
-void QSGSpriteEngine::setGoal(int state, int sprite, bool jump)
+void QSGStochasticEngine::setGoal(int state, int sprite, bool jump)
 {
-    if (sprite >= m_sprites.count() || state >= m_states.count())
+    if (sprite >= m_things.count() || state >= m_states.count())
         return;
     if (!jump){
         m_goals[sprite] = state;
         return;
     }
 
-    if (m_sprites[sprite] == state)
+    if (m_things[sprite] == state)
         return;//Already there
-    m_sprites[sprite] = state;
+    m_things[sprite] = state;
     m_duration[sprite] = m_states[state]->variedDuration();
     m_goals[sprite] = -1;
-    restartSprite(sprite);
+    restart(sprite);
     emit stateChanged(sprite);
     emit m_states[state]->entered();
     return;
@@ -165,8 +182,15 @@ QImage QSGSpriteEngine::assembledImage()
 
     int maxSize;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+    foreach (QSGStochasticState* s, m_states){
+        QSGSprite* sprite = qobject_cast<QSGSprite*>(s);
+        if (sprite)
+            m_sprites << sprite;
+        else
+            qDebug() << "Error: Non-sprite in QSGSpriteEngine";
+    }
 
-    foreach (QSGSprite* state, m_states){
+    foreach (QSGSprite* state, m_sprites){
         if (state->frames() > m_maxFrames)
             m_maxFrames = state->frames();
 
@@ -224,7 +248,7 @@ QImage QSGSpriteEngine::assembledImage()
     image.fill(0);
     QPainter p(&image);
     int y = 0;
-    foreach (QSGSprite* state, m_states){
+    foreach (QSGSprite* state, m_sprites){
         QImage img(state->source().toLocalFile());
         if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
             p.drawImage(0,y,img);
@@ -271,51 +295,51 @@ QImage QSGSpriteEngine::assembledImage()
     return image;
 }
 
-void QSGSpriteEngine::setCount(int c)
+void QSGStochasticEngine::setCount(int c)
 {
-    m_sprites.resize(c);
+    m_things.resize(c);
     m_goals.resize(c);
     m_duration.resize(c);
     m_startTimes.resize(c);
 }
 
-void QSGSpriteEngine::startSprite(int index, int state)
+void QSGStochasticEngine::start(int index, int state)
 {
-    if (index >= m_sprites.count())
+    if (index >= m_things.count())
         return;
-    m_sprites[index] = state;
+    m_things[index] = state;
     m_duration[index] = m_states[state]->variedDuration();
     m_goals[index] = -1;
-    restartSprite(index);
+    restart(index);
 }
 
-void QSGSpriteEngine::stopSprite(int index)
+void QSGStochasticEngine::stop(int index)
 {
-    if (index >= m_sprites.count())
+    if (index >= m_things.count())
         return;
     //Will never change until start is called again with a new state - this is not a 'pause'
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
 }
 
-void QSGSpriteEngine::restartSprite(int index)
+void QSGStochasticEngine::restart(int index)
 {
     m_startTimes[index] = m_timeOffset + m_advanceTime.elapsed();
-    int time = m_duration[index] * m_states[m_sprites[index]]->frames() + m_startTimes[index];
+    int time = m_duration[index] * m_states[m_things[index]]->frames() + m_startTimes[index];
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
     addToUpdateList(time, index);
 }
 
-uint QSGSpriteEngine::updateSprites(uint time)//### would returning a list of changed idxs be faster than signals?
+uint QSGStochasticEngine::updateSprites(uint time)//### would returning a list of changed idxs be faster than signals?
 {
     //Sprite State Update;
     QSet<int> changedIndexes;
     while (!m_stateUpdates.isEmpty() && time >= m_stateUpdates.first().first){
         foreach (int idx, m_stateUpdates.first().second){
-            if (idx >= m_sprites.count())
+            if (idx >= m_things.count())
                 continue;//TODO: Proper fix(because this does happen and I'm just ignoring it)
-            int stateIdx = m_sprites[idx];
+            int stateIdx = m_things[idx];
             int nextIdx = -1;
             int goalPath = goalSeek(stateIdx, idx);
             if (goalPath == -1){//Random
@@ -347,7 +371,7 @@ uint QSGSpriteEngine::updateSprites(uint time)//### would returning a list of ch
             if (nextIdx == -1)//No to states means stay here
                 nextIdx = stateIdx;
 
-            m_sprites[idx] = nextIdx;
+            m_things[idx] = nextIdx;
             m_duration[idx] = m_states[nextIdx]->variedDuration();
             m_startTimes[idx] = time;
             if (nextIdx != stateIdx){
@@ -370,7 +394,7 @@ uint QSGSpriteEngine::updateSprites(uint time)//### would returning a list of ch
     return m_stateUpdates.first().first;
 }
 
-int QSGSpriteEngine::goalSeek(int curIdx, int spriteIdx, int dist)
+int QSGStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
 {
     QString goalName;
     if (m_goals[spriteIdx] != -1)
@@ -386,7 +410,7 @@ int QSGSpriteEngine::goalSeek(int curIdx, int spriteIdx, int dist)
             return curIdx;
     if (dist < 0)
         dist = m_states.count();
-    QSGSprite* curState = m_states[curIdx];
+    QSGStochasticState* curState = m_states[curIdx];
     for (QVariantMap::const_iterator iter = curState->m_to.constBegin();
         iter!=curState->m_to.constEnd(); iter++){
         if (iter.key() == goalName)
@@ -445,7 +469,7 @@ int QSGSpriteEngine::goalSeek(int curIdx, int spriteIdx, int dist)
     return -1;
 }
 
-void QSGSpriteEngine::addToUpdateList(uint t, int idx)
+void QSGStochasticEngine::addToUpdateList(uint t, int idx)
 {
     for (int i=0; i<m_stateUpdates.count(); i++){
         if (m_stateUpdates[i].first==t){

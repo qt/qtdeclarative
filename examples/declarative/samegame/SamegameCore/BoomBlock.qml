@@ -75,7 +75,7 @@ Item {
     Emitter {
         id: particles
         system: particleSystem
-        particle: { 
+        group: { 
             if(type == 0){
                 "red";
             } else if (type == 1) {

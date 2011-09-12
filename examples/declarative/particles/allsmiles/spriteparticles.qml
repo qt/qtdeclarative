@@ -47,7 +47,7 @@ Rectangle{
     height: 400
     ImageParticle{
         id: test
-        particles: ["Test"]
+        groups: ["Test"]
         source: "content/particle.png"
         system: sys
         z: 2
@@ -57,7 +57,7 @@ Rectangle{
     }
     ImageParticle{
         id: single
-        particles: ["Face"]
+        groups: ["Face"]
         system: sys
         z: 2
         anchors.fill: parent
@@ -73,7 +73,7 @@ Rectangle{
     }
     Emitter{
         system: sys
-        particle: "Test"
+        group: "Test"
         anchors.fill: parent
         id: particles2
         emitRate: 6000
@@ -83,7 +83,7 @@ Rectangle{
     }
     Emitter{
         system: sys
-        particle: "Face"
+        group: "Face"
         anchors.fill: parent
         id: particles
         emitRate: 60

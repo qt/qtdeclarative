@@ -55,7 +55,7 @@ Rectangle {
     ImageParticle{
         id: fireball
         anchors.fill: parent
-        particles: ["E"]
+        groups: ["E"]
         system: particles
         source: "content/particleA.png"
         colorVariation: 0.2
@@ -66,7 +66,7 @@ Rectangle {
         id: smoke
         system: particles
         anchors.fill: parent
-        particles: ["A", "B"]
+        groups: ["A", "B"]
         source: "content/particle.png"
         colorVariation: 0
         color: "#00111111"
@@ -75,7 +75,7 @@ Rectangle {
         id: flame
         anchors.fill: parent
         system: particles
-        particles: ["C", "D"]
+        groups: ["C", "D"]
         source: "content/particle.png"
         colorVariation: 0.1
         color: "#00ff400f"
@@ -83,7 +83,7 @@ Rectangle {
     Emitter{
         id: fire
         system: particles
-        particle: "C"
+        group: "C"
 
         y: parent.height
         width: parent.width
@@ -100,7 +100,7 @@ Rectangle {
     }
     TrailEmitter{
         id: fireSmoke
-        particle: "B"
+        group: "B"
         system: particles
         follow: "C"
         width: root.width
@@ -120,7 +120,7 @@ Rectangle {
         id: fireballFlame
         anchors.fill: parent
         system: particles
-        particle: "D"
+        group: "D"
         follow: "E"
 
         emitRatePerParticle: 120
@@ -137,7 +137,7 @@ Rectangle {
         id: fireballSmoke
         anchors.fill: parent
         system: particles
-        particle: "A"
+        group: "A"
         follow: "E"
 
         emitRatePerParticle: 128
@@ -155,7 +155,7 @@ Rectangle {
     Emitter{
         id: balls
         system: particles
-        particle: "E"
+        group: "E"
 
         y: parent.height
         width: parent.width

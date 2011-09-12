@@ -64,16 +64,12 @@ QT_BEGIN_NAMESPACE
     \qmlproperty bool QtQuick.Particles2::SpriteGoal::systemStates
 */
 
-    Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
-    Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
-
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
     QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false), m_systemStates(false), m_lastEngine(0), m_notUsingEngine(false)
 {
 }
 
-void QSGSpriteGoalAffector::updateStateIndex(QSGSpriteEngine* e)
+void QSGSpriteGoalAffector::updateStateIndex(QSGStochasticEngine* e)
 {
     if (m_systemStates){
         m_goalIdx = m_system->m_groupIds[m_goalState];
@@ -104,14 +100,14 @@ void QSGSpriteGoalAffector::setGoalState(QString arg)
 bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    QSGSpriteEngine *engine = 0;
+    QSGStochasticEngine *engine = 0;
     if (!m_systemStates){
         //TODO: Affect all engines
         foreach (QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
             if (qobject_cast<QSGImageParticle*>(p))
                 engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
     }else{
-        engine = m_system->m_spriteEngine;
+        engine = m_system->m_stateEngine;
         if (!engine)
             m_notUsingEngine = true;
     }
@@ -126,7 +122,7 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
     if (m_notUsingEngine){//systemStates && no stochastic states defined. So cut out the engine
         //TODO: It's possible to move to a group that is intermediate and not used by painters or emitters - but right now that will redirect to the default group
         m_system->moveGroups(d, m_goalIdx);
-    }else if (engine->spriteState(index) != m_goalIdx){
+    }else if (engine->curState(index) != m_goalIdx){
         engine->setGoal(m_goalIdx, index, m_jump);
         emit affected(QPointF(d->curX(), d->curY()));//###Expensive if unconnected? Move to Affector?
         return true; //Doesn't affect particle data, but necessary for onceOff

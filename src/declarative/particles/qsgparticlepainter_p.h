@@ -58,7 +58,7 @@ class QSGParticlePainter : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
-    Q_PROPERTY(QStringList particles READ particles WRITE setParticles NOTIFY particlesChanged)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
 
 public:
     explicit QSGParticlePainter(QSGItem *parent = 0);
@@ -74,25 +74,25 @@ public:
     }
 
 
-    QStringList particles() const
+    QStringList groups() const
     {
-        return m_particles;
+        return m_groups;
     }
 
 signals:
     void countChanged();
     void systemChanged(QSGParticleSystem* arg);
 
-    void particlesChanged(QStringList arg);
+    void groupsChanged(QStringList arg);
 
 public slots:
 void setSystem(QSGParticleSystem* arg);
 
-void setParticles(QStringList arg)
+void setGroups(QStringList arg)
 {
-    if (m_particles != arg) {
-        m_particles = arg;
-        emit particlesChanged(arg);
+    if (m_groups != arg) {
+        m_groups = arg;
+        emit groupsChanged(arg);
     }
 }
 
@@ -121,7 +121,7 @@ protected:
     friend class QSGParticleSystem;
     int m_count;
     bool m_pleaseReset;
-    QStringList m_particles;
+    QStringList m_groups;
     QPointF m_systemOffset;
 
 private:

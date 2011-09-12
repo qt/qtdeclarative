@@ -263,7 +263,7 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
     g->setDrawingMode(GL_TRIANGLES);
 
     SpriteVertices *p = (SpriteVertices *) g->vertexData();
-    m_spriteEngine->startSprite(0);
+    m_spriteEngine->start(0);
     p->v1.animT = p->v2.animT = p->v3.animT = p->v4.animT = 0;
     p->v1.animIdx = p->v2.animIdx = p->v3.animIdx = p->v4.animIdx = 0;
     p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->spriteFrames();

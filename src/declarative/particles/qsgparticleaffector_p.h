@@ -56,7 +56,7 @@ class QSGParticleAffector : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
-    Q_PROPERTY(QStringList particles READ particles WRITE setParticles NOTIFY particlesChanged)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
     Q_PROPERTY(QStringList whenCollidingWith READ whenCollidingWith WRITE setWhenCollidingWith NOTIFY whenCollidingWithChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool once READ onceOff WRITE setOnceOff NOTIFY onceChanged)
@@ -71,9 +71,9 @@ public:
         return m_system;
     }
 
-    QStringList particles() const
+    QStringList groups() const
     {
-        return m_particles;
+        return m_groups;
     }
 
     bool enabled() const
@@ -100,7 +100,7 @@ signals:
 
     void systemChanged(QSGParticleSystem* arg);
 
-    void particlesChanged(QStringList arg);
+    void groupsChanged(QStringList arg);
 
     void enabledChanged(bool arg);
 
@@ -122,12 +122,12 @@ void setSystem(QSGParticleSystem* arg)
     }
 }
 
-void setParticles(QStringList arg)
+void setGroups(QStringList arg)
 {
-    if (m_particles != arg) {
-        m_particles = arg;
+    if (m_groups != arg) {
+        m_groups = arg;
         m_updateIntSet = true;
-        emit particlesChanged(arg);
+        emit groupsChanged(arg);
     }
 }
 
@@ -169,14 +169,14 @@ protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
     bool m_needsReset;//### What is this really saving?
     QSGParticleSystem* m_system;
-    QStringList m_particles;
+    QStringList m_groups;
     bool activeGroup(int g);
     bool m_enabled;
     virtual void componentComplete();
     QPointF m_offset;
     bool isAffectedConnected();
 private:
-    QSet<int> m_groups;
+    QSet<int> m_groupIds;
     QSet<QPair<int, int> > m_onceOffed;
     bool m_updateIntSet;
 

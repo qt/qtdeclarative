@@ -104,7 +104,7 @@ Item {
         ImageParticle {
             id: stars
             source: "content/images/star.png"
-            particles: ["stars"]
+            groups: ["stars"]
             opacity: .5
         }
 
@@ -113,7 +113,7 @@ Item {
             anchors.fill: parent
             emitRate: parent.width / 50
             lifeSpan: 5000
-            particle: "stars"
+            group: "stars"
         }
     }
 

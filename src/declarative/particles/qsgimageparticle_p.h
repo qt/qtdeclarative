@@ -56,7 +56,7 @@ class ImageMaterialData;
 class QSGGeometryNode;
 
 class QSGSprite;
-class QSGSpriteEngine;
+class QSGStochasticEngine;
 
 struct SimpleVertex {
     float x;
@@ -186,7 +186,7 @@ public:
 
 
     QDeclarativeListProperty<QSGSprite> sprites();
-    QSGSpriteEngine* spriteEngine() {return m_spriteEngine;}
+    QSGStochasticEngine* spriteEngine() {return m_spriteEngine;}
 
     enum EntryEffect {
         None = 0,

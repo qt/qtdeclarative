@@ -226,7 +226,7 @@ void QSGItemParticle::prepareNextFrame()
         return;
 
     //TODO: Size, better fade?
-    foreach (const QString &str, m_particles){
+    foreach (const QString &str, m_groups){
         int gIdx = m_system->m_groupIds[str];
         int count = m_system->m_groupData[gIdx]->size();
 

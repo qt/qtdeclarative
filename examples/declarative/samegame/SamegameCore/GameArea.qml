@@ -65,21 +65,21 @@ Item {
         id: particleSystem;
         z:2
         ImageParticle {
-            particles: ["red"]
+            groups: ["red"]
             color: Qt.darker("red");//Actually want desaturated...
             source: "pics/particle.png"
             colorVariation: 0.4
             alpha: 0.1
         }
         ImageParticle {
-            particles: ["green"]
+            groups: ["green"]
             color: Qt.darker("green");//Actually want desaturated...
             source: "pics/particle.png"
             colorVariation: 0.4
             alpha: 0.1
         }
         ImageParticle {
-            particles: ["blue"]
+            groups: ["blue"]
             color: Qt.darker("blue");//Actually want desaturated...
             source: "pics/particle.png"
             colorVariation: 0.4

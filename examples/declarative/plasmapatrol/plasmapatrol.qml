@@ -97,7 +97,7 @@ Rectangle {
                         anchors.fill: parent
                         system: particles
                         enabled: true
-                        particle: "default"
+                        group: "default"
                         emitRate: 1200
                         lifeSpan: 1200
                         shape: MaskShape{source:"content/pics/TitleText.png"}

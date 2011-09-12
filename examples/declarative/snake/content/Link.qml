@@ -96,13 +96,13 @@ Item { id:link
     ParticleSystem {
         width:1; height:1; anchors.centerIn: parent;
         ImageParticle {
-            particles: ["star"]
+            groups: ["star"]
             source: type == 1 ? "pics/blueStar.png" : "pics/redStar.png"
         }
         Emitter {
             id: particles
             anchors.fill: parent
-            particle: "star"
+            group: "star"
             emitRate: 50
             emitting: false
             lifeSpan: 700

@@ -29,7 +29,8 @@ HEADERS += \
     $$PWD/qsgtargetaffector_p.h \
     $$PWD/qsgcumulativedirection_p.h \
     $$PWD/qsgv8particledata_p.h \
-    $$PWD/qsgrectangleextruder_p.h
+    $$PWD/qsgrectangleextruder_p.h \
+    $$PWD/qsgparticlegroup_p.h
 
 SOURCES += \
     $$PWD/qsgangledirection.cpp \
@@ -60,7 +61,8 @@ SOURCES += \
     $$PWD/qsgtargetaffector.cpp \
     $$PWD/qsgcumulativedirection.cpp \
     $$PWD/qsgv8particledata.cpp \
-    $$PWD/qsgrectangleextruder.cpp
+    $$PWD/qsgrectangleextruder.cpp \
+    $$PWD/qsgparticlegroup.cpp
 
 RESOURCES += \
     $$PWD/particles.qrc

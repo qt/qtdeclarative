@@ -46,6 +46,7 @@
 #include <QUrl>
 #include <QVariantMap>
 #include <QDeclarativeListProperty>
+#include "qsgspriteengine_p.h"
 
 QT_BEGIN_HEADER
 
@@ -54,36 +55,21 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 
-class QSGSprite : public QObject
+class QSGSprite : public QSGStochasticState
 {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
-    //If frame height or width is not specified, it is assumed to be a single long row of frames.
+    //If frame height or width is not specified, it is assumed to be a single long row of square frames.
     //Otherwise, it can be multiple contiguous rows, when one row runs out the next will be used.
     Q_PROPERTY(int frameHeight READ frameHeight WRITE setFrameHeight NOTIFY frameHeightChanged)
     Q_PROPERTY(int frameWidth READ frameWidth WRITE setFrameWidth NOTIFY frameWidthChanged)
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(int durationVariation READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
-    Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
-    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
 
-    Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
-    Q_CLASSINFO("DefaultProperty", "particleChildren")
 public:
     explicit QSGSprite(QObject *parent = 0);
-
-    QDeclarativeListProperty<QObject> particleChildren();
 
     QUrl source() const
     {
         return m_source;
-    }
-
-    int frames() const
-    {
-        return m_frames;
     }
 
     int frameHeight() const
@@ -96,54 +82,14 @@ public:
         return m_frameWidth;
     }
 
-    int duration() const
-    {
-        return m_duration;
-    }
-
-    QString name() const
-    {
-        return m_name;
-    }
-
-    QVariantMap to() const
-    {
-        return m_to;
-    }
-
-    qreal speedModifer() const
-    {
-        return m_speedModifier;
-    }
-
-    int durationVariance() const
-    {
-        return m_durationVariance;
-    }
-
-    int variedDuration() const;
 
 signals:
 
     void sourceChanged(QUrl arg);
 
-    void framesChanged(int arg);
-
     void frameHeightChanged(int arg);
 
     void frameWidthChanged(int arg);
-
-    void durationChanged(int arg);
-
-    void nameChanged(QString arg);
-
-    void toChanged(QVariantMap arg);
-
-    void speedModifierChanged(qreal arg);
-
-    void durationVarianceChanged(int arg);
-
-    void entered();//### Just playing around - don't expect full state API
 
 public slots:
 
@@ -152,14 +98,6 @@ public slots:
         if (m_source != arg) {
             m_source = arg;
             emit sourceChanged(arg);
-        }
-    }
-
-    void setFrames(int arg)
-    {
-        if (m_frames != arg) {
-            m_frames = arg;
-            emit framesChanged(arg);
         }
     }
 
@@ -179,60 +117,16 @@ public slots:
         }
     }
 
-    void setDuration(int arg)
-    {
-        if (m_duration != arg) {
-            m_duration = arg;
-            emit durationChanged(arg);
-        }
-    }
-
-    void setName(QString arg)
-    {
-        if (m_name != arg) {
-            m_name = arg;
-            emit nameChanged(arg);
-        }
-    }
-
-    void setTo(QVariantMap arg)
-    {
-        if (m_to != arg) {
-            m_to = arg;
-            emit toChanged(arg);
-        }
-    }
-
-    void setSpeedModifier(qreal arg)
-    {
-        if (m_speedModifier != arg) {
-            m_speedModifier = arg;
-            emit speedModifierChanged(arg);
-        }
-    }
-
-    void setDurationVariance(int arg)
-    {
-        if (m_durationVariance != arg) {
-            m_durationVariance = arg;
-            emit durationVarianceChanged(arg);
-        }
-    }
 
 private:
     friend class QSGImageParticle;
     friend class QSGSpriteEngine;
+    friend class QSGStochasticEngine;
     int m_generatedCount;
     int m_framesPerRow;
     QUrl m_source;
-    int m_frames;
     int m_frameHeight;
     int m_frameWidth;
-    int m_duration;
-    QString m_name;
-    QVariantMap m_to;
-    qreal m_speedModifier;
-    int m_durationVariance;
 
 };
 

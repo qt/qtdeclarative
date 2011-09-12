@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     If the Affector is a direct child of a ParticleSystem, it will automatically be associated with it.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::Affector::particles
+    \qmlproperty list<string> QtQuick.Particles2::Affector::groups
     Which logical particle groups will be affected.
 
     If empty, it will affect all particles.
@@ -100,9 +100,9 @@ QT_BEGIN_NAMESPACE
     x,y are the coordinates of the affected particle, relative to the ParticleSystem.
 
 */
-//TODO: Document particle 'type'
+
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle, dt)
+    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle particle, real dt)
 
     This handler is called when particles are selected to be affected.
 
@@ -113,7 +113,7 @@ QT_BEGIN_NAMESPACE
     high-volume particle systems.
 */
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::affected(x, y)
+    \qmlsignal QtQuick.Particles2::Affector::affected(real x, real y)
 
     This handler is called when a particle is selected to be affected. It will
     only be called if signal is set to true.
@@ -142,12 +142,12 @@ void QSGParticleAffector::componentComplete()
 
 bool QSGParticleAffector::activeGroup(int g) {
     if (m_updateIntSet){
-        m_groups.clear();
-        foreach (const QString &p, m_particles)
-            m_groups << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
+        m_groupIds.clear();
+        foreach (const QString &p, m_groups)
+            m_groupIds << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
         m_updateIntSet = false;
     }
-    return m_groups.isEmpty() || m_groups.contains(g);
+    return m_groupIds.isEmpty() || m_groupIds.contains(g);
 }
 
 void QSGParticleAffector::affectSystem(qreal dt)
@@ -195,7 +195,7 @@ bool QSGParticleAffector::affectParticle(QSGParticleData *, qreal )
 void QSGParticleAffector::reset(QSGParticleData* pd)
 {//TODO: This, among other ones, should be restructured so they don't all need to remember to call the superclass
     if (m_onceOff)
-        if (m_groups.isEmpty() || m_groups.contains(pd->group))
+        if (m_groups.isEmpty() || m_groupIds.contains(pd->group))
             m_onceOffed.remove(qMakePair(pd->group, pd->index));
 }
 

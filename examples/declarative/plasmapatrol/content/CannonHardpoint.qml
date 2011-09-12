@@ -51,7 +51,7 @@ Item {
     height: 24
     Emitter{
         id: visualization
-        particle: "cannon"
+        group: "cannon"
         enabled: container.show
         system: container.system
         anchors.centerIn: parent
@@ -80,7 +80,7 @@ Item {
     }
     Emitter{
         id: emitter
-        particle: "cannon"
+        group: "cannon"
         enabled: false
         system: container.system
         anchors.centerIn: parent

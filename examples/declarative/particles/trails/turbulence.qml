@@ -71,14 +71,14 @@ Rectangle{
         strength: 32
     }
     ImageParticle{
-        particles: ["smoke"]
+        groups: ["smoke"]
         system: ps
         source: "content/particle.png"
         color: "#11111111"
         colorVariation: 0
     }
     ImageParticle{
-        particles: ["flame"]
+        groups: ["flame"]
         system: ps
         source: "content/particle.png"
         color: "#11ff400f"
@@ -87,7 +87,7 @@ Rectangle{
     Emitter{
         anchors.centerIn: parent
         system: ps
-        particle: "flame"
+        group: "flame"
         
         emitRate: 120
         lifeSpan: 1200
@@ -102,7 +102,7 @@ Rectangle{
         width: root.width
         height: root.height/2 - 20
         system: ps
-        particle: "smoke"
+        group: "smoke"
         follow: "flame"
 
         emitRatePerParticle: 1
@@ -119,7 +119,7 @@ Rectangle{
         width: root.width
         height: root.height/2 - 40
         system: ps
-        particle: "smoke"
+        group: "smoke"
         follow: "flame"
         
         emitRatePerParticle: 4

@@ -58,48 +58,171 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGSprite;
-
-class QSGSpriteEngine : public QObject
+class QSGStochasticState : public QObject //For internal use
 {
     Q_OBJECT
-    //TODO: Optimize single sprite case
-    Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
-    Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
-public:
-    explicit QSGSpriteEngine(QObject *parent = 0);
-    QSGSpriteEngine(QList<QSGSprite*> sprites, QObject *parent=0);
-    ~QSGSpriteEngine();
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(int durationVariation READ durationVariance WRITE setDurationVariance NOTIFY durationVarianceChanged)
+    Q_PROPERTY(QVariantMap to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(qreal speedModifiesDuration READ speedModifer WRITE setSpeedModifier NOTIFY speedModifierChanged)
+    Q_PROPERTY(int frames READ frames WRITE setFrames NOTIFY framesChanged)
 
-    QDeclarativeListProperty<QSGSprite> sprites()
+public:
+    QSGStochasticState(QObject* parent = 0)
+        : QObject(parent)
+        , m_frames(1)
+        , m_duration(1000)
     {
-        return QDeclarativeListProperty<QSGSprite>(this, m_states);
     }
+
+    int duration() const
+    {
+        return m_duration;
+    }
+
+    QString name() const
+    {
+        return m_name;
+    }
+
+    QVariantMap to() const
+    {
+        return m_to;
+    }
+
+    qreal speedModifer() const
+    {
+        return m_speedModifier;
+    }
+
+    int durationVariance() const
+    {
+        return m_durationVariance;
+    }
+
+
+    int variedDuration() const
+    {
+        return m_duration
+                + (m_durationVariance * ((qreal)qrand()/RAND_MAX) * 2)
+                - m_durationVariance;
+    }
+
+    int frames() const
+    {
+        return m_frames;
+    }
+
+signals:
+    void durationChanged(int arg);
+
+    void nameChanged(QString arg);
+
+    void toChanged(QVariantMap arg);
+
+    void speedModifierChanged(qreal arg);
+
+    void durationVarianceChanged(int arg);
+
+    void entered();//### Just playing around - don't expect full state API
+    void framesChanged(int arg);
+
+public slots:
+    void setDuration(int arg)
+    {
+        if (m_duration != arg) {
+            m_duration = arg;
+            emit durationChanged(arg);
+        }
+    }
+
+    void setName(QString arg)
+    {
+        if (m_name != arg) {
+            m_name = arg;
+            emit nameChanged(arg);
+        }
+    }
+
+    void setTo(QVariantMap arg)
+    {
+        if (m_to != arg) {
+            m_to = arg;
+            emit toChanged(arg);
+        }
+    }
+
+    void setSpeedModifier(qreal arg)
+    {
+        if (m_speedModifier != arg) {
+            m_speedModifier = arg;
+            emit speedModifierChanged(arg);
+        }
+    }
+
+    void setDurationVariance(int arg)
+    {
+        if (m_durationVariance != arg) {
+            m_durationVariance = arg;
+            emit durationVarianceChanged(arg);
+        }
+    }
+
+    void setFrames(int arg)
+    {
+        if (m_frames != arg) {
+            m_frames = arg;
+            emit framesChanged(arg);
+        }
+    }
+
+private:
+    QString m_name;
+    int m_frames;
+    QVariantMap m_to;
+    int m_duration;
+    qreal m_speedModifier;
+    int m_durationVariance;
+
+    friend class QSGStochasticEngine;
+};
+
+class QSGStochasticEngine : public QObject
+{
+    Q_OBJECT
+    //TODO: Optimize single state case?
+    Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
+    Q_PROPERTY(QDeclarativeListProperty<QSGStochasticState> states READ states)
+public:
+    explicit QSGStochasticEngine(QObject *parent = 0);
+    QSGStochasticEngine(QList<QSGStochasticState*> states, QObject *parent=0);
+    ~QSGStochasticEngine();
+
+    QDeclarativeListProperty<QSGStochasticState> states()
+    {
+        return QDeclarativeListProperty<QSGStochasticState>(this, m_states);
+    }
+
     QString globalGoal() const
     {
         return m_globalGoal;
     }
 
-    int count() const {return m_sprites.count();}
+    int count() const {return m_things.count();}
     void setCount(int c);
 
-    int spriteState(int sprite=0);// {return m_sprites[sprite];}
-    int spriteStart(int sprite=0);// {return m_startTimes[sprite];}
-    int spriteFrames(int sprite=0);
-    int spriteDuration(int sprite=0);
-    int spriteCount();//Like state count, but for the image states
-    int maxFrames();
+
 
     void setGoal(int state, int sprite=0, bool jump=false);
-    QImage assembledImage();
+    void start(int index=0, int state=0);
+    void stop(int index=0);
+    int curState(int index=0) {return m_things[index];}
 
-    void startSprite(int index=0, int state=0);
-    void stopSprite(int index=0);
-
-private://Nothing outside should use this?
-    friend class QSGSpriteGoalAffector;//XXX: Fix interface
+    QSGStochasticState* state(int idx){return m_states[idx];}
+    int stateIndex(QSGStochasticState* s){return m_states.indexOf(s);}
     int stateCount() {return m_states.count();}
-    int stateIndex(QSGSprite* s){return m_states.indexOf(s);}//TODO: Does this need to be hidden?
-    QSGSprite* state(int idx){return m_states[idx];}//Used by spritegoal affector
+private:
 signals:
 
     void globalGoalChanged(QString arg);
@@ -116,14 +239,14 @@ public slots:
 
     uint updateSprites(uint time);
 
-private:
+protected:
     friend class QSGParticleSystem;
-    void restartSprite(int sprite);
+    void restart(int index);
     void addToUpdateList(uint t, int idx);
-    int goalSeek(int curState, int spriteIdx, int dist=-1);
-    QList<QSGSprite*> m_states;
+    int goalSeek(int curState, int idx, int dist=-1);
+    QList<QSGStochasticState*> m_states;
     //### Consider struct or class for the four data variables?
-    QVector<int> m_sprites;//int is the index in m_states of the current state
+    QVector<int> m_things;//int is the index in m_states of the current state
     QVector<int> m_goals;
     QVector<int> m_duration;
     QVector<int> m_startTimes;
@@ -134,6 +257,31 @@ private:
     QString m_globalGoal;
     int m_maxFrames;
     int m_imageStateCount;
+};
+
+class QSGSpriteEngine : public QSGStochasticEngine
+{
+    Q_OBJECT
+    Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
+public:
+    explicit QSGSpriteEngine(QObject *parent = 0);
+    QSGSpriteEngine(QList<QSGSprite*> sprites, QObject *parent=0);
+    ~QSGSpriteEngine();
+    QDeclarativeListProperty<QSGSprite> sprites()
+    {
+        return QDeclarativeListProperty<QSGSprite>(this, m_sprites);
+    }
+
+
+    int spriteState(int sprite=0);
+    int spriteStart(int sprite=0);
+    int spriteFrames(int sprite=0);
+    int spriteDuration(int sprite=0);
+    int spriteCount();//Like state count, but for the image states
+    int maxFrames();
+    QImage assembledImage();
+private:
+    QList<QSGSprite*> m_sprites;
 };
 
 //Common use is to have your own list property which is transparently an engine
