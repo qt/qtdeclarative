@@ -23,7 +23,8 @@ PUBLICTESTS += \
     qdeclarativexmlhttprequest \
     qjsvalue \
     qjsvalueiterator \
-    qjsengine
+    qjsengine \
+    qmlmin
 
 PRIVATETESTS += \
     qdeclarativeanimations \
