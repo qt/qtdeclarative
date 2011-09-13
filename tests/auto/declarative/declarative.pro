@@ -1,54 +1,54 @@
 TEMPLATE = subdirs
 
 METATYPETESTS += \
-    qdeclarativemetatype \
+#   qdeclarativemetatype \
     qmetaobjectbuilder
 
 PUBLICTESTS += \
-    examples \
+#   examples \
     geometry \
-    nodes \
+#   nodes \
     parserstress \
     qdeclarativecomponent \
     qdeclarativecontext \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
-    qdeclarativeinfo \
+#   qdeclarativeinfo \
     qdeclarativelistreference \
     qdeclarativemoduleplugin \
     qdeclarativepixmapcache \
     qdeclarativeqt \
     qdeclarativetranslation \
     qdeclarativexmlhttprequest \
-    qjsvalue \
+#   qjsvalue \
     qjsvalueiterator \
-    qjsengine
+#   qjsengine
 
 PRIVATETESTS += \
     qdeclarativeanimations \
-    qdeclarativeapplication \
+#   qdeclarativeapplication \
     qdeclarativebehaviors \
     qdeclarativebinding \
     qdeclarativeconnection \
     qdeclarativeenginedebug \
     qdeclarativedebugclient \
     qdeclarativedebugservice \
-    qdeclarativedebugjs \
-    qdeclarativeecmascript \
+#   qdeclarativedebugjs \
+#   qdeclarativeecmascript \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
     qdeclarativelanguage \
     qdeclarativelistmodel \
     qdeclarativeproperty \
     qdeclarativepropertymap \
-    # qdeclarativescriptdebugging \
+#   qdeclarativescriptdebugging \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
     qdeclarativestyledtext \
     qdeclarativesqldatabase \
-    qdeclarativestates \
-    qdeclarativesystempalette \
+#   qdeclarativestates \
+#   qdeclarativesystempalette \
     qdeclarativetimer \
     qdeclarativevaluetypes \
     qdeclarativeworkerscript \
@@ -60,23 +60,23 @@ SGTESTS =  \
     qsganimatedimage \
     qsgborderimage \
     qsgcanvas \
-    qsgflickable \
+#   qsgflickable \
     qsgflipable \
-    qsgfocusscope \
-    qsggridview \
-    qsgimage \
+#   qsgfocusscope \
+#   qsggridview \
+#   qsgimage \
     qsgitem \
     qsglistview \
     qsgloader \
     qsgmousearea \
-    qsgpathview \
+#   qsgpathview \
     qsgpincharea \
-    qsgpositioners \
+#   qsgpositioners \
     qsgrepeater \
     qsgtext \
- #   qsgtextedit \
- #   qsgtextinput \
-    qsgvisualdatamodel \
+#   qsgtextedit \
+#   qsgtextinput \
+#   qsgvisualdatamodel \
 
 
 SUBDIRS += $$PUBLICTESTS
