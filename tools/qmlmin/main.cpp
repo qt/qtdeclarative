@@ -411,6 +411,7 @@ static void usage(bool showHelp = false)
         std::cerr << " Removes comments and layout characters" << std::endl
                   << " The options are:" << std::endl
                   << "  -o<file>                write output to file rather than stdout" << std::endl
+                  << "  -v --verify-only        just run the verifier, no output" << std::endl
                   << "  -h                      display this output" << std::endl;
     }
 }
@@ -423,6 +424,7 @@ int main(int argc, char *argv[])
 
     QString fileName;
     QString outputFile;
+    bool verifyOnly = false;
 
     int index = 1;
     while (index < args.size()) {
@@ -432,6 +434,8 @@ int main(int argc, char *argv[])
         if (arg == QLatin1String("-h") || arg == QLatin1String("--help")) {
             usage(/*showHelp*/ true);
             return 0;
+        } else if (arg == QLatin1String("-v") || arg == QLatin1String("--verify-only")) {
+            verifyOnly = true;
         } else if (arg == QLatin1String("-o")) {
             if (next.isEmpty()) {
                 std::cerr << "qmlmin: argument to '-o' is missing" << std::endl;
@@ -500,18 +504,20 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (outputFile.isEmpty()) {
-        const QByteArray chars = minify.minifiedCode().toUtf8();
-        std::cout << chars.constData();
-    } else {
-        QFile file(outputFile);
-        if (! file.open(QFile::WriteOnly)) {
-            std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "' (permission denied)" << std::endl;
-            return EXIT_FAILURE;
-        }
+    if (! verifyOnly) {
+        if (outputFile.isEmpty()) {
+            const QByteArray chars = minify.minifiedCode().toUtf8();
+            std::cout << chars.constData();
+        } else {
+            QFile file(outputFile);
+            if (! file.open(QFile::WriteOnly)) {
+                std::cerr << "qmlmin: cannot minify '" << qPrintable(fileName) << "' (permission denied)" << std::endl;
+                return EXIT_FAILURE;
+            }
 
-        file.write(minify.minifiedCode().toUtf8());
-        file.close();
+            file.write(minify.minifiedCode().toUtf8());
+            file.close();
+        }
     }
 
     return 0;
