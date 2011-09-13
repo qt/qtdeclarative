@@ -2268,7 +2268,7 @@ public:
     virtual QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data)
     {
        nbPaint++;
-//       return QSGTextInput::updatePaintNode(node, data);
+       return QSGTextInput::updatePaintNode(node, data);
     }
     int nbPaint;
 };
