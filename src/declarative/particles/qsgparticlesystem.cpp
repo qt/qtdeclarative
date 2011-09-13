@@ -850,8 +850,11 @@ void QSGParticleSystem::emittersChanged()
         m_particle_count += m_groupData[i]->size();
     }
 
-    Q_ASSERT(m_particle_count >= m_bySysIdx.size());//XXX when GC done right
-    m_bySysIdx.resize(m_particle_count);
+    if (m_debugMode)
+        qDebug() << "Particle system emitters changed. New particle count: " << m_particle_count;
+
+    if (m_particle_count > m_bySysIdx.size())//New datum requests haven't updated it
+        m_bySysIdx.resize(m_particle_count);
 
     foreach (QSGParticlePainter *p, m_painters)
         loadPainter(p);
@@ -859,8 +862,6 @@ void QSGParticleSystem::emittersChanged()
     if (!m_groups.isEmpty())
         createEngine();
 
-    if (m_debugMode)
-        qDebug() << "Particle system emitters changed. New particle count: " << m_particle_count;
 }
 
 void QSGParticleSystem::createEngine()
