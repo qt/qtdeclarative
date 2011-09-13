@@ -1,5 +1,5 @@
 load(qttest_p4)
-QT += declarative
+QT += declarative widgets
 SOURCES  += tst_qjsvalue.cpp
 HEADERS  += tst_qjsvalue.h
 
