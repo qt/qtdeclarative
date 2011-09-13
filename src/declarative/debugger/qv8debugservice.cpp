@@ -62,7 +62,8 @@ void DebugMessageHandler(const v8::Debug::Message& message)
         return;
     }
 
-    QByteArray response(QV8Engine::toStringStatic(message.GetJSON()).toUtf8());
+    const QByteArray response(QV8Engine::toStringStatic(
+                                  message.GetJSON()).toUtf8());
 
     QV8DebugService *service = QV8DebugService::instance();
     service->debugMessageHandler(response);
@@ -105,10 +106,12 @@ public:
     QEventLoop loop;
     QHash<QString,QString> sourcePath;
     QHash<QString,QByteArray> requestCache;
+    QHash<int,QString> eventList;
 };
 
 QV8DebugService::QV8DebugService(QObject *parent)
-    : QDeclarativeDebugService(*(new QV8DebugServicePrivate()), QLatin1String("V8Debugger"), parent)
+    : QDeclarativeDebugService(*(new QV8DebugServicePrivate()),
+                               QLatin1String("V8Debugger"), parent)
 {
     Q_D(QV8DebugService);
     v8::Debug::SetMessageHandler2(DebugMessageHandler);
@@ -177,8 +180,10 @@ void QV8DebugService::appendSourcePath(QByteArray message)
         msgMap = out.toVariant().toMap();
     }
 
-    QString sourcePath(msgMap.value(QLatin1String("body")).toMap().value(QLatin1String("script")).toMap().value(QLatin1String("name")).toString());
-    QString fileName(QFileInfo(sourcePath).fileName());
+    const QString sourcePath(msgMap.value(QLatin1String("body")).toMap().value(
+                                 QLatin1String("script")).toMap().value(
+                                 QLatin1String("name")).toString());
+    const QString fileName(QFileInfo(sourcePath).fileName());
 
     d->sourcePath.insert(fileName, sourcePath);
 
@@ -190,6 +195,20 @@ void QV8DebugService::appendSourcePath(QByteArray message)
             request.replace(fileName.toUtf8(), sourcePath.toUtf8());
             sendDebugMessage(request);
         }
+    }
+}
+
+void QV8DebugService::signalEmitted(const char *signal)
+{
+    //This function is only called by QDeclarativeBoundSignal
+    //only if there is a slot connected to the signal. Hence, there
+    //is no need for additional check.
+    Q_D(QV8DebugService);
+
+    QString function(signal);
+    //Parse just the name and remove the class info
+    if (d->eventList.key(function.left(function.indexOf(QLatin1String("("))))) {
+        v8::Debug::DebugBreak();
     }
 }
 
@@ -217,7 +236,7 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             reqMap = out.toVariant().toMap();
         }
 
-        QString debugCommand(reqMap.value(QLatin1String("command")).toString());
+        const QString debugCommand(reqMap.value(QLatin1String("command")).toString());
 
         if (debugCommand == QLatin1String("connect")) {
             d->initialized = true;
@@ -226,11 +245,11 @@ void QV8DebugService::messageReceived(const QByteArray &message)
             v8::Debug::DebugBreak();
 
         } else {
-            bool ok = true;
+            bool forwardRequestToV8 = true;
 
-            if (debugCommand == QLatin1String("setbreakpoint")){
-                QVariantMap arguments = reqMap.value(QLatin1String("arguments")).toMap();
-                QString type(arguments.value(QLatin1String("type")).toString());
+            if (debugCommand == QLatin1String("setbreakpoint")) {
+                const QVariantMap arguments = reqMap.value(QLatin1String("arguments")).toMap();
+                const QString type(arguments.value(QLatin1String("type")).toString());
 
                 if (type == QLatin1String("script")) {
                     QString fileName(arguments.value(QLatin1String("target")).toString());
@@ -242,11 +261,76 @@ void QV8DebugService::messageReceived(const QByteArray &message)
                     } else {
                         //Store the setbreakpoint message till filepath is resolved
                         d->requestCache.insertMulti(fileName, request);
-                        ok = false;
+                        forwardRequestToV8 = false;
+                    }
+                } else if (type == QLatin1String("event")) {
+                    //Do not send this request to v8
+                    forwardRequestToV8 = false;
+
+                    //Prepare the response string
+                    //Create a json message using v8 debugging protocol
+                    //and send it to client
+
+                    // { "seq"         : <number>,
+                    //   "type"        : "response",
+                    //   "request_seq" : <number>,
+                    //   "command"     : "setbreakpoint",
+                    //   "body"        : { "type"       : <"function" or "script">
+                    //                     "breakpoint" : <break point number of the new break point>
+                    //                   }
+                    //   "running"     : <is the VM running after sending this response>
+                    //   "success"     : true
+                    // }
+                    {
+                        v8::Isolate::Scope i_scope(d->isolate);
+                        const QString obj("{}");
+                        QJSValue parser = d->engine->evaluate(QLatin1String("JSON.parse"));
+                        QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj);
+                        jsonVal.setProperty(QLatin1String("type"), QJSValue(QLatin1String("response")));
+
+                        const int sequence = reqMap.value(QLatin1String("seq")).toInt();
+                        jsonVal.setProperty(QLatin1String("request_seq"), QJSValue(sequence));
+                        jsonVal.setProperty(QLatin1String("command"), QJSValue(debugCommand));
+
+                        //Check that the function starts with 'on'
+                        QString eventName(arguments.value(QLatin1String("target")).toString());
+
+
+                        if (eventName.startsWith(QLatin1String("on"))) {
+                            d->eventList.insert(-sequence, eventName.remove(0,2).toLower());
+
+                            QJSValue args = parser.call(QJSValue(), QJSValueList() << obj);
+
+                            args.setProperty(QLatin1String("type"), QJSValue(QLatin1String("event")));
+                            args.setProperty(QLatin1String("breakpoint"), QJSValue(-sequence));
+
+                            jsonVal.setProperty(QLatin1String("body"), args);
+                            jsonVal.setProperty(QLatin1String("success"), QJSValue(true));
+
+                        } else {
+                            jsonVal.setProperty(QLatin1String("success"), QJSValue(false));
+                        }
+
+
+                        jsonVal.setProperty(QLatin1String("running"), QJSValue(!d->loop.isRunning()));
+
+                        QJSValue stringify = d->engine->evaluate(QLatin1String("JSON.stringify"));
+                        QJSValue json = stringify.call(QJSValue(), QJSValueList() << jsonVal);
+                        debugMessageHandler(json.toString().toUtf8());
+
                     }
                 }
+            } else if (debugCommand == QLatin1String("clearbreakpoint")) {
+                //check if the breakpoint is a negative integer (event breakpoint)
+                const QVariantMap arguments = reqMap.value(QLatin1String("arguments")).toMap();
+                const int bp = arguments.value("breakpoint").toInt();
+
+                if (bp < 0) {
+                    d->eventList.remove(bp);
+                    forwardRequestToV8 = false;
+                }
             }
-            if (ok)
+            if (forwardRequestToV8)
                 sendDebugMessage(request);
         }
     }
@@ -258,7 +342,7 @@ void QV8DebugService::sendDebugMessage(const QByteArray &msg)
 {
     Q_D(QV8DebugService);
 
-    QString message(msg);
+    const QString message(msg);
     if (d->loop.isRunning()) {
         d->loop.exit();
     }

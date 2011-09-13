@@ -84,6 +84,8 @@ public:
 
     void appendSourcePath(QByteArray message);
 
+    void signalEmitted(const char *signal);
+
 protected:
     void messageReceived(const QByteArray &);
 
