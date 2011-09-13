@@ -52,9 +52,9 @@
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeExpression>
-#include <QtGui/QWidget>
+#include <QtWidgets/QWidget>
 #include <QtGui/QMouseEvent>
-#include <QtGui/QGraphicsObject>
+#include <QtWidgets/QGraphicsObject>
 
 namespace QmlJSDebugger {
 

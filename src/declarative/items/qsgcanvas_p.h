@@ -63,9 +63,12 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
-#include <private/qwidget_p.h>
-#include <private/qgl_p.h>
-#include <QtOpenGL/qglframebufferobject.h>
+#include <private/qwindow_p.h>
+#include <private/qopengl_p.h>
+#include <qopenglcontext.h>
+#include <QtGui/qopenglframebufferobject.h>
+#include <QtGui/qevent.h>
+#include <QtGui/qinputpanel.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,9 +83,9 @@ public:
 class QSGCanvasPrivate;
 
 class QTouchEvent;
-class QSGCanvasRenderThread;
+class QSGCanvasRenderLoop;
 
-class QSGCanvasPrivate : public QGLWidgetPrivate
+class QSGCanvasPrivate : public QWindowPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QSGCanvas)
@@ -100,16 +103,12 @@ public:
     QSGItem *mouseGrabberItem;
 
     // Mouse positions are saved in widget coordinates
-    QPoint lastMousePosition;
-    QPoint buttonDownPositions[5]; // Left, Right, Middle, XButton1, XButton2
-    void sceneMouseEventFromMouseEvent(QGraphicsSceneMouseEvent &, QMouseEvent *);
+    QPointF lastMousePosition;
     void translateTouchEvent(QTouchEvent *touchEvent);
-    static QEvent::Type sceneMouseEventTypeFromMouseEvent(QMouseEvent *);
-    static void sceneMouseEventForTransform(QGraphicsSceneMouseEvent &, const QTransform &);
     static void transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform);
-    bool deliverInitialMousePressEvent(QSGItem *, QGraphicsSceneMouseEvent *);
-    bool deliverMouseEvent(QGraphicsSceneMouseEvent *);
-    bool sendFilteredMouseEvent(QSGItem *, QSGItem *, QGraphicsSceneMouseEvent *);
+    bool deliverInitialMousePressEvent(QSGItem *, QMouseEvent *);
+    bool deliverMouseEvent(QMouseEvent *);
+    bool sendFilteredMouseEvent(QSGItem *, QSGItem *, QMouseEvent *);
     bool deliverWheelEvent(QSGItem *, QWheelEvent *);
     bool deliverTouchPoints(QSGItem *, QTouchEvent *, const QList<QTouchEvent::TouchPoint> &, QSet<int> *,
             QHash<QSGItem *, QList<QTouchEvent::TouchPoint> > *);
@@ -132,6 +131,7 @@ public:
     void notifyFocusChangesRecur(QSGItem **item, int remaining);
 
     void updateInputMethodData();
+    void updateFocusItemTransform();
 
     void dirtyItem(QSGItem *);
     void cleanup(QSGNode *);
@@ -140,6 +140,8 @@ public:
     void polishItems();
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size);
+
+    void updateInputContext();
 
     QSGItem::UpdatePaintNodeData updatePaintNodeData;
 
@@ -156,32 +158,77 @@ public:
 
     QSGContext *context;
 
-    uint contextFailed : 1;
-    uint threadedRendering : 1;
-    uint animationRunning: 1;
-    uint renderThreadAwakened : 1;
-
     uint vsyncAnimations : 1;
 
-    QSGCanvasRenderThread *thread;
+    QSGCanvasRenderLoop *thread;
     QSize widgetSize;
     QSize viewportSize;
 
     QAnimationDriver *animationDriver;
 
-    QGLFramebufferObject *renderTarget;
+    QOpenGLFramebufferObject *renderTarget;
 
     QHash<int, QSGItem *> itemForTouchPointId;
 };
 
+class QSGCanvasRenderLoop
+{
+public:
+    QSGCanvasRenderLoop()
+        : d(0)
+        , renderer(0)
+        , gl(0)
+    {
+    }
+    virtual ~QSGCanvasRenderLoop()
+    {
+        delete gl;
+    }
 
+    friend class QSGCanvasPrivate;
 
-class QSGCanvasRenderThread : public QThread
+    virtual void paint() = 0;
+    virtual void resize(const QSize &size) = 0;
+    virtual void startRendering() = 0;
+    virtual void stopRendering() = 0;
+    virtual QImage grab() = 0;
+    virtual void setWindowSize(const QSize &size) = 0;
+    virtual void maybeUpdate() = 0;
+    virtual bool isRunning() const = 0;
+    virtual void animationStarted() = 0;
+    virtual void animationStopped() = 0;
+    virtual void moveContextToThread(QSGContext *) { }
+
+protected:
+    void initializeSceneGraph() { d->initializeSceneGraph(); }
+    void syncSceneGraph() { d->syncSceneGraph(); }
+    void renderSceneGraph(const QSize &size) { d->renderSceneGraph(size); }
+    void polishItems() { d->polishItems(); }
+    QAnimationDriver *animationDriver() const { return d->animationDriver; }
+
+    inline QOpenGLContext *glContext() const { return gl; }
+    void createGLContext();
+    void makeCurrent() { gl->makeCurrent(renderer); }
+    void doneCurrent() { gl->doneCurrent(); }
+    void swapBuffers() {
+        gl->swapBuffers(renderer);
+        emit renderer->frameSwapped();
+    }
+
+private:
+    QSGCanvasPrivate *d;
+    QSGCanvas *renderer;
+
+    QOpenGLContext *gl;
+};
+
+class QSGCanvasRenderThread : public QThread, public QSGCanvasRenderLoop
 {
     Q_OBJECT
 public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
+        , animationRunning(false)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
         , isGuiBlockPending(false)
@@ -192,6 +239,7 @@ public:
         , doGrab(false)
         , shouldExit(false)
         , hasExited(false)
+        , renderThreadAwakened(false)
     {}
 
     inline void lock() { mutex.lock(); }
@@ -204,10 +252,16 @@ public:
 
     void paint();
     void resize(const QSize &size);
-    void startRenderThread();
-    void stopRenderThread();
+    void startRendering();
+    void stopRendering();
     void exhaustSyncEvent();
     void sync(bool guiAlreadyLocked);
+    bool isRunning() const { return QThread::isRunning(); }
+    void setWindowSize(const QSize &size) { windowSize = size; }
+    void maybeUpdate();
+    void moveContextToThread(QSGContext *c) { c->moveToThread(this); }
+
+    bool event(QEvent *);
 
     QImage grab();
 
@@ -222,9 +276,7 @@ public:
     QSize windowSize;
     QSize renderedSize;
 
-    QSGCanvas *renderer;
-    QSGCanvasPrivate *d;
-
+    uint animationRunning: 1;
     int isGuiBlocked;
     uint isPaintCompleted : 1;
     uint isGuiBlockPending : 1;
@@ -232,10 +284,10 @@ public:
     uint isExternalUpdatePending : 1;
     uint syncAlreadyHappened : 1;
     uint inSync : 1;
-
     uint doGrab : 1;
     uint shouldExit : 1;
     uint hasExited : 1;
+    uint renderThreadAwakened : 1;
 
     QImage grabContent;
 

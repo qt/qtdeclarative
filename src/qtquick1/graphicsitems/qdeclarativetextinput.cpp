@@ -48,6 +48,7 @@
 #include <QValidator>
 #include <QTextCursor>
 #include <QApplication>
+#include <QtGui/QInputPanel>
 #include <QFontMetrics>
 #include <QPainter>
 #include <QTextBoundaryFinder>
@@ -904,7 +905,7 @@ void QDeclarative1TextInput::setEchoMode(QDeclarative1TextInput::EchoMode echo)
     Q_D(QDeclarative1TextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((uint)echo);
+    d->control->setEchoMode((QLineControl::EchoMode)echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());
@@ -1281,7 +1282,6 @@ bool QDeclarative1TextInput::event(QEvent* ev)
 void QDeclarative1TextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
-    Q_D(QDeclarative1TextInput);
     if (newGeometry.width() != oldGeometry.width()) {
         updateSize();
         updateCursorRectangle();
@@ -1767,11 +1767,10 @@ void QDeclarative1TextInput::moveCursorSelection(int pos, SelectionMode mode)
 */
 void QDeclarative1TextInput::openSoftwareInputPanel()
 {
-    QEvent event(QEvent::RequestSoftwareInputPanel);
     if (qApp) {
         if (QGraphicsView * view = qobject_cast<QGraphicsView*>(qApp->focusWidget())) {
             if (view->scene() && view->scene() == scene()) {
-                QApplication::sendEvent(view, &event);
+                qApp->inputPanel()->show();
             }
         }
     }
@@ -1818,12 +1817,10 @@ void QDeclarative1TextInput::openSoftwareInputPanel()
 */
 void QDeclarative1TextInput::closeSoftwareInputPanel()
 {
-    QEvent event(QEvent::CloseSoftwareInputPanel);
     if (qApp) {
-        QEvent event(QEvent::CloseSoftwareInputPanel);
         if (QGraphicsView * view = qobject_cast<QGraphicsView*>(qApp->focusWidget())) {
             if (view->scene() && view->scene() == scene()) {
-                QApplication::sendEvent(view, &event);
+                qApp->inputPanel()->hide();
             }
         }
     }

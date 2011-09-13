@@ -58,7 +58,7 @@ QT_MODULE(Declarative)
 
 class QDeclarative1AnchorsPrivate;
 class QDeclarative1AnchorLine;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Anchors : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1Anchors : public QObject
 {
     Q_OBJECT
 

@@ -127,9 +127,6 @@ private:
 
 void tst_QSGPathView::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("PathView needs OpenGL 2.0", SkipAll);
 }
 
 void tst_QSGPathView::cleanupTestCase()
@@ -979,9 +976,9 @@ void tst_QSGPathView::mouseDrag()
     QSGView *canvas = createView();
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragpath.qml"));
     canvas->show();
-    QApplication::setActiveWindow(canvas);
+    canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
+    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -1037,12 +1034,12 @@ void tst_QSGPathView::treeModel()
 void tst_QSGPathView::changePreferredHighlight()
 {
     QSGView *canvas = createView();
-    canvas->setFixedSize(400,200);
+    canvas->setGeometry(0,0,400,200);
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/dragpath.qml"));
     canvas->show();
-    QApplication::setActiveWindow(canvas);
+    canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
+    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -1076,7 +1073,7 @@ void tst_QSGPathView::changePreferredHighlight()
 QSGView *tst_QSGPathView::createView()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     return canvas;
 }

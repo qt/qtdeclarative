@@ -2,7 +2,7 @@ TARGET  = qmlinputcontextplugin
 TARGETPATH = Qt/labs/inputcontext
 include(../qimportbase.pri)
 
-QT += declarative
+QT += declarative widgets
 
 SOURCES += \
         declarativeinputcontext.cpp \

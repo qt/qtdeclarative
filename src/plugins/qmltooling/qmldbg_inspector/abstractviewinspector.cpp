@@ -50,7 +50,7 @@
 #include <QtCore/private/qabstractanimation_p.h>
 #include "QtDeclarative/private/qdeclarativeinspectorservice_p.h"
 
-#include <QtGui/QVBoxLayout>
+#include <QtWidgets/QVBoxLayout>
 #include <QtGui/QMouseEvent>
 #include <QtCore/QSettings>
 

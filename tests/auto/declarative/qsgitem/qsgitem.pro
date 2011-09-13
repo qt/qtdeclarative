@@ -5,4 +5,4 @@ SOURCES += tst_qsgitem.cpp
 macx:CONFIG -= app_bundle
 
 CONFIG += parallel_test
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private widgets

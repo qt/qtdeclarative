@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGImagePrivate;
-class Q_AUTOTEST_EXPORT QSGImage : public QSGImageBase, public QSGTextureProvider
+class Q_AUTOTEST_EXPORT QSGImage : public QSGImageBase
 {
     Q_OBJECT
     Q_ENUMS(FillMode)
@@ -63,11 +63,8 @@ class Q_AUTOTEST_EXPORT QSGImage : public QSGImageBase, public QSGTextureProvide
     Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
     Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedGeometryChanged)
     Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged)
-    Q_PROPERTY(QSGTexture *texture READ texture)
     Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged)
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
-
-    Q_INTERFACES(QSGTextureProvider)
 
 public:
     QSGImage(QSGItem *parent=0);
@@ -90,13 +87,14 @@ public:
 
     QRectF boundingRect() const;
 
-    virtual QSGTexture *texture() const;
-
     HAlignment horizontalAlignment() const;
     void setHorizontalAlignment(HAlignment align);
 
     VAlignment verticalAlignment() const;
     void setVerticalAlignment(VAlignment align);
+
+    bool isTextureProvider() const { return true; }
+    QSGTextureProvider *textureProvider() const;
 
 Q_SIGNALS:
     void fillModeChanged();

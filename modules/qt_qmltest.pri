@@ -12,6 +12,6 @@ QT.qmltest.libs = $$QT_MODULE_LIB_BASE
 QT.qmltest.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.qmltest.imports = $$QT_MODULE_IMPORT_BASE
 QT.qmltest.depends = declarative testlib
-QT.qmltest.DEFINES = QT_DECLARATIVE_LIB
+QT.qmltest.DEFINES = QT_QMLTEST_LIB
 
 QT_CONFIG += qmltest

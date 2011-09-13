@@ -44,6 +44,7 @@
 #include "qsgcanvasitem_p.h"
 #include "qsgitem_p.h"
 #include "qsgshadereffectsource_p.h"
+#include <QtGui/qopenglframebufferobject.h>
 
 #include <QtCore/qdebug.h>
 #include "private/qsgcontext_p.h"
@@ -52,6 +53,7 @@
 
 #include "private/qsgimage_p_p.h"
 
+#include <QtGui/qguiapplication.h>
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
 #include "qv8engine_p.h"
@@ -68,6 +70,8 @@ QT_BEGIN_NAMESPACE
 */
 static const double Q_PI   = 3.14159265358979323846;   // pi
 
+
+static bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
 
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
@@ -720,7 +724,14 @@ static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::
     CHECK_CONTEXT(r)
 
 
+<<<<<<< HEAD
     return v8::Number::New(r->context->state.globalAlpha);
+=======
+    QV8Engine *engine = V8ENGINE_ACCESSOR();
+    Q_UNUSED(engine)
+
+    return v8::Boolean::New(r->context->valid());
+>>>>>>> refactor
 }
 
 static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
@@ -2160,12 +2171,26 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
       return v8::Undefined();
     }
 
+<<<<<<< HEAD
     if (args.Length() == 1) {
         horizontal = args[0]->BooleanValue();
     } else if (args.Length() == 2) {
         horizontal = args[0]->BooleanValue();
         vertical = args[1]->BooleanValue();
+=======
+#if 0
+    // ### refactor
+    // blur the alpha channel
+    if (state.shadowBlur > 0) {
+        QImage blurred(shadowImg.size(), QImage::Format_ARGB32);
+        blurred.fill(0);
+        QPainter blurPainter(&blurred);
+        qt_blurImage(&blurPainter, shadowImg, state.shadowBlur, false, true);
+        blurPainter.end();
+        shadowImg = blurred;
+>>>>>>> refactor
     }
+#endif
 
     r->image = r->image.mirrored(horizontal, vertical);
     return args.This();

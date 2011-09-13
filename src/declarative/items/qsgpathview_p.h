@@ -174,10 +174,10 @@ Q_SIGNALS:
 
 protected:
     virtual void updatePolish();
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
-    bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *);
+    bool sendMouseEvent(QMouseEvent *event);
     bool childMouseEventFilter(QSGItem *, QEvent *);
     void mouseUngrabEvent();
     void componentComplete();

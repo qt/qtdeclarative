@@ -43,9 +43,12 @@
 
 #include "qsgpainteditem.h"
 #include <private/qsgcontext_p.h>
-#include <qglframebufferobject.h>
-#include <qglfunctions.h>
+#include <private/qopenglextensions_p.h>
+#include <qopenglframebufferobject.h>
+#include <qopenglfunctions.h>
+#include <qopenglpaintdevice.h>
 #include <qmath.h>
+#include <qpainter.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,7 +93,7 @@ void QSGPainterTexture::bind()
 #endif
 
         if (m_has_mipmaps && !m_mipmaps_generated) {
-            const QGLContext *ctx = QGLContext::currentContext();
+            QOpenGLContext *ctx = QOpenGLContext::currentContext();
             ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
             m_mipmaps_generated = true;
         }
@@ -110,6 +113,7 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_multisampledFbo(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_texture(0)
+    , m_gl_device(0)
     , m_size(1, 1)
     , m_dirtyContents(false)
     , m_opaquePainting(false)
@@ -134,6 +138,7 @@ QSGPainterNode::~QSGPainterNode()
     delete m_texture;
     delete m_fbo;
     delete m_multisampledFbo;
+    delete m_gl_device;
 }
 
 void QSGPainterNode::paint()
@@ -143,10 +148,19 @@ void QSGPainterNode::paint()
     QPainter painter;
     if (m_actualRenderTarget == QSGPaintedItem::Image)
         painter.begin(&m_image);
-    else if (m_multisampledFbo)
-        painter.begin(m_multisampledFbo);
-    else
-        painter.begin(m_fbo);
+    else {
+        if (!m_gl_device) {
+            m_gl_device = new QOpenGLPaintDevice(m_fboSize);
+            m_gl_device->setPaintFlipped(true);
+        }
+
+        if (m_multisampledFbo)
+            m_multisampledFbo->bind();
+        else
+            m_fbo->bind();
+
+        painter.begin(m_gl_device);
+    }
 
     if (m_smoothPainting) {
         painter.setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing
@@ -174,8 +188,13 @@ void QSGPainterNode::paint()
         m_texture->setImage(m_image);
         m_texture->setDirtyRect(dirtyRect);
     } else if (m_multisampledFbo) {
-        QGLFramebufferObject::blitFramebuffer(m_fbo, dirtyRect, m_multisampledFbo, dirtyRect);
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, dirtyRect, m_multisampledFbo, dirtyRect);
     }
+
+    if (m_multisampledFbo)
+        m_multisampledFbo->release();
+    else if (m_fbo)
+        m_fbo->release();
 
     m_dirtyRect = QRect();
 }
@@ -214,7 +233,7 @@ void QSGPainterNode::updateGeometry()
     if (m_actualRenderTarget == QSGPaintedItem::Image)
         source = QRectF(0, 0, 1, 1);
     else
-        source = QRectF(0, 1, qreal(m_size.width()) / m_fboSize.width(), qreal(-m_size.height()) / m_fboSize.height());
+        source = QRectF(0, 0, qreal(m_size.width()) / m_fboSize.width(), qreal(m_size.height()) / m_fboSize.height());
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
                                             QRectF(0, 0, m_size.width(), m_size.height()),
                                             source);
@@ -249,8 +268,8 @@ void QSGPainterNode::updateRenderTarget()
     }
 
     if (m_actualRenderTarget == QSGPaintedItem::FramebufferObject) {
-        const QGLContext *ctx = QGLContext::currentContext();
-        if (m_fbo && !m_dirtyGeometry && (!ctx->format().sampleBuffers() || !m_multisamplingSupported))
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;
 
         if (m_fboSize.isEmpty())
@@ -260,22 +279,22 @@ void QSGPainterNode::updateRenderTarget()
         delete m_multisampledFbo;
         m_fbo = m_multisampledFbo = 0;
 
-        if (m_smoothPainting && ctx->format().sampleBuffers() && m_multisamplingSupported) {
+        if (m_smoothPainting && ctx->format().samples() && m_multisamplingSupported) {
             {
-                QGLFramebufferObjectFormat format;
-                format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
-                format.setSamples(ctx->format().samples());
-                m_multisampledFbo = new QGLFramebufferObject(m_fboSize, format);
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+                format.setSamples(8);
+                m_multisampledFbo = new QOpenGLFramebufferObject(m_fboSize, format);
             }
             {
-                QGLFramebufferObjectFormat format;
-                format.setAttachment(QGLFramebufferObject::NoAttachment);
-                m_fbo = new QGLFramebufferObject(m_fboSize, format);
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+                m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
             }
         } else {
-            QGLFramebufferObjectFormat format;
-            format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
-            m_fbo = new QGLFramebufferObject(m_fboSize, format);
+            QOpenGLFramebufferObjectFormat format;
+            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
         }
     } else {
         if (!m_image.isNull() && !m_dirtyGeometry)

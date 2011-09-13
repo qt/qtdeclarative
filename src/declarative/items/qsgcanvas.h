@@ -43,8 +43,8 @@
 #define QSGCANVAS_H
 
 #include <QtCore/qmetatype.h>
-#include <QtOpenGL/qgl.h>
-#include <QtGui/qwidget.h>
+#include <QtGui/qopengl.h>
+#include <QtGui/qwindow.h>
 
 QT_BEGIN_HEADER
 
@@ -55,15 +55,15 @@ QT_MODULE(Declarative)
 class QSGItem;
 class QSGEngine;
 class QSGCanvasPrivate;
-class QGLFramebufferObject;
+class QOpenGLFramebufferObject;
 
-class Q_DECLARATIVE_EXPORT QSGCanvas : public QGLWidget
+class Q_DECLARATIVE_EXPORT QSGCanvas : public QWindow
 {
 Q_OBJECT
 Q_DECLARE_PRIVATE(QSGCanvas)
 public:
-    QSGCanvas(QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGCanvas(const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    QSGCanvas(QWindow *parent = 0);
+
     virtual ~QSGCanvas();
 
     QSGItem *rootItem() const;
@@ -82,24 +82,23 @@ public:
 
     QImage grabFrameBuffer();
 
-    void setRenderTarget(QGLFramebufferObject *fbo);
-    QGLFramebufferObject *renderTarget() const;
+    void setRenderTarget(QOpenGLFramebufferObject *fbo);
+    QOpenGLFramebufferObject *renderTarget() const;
+
+signals:
+    void frameSwapped();
 
 Q_SIGNALS:
     void sceneGraphInitialized();
 
 protected:
-    QSGCanvas(QSGCanvasPrivate &dd, QWidget *parent = 0, Qt::WindowFlags f = 0);
-    QSGCanvas(QSGCanvasPrivate &dd, const QGLFormat &format, QWidget *parent = 0, Qt::WindowFlags f = 0);
+    QSGCanvas(QSGCanvasPrivate &dd, QWindow *parent = 0);
 
-    virtual void paintEvent(QPaintEvent *);
+    virtual void exposeEvent(QExposeEvent *);
     virtual void resizeEvent(QResizeEvent *);
 
     virtual void showEvent(QShowEvent *);
     virtual void hideEvent(QHideEvent *);
-
-    virtual void focusOutEvent(QFocusEvent *);
-    virtual void focusInEvent(QFocusEvent *);
 
     virtual bool event(QEvent *);
     virtual void keyPressEvent(QKeyEvent *);
@@ -116,9 +115,12 @@ protected:
 private Q_SLOTS:
     void sceneGraphChanged();
     void maybeUpdate();
+    void animationStarted();
+    void animationStopped();
 
 private:
     friend class QSGItem;
+    friend class QSGCanvasRenderLoop;
     Q_DISABLE_COPY(QSGCanvas)
 };
 

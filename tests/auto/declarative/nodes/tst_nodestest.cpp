@@ -47,7 +47,7 @@
 #include <private/qsgnodeupdater_p.h>
 
 #include <qsgsimplerectnode.h>
-
+#include <QtOpenGL/QGLWidget>
 class NodesTest : public QObject
 {
     Q_OBJECT

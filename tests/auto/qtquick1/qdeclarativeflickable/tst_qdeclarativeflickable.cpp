@@ -45,7 +45,7 @@
 #include <QtQuick1/qdeclarativeview.h>
 #include <private/qdeclarativeflickable_p.h>
 #include <private/qdeclarativevaluetype_p.h>
-#include <QtGui/qgraphicswidget.h>
+#include <QtWidgets/qgraphicswidget.h>
 #include <math.h>
 #include "../../../shared/util.h"
 

@@ -49,7 +49,7 @@
 #include "qsgparticleemitter_p.h"
 #include "qsgsprite_p.h"
 #include "qsgspriteengine_p.h"
-#include <QGLFunctions>
+#include <QOpenGLFunctions>
 #include <qsgengine.h>
 
 QT_BEGIN_NAMESPACE
@@ -65,7 +65,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
 
-const float CONV = 0.017453292519943295;
+const qreal CONV = 0.017453292519943295;
 class ImageMaterialData
 {
     public:
@@ -98,13 +98,13 @@ class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 public:
     TabledMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
@@ -127,7 +127,7 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
@@ -155,7 +155,7 @@ public:
     int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class DeformableMaterialData : public ImageMaterialData {};
@@ -166,13 +166,13 @@ class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData
 public:
     DeformableMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
@@ -194,7 +194,7 @@ public:
         QSGSimpleMaterialShader<DeformableMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -211,7 +211,7 @@ public:
     int m_timestamp_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class SpriteMaterialData : public ImageMaterialData {};
@@ -222,13 +222,13 @@ class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
 public:
     SpriteMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
@@ -251,7 +251,7 @@ public:
         program()->bind();
         program()->setUniformValue("texture", 0);
         program()->setUniformValue("colortable", 1);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_framecount_id = program()->uniformLocation("framecount");
         m_animcount_id = program()->uniformLocation("animcount");
@@ -284,7 +284,7 @@ public:
     int m_opacitytable_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class ColoredMaterialData : public ImageMaterialData {};
@@ -295,13 +295,13 @@ class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
 public:
     ColoredMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
@@ -316,7 +316,7 @@ public:
 
     void activate() {
         QSGSimpleMaterialShader<ColoredMaterialData>::activate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -324,7 +324,7 @@ public:
 
     void deactivate() {
         QSGSimpleMaterialShader<ColoredMaterialData>::deactivate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -338,7 +338,7 @@ public:
         QSGSimpleMaterialShader<ColoredMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -355,7 +355,7 @@ public:
     int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 class SimpleMaterialData : public ImageMaterialData {};
@@ -366,12 +366,12 @@ class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
 public:
     SimpleMaterial()
     {
-        QFile vf(":defaultshaders/imagevertex.shader");
+        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + vf.readAll();
 
-        QFile ff(":defaultshaders/imagefragment.shader");
+        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + ff.readAll();
@@ -385,7 +385,7 @@ public:
 
     void activate() {
         QSGSimpleMaterialShader<SimpleMaterialData>::activate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -393,7 +393,7 @@ public:
 
     void deactivate() {
         QSGSimpleMaterialShader<SimpleMaterialData>::deactivate();
-#ifndef QT_OPENGL_ES_2
+#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -407,7 +407,7 @@ public:
         QSGSimpleMaterialShader<SimpleMaterialData>::initialize();
         program()->bind();
         program()->setUniformValue("texture", 0);
-        glFuncs = QGLContext::currentContext()->functions();
+        glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
         m_entry_id = program()->uniformLocation("entry");
     }
@@ -424,7 +424,7 @@ public:
     int m_entry_id;
     QByteArray m_vertex_code;
     QByteArray m_fragment_code;
-    QGLFunctions* glFuncs;
+    QOpenGLFunctions* glFuncs;
 };
 
 void fillUniformArrayFromImage(float* array, const QImage& img, int size)
@@ -871,9 +871,9 @@ void QSGImageParticle::createEngine()
 }
 
 static QSGGeometry::Attribute SimpleParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 4, GL_FLOAT },             // Data
-    { 2, 4, GL_FLOAT }             // Vectors
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
+    QSGGeometry::Attribute::create(1, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT)             // Vectors
 };
 
 static QSGGeometry::AttributeSet SimpleParticle_AttributeSet =
@@ -884,10 +884,10 @@ static QSGGeometry::AttributeSet SimpleParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute ColoredParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 4, GL_FLOAT },             // Data
-    { 2, 4, GL_FLOAT },             // Vectors
-    { 3, 4, GL_UNSIGNED_BYTE },     // Colors
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
+    QSGGeometry::Attribute::create(1, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(3, 4, GL_UNSIGNED_BYTE),     // Colors
 };
 
 static QSGGeometry::AttributeSet ColoredParticle_AttributeSet =
@@ -898,13 +898,13 @@ static QSGGeometry::AttributeSet ColoredParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute DeformableParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT },             // Vectors
-    { 4, 4, GL_UNSIGNED_BYTE },     // Colors
-    { 5, 4, GL_FLOAT },             // DeformationVectors
-    { 6, 3, GL_FLOAT },             // Rotation
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
+    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(4, 4, GL_UNSIGNED_BYTE),     // Colors
+    QSGGeometry::Attribute::create(5, 4, GL_FLOAT),             // DeformationVectors
+    QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Rotation
 };
 
 static QSGGeometry::AttributeSet DeformableParticle_AttributeSet =
@@ -915,14 +915,14 @@ static QSGGeometry::AttributeSet DeformableParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute SpriteParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT },             // Vectors
-    { 4, 4, GL_UNSIGNED_BYTE },     // Colors
-    { 5, 4, GL_FLOAT },             // DeformationVectors
-    { 6, 3, GL_FLOAT },             // Rotation
-    { 7, 4, GL_FLOAT }              // Anim Data
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),             // Position
+    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(4, 4, GL_UNSIGNED_BYTE),     // Colors
+    QSGGeometry::Attribute::create(5, 4, GL_FLOAT),             // DeformationVectors
+    QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Rotation
+    QSGGeometry::Attribute::create(7, 4, GL_FLOAT)              // Anim Data
 };
 
 static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
@@ -1001,7 +1001,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         sizetable = QImage(m_sizetable_name.toLocalFile());
         opacitytable = QImage(m_opacitytable_name.toLocalFile());
         if (colortable.isNull())
-            colortable = QImage(":defaultshaders/identitytable.png");
+            colortable = QImage(QStringLiteral(":defaultshaders/identitytable.png"));
         Q_ASSERT(!colortable.isNull());
         getState<ImageMaterialData>(m_material)->colorTable = sceneGraphEngine()->createTextureFromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);

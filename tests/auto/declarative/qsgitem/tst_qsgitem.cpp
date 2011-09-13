@@ -43,6 +43,7 @@
 
 #include "qsgitem.h"
 #include "qsgcanvas.h"
+#include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qsgfocusscope_p.h"
 #include "../../../shared/util.h"
 #include <QDebug>
@@ -61,8 +62,8 @@ public:
 protected:
     virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
     virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++pressCount; }
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { event->accept(); ++releaseCount; }
+    virtual void mousePressEvent(QMouseEvent *event) { event->accept(); ++pressCount; }
+    virtual void mouseReleaseEvent(QMouseEvent *event) { event->accept(); ++releaseCount; }
     virtual void wheelEvent(QWheelEvent *event) { event->accept(); ++wheelCount; }
 };
 
@@ -72,7 +73,7 @@ Q_OBJECT
 public:
     TestPolishItem(QSGItem *parent)
     : QSGItem(parent), wasPolished(false) {
-        QTimer::singleShot(50, this, SLOT(doPolish()));
+        QTimer::singleShot(10, this, SLOT(doPolish()));
     }
 
     bool wasPolished;
@@ -132,9 +133,10 @@ private slots:
     void hoverEventInParent();
 
 private:
-    void ensureFocus(QWidget *w) {
+
+    void ensureFocus(QWindow *w) {
         w->show();
-        qApp->setActiveWindow(w);
+        w->requestActivateWindow();
         qApp->processEvents();
 
 #ifdef Q_WS_X11
@@ -787,27 +789,35 @@ void tst_qsgitem::mouseGrab()
 
     TestItem *child2 = new TestItem;
     child2->setAcceptedMouseButtons(Qt::LeftButton);
-    child2->setY(100);
+    child2->setY(51);
     child2->setSize(QSizeF(200, 100));
     child2->setParentItem(canvas->rootItem());
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(100);
+    qDebug() << canvas->mouseGrabberItem();
     QVERIFY(canvas->mouseGrabberItem() == child1);
+    QTest::qWait(100);
+
     QCOMPARE(child1->pressCount, 1);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QVERIFY(canvas->mouseGrabberItem() == 0);
     QCOMPARE(child1->releaseCount, 1);
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QVERIFY(canvas->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 2);
     child1->setEnabled(false);
     QVERIFY(canvas->mouseGrabberItem() == 0);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     child1->setEnabled(true);
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QVERIFY(canvas->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 3);
     child1->setVisible(false);
@@ -817,20 +827,24 @@ void tst_qsgitem::mouseGrab()
     child1->setVisible(true);
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QVERIFY(canvas->mouseGrabberItem() == child1);
     QCOMPARE(child1->pressCount, 4);
     child2->grabMouse();
     QVERIFY(canvas->mouseGrabberItem() == child2);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 1);
 
     child2->grabMouse();
     QVERIFY(canvas->mouseGrabberItem() == child2);
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QCOMPARE(child1->pressCount, 4);
     QCOMPARE(child2->pressCount, 1);
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 2);
 
@@ -846,7 +860,8 @@ void tst_qsgitem::polishOutsideAnimation()
     canvas->show();
 
     TestPolishItem *item = new TestPolishItem(canvas->rootItem());
-
+    item->setSize(QSizeF(200, 100));
+    QTest::qWait(50);
     QTRY_VERIFY(item->wasPolished);
 
     delete item;

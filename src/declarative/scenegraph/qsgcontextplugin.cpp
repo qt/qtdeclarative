@@ -41,7 +41,7 @@
 
 #include "qsgcontextplugin_p.h"
 #include <private/qsgcontext_p.h>
-#include <QtGui/qapplication.h>
+#include <QtGui/qguiapplication.h>
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qlibraryinfo.h>
 
@@ -69,7 +69,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 */
 QSGContext *QSGContext::createDefaultContext()
 {
-    const QStringList args = QApplication::arguments();
+    const QStringList args = QGuiApplication::arguments();
     QString device;
     for (int index = 0; index < args.count(); ++index) {
         if (args.at(index).startsWith(QLatin1String("--device="))) {

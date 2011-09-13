@@ -1,5 +1,9 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS += declarative qtquick1 plugins
-contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
+
+# ### refactor: port properly
+# contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
+
 SUBDIRS += imports
+

@@ -71,7 +71,8 @@ class QDeclarativeImportsPrivate;
 class QDeclarativeImportDatabase;
 class QDeclarativeTypeLoader;
 
-class QDeclarativeImports
+// Exported for QtQuick1
+class Q_DECLARATIVE_EXPORT QDeclarativeImports
 {
 public:
     QDeclarativeImports(QDeclarativeTypeLoader *);

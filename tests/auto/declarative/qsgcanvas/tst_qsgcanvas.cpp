@@ -42,15 +42,16 @@
 #include <qtest.h>
 #include <QDebug>
 #include <QTouchEvent>
-
-#include "qsgitem.h"
-#include "qsgcanvas.h"
-#include "private/qsgrectangle_p.h"
+#include <QtDeclarative/QSGItem>
+#include <QtDeclarative/QSGCanvas>
+#include <QtDeclarative/private/qsgrectangle_p.h>
 #include "../../../shared/util.h"
+#include <QtGui/QWindowSystemInterface>
 
 struct TouchEventData {
     QEvent::Type type;
     QWidget *widget;
+    QWindow *window;
     Qt::TouchPointStates states;
     QList<QTouchEvent::TouchPoint> touchPoints;
 };
@@ -60,6 +61,7 @@ static QTouchEvent::TouchPoint makeTouchPoint(QSGItem *item, const QPointF &p, c
     QPointF last = lastPoint.isNull() ? p : lastPoint;
 
     QTouchEvent::TouchPoint tp;
+
     tp.setPos(p);
     tp.setLastPos(last);
     tp.setScenePos(item->mapToScene(p));
@@ -71,11 +73,22 @@ static QTouchEvent::TouchPoint makeTouchPoint(QSGItem *item, const QPointF &p, c
 
 static TouchEventData makeTouchData(QEvent::Type type, QWidget *w, Qt::TouchPointStates states, const QList<QTouchEvent::TouchPoint> &touchPoints)
 {
-    TouchEventData d = { type, w, states, touchPoints };
+    TouchEventData d = { type, w, 0, states, touchPoints };
     return d;
 }
 
 static TouchEventData makeTouchData(QEvent::Type type, QWidget *w, Qt::TouchPointStates states, const QTouchEvent::TouchPoint &touchPoint)
+{
+    QList<QTouchEvent::TouchPoint> points;
+    points << touchPoint;
+    return makeTouchData(type, w, states, points);
+}
+static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states, const QList<QTouchEvent::TouchPoint>& touchPoints)
+{
+    TouchEventData d = { type, 0, w, states, touchPoints };
+    return d;
+}
+static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states, const QTouchEvent::TouchPoint &touchPoint)
 {
     QList<QTouchEvent::TouchPoint> points;
     points << touchPoint;
@@ -118,7 +131,7 @@ public:
         setEnabled(true);
         setOpacity(1.0);
 
-        lastEvent = makeTouchData(QEvent::None, 0, 0, QList<QTouchEvent::TouchPoint>());
+        lastEvent = makeTouchData(QEvent::None, canvas(), 0, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
     }
 
     bool acceptEvents;
@@ -195,7 +208,7 @@ void tst_qsgcanvas::touchEvent_basic()
 {
     QSGCanvas *canvas = new QSGCanvas;
     canvas->resize(250, 250);
-    canvas->window()->move(100, 100);
+    canvas->move(100, 100);
     canvas->show();
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
@@ -215,16 +228,21 @@ void tst_qsgcanvas::touchEvent_basic()
     QPointF pos(10, 10);
 
     // press single point
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::qWait(50);
+
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
+
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
+    TouchEventData d = makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(topItem,pos));
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed, makeTouchPoint(topItem, pos)));
     topItem->reset();
 
     // press multiple points
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint())
-                             .press(1, bottomItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+            .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
@@ -234,25 +252,31 @@ void tst_qsgcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // touch point on top item moves to bottom item, but top item should still receive the event
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint());
-    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
+    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
 
     // touch point on bottom item moves to top item, but bottom item should still receive the event
-    QTest::touchEvent(canvas).press(0, bottomItem->mapToScene(pos).toPoint());
-    QTest::touchEvent(canvas).move(0, topItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
+    QTest::touchEvent(canvas).move(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, canvas, Qt::TouchPointMoved,
             makeTouchPoint(bottomItem, bottomItem->mapFromItem(topItem, pos), pos)));
     bottomItem->reset();
 
     // a single stationary press on an item shouldn't cause an event
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
     QTest::touchEvent(canvas).stationary(0)
-                             .press(1, bottomItem->mapToScene(pos).toPoint());
+            .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press only, not stationary
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
@@ -262,19 +286,24 @@ void tst_qsgcanvas::touchEvent_basic()
     bottomItem->reset();
 
     // move touch point from top item to bottom, and release
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint());
-    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint());
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas);
+    QTest::qWait(50);
+    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint(),canvas);
+    QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, canvas, Qt::TouchPointReleased,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
 
     // release while another point is pressed
-    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint())
-                             .press(1, bottomItem->mapToScene(pos).toPoint());
-    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint());
-    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint())
+    QTest::touchEvent(canvas).press(0, topItem->mapToScene(pos).toPoint(),canvas)
+            .press(1, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
+    QTest::touchEvent(canvas).move(0, bottomItem->mapToScene(pos).toPoint(), canvas);
+    QTest::qWait(50);
+    QTest::touchEvent(canvas).release(0, bottomItem->mapToScene(pos).toPoint(), canvas)
                              .stationary(1);
+    QTest::qWait(50);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
@@ -298,7 +327,7 @@ void tst_qsgcanvas::touchEvent_propagation()
 
     QSGCanvas *canvas = new QSGCanvas;
     canvas->resize(250, 250);
-    canvas->window()->move(100, 100);
+    canvas->move(100, 100);
     canvas->show();
 
     TestTouchItem *bottomItem = new TestTouchItem(canvas->rootItem());
@@ -326,7 +355,8 @@ void tst_qsgcanvas::touchEvent_propagation()
     topItem->setOpacity(itemOpacity);
 
     // single touch to top item, should be received by middle item
-    QTest::touchEvent(canvas).press(0, pointInTopItem);
+    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas);
+    QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(middleItem->lastEvent.touchPoints.count(), 1);
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
@@ -334,13 +364,14 @@ void tst_qsgcanvas::touchEvent_propagation()
             makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))));
 
     // touch top and middle items, middle item should get both events
-    QTest::touchEvent(canvas).press(0, pointInTopItem)
-                             .press(1, pointInMiddleItem);
+    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+            .press(1, pointInMiddleItem, canvas);
+    QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(middleItem->lastEvent.touchPoints.count(), 2);
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, canvas, Qt::TouchPointPressed,
-            (QList<QTouchEvent::TouchPoint>() << makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))
+           (QList<QTouchEvent::TouchPoint>() << makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))
                                               << makeTouchPoint(middleItem, pos) )));
     middleItem->reset();
 
@@ -350,8 +381,9 @@ void tst_qsgcanvas::touchEvent_propagation()
     middleItem->setOpacity(itemOpacity);
 
     // touch top and middle items, bottom item should get all events
-    QTest::touchEvent(canvas).press(0, pointInTopItem)
-                             .press(1, pointInMiddleItem);
+    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+            .press(1, pointInMiddleItem, canvas);
+    QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 2);
@@ -366,9 +398,10 @@ void tst_qsgcanvas::touchEvent_propagation()
     bottomItem->setOpacity(itemOpacity);
 
     // no events should be received
-    QTest::touchEvent(canvas).press(0, pointInTopItem)
-                             .press(1, pointInMiddleItem)
-                             .press(2, pointInBottomItem);
+    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas)
+            .press(1, pointInMiddleItem, canvas)
+            .press(2, pointInBottomItem, canvas);
+    QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
@@ -381,7 +414,8 @@ void tst_qsgcanvas::touchEvent_propagation()
     middleItem->acceptEvents = acceptEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setOpacity(itemOpacity);
-    QTest::touchEvent(canvas).press(0, pointInTopItem);
+    QTest::touchEvent(canvas).press(0, pointInTopItem, canvas);
+    QTest::qWait(50);
     if (!enableItem || itemOpacity == 0) {
         // middle item is disabled or has 0 opacity, bottom item receives the event
         QVERIFY(topItem->lastEvent.touchPoints.isEmpty());

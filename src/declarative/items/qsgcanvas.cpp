@@ -50,12 +50,14 @@
 #include <private/qsgrenderer_p.h>
 #include <private/qsgflashnode_p.h>
 
+#include <private/qguiapplication_p.h>
+#include <QtGui/QInputPanel>
+
 #include <private/qabstractanimation_p.h>
 
 #include <QtGui/qpainter.h>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
-#include <QtGui/qinputcontext.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
 
@@ -63,26 +65,114 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_NO_THREADED_RENDERER)
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
+DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
 
-extern Q_OPENGL_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
+
+void QSGCanvasPrivate::updateFocusItemTransform()
+{
+    Q_Q(QSGCanvas);
+    QSGItem *focus = q->activeFocusItem();
+    if (focus && qApp->inputPanel()->inputItem() == focus)
+        qApp->inputPanel()->setInputItemTransform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
+}
+
+class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
+{
+public:
+    QSGCanvasPlainRenderLoop()
+        : updatePending(false)
+        , animationRunning(false)
+    {
+        qWarning("QSGCanvas: using non-threaded render loop. Be very sure to not access scene graph "
+                 "objects outside the QSGItem::updatePaintNode() call. Failing to do so will cause "
+                 "your code to crash on other platforms!");
+    }
+
+    virtual void paint() {
+        updatePending = false;
+        if (animationRunning && animationDriver())
+            animationDriver()->advance();
+        polishItems();
+        syncSceneGraph();
+        makeCurrent();
+        glViewport(0, 0, size.width(), size.height());
+        renderSceneGraph(size);
+        swapBuffers();
+
+        if (animationRunning)
+            maybeUpdate();
+    }
+
+    virtual QImage grab() {
+        return qt_gl_read_framebuffer(size, false, false);
+    }
+
+    virtual void startRendering() {
+        if (!glContext()) {
+            createGLContext();
+            makeCurrent();
+            initializeSceneGraph();
+        } else {
+            makeCurrent();
+        }
+        maybeUpdate();
+    }
+
+    virtual void stopRendering() { }
+
+    virtual void maybeUpdate() {
+        if (!updatePending) {
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+            updatePending = true;
+        }
+    }
+
+    virtual void animationStarted() {
+        animationRunning = true;
+        maybeUpdate();
+    }
+
+    virtual void animationStopped() {
+        animationRunning = false;
+    }
+
+    virtual bool isRunning() const { return glContext(); } // Event loop is always running...
+    virtual void resize(const QSize &s) { size = s; }
+    virtual void setWindowSize(const QSize &s) { size = s; }
+
+    bool event(QEvent *e) {
+        if (e->type() == QEvent::User) {
+            paint();
+            return true;
+        }
+        return QObject::event(e);
+    }
+
+    QSize size;
+
+    uint updatePending : 1;
+    uint animationRunning : 1;
+};
+
+
 
 /*
 Focus behavior
 ==============
 
-Prior to being added to a valid canvas items can set and clear focus with no 
+Prior to being added to a valid canvas items can set and clear focus with no
 effect.  Only once items are added to a canvas (by way of having a parent set that
-already belongs to a canvas) do the focus rules apply.  Focus goes back to 
+already belongs to a canvas) do the focus rules apply.  Focus goes back to
 having no effect if an item is removed from a canvas.
 
 When an item is moved into a new focus scope (either being added to a canvas
-for the first time, or having its parent changed), if the focus scope already has 
+for the first time, or having its parent changed), if the focus scope already has
 a scope focused item that takes precedence over the item being added.  Otherwise,
-the focus of the added tree is used.  In the case of of a tree of items being 
+the focus of the added tree is used.  In the case of of a tree of items being
 added to a canvas for the first time, which may have a conflicted focus state (two
-or more items in one scope having focus set), the same rule is applied item by item - 
+or more items in one scope having focus set), the same rule is applied item by item -
 thus the first item that has focus will get it (assuming the scope doesn't already
 have a scope focused item), and the other items will have their focus cleared.
 */
@@ -165,134 +255,50 @@ QSGRootItem::QSGRootItem()
 {
 }
 
-void QSGCanvas::paintEvent(QPaintEvent *)
+void QSGCanvas::exposeEvent(QExposeEvent *)
 {
     Q_D(QSGCanvas);
+    d->thread->paint();
+}
 
-    if (!d->threadedRendering) {
-#ifdef FRAME_TIMING
-        int lastFrame = frameTimer.restart();
-#endif
+void QSGCanvas::resizeEvent(QResizeEvent *)
+{
+    Q_D(QSGCanvas);
+    d->thread->resize(size());
+}
 
-        if (d->animationDriver && d->animationDriver->isRunning())
-            d->animationDriver->advance();
+void QSGCanvas::animationStarted()
+{
+    d_func()->thread->animationStarted();
+}
 
-#ifdef FRAME_TIMING
-        int animationTime = frameTimer.elapsed();
-#endif
+void QSGCanvas::animationStopped()
+{
+    d_func()->thread->animationStopped();
+}
 
-        Q_ASSERT(d->context);
-
-        d->polishItems();
-
-        QDeclarativeDebugTrace::addEvent(QDeclarativeDebugTrace::FramePaint);
-        QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Painting);
-
-#ifdef FRAME_TIMING
-        int polishTime = frameTimer.elapsed();
-#endif
-
-        makeCurrent();
-
-#ifdef FRAME_TIMING
-        int makecurrentTime = frameTimer.elapsed();
-#endif
-
-        d->syncSceneGraph();
-
-#ifdef FRAME_TIMING
-        int syncTime = frameTimer.elapsed();
-#endif
-
-        d->renderSceneGraph(d->widgetSize);
-
-        swapBuffers();
-
-#ifdef FRAME_TIMING
-        printf("FrameTimes, last=%d, animations=%d, polish=%d, makeCurrent=%d, sync=%d, sgrender=%d, readback=%d, total=%d\n",
-               lastFrame,
-               animationTime,
-               polishTime - animationTime,
-               makecurrentTime - polishTime,
-               syncTime - makecurrentTime,
-               sceneGraphRenderTime - syncTime,
-               readbackTime - sceneGraphRenderTime,
-               frameTimer.elapsed());
-#endif
-
-        QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Painting);
-
-        if (d->animationDriver && d->animationDriver->isRunning())
-            update();
-    } else {
-        if (updatesEnabled()) {
-            d->thread->paint();
-            setUpdatesEnabled(false);
+void QSGCanvas::showEvent(QShowEvent *)
+{
+    Q_D(QSGCanvas);
+    if (d->vsyncAnimations) {
+        if (!d->animationDriver) {
+            d->animationDriver = d->context->createAnimationDriver(this);
+            connect(d->animationDriver, SIGNAL(started()), this, SLOT(animationStarted()), Qt::DirectConnection);
+            connect(d->animationDriver, SIGNAL(stopped()), this, SLOT(animationStopped()), Qt::DirectConnection);
         }
+        d->animationDriver->install();
+    }
+
+    if (!d->thread->isRunning()) {
+        d->thread->setWindowSize(size());
+        d->thread->startRendering();
     }
 }
 
-void QSGCanvas::resizeEvent(QResizeEvent *e)
+void QSGCanvas::hideEvent(QHideEvent *)
 {
     Q_D(QSGCanvas);
-    if (d->threadedRendering) {
-        d->thread->resize(e->size());
-    } else {
-        d->widgetSize = e->size();
-        d->viewportSize = d->widgetSize;
-        QGLWidget::resizeEvent(e);
-    }
-}
-
-void QSGCanvas::showEvent(QShowEvent *e)
-{
-    Q_D(QSGCanvas);
-
-    QGLWidget::showEvent(e);
-
-    if (!d->contextFailed) {
-        if (d->threadedRendering) {
-            if (d->vsyncAnimations) {
-                if (!d->animationDriver) {
-                    d->animationDriver = d->context->createAnimationDriver(this);
-                    connect(d->animationDriver, SIGNAL(started()), d->thread, SLOT(animationStarted()), Qt::DirectConnection);
-                    connect(d->animationDriver, SIGNAL(stopped()), d->thread, SLOT(animationStopped()), Qt::DirectConnection);
-                }
-                d->animationDriver->install();
-            }
-            d->thread->startRenderThread();
-            setUpdatesEnabled(true);
-        } else {
-            makeCurrent();
-
-            if (!d->context || !d->context->isReady()) {
-                d->initializeSceneGraph();
-                if (d->vsyncAnimations) {
-                    d->animationDriver = d->context->createAnimationDriver(this);
-                    connect(d->animationDriver, SIGNAL(started()), this, SLOT(update()));
-                }
-            }
-
-            if (d->animationDriver)
-                d->animationDriver->install();
-        }
-    }
-}
-
-void QSGCanvas::hideEvent(QHideEvent *e)
-{
-    Q_D(QSGCanvas);
-
-    if (!d->contextFailed) {
-        if (d->threadedRendering) {
-            d->thread->stopRenderThread();
-        }
-
-        if (d->animationDriver)
-            d->animationDriver->uninstall();
-    }
-
-    QGLWidget::hideEvent(e);
+    d->thread->stopRendering();
 }
 
 
@@ -313,7 +319,7 @@ void QSGCanvas::hideEvent(QHideEvent *e)
 void QSGCanvas::setVSyncAnimations(bool enabled)
 {
     Q_D(QSGCanvas);
-    if (isVisible()) {
+    if (visible()) {
         qWarning("QSGCanvas::setVSyncAnimations: Cannot be changed when widget is shown");
         return;
     }
@@ -332,20 +338,14 @@ bool QSGCanvas::vsyncAnimations() const
     return d->vsyncAnimations;
 }
 
-
-
-void QSGCanvas::focusOutEvent(QFocusEvent *event)
+/*!
+    This function is an attempt to localize all uses of QInputContext::update in
+    one place up until the point where we have public API for the QInputContext API.
+ */
+void QSGCanvasPrivate::updateInputContext()
 {
-    Q_D(QSGCanvas);
-    d->rootItem->setFocus(false);
-    QGLWidget::focusOutEvent(event);
-}
-
-void QSGCanvas::focusInEvent(QFocusEvent *event)
-{
-    Q_D(QSGCanvas);
-    d->rootItem->setFocus(true);
-    QGLWidget::focusInEvent(event);
+    // ### finer grained updates would be good
+    qApp->inputPanel()->update(Qt::ImQueryAll);
 }
 
 void QSGCanvasPrivate::initializeSceneGraph()
@@ -356,14 +356,12 @@ void QSGCanvasPrivate::initializeSceneGraph()
     if (context->isReady())
         return;
 
-    QGLContext *glctx = const_cast<QGLContext *>(QGLContext::currentContext());
+    QOpenGLContext *glctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
     context->initialize(glctx);
 
-    if (!threadedRendering) {
-        Q_Q(QSGCanvas);
-        QObject::connect(context->renderer(), SIGNAL(sceneGraphChanged()), q, SLOT(maybeUpdate()),
-                         Qt::DirectConnection);
-    }
+    Q_Q(QSGCanvas);
+    QObject::connect(context->renderer(), SIGNAL(sceneGraphChanged()), q, SLOT(maybeUpdate()),
+                     Qt::DirectConnection);
 
     if (!QSGItemPrivate::get(rootItem)->itemNode()->parent()) {
         context->rootNode()->appendChildNode(QSGItemPrivate::get(rootItem)->itemNode());
@@ -381,6 +379,7 @@ void QSGCanvasPrivate::polishItems()
         QSGItemPrivate::get(item)->polishScheduled = false;
         item->updatePolish();
     }
+    updateFocusItemTransform();
 }
 
 
@@ -417,23 +416,17 @@ void QSGCanvas::sceneGraphChanged()
 //    d->needsRepaint = true;
 }
 
-
 QSGCanvasPrivate::QSGCanvasPrivate()
     : rootItem(0)
     , activeFocusItem(0)
     , mouseGrabberItem(0)
     , dirtyItemList(0)
     , context(0)
-    , contextFailed(false)
-    , threadedRendering(false)
-    , animationRunning(false)
-    , renderThreadAwakened(false)
     , vsyncAnimations(false)
     , thread(0)
     , animationDriver(0)
     , renderTarget(0)
 {
-    threadedRendering = !qmlNoThreadedRenderer();
 }
 
 QSGCanvasPrivate::~QSGCanvasPrivate()
@@ -444,44 +437,36 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
 {
     QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
 
-    if (!c->context() || !c->context()->isValid()) {
-        contextFailed = true;
-        qWarning("QSGCanvas: Couldn't acquire a GL context.");
-    }
-
     q_ptr = c;
 
     Q_Q(QSGCanvas);
-
-    q->setAttribute(Qt::WA_AcceptTouchEvents);
-    q->setFocusPolicy(Qt::StrongFocus);
 
     rootItem = new QSGRootItem;
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(rootItem);
     rootItemPrivate->canvas = q;
     rootItemPrivate->flags |= QSGItem::ItemIsFocusScope;
 
+    // QML always has focus. It is important that this call happens after the rootItem
+    // has a canvas..
+    rootItem->setFocus(true);
+
+    bool threaded = !qmlNoThreadedRenderer();
+
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
+        qWarning("QSGCanvas: platform does not support threaded rendering!");
+        threaded = false;
+    }
+
+    if (threaded)
+        thread = new QSGCanvasRenderThread();
+    else
+        thread = new QSGCanvasPlainRenderLoop();
+
+    thread->renderer = q;
+    thread->d = this;
+
     context = QSGContext::createDefaultContext();
-
-    if (threadedRendering) {
-        thread = new QSGCanvasRenderThread;
-        thread->renderer = q;
-        thread->d = this;
-    }
-
-}
-
-void QSGCanvasPrivate::sceneMouseEventForTransform(QGraphicsSceneMouseEvent &sceneEvent,
-                                                   const QTransform &transform)
-{
-    sceneEvent.setPos(transform.map(sceneEvent.scenePos()));
-    sceneEvent.setLastPos(transform.map(sceneEvent.lastScenePos()));
-    for (int ii = 0; ii < 5; ++ii) {
-        if (sceneEvent.buttons() & (1 << ii)) {
-            sceneEvent.setButtonDownPos((Qt::MouseButton)(1 << ii), 
-                                        transform.map(sceneEvent.buttonDownScenePos((Qt::MouseButton)(1 << ii))));
-        }
-    }
+    thread->moveContextToThread(context);
 }
 
 void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -494,76 +479,6 @@ void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touc
     }
 }
 
-QEvent::Type QSGCanvasPrivate::sceneMouseEventTypeFromMouseEvent(QMouseEvent *event)
-{
-    switch(event->type()) {
-    default:
-        Q_ASSERT(!"Unknown event type");
-    case QEvent::MouseButtonPress:
-        return QEvent::GraphicsSceneMousePress;
-    case QEvent::MouseButtonRelease:
-        return QEvent::GraphicsSceneMouseRelease;
-    case QEvent::MouseButtonDblClick:
-        return QEvent::GraphicsSceneMouseDoubleClick;
-    case QEvent::MouseMove:
-        return QEvent::GraphicsSceneMouseMove;
-    }
-}
-
-/*!
-Fill in the data in \a sceneEvent based on \a event.  This method leaves the item local positions in
-\a sceneEvent untouched.  Use sceneMouseEventForTransform() to fill in those details.
-*/
-void QSGCanvasPrivate::sceneMouseEventFromMouseEvent(QGraphicsSceneMouseEvent &sceneEvent, QMouseEvent *event)
-{
-    Q_Q(QSGCanvas);
-
-    Q_ASSERT(event);
-
-    if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) {
-        if ((event->button() & event->buttons()) == event->buttons()) {
-            lastMousePosition = event->pos();
-        }
-
-        switch (event->button()) {
-        default:
-            Q_ASSERT(!"Unknown button");
-        case Qt::LeftButton:
-            buttonDownPositions[0] = event->pos();
-            break;
-        case Qt::RightButton:
-            buttonDownPositions[1] = event->pos();
-            break;
-        case Qt::MiddleButton:
-            buttonDownPositions[2] = event->pos();
-            break;
-        case Qt::XButton1:
-            buttonDownPositions[3] = event->pos();
-            break;
-        case Qt::XButton2:
-            buttonDownPositions[4] = event->pos();
-            break;
-        }
-    }
-
-    sceneEvent.setScenePos(event->pos());
-    sceneEvent.setScreenPos(event->globalPos());
-    sceneEvent.setLastScenePos(lastMousePosition);
-    sceneEvent.setLastScreenPos(q->mapToGlobal(lastMousePosition));
-    sceneEvent.setButtons(event->buttons());
-    sceneEvent.setButton(event->button());
-    sceneEvent.setModifiers(event->modifiers());
-    sceneEvent.setWidget(q);
-
-    for (int ii = 0; ii < 5; ++ii) {
-        if (sceneEvent.buttons() & (1 << ii)) {
-            sceneEvent.setButtonDownScenePos((Qt::MouseButton)(1 << ii), buttonDownPositions[ii]);
-            sceneEvent.setButtonDownScreenPos((Qt::MouseButton)(1 << ii), q->mapToGlobal(buttonDownPositions[ii]));
-        }
-    }
-
-    lastMousePosition = event->pos();
-}
 
 /*!
 Translates the data in \a touchEvent to this canvas.  This method leaves the item local positions in
@@ -571,9 +486,9 @@ Translates the data in \a touchEvent to this canvas.  This method leaves the ite
 */
 void QSGCanvasPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 {
-    Q_Q(QSGCanvas);
+//    Q_Q(QSGCanvas);
 
-    touchEvent->setWidget(q);
+//    touchEvent->setWidget(q); // ### refactor...
 
     QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
     for (int i = 0; i < touchPoints.count(); ++i) {
@@ -626,8 +541,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
 
         if (oldActiveFocusItem) {
 #ifndef QT_NO_IM
-            if (QInputContext *ic = inputContext())
-                ic->reset();
+            qApp->inputPanel()->commit();
 #endif
 
             activeFocusItem = 0;
@@ -671,13 +585,13 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
     }
 
     if (!(options & DontChangeFocusProperty)) {
-        if (item != rootItem || q->hasFocus()) {
+        // if (item != rootItem || q->hasFocus()) { // ### refactor: focus handling...
             itemPrivate->focus = true;
             changed << item;
-        }
+        // }
     }
 
-    if (newActiveFocusItem && q->hasFocus()) {
+    if (newActiveFocusItem) { // ### refactor:  && q->hasFocus()) {
         activeFocusItem = newActiveFocusItem;
 
         QSGItemPrivate::get(newActiveFocusItem)->activeFocus = true;
@@ -695,7 +609,7 @@ void QSGCanvasPrivate::setFocusInScope(QSGItem *scope, QSGItem *item, FocusOptio
         updateInputMethodData();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
-        q->sendEvent(newActiveFocusItem, &event); 
+        q->sendEvent(newActiveFocusItem, &event);
     } else {
         updateInputMethodData();
     }
@@ -736,8 +650,7 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         Q_ASSERT(oldActiveFocusItem);
 
 #ifndef QT_NO_IM
-        if (QInputContext *ic = inputContext())
-            ic->reset();
+        qApp->inputPanel()->commit();
 #endif
 
         activeFocusItem = 0;
@@ -782,12 +695,12 @@ void QSGCanvasPrivate::clearFocusInScope(QSGItem *scope, QSGItem *item, FocusOpt
         updateInputMethodData();
 
         QFocusEvent event(QEvent::FocusIn, Qt::OtherFocusReason);
-        q->sendEvent(newActiveFocusItem, &event); 
+        q->sendEvent(newActiveFocusItem, &event);
     } else {
         updateInputMethodData();
     }
 
-    if (!changed.isEmpty()) 
+    if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
 }
 
@@ -811,16 +724,12 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
             itemPrivate->itemChange(QSGItem::ItemActiveFocusHasChanged, itemPrivate->activeFocus);
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }
-    } 
+    }
 }
 
 void QSGCanvasPrivate::updateInputMethodData()
 {
-    Q_Q(QSGCanvas);
-    bool enabled = activeFocusItem
-                   && (QSGItemPrivate::get(activeFocusItem)->flags & QSGItem::ItemAcceptsInputMethod);
-    q->setAttribute(Qt::WA_InputMethodEnabled, enabled);
-    q->setInputMethodHints(enabled ? activeFocusItem->inputMethodHints() : Qt::ImhNone);
+    qApp->inputPanel()->setInputItem(activeFocusItem);
 }
 
 QVariant QSGCanvas::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -857,42 +766,18 @@ void QSGCanvasPrivate::cleanup(QSGNode *n)
     q->maybeUpdate();
 }
 
-static QGLFormat tweakFormat(const QGLFormat &format = QGLFormat::defaultFormat())
-{
-    QGLFormat f = format;
-    f.setSwapInterval(1);
-    return f;
-}
 
-QSGCanvas::QSGCanvas(QWidget *parent, Qt::WindowFlags f)
-    : QGLWidget(*(new QSGCanvasPrivate), tweakFormat(), parent, (QGLWidget *) 0, f)
+QSGCanvas::QSGCanvas(QWindow *parent)
+    : QWindow(*(new QSGCanvasPrivate), parent)
 {
     Q_D(QSGCanvas);
-
     d->init(this);
 }
 
-QSGCanvas::QSGCanvas(const QGLFormat &format, QWidget *parent, Qt::WindowFlags f)
-    : QGLWidget(*(new QSGCanvasPrivate), tweakFormat(format), parent, (QGLWidget *) 0, f)
+QSGCanvas::QSGCanvas(QSGCanvasPrivate &dd, QWindow *parent)
+    : QWindow(dd, parent)
 {
     Q_D(QSGCanvas);
-
-    d->init(this);
-}
-
-QSGCanvas::QSGCanvas(QSGCanvasPrivate &dd, QWidget *parent, Qt::WindowFlags f)
-: QGLWidget(dd, tweakFormat(), parent, 0, f)
-{
-    Q_D(QSGCanvas);
-
-    d->init(this);
-}
-
-QSGCanvas::QSGCanvas(QSGCanvasPrivate &dd, const QGLFormat &format, QWidget *parent, Qt::WindowFlags f)
-: QGLWidget(dd, tweakFormat(format), parent, 0, f)
-{
-    Q_D(QSGCanvas);
-
     d->init(this);
 }
 
@@ -900,8 +785,8 @@ QSGCanvas::~QSGCanvas()
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering && d->thread->isRunning()) {
-        d->thread->stopRenderThread();
+    if (d->thread->isRunning()) {
+        d->thread->stopRendering();
         delete d->thread;
         d->thread = 0;
     }
@@ -913,56 +798,40 @@ QSGCanvas::~QSGCanvas()
 
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
-
-    if (!d->contextFailed) {
-        // We need to remove all references to textures pointing to "our" QSGContext
-        // from the QDeclarativePixmapCache. Call into the cache to remove the GL / Scene Graph
-        // part of those cache entries.
-        // To "play nice" with other GL apps that are potentially running in the GUI thread,
-        // We get the current context and only temporarily make our own current
-        QGLContext *currentContext = const_cast<QGLContext *>(QGLContext::currentContext());
-        makeCurrent();
-        extern void qt_declarative_pixmapstore_clean(QSGContext *context);
-        qt_declarative_pixmapstore_clean(d->context);
-        delete d->context;
-        if (currentContext)
-            currentContext->makeCurrent();
-    }
 }
 
 QSGItem *QSGCanvas::rootItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->rootItem;
 }
 
 QSGItem *QSGCanvas::activeFocusItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->activeFocusItem;
 }
 
 QSGItem *QSGCanvas::mouseGrabberItem() const
 {
     Q_D(const QSGCanvas);
-    
+
     return d->mouseGrabberItem;
 }
 
 
 bool QSGCanvasPrivate::clearHover()
 {
-    Q_Q(QSGCanvas);
     if (hoverItems.isEmpty())
         return false;
 
-    QPointF pos = q->mapFromGlobal(QCursor::pos());
+    QPointF pos = QCursor::pos(); // ### refactor: q->mapFromGlobal(QCursor::pos());
 
     bool accepted = false;
     foreach (QSGItem* item, hoverItems)
-        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QApplication::keyboardModifiers(), true) || accepted;
+        accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), true) || accepted;
     hoverItems.clear();
     return accepted;
 }
@@ -971,29 +840,6 @@ bool QSGCanvasPrivate::clearHover()
 bool QSGCanvas::event(QEvent *e)
 {
     Q_D(QSGCanvas);
-
-    if (e->type() == QEvent::User) {
-        if (!d->thread->syncAlreadyHappened)
-            d->thread->sync(false);
-        else
-            d->renderThreadAwakened = false;
-
-        d->thread->syncAlreadyHappened = false;
-
-        if (d->animationRunning && d->animationDriver) {
-#ifdef THREAD_DEBUG
-            qDebug("GUI: Advancing animations...\n");
-#endif
-
-            d->animationDriver->advance();
-
-#ifdef THREAD_DEBUG
-            qDebug("GUI: Animations advanced...\n");
-#endif
-        }
-
-        return true;
-    }
 
     switch (e->type()) {
 
@@ -1006,6 +852,7 @@ bool QSGCanvas::event(QEvent *e)
         d->deliverTouchEvent(touch);
         if (!touch->isAccepted())
             return false;
+        break;
     }
     case QEvent::Leave:
         d->clearHover();
@@ -1024,7 +871,7 @@ bool QSGCanvas::event(QEvent *e)
         break;
     }
 
-    return QGLWidget::event(e);
+    return QWindow::event(e);
 }
 
 void QSGCanvas::keyPressEvent(QKeyEvent *e)
@@ -1051,7 +898,7 @@ void QSGCanvas::inputMethodEvent(QInputMethodEvent *e)
         sendEvent(d->activeFocusItem, e);
 }
 
-bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSceneMouseEvent *event)
+bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QMouseEvent *event)
 {
     Q_Q(QSGCanvas);
 
@@ -1060,7 +907,7 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(event->windowPos());
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1075,13 +922,15 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
     }
 
     if (itemPrivate->acceptedMouseButtons & event->button()) {
-        QPointF p = item->mapFromScene(event->scenePos());
+        QPointF p = item->mapFromScene(event->windowPos());
         if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
-            sceneMouseEventForTransform(*event, itemPrivate->canvasToItemTransform());
-            event->accept();
+            QMouseEvent me(event->type(), p, event->windowPos(), event->screenPos(),
+                           event->button(), event->buttons(), event->modifiers());
+            me.accept();
             mouseGrabberItem = item;
-            q->sendEvent(item, event);
-            if (event->isAccepted()) 
+            q->sendEvent(item, &me);
+            event->setAccepted(me.isAccepted());
+            if (me.isAccepted())
                 return true;
             mouseGrabberItem->ungrabMouse();
             mouseGrabberItem = 0;
@@ -1091,24 +940,28 @@ bool QSGCanvasPrivate::deliverInitialMousePressEvent(QSGItem *item, QGraphicsSce
     return false;
 }
 
-bool QSGCanvasPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *sceneEvent)
+bool QSGCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 {
     Q_Q(QSGCanvas);
 
+    lastMousePosition = event->windowPos();
+
     if (!mouseGrabberItem && 
-         sceneEvent->type() == QEvent::GraphicsSceneMousePress &&
-         (sceneEvent->button() & sceneEvent->buttons()) == sceneEvent->buttons()) {
+         event->type() == QEvent::MouseButtonPress &&
+         (event->button() & event->buttons()) == event->buttons()) {
         
-        return deliverInitialMousePressEvent(rootItem, sceneEvent);
+        return deliverInitialMousePressEvent(rootItem, event);
     }
 
     if (mouseGrabberItem) {
         QSGItemPrivate *mgPrivate = QSGItemPrivate::get(mouseGrabberItem);
-        sceneMouseEventForTransform(*sceneEvent, mgPrivate->canvasToItemTransform());
-
-        sceneEvent->accept();
-        q->sendEvent(mouseGrabberItem, sceneEvent);
-        if (sceneEvent->isAccepted())
+        const QTransform &transform = mgPrivate->canvasToItemTransform();
+        QMouseEvent me(event->type(), transform.map(event->windowPos()), event->windowPos(), event->screenPos(),
+                       event->button(), event->buttons(), event->modifiers());
+        me.accept();
+        q->sendEvent(mouseGrabberItem, &me);
+        event->setAccepted(me.isAccepted());
+        if (me.isAccepted())
             return true;
     }
 
@@ -1118,61 +971,48 @@ bool QSGCanvasPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *sceneEvent)
 void QSGCanvas::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mousePressEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 void QSGCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseReleaseEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
     if (!d->mouseGrabberItem) {
-        QGLWidget::mouseReleaseEvent(event);
+        QWindow::mouseReleaseEvent(event);
         return;
     }
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
-
+    d->deliverMouseEvent(event);
     d->mouseGrabberItem = 0;
 }
 
 void QSGCanvas::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseDoubleClickEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
     if (!d->mouseGrabberItem && (event->button() & event->buttons()) == event->buttons()) {
-        if (d->deliverInitialMousePressEvent(d->rootItem, &sceneEvent))
+        if (d->deliverInitialMousePressEvent(d->rootItem, event))
             event->accept();
         else
             event->ignore();
         return;
-    } 
+    }
 
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 bool QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
@@ -1194,19 +1034,19 @@ bool QSGCanvasPrivate::sendHoverEvent(QEvent::Type type, QSGItem *item,
 void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGCanvas);
-    
+
 #ifdef MOUSE_DEBUG
     qWarning() << "QSGCanvas::mouseMoveEvent()" << event->pos() << event->button() << event->buttons();
 #endif
 
     if (!d->mouseGrabberItem) {
         if (d->lastMousePosition.isNull())
-            d->lastMousePosition = event->pos();
+            d->lastMousePosition = event->windowPos();
         QPointF last = d->lastMousePosition;
-        d->lastMousePosition = event->pos();
+        d->lastMousePosition = event->windowPos();
 
         bool accepted = event->isAccepted();
-        bool delivered = d->deliverHoverEvent(d->rootItem, event->pos(), last, event->modifiers(), accepted);
+        bool delivered = d->deliverHoverEvent(d->rootItem, event->windowPos(), last, event->modifiers(), accepted);
         if (!delivered) {
             //take care of any exits
             accepted = d->clearHover();
@@ -1215,11 +1055,7 @@ void QSGCanvas::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    QGraphicsSceneMouseEvent sceneEvent(d->sceneMouseEventTypeFromMouseEvent(event));
-    d->sceneMouseEventFromMouseEvent(sceneEvent, event);
-
-    d->deliverMouseEvent(&sceneEvent);
-    event->setAccepted(sceneEvent.isAccepted());
+    d->deliverMouseEvent(event);
 }
 
 bool QSGCanvasPrivate::deliverHoverEvent(QSGItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -1298,7 +1134,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
         return false;
 
     if (itemPrivate->flags & QSGItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->pos());
+        QPointF p = item->mapFromScene(event->posF());
         if (!QRectF(0, 0, item->width(), item->height()).contains(p))
             return false;
     }
@@ -1312,7 +1148,7 @@ bool QSGCanvasPrivate::deliverWheelEvent(QSGItem *item, QWheelEvent *event)
             return true;
     }
 
-    QPointF p = item->mapFromScene(event->pos());
+    QPointF p = item->mapFromScene(event->posF());
     if (QRectF(0, 0, item->width(), item->height()).contains(p)) {
         QWheelEvent wheel(p, event->delta(), event->buttons(), event->modifiers(), event->orientation());
         wheel.accept();
@@ -1462,7 +1298,7 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
 
         if (eventStates != Qt::TouchPointStationary) {
             QTouchEvent touchEvent(eventType);
-            touchEvent.setWidget(q);
+            // touchEvent.setWidget(q); // ### refactor: what is the consequence of not setting the widget?
             touchEvent.setDeviceType(event->deviceType());
             touchEvent.setModifiers(event->modifiers());
             touchEvent.setTouchPointStates(eventStates);
@@ -1559,7 +1395,7 @@ bool QSGCanvasPrivate::deliverDragEvent(QSGItem *item, QSGDragEvent *event)
     return false;
 }
 
-bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QGraphicsSceneMouseEvent *event)
+bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QMouseEvent *event)
 {
     if (!target)
         return false;
@@ -1568,17 +1404,17 @@ bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QG
         return true;
 
     QSGItemPrivate *targetPrivate = QSGItemPrivate::get(target);
-    if (targetPrivate->filtersChildMouseEvents) 
+    if (targetPrivate->filtersChildMouseEvents)
         if (target->childMouseEventFilter(item, event))
             return true;
 
     return false;
 }
 
-bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e) 
-{ 
+bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
+{
     Q_D(QSGCanvas);
-    
+
     if (!item) {
         qWarning("QSGCanvas::sendEvent: Cannot send event to a null item");
         return false;
@@ -1608,13 +1444,13 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::FocusOut:
         QSGItemPrivate::get(item)->deliverFocusEvent(static_cast<QFocusEvent *>(e));
         break;
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseRelease:
-    case QEvent::GraphicsSceneMouseDoubleClick:
-    case QEvent::GraphicsSceneMouseMove:
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick:
+    case QEvent::MouseMove:
         // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events? 
         {
-            QGraphicsSceneMouseEvent *se = static_cast<QGraphicsSceneMouseEvent *>(e);
+            QMouseEvent *se = static_cast<QMouseEvent *>(e);
             if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
                 se->accept();
                 QSGItemPrivate::get(item)->deliverMouseEvent(se);
@@ -1644,7 +1480,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
         break;
     }
 
-    return false; 
+    return false;
 }
 
 void QSGCanvasPrivate::cleanupNodes()
@@ -1689,12 +1525,12 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
     itemPriv->dirtyAttributes = 0;
 
     if ((dirty & QSGItemPrivate::TransformUpdateMask) ||
-        (dirty & QSGItemPrivate::Size && itemPriv->origin != QSGItem::TopLeft && 
+        (dirty & QSGItemPrivate::Size && itemPriv->origin != QSGItem::TopLeft &&
          (itemPriv->scale != 1. || itemPriv->rotation != 0.))) {
 
         QMatrix4x4 matrix;
 
-        if (itemPriv->x != 0. || itemPriv->y != 0.) 
+        if (itemPriv->x != 0. || itemPriv->y != 0.)
             matrix.translate(itemPriv->x, itemPriv->y);
 
         for (int ii = itemPriv->transforms.count() - 1; ii >= 0; --ii)
@@ -1842,10 +1678,10 @@ void QSGCanvasPrivate::updateDirtyNode(QSGItem *item)
     if (dirty & QSGItemPrivate::ContentUpdateMask) {
 
         if (itemPriv->flags & QSGItem::ItemHasContents) {
-            updatePaintNodeData.transformNode = itemPriv->itemNode(); 
+            updatePaintNodeData.transformNode = itemPriv->itemNode();
             itemPriv->paintNode = item->updatePaintNode(itemPriv->paintNode, &updatePaintNodeData);
 
-            Q_ASSERT(itemPriv->paintNode == 0 || 
+            Q_ASSERT(itemPriv->paintNode == 0 ||
                      itemPriv->paintNode->parent() == 0 ||
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
@@ -1916,28 +1752,8 @@ void QSGCanvas::maybeUpdate()
 {
     Q_D(QSGCanvas);
 
-    if (d->threadedRendering && d->thread && d->thread->isRunning()) {
-        Q_ASSERT_X(QThread::currentThread() == QApplication::instance()->thread() || d->thread->inSync,
-                   "QSGCanvas::update",
-                   "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
-
-        if (d->thread->inSync) {
-            d->thread->isExternalUpdatePending = true;
-
-        } else if (!d->renderThreadAwakened) {
-#ifdef THREAD_DEBUG
-            printf("GUI: doing update...\n");
-#endif
-            d->renderThreadAwakened = true;
-            d->thread->lockInGui();
-            d->thread->isExternalUpdatePending = true;
-            if (d->thread->isRenderBlocked)
-                d->thread->wake();
-            d->thread->unlockInGui();
-        }
-    } else if (!d->animationDriver || !d->animationDriver->isRunning()) {
-        update();
-    }
+    if (d->thread && d->thread->isRunning())
+        d->thread->maybeUpdate();
 }
 
 /*!
@@ -1977,7 +1793,7 @@ QSGEngine *QSGCanvas::sceneGraphEngine() const
     the rendering.
  */
 
-void QSGCanvas::setRenderTarget(QGLFramebufferObject *fbo)
+void QSGCanvas::setRenderTarget(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QSGCanvas);
     if (d->context && d->context && QThread::currentThread() != d->context->thread()) {
@@ -1996,7 +1812,7 @@ void QSGCanvas::setRenderTarget(QGLFramebufferObject *fbo)
     The default is to render to the surface of the canvas, in which
     case the render target is 0.
  */
-QGLFramebufferObject *QSGCanvas::renderTarget() const
+QOpenGLFramebufferObject *QSGCanvas::renderTarget() const
 {
     Q_D(const QSGCanvas);
     return d->renderTarget;
@@ -2009,17 +1825,21 @@ QGLFramebufferObject *QSGCanvas::renderTarget() const
     This function might not work if the view is not visible.
 
     \warning Calling this function will cause performance problems.
+
+    \warning This function can only be called from the GUI thread.
  */
 QImage QSGCanvas::grabFrameBuffer()
 {
     Q_D(QSGCanvas);
-    if (d->threadedRendering)
-        return d->thread ? d->thread->grab() : QImage();
-    else {
-        // render a fresh copy of the scene graph in the current thread.
-        d->renderSceneGraph(size());
-        return QGLWidget::grabFrameBuffer(false);
-    }
+    return d->thread ? d->thread->grab() : QImage();
+}
+
+
+
+void QSGCanvasRenderLoop::createGLContext()
+{
+    gl = new QOpenGLContext();
+    gl->create();
 }
 
 
@@ -2029,12 +1849,14 @@ void QSGCanvasRenderThread::run()
     qDebug("QML Rendering Thread Started");
 #endif
 
-    renderer->makeCurrent();
+    if (!glContext()) {
+        createGLContext();
+        makeCurrent();
+        initializeSceneGraph();
+    } else {
+        makeCurrent();
+    }
 
-    if (!d->context->isReady())
-        d->initializeSceneGraph();
-
-    
     while (!shouldExit) {
         lock();
 
@@ -2059,7 +1881,7 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
-            QApplication::postEvent(renderer, new QEvent(QEvent::User));
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
 #endif
@@ -2072,7 +1894,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: Doing locked sync\n");
 #endif
         inSync = true;
-        d->syncSceneGraph();
+        syncSceneGraph();
         inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
@@ -2088,7 +1910,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: rendering... %d x %d\n", windowSize.width(), windowSize.height());
 #endif
 
-        d->renderSceneGraph(windowSize);
+        renderSceneGraph(windowSize);
 
         // The content of the target buffer is undefined after swap() so grab needs
         // to happen before swap();
@@ -2104,8 +1926,7 @@ void QSGCanvasRenderThread::run()
         printf("                RenderThread: wait for swap...\n");
 #endif
 
-        renderer->swapBuffers();
-
+        swapBuffers();
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
 #endif
@@ -2121,7 +1942,7 @@ void QSGCanvasRenderThread::run()
         // but we don't want to lock an extra time.
         wake();
 
-        if (!d->animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
+        if (!animationRunning && !isExternalUpdatePending && !shouldExit && !doGrab) {
 #ifdef THREAD_DEBUG
             printf("                RenderThread: nothing to do, going to sleep...\n");
 #endif
@@ -2131,13 +1952,16 @@ void QSGCanvasRenderThread::run()
         }
 
         unlock();
+
+        // Process any "deleteLater" objects...
+        QCoreApplication::processEvents();
     }
 
 #ifdef THREAD_DEBUG
-    printf("                RenderThread: exited... Good Night!\n");
+    printf("                RenderThread: render loop exited... Good Night!\n");
 #endif
 
-    renderer->doneCurrent();
+    doneCurrent();
 
     lock();
     hasExited = true;
@@ -2146,6 +1970,40 @@ void QSGCanvasRenderThread::run()
 #endif
     wake();
     unlock();
+
+#ifdef THREAD_DEBUG
+    printf("                RenderThread: All done...\n");
+#endif
+}
+
+
+
+bool QSGCanvasRenderThread::event(QEvent *e)
+{
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+
+    if (e->type() == QEvent::User) {
+        if (!syncAlreadyHappened)
+            sync(false);
+
+        syncAlreadyHappened = false;
+
+        if (animationRunning && animationDriver()) {
+#ifdef THREAD_DEBUG
+            qDebug("GUI: Advancing animations...\n");
+#endif
+
+            animationDriver()->advance();
+
+#ifdef THREAD_DEBUG
+            qDebug("GUI: Animations advanced...\n");
+#endif
+        }
+
+        return true;
+    }
+
+    return QThread::event(e);
 }
 
 
@@ -2165,20 +2023,18 @@ void QSGCanvasRenderThread::sync(bool guiAlreadyLocked)
 #ifdef THREAD_DEBUG
     printf("GUI: sync - %s\n", guiAlreadyLocked ? "outside event" : "inside event");
 #endif
-    Q_ASSERT(d->threadedRendering);
+    if (!guiAlreadyLocked)
+        lockInGui();
+
+    renderThreadAwakened = false;
+
+    polishItems();
+
+    wake();
+    wait();
 
     if (!guiAlreadyLocked)
-        d->thread->lockInGui();
-
-    d->renderThreadAwakened = false;
-
-    d->polishItems();
-
-    d->thread->wake();
-    d->thread->wait();
-
-    if (!guiAlreadyLocked)
-        d->thread->unlockInGui();
+        unlockInGui();
 }
 
 
@@ -2228,7 +2084,7 @@ void QSGCanvasRenderThread::animationStarted()
 
     lockInGui();
 
-    d->animationRunning = true;
+    animationRunning = true;
 
     if (isRenderBlocked)
         wake();
@@ -2245,7 +2101,7 @@ void QSGCanvasRenderThread::animationStopped()
 #endif
 
     lockInGui();
-    d->animationRunning = false;
+    animationRunning = false;
     unlockInGui();
 }
 
@@ -2266,10 +2122,6 @@ void QSGCanvasRenderThread::paint()
         wait();
     }
     unlockInGui();
-
-    // paint is only called for the inital show. After that we will do all
-    // drawing ourselves, so block future updates..
-    renderer->setUpdatesEnabled(false);
 }
 
 
@@ -2300,7 +2152,7 @@ void QSGCanvasRenderThread::resize(const QSize &size)
 
 
 
-void QSGCanvasRenderThread::startRenderThread()
+void QSGCanvasRenderThread::startRendering()
 {
 #ifdef THREAD_DEBUG
     printf("GUI: Starting Render Thread\n");
@@ -2309,14 +2161,12 @@ void QSGCanvasRenderThread::startRenderThread()
     shouldExit = false;
     isGuiBlocked = 0;
     isGuiBlockPending = false;
-
-    renderer->doneCurrent();
     start();
 }
 
 
 
-void QSGCanvasRenderThread::stopRenderThread()
+void QSGCanvasRenderThread::stopRendering()
 {
 #ifdef THREAD_DEBUG
     printf("GUI: stopping render thread\n");
@@ -2348,6 +2198,11 @@ void QSGCanvasRenderThread::stopRenderThread()
     // Actually wait for the thread to terminate.  Otherwise we can delete it
     // too early and crash.
     QThread::wait();
+
+#ifdef THREAD_DEBUG
+    printf("GUI: thread has terminated and we're all good..\n");
+#endif
+
 }
 
 
@@ -2356,6 +2211,11 @@ QImage QSGCanvasRenderThread::grab()
 {
     if (!isRunning())
         return QImage();
+
+    if (QThread::currentThread() != qApp->thread()) {
+        qWarning("QSGCanvas::grabFrameBuffer: can only be called from the GUI thread");
+        return QImage();
+    }
 
 #ifdef THREAD_DEBUG
     printf("GUI: doing a pixelwise grab..\n");
@@ -2378,6 +2238,30 @@ QImage QSGCanvasRenderThread::grab()
     unlockInGui();
 
     return grabbed;
+}
+
+
+
+void QSGCanvasRenderThread::maybeUpdate()
+{
+    Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread() || inSync,
+               "QSGCanvas::update",
+               "Function can only be called from GUI thread or during QSGItem::updatePaintNode()");
+
+    if (inSync) {
+        isExternalUpdatePending = true;
+
+    } else if (!renderThreadAwakened) {
+#ifdef THREAD_DEBUG
+        printf("GUI: doing update...\n");
+#endif
+        renderThreadAwakened = true;
+        lockInGui();
+        isExternalUpdatePending = true;
+        if (isRenderBlocked)
+            wake();
+        unlockInGui();
+    }
 }
 
 

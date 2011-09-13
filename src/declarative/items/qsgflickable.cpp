@@ -45,8 +45,9 @@
 #include "qsgcanvas_p.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qapplication.h>
+#include <QtGui/qevent.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
@@ -793,7 +794,7 @@ void QSGFlickable::setPixelAligned(bool align)
     }
 }
 
-void QSGFlickablePrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
 {
     Q_Q(QSGFlickable);
     if (interactive && timeline.isActive()
@@ -815,7 +816,7 @@ void QSGFlickablePrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
     fixupMode = Normal;
     lastPos = QPoint();
     QSGItemPrivate::start(lastPosTime);
-    pressPos = event->pos();
+    pressPos = event->localPos();
     hData.pressPos = hData.move.value();
     vData.pressPos = vData.move.value();
     flickingHorizontally = false;
@@ -824,7 +825,7 @@ void QSGFlickablePrivate::handleMousePressEvent(QGraphicsSceneMouseEvent *event)
     QSGItemPrivate::start(velocityTime);
 }
 
-void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 {
     Q_Q(QSGFlickable);
     if (!interactive || !lastPosTime.isValid())
@@ -836,8 +837,8 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
     bool stealX = stealMouse;
 
     if (q->yflick()) {
-        int dy = int(event->pos().y() - pressPos.y());
-        if (qAbs(dy) > QApplication::startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
+        int dy = int(event->localPos().y() - pressPos.y());
+        if (qAbs(dy) > qApp->styleHints()->startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - vData.dragStartOffset;
@@ -862,14 +863,14 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 vData.move.setValue(qRound(newY));
                 vMoved = true;
             }
-            if (qAbs(dy) > QApplication::startDragDistance())
+            if (qAbs(dy) > qApp->styleHints()->startDragDistance())
                 stealY = true;
         }
     }
 
     if (q->xflick()) {
-        int dx = int(event->pos().x() - pressPos.x());
-        if (qAbs(dx) > QApplication::startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
+        int dx = int(event->localPos().x() - pressPos.x());
+        if (qAbs(dx) > qApp->styleHints()->startDragDistance() || QSGItemPrivate::elapsed(pressTime) > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - hData.dragStartOffset;
@@ -895,7 +896,7 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
                 hMoved = true;
             }
 
-            if (qAbs(dx) > QApplication::startDragDistance())
+            if (qAbs(dx) > qApp->styleHints()->startDragDistance())
                 stealX = true;
         }
     }
@@ -924,18 +925,18 @@ void QSGFlickablePrivate::handleMouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (elapsed <= 0)
             return;
         QSGItemPrivate::restart(lastPosTime);
-        qreal dy = event->pos().y()-lastPos.y();
+        qreal dy = event->localPos().y()-lastPos.y();
         if (q->yflick() && !rejectY)
             vData.addVelocitySample(dy/elapsed, maxVelocity);
-        qreal dx = event->pos().x()-lastPos.x();
+        qreal dx = event->localPos().x()-lastPos.x();
         if (q->xflick() && !rejectX)
             hData.addVelocitySample(dx/elapsed, maxVelocity);
     }
 
-    lastPos = event->pos();
+    lastPos = event->localPos();
 }
 
-void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 {
     Q_Q(QSGFlickable);
     stealMouse = false;
@@ -961,7 +962,7 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *even
     qreal velocity = vData.velocity;
     if (vData.atBeginning || vData.atEnd)
         velocity /= 2;
-    if (qAbs(velocity) > MinimumFlickVelocity && qAbs(event->pos().y() - pressPos.y()) > FlickThreshold)
+    if (qAbs(velocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold)
         flickY(velocity);
     else
         fixupY();
@@ -969,7 +970,7 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *even
     velocity = hData.velocity;
     if (hData.atBeginning || hData.atEnd)
         velocity /= 2;
-    if (qAbs(velocity) > MinimumFlickVelocity && qAbs(event->pos().x() - pressPos.x()) > FlickThreshold)
+    if (qAbs(velocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold)
         flickX(velocity);
     else
         fixupX();
@@ -978,7 +979,7 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QGraphicsSceneMouseEvent *even
         q->movementEnding();
 }
 
-void QSGFlickable::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickable::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGFlickable);
     if (d->interactive) {
@@ -990,7 +991,7 @@ void QSGFlickable::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGFlickable::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickable::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGFlickable);
     if (d->interactive) {
@@ -1001,7 +1002,7 @@ void QSGFlickable::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGFlickable::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGFlickable::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGFlickable);
     if (d->interactive) {
@@ -1074,7 +1075,7 @@ bool QSGFlickablePrivate::isOutermostPressDelay() const
     return true;
 }
 
-void QSGFlickablePrivate::captureDelayedPress(QGraphicsSceneMouseEvent *event)
+void QSGFlickablePrivate::captureDelayedPress(QMouseEvent *event)
 {
     Q_Q(QSGFlickable);
     if (!q->canvas() || pressDelay <= 0)
@@ -1082,25 +1083,8 @@ void QSGFlickablePrivate::captureDelayedPress(QGraphicsSceneMouseEvent *event)
     if (!isOutermostPressDelay())
         return;
     delayedPressTarget = q->canvas()->mouseGrabberItem();
-    delayedPressEvent = new QGraphicsSceneMouseEvent(event->type());
+    delayedPressEvent = new QMouseEvent(*event);
     delayedPressEvent->setAccepted(false);
-    for (int i = 0x1; i <= 0x10; i <<= 1) {
-        if (event->buttons() & i) {
-            Qt::MouseButton button = Qt::MouseButton(i);
-            delayedPressEvent->setButtonDownPos(button, event->buttonDownPos(button));
-            delayedPressEvent->setButtonDownScenePos(button, event->buttonDownScenePos(button));
-            delayedPressEvent->setButtonDownScreenPos(button, event->buttonDownScreenPos(button));
-        }
-    }
-    delayedPressEvent->setButtons(event->buttons());
-    delayedPressEvent->setButton(event->button());
-    delayedPressEvent->setPos(event->pos());
-    delayedPressEvent->setScenePos(event->scenePos());
-    delayedPressEvent->setScreenPos(event->screenPos());
-    delayedPressEvent->setLastPos(event->lastPos());
-    delayedPressEvent->setLastScenePos(event->lastScenePos());
-    delayedPressEvent->setLastScreenPos(event->lastScreenPos());
-    delayedPressEvent->setModifiers(event->modifiers());
     delayedPressTimer.start(pressDelay, q);
 }
 
@@ -1518,34 +1502,26 @@ void QSGFlickable::mouseUngrabEvent()
     }
 }
 
-bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
+bool QSGFlickable::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QSGFlickable);
-    QGraphicsSceneMouseEvent mouseEvent(event->type());
     QRectF myRect = mapRectToScene(QRectF(0, 0, width(), height()));
 
     QSGCanvas *c = canvas();
     QSGItem *grabber = c ? c->mouseGrabberItem() : 0;
     bool disabledItem = grabber && !grabber->isEnabled();
     bool stealThisEvent = d->stealMouse;
-    if ((stealThisEvent || myRect.contains(event->scenePos().toPoint())) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
+    if ((stealThisEvent || myRect.contains(event->windowPos())) && (!grabber || !grabber->keepMouseGrab() || disabledItem)) {
+        QMouseEvent mouseEvent(event->type(), mapFromScene(event->windowPos()), event->windowPos(), event->screenPos(),
+                               event->button(), event->buttons(), event->modifiers());
+
         mouseEvent.setAccepted(false);
-        for (int i = 0x1; i <= 0x10; i <<= 1) {
-            if (event->buttons() & i) {
-                Qt::MouseButton button = Qt::MouseButton(i);
-                mouseEvent.setButtonDownPos(button, mapFromScene(event->buttonDownPos(button)));
-            }
-        }
-        mouseEvent.setScenePos(event->scenePos());
-        mouseEvent.setLastScenePos(event->lastScenePos());
-        mouseEvent.setPos(mapFromScene(event->scenePos()));
-        mouseEvent.setLastPos(mapFromScene(event->lastScenePos()));
 
         switch(mouseEvent.type()) {
-        case QEvent::GraphicsSceneMouseMove:
+        case QEvent::MouseMove:
             d->handleMouseMoveEvent(&mouseEvent);
             break;
-        case QEvent::GraphicsSceneMousePress:
+        case QEvent::MouseButtonPress:
             if (d->pressed) // we are already pressed - this is a delayed replay
                 return false;
 
@@ -1553,7 +1529,7 @@ bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
             d->captureDelayedPress(event);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
-        case QEvent::GraphicsSceneMouseRelease:
+        case QEvent::MouseButtonRelease:
             if (d->delayedPressEvent) {
                 // We replay the mouse press but the grabber we had might not be interessted by the event (e.g. overlay)
                 // so we reset the grabber
@@ -1585,7 +1561,7 @@ bool QSGFlickable::sendMouseEvent(QGraphicsSceneMouseEvent *event)
         d->lastPosTime.invalidate();
         returnToBounds();
     }
-    if (mouseEvent.type() == QEvent::GraphicsSceneMouseRelease) {
+    if (event->type() == QEvent::MouseButtonRelease) {
         d->lastPosTime.invalidate();
         d->clearDelayedPress();
         d->stealMouse = false;
@@ -1601,10 +1577,10 @@ bool QSGFlickable::childMouseEventFilter(QSGItem *i, QEvent *e)
     if (!isVisible() || !d->interactive || !isEnabled())
         return QSGItem::childMouseEventFilter(i, e);
     switch (e->type()) {
-    case QEvent::GraphicsSceneMousePress:
-    case QEvent::GraphicsSceneMouseMove:
-    case QEvent::GraphicsSceneMouseRelease:
-        return sendMouseEvent(static_cast<QGraphicsSceneMouseEvent *>(e));
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonRelease:
+        return sendMouseEvent(static_cast<QMouseEvent *>(e));
     default:
         break;
     }

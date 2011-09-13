@@ -54,7 +54,7 @@
 #include <QtCore/qbasictimer.h>
 
 
-// XXX todo - This whole class should probably be merged with QDeclarativeView for 
+// XXX todo - This whole class should probably be merged with QDeclarativeView for
 // maximum seamlessness
 QT_BEGIN_NAMESPACE
 
@@ -62,19 +62,18 @@ DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
 
 void QSGViewPrivate::init()
 {
-    q_func()->setSizePolicy(QSizePolicy::Preferred,QSizePolicy::Preferred);
     QDeclarativeEnginePrivate::get(&engine)->sgContext = QSGCanvasPrivate::context;
 
     QDeclarativeInspectorService::instance()->addView(q_func());
 }
 
 QSGViewPrivate::QSGViewPrivate()
-: root(0), component(0), resizeMode(QSGView::SizeViewToRootObject), initialSize(0,0) 
+    : root(0), component(0), resizeMode(QSGView::SizeViewToRootObject), initialSize(0,0), resized(false)
 {
 }
 
-QSGViewPrivate::~QSGViewPrivate() 
-{ 
+QSGViewPrivate::~QSGViewPrivate()
+{
     QDeclarativeInspectorService::instance()->removeView(q_func());
 
     delete root;
@@ -96,7 +95,7 @@ void QSGViewPrivate::execute()
         if (!component->isLoading()) {
             q->continueExecute();
         } else {
-            QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)), 
+            QObject::connect(component, SIGNAL(statusChanged(QDeclarativeComponent::Status)),
                              q, SLOT(continueExecute()));
         }
     }
@@ -112,28 +111,17 @@ void QSGViewPrivate::itemGeometryChanged(QSGItem *resizeItem, const QRectF &newG
     QSGItemChangeListener::itemGeometryChanged(resizeItem, newGeometry, oldGeometry);
 }
 
-QSGView::QSGView(QWidget *parent, Qt::WindowFlags f)
-: QSGCanvas(*(new QSGViewPrivate), parent, f)
+QSGView::QSGView(QWindow *parent, Qt::WindowFlags f)
+: QSGCanvas(*(new QSGViewPrivate), parent)
 {
+    setWindowFlags(f);
     d_func()->init();
 }
 
-QSGView::QSGView(const QGLFormat &format, QWidget *parent, Qt::WindowFlags f)
-: QSGCanvas(*(new QSGViewPrivate), format, parent, f)
+QSGView::QSGView(const QUrl &source, QWindow *parent, Qt::WindowFlags f)
+: QSGCanvas(*(new QSGViewPrivate), parent)
 {
-    d_func()->init();
-}
-
-QSGView::QSGView(const QUrl &source, QWidget *parent, Qt::WindowFlags f)
-: QSGCanvas(*(new QSGViewPrivate), parent, f)
-{
-    d_func()->init();
-    setSource(source);
-}
-
-QSGView::QSGView(const QUrl &source, const QGLFormat &format, QWidget *parent, Qt::WindowFlags f)
-: QSGCanvas(*(new QSGViewPrivate), format, parent, f)
-{
+    setWindowFlags(f);
     d_func()->init();
     setSource(source);
 }
@@ -231,8 +219,6 @@ void QSGViewPrivate::updateSize()
         if (!qFuzzyCompare(q->height(), root->height()))
             root->setHeight(q->height());
     }
-
-    q->updateGeometry();
 }
 
 QSize QSGViewPrivate::rootObjectSize() const
@@ -319,14 +305,13 @@ void QSGViewPrivate::setRootObject(QObject *obj)
         delete obj;
         root = 0;
     }
-
     if (root) {
         initialSize = rootObjectSize();
-        if ((resizeMode == QSGView::SizeViewToRootObject || !q->testAttribute(Qt::WA_Resized))
+        if ((resizeMode == QSGView::SizeViewToRootObject || !resized) // ### refactor:  || !q->testAttribute(Qt::WA_Resized)
              && initialSize != q->size()) {
-            if (!(q->parentWidget() && q->parentWidget()->layout())) {
-                q->resize(initialSize);
-            }
+
+            q->resize(initialSize);
+            resized = true;
         }
         initResize();
     }
@@ -381,26 +366,10 @@ QSGItem *QSGView::rootObject() const
 void QSGView::resizeEvent(QResizeEvent *e)
 {
     Q_D(QSGView);
-    if (d->resizeMode == SizeRootObjectToView) 
+    if (d->resizeMode == SizeRootObjectToView)
         d->updateSize();
-    
+
     QSGCanvas::resizeEvent(e);
-}
-
-/*!
-    \internal
-*/
-void QSGView::paintEvent(QPaintEvent *event)
-{
-    Q_D(QSGView);
-    int time = 0;
-    if (frameRateDebug()) 
-        time = d->frameTimer.restart();
-
-    QSGCanvas::paintEvent(event);
-
-    if (frameRateDebug())
-        qDebug() << "paintEvent:" << d->frameTimer.elapsed() << "time since last frame:" << time;
 }
 
 void QSGView::keyPressEvent(QKeyEvent *e)

@@ -43,7 +43,7 @@
 
 #include "QtQuick1/private/qdeclarativeitem_p.h"
 
-#include <QtGui/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsscene.h>
 #include <QEvent>
 
 QT_BEGIN_NAMESPACE

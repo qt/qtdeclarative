@@ -64,8 +64,8 @@
 #include <qgraphicswidget.h>
 #include <qbasictimer.h>
 #include <QtCore/qabstractanimation.h>
-#include <private/qgraphicsview_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
+#include <QtWidgets/private/qgraphicsview_p.h>
 #include <private/qabstractanimation_p.h>
 #include <QtQuick1/private/qdeclarativeitemchangelistener_p.h>
 

@@ -43,12 +43,13 @@
 #include "qsgnode.h"
 #include "qsgmaterial.h"
 #include "qsgnodeupdater_p.h"
+#include "qsggeometry_p.h"
 
 #include "private/qsgadaptationlayer_p.h"
 
-#include <QGLShaderProgram>
-#include <qglframebufferobject.h>
-#include <QtGui/qapplication.h>
+#include <QOpenGLShaderProgram>
+#include <qopenglframebufferobject.h>
+#include <QtGui/qguiapplication.h>
 
 #include <qdatetime.h>
 
@@ -57,12 +58,14 @@ QT_BEGIN_NAMESPACE
 //#define RENDERER_DEBUG
 //#define QT_GL_NO_SCISSOR_TEST
 
-// #define QSG_RENDERER_TIMING
+
+
+#define QSG_RENDERER_TIMING
 #ifdef QSG_RENDERER_TIMING
+static bool qsg_render_timing = !qgetenv("QML_RENDERER_TIMING").isEmpty();
 static QTime frameTimer;
 static int preprocessTime;
 static int updatePassTime;
-static int frameNumber = 0;
 #endif
 
 void QSGBindable::clear(QSGRenderer::ClearMode mode) const
@@ -80,7 +83,7 @@ void QSGBindable::reactivate() const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
-QSGBindableFbo::QSGBindableFbo(QGLFramebufferObject *fbo) : m_fbo(fbo)
+QSGBindableFbo::QSGBindableFbo(QOpenGLFramebufferObject *fbo) : m_fbo(fbo)
 {
 }
 
@@ -130,6 +133,8 @@ QSGRenderer::QSGRenderer(QSGContext *context)
     , m_changed_emitted(false)
     , m_mirrored(false)
     , m_is_rendering(false)
+    , m_vertex_buffer_bound(false)
+    , m_index_buffer_bound(false)
 {
     initializeGLFunctions();
 }
@@ -206,7 +211,7 @@ void QSGRenderer::renderScene()
     class B : public QSGBindable
     {
     public:
-        void bind() const { QGLFramebufferObject::bindDefault(); }
+        void bind() const { QOpenGLFramebufferObject::bindDefault(); }
     } b;
     renderScene(b);
 }
@@ -217,8 +222,13 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
         return;
 
     m_is_rendering = true;
+
+
 #ifdef QSG_RENDERER_TIMING
-    frameTimer.start();
+    if (qsg_render_timing)
+        frameTimer.start();
+    int bindTime;
+    int renderTime;
 #endif
 
     m_bindable = &bindable;
@@ -226,7 +236,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     bindable.bind();
 #ifdef QSG_RENDERER_TIMING
-    int bindTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        bindTime = frameTimer.elapsed();
 #endif
 
 #ifndef QT_NO_DEBUG
@@ -246,7 +257,8 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     render();
 #ifdef QSG_RENDERER_TIMING
-    int renderTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        renderTime = frameTimer.elapsed();
 #endif
 
     glDisable(GL_SCISSOR_TEST);
@@ -254,13 +266,25 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     m_changed_emitted = false;
     m_bindable = 0;
 
+    if (m_vertex_buffer_bound) {
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        m_vertex_buffer_bound = false;
+    }
+
+    if (m_index_buffer_bound) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        m_index_buffer_bound = false;
+    }
+
 #ifdef QSG_RENDERER_TIMING
-    printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
-           preprocessTime,
-           updatePassTime - preprocessTime,
-           bindTime - updatePassTime,
-           renderTime - bindTime,
-           renderTime);
+    if (qsg_render_timing) {
+        printf(" - Breakdown of frametime: preprocess=%d, updates=%d, binding=%d, render=%d, total=%d\n",
+               preprocessTime,
+               updatePassTime - preprocessTime,
+               bindTime - updatePassTime,
+               renderTime - bindTime,
+               renderTime);
+    }
 #endif
 }
 
@@ -340,14 +364,16 @@ void QSGRenderer::preprocess()
     }
 
 #ifdef QSG_RENDERER_TIMING
-    preprocessTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        preprocessTime = frameTimer.elapsed();
 #endif
 
     nodeUpdater()->setToplevelOpacity(context()->renderAlpha());
     nodeUpdater()->updateStates(m_root_node);
 
 #ifdef QSG_RENDERER_TIMING
-    updatePassTime = frameTimer.elapsed();
+    if (qsg_render_timing)
+        updatePassTime = frameTimer.elapsed();
 #endif
 
 }
@@ -441,13 +467,13 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
         } else {
             if (!stencilEnabled) {
                 if (!m_clip_program.isLinked()) {
-                    m_clip_program.addShaderFromSourceCode(QGLShader::Vertex,
+                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
                         "attribute highp vec4 vCoord;       \n"
                         "uniform highp mat4 matrix;         \n"
                         "void main() {                      \n"
                         "    gl_Position = matrix * vCoord; \n"
                         "}");
-                    m_clip_program.addShaderFromSourceCode(QGLShader::Fragment,
+                    m_clip_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
                         "void main() {                                   \n"
                         "    gl_FragColor = vec4(0.81, 0.83, 0.12, 1.0); \n" // Trolltech green ftw!
                         "}");
@@ -473,14 +499,17 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
             glStencilFunc(GL_EQUAL, clipDepth, 0xff); // stencil test, ref, test mask
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // stencil fail, z fail, z pass
 
-            const QSGGeometry *geometry = clip->geometry();
-            Q_ASSERT(geometry->attributeCount() > 0);
-            const QSGGeometry::Attribute *a = geometry->attributes();
-
-            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, geometry->stride(), geometry->vertexData());
+            const QSGGeometry *g = clip->geometry();
+            Q_ASSERT(g->attributeCount() > 0);
+            const QSGGeometry::Attribute *a = g->attributes();
+            glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), g->vertexData());
 
             m_clip_program.setUniformValue(m_clip_matrix_id, m);
-            draw(clip);
+            if (g->indexCount()) {
+                glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
+            } else {
+                glDrawArrays(g->drawingMode(), 0, g->vertexCount());
+            }
 
             ++clipDepth;
         }
@@ -507,25 +536,6 @@ QSGRenderer::ClipType QSGRenderer::updateStencilClip(const QSGClipNode *clip)
 }
 
 
-/*!
-    Issues the GL draw call for \a geometryNode.
-
-    The function assumes that attributes have been bound and set up prior
-    to making this call.
-
-    \internal
- */
-
-void QSGRenderer::draw(const QSGBasicGeometryNode *node)
-{
-    const QSGGeometry *g = node->geometry();
-    if (g->indexCount()) {
-        glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), g->indexData());
-    } else {
-        glDrawArrays(g->drawingMode(), 0, g->vertexCount());
-    }
-}
-
 
 static inline int size_of_type(GLenum type)
 {
@@ -542,19 +552,102 @@ static inline int size_of_type(GLenum type)
         4,
         sizeof(double)
     };
+    Q_ASSERT(type >= GL_BYTE && type <= 0x140A); // the value of GL_DOUBLE
     return sizes[type - GL_BYTE];
 }
 
+
+class QSGRendererVBOGeometryData : public QSGGeometryData
+{
+public:
+    QSGRendererVBOGeometryData()
+        : vertexBuffer(0)
+        , indexBuffer(0)
+    {
+    }
+
+    ~QSGRendererVBOGeometryData()
+    {
+        QOpenGLFunctions *func = QOpenGLContext::currentContext()->functions();
+        if (vertexBuffer)
+            func->glDeleteBuffers(1, &vertexBuffer);
+        if (indexBuffer)
+            func->glDeleteBuffers(1, &indexBuffer);
+    }
+
+    GLuint vertexBuffer;
+    GLuint indexBuffer;
+
+    static QSGRendererVBOGeometryData *get(const QSGGeometry *g) {
+        QSGRendererVBOGeometryData *gd = static_cast<QSGRendererVBOGeometryData *>(QSGGeometryData::data(g));
+        if (!gd) {
+            gd = new QSGRendererVBOGeometryData;
+            QSGGeometryData::install(g, gd);
+        }
+        return gd;
+    }
+
+};
+
+static inline GLenum qt_drawTypeForPattern(QSGGeometry::DataPattern p)
+{
+    Q_ASSERT(p > 0 && p <= 3);
+    static GLenum drawTypes[] = { 0,
+                                  GL_STREAM_DRAW,
+                                  GL_DYNAMIC_DRAW,
+                                  GL_STATIC_DRAW
+                            };
+    return drawTypes[p];
+}
+
+
 /*!
-    Convenience function to set up and bind the vertex data in \a g to the
-    required attribute positions defined in \a material.
+    Issues the GL draw call for the geometry \a g using the material \a shader.
+
+    The function assumes that attributes have been bound and set up prior
+    to making this call.
 
     \internal
  */
 
-void QSGRenderer::bindGeometry(QSGMaterialShader *material, const QSGGeometry *g)
+void QSGRenderer::draw(const QSGMaterialShader *shader, const QSGGeometry *g)
 {
-    char const *const *attrNames = material->attributeNames();
+    // ### remove before final release...
+    static bool use_vbo = !QGuiApplication::arguments().contains(QLatin1String("--no-vbo"));
+
+    const void *vertexData;
+    int vertexByteSize = g->vertexCount() * g->sizeOfVertex();
+    if (use_vbo && g->vertexDataPattern() != QSGGeometry::AlwaysUploadPattern && vertexByteSize > 1024) {
+
+        // The base pointer for a VBO is 0
+        vertexData = 0;
+
+        bool updateData = QSGGeometryData::hasDirtyVertexData(g);
+        QSGRendererVBOGeometryData *gd = QSGRendererVBOGeometryData::get(g);
+        if (!gd->vertexBuffer) {
+            glGenBuffers(1, &gd->vertexBuffer);
+            updateData = true;
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, gd->vertexBuffer);
+        m_vertex_buffer_bound = true;
+
+        if (updateData) {
+            glBufferData(GL_ARRAY_BUFFER, vertexByteSize, g->vertexData(),
+                         qt_drawTypeForPattern(g->vertexDataPattern()));
+            QSGGeometryData::clearDirtyVertexData(g);
+        }
+
+    } else {
+        if (m_vertex_buffer_bound) {
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            m_vertex_buffer_bound = false;
+        }
+        vertexData = g->vertexData();
+    }
+
+    // Bind the vertices to attributes...
+    char const *const *attrNames = shader->attributeNames();
     int offset = 0;
     for (int j = 0; attrNames[j]; ++j) {
         if (!*attrNames[j])
@@ -562,14 +655,88 @@ void QSGRenderer::bindGeometry(QSGMaterialShader *material, const QSGGeometry *g
         Q_ASSERT_X(j < g->attributeCount(), "QSGRenderer::bindGeometry()", "Geometry lacks attribute required by material");
         const QSGGeometry::Attribute &a = g->attributes()[j];
         Q_ASSERT_X(j == a.position, "QSGRenderer::bindGeometry()", "Geometry does not have continuous attribute positions");
+
 #if defined(QT_OPENGL_ES_2)
         GLboolean normalize = a.type != GL_FLOAT;
 #else
         GLboolean normalize = a.type != GL_FLOAT && a.type != GL_DOUBLE;
 #endif
-        glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->stride(), (char *) g->vertexData() + offset);
+        glVertexAttribPointer(a.position, a.tupleSize, a.type, normalize, g->sizeOfVertex(), (char *) vertexData + offset);
         offset += a.tupleSize * size_of_type(a.type);
     }
+
+    // Set up the indices...
+    const void *indexData;
+    if (use_vbo && g->indexDataPattern() != QSGGeometry::AlwaysUploadPattern && g->indexCount() > 512) {
+
+        // Base pointer for a VBO is 0
+        indexData = 0;
+
+        bool updateData = QSGGeometryData::hasDirtyIndexData(g);
+        QSGRendererVBOGeometryData *gd = QSGRendererVBOGeometryData::get(g);
+        if (!gd->indexBuffer) {
+            glGenBuffers(1, &gd->indexBuffer);
+            updateData = true;
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gd->indexBuffer);
+        m_index_buffer_bound = true;
+
+        if (updateData) {
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                         g->indexCount() * g->sizeOfIndex(),
+                         g->indexData(),
+                         qt_drawTypeForPattern(g->indexDataPattern()));
+            QSGGeometryData::clearDirtyIndexData(g);
+        }
+
+    } else {
+        if (m_index_buffer_bound) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            m_index_buffer_bound = false;
+        }
+        indexData = g->indexData();
+    }
+
+
+    // draw the stuff...
+    if (g->indexCount()) {
+        glDrawElements(g->drawingMode(), g->indexCount(), g->indexType(), indexData);
+    } else {
+        glDrawArrays(g->drawingMode(), 0, g->vertexCount());
+    }
+
+    // We leave buffers bound for now... They will be reset by bind on next draw() or
+    // set back to 0 if next draw is not using VBOs
+
+}
+
+/*!
+    \class QSGNodeDumper
+    \brief The QSGNodeDumper class provides a way of dumping a scene grahp to the console.
+
+    This class is solely for debugging purposes.
+
+    \internal
+ */
+
+void QSGNodeDumper::dump(QSGNode *n)
+{
+    QSGNodeDumper dump;
+    dump.visitNode(n);
+}
+
+void QSGNodeDumper::visitNode(QSGNode *n)
+{
+    qDebug() << QString(m_indent * 2, QLatin1Char(' ')) << n;
+    QSGNodeVisitor::visitNode(n);
+}
+
+void QSGNodeDumper::visitChildren(QSGNode *n)
+{
+    ++m_indent;
+    QSGNodeVisitor::visitChildren(n);
+    --m_indent;
 }
 
 

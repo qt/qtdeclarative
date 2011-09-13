@@ -45,8 +45,9 @@
 #include <qset.h>
 #include <qhash.h>
 
-#include <qglfunctions.h>
-#include <qglshaderprogram.h>
+#include <qcolor.h>
+#include <qopenglfunctions.h>
+#include <qopenglshaderprogram.h>
 
 #include "qsgnode.h"
 #include "qsgmaterial.h"
@@ -62,13 +63,12 @@ QT_MODULE(Declarative)
 
 class QSGMaterialShader;
 struct QSGMaterialType;
-class QGLFramebufferObject;
+class QOpenGLFramebufferObject;
 class TextureReference;
 class QSGBindable;
 class QSGNodeUpdater;
 
-
-class Q_DECLARATIVE_EXPORT QSGRenderer : public QObject, public QGLFunctions
+class Q_DECLARATIVE_EXPORT QSGRenderer : public QObject, public QOpenGLFunctions
 {
     Q_OBJECT
 public:
@@ -116,7 +116,7 @@ public:
     void setClearColor(const QColor &color);
     QColor clearColor() const { return m_clear_color; }
 
-    const QGLContext *glContext() const { Q_ASSERT(m_context); return m_context->glContext(); }
+    QOpenGLContext *glContext() const { Q_ASSERT(m_context); return m_context->glContext(); }
 
     QSGContext *context();
 
@@ -137,8 +137,7 @@ signals:
     void sceneGraphChanged(); // Add, remove, ChangeFlags changes...
 
 protected:
-    void draw(const QSGBasicGeometryNode *geometry);
-    void bindGeometry(QSGMaterialShader *material, const QSGGeometry *g);
+    void draw(const QSGMaterialShader *material, const QSGGeometry *g);
 
     virtual void render() = 0;
     QSGRenderer::ClipType updateStencilClip(const QSGClipNode *clip);
@@ -169,14 +168,17 @@ private:
     QSet<QSGNode *> m_nodes_to_preprocess;
 
     QMatrix4x4 m_projection_matrix;
-    QGLShaderProgram m_clip_program;
+    QOpenGLShaderProgram m_clip_program;
     int m_clip_matrix_id;
 
     const QSGBindable *m_bindable;
 
-    bool m_changed_emitted : 1;
-    bool m_mirrored : 1;
-    bool m_is_rendering : 1;
+    uint m_changed_emitted : 1;
+    uint m_mirrored : 1;
+    uint m_is_rendering : 1;
+
+    uint m_vertex_buffer_bound : 1;
+    uint m_index_buffer_bound : 1;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGRenderer::ClearMode)
@@ -193,10 +195,10 @@ public:
 class QSGBindableFbo : public QSGBindable
 {
 public:
-    QSGBindableFbo(QGLFramebufferObject *fbo);
+    QSGBindableFbo(QOpenGLFramebufferObject *fbo);
     virtual void bind() const;
 private:
-    QGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_fbo;
 };
 
 
@@ -208,6 +210,21 @@ QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState
     s.m_data = this;
     return s;
 }
+
+
+class Q_DECLARATIVE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+
+public:
+    static void dump(QSGNode *n);
+
+    QSGNodeDumper() : m_indent(0) {}
+    void visitNode(QSGNode *n);
+    void visitChildren(QSGNode *n);
+
+private:
+    int m_indent;
+};
+
 
 
 QT_END_NAMESPACE

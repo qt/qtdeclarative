@@ -44,22 +44,20 @@
 #include "qsgcanvas.h"
 
 #include <private/qdeclarativeglobal_p.h>
-#include <private/qwidget_p.h>
 #include <private/qsgdistancefieldglyphcache_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qinputcontext.h>
+#include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
-#include <qstyle.h>
 #include <qsgtextnode_p.h>
 #include <qsgsimplerectnode.h>
+
+#include <QtGui/qstylehints.h>
+#include <QtGui/qinputpanel.h>
 
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
-
-QWidgetPrivate *qt_widget_private(QWidget *widget);
 
 /*!
     \qmlclass TextInput QSGTextInput
@@ -407,9 +405,7 @@ bool QSGTextInputPrivate::determineHorizontalAlignment()
         QString text = control->text();
         if (text.isEmpty())
             text = control->preeditAreaText();
-        bool isRightToLeft = text.isEmpty()
-                ? QApplication::keyboardInputDirection() == Qt::RightToLeft
-                : text.isRightToLeft();
+        bool isRightToLeft = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : text.isRightToLeft();
         return setHAlign(isRightToLeft ? QSGTextInput::AlignRight : QSGTextInput::AlignLeft);
     }
     return false;
@@ -518,7 +514,7 @@ void QSGTextInput::setCursorVisible(bool on)
     if (d->cursorVisible == on)
         return;
     d->cursorVisible = on;
-    d->control->setCursorBlinkPeriod(on?QApplication::cursorFlashTime():0);
+    d->control->setCursorBlinkPeriod(on ? qApp->styleHints()->cursorFlashTime() : 0);
     QRect r = d->control->cursorRect();
     if (d->control->inputMask().isEmpty())
         updateRect(r);
@@ -892,7 +888,7 @@ void QSGTextInput::setEchoMode(QSGTextInput::EchoMode echo)
     Q_D(QSGTextInput);
     if (echoMode() == echo)
         return;
-    d->control->setEchoMode((uint)echo);
+    d->control->setEchoMode((QLineControl::EchoMode)echo);
     d->updateInputMethodHints();
     q_textChanged();
     emit echoModeChanged(echoMode());
@@ -1083,13 +1079,13 @@ void QSGTextInput::inputMethodEvent(QInputMethodEvent *ev)
         emit inputMethodComposingChanged();
 }
 
-void QSGTextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonDblClick))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectByMouse) {
-        int cursor = d->xToPos(event->pos().x());
+        int cursor = d->xToPos(event->localPos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
     } else {
@@ -1097,10 +1093,10 @@ void QSGTextInput::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void QSGTextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonPress))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if(d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
@@ -1119,42 +1115,44 @@ void QSGTextInput::mousePressEvent(QGraphicsSceneMouseEvent *event)
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
-        d->pressPos = event->pos();
+        d->pressPos = event->localPos();
     }
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
-    int cursor = d->xToPos(event->pos().x());
+    int cursor = d->xToPos(event->localPos().x());
     d->control->moveCursor(cursor, mark);
     event->setAccepted(true);
 }
 
-void QSGTextInput::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseMove))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectPressed) {
-        if (qAbs(int(event->pos().x() - d->pressPos.x())) > QApplication::startDragDistance())
+        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > qApp->styleHints()->startDragDistance())
             setKeepMouseGrab(true);
-        moveCursorSelection(d->xToPos(event->pos().x()), d->mouseSelectionMode);
+        moveCursorSelection(d->xToPos(event->localPos().x()), d->mouseSelectionMode);
         event->setAccepted(true);
     } else {
         QSGImplicitSizeItem::mouseMoveEvent(event);
     }
 }
 
-void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextInput::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextInput);
-    if (d->sendMouseEventToInputContext(event, QEvent::MouseButtonRelease))
+    if (d->sendMouseEventToInputContext(event))
         return;
     if (d->selectPressed) {
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
     if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
-            if (canvas() && canvas() == qApp->focusWidget()) {
-                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
+        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
+            if (canvas() && canvas() == QGuiApplication::activeWindow()) {
+                // ### refactor: implement virtual keyboard properly..
+                qDebug("QSGTextInput: virtual keyboard no implemented...");
+//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
             }
         }
     }
@@ -1164,33 +1162,21 @@ void QSGTextInput::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QSGImplicitSizeItem::mouseReleaseEvent(event);
 }
 
-bool QSGTextInputPrivate::sendMouseEventToInputContext(
-        QGraphicsSceneMouseEvent *event, QEvent::Type eventType)
+bool QSGTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if !defined QT_NO_IM
-    if (event->widget() && control->composeMode()) {
-        int tmp_cursor = xToPos(event->pos().x());
+    if (control->composeMode() && event->type() == QEvent::KeyRelease) {
+        int tmp_cursor = xToPos(event->localPos().x());
         int mousePos = tmp_cursor - control->cursor();
         if (mousePos < 0 || mousePos > control->preeditAreaText().length()) {
             mousePos = -1;
             // don't send move events outside the preedit area
-            if (eventType == QEvent::MouseMove)
+            if (event->type() == QEvent::MouseMove)
                 return true;
         }
 
-        QInputContext *qic = event->widget()->inputContext();
-        if (qic) {
-            QMouseEvent mouseEvent(
-                    eventType,
-                    event->widget()->mapFromGlobal(event->screenPos()),
-                    event->screenPos(),
-                    event->button(),
-                    event->buttons(),
-                    event->modifiers());
-            // may be causing reset() in some input methods
-            qic->mouseHandler(mousePos, &mouseEvent);
-            event->setAccepted(mouseEvent.isAccepted());
-        }
+        // may be causing reset() in some input methods
+        qApp->inputPanel()->invokeAction(QInputPanel::Click, mousePos);
         if (!control->preeditAreaText().isEmpty())
             return true;
     }
@@ -1218,10 +1204,10 @@ bool QSGTextInput::event(QEvent* ev)
         case QEvent::KeyPress:
         case QEvent::KeyRelease://###Should the control be doing anything with release?
         case QEvent::InputMethod:
-        case QEvent::GraphicsSceneMousePress:
-        case QEvent::GraphicsSceneMouseMove:
-        case QEvent::GraphicsSceneMouseRelease:
-        case QEvent::GraphicsSceneMouseDoubleClick:
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonRelease:
+        case QEvent::MouseButtonDblClick:
             break;
         default:
             handled = d->control->processEvent(ev);
@@ -1234,7 +1220,6 @@ bool QSGTextInput::event(QEvent* ev)
 void QSGTextInput::geometryChanged(const QRectF &newGeometry,
                                   const QRectF &oldGeometry)
 {
-    Q_D(QSGTextInput);
     if (newGeometry.width() != oldGeometry.width()) {
         updateSize();
         updateCursorRectangle();
@@ -1366,14 +1351,18 @@ QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     Q_D(const QSGTextInput);
     switch(property) {
-    case Qt::ImMicroFocus:
+    case Qt::ImEnabled:
+        return QVariant((bool)(flags() & ItemAcceptsInputMethod));
+    case Qt::ImHints:
+        return QVariant((int)inputMethodHints());
+    case Qt::ImCursorRectangle:
         return cursorRectangle();
     case Qt::ImFont:
         return font();
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == PasswordEchoOnEdit && !d->control->passwordEchoEditing())
+        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit && !d->control->passwordEchoEditing())
             return QVariant(displayText());
         else
             return QVariant(text());
@@ -1745,13 +1734,8 @@ void QSGTextInput::moveCursorSelection(int pos, SelectionMode mode)
 */
 void QSGTextInput::openSoftwareInputPanel()
 {
-    QEvent event(QEvent::RequestSoftwareInputPanel);
-    if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::RequestSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 /*!
@@ -1795,12 +1779,8 @@ void QSGTextInput::openSoftwareInputPanel()
 */
 void QSGTextInput::closeSoftwareInputPanel()
 {
-    if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->hide();
 }
 
 void QSGTextInput::focusInEvent(QFocusEvent *event)
@@ -1820,8 +1800,8 @@ void QSGTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemActiveFocusHasChanged) {
         bool hasFocus = value.boolValue;
         d->focused = hasFocus;
-        setCursorVisible(hasFocus && d->canvas && d->canvas->hasFocus());
-        if(!hasFocus && d->control->passwordEchoEditing())
+        setCursorVisible(hasFocus); // ### refactor:  && d->canvas && d->canvas->hasFocus()
+        if(echoMode() == QSGTextInput::PasswordEchoOnEdit && !hasFocus)
             d->control->updatePasswordEchoEditing(false);//QLineControl sets it on key events, but doesn't deal with focus events
         if (!hasFocus)
             d->control->deselect();
@@ -1873,9 +1853,9 @@ void QSGTextInputPrivate::init()
 #ifndef QT_NO_CLIPBOARD
     q->connect(q, SIGNAL(readOnlyChanged(bool)),
             q, SLOT(q_canPasteChanged()));
-    q->connect(QApplication::clipboard(), SIGNAL(dataChanged()),
+    q->connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()),
             q, SLOT(q_canPasteChanged()));
-    canPaste = !control->isReadOnly() && QApplication::clipboard()->text().length() != 0;
+    canPaste = !control->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
 #endif // QT_NO_CLIPBOARD
     q->connect(control, SIGNAL(updateMicroFocus()),
                q, SLOT(updateCursorRectangle()));
@@ -2020,7 +2000,7 @@ void QSGTextInput::q_canPasteChanged()
     Q_D(QSGTextInput);
     bool old = d->canPaste;
 #ifndef QT_NO_CLIPBOARD
-    d->canPaste = !d->control->isReadOnly() && QApplication::clipboard()->text().length() != 0;
+    d->canPaste = !d->control->isReadOnly() && QGuiApplication::clipboard()->text().length() != 0;
 #endif
     if(d->canPaste != old)
         emit canPasteChanged();

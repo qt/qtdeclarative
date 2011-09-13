@@ -48,9 +48,8 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
-#include <QtGui/qaction.h>
 
 QT_BEGIN_HEADER
 
@@ -95,6 +94,8 @@ class QSGEngine;
 class QTouchEvent;
 class QSGNode;
 class QSGTransformNode;
+class QSGTextureProvider;
+
 class Q_DECLARATIVE_EXPORT QSGItem : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
@@ -309,6 +310,9 @@ public:
        UpdatePaintNodeData();
     };
 
+    virtual bool isTextureProvider() const { return false; }
+    virtual QSGTextureProvider *textureProvider() const { return 0; }
+
 public Q_SLOTS:
     void update();
     void updateMicroFocus();
@@ -359,10 +363,10 @@ protected:
     virtual void inputMethodEvent(QInputMethodEvent *);
     virtual void focusInEvent(QFocusEvent *);
     virtual void focusOutEvent(QFocusEvent *);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent(); // XXX todo - params?
     virtual void wheelEvent(QWheelEvent *event);
     virtual void touchEvent(QTouchEvent *event);

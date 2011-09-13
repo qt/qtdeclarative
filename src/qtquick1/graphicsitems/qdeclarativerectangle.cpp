@@ -45,6 +45,7 @@
 #include <QPainter>
 #include <QStringBuilder>
 #include <QtCore/qmath.h>
+#include <QtWidgets/qdrawutil.h>
 
 QT_BEGIN_NAMESPACE
 

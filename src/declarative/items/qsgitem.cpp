@@ -51,9 +51,10 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qgraphicstransform.h>
 #include <QtGui/qpen.h>
-#include <QtGui/qinputcontext.h>
+#include <QtGui/qcursor.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qinputpanel.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qnumeric.h>
@@ -2046,9 +2047,6 @@ void QSGItemPrivate::initCanvas(InitializationState *state, QSGCanvas *c)
     if (canvas && polishScheduled)
         QSGCanvasPrivate::get(canvas)->itemsToPolish.insert(q);
 
-    if (canvas && hoverEnabled && !canvas->hasMouseTracking())
-        canvas->setMouseTracking(true);
-
     itemNodeInstance = 0;
     opacityNode = 0;
     clipNode = 0;
@@ -2202,7 +2200,7 @@ QSGItemPrivate::QSGItemPrivate()
   z(0), scale(1), rotation(0), opacity(1),
 
   attachedLayoutDirection(0), acceptedMouseButtons(0),
-  imHints(Qt::ImhNone),
+  imHints(Qt::ImhMultiLine),
 
   keyHandler(0),
 
@@ -2244,8 +2242,6 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
     // This test is measurably (albeit only slightly) faster than qobject_cast<>()
     const QMetaObject *mo = o->metaObject();
     while (mo && mo != &QSGItem::staticMetaObject) {
-        if (mo == &QGraphicsObject::staticMetaObject)
-            qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         mo = mo->d.superdata;
     }
 
@@ -2253,6 +2249,9 @@ void QSGItemPrivate::data_append(QDeclarativeListProperty<QObject> *prop, QObjec
         QSGItem *item = static_cast<QSGItem *>(o);
         item->setParentItem(that);
     } else {
+        if (o->inherits("QGraphicsItem"))
+            qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
+
         // XXX todo - do we really want this behavior?
         o->setParent(that);
     }
@@ -2833,22 +2832,22 @@ void QSGItem::focusOutEvent(QFocusEvent *)
 {
 }
 
-void QSGItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mousePressEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseMoveEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseReleaseEvent(QMouseEvent *event)
 {
     event->ignore();
 }
 
-void QSGItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGItem::mouseDoubleClickEvent(QMouseEvent *event)
 {
     mousePressEvent(event);
 }
@@ -2929,22 +2928,16 @@ void QSGItem::setInputMethodHints(Qt::InputMethodHints hints)
     if (!d->canvas || d->canvas->activeFocusItem() != this)
         return;
 
-    QSGCanvasPrivate::get(d->canvas)->updateInputMethodData();
-#ifndef QT_NO_IM
-    if (d->canvas->hasFocus())
-        if (QInputContext *inputContext = d->canvas->inputContext())
-            inputContext->update();
-#endif
+    QInputPanel *p = qApp->inputPanel();
+    if (p->inputItem() == this)
+        qApp->inputPanel()->update(Qt::ImHints);
 }
 
 void QSGItem::updateMicroFocus()
 {
-#ifndef QT_NO_IM
-    Q_D(QSGItem);
-    if (d->canvas && d->canvas->hasFocus())
-        if (QInputContext *inputContext = d->canvas->inputContext())
-            inputContext->update();
-#endif
+    QInputPanel *p = qApp->inputPanel();
+    if (p->inputItem() == this)
+        qApp->inputPanel()->update(Qt::ImCursorRectangle);
 }
 
 QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
@@ -2952,8 +2945,26 @@ QVariant QSGItem::inputMethodQuery(Qt::InputMethodQuery query) const
     Q_D(const QSGItem);
     QVariant v;
 
-    if (d->keyHandler)
-        v = d->keyHandler->inputMethodQuery(query);
+    switch (query) {
+    case Qt::ImEnabled:
+        v = (bool)(flags() & ItemAcceptsInputMethod);
+        break;
+    case Qt::ImHints:
+        v = (int)inputMethodHints();
+        break;
+    case Qt::ImCursorRectangle:
+    case Qt::ImFont:
+    case Qt::ImCursorPosition:
+    case Qt::ImSurroundingText:
+    case Qt::ImCurrentSelection:
+    case Qt::ImMaximumTextLength:
+    case Qt::ImAnchorPosition:
+    case Qt::ImPreferredLanguage:
+        if (d->keyHandler)
+            v = d->keyHandler->inputMethodQuery(query);
+    default:
+        break;
+    }
 
     return v;
 }
@@ -3359,7 +3370,7 @@ void QSGItemPrivate::deliverFocusEvent(QFocusEvent *e)
     }
 }
 
-void QSGItemPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *e)
+void QSGItemPrivate::deliverMouseEvent(QMouseEvent *e)
 {
     Q_Q(QSGItem);
 
@@ -3368,16 +3379,16 @@ void QSGItemPrivate::deliverMouseEvent(QGraphicsSceneMouseEvent *e)
     switch(e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
-    case QEvent::GraphicsSceneMouseMove:
+    case QEvent::MouseMove:
         q->mouseMoveEvent(e);
         break;
-    case QEvent::GraphicsSceneMousePress:
+    case QEvent::MouseButtonPress:
         q->mousePressEvent(e);
         break;
-    case QEvent::GraphicsSceneMouseRelease:
+    case QEvent::MouseButtonRelease:
         q->mouseReleaseEvent(e);
         break;
-    case QEvent::GraphicsSceneMouseDoubleClick:
+    case QEvent::MouseButtonDblClick:
         q->mouseDoubleClickEvent(e);
         break;
     }
@@ -4439,7 +4450,7 @@ bool QSGItem::isUnderMouse() const
         return false;
 
     QPoint cursorPos = QCursor::pos();
-    if (QRectF(0, 0, width(), height()).contains(mapFromScene(d->canvas->mapFromGlobal(cursorPos))))
+    if (QRectF(0, 0, width(), height()).contains(mapFromScene(cursorPos))) // ### refactor: d->canvas->mapFromGlobal(cursorPos))))
         return true;
     return false;
 }
@@ -4454,22 +4465,6 @@ void QSGItem::setAcceptHoverEvents(bool enabled)
 {
     Q_D(QSGItem);
     d->hoverEnabled = enabled;
-
-    if (d->canvas){
-        QSGCanvasPrivate *c = QSGCanvasPrivate::get(d->canvas);
-        if (d->hoverEnabled){
-            if (!d->canvas->hasMouseTracking())
-                d->canvas->setMouseTracking(true);
-            if (isUnderMouse())
-                c->hoverItems.prepend(this);
-                c->sendHoverEvent(QEvent::HoverEnter, this, c->lastMousePosition, c->lastMousePosition,
-                        QApplication::keyboardModifiers(), true);
-        } else {
-            c->hoverItems.removeAll(this);
-            c->sendHoverEvent(QEvent::HoverLeave, this, c->lastMousePosition, c->lastMousePosition,
-                    QApplication::keyboardModifiers(), true);
-        }
-    }
 }
 
 void QSGItem::grabMouse() 
@@ -4921,8 +4916,6 @@ QRectF QSGItem::mapRectFromScene(const QRectF &rect) const
 
 bool QSGItem::event(QEvent *ev)
 {
-    return QObject::event(ev);
-
 #if 0
     if (ev->type() == QEvent::PolishRequest) {
         Q_D(QSGItem);
@@ -4933,6 +4926,23 @@ bool QSGItem::event(QEvent *ev)
         return QObject::event(ev);
     }
 #endif
+    if (ev->type() == QEvent::InputMethodQuery) {
+        QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
+        Qt::InputMethodQueries queries = query->queries();
+        for (uint i = 0; i < 32; ++i) {
+            Qt::InputMethodQuery q = (Qt::InputMethodQuery)(int)(queries & (1<<i));
+            if (q) {
+                QVariant v = inputMethodQuery(q);
+                query->setValue(q, v);
+            }
+        }
+        query->accept();
+        return true;
+    } else if (ev->type() == QEvent::InputMethod) {
+        inputMethodEvent(static_cast<QInputMethodEvent *>(ev));
+        return true;
+    }
+    return QObject::event(ev);
 }
 
 #ifndef QT_NO_DEBUG_STREAM
@@ -5003,6 +5013,24 @@ qint64 QSGItemPrivate::restart(QElapsedTimer &t)
     else
         return ((QElapsedTimerConsistentTimeHack*)&t)->restart();
 }
+
+/*!
+    \fn bool QSGItem::isTextureProvider() const
+
+    Returns true if this item is a texture provider. The default
+    implementation returns false.
+
+    This function can be called from any thread.
+ */
+
+/*!
+    \fn QSGTextureProvider *QSGItem::textureProvider() const
+
+    Returns the texture provider for an item. The default implementation
+    returns 0.
+
+    This function may only be called on the rendering thread.
+ */
 
 QT_END_NAMESPACE
 

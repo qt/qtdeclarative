@@ -47,7 +47,7 @@
 #include <private/qdeclarativetransition_p.h>
 #include <private/qsgitem_p.h>
 #include <qdeclarativeexpression.h>
-#include <QtGui/qgraphicswidget.h>
+#include <QtWidgets/qgraphicswidget.h>
 #include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN

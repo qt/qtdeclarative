@@ -283,10 +283,10 @@ protected:
     void focusInEvent(QFocusEvent *event);
 
     // mouse filter?
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void inputMethodEvent(QInputMethodEvent *e);
     virtual void itemChange(ItemChange, const ItemChangeData &);
 

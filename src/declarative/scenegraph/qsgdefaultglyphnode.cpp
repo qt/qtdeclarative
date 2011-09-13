@@ -42,7 +42,7 @@
 #include "qsgdefaultglyphnode_p.h"
 #include "qsgdefaultglyphnode_p_p.h"
 
-#include <qglshaderprogram.h>
+#include <qopenglshaderprogram.h>
 #include <private/qfont_p.h>
 
 QT_BEGIN_NAMESPACE

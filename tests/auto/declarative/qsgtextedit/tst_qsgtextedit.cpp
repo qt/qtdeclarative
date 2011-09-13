@@ -59,7 +59,7 @@
 #include <QInputContext>
 #include <QClipboard>
 #include <QMimeData>
-#include <private/qapplication_p.h>
+#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <private/qtextcontrol_p.h>
 #include <QtOpenGL/QGLShaderProgram>
 
@@ -177,9 +177,6 @@ private:
 };
 void tst_qsgtextedit::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("TextEdit item needs OpenGL 2.0", SkipAll);
 }
 
 void tst_qsgtextedit::cleanupTestCase()
@@ -431,9 +428,9 @@ void tst_qsgtextedit::alignments()
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/alignments.qml"));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QObject *ob = canvas.rootObject();
     QVERIFY(ob != 0);
@@ -968,10 +965,10 @@ void tst_qsgtextedit::keySelection()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
-    canvas.setFocus();
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1381,9 +1378,9 @@ void tst_qsgtextedit::mouseSelection()
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextEdit *textEditObject = qobject_cast<QSGTextEdit *>(canvas.rootObject());
@@ -1413,9 +1410,9 @@ void tst_qsgtextedit::dragMouseSelection()
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextEdit *textEditObject = qobject_cast<QSGTextEdit *>(canvas.rootObject());
@@ -1470,9 +1467,9 @@ void tst_qsgtextedit::mouseSelectionMode()
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
     canvas.show();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(canvas.windowState(), Qt::WindowActive);
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextEdit *textEditObject = qobject_cast<QSGTextEdit *>(canvas.rootObject());
@@ -1500,7 +1497,7 @@ void tst_qsgtextedit::inputMethodHints()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/inputmethodhints.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
     QSGTextEdit *textEditObject = qobject_cast<QSGTextEdit *>(canvas.rootObject());
@@ -1515,8 +1512,8 @@ void tst_qsgtextedit::positionAt()
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
-    canvas.setFocus();
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
 
     QSGTextEdit *texteditObject = qobject_cast<QSGTextEdit *>(canvas.rootObject());
@@ -1583,7 +1580,7 @@ void tst_qsgtextedit::cursorDelegate()
 {
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorTest.qml"));
     view.show();
-    view.setFocus();
+    view.requestActivateWindow();
     QSGTextEdit *textEditObject = view.rootObject()->findChild<QSGTextEdit*>("textEditObject");
     QVERIFY(textEditObject != 0);
     QVERIFY(textEditObject->findChild<QSGItem*>("cursorInstance"));
@@ -1646,10 +1643,10 @@ void tst_qsgtextedit::cursorVisible()
 {
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorVisible.qml"));
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
-    view.setFocus();
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
+    view.requestActivateWindow();
 
     QSGTextEdit edit;
     QSignalSpy spy(&edit, SIGNAL(cursorVisibleChanged(bool)));
@@ -1680,11 +1677,11 @@ void tst_qsgtextedit::cursorVisible()
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 5);
 
-    view.clearFocus();
+    view.setWindowState(Qt::WindowNoState);
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
-    view.setFocus();
+    view.requestActivateWindow();
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
 
@@ -1696,8 +1693,9 @@ void tst_qsgtextedit::cursorVisible()
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 8);
 
-    QApplication::setActiveWindow(&view);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
+    view.requestActivateWindow();
+    QTest::qWaitForWindowShown(&view);
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 9);
 #endif
@@ -1726,7 +1724,7 @@ void tst_qsgtextedit::delegateLoading()
 
     QSGView view(QUrl(QLatin1String("http://localhost:42332/") + qmlfile));
     view.show();
-    view.setFocus();
+    view.requestActivateWindow();
 
     if (!error.isEmpty()) {
         QTest::ignoreMessage(QtWarningMsg, error.toUtf8());
@@ -1763,7 +1761,7 @@ void tst_qsgtextedit::navigation()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1883,7 +1881,7 @@ void tst_qsgtextedit::readOnly()
 {
     QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/readOnly.qml"));
     canvas.show();
-    canvas.setFocus();
+    canvas.requestActivateWindow();
 
     QVERIFY(canvas.rootObject() != 0);
 
@@ -1976,9 +1974,9 @@ void tst_qsgtextedit::textInput()
 {
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus() == true);

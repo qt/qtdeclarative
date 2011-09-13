@@ -58,6 +58,7 @@
 #include "qsgimplicitsizeitem_p_p.h"
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtGui/qpixmap.h>
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;

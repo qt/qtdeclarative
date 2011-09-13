@@ -44,9 +44,9 @@
 #include "../qmlinspectorconstants.h"
 
 #include <QtGui/QPen>
-#include <QtGui/QGraphicsRectItem>
-#include <QtGui/QGraphicsObject>
-#include <QtGui/QGraphicsScene>
+#include <QtWidgets/QGraphicsRectItem>
+#include <QtWidgets/QGraphicsObject>
+#include <QtWidgets/QGraphicsScene>
 
 #include <QtCore/QtDebug>
 

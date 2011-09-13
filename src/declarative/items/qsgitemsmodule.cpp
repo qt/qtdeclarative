@@ -130,7 +130,8 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QDeclarativePathArc>("QtQuick",2,0,"PathArc");
     qmlRegisterType<QDeclarativePathSvg>("QtQuick",2,0,"PathSvg");
     qmlRegisterType<QSGPathView>(uri,major,minor,"PathView");
-    qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner","Positioner is an abstract type that is only available as an attached property.");
+    qmlRegisterUncreatableType<QSGBasePositioner>(uri,major,minor,"Positioner",
+                                                  QStringLiteral("Positioner is an abstract type that is only available as an attached property."));
 #ifndef QT_NO_VALIDATOR
     qmlRegisterType<QIntValidator>(uri,major,minor,"IntValidator");
     qmlRegisterType<QDoubleValidator>(uri,major,minor,"DoubleValidator");
@@ -160,9 +161,6 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QValidator>();
 #endif
     qmlRegisterType<QSGVisualModel>();
-#ifndef QT_NO_ACTION
-    qmlRegisterType<QAction>();
-#endif
     qmlRegisterType<QSGPen>();
     qmlRegisterType<QSGFlickableVisibleArea>();
     qRegisterMetaType<QSGAnchorLine>("QSGAnchorLine");

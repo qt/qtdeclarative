@@ -138,11 +138,10 @@ private:
     struct SourceData
     {
         QSignalMapper *mapper;
-        QPointer<QSGItem> item;
+        QPointer<QSGItem> sourceObject;
         QByteArray name;
     };
     QVector<SourceData> m_sources;
-    QSGShaderEffectMaterial m_material;
 
     uint m_blending : 1;
     uint m_dirtyData : 1;

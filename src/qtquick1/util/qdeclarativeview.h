@@ -44,9 +44,9 @@
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qurl.h>
-#include <QtGui/qgraphicssceneevent.h>
-#include <QtGui/qgraphicsview.h>
-#include <QtGui/qwidget.h>
+#include <QtWidgets/qgraphicssceneevent.h>
+#include <QtWidgets/qgraphicsview.h>
+#include <QtWidgets/qwidget.h>
 #include <QtDeclarative/qdeclarativedebug.h>
 
 QT_BEGIN_HEADER
@@ -61,7 +61,7 @@ class QDeclarativeError;
 QT_MODULE(Declarative)
 
 class QDeclarativeViewPrivate;
-class Q_DECLARATIVE_EXPORT QDeclarativeView : public QGraphicsView
+class Q_QTQUICK1_EXPORT QDeclarativeView : public QGraphicsView
 {
     Q_OBJECT
     Q_PROPERTY(ResizeMode resizeMode READ resizeMode WRITE setResizeMode)

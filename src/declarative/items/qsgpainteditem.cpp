@@ -56,10 +56,10 @@ QT_BEGIN_NAMESPACE
 
     The QSGPaintedItem makes it possible to use the QPainter API with the QML Scene Graph.
     It sets up a textured rectangle in the Scene Graph and uses a QPainter to paint
-    onto the texture. The render target can be either a QImage or a QGLFramebufferObject.
+    onto the texture. The render target can be either a QImage or a QOpenGLFramebufferObject.
     When the render target is a QImage, QPainter first renders into the image then
     the content is uploaded to the texture.
-    When a QGLFramebufferObject is used, QPainter paints directly onto the texture.
+    When a QOpenGLFramebufferObject is used, QPainter paints directly onto the texture.
     Call update() to trigger a repaint.
 
     To enable QPainter to do anti-aliased rendering, use setAntialiasing().
@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
     can potentially be slow if the item is large. This render target allows high quality
     anti-aliasing and fast item resizing.
 
-    \value FramebufferObject QPainter paints into a QGLFramebufferObject using the GL
+    \value FramebufferObject QPainter paints into a QOpenGLFramebufferObject using the GL
     paint engine. Painting can be faster as no texture upload is required, but anti-aliasing
     quality is not as good as if using an image. This render target allows faster rendering
     in some cases, but you should avoid using it if the item is resized often.

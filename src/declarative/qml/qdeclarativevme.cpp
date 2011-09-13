@@ -65,7 +65,6 @@
 #include "qdeclarativescriptstring_p.h"
 
 #include <QStack>
-#include <QWidget>
 #include <QColor>
 #include <QPointF>
 #include <QSizeF>
@@ -276,17 +275,20 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             }
             if (!stack.isEmpty()) {
                 QObject *parent = stack.top();
-                if (o->isWidgetType()) { 
+#if 0 // ### refactor
+                if (o->isWidgetType()) {
                     QWidget *widget = static_cast<QWidget*>(o); 
                     if (parent->isWidgetType()) { 
                         QWidget *parentWidget = static_cast<QWidget*>(parent); 
-                        widget->setParent(parentWidget); 
-                    } else { 
+                        widget->setParent(parentWidget);
+                    } else {
                         // TODO: parent might be a layout 
                     } 
-                } else { 
-                        QDeclarative_setParent_noEvent(o, parent);
-                } 
+                } else
+#endif
+                {
+                    QDeclarative_setParent_noEvent(o, parent);
+                }
             }
             stack.push(o);
         QML_END_INSTR(CreateObject)

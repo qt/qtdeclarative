@@ -72,7 +72,7 @@ QT_MODULE(Declarative)
 class QByteArray;
 class QDeclarativePropertyCache;
 namespace QDeclarativeJS { namespace AST { class Node; class StringLiteral; } }
-namespace QDeclarativeCompilerTypes { class BindingReference; class ComponentCompileState; }
+namespace QDeclarativeCompilerTypes { struct BindingReference; struct ComponentCompileState; }
 
 namespace QDeclarativeScript {
 

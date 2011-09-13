@@ -83,11 +83,11 @@ static const char qt_particles_default_fragment_code[] =
         "}";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {
-    { 0, 2, GL_FLOAT },             // Position
-    { 1, 2, GL_FLOAT },             // TexCoord
-    { 2, 4, GL_FLOAT },             // Data
-    { 3, 4, GL_FLOAT },             // Vectors
-    { 4, 1, GL_FLOAT }              // r
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),       // Position
+    QSGGeometry::Attribute::create(1, 2, GL_FLOAT),             // TexCoord
+    QSGGeometry::Attribute::create(2, 4, GL_FLOAT),             // Data
+    QSGGeometry::Attribute::create(3, 4, GL_FLOAT),             // Vectors
+    QSGGeometry::Attribute::create(4, 1, GL_FLOAT)              // r
 };
 
 static QSGGeometry::AttributeSet PlainParticle_AttributeSet =
@@ -132,9 +132,18 @@ QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
     , m_pleaseReset(true)
     , m_dirtyData(true)
+    , m_material(0)
     , m_rootNode(0)
 {
     setFlag(QSGItem::ItemHasContents);
+}
+
+class QSGShaderEffectMaterialObject : public QObject, public QSGShaderEffectMaterial { };
+
+QSGCustomParticle::~QSGCustomParticle()
+{
+    if (m_material)
+        m_material->deleteLater();
 }
 
 void QSGCustomParticle::componentComplete()
@@ -269,13 +278,12 @@ void QSGCustomParticle::setSource(const QVariant &var, int index)
     }
 
     QObject *obj = qVariantValue<QObject *>(var);
-
-    QSGTextureProvider *int3rface = QSGTextureProvider::from(obj);
-    if (!int3rface) {
-        qWarning("Could not assign property '%s', did not implement QSGTextureProvider.", source.name.constData());
-    }
-
     source.item = qobject_cast<QSGItem *>(obj);
+    if (!source.item || !source.item->isTextureProvider()) {
+        qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
+                 source.name.constData(), qPrintable(obj->objectName()), obj->metaObject()->className());
+        return;
+    }
 
     // TODO: Copy better solution in QSGShaderEffect when they find it.
     // 'source.item' needs a canvas to get a scenegraph node.
@@ -463,9 +471,20 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
         s.fragmentCode = qt_particles_default_fragment_code;
     if (s.vertexCode.isEmpty())
         s.vertexCode = qt_particles_default_vertex_code;
+
+    if (!m_material) {
+        m_material = new QSGShaderEffectMaterialObject;
+    }
+
     s.vertexCode = qt_particles_template_vertex_code + s.vertexCode;
+<<<<<<< HEAD
     m_material.setProgramSource(s);
     foreach (const QString &str, m_groups){
+=======
+    m_material->setProgramSource(s);
+
+    foreach (const QString &str, m_particles){
+>>>>>>> refactor
         int gIdx = m_system->m_groupIds[str];
         int count = m_system->m_groupData[gIdx]->size();
         //Create Particle Geometry
@@ -504,7 +523,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
         QSGShaderEffectNode* node = new QSGShaderEffectNode();
 
         node->setGeometry(g);
-        node->setMaterial(&m_material);
+        node->setMaterial(m_material);
         node->markDirty(QSGNode::DirtyMaterial);
 
         m_nodes.insert(gIdx, node);
@@ -525,29 +544,29 @@ void QSGCustomParticle::buildData()
         return;
     const QByteArray timestampName("qt_Timestamp");
     QVector<QPair<QByteArray, QVariant> > values;
-    QVector<QPair<QByteArray, QPointer<QSGItem> > > textures;
-    const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = m_material.textureProviders();
+    QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
+    const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = m_material->textureProviders();
     for (int i = 0; i < oldTextures.size(); ++i) {
-        QSGTextureProvider *oldSource = QSGTextureProvider::from(oldTextures.at(i).second);
-        if (oldSource && oldSource->textureChangedSignal())
+        QSGTextureProvider *t = oldTextures.at(i).second;
+        if (t)
             foreach (QSGShaderEffectNode* node, m_nodes)
-                disconnect(oldTextures.at(i).second, oldSource->textureChangedSignal(), node, SLOT(markDirtyTexture()));
+                disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
     }
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
-        textures.append(qMakePair(source.name, source.item));
-        QSGTextureProvider *t = QSGTextureProvider::from(source.item);
-        if (t && t->textureChangedSignal())
+        QSGTextureProvider *t = source.item->textureProvider();
+        textures.append(qMakePair(source.name, t));
+        if (t)
             foreach (QSGShaderEffectNode* node, m_nodes)
-                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
          it != m_source.uniformNames.end(); ++it) {
         values.append(qMakePair(*it, property(*it)));
     }
     values.append(qMakePair(timestampName, QVariant(m_lastTime)));
-    m_material.setUniforms(values);
-    m_material.setTextureProviders(textures);
+    m_material->setUniforms(values);
+    m_material->setTextureProviders(textures);
     m_dirtyData = false;
     foreach (QSGShaderEffectNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);

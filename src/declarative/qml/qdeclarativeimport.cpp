@@ -210,7 +210,7 @@ void QDeclarativeImports::populateCache(QDeclarativeTypeNameCache *cache, QDecla
             if (module)
                 import.modules.append(QDeclarativeTypeModuleVersion(module, data.minversion));
 
-            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(data.uri.toUtf8(), data.majversion, data.minversion);
+            QDeclarativeMetaType::ModuleApi moduleApi = QDeclarativeMetaType::moduleApi(data.uri, data.majversion, data.minversion);
             if (moduleApi.script || moduleApi.qobject) {
                 QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
                 QDeclarativeMetaType::ModuleApiInstance *a = ep->moduleApiInstances.value(moduleApi);

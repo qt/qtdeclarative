@@ -44,7 +44,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QSet>
-#include <QtOpenGL>
+#include <QtGui>
 
 QT_BEGIN_NAMESPACE
 

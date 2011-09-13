@@ -47,8 +47,8 @@
 #include "qsgsimplerectnode.h"
 
 #include <QtDeclarative/qdeclarativeinfo.h>
-#include <QtGui/qapplication.h>
-#include <QtGui/qgraphicssceneevent.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qevent.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qtextobject.h>
 #include <QtCore/qmath.h>
@@ -56,7 +56,6 @@
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qtextcontrol_p.h>
 #include <private/qtextengine_p.h>
-#include <private/qwidget_p.h>
 #include <private/qsgdistancefieldglyphcache_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -65,7 +64,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
-QWidgetPrivate *qt_widget_private(QWidget *widget);
 /*!
     \qmlclass TextEdit QSGTextEdit
     \inqmlmodule QtQuick 2
@@ -551,15 +549,7 @@ bool QSGTextEditPrivate::determineHorizontalAlignment()
 {
     Q_Q(QSGTextEdit);
     if (hAlignImplicit && q->isComponentComplete()) {
-        bool alignToRight;
-        if (text.isEmpty()) {
-            const QString preeditText = control->textCursor().block().layout()->preeditAreaText();
-            alignToRight = preeditText.isEmpty()
-                    ? QApplication::keyboardInputDirection() == Qt::RightToLeft
-                    : preeditText.isRightToLeft();
-        } else {
-            alignToRight = rightToLeftText;
-        }
+        bool alignToRight = text.isEmpty() ? QGuiApplication::keyboardInputDirection() == Qt::RightToLeft : rightToLeftText;
         return setHAlign(alignToRight ? QSGTextEdit::AlignRight : QSGTextEdit::AlignLeft);
     }
     return false;
@@ -1336,7 +1326,7 @@ void QSGTextEdit::paste()
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     if (d->focusOnPress){
@@ -1362,15 +1352,17 @@ void QSGTextEdit::mousePressEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->pos())) {
-            if (canvas() && canvas() == qApp->focusWidget()) {
-                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-            }
+        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
+            // ### refactor: port properly
+            qDebug("QSGTextEdit: virtual keyboard handling not implemented");
+//            if (canvas() && canvas() == qApp->focusWidget()) {
+//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
+//            }
         }
     }
     d->clickCausedFocus = false;
@@ -1383,7 +1375,7 @@ void QSGTextEdit::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
@@ -1395,7 +1387,7 @@ void QSGTextEdit::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 \overload
 Handles the given mouse \a event.
 */
-void QSGTextEdit::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void QSGTextEdit::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
@@ -1420,7 +1412,7 @@ void QSGTextEdit::itemChange(ItemChange change, const ItemChangeData &value)
 {
     Q_D(QSGTextEdit);
     if (change == ItemActiveFocusHasChanged) {
-        setCursorVisible(value.boolValue && d->canvas && d->canvas->hasFocus());
+        setCursorVisible(value.boolValue); // ### refactor: focus handling && d->canvas && d->canvas->hasFocus());
     }
     QSGItem::itemChange(change, value);
 }
@@ -1432,7 +1424,21 @@ Returns the value of the given \a property.
 QVariant QSGTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const
 {
     Q_D(const QSGTextEdit);
-    return d->control->inputMethodQuery(property);
+
+    QVariant v;
+    switch (property) {
+    case Qt::ImEnabled:
+        v = (bool)(flags() & ItemAcceptsInputMethod);
+        break;
+    case Qt::ImHints:
+        v = (int)inputMethodHints();
+        break;
+    default:
+        v = d->control->inputMethodQuery(property);
+        break;
+    }
+    return v;
+
 }
 
 void QSGTextEdit::updateImageCache(const QRectF &)
@@ -1642,7 +1648,7 @@ void QSGTextEditPrivate::init()
     QObject::connect(control, SIGNAL(linkActivated(QString)), q, SIGNAL(linkActivated(QString)));
 #ifndef QT_NO_CLIPBOARD
     QObject::connect(q, SIGNAL(readOnlyChanged(bool)), q, SLOT(q_canPasteChanged()));
-    QObject::connect(QApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
+    QObject::connect(QGuiApplication::clipboard(), SIGNAL(dataChanged()), q, SLOT(q_canPasteChanged()));
     canPaste = control->canPaste();
 #endif
 
@@ -1914,12 +1920,8 @@ void QSGTextEditPrivate::updateDefaultTextOption()
 */
 void QSGTextEdit::openSoftwareInputPanel()
 {
-    if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::RequestSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
-    }
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 /*!
@@ -1962,13 +1964,9 @@ void QSGTextEdit::openSoftwareInputPanel()
     \endcode
 */
 void QSGTextEdit::closeSoftwareInputPanel()
-{
-    if (qApp) {
-        if (canvas() && canvas() == qApp->focusWidget()) {
-            QEvent event(QEvent::CloseSoftwareInputPanel);
-            QApplication::sendEvent(canvas(), &event);
-        }
-    }
+{  
+    if (qGuiApp)
+        qGuiApp->inputPanel()->show();
 }
 
 void QSGTextEdit::focusInEvent(QFocusEvent *event)

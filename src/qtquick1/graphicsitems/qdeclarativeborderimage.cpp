@@ -49,6 +49,8 @@
 #include <QNetworkReply>
 #include <QFile>
 
+#include <QtWidgets/qdrawutil.h>
+
 QT_BEGIN_NAMESPACE
 
 

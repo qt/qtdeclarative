@@ -44,7 +44,8 @@
 #include <QtDebug>
 #include <QFile>
 
-#include <qglfunctions.h>
+#include <qopenglfunctions.h>
+#include <qopenglcontext.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -118,7 +119,7 @@ void EtcTexture::bind()
                 "paddedWidth: " << m_paddedSize.width() << "paddedHeight: " << m_paddedSize.height();
 #endif
 
-    const QGLContext *ctx = QGLContext::currentContext();
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
     Q_ASSERT(ctx != 0);
     ctx->functions()->glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES,
                                              m_size.width(), m_size.height(), 0,

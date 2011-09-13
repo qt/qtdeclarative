@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include <QtGui/QApplication>
+#include <QtGui/QGuiApplication>
 #include <qsgview.h>
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeEngine>
@@ -48,7 +48,7 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
     QSGView canvas;
 
     qmlRegisterType<TileData>();

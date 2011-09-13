@@ -254,7 +254,7 @@ public:
     }
 };
 
-struct Q_AUTOTEST_EXPORT QStringHashData
+class Q_AUTOTEST_EXPORT QStringHashData
 {
 public:
     QStringHashData() 
@@ -275,7 +275,7 @@ private:
 };
 
 template<class T, int SmallThreshold = 0>
-class Q_AUTOTEST_EXPORT QStringHash
+class QStringHash
 {
 public:
     struct Node : public QStringHashNode {

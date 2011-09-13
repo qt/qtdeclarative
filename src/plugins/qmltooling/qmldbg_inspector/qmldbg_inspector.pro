@@ -1,7 +1,7 @@
 load(qt_module)
 
 TARGET = qmldbg_inspector
-QT       += declarative-private core-private gui-private v8-private opengl-private qtquick1
+QT       += declarative-private core-private gui-private opengl-private qtquick1 widgets widgets-private v8-private
 
 load(qt_plugin)
 

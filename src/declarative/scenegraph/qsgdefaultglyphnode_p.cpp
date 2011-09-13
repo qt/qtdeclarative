@@ -41,11 +41,11 @@
 
 #include "qsgdefaultglyphnode_p_p.h"
 
-#include <qglshaderprogram.h>
+#include <qopenglshaderprogram.h>
 
-#include <private/qtextureglyphcache_gl_p.h>
+#include <QtGui/private/qopengltextureglyphcache_p.h>
 #include <private/qfontengine_p.h>
-#include <private/qglextensions_p.h>
+#include <private/qopenglextensions_p.h>
 
 #include <private/qsgtexture_p.h>
 
@@ -163,24 +163,17 @@ void QSGTextMaskMaterial::init()
     QFontEngineGlyphCache::Type type = QFontEngineGlyphCache::Raster_A8;
     setFlag(Blending, true);
 
-    QGLContext *ctx = const_cast<QGLContext *>(QGLContext::currentContext());
+    QOpenGLContext *ctx = const_cast<QOpenGLContext *>(QOpenGLContext::currentContext());
     Q_ASSERT(ctx != 0);
 
     QRawFontPrivate *fontD = QRawFontPrivate::get(m_font);
     if (fontD->fontEngine != 0) {
         m_glyphCache = fontD->fontEngine->glyphCache(ctx, type, QTransform());
         if (!m_glyphCache || m_glyphCache->cacheType() != type) {
-            m_glyphCache = new QGLTextureGlyphCache(ctx, type, QTransform());
+            m_glyphCache = new QOpenGLTextureGlyphCache(type, QTransform());
             fontD->fontEngine->setGlyphCache(ctx, m_glyphCache.data());
         }
     }
-
-#if !defined(QT_OPENGL_ES_2)
-    bool success = qt_resolve_version_2_0_functions(ctx)
-                   && qt_resolve_buffer_extensions(ctx);
-    Q_ASSERT(success);
-    Q_UNUSED(success);
-#endif
 }
 
 void QSGTextMaskMaterial::populate(const QPointF &p,
@@ -207,7 +200,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
     QVector4D *vp = (QVector4D *)geometry->vertexDataAsTexturedPoint2D();
-    Q_ASSERT(geometry->stride() == sizeof(QVector4D));
+    Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));
     ushort *ip = geometry->indexDataAsUShort();
 
     QPointF position(p.x(), p.y() - m_font.ascent());
@@ -260,9 +253,9 @@ QSGMaterialType *QSGTextMaskMaterial::type() const
     return &type;
 }
 
-QGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
+QOpenGLTextureGlyphCache *QSGTextMaskMaterial::glyphCache() const
 {
-    return static_cast<QGLTextureGlyphCache*>(m_glyphCache.data());
+    return static_cast<QOpenGLTextureGlyphCache*>(m_glyphCache.data());
 }
 
 QSGMaterialShader *QSGTextMaskMaterial::createShader() const

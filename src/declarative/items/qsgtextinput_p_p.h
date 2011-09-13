@@ -121,7 +121,7 @@ public:
     bool setHAlign(QSGTextInput::HAlignment, bool forceAlign = false);
     void mirrorChange();
     int calculateTextWidth();
-    bool sendMouseEventToInputContext(QGraphicsSceneMouseEvent *event, QEvent::Type eventType);
+    bool sendMouseEventToInputContext(QMouseEvent *event);
     void updateInputMethodHints();
     void hideCursor();
     void showCursor();

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarative1StateGroupPrivate;
-class Q_DECLARATIVE_EXPORT QDeclarative1StateGroup : public QObject, public QDeclarativeParserStatus
+class Q_QTQUICK1_EXPORT QDeclarative1StateGroup : public QObject, public QDeclarativeParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QDeclarativeParserStatus)

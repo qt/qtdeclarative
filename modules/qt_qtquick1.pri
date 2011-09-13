@@ -12,6 +12,6 @@ QT.qtquick1.libs = $$QT_MODULE_LIB_BASE
 QT.qtquick1.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.qtquick1.imports = $$QT_MODULE_IMPORT_BASE
 QT.qtquick1.depends = declarative
-QT.qtquick1.DEFINES = QT_DECLARATIVE_LIB
+QT.qtquick1.DEFINES = QT_QTQUICK1_LIB
 
 QT_CONFIG += qtquick1

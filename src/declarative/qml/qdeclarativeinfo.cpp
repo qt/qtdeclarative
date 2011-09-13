@@ -132,7 +132,8 @@ QDeclarativeInfo::~QDeclarativeInfo()
 
                     marker = typeName.indexOf(QLatin1String("_QML_"));
                     if (marker != -1) {
-                        typeName = typeName.left(marker) + "*";
+                        typeName = typeName.left(marker);
+                        typeName += QLatin1Char('*');
                         type = QDeclarativeMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
                         if (type) {
                             typeName = QLatin1String(type->qmlTypeName());

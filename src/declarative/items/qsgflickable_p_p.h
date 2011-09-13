@@ -138,7 +138,7 @@ public:
     void updateBeginningEnd();
 
     bool isOutermostPressDelay() const;
-    void captureDelayedPress(QGraphicsSceneMouseEvent *event);
+    void captureDelayedPress(QMouseEvent *event);
     void clearDelayedPress();
 
     void setViewportX(qreal x);
@@ -178,7 +178,7 @@ public:
     QElapsedTimer velocityTime;
     QPointF lastFlickablePosition;
     qreal reportedVelocitySmoothing;
-    QGraphicsSceneMouseEvent *delayedPressEvent;
+    QMouseEvent *delayedPressEvent;
     QSGItem *delayedPressTarget;
     QBasicTimer delayedPressTimer;
     int pressDelay;
@@ -197,9 +197,9 @@ public:
     QSGFlickable::FlickableDirection flickableDirection;
     QSGFlickable::BoundsBehavior boundsBehavior;
 
-    void handleMousePressEvent(QGraphicsSceneMouseEvent *);
-    void handleMouseMoveEvent(QGraphicsSceneMouseEvent *);
-    void handleMouseReleaseEvent(QGraphicsSceneMouseEvent *);
+    void handleMousePressEvent(QMouseEvent *);
+    void handleMouseMoveEvent(QMouseEvent *);
+    void handleMouseReleaseEvent(QMouseEvent *);
 
     // flickableData property
     static void data_append(QDeclarativeListProperty<QObject> *, QObject *);

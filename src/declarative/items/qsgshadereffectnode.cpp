@@ -108,17 +108,17 @@ void QSGCustomMaterialShader::updateState(const RenderState &state, QSGMaterial 
         }
     }
 
-    QGLFunctions *functions = state.context()->functions();
+    QOpenGLFunctions *functions = state.context()->functions();
     for (int i = material->m_textures.size() - 1; i >= 0; --i) {
-        QPointer<QSGItem> source = material->m_textures.at(i).second;
-        QSGTextureProvider *provider = QSGTextureProvider::from(source);
-        QSGTexture *texture = provider ? provider->texture() : 0;
-        if (!source || !provider || !texture) {
-            qWarning("ShaderEffectItem: source or provider missing when binding textures");
-            continue;
-        }
         functions->glActiveTexture(GL_TEXTURE0 + i);
-        provider->texture()->bind();
+        if (QSGTextureProvider *provider = material->m_textures.at(i).second) {
+            if (QSGTexture *texture = provider->texture()) {
+                texture->bind();
+                continue;
+            }
+        }
+        qWarning("ShaderEffectItem: source or provider missing when binding textures");
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     if (material->m_source.respectsOpacity)
@@ -271,12 +271,12 @@ void QSGShaderEffectMaterial::setUniforms(const QVector<QPair<QByteArray, QVaria
     m_uniformValues = uniformValues;
 }
 
-void QSGShaderEffectMaterial::setTextureProviders(const QVector<QPair<QByteArray, QPointer<QSGItem> > > &textures)
+void QSGShaderEffectMaterial::setTextureProviders(const QVector<QPair<QByteArray, QSGTextureProvider *> > &textures)
 {
     m_textures = textures;
 }
 
-const QVector<QPair<QByteArray, QPointer<QSGItem> > > &QSGShaderEffectMaterial::textureProviders() const
+const QVector<QPair<QByteArray, QSGTextureProvider *> > &QSGShaderEffectMaterial::textureProviders() const
 {
     return m_textures;
 }
@@ -284,20 +284,9 @@ const QVector<QPair<QByteArray, QPointer<QSGItem> > > &QSGShaderEffectMaterial::
 void QSGShaderEffectMaterial::updateTextures() const
 {
     for (int i = 0; i < m_textures.size(); ++i) {
-        QSGItem *item = m_textures.at(i).second;
-        if (item) {
-            QSGTextureProvider *provider = QSGTextureProvider::from(item);
-            if (provider) {
-                QSGTexture *texture = provider->texture();
-                if (!texture) {
-                    qWarning("QSGShaderEffectMaterial: no texture from %s [%s]",
-                             qPrintable(item->objectName()),
-                             item->metaObject()->className());
-                }
-                if (QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(provider->texture())) {
-                    t->updateTexture();
-                }
-            }
+        if (QSGTextureProvider *provider = m_textures.at(i).second) {
+            if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(provider->texture()))
+                texture->updateTexture();
         }
     }
 }
@@ -306,6 +295,7 @@ void QSGShaderEffectMaterial::updateTextures() const
 QSGShaderEffectNode::QSGShaderEffectNode()
 {
     QSGNode::setFlag(UsePreprocess, true);
+    setMaterial(&m_material);
 }
 
 QSGShaderEffectNode::~QSGShaderEffectNode()

@@ -63,7 +63,7 @@ void GeometryTest::testPoint2D()
     QSGGeometry geometry(QSGGeometry::defaultAttributes_Point2D(), 4, 0);
 
     QCOMPARE(geometry.attributeCount(), 1);
-    QCOMPARE(geometry.stride(), (int) sizeof(float) * 2);
+    QCOMPARE(geometry.sizeOfVertex(), (int) sizeof(float) * 2);
     QCOMPARE(geometry.vertexCount(), 4);
     QCOMPARE(geometry.indexCount(), 0);
     QVERIFY(geometry.indexData() == 0);
@@ -96,7 +96,7 @@ void GeometryTest::testTexturedPoint2D()
     QSGGeometry geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4, 0);
 
     QCOMPARE(geometry.attributeCount(), 2);
-    QCOMPARE(geometry.stride(), (int) sizeof(float) * 4);
+    QCOMPARE(geometry.sizeOfVertex(), (int) sizeof(float) * 4);
     QCOMPARE(geometry.vertexCount(), 4);
     QCOMPARE(geometry.indexCount(), 0);
     QVERIFY(geometry.indexData() == 0);

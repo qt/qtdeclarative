@@ -100,8 +100,8 @@ public:
 
     void setProgramSource(const QSGShaderEffectProgram &);
     void setUniforms(const QVector<QPair<QByteArray, QVariant> > &uniformValues);
-    void setTextureProviders(const QVector<QPair<QByteArray, QPointer<QSGItem> > > &textures);
-    const QVector<QPair<QByteArray, QPointer<QSGItem> > > &textureProviders() const;
+    void setTextureProviders(const QVector<QPair<QByteArray, QSGTextureProvider *> > &textures);
+    const QVector<QPair<QByteArray, QSGTextureProvider *> > &textureProviders() const;
     void updateTextures() const;
 
 protected:
@@ -118,7 +118,7 @@ protected:
 
     QSGShaderEffectProgram m_source;
     QVector<QPair<QByteArray, QVariant> > m_uniformValues;
-    QVector<QPair<QByteArray, QPointer<QSGItem> > > m_textures;
+    QVector<QPair<QByteArray, QSGTextureProvider *> > m_textures;
     CullMode m_cullMode;
 
     static QHash<QSGShaderEffectMaterialKey, QSharedPointer<QSGMaterialType> > materialMap;
@@ -136,9 +136,13 @@ public:
 
     virtual void preprocess();
 
+    QSGShaderEffectMaterial *shaderMaterial() { return &m_material; }
+
 private Q_SLOTS:
     void markDirtyTexture();
 
+private:
+    QSGShaderEffectMaterial m_material;
 };
 
 QT_END_NAMESPACE

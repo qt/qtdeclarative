@@ -44,7 +44,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtQuick1/qdeclarativeitem.h>
-#include <QtGui/qgraphicswidget.h>
+#include <QtWidgets/qgraphicswidget.h>
 #include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN

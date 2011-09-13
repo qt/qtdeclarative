@@ -1102,7 +1102,7 @@ QDebug operator<<(QDebug d, const QSGGeometryNode *n)
 
          if (g->attributeCount() > 0 && g->attributes()->type == GL_FLOAT) {
              float x1 = 1e10, x2 = -1e10, y1=1e10, y2=-1e10;
-             int stride = g->stride();
+             int stride = g->sizeOfVertex();
              for (int i = 0; i < g->vertexCount(); ++i) {
                  float x = ((float *)((char *)const_cast<QSGGeometry *>(g)->vertexData() + i * stride))[0];
                  float y = ((float *)((char *)const_cast<QSGGeometry *>(g)->vertexData() + i * stride))[1];
@@ -1235,7 +1235,8 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     default:
         d << "QSGNode(" << hex << (void *) n << dec
-          << "dirty=" << hex << (int) n->dirtyFlags() << dec
+          << "dirty=" << hex << (int) n->dirtyFlags()
+          << "flags=" << (int) n->flags() << dec
           << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QML_RUNTIME_TESTING
         d << n->description;
@@ -1244,37 +1245,6 @@ QDebug operator<<(QDebug d, const QSGNode *n)
         break;
     }
     return d;
-}
-
-
-/*!
-    \class QSGNodeDumper
-    \brief The QSGNodeDumper class provides a way of dumping a scene grahp to the console.
-
-    This class is solely for debugging purposes.
-
-    \internal
- */
-
-void QSGNodeDumper::dump(QSGNode *n)
-{
-    QSGNodeDumper dump;
-    dump.visitNode(n);
-}
-
-void QSGNodeDumper::visitNode(QSGNode *n)
-{
-    if (n->isSubtreeBlocked())
-        return;
-    qDebug() << QString(m_indent * 2, QLatin1Char(' ')) << n;
-    QSGNodeVisitor::visitNode(n);
-}
-
-void QSGNodeDumper::visitChildren(QSGNode *n)
-{
-    ++m_indent;
-    QSGNodeVisitor::visitChildren(n);
-    --m_indent;
 }
 
 #endif

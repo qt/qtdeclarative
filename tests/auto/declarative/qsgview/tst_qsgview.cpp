@@ -45,7 +45,8 @@
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qsgitem.h>
 #include "../../../shared/util.h"
-
+#include <QtGui/QWindow>
+#include <QtCore/QDebug>
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
 #define SRCDIR "."
@@ -70,7 +71,9 @@ tst_QSGView::tst_QSGView()
 
 void tst_QSGView::resizemodeitem()
 {
-    QWidget window;
+    QWindow window;
+    window.setGeometry(0, 0, 400, 400);
+
     QSGView *canvas = new QSGView(&window);
     QVERIFY(canvas);
     canvas->setResizeMode(QSGView::SizeRootObjectToView);
@@ -80,6 +83,8 @@ void tst_QSGView::resizemodeitem()
     QVERIFY(item);
     window.show();
 
+    canvas->show();
+
     // initial size from root object
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 200.0);
@@ -87,8 +92,14 @@ void tst_QSGView::resizemodeitem()
     QCOMPARE(canvas->size(), canvas->sizeHint());
     QCOMPARE(canvas->size(), canvas->initialSize());
 
+    qDebug() << window.size();
+    qDebug() << "canvas size:" << canvas->size();
     // size update from view
     canvas->resize(QSize(80,100));
+    QTest::qWait(50);
+    qDebug() << window.size();
+    qDebug() << "canvas size:" << canvas->size();
+
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
     QCOMPARE(canvas->size(), QSize(80, 100));
@@ -100,6 +111,7 @@ void tst_QSGView::resizemodeitem()
     canvas->resize(QSize(60,80));
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
+    QTest::qWait(50);
     QCOMPARE(canvas->size(), QSize(60, 80));
 
     // size update from root object
@@ -121,6 +133,8 @@ void tst_QSGView::resizemodeitem()
     item = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
+
+    canvas->show();
 
     // initial size for root object
     QCOMPARE(item->width(), 200.0);
@@ -147,11 +161,13 @@ void tst_QSGView::resizemodeitem()
 
     // size update from view
     canvas->resize(QSize(200,300));
+    QTest::qWait(50);
     QCOMPARE(item->width(), 200.0);
     QCOMPARE(item->height(), 300.0);
     QCOMPARE(canvas->size(), QSize(200, 300));
     QCOMPARE(canvas->size(), canvas->sizeHint());
 
+    window.hide();
     delete canvas;
 
     // if we set a specific size for the view then it should keep that size
@@ -161,9 +177,13 @@ void tst_QSGView::resizemodeitem()
     canvas->setResizeMode(QSGView::SizeRootObjectToView);
     QCOMPARE(QSize(0,0), canvas->initialSize());
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/resizemodeitem.qml"));
+    canvas->resize(300, 300);
     item = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
+
+    canvas->show();
+    QTest::qWait(50);
 
     // initial size from root object
     QCOMPARE(item->width(), 300.0);

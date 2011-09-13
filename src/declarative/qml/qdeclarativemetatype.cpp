@@ -1346,13 +1346,11 @@ QT_END_NAMESPACE
 #include <QtGui/qbrush.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qpalette.h>
-#include <QtGui/qicon.h>
 #include <QtGui/qimage.h>
 #include <QtGui/qpolygon.h>
 #include <QtGui/qregion.h>
 #include <QtGui/qbitmap.h>
 #include <QtGui/qcursor.h>
-#include <QtGui/qsizepolicy.h>
 #include <QtGui/qkeysequence.h>
 #include <QtGui/qpen.h>
 
@@ -1425,7 +1423,6 @@ bool QDeclarativeMetaType::canCopy(int type)
     case QMetaType::QBrush:
     case QMetaType::QColor:
     case QMetaType::QPalette:
-    case QMetaType::QIcon:
     case QMetaType::QImage:
     case QMetaType::QPolygon:
     case QMetaType::QRegion:
@@ -1433,7 +1430,6 @@ bool QDeclarativeMetaType::canCopy(int type)
 #ifndef QT_NO_CURSOR
     case QMetaType::QCursor:
 #endif
-    case QMetaType::QSizePolicy:
     case QMetaType::QKeySequence:
     case QMetaType::QPen:
     case QMetaType::QTextLength:
@@ -1611,9 +1607,6 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
         case QMetaType::QPalette:
             *static_cast<NS(QPalette) *>(data) = *static_cast<const NS(QPalette)*>(copy);
             return true;
-        case QMetaType::QIcon:
-            *static_cast<NS(QIcon) *>(data) = *static_cast<const NS(QIcon)*>(copy);
-            return true;
         case QMetaType::QImage:
             *static_cast<NS(QImage) *>(data) = *static_cast<const NS(QImage)*>(copy);
             return true;
@@ -1631,9 +1624,6 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             *static_cast<NS(QCursor) *>(data) = *static_cast<const NS(QCursor)*>(copy);
             return true;
 #endif
-        case QMetaType::QSizePolicy:
-            *static_cast<NS(QSizePolicy) *>(data) = *static_cast<const NS(QSizePolicy)*>(copy);
-            return true;
         case QMetaType::QKeySequence:
             *static_cast<NS(QKeySequence) *>(data) = *static_cast<const NS(QKeySequence)*>(copy);
             return true;
@@ -1822,9 +1812,6 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
         case QMetaType::QPalette:
             *static_cast<NS(QPalette) *>(data) = NS(QPalette)();
             return true;
-        case QMetaType::QIcon:
-            *static_cast<NS(QIcon) *>(data) = NS(QIcon)();
-            return true;
         case QMetaType::QImage:
             *static_cast<NS(QImage) *>(data) = NS(QImage)();
             return true;
@@ -1842,9 +1829,6 @@ bool QDeclarativeMetaType::copy(int type, void *data, const void *copy)
             *static_cast<NS(QCursor) *>(data) = NS(QCursor)();
             return true;
 #endif
-        case QMetaType::QSizePolicy:
-            *static_cast<NS(QSizePolicy) *>(data) = NS(QSizePolicy)();
-            return true;
         case QMetaType::QKeySequence:
             *static_cast<NS(QKeySequence) *>(data) = NS(QKeySequence)();
             return true;

@@ -194,8 +194,8 @@ Q_SIGNALS:
     void effectiveHorizontalAlignmentChanged();
 
 protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
     virtual void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry);
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);

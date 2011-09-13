@@ -225,8 +225,8 @@ void QSGSpriteImage::createEngine()
 }
 
 static QSGGeometry::Attribute SpriteImage_Attributes[] = {
-    { 0, 2, GL_FLOAT },            // tex
-    { 1, 4, GL_FLOAT }             // animData
+    QSGGeometry::Attribute::create(0, 2, GL_FLOAT),         // tex
+    QSGGeometry::Attribute::create(1, 4, GL_FLOAT)          // animData
 };
 
 static QSGGeometry::AttributeSet SpriteImage_AttributeSet =

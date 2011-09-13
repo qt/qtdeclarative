@@ -43,7 +43,7 @@
 #include <QtDeclarative/private/qdeclarativemetatype_p.h>
 #include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
 
-#include <QtGui/QApplication>
+#include <QtWidgets/QApplication>
 
 #include <QtCore/QSet>
 #include <QtCore/QMetaObject>

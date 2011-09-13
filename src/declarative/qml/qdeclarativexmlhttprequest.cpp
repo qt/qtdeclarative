@@ -613,7 +613,7 @@ v8::Handle<v8::Value> CharacterData::length(v8::Local<v8::String>, const v8::Acc
     QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
     if (!r) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
-
+    Q_UNUSED(engine)
     return v8::Integer::New(r->d->data.length());
 }
 
@@ -637,7 +637,7 @@ v8::Handle<v8::Value> Text::isElementContentWhitespace(v8::Local<v8::String>, co
     QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
     if (!r) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
-
+    Q_UNUSED(engine)
     return v8::Boolean::New(r->d->data.trimmed().isEmpty());
 }
 
@@ -810,7 +810,7 @@ v8::Handle<v8::Value> NamedNodeMap::length(v8::Local<v8::String>, const v8::Acce
     QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
     if (!r) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
-
+    Q_UNUSED(engine)
     return v8::Integer::New(r->list->count());
 }
 
@@ -888,7 +888,7 @@ v8::Handle<v8::Value> NodeList::length(v8::Local<v8::String>, const v8::Accessor
     QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
     if (!r) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
-
+    Q_UNUSED(engine)
     return v8::Integer::New(r->d->children.count());
 }
 
@@ -931,7 +931,7 @@ v8::Handle<v8::Value> Document::xmlStandalone(v8::Local<v8::String>, const v8::A
     QDeclarativeDOMNodeResource *r = v8_resource_cast<QDeclarativeDOMNodeResource>(args.This());
     if (!r || r->d->type != NodeImpl::Document) return v8::Undefined();
     QV8Engine *engine = V8ENGINE();
-
+    Q_UNUSED(engine)
     return v8::Boolean::New(static_cast<DocumentImpl *>(r->d)->isStandalone);
 }
 
@@ -1646,7 +1646,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_getAllResponseHeaders(const v8::A
 }
 
 // XMLHttpRequest properties
-static v8::Handle<v8::Value> qmlxmlhttprequest_readyState(v8::Local<v8::String> property,
+static v8::Handle<v8::Value> qmlxmlhttprequest_readyState(v8::Local<v8::String> /* property */,
                                                           const v8::AccessorInfo& info)
 {
     QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
@@ -1656,7 +1656,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_readyState(v8::Local<v8::String> 
     return v8::Integer::NewFromUnsigned(r->readyState());
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Local<v8::String> property,
+static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Local<v8::String> /* property */,
                                                       const v8::AccessorInfo& info)
 {
     QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
@@ -1673,7 +1673,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_status(v8::Local<v8::String> prop
         return v8::Integer::New(r->replyStatus());
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Local<v8::String> property,
+static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Local<v8::String> /* property */,
                                                           const v8::AccessorInfo& info)
 {
     QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
@@ -1692,7 +1692,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_statusText(v8::Local<v8::String> 
         return engine->toString(r->replyStatusText());
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_responseText(v8::Local<v8::String> property,
+static v8::Handle<v8::Value> qmlxmlhttprequest_responseText(v8::Local<v8::String> /* property */,
                                                             const v8::AccessorInfo& info)
 {
     QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
@@ -1708,8 +1708,8 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_responseText(v8::Local<v8::String
         return engine->toString(r->responseBody());
 }
 
-static v8::Handle<v8::Value> qmlxmlhttprequest_responseXML(v8::Local<v8::String> property,
-                                                            const v8::AccessorInfo& info)
+static v8::Handle<v8::Value> qmlxmlhttprequest_responseXML(v8::Local<v8::String> /* property */,
+                                                           const v8::AccessorInfo& info)
 {
     QDeclarativeXMLHttpRequest *r = v8_resource_cast<QDeclarativeXMLHttpRequest>(info.This());
     if (!r)
@@ -1729,7 +1729,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
     if (args.IsConstructCall()) {
         QV8Engine *engine = V8ENGINE();
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
-
+        Q_UNUSED(ep)
         QDeclarativeXMLHttpRequest *r = new QDeclarativeXMLHttpRequest(engine, engine->networkAccessManager());
         args.This()->SetExternalResource(r);
 
@@ -1741,7 +1741,7 @@ static v8::Handle<v8::Value> qmlxmlhttprequest_new(const v8::Arguments &args)
 
 #define NEWFUNCTION(function) v8::FunctionTemplate::New(function)->GetFunction()
 
-void qt_rem_qmlxmlhttprequest(QV8Engine *engine, void *d)
+void qt_rem_qmlxmlhttprequest(QV8Engine * /* engine */, void *d)
 {
     QDeclarativeXMLHttpRequestData *data = (QDeclarativeXMLHttpRequestData *)d;
     delete data;

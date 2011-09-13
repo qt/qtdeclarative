@@ -281,11 +281,11 @@ Q_SIGNALS:
     void pinchFinished(QSGPinchEvent *pinch);
 
 protected:
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseUngrabEvent();
-    virtual bool sendMouseEvent(QGraphicsSceneMouseEvent *event);
+    virtual bool sendMouseEvent(QMouseEvent *event);
     virtual bool childMouseEventFilter(QSGItem *i, QEvent *e);
     virtual void touchEvent(QTouchEvent *event);
 

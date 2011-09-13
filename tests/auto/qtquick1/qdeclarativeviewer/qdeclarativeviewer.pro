@@ -6,9 +6,8 @@ include(../../../../tools/qmlviewer/qml.pri)
 
 SOURCES += tst_qdeclarativeviewer.cpp
 
-include(../symbianlibs.pri)
-
 symbian: {
+    include(../symbianlibs.pri)
     importFiles.files = data
     importFiles.path = .
     DEPLOYMENT += importFiles
@@ -17,4 +16,4 @@ symbian: {
 }
 
 CONFIG += parallel_test
-QT += core-private gui-private v8-private declarative-private qtquick1-private
+QT += core-private gui-private declarative-private qtquick1-private widgets-private v8-private

@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtGui/QStringListModel>
+#include <QtWidgets/QStringListModel>
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>

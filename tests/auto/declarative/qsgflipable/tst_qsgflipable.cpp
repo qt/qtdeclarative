@@ -81,9 +81,6 @@ tst_qsgflipable::tst_qsgflipable()
 }
 void tst_qsgflipable::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("Flipable item needs OpenGL 2.0", SkipAll);
 }
 
 void tst_qsgflipable::cleanupTestCase()

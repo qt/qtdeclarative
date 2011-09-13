@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
-#include <QtGui/qstringlistmodel.h>
+#include <QtWidgets/qstringlistmodel.h>
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
@@ -143,9 +143,6 @@ void tst_qsggridview_move(int from, int to, int n, T *items)
 
 void tst_QSGGridView::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("QSGGridView needs OpenGL 2.0", SkipAll);
 }
 
 void tst_QSGGridView::cleanupTestCase()
@@ -1062,7 +1059,7 @@ void tst_QSGGridView::currentIndex()
         model.addItem("Item" + QString::number(i), QString::number(i));
 
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
     canvas->show();
 
     QDeclarativeContext *ctxt = canvas->rootContext();
@@ -1153,12 +1150,12 @@ void tst_QSGGridView::currentIndex()
 
 
     // Test keys
-    qApp->setActiveWindow(canvas);
+    canvas->requestActivateWindow();
 #ifdef Q_WS_X11
     // to be safe and avoid failing setFocus with window managers
     qt_x11_wait_for_window_manager(canvas);
 #endif
-    QTRY_VERIFY(canvas->hasFocus());
+    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
     qApp->processEvents();
 
     gridview->setCurrentIndex(0);
@@ -1190,12 +1187,12 @@ void tst_QSGGridView::currentIndex()
 
     gridview->setFlow(QSGGridView::TopToBottom);
 
-    qApp->setActiveWindow(canvas);
+    canvas->requestActivateWindow();
 #ifdef Q_WS_X11
     // to be safe and avoid failing setFocus with window managers
     qt_x11_wait_for_window_manager(canvas);
 #endif
-    QTRY_VERIFY(canvas->hasFocus());
+    QTRY_VERIFY((canvas->windowState() == Qt::WindowActive));
     qApp->processEvents();
 
     QTest::keyClick(canvas, Qt::Key_Right);
@@ -1257,12 +1254,12 @@ void tst_QSGGridView::currentIndex()
     gridview->setFlow(QSGGridView::LeftToRight);
     gridview->setLayoutDirection(Qt::RightToLeft);
 
-    qApp->setActiveWindow(canvas);
+    canvas->requestActivateWindow();
 #ifdef Q_WS_X11
     // to be safe and avoid failing setFocus with window managers
     qt_x11_wait_for_window_manager(canvas);
 #endif
-    QTRY_VERIFY(canvas->hasFocus());
+    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
     qApp->processEvents();
 
     gridview->setCurrentIndex(35);
@@ -1313,7 +1310,7 @@ void tst_QSGGridView::noCurrentIndex()
         model.addItem("Item" + QString::number(i), QString::number(i));
 
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testModel", &model);
@@ -2646,7 +2643,7 @@ void tst_QSGGridView::onAdd()
     const int delegateHeight = 100;
     TestModel model;
     QSGView *canvas = createView();
-    canvas->setFixedSize(5 * delegateWidth, 5 * delegateHeight); // just ensure all items fit
+    canvas->setGeometry(0,0,5 * delegateWidth, 5 * delegateHeight); // just ensure all items fit
 
     // these initial items should not trigger GridView.onAdd
     for (int i=0; i<initialItemCount; i++)
@@ -2789,7 +2786,7 @@ void tst_QSGGridView::testQtQuick11Attributes_data()
 QSGView *tst_QSGGridView::createView()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setGeometry(0,0,240,320);
 
     return canvas;
 }

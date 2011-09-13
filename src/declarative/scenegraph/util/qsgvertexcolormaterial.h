@@ -50,12 +50,12 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGVertexColorMaterial : public QSGMaterial
+class Q_DECLARATIVE_EXPORT QSGVertexColorMaterial : public QSGMaterial
 {
 public:
     QSGVertexColorMaterial();
 
-    void setColorsAreOpaque(bool opaqueHint);
+    int compare(const QSGMaterial *other) const;
 
 protected:
     virtual QSGMaterialType *type() const;

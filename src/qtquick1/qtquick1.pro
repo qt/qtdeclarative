@@ -7,8 +7,8 @@ CONFIG += module
 CONFIG += dll warn_on
 MODULE_PRI += ../../modules/qt_qtquick1.pri
 
-QT += testlib-private declarative testlib declarative-private core-private gui-private network v8-private
-DEFINES += QT_NO_URL_CAST_FROM_STRING
+QT += testlib-private declarative testlib declarative-private core-private gui-private network widgets-private v8-private
+DEFINES += QT_BUILD_QTQUICK1_LIB QT_NO_URL_CAST_FROM_STRING
 
 load(qt_module_config)
 
@@ -38,5 +38,5 @@ HEADERS += qtquick1_p.h
 SOURCES += qtquick1.cpp
 
 DEFINES += QT_NO_OPENTYPE
-INCLUDEPATH += $$QT_SOURCE_TREE/src/3rdparty/harfbuzz/src
+INCLUDEPATH +=  $$QT.corelib.sources/../src/3rdparty/harfbuzz/src
 

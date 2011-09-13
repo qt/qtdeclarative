@@ -49,7 +49,7 @@
 #include <QtDeclarative/qsgcanvas.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
-#include <QtGui/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsscene.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,28 +64,28 @@ QuickTestEvent::~QuickTestEvent()
 
 bool QuickTestEvent::keyPress(int key, int modifiers, int delay)
 {
-    QWidget *widget = eventWidget();
-    if (!widget)
+    QWindow *window = eventWindow();
+    if (!window)
         return false;
-    QTest::keyPress(widget, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
+    QTest::keyPress(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
     return true;
 }
 
 bool QuickTestEvent::keyRelease(int key, int modifiers, int delay)
 {
-    QWidget *widget = eventWidget();
-    if (!widget)
+    QWindow *window = eventWindow();
+    if (!window)
         return false;
-    QTest::keyRelease(widget, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
+    QTest::keyRelease(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
     return true;
 }
 
 bool QuickTestEvent::keyClick(int key, int modifiers, int delay)
 {
-    QWidget *widget = eventWidget();
-    if (!widget)
+    QWindow *window = eventWindow();
+    if (!window)
         return false;
-    QTest::keyClick(widget, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
+    QTest::keyClick(window, Qt::Key(key), Qt::KeyboardModifiers(modifiers), delay);
     return true;
 }
 
@@ -97,11 +97,11 @@ namespace QtQuickTest
 {
     enum MouseAction { MousePress, MouseRelease, MouseClick, MouseDoubleClick, MouseMove };
 
-    static void mouseEvent(MouseAction action, QWidget *widget,
+    static void mouseEvent(MouseAction action, QWindow *window,
                            QObject *item, Qt::MouseButton button,
                            Qt::KeyboardModifiers stateKey, QPointF _pos, int delay=-1)
     {
-        QTEST_ASSERT(widget);
+        QTEST_ASSERT(window);
         QTEST_ASSERT(item);
 
         if (delay == -1 || delay < QTest::defaultMouseDelay())
@@ -110,14 +110,14 @@ namespace QtQuickTest
             QTest::qWait(delay);
 
         if (action == MouseClick) {
-            mouseEvent(MousePress, widget, item, button, stateKey, _pos);
-            mouseEvent(MouseRelease, widget, item, button, stateKey, _pos);
+            mouseEvent(MousePress, window, item, button, stateKey, _pos);
+            mouseEvent(MouseRelease, window, item, button, stateKey, _pos);
             return;
         }
 
         QPoint pos;
-        QDeclarativeView *view = qobject_cast<QDeclarativeView *>(widget);
-        QWidget *eventWidget = widget;
+        QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
+        QWindow *eventWindow = window;
 #ifdef QUICK_TEST_SCENEGRAPH
         QSGItem *sgitem = qobject_cast<QSGItem *>(item);
         if (sgitem) {
@@ -131,7 +131,7 @@ namespace QtQuickTest
                 return;
             }
             pos = view->mapFromScene(ditem->mapToScene(_pos));
-            eventWidget = view->viewport();
+            eventWindow = view->viewport()->windowHandle();
         }
 
         QTEST_ASSERT(button == Qt::NoButton || button & Qt::MouseButtonMask);
@@ -143,26 +143,26 @@ namespace QtQuickTest
         switch (action)
         {
             case MousePress:
-                me = QMouseEvent(QEvent::MouseButtonPress, pos, widget->mapToGlobal(pos), button, button, stateKey);
+                me = QMouseEvent(QEvent::MouseButtonPress, pos, window->mapToGlobal(pos), button, button, stateKey);
                 break;
             case MouseRelease:
-                me = QMouseEvent(QEvent::MouseButtonRelease, pos, widget->mapToGlobal(pos), button, 0, stateKey);
+                me = QMouseEvent(QEvent::MouseButtonRelease, pos, window->mapToGlobal(pos), button, 0, stateKey);
                 break;
             case MouseDoubleClick:
-                me = QMouseEvent(QEvent::MouseButtonDblClick, pos, widget->mapToGlobal(pos), button, button, stateKey);
+                me = QMouseEvent(QEvent::MouseButtonDblClick, pos, window->mapToGlobal(pos), button, button, stateKey);
                 break;
             case MouseMove:
-                QCursor::setPos(widget->mapToGlobal(pos));
+                QCursor::setPos(window->mapToGlobal(pos));
                 qApp->processEvents();
                 return;
             default:
                 QTEST_ASSERT(false);
         }
         QSpontaneKeyEvent::setSpontaneous(&me);
-        if (!qApp->notify(eventWidget, &me)) {
+        if (!qApp->notify(eventWindow, &me)) {
             static const char *mouseActionNames[] =
                 { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove" };
-            QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving widget");
+            QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
             QTest::qWarn(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toAscii().data());
         }
     }
@@ -172,7 +172,7 @@ bool QuickTestEvent::mousePress
     (QObject *item, qreal x, qreal y, int button,
      int modifiers, int delay)
 {
-    QWidget *view = eventWidget();
+    QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MousePress, view, item,
@@ -186,7 +186,7 @@ bool QuickTestEvent::mouseRelease
     (QObject *item, qreal x, qreal y, int button,
      int modifiers, int delay)
 {
-    QWidget *view = eventWidget();
+    QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseRelease, view, item,
@@ -200,7 +200,7 @@ bool QuickTestEvent::mouseClick
     (QObject *item, qreal x, qreal y, int button,
      int modifiers, int delay)
 {
-    QWidget *view = eventWidget();
+    QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseClick, view, item,
@@ -214,7 +214,7 @@ bool QuickTestEvent::mouseDoubleClick
     (QObject *item, qreal x, qreal y, int button,
      int modifiers, int delay)
 {
-    QWidget *view = eventWidget();
+    QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseDoubleClick, view, item,
@@ -227,7 +227,7 @@ bool QuickTestEvent::mouseDoubleClick
 bool QuickTestEvent::mouseMove
     (QObject *item, qreal x, qreal y, int delay)
 {
-    QWidget *view = eventWidget();
+    QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseMove, view, item,
@@ -236,7 +236,7 @@ bool QuickTestEvent::mouseMove
     return true;
 }
 
-QWidget *QuickTestEvent::eventWidget()
+QWindow *QuickTestEvent::eventWindow()
 {
 #ifdef QUICK_TEST_SCENEGRAPH
     QSGItem *sgitem = qobject_cast<QSGItem *>(parent());
@@ -252,7 +252,7 @@ QWidget *QuickTestEvent::eventWidget()
     QList<QGraphicsView *> views = s->views();
     if (views.isEmpty())
         return 0;
-    return views.at(0);
+    return views.at(0)->windowHandle();
 }
 
 QT_END_NAMESPACE

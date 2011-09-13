@@ -60,9 +60,10 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QtCore/qnumeric.h>
 #include <QtDeclarative/qjsengine.h>
-#include <QtGui/qgraphicstransform.h>
 
 #include <private/qv8engine_p.h>
+#include <QtWidgets/qgraphicstransform.h>
+#include <private/qlistmodelinterface_p.h>
 
 #include <float.h>
 
@@ -2896,7 +2897,7 @@ QDeclarativeListProperty<QDeclarative1Transition> QDeclarativeItemPrivate::trans
 
   If clipping is enabled, an item will clip its own painting, as well
   as the painting of its children, to its bounding rectangle. If you set
-  clipping during an item's paint operation, remember to re-set it to 
+  clipping during an item's paint operation, remember to re-set it to
   prevent clipping the rest of your scene.
 
   Non-rectangular clipping regions are not supported for performance reasons.

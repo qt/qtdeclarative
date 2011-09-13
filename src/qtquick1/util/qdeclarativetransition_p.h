@@ -57,7 +57,7 @@ QT_MODULE(Declarative)
 class QDeclarative1AbstractAnimation;
 class QDeclarative1TransitionPrivate;
 class QDeclarative1TransitionManager;
-class Q_DECLARATIVE_EXPORT QDeclarative1Transition : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1Transition : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QDeclarative1Transition)

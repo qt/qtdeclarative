@@ -49,8 +49,11 @@
 #include <private/qsgtextureprovider_p.h>
 #include "qsgcanvas.h"
 
+#include <qsgimage_p.h>
+#include <qsgshadereffectsource_p.h>
+
 #include <QtCore/qsignalmapper.h>
-#include <QtOpenGL/qglframebufferobject.h>
+#include <QtGui/qopenglframebufferobject.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -373,7 +376,7 @@ void QSGShaderEffect::setSource(const QVariant &var, int index)
 
     SourceData &source = m_sources[index];
 
-    source.item = 0;
+    source.sourceObject = 0;
     if (var.isNull()) {
         return;
     } else if (!qVariantCanConvert<QObject *>(var)) {
@@ -382,21 +385,23 @@ void QSGShaderEffect::setSource(const QVariant &var, int index)
     }
 
     QObject *obj = qVariantValue<QObject *>(var);
-
-    QSGTextureProvider *int3rface = QSGTextureProvider::from(obj);
-    if (!int3rface) {
-        qWarning("Could not assign property '%s', did not implement QSGTextureProvider.", source.name.constData());
+    QSGItem *item = qobject_cast<QSGItem *>(obj);
+    if (!item || !item->isTextureProvider()) {
+        qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
+                 source.name.constData(), qPrintable(obj->objectName()), obj->metaObject()->className());
+        return;
     }
 
-    source.item = qobject_cast<QSGItem *>(obj);
+    source.sourceObject = item;
+
 
     // TODO: Find better solution.
-    // 'source.item' needs a canvas to get a scenegraph node.
+    // 'item' needs a canvas to get a scenegraph node.
     // The easiest way to make sure it gets a canvas is to
     // make it a part of the same item tree as 'this'.
-    if (source.item && source.item->parentItem() == 0) {
-        source.item->setParentItem(this);
-        source.item->setVisible(false);
+    if (item && item->parentItem() == 0) {
+        item->setParentItem(this);
+        item->setVisible(false);
     }
 }
 
@@ -455,8 +460,9 @@ void QSGShaderEffect::reset()
     for (int i = 0; i < m_sources.size(); ++i) {
         const SourceData &source = m_sources.at(i);
         delete source.mapper;
-        if (source.item && source.item->parentItem() == this)
-            source.item->setParentItem(0);
+        QSGItem *item = qobject_cast<QSGItem *>(source.sourceObject);
+        if (item && item->parentItem() == this)
+            item->setParentItem(0);
     }
     m_sources.clear();
 
@@ -528,7 +534,7 @@ void QSGShaderEffect::lookThroughShaderCode(const QByteArray &code)
                     SourceData d;
                     d.mapper = new QSignalMapper;
                     d.name = name;
-                    d.item = 0;
+                    d.sourceObject = 0;
                     m_sources.append(d);
                 }
             }
@@ -546,13 +552,21 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 {
     QSGShaderEffectNode *node = static_cast<QSGShaderEffectNode *>(oldNode);
 
+    // In the case of a bad vertex shader, don't try to create a node...
+    if (m_source.attributeNames.isEmpty()) {
+        if (node)
+            delete node;
+        return 0;
+    }
+
     if (!node) {
         node = new QSGShaderEffectNode;
-        node->setMaterial(&m_material);
         m_programDirty = true;
         m_dirtyData = true;
         m_dirtyGeometry = true;
     }
+
+    QSGShaderEffectMaterial *material = node->shaderMaterial();
 
     if (m_dirtyMesh) {
         node->setGeometry(0);
@@ -586,45 +600,45 @@ QSGNode *QSGShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
             s.vertexCode = qt_default_vertex_code;
         s.className = metaObject()->className();
 
-        m_material.setProgramSource(s);
+        material->setProgramSource(s);
         node->markDirty(QSGNode::DirtyMaterial);
         m_programDirty = false;
     }
 
     // Update blending
-    if (bool(m_material.flags() & QSGMaterial::Blending) != m_blending) {
-        m_material.setFlag(QSGMaterial::Blending, m_blending);
+    if (bool(material->flags() & QSGMaterial::Blending) != m_blending) {
+        material->setFlag(QSGMaterial::Blending, m_blending);
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
-    if (int(m_material.cullMode()) != int(m_cullMode)) {
-        m_material.setCullMode(QSGShaderEffectMaterial::CullMode(m_cullMode));
+    if (int(material->cullMode()) != int(m_cullMode)) {
+        material->setCullMode(QSGShaderEffectMaterial::CullMode(m_cullMode));
         node->markDirty(QSGNode::DirtyMaterial);
     }
 
     if (m_dirtyData) {
         QVector<QPair<QByteArray, QVariant> > values;
-        QVector<QPair<QByteArray, QPointer<QSGItem> > > textures;
-        const QVector<QPair<QByteArray, QPointer<QSGItem> > > &oldTextures = m_material.textureProviders();
+        QVector<QPair<QByteArray, QSGTextureProvider *> > textures;
+        const QVector<QPair<QByteArray, QSGTextureProvider *> > &oldTextures = material->textureProviders();
 
         for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin(); 
              it != m_source.uniformNames.end(); ++it) {
             values.append(qMakePair(*it, property(*it)));
         }
         for (int i = 0; i < oldTextures.size(); ++i) {
-            QSGTextureProvider *oldSource = QSGTextureProvider::from(oldTextures.at(i).second);
-            if (oldSource && oldSource->textureChangedSignal())
-                disconnect(oldTextures.at(i).second, oldSource->textureChangedSignal(), node, SLOT(markDirtyTexture()));
+            QSGTextureProvider *t = oldTextures.at(i).second;
+            if (t)
+                disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
         }
         for (int i = 0; i < m_sources.size(); ++i) {
             const SourceData &source = m_sources.at(i);
-            textures.append(qMakePair(source.name, source.item));
-            QSGTextureProvider *t = QSGTextureProvider::from(source.item);
-            if (t && t->textureChangedSignal())
-                connect(source.item, t->textureChangedSignal(), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
+            QSGTextureProvider *t = source.sourceObject->textureProvider();
+            textures.append(qMakePair(source.name, t));
+            if (t)
+                connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
         }
-        m_material.setUniforms(values);
-        m_material.setTextureProviders(textures);
+        material->setUniforms(values);
+        material->setTextureProviders(textures);
         node->markDirty(QSGNode::DirtyMaterial);
         m_dirtyData = false;
     }

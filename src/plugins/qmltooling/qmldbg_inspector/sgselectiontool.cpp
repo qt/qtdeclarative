@@ -44,7 +44,7 @@
 #include "sghighlight.h"
 #include "sgviewinspector.h"
 
-#include <QtGui/QMenu>
+#include <QtWidgets/QMenu>
 #include <QtGui/QMouseEvent>
 #include <QtDeclarative/QSGView>
 #include <QtDeclarative/QSGItem>

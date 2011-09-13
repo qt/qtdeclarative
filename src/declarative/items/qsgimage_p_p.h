@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGImagePrivate;
+class QSGImageTextureProvider;
 
 class QSGImagePrivate : public QSGImageBasePrivate
 {
@@ -76,6 +76,8 @@ public:
     bool pixmapChanged : 1;
     QSGImage::HAlignment hAlign;
     QSGImage::VAlignment vAlign;
+
+    QSGImageTextureProvider *provider;
 };
 
 QT_END_NAMESPACE

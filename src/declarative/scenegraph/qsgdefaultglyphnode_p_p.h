@@ -42,6 +42,7 @@
 #ifndef TEXTMASKMATERIAL_H
 #define TEXTMASKMATERIAL_H
 
+#include <qcolor.h>
 #include <qsgmaterial.h>
 #include <qsgtexture.h>
 #include <qsggeometry.h>
@@ -52,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 class QFontEngineGlyphCache;
-class QGLTextureGlyphCache;
+class QOpenGLTextureGlyphCache;
 class QFontEngine;
 class Geometry;
 class QSGTextMaskMaterial: public QSGMaterial
@@ -75,7 +76,7 @@ public:
 
     bool ensureUpToDate();
 
-    QGLTextureGlyphCache *glyphCache() const;
+    QOpenGLTextureGlyphCache *glyphCache() const;
     void populate(const QPointF &position,
                   const QVector<quint32> &glyphIndexes, const QVector<QPointF> &glyphPositions,
                   QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine);

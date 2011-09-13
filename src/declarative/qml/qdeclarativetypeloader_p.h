@@ -77,7 +77,8 @@ class QDeclarativeComponentPrivate;
 class QDeclarativeTypeData;
 class QDeclarativeDataLoader;
 
-class Q_AUTOTEST_EXPORT QDeclarativeDataBlob : public QDeclarativeRefCount
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDataBlob : public QDeclarativeRefCount
 {
 public:
     enum Status {
@@ -160,7 +161,8 @@ private:
     QList<QDeclarativeError> m_errors;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeDataLoader : public QObject
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeDataLoader : public QObject
 {
     Q_OBJECT
 public:
@@ -184,7 +186,8 @@ private:
     NetworkReplies m_networkReplies;
 };
 
-class Q_AUTOTEST_EXPORT QDeclarativeTypeLoader : public QDeclarativeDataLoader
+// Exported for QtQuick1
+class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeTypeLoader : public QDeclarativeDataLoader
 {
     Q_OBJECT
 public:

@@ -44,7 +44,7 @@
 
 #include "qsgdefaultrectanglenode_p.h"
 
-#include <private/qsgvertexcolormaterial_p.h>
+#include <qsgvertexcolormaterial.h>
 #include "qsgtexturematerial.h"
 
 #include <private/qsgcontext_p.h>
@@ -174,7 +174,7 @@ void QSGDefaultRectangleNode::setGradientStops(const QGradientStops &stops)
             setGeometry(g);
             setFlag(OwnsGeometry);
         }
-        static_cast<QSGVertexColorMaterial *>(material())->setColorsAreOpaque(m_gradient_is_opaque);
+        static_cast<QSGVertexColorMaterial *>(material())->setFlag(QSGMaterial::Blending, !m_gradient_is_opaque);
     }
 
     m_dirty_geometry = true;
@@ -248,13 +248,13 @@ void QSGDefaultRectangleNode::updateGeometry()
     QSGGeometry *fill = geometry();
 
     // Check that the vertex type matches the material.
-    Q_ASSERT(m_material_type != TypeFlat || fill->stride() == sizeof(Vertex));
-    Q_ASSERT(m_material_type != TypeVertexGradient || fill->stride() == sizeof(ColorVertex));
+    Q_ASSERT(m_material_type != TypeFlat || fill->sizeOfVertex() == sizeof(Vertex));
+    Q_ASSERT(m_material_type != TypeVertexGradient || fill->sizeOfVertex() == sizeof(ColorVertex));
 
     QSGGeometry *borderGeometry = 0;
     if (m_border) {
         borderGeometry = border()->geometry();
-        Q_ASSERT(borderGeometry->stride() == sizeof(Vertex));
+        Q_ASSERT(borderGeometry->sizeOfVertex() == sizeof(Vertex));
     }
 
     int fillVertexCount = 0;

@@ -53,6 +53,9 @@ QT_MODULE(Declarative)
 
 class QSGNode;
 struct PlainVertices;
+
+class QSGShaderEffectMaterialObject;
+
 //Genealogy: Hybrid of UltraParticle and ShaderEffect
 class QSGCustomParticle : public QSGParticlePainter
 {
@@ -62,6 +65,7 @@ class QSGCustomParticle : public QSGParticlePainter
 
 public:
     explicit QSGCustomParticle(QSGItem* parent=0);
+    ~QSGCustomParticle();
 
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
     void setFragmentShader(const QByteArray &code);
@@ -105,7 +109,7 @@ private:
         QByteArray name;
     };
     QVector<SourceData> m_sources;
-    QSGShaderEffectMaterial m_material;
+    QSGShaderEffectMaterialObject *m_material;
     QSGShaderEffectNode* m_rootNode;
     QHash<int, QSGShaderEffectNode*> m_nodes;
     qreal m_lastTime;

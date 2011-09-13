@@ -258,7 +258,7 @@ public:
     quint32 dummy:1;
 
     QSGCanvas *canvas;
-    QSGContext *sceneGraphContext() const { return static_cast<QSGCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
+    QSGContext *sceneGraphContext() const { Q_ASSERT(canvas); return static_cast<QSGCanvasPrivate *>(QObjectPrivate::get(canvas))->context; }
 
     QSGItem *parentItem;
     QList<QSGItem *> childItems;
@@ -322,7 +322,7 @@ public:
     void deliverKeyEvent(QKeyEvent *);
     void deliverInputMethodEvent(QInputMethodEvent *);
     void deliverFocusEvent(QFocusEvent *);
-    void deliverMouseEvent(QGraphicsSceneMouseEvent *);
+    void deliverMouseEvent(QMouseEvent *);
     void deliverWheelEvent(QWheelEvent *);
     void deliverTouchEvent(QTouchEvent *);
     void deliverHoverEvent(QHoverEvent *);

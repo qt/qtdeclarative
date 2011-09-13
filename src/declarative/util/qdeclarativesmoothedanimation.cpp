@@ -123,14 +123,14 @@ bool QSmoothedAnimation::recalc()
         sd = s;
     } else if (maximumEasingTime != -1 && tf > (maximumEasingTime / 1000.)) {
         qreal met = maximumEasingTime / 1000.;
-        //       tp|       |td
-        // vp_      _______
-        //         /       \
-        // vi_    /         \
-        //                   \
-        //                    \   _ 0
-        //       |ta|      |ta|
-        //
+        /*       tp|       |td
+         * vp_      _______
+         *         /       \
+         * vi_    /         \
+         *                   \
+         *                    \   _ 0
+         *       |ta|      |ta|
+         */
         qreal ta = met / 2.;
         a = (s - (vi * tf - 0.5 * vi * ta)) / (tf * ta - ta * ta);
 

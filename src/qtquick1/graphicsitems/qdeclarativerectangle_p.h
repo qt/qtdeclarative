@@ -53,7 +53,7 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Pen : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1Pen : public QObject
 {
     Q_OBJECT
 
@@ -133,7 +133,7 @@ private:
 };
 
 class QDeclarative1RectanglePrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Rectangle : public QDeclarativeItem
+class Q_QTQUICK1_EXPORT QDeclarative1Rectangle : public QDeclarativeItem
 {
     Q_OBJECT
 

@@ -40,8 +40,20 @@
 ****************************************************************************/
 
 #include "qsggeometry.h"
+#include "qsggeometry_p.h"
+
+#include <qopenglcontext.h>
+#include <qopenglfunctions.h>
+#include <private/qopenglextensions_p.h>
 
 QT_BEGIN_NAMESPACE
+
+
+QSGGeometry::Attribute QSGGeometry::Attribute::create(int attributeIndex, int tupleSize, int primitiveType, bool isPrimitive)
+{
+    Attribute a = { attributeIndex, tupleSize, primitiveType, isPrimitive, 0 };
+    return a;
+}
 
 
 /*!
@@ -52,7 +64,7 @@ QT_BEGIN_NAMESPACE
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true)
     };
     static AttributeSet attrs = { 1, sizeof(float) * 2, data };
     return attrs;
@@ -65,8 +77,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT },
-        { 1, 2, GL_FLOAT }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+        QSGGeometry::Attribute::create(1, 2, GL_FLOAT)
     };
     static AttributeSet attrs = { 2, sizeof(float) * 4, data };
     return attrs;
@@ -79,8 +91,8 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D(
 const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 {
     static Attribute data[] = {
-        { 0, 2, GL_FLOAT },
-        { 1, 4, GL_UNSIGNED_BYTE }
+        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
+        QSGGeometry::Attribute::create(1, 4, GL_UNSIGNED_BYTE)
     };
     static AttributeSet attrs = { 2, 2 * sizeof(float) + 4 * sizeof(char), data };
     return attrs;
@@ -122,20 +134,58 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_attributes(attributes)
     , m_data(0)
     , m_index_data_offset(-1)
+    , m_server_data(0)
     , m_owns_data(false)
+    , m_index_usage_pattern(AlwaysUploadPattern)
+    , m_vertex_usage_pattern(AlwaysUploadPattern)
 {
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
+
+    Q_ASSERT_X(indexType != GL_UNSIGNED_INT
+               || static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions())
+                  ->hasOpenGLExtension(QOpenGLExtensions::ElementIndexUint),
+               "QSGGeometry::QSGGeometry",
+               "GL_UNSIGNED_INT is not supported, geometry will not render"
+               );
+
+    if (indexType != GL_UNSIGNED_BYTE
+        && indexType != GL_UNSIGNED_SHORT
+        && indexType != GL_UNSIGNED_INT) {
+        qFatal("QSGGeometry: Unsupported index type, %x.\n", indexType);
+    }
+
 
     // Because allocate reads m_vertex_count, m_index_count and m_owns_data, these
     // need to be set before calling allocate...
     allocate(vertexCount, indexCount);
 }
 
+/*!
+    \fn int QSGGeometry::sizeOfVertex() const
+
+    Returns the size in bytes of one vertex.
+
+    This value comes from the attributes.
+ */
+
+/*!
+    \fn int QSGGeometry::sizeOfIndex() const
+
+    Returns the byte size of the index type.
+
+    This value is either 1 when index type is GL_UNSIGNED_BYTE or 2 when
+    index type is GL_UNSIGNED_SHORT. For Desktop OpenGL, GL_UNSIGNED_INT
+    with the value 4 is also supported.
+ */
+
 QSGGeometry::~QSGGeometry()
 {
     if (m_owns_data)
         qFree(m_data);
+
+    if (m_server_data)
+        delete m_server_data;
 }
 
 /*!
@@ -250,6 +300,15 @@ void QSGGeometry::allocate(int vertexCount, int indexCount)
         m_owns_data = true;
     }
 
+    // If we have associated vbo data we could potentially crash later if
+    // the old buffers are used with the new vertex and index count, so we force
+    // an update in the renderer in that case. This is really the users responsibility
+    // but it is cheap for us to enforce this, so why not...
+    if (m_server_data) {
+        markIndexDataDirty();
+        markVertexDataDirty();
+    }
+
 }
 
 /*!
@@ -306,5 +365,102 @@ void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect,
     v[3].tx = textureRect.right();
     v[3].ty = textureRect.bottom();
 }
+
+
+
+/*!
+    \enum QSGGeometry::DataPattern
+
+    The DataPattern enum is used to specify the use pattern for the vertex
+    and index data in a geometry object.
+
+    \value AlwaysUploadPattern The data is always uploaded. This means that
+    the user does not need to explicitly mark index and vertex data as
+    dirty after changing it. This is the default.
+
+    \value DynamicPattern The data is modified repeatedly and drawn many times.
+    This is a hint that may provide better performance. When set
+    the user must make sure to mark the data as dirty after changing it.
+
+    \value StaticPattern The data is modified once and drawn many times. This is
+    a hint that may provide better performance. When set the user must make sure
+    to mark the data as dirty after changing it.
+ */
+
+
+/*!
+    \fn QSGGeometry::DataPattern QSGGeometry::indexDataPattern() const
+
+    Returns the usage pattern for indices in this geometry. The default
+    pattern is AlwaysUploadPattern.
+ */
+
+/*!
+    Sets the usage pattern for indices to \a p.
+
+    The default is AlwaysUploadPattern. When set to anything other than
+    the default, the user must call markIndexDataDirty() after changing
+    the index data.
+ */
+
+void QSGGeometry::setIndexDataPattern(DataPattern p)
+{
+    m_index_usage_pattern = p;
+}
+
+
+
+
+/*!
+    \fn QSGGeometry::DataPattern QSGGeometry::vertexDataPattern() const
+
+    Returns the usage pattern for vertices in this geometry. The default
+    pattern is AlwaysUploadPattern.
+ */
+
+/*!
+    Sets the usage pattern for vertices to \a p.
+
+    The default is AlwaysUploadPattern. When set to anything other than
+    the default, the user must call markVertexDataDirty() after changing
+    the vertex data.
+ */
+
+void QSGGeometry::setVertexDataPattern(DataPattern p)
+{
+    m_vertex_usage_pattern = p;
+}
+
+
+
+
+/*!
+    Mark that the vertices in this geometry has changed and must be uploaded
+    again.
+
+    This function only has an effect when the usage pattern for vertices is
+    StaticData and the renderer that renders this geometry uploads the geometry
+    into Vertex Buffer Objects (VBOs).
+ */
+void QSGGeometry::markIndexDataDirty()
+{
+    m_dirty_index_data = true;
+}
+
+
+
+/*!
+    Mark that the vertices in this geometry has changed and must be uploaded
+    again.
+
+    This function only has an effect when the usage pattern for vertices is
+    StaticData and the renderer that renders this geometry uploads the geometry
+    into Vertex Buffer Objects (VBOs).
+ */
+void QSGGeometry::markVertexDataDirty()
+{
+    m_dirty_vertex_data = true;
+}
+
 
 QT_END_NAMESPACE

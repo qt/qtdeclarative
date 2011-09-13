@@ -48,7 +48,7 @@
 #include <QtCore/QAbstractAnimation>
 
 #include <QPainter>
-#include <QtGui/qdrawutil.h>
+#include <QtWidgets/qdrawutil.h>
 #include <QVarLengthArray>
 
 #include <stdlib.h>

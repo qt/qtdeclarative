@@ -1,9 +1,6 @@
 INCLUDEPATH += $$PWD/coreapi $$PWD/convenience $$PWD/3d
 !contains(QT_CONFIG, egl):DEFINES += QT_NO_EGL
 
-QT += opengl
-
-
 # Core API
 HEADERS += \
     $$PWD/coreapi/qsgdefaultrenderer_p.h \
@@ -11,7 +8,9 @@ HEADERS += \
     $$PWD/coreapi/qsgmaterial.h \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
-    $$PWD/coreapi/qsgrenderer_p.h
+    $$PWD/coreapi/qsgrenderer_p.h \
+    $$PWD/coreapi/qsggeometry_p.h
+
 SOURCES += \
     $$PWD/coreapi/qsgdefaultrenderer.cpp \
     $$PWD/coreapi/qsggeometry.cpp \
@@ -31,7 +30,7 @@ HEADERS += \
     $$PWD/util/qsgsimpletexturenode.h \
     $$PWD/util/qsgtexturematerial.h \
     $$PWD/util/qsgtexturematerial_p.h \
-    $$PWD/util/qsgvertexcolormaterial_p.h \
+    $$PWD/util/qsgvertexcolormaterial.h \
     $$PWD/util/qsgtexture.h \
     $$PWD/util/qsgtexture_p.h \
     $$PWD/util/qsgtextureprovider_p.h \

@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QDeclarative1ApplicationPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarative1Application : public QObject
+class Q_QTQUICK1_EXPORT QDeclarative1Application : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)

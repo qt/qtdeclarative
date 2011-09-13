@@ -124,9 +124,9 @@ public:
         return model && model->count() > 0 && model->isValid() && path;
     }
 
-    void handleMousePressEvent(QGraphicsSceneMouseEvent *event);
-    void handleMouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void handleMouseReleaseEvent(QGraphicsSceneMouseEvent *);
+    void handleMousePressEvent(QMouseEvent *event);
+    void handleMouseMoveEvent(QMouseEvent *event);
+    void handleMouseReleaseEvent(QMouseEvent *);
 
     int calcCurrentIndex();
     void updateCurrent();

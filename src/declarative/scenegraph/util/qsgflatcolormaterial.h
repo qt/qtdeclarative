@@ -43,6 +43,7 @@
 #define FLATCOLORMATERIAL_H
 
 #include <qsgmaterial.h>
+#include <qcolor.h>
 
 QT_BEGIN_HEADER
 
@@ -59,6 +60,8 @@ public:
 
     void setColor(const QColor &color);
     const QColor &color() const { return m_color; }
+
+    int compare(const QSGMaterial *other) const;
 
 private:
     QColor m_color;

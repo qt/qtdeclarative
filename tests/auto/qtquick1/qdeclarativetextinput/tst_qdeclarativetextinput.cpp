@@ -50,7 +50,7 @@
 #include <QDir>
 #include <QStyle>
 #include <QInputContext>
-#include <private/qapplication_p.h>
+#include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 
 #include "qplatformdefs.h"
 

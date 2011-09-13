@@ -41,6 +41,9 @@
 
 #include "qsgtextureprovider_p.h"
 
+#include <qsgimage_p.h>
+#include <qsgshadereffectsource_p.h>
+
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif
@@ -50,16 +53,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QSGTextureProvider
     \brief The QSGTextureProvider class encapsulates texture based entities in QML.
+
+    The QSGTextureProvider lives primarily in the scene graph rendering thread.
  */
 
-
-/*!
-    Convenience function for casting a QObject to a QSGTextureProvider
- */
-QSGTextureProvider *QSGTextureProvider::from(QObject *object)
-{
-    return object ? static_cast<QSGTextureProvider *>(object->qt_metacast("QSGTextureProvider")) : 0;
-}
 
 
 QT_END_NAMESPACE

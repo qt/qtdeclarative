@@ -74,8 +74,8 @@ SGTESTS =  \
     qsgpositioners \
     qsgrepeater \
     qsgtext \
-    qsgtextedit \
-    qsgtextinput \
+ #   qsgtextedit \
+ #   qsgtextinput \
     qsgvisualdatamodel \
 
 

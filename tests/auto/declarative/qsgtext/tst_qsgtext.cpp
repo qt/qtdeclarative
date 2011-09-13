@@ -52,7 +52,7 @@
 #include <QSGView>
 #include <private/qapplication_p.h>
 #include <limits.h>
-
+#include <QtGui/QMouseEvent>
 #include "../../../shared/util.h"
 #include "testhttpserver.h"
 #include <QtOpenGL/QGLShaderProgram>
@@ -109,11 +109,11 @@ private slots:
 
     void clickLink();
 
-    void QTBUG_12291();
+
     void implicitSize_data();
     void implicitSize();
 
-    void qtbug_14734();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -135,9 +135,6 @@ private:
 };
 void tst_qsgtext::initTestCase()
 {
-    QSGView canvas;
-    if (!QGLShaderProgram::hasOpenGLShaderPrograms(canvas.context()))
-        QSKIP("Text item needs OpenGL 2.0", SkipAll);
 }
 
 void tst_qsgtext::cleanupTestCase()
@@ -505,8 +502,9 @@ void tst_qsgtext::alignments_data()
 
 void tst_qsgtext::alignments()
 {
-    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph", SkipAll);
 
+    QSKIP("Text alignment pixmap comparison tests will not work with scenegraph", SkipAll);
+#if (0)// No widgets in scenegraph
     QFETCH(int, hAlign);
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
@@ -521,8 +519,8 @@ void tst_qsgtext::alignments()
     QSGView *canvas = createView(SRCDIR "/data/alignments.qml");
 
     canvas->show();
-    QApplication::setActiveWindow(canvas);
-    QTest::qWaitForWindowShown(canvas);
+    canvas->requestActivateWindow();
+    QTest::qWait(50);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
 
     QObject *ob = canvas->rootObject();
@@ -545,6 +543,7 @@ void tst_qsgtext::alignments()
 #endif
 
     delete canvas;
+#endif
 }
 
 //the alignment tests may be trivial o.oa
@@ -1192,33 +1191,17 @@ void tst_qsgtext::wordSpacing()
     }
 }
 
-void tst_qsgtext::QTBUG_12291()
-{
-    QSGView *canvas = createView(SRCDIR "/data/rotated.qml");
 
-    canvas->show();
-    QApplication::setActiveWindow(canvas);
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
 
-    QObject *ob = canvas->rootObject();
-    QVERIFY(ob != 0);
-
-    QSGText *text = ob->findChild<QSGText*>("text");
-    QVERIFY(text);
-    QVERIFY(text->boundingRect().isValid());
-
-    delete canvas;
-}
 
 class EventSender : public QSGItem
 {
 public:
-    void sendEvent(QEvent *event) {
-        if (event->type() == QEvent::GraphicsSceneMousePress)
-            mousePressEvent(static_cast<QGraphicsSceneMouseEvent*>(event));
-        else if (event->type() == QEvent::GraphicsSceneMouseRelease)
-            mouseReleaseEvent(static_cast<QGraphicsSceneMouseEvent*>(event));
+    void sendEvent(QMouseEvent *event) {
+        if (event->type() == QEvent::MouseButtonPress)
+            mousePressEvent(event);
+        else if (event->type() == QEvent::MouseButtonRelease)
+            mouseReleaseEvent(event);
         else
             qWarning() << "Trying to send unsupported event type";
     }
@@ -1250,18 +1233,17 @@ void tst_qsgtext::clickLink()
         QObject::connect(textObject, SIGNAL(linkActivated(QString)), &test, SLOT(linkClicked(QString)));
 
         {
-            QGraphicsSceneMouseEvent me(QEvent::GraphicsSceneMousePress);
-            me.setPos(QPointF(textObject->x()/2, textObject->y()/2));
-            me.setButton(Qt::LeftButton);
+            QMouseEvent me(QEvent::MouseButtonPress,QPointF(textObject->x()/2, textObject->y()/2), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
             static_cast<EventSender*>(static_cast<QSGItem*>(textObject))->sendEvent(&me);
+
         }
 
         {
-            QGraphicsSceneMouseEvent me(QEvent::GraphicsSceneMouseRelease);
-            me.setPos(QPointF(textObject->x()/2, textObject->y()/2));
-            me.setButton(Qt::LeftButton);
+            QMouseEvent me(QEvent::MouseButtonRelease,QPointF(textObject->x()/2, textObject->y()/2), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
             static_cast<EventSender*>(static_cast<QSGItem*>(textObject))->sendEvent(&me);
+
         }
+
 
         QCOMPARE(test.link, QLatin1String("http://qt.nokia.com"));
 
@@ -1408,18 +1390,6 @@ void tst_qsgtext::implicitSize()
     delete textObject;
 }
 
-void tst_qsgtext::qtbug_14734()
-{
-    QSGView *canvas = createView(SRCDIR "/data/qtbug_14734.qml");
-    QVERIFY(canvas);
-
-    canvas->show();
-    QApplication::setActiveWindow(canvas);
-    QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
-
-    delete canvas;
-}
 
 QTEST_MAIN(tst_qsgtext)
 

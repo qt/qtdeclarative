@@ -41,10 +41,11 @@
 
 #include "qdeclarativeparserstatus.h"
 
+#include <QtGui/qcolor.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qvariant.h>
-#include <QtOpenGL/qglfunctions.h>
+#include <QtGui/qopenglfunctions.h>
 
 #ifndef SHADEREFFECTMESH_H
 #define SHADEREFFECTMESH_H
