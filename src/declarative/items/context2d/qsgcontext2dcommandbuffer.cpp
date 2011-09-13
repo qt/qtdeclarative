@@ -45,10 +45,13 @@
 #include <QtCore/QMutex>
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))
+
+void qt_image_boxblur(QImage& image, int radius, bool quality);
+
 static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
 {
-    QImage shadowImg(image.width() + blur * 2 + qAbs(offsetX),
-                     image.height() + blur *2 + qAbs(offsetY),
+    QImage shadowImg(image.width() + blur + qAbs(offsetX),
+                     image.height() + blur + qAbs(offsetY),
                      QImage::Format_ARGB32);
     shadowImg.fill(0);
     QPainter tmpPainter(&shadowImg);
@@ -59,17 +62,8 @@ static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY,
     tmpPainter.drawImage(shadowX, shadowY, image);
     tmpPainter.end();
 
-    // blur the alpha channel
-    if (blur > 0) {
-        QImage blurred(shadowImg.size(), QImage::Format_ARGB32);
-        blurred.fill(0);
-        QPainter blurPainter(&blurred);
-#if 0
-        qt_blurImage(&blurPainter, shadowImg, blur, true, false);
-#endif
-        blurPainter.end();
-        shadowImg = blurred;
-    }
+    if (blur > 0)
+        qt_image_boxblur(shadowImg, blur/2, true);
 
     // blacken the image with shadow color...
     tmpPainter.begin(&shadowImg);

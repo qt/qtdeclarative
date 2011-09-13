@@ -131,13 +131,13 @@ Item {
           twitterUser.showFriends(ctx);
           ctx.shadowOffsetX = 5;
           ctx.shadowOffsetY = 5;
-          ctx.shadowBlur = 20;
+          ctx.shadowBlur = 7;
           ctx.shadowColor = "blue";
           ctx.globalAlpha = 1;
       }  else {
           ctx.shadowOffsetX = 5;
           ctx.shadowOffsetY = 5;
-          ctx.shadowBlur = 20;
+          ctx.shadowBlur = 7;
           ctx.shadowColor = twitterUser.linkColor;
           ctx.globalAlpha = 0.6;
       }

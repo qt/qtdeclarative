@@ -45,11 +45,6 @@
 #include "qsgcontext2d_p.h"
 #include "qdeclarativepixmapcache_p.h"
 
-// Note, this is exported but in a private header as qtopengl depends on it.
-// But it really should be considered private API
-void qt_blurImage(QPainter *p, QImage &blurImage, qreal radius, bool quality, bool alphaOnly, int transposed = 0);
-void qt_blurImage(QImage &blurImage, qreal radius, bool quality, int transposed = 0);
-
 
 QT_BEGIN_HEADER
 

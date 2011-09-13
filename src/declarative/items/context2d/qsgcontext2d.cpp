@@ -338,45 +338,52 @@ public:
     QImage image;
 };
 
-static QImage qt_texture_to_image(QSGTexture* texture)
+QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
 {
-    if (!texture || !texture->textureId())
-        return QImage();
-    QOpenGLFramebufferObjectFormat format;
-    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-    format.setInternalTextureFormat(GL_RGBA);
-    format.setMipmap(false);
-    QOpenGLFramebufferObject* fbo = new QOpenGLFramebufferObject(texture->textureSize(), format);
-#if 0
-    // ### refactor
-    fbo->drawTexture(QPointF(0,0), texture->textureId(), GL_TEXTURE_2D);
-#endif
-    return fbo->toImage();
+    int sides = radius ? radius : qRound(qSqrt(weights.size()));
+    int half = qFloor(sides/2);
+
+    QImage dst = QImage(src.size(), src.format());
+    int w = src.width();
+    int h = src.height();
+    for (int y = 0; y < dst.height(); ++y) {
+      QRgb *dr = (QRgb*)dst.scanLine(y);
+      for (int x = 0; x < dst.width(); ++x) {
+          unsigned char* dRgb = ((unsigned char*)&dr[x]);
+          unsigned char red=0, green=0, blue=0, alpha=0;
+          int sy = y;
+          int sx = x;
+
+          for (int cy=0; cy<sides; cy++) {
+             for (int cx=0; cx<sides; cx++) {
+               int scy = sy + cy - half;
+               int scx = sx + cx - half;
+               if (scy >= 0 && scy < w && scx >= 0 && scx < h) {
+                  const QRgb *sr = (const QRgb*)(src.constScanLine(scy));
+                  const unsigned char* sRgb = ((const unsigned char*)&sr[scx]);
+                  qreal wt = radius ? weights[0] : weights[cy*sides+cx];
+                  red += sRgb[0] * wt;
+                  green += sRgb[1] * wt;
+                  blue += sRgb[2] * wt;
+                  alpha += sRgb[3] * wt;
+               }
+             }
+          }
+          dRgb[0] = red;
+          dRgb[1] = green;
+          dRgb[2] = blue;
+          dRgb[3] = alpha;
+      }
+    }
+    return dst;
 }
 
-static QSGTexture* qt_item_to_texture(QSGItem* item)
+void qt_image_boxblur(QImage& image, int radius, bool quality)
 {
-    if (!item)
-        return 0;
-    QSGShaderEffectTexture* texture = new QSGShaderEffectTexture(item);
-    texture->setItem(QSGItemPrivate::get(item)->itemNode());
-    texture->setLive(true);
-
-    QRectF sourceRect = QRectF(0, 0, item->width(), item->height());
-
-    texture->setRect(sourceRect);
-    QSize textureSize = QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height())));
-    texture->setSize(textureSize);
-    texture->setRecursive(false);
-    texture->setFormat(GL_RGBA);
-    texture->setHasMipmaps(false);
-    texture->markDirtyTexture();
-    texture->updateTexture();
-    return texture;
-}
-
-static QImage qt_item_to_image(QSGItem* item) {
-    return qt_texture_to_image(qt_item_to_texture(item));
+    int passes = quality? 3: 1;
+    for (int i=0; i < passes; i++) {
+        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0/(radius * radius * 1.0), radius);
+    }
 }
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
@@ -1010,24 +1017,24 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 
     QV8Engine *engine = V8ENGINE();
 
-    if (args.Length() == 2) {
-        QSGContext2DEngineData *ed = engineData(engine);
-        v8::Local<v8::Object> pattern = ed->constructorPattern->NewInstance();
-        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
+//    if (args.Length() == 2) {
+//        QSGContext2DEngineData *ed = engineData(engine);
+//        v8::Local<v8::Object> pattern = ed->constructorPattern->NewInstance();
+//        QV8Context2DStyleResource *r = new QV8Context2DStyleResource(engine);
 
-        QImage img;
+//        QImage img;
 
-        QSGItem* item = qobject_cast<QSGItem*>(engine->toQObject(args[0]));
-        if (item) {
-            img = qt_item_to_image(item);
+//        QSGItem* item = qobject_cast<QSGItem*>(engine->toQObject(args[0]));
+//        if (item) {
+//            img = qt_item_to_image(item);
 //            if (img.isNull()) {
 //                //exception: INVALID_STATE_ERR
 //            }
-        } /*else {
-            //exception: TYPE_MISMATCH_ERR
-        }*/
+//        } /*else {
+//            //exception: TYPE_MISMATCH_ERR
+//        }*/
 
-        QString repetition = engine->toString(args[1]);
+//        QString repetition = engine->toString(args[1]);
 
 //        if (repetition == "repeat" || repetition.isEmpty()) {
 //            //TODO
@@ -1040,10 +1047,10 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 //        } else {
 //            //TODO: exception: SYNTAX_ERR
 //        }
-        r->brush = img;
-        pattern->SetExternalResource(r);
-        return pattern;
-    }
+//        r->brush = img;
+//        pattern->SetExternalResource(r);
+ //       return pattern;
+//    }
     return v8::Null();
 }
 
@@ -1558,7 +1565,7 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
-    CHECK_CONTEXT(r)
+    CHECK_CONTEXT(r);
 
     r->context->buffer()->fill(r->context->m_path);
 
@@ -1687,7 +1694,7 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
     CHECK_CONTEXT(r)
 
 
-    if (args.Length() == 6) {
+    if (args.Length() == 4) {
         r->context->ellipse(args[0]->NumberValue(),
                             args[1]->NumberValue(),
                             args[2]->NumberValue(),
@@ -2170,19 +2177,6 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
         horizontal = args[0]->BooleanValue();
         vertical = args[1]->BooleanValue();
     }
-#if 0
-    // ### refactor
-    // blur the alpha channel
-    if (state.shadowBlur > 0) {
-        QImage blurred(shadowImg.size(), QImage::Format_ARGB32);
-        blurred.fill(0);
-        QPainter blurPainter(&blurred);
-        qt_blurImage(&blurPainter, shadowImg, state.shadowBlur, false, true);
-        blurPainter.end();
-        shadowImg = blurred;
-    }
-#endif
-
     r->image = r->image.mirrored(horizontal, vertical);
     return args.This();
 }
@@ -2250,18 +2244,15 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             break;
         case QSGCanvasItem::Blur :
         {
-            QImage blurred(r->image.size(), QImage::Format_ARGB32);
-            qreal blur = 10;
-            if (args.Length() > 1)
-                blur = args[1]->NumberValue();
+            int radius = 3;
+            bool quality = false;
 
-            blurred.fill(Qt::transparent);
-            QPainter blurPainter(&blurred);
-#if 0
-            qt_blurImage(&blurPainter, r->image, blur, true, false);
-#endif
-            blurPainter.end();
-            r->image = blurred;
+            if (args.Length() > 1)
+                radius = args[1]->IntegerValue() / 2;
+            if (args.Length() > 2)
+                quality = args[2]->BooleanValue();
+
+            qt_image_boxblur(r->image, radius, quality);
         }
             break;
         case QSGCanvasItem::Opaque :
@@ -2278,45 +2269,10 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
         {
             if (args.Length() > 1 && args[1]->IsArray()) {
                 v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(args[1]);
-                QVector<int> weights;
+                QVector<qreal> weights;
                 for (uint32_t i = 0; i < array->Length(); ++i)
                     weights.append(array->Get(i)->NumberValue());
-                int sides = qRound(qSqrt(weights.size()));
-                int half = qFloor(sides/2);
-
-                QImage image = QImage(r->image.size(), QImage::Format_ARGB32);
-                int w = r->image.width();
-                int h = r->image.height();
-                for (int y = 0; y < image.height(); ++y) {
-                  QRgb *dRow = (QRgb*)image.scanLine(y);
-                  for (int x = 0; x < image.width(); ++x) {
-                      unsigned char* dRgb = ((unsigned char*)&dRow[x]);
-                      unsigned char red=0, green=0, blue=0, alpha=0;
-                      int sy = y;
-                      int sx = x;
-
-                      for (int cy=0; cy<sides; cy++) {
-                         for (int cx=0; cx<sides; cx++) {
-                           int scy = sy + cy - half;
-                           int scx = sx + cx - half;
-                           if (scy >= 0 && scy < w && scx >= 0 && scx < h) {
-                              QRgb *sRow = (QRgb*)(r->image.scanLine(scy));
-                              unsigned char* sRgb = ((unsigned char*)&sRow[scx]);
-                              int wt = weights[cy*sides+cx];
-                              red += sRgb[0] * wt;
-                              green += sRgb[1] * wt;
-                              blue += sRgb[2] * wt;
-                              alpha += sRgb[3] * wt;
-                           }
-                         }
-                      }
-                      dRgb[0] = red;
-                      dRgb[1] = green;
-                      dRgb[2] = blue;
-                      dRgb[3] = alpha;
-                  }
-                }
-                r->image = image;
+                r->image = qt_image_convolute_filter(r->image, weights);
             } else {
                 //error
             }
@@ -2932,7 +2888,7 @@ QSGContext2DEngineData::QSGContext2DEngineData(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("moveTo"), V8FUNCTION(ctx2d_moveTo, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("quadraticCurveTo"), V8FUNCTION(ctx2d_quadraticCurveTo, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("rect"), V8FUNCTION(ctx2d_rect, engine));
-    ft->PrototypeTemplate()->Set(v8::String::New("roundedRect "), V8FUNCTION(ctx2d_roundedRect, engine));
+    ft->PrototypeTemplate()->Set(v8::String::New("roundedRect"), V8FUNCTION(ctx2d_roundedRect, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("text"), V8FUNCTION(ctx2d_text, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("ellipse"), V8FUNCTION(ctx2d_ellipse, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("stroke"), V8FUNCTION(ctx2d_stroke, engine));
