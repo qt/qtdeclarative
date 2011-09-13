@@ -1793,7 +1793,7 @@ void tst_QSGListView::currentIndex()
     listview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
-    QCOMPARE(listview->currentIndex(), 0);
+    QCOMPARE(listview->currentIndex(), 1);
 
     QTest::keyClick(canvas, Qt::Key_Up);
     QCOMPARE(listview->currentIndex(), 0);
