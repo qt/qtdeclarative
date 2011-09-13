@@ -46,8 +46,8 @@
 #include "qsgcanvasitem_p.h"
 #include "qsgcontext2d_p.h"
 
-#include <QtOpenGL/QGLContext>
-#include <QtOpenGL/QGLFramebufferObject>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 
 #include <QtCore/QMutex>
 #include <QtCore/QWaitCondition>
@@ -152,10 +152,11 @@ private Q_SLOTS:
 
 private:
     QImage m_grabedImage;
-    QGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_fbo;
     QMutex m_mutex;
     QWaitCondition m_condition;
     QSize m_fboSize;
+    QPaintDevice *m_paint_device;
 };
 
 class QSGPlainTexture;

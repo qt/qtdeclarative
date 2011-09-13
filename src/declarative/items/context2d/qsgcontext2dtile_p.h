@@ -43,7 +43,7 @@
 #define QSGCONTEXT2DTILE_P_H
 
 #include "qsgcontext2d_p.h"
-#include <QtOpenGL/QGLFramebufferObject>
+#include <QOpenGLFramebufferObject>
 
 QT_BEGIN_HEADER
 
@@ -68,7 +68,10 @@ public:
     virtual void setRect(const QRect& r) = 0;
     virtual QPainter* createPainter(bool smooth = false);
 
+
 protected:
+    virtual void aboutToDraw() {}
+
     uint m_dirty : 1;
     QRect m_rect;
     QPaintDevice* m_device;
@@ -82,9 +85,15 @@ public:
     QSGContext2DFBOTile();
     ~QSGContext2DFBOTile();
     virtual void setRect(const QRect& r);
-    QGLFramebufferObject* fbo() const {return m_fbo;}
+    QOpenGLFramebufferObject* fbo() const {return m_fbo;}
+
+protected:
+    void aboutToDraw();
+
 private:
-    QGLFramebufferObject *m_fbo;
+
+
+    QOpenGLFramebufferObject *m_fbo;
 };
 
 class QSGContext2DImageTile : public QSGContext2DTile

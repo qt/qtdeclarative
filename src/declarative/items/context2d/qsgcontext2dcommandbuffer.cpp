@@ -42,7 +42,6 @@
 #include "qsgcontext2dcommandbuffer_p.h"
 #include "qsgcanvasitem_p.h"
 #include "qdeclarative.h"
-#include <QtGui/QApplication>
 #include <QtCore/QMutex>
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))
@@ -65,7 +64,9 @@ static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY,
         QImage blurred(shadowImg.size(), QImage::Format_ARGB32);
         blurred.fill(0);
         QPainter blurPainter(&blurred);
+#if 0
         qt_blurImage(&blurPainter, shadowImg, blur, true, false);
+#endif
         blurPainter.end();
         shadowImg = blurred;
     }

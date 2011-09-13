@@ -477,14 +477,8 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
     }
 
     s.vertexCode = qt_particles_template_vertex_code + s.vertexCode;
-<<<<<<< HEAD
-    m_material.setProgramSource(s);
-    foreach (const QString &str, m_groups){
-=======
     m_material->setProgramSource(s);
-
-    foreach (const QString &str, m_particles){
->>>>>>> refactor
+    foreach (const QString &str, m_groups){
         int gIdx = m_system->m_groupIds[str];
         int count = m_system->m_groupData[gIdx]->size();
         //Create Particle Geometry

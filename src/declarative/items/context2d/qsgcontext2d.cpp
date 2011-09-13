@@ -58,8 +58,6 @@
 #include <QtCore/qmath.h>
 #include "qv8engine_p.h"
 
-#include <QtOpenGL/QGLFramebufferObjectFormat>
-#include <QtOpenGL/QGLFramebufferObject>
 #include "qdeclarativeengine.h"
 QT_BEGIN_NAMESPACE
 /*!
@@ -344,12 +342,15 @@ static QImage qt_texture_to_image(QSGTexture* texture)
 {
     if (!texture || !texture->textureId())
         return QImage();
-    QGLFramebufferObjectFormat format;
-    format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     format.setInternalTextureFormat(GL_RGBA);
     format.setMipmap(false);
-    QGLFramebufferObject* fbo = new QGLFramebufferObject(texture->textureSize(), format);
+    QOpenGLFramebufferObject* fbo = new QOpenGLFramebufferObject(texture->textureSize(), format);
+#if 0
+    // ### refactor
     fbo->drawTexture(QPointF(0,0), texture->textureId(), GL_TEXTURE_2D);
+#endif
     return fbo->toImage();
 }
 
@@ -723,15 +724,7 @@ static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
     CHECK_CONTEXT(r)
 
-
-<<<<<<< HEAD
     return v8::Number::New(r->context->state.globalAlpha);
-=======
-    QV8Engine *engine = V8ENGINE_ACCESSOR();
-    Q_UNUSED(engine)
-
-    return v8::Boolean::New(r->context->valid());
->>>>>>> refactor
 }
 
 static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
@@ -2171,13 +2164,12 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
       return v8::Undefined();
     }
 
-<<<<<<< HEAD
     if (args.Length() == 1) {
         horizontal = args[0]->BooleanValue();
     } else if (args.Length() == 2) {
         horizontal = args[0]->BooleanValue();
         vertical = args[1]->BooleanValue();
-=======
+    }
 #if 0
     // ### refactor
     // blur the alpha channel
@@ -2188,7 +2180,6 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
         qt_blurImage(&blurPainter, shadowImg, state.shadowBlur, false, true);
         blurPainter.end();
         shadowImg = blurred;
->>>>>>> refactor
     }
 #endif
 
@@ -2266,7 +2257,9 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
 
             blurred.fill(Qt::transparent);
             QPainter blurPainter(&blurred);
+#if 0
             qt_blurImage(&blurPainter, r->image, blur, true, false);
+#endif
             blurPainter.end();
             r->image = blurred;
         }
@@ -2832,9 +2825,9 @@ static int textAlignOffset(QSGContext2D::TextAlignType value, const QFontMetrics
 {
     int offset = 0;
     if (value == QSGContext2D::Start)
-        value = QApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Left : QSGContext2D::Right;
+        value = QGuiApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Left : QSGContext2D::Right;
     else if (value == QSGContext2D::End)
-        value = QApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Right: QSGContext2D::Left;
+        value = QGuiApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Right: QSGContext2D::Left;
     switch (value) {
     case QSGContext2D::QSGContext2D::Center:
         offset = metrics.width(text)/2;

@@ -4,9 +4,10 @@
 #include "qsgitem_p.h"
 #include "private/qsgtexture_p.h"
 #include "qsgcontext2dcommandbuffer_p.h"
+#include <QOpenGLPaintDevice>
 
-#include <QtOpenGL/QGLFramebufferObject>
-#include <QtOpenGL/QGLFramebufferObjectFormat>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObjectFormat>
 #include <QtCore/QThread>
 
 #define QT_MINIMUM_FBO_SIZE 64
@@ -361,6 +362,7 @@ void QSGContext2DTexture::clearTiles()
 QSGContext2DFBOTexture::QSGContext2DFBOTexture()
     : QSGContext2DTexture()
     , m_fbo(0)
+    , m_paint_device(0)
 {
     m_threadRendering = false;
 }
@@ -492,7 +494,7 @@ void QSGContext2DFBOTexture::compositeTile(QSGContext2DTile* tile)
         source.moveTo(source.topLeft() - t->rect().topLeft());
         target.moveTo(target.topLeft() - m_canvasWindow.topLeft());
 
-        QGLFramebufferObject::blitFramebuffer(m_fbo, target, t->fbo(), source);
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, target, t->fbo(), source);
     }
 }
 QSGCanvasItem::RenderTarget QSGContext2DFBOTexture::renderTarget() const
@@ -507,8 +509,8 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
         delete m_fbo;
         m_fbo = 0;
     } else if (!m_fbo || m_fbo->size() != m_fboSize) {
-        QGLFramebufferObjectFormat format;
-        format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+        QOpenGLFramebufferObjectFormat format;
+        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
         format.setInternalTextureFormat(GL_RGBA);
         format.setMipmap(false);
         format.setTextureTarget(GL_TEXTURE_2D);
@@ -516,11 +518,17 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
         glDisable(GL_DEPTH_TEST);
         glDepthMask(false);
 
-        m_fbo = new QGLFramebufferObject(m_fboSize, format);
+        m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
         glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
         updateBindOptions(false);
     }
-    return m_fbo;
+
+    m_fbo->bind();
+
+    if (!m_paint_device)
+        m_paint_device = new QOpenGLPaintDevice(m_fbo->size());
+
+    return m_paint_device;
 }
 
 void qt_quit_context2d_render_thread()

@@ -41,8 +41,9 @@
 
 #include "qsgcontext2dtile_p.h"
 
-#include <QtOpenGL/QGLFramebufferObject>
-#include <QtOpenGL/QGLFramebufferObjectFormat>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLFramebufferObjectFormat>
+#include <QOpenGLPaintDevice>
 
 QSGContext2DTile::QSGContext2DTile()
     : m_dirty(true)
@@ -63,6 +64,7 @@ QPainter* QSGContext2DTile::createPainter(bool smooth)
         m_painter.end();
 
     if (m_device) {
+        aboutToDraw();
         m_painter.begin(m_device);
         m_painter.resetTransform();
         m_painter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -97,10 +99,20 @@ QSGContext2DFBOTile::QSGContext2DFBOTile()
 {
 }
 
+
 QSGContext2DFBOTile::~QSGContext2DFBOTile()
 {
     delete m_fbo;
 }
+
+void QSGContext2DFBOTile::aboutToDraw()
+{
+    m_fbo->bind();
+    if (!m_device) {
+        m_device = new QOpenGLPaintDevice(rect().size());
+    }
+}
+
 
 void QSGContext2DFBOTile::setRect(const QRect& r)
 {
@@ -109,8 +121,8 @@ void QSGContext2DFBOTile::setRect(const QRect& r)
     m_rect = r;
     m_dirty = true;
     if (!m_fbo || m_fbo->size() != r.size()) {
-        QGLFramebufferObjectFormat format;
-        format.setAttachment(QGLFramebufferObject::CombinedDepthStencil);
+        QOpenGLFramebufferObjectFormat format;
+        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
         format.setInternalTextureFormat(GL_RGBA);
         format.setMipmap(false);
 
@@ -118,9 +130,8 @@ void QSGContext2DFBOTile::setRect(const QRect& r)
             m_painter.end();
 
         delete m_fbo;
-        m_fbo = new QGLFramebufferObject(r.size(), format);
+        m_fbo = new QOpenGLFramebufferObject(r.size(), format);
     }
-    m_device = m_fbo;
 }
 
 
