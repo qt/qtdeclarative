@@ -136,6 +136,12 @@ public:
         EqualPrefix
     };
 
+    enum RegExpFlag {
+        RegExp_Global     = 0x01,
+        RegExp_IgnoreCase = 0x02,
+        RegExp_Multiline  = 0x04
+    };
+
 public:
     Lexer(Engine *engine);
 

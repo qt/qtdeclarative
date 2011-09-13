@@ -53,18 +53,12 @@ QT_END_NAMESPACE
 
 using namespace QDeclarativeJS;
 
-enum RegExpFlag {
-    Global     = 0x01,
-    IgnoreCase = 0x02,
-    Multiline  = 0x04
-};
-
-static int flagFromChar(const QChar &ch)
+static int regExpFlagFromChar(const QChar &ch)
 {
     switch (ch.unicode()) {
-    case 'g': return Global;
-    case 'i': return IgnoreCase;
-    case 'm': return Multiline;
+    case 'g': return Lexer::RegExp_Global;
+    case 'i': return Lexer::RegExp_IgnoreCase;
+    case 'm': return Lexer::RegExp_Multiline;
     }
     return 0;
 }
@@ -863,7 +857,7 @@ bool Lexer::scanRegExp(RegExpBodyPrefix prefix)
             // scan the flags
             _patternFlags = 0;
             while (isIdentLetter(_char)) {
-                int flag = flagFromChar(_char);
+                int flag = regExpFlagFromChar(_char);
                 if (flag == 0) {
                     _errorMessage = QCoreApplication::translate("QDeclarativeParser", "Invalid regular expression flag '%0'")
                              .arg(QChar(_char));
