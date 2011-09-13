@@ -23,3 +23,5 @@ OTHER_FILES =   data/test.qml \
 
 
 CONFIG += parallel_test
+#temporary
+CONFIG += insignificant_test

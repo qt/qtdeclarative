@@ -2,7 +2,8 @@ load(qttest_p4)
 QT += declarative
 macx:CONFIG -= app_bundle
 SOURCES += tst_qjsengine.cpp
-
+#temporary
+CONFIG += insignificant_test
 wince* {
     DEFINES += SRCDIR=\\\"./\\\"
 } else:!symbian {

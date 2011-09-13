@@ -13,5 +13,6 @@ symbian: {
 }
 
 CONFIG += parallel_test
-
+#temporary
+CONFIG += insignificant_test
 QT += core-private gui-private declarative-private
