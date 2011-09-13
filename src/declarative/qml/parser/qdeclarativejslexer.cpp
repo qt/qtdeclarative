@@ -616,7 +616,7 @@ again:
                     break;
 
                 // single character escape sequence
-                case '\\': u = QLatin1Char('\''); scanChar(); break;
+                case '\\': u = QLatin1Char('\\'); scanChar(); break;
                 case '\'': u = QLatin1Char('\''); scanChar(); break;
                 case '\"': u = QLatin1Char('\"'); scanChar(); break;
                 case 'b':  u = QLatin1Char('\b'); scanChar(); break;
