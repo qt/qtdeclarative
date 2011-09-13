@@ -79,10 +79,12 @@ private slots:
     void wheel();
     void movingAndDragging();
     void disabled();
+    void flickVelocity();
 
 private:
     QDeclarativeEngine engine;
 
+    void flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &objectName);
 };
@@ -543,6 +545,52 @@ void tst_qsgflickable::disabled()
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10));
 
     QVERIFY(canvas->rootObject()->property("clicked").toBool() == true);
+}
+
+void tst_qsgflickable::flickVelocity()
+{
+#ifdef Q_WS_MAC
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems", SkipAll);
+#endif
+
+    QSGView *canvas = new QSGView;
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
+    canvas->show();
+    canvas->setFocus();
+    QVERIFY(canvas->rootObject() != 0);
+
+    QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
+    QVERIFY(flickable != 0);
+
+    // flick up
+    flick(canvas, QPoint(20,190), QPoint(20, 50), 200);
+    QVERIFY(flickable->verticalVelocity() > 0.0);
+    QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
+
+    // flick down
+    flick(canvas, QPoint(20,10), QPoint(20, 140), 200);
+    QVERIFY(flickable->verticalVelocity() < 0.0);
+    QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
+
+    delete canvas;
+}
+
+void tst_qsgflickable::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)
+{
+    const int pointCount = 5;
+    QPoint diff = to - from;
+
+    // send press, five equally spaced moves, and release.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+
+    for (int i = 0; i < pointCount; ++i) {
+        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(canvas, &mv);
+        QTest::qWait(duration/pointCount);
+        QCoreApplication::processEvents();
+    }
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
 }
 
 template<typename T>
