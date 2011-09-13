@@ -568,7 +568,10 @@ public:
 
     ~QSGRendererVBOGeometryData()
     {
-        QOpenGLFunctions *func = QOpenGLContext::currentContext()->functions();
+        QOpenGLContext *ctx = QOpenGLContext::currentContext();
+        if (!ctx)
+            return;
+        QOpenGLFunctions *func = ctx->functions();
         if (vertexBuffer)
             func->glDeleteBuffers(1, &vertexBuffer);
         if (indexBuffer)

@@ -125,7 +125,6 @@ void tst_qsgfocusscope::basic()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
 
     QTest::qWaitForWindowShown(view);
 
@@ -136,12 +135,14 @@ void tst_qsgfocusscope::basic()
     QVERIFY(item3->hasActiveFocus() == false);
 
     QTest::keyClick(view, Qt::Key_Right);
+    QTest::qWait(50);
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == false);
     QVERIFY(item2->hasActiveFocus() == true);
     QVERIFY(item3->hasActiveFocus() == false);
 
     QTest::keyClick(view, Qt::Key_Down);
+    QTest::qWait(50);
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -168,11 +169,8 @@ void tst_qsgfocusscope::nested()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
 
     QTest::qWaitForWindowShown(view);
-
-    QVERIFY(view->windowState() == Qt::WindowActive);
 
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == true);
@@ -198,11 +196,8 @@ void tst_qsgfocusscope::noFocus()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
-
     QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -239,7 +234,6 @@ void tst_qsgfocusscope::textEdit()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
 
     QTest::qWaitForWindowShown(view);
 
@@ -294,11 +288,8 @@ void tst_qsgfocusscope::forceFocus()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
-
     QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -365,14 +356,12 @@ void tst_qsgfocusscope::signalEmission()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
 
     QTest::qWaitForWindowShown(view);
 
     QVariant blue(QColor("blue"));
     QVariant red(QColor("red"));
 
-    QVERIFY(view->windowState() == Qt::WindowActive);
     item1->setFocus(true);
     QCOMPARE(item1->property("color"), red);
     QCOMPARE(item2->property("color"), blue);
@@ -590,12 +579,10 @@ void tst_qsgfocusscope::canvasFocus()
 
     view->show();
     view->requestActivateWindow();
-    qApp->processEvents();
 
     QTest::qWaitForWindowShown(view);
 
     // Now the canvas has focus, active focus given to item1
-    QTRY_COMPARE((view->windowState() == Qt::WindowActive), true);
     QCOMPARE(rootItem->hasFocus(), true);
     QCOMPARE(rootItem->hasActiveFocus(), true);
     QCOMPARE(scope1->hasFocus(), true);
