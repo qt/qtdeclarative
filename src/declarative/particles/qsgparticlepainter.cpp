@@ -95,7 +95,7 @@ void QSGParticlePainter::setSystem(QSGParticleSystem *arg)
                     this, SLOT(calcSystemOffset()));
             connect(m_system, SIGNAL(yChanged()),
                     this, SLOT(calcSystemOffset()));
-            calcSystemOffset();
+            reset();
         }
         emit systemChanged(arg);
     }
