@@ -457,6 +457,8 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
 
     context = QSGContext::createDefaultContext();
     thread->moveContextToThread(context);
+
+    q->setSurfaceType(QWindow::OpenGLSurface);
 }
 
 void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
