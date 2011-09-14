@@ -2,7 +2,7 @@ TEMPLATE=subdirs
 SUBDIRS=\
     declarative
 
-
-contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
+# ### refactor: port properly
+# contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
 
 !cross_compile:                             SUBDIRS += host.pro
