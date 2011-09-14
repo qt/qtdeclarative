@@ -67,7 +67,8 @@ public:
         NoDecoration = 0x0,
         Underline    = 0x1,
         Overline     = 0x2,
-        StrikeOut    = 0x4
+        StrikeOut    = 0x4,
+        Background   = 0x8
     };
     Q_DECLARE_FLAGS(Decorations, Decoration)
 
