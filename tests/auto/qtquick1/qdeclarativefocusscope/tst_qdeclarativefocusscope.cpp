@@ -47,6 +47,7 @@
 #include <QtQuick1/private/qdeclarativetextedit_p.h>
 #include <QtQuick1/private/qdeclarativetext_p.h>
 #include <QtQuick1/private/qdeclarativefocusscope_p.h>
+#include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -112,14 +113,10 @@ void tst_qdeclarativefocusscope::basic()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
@@ -159,14 +156,10 @@ void tst_qdeclarativefocusscope::nested()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
 
     QVERIFY(item1->hasActiveFocus() == true);
@@ -193,14 +186,10 @@ void tst_qdeclarativefocusscope::noFocus()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
@@ -238,14 +227,10 @@ void tst_qdeclarativefocusscope::textEdit()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
@@ -297,14 +282,10 @@ void tst_qdeclarativefocusscope::forceFocus()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
@@ -363,17 +344,13 @@ void tst_qdeclarativefocusscope::signalEmission()
 
     view->show();
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
     QVariant blue(QColor("blue"));
     QVariant red(QColor("red"));
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     item1->setFocus(true);
     QCOMPARE(item1->property("color"), red);
@@ -416,14 +393,10 @@ void tst_qdeclarativefocusscope::qtBug13380()
     view->show();
     QVERIFY(view->rootObject());
     qApp->setActiveWindow(view);
-    qApp->processEvents();
 
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(view);
-#endif
+    QTest::qWaitForWindowShown(view);
 
-    QVERIFY(view->hasFocus());
+    QTRY_VERIFY(view->hasFocus());
     QVERIFY(view->scene()->hasFocus());
     QVERIFY(view->rootObject()->property("noFocus").toBool());
 
