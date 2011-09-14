@@ -38,7 +38,8 @@
 **
 ****************************************************************************/
 
-#include <QtGui/qapplication.h>
+#include <QApplication>
+#include <QPainter>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qsgpainteditem.h>
@@ -71,9 +72,7 @@ int main(int argc, char ** argv)
 
     qmlRegisterType<MyPaintItem>("MyModule", 1, 0, "MyPaintItem");
 
-    QGLFormat f = QGLFormat::defaultFormat();
-    f.setSampleBuffers(true);
-    QSGView view(f);
+    QSGView view;
     view.setResizeMode(QSGView::SizeRootObjectToView);
     view.setSource(QUrl::fromLocalFile("smile.qml"));
     view.show();

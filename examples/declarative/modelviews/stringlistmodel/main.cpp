@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include <QApplication>
+#include <QStringList>
 
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
