@@ -144,6 +144,8 @@ public:
     QString errorMessage() const;
 
     bool prevTerminator() const;
+    bool followsClosingBrace() const;
+    bool canInsertAutomaticSemicolon(int token) const;
 
     enum ParenthesesState {
         IgnoreParentheses,
@@ -201,6 +203,7 @@ private:
     bool _prohibitAutomaticSemicolon;
     bool _restrictedKeyword;
     bool _terminator;
+    bool _followsClosingBrace;
     bool _delimited;
     bool _qmlMode;
 };

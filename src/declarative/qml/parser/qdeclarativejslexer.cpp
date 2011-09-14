@@ -111,6 +111,7 @@ Lexer::Lexer(Engine *engine)
     , _prohibitAutomaticSemicolon(false)
     , _restrictedKeyword(false)
     , _terminator(false)
+    , _followsClosingBrace(false)
     , _delimited(false)
     , _qmlMode(true)
 {
@@ -160,6 +161,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
     _prohibitAutomaticSemicolon = false;
     _restrictedKeyword = false;
     _terminator = false;
+    _followsClosingBrace = false;
     _delimited = false;
 }
 
@@ -175,12 +177,15 @@ void Lexer::scanChar()
 
 int Lexer::lex()
 {
+    const int previousTokenKind = _tokenKind;
+
     _tokenSpell = QStringRef();
     _tokenKind = scanToken();
     _tokenLength = _codePtr - _tokenStartPtr - 1;
 
     _delimited = false;
     _restrictedKeyword = false;
+    _followsClosingBrace = (previousTokenKind == T_RBRACE);
 
     // update the flags
     switch (_tokenKind) {
@@ -1042,6 +1047,19 @@ void Lexer::syncProhibitAutomaticSemicolon()
 bool Lexer::prevTerminator() const
 {
     return _terminator;
+}
+
+bool Lexer::followsClosingBrace() const
+{
+    return _followsClosingBrace;
+}
+
+bool Lexer::canInsertAutomaticSemicolon(int token) const
+{
+    return token == T_RBRACE
+            || token == EOF_SYMBOL
+            || _terminator
+            || _followsClosingBrace;
 }
 
 #include "qdeclarativejskeywords_p.h"

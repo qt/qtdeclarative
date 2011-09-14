@@ -407,14 +407,6 @@ void Parser::reallocateStack()
     string_stack = reinterpret_cast<QStringRef*> (qRealloc(string_stack, stack_size * sizeof(QStringRef)));
 }
 
-inline static bool automatic(Engine *driver, int token)
-{
-    return token == $table::T_RBRACE
-        || token == 0
-        || driver->lexer()->prevTerminator();
-}
-
-
 Parser::Parser(Engine *engine):
     driver(engine),
     pool(engine->pool()),
@@ -2890,7 +2882,7 @@ PropertyNameAndValueListOpt: PropertyNameAndValueList ;
         const int errorState = state_stack[tos];
 
         // automatic insertion of `;'
-        if (yytoken != -1 && t_action(errorState, T_AUTOMATIC_SEMICOLON) && automatic(driver, yytoken)) {
+        if (yytoken != -1 && t_action(errorState, T_AUTOMATIC_SEMICOLON) && lexer->canInsertAutomaticSemicolon(yytoken)) {
             SavedToken &tk = token_buffer[0];
             tk.token = yytoken;
             tk.dval = yylval;
