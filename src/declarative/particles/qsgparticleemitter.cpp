@@ -77,9 +77,11 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Shape QtQuick.Particles2::Emitter::shape
 
-    This shape is applied to the bounding box of the emitter. Particles are then emitting
-    from inside the area of the shape.
+    This shape is applied with the size of the Emitter. Particles will be emitted
+    randomly from any area covered by the shape.
 
+    The default shape is a filled in rectangle, which corresponds to the full bounding
+    box of the Emitter.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::Emitter::emitting

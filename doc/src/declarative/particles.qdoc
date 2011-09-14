@@ -55,6 +55,7 @@
     All the particle system elements act on "logical particles". Every particle has a logical representation inside
     the particle system, and this is what the elements act upon. Not every logical particle needs to be visualized,
     and some logical particles could lead to multiple visual particles being drawn on screen.
+
     \section1 Particle Groups
     Every logical particle is a member of a particle group, and each group is identified by a name. If no other
     group has been specified, a logical particle belongs to the group with the name "" (the empty string), which
@@ -66,9 +67,10 @@
     other (aside from the usual stochastic parameter variation) will need to be in different groups.
 
     Particles can also change groups dynamically. When this happens the particles trajectory is unaltered, but it
-    can be acted upon by different ParticlePainters or Affectors. Particles can either have their state changed by
-    an Affector, or stochastic state transitions can be defined in the group definition (in the particleStates property).
-    Generally, groups should only be defined in that property if they require stochastic state transitions. Otherwise,
+    can be acted upon by different ParticlePainters or Affectors. Particles can either have their group changed by
+    an Affector, or stochastic state transitions can be defined in a ParticleGroup element.
+
+    Generally, groups should only be defined in a ParticleGroup if they require stochastic state transitions. Otherwise,
     it is sufficient to have the groups be defined simply by the strings used in the particle/particles properties
     of the elements.
 
