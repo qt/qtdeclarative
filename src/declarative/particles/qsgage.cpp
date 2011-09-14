@@ -57,12 +57,27 @@ QT_BEGIN_NAMESPACE
     \qmlproperty int QtQuick.Particles2::Age::lifeLeft
 
     The amount of life to set the particle to have. Affected particles
-    will jump to a point in their life where they will have this many
+    will advance to a point in their life where they will have this many
     milliseconds left to live.
 */
 
+/*!
+    \qmlproperty bool QtQuick.Particles2::Age::advancePosition
+
+    advancePosition determines whether position, veclocity and acceleration are included in
+    the simulated aging done by the affector. If advancePosition is false,
+    then the position, velocity and acceleration will remain the same and only
+    other attributes (such as opacity) will advance in the simulation to where
+    it would normally be for that point in the particle's life. With advancePosition set to
+    true the position, velocity and acceleration will also advance to where it would
+    normally be by that point in the particle's life, making it advance its position
+    on screen.
+
+    Default value is true.
+*/
+
 QSGAgeAffector::QSGAgeAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_lifeLeft(0)
+    QSGParticleAffector(parent), m_lifeLeft(0), m_advancePosition(true)
 {
 }
 
@@ -73,7 +88,23 @@ bool QSGAgeAffector::affectParticle(QSGParticleData *d, qreal dt)
     if (d->stillAlive()){
         qreal curT = (qreal)m_system->m_timeInt/1000.0;
         qreal ttl = (qreal)m_lifeLeft/1000.0;
-        d->t = curT - (d->lifeSpan - ttl) + 1;
+        if (!m_advancePosition && ttl > 0){
+            qreal x = d->curX();
+            qreal vx = d->curVX();
+            qreal ax = d->curAX();
+            qreal y = d->curY();
+            qreal vy = d->curVY();
+            qreal ay = d->curAY();
+            d->t = curT - (d->lifeSpan - ttl);
+            d->setInstantaneousX(x);
+            d->setInstantaneousVX(vx);
+            d->setInstantaneousAX(ax);
+            d->setInstantaneousY(y);
+            d->setInstantaneousVY(vy);
+            d->setInstantaneousAY(ay);
+        } else {
+            d->t = curT - (d->lifeSpan - ttl);
+        }
         return true;
     }
     return false;

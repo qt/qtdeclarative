@@ -54,6 +54,7 @@ class QSGAgeAffector : public QSGParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(int lifeLeft READ lifeLeft WRITE setLifeLeft NOTIFY lifeLeftChanged)
+    Q_PROPERTY(bool advancePosition READ advancePosition WRITE setAdvancePosition NOTIFY advancePositionChanged)
 
 public:
     explicit QSGAgeAffector(QSGItem *parent = 0);
@@ -63,10 +64,16 @@ public:
         return m_lifeLeft;
     }
 
+    bool advancePosition() const
+    {
+        return m_advancePosition;
+    }
+
 protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
 signals:
     void lifeLeftChanged(int arg);
+    void advancePositionChanged(bool arg);
 
 public slots:
     void setLifeLeft(int arg)
@@ -77,9 +84,17 @@ public slots:
         }
     }
 
-private:
+    void setAdvancePosition(bool arg)
+    {
+        if (m_advancePosition != arg) {
+            m_advancePosition = arg;
+            emit advancePositionChanged(arg);
+        }
+    }
 
-int m_lifeLeft;
+private:
+    int m_lifeLeft;
+    bool m_advancePosition;
 };
 
 QT_END_NAMESPACE
