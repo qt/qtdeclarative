@@ -79,7 +79,6 @@ signals:
     void noiseSourceChanged(QUrl arg);
 
 public slots:
-        void initializeGrid();
 
     void setStrength(qreal arg)
     {
@@ -94,6 +93,7 @@ public slots:
         if (m_noiseSource != arg) {
             m_noiseSource = arg;
             emit noiseSourceChanged(arg);
+            initializeGrid();
         }
     }
 
@@ -103,6 +103,7 @@ protected:
 private:
     void ensureInit();
     void mapUpdate();
+    void initializeGrid();
     qreal boundsRespectingField(int x, int y);
     qreal m_strength;
     qreal m_lastT;
