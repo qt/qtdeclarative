@@ -62,7 +62,6 @@
 #include "private/qdeclarativeglobal_p.h"
 #include "private/qdeclarativebinding_p.h"
 #include "private/qdeclarativev4compiler_p.h"
-#include "private/qdeclarativeutils_p.h"
 
 #include <QColor>
 #include <QDebug>
@@ -127,7 +126,7 @@ bool QDeclarativeCompiler::isAttachedPropertyName(const QString &name)
 
 bool QDeclarativeCompiler::isAttachedPropertyName(const QHashedStringRef &name)
 {
-    return !name.isEmpty() && QDeclarativeUtils::isUpper(name.at(0));
+    return !name.isEmpty() && name.at(0).isUpper();
 }
 
 /*!
@@ -154,7 +153,7 @@ bool QDeclarativeCompiler::isSignalPropertyName(const QHashedStringRef &name)
     for (int i = 2; i < ns; ++i) {
         const QChar curr = name.at(i);
         if (curr.unicode() == '_') continue;
-        if (QDeclarativeUtils::isUpper(curr)) return true;
+        if (curr.isUpper()) return true;
         return false;
     }
     return false; // consists solely of underscores - invalid.
@@ -1463,7 +1462,7 @@ bool QDeclarativeCompiler::buildSignal(QDeclarativeScript::Property *prop, QDecl
     // Note that the property name could start with any alpha or '_' or '$' character,
     // so we need to do the lower-casing of the first alpha character.
     for (int firstAlphaIndex = 0; firstAlphaIndex < name.size(); ++firstAlphaIndex) {
-        if (QDeclarativeUtils::isUpper(name.at(firstAlphaIndex))) {
+        if (name.at(firstAlphaIndex).isUpper()) {
             name[firstAlphaIndex] = name.at(firstAlphaIndex).toLower();
             break;
         }
@@ -2310,7 +2309,7 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
         COMPILE_EXCEPTION(v, tr("Invalid property assignment: \"%1\" is a read-only property").arg(QString::fromUtf8(prop.name())));
 
     QString string = v->value.asString();
-    if (!QDeclarativeUtils::isUpper(string.at(0)))
+    if (!string.at(0).isUpper())
         return true;
 
     QStringList parts = string.split(QLatin1Char('.'));
@@ -2443,7 +2442,7 @@ bool QDeclarativeCompiler::checkDynamicMeta(QDeclarativeScript::Object *obj)
             }
         }
 
-        if (QDeclarativeUtils::isUpper(prop.name.at(0)))
+        if (prop.name.at(0).isUpper())
             COMPILE_EXCEPTION(&prop, tr("Property names cannot begin with an upper case letter"));
 
         if (enginePrivate->v8engine()->illegalNames().contains(prop.name))
@@ -2574,7 +2573,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
             QString nameBase = path.mid(lastSlash + 1, path.length()-lastSlash-5);
-            if (!nameBase.isEmpty() && QDeclarativeUtils::isUpper(nameBase.at(0)))
+            if (!nameBase.isEmpty() && nameBase.at(0).isUpper())
                 newClassName = nameBase.toUtf8() + "_QMLTYPE_" + QByteArray::number(uniqueClassId);
         }
     }
@@ -2891,16 +2890,16 @@ bool QDeclarativeCompiler::checkValidId(QDeclarativeScript::Value *v, const QStr
         COMPILE_EXCEPTION(v, tr( "Invalid empty ID"));
 
     QChar ch = val.at(0);
-    if (QDeclarativeUtils::isLetter(ch) && !QDeclarativeUtils::isLower(ch))
+    if (ch.isLetter() && !ch.isLower())
         COMPILE_EXCEPTION(v, tr( "IDs cannot start with an uppercase letter"));
 
     QChar u(QLatin1Char('_'));
-    if (!QDeclarativeUtils::isLetter(ch) && ch != u)
+    if (!ch.isLetter() && ch != u)
         COMPILE_EXCEPTION(v, tr( "IDs must start with a letter or underscore"));
 
     for (int ii = 1; ii < val.count(); ++ii) {
         ch = val.at(ii);
-        if (!QDeclarativeUtils::isLetterOrNumber(ch) && ch != u)
+        if (!ch.isLetterOrNumber() && ch != u)
             COMPILE_EXCEPTION(v, tr( "IDs must contain only letters, numbers, and underscores"));
     }
 

@@ -43,7 +43,6 @@
 #include "qdeclarativejsengine_p.h"
 #include "qdeclarativejsmemorypool_p.h"
 
-#include <private/qdeclarativeutils_p.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QVarLengthArray>
 #include <QtCore/QDebug>
@@ -279,7 +278,7 @@ again:
     _validTokenText = false;
     _tokenLinePtr = _lastLinePtr;
 
-    while (QDeclarativeUtils::isSpace(_char)) {
+    while (_char.isSpace()) {
         if (_char == QLatin1Char('\n')) {
             _tokenLinePtr = _codePtr;
 
@@ -418,19 +417,19 @@ again:
         return T_DIVIDE_;
 
     case '.':
-        if (QDeclarativeUtils::isDigit(_char)) {
+        if (_char.isDigit()) {
             QVarLengthArray<char,32> chars;
 
             chars.append(ch.unicode()); // append the `.'
 
-            while (QDeclarativeUtils::isDigit(_char)) {
+            while (_char.isDigit()) {
                 chars.append(_char.unicode());
                 scanChar();
             }
 
             if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-                if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                              QDeclarativeUtils::isDigit(_codePtr[1]))) {
+                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              _codePtr[1].isDigit())) {
 
                     chars.append(_char.unicode());
                     scanChar(); // consume `e'
@@ -440,7 +439,7 @@ again:
                         scanChar(); // consume the sign
                     }
 
-                    while (QDeclarativeUtils::isDigit(_char)) {
+                    while (_char.isDigit()) {
                         chars.append(_char.unicode());
                         scanChar();
                     }
@@ -667,7 +666,7 @@ again:
     }
 
     default:
-        if (QDeclarativeUtils::isLetter(ch) || ch == QLatin1Char('$') || ch == QLatin1Char('_') || (ch == QLatin1Char('\\') && _char == QLatin1Char('u'))) {
+        if (ch.isLetter() || ch == QLatin1Char('$') || ch == QLatin1Char('_') || (ch == QLatin1Char('\\') && _char == QLatin1Char('u'))) {
             bool identifierWithEscapeChars = false;
             if (ch == QLatin1Char('\\')) {
                 identifierWithEscapeChars = true;
@@ -682,7 +681,7 @@ again:
                 }
             }
             while (true) {
-                if (QDeclarativeUtils::isLetterOrNumber(_char) || _char == QLatin1Char('$') || _char == QLatin1Char('_')) {
+                if (_char.isLetterOrNumber() || _char == QLatin1Char('$') || _char == QLatin1Char('_')) {
                     if (identifierWithEscapeChars)
                         _tokenText += _char;
 
@@ -721,13 +720,13 @@ again:
                     return kind;
                 }
             }
-        } else if (QDeclarativeUtils::isDigit(ch)) {
+        } else if (ch.isDigit()) {
             if (ch != QLatin1Char('0')) {
                 double integer = ch.unicode() - '0';
 
                 QChar n = _char;
                 const QChar *code = _codePtr;
-                while (QDeclarativeUtils::isDigit(n)) {
+                while (n.isDigit()) {
                     integer = integer * 10 + (n.unicode() - '0');
                     n = *code++;
                 }
@@ -761,7 +760,7 @@ again:
             }
 
             // decimal integer literal
-            while (QDeclarativeUtils::isDigit(_char)) {
+            while (_char.isDigit()) {
                 chars.append(_char.unicode());
                 scanChar(); // consume the digit
             }
@@ -770,14 +769,14 @@ again:
                 chars.append(_char.unicode());
                 scanChar(); // consume `.'
 
-                while (QDeclarativeUtils::isDigit(_char)) {
+                while (_char.isDigit()) {
                     chars.append(_char.unicode());
                     scanChar();
                 }
 
                 if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-                    if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                                  QDeclarativeUtils::isDigit(_codePtr[1]))) {
+                    if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                                  _codePtr[1].isDigit())) {
 
                         chars.append(_char.unicode());
                         scanChar(); // consume `e'
@@ -787,15 +786,15 @@ again:
                             scanChar(); // consume the sign
                         }
 
-                        while (QDeclarativeUtils::isDigit(_char)) {
+                        while (_char.isDigit()) {
                             chars.append(_char.unicode());
                             scanChar();
                         }
                     }
                 }
             } else if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-                if (QDeclarativeUtils::isDigit(_codePtr[0]) || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                              QDeclarativeUtils::isDigit(_codePtr[1]))) {
+                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
+                                              _codePtr[1].isDigit())) {
 
                     chars.append(_char.unicode());
                     scanChar(); // consume `e'
@@ -805,7 +804,7 @@ again:
                         scanChar(); // consume the sign
                     }
 
-                    while (QDeclarativeUtils::isDigit(_char)) {
+                    while (_char.isDigit()) {
                         chars.append(_char.unicode());
                         scanChar();
                     }
