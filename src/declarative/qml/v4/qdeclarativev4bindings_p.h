@@ -67,7 +67,8 @@ class QDeclarativeV4Bindings : public QObject,
                                public QDeclarativeRefCount
 {
 public:
-    QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context);
+    QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context,
+                           QDeclarativeRefCount *);
     virtual ~QDeclarativeV4Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, int property);

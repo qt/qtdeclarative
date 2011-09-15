@@ -218,7 +218,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
                 ctxt->setIdPropertyData(comp->contextCaches.at(instr.contextCache));
             if (instr.compiledBinding != -1) {
                 const char *v4data = datas.at(instr.compiledBinding).constData();
-                ctxt->v4bindings = new QDeclarativeV4Bindings(v4data, ctxt);
+                ctxt->v4bindings = new QDeclarativeV4Bindings(v4data, ctxt, comp);
             }
         QML_END_INSTR(Init)
 

@@ -221,6 +221,7 @@ public:
     void run(Binding *, QDeclarativePropertyPrivate::WriteFlags flags);
 
     QDeclarativeV4Program *program;
+    QDeclarativeRefCount *dataRef;
     Binding *bindings;
 
     static int methodCount;
@@ -245,18 +246,20 @@ public:
 };
 
 QDeclarativeV4BindingsPrivate::QDeclarativeV4BindingsPrivate()
-: subscriptions(0), program(0), bindings(0)
+: subscriptions(0), program(0), dataRef(0), bindings(0)
 {
 }
 
 QDeclarativeV4BindingsPrivate::~QDeclarativeV4BindingsPrivate()
 {
     delete [] subscriptions; subscriptions = 0;
+    if (dataRef) dataRef->release();
 }
 
 int QDeclarativeV4BindingsPrivate::methodCount = -1;
 
-QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context)
+QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context, 
+                                               QDeclarativeRefCount *dataRef)
 : QObject(*(new QDeclarativeV4BindingsPrivate))
 {
     Q_D(QDeclarativeV4Bindings);
@@ -265,6 +268,8 @@ QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *program, QDeclarative
         d->methodCount = QDeclarativeV4Bindings::staticMetaObject.methodCount();
 
     d->program = (QDeclarativeV4Program *)program;
+    d->dataRef = dataRef;
+    if (dataRef) dataRef->addref();
 
     if (program) {
         d->init();
@@ -744,7 +749,7 @@ void **QDeclarativeV4Bindings::getDecodeInstrTable()
 {
     static void **decode_instr;
     if (!decode_instr) {
-        QDeclarativeV4Bindings dummy(0, 0);
+        QDeclarativeV4Bindings dummy(0, 0, 0);
         quint32 executedBlocks = 0;
         dummy.d_func()->run(0, executedBlocks, 0, 0, 0, 0, QDeclarativePropertyPrivate::BypassInterceptor, &decode_instr);
     }
