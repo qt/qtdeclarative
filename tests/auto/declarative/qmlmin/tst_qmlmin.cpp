@@ -150,11 +150,6 @@ void tst_qmlmin::qmlMinify()
 
     QCOMPARE(qmlminify.error(), QProcess::UnknownError);
     QCOMPARE(qmlminify.exitStatus(), QProcess::NormalExit);
-
-    if (file.endsWith(QLatin1String("/PhotoViewerCore/script/script.js")) ||
-        file.endsWith(QLatin1String("/samegame/SamegameCore/samegame.js"))) {
-        QEXPECT_FAIL("", "This requires .pragma support in the Javascript parser", Continue);
-    }
     QCOMPARE(qmlminify.exitCode(), 0);
 }
 

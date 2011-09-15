@@ -61,10 +61,12 @@ enum RegExpFlag {
     Multiline  = 0x04
 };
 
-class QmlminLexer: protected Lexer
+
+class QmlminLexer: protected Lexer, public Directives
 {
     QDeclarativeJS::Engine _engine;
     QString _fileName;
+    QString _directives;
 
 public:
     QmlminLexer(): Lexer(&_engine) {}
@@ -80,15 +82,72 @@ public:
             startToken = T_FEED_UI_PROGRAM;
         setCode(code, /*line = */ 1, /*qmlMode = */ startToken == T_FEED_UI_PROGRAM);
         _fileName = fileName;
+        _directives.clear();
         return parse(startToken);
     }
 
-protected:
-    virtual bool parse(int startToken) = 0;
+    QString directives()
+    {
+        return _directives;
+    }
 
+    //
+    // Handle the .pragma/.import directives
+    //
+    virtual void pragmaLibrary()
+    {
+        _directives += QLatin1String(".pragma library\n");
+    }
+
+    virtual void importFile(const QString &jsfile, const QString &module)
+    {
+        _directives += QLatin1String(".import");
+        _directives += QLatin1Char('"');
+        _directives += quote(jsfile);
+        _directives += QLatin1Char('"');
+        _directives += QLatin1String("as ");
+        _directives += module;
+        _directives += QLatin1Char('\n');
+    }
+
+    virtual void importModule(const QString &uri, const QString &version, const QString &module)
+    {
+        _directives += QLatin1String(".import ");
+        _directives += uri;
+        _directives += QLatin1Char(' ');
+        _directives += version;
+        _directives += QLatin1String(" as ");
+        _directives += module;
+        _directives += QLatin1Char('\n');
+    }
+
+protected:
     bool automatic(int token) const
     {
         return token == T_RBRACE || token == 0 || prevTerminator();
+    }
+
+    virtual bool parse(int startToken) = 0;
+
+    static QString quote(const QString &string)
+    {
+        QString quotedString;
+        foreach (const QChar &ch, string) {
+            if (ch == QLatin1Char('"'))
+                quotedString += QLatin1String("\\\"");
+            else {
+                if (ch == QLatin1Char('\\')) quotedString += QLatin1String("\\\\");
+                else if (ch == QLatin1Char('\"')) quotedString += QLatin1String("\\\"");
+                else if (ch == QLatin1Char('\b')) quotedString += QLatin1String("\\b");
+                else if (ch == QLatin1Char('\f')) quotedString += QLatin1String("\\f");
+                else if (ch == QLatin1Char('\n')) quotedString += QLatin1String("\\n");
+                else if (ch == QLatin1Char('\r')) quotedString += QLatin1String("\\r");
+                else if (ch == QLatin1Char('\t')) quotedString += QLatin1String("\\t");
+                else if (ch == QLatin1Char('\v')) quotedString += QLatin1String("\\v");
+                else quotedString += ch;
+            }
+        }
+        return quotedString;
     }
 
     bool isIdentChar(const QChar &ch) const
@@ -125,7 +184,6 @@ protected:
             *restOfRegExp += QLatin1Char('i');
         if (flags & Multiline)
             *restOfRegExp += QLatin1Char('m');
-        qDebug() << *restOfRegExp;
         return true;
     }
 };
@@ -167,6 +225,20 @@ bool Minify::parse(int startToken)
     _minifiedCode.clear();
     _tokens.append(startToken);
     _tokenStrings.append(QString());
+
+    if (startToken == T_FEED_JS_PROGRAM) {
+        // parse optional pragma directive
+        if (scanDirectives(this)) {
+            // append the scanned directives to the minifier code.
+            _minifiedCode += directives();
+
+            _tokens.append(tokenKind());
+            _tokenStrings.append(tokenText());
+        } else {
+            std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+            return false;
+        }
+    }
 
     do {
         if (++yytos == _stateStack.size())
@@ -242,22 +314,7 @@ bool Minify::parse(int startToken)
 
             } else if (yytoken == T_STRING_LITERAL || yytoken == T_MULTILINE_STRING_LITERAL) {
                 _minifiedCode += QLatin1Char('"');
-                foreach (const QChar &ch, yytokentext) {
-                    if (ch == QLatin1Char('"'))
-                        _minifiedCode += QLatin1String("\\\"");
-                    else {
-                        if (ch == QLatin1Char('\\')) _minifiedCode += QLatin1String("\\\\");
-                        else if (ch == QLatin1Char('\"')) _minifiedCode += QLatin1String("\\\"");
-                        else if (ch == QLatin1Char('\b')) _minifiedCode += QLatin1String("\\b");
-                        else if (ch == QLatin1Char('\f')) _minifiedCode += QLatin1String("\\f");
-                        else if (ch == QLatin1Char('\n')) _minifiedCode += QLatin1String("\\n");
-                        else if (ch == QLatin1Char('\r')) _minifiedCode += QLatin1String("\\r");
-                        else if (ch == QLatin1Char('\t')) _minifiedCode += QLatin1String("\\t");
-                        else if (ch == QLatin1Char('\v')) _minifiedCode += QLatin1String("\\v");
-                        else _minifiedCode += ch;
-                    }
-                }
-
+                _minifiedCode += quote(yytokentext);
                 _minifiedCode += QLatin1Char('"');
             } else {
                 if (isIdentChar(lastChar)) {
@@ -338,6 +395,21 @@ bool Tokenize::parse(int startToken)
     _minifiedCode.clear();
     _tokens.append(startToken);
     _tokenStrings.append(QString());
+
+    if (startToken == T_FEED_JS_PROGRAM) {
+        // parse optional pragma directive
+        if (scanDirectives(this)) {
+            // append the scanned directives as one token to
+            // the token stream.
+            _minifiedCode.append(directives());
+
+            _tokens.append(tokenKind());
+            _tokenStrings.append(tokenText());
+        } else {
+            std::cerr << qPrintable(fileName()) << ":" << tokenStartLine() << ":" << tokenStartColumn() << ": syntax error" << std::endl;
+            return false;
+        }
+    }
 
     do {
         if (++yytos == _stateStack.size())
