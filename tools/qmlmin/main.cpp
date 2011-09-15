@@ -122,11 +122,6 @@ public:
     }
 
 protected:
-    bool automatic(int token) const
-    {
-        return token == T_RBRACE || token == 0 || prevTerminator();
-    }
-
     virtual bool parse(int startToken) = 0;
 
     static QString quote(const QString &string)
@@ -346,7 +341,7 @@ bool Minify::parse(int startToken)
     const int yyerrorstate = _stateStack[yytos];
 
     // automatic insertion of `;'
-    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && automatic(yytoken)) {
+    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken)) {
         _tokens.prepend(yytoken);
         _tokenStrings.prepend(yytokentext);
         yyaction = yyerrorstate;
@@ -461,7 +456,7 @@ bool Tokenize::parse(int startToken)
     const int yyerrorstate = _stateStack[yytos];
 
     // automatic insertion of `;'
-    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && automatic(yytoken)) {
+    if (yytoken != -1 && t_action(yyerrorstate, T_AUTOMATIC_SEMICOLON) && canInsertAutomaticSemicolon(yytoken)) {
         _tokens.prepend(yytoken);
         _tokenStrings.prepend(yytokentext);
         yyaction = yyerrorstate;
