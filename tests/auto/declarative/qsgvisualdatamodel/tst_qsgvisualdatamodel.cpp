@@ -274,6 +274,7 @@ void tst_qsgvisualdatamodel::childChanged()
 
     QSGVisualDataModel *vdm = listview->findChild<QSGVisualDataModel*>("visualModel");
     vdm->setRootIndex(QVariant::fromValue(model.indexFromItem(model.item(1,0))));
+    QCOMPARE(listview->count(), 1);
 
     QSGText *name = findItem<QSGText>(contentItem, "display", 0);
     QVERIFY(name);
@@ -289,7 +290,7 @@ void tst_qsgvisualdatamodel::childChanged()
     QCOMPARE(name->text(), QString("Row 2 updated child"));
 
     model.item(1,0)->appendRow(new QStandardItem(QLatin1String("Row 2 Child Item 2")));
-    QTest::qWait(300);
+    QCOMPARE(listview->count(), 2);
 
     name = findItem<QSGText>(contentItem, "display", 1);
     QVERIFY(name != 0);
@@ -300,7 +301,7 @@ void tst_qsgvisualdatamodel::childChanged()
     QVERIFY(name == 0);
 
     vdm->setRootIndex(QVariant::fromValue(QModelIndex()));
-    QTest::qWait(300);
+    QCOMPARE(listview->count(), 3);
     name = findItem<QSGText>(contentItem, "display", 0);
     QVERIFY(name);
     QCOMPARE(name->text(), QString("Row 1 Item"));

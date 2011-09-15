@@ -984,7 +984,7 @@ void QSGVisualDataModel::setDelegate(QDeclarativeComponent *delegate)
         emit countChanged();
     }
     if (wasValid && !d->m_delegate && d->modelCount()) {
-        emit itemsRemoved(0, d->modelCount());
+        _q_itemsRemoved(0, d->modelCount());
         emit countChanged();
     }
 }
@@ -1035,7 +1035,7 @@ void QSGVisualDataModel::setRootIndex(const QVariant &root)
             d->m_abstractItemModel->fetchMore(modelIndex);
         int newCount = d->modelCount();
         if (d->m_delegate && oldCount)
-            emit itemsRemoved(0, oldCount);
+            _q_itemsRemoved(0, oldCount);
         if (d->m_delegate && newCount)
             emit itemsInserted(0, newCount);
         if (newCount != oldCount)
