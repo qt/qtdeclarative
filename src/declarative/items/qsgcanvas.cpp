@@ -1831,6 +1831,7 @@ QImage QSGCanvas::grabFrameBuffer()
 void QSGCanvasRenderLoop::createGLContext()
 {
     gl = new QOpenGLContext();
+    gl->setFormat(renderer->format());
     gl->create();
 }
 
