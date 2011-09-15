@@ -11,5 +11,5 @@ symbian: {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
 }
 
-QT += core-private gui-private declarative-private qtquick1-private
+QT += core-private gui-private widgets-private declarative-private qtquick1-private
 qpa:CONFIG+=insignificant_test  # QTBUG-21013 unstable

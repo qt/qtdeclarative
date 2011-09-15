@@ -10,4 +10,4 @@ SOURCES += tst_qdeclarativesystempalette.cpp
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private qtquick1-private
+QT += core-private gui-private widgets-private declarative-private qtquick1-private

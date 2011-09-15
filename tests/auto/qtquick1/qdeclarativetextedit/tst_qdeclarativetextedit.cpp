@@ -2069,7 +2069,7 @@ public:
             openInputPanelReceived = true;
         if (event->type() == QEvent::CloseSoftwareInputPanel)
             closeInputPanelReceived = true;
-        return QInputContext::filterEvent(event);
+        return false; //QInputContext::filterEvent(event);
     }
 
     void update() { updateReceived = true; }

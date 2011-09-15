@@ -14,5 +14,5 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private declarative-private qtquick1-private
+QT += core-private gui-private widgets-private v8-private declarative-private qtquick1-private
 qpa:contains(QT_CONFIG,xcb):CONFIG+=insignificant_test  # QTBUG-21012 fails on exit (X11-specific)

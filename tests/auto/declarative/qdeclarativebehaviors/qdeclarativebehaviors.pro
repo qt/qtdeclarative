@@ -11,6 +11,6 @@ symbian: {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
 }
 
-CONFIG += parallel_test
+CONFIG += parallel_test insignificant_test
 
 QT += core-private gui-private v8-private declarative-private opengl-private

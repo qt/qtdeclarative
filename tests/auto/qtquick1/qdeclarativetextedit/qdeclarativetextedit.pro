@@ -12,4 +12,4 @@ symbian: {
 } else {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
 }
-QT += core-private gui-private v8-private declarative-private qtquick1-private
+QT += core-private gui-private widgets-private v8-private declarative-private qtquick1-private
