@@ -1062,4 +1062,100 @@ bool Lexer::canInsertAutomaticSemicolon(int token) const
             || _followsClosingBrace;
 }
 
+bool Lexer::scanDirectives(Directives *directives)
+{
+    if (_qmlMode) {
+        // the directives are a Javascript-only extension.
+        return false;
+    }
+
+    lex(); // fetch the first token
+
+    if (_tokenKind != T_DOT)
+        return true;
+
+    do {
+        lex(); // skip T_DOT
+
+        const int lineNumber = tokenStartLine();
+
+        if (! (_tokenKind == T_IDENTIFIER || _tokenKind == T_RESERVED_WORD))
+            return false; // expected a valid QML/JS directive
+
+        const QString directiveName = tokenText();
+
+        if (! (directiveName == QLatin1String("pragma") ||
+               directiveName == QLatin1String("import")))
+            return false; // not a valid directive name
+
+        // it must be a pragma or an import directive.
+        if (directiveName == QLatin1String("pragma")) {
+            // .pragma library
+            if (! (lex() == T_IDENTIFIER && tokenText() == QLatin1String("library")))
+                return false; // expected `library
+
+            // we found a .pragma library directive
+            directives->pragmaLibrary();
+
+        } else {
+            Q_ASSERT(directiveName == QLatin1String("import"));
+            lex(); // skip .import
+
+            QString pathOrUri;
+            QString version;
+            bool fileImport = false; // file or uri import
+
+            if (_tokenKind == T_STRING_LITERAL) {
+                // .import T_STRING_LITERAL as T_IDENTIFIER
+
+                fileImport = true;
+                pathOrUri = tokenText();
+
+            } else if (_tokenKind == T_IDENTIFIER) {
+                // .import T_IDENTIFIER (. T_IDENTIFIER)* T_NUMERIC_LITERAL as T_IDENTIFIER
+
+                pathOrUri = tokenText();
+
+                lex(); // skip the first T_IDENTIFIER
+                for (; _tokenKind == T_DOT; lex()) {
+                    if (lex() != T_IDENTIFIER)
+                        return false;
+
+                    pathOrUri += QLatin1Char('.');
+                    pathOrUri += tokenText();
+                }
+
+                if (_tokenKind != T_NUMERIC_LITERAL)
+                    return false; // expected the module version number
+
+                version = tokenText();
+            }
+
+            //
+            // recognize the mandatory `as' followed by the module name
+            //
+            if (! (lex() == T_RESERVED_WORD && tokenText() == QLatin1String("as")))
+                return false; // expected `as'
+
+            if (lex() != T_IDENTIFIER)
+                return false; // expected module name
+
+            const QString module = tokenText();
+
+            if (fileImport)
+                directives->importFile(pathOrUri, module);
+            else
+                directives->importModule(pathOrUri, version, module);
+        }
+
+        if (tokenStartLine() != lineNumber)
+            return false; // the directives cannot span over multiple lines
+
+        // fetch the first token after the .pragma/.import directive
+        lex();
+    } while (_tokenKind == T_DOT);
+
+    return true;
+}
+
 #include "qdeclarativejskeywords_p.h"

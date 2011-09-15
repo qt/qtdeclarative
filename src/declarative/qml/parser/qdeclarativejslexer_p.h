@@ -63,6 +63,28 @@ namespace QDeclarativeJS {
 
 class Engine;
 
+class QML_PARSER_EXPORT Directives {
+public:
+    virtual ~Directives() {}
+
+    virtual void pragmaLibrary()
+    {
+    }
+
+    virtual void importFile(const QString &jsfile, const QString &module)
+    {
+        Q_UNUSED(jsfile);
+        Q_UNUSED(module);
+    }
+
+    virtual void importModule(const QString &uri, const QString &version, const QString &module)
+    {
+        Q_UNUSED(uri);
+        Q_UNUSED(version);
+        Q_UNUSED(module);
+    }
+};
+
 class QML_PARSER_EXPORT Lexer: public QDeclarativeJSGrammar
 {
 public:
@@ -123,6 +145,7 @@ public:
     int lex();
 
     bool scanRegExp(RegExpBodyPrefix prefix = NoPrefix);
+    bool scanDirectives(Directives *directives);
 
     int regExpFlags() const { return _patternFlags; }
     QString regExpPattern() const { return _tokenText; }
