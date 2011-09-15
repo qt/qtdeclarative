@@ -86,17 +86,16 @@ signals:
     void groupsChanged(QStringList arg);
 
 public slots:
-void setSystem(QSGParticleSystem* arg);
+    void setSystem(QSGParticleSystem* arg);
 
-void setGroups(QStringList arg)
-{
-    if (m_groups != arg) {
-        m_groups = arg;
-        emit groupsChanged(arg);
+    void setGroups(QStringList arg)
+    {
+        if (m_groups != arg) {
+            m_groups = arg;
+            emit groupsChanged(arg);
+        }
     }
-}
 
-private slots:
     void calcSystemOffset(bool resetPending = false);
 
 protected:

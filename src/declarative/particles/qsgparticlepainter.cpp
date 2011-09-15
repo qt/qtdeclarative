@@ -67,12 +67,6 @@ QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
     m_system(0), m_count(0), m_sentinel(new QSGParticleData(0))
 {
-    connect(this, SIGNAL(parentChanged(QSGItem*)),
-            this, SLOT(calcSystemOffset()));
-    connect(this, SIGNAL(xChanged()),
-            this, SLOT(calcSystemOffset()));
-    connect(this, SIGNAL(yChanged()),
-            this, SLOT(calcSystemOffset()));
 }
 
 void QSGParticlePainter::componentComplete()
@@ -91,10 +85,6 @@ void QSGParticlePainter::setSystem(QSGParticleSystem *arg)
         m_system = arg;
         if (m_system){
             m_system->registerParticlePainter(this);
-            connect(m_system, SIGNAL(xChanged()),
-                    this, SLOT(calcSystemOffset()));
-            connect(m_system, SIGNAL(yChanged()),
-                    this, SLOT(calcSystemOffset()));
             reset();
         }
         emit systemChanged(arg);
@@ -118,7 +108,6 @@ void QSGParticlePainter::reload(QSGParticleData* d)
 
 void QSGParticlePainter::reset()
 {
-    calcSystemOffset(true);//In case an ancestor changed in some way
 }
 
 void QSGParticlePainter::setCount(int c)//### TODO: some resizeing so that particles can reallocate on size change instead of recreate
@@ -154,6 +143,7 @@ void QSGParticlePainter::calcSystemOffset(bool resetPending)
 typedef QPair<int,int> intPair;
 void QSGParticlePainter::performPendingCommits()
 {
+    calcSystemOffset();
     foreach (intPair p, m_pendingCommits)
         commit(p.first, p.second);
     m_pendingCommits.clear();
