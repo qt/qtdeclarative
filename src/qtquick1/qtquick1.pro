@@ -40,3 +40,16 @@ SOURCES += qtquick1.cpp
 DEFINES += QT_NO_OPENTYPE
 INCLUDEPATH +=  $$QT.corelib.sources/../src/3rdparty/harfbuzz/src
 
+mac {
+    # FIXME: this is a workaround for broken qmake logic in qtAddModule()
+    # This function refuses to use frameworks unless the framework exists on
+    # the filesystem at the time qmake is run, resulting in a build failure
+    # if QtQuick1 is qmaked before QtDeclarative is built and frameworks are
+    # in use. qtAddLibrary() contains correct logic to deal with this, so
+    # we'll explicitly call that for now.
+    load(qt)
+    LIBS -= -lQtDeclarative        # in non-framework builds, these should be re-added
+    LIBS -= -lQtDeclarative_debug  # within the qtAddLibrary if appropriate, so no
+    qtAddLibrary(QtDeclarative)    # harm done :)
+}
+
