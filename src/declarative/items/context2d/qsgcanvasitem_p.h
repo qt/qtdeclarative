@@ -73,6 +73,7 @@ public:
 
     enum ImageFilterMode {
         Threshold,
+        Mono,
         GrayScale,
         Brightness,
         Invert,
@@ -108,7 +109,6 @@ Q_SIGNALS:
     void painted();
     void canvasSizeChanged();
     void tileSizeChanged();
-    void viewpointChanged();
     void threadRenderingChanged();
     void textureChanged();
     void canvasWindowChanged();

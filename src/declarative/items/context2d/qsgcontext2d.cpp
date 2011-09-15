@@ -64,12 +64,35 @@ QT_BEGIN_NAMESPACE
     \qmlclass Context2D QSGContext2D
     \inqmlmodule QtQuick 2
     \since QtQuick 2.0
-    \brief The Context2D element allows you to draw 2d graphic shapes on Canvas item.
+    \brief The Context2D API allows you to draw 2d graphic shapes on the \c Canvas item.
+
+    The Context2D object can be created by \c Canvas item's \c getContext() method:
+    \code
+    Canvas {
+      id:canvas
+      onPaint:{
+         var ctx = canvas.getContext('2d');
+         //...
+      }
+    }
+    \endcode
+    The Context2D API implements the same \l {http://www.w3.org/TR/2dcontext}{W3C Canvas 2D Context API standard}
+    with some enhanced features.
+
+    The Context2D API provides the rendering \bold{context} which defines the methods and attributes needed to draw
+    on the \c Canvas item. The following assigns the canvas rendering context to a \c{context}
+    variable:
+    \code
+    var context = mycanvas.getContext("2d")
+    \endcode
+
+    The Context2D API renders the canvas as a coordinate system whose origin (0,0) is
+    at the top left corner, as shown in the figure below. Coordinates increase along
+    the \c{x} axis from left to right and along the \c{y} axis from top to bottom of
+    the canvas.
+    \image qml-item-canvas-context.gif
 */
 static const double Q_PI   = 3.14159265358979323846;   // pi
-
-
-static bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
 
 #define DEGREES(t) ((t) * 180.0 / Q_PI)
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
@@ -522,6 +545,8 @@ static v8::Local<v8::Object> qt_create_image_data(qreal w, qreal h, QV8Engine* e
 /*!
     \qmlproperty QtQuick2::Canvas QtQuick2::Context2D::canvas
      Holds the canvas item that the context paints on.
+
+     This property is read only.
 */
 static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -537,6 +562,8 @@ static v8::Handle<v8::Value> ctx2d_canvas(v8::Local<v8::String>, const v8::Acces
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::restore()
     Pops the top state on the stack, restoring the context to that state.
+
+    \sa QtQuick2::Context2D::save()
 */
 static v8::Handle<v8::Value> ctx2d_restore(const v8::Arguments &args)
 {
@@ -562,7 +589,33 @@ static v8::Handle<v8::Value> ctx2d_reset(const v8::Arguments &args)
 
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::save()
-    Pushes the current state onto the stack.
+    Pushes the current state onto the state stack.
+
+    Before changing any state attributes, you should save the current state
+    for future reference. The context maintains a stack of drawing states.
+    Each state consists of the current transformation matrix, clipping region,
+    and values of the following attributes:
+    \list
+    \o\a QtQuick2::Context2D::strokeStyle
+    \o\a QtQuick2::Context2D::fillStyle
+    \o\a QtQuick2::Context2D::fillRule
+    \o\a QtQuick2::Context2D::globalAlpha
+    \o\a QtQuick2::Context2D::lineWidth
+    \o\a QtQuick2::Context2D::lineCap
+    \o\a QtQuick2::Context2D::lineJoin
+    \o\a QtQuick2::Context2D::miterLimit
+    \o\a QtQuick2::Context2D::shadowOffsetX
+    \o\a QtQuick2::Context2D::shadowOffsetY
+    \o\a QtQuick2::Context2D::shadowBlur
+    \o\a QtQuick2::Context2D::shadowColor
+    \o\a QtQuick2::Context2D::globalCompositeOperation
+    \o\a QtQuick2::Context2D::font
+    \o\a QtQuick2::Context2D::textAlign
+    \o\a QtQuick2::Context2D::textBaseline
+    \endlist
+
+    The current path is NOT part of the drawing state. The path can be reset by
+    invoking the \a QtQuick2::Context2D::beginPath() method.
 */
 static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 {
@@ -577,8 +630,18 @@ static v8::Handle<v8::Value> ctx2d_save(const v8::Arguments &args)
 // transformations
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::rotate(real angle)
-    Changes the transformation matrix to apply a rotation transformation with the given characteristics.
-    Note: The angle is in radians.
+    Rotate the canvas around the current origin by \c angle in radians and clockwise direction.
+    \code
+    ctx.rotate(Math.PI/2);
+    \endcode
+    \image qml-item-canvas-rotate.png
+
+    The rotation transformation matrix is as follows:
+
+    \image qml-item-canvas-math-rotate.png
+
+    where the \c angle of rotation is in radians.
+
 */
 static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
 {
@@ -597,7 +660,17 @@ static v8::Handle<v8::Value> ctx2d_rotate(const v8::Arguments &args)
 
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::scale(real x, real y)
-    Changes the transformation matrix to apply a scaling transformation with the given characteristics.
+    Increases or decreases the size of each unit in the canvas grid by multiplying the scale factors
+    to the current tranform matrix.
+    Where \c x is the scale factor in the horizontal direction and \c y is the scale factor in the
+    vertical direction.
+    The following code doubles the horizontal size of an object drawn on the canvas and half its
+    vertical size:
+    \code
+    ctx.scale(2.0, 0.5);
+    \endcode
+    \image qml-item-canvas-scale.png
+
 */
 static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 {
@@ -619,6 +692,33 @@ static v8::Handle<v8::Value> ctx2d_scale(const v8::Arguments &args)
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::setTransform(real a, real b, real c, real d, real e, real f)
     Changes the transformation matrix to the matrix given by the arguments as described below.
+
+    Modifying the transformation matrix directly enables you to perform scaling,
+    rotating, and translating transformations in a single step.
+
+    Each point on the canvas is multiplied by the matrix before anything is
+    drawn. The \l{HTML5 Canvas API} defines the transformation matrix as:
+
+    \image qml-item-canvas-math.png
+    where:
+    \list
+    \o \c{a} is the scale factor in the horizontal (x) direction
+    \image qml-item-canvas-scalex.png
+    \o \c{c} is the skew factor in the x direction
+    \image qml-item-canvas-canvas-skewx.png
+    \o \c{e} is the translation in the x direction
+    \image qml-item-canvas-canvas-translate.png
+    \o \c{b} is the skew factor in the y (vertical) direction
+    \image qml-item-canvas-canvas-skewy.png
+    \o \c{d} is the scale factor in the y direction
+    \image qml-item-canvas-canvas-scaley.png
+    \o \c{f} is the translation in the y direction
+    \image qml-item-canvas-canvas-translatey.png
+    \o the last row remains constant
+    \endlist
+    The scale factors and skew factors are multiples; \c{e} and \c{f} are
+    coordinate space units, just like the units in the \a QtQuick2::Context2D::translate(x,y)
+    method.
 
     \sa QtQuick2::Context2D::transform()
 */
@@ -643,7 +743,11 @@ static v8::Handle<v8::Value> ctx2d_setTransform(const v8::Arguments &args)
 
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::transform(real a, real b, real c, real d, real e, real f)
-    Changes the transformation matrix to apply the matrix given by the arguments as described below.
+    This method is very similar to \a QtQuick2::Context2D::setTransform(), but instead of replacing the old
+    tranform matrix, this method applies the given tranform matrix to the current matrix by mulitplying to it.
+
+    The \a setTransform(a, b, c, d, e, f) method actually resets the current transform to the identity matrix,
+    and then invokes the transform(a, b, c, d, e, f) method with the same arguments.
 
     \sa QtQuick2::Context2D::setTransform()
 */
@@ -668,7 +772,12 @@ static v8::Handle<v8::Value> ctx2d_transform(const v8::Arguments &args)
 
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::translate(real x, real y)
-    Changes the transformation matrix to apply a translation transformation with the given characteristics.
+    Translates the origin of the canvas to point (\c x, \c y).
+
+    \c x is the horizontal distance that the origin is translated, in coordinate space units,
+    \c y is the vertical distance that the origin is translated, in coordinate space units.
+    Translating the origin enables you to draw patterns of different objects on the canvas
+    without having to measure the coordinates manually for each shape.
 */
 static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 {
@@ -688,9 +797,9 @@ static v8::Handle<v8::Value> ctx2d_translate(const v8::Arguments &args)
 
 /*!
     \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::resetTransform()
-    Reset the transformation matrix default value.
+    Reset the transformation matrix to default value.
 
-    \sa QtQuick2::Context2D::transform(), QtQuick2::Context2D::setTransform()
+    \sa QtQuick2::Context2D::transform(), QtQuick2::Context2D::setTransform(), QtQuick2::Context2D::reset()
 */
 static v8::Handle<v8::Value> ctx2d_resetTransform(const v8::Arguments &args)
 {
@@ -724,7 +833,8 @@ static v8::Handle<v8::Value> ctx2d_shear(const v8::Arguments &args)
 /*!
     \qmlproperty real QtQuick2::Context2D::globalAlpha
      Holds the the current alpha value applied to rendering operations.
-     The value must be in the range from 0.0 (fully transparent) to 1.0 (no additional transparency).
+     The value must be in the range from 0.0 (fully transparent) to 1.0 (fully opque).
+     The default value is 1.0.
 */
 static v8::Handle<v8::Value> ctx2d_globalAlpha(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -768,6 +878,10 @@ static void ctx2d_globalAlpha_set(v8::Local<v8::String>, v8::Local<v8::Value> va
      \o copy             - A (B is ignored). Display the source image instead of the destination image.
      \o xor              - A xor B. Exclusive OR of the source image and destination image.
      \endlist
+
+     Additionally, this property also accepts the compositon modes listed in \a {QPainter::CompositionMode}. According to the W3C standard, these
+     extension composition modes are provided as "vendorName-operationName" syntax, for example: \c {QPainter::CompositionMode_Exclusion} is porvided as
+     "qt-exclusion".
 */
 static v8::Handle<v8::Value> ctx2d_globalCompositeOperation(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -787,6 +901,7 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
+
     QPainter::CompositionMode cm = qt_composite_mode_from_string(engine->toString(value));
     if (cm != r->context->state.globalCompositeOperation) {
         r->context->state.globalCompositeOperation = cm;
@@ -798,7 +913,20 @@ static void ctx2d_globalCompositeOperation_set(v8::Local<v8::String>, v8::Local<
 /*!
     \qmlproperty variant QtQuick2::Context2D::fillStyle
      Holds the current style used for filling shapes.
-     The style can be either a string containing a CSS color, or a CanvasGradient or CanvasPattern object. Invalid values are ignored.
+     The style can be either a string containing a CSS color, a CanvasGradient or CanvasPattern object. Invalid values are ignored.
+     This property accepts several color syntaxes:
+     \list
+     \o 'rgb(red, green, blue)' - for example: 'rgb(255, 100, 55)' or 'rgb(100%, 70%, 30%)'
+     \o 'rgba(red, green, blue, alpha)' - for example: 'rgb(255, 100, 55, 1.0)' or 'rgb(100%, 70%, 30%, 0.5)'
+     \o 'hsl(hue, saturation, lightness)'
+     \o 'hsla(hue, saturation, lightness, alpha)'
+     \o '#RRGGBB' - for example: '#00FFCC'
+     \o Qt.rgba(red, green, blue, alpha) - for example: Qt.rgba(0.3, 0.7, 1, 1.0)
+     \endlist
+     If the \a fillStyle or \a strokeStyle is assigned many times in a loop, the last Qt.rgba() syntax should be chosen, as it has the
+     best performance, because it's already a valid QColor value, does not need to be parsed everytime.
+
+     The default value is  '#000000'.
      \sa QtQuick2::Context2D::createLinearGradient
      \sa QtQuick2::Context2D::createRadialGradient
      \sa QtQuick2::Context2D::createPattern
@@ -840,7 +968,18 @@ static void ctx2d_fillStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
        }
    }
 }
+/*!
+    \qmlproperty enumeration QtQuick2::Context2D::fillRule
+     Holds the current fill rule used for filling shapes. The following fill rules supported:
+     \list
+     \o Qt.OddEvenFill
+     \o Qt.WindingFill
+     \endlist
+     Note: Unlike the \a QPainterPath, the Canvas API uses the winding fill as the default fill rule.
+     The fillRule property is part of the context rendering state.
 
+     \sa QtQuick2::Context2D::fillStyle
+ */
 static v8::Handle<v8::Value> ctx2d_fillRule(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(info.This());
@@ -871,7 +1010,11 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 /*!
     \qmlproperty variant QtQuick2::Context2D::strokeStyle
      Holds the current color or style to use for the lines around shapes,
-     The style can be either a string containing a CSS color, or a CanvasGradient or CanvasPattern object. Invalid values are ignored.
+     The style can be either a string containing a CSS color, a CanvasGradient or CanvasPattern object.
+     Invalid values are ignored.
+
+     The default value is  '#000000'.
+
      \sa QtQuick2::Context2D::createLinearGradient
      \sa QtQuick2::Context2D::createRadialGradient
      \sa QtQuick2::Context2D::createPattern
@@ -917,8 +1060,14 @@ static void ctx2d_strokeStyle_set(v8::Local<v8::String>, v8::Local<v8::Value> va
 
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::createLinearGradient(real x0, real y0, real x1, real y1)
-   Returns a CanvasGradient object that represents a linear gradient that paints along the line given by the coordinates
-   represented by the start point (\a x0, \a y0) and the end point (\a x1, \a y1).
+   Returns a CanvasGradient object that represents a linear gradient that transitions the color along a line between
+   the start point (\a x0, \a y0) and the end point (\a x1, \a y1).
+
+   A gradient is a smooth transition between colors. There are two types of gradients: linear and radial.
+   Gradients must have two or more color stops, representing color shifts positioned from 0 to 1 between
+   to the gradient's starting and end points or circles.
+
+    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createRadialGradient
     \sa QtQuick2::Context2D::createPattern
     \sa QtQuick2::Context2D::fillStyle
@@ -954,6 +1103,7 @@ static v8::Handle<v8::Value> ctx2d_createLinearGradient(const v8::Arguments &arg
    Returns a CanvasGradient object that represents a radial gradient that paints along the cone given by the start circle with
    origin (x0, y0) and radius r0, and the end circle with origin (x1, y1) and radius r1.
 
+    \sa QtQuick2::Context2D::CanvasGradient::addColorStop
     \sa QtQuick2::Context2D::createLinearGradient
     \sa QtQuick2::Context2D::createPattern
     \sa QtQuick2::Context2D::fillStyle
@@ -988,12 +1138,34 @@ static v8::Handle<v8::Value> ctx2d_createRadialGradient(const v8::Arguments &arg
 
     return args.This();
 }
-
+/*!
+  \qmlmethod variant createPattern(Color color, enumeration patternMode)
+  This is a overload function.
+  Returns a CanvasPattern object that uses the given \c color and \c patternMode.
+  The valid pattern modes are:
+    \list
+    \o Qt.SolidPattern
+    \o Qt.Dense1Pattern
+    \o Qt.Dense2Pattern
+    \o Qt.Dense3Pattern
+    \o Qt.Dense4Pattern
+    \o Qt.Dense5Pattern
+    \o Qt.Dense6Pattern
+    \o Qt.Dense7Pattern
+    \o Qt.HorPattern
+    \o Qt.VerPattern
+    \o Qt.CrossPattern
+    \o Qt.BDiagPattern
+    \o Qt.FDiagPattern
+    \o Qt.DiagCrossPattern
+\endlist
+    \sa Qt::BrushStyle
+ */
 /*!
   \qmlmethod variant createPattern(Image image, string repetition)
   Returns a CanvasPattern object that uses the given image and repeats in the direction(s) given by the repetition argument.
 
-  The \a image parameter must be a valid Image item, if there is no image data, throws an INVALID_STATE_ERR exception.
+  The \a image parameter must be a valid Image item, a valid \a QtQuick2::CanvasImageData object or loaded image url, if there is no image data, throws an INVALID_STATE_ERR exception.
 
   The allowed values for \a repetition are:
 
@@ -1016,6 +1188,8 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
 
 
     QV8Engine *engine = V8ENGINE();
+
+    //FIXME::
 
 //    if (args.Length() == 2) {
 //        QSGContext2DEngineData *ed = engineData(engine);
@@ -1424,10 +1598,10 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 // Complex shapes (paths) API
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::arc(real x, real y, real radius, real startAngle, real endAngle, bool anticlockwise)
-   Adds points to the subpath such that the arc described by the circumference of
-   the circle described by the arguments.
-
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-arc for details.
+  Adds an arc to the current subpath that lies on the circumference of the circle whose center is at the point (\c x,\cy) and whose radius is \c radius.
+  \image qml-item-canvas-arcTo2.png
+  \sa  QtQuick2::Context2D::arcTo
+  See {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C 2d context standard for arc}
   */
 static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
 {
@@ -1457,7 +1631,21 @@ static v8::Handle<v8::Value> ctx2d_arc(const v8::Arguments &args)
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::arcTo(real x1, real y1, real x2, real y2, real radius)
 
    Adds an arc with the given control points and radius to the current subpath, connected to the previous point by a straight line.
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto for details.
+   To draw an arc, you begin with the same steps your followed to create a line:
+    \list
+    \o Call the context.beginPath() method to set a new path.
+    \o Call the context.moveTo(\c x, \c y) method to set your starting position on the canvas at the point (\c x,\c y).
+    \o To draw an arc or circle, call the context.arcTo(\c x1, \c y1, \c x2, \c y2,\c radius) method.
+       This adds an arc with starting point (\c x1,\c y1), ending point (\c x2, \c y2), and radius \c radius to the current subpath and connects
+       it to the previous subpath by a straight line.
+    \endlist
+    \image qml-item-canvas-arcTo.png
+    Both startAngle and endAngle are measured from the x axis in units of radians.
+
+    \image qml-item-canvas-startAngle.png
+    The anticlockwise has the value TRUE for each arc in the figure above because they are all drawn in the counterclockwise direction.
+  \sa  QtQuick2::Context2D::arc
+  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C 2d context standard for arcTo}
   */
 static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 {
@@ -1479,7 +1667,7 @@ static v8::Handle<v8::Value> ctx2d_arcTo(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::beginPath()
 
-   Resets the current path.
+   Resets the current path to a new path.
   */
 static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 {
@@ -1495,9 +1683,21 @@ static v8::Handle<v8::Value> ctx2d_beginPath(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::bezierCurveTo(real cp1x, real cp1y, real cp2x, real cp2y, real x, real y)
 
-   Adds the given point to the current subpath, connected to the previous one by a cubic Bézier curve with the given control points.
-
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto for details.
+  Adds a cubic Bezier curve between the current position and the given endPoint using the control points specified by (\c cp1x, cp1y),
+  and (\c cp2x, \c cp2y).
+  After the curve is added, the current position is updated to be at the end point (\c x, \c y) of the curve.
+  The following code produces the path shown below:
+  \code
+  ctx.strokeStyle = Qt.rgba(0, 0, 0, 1);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(20, 0);//start point
+  ctx.bezierCurveTo(-10, 90, 210, 90, 180, 0);
+  ctx.stroke();
+  \endcode
+   \image qml-item-canvas-bezierCurveTo.png
+  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto}{W3C 2d context standard for bezierCurveTo}
+  \sa {http://www.openrise.com/lab/FlowerPower/}{The beautiful flower demo by using bezierCurveTo}
   */
 static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
 {
@@ -1520,9 +1720,26 @@ static v8::Handle<v8::Value> ctx2d_bezierCurveTo(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::clip()
 
-   constrains the clipping region to the given path.
+   Creates the clipping region from the current path.
+   Any parts of the shape outside the clipping path are not displayed.
+   To create a complex shape using the \a clip() method:
 
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-clip for details.
+    \list 1
+    \o Call the \c{context.beginPath()} method to set the clipping path.
+    \o Define the clipping path by calling any combination of the \c{lineTo},
+    \c{arcTo}, \c{arc}, \c{moveTo}, etc and \c{closePath} methods.
+    \o Call the \c{context.clip()} method.
+    \endlist
+
+    The new shape displays.  The following shows how a clipping path can
+    modify how an image displays:
+
+    \image qml-canvas-clip-complex.png
+    \sa QtQuick2::Context2D::beginPath()
+    \sa QtQuick2::Context2D::closePath()
+    \sa QtQuick2::Context2D::stroke()
+    \sa QtQuick2::Context2D::fill()
+   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-clip}{W3C 2d context standard for clip}
   */
 static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
 {
@@ -1537,10 +1754,10 @@ static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
 
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::closePath()
+   Closes the current subpath by drawing a line to the beginning of the subpath, automatically starting a new path.
+   The current point of the new path is the previous subpath's first point.
 
-   Marks the current subpath as closed, and starts a new subpath with a point the same as the start and end of the newly closed subpath.
-
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-closepath for details.
+   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-closepath}{W3C 2d context standard for closePath}
   */
 static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 {
@@ -1558,7 +1775,7 @@ static v8::Handle<v8::Value> ctx2d_closePath(const v8::Arguments &args)
 
    Fills the subpaths with the current fill style.
 
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-fill for details.
+   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-fill}{W3C 2d context standard for fill}
 
    \sa QtQuick2::Context2D::fillStyle
   */
@@ -1575,7 +1792,7 @@ static v8::Handle<v8::Value> ctx2d_fill(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::lineTo(real x, real y)
 
-   Adds the given point to the current subpath, connected to the previous one by a straight line.
+   Draws a line from the current position to the point (x, y).
  */
 static v8::Handle<v8::Value> ctx2d_lineTo(const v8::Arguments &args)
 {
@@ -1613,9 +1830,9 @@ static v8::Handle<v8::Value> ctx2d_moveTo(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::quadraticCurveTo(real cpx, real cpy, real x, real y)
 
-   Adds the given point to the current subpath, connected to the previous one by a quadratic Bézier curve with the given control point.
+   Adds a quadratic Bezier curve between the current point and the endpoint (\c x, \c y) with the control point specified by (\c cpx, \c cpy).
 
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto for details.
+   See {http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for  for quadraticCurveTo}
  */
 static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
 {
@@ -1636,9 +1853,7 @@ static v8::Handle<v8::Value> ctx2d_quadraticCurveTo(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::rect(real x, real y, real w, real h)
 
-   Adds a new closed subpath to the path, representing the given rectangle.
-
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-rect for details.
+   Adds a rectangle at position (\c x, \c y), with the given width \c w and height \c h, as a closed subpath.
  */
 static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
 {
@@ -1659,7 +1874,7 @@ static v8::Handle<v8::Value> ctx2d_rect(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::roundedRect(real x, real y, real w, real h,  real xRadius, real yRadius)
 
-   Adds the given rectangle rect with rounded corners to the path. The xRadius and yRadius arguments specify the radii of the
+   Adds the given rectangle rect with rounded corners to the path. The \c xRadius and \c yRadius arguments specify the radius of the
    ellipses defining the corners of the rounded rectangle.
  */
 static v8::Handle<v8::Value> ctx2d_roundedRect(const v8::Arguments &args)
@@ -1707,8 +1922,8 @@ static v8::Handle<v8::Value> ctx2d_ellipse(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::text(string text, real x, real y)
 
-  Adds the given \a text to the path as a set of closed subpaths created from the current context font supplied.
-  The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (x, y).
+  Adds the given \c text to the path as a set of closed subpaths created from the current context font supplied.
+  The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (\c x, \c y).
  */
 static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
 {
@@ -1730,7 +1945,7 @@ static v8::Handle<v8::Value> ctx2d_text(const v8::Arguments &args)
 
    Strokes the subpaths with the current stroke style.
 
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke for details.
+   See {http://www.w3.org/TR/2dcontext/#dom-context-2d-stroke}{W3C 2d context standard for stroke}
 
    \sa QtQuick2::Context2D::strokeStyle
   */
@@ -1750,7 +1965,7 @@ static v8::Handle<v8::Value> ctx2d_stroke(const v8::Arguments &args)
 
    Returns true if the given point is in the current path.
 
-   See http://www.w3.org/TR/2dcontext/#dom-context-2d-ispointinpath for details.
+   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-ispointinpath}{W3C 2d context standard for isPointInPath}
   */
 static v8::Handle<v8::Value> ctx2d_isPointInPath(const v8::Arguments &args)
 {
@@ -1788,9 +2003,10 @@ static v8::Handle<v8::Value> ctx2d_caretBlinkRate(const v8::Arguments &args)
 // text
 /*!
   \qmlproperty string QtQuick2::Context2D::font
-  Holds the current font settings, default value is "10px sans-serif".
+  Holds the current font settings.
 
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-font for details.
+  The default font value is "10px sans-serif".
+  See {http://www.w3.org/TR/2dcontext/#dom-context-2d-font}{w3C 2d context standard for font}
   */
 v8::Handle<v8::Value> ctx2d_font(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1828,7 +2044,7 @@ static void ctx2d_font_set(v8::Local<v8::String>, v8::Local<v8::Value> value, co
     \o right
     \o center
   \endlist
-  Other values are ignored. The default is start.
+  Other values are ignored. The default value is "start".
   */
 v8::Handle<v8::Value> ctx2d_textAlign(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1891,7 +2107,6 @@ static void ctx2d_textAlign_set(v8::Local<v8::String>, v8::Local<v8::Value> valu
     \o bottom
   \endlist
   Other values are ignored. The default value is "alphabetic".
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-textbaseline for details.
   */
 v8::Handle<v8::Value> ctx2d_textBaseline(v8::Local<v8::String>, const v8::AccessorInfo &info)
 {
@@ -1943,7 +2158,10 @@ static void ctx2d_textBaseline_set(v8::Local<v8::String>, v8::Local<v8::Value> v
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::fillText(text, x, y)
   Fills the given text at the given position.
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-filltext for details.
+  \sa QtQuick2::Context2D::font
+  \sa QtQuick2::Context2D::textAlign
+  \sa QtQuick2::Context2D::textBaseline
+  \sa QtQuick2::Context2D::strokeText
   */
 static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
 {
@@ -1965,7 +2183,10 @@ static v8::Handle<v8::Value> ctx2d_fillText(const v8::Arguments &args)
 /*!
   \qmlmethod QtQuick2::Context2D QtQuick2::Context2D::strokeText(text, x, y)
   Strokes the given text at the given position.
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-stroketext for details.
+  \sa QtQuick2::Context2D::font
+  \sa QtQuick2::Context2D::textAlign
+  \sa QtQuick2::Context2D::textBaseline
+  \sa QtQuick2::Context2D::fillText
   */
 static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
 {
@@ -1990,7 +2211,7 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
     \since QtQuick 2.0
     \brief The Context2D TextMetrics interface.
     The TextMetrics object can be created by QtQuick2::Context2D::measureText method.
-    See http://www.w3.org/TR/2dcontext/#textmetrics for more details.
+    See {http://www.w3.org/TR/2dcontext/#textmetrics}{W3C 2d context TexMetrics} for more details.
 
     \sa QtQuick2::Context2D::measureText
     \sa QtQuick2::TextMetrics::width
@@ -2000,13 +2221,11 @@ static v8::Handle<v8::Value> ctx2d_strokeText(const v8::Arguments &args)
   \qmlproperty int QtQuick2::TextMetrics::width
   Holds the advance width of the text that was passed to the QtQuick2::Context2D::measureText() method.
   This property is read only.
-  See http://www.w3.org/TR/2dcontext/#dom-textmetrics-width for more details.
   */
 
 /*!
   \qmlmethod variant QtQuick2::Context2D::measureText(text)
   Returns a TextMetrics object with the metrics of the given text in the current font.
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-measuretext for details.
   */
 static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 {
@@ -2032,24 +2251,60 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
   \qmlmethod QtQuick2::Context2D::drawImage(variant image, real dx, real dy)
   Draws the given \a image on the canvas at position (\a dx, \a dy).
   Note:
-     The \a image type can be an Image item or a image url. When given as Image
-  type, if the image isn't fully loaded, will draw nothing. When given as url string,
-  the context loads the image asynchorously and redraw the canvas when the image is loaded.
+  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  When given as Image item, if the image isn't fully loaded, this method draws nothing.
+  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
 
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage for more details.
+  \sa QtQuick2::CanvasImageData
+  \sa QtQuick2::Image
+  \sa QtQuick2::Canvas::loadImage
+  \sa QtQuick2::Canvas::isImageLoaded
+  \sa QtQuick2::Canvas::imageLoaded
+
+  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
   \qmlmethod QtQuick2::Context2D::drawImage(variant image, real dx, real dy, real dw, real dh)
+  This is an overloaded function.
   Draws the given item as \a image onto the canvas at point (\a dx, \a dy) and with width \a dw,
   height \a dh.
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage for more details.
+
+  Note:
+  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  When given as Image item, if the image isn't fully loaded, this method draws nothing.
+  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
+
+  \sa QtQuick2::CanvasImageData
+  \sa QtQuick2::Image
+  \sa QtQuick2::Canvas::loadImage
+  \sa QtQuick2::Canvas::isImageLoaded
+  \sa QtQuick2::Canvas::imageLoaded
+
+  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
   \qmlmethod QtQuick2::Context2D::drawImage(variant image, real sx, real sy, real sw, sh, real dx, real dy, real dw, dh)
+  This is an overloaded function.
   Draws the given item as \a image from source point (\a sx, \a sy) and source width \sw, source height \sh
   onto the canvas at point (\a dx, \a dy) and with width \a dw, height \a dh.
-  See http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage for more details.
-  */
+
+
+  Note:
+  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  When given as Image item, if the image isn't fully loaded, this method draws nothing.
+  When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
+  This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
+
+  \sa QtQuick2::CanvasImageData
+  \sa QtQuick2::Image
+  \sa QtQuick2::Canvas::loadImage
+  \sa QtQuick2::Canvas::isImageLoaded
+  \sa QtQuick2::Canvas::imageLoaded
+
+  \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
+*/
 static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 {
     QV8Context2DResource *r = v8_resource_cast<QV8Context2DResource>(args.This());
@@ -2071,15 +2326,18 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
     QImage image;
     if (args[0]->IsString()) {
         image = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
-    } /*else if (args[0]->IsObject()) {
+    } else if (args[0]->IsObject()) {
         QSGImage* imageItem = qobject_cast<QSGImage*>(engine->toQObject(args[0]->ToObject()));
-        if (imageItem) {
+        QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
+        if (r) {
+            image = r->image;
+        } else if (imageItem) {
             image = imageItem->pixmap().toImage();
         } else {
             //wrong image type
             return args.This();
         }
-    }*/
+    }
     if (args.Length() == 3) {
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
@@ -2120,7 +2378,18 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 // pixel manipulation
 /*!
   \qmlclass QtQuick2::CanvasImageData
+     The \a QtQuick2::CanvasImageData object holds the image pixel data.
 
+     The \a QtQuick2::CanvasImageData object has the actual dimensions of the data stored in
+     this object and holds the one-dimensional array containing the data in RGBA order,
+     as integers in the range 0 to 255.
+
+     \sa QtQuick2::CanvasImageData::width
+     \sa QtQuick2::CanvasImageData::height
+     \sa QtQuick2::CanvasImageData::data
+     \sa QtQuick2::Context2D::createImageData
+     \sa QtQuick2::Context2D::getImageData
+     \sa QtQuick2::Context2D::putImageData
   */
 /*!
   \qmlproperty QtQuick2::CanvasImageData::width
@@ -2156,6 +2425,12 @@ v8::Handle<v8::Value> ctx2d_imageData_data(v8::Local<v8::String>, const v8::Acce
     return args.This()->GetInternalField(0);
 }
 
+/*!
+  \qmlmethod void QtQuick2::CanvasImageData::mirrr( bool horizontal = false, bool vertical = true)
+  Mirrors the image data in place in the  \c horizontal and/or the \c vertical direction depending on
+  whether horizontal and vertical are set to true or false.
+  The default \c horizontal value is false, the default \c vertical value is true.
+*/
 static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
 {
     bool horizontal = false, vertical = true;
@@ -2181,7 +2456,27 @@ static v8::Handle<v8::Value> ctx2d_imageData_mirror(const v8::Arguments &args)
     return args.This();
 }
 
+/*!
+  \qmlmethod void QtQuick2::CanvasImageData::filter(enumeration mode, args)
+   Filters the image data as defined by one of the following modes:
+    \list
+    \o Canvas.Threshold - converts the image to black and white pixels depending
+                          if they are above or below the threshold defined by the level parameter.
+                          The level must be between 0.0 (black) and 1.0(white).
+                          If no level is specified, 0.5 is used.
+    \o Canvas.Mono - converts the image to the 1-bit per pixel format.
+    \o Canvas.GrayScale - converts any colors in the image to grayscale equivalents.
+    \o Canvas.Brightness -increase/decrease a fixed \c adjustment value to each pixel's RGB channel value.
+    \o Canvas.Invert - sets each pixel to its inverse value.
+    \o Canvas.Blur - executes a box blur with the pixel \c radius parameter specifying the range of the blurring for each pixel.
+                     the default blur \c radius is 3. This filter also accepts another \c quality parameter, if true, the filter will
+                     execute 3-passes box blur to simulate the Guassian blur. The default \c quality value is false.
+    \o Canvas.Opaque - sets the alpha channel to entirely opaque.
+    \o Canvas.Convolute - executes a generic {http://en.wikipedia.org/wiki/Convolution}{Convolution} filter, the second
+                          parameter contains the convoluton matrix data as a number array.
+    \endlist
 
+*/
 static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This()->GetInternalField(0)->ToObject());
@@ -2194,6 +2489,11 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
     if (args.Length() >= 1) {
         int filterFlag = args[0]->IntegerValue();
         switch(filterFlag) {
+        case QSGCanvasItem::Mono :
+        {
+            r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32);
+        }
+            break;
         case QSGCanvasItem::GrayScale :
         {
             for (int y = 0; y < r->image.height(); ++y) {
@@ -2207,15 +2507,15 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
             break;
         case QSGCanvasItem::Threshold :
         {
-            int threshold = 127;
+            qreal threshold = 0.5;
             if (args.Length() > 1)
-                threshold = args[1]->IntegerValue();
+                threshold = args[1]->NumberValue();
 
             for (int y = 0; y < r->image.height(); ++y) {
               QRgb *row = (QRgb*)r->image.scanLine(y);
               for (int x = 0; x < r->image.width(); ++x) {
                   unsigned char* rgb = ((unsigned char*)&row[x]);
-                  unsigned char v = qGray(rgb[0], rgb[1], rgb[2]) >= threshold ? 255 : 0;
+                  unsigned char v = qGray(rgb[0], rgb[1], rgb[2]) >= threshold*255 ? 255 : 0;
                   rgb[0] = rgb[1] = rgb[2] = v;
               }
             }
@@ -2288,14 +2588,17 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
 /*!
   \qmlclass QtQuick2::CanvasPixelArray
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
-  See http://www.w3.org/TR/2dcontext/#canvaspixelarray for more details.
+  The CanvasPixelArray can be accessed as normal Javascript array.
+    \sa QtQuick2::CanvasImageData
+    \sa {http://www.w3.org/TR/2dcontext/#canvaspixelarray}{W3C 2d context standard for PixelArray}
   */
 
 /*!
   \qmlproperty QtQuick2::CanvasPixelArray::length
   The CanvasPixelArray object represents h×w×4 integers which w and h comes from CanvasImageData.
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
- */
+  This property is read only.
+*/
 v8::Handle<v8::Value> ctx2d_pixelArray_length(v8::Local<v8::String>, const v8::AccessorInfo &args)
 {
     QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args.This());
@@ -2513,6 +2816,13 @@ static v8::Handle<v8::Value> ctx2d_putImageData(const v8::Arguments &args)
   \qmlmethod QtQuick2::CanvasGradient QtQuick2::CanvasGradient::addColorStop(real offsetof, string color)
   Adds a color stop with the given color to the gradient at the given offset.
   0.0 is the offset at one end of the gradient, 1.0 is the offset at the other end.
+
+  For example:
+  \code
+  var gradient = ctx.createLinearGradient(0, 0, 100, 100);
+  gradient.addColorStop(0.3, Qt.rgba(1, 0, 0, 1));
+  gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
+  \endcode
   */
 static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &args)
 {
@@ -2528,7 +2838,13 @@ static v8::Handle<v8::Value> ctx2d_gradient_addColorStop(const v8::Arguments &ar
             V8THROW_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
         QGradient gradient = *(style->brush.gradient());
         qreal pos = args[0]->NumberValue();
-        QColor color = qt_color_from_string(engine->toString(args[1]));
+        QColor color;
+
+        if (args[1]->IsObject()) {
+            color = engine->toVariant(args[1], qMetaTypeId<QColor>()).value<QColor>();
+        } else {
+            color = qt_color_from_string(engine->toString(args[1]));
+        }
         if (pos < 0.0 || pos > 1.0) {
             //Throws an INDEX_SIZE_ERR exception
             V8THROW_ERROR("CanvasGradient: parameter offset out of range");
@@ -2561,10 +2877,13 @@ void QSGContext2D::closePath()
     QRectF boundRect = m_path.boundingRect();
     if (boundRect.width() || boundRect.height())
         m_path.closeSubpath();
+    //FIXME:QPainterPath set the current point to (0,0) after close subpath
+    //should be the first point of the previous subpath
 }
 
 void QSGContext2D::moveTo( qreal x, qreal y)
 {
+    //FIXME: moveTo should not close the previous subpath
     m_path.moveTo(state.matrix.map(QPointF(x, y)));
 }
 
