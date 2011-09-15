@@ -958,7 +958,11 @@ void tst_qdeclarativestates::anchorRewindBug()
 {
     QSGView *view = new QSGView;
     view->setSource(QUrl::fromLocalFile(SRCDIR "/data/anchorRewindBug.qml"));
-    qApp->processEvents();
+
+    view->show();
+    view->requestActivateWindow();
+
+    QTest::qWaitForWindowShown(view);
 
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(view->rootObject());
     QVERIFY(rect != 0);
