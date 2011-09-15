@@ -970,6 +970,11 @@ bool Lexer::isOctalDigit(ushort c)
     return (c >= '0' && c <= '7');
 }
 
+int Lexer::tokenKind() const
+{
+    return _tokenKind;
+}
+
 int Lexer::tokenOffset() const
 {
     return _tokenStartPtr - _code.unicode();

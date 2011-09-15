@@ -150,6 +150,7 @@ public:
     int regExpFlags() const { return _patternFlags; }
     QString regExpPattern() const { return _tokenText; }
 
+    int tokenKind() const;
     int tokenOffset() const;
     int tokenLength() const;
 
