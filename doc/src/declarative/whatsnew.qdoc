@@ -33,6 +33,59 @@
 
 QtQuick 2.0 is a major update.
 
+\section2 SceneGraph renderer
+
+QtQuick 2 is based on an OpenGL scenegraph.  The following
+classes replace their equivalents in QtQuick 1:
+
+\list
+\o QSGView
+\o QSGCanvas
+\o QSGItem
+\o QSGPaintedItem
+\endlist
+
+\section2 QML Engine/Language Improvements
+
+JS engine changed to V8.
+
+Parser and compiler optimizations.
+
+New binding optimizer.
+
+ValueType improvements:
+ - QColor is now a value type.  The red, green, blue and alpha channels can be accessed via "r", "g", "b" and "a" properties
+ - Improved support for QVector4D, now constructible in QML via Qt.vector4d()
+
+Arbitrary functionality may be provided in a namespace through a Module API.  See \l{qmlRegisterModuleApi()} for more information.
+
+JavaScript (.js) files may now import QML modules and other JavaScript files.  See \l{Importing One JavaScript File From Another} for more information.
+
+QML properties of type \c variant can now hold pixmaps.  See \l{Scarce Resources in JavaScript} for more information
+
+QDeclarativeExpression can now be directly (and more efficiently) constructed from a
+QDeclarativeScriptString.
+
+\section2 Canvas Item
+
+The new \l Canvas item provides a HTML5 canvas like API, with some enhancements:
+1) Supports 2 render targets: Canvas.Image and Canvas.FramebufferObject
+2) Supports background thread rendering
+3) Supports tiled canvas rendering
+
+The Canvas item supports most of the HTML5 context2d APIs, the API details please look at the canvas item documentation.
+
+
+\section2 Particle System
+
+The \l{QtQuick.Particles 2}{QtQuick.Particles} module contains elements that can be composed to form 2D particle system.
+
+
+\section2 Element API/Behavior Changes
+
+New \l SpriteImage element renders animated sprites and can transition between animations.
+It uses the \l Sprite element to represent each animation.
+
 MouseArea now propagates clicked, doubleClicked and pressAndHold differently to pressed. 
 These will now be propagated to the highest-stacking-order enabled MouseArea which has a handler for them.
 You can still ignore these events in the handler to let them pass through.
@@ -40,22 +93,26 @@ You can still ignore these events in the handler to let them pass through.
 The Binding element can now be used as a value source, and will also restore any previously
 set binding when its \e when clause becomes false.
 
-QDeclarativeExpression can now be directly (and more efficiently) constructed from a
-QDeclarativeScriptString.
-
 Flickable: added dragging, draggingHorizontally and draggingVerically properties.
 
 Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
 fillMode (Image.Pad) that does not transform the image.
 
-The Loader element now only emits the \c sourceChanged signal when the source is changed and the
-\c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one
-of the properties was changed.
-
 Grid now has rowSpacing and columnSpacing properties.
 
-Positioner now has an attached property that can be used to determine a subitem's location within a
-container such as Column or Row.
+Positioners now have attached properties that can be used to determine a subitem's location within a
+container such as Column or Row: Positioner.index, Positioner.isFirstItem, Positioner.isLastItem.
+
+Loader improvements:
+ - "active" property added to Loader, to allow delaying instantiation of a Loader element's item property
+ - "setSource(JSObject)" method added to Loader to allow initial property values to be specified (similar to Component.createObject())
+ - now only emits the \c sourceChanged signal when the source is changed and the
+\c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one of the properties was changed.
+
+PathView now has a \c currentItem property
+
+ListView and GridView now have headerItem and footerItem properties (the instantiated
+header and footer items).
 
 \section2 QtQuick 1 is now a separate library and module
 
@@ -69,13 +126,6 @@ QDeclarativeView and QDeclarativeItem headers are now in the QtQuick 1 module, i
 "import QtQuick 1.0" loads the module dynamically.  To deploy QtQuick 1 applications
 the library (lib/libQtQuick1*) and plugin (imports/QtQuick/) must be installed.
 
-
-\section2 PathView
-
-Added the following properties:
-\list
-\o \l {PathView::}{currentItem}
-\endlist
 
 \section1 Qt 4.7.4 includes QtQuick 1.1
 
