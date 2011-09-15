@@ -56,9 +56,8 @@ class QSGImageTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    QSGImageTextureProvider(const QSGImage *imageItem)
-        : d((QSGImagePrivate *) QSGItemPrivate::get(imageItem))
-        , m_texture(0)
+    QSGImageTextureProvider()
+        : m_texture(0)
         , m_smooth(false)
     {
     }
@@ -75,7 +74,6 @@ public:
 
     friend class QSGImage;
 
-    QSGImagePrivate *d;
     QSGTexture *m_texture;
     bool m_smooth;
 };
@@ -546,7 +544,9 @@ QSGTextureProvider *QSGImage::textureProvider() const
                    && QThread::currentThread() == d->sceneGraphContext()->thread(),
                    "QSGImage::textureProvider",
                    "Cannot be used outside the GUI thread");
-        const_cast<QSGImagePrivate *>(d)->provider = new QSGImageTextureProvider(this);
+        QSGImagePrivate *dd = const_cast<QSGImagePrivate *>(d);
+        dd->provider = new QSGImageTextureProvider;
+        dd->provider->m_texture = d->pix.texture(d->sceneGraphContext());
     }
 
     return d->provider;
