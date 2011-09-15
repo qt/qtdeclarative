@@ -47,10 +47,11 @@
 #include <qglyphrun.h>
 
 #include <QtGui/qcolor.h>
+#include <QtGui/qtextlayout.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
 
-class QTextLayout;
 class QSGGlyphNode;
 class QTextBlock;
 class QColor;
@@ -95,6 +96,8 @@ public:
                             QSGNode *parentNode = 0);
 
 private:
+    void mergeFormats(QTextLayout *textLayout, QVarLengthArray<QTextLayout::FormatRange> *mergedFormats);
+
     QSGContext *m_context;
     QSGSimpleRectNode *m_cursorNode;
 };

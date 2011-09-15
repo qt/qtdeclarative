@@ -213,6 +213,7 @@ namespace {
         {
             int newIndex = binaryTree->size();
             QRectF searchRect = glyphRun.boundingRect();
+            searchRect.translate(position);
 
             if (qFuzzyIsNull(searchRect.width()) || qFuzzyIsNull(searchRect.height()))
                 return;
@@ -786,6 +787,59 @@ namespace {
     }
 }
 
+void QSGTextNode::mergeFormats(QTextLayout *textLayout,
+                               QVarLengthArray<QTextLayout::FormatRange> *mergedFormats)
+{
+    Q_ASSERT(mergedFormats != 0);
+    if (textLayout == 0)
+        return;
+
+    QList<QTextLayout::FormatRange> additionalFormats = textLayout->additionalFormats();
+    for (int i=0; i<additionalFormats.size(); ++i) {
+        QTextLayout::FormatRange additionalFormat = additionalFormats.at(i);
+        if (additionalFormat.format.hasProperty(QTextFormat::ForegroundBrush)
+         || additionalFormat.format.hasProperty(QTextFormat::BackgroundBrush)) {
+            // Merge overlapping formats
+            if (!mergedFormats->isEmpty()) {
+                QTextLayout::FormatRange *lastFormat = mergedFormats->data() + mergedFormats->size() - 1;
+
+                if (additionalFormat.start < lastFormat->start + lastFormat->length) {
+                    QTextLayout::FormatRange *mergedRange = 0;
+
+                    int length = additionalFormat.length;
+                    if (additionalFormat.start > lastFormat->start) {
+                        lastFormat->length = additionalFormat.start - lastFormat->start;
+                        length -= lastFormat->length;
+
+                        mergedFormats->append(QTextLayout::FormatRange());
+                        mergedRange = mergedFormats->data() + mergedFormats->size() - 1;
+                        lastFormat = mergedFormats->data() + mergedFormats->size() - 2;
+                    } else {
+                        mergedRange = lastFormat;
+                    }
+
+                    mergedRange->format = lastFormat->format;
+                    mergedRange->format.merge(additionalFormat.format);
+                    mergedRange->start = additionalFormat.start;
+
+                    int end = qMin(additionalFormat.start + additionalFormat.length,
+                                   lastFormat->start + lastFormat->length);
+
+                    mergedRange->length = end - mergedRange->start;
+                    length -= mergedRange->length;
+
+                    additionalFormat.start = end;
+                    additionalFormat.length = length;
+                }
+            }
+
+            if (additionalFormat.length > 0)
+                mergedFormats->append(additionalFormat);
+        }
+    }
+
+}
+
 void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
                                   const QColor &textColor,
                                   QSGText::TextStyle style, const QColor &styleColor,
@@ -808,53 +862,8 @@ void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
         int preeditLength = block.isValid() ? block.layout()->preeditAreaText().length() : 0;
         int preeditPosition = block.isValid() ? block.layout()->preeditAreaPosition() : -1;
 
-        QTextLayout *textLayout = block.layout();
-        QList<QTextLayout::FormatRange> additionalFormats;
-        if (textLayout != 0)
-            additionalFormats = textLayout->additionalFormats();
         QVarLengthArray<QTextLayout::FormatRange> colorChanges;
-        for (int i=0; i<additionalFormats.size(); ++i) {
-            QTextLayout::FormatRange additionalFormat = additionalFormats.at(i);
-            if (additionalFormat.format.hasProperty(QTextFormat::ForegroundBrush)
-             || additionalFormat.format.hasProperty(QTextFormat::BackgroundBrush)) {
-                // Merge overlapping formats
-                if (!colorChanges.isEmpty()) {
-                    QTextLayout::FormatRange *lastFormat = colorChanges.data() + colorChanges.size() - 1;
-
-                    if (additionalFormat.start < lastFormat->start + lastFormat->length) {
-                        QTextLayout::FormatRange *mergedRange = 0;
-
-                        int length = additionalFormat.length;
-                        if (additionalFormat.start > lastFormat->start) {
-                            lastFormat->length = additionalFormat.start - lastFormat->start;
-                            length -= lastFormat->length;
-
-                            colorChanges.append(QTextLayout::FormatRange());
-                            mergedRange = colorChanges.data() + colorChanges.size() - 1;
-                            lastFormat = colorChanges.data() + colorChanges.size() - 2;
-                        } else {
-                            mergedRange = lastFormat;
-                        }
-
-                        mergedRange->format = lastFormat->format;
-                        mergedRange->format.merge(additionalFormat.format);
-                        mergedRange->start = additionalFormat.start;
-
-                        int end = qMin(additionalFormat.start + additionalFormat.length,
-                                       lastFormat->start + lastFormat->length);
-
-                        mergedRange->length = end - mergedRange->start;
-                        length -= mergedRange->length;
-
-                        additionalFormat.start = end;
-                        additionalFormat.length = length;
-                    }
-                }
-
-                if (additionalFormat.length > 0)
-                    colorChanges.append(additionalFormat);
-            }
-        }
+        mergeFormats(block.layout(), &colorChanges);
 
         QTextBlock::iterator blockIterator = block.begin();
         int textPos = block.position();
@@ -918,20 +927,27 @@ void QSGTextNode::addTextLayout(const QPointF &position, QTextLayout *textLayout
     engine.setSelectionColor(selectionColor);
     engine.setPosition(position);
 
-    QList<QTextLayout::FormatRange> additionalFormats = textLayout->additionalFormats();
+    int preeditLength = textLayout->preeditAreaText().length();
+    int preeditPosition = textLayout->preeditAreaPosition();
+
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
-    for (int i=0; i<additionalFormats.size(); ++i) {
-        if (additionalFormats.at(i).format.hasProperty(QTextFormat::ForegroundBrush))
-            colorChanges.append(additionalFormats.at(i));
-    }
+    mergeFormats(textLayout, &colorChanges);
 
     for (int i=0; i<textLayout->lineCount(); ++i) {
         QTextLine line = textLayout->lineAt(i);
 
+        int start = line.textStart();
+        int length = line.textLength();
+        int end = start + length;
+
+        if (preeditPosition >= 0
+         && preeditPosition >= start
+         && preeditPosition < end) {
+            end += preeditLength;
+        }
+
         engine.setCurrentLine(line);
-        engine.addGlyphsForRanges(colorChanges,
-                                  line.textStart(), line.textStart() + line.textLength(),
-                                  selectionStart, selectionEnd);
+        engine.addGlyphsForRanges(colorChanges, start, end, selectionStart, selectionEnd);
     }
 
     engine.addToSceneGraph(this, style, styleColor);
