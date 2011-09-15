@@ -81,6 +81,11 @@ void main() {
     else if(entry == 2.)
         currentSize = currentSize * fadeIn * fadeOut;
 
+    if(currentSize <= 0)//Sizes too small look jittery as they move
+        currentSize = 0;
+    else if(currentSize < 3)
+        currentSize = 3;
+
     highp vec2 pos;
 #ifdef DEFORM
     highp float rotation = vRotation.x + vRotation.y * t * vData.y;
