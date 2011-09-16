@@ -78,7 +78,7 @@ public:
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QSGTextEdit::AutoText), document(0), wrapMode(QSGTextEdit::NoWrap),
       mouseSelectionMode(QSGTextEdit::SelectCharacters),
-      yoff(0), nodeType(NodeIsNull), texture(0)
+      lineCount(0), yoff(0), nodeType(NodeIsNull), texture(0)
     {
 #ifdef Q_OS_SYMBIAN
         if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
