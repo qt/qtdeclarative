@@ -21,9 +21,9 @@ PUBLICTESTS += \
     qdeclarativeqt \
     qdeclarativetranslation \
     qdeclarativexmlhttprequest \
-#   qjsvalue \
+    qjsvalue \
     qjsvalueiterator \
-#   qjsengine
+    qjsengine
 
 PRIVATETESTS += \
     qdeclarativeanimations \

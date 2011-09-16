@@ -1,5 +1,5 @@
 load(qttest_p4)
-QT += declarative
+QT += declarative widgets
 macx:CONFIG -= app_bundle
 SOURCES += tst_qjsengine.cpp
 #temporary
