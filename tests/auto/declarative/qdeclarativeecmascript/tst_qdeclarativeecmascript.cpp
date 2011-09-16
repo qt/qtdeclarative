@@ -146,6 +146,10 @@ private slots:
     void numberAssignment();
     void propertySplicing();
     void signalWithUnknownTypes();
+    void signalWithJSValueInVariant_data();
+    void signalWithJSValueInVariant();
+    void signalWithJSValueInVariant_twoEngines_data();
+    void signalWithJSValueInVariant_twoEngines();
     void moduleApi_data();
     void moduleApi();
     void importScripts();
@@ -2756,6 +2760,77 @@ void tst_qdeclarativeecmascript::signalWithUnknownTypes()
 
 
     delete object;
+}
+
+void tst_qdeclarativeecmascript::signalWithJSValueInVariant_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QString>("compare");
+
+    QString compareStrict("(function(a, b) { return a === b; })");
+    QTest::newRow("true") << "true" << compareStrict;
+    QTest::newRow("undefined") << "undefined" << compareStrict;
+    QTest::newRow("null") << "null" << compareStrict;
+    QTest::newRow("123") << "123" << compareStrict;
+    QTest::newRow("'ciao'") << "'ciao'" << compareStrict;
+
+    QString comparePropertiesStrict(
+        "(function(a, b) {"
+        "  if (typeof b != 'object')"
+        "    return a === b;"
+        "  var props = Object.getOwnPropertyNames(b);"
+        "  for (var i = 0; i < props.length; ++i) {"
+        "    var p = props[i];"
+        "    return arguments.callee(a[p], b[p]);"
+        "  }"
+        "})");
+    QTest::newRow("{ foo: 'bar' }") << "({ foo: 'bar' })"  << comparePropertiesStrict;
+    QTest::newRow("[10,20,30]") << "[10,20,30]"  << comparePropertiesStrict;
+}
+
+void tst_qdeclarativeecmascript::signalWithJSValueInVariant()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, compare);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("signalWithJSValueInVariant.qml"));
+    QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
+    QVERIFY(object != 0);
+
+    QJSValue value = engine.evaluate(expression);
+    QVERIFY(!engine.hasUncaughtException());
+    object->setProperty("expression", expression);
+    object->setProperty("compare", compare);
+    object->setProperty("pass", false);
+
+    emit object->signalWithVariant(QVariant::fromValue(value));
+    QVERIFY(object->property("pass").toBool());
+}
+
+void tst_qdeclarativeecmascript::signalWithJSValueInVariant_twoEngines_data()
+{
+    signalWithJSValueInVariant_data();
+}
+
+void tst_qdeclarativeecmascript::signalWithJSValueInVariant_twoEngines()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, compare);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("signalWithJSValueInVariant.qml"));
+    QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
+    QVERIFY(object != 0);
+
+    QJSEngine engine2;
+    QJSValue value = engine2.evaluate(expression);
+    QVERIFY(!engine2.hasUncaughtException());
+    object->setProperty("expression", expression);
+    object->setProperty("compare", compare);
+    object->setProperty("pass", false);
+
+    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
+    emit object->signalWithVariant(QVariant::fromValue(value));
+    QVERIFY(!object->property("pass").toBool());
 }
 
 void tst_qdeclarativeecmascript::moduleApi_data()

@@ -341,6 +341,11 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             } else {
                 return v8::Null();
             }
+        } else if (type == qMetaTypeId<QJSValue>()) {
+            const QJSValue *value = reinterpret_cast<const QJSValue *>(ptr);
+            QJSValuePrivate *valuep = QJSValuePrivate::get(*value);
+            if (valuep->assignEngine(this))
+                return v8::Local<v8::Value>::New(*valuep);
         } else if (type == qMetaTypeId<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
@@ -358,7 +363,6 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
     }
 
     // XXX TODO: To be compatible, we still need to handle:
-    //    + QJSValue
     //    + QObjectList
     //    + QList<int>
 

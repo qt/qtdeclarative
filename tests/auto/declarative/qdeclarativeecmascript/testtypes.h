@@ -170,6 +170,7 @@ signals:
     void anotherBasicSignal();
     void thirdBasicSignal();
     void signalWithUnknownType(const MyQmlObject::MyType &arg);
+    void signalWithVariant(const QVariant &arg);
 
 public slots:
     void deleteMe() { delete this; }
