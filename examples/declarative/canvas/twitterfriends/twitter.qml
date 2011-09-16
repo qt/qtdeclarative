@@ -84,7 +84,7 @@ Item {
       anchors.bottom : parent.bottom
       smooth:true
       renderTarget:Canvas.Image
-      threadRendering:false
+      renderInThread:false
 
       property bool layoutChanged:true
       property string twitterName:""
@@ -124,4 +124,3 @@ Item {
     }
   }
 }
-

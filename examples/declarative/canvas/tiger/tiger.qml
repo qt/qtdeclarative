@@ -55,12 +55,11 @@ Item {
         id:canvas
         width:360
         height:360
-        smooth:false
-        renderTarget:Canvas.Image
-        threadRendering:false
+        smooth:true
+        renderTarget:Canvas.FramebufferObject
+        renderInThread:false
         property string strokeStyle:"steelblue"
         property string fillStyle:"yellow"
-        property int lineWidth:lineWidthCtrl.value
         property bool fill:true
         property bool stroke:true
         property real alpha:alphaCtrl.value
@@ -69,7 +68,6 @@ Item {
         property real rotate : rotateCtrl.value
         property int frame:0
 
-        onLineWidthChanged: requestPaint();
         onFillChanged: requestPaint();
         onStrokeChanged: requestPaint();
         onAlphaChanged: requestPaint();
@@ -85,8 +83,7 @@ Item {
         onPaint: {
             var ctx = canvas.getContext('2d');
             ctx.reset();
-            ctx.fillStyle = "rgba(0,0,0,0)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.globalAlpha = canvas.alpha;
             ctx.scale(canvas.scaleX, canvas.scaleY);
             ctx.rotate(canvas.rotate);
@@ -121,7 +118,6 @@ Item {
         height:160
         Column {
           spacing:3
-          Slider {id:lineWidthCtrl; width:300; height:30; min:1; max:10; init:2; name:"Line width"}
           Slider {id:scaleXCtrl; width:300; height:30; min:0.1; max:10; init:0.5; name:"ScaleX"}
           Slider {id:scaleYCtrl; width:300; height:30; min:0.1; max:10; init:0.5; name:"ScaleY"}
           Slider {id:rotateCtrl; width:300; height:30; min:0; max:Math.PI*2; init:0; name:"Rotate"}

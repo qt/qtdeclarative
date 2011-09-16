@@ -56,7 +56,7 @@ Item {
         height:360
         smooth:true
         renderTarget:Canvas.Image
-        threadRendering:false
+        renderInThread:false
 
         property string strokeStyle:"green"
         property string fillStyle:"yellow"

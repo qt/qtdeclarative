@@ -55,8 +55,8 @@ Item {
       width:360
       height:360
       smooth:true
-      renderTarget:Canvas.Image
-      threadRendering:false
+      renderTarget:Canvas.FramebufferObject
+      renderInThread:false
       property string image :"../contents/qt-logo.png"
       Component.onCompleted:loadImage(image);
       onImageLoaded:requestPaint();

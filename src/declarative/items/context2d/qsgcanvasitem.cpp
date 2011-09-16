@@ -64,7 +64,7 @@ public:
     QSize tileSize;
     QRectF canvasWindow;
     QRectF dirtyRect;
-    uint threadRendering : 1;
+    uint renderInThread : 1;
     uint hasCanvasSize :1;
     uint hasTileSize :1;
     uint hasCanvasWindow :1;
@@ -80,7 +80,7 @@ QSGCanvasItemPrivate::QSGCanvasItemPrivate()
     , texture(0)
     , canvasSize(1, 1)
     , tileSize(1, 1)
-    , threadRendering(true)
+    , renderInThread(false)
     , hasCanvasSize(false)
     , hasTileSize(false)
     , hasCanvasWindow(false)
@@ -303,10 +303,10 @@ QSGContext2D* QSGCanvasItem::context() const
      The default value is false.
     \sa QtQuick2::Canvas::renderTarget
 */
-bool QSGCanvasItem::threadRendering() const
+bool QSGCanvasItem::renderInThread() const
 {
     Q_D(const QSGCanvasItem);
-    return d->threadRendering;
+    return d->renderInThread;
 }
 /*!
     \qmlproperty bool QtQuick2::Canvas::renderTarget
@@ -353,20 +353,30 @@ void QSGCanvasItem::_doPainting(const QRectF& region)
         d->texture->wake();
 }
 
-void QSGCanvasItem::setThreadRendering(bool threadRendering)
+/*!
+    \qmlproperty bool QtQuick2::Canvas::renderInThread
+     Holds the current canvas rendering mode.
+
+     When this property is true, all canvas painting commands
+     are rendered in a background rendering thread, otherwise
+     the rendering happens in the main GUI thread.
+
+     The default renderInThread value is false.
+*/
+void QSGCanvasItem::setRenderInThread(bool renderInThread)
 {
     Q_D(QSGCanvasItem);
-    if (d->threadRendering != threadRendering) {
-        d->threadRendering = threadRendering;
+    if (d->renderInThread != renderInThread) {
+        d->renderInThread = renderInThread;
 
         if (d->componentCompleted)
             createTexture();
 
-        if (d->threadRendering)
+        if (d->renderInThread)
             connect(this, SIGNAL(painted()), SLOT(update()));
         else
             disconnect(this, SIGNAL(painted()), this, SLOT(update()));
-        emit threadRenderingChanged();
+        emit renderInThreadChanged();
         polish();
     }
 }
@@ -418,7 +428,7 @@ void QSGCanvasItem::updatePolish()
 
     QSGItem::updatePolish();
     if (d->texture) {
-        if (!d->threadRendering && d->dirtyRect.isValid())
+        if (!d->renderInThread && d->dirtyRect.isValid())
             _doPainting(d->dirtyRect);
 
         d->texture->canvasChanged(d->canvasSize.toSize()
@@ -447,7 +457,7 @@ void QSGCanvasItem::createTexture()
     Q_D(QSGCanvasItem);
 
     if (!d->texture
-      || d->texture->threadRendering() != d->threadRendering
+      || d->texture->threadRendering() != d->renderInThread
       || d->texture->renderTarget() != d->renderTarget) {
         if (d->texture) {
             d->texture->deleteLater();
@@ -455,18 +465,18 @@ void QSGCanvasItem::createTexture()
         }
 
         if (d->renderTarget == QSGCanvasItem::Image) {
-            d->texture = new QSGContext2DImageTexture(d->threadRendering);
+            d->texture = new QSGContext2DImageTexture(d->renderInThread);
         } else if (d->renderTarget == QSGCanvasItem::FramebufferObject) {
             d->texture = new QSGContext2DFBOTexture();
         }
 
-        if (d->threadRendering && !d->texture->supportThreadRendering()) {
+        if (d->renderInThread && !d->texture->supportThreadRendering()) {
             qWarning("Canvas: render target does not support thread rendering, force to non-thread rendering mode.");
-            d->threadRendering = false;
-            emit threadRenderingChanged();
+            d->renderInThread = false;
+            emit renderInThreadChanged();
         }
 
-        if (d->threadRendering)
+        if (d->renderInThread)
             connect(d->texture, SIGNAL(textureChanged()), this, SLOT(update()));
 
         d->texture->setItem(this);

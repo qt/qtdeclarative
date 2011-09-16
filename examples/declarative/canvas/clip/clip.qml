@@ -66,7 +66,7 @@ Item {
       property string imagefile:"../contents/qt-logo.png"
       smooth:true
       renderTarget:Canvas.Image
-      threadRendering:false
+      renderInThread:false
       Component.onCompleted:loadImage(canvas.imagefile);
 
     onAlphaChanged:requestPaint();

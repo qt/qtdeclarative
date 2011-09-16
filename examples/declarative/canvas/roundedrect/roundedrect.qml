@@ -55,7 +55,7 @@ Item {
         height:360
         smooth:true
         renderTarget:Canvas.Image
-        threadRendering:false
+        renderInThread:false
 
         property int radius: rCtrl.value
         property int rectx: rxCtrl.value

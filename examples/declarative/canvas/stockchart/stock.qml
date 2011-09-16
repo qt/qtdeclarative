@@ -337,7 +337,7 @@ Rectangle {
         anchors.bottom : view.top
         width:container.width;
         opacity:0
-        threadRendering:false
+        renderInThread:false
         renderTarget: Canvas.Image
         property bool running:false
         property int frames:first

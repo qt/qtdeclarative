@@ -65,7 +65,7 @@ Item {
       property real rotate : rotateCtrl.value
       smooth:true
       renderTarget:Canvas.Image
-      threadRendering:false
+      renderInThread:false
 
       onLineWidthChanged:requestPaint();
       onFillChanged:requestPaint();
@@ -106,8 +106,7 @@ Item {
           ctx.fillStyle="green";
           ctx.font = "Bold 15px";
 
-         // ctx.fillText("QML酷毙了", 30, 60); //BUG(in Linux):can't show multiple Chinese characters correctly.
-          ctx.fillText("QML酷   毙   了   !", 35, 65);
+          ctx.fillText("QML酷毙了", 30, 60);
       }
     }
 

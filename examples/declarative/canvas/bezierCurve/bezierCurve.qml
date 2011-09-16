@@ -65,7 +65,7 @@ Item {
       property real rotate : rotateCtrl.value
       smooth:true
       renderTarget:Canvas.Image
-      threadRendering:false
+      renderInThread:false
 
 
       Behavior on scaleX { SpringAnimation { spring: 2; damping: 0.2; loops:Animation.Infinite } }

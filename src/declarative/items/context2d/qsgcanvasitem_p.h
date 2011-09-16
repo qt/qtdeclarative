@@ -63,7 +63,7 @@ class QSGCanvasItem : public QSGItem
     Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
     Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
     Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
-    Q_PROPERTY(bool threadRendering READ threadRendering WRITE setThreadRendering NOTIFY threadRenderingChanged)
+    Q_PROPERTY(bool renderInThread READ renderInThread WRITE setRenderInThread NOTIFY renderInThreadChanged)
     Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
 public:
     enum RenderTarget {
@@ -94,8 +94,8 @@ public:
     QRectF canvasWindow() const;
     void setCanvasWindow(const QRectF& rect);
 
-    bool threadRendering() const;
-    void setThreadRendering(bool theadRendering);
+    bool renderInThread() const;
+    void setRenderInThread(bool renderInThread);
 
     RenderTarget renderTarget() const;
     void setRenderTarget(RenderTarget target);
@@ -109,7 +109,7 @@ Q_SIGNALS:
     void painted();
     void canvasSizeChanged();
     void tileSizeChanged();
-    void threadRenderingChanged();
+    void renderInThreadChanged();
     void textureChanged();
     void canvasWindowChanged();
     void renderTargetChanged();
