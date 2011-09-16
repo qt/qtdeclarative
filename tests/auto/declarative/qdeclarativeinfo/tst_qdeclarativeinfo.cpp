@@ -42,7 +42,7 @@
 #include <qtest.h>
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
-#include <QPushButton>
+#include <QTimer>
 #include <QDeclarativeContext>
 #include <qdeclarativeinfo.h>
 
@@ -143,9 +143,9 @@ void tst_qdeclarativeinfo::nonQmlObject()
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Test Message");
     qmlInfo(&object) << "Test Message";
 
-    QPushButton pbObject;
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QPushButton: Test Message");
-    qmlInfo(&pbObject) << "Test Message";
+    QTimer nonQmlObject;
+    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QTimer: Test Message");
+    qmlInfo(&nonQmlObject) << "Test Message";
 }
 
 void tst_qdeclarativeinfo::nullObject()

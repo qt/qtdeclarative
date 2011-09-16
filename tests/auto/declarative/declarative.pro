@@ -27,7 +27,7 @@ PUBLICTESTS += \
 
 PRIVATETESTS += \
     qdeclarativeanimations \
-#   qdeclarativeapplication \
+    qdeclarativeapplication \
     qdeclarativebehaviors \
     qdeclarativebinding \
     qdeclarativeconnection \
@@ -48,7 +48,7 @@ PRIVATETESTS += \
     qdeclarativestyledtext \
     qdeclarativesqldatabase \
     qdeclarativestates \
-#   qdeclarativesystempalette \
+    qdeclarativesystempalette \
     qdeclarativetimer \
     qdeclarativevaluetypes \
     qdeclarativeworkerscript \
@@ -60,23 +60,23 @@ SGTESTS =  \
     qsganimatedimage \
     qsgborderimage \
     qsgcanvas \
-#   qsgflickable \
+    qsgflickable \
     qsgflipable \
-#   qsgfocusscope \
-#   qsggridview \
-#   qsgimage \
+    qsgfocusscope \
+    qsggridview \
+    qsgimage \
     qsgitem \
     qsglistview \
     qsgloader \
     qsgmousearea \
-#   qsgpathview \
+    qsgpathview \
     qsgpincharea \
-#   qsgpositioners \
+    qsgpositioners \
     qsgrepeater \
     qsgtext \
 #   qsgtextedit \
 #   qsgtextinput \
-#   qsgvisualdatamodel \
+    qsgvisualdatamodel \
 
 
 SUBDIRS += $$PUBLICTESTS

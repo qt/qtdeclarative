@@ -408,6 +408,7 @@ void tst_qsgflickable::movingAndDragging()
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
     canvas->show();
     canvas->requestActivateWindow();
+    QTest::qWaitForWindowShown(canvas);
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
@@ -425,14 +426,11 @@ void tst_qsgflickable::movingAndDragging()
     //Vertical
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
 
+    QTest::mouseMove(canvas, QPoint(50, 80));
+    QTest::mouseMove(canvas, QPoint(50, 70));
+    QTest::mouseMove(canvas, QPoint(50, 60));
+
     QMouseEvent moveEvent(QEvent::MouseMove, QPoint(50, 80), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 70), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 60), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
 
     QVERIFY(!flickable->isDraggingHorizontally());
     QVERIFY(flickable->isDraggingVertically());
@@ -452,7 +450,7 @@ void tst_qsgflickable::movingAndDragging()
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 60));
 
-    QVERIFY(!flickable->isDraggingVertically());
+    QTRY_VERIFY(!flickable->isDraggingVertically());
     QVERIFY(!flickable->isDragging());
     QCOMPARE(vDragSpy.count(), 2);
     QCOMPARE(dragSpy.count(), 2);
@@ -475,14 +473,9 @@ void tst_qsgflickable::movingAndDragging()
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(90, 50));
 
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(80, 50), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(70, 50), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(60, 50), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QTest::mouseMove(canvas, QPoint(80, 50));
+    QTest::mouseMove(canvas, QPoint(70, 50));
+    QTest::mouseMove(canvas, QPoint(60, 50));
 
     QVERIFY(flickable->isDraggingHorizontally());
     QVERIFY(flickable->isDragging());
@@ -501,7 +494,7 @@ void tst_qsgflickable::movingAndDragging()
 
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(60, 50));
 
-    QVERIFY(!flickable->isDraggingHorizontally());
+    QTRY_VERIFY(!flickable->isDraggingHorizontally());
     QVERIFY(!flickable->isDragging());
     QCOMPARE(vDragSpy.count(), 0);
     QCOMPARE(dragSpy.count(), 2);
@@ -527,14 +520,9 @@ void tst_qsgflickable::disabled()
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 90));
 
-    QMouseEvent moveEvent(QEvent::MouseMove, QPoint(50, 80), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 70), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
-
-    moveEvent = QMouseEvent(QEvent::MouseMove, QPoint(50, 60), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &moveEvent);
+    QTest::mouseMove(canvas, QPoint(50, 80));
+    QTest::mouseMove(canvas, QPoint(50, 70));
+    QTest::mouseMove(canvas, QPoint(50, 60));
 
     QVERIFY(flick->isMoving() == false);
 
@@ -544,7 +532,7 @@ void tst_qsgflickable::disabled()
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(50, 10));
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(50, 10));
 
-    QVERIFY(canvas->rootObject()->property("clicked").toBool() == true);
+    QTRY_VERIFY(canvas->rootObject()->property("clicked").toBool() == true);
 }
 
 void tst_qsgflickable::flickVelocity()
@@ -556,7 +544,7 @@ void tst_qsgflickable::flickVelocity()
     QSGView *canvas = new QSGView;
     canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
     canvas->show();
-    canvas->setFocus();
+    canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlickable *flickable = qobject_cast<QSGFlickable*>(canvas->rootObject());
