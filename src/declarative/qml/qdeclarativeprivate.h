@@ -251,7 +251,7 @@ namespace QDeclarativePrivate
         TypeRegistration       = 0, 
         InterfaceRegistration  = 1,
         AutoParentRegistration = 2,
-        ModuleApiRegistration  = 3,
+        ModuleApiRegistration  = 3
     };
 
     int Q_DECLARATIVE_EXPORT qmlregister(RegistrationType, void *);

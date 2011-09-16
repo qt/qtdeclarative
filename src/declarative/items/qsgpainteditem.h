@@ -108,8 +108,8 @@ protected:
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
 private:
-    Q_DISABLE_COPY(QSGPaintedItem);
-    Q_DECLARE_PRIVATE(QSGPaintedItem);
+    Q_DISABLE_COPY(QSGPaintedItem)
+    Q_DECLARE_PRIVATE(QSGPaintedItem)
 };
 
 QT_END_NAMESPACE

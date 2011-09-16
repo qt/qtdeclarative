@@ -85,10 +85,8 @@ public:
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
 
-signals:
-    void frameSwapped();
-
 Q_SIGNALS:
+    void frameSwapped();
     void sceneGraphInitialized();
 
 protected:
@@ -126,7 +124,7 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QSGCanvas *);
+Q_DECLARE_METATYPE(QSGCanvas *)
 
 QT_END_HEADER
 

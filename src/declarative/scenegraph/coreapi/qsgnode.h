@@ -90,7 +90,7 @@ public:
                                       | DirtyClipList
                                       | DirtyNodeAdded
                                       | DirtyOpacity
-                                      | DirtyForceUpdate,
+                                      | DirtyForceUpdate
 
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
@@ -170,8 +170,8 @@ private:
     void *m_reserved;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyFlags);
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags);
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::DirtyFlags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSGNode::Flags)
 
 class Q_DECLARATIVE_EXPORT QSGBasicGeometryNode : public QSGNode
 {

@@ -78,7 +78,7 @@ protected:
     QSGTransform(QSGTransformPrivate &dd, QObject *parent);
 
 private:
-    Q_DECLARE_PRIVATE(QSGTransform);
+    Q_DECLARE_PRIVATE(QSGTransform)
 };
 
 class QDeclarativeV8Function;
@@ -154,7 +154,7 @@ public:
         ItemClipsChildrenToShape  = 0x01,
         ItemAcceptsInputMethod    = 0x02,
         ItemIsFocusScope          = 0x04,
-        ItemHasContents           = 0x08,
+        ItemHasContents           = 0x08
         // Remember to increment the size of QSGItemPrivate::flags
     };
     Q_DECLARE_FLAGS(Flags, Flag)
@@ -167,7 +167,7 @@ public:
         ItemParentHasChanged,      // value.item
         ItemOpacityHasChanged,     // value.realValue
         ItemActiveFocusHasChanged, // value.boolValue
-        ItemRotationHasChanged,    // value.realValue
+        ItemRotationHasChanged     // value.realValue
     };
 
     union ItemChangeData {
