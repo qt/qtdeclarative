@@ -170,11 +170,19 @@ Elements that animate properties based on data types
 \endlist
 
 \section1 Graphical Effects
+\section2 QtQuick 1.0
 \list
 \o \l {Particles} - Generates and animates particles
 \o \l {ParticleMotionLinear} - Adds linear motion behavior to \l {Particles}
 \o \l {ParticleMotionGravity} - Adds gravitational motion to \l {Particles}
 \o \l {ParticleMotionWander} - Adds varied motions to \l {Particles}
+\endlist
+\section2 QtQuick 2.0
+\list
+\o \l {ShaderEffect} - Allows GLSL shaders to be used as graphical effects
+\o \l {ShaderEffectSource} - Usable as a texture in ShaderEffect
+\o \l {GridMesh} - Generates a gird mesh of vertices for use by ShaderEffect
+\o The \l{QtQuick.Particles 2} module provides a set of Particle System elements for QtQuick 2
 \endlist
 
 \section1 Add-On Elements
@@ -317,6 +325,10 @@ should first be obtained and installed.
     \ingroup qml-groups
 
     \brief Elements for handling particle effects.
+
+    This is the QtQuick 1.0 particle system, incompatible with QtQuick 2.0
+
+    There is a completely separate \l{QtQuick.Particles 2}{QtQuick 2.0 particle system}
 
     \generatelist{related}
 
