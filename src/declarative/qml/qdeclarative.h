@@ -480,6 +480,11 @@ inline int qmlRegisterModuleApi(const char *uri, int versionMajor, int versionMi
    may be registered into any given namespace (combination of \a uri, \a majorVersion and \a minorVersion).
    This function should be used to register a module API provider function which returns a QObject as a module API.
 
+   A QObject module API must be imported with a qualifier, and that qualifier may be used as
+   the target in a \l Connections element or otherwise used as any other element id would.
+   One exception to this is that a QObject module API property may not be aliased (because the
+   module API qualifier does not identify an object within the same component as any other item).
+
    Usage:
    \code
    // first, define your QObject which provides the functionality.
