@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
     char arg[] = "-qmljsdebugger=port:13769";
     _argv[_argc - 1] = arg;
 
-    QApplication app(_argc, _argv);
+    QGuiApplication app(_argc, _argv);
     tst_QDeclarativeDebugService tc;
     return QTest::qExec(&tc, _argc, _argv);
     delete _argv;

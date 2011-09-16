@@ -188,7 +188,7 @@ void tst_qdeclarativebinding::deletedObject()
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QGuiApplication::sendPostedEvents(0, QEvent::DeferredDelete);
 
     //don't crash
     rect->setProperty("activateBinding", true);

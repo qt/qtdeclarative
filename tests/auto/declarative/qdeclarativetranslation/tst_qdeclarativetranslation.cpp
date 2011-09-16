@@ -70,7 +70,7 @@ void tst_qdeclarativetranslation::translation()
 {
     QTranslator translator;
     translator.load(QLatin1String("qml_fr"), QLatin1String(SRCDIR) + QLatin1String("/data"));
-    QApplication::installTranslator(&translator);
+    QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("translation.qml"));
@@ -86,7 +86,7 @@ void tst_qdeclarativetranslation::translation()
     QCOMPARE(object->property("singular").toString(), QLatin1String("1 canard"));
     QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
 
-    QApplication::removeTranslator(&translator);
+    QCoreApplication::removeTranslator(&translator);
     delete object;
 }
 
@@ -94,7 +94,7 @@ void tst_qdeclarativetranslation::idTranslation()
 {
     QTranslator translator;
     translator.load(QLatin1String("qmlid_fr"), QLatin1String(SRCDIR) + QLatin1String("/data"));
-    QApplication::installTranslator(&translator);
+    QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, TEST_FILE("idtranslation.qml"));
@@ -104,7 +104,7 @@ void tst_qdeclarativetranslation::idTranslation()
     QCOMPARE(object->property("idTranslation").toString(), QLatin1String("bonjour tout le monde"));
     QCOMPARE(object->property("idTranslation2").toString(), QLatin1String("bonjour tout le monde"));
 
-    QApplication::removeTranslator(&translator);
+    QCoreApplication::removeTranslator(&translator);
     delete object;
 }
 
@@ -112,7 +112,7 @@ void tst_qdeclarativetranslation::translationInQrc()
 {
     QTranslator translator;
     translator.load(":/qml_fr.qm");
-    QApplication::installTranslator(&translator);
+    QCoreApplication::installTranslator(&translator);
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl("qrc:/translation.qml"));
@@ -128,7 +128,7 @@ void tst_qdeclarativetranslation::translationInQrc()
     QCOMPARE(object->property("singular").toString(), QLatin1String("1 canard"));
     QCOMPARE(object->property("plural").toString(), QLatin1String("2 canards"));
 
-    QApplication::removeTranslator(&translator);
+    QCoreApplication::removeTranslator(&translator);
     delete object;
 }
 
