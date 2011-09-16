@@ -96,7 +96,7 @@ private slots:
     void test_attachedproperties_dynamic();
 
 private:
-    QSGView *createView(const QString &filename);
+    QSGView *createView(const QString &filename, bool wait=true);
 };
 
 tst_qsgpositioners::tst_qsgpositioners()
@@ -230,7 +230,7 @@ void tst_qsgpositioners::test_horizontal_spacing_rightToLeft()
 
 void tst_qsgpositioners::test_horizontal_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml");
+    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml", false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -247,6 +247,8 @@ void tst_qsgpositioners::test_horizontal_animated()
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
+
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     QSGItem *row = canvas->rootObject()->findChild<QSGItem*>("row");
     QVERIFY(row);
@@ -282,7 +284,7 @@ void tst_qsgpositioners::test_horizontal_animated()
 
 void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml");
+    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml", false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -299,6 +301,8 @@ void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
     QCOMPARE(one->x(), -100.0);
     QCOMPARE(two->x(), -100.0);
     QCOMPARE(three->x(), -100.0);
+
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     QSGItem *row = canvas->rootObject()->findChild<QSGItem*>("row");
     QVERIFY(row);
@@ -431,7 +435,7 @@ void tst_qsgpositioners::test_vertical_spacing()
 
 void tst_qsgpositioners::test_vertical_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/vertical-animated.qml");
+    QSGView *canvas = createView(SRCDIR "/data/vertical-animated.qml", false);
 
     //Note that they animate in
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
@@ -445,6 +449,8 @@ void tst_qsgpositioners::test_vertical_animated()
     QSGRectangle *three = canvas->rootObject()->findChild<QSGRectangle*>("three");
     QVERIFY(three != 0);
     QCOMPARE(three->y(), -100.0);
+
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     QSGItem *column = canvas->rootObject()->findChild<QSGItem*>("column");
     QVERIFY(column);
@@ -662,7 +668,7 @@ void tst_qsgpositioners::test_grid_row_column_spacing()
 
 void tst_qsgpositioners::test_grid_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml");
+    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml", false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -691,6 +697,8 @@ void tst_qsgpositioners::test_grid_animated()
     QVERIFY(five != 0);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
+
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
     QVERIFY(grid);
@@ -745,7 +753,7 @@ void tst_qsgpositioners::test_grid_animated()
 
 void tst_qsgpositioners::test_grid_animated_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml");
+    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml", false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -774,6 +782,8 @@ void tst_qsgpositioners::test_grid_animated_rightToLeft()
     QVERIFY(five != 0);
     QCOMPARE(five->x(), -100.0);
     QCOMPARE(five->y(), -100.0);
+
+    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     QSGItem *grid = canvas->rootObject()->findChild<QSGItem*>("grid");
     QVERIFY(grid);
@@ -1453,13 +1463,14 @@ void tst_qsgpositioners::test_attachedproperties_dynamic()
     delete canvas;
 }
 
-QSGView *tst_qsgpositioners::createView(const QString &filename)
+QSGView *tst_qsgpositioners::createView(const QString &filename, bool wait)
 {
     QSGView *canvas = new QSGView(0);
 
     canvas->setSource(QUrl::fromLocalFile(filename));
     canvas->show();
-    QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
+    if (wait)
+        QTest::qWaitForWindowShown(canvas); //It may not relayout until the next frame, so it needs to be drawn
 
     return canvas;
 }
