@@ -7,14 +7,14 @@ METATYPETESTS += \
 PUBLICTESTS += \
 #   examples \
     geometry \
-#   nodes \
+    nodes \
     parserstress \
     qdeclarativecomponent \
     qdeclarativecontext \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
-#   qdeclarativeinfo \
+    qdeclarativeinfo \
     qdeclarativelistreference \
     qdeclarativemoduleplugin \
     qdeclarativepixmapcache \
@@ -35,7 +35,7 @@ PRIVATETESTS += \
     qdeclarativedebugclient \
     qdeclarativedebugservice \
 #   qdeclarativedebugjs \
-#   qdeclarativeecmascript \
+    qdeclarativeecmascript \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
     qdeclarativelanguage \
@@ -47,7 +47,7 @@ PRIVATETESTS += \
     qdeclarativespringanimation \
     qdeclarativestyledtext \
     qdeclarativesqldatabase \
-#   qdeclarativestates \
+    qdeclarativestates \
 #   qdeclarativesystempalette \
     qdeclarativetimer \
     qdeclarativevaluetypes \

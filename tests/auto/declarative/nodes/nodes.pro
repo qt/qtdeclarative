@@ -1,5 +1,5 @@
 load(qttest_p4)
-QT       += opengl declarative
+QT       += opengl declarative widgets
 
 TARGET = tst_nodestest
 macx:CONFIG   -= app_bundle
