@@ -63,6 +63,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
+DEFINE_BOOL_CONFIG_OPTION(qmlEnableImageCache, QML_ENABLE_TEXT_IMAGE_CACHE)
 
 /*!
     \qmlclass TextEdit QSGTextEdit
@@ -260,7 +261,7 @@ void QSGTextEdit::setText(const QString &text)
 #else
         d->control->setPlainText(text);
 #endif
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
+        d->useImageFallback = qmlEnableImageCache();
     } else {
         d->control->setPlainText(text);
     }
@@ -330,7 +331,7 @@ void QSGTextEdit::setTextFormat(TextFormat format)
         d->control->setPlainText(d->text);
 #endif
         updateSize();
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
+        d->useImageFallback = qmlEnableImageCache();
     }
     d->format = format;
     d->control->setAcceptRichText(d->format != PlainText);
@@ -1035,9 +1036,8 @@ void QSGTextEdit::componentComplete()
     Q_D(QSGTextEdit);
     QSGImplicitSizeItem::componentComplete();
 
-    if (d->richText) {
-        d->isComplexRichText = QSGTextNode::isComplexRichText(d->document);
-    }
+    if (d->richText)
+        d->useImageFallback = qmlEnableImageCache();
 
     if (d->dirty) {
         d->determineHorizontalAlignment();
@@ -1429,7 +1429,7 @@ void QSGTextEdit::updateImageCache(const QRectF &)
     Q_D(QSGTextEdit);
 
     // Do we really need the image cache?
-    if (!d->richText || !d->isComplexRichText) {
+    if (!d->richText || !d->useImageFallback) {
         if (!d->pixmapCache.isNull())
             d->pixmapCache = QPixmap();
         return;
@@ -1461,7 +1461,7 @@ QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upd
     Q_D(QSGTextEdit);
 
     QSGNode *currentNode = oldNode;
-    if (d->richText && d->isComplexRichText) {
+    if (d->richText && d->useImageFallback) {
         QSGImageNode *node = 0;
         if (oldNode == 0 || d->nodeType != QSGTextEditPrivate::NodeIsTexture) {
             delete oldNode;
@@ -1513,7 +1513,8 @@ QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upd
         QColor selectedTextColor = d->control->palette().color(QPalette::HighlightedText);
         node->addTextDocument(bounds.topLeft(), d->document, d->color, QSGText::Normal, QColor(),
                               selectionColor, selectedTextColor, selectionStart(),
-                              selectionEnd() - 1);
+                              selectionEnd() - 1);  // selectionEnd() returns first char after
+                                                    // selection
 
 #if defined(Q_WS_MAC)
         // We also need to make sure the document layout is redone when

@@ -958,7 +958,7 @@ void QSGText::setText(const QString &n)
             d->ensureDoc();
             d->doc->setText(n);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
+            d->richTextAsImage = enableImageCache();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }
@@ -1384,7 +1384,7 @@ void QSGText::setTextFormat(TextFormat format)
     if (!wasRich && d->richText && isComponentComplete()) {
         d->ensureDoc();
         d->doc->setText(d->text);
-        d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
+        d->richTextAsImage = enableImageCache();
     }
 
     d->updateLayout();
@@ -1674,7 +1674,7 @@ void QSGText::componentComplete()
             d->ensureDoc();
             d->doc->setText(d->text);
             d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
-            d->richTextAsImage = QSGTextNode::isComplexRichText(d->doc);
+            d->richTextAsImage = enableImageCache();
         } else {
             d->rightToLeftText = d->text.isRightToLeft();
         }

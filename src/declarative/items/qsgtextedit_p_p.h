@@ -73,7 +73,7 @@ public:
       : color("black"), hAlign(QSGTextEdit::AlignLeft), vAlign(QSGTextEdit::AlignTop),
       documentDirty(true), dirty(false), richText(false), cursorVisible(false), focusOnPress(true),
       persistentSelection(true), requireImplicitWidth(false), selectByMouse(false), canPaste(false),
-      hAlignImplicit(true), rightToLeftText(false), isComplexRichText(false),
+      hAlignImplicit(true), rightToLeftText(false), useImageFallback(false),
       textMargin(0.0), lastSelectionStart(0), lastSelectionEnd(0), cursorComponent(0), cursor(0),
       format(QSGTextEdit::AutoText), document(0), wrapMode(QSGTextEdit::NoWrap),
       mouseSelectionMode(QSGTextEdit::SelectCharacters),
@@ -113,7 +113,7 @@ public:
     bool canPaste:1;
     bool hAlignImplicit:1;
     bool rightToLeftText:1;
-    bool isComplexRichText:1;
+    bool useImageFallback:1;
 
     qreal textMargin;
     int lastSelectionStart;

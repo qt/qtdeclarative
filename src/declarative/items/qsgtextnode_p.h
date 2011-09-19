@@ -60,6 +60,7 @@ class QSGContext;
 class QRawFont;
 class QSGSimpleRectNode;
 class QSGClipNode;
+class QSGTexture;
 
 class QSGTextNode : public QSGTransformNode
 {
@@ -94,12 +95,14 @@ public:
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                             QSGText::TextStyle style = QSGText::Normal, const QColor &styleColor = QColor(),
                             QSGNode *parentNode = 0);
+    void addImage(const QRectF &rect, const QImage &image);
 
 private:
     void mergeFormats(QTextLayout *textLayout, QVarLengthArray<QTextLayout::FormatRange> *mergedFormats);
 
     QSGContext *m_context;
     QSGSimpleRectNode *m_cursorNode;
+    QList<QSGTexture *> m_textures;
 };
 
 QT_END_NAMESPACE
