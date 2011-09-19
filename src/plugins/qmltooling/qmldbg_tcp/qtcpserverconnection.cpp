@@ -168,13 +168,14 @@ void QTcpServerConnection::newConnection()
 {
     Q_D(QTcpServerConnection);
 
-    if (d->socket) {
+    if (d->socket && d->socket->peerPort()) {
         qWarning("QDeclarativeDebugServer: Another client is already connected");
         QTcpSocket *faultyConnection = d->tcpServer->nextPendingConnection();
         delete faultyConnection;
         return;
     }
 
+    delete d->socket;
     d->socket = d->tcpServer->nextPendingConnection();
     d->socket->setParent(this);
     d->protocol = new QPacketProtocol(d->socket, this);

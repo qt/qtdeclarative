@@ -50,6 +50,9 @@
 #include "../../../shared/util.h"
 #include "../shared/debugutil_p.h"
 
+#define PORT 13770
+#define STR_PORT "13770"
+
 class tst_QDeclarativeDebugClient : public QObject
 {
     Q_OBJECT
@@ -63,11 +66,14 @@ private slots:
     void name();
     void status();
     void sendMessage();
+    void parallelConnect();
+    void sequentialConnect();
 };
 
 void tst_QDeclarativeDebugClient::initTestCase()
 {
-    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Waiting for connection on port 13770...");
+    const QString waitingMsg = QString("QDeclarativeDebugServer: Waiting for connection on port %1...").arg(PORT);
+    QTest::ignoreMessage(QtWarningMsg, waitingMsg.toAscii().constData());
     new QDeclarativeEngine(this);
 
     m_conn = new QDeclarativeDebugConnection(this);
@@ -75,7 +81,7 @@ void tst_QDeclarativeDebugClient::initTestCase()
     QDeclarativeDebugTestClient client("tst_QDeclarativeDebugClient::handshake()", m_conn);
     QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::handshake()");
 
-    m_conn->connectToHost("127.0.0.1", 13770);
+    m_conn->connectToHost("127.0.0.1", PORT);
 
     QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
     bool ok = m_conn->waitForConnected();
@@ -134,14 +140,46 @@ void tst_QDeclarativeDebugClient::sendMessage()
     QCOMPARE(resp, msg);
 }
 
+void tst_QDeclarativeDebugClient::parallelConnect()
+{
+    QDeclarativeDebugConnection connection2;
+
+    connection2.connectToHost("127.0.0.1", PORT);
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Another client is already connected");
+    // will connect & immediately disconnect
+    QVERIFY(connection2.waitForConnected());
+    QTRY_COMPARE(connection2.state(), QAbstractSocket::UnconnectedState);
+    QVERIFY(m_conn->isConnected());
+}
+
+void tst_QDeclarativeDebugClient::sequentialConnect()
+{
+    QDeclarativeDebugConnection connection2;
+    QDeclarativeDebugTestClient client2("tst_QDeclarativeDebugClient::handshake()", &connection2);
+    QDeclarativeDebugTestService service("tst_QDeclarativeDebugClient::handshake()");
+
+    m_conn->close();
+    QVERIFY(!m_conn->isConnected());
+    QCOMPARE(m_conn->state(), QAbstractSocket::UnconnectedState);
+
+    // Make sure that the disconnect is actually delivered to the server
+    QGuiApplication::processEvents();
+
+    connection2.connectToHost("127.0.0.1", PORT);
+    QTest::ignoreMessage(QtWarningMsg, "QDeclarativeDebugServer: Connection established");
+    QVERIFY(connection2.waitForConnected());
+    QVERIFY(connection2.isConnected());
+    QTRY_VERIFY(client2.status() == QDeclarativeDebugClient::Enabled);
+}
+
 int main(int argc, char *argv[])
 {
     int _argc = argc + 1;
     char **_argv = new char*[_argc];
     for (int i = 0; i < argc; ++i)
         _argv[i] = argv[i];
-    char arg[] = "-qmljsdebugger=port:13770";
-    _argv[_argc - 1] = arg;
+
+    _argv[_argc - 1] = "-qmljsdebugger=port:" STR_PORT;
 
     QGuiApplication app(_argc, _argv);
     tst_QDeclarativeDebugClient tc;

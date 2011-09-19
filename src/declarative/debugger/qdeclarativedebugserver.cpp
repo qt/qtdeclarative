@@ -243,75 +243,66 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
     Q_D(QDeclarativeDebugServer);
 
     QDataStream in(message);
-    if (!d->gotHello) {
-        QString name;
-        int op;
-        in >> name >> op;
+    QString name;
 
-        if (name != QLatin1String("QDeclarativeDebugServer")
-                || op != 0) {
-            qWarning("QDeclarativeDebugServer: Invalid hello message");
+    in >> name;
+    if (name == QLatin1String("QDeclarativeDebugServer")) {
+        int op = -1;
+        in >> op;
+        if (op == 0) {
+            int version;
+            in >> version >> d->clientPlugins;
+
+            // Send the hello answer immediately, since it needs to arrive before
+            // the plugins below start sending messages.
+            QByteArray helloAnswer;
+            {
+                QDataStream out(&helloAnswer, QIODevice::WriteOnly);
+                out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << d->plugins.keys();
+            }
+            d->connection->send(helloAnswer);
+
+            d->gotHello = true;
+
+            QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
+            for (; iter != d->plugins.end(); ++iter) {
+                QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+                if (d->clientPlugins.contains(iter.key()))
+                    newStatus = QDeclarativeDebugService::Enabled;
+                iter.value()->d_func()->status = newStatus;
+                iter.value()->statusChanged(newStatus);
+            }
+
+            qWarning("QDeclarativeDebugServer: Connection established");
+
+        } else if (op == 1) {
+
+            // Service Discovery
+            QStringList oldClientPlugins = d->clientPlugins;
+            in >> d->clientPlugins;
+
+            QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
+            for (; iter != d->plugins.end(); ++iter) {
+                const QString pluginName = iter.key();
+                QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
+                if (d->clientPlugins.contains(pluginName))
+                    newStatus = QDeclarativeDebugService::Enabled;
+
+                if (oldClientPlugins.contains(pluginName)
+                        != d->clientPlugins.contains(pluginName)) {
+                    iter.value()->d_func()->status = newStatus;
+                    iter.value()->statusChanged(newStatus);
+                }
+            }
+
+        } else {
+            qWarning("QDeclarativeDebugServer: Invalid control message %d", op);
             d->connection->disconnect();
             return;
         }
 
-        int version;
-        in >> version >> d->clientPlugins;
-
-        // Send the hello answer immediately, since it needs to arrive before
-        // the plugins below start sending messages.
-        QByteArray helloAnswer;
-        {
-            QDataStream out(&helloAnswer, QIODevice::WriteOnly);
-            out << QString(QLatin1String("QDeclarativeDebugClient")) << 0 << protocolVersion << d->plugins.keys();
-        }
-        d->connection->send(helloAnswer);
-
-        d->gotHello = true;
-
-        QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
-        for (; iter != d->plugins.end(); ++iter) {
-            QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
-            if (d->clientPlugins.contains(iter.key()))
-                newStatus = QDeclarativeDebugService::Enabled;
-            iter.value()->d_func()->status = newStatus;
-            iter.value()->statusChanged(newStatus);
-        }
-
-        qWarning("QDeclarativeDebugServer: Connection established");
     } else {
-
-        QString debugServer(QLatin1String("QDeclarativeDebugServer"));
-
-        QString name;
-        in >> name;
-
-        if (name == debugServer) {
-            int op = -1;
-            in >> op;
-
-            if (op == 1) {
-                // Service Discovery
-                QStringList oldClientPlugins = d->clientPlugins;
-                in >> d->clientPlugins;
-
-                QHash<QString, QDeclarativeDebugService*>::Iterator iter = d->plugins.begin();
-                for (; iter != d->plugins.end(); ++iter) {
-                    const QString pluginName = iter.key();
-                    QDeclarativeDebugService::Status newStatus = QDeclarativeDebugService::Unavailable;
-                    if (d->clientPlugins.contains(pluginName))
-                        newStatus = QDeclarativeDebugService::Enabled;
-
-                    if (oldClientPlugins.contains(pluginName)
-                            != d->clientPlugins.contains(pluginName)) {
-                        iter.value()->d_func()->status = newStatus;
-                        iter.value()->statusChanged(newStatus);
-                    }
-                }
-            } else {
-                qWarning("QDeclarativeDebugServer: Invalid control message %d", op);
-            }
-        } else {
+        if (d->gotHello) {
             QByteArray message;
             in >> message;
 
@@ -328,7 +319,10 @@ void QDeclarativeDebugServer::receiveMessage(const QByteArray &message)
                                           Q_ARG(QString, name),
                                           Q_ARG(QByteArray, message));
             }
+        } else {
+            qWarning("QDeclarativeDebugServer: Invalid hello message");
         }
+
     }
 }
 
