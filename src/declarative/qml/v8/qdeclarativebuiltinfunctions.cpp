@@ -98,17 +98,19 @@ v8::Handle<v8::Value> stringArg(const v8::Arguments &args)
     if (args.Length() != 1)
         V8THROW_ERROR("String.arg(): Invalid arguments");
 
-    if (args[0]->IsUint32())
-        return V8ENGINE()->toString(value.arg(args[0]->Uint32Value()));
-    else if (args[0]->IsInt32())
-        return V8ENGINE()->toString(value.arg(args[0]->Int32Value()));
-    else if (args[0]->IsNumber())
-        return V8ENGINE()->toString(value.arg(args[0]->NumberValue()));
-    else if (args[0]->IsBoolean())
-        return V8ENGINE()->toString(value.arg(args[0]->BooleanValue()));
+    v8::Handle<v8::Value> arg = args[0];
+    if (arg->IsUint32())
+        return V8ENGINE()->toString(value.arg(arg->Uint32Value()));
+    else if (arg->IsInt32())
+        return V8ENGINE()->toString(value.arg(arg->Int32Value()));
+    else if (arg->IsNumber())
+        return V8ENGINE()->toString(value.arg(arg->NumberValue()));
+    else if (arg->IsBoolean())
+        return V8ENGINE()->toString(value.arg(arg->BooleanValue()));
 
-    return V8ENGINE()->toString(value.arg(V8ENGINE()->toString(args[0])));
+    return V8ENGINE()->toString(value.arg(V8ENGINE()->toString(arg)));
 }
+
 /*!
 \qmlmethod bool Qt::isQtObject(object)
 Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.

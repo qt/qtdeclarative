@@ -546,9 +546,21 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
     global->Set(v8::String::New("Qt"), qt);
     global->Set(v8::String::New("gc"), V8FUNCTION(QDeclarativeBuiltinFunctions::gc, this));
 
-    v8::Local<v8::Object> string = v8::Local<v8::Object>::Cast(global->Get(v8::String::New("String")));
-    v8::Local<v8::Object> stringPrototype = v8::Local<v8::Object>::Cast(string->Get(v8::String::New("prototype")));
-    stringPrototype->Set(v8::String::New("arg"), V8FUNCTION(stringArg, this));
+    {
+#define STRING_ARG "(function(stringArg) { "\
+                   "    String.prototype.arg = (function() {"\
+                   "        return stringArg.apply(this, arguments);"\
+                   "    })"\
+                   "})"
+
+        v8::Local<v8::Script> registerArg = v8::Script::New(v8::String::New(STRING_ARG), 0, 0, v8::Handle<v8::String>(), v8::Script::NativeMode);
+        v8::Local<v8::Value> result = registerArg->Run();
+        Q_ASSERT(result->IsFunction());
+        v8::Local<v8::Function> registerArgFunc = v8::Local<v8::Function>::Cast(result);
+        v8::Handle<v8::Value> args = V8FUNCTION(stringArg, this);
+        registerArgFunc->Call(v8::Local<v8::Object>::Cast(registerArgFunc), 1, &args);
+#undef STRING_ARG
+    }
 
     qt_add_domexceptions(this);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(this);

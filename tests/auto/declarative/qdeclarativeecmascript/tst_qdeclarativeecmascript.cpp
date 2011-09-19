@@ -159,6 +159,7 @@ private slots:
     void objectPassThroughSignals();
     void booleanConversion();
     void handleReferenceManagement();
+    void stringArg();
 
     void bug1();
     void bug2();
@@ -3552,6 +3553,22 @@ void tst_qdeclarativeecmascript::handleReferenceManagement()
         QCOMPARE(dtorCount, 6);
         delete hrmEngine1;
     }
+}
+
+void tst_qdeclarativeecmascript::stringArg()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("stringArg.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "success");
+    QVERIFY(object->property("returnValue").toBool());
+
+    QString w1 = TEST_FILE("stringArg.qml").toString() + QLatin1String(":45: Error: String.arg(): Invalid arguments");
+    QTest::ignoreMessage(QtWarningMsg, w1.toAscii().constData());
+    QMetaObject::invokeMethod(object, "failure");
+    QVERIFY(object->property("returnValue").toBool());
+
+    delete object;
 }
 
 // Test that assigning a null object works 
