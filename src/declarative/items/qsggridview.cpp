@@ -93,7 +93,7 @@ public:
     qreal colPos() const {
         if (view->flow() == QSGGridView::LeftToRight) {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
-                int colSize = view->cellWidth();
+                qreal colSize = view->cellWidth();
                 int columns = view->width()/colSize;
                 return colSize * (columns-1) - item->x();
             } else {
@@ -152,8 +152,8 @@ public:
     virtual qreal originPosition() const;
     virtual qreal lastPosition() const;
 
-    int rowSize() const;
-    int colSize() const;
+    qreal rowSize() const;
+    qreal colSize() const;
     qreal colPosAt(int modelIndex) const;
     qreal rowPosAt(int modelIndex) const;
     qreal snapPosAt(qreal pos) const;
@@ -196,8 +196,8 @@ public:
                         QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
 
     QSGGridView::Flow flow;
-    int cellWidth;
-    int cellHeight;
+    qreal cellWidth;
+    qreal cellHeight;
     int columns;
     QSGGridView::SnapMode snapMode;
 
@@ -276,10 +276,10 @@ qreal QSGGridViewPrivate::endPositionAt(int index) const
     return rowPosAt(index) + rowSize();
 }
 
-int QSGGridViewPrivate::rowSize() const {
+qreal QSGGridViewPrivate::rowSize() const {
     return flow == QSGGridView::LeftToRight ? cellHeight : cellWidth;
 }
-int QSGGridViewPrivate::colSize() const {
+qreal QSGGridViewPrivate::colSize() const {
     return flow == QSGGridView::LeftToRight ? cellWidth : cellHeight;
 }
 
@@ -1374,24 +1374,24 @@ void QSGGridView::setFlow(Flow flow)
 
 
 /*!
-  \qmlproperty int QtQuick2::GridView::cellWidth
-  \qmlproperty int QtQuick2::GridView::cellHeight
+  \qmlproperty real QtQuick2::GridView::cellWidth
+  \qmlproperty real QtQuick2::GridView::cellHeight
 
   These properties holds the width and height of each cell in the grid.
 
   The default cell size is 100x100.
 */
-int QSGGridView::cellWidth() const
+qreal QSGGridView::cellWidth() const
 {
     Q_D(const QSGGridView);
     return d->cellWidth;
 }
 
-void QSGGridView::setCellWidth(int cellWidth)
+void QSGGridView::setCellWidth(qreal cellWidth)
 {
     Q_D(QSGGridView);
     if (cellWidth != d->cellWidth && cellWidth > 0) {
-        d->cellWidth = qMax(1, cellWidth);
+        d->cellWidth = qMax(qreal(1), cellWidth);
         d->updateViewport();
         emit cellWidthChanged();
         d->forceLayout = true;
@@ -1399,17 +1399,17 @@ void QSGGridView::setCellWidth(int cellWidth)
     }
 }
 
-int QSGGridView::cellHeight() const
+qreal QSGGridView::cellHeight() const
 {
     Q_D(const QSGGridView);
     return d->cellHeight;
 }
 
-void QSGGridView::setCellHeight(int cellHeight)
+void QSGGridView::setCellHeight(qreal cellHeight)
 {
     Q_D(QSGGridView);
     if (cellHeight != d->cellHeight && cellHeight > 0) {
-        d->cellHeight = qMax(1, cellHeight);
+        d->cellHeight = qMax(qreal(1), cellHeight);
         d->updateViewport();
         emit cellHeightChanged();
         d->forceLayout = true;

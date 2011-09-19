@@ -109,6 +109,7 @@ private slots:
     void onRemove_data();
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
+    void columnCount();
 
 private:
     QSGView *createView();
@@ -1455,8 +1456,8 @@ void tst_QSGGridView::defaultValues()
     QTRY_VERIFY(obj->flow() == 0);
     QTRY_COMPARE(obj->isWrapEnabled(), false);
     QTRY_COMPARE(obj->cacheBuffer(), 0);
-    QTRY_COMPARE(obj->cellWidth(), 100); //### Should 100 be the default?
-    QTRY_COMPARE(obj->cellHeight(), 100);
+    QTRY_COMPARE(obj->cellWidth(), qreal(100)); //### Should 100 be the default?
+    QTRY_COMPARE(obj->cellHeight(), qreal(100));
     delete obj;
 }
 
@@ -1478,8 +1479,8 @@ void tst_QSGGridView::properties()
     QTRY_VERIFY(obj->flow() == 0);
     QTRY_COMPARE(obj->isWrapEnabled(), true);
     QTRY_COMPARE(obj->cacheBuffer(), 200);
-    QTRY_COMPARE(obj->cellWidth(), 100);
-    QTRY_COMPARE(obj->cellHeight(), 100);
+    QTRY_COMPARE(obj->cellWidth(), qreal(100));
+    QTRY_COMPARE(obj->cellHeight(), qreal(100));
     delete obj;
 }
 
@@ -2781,6 +2782,25 @@ void tst_QSGGridView::testQtQuick11Attributes_data()
     QTest::newRow("positionViewAtEnd") << "Component.onCompleted: positionViewAtEnd()"
         << "<Unknown File>:1: ReferenceError: Can't find variable: positionViewAtEnd"
         << "";
+}
+
+void tst_QSGGridView::columnCount()
+{
+    QSGView canvas;
+    canvas.setSource(QUrl::fromLocalFile(SRCDIR "/data/gridview4.qml"));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+
+    QSGGridView *view = qobject_cast<QSGGridView*>(canvas.rootObject());
+
+    QCOMPARE(view->cellWidth(), qreal(400)/qreal(9));
+    QCOMPARE(view->cellHeight(), qreal(100));
+
+    QList<QSGItem*> items = findItems<QSGItem>(view, "delegate");
+    QCOMPARE(items.size(), 18);
+    QCOMPARE(items.at(8)->y(), qreal(0));
+    QCOMPARE(items.at(9)->y(), qreal(100));
 }
 
 QSGView *tst_QSGGridView::createView()

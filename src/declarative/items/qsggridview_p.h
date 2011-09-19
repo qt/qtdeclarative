@@ -61,8 +61,8 @@ class Q_AUTOTEST_EXPORT QSGGridView : public QSGItemView
     Q_DECLARE_PRIVATE(QSGGridView)
 
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
-    Q_PROPERTY(int cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
-    Q_PROPERTY(int cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
+    Q_PROPERTY(qreal cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
+    Q_PROPERTY(qreal cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
 
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
@@ -81,11 +81,11 @@ public:
     Flow flow() const;
     void setFlow(Flow);
 
-    int cellWidth() const;
-    void setCellWidth(int);
+    qreal cellWidth() const;
+    void setCellWidth(qreal);
 
-    int cellHeight() const;
-    void setCellHeight(int);
+    qreal cellHeight() const;
+    void setCellHeight(qreal);
 
     enum SnapMode { NoSnap, SnapToRow, SnapOneRow };
     SnapMode snapMode() const;
