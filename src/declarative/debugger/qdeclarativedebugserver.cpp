@@ -177,11 +177,10 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
         // format: qmljsdebugger=port:3768[,block] OR qmljsdebugger=ost[,block]
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
             if (!QDeclarativeEnginePrivate::qml_debugging_enabled) {
-                const QString message =
-                        QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                                           "Debugging has not been enabled.").arg(
-                            appD->qmljsDebugArgumentsString());
-                qWarning("%s", qPrintable(message));
+                qWarning() << QString::fromLatin1(
+                                  "QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                  "Debugging has not been enabled.").arg(
+                                  appD->qmljsDebugArgumentsString());
                 return 0;
             }
 
@@ -208,21 +207,25 @@ QDeclarativeDebugServer *QDeclarativeDebugServer::instance()
                     connection->setServer(server);
                     connection->setPort(port, block);
                 } else {
-                    qWarning() << QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                                                     "Remote debugger plugin has not been found.").arg(appD->qmljsDebugArgumentsString());
+                    qWarning() << QString::fromLatin1(
+                                      "QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                      "Remote debugger plugin has not been found.").arg(
+                                      appD->qmljsDebugArgumentsString());
                 }
 
             } else {
-                qWarning(QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                                            "Format is -qmljsdebugger=port:<port>[,block]").arg(
-                             appD->qmljsDebugArgumentsString()).toAscii().constData());
+                qWarning() << QString::fromLatin1(
+                                  "QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                                  "Format is -qmljsdebugger=port:<port>[,block]").arg(
+                                  appD->qmljsDebugArgumentsString());
             }
         }
 #else
         if (!appD->qmljsDebugArgumentsString().isEmpty()) {
-            qWarning(QString::fromAscii("QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
-                                        "QtDeclarative is not configured for debugging.").arg(
-                         appD->qmljsDebugArgumentsString()).toAscii().constData());
+            qWarning() << QString::fromLatin1(
+                         "QDeclarativeDebugServer: Ignoring \"-qmljsdebugger=%1\". "
+                         "QtDeclarative is not configured for debugging.").arg(
+                         appD->qmljsDebugArgumentsString());
         }
 #endif
     }
