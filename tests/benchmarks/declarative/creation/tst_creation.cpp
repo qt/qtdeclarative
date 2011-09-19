@@ -264,6 +264,7 @@ void tst_creation::itemtree_notree_cpp()
         QDeclarativeItem *item = new QDeclarativeItem;
         for (int i = 0; i < 30; ++i) {
             QDeclarativeItem *child = new QDeclarativeItem;
+            Q_UNUSED(child);
         }
         delete item;
     }
@@ -340,16 +341,16 @@ void tst_creation::itemtree_scene_cpp()
 
 void tst_creation::elements_data()
 {
-    QTest::addColumn<QByteArray>("type");
+    QTest::addColumn<QString>("type");
 
-    QList<QByteArray> types = QDeclarativeMetaType::qmlTypeNames();
-    foreach (QByteArray type, types)
-        QTest::newRow(type.constData()) << type;
+    QList<QString> types = QDeclarativeMetaType::qmlTypeNames();
+    foreach (QString type, types)
+        QTest::newRow(type.toLatin1()) << type;
 }
 
 void tst_creation::elements()
 {
-    QFETCH(QByteArray, type);
+    QFETCH(QString, type);
     QDeclarativeType *t = QDeclarativeMetaType::qmlType(type, 2, 0);
     if (!t || !t->isCreatable())
         QSKIP("Non-creatable type", SkipSingle);
