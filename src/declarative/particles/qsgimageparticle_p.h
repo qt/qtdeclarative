@@ -371,6 +371,16 @@ private:
     QList<QSGSprite*> m_sprites;
     QSGSpriteEngine* m_spriteEngine;
 
+    //TODO: Reset methods
+    bool m_explicitColor;
+    bool m_explicitRotation;
+    bool m_explicitDeformation;
+    bool m_explicitAnimation;//TODO: Implement this
+    QHash<int, QVector<QSGParticleData*> > m_shadowData;
+    bool m_shadowInit;
+    void clearShadows();
+    QSGParticleData* getShadowDatum(QSGParticleData* datum);
+
     bool m_bloat;
     PerformanceLevel perfLevel;
 

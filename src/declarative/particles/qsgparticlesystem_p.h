@@ -69,6 +69,7 @@ class QSGStochasticEngine;
 class QSGSprite;
 class QSGV8ParticleData;
 class QSGParticleGroup;
+class QSGImageParticle;
 
 struct QSGParticleDataHeapNode{
     int time;//in ms
@@ -206,6 +207,12 @@ public:
     QSGItem* delegate;
     int modelIndex;
     float update;//Used by custom affectors
+
+    //Used by image particle
+    QSGImageParticle* colorOwner;
+    QSGImageParticle* rotationOwner;
+    QSGImageParticle* deformationOwner;
+    QSGImageParticle* animationOwner;
 
     void debugDump();
     bool stillAlive();

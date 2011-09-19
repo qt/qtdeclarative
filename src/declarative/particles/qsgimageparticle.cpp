@@ -446,10 +446,20 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     \brief The ImageParticle element visualizes logical particles using an image
 
     This element renders a logical particle as an image. The image can be
-        - colorized
-        - rotated
-        - deformed
-        - a sprite-based animation
+    \list
+    \o colorized
+    \o rotated
+    \o deformed
+    \o a sprite-based animation
+    \endlist
+
+    ImageParticles implictly share data on particles if multiple ImageParticles are painting
+    the same logical particle group. This is broken down along the four capabilities listed
+    above. So if one ImageParticle defines data for rendering the particles in one of those
+    capabilities, and the other does not, then both will draw the particles the same in that
+    aspect automatically. This is primarily useful when there is some random variation on
+    the particle which is supposed to stay with it when switching painters. If both ImageParticles
+    define how they should appear for that aspect, they diverge and each appears as it is defined.
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::source
@@ -635,6 +645,10 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_xVector(0)
     , m_yVector(0)
     , m_spriteEngine(0)
+    , m_explicitColor(false)
+    , m_explicitRotation(false)
+    , m_explicitDeformation(false)
+    , m_explicitAnimation(false)
     , m_bloat(false)
     , perfLevel(Unknown)
     , m_lastLevel(Unknown)
@@ -698,6 +712,7 @@ void QSGImageParticle::setColor(const QColor &color)
         return;
     m_color = color;
     emit colorChanged();
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -708,6 +723,7 @@ void QSGImageParticle::setColorVariation(qreal var)
         return;
     m_color_variation = var;
     emit colorVariationChanged();
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -718,6 +734,7 @@ void QSGImageParticle::setAlphaVariation(qreal arg)
         m_alphaVariation = arg;
         emit alphaVariationChanged(arg);
     }
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -728,6 +745,7 @@ void QSGImageParticle::setAlpha(qreal arg)
         m_alpha = arg;
         emit alphaChanged(arg);
     }
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -738,6 +756,7 @@ void QSGImageParticle::setRedVariation(qreal arg)
         m_redVariation = arg;
         emit redVariationChanged(arg);
     }
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -748,6 +767,7 @@ void QSGImageParticle::setGreenVariation(qreal arg)
         m_greenVariation = arg;
         emit greenVariationChanged(arg);
     }
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -758,6 +778,7 @@ void QSGImageParticle::setBlueVariation(qreal arg)
         m_blueVariation = arg;
         emit blueVariationChanged(arg);
     }
+    m_explicitColor = true;
     if (perfLevel < Colored)
         reset();
 }
@@ -768,6 +789,7 @@ void QSGImageParticle::setRotation(qreal arg)
         m_rotation = arg;
         emit rotationChanged(arg);
     }
+    m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -778,6 +800,7 @@ void QSGImageParticle::setRotationVariation(qreal arg)
         m_rotationVariation = arg;
         emit rotationVariationChanged(arg);
     }
+    m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -788,6 +811,7 @@ void QSGImageParticle::setRotationSpeed(qreal arg)
         m_rotationSpeed = arg;
         emit rotationSpeedChanged(arg);
     }
+    m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -798,6 +822,7 @@ void QSGImageParticle::setRotationSpeedVariation(qreal arg)
         m_rotationSpeedVariation = arg;
         emit rotationSpeedVariationChanged(arg);
     }
+    m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -808,6 +833,7 @@ void QSGImageParticle::setAutoRotation(bool arg)
         m_autoRotation = arg;
         emit autoRotationChanged(arg);
     }
+    m_explicitRotation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -818,6 +844,7 @@ void QSGImageParticle::setXVector(QSGDirection* arg)
         m_xVector = arg;
         emit xVectorChanged(arg);
     }
+    m_explicitDeformation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -828,6 +855,7 @@ void QSGImageParticle::setYVector(QSGDirection* arg)
         m_yVector = arg;
         emit yVectorChanged(arg);
     }
+    m_explicitDeformation = true;
     if (perfLevel < Deformable)
         reset();
 }
@@ -867,6 +895,7 @@ void QSGImageParticle::createEngine()
         m_spriteEngine = new QSGSpriteEngine(m_sprites, this);
     else
         m_spriteEngine = 0;
+    m_explicitAnimation = true;
     reset();
 }
 
@@ -932,6 +961,32 @@ static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
     SpriteParticle_Attributes
 };
 
+void QSGImageParticle::clearShadows()
+{
+    m_shadowInit = false;
+    foreach (const QVector<QSGParticleData*> data, m_shadowData)
+        qDeleteAll(data);
+    m_shadowData.clear();
+}
+
+//Only call if you need to, may initialize the whole array first time
+QSGParticleData* QSGImageParticle::getShadowDatum(QSGParticleData* datum)
+{
+    QSGParticleGroupData* gd = m_system->m_groupData[datum->group];
+    if (!m_shadowData.contains(datum->group)) {
+        QVector<QSGParticleData*> data;
+        for (int i=0; i<gd->size(); i++){
+            QSGParticleData* datum = new QSGParticleData(m_system);
+            *datum = *(gd->data[i]);
+            data << datum;
+        }
+        m_shadowData.insert(datum->group, data);
+    }
+    //### If dynamic resize is added, remember to potentially resize the shadow data on out-of-bounds access request
+
+    return m_shadowData[datum->group][datum->index];
+}
+
 QSGGeometryNode* QSGImageParticle::buildParticleNodes()
 {
 #ifdef QT_OPENGL_ES_2
@@ -959,6 +1014,25 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         perfLevel = Simple;
     }
 
+    foreach (const QString &str, m_groups){//For sharing higher levels, need to have highest used so it renders
+        int gIdx = m_system->m_groupIds[str];
+        foreach (QSGParticlePainter* p, m_system->m_groupData[gIdx]->painters){
+            QSGImageParticle* other = qobject_cast<QSGImageParticle*>(p);
+            if (other){
+                if (other->perfLevel > perfLevel) {
+                    if (other->perfLevel >= Tabled){//Deformable is the highest level needed for this, anything higher isn't shared (or requires your own sprite)
+                        if (perfLevel < Deformable)
+                            perfLevel = Deformable;
+                    } else {
+                        perfLevel = other->perfLevel;
+                    }
+                } else if (other->perfLevel < perfLevel) {
+                    other->reset();
+                }
+            }
+        }
+    }
+
     if (perfLevel >= Colored  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
 
@@ -979,7 +1053,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         }
     }
 
-
+    clearShadows();
     if (m_material) {
         delete m_material;
         m_material = 0;
@@ -1193,6 +1267,9 @@ void QSGImageParticle::initialize(int gIdx, int pIdx)
     qreal greenVariation = m_color_variation + m_greenVariation;
     qreal blueVariation = m_color_variation + m_blueVariation;
     int spriteIdx = m_idxStarts[gIdx] + datum->index;
+    float rotation;
+    float rotationSpeed;
+    float autoRotate;
     switch (perfLevel){//Fall-through is intended on all of them
         case Sprites:
             // Initial Sprite State
@@ -1209,29 +1286,64 @@ void QSGImageParticle::initialize(int gIdx, int pIdx)
         case Tabled:
         case Deformable:
             //Initial Rotation
-            if (m_xVector){
-                const QPointF &ret = m_xVector->sample(QPointF(datum->x, datum->y));
-                datum->xx = ret.x();
-                datum->xy = ret.y();
+            if (m_explicitDeformation){
+                if (!datum->deformationOwner)
+                    datum->deformationOwner = this;
+                if (m_xVector){
+                    const QPointF &ret = m_xVector->sample(QPointF(datum->x, datum->y));
+                    if (datum->deformationOwner == this) {
+                        datum->xx = ret.x();
+                        datum->xy = ret.y();
+                    } else {
+                        getShadowDatum(datum)->xx = ret.x();
+                        getShadowDatum(datum)->xy = ret.y();
+                    }
+                }
+                if (m_yVector){
+                    const QPointF &ret = m_yVector->sample(QPointF(datum->x, datum->y));
+                    if (datum->deformationOwner == this) {
+                        datum->yx = ret.x();
+                        datum->yy = ret.y();
+                    } else {
+                        getShadowDatum(datum)->yx = ret.x();
+                        getShadowDatum(datum)->yy = ret.y();
+                    }
+                }
             }
-            if (m_yVector){
-                const QPointF &ret = m_yVector->sample(QPointF(datum->x, datum->y));
-                datum->yx = ret.x();
-                datum->yy = ret.y();
+
+            if (m_explicitRotation){
+                if (!datum->rotationOwner)
+                    datum->rotationOwner = this;
+                rotation =
+                        (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
+                rotationSpeed =
+                        (m_rotationSpeed + (m_rotationSpeedVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationSpeedVariation) ) * CONV;
+                autoRotate = m_autoRotation?1.0:0.0;
+                if (datum->rotationOwner == this) {
+                    datum->rotation = rotation;
+                    datum->rotationSpeed = rotationSpeed;
+                    datum->autoRotate = autoRotate;
+                } else {
+                    getShadowDatum(datum)->rotation = rotation;
+                    getShadowDatum(datum)->rotationSpeed = rotationSpeed;
+                    getShadowDatum(datum)->autoRotate = autoRotate;
+                }
             }
-            datum->rotation =
-                    (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
-            datum->rotationSpeed =
-                    (m_rotationSpeed + (m_rotationSpeedVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationSpeedVariation) ) * CONV;
-            datum->autoRotate = m_autoRotation?1.0:0.0;
         case Colored:
             //Color initialization
             // Particle color
-            color.r = m_color.red() * (1 - redVariation) + rand() % 256 * redVariation;
-            color.g = m_color.green() * (1 - greenVariation) + rand() % 256 * greenVariation;
-            color.b = m_color.blue() * (1 - blueVariation) + rand() % 256 * blueVariation;
-            color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + rand() % 256 * m_alphaVariation;
-            datum->color = color;
+            if (m_explicitColor) {
+                if (!datum->colorOwner)
+                    datum->colorOwner = this;
+                color.r = m_color.red() * (1 - redVariation) + rand() % 256 * redVariation;
+                color.g = m_color.green() * (1 - greenVariation) + rand() % 256 * greenVariation;
+                color.b = m_color.blue() * (1 - blueVariation) + rand() % 256 * blueVariation;
+                color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + rand() % 256 * m_alphaVariation;
+                if (datum->colorOwner == this)
+                    datum->color = color;
+                else
+                    getShadowDatum(datum)->color = color;
+            }
         default:
             break;
     }
@@ -1264,21 +1376,52 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             spriteVertices[i].vy = datum->vy;
             spriteVertices[i].ax = datum->ax;
             spriteVertices[i].ay = datum->ay;
-            spriteVertices[i].xx = datum->xx;
-            spriteVertices[i].xy = datum->xy;
-            spriteVertices[i].yx = datum->yx;
-            spriteVertices[i].yy = datum->yy;
-            spriteVertices[i].rotation = datum->rotation;
-            spriteVertices[i].rotationSpeed = datum->rotationSpeed;
-            spriteVertices[i].autoRotate = datum->autoRotate;
-            spriteVertices[i].animIdx = datum->animIdx;
-            spriteVertices[i].frameDuration = datum->frameDuration;
-            spriteVertices[i].frameCount = datum->frameCount;
-            spriteVertices[i].animT = datum->animT;
-            spriteVertices[i].color.r = datum->color.r;
-            spriteVertices[i].color.g = datum->color.g;
-            spriteVertices[i].color.b = datum->color.b;
-            spriteVertices[i].color.a = datum->color.a;
+            if (m_explicitDeformation && datum->deformationOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                spriteVertices[i].xx = shadow->xx;
+                spriteVertices[i].xy = shadow->xy;
+                spriteVertices[i].yx = shadow->yx;
+                spriteVertices[i].yy = shadow->yy;
+            } else {
+                spriteVertices[i].xx = datum->xx;
+                spriteVertices[i].xy = datum->xy;
+                spriteVertices[i].yx = datum->yx;
+                spriteVertices[i].yy = datum->yy;
+            }
+            if (m_explicitRotation && datum->rotationOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                spriteVertices[i].rotation = shadow->rotation;
+                spriteVertices[i].rotationSpeed = shadow->rotationSpeed;
+                spriteVertices[i].autoRotate = shadow->autoRotate;
+            }  else {
+                spriteVertices[i].rotation = datum->rotation;
+                spriteVertices[i].rotationSpeed = datum->rotationSpeed;
+                spriteVertices[i].autoRotate = datum->autoRotate;
+            }
+            if (m_explicitAnimation && datum->animationOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                spriteVertices[i].animIdx = shadow->animIdx;
+                spriteVertices[i].frameDuration = shadow->frameDuration;
+                spriteVertices[i].frameCount = shadow->frameCount;
+                spriteVertices[i].animT = shadow->animT;
+            }  else {
+                spriteVertices[i].animIdx = datum->animIdx;
+                spriteVertices[i].frameDuration = datum->frameDuration;
+                spriteVertices[i].frameCount = datum->frameCount;
+                spriteVertices[i].animT = datum->animT;
+            }
+            if (m_explicitColor && datum->colorOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                spriteVertices[i].color.r = shadow->color.r;
+                spriteVertices[i].color.g = shadow->color.g;
+                spriteVertices[i].color.b = shadow->color.b;
+                spriteVertices[i].color.a = shadow->color.a;
+            }  else {
+                spriteVertices[i].color.r = datum->color.r;
+                spriteVertices[i].color.g = datum->color.g;
+                spriteVertices[i].color.b = datum->color.b;
+                spriteVertices[i].color.a = datum->color.a;
+            }
         }
         break;
     case Tabled: //Fall through until it has its own vertex class
@@ -1295,17 +1438,40 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             deformableVertices[i].vy = datum->vy;
             deformableVertices[i].ax = datum->ax;
             deformableVertices[i].ay = datum->ay;
-            deformableVertices[i].xx = datum->xx;
-            deformableVertices[i].xy = datum->xy;
-            deformableVertices[i].yx = datum->yx;
-            deformableVertices[i].yy = datum->yy;
-            deformableVertices[i].rotation = datum->rotation;
-            deformableVertices[i].rotationSpeed = datum->rotationSpeed;
-            deformableVertices[i].autoRotate = datum->autoRotate;
-            deformableVertices[i].color.r = datum->color.r;
-            deformableVertices[i].color.g = datum->color.g;
-            deformableVertices[i].color.b = datum->color.b;
-            deformableVertices[i].color.a = datum->color.a;
+            if (m_explicitDeformation && datum->deformationOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                deformableVertices[i].xx = shadow->xx;
+                deformableVertices[i].xy = shadow->xy;
+                deformableVertices[i].yx = shadow->yx;
+                deformableVertices[i].yy = shadow->yy;
+            } else {
+                deformableVertices[i].xx = datum->xx;
+                deformableVertices[i].xy = datum->xy;
+                deformableVertices[i].yx = datum->yx;
+                deformableVertices[i].yy = datum->yy;
+            }
+            if (m_explicitRotation && datum->rotationOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                deformableVertices[i].rotation = shadow->rotation;
+                deformableVertices[i].rotationSpeed = shadow->rotationSpeed;
+                deformableVertices[i].autoRotate = shadow->autoRotate;
+            } else {
+                deformableVertices[i].rotation = datum->rotation;
+                deformableVertices[i].rotationSpeed = datum->rotationSpeed;
+                deformableVertices[i].autoRotate = datum->autoRotate;
+            }
+            if (m_explicitColor && datum->colorOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                deformableVertices[i].color.r = shadow->color.r;
+                deformableVertices[i].color.g = shadow->color.g;
+                deformableVertices[i].color.b = shadow->color.b;
+                deformableVertices[i].color.a = shadow->color.a;
+            } else {
+                deformableVertices[i].color.r = datum->color.r;
+                deformableVertices[i].color.g = datum->color.g;
+                deformableVertices[i].color.b = datum->color.b;
+                deformableVertices[i].color.a = datum->color.a;
+            }
         }
         break;
     case Colored:
@@ -1321,10 +1487,18 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
             coloredVertices[i].vy = datum->vy;
             coloredVertices[i].ax = datum->ax;
             coloredVertices[i].ay = datum->ay;
-            coloredVertices[i].color.r = datum->color.r;
-            coloredVertices[i].color.g = datum->color.g;
-            coloredVertices[i].color.b = datum->color.b;
-            coloredVertices[i].color.a = datum->color.a;
+            if (m_explicitColor && datum->colorOwner != this) {
+                QSGParticleData* shadow = getShadowDatum(datum);
+                coloredVertices[i].color.r = shadow->color.r;
+                coloredVertices[i].color.g = shadow->color.g;
+                coloredVertices[i].color.b = shadow->color.b;
+                coloredVertices[i].color.a = shadow->color.a;
+            } else {
+                coloredVertices[i].color.r = datum->color.r;
+                coloredVertices[i].color.g = datum->color.g;
+                coloredVertices[i].color.b = datum->color.b;
+                coloredVertices[i].color.a = datum->color.a;
+            }
         }
         break;
     case Simple:

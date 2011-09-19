@@ -389,6 +389,10 @@ QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     , index(0)
     , systemIndex(-1)
     , v8Datum(0)
+    , colorOwner(0)
+    , rotationOwner(0)
+    , deformationOwner(0)
+    , animationOwner(0)
 {
     x = 0;
     y = 0;
@@ -450,6 +454,11 @@ void QSGParticleData::clone(const QSGParticleData& other)
     r = other.r;
     delegate = other.delegate;
     modelIndex = other.modelIndex;
+
+    colorOwner = other.colorOwner;
+    rotationOwner = other.rotationOwner;
+    deformationOwner = other.deformationOwner;
+    animationOwner = other.animationOwner;
 }
 
 QDeclarativeV8Handle QSGParticleData::v8Value()
