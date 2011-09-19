@@ -1245,10 +1245,6 @@ void tst_qsgtextinput::positionAt()
 
     int diff = abs(textWidth - (textLeftWidth+textinputObject->width()/2));
 
-#ifdef Q_WS_QPA
-    QEXPECT_FAIL("", "QTBUG-21011 fails", Continue);
-#endif
-
     // some tollerance for different fonts.
 #ifdef Q_OS_LINUX
     QVERIFY(diff < 2);
@@ -1285,10 +1281,6 @@ void tst_qsgtextinput::positionAt()
     }
 
     diff = abs(int(textLeftWidth-textinputObject->width()/2));
-
-#ifdef Q_WS_QPA
-    QEXPECT_FAIL("", "QTBUG-21011 fails", Continue);
-#endif
 
     // some tollerance for different fonts.
 #ifdef Q_OS_LINUX
@@ -2381,9 +2373,6 @@ void tst_qsgtextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     ic.sendPreeditText(preeditText.mid(0, 3), 1);
-#ifdef Q_WS_QPA
-    QEXPECT_FAIL("", "QTBUG-21011 fails", Abort);
-#endif
     QVERIFY(input->positionAt(0) != 0);
     QVERIFY(input->cursorRectangle().left() < input->boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
