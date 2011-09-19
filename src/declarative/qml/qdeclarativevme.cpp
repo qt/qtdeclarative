@@ -110,7 +110,7 @@ QDeclarativeVME::QDeclarativeVME()
         error.setLine(line); \
         error.setUrl(comp->url); \
         vmeErrors << error; \
-        break; \
+        goto exceptionExit; \
     }
 
 struct ListInstance
@@ -172,6 +172,7 @@ static void removeBindingOnProperty(QObject *o, int index)
         instructionStream += QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::Size; \
         Q_UNUSED(instr); 
 
+#define QML_NEXT_INSTR(I) break;
 #define QML_END_INSTR(I) } break;
 
 #define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
@@ -204,8 +205,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
 
     const char *instructionStream = comp->bytecode.constData() + start;
 
-    bool done = false;
-    while (!isError() && !done) {
+    for (;;) {
         const QDeclarativeInstruction &genericInstr = *((QDeclarativeInstruction *)instructionStream);
 
         switch(genericInstr.type()) {
@@ -223,7 +223,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
         QML_END_INSTR(Init)
 
         QML_BEGIN_INSTR(Done)
-            done = true;
+            goto normalExit;
         QML_END_INSTR(Done)
 
         QML_BEGIN_INSTR(CreateObject)
@@ -716,7 +716,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             int coreIndex = mp.index();
 
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
-                break;
+                QML_NEXT_INSTR(StoreBinding);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true, 
                                                                 context, ctxt, comp->name, instr.line);
@@ -739,7 +739,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             int coreIndex = mp.index();
 
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex)) 
-                break;
+                QML_NEXT_INSTR(StoreBindingOnAlias);
 
             QDeclarativeBinding *bind = new QDeclarativeBinding(primitives.at(instr.value), true,
                                                                 context, ctxt, comp->name, instr.line);
@@ -759,7 +759,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
 
             int property = instr.property;
             if (stack.count() == 1 && bindingSkipList.testBit(property & 0xFFFF))  
-                break;
+                QML_NEXT_INSTR(StoreV4Binding);
 
             QDeclarativeAbstractBinding *binding = 
                 ctxt->v4bindings->configBinding(instr.value, target, scope, property);
@@ -780,7 +780,7 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             int coreIndex = mp.index();
 
             if ((stack.count() - instr.owner) == 1 && bindingSkipList.testBit(coreIndex))
-                break;
+                QML_NEXT_INSTR(StoreV8Binding);
 
             QDeclarativeAbstractBinding *binding = 
                 ctxt->v8bindings->configBinding(instr.value, target, scope, mp, instr.line);
@@ -972,18 +972,19 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
         }
     }
 
-    if (isError()) {
-        if (!stack.isEmpty()) {
-            delete stack.at(0); // ### What about failures in deferred creation?
-        } else {
-            ctxt->destroy();
-        }
-
-        QDeclarativeEnginePrivate::clear(bindValues);
-        QDeclarativeEnginePrivate::clear(parserStatus);
-        return 0;
+    exceptionExit:
+    Q_ASSERT(isError());
+    if (!stack.isEmpty()) {
+        delete stack.at(0); // ### What about failures in deferred creation?
+    } else {
+        ctxt->destroy();
     }
 
+    QDeclarativeEnginePrivate::clear(bindValues);
+    QDeclarativeEnginePrivate::clear(parserStatus);
+    return 0;
+
+    normalExit:
     if (bindValues.count)
         ep->bindValues << bindValues;
     else if (bindValues.values)
