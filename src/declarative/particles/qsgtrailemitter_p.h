@@ -94,7 +94,7 @@ public:
     }
 
 signals:
-    void emitFollowParticle(QDeclarativeV8Handle group, QDeclarativeV8Handle followed);
+    void emitFollowParticles(QDeclarativeV8Handle particles, QDeclarativeV8Handle followed);
 
     void particlesPerParticlePerSecondChanged(int arg);
 

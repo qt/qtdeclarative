@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgparticleemitter_p.h"
+#include <private/qdeclarativeengine_p.h>
 QT_BEGIN_NAMESPACE
 
 
@@ -183,12 +184,12 @@ QT_BEGIN_NAMESPACE
 
     Default value is 0.
 */
-//TODO: Document particle 'type'
-/*!
-    \qmlsignal QtQuick.Particles2::Emitter::onEmitParticle(Particle particle)
 
-    This handler is called when a particle is emitted. You can modify particle
-    attributes from within the handler.
+/*!
+    \qmlsignal QtQuick.Particles2::Emitter::onEmitParticles(Array particles)
+
+    This handler is called when particles are emitted. particles is a javascript
+    array of Particle objects. You can modify particle attributes directly within the handler.
 
     Note that JS is slower to execute, so it is not recommended to use this in
     high-volume particle systems.
@@ -252,7 +253,7 @@ QSGParticleEmitter::~QSGParticleEmitter()
 
 bool QSGParticleEmitter::isEmitConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("emitParticle(QDeclarativeV8Handle)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitParticles(QDeclarativeV8Handle)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
@@ -396,6 +397,9 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal emitter_y_offset = m_last_emitter.y() - y();
     if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_enabled)//'outside time' emissions only
         pt = time;
+
+    QList<QSGParticleData*> toEmit;
+
     while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
         QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_group], !m_overwrite);
@@ -459,9 +463,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
             datum->size = size;// * float(m_emitting);
             datum->endSize = endSize;// * float(m_emitting);
 
-            if (isEmitConnected())
-                emitParticle(datum->v8Value());//A chance for arbitrary JS changes
-            m_system->emitParticle(datum);
+            toEmit << datum;
         }
         if (m_burstQueue.isEmpty()){
             pt += particleRatio;
@@ -471,6 +473,19 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
                 m_burstQueue.pop_front();
         }
     }
+
+    if (isEmitConnected()) {
+        v8::HandleScope handle_scope;
+        v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
+        v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
+        for (int i=0; i<toEmit.size(); i++)
+            array->Set(i, toEmit[i]->v8Value().toHandle());
+
+        emitParticles(QDeclarativeV8Handle::fromHandle(array));//A chance for arbitrary JS changes
+    }
+    foreach (QSGParticleData* d, toEmit)
+            m_system->emitParticle(d);
+
     m_last_emission = pt;
 
     m_last_last_last_emitter = m_last_last_emitter;

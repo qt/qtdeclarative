@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qsgtrailemitter_p.h"
+#include <private/qdeclarativeengine_p.h>
 #include <cmath>
 QT_BEGIN_NAMESPACE
 
@@ -102,18 +103,17 @@ QSGTrailEmitter::QSGTrailEmitter(QSGItem *parent) :
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
 */
 /*!
-    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticle(particle, followed)
+    \qmlsignal QtQuick.Particles2::TrailEmitter::emitFollowParticles(Array particles, real followed)
 
-    This handler is called when a particle is emitted. You can modify particle
-    attributes from within the handler. followed is the particle that this is being
-    emitted off of.
+    This handler is called when particles are emitted from the \a followed particle. \a particles contains an array of particle objects which can be directly manipulated.
 
-    If you use this signal handler, emitParticle will not be emitted.
+    If you use this signal handler, emitParticles will not be emitted.
+
 */
 
 bool QSGTrailEmitter::isEmitFollowConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticle(QDeclarativeV8Handle,QDeclarativeV8Handle)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("emitFollowParticles(QDeclarativeV8Handle,QDeclarativeV8Handle)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
@@ -180,6 +180,9 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
             m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside
             continue;
         }
+
+        QList<QSGParticleData*> toEmit;
+
         while (pt < time || !m_burstQueue.isEmpty()){
             QSGParticleData* datum = m_system->newDatum(gId2, !m_overwrite);
             if (datum){//else, skip this emission
@@ -235,10 +238,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 datum->size = size * float(m_enabled);
                 datum->endSize = endSize * float(m_enabled);
 
-                if (isEmitFollowConnected())
-                    emitFollowParticle(datum->v8Value(), d->v8Value());//A chance for many arbitrary JS changes
-                else if (isEmitConnected())
-                    emitParticle(datum->v8Value());//A chance for arbitrary JS changes
+                toEmit << datum;
 
                 m_system->emitParticle(datum);
             }
@@ -250,6 +250,21 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 pt += particleRatio;
             }
         }
+
+        if (isEmitConnected() || isEmitFollowConnected()) {
+            v8::HandleScope handle_scope;
+            v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
+            v8::Handle<v8::Array> array = v8::Array::New(toEmit.size());
+            for (int i=0; i<toEmit.size(); i++)
+                array->Set(i, toEmit[i]->v8Value().toHandle());
+
+            if (isEmitFollowConnected())
+                emitFollowParticles(QDeclarativeV8Handle::fromHandle(array), d->v8Value());//A chance for many arbitrary JS changes
+            else if (isEmitConnected())
+                emitParticles(QDeclarativeV8Handle::fromHandle(array));//A chance for arbitrary JS changes
+        }
+        foreach (QSGParticleData* d, toEmit)
+            m_system->emitParticle(d);
         m_lastEmission[d->index] = pt;
     }
 

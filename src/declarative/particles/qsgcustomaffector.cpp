@@ -40,15 +40,18 @@
 ****************************************************************************/
 
 #include "qsgcustomaffector_p.h"
+#include <private/qv8engine_p.h>
+#include <private/qdeclarativeengine_p.h>
+#include <QDeclarativeEngine>
 #include <QDebug>
 QT_BEGIN_NAMESPACE
 
 //TODO: Move docs (and inherit) to real base when docs can propagate
-//TODO: Document particle 'type'
 /*!
-    \qmlsignal QtQuick.Particles2::Affector::affectParticle(particle, dt)
+    \qmlsignal QtQuick.Particles2::Affector::affectParticles(Array particles, real dt)
 
-    This handler is called when particles are selected to be affected.
+    This handler is called when particles are selected to be affected. particles contains
+    an array of particle objects which can be directly manipulated.
 
     dt is the time since the last time it was affected. Use dt to normalize
     trajectory manipulations to real time.
@@ -63,18 +66,38 @@ QSGCustomAffector::QSGCustomAffector(QSGItem *parent) :
 
 bool QSGCustomAffector::isAffectConnected()
 {
-    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticle(QDeclarativeV8Handle,qreal)");
+    static int idx = QObjectPrivate::get(this)->signalIndex("affectParticles(QDeclarativeV8Handle,qreal)");
     return QObjectPrivate::get(this)->isSignalConnected(idx);
 }
 
-bool QSGCustomAffector::affectParticle(QSGParticleData *d, qreal dt)
+void QSGCustomAffector::affectSystem(qreal dt)
 {
-    if (isAffectConnected()){
-        d->update = 0.0;
-        emit affectParticle(d->v8Value(), dt);
-        return d->update == 1.0;
+    if (!isAffectConnected()) {
+        QSGParticleAffector::affectSystem(dt);
+        return;
     }
-    return true;
+    if (!m_enabled)
+        return;
+    updateOffsets();
+
+    QList<QSGParticleData*> toAffect;
+    foreach (QSGParticleGroupData* gd, m_system->m_groupData)
+        if (activeGroup(m_system->m_groupData.key(gd)))
+            foreach (QSGParticleData* d, gd->data)
+                if (shouldAffect(d))
+                    toAffect << d;
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
+    v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
+    for (int i=0; i<toAffect.size(); i++)
+        array->Set(i, toAffect[i]->v8Value().toHandle());
+
+    emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+
+    foreach (QSGParticleData* d, toAffect)
+        if (d->update == 1.0)
+            postAffect(d);
 }
 
 QT_END_NAMESPACE

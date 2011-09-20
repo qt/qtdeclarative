@@ -71,7 +71,7 @@ Item {
         property real speed: 1.5
         width: parent.width
         height: parent.height - 100
-        onAffectParticle:{
+        onAffectParticles:{
         /*  //Linear movement
             if (particle.r == 0){
                 particle.r = Math.random() > 0.5 ? -1 : 1;
@@ -86,14 +86,17 @@ Item {
             }
         */
             //Wobbly movement
-            if (particle.r == 0.0){
-                particle.r = Math.random() + 0.01;
+            for (var i=0; i<particles.length; i++) {
+                var particle = particles[i];
+                if (particle.r == 0.0) {
+                    particle.r = Math.random() + 0.01;
+                }
+                particle.rotation += speed * particle.r * dt;
+                particle.r -= particle.rotation * coefficient;
+                if (particle.r == 0.0)
+                    particle.r -= particle.rotation * 0.000001;
+                particle.update = 1;
             }
-            particle.rotation += speed * particle.r * dt;
-            particle.r -= particle.rotation * coefficient;
-            if (particle.r == 0.0)
-                particle.r -= particle.rotation * 0.000001;
-            particle.update = 1;
         }
     }
 
@@ -104,19 +107,22 @@ Item {
         width: parent.width + 120
         height: 100
         anchors.bottom: parent.bottom
-        onAffectParticle:{
-            var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;
-            var yslow = pseudoRand * 0.01 + 1.01;
-            var xslow = pseudoRand * 0.005 + 1.0;
-            if (particle.vy < 1)
-                particle.vy = 0;
-            else
-                particle.vy = (particle.vy / yslow);
-            if (particle.vx < 1)
-                particle.vx = 0;
-            else
-                particle.vx = (particle.vx / xslow);
-            particle.update = 1;
+        onAffectParticles:{
+            for (var i=0; i<particles.length; i++) {
+                var particle = particles[i];
+                var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;
+                var yslow = dt * pseudoRand * 0.5 + 1;
+                var xslow = dt * pseudoRand * 0.05 + 1;
+                if (particle.vy < 1)
+                    particle.vy = 0;
+                else
+                    particle.vy = (particle.vy / yslow);
+                if (particle.vx < 1)
+                    particle.vx = 0;
+                else
+                    particle.vx = (particle.vx / xslow);
+                particle.update = 1;
+            }
         }
     }
     ImageParticle{

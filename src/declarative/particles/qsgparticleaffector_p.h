@@ -163,6 +163,8 @@ void setWhenCollidingWith(QStringList arg)
         emit whenCollidingWithChanged(arg);
     }
 }
+public slots:
+    void updateOffsets();
 
 protected:
     friend class QSGParticleSystem;
@@ -189,8 +191,6 @@ private:
     QStringList m_whenCollidingWith;
 
     bool isColliding(QSGParticleData* d);
-private slots:
-    void updateOffsets();
 };
 
 QT_END_NAMESPACE

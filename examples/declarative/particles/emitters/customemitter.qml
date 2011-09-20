@@ -66,15 +66,18 @@ ParticleSystem{
         emitRate: 120
         size: 12
         anchors.centerIn: parent
-        onEmitParticle:{
-            particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
-            var theta = Math.floor(Math.random() * 6.0) / 6.0;
-            theta *= 2.0*Math.PI;
-            theta += sys.convert(sys.petalRotation);
-            particle.initialVX = petalLength * Math.cos(theta);
-            particle.initialVY = petalLength * Math.sin(theta);
-            particle.initialAX = particle.initialVX * -0.5;
-            particle.initialAY = particle.initialVY * -0.5;
+        onEmitParticles:{
+            for (var i=0; i<particles.length; i++) {
+                var particle = particles[i];
+                particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
+                var theta = Math.floor(Math.random() * 6.0) / 6.0;
+                theta *= 2.0*Math.PI;
+                theta += sys.convert(sys.petalRotation);
+                particle.initialVX = petalLength * Math.cos(theta);
+                particle.initialVY = petalLength * Math.sin(theta);
+                particle.initialAX = particle.initialVX * -0.5;
+                particle.initialAY = particle.initialVY * -0.5;
+            }
         }
     }
     ImageParticle{

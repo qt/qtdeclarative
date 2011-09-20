@@ -59,13 +59,13 @@ class QSGCustomAffector : public QSGParticleAffector
 
 public:
     explicit QSGCustomAffector(QSGItem *parent = 0);
+    virtual void affectSystem(qreal dt);
 
 signals:
-    void affectParticle(QDeclarativeV8Handle particle, qreal dt);
+    void affectParticles(QDeclarativeV8Handle particles, qreal dt);
 public slots:
 protected:
     bool isAffectConnected();
-    virtual bool affectParticle(QSGParticleData *d, qreal dt);
 private:
 };
 
