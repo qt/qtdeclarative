@@ -41,27 +41,27 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Item{
+Item {
     id: container
     width: 360
     height: 160
     property ParticleSystem system
-    Ship{
+    Ship {
         id: nully
         system: system
     }
     property Item target: nully
     /*
-    Component.onCompleted:{
+    Component.onCompleted: {
         container.target.shipType = 1
         container.target.gunType = 1
     }
     */
-    Row{
+    Row {
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height
         spacing: 8
-        Button{
+        Button {
             width: 80
             height: 80
             anchors.verticalCenter: parent.verticalCenter
@@ -75,11 +75,11 @@ Item{
                 container.target.shipType = nextVal;
             }
         }
-        Item{
+        Item {
             width: 128
             height: 128
             anchors.verticalCenter: parent.verticalCenter
-            Ship{
+            Ship {
                 hp: 20
                 anchors.centerIn: parent
                 shipType: container.target.shipType
@@ -87,7 +87,7 @@ Item{
                 system: container.system
             }
         }
-        Button{
+        Button {
             width: 80
             height: 80
             anchors.verticalCenter: parent.verticalCenter

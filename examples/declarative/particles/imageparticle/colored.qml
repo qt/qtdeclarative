@@ -41,18 +41,18 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     width: 360
     height: 540
     color: "black"
-    ParticleSystem{ 
+    ParticleSystem {
         anchors.fill: parent
-        ImageParticle{
+        ImageParticle {
             groups: ["stars"]
             anchors.fill: parent
             source: "../images/star.png"
         }
-        Emitter{
+        Emitter {
             group: "stars"
             emitRate: 800
             lifeSpan: 2400
@@ -60,22 +60,25 @@ Rectangle{
             sizeVariation: 8
             anchors.fill: parent
         }
-        ImageParticle{
+
+        ImageParticle {
             anchors.fill: parent
             source: "../images/star.png"
             alpha: 0
             alphaVariation: 0.2
             colorVariation: 1.0
         }
-        Emitter{
+
+        Emitter {
             anchors.centerIn: parent
             emitRate: 400
             lifeSpan: 2400
             size: 48
             sizeVariation: 8
-            speed: AngleDirection{angleVariation: 180; magnitude: 60}
+            speed: AngleDirection {angleVariation: 180; magnitude: 60}
         }
-        Turbulence{
+
+        Turbulence {
             anchors.fill: parent
             strength: 2
         }

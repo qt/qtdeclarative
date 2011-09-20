@@ -56,26 +56,10 @@ Rectangle {
     MouseArea {
         id: mouseArea
         anchors.fill: root
-
-/*
-        onPressed: stopAndStart()
-        onReleased: stopAndStart()
-        function stopAndStart() {
-            trailsNormal.emitting = false;
-            trailsNormal.emitting = true;
-            trailsStars.emitting = false;
-            trailsStars.emitting = true;
-            trailsNormal2.emitting = false;
-            trailsNormal2.emitting = true;
-            trailsStars2.emitting = false;
-            trailsStars2.emitting = true;
-            print("stop and start")
-        }
-*/
     }
 
-    ParticleSystem{ id: sys1 }
-    ImageParticle{
+    ParticleSystem { id: sys1 }
+    ImageParticle {
         system: sys1
         source: "../images/particle.png"
         color: "cyan"
@@ -105,7 +89,7 @@ Rectangle {
         }
         colorVariation: 0.3
     }
-    Emitter{
+    Emitter {
         id: trailsNormal
         system: sys1
 
@@ -116,15 +100,15 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointDirection{xVariation: 4; yVariation: 4;}
-        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
+        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection {xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
         size: 8
         sizeVariation: 4
     }
     ParticleSystem { id: sys2 }
-    ImageParticle{
+    ImageParticle {
         color: "cyan"
         system: sys2
         alpha: 0
@@ -144,7 +128,7 @@ Rectangle {
         colorVariation: 0.5
         source: "../images/star.png"
     }
-    Emitter{
+    Emitter {
         id: trailsStars
         system: sys2
 
@@ -155,15 +139,15 @@ Rectangle {
         y: mouseArea.pressed ? mouseArea.mouseY : circle.cy
         x: mouseArea.pressed ? mouseArea.mouseX : circle.cx
 
-        speed: PointDirection{xVariation: 4; yVariation: 4;}
-        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
+        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection {xVariation: 10; yVariation: 10;}
         speedFromMovement: 8
 
         size: 22
         sizeVariation: 4
     }
     ParticleSystem { id: sys3; }
-    ImageParticle{
+    ImageParticle {
         source: "../images/particle.png"
         system: sys3
         color: "orange"
@@ -185,7 +169,7 @@ Rectangle {
         colorVariation: 0.2
 
     }
-    Emitter{
+    Emitter {
         id: trailsNormal2
         system: sys3
 
@@ -197,14 +181,14 @@ Rectangle {
 
         speedFromMovement: 16
 
-        speed: PointDirection{xVariation: 4; yVariation: 4;}
-        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
+        speed: PointDirection {xVariation: 4; yVariation: 4;}
+        acceleration: PointDirection {xVariation: 10; yVariation: 10;}
 
         size: 12
         sizeVariation: 4
     }
     ParticleSystem { id: sys4; }
-    ImageParticle{
+    ImageParticle {
         system: sys4
         source: "../images/star.png"
         color: "green"
@@ -225,7 +209,7 @@ Rectangle {
 
         colorVariation: 0.5
     }
-    Emitter{
+    Emitter {
         id: trailsStars2
         system: sys4
 
@@ -237,8 +221,8 @@ Rectangle {
         x: mouseArea.pressed ? mouseArea.mouseX : circle2.cx
 
         speedFromMovement: 16
-        speed: PointDirection{xVariation: 2; yVariation: 2;}
-        acceleration: PointDirection{xVariation: 10; yVariation: 10;}
+        speed: PointDirection {xVariation: 2; yVariation: 2;}
+        acceleration: PointDirection {xVariation: 10; yVariation: 10;}
 
         size: 22
         sizeVariation: 4

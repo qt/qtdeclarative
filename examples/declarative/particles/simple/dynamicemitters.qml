@@ -41,39 +41,40 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root
     color: "black"
     width: 640
     height: 480
-    ParticleSystem{
+    ParticleSystem {
         id: sys
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         source: "../images/particle.png"
         color: "white"
         colorVariation: 1.0
         alpha: 0.1
     }
-    Component{
+
+    Component {
         id: emitterComp
-        Emitter{
+        Emitter {
             id: container
-            Emitter{
+            Emitter {
                 id: emitMore
                 system: sys
                 emitRate: 128
                 lifeSpan: 600
                 size: 16
                 endSize: 8
-                speed: AngleDirection{angleVariation:360; magnitude: 60}
+                speed: AngleDirection {angleVariation:360; magnitude: 60}
             }
 
             property int life: 2600
             property real targetX: 0
             property real targetY: 0
-            function go(){
+            function go() {
                 xAnim.start();
                 yAnim.start();
                 container.enabled = true
@@ -83,29 +84,30 @@ Rectangle{
             lifeSpan: 600
             size: 24
             endSize: 8
-            NumberAnimation on x{
+            NumberAnimation on x {
                 id: xAnim;
                 to: targetX
                 duration: life
                 running: false
             }
-            NumberAnimation on y{
+            NumberAnimation on y {
                 id: yAnim;
                 to: targetY
                 duration: life
                 running: false
             }
-            Timer{
+            Timer {
                 interval: life
                 running: true
                 onTriggered: container.destroy();
             }
         }
     }
-    MouseArea{
+
+    MouseArea {
         anchors.fill: parent
-        onClicked:{
-            for(var i=0; i<8; i++){
+        onClicked: {
+            for (var i=0; i<8; i++) {
                 var obj = emitterComp.createObject(root);
                 obj.x = mouse.x
                 obj.y = mouse.y

@@ -45,18 +45,20 @@ Item {
     width: 360
     height: 600
 
-    Image{
+    Image {
         source: "../images/backgroundLeaves.jpg"
         anchors.fill: parent
     }
-    ParticleSystem{ id: sys }
-    Emitter{
+    ParticleSystem {
+        id: sys
+    }
+    Emitter {
         system: sys
         width: parent.width
         emitRate: 4
         lifeSpan: 14000
         size: 80
-        speed: PointDirection{ y: 60 }
+        speed: PointDirection { y: 60 }
     }
     Wander {
         system: sys
@@ -65,21 +67,22 @@ Item {
         xVariance: 60
         pace: 60
     }
-    Affector{
+
+    Affector {
         system: sys
         property real coefficient: 0.1
         property real speed: 1.5
         width: parent.width
         height: parent.height - 100
-        onAffectParticles:{
+        onAffectParticles: {
         /*  //Linear movement
-            if (particle.r == 0){
+            if (particle.r == 0) {
                 particle.r = Math.random() > 0.5 ? -1 : 1;
-            }else if (particle.r == 1){
+            }else if (particle.r == 1) {
                 particle.rotation += speed * dt;
                 if(particle.rotation >= maxAngle)
                     particle.r = -1;
-            }else if (particle.r == -1){
+            }else if (particle.r == -1) {
                 particle.rotation -= speed * dt;
                 if(particle.rotation <= -1 * maxAngle)
                     particle.r = 1;
@@ -100,14 +103,14 @@ Item {
         }
     }
 
-    Affector{//Custom Friction, adds some 'randomness'
+    Affector {//Custom Friction, adds some 'randomness'
         system: sys
         //onceOff: true
         x: -60
         width: parent.width + 120
         height: 100
         anchors.bottom: parent.bottom
-        onAffectParticles:{
+        onAffectParticles: {
             for (var i=0; i<particles.length; i++) {
                 var particle = particles[i];
                 var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;
@@ -125,34 +128,35 @@ Item {
             }
         }
     }
-    ImageParticle{
+
+    ImageParticle {
         anchors.fill: parent
         id: particles
         system: sys
-        sprites: [Sprite{
+        sprites: [Sprite {
                 source: "../images/realLeaf1.png"
                 frames: 1
                 duration: 1
                 to: {"a":1, "b":1, "c":1, "d":1}
-            }, Sprite{
+            }, Sprite {
                 name: "a"
                 source: "../images/realLeaf1.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "b"
                 source: "../images/realLeaf2.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "c"
                 source: "../images/realLeaf3.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "d"
                 source: "../images/realLeaf4.png"
                 frames: 1

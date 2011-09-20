@@ -58,6 +58,7 @@ Item {
             }
         }
     }
+
     Rectangle {
         id: ground
         width: parent.width * 2
@@ -71,13 +72,15 @@ Item {
             GradientStop { position: 1.0; color: "DarkGreen"; }
         }
     }
-    MouseArea{
+
+    MouseArea {
         anchors.fill: parent
         onPositionChanged: {
             var rot = Math.atan2(mouseY - window.height/2,mouseX - window.width/2) * 180/Math.PI;
             ground.rotation = rot;
         }
     }
+
     ParticleSystem { id: sys }
     Gravity {
         system: sys
@@ -91,7 +94,7 @@ Item {
         lifeSpan: 10000
         size: 64
     }
-    ImageParticle{
+    ImageParticle {
         anchors.fill: parent
         system: sys
         source: "../images/realLeaf1.png"

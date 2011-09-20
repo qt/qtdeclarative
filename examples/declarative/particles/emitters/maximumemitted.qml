@@ -41,22 +41,24 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     color: "black"
     width: 360
     height: 540
-    ParticleSystem{
+    ParticleSystem {
         id: sys
         onEmptyChanged: if (empty) sys.pause();
     }
-    ImageParticle{
+
+    ImageParticle {
         system: sys
         id: cp
         source: "../images/particle.png"
         colorVariation: 0.4
         color: "#000000FF"
     }
-    Emitter{
+
+    Emitter {
         //burst on click
         id: bursty
         system: sys
@@ -65,12 +67,13 @@ Rectangle{
         y: ma.mouseY
         emitRate: 16000
         maximumEmitted: 4000
-        acceleration: AngleDirection{angleVariation: 360; magnitude: 360; }
+        acceleration: AngleDirection {angleVariation: 360; magnitude: 360; }
         size: 8
         endSize: 16
         sizeVariation: 4
     }
-    MouseArea{
+
+    MouseArea {
         anchors.fill: parent
         onPressed: sys.resume()
         id: ma

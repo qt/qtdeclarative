@@ -47,11 +47,11 @@ Rectangle {
     height: 540
     color: "black"
 
-    ParticleSystem{
+    ParticleSystem {
         id: particles
     }
 
-    ImageParticle{
+    ImageParticle {
         id: smoke
         system: particles
         anchors.fill: parent
@@ -60,7 +60,7 @@ Rectangle {
         colorVariation: 0
         color: "#00111111"
     }
-    ImageParticle{
+    ImageParticle {
         id: flame
         anchors.fill: parent
         system: particles
@@ -69,7 +69,8 @@ Rectangle {
         colorVariation: 0.1
         color: "#00ff400f"
     }
-    Emitter{
+
+    Emitter {
         id: fire
         system: particles
         group: "C"
@@ -80,14 +81,15 @@ Rectangle {
         emitRate: 350
         lifeSpan: 3500
 
-        acceleration: PointDirection{ y: -17; xVariation: 3 }
-        speed: PointDirection{xVariation: 3}
+        acceleration: PointDirection { y: -17; xVariation: 3 }
+        speed: PointDirection {xVariation: 3}
 
         size: 24
         sizeVariation: 8
         endSize: 4
     }
-    TrailEmitter{
+
+    TrailEmitter {
         id: fireSmoke
         group: "B"
         system: particles
@@ -98,14 +100,15 @@ Rectangle {
         emitRatePerParticle: 1
         lifeSpan: 2000
 
-        speed: PointDirection{y:-17*6; yVariation: -17; xVariation: 3}
-        acceleration: PointDirection{xVariation: 3}
+        speed: PointDirection {y:-17*6; yVariation: -17; xVariation: 3}
+        acceleration: PointDirection {xVariation: 3}
 
         size: 36
         sizeVariation: 8
         endSize: 16
     }
-    TrailEmitter{
+
+    TrailEmitter {
         id: fireballFlame
         anchors.fill: parent
         system: particles
@@ -122,7 +125,7 @@ Rectangle {
         endSize: 4
     }
     
-    TrailEmitter{
+    TrailEmitter {
         id: fireballSmoke
         anchors.fill: parent
         system: particles
@@ -134,14 +137,15 @@ Rectangle {
         emitWidth: 16
         emitHeight: 16
 
-        speed: PointDirection{yVariation: 16; xVariation: 16}
-        acceleration: PointDirection{y: -16}
+        speed: PointDirection {yVariation: 16; xVariation: 16}
+        acceleration: PointDirection {y: -16}
 
         size: 24
         sizeVariation: 8
         endSize: 8
     }
-    Emitter{
+
+    Emitter {
         id: balls
         system: particles
         group: "E"
@@ -152,12 +156,13 @@ Rectangle {
         emitRate: 2
         lifeSpan: 7000
 
-        speed: PointDirection{y:-17*4*2; xVariation: 6*6}
-        acceleration: PointDirection{y: 17*2; xVariation: 6*6}
+        speed: PointDirection {y:-17*4*2; xVariation: 6*6}
+        acceleration: PointDirection {y: 17*2; xVariation: 6*6}
 
         size: 12
         sizeVariation: 4
     }
+
     Turbulence { //A bit of turbulence makes the smoke look better
         anchors.fill: parent
         groups: ["A","B"]

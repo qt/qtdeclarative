@@ -41,11 +41,11 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     width: 360
     height: 540
     color: "black"
-    MouseArea{
+    MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
@@ -55,11 +55,13 @@ Rectangle{
                 particles.paused = !particles.paused;
         }
     }
-    ParticleSystem{ 
-        id: particles 
+
+    ParticleSystem {
+        id: particles
         running: false
     }
-    ImageParticle{
+
+    ImageParticle {
         anchors.fill: parent
         system: particles
         source: "../images/star.png"
@@ -67,7 +69,8 @@ Rectangle{
         alpha: 0
         colorVariation: 0.6
     }
-    Emitter{
+
+    Emitter {
         anchors.fill: parent
         system: particles
         emitRate: 2000

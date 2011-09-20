@@ -100,6 +100,7 @@ Rectangle {
             }
         }
     }
+
     ListView {
         id: listView
         width: 200; height: parent.height
@@ -121,7 +122,7 @@ Rectangle {
             lifeSpan: 10000
             size: 24
             sizeVariation: 8
-            speed: AngleDirection{ angleVariation: 360; magnitude: 3 }
+            speed: AngleDirection { angleVariation: 360; magnitude: 3 }
             maximumEmitted: 10
             startTime: 5000
         }

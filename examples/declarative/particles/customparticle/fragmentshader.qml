@@ -41,15 +41,15 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-ParticleSystem{
+ParticleSystem {
     id: root
     width: 1024
     height: 768
-    Rectangle{
+    Rectangle {
         z: -1
         anchors.fill: parent
         color: "black"
-        Text{
+        Text {
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
             font.pixelSize: 36
@@ -57,16 +57,18 @@ ParticleSystem{
             text: "It's all in the fragment shader."
         }
     }
-    Emitter{
+
+    Emitter {
         emitRate: 400
         lifeSpan: 8000
         size: 24
         sizeVariation: 16
-        speed: PointDirection{x: root.width/10; y: root.height/10;}
-        //acceleration: AngledDirection{angle:225; magnitude: root.width/36; angleVariation: 45; magnitudeVariation: 80}
-        acceleration: PointDirection{x: -root.width/40; y: -root.height/40; xVariation: -root.width/20; yVariation: -root.width/20}
+        speed: PointDirection {x: root.width/10; y: root.height/10;}
+        //acceleration: AngledDirection {angle:225; magnitude: root.width/36; angleVariation: 45; magnitudeVariation: 80}
+        acceleration: PointDirection {x: -root.width/40; y: -root.height/40; xVariation: -root.width/20; yVariation: -root.width/20}
     }
-    CustomParticle{
+
+    CustomParticle {
         vertexShader:"
             uniform lowp float qt_Opacity;
             varying lowp float fFade;

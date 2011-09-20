@@ -41,15 +41,16 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root
     color: "black"
     width: 640
     height: 480
-    ParticleSystem{
+    ParticleSystem {
         id: sys
     }
-    ImageParticle{
+
+    ImageParticle {
         system: sys
         source: "../images/particle.png"
         color: "white"
@@ -57,20 +58,22 @@ Rectangle{
         alpha: 0.1
         entryEffect: ImageParticle.None
     }
-    Emitter{
+
+    Emitter {
         id: emitter
         system: sys
         width: parent.width/2
-        speed: PointDirection{y: 72; yVariation: 24}
+        speed: PointDirection {y: 72; yVariation: 24}
         lifeSpan: 10000
         emitRate: 1000
         enabled: false
         size: 32
     }
-    Item{
+
+    Item {
         id: fakeEmitter
-        function burst(number){
-            while(number > 0){
+        function burst(number) {
+            while (number > 0) {
                 var item = fakeParticle.createObject(root);
                 item.lifeSpan = Math.random() * 5000 + 5000;
                 item.x = Math.random() * 320 + 320;
@@ -79,42 +82,43 @@ Rectangle{
             }
         }
 
-        Component{
+        Component {
             id: fakeParticle
-            Image{
+            Image {
                 id: container
                 property int lifeSpan: 10000
                 width: 32
                 height: 32
                 source: "../images/particle.png"
                 y: 0
-                PropertyAnimation on y{from: -16; to: 480-16; duration: container.lifeSpan; running: true}
-                SequentialAnimation on opacity{
+                PropertyAnimation on y {from: -16; to: 480-16; duration: container.lifeSpan; running: true}
+                SequentialAnimation on opacity {
                     running: true
-                    NumberAnimation{ from:0; to: 1; duration: 500}
-                    PauseAnimation{ duration: container.lifeSpan - 1000}
-                    NumberAnimation{ from:1; to: 0; duration: 500}
-                    ScriptAction{ script: container.destroy(); }
+                    NumberAnimation { from:0; to: 1; duration: 500}
+                    PauseAnimation { duration: container.lifeSpan - 1000}
+                    NumberAnimation { from:1; to: 0; duration: 500}
+                    ScriptAction { script: container.destroy(); }
                 }
             }
         }
     }
-    Text{
+
+    Text {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         text: "1000 particles"
         color: "white"
-        MouseArea{
+        MouseArea {
             anchors.fill: parent
             onClicked: emitter.burst(1000);
         }
     }
-    Text{
+    Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         text: "1000 items"
         color: "white"
-        MouseArea{
+        MouseArea {
             anchors.fill: parent
             onClicked: fakeEmitter.burst(1000);
         }

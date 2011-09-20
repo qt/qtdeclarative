@@ -47,8 +47,9 @@ Rectangle {
     height: 540
     color: "black"
 
-    ParticleSystem{ id: particles }
-    ImageParticle{
+    ParticleSystem { id: particles }
+
+    ImageParticle {
         system: particles
         colorVariation: 0.5
         alpha: 0
@@ -57,7 +58,8 @@ Rectangle {
         colorTable: "../images/colortable.png"
         sizeTable: "../images/colortable.png"
     }
-    Emitter{
+
+    Emitter {
         system: particles
         emitRate: 500
         lifeSpan: 2000
@@ -72,8 +74,8 @@ Rectangle {
 
         speedFromMovement: 20
 
-        speed: PointDirection{ xVariation: 5; yVariation: 5;}
-        acceleration: PointDirection{ xVariation: 5; yVariation: 5;}
+        speed: PointDirection { xVariation: 5; yVariation: 5;}
+        acceleration: PointDirection { xVariation: 5; yVariation: 5;}
 
         size: 16
         //endSize: 8

@@ -46,10 +46,12 @@ Rectangle {
     width: 360
     height: 600
     color: "white"
-    ParticleSystem{ id: particles }
+
+    ParticleSystem { id: particles }
+
     ImageParticle {
         system: particles
-        sprites: Sprite{
+        sprites: Sprite {
             name: "snow"
             source: "../images/snowflake.png"
             frames: 51
@@ -57,31 +59,34 @@ Rectangle {
             durationVariation: 8
         }
     }
+
     Emitter {
         system: particles
         emitRate: 20
         lifeSpan: 8000
-        speed: PointDirection{ y:80; yVariation: 40; }
-        acceleration: PointDirection{ y: 4 }
+        speed: PointDirection { y:80; yVariation: 40; }
+        acceleration: PointDirection { y: 4 }
         size: 36
         endSize: 12
         sizeVariation: 8
         width: parent.width
         height: 100
     }
-    MouseArea{
+
+    MouseArea {
         id: ma
         anchors.fill: parent
         hoverEnabled: true
     }
-    Rectangle{
+
+    Rectangle {
         color: "#803333AA"
         border.color: "black"
         x: ma.mouseX - 36
         y: ma.mouseY - 36
         width: 72
         height: 72
-        Age{
+        Age {
             anchors.fill: parent
             system: particles
             once: true

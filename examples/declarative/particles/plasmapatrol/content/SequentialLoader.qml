@@ -40,13 +40,13 @@
 ****************************************************************************/
 import QtQuick 2.0
 
-Item{
+Item {
     id: container
     //TODO: Somehow get particles into this?
     property list<Component> pages
     property Item cur: null
     property int at: 0
-    function advance(){
+    function advance() {
         if(cur != null)
             cur.destroy();
         cur = pages[at++].createObject(container);

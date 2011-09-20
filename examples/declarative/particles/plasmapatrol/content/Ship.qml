@@ -52,17 +52,17 @@ Item {
     property ParticleSystem system
     property int targetIdx: 0
     property Item target: targets[targetIdx] == undefined?null:targets[targetIdx]
-    Connections{
+    Connections {
         target: me.target
-        onHpChanged: if(me.target.hp<=0) me.targetIdx++;
+        onHpChanged: if (me.target.hp<=0) me.targetIdx++;
     }
     property list<Item> targets
     property string shipParticle: "default"//Per team colors?
     property int gunType: 0
     property int shipType: 0
-    Component{
+    Component {
         id: sloopComp
-        Sloop{
+        Sloop {
             system: me.system
             target: me.target
             shipParticle: me.shipParticle
@@ -71,9 +71,9 @@ Item {
             dodge: me.dodge
         }
     }
-    Component{
+    Component {
         id: frigateComp
-        Frigate{
+        Frigate {
             system: me.system
             target: me.target
             shipParticle: me.shipParticle
@@ -82,9 +82,9 @@ Item {
             dodge: me.dodge
         }
     }
-    Component{
+    Component {
         id: cruiserComp
-        Cruiser{
+        Cruiser {
             system: me.system
             target: me.target
             shipParticle: me.shipParticle
@@ -93,21 +93,22 @@ Item {
             dodge: me.dodge
         }
     }
-    Component{
+    Component {
         id: dumbComp
-        Item{
+        Item {
             property int maxHP: 0
             property int initialDodge: 0
         }
     }
-    Loader{
+    Loader {
         id: shipLoader
-        sourceComponent:{ switch(shipType){
+        sourceComponent: {
+            switch (shipType) {
             case 1: sloopComp; break;
             case 2: frigateComp; break;
             case 3: cruiserComp; break;
             default: dumbComp;
-        }
+            }
         }
     }
 }

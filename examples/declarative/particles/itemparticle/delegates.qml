@@ -41,12 +41,14 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root;
     width: 360
     height: 600
-    function newPithySaying(){
-        switch (Math.floor(Math.random()*16)){
+    color: "black"
+
+    function newPithySaying() {
+        switch (Math.floor(Math.random()*16)) {
             case 0: return "Hello World";
             case 1: return "G'day Mate";
             case 2: return "Code Less";
@@ -66,19 +68,19 @@ Rectangle{
             default: return "OMGWTFBBQ";
         }
     }
-    color: "black"
-    ParticleSystem{
+
+    ParticleSystem {
         anchors.fill: parent
         id: syssy
-        Emitter{
+        Emitter {
             anchors.centerIn: parent
             emitRate: 1
             lifeSpan: 4800
             lifeSpanVariation: 1600
-            speed: AngleDirection{angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
+            speed: AngleDirection {angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
         }
-        ItemParticle{
-            delegate: Text{
+        ItemParticle {
+            delegate: Text {
                 text: root.newPithySaying();
                 color: "white"
                 font.pixelSize: 18

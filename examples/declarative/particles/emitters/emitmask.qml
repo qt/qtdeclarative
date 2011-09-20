@@ -41,29 +41,32 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     color: "goldenrod"
     width: 400
     height: 400
-    ParticleSystem{
+    ParticleSystem {
         width: 300
         height: 300
         anchors.centerIn: parent
-        ImageParticle{
+
+        ImageParticle {
             source: "../images/particle.png"
             z: 2
             anchors.fill: parent
             color: "#336666CC"
             colorVariation: 0.0
         }
-        Emitter{
+
+        Emitter {
             anchors.fill: parent
             emitRate: 6000
             lifeSpan: 720
             size: 10
-            shape: MaskShape{
+            shape: MaskShape {
                 source: "../images/smileMask.png"
             }
         }
+
     }
 }

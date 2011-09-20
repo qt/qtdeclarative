@@ -54,7 +54,7 @@ Item {
     property int gunType: 0
     width: 128
     height: 128
-    Emitter{
+    Emitter {
         //TODO: Cooler would be an 'orbiting' affector
         //TODO: On the subject, opacity and size should be grouped type 'overLife' if we can cram that in the particles
         system: container.system
@@ -62,7 +62,7 @@ Item {
         anchors.centerIn: parent
         width: 64
         height: 64
-        shape: EllipseShape{}
+        shape: EllipseShape {}
 
         emitRate: hp > 0 ?  hp * 1 + 20 : 0 
         lifeSpan: 2400
@@ -72,13 +72,13 @@ Item {
         sizeVariation: 16
         endSize: 16
 
-        speed: AngleDirection{angleVariation:360; magnitudeVariation: 32}
+        speed: AngleDirection {angleVariation:360; magnitudeVariation: 32}
     }
-    Emitter{
+    Emitter {
         system: container.system
         group: "cruiserArmor"
         anchors.fill: parent
-        shape: EllipseShape{ fill: false }
+        shape: EllipseShape { fill: false }
         enabled: hp>0
         
         emitRate: 16
@@ -87,7 +87,7 @@ Item {
         size: 48
         sizeVariation: 24
 
-        SpriteGoal{
+        SpriteGoal {
             id: destructor
             system: container.system
             enabled: container.hp <=0
@@ -99,27 +99,27 @@ Item {
         }
     }
 
-    Timer{
+    Timer {
         id: fireControl
         property int next: Math.floor(Math.random() * 3) + 1
         interval: 800
         running: root.readySetGo
         repeat: true
-        onTriggered:{
-            if(next == 1){
+        onTriggered: {
+            if (next == 1) {
                 gun1.fireAt(container.target);
                 next = Math.floor(Math.random() * 3) + 1;
-            }else if(next == 2){
+            } else if (next == 2) {
                 gun2.fireAt(container.target);
                 next = Math.floor(Math.random() * 3) + 1;
-            }else if(next == 3){
+            } else if (next == 3) {
                 gun3.fireAt(container.target);
                 next = Math.floor(Math.random() * 3) + 1;
             }
         }
     }
 
-    Hardpoint{//TODO: Hardpoint abstraction
+    Hardpoint {//TODO: Hardpoint abstraction
         x: 112 - 12 - 8*2
         y: 128 - 12 - 12*2
         id: gun1
@@ -127,7 +127,7 @@ Item {
         show: hp > 0
         hardpointType: gunType
     }
-    Hardpoint{
+    Hardpoint {
         x: 64 - 12
         y: 0 - 12 + 12*2
         id: gun2
@@ -135,7 +135,7 @@ Item {
         show: hp > 0
         hardpointType: gunType
     }
-    Hardpoint{
+    Hardpoint {
         x: 16 - 12 + 8*2
         y: 128 - 12 - 12*2
         id: gun3

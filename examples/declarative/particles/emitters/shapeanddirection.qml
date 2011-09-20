@@ -41,19 +41,21 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root
     width: 360
     height: 540
     color: "black"
-    Image{
+    Image {
         anchors.fill: parent
         source: "../images/portal_bg.png"
     }
-    ParticleSystem{ 
-        id: particles 
+
+    ParticleSystem {
+        id: particles
     }
-    ImageParticle{
+
+    ImageParticle {
         groups: ["center","edge"]
         anchors.fill: parent
         system: particles
@@ -61,7 +63,8 @@ Rectangle{
         colorVariation: 0.1
         color: "#009999FF"
     }
-    Emitter{
+
+    Emitter {
         anchors.fill: parent
         group: "center"
         system: particles
@@ -70,15 +73,16 @@ Rectangle{
         size: 20
         sizeVariation: 2
         endSize: 0
-        shape: EllipseShape{fill: false}
-        speed: TargetDirection{
+        shape: EllipseShape {fill: false}
+        speed: TargetDirection {
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true
             magnitude: 0.5
         }
     }
-    Emitter{
+
+    Emitter {
         anchors.fill: parent
         group: "edge"
         startTime: 2000
@@ -88,15 +92,15 @@ Rectangle{
         size: 28
         sizeVariation: 2
         endSize: 16
-        shape: EllipseShape{fill: false}
-        speed: TargetDirection{
+        shape: EllipseShape {fill: false}
+        speed: TargetDirection {
             targetX: root.width/2 
             targetY: root.height/2
             proportionalMagnitude: true
             magnitude: 0.1
             magnitudeVariation: 0.1
         }
-        acceleration: TargetDirection{
+        acceleration: TargetDirection {
             targetX: root.width/2 
             targetY: root.height/2
             targetVariation: 200

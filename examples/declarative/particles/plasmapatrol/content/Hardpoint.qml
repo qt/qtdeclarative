@@ -53,7 +53,7 @@ Item {
     property Item targetObj: null
     property int damageDealt: 0
     onDamageDealtChanged: dealDamageTimer.start();
-    Timer{
+    Timer {
         id: dealDamageTimer
         interval: 16
         running: false
@@ -62,49 +62,51 @@ Item {
     }
     width: 24
     height: 24
-    function fireAt(targetArg){//Each implement own
-        if(targetArg != null){
+    function fireAt(targetArg) {//Each implement own
+        if (targetArg != null) {
             hardpointLoader.item.fireAt(targetArg, container);
             targetObj = targetArg;
         }
     }
-    Loader{
+    Loader {
         id: hardpointLoader
-        sourceComponent: {switch(hardpointType){
-        case 1: laserComponent; break;
-        case 2: blasterComponent; break;
-        case 3: cannonComponent; break;
-        default: emptyComponent;
-        }}
+        sourceComponent:  {
+            switch (hardpointType) {
+            case 1: laserComponent; break;
+            case 2: blasterComponent; break;
+            case 3: cannonComponent; break;
+            default: emptyComponent;
+            }
+        }
     }
-    Component{
+    Component {
         id: laserComponent
-        LaserHardpoint{
+        LaserHardpoint {
             target: container.target
             system: container.system
             show: container.show
         }
     }
-    Component{
+    Component {
         id: blasterComponent
-        BlasterHardpoint{
+        BlasterHardpoint {
             target: container.target
             system: container.system
             show: container.show
         }
     }
-    Component{
+    Component {
         id: cannonComponent
-        CannonHardpoint{
+        CannonHardpoint {
             target: container.target
             system: container.system
             show: container.show
         }
     }
-    Component{
+    Component {
         id: emptyComponent
         Item {
-            function fireAt(obj){
+            function fireAt(obj) {
                 console.log("Firing null weapon. It hurts.");
             }
         }

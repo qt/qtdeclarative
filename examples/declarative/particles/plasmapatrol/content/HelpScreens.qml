@@ -45,25 +45,25 @@ SequentialLoader {
     id: hLdr
     signal exitDesired
     Component.onCompleted: advance();
-    ParticleSystem{ id: helpSystem }
-    PlasmaPatrolParticles{ sys: helpSystem }
+    ParticleSystem { id: helpSystem }
+    PlasmaPatrolParticles { sys: helpSystem }
     pages: [
-        Component{Item{
+        Component {Item {
             id: story
-            Text{
+            Text {
                 color: "white"
                 text: "Story"
                 font.pixelSize: 48
             }
             /*
-            Flickable{
+            Flickable {
                 y: 60
                 width: 360
                 height: 500
                 contentHeight: txt1.height
                 contentWidth: 360//TODO: Less magic numbers?
                 */
-                Text{
+                Text {
                     id: txt1
                     color: "white"
                     y: 60
@@ -77,7 +77,7 @@ You must select one such patrol unit for the border, heading into an inevitable 
                     wrapMode: Text.WordWrap
                 }
            // }
-            Button{
+            Button {
                 x: 20
                 y: 560
                 height: 40
@@ -85,7 +85,7 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 text: "Next"
                 onClicked: hLdr.advance();
             }
-            Button{
+            Button {
                 x: 220
                 y: 560
                 height: 40
@@ -94,51 +94,51 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 onClicked: hLdr.exitDesired();
             }
         }},
-        Component{Item{
+        Component {Item {
             id: ships
-            Text{
+            Text {
                 color: "white"
                 text: "Vessels"
                 font.pixelSize: 48
             }
-            Column{
+            Column {
                 spacing: 16
                 y: 60
-                Row{
+                Row {
                     height: 128
-                    Sloop{
+                    Sloop {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The nimble sloop"
                         color: "white"
                         font.pixelSize: 18
                     }
                 }
-                Row{
+                Row {
                     height: 128
-                    Frigate{
+                    Frigate {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The versitile shield frigate"
                         color: "white"
                         font.pixelSize: 18
                     }
                 }
-                Row{
+                Row {
                     height: 128
-                    Cruiser{
+                    Cruiser {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The armored cruiser"
                         color: "white"
                         font.pixelSize: 18
                     }
                 }
             }
-            Button{
+            Button {
                 x: 20
                 y: 560
                 height: 40
@@ -146,7 +146,7 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 text: "Next"
                 onClicked: hLdr.advance();
             }
-            Button{
+            Button {
                 x: 220
                 y: 560
                 height: 40
@@ -155,22 +155,22 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 onClicked: hLdr.exitDesired();
             }
         }},
-        Component{Item{
+        Component {Item {
             id: guns
-            Text{
+            Text {
                 color: "white"
                 text: "Hardpoints"
                 font.pixelSize: 48
             }
-            Column{
+            Column {
                 spacing: 16
                 y: 60
-                Row{
+                Row {
                     height: 128
-                    LaserHardpoint{
+                    LaserHardpoint {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The laser hardpoint almost always hits the target, even the nimble sloop, but loses much of its potency against the frigate's shields"
                         width: 332
                         wrapMode: Text.WordWrap
@@ -178,12 +178,12 @@ You must select one such patrol unit for the border, heading into an inevitable 
                         font.pixelSize: 18
                     }
                 }
-                Row{
+                Row {
                     height: 128
-                    BlasterHardpoint{
+                    BlasterHardpoint {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The blaster passes right through the frigate's shields but loses much of its impact against the armor of the cruiser"
                         width: 332
                         wrapMode: Text.WordWrap
@@ -191,12 +191,12 @@ You must select one such patrol unit for the border, heading into an inevitable 
                         font.pixelSize: 18
                     }
                 }
-                Row{
+                Row {
                     height: 128
-                    CannonHardpoint{
+                    CannonHardpoint {
                         system: helpSystem
                     }
-                    Text{
+                    Text {
                         text: "The cannon has poor accuracy, often missing the nimble sloop, but can punch right through the armor of the cruiser"
                         width: 332
                         wrapMode: Text.WordWrap
@@ -205,7 +205,7 @@ You must select one such patrol unit for the border, heading into an inevitable 
                     }
                 }
             }
-            Button{
+            Button {
                 x: 20
                 y: 560
                 height: 40
@@ -213,7 +213,7 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 text: "Next"
                 onClicked: hLdr.advance();
             }
-            Button{
+            Button {
                 x: 220
                 y: 560
                 height: 40
@@ -222,20 +222,20 @@ You must select one such patrol unit for the border, heading into an inevitable 
                 onClicked: hLdr.exitDesired();
             }
         }},
-        Component{Item{
+        Component {Item {
             id: strategy
-            Text{
+            Text {
                 color: "white"
                 text: "Strategy"
                 font.pixelSize: 48
             }
-            Flickable{
+            Flickable {
                 y: 60
                 width: 360
                 height: 500
                 contentHeight: txt1.height
                 contentWidth: 360//TODO: Less magic numbers?
-                Text{
+                Text {
                     id: txt1
                     color: "white"
                     font.pixelSize: 18
@@ -247,7 +247,7 @@ More to come after thorough playtesting.
                     wrapMode: Text.WordWrap
                 }
             }
-            Button{
+            Button {
                 x: 20
                 y: 560
                 height: 40
@@ -255,7 +255,7 @@ More to come after thorough playtesting.
                 text: "Story"
                 onClicked: {hLdr.at=0; hLdr.advance();}
             }
-            Button{
+            Button {
                 x: 220
                 y: 560
                 height: 40

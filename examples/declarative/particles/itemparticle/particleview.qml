@@ -43,47 +43,47 @@ import QtQuick.Particles 2.0
 import "content/script.js" as Script
 import "content"
 
-Item{
+Item {
     id: root
     width: 640
     height: 480
-    Rectangle{
+    Rectangle {
         anchors.fill: parent
         color: "black"
         z: -1
     }
-    Item{
+    Item {
         id: loading
-        Behavior on opacity{NumberAnimation{}}
+        Behavior on opacity {NumberAnimation {}}
         anchors.fill: parent
-        Text{
+        Text {
             anchors.centerIn: parent
             text: "Loading"
             color: "white"
         }
     }
-    ParticleSystem{ 
+    ParticleSystem {
         id: sys;
         running: true
     }
-    Emitter{
+    Emitter {
         id: emitter
         system: sys
         height: parent.height - 132/2
         x: -132/2
         y: 132/2
-        speed: PointDirection{ x: 32; xVariation: 8 }
+        speed: PointDirection { x: 32; xVariation: 8 }
         emitRate: 0.5
         lifeSpan: Emitter.InfiniteLife
         group: "photos"
     }
-    Age{
+    Age {
         system: sys
         x: parent.width + 132/2
         height: parent.height
         width: 1000
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["fireworks"]
         source: "../trails/../images/star.png"
@@ -92,29 +92,29 @@ Item{
         colorVariation: 0
         z: 1000
     }
-    ItemParticle{
+    ItemParticle {
         id: mp
         z: 0
         system: sys
         fade: false
         groups: ["photos"]
     }
-    Component{
+    Component {
         id: alertDelegate
-        Rectangle{
+        Rectangle {
             width: 132
             height: 132
-            NumberAnimation on scale{
+            NumberAnimation on scale {
                 running: true
                 loops: 1
                 from: 0.2
                 to: 1
             }
-            Image{
+            Image {
                 source: "../asteroid/../images/rocket.png"
                 anchors.centerIn: parent
             }
-            Text{
+            Text {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "A new ship has arrived!"
@@ -122,7 +122,7 @@ Item{
         }
     }
     property Item alertItem;
-    function alert(){
+    function alert() {
         //resetter.active = false
         force.active = true;
         alertItem = alertDelegate.createObject(root);
@@ -133,7 +133,7 @@ Item{
     }
     focus: true
     Keys.onSpacePressed: alert();
-    Timer{
+    Timer {
         id: stopAlert
         running: false
         repeat: false
@@ -145,7 +145,7 @@ Item{
             centerEmitter.burst(1);
         }
     }
-    Attractor{
+    Attractor {
         id: force
         system: sys
         pointX: root.width/2
@@ -158,9 +158,9 @@ Item{
         groups:["photos"]
         affectedParameter: Attractor.Position
     }
-    Emitter{
+    Emitter {
         id: centerEmitter
-        speed: PointDirection{ x: 32; xVariation: 8;}
+        speed: PointDirection { x: 32; xVariation: 8;}
         emitRate: 0.5
         lifeSpan: 12000 //TODO: A -1 or something which does 'infinite'? (but need disable fade first)
         maximumEmitted: 20
@@ -171,7 +171,7 @@ Item{
 
         //TODO: Zoom in effect
     }
-    Emitter{
+    Emitter {
         id: spawnFireworks
         group: "fireworks"
         system: sys
@@ -185,16 +185,16 @@ Item{
         enabled: false
         size: 32
         endSize: 8
-        speed: AngleDirection{ magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
-        acceleration: PointDirection{ y: 160 }
+        speed: AngleDirection { magnitude: 160; magnitudeVariation: 120; angleVariation: 90; angle: 270 }
+        acceleration: PointDirection { y: 160 }
     }
-    Item{ x: -1000; y: -1000 //offscreen
-        Repeater{//Load them here, add to system on completed
+    Item { x: -1000; y: -1000 //offscreen
+        Repeater {//Load them here, add to system on completed
             model: theModel
             delegate: theDelegate
         }
     }
-    RssModel{id: theModel; tags:"particle,particles"}
+    RssModel {id: theModel; tags:"particle,particles"}
     Component {
         id: theDelegate
         Rectangle {
@@ -210,27 +210,27 @@ Item{
             ItemParticle.onDetached: mp.take(container);//respawns
             function manage()
             {
-                if(state == "selected"){
+                if (state == "selected") {
                     console.log("Taking " + index);
                     mp.freeze(container);
-                }else{
+                } else {
                     console.log("Returning " +index);
                     mp.unfreeze(container);
                 }
             }
-            Image{
+            Image {
                 id: img
                 anchors.centerIn: parent
                 smooth: true; source: "http://" + Script.getImagePath(content); cache: true
                 fillMode: Image.PreserveAspectFit; 
                 width: parent.width-4; height: parent.height-4
-                onStatusChanged: if(img.status == Image.Ready){
+                onStatusChanged: if (img.status == Image.Ready) {
                     container.opacity = 0;
                     loading.opacity = 0;
                     mp.take(container);
                 }
             }
-            Text{
+            Text {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
@@ -238,19 +238,19 @@ Item{
                 text: title
                 color: "black"
             }
-            MouseArea{
+            MouseArea {
                 anchors.fill: parent
                 onClicked: container.state == "selected" ? container.state = "" : container.state = "selected"
             }
-            states: State{
+            states: State {
                 name: "selected"
-                ParentChange{
+                ParentChange {
                     target: container
                     parent: root
                     x: 0
                     y: 0
                 }
-                PropertyChanges{
+                PropertyChanges {
                     target: container
                     width: root.width
                     height: root.height
@@ -259,14 +259,14 @@ Item{
                     rotation: 0
                 }
             }
-            transitions: Transition{
+            transitions: Transition {
                 to: "selected"
                 reversible: true
-                SequentialAnimation{
-                    ScriptAction{script: container.manage();}
-                    ParallelAnimation{
-                        ParentAnimation{NumberAnimation{ properties: "x,y" }}//Doesn't work, particles takes control of x,y instantly
-                        NumberAnimation{ properties: "width, height, z, rotation" }
+                SequentialAnimation {
+                    ScriptAction {script: container.manage();}
+                    ParallelAnimation {
+                        ParentAnimation {NumberAnimation { properties: "x,y" }}//Doesn't work, particles takes control of x,y instantly
+                        NumberAnimation { properties: "width, height, z, rotation" }
                     }
                 }
             }

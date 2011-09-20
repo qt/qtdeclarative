@@ -41,40 +41,43 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root
     width: 360
     height: 600
     color: "darkblue"
     property bool cloneMode: false
-    MouseArea{
+    ParticleSystem {
+        id: sys
+    }
+    MouseArea {
         anchors.fill: parent
         onClicked: cloneMode = !cloneMode;
     }
-    ParticleSystem{
-        id: sys
-    }
-    Emitter{
+    Emitter {
         system: sys
         y:root.height + 20
         width: root.width
         emitRate: 200
         lifeSpan: 4000
         startTime: 4000
-        speed: PointDirection{ y: -120; }
+        speed: PointDirection { y: -120; }
     }
-    ImageParticle{
+
+    ImageParticle {
         system: sys
         visible: !cloneMode
         source: "../images/particle2.png"
     }
-    ImageParticle{
+
+    ImageParticle {
         system: sys
         visible: cloneMode
         z: 0
         source: "../images/particle3.png"
     }
-    ImageParticle{
+
+    ImageParticle {
         system: sys
         clip: true
         visible: cloneMode

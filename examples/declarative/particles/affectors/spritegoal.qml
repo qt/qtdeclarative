@@ -46,7 +46,7 @@ Item {
     id: root
     width: 360
     height: 540
-    MouseArea{
+    MouseArea {
         id: ma
         anchors.fill: parent
     }
@@ -82,27 +82,27 @@ Item {
 
         anchors.centerIn: parent
 
-        //acceleration: AngledDirection{angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent speed?
-        acceleration: PointDirection{ xVariation: 200; yVariation: 200; }
+        //acceleration: AngledDirection {angleVariation: 360; magnitude: 200}//Is this a better effect, more consistent speed?
+        acceleration: PointDirection { xVariation: 200; yVariation: 200; }
 
         size: 0
         endSize: 80
         sizeVariation: 10
     }
-    Emitter{
+    Emitter {
         system: sys
         group: "meteor"
         emitRate: 12
         lifeSpan: 5000
-        acceleration: PointDirection{ xVariation: 80; yVariation: 80; }
+        acceleration: PointDirection { xVariation: 80; yVariation: 80; }
         size: 15
         endSize: 300
         anchors.centerIn: parent
      }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["meteor"]
-        sprites:[Sprite{
+        sprites:[Sprite {
                 id: spinState
                 name: "spinning"
                 source: "../images/meteor.png"
@@ -110,14 +110,14 @@ Item {
                 duration: 40
                 speedModifiesDuration: -0.1
                 to: {"explode":0, "spinning":1}
-            },Sprite{
+            },Sprite {
                 name: "explode"
                 source: "../images/_explo.png"
                 frames: 22
                 duration: 40
                 speedModifiesDuration: -0.1
                 to: {"nullFrame":1}
-            },Sprite{//Not sure if this is needed, but seemed easiest
+            },Sprite {//Not sure if this is needed, but seemed easiest
                 name: "nullFrame"
                 source: "../images/nullRock.png"
                 frames: 1
@@ -125,7 +125,7 @@ Item {
             }
         ]
     }
-    SpriteGoal{
+    SpriteGoal {
         groups: ["meteor"]
         system: sys
         goalState: "explode"
@@ -167,7 +167,8 @@ Item {
 
         }
     }
-    ImageParticle{
+
+    ImageParticle {
         z:0 
         system: sys
         groups: ["exhaust"]
@@ -190,7 +191,8 @@ Item {
 
         colorVariation: 0.2
     }
-    Emitter{
+
+    Emitter {
         id: trailsNormal2
         system: sys
         group: "exhaust"
@@ -201,10 +203,10 @@ Item {
         y: holder.y
         x: holder.x 
 
-        speed: PointDirection{ xVariation: 40; yVariation: 40; }
+        speed: PointDirection { xVariation: 40; yVariation: 40; }
         speedFromMovement: 16
 
-        acceleration: PointDirection{ xVariation: 10; yVariation: 10; }
+        acceleration: PointDirection { xVariation: 10; yVariation: 10; }
 
         size: 4
         sizeVariation: 4

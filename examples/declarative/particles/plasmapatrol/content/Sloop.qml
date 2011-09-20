@@ -55,19 +55,19 @@ Item {
     property int gunType: 0
     width: 128
     height: 128
-    Emitter{
+    Emitter {
         id: emitter
         //TODO: Cooler would be an 'orbiting' affector
         //TODO: On the subject, opacity and size should be grouped type 'overLife' if we can cram that in the particles
         system: container.system
         group: container.shipParticle
-        shape: EllipseShape{}
+        shape: EllipseShape {}
 
         emitRate: hp > 0 ?  hp + 20 : 0 
         lifeSpan: blinkInterval
         maximumEmitted: (maxHP + 20)
 
-        acceleration: AngleDirection{angleVariation: 360; magnitude: 8}
+        acceleration: AngleDirection {angleVariation: 360; magnitude: 8}
 
         size: 24
         endSize: 4
@@ -76,9 +76,9 @@ Item {
         height: 16
         x: 64
         y: 64
-        Behavior on x{NumberAnimation{duration:blinkInterval}}
-        Behavior on y{NumberAnimation{duration:blinkInterval}}
-        Timer{
+        Behavior on x {NumberAnimation {duration:blinkInterval}}
+        Behavior on y {NumberAnimation {duration:blinkInterval}}
+        Timer {
             interval: blinkInterval
             running: true
             repeat: true
@@ -88,19 +88,19 @@ Item {
             }
         }
     }
-    Hardpoint{
+    Hardpoint {
         anchors.centerIn: parent
         id: gun2
         system: container.system
         show: container.hp > 0
         hardpointType: gunType
     }
-    Timer{
+    Timer {
         id: fireControl
         interval: 800
         running: root.readySetGo
         repeat: true
-        onTriggered:{
+        onTriggered: {
                 gun2.fireAt(container.target);
         }
     }

@@ -41,9 +41,9 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Item{
+Item {
     property ParticleSystem sys
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["default"]
         source: "pics/blur-circle3.png"
@@ -51,7 +51,7 @@ Item{
         colorVariation: 0.1
         z: 0
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["redTeam"]
         source: "pics/blur-circle3.png"
@@ -59,7 +59,7 @@ Item{
         colorVariation: 0.1
         z: 0
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["greenTeam"]
         source: "pics/blur-circle3.png"
@@ -67,7 +67,7 @@ Item{
         colorVariation: 0.1
        z: 0
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["blaster"]
         source: "pics/star2.png"
@@ -76,7 +76,7 @@ Item{
         colorVariation: 0.2
         z: 2
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["laser"]
         source: "pics/star3.png"
@@ -85,7 +85,7 @@ Item{
         colorVariation: 0.2
         z: 2
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["cannon"]
         source: "pics/particle.png"
@@ -93,7 +93,7 @@ Item{
         colorVariation: 0.1
         z: 2
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["cannonCore"]
         source: "pics/particle.png"
@@ -101,7 +101,7 @@ Item{
         colorVariation: 0.8
         z: 1
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["cannonWake"]
         source: "pics/star.png"
@@ -109,7 +109,7 @@ Item{
         colorVariation: 0.2
         z: 1
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["frigateShield"]
         source: "pics/blur-circle2.png"
@@ -119,24 +119,24 @@ Item{
         greenVariation: 0.1
         z: 3
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["cruiserArmor"]
         z: 1
-        sprites:[Sprite{
+        sprites:[Sprite {
                 id: spinState
                 name: "spinning"
                 source: "pics/meteor.png"
                 frames: 35
                 duration: 40
                 to: {"death":0, "spinning":1}
-            },Sprite{
+            },Sprite {
                 name: "death"
                 source: "pics/meteor_explo.png"
                 frames: 22
                 duration: 40
                 to: {"null":1}
-            }, Sprite{
+            }, Sprite {
                 name: "null"
                 source: "pics/nullRock.png"
                 frames: 1
@@ -144,13 +144,13 @@ Item{
             }
         ]
     }
-    TrailEmitter{
+    TrailEmitter {
         system: sys
         group: "cannonWake"
         follow: "cannon"
         emitRatePerParticle: 64
         lifeSpan: 600
-        speed: AngleDirection{ angleVariation: 360; magnitude: 48}
+        speed: AngleDirection { angleVariation: 360; magnitude: 48}
         size: 16
         endSize: 8
         sizeVariation: 2
@@ -158,7 +158,7 @@ Item{
         width: 1000//XXX: Terrible hack
         height: 1000
     }
-    TrailEmitter{
+    TrailEmitter {
         system: sys
         group: "cannonCore"
         follow: "cannon"

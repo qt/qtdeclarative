@@ -41,26 +41,27 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     width: 360
     height: 600
     color: "#222222"
     id: root
-    Image{
+    Image {
         source: "../images/candle.png"
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: -8
         anchors.horizontalCenterOffset: 2
     }
-    ParticleSystem{
+    ParticleSystem {
         id: ps
     }
-    MouseArea{
+    MouseArea {
         anchors.fill: parent
         onClicked: turb.enabled = !turb.enabled
     }
-    Turbulence{
+
+    Turbulence {
         id: turb
         system: ps
         enabled: true
@@ -70,21 +71,22 @@ Rectangle{
         anchors.fill: parent
         strength: 32
     }
-    ImageParticle{
+
+    ImageParticle {
         groups: ["smoke"]
         system: ps
         source: "../images/particle.png"
         color: "#11111111"
         colorVariation: 0
     }
-    ImageParticle{
+    ImageParticle {
         groups: ["flame"]
         system: ps
         source: "../images/particle.png"
         color: "#11ff400f"
         colorVariation: 0.1
     }
-    Emitter{
+    Emitter {
         anchors.centerIn: parent
         system: ps
         group: "flame"
@@ -94,10 +96,10 @@ Rectangle{
         size: 20
         endSize: 10
         sizeVariation: 10
-        acceleration: PointDirection{ y: -40 }
-        speed: AngleDirection{ angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
+        acceleration: PointDirection { y: -40 }
+        speed: AngleDirection { angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
     }
-    TrailEmitter{
+    TrailEmitter {
         id: smoke1
         width: root.width
         height: root.height/2 - 20
@@ -111,10 +113,10 @@ Rectangle{
         size: 16
         endSize: 8
         sizeVariation: 8
-        acceleration: PointDirection{ y: -40 }
-        speed: AngleDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        acceleration: PointDirection { y: -40 }
+        speed: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
-    TrailEmitter{
+    TrailEmitter {
         id: smoke2
         width: root.width
         height: root.height/2 - 40
@@ -127,7 +129,7 @@ Rectangle{
         size: 36
         endSize: 24
         sizeVariation: 12
-        acceleration: PointDirection{ y: -40 }
-        speed: AngleDirection{ angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        acceleration: PointDirection { y: -40 }
+        speed: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
     }
 }

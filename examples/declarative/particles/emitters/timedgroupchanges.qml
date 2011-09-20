@@ -41,49 +41,50 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     width: 360
     height: 600
     color: "black"
-    ParticleSystem{
+    ParticleSystem {
         anchors.fill: parent
         id: syssy
-        ParticleGroup{
+        ParticleGroup {
             name: "fire"
             duration: 2000
             durationVariation: 2000
             to: {"splode":1}
         }
-        ParticleGroup{
+        ParticleGroup {
             name: "splode"
             duration: 400
             to: {"dead":1}
-            TrailEmitter{
+            TrailEmitter {
                 group: "works"
                 emitRatePerParticle: 100
                 lifeSpan: 1000
                 maximumEmitted: 1200
                 size: 8
-                speed: AngleDirection{angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
-                acceleration: PointDirection{y:100; yVariation: 20}
+                speed: AngleDirection {angle: 270; angleVariation: 45; magnitude: 20; magnitudeVariation: 20;}
+                acceleration: PointDirection {y:100; yVariation: 20}
             }
         }
-        ParticleGroup{
+        ParticleGroup {
             name: "dead"
             duration: 1000
-            Affector{
+            Affector {
                 once: true
                 onAffected: worksEmitter.burst(400,x,y)
             }
         }
-        Timer{
+
+        Timer {
             interval: 6000
             running: true
             triggeredOnStart: true
             repeat: true
             onTriggered:startingEmitter.pulse(0.1);
         }
-        Emitter{
+        Emitter {
             id: startingEmitter
             group: "fire"
             width: parent.width
@@ -91,10 +92,11 @@ Rectangle{
             enabled: false
             emitRate: 80
             lifeSpan: 6000
-            speed: PointDirection{y:-100;}
+            speed: PointDirection {y:-100;}
             size: 32
         }
-        Emitter{
+
+        Emitter {
             id: worksEmitter
             group: "works"
             enabled: false
@@ -102,13 +104,14 @@ Rectangle{
             lifeSpan: 1600
             maximumEmitted: 6400
             size: 8
-            speed: CumulativeDirection{
-                PointDirection{y:-100}
-                AngleDirection{angleVariation: 360; magnitudeVariation: 80;}
+            speed: CumulativeDirection {
+                PointDirection {y:-100}
+                AngleDirection {angleVariation: 360; magnitudeVariation: 80;}
             }
-            acceleration: PointDirection{y:100; yVariation: 20}
+            acceleration: PointDirection {y:100; yVariation: 20}
         }
-        ImageParticle{
+
+        ImageParticle {
             groups: ["works", "fire", "splode"]
             source: "../images/particle.png"
             entryEffect: ImageParticle.Scale

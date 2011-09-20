@@ -49,7 +49,7 @@ Item {
 
     width: 24
     height: 24
-    Emitter{
+    Emitter {
         id: visualization
         group: "cannon"
         enabled: container.show
@@ -62,14 +62,14 @@ Item {
         endSize: 0
     }
 
-    function fireAt(targetArg, hardpoint){
+    function fireAt(targetArg, hardpoint) {
         target = container.mapFromItem(targetArg, targetArg.width/2, targetArg.height/2);
-        if(container.hp <= 0 || targetArg.hp <= 0)
+        if (container.hp <= 0 || targetArg.hp <= 0)
             return;
         //TODO: calculate hit and damage at target, which must be a Ship
         var hit = Math.random() > targetArg.dodge
-        if(hit){
-            switch(targetArg.shipType){
+        if (hit) {
+            switch (targetArg.shipType) {
             case 1: hardpoint.damageDealt += 8; break;
             case 2: hardpoint.damageDealt += 10; break;
             case 3: hardpoint.damageDealt += 16; break;
@@ -78,7 +78,7 @@ Item {
         }
         emitter.burst(1);
     }
-    Emitter{
+    Emitter {
         id: emitter
         group: "cannon"
         enabled: false
@@ -89,7 +89,7 @@ Item {
         emitRate: 1
         size: 8
         endSize: 4
-        speed: TargetDirection{
+        speed: TargetDirection {
             id: blastVector
             targetX: target.x; targetY: target.y; magnitude: 1.1; proportionalMagnitude: true
         }

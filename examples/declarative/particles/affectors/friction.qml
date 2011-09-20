@@ -45,47 +45,48 @@ Item {
     width: 360
     height: 600
 
-    Image{
+    Image {
         source: "../images/backgroundLeaves.jpg"
         anchors.fill: parent
     }
-    ParticleSystem{ id: sys }
-    Emitter{
+    ParticleSystem { id: sys }
+    Emitter {
         system: sys
         width: parent.width
         emitRate: 4
         lifeSpan: 14000
         size: 80
-        speed: PointDirection{ y: 160; yVariation: 80; xVariation: 20 }
+        speed: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
     }
-    ImageParticle{
+
+    ImageParticle {
         anchors.fill: parent
         id: particles
         system: sys
-        sprites: [Sprite{
+        sprites: [Sprite {
                 source: "../images/realLeaf1.png"
                 frames: 1
                 duration: 1
                 to: {"a":1, "b":1, "c":1, "d":1}
-            }, Sprite{
+            }, Sprite {
                 name: "a"
                 source: "../images/realLeaf1.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "b"
                 source: "../images/realLeaf2.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "c"
                 source: "../images/realLeaf3.png"
                 frames: 1
                 duration: 10000
             },
-            Sprite{
+            Sprite {
                 name: "d"
                 source: "../images/realLeaf4.png"
                 frames: 1

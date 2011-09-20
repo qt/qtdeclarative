@@ -54,7 +54,7 @@ Item {
     property int gunType: 0
     width: 128
     height: 128
-    Emitter{
+    Emitter {
         system: container.system
         group: "frigateShield"
         anchors.centerIn: parent
@@ -63,13 +63,13 @@ Item {
         lifeSpan: 4800
         enabled: hp > 0
     }
-    Emitter{
+    Emitter {
         system: container.system
         group: container.shipParticle
         anchors.centerIn: parent
         width: 64 
         height: 16
-        shape: EllipseShape{}
+        shape: EllipseShape {}
 
         size: 16
         sizeVariation: 8
@@ -78,24 +78,24 @@ Item {
         lifeSpan: 1200
         maximumEmitted: (maxHP * 1 + 20)*2
     }
-    Timer{
+    Timer {
         id: fireControl
         property int next: Math.floor(Math.random() * 2) + 1
         interval: 800
         running: root.readySetGo
         repeat: true
-        onTriggered:{
-            if(next == 1){
+        onTriggered: {
+            if (next == 1) {
                 gun1.fireAt(container.target);
                 next = Math.floor(Math.random() * 2) + 1;
-            }else if(next == 2){
+            } else if (next == 2) {
                 gun2.fireAt(container.target);
                 next = Math.floor(Math.random() * 2) + 1;
             }
         }
     }
 
-    Hardpoint{
+    Hardpoint {
         x: 128 - 32 - 12
         y: 64 - 12
         id: gun1
@@ -103,7 +103,7 @@ Item {
         show: hp > 0
         hardpointType: gunType
     }
-    Hardpoint{
+    Hardpoint {
         x: 0 + 32 - 12
         y: 64 - 12
         id: gun2

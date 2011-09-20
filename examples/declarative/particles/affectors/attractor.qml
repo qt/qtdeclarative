@@ -41,14 +41,14 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     id: root
     width: 360
     height: 540
     color: "black"
     property bool spacePressed: false
     focus: true
-    Image{
+    Image {
         source: "../images/finalfrontier.png"
         anchors.centerIn:parent
     }
@@ -65,7 +65,7 @@ Rectangle{
         }
     }
 
-    Emitter{
+    Emitter {
         group: "stars"
         system: particles
         emitRate: 40
@@ -73,10 +73,10 @@ Rectangle{
         enabled: true
         size: 30
         sizeVariation: 10
-        speed: PointDirection{ x: 220; xVariation: 40 }
+        speed: PointDirection { x: 220; xVariation: 40 }
         height: parent.height
     }
-    Emitter{
+    Emitter {
         group: "roids"
         system: particles
         emitRate: 10
@@ -84,14 +84,14 @@ Rectangle{
         enabled: true
         size: 30
         sizeVariation: 10
-        speed: PointDirection{ x: 220; xVariation: 40 }
+        speed: PointDirection { x: 220; xVariation: 40 }
         height: parent.height
     }
-    ParticleSystem{
+    ParticleSystem {
         id: particles
         anchors.fill: parent
     }
-    ImageParticle{
+    ImageParticle {
         id: stars
         groups: ["stars"]
         system: particles
@@ -100,11 +100,11 @@ Rectangle{
         colorVariation: 0.1
         alpha: 0
     }
-    ImageParticle{
+    ImageParticle {
         id: roids
         groups: ["roids"]
         system: particles
-        sprites: Sprite{
+        sprites: Sprite {
             id: spinState
             name: "spinning"
             source: "../images/meteor.png"
@@ -113,7 +113,7 @@ Rectangle{
             speedModifiesDuration: -0.1
         }
     }
-    ImageParticle{
+    ImageParticle {
         id: shot
         groups: ["shot"]
         system: particles
@@ -122,7 +122,7 @@ Rectangle{
         color: "#0FF06600"
         colorVariation: 0.3
     }
-    ImageParticle{
+    ImageParticle {
         id: engine
         groups: ["engine"]
         system: particles
@@ -145,20 +145,20 @@ Rectangle{
 
         colorVariation: 0.2
     }
-    Attractor{
+    Attractor {
         id: gs; pointX: root.width/2; pointY: root.height/2; strength: 4000000;
         system: particles
         affectedParameter: Attractor.Acceleration
         proportionalToDistance: Attractor.InverseQuadratic
     }
-    Age{
+    Age {
         system: particles
         x: gs.pointX - 8;
         y: gs.pointY - 8;
         width: 16
         height: 16
     }
-    Rectangle{
+    Rectangle {
         color: "black"
         width: 8
         height: 8
@@ -166,18 +166,19 @@ Rectangle{
         x: gs.pointX - 4
         y: gs.pointY - 4
     }
-    Image{
+
+    Image {
         source:"../images/rocket2.png"
         id: ship
         width: 45
         height: 22
-        MouseArea{
+        MouseArea {
             id: ma
             anchors.fill: parent;
             drag.axis: Drag.XandYAxis
             drag.target: ship
         }
-        Emitter{
+        Emitter {
             group: "engine"
             system: particles
             emitRate: 200
@@ -185,23 +186,24 @@ Rectangle{
             size: 10
             endSize: 4
             sizeVariation: 4
-            speed: PointDirection{ x: -128; xVariation: 32 }
+            speed: PointDirection { x: -128; xVariation: 32 }
             height: parent.height
             width: 20
         }
-        Emitter{
+        Emitter {
             group: "shot"
             system: particles
             emitRate: 32
             lifeSpan: 2000
             enabled: spacePressed
             size: 40
-            speed: PointDirection{ x: 256; }
+            speed: PointDirection { x: 256; }
             x: parent.width
             y: parent.height/2
         }
     }
-    Text{
+
+    Text {
         color: "white"
         anchors.bottom: parent.bottom
         text:"Drag the ship, Spacebar to fire."

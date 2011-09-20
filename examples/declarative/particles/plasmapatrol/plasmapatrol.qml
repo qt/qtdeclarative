@@ -50,15 +50,15 @@ Rectangle {
     property int misses: 0
     property real ratio: hits/(misses?misses:1)
     //Move to JS file?
-    property Ship redVar1: Ship{shipType: 1; gunType: 1}
-    property Ship redVar2: Ship{shipType: 1; gunType: 2}
-    property Ship redVar3: Ship{shipType: 1; gunType: 3}
-    property Ship greenVar1: Ship{shipType: 3; gunType: 1}
-    property Ship greenVar2: Ship{shipType: 2; gunType: 2}
-    property Ship greenVar3: Ship{shipType: 1; gunType: 3}
+    property Ship redVar1: Ship {shipType: 1; gunType: 1}
+    property Ship redVar2: Ship {shipType: 1; gunType: 2}
+    property Ship redVar3: Ship {shipType: 1; gunType: 3}
+    property Ship greenVar1: Ship {shipType: 3; gunType: 1}
+    property Ship greenVar2: Ship {shipType: 2; gunType: 2}
+    property Ship greenVar3: Ship {shipType: 1; gunType: 3}
     property string winner: "0"
     property int players: 0
-    function aiSet(ship){
+    function aiSet(ship) {
         ship.gunType = Math.floor(Math.random() * 3) + 1
         ship.shipType = Math.floor(Math.random() * 3) + 1
     }
@@ -66,58 +66,58 @@ Rectangle {
     width: 360
     height: 600
     color: "black"
-    SequentialLoader{
+    SequentialLoader {
         anchors.fill: parent
         //General Children
-        Image{
+        Image {
             anchors.centerIn: parent
             source: "../images/pics/finalfrontier.png"
         }
-        ParticleSystem{
+        ParticleSystem {
             id: particles
         }
-        PlasmaPatrolParticles{ sys: particles; z: 100 }//Renders all particles on the one plane
+        PlasmaPatrolParticles { sys: particles; z: 100 }//Renders all particles on the one plane
         //Component parts
         id: pageControl
         Component.onCompleted: advance();
         pages:[
-        Component{Item{
+        Component {Item {
             id: menu
             width: root.width
             height: root.height
-            Column{
+            Column {
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
                 spacing: 8
-                Item{
+                Item {
                     id: title
                     width: root.width
                     height: 240
-                    Emitter{
+                    Emitter {
                         anchors.fill: parent
                         system: particles
                         enabled: true
                         group: "default"
                         emitRate: 1200
                         lifeSpan: 1200
-                        shape: MaskShape{source:"../images/pics/TitleText.png"}
+                        shape: MaskShape {source:"../images/pics/TitleText.png"}
                         size: 16
                         endSize: 0
                         sizeVariation: 8
-                        speed: AngleDirection{angleVariation:360; magnitudeVariation: 6}
+                        speed: AngleDirection {angleVariation:360; magnitudeVariation: 6}
                     }
                 }
-                Button{
+                Button {
                     text: "1P"
                     onClicked: {root.players = 1; pageControl.advance();}
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
-                Button{
+                Button {
                     text: "2P"
                     onClicked: {root.players = 2; pageControl.advance();}
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
-                Button{
+                Button {
                     text: "Demo"
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: {root.players = 0; 
@@ -130,7 +130,7 @@ Rectangle {
                         pageControl.at = 5;//TODO: Not a magic number
                         pageControl.advance();}
                 }
-                Button{
+                Button {
                     text: "Help"
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: {
@@ -138,23 +138,23 @@ Rectangle {
                         pageControl.advance();
                     }
                 }
-                Button{
+                Button {
                     text: "Quit"
                     anchors.horizontalCenter: parent.horizontalCenter
                     onClicked: Qt.quit();
                 }
             }
         }},
-        Component{Item{
+        Component {Item {
             id: p1Screen
             z: 101
             width: root.width
             height: root.height
-            Rectangle{
+            Rectangle {
                 anchors.fill: parent
                 color: "red"
             }
-            Text{
+            Text {
                 anchors.centerIn: parent
                 color: "white"
                 font.pixelSize: 64
@@ -162,41 +162,41 @@ Rectangle {
                 text: "Player\n    1"
                 horizontalAlignment: Text.AlignHCenter
             }
-            MouseArea{
+            MouseArea {
                 anchors.fill: parent
                 onClicked: pageControl.advance()
             }
         }},
-        Component{Item{
+        Component {Item {
             id: p1Choices
             z: 3
             width: root.width
             height: root.height
-            Rectangle{
+            Rectangle {
                 color: "black"
                 anchors.fill: parent
             }
-            Column{
+            Column {
                 spacing: 16
                 width: root.width
                 anchors.horizontalCenter: parent.horizontalCenter
-                ChoiceBox{
+                ChoiceBox {
                     target: redVar1
                     system: particles
                 }
-                ChoiceBox{
+                ChoiceBox {
                     target: redVar2
                     system: particles
                 }
-                ChoiceBox{
+                ChoiceBox {
                     target: redVar3
                     system: particles
                 }
-                Button{
+                Button {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Next"
                     onClicked: {
-                        if(root.players < 2){
+                        if (root.players < 2) {
                             aiSet(greenVar1);
                             aiSet(greenVar2);
                             aiSet(greenVar3);
@@ -207,16 +207,16 @@ Rectangle {
                 }
             }
         }},
-        Component{Item{
+        Component {Item {
             id: p2Screen
             z: 101
             width: root.width
             height: root.height
-            Rectangle{
+            Rectangle {
                 anchors.fill: parent
                 color: "green"
             }
-            Text{
+            Text {
                 anchors.centerIn: parent
                 color: "white"
                 font.pixelSize: 64
@@ -224,44 +224,44 @@ Rectangle {
                 text: "Player\n    2"
                 horizontalAlignment: Text.AlignHCenter
             }
-            MouseArea{
+            MouseArea {
                 anchors.fill: parent
                 onClicked: pageControl.advance()
             }
         }},
-        Component{Item{
+        Component {Item {
             id: p2Choices
             z: 1
             width: root.width
             height: root.height
-            Rectangle{
+            Rectangle {
                 color: "black"
                 anchors.fill: parent
             }
-            Column{
+            Column {
                 spacing: 16
                 width: root.width
                 anchors.horizontalCenter: parent.horizontalCenter
-                ChoiceBox{
+                ChoiceBox {
                     target: greenVar1
                     system: particles
                 }
-                ChoiceBox{
+                ChoiceBox {
                     target: greenVar2
                     system: particles
                 }
-                ChoiceBox{
+                ChoiceBox {
                     target: greenVar3
                     system: particles
                 }
-                Button{
+                Button {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Next"
                     onClicked: pageControl.advance()
                 }
             }
         }},
-        Component{Item{
+        Component {Item {
             id: arena
             width: root.width
             height: root.height
@@ -270,25 +270,25 @@ Rectangle {
             Component.onDestruction: root.readySetGo = false
             property bool victory: redShip3.hp <= 0 || greenShip3.hp <=0
             onVictoryChanged: {
-                if(redShip3.hp <= 0){
-                    if(greenShip3.hp <= 0){
+                if (redShip3.hp <= 0) {
+                    if (greenShip3.hp <= 0) {
                         root.winner = "1&2"
-                    }else{
+                    }else {
                         root.winner = "2"
                     }
-                }else{
+                } else {
                     root.winner = "1"
                 }
                 winTimer.start()
             }
-            Timer{
+            Timer {
                 id: winTimer
                 interval: 1200
                 repeat: false
                 running: false
                 onTriggered: pageControl.advance();
             }
-            Ship{
+            Ship {
                 id: redShip1
                 shipParticle: "redTeam"
                 system: particles
@@ -298,7 +298,7 @@ Rectangle {
                 gunType: redVar1.gunType
                 targets: [greenShip1, greenShip2, greenShip3]
             }
-            Ship{
+            Ship {
                 id: redShip2
                 shipParticle: "redTeam"
                 system: particles
@@ -308,7 +308,7 @@ Rectangle {
                 gunType: redVar2.gunType
                 targets: [greenShip1, greenShip2, greenShip3]
             }
-            Ship{
+            Ship {
                 id: redShip3
                 shipParticle: "redTeam"
                 system: particles
@@ -319,7 +319,7 @@ Rectangle {
                 targets: [greenShip1, greenShip2, greenShip3]
             }
 
-            Ship{
+            Ship {
                 id: greenShip1
                 shipParticle: "greenTeam"
                 system: particles
@@ -329,7 +329,7 @@ Rectangle {
                 gunType: greenVar1.gunType
                 targets: [redShip1, redShip2, redShip3]
             }
-            Ship{
+            Ship {
                 id: greenShip2
                 shipParticle: "greenTeam"
                 system: particles
@@ -339,7 +339,7 @@ Rectangle {
                 gunType: greenVar2.gunType
                 targets: [redShip1, redShip2, redShip3]
             }
-            Ship{
+            Ship {
                 id: greenShip3
                 shipParticle: "greenTeam"
                 system: particles
@@ -350,18 +350,18 @@ Rectangle {
                 targets: [redShip1, redShip2, redShip3]
             }
         }},
-        Component{Item{
+        Component {Item {
             id: winScreen
             z: 101
             width: root.width
             height: root.height
             /*
-            Rectangle{
+            Rectangle {
                 anchors.fill: parent
                 color: "black"
             }
             */
-            Text{//TODO: Particle Text?
+            Text {//TODO: Particle Text?
                 anchors.fill: parent
                 color: "white"
                 font.pixelSize: 64
@@ -371,13 +371,13 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-            MouseArea{
+            MouseArea {
                 anchors.fill: parent
                 onClicked: {pageControl.at = 0; pageControl.advance();}
             }
         }},
-        Component{
-            HelpScreens{
+        Component {
+            HelpScreens {
                 onExitDesired: {pageControl.at = 0; pageControl.advance();}
             }
         }

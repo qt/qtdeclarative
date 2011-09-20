@@ -43,16 +43,17 @@ import QtQuick.Particles 2.0
 import "content/launcher.js" as Util
 import "content"
 
-Rectangle{
+Rectangle {
     color: "black"
     width: 360
     height: 600
-    Shell{
+    Shell {
         z: 1
         id: shell
         anchors.fill: parent
     }
-    VisualDataModel{//TODO: Transitions between modes (and a second mode...)
+
+    VisualDataModel {//TODO: Transitions between modes (and a second mode...)
         id: vdm
         model: [
             "../../affectors/attractor.qml",
@@ -83,29 +84,30 @@ Rectangle{
             "../../simple/startstop.qml",
             "../../plasmapatrol/plasmapatrol.qml"
         ]
-        delegate: Rectangle{
+        delegate: Rectangle {
             color: "white"
             width: 96
             height: 96
-            Image{
+            Image {
                 width: 72
                 height: 72
                 anchors.centerIn: parent
                 source: Util.iconFromPath(modelData)
             }
-            Text{
+            Text {
                 text: Util.nameFromPath(modelData)
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.pixelSize: 8
             }
-            MouseArea{
+            MouseArea {
                 anchors.fill: parent
                 onClicked: shell.setDemo(modelData)
             }
         }
     }
-    GridView{
+
+    GridView {
         anchors.fill: parent
         cellWidth: 120
         cellHeight: 120

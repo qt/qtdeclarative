@@ -41,32 +41,34 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-ParticleSystem{
+ParticleSystem {
     id: sys
     width: 360
     height: 600
     running: true
-    Rectangle{
+    Rectangle {
         z: -1
         anchors.fill: parent
         color: "black"
     }
+
     property real petalLength: 180
     property real petalRotation: 0
-    NumberAnimation on petalRotation{
+    NumberAnimation on petalRotation {
         from: 0;
         to: 360;
         loops: -1;
         running: true
         duration: 24000
     }
-    function convert(a){return a*(Math.PI/180);}
-    Emitter{
+
+    function convert(a) {return a*(Math.PI/180);}
+    Emitter {
         lifeSpan: 4000
         emitRate: 120
         size: 12
         anchors.centerIn: parent
-        onEmitParticles:{
+        onEmitParticles: {
             for (var i=0; i<particles.length; i++) {
                 var particle = particles[i];
                 particle.startSize = Math.max(02,Math.min(492,Math.tan(particle.t/2)*24));
@@ -80,7 +82,8 @@ ParticleSystem{
             }
         }
     }
-    ImageParticle{
+
+    ImageParticle {
         source: "../images/particle4.png"
         alpha: 0.0
         redVariation: 0.6

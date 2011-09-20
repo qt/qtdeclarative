@@ -41,32 +41,32 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     color: "white"
     width: 240
     height: 360
-    ParticleSystem{
+    ParticleSystem {
         id: sys
     }
-    Emitter{
+    Emitter {
         system:sys
         height: parent.height
         emitRate: 1
         lifeSpan: 12000
-        speed: PointDirection{x:20;}
+        speed: PointDirection {x:20;}
         size: 64
     }
-    ShaderEffectSource{
+    ShaderEffectSource {
         id: theSource
         sourceItem: theItem
         hideSource: true
     }
-    Image{
+    Image {
         id: theItem
         source: "../images/smile.png"
     }
 
-    CustomParticle{
+    CustomParticle {
         system: sys 
         vertexShader:"
             uniform lowp float qt_Opacity;

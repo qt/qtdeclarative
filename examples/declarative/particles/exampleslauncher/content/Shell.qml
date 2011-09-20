@@ -40,36 +40,36 @@
 
 import QtQuick 2.0
 
-Loader{
+Loader {
     id: ldr
     visible: false
     focus: visible
     onVisibleChanged: source = ""
     opacity: visible?1:0
-    Behavior on opacity{NumberAnimation{}}
+    Behavior on opacity {NumberAnimation {}}
 
-    function setDemo(str){
+    function setDemo(str) {
         visible = true;
         source = str;
     }
-    Image{//TODO: Augment with PARTICLES
+    Image {//TODO: Augment with PARTICLES
         z: 1
         source: "../../images/launcherIcons/close.png"
-        MouseArea{
+        MouseArea {
             anchors.fill: parent
             onClicked: ldr.visible = false;
         }
     }
-    Rectangle{
+    Rectangle {
         z: -1
         anchors.fill: parent
         color:"black"
-        Text{
+        Text {
             color: "white"
             anchors.centerIn: parent
             text: ldr.Status == Loader.Error ? "Error :(" : "Loading..."
         }
-        MouseArea{
+        MouseArea {
             id: graball
             anchors.fill: parent
             onClicked:;

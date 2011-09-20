@@ -49,14 +49,14 @@ Item {
 
     width: 24
     height: 24
-    Emitter{
+    Emitter {
         id: visualization
         group: "laser"
         system: container.system
         anchors.fill: parent
         enabled: container.show
-        shape: EllipseShape{}
-        speed: TargetDirection{ targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
+        shape: EllipseShape {}
+        speed: TargetDirection { targetX: width/2; targetY: width/2; magnitude: -1; proportionalMagnitude: true }
         lifeSpan: 1000
         emitRate: 64
 
@@ -65,26 +65,26 @@ Item {
         endSize: 8
     }
 
-    function fireAt(targetArg, hardpoint){
-        if(targetArg.hp <= 0)
+    function fireAt(targetArg, hardpoint) {
+        if (targetArg.hp <= 0)
             return;
         //TODO: calculate hit and damage at target, which must be a Ship
         var offset = 0;
-        if(Math.random() < 0.99){
-            switch(targetArg.shipType){
+        if (Math.random() < 0.99) {
+            switch (targetArg.shipType) {
             case 1: hardpoint.damageDealt += 16; break;
             case 2: hardpoint.damageDealt += 4; break;
             case 3: hardpoint.damageDealt += 8; break;
             default: hardpoint.damageDealt += 500; //Really effective against unregistered vessels
             }
-        }else{//Misses with Lasers are really rare
+        } else {//Misses with Lasers are really rare
             offset = Math.random() * 100;
         }
         target = container.mapFromItem(targetArg, offset + targetArg.width/2, offset + targetArg.height/2);
         emitter.pulse(0.10);
  //       console.log("Fire box: " +  Math.min(container.width/2, target.x) + "," + Math.min(container.height/2, target.y) + " " + (Math.max(container.width/2, target.x) - Math.min(container.width/2, target.x)) + "," + (Math.max(container.height/2, target.y) - Math.min(container.height/2, target.y)));
     }
-    Emitter{
+    Emitter {
         id: emitter
         group: "laser"
         enabled: false
@@ -93,7 +93,7 @@ Item {
         width: Math.max(container.width/2, target.x) - x;
         y: Math.min(container.height/2, target.y);
         height: Math.max(container.height/2, target.y) - y;
-        shape: LineShape{
+        shape: LineShape {
             mirrored: (emitter.y < 0 || emitter.x < 0) && !(emitter.y < 0 && emitter.x < 0 )//I just want XOR
         }
 
@@ -103,6 +103,6 @@ Item {
         size: 16
         endSize: 0
 
-        speed: PointDirection{xVariation: 4; yVariation: 4}
+        speed: PointDirection {xVariation: 4; yVariation: 4}
     }
 }

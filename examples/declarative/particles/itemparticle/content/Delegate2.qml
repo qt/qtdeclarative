@@ -50,16 +50,16 @@ Package {
             width: w; height: h;
             color: col
             rotation: Math.random()*360
-            Behavior on rotation{RotationAnimation{}}
+            Behavior on rotation {RotationAnimation {}}
 
-            states: State{
+            states: State {
                 name: "gridded"
                 when: root.inGrid
-                PropertyChanges{
+                PropertyChanges {
                     target: wrapper
                     rotation: 0
                 }
-                ParentChange{
+                ParentChange {
                     target: wrapper
                     parent: gridDelegate
                     x:0

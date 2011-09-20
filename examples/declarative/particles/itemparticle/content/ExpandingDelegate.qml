@@ -69,7 +69,7 @@ import "../../../modelviews/listview/content"
                 border.color: "orange"
                 radius: 5
             }
-            Image{
+            Image {
                 anchors.fill:parent
                 anchors.margins: -32
                 source: "bubble.png"
@@ -187,7 +187,7 @@ import "../../../modelviews/listview/content"
                 //The only strictly necessary particle specific lines 
                 to: "Details"
                 reversible: true
-                ScriptAction{script:{
+                ScriptAction {script: {
                     if(state == "Details")
                         mp.freeze(index);
                     else

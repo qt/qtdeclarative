@@ -49,40 +49,41 @@ Rectangle {
     color: "black"
 
     property int score: 0
-    Text{
+    Text {
         color: "white"
         anchors.right: parent.right
         text: score
     }
-    ParticleSystem{
+
+    ParticleSystem {
         id: particles
         anchors.fill: parent
-        ParticleGroup{
+        ParticleGroup {
             name: "unlit"
             duration: 1000
             to: {"lighting":1, "unlit":99}
-            ImageParticle{
+            ImageParticle {
                 source: "../images/particleA.png"
                 colorVariation: 0.1
                 color: "#2060160f"
             }
-            SpriteGoal{
+            SpriteGoal {
                 whenCollidingWith: ["lit"]
                 goalState: "lighting"
                 jump: true
                 systemStates: true
             }
         }
-        ParticleGroup{
+        ParticleGroup {
             name: "lighting"
             duration: 100
             to: {"lit":1}
         }
-        ParticleGroup{
+        ParticleGroup {
             name: "lit"
             duration: 10000
             onEntered: score++;
-            TrailEmitter{
+            TrailEmitter {
                 id: fireballFlame
                 group: "flame"
 
@@ -96,7 +97,7 @@ Rectangle {
                 endSize: 4
             }
 
-            TrailEmitter{
+            TrailEmitter {
                 id: fireballSmoke
                 group: "smoke"
 
@@ -105,8 +106,8 @@ Rectangle {
                 emitWidth: 16
                 emitHeight: 16
 
-                speed: PointDirection{yVariation: 16; xVariation: 16}
-                acceleration: PointDirection{y: -16}
+                speed: PointDirection {yVariation: 16; xVariation: 16}
+                acceleration: PointDirection {y: -16}
 
                 size: 24
                 sizeVariation: 8
@@ -114,7 +115,7 @@ Rectangle {
             }
         }
 
-        ImageParticle{
+        ImageParticle {
             id: smoke
             anchors.fill: parent
             groups: ["smoke"]
@@ -122,7 +123,7 @@ Rectangle {
             colorVariation: 0
             color: "#00111111"
         }
-        ImageParticle{
+        ImageParticle {
             id: pilot
             anchors.fill: parent
             groups: ["pilot"]
@@ -131,7 +132,7 @@ Rectangle {
             blueVariation: 0.4
             color: "#0010004f"
         }
-        ImageParticle{
+        ImageParticle {
             id: flame
             anchors.fill: parent
             groups: ["flame", "lit", "lighting"]
@@ -140,18 +141,18 @@ Rectangle {
             color: "#00ff400f"
         }
 
-        Emitter{
+        Emitter {
             height: parent.height/2
             emitRate: 4
             lifeSpan: 4000//TODO: Infinite & kill zone
             size: 24
             sizeVariation: 4
-            speed: PointDirection{x:120; xVariation: 80; yVariation: 50}
-            acceleration: PointDirection{y:120}
+            speed: PointDirection {x:120; xVariation: 80; yVariation: 50}
+            acceleration: PointDirection {y:120}
             group: "unlit"
         }
 
-        Emitter{
+        Emitter {
             id: flamer
             x: 100
             y: 300
@@ -161,8 +162,8 @@ Rectangle {
             size: 24
             sizeVariation: 2
             endSize: 0
-            speed: PointDirection{ y:-100; yVariation: 4; xVariation: 4 }
-            SpriteGoal{
+            speed: PointDirection { y:-100; yVariation: 4; xVariation: 4 }
+            SpriteGoal {
                 groups: ["unlit"]
                 goalState: "lit"
                 jump: true
@@ -172,11 +173,11 @@ Rectangle {
                 y: -55
                 height: 75
                 width: 30
-                shape: MaskShape{source: "../images/matchmask.png"}
+                shape: MaskShape {source: "../images/matchmask.png"}
             }
         }
         //Click to enflame
-        SpriteGoal{//TODO: Aux emiiters in the state definition (which allows the occasional ball to spontaneously combust)
+        SpriteGoal {//TODO: Aux emiiters in the state definition (which allows the occasional ball to spontaneously combust)
             groups: ["unlit"]
             goalState: "lighting"
             jump: true
@@ -187,7 +188,7 @@ Rectangle {
             x: ma.mouseX - width/2
             y: ma.mouseY - height/2
         }
-        MouseArea{
+        MouseArea {
             id: ma
             anchors.fill: parent
         }

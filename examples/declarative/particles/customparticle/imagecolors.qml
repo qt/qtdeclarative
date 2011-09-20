@@ -41,35 +41,35 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     width: 400
     height: 400
-    Rectangle{
+    Rectangle {
         id: root
         color: "white"
         width: 310
         height: 300
         anchors.centerIn: parent
-        ParticleSystem{ id: sys }
-        CustomParticle{
+        ParticleSystem { id: sys }
+        CustomParticle {
             system: sys
             property real maxWidth: root.width
             property real maxHeight: root.height
-            ShaderEffectSource{
+            ShaderEffectSource {
                 id: pictureSource
                 sourceItem: picture
                 hideSource: true
             }
-            Image{
+            Image {
                 id: picture
                 source: "../images/smile.png"
             }
-            ShaderEffectSource{
+            ShaderEffectSource {
                 id: particleSource
                 sourceItem: particle
                 hideSource: true
             }
-            Image{
+            Image {
                 id: particle
                 source: "../images/particle.png"
             }
@@ -99,7 +99,8 @@ Rectangle{
                     gl_FragColor = texture2D(pictureTexture, fTex2) * texture2D(particleTexture, qt_TexCoord0).w * fFade;
             }"
         }
-        Emitter{
+
+        Emitter {
             id: emitter
             system: sys
             enabled: false
@@ -107,9 +108,9 @@ Rectangle{
             maximumEmitted: 1200
             anchors.fill: parent
             size: 32
-            speed: PointDirection{ xVariation: 12; yVariation: 12 }
+            speed: PointDirection { xVariation: 12; yVariation: 12 }
         }
-        MouseArea{
+        MouseArea {
             anchors.fill: parent
             onClicked: emitter.burst(1200);
         }

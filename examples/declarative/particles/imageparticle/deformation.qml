@@ -41,12 +41,13 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     color: "goldenrod"
     width: 400
     height: 400
-    ParticleSystem{id:sys}
-    ImageParticle{
+    ParticleSystem {id:sys}
+
+    ImageParticle {
         system: sys
         groups: ["goingLeft", "goingRight"]
         source: "../images/singlesmile.png"
@@ -54,63 +55,65 @@ Rectangle{
         rotationSpeed: 90
         autoRotation: true
     }
-    ImageParticle{
+    ImageParticle {
         system: sys
         groups: ["goingDown"]
         source: "../images/squarefacespriteXX.png"
-        yVector: PointDirection{ y: 0.5; yVariation: 0.25; xVariation: 0.25; }
+        yVector: PointDirection { y: 0.5; yVariation: 0.25; xVariation: 0.25; }
         rotation: 180
     }
-    Timer{
+
+    Timer {
         running: true
         repeat: false
         interval: 100
         onTriggered: emitA.enabled = true;
     }
-    Timer{
+    Timer {
         running: true
         repeat: false
         interval: 4200
         onTriggered: emitB.enabled = true;
     }
-    Timer{
+    Timer {
         running: true
         repeat: false
         interval: 8400
         onTriggered: emitC.enabled = true;
     }
-    Emitter{
+
+    Emitter {
         id: emitA
         x: 0
         y: 120
         system: sys
         enabled: false
         group: "goingRight"
-        speed: PointDirection{ x: 100 }
+        speed: PointDirection { x: 100 }
         lifeSpan: 4000
         emitRate: 2
         size: 32
     }
-    Emitter{
+    Emitter {
         id: emitB
         x: 400
         y: 240
         system: sys
         enabled: false
         group: "goingLeft"
-        speed: PointDirection{ x: -100 }
+        speed: PointDirection { x: -100 }
         lifeSpan: 4000
         emitRate: 2
         size: 32
     }
-    Emitter{
+    Emitter {
         id: emitC
         x: 0
         y: 360
         system: sys
         enabled: false
         group: "goingDown"
-        speed: PointDirection{ x: 100 }
+        speed: PointDirection { x: 100 }
         lifeSpan: 4000
         emitRate: 2
         size: 32

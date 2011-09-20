@@ -42,13 +42,13 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 import "../exampleslauncher/content" as UI
 
-Rectangle{
+Rectangle {
     width: 360
     height: 540
     ParticleSystem { id: particles }
     ImageParticle {
         system: particles
-        sprites: Sprite{
+        sprites: Sprite {
             name: "snow"
             source: "../images/snowflake.png"
             frames: 51
@@ -56,6 +56,7 @@ Rectangle{
             durationVariation: 8
         }
     }
+
     Wander { 
         id: wanderer
         system: particles
@@ -63,29 +64,30 @@ Rectangle{
         xVariance: 360/(wanderer.affectedParameter+1);
         pace: 100*(wanderer.affectedParameter+1);
     }
+
     Emitter {
         system: particles
         emitRate: 20
         lifeSpan: 7000
-        speed: PointDirection{ y:80; yVariation: 40; }
-        acceleration: PointDirection{ y: 4 }
+        speed: PointDirection { y:80; yVariation: 40; }
+        acceleration: PointDirection { y: 4 }
         size: 20
         sizeVariation: 10
         width: parent.width
         height: 100
     }
-    Row{
+    Row {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        UI.Button{
+        UI.Button {
             text:"dx/dt"
             onClicked: wanderer.affectedParameter = Wander.Position;
         }
-        UI.Button{
+        UI.Button {
             text:"dv/dt"
             onClicked: wanderer.affectedParameter = Wander.Velocity;
         }
-        UI.Button{
+        UI.Button {
             text:"da/dt"
             onClicked: wanderer.affectedParameter = Wander.Acceleration;
         }

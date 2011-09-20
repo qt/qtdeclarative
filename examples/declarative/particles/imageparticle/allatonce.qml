@@ -41,30 +41,31 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Rectangle{
+Rectangle {
     color: "white"
     width: 640
     height: 480
-    ParticleSystem{ 
+    ParticleSystem {
         id: sys 
     }
-    ImageParticle{
+
+    ImageParticle {
         sprites: [
-            Sprite{
+            Sprite {
                 name: "licking"
                 source: "../images/squarefacewhite.png"
                 frames: 6
                 duration: 120
                 to: {"dying":1, "licking":5}
             },
-            Sprite{
+            Sprite {
                 name: "dying"
                 source: "../images/squarefacewhiteX.png"
                 frames: 4
                 duration: 120
                 to: {"dead":1}
             },
-            Sprite{
+            Sprite {
                 name: "dead"
                 source: "../images/squarefacewhiteXX.png"
                 frames: 1
@@ -76,28 +77,31 @@ Rectangle{
         system: sys
         colorTable: "../trails/../images/colortable.png"
     }
-    Friction{
+
+    Friction {
         factor: 0.1
         system: sys
     }
-    Emitter{
+
+    Emitter {
         system: sys
         anchors.centerIn: parent
         id: particles
         emitRate: 200
         lifeSpan: 6000
-        speed: AngleDirection{angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+        speed: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
         size: 40
         endSize: 80
     }
-    Text{
+
+    Text {
         x: 16
         y: 16
         text: "QML..."
         style: Text.Outline; styleColor: "#AAAAAA"
         font.pixelSize: 32
     }
-    Text{
+    Text {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.margins: 16
