@@ -65,10 +65,16 @@ QT_BEGIN_NAMESPACE
     If empty, it will affect all particles.
 */
 /*!
-    \qmlproperty list<string> QtQuick.Particles2::Affector::collisionParticles
+    \qmlproperty list<string> QtQuick.Particles2::Affector::whenCollidingWith
     If any logical particle groups are specified here, then the affector
     will only be triggered if the particle being examined intersects with
     a particle of one of these groups.
+
+    This is different from the groups property. The groups property selects which
+    particles might be examined, and if they meet other criteria (including being
+    within the bounds of the Affector, modified by shape) then they will be tested
+    again to see if they intersect with a particles from one of the particle groups
+    in whenCollidingWith.
 
     By default, no groups are specified.
 */
