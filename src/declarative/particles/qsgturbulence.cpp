@@ -177,6 +177,7 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
     if (!m_system || !m_enabled)
         return;
     ensureInit();
+    updateOffsets();//### Needed if an ancestor is transformed.
 
     QRectF boundsRect(0, 0, width()-1, height()-1);
     foreach (QSGParticleGroupData *gd, m_system->m_groupData){
