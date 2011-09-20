@@ -2,6 +2,7 @@ import QtQuick 2.0
 
 Rectangle {
     property string sectionProperty: "number"
+    property int sectionPositioning: ViewSection.InlineLabels
     width: 240
     height: 320
     color: "#ffffff"
@@ -63,7 +64,8 @@ Rectangle {
             color: "#99bb99"
             height: 20
             width: list.width
-            Text { text: section }
+            Text { text: section + ",   " + parent.y + ",    " + parent.objectName }
         }
+        section.labelPositioning: sectionPositioning
     }
 }

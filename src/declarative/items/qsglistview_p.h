@@ -53,15 +53,19 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QSGListView;
+class QSGListViewPrivate;
 class Q_AUTOTEST_EXPORT QSGViewSection : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
     Q_PROPERTY(SectionCriteria criteria READ criteria WRITE setCriteria NOTIFY criteriaChanged)
     Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged)
     Q_ENUMS(SectionCriteria)
+    Q_ENUMS(LabelPositioning)
 public:
-    QSGViewSection(QObject *parent=0) : QObject(parent), m_criteria(FullString), m_delegate(0) {}
+    QSGViewSection(QSGListView *parent=0);
 
     QString property() const { return m_property; }
     void setProperty(const QString &);
@@ -75,21 +79,27 @@ public:
 
     QString sectionString(const QString &value);
 
+    enum LabelPositioning { InlineLabels = 0x01, CurrentLabelAtStart = 0x02, NextLabelAtEnd = 0x04 };
+    int labelPositioning() { return m_labelPositioning; }
+    void setLabelPositioning(int pos);
+
 Q_SIGNALS:
     void propertyChanged();
     void criteriaChanged();
     void delegateChanged();
+    void labelPositioningChanged();
 
 private:
     QString m_property;
     SectionCriteria m_criteria;
     QDeclarativeComponent *m_delegate;
+    int m_labelPositioning;
+    QSGListViewPrivate *m_view;
 };
 
 
 class QSGVisualModel;
 class QSGListViewAttached;
-class QSGListViewPrivate;
 class Q_AUTOTEST_EXPORT QSGListView : public QSGItemView
 {
     Q_OBJECT

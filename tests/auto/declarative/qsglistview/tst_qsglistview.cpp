@@ -105,6 +105,7 @@ private slots:
     void enforceRange_withoutHighlight();
     void spacing();
     void sections();
+    void sectionsPositioning();
     void sectionsDelegate();
     void cacheBuffer();
     void positionViewAtIndex();
@@ -144,6 +145,7 @@ private:
     template <class T> void moved();
     template <class T> void clear();
     QSGView *createView();
+    QSGItem *findVisibleChild(QSGItem *parent, const QString &objectName);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &id, int index=-1);
     template<typename T>
@@ -1697,6 +1699,135 @@ void tst_QSGListView::sectionsDelegate()
     QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(20,-200));
     // view should settle back at 0
     QTRY_COMPARE(listview->contentY(), 0.0);
+
+    delete canvas;
+}
+
+void tst_QSGListView::sectionsPositioning()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i/5));
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/listview-sections_delegate.qml"));
+    qApp->processEvents();
+    canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QSGViewSection::InlineLabels | QSGViewSection::CurrentLabelAtStart | QSGViewSection::NextLabelAtEnd)));
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    for (int i = 0; i < 3; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "sect_" + QString::number(i));
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(i*20*6));
+    }
+
+    QSGItem *topItem = findVisibleChild(contentItem, "sect_0"); // section header
+    QVERIFY(topItem);
+    QCOMPARE(topItem->y(), 0.);
+
+    QSGItem *bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
+    QVERIFY(bottomItem);
+    QCOMPARE(bottomItem->y(), 300.);
+
+    // move down a little and check that section header is at top
+    listview->setContentY(10);
+    QCOMPARE(topItem->y(), 0.);
+
+    // push the top header up
+    listview->setContentY(110);
+    topItem = findVisibleChild(contentItem, "sect_0"); // section header
+    QVERIFY(topItem);
+    QCOMPARE(topItem->y(), 100.);
+
+    QSGItem *item = findVisibleChild(contentItem, "sect_1");
+    QVERIFY(item);
+    QCOMPARE(item->y(), 120.);
+
+    bottomItem = findVisibleChild(contentItem, "sect_4"); // section footer
+    QVERIFY(bottomItem);
+    QCOMPARE(bottomItem->y(), 410.);
+
+    // Move past section 0
+    listview->setContentY(120);
+    topItem = findVisibleChild(contentItem, "sect_0"); // section header
+    QVERIFY(!topItem);
+
+    // Push section footer down
+    listview->setContentY(70);
+    bottomItem = findVisibleChild(contentItem, "sect_4"); // section footer
+    QVERIFY(bottomItem);
+    QCOMPARE(bottomItem->y(), 380.);
+
+    // Change current section
+    listview->setContentY(10);
+    model.modifyItem(0, "One", "aaa");
+    model.modifyItem(1, "Two", "aaa");
+    model.modifyItem(2, "Three", "aaa");
+    model.modifyItem(3, "Four", "aaa");
+    model.modifyItem(4, "Five", "aaa");
+    QTest::qWait(300);
+
+    QTRY_COMPARE(listview->currentSection(), QString("aaa"));
+
+    for (int i = 0; i < 3; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem,
+                "sect_" + (i == 0 ? QString("aaa") : QString::number(i)));
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(i*20*6));
+    }
+
+    topItem = findVisibleChild(contentItem, "sect_aaa"); // section header
+    QVERIFY(topItem);
+    QCOMPARE(topItem->y(), 10.);
+
+    // remove section boundary
+    listview->setContentY(120);
+    model.removeItem(5);
+    QTRY_COMPARE(listview->count(), model.count());
+    for (int i = 0; i < 3; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem,
+                "sect_" + (i == 0 ? QString("aaa") : QString::number(i)));
+        QVERIFY(item);
+        QTRY_COMPARE(item->y(), qreal(i*20*6));
+    }
+
+    QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
+    QCOMPARE(topItem->y(), 120.);
+    QVERIFY(topItem = findVisibleChild(contentItem, "sect_1"));
+    QCOMPARE(topItem->y(), 140.);
+
+    // Change the next section
+    listview->setContentY(0);
+    bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
+    QVERIFY(bottomItem);
+    QCOMPARE(bottomItem->y(), 320.);
+
+    model.modifyItem(14, "New", "new");
+
+    QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
+    QCOMPARE(bottomItem->y(), 320.);
+
+    // Turn sticky footer off
+    listview->setContentY(50);
+    canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QSGViewSection::InlineLabels | QSGViewSection::CurrentLabelAtStart)));
+    item = findVisibleChild(contentItem, "sect_new"); // inline label restored
+    QCOMPARE(item->y(), 360.);
+
+    // Turn sticky header off
+    listview->setContentY(50);
+    canvas->rootObject()->setProperty("sectionPositioning", QVariant(int(QSGViewSection::InlineLabels)));
+    item = findVisibleChild(contentItem, "sect_aaa"); // inline label restored
+    QCOMPARE(item->y(), 20.);
 
     delete canvas;
 }
@@ -3491,6 +3622,18 @@ QSGView *tst_QSGListView::createView()
     return canvas;
 }
 
+QSGItem *tst_QSGListView::findVisibleChild(QSGItem *parent, const QString &objectName)
+{
+    QSGItem *item = 0;
+    QList<QSGItem*> items = parent->findChildren<QSGItem*>(objectName);
+    for (int i = 0; i < items.count(); ++i) {
+        if (items.at(i)->isVisible()) {
+            item = items.at(i);
+            break;
+        }
+    }
+    return item;
+}
 /*
    Find an item with the specified objectName.  If index is supplied then the
    item must also evaluate the {index} expression equal to index

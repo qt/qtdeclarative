@@ -55,11 +55,132 @@
 
 QT_BEGIN_NAMESPACE
 
+class FxListItemSG;
+
+class QSGListViewPrivate : public QSGItemViewPrivate
+{
+    Q_DECLARE_PUBLIC(QSGListView)
+public:
+    static QSGListViewPrivate* get(QSGListView *item) { return item->d_func(); }
+
+    virtual Qt::Orientation layoutOrientation() const;
+    virtual bool isContentFlowReversed() const;
+    bool isRightToLeft() const;
+
+    virtual qreal positionAt(int index) const;
+    virtual qreal endPositionAt(int index) const;
+    virtual qreal originPosition() const;
+    virtual qreal lastPosition() const;
+
+    FxViewItem *nextVisibleItem() const;
+    FxViewItem *itemBefore(int modelIndex) const;
+    QString sectionAt(int modelIndex);
+    qreal snapPosAt(qreal pos);
+    FxViewItem *snapItemAt(qreal pos);
+
+    virtual void init();
+    virtual void clear();
+
+    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
+    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
+    virtual void visibleItemsChanged();
+
+    virtual FxViewItem *newViewItem(int index, QSGItem *item);
+    virtual void initializeViewItem(FxViewItem *item);
+    virtual void releaseItem(FxViewItem *item);
+    virtual void repositionPackageItemAt(QSGItem *item, int index);
+    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
+    virtual void resetFirstItemPosition();
+    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
+
+    virtual void createHighlight();
+    virtual void updateHighlight();
+    virtual void resetHighlightPosition();
+
+    virtual void setPosition(qreal pos);
+    virtual void layoutVisibleItems();
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *firstVisible);
+
+    virtual void updateSections();
+    QSGItem *getSectionItem(const QString &section);
+    void releaseSectionItem(QSGItem *item);
+    void updateInlineSection(FxListItemSG *);
+    void updateCurrentSection();
+    void updateStickySections();
+
+    virtual qreal headerSize() const;
+    virtual qreal footerSize() const;
+    virtual bool showHeaderForIndex(int index) const;
+    virtual bool showFooterForIndex(int index) const;
+    virtual void updateHeader();
+    virtual void updateFooter();
+
+    virtual void changedVisibleIndex(int newIndex);
+    virtual void initializeCurrentItem();
+
+    void updateAverage();
+
+    void itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void fixupPosition();
+    virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
+    virtual void flick(QSGItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
+
+    QSGListView::Orientation orient;
+    qreal visiblePos;
+    qreal averageSize;
+    qreal spacing;
+    QSGListView::SnapMode snapMode;
+
+    QSmoothedAnimation *highlightPosAnimator;
+    QSmoothedAnimation *highlightSizeAnimator;
+    qreal highlightMoveSpeed;
+    qreal highlightResizeSpeed;
+    int highlightResizeDuration;
+
+    QSGViewSection *sectionCriteria;
+    QString currentSection;
+    static const int sectionCacheSize = 5;
+    QSGItem *sectionCache[sectionCacheSize];
+    QSGItem *currentSectionItem;
+    QString currentStickySection;
+    QSGItem *nextSectionItem;
+    QString nextStickySection;
+    QString lastVisibleSection;
+    QString nextSection;
+
+    qreal overshootDist;
+    bool correctFlick : 1;
+    bool inFlickCorrection : 1;
+
+    QSGListViewPrivate()
+        : orient(QSGListView::Vertical)
+        , visiblePos(0)
+        , averageSize(100.0), spacing(0.0)
+        , snapMode(QSGListView::NoSnap)
+        , highlightPosAnimator(0), highlightSizeAnimator(0)
+        , highlightMoveSpeed(400), highlightResizeSpeed(400), highlightResizeDuration(-1)
+        , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
+        , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
+    {}
+
+    friend class QSGViewSection;
+};
+
+//----------------------------------------------------------------------------
+
+QSGViewSection::QSGViewSection(QSGListView *parent)
+    : QObject(parent), m_criteria(FullString), m_delegate(0), m_labelPositioning(InlineLabels)
+    , m_view(QSGListViewPrivate::get(parent))
+{
+}
+
 void QSGViewSection::setProperty(const QString &property)
 {
     if (property != m_property) {
         m_property = property;
         emit propertyChanged();
+        m_view->updateSections();
     }
 }
 
@@ -68,6 +189,7 @@ void QSGViewSection::setCriteria(QSGViewSection::SectionCriteria criteria)
     if (criteria != m_criteria) {
         m_criteria = criteria;
         emit criteriaChanged();
+        m_view->updateSections();
     }
 }
 
@@ -76,6 +198,7 @@ void QSGViewSection::setDelegate(QDeclarativeComponent *delegate)
     if (delegate != m_delegate) {
         m_delegate = delegate;
         emit delegateChanged();
+        m_view->updateSections();
     }
 }
 
@@ -85,6 +208,15 @@ QString QSGViewSection::sectionString(const QString &value)
         return value.isEmpty() ? QString() : value.at(0);
     else
         return value;
+}
+
+void QSGViewSection::setLabelPositioning(int l)
+{
+    if (m_labelPositioning != l) {
+        m_labelPositioning = l;
+        emit labelPositioningChanged();
+        m_view->updateSections();
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -178,103 +310,6 @@ public:
 };
 
 //----------------------------------------------------------------------------
-
-class QSGListViewPrivate : public QSGItemViewPrivate
-{
-    Q_DECLARE_PUBLIC(QSGListView)
-public:
-    virtual Qt::Orientation layoutOrientation() const;
-    virtual bool isContentFlowReversed() const;
-    bool isRightToLeft() const;
-
-    virtual qreal positionAt(int index) const;
-    virtual qreal endPositionAt(int index) const;
-    virtual qreal originPosition() const;
-    virtual qreal lastPosition() const;
-
-    FxViewItem *nextVisibleItem() const;
-    FxViewItem *itemBefore(int modelIndex) const;
-    QString sectionAt(int modelIndex);
-    qreal snapPosAt(qreal pos);
-    FxViewItem *snapItemAt(qreal pos);
-
-    virtual void init();
-    virtual void clear();
-
-    virtual bool addVisibleItems(qreal fillFrom, qreal fillTo, bool doBuffer);
-    virtual bool removeNonVisibleItems(qreal bufferFrom, qreal bufferTo);
-    virtual void visibleItemsChanged();
-
-    virtual FxViewItem *newViewItem(int index, QSGItem *item);
-    virtual void initializeViewItem(FxViewItem *item);
-    virtual void releaseItem(FxViewItem *item);
-    virtual void repositionPackageItemAt(QSGItem *item, int index);
-    virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
-    virtual void resetFirstItemPosition();
-    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
-
-    virtual void createHighlight();
-    virtual void updateHighlight();
-    virtual void resetHighlightPosition();
-
-    virtual void setPosition(qreal pos);
-    virtual void layoutVisibleItems();
-    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *firstVisible);
-
-    virtual void updateSections();
-    void createSection(FxListItemSG *);
-    void updateCurrentSection();
-
-    virtual qreal headerSize() const;
-    virtual qreal footerSize() const;
-    virtual bool showHeaderForIndex(int index) const;
-    virtual bool showFooterForIndex(int index) const;
-    virtual void updateHeader();
-    virtual void updateFooter();
-
-    virtual void changedVisibleIndex(int newIndex);
-    virtual void initializeCurrentItem();
-
-    void updateAverage();
-
-    void itemGeometryChanged(QSGItem *item, const QRectF &newGeometry, const QRectF &oldGeometry);
-    virtual void fixupPosition();
-    virtual void fixup(AxisData &data, qreal minExtent, qreal maxExtent);
-    virtual void flick(QSGItemViewPrivate::AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
-                        QDeclarativeTimeLineCallback::Callback fixupCallback, qreal velocity);
-
-    QSGListView::Orientation orient;
-    qreal visiblePos;
-    qreal averageSize;
-    qreal spacing;
-    QSGListView::SnapMode snapMode;
-
-    QSmoothedAnimation *highlightPosAnimator;
-    QSmoothedAnimation *highlightSizeAnimator;
-    qreal highlightMoveSpeed;
-    qreal highlightResizeSpeed;
-    int highlightResizeDuration;
-
-    QSGViewSection *sectionCriteria;
-    QString currentSection;
-    static const int sectionCacheSize = 4;
-    QSGItem *sectionCache[sectionCacheSize];
-
-    qreal overshootDist;
-    bool correctFlick : 1;
-    bool inFlickCorrection : 1;
-
-    QSGListViewPrivate()
-        : orient(QSGListView::Vertical)
-        , visiblePos(0)
-        , averageSize(100.0), spacing(0.0)
-        , snapMode(QSGListView::NoSnap)
-        , highlightPosAnimator(0), highlightSizeAnimator(0)
-        , highlightMoveSpeed(400), highlightResizeSpeed(400), highlightResizeDuration(-1)
-        , sectionCriteria(0)
-        , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
-    {}
-};
 
 bool QSGListViewPrivate::isContentFlowReversed() const
 {
@@ -474,6 +509,9 @@ void QSGListViewPrivate::clear()
         sectionCache[i] = 0;
     }
     visiblePos = 0;
+    currentSectionItem = 0;
+    nextSectionItem = 0;
+    lastVisibleSection = QString();
     QSGItemViewPrivate::clear();
 }
 
@@ -514,7 +552,7 @@ void QSGListViewPrivate::initializeViewItem(FxViewItem *item)
 
     if (sectionCriteria && sectionCriteria->delegate()) {
         if (item->attached->m_prevSection != item->attached->m_section)
-            createSection(static_cast<FxListItemSG*>(item));
+            updateInlineSection(static_cast<FxListItemSG*>(item));
     }
 }
 
@@ -790,42 +828,66 @@ void QSGListViewPrivate::resetHighlightPosition()
         static_cast<FxListItemSG*>(highlight)->setPosition(static_cast<FxListItemSG*>(currentItem)->itemPosition());
 }
 
-void QSGListViewPrivate::createSection(FxListItemSG *listItem)
+QSGItem * QSGListViewPrivate::getSectionItem(const QString &section)
 {
     Q_Q(QSGListView);
+    QSGItem *sectionItem = 0;
+    int i = sectionCacheSize-1;
+    while (i >= 0 && !sectionCache[i])
+        --i;
+    if (i >= 0) {
+        sectionItem = sectionCache[i];
+        sectionCache[i] = 0;
+        sectionItem->setVisible(true);
+        QDeclarativeContext *context = QDeclarativeEngine::contextForObject(sectionItem)->parentContext();
+        context->setContextProperty(QLatin1String("section"), section);
+    } else {
+        QDeclarativeContext *context = new QDeclarativeContext(qmlContext(q));
+        context->setContextProperty(QLatin1String("section"), section);
+        QObject *nobj = sectionCriteria->delegate()->beginCreate(context);
+        if (nobj) {
+            QDeclarative_setParent_noEvent(context, nobj);
+            sectionItem = qobject_cast<QSGItem *>(nobj);
+            if (!sectionItem) {
+                delete nobj;
+            } else {
+                sectionItem->setZ(2);
+                QDeclarative_setParent_noEvent(sectionItem, contentItem);
+                sectionItem->setParentItem(contentItem);
+            }
+        } else {
+            delete context;
+        }
+        sectionCriteria->delegate()->completeCreate();
+    }
+
+    return sectionItem;
+}
+
+void QSGListViewPrivate::releaseSectionItem(QSGItem *item)
+{
+    int i = 0;
+    do {
+        if (!sectionCache[i]) {
+            sectionCache[i] = item;
+            sectionCache[i]->setVisible(false);
+            return;
+        }
+        ++i;
+    } while (i < sectionCacheSize);
+    delete item;
+}
+
+void QSGListViewPrivate::updateInlineSection(FxListItemSG *listItem)
+{
     if (!sectionCriteria || !sectionCriteria->delegate())
         return;
-    if (listItem->attached->m_prevSection != listItem->attached->m_section) {
+    if (listItem->attached->m_prevSection != listItem->attached->m_section
+            && (sectionCriteria->labelPositioning() & QSGViewSection::InlineLabels
+                || (listItem->index == 0 && sectionCriteria->labelPositioning() & QSGViewSection::CurrentLabelAtStart))) {
         if (!listItem->section) {
             qreal pos = listItem->position();
-            int i = sectionCacheSize-1;
-            while (i >= 0 && !sectionCache[i])
-                --i;
-            if (i >= 0) {
-                listItem->section = sectionCache[i];
-                sectionCache[i] = 0;
-                listItem->section->setVisible(true);
-                QDeclarativeContext *context = QDeclarativeEngine::contextForObject(listItem->section)->parentContext();
-                context->setContextProperty(QLatin1String("section"), listItem->attached->m_section);
-            } else {
-                QDeclarativeContext *context = new QDeclarativeContext(qmlContext(q));
-                context->setContextProperty(QLatin1String("section"), listItem->attached->m_section);
-                QObject *nobj = sectionCriteria->delegate()->beginCreate(context);
-                if (nobj) {
-                    QDeclarative_setParent_noEvent(context, nobj);
-                    listItem->section = qobject_cast<QSGItem *>(nobj);
-                    if (!listItem->section) {
-                        delete nobj;
-                    } else {
-                        listItem->section->setZ(1);
-                        QDeclarative_setParent_noEvent(listItem->section, q->contentItem());
-                        listItem->section->setParentItem(q->contentItem());
-                    }
-                } else {
-                    delete context;
-                }
-                sectionCriteria->delegate()->completeCreate();
-            }
+            listItem->section = getSectionItem(listItem->attached->m_section);
             listItem->setPosition(pos);
         } else {
             QDeclarativeContext *context = QDeclarativeEngine::contextForObject(listItem->section)->parentContext();
@@ -833,24 +895,119 @@ void QSGListViewPrivate::createSection(FxListItemSG *listItem)
         }
     } else if (listItem->section) {
         qreal pos = listItem->position();
-        int i = 0;
-        do {
-            if (!sectionCache[i]) {
-                sectionCache[i] = listItem->section;
-                sectionCache[i]->setVisible(false);
-                listItem->section = 0;
-                return;
-            }
-            ++i;
-        } while (i < sectionCacheSize);
-        delete listItem->section;
+        releaseSectionItem(listItem->section);
         listItem->section = 0;
         listItem->setPosition(pos);
     }
 }
 
+void QSGListViewPrivate::updateStickySections()
+{
+    if (!sectionCriteria || visibleItems.isEmpty()
+            || (!sectionCriteria->labelPositioning() && !currentSectionItem && !nextSectionItem))
+        return;
+
+    bool isRtl = isRightToLeft();
+    qreal viewPos = isRightToLeft() ? -position()-size() : position();
+    QSGItem *sectionItem = 0;
+    QSGItem *lastSectionItem = 0;
+    int index = 0;
+    while (index < visibleItems.count()) {
+        if (QSGItem *section = static_cast<FxListItemSG *>(visibleItems.at(index))->section) {
+            // Find the current section header and last visible section header
+            // and hide them if they will overlap a static section header.
+            qreal sectionPos = orient == QSGListView::Vertical ? section->y() : section->x();
+            qreal sectionSize = orient == QSGListView::Vertical ? section->height() : section->width();
+            bool visTop = true;
+            if (sectionCriteria->labelPositioning() & QSGViewSection::CurrentLabelAtStart)
+                visTop = isRtl ? -sectionPos-sectionSize >= viewPos : sectionPos >= viewPos;
+            bool visBot = true;
+            if (sectionCriteria->labelPositioning() & QSGViewSection::NextLabelAtEnd)
+                visBot = isRtl ? -sectionPos <= viewPos + size() : sectionPos + sectionSize < viewPos + size();
+            section->setVisible(visBot && visTop);
+            if (visTop && !sectionItem)
+                sectionItem = section;
+            if (isRtl) {
+               if (-sectionPos <= viewPos + size())
+                    lastSectionItem = section;
+            } else {
+                if (sectionPos + sectionSize < viewPos + size())
+                    lastSectionItem = section;
+            }
+        }
+        ++index;
+    }
+
+    // Current section header
+    if (sectionCriteria->labelPositioning() & QSGViewSection::CurrentLabelAtStart) {
+        if (!currentSectionItem) {
+            currentSectionItem = getSectionItem(currentSection);
+        } else if (currentStickySection != currentSection) {
+            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(currentSectionItem)->parentContext();
+            context->setContextProperty(QLatin1String("section"), currentSection);
+        }
+        currentStickySection = currentSection;
+        if (!currentSectionItem)
+            return;
+
+        qreal sectionSize = orient == QSGListView::Vertical ? currentSectionItem->height() : currentSectionItem->width();
+        bool atBeginning = orient == QSGListView::Vertical ? vData.atBeginning : (isRightToLeft() ? hData.atEnd : hData.atBeginning);
+        currentSectionItem->setVisible(!atBeginning && (!header || header->endPosition() < viewPos));
+        qreal pos = isRtl ? position() + size() - sectionSize : viewPos;
+        if (sectionItem) {
+            qreal sectionPos = orient == QSGListView::Vertical ? sectionItem->y() : sectionItem->x();
+            pos = isRtl ? qMax(pos, sectionPos + sectionSize) : qMin(pos, sectionPos - sectionSize);
+        }
+        if (header)
+            pos = isRtl ? qMin(header->endPosition(), pos) : qMax(header->endPosition(), pos);
+        if (footer)
+            pos = isRtl ? qMax(-footer->position(), pos) : qMin(footer->position() - sectionSize, pos);
+        if (orient == QSGListView::Vertical)
+            currentSectionItem->setY(pos);
+        else
+            currentSectionItem->setX(pos);
+    } else if (currentSectionItem) {
+        releaseSectionItem(currentSectionItem);
+        currentSectionItem = 0;
+    }
+
+    // Next section footer
+    if (sectionCriteria->labelPositioning() & QSGViewSection::NextLabelAtEnd) {
+        if (!nextSectionItem) {
+            nextSectionItem = getSectionItem(nextSection);
+        } else if (nextStickySection != nextSection) {
+            QDeclarativeContext *context = QDeclarativeEngine::contextForObject(nextSectionItem)->parentContext();
+            context->setContextProperty(QLatin1String("section"), nextSection);
+        }
+        nextStickySection = nextSection;
+        if (!nextSectionItem)
+            return;
+
+        qreal sectionSize = orient == QSGListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
+        nextSectionItem->setVisible(!nextSection.isEmpty());
+        qreal pos = isRtl ? position() : viewPos + size() - sectionSize;
+        if (lastSectionItem) {
+            qreal sectionPos = orient == QSGListView::Vertical ? lastSectionItem->y() : lastSectionItem->x();
+            pos = isRtl ? qMin(pos, sectionPos - sectionSize) : qMax(pos, sectionPos + sectionSize);
+        }
+        if (header)
+            pos = isRtl ? qMin(header->endPosition() - sectionSize, pos) : qMax(header->endPosition(), pos);
+        if (orient == QSGListView::Vertical)
+            nextSectionItem->setY(pos);
+        else
+            nextSectionItem->setX(pos);
+    } else if (nextSectionItem) {
+        releaseSectionItem(nextSectionItem);
+        nextSectionItem = 0;
+    }
+}
+
 void QSGListViewPrivate::updateSections()
 {
+    Q_Q(QSGListView);
+    if (!q->isComponentComplete())
+        return;
+
     QSGItemViewPrivate::updateSections();
 
     if (sectionCriteria && !visibleItems.isEmpty()) {
@@ -867,7 +1024,7 @@ void QSGListViewPrivate::updateSections()
                 attached->setSection(sectionCriteria->sectionString(propValue));
                 idx = visibleItems.at(i)->index;
             }
-            createSection(static_cast<FxListItemSG*>(visibleItems.at(i)));
+            updateInlineSection(static_cast<FxListItemSG*>(visibleItems.at(i)));
             if (prevAtt)
                 prevAtt->setNextSection(attached->section());
             prevSection = attached->section();
@@ -880,6 +1037,10 @@ void QSGListViewPrivate::updateSections()
                 prevAtt->setNextSection(QString());
         }
     }
+
+    lastVisibleSection = QString();
+    updateCurrentSection();
+    updateStickySections();
 }
 
 void QSGListViewPrivate::updateCurrentSection()
@@ -892,9 +1053,17 @@ void QSGListViewPrivate::updateCurrentSection()
         }
         return;
     }
+    bool inlineSections = sectionCriteria->labelPositioning() & QSGViewSection::InlineLabels;
+    qreal sectionThreshold = position();
+    if (currentSectionItem && !inlineSections)
+        sectionThreshold += orient == QSGListView::Vertical ? currentSectionItem->height() : currentSectionItem->width();
     int index = 0;
-    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= position())
+    int modelIndex = visibleIndex;
+    while (index < visibleItems.count() && visibleItems.at(index)->endPosition() <= sectionThreshold) {
+        if (visibleItems.at(index)->index != -1)
+            modelIndex = visibleItems.at(index)->index;
         ++index;
+    }
 
     QString newSection = currentSection;
     if (index < visibleItems.count())
@@ -903,7 +1072,38 @@ void QSGListViewPrivate::updateCurrentSection()
         newSection = (*visibleItems.constBegin())->attached->section();
     if (newSection != currentSection) {
         currentSection = newSection;
+        updateStickySections();
         emit q->currentSectionChanged();
+    }
+
+    if (sectionCriteria->labelPositioning() & QSGViewSection::NextLabelAtEnd) {
+        // Don't want to scan for next section on every movement, so remember
+        // the last section in the visible area and only scan for the next
+        // section when that changes.  Clearing lastVisibleSection will also
+        // force searching.
+        QString lastSection = currentSection;
+        qreal endPos = isRightToLeft() ? -position() : position() + size();
+        if (nextSectionItem && !inlineSections)
+            endPos -= orient == QSGListView::Vertical ? nextSectionItem->height() : nextSectionItem->width();
+        while (index < visibleItems.count() && static_cast<FxListItemSG*>(visibleItems.at(index))->itemPosition() < endPos) {
+            if (visibleItems.at(index)->index != -1)
+                modelIndex = visibleItems.at(index)->index;
+            lastSection = visibleItems.at(index)->attached->section();
+            ++index;
+        }
+
+        if (lastVisibleSection != lastSection) {
+            nextSection = QString();
+            lastVisibleSection = lastSection;
+            for (int i = modelIndex; i < itemCount; ++i) {
+                QString section = sectionAt(i);
+                if (section != lastSection) {
+                    nextSection = section;
+                    updateStickySections();
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -1708,12 +1908,10 @@ void QSGListView::setOrientation(QSGListView::Orientation orientation)
     \qmlproperty string QtQuick2::ListView::section.property
     \qmlproperty enumeration QtQuick2::ListView::section.criteria
     \qmlproperty Component QtQuick2::ListView::section.delegate
+    \qmlproperty enumeration QtQuick2::ListView::section.labelPositioning
 
-    These properties hold the expression to be evaluated for the \l section attached property.
-
-    The \l section attached property enables a ListView to be visually
-    separated into different parts. These properties determine how sections
-    are created.
+    These properties determine the expression to be evaluated and appearance
+    of the section labels.
 
     \c section.property holds the name of the property that is the basis
     of each section.
@@ -1731,9 +1929,23 @@ void QSGListView::setOrientation(QSGListView::Orientation orientation)
 
     \c section.delegate holds the delegate component for each section.
 
+    \c section.labelPositioning determines whether the current and/or
+    next section labels stick to the start/end of the view, and whether
+    the labels are shown inline.  This value can be a combination of:
+
+    \list
+    \o ViewSection.InlineLabels - section labels are shown inline between
+    the item delegates separating sections (default).
+    \o ViewSection.CurrentLabelAtStart - the current section label sticks to the
+    start of the view as it is moved.
+    \o ViewSection.NextLabelAtEnd - the next section label (beyond all visible
+    sections) sticks to the end of the view as it is moved. \note Enabling
+    \c ViewSection.NextLabelAtEnd requires the view to scan ahead for the next
+    section, which has performance implications, especially for slower models.
+    \endlist
+
     Each item in the list has attached properties named \c ListView.section,
-    \c ListView.previousSection and \c ListView.nextSection.  These may be
-    used to place a section header for related items.
+    \c ListView.previousSection and \c ListView.nextSection.
 
     For example, here is a ListView that displays a list of animals, separated
     into sections. Each item in the ListView is placed in a different section
@@ -1999,6 +2211,10 @@ void QSGListView::viewportMoved()
             }
         }
         d->inFlickCorrection = false;
+    }
+    if (d->sectionCriteria) {
+        d->updateCurrentSection();
+        d->updateStickySections();
     }
     d->inViewportMoved = false;
 }

@@ -114,6 +114,10 @@ PathView now has a \c currentItem property
 ListView and GridView now have headerItem and footerItem properties (the instantiated
 header and footer items).
 
+ListView section.labelPositioning property added to allow keeping the current section label
+at the start and/or next section label at the end of the view.
+
+
 \section2 QtQuick 1 is now a separate library and module
 
 Writing C++ applications using QtQuick 1 specific API, i.e. QDeclarativeView or QDeclarativeItem
