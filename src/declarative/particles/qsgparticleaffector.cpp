@@ -150,41 +150,48 @@ bool QSGParticleAffector::activeGroup(int g) {
     return m_groupIds.isEmpty() || m_groupIds.contains(g);
 }
 
+bool QSGParticleAffector::shouldAffect(QSGParticleData* d)
+{
+    if (!d)
+        return false;
+    if (activeGroup(d->group)){
+        if ((m_onceOff && m_onceOffed.contains(qMakePair(d->group, d->index)))
+                || !d->stillAlive())
+            return false;
+        //Need to have previous location for affected anyways
+        if (width() == 0 || height() == 0
+                || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()), QPointF(d->curX(), d->curY()))){
+            if (m_whenCollidingWith.isEmpty() || isColliding(d)){
+                return true;
+            }
+        }
+    }
+    return false;
+
+}
+
+void QSGParticleAffector::postAffect(QSGParticleData* d)
+{
+    m_system->m_needsReset << d;
+    if (m_onceOff)
+        m_onceOffed << qMakePair(d->group, d->index);
+    if (isAffectedConnected())
+        emit affected(d->curX(), d->curY());
+}
+
 void QSGParticleAffector::affectSystem(qreal dt)
 {
     if (!m_enabled)
         return;
     //If not reimplemented, calls affect particle per particle
     //But only on particles in targeted system/area
-    bool affectedConnected = isAffectedConnected();
     updateOffsets();//### Needed if an ancestor is transformed.
-    foreach (QSGParticleGroupData* gd, m_system->m_groupData){
-        foreach (QSGParticleData* d, gd->data){
-            if (!d)
-                continue;
-            if (activeGroup(d->group)){
-                if ((m_onceOff && m_onceOffed.contains(qMakePair(d->group, d->index)))
-                        || !d->stillAlive())
-                    continue;
-                //Need to have previous location for affected anyways
-                QPointF curPos;
-                if (affectedConnected || (width() && height()))
-                    curPos = QPointF(d->curX(), d->curY());
-                if (width() == 0 || height() == 0
-                        || m_shape->contains(QRectF(m_offset.x(), m_offset.y(), width(), height()),curPos)){
-                    if (m_whenCollidingWith.isEmpty() || isColliding(d)){
-                        if (affectParticle(d, dt)){
-                            m_system->m_needsReset << d;
-                            if (m_onceOff)
-                                m_onceOffed << qMakePair(d->group, d->index);
-                            if (affectedConnected)
-                                emit affected(curPos.x(), curPos.y());
-                        }
-                    }
-                }
-            }
-        }
-    }
+    foreach (QSGParticleGroupData* gd, m_system->m_groupData)
+        if (activeGroup(m_system->m_groupData.key(gd)))
+            foreach (QSGParticleData* d, gd->data)
+                if (shouldAffect(d))
+                    if (affectParticle(d, dt))
+                        postAffect(d);
 }
 
 bool QSGParticleAffector::affectParticle(QSGParticleData *, qreal )

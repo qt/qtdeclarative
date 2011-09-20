@@ -180,14 +180,12 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
 
     QRectF boundsRect(0, 0, width()-1, height()-1);
     foreach (QSGParticleGroupData *gd, m_system->m_groupData){
-        if (!activeGroup(m_system->m_groupData.key(gd)))//TODO: Surely this can be done better
+        if (!activeGroup(m_system->m_groupData.key(gd)))
             continue;
         foreach (QSGParticleData *d, gd->data){
-            if (!d || !activeGroup(d->group) || !d->stillAlive())
+            if (!shouldAffect(d))
                 continue;
             QPoint pos = (QPointF(d->curX(), d->curY()) - m_offset).toPoint();
-            if (!boundsRect.contains(pos))
-                continue;
             qreal fx = 0.0;
             qreal fy = 0.0;
             fx += m_vectorField[pos.x()][pos.y()].x() * m_strength;
@@ -195,7 +193,7 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
             if (fx || fy){
                 d->setInstantaneousVX(d->curVX()+ fx * dt);
                 d->setInstantaneousVY(d->curVY()+ fy * dt);
-                m_system->m_needsReset << d;
+                postAffect(d);
             }
         }
     }
