@@ -153,29 +153,29 @@ class QSGImageParticle : public QSGParticlePainter
     Q_PROPERTY(QUrl opacityTable READ opacitytable WRITE setOpacitytable NOTIFY opacitytableChanged)
 
     //###Now just colorize - add a flag for 'solid' color particles(where the img is just a mask?)?
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged RESET resetColor)
     //Stacks (added) with individual colorVariations
-    Q_PROPERTY(qreal colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged)
-    Q_PROPERTY(qreal redVariation READ redVariation WRITE setRedVariation NOTIFY redVariationChanged)
-    Q_PROPERTY(qreal greenVariation READ greenVariation WRITE setGreenVariation NOTIFY greenVariationChanged)
-    Q_PROPERTY(qreal blueVariation READ blueVariation WRITE setBlueVariation NOTIFY blueVariationChanged)
+    Q_PROPERTY(qreal colorVariation READ colorVariation WRITE setColorVariation NOTIFY colorVariationChanged RESET resetColor)
+    Q_PROPERTY(qreal redVariation READ redVariation WRITE setRedVariation NOTIFY redVariationChanged RESET resetColor)
+    Q_PROPERTY(qreal greenVariation READ greenVariation WRITE setGreenVariation NOTIFY greenVariationChanged RESET resetColor)
+    Q_PROPERTY(qreal blueVariation READ blueVariation WRITE setBlueVariation NOTIFY blueVariationChanged RESET resetColor)
     //Stacks (multiplies) with the Alpha in the color, mostly here so you can use svg color names (which have full alpha)
-    Q_PROPERTY(qreal alpha READ alpha WRITE setAlpha NOTIFY alphaChanged)
-    Q_PROPERTY(qreal alphaVariation READ alphaVariation WRITE setAlphaVariation NOTIFY alphaVariationChanged)
+    Q_PROPERTY(qreal alpha READ alpha WRITE setAlpha NOTIFY alphaChanged RESET resetColor)
+    Q_PROPERTY(qreal alphaVariation READ alphaVariation WRITE setAlphaVariation NOTIFY alphaVariationChanged RESET resetColor)
 
-    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
-    Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged)
-    Q_PROPERTY(qreal rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged)
-    Q_PROPERTY(qreal rotationSpeedVariation READ rotationSpeedVariation WRITE setRotationSpeedVariation NOTIFY rotationSpeedVariationChanged)
+    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationSpeed READ rotationSpeed WRITE setRotationSpeed NOTIFY rotationSpeedChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotationSpeedVariation READ rotationSpeedVariation WRITE setRotationSpeedVariation NOTIFY rotationSpeedVariationChanged RESET resetRotation)
     //If true, then will face the direction of motion. Stacks with rotation, e.g. setting rotation
     //to 180 will lead to facing away from the direction of motion
-    Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged)
+    Q_PROPERTY(bool autoRotation READ autoRotation WRITE setAutoRotation NOTIFY autoRotationChanged RESET resetRotation)
 
     //###Call i/j? Makes more sense to those with vector calculus experience, and I could even add the cirumflex in QML?
     //xVector is the vector from the top-left point to the top-right point, and is multiplied by current size
-    Q_PROPERTY(QSGDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged)
+    Q_PROPERTY(QSGDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged RESET resetDeformation)
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
-    Q_PROPERTY(QSGDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged)
+    Q_PROPERTY(QSGDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation)
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
@@ -251,6 +251,10 @@ public:
     bool bloat() const { return m_bloat; }
 
     EntryEffect entryEffect() const { return m_entryEffect; }
+
+    void resetColor();
+    void resetRotation();
+    void resetDeformation();
 
 signals:
 
@@ -371,11 +375,10 @@ private:
     QList<QSGSprite*> m_sprites;
     QSGSpriteEngine* m_spriteEngine;
 
-    //TODO: Reset methods
     bool m_explicitColor;
     bool m_explicitRotation;
     bool m_explicitDeformation;
-    bool m_explicitAnimation;//TODO: Implement this
+    bool m_explicitAnimation;
     QHash<int, QVector<QSGParticleData*> > m_shadowData;
     bool m_shadowInit;
     void clearShadows();

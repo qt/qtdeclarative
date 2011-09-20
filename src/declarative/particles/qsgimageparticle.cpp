@@ -460,6 +460,12 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     aspect automatically. This is primarily useful when there is some random variation on
     the particle which is supposed to stay with it when switching painters. If both ImageParticles
     define how they should appear for that aspect, they diverge and each appears as it is defined.
+
+    This sharing of data happens behind the scenes based off of whether properties were implicitly or explicitly
+    set. One drawback of the current implementation is that it is only possible to reset the capabilities as a whole.
+    So if you explicity set an attribute affecting color, such as redVariation, and then reset it (by setting redVariation
+    to undefined), all color data will be reset and it will begin to have an implicit value of any shared color from
+    other ImageParticles.
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::source
@@ -638,10 +644,10 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_greenVariation(0.0)
     , m_blueVariation(0.0)
     , m_rotation(0)
-    , m_autoRotation(false)
     , m_rotationVariation(0)
     , m_rotationSpeed(0)
     , m_rotationSpeedVariation(0)
+    , m_autoRotation(false)
     , m_xVector(0)
     , m_yVector(0)
     , m_spriteEngine(0)
@@ -878,6 +884,51 @@ void QSGImageParticle::setEntryEffect(EntryEffect arg)
             getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
         emit entryEffectChanged(arg);
     }
+}
+
+void QSGImageParticle::resetColor()
+{
+    m_explicitColor = false;
+    foreach (const QString &str, m_groups)
+        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+            if (d->colorOwner == this)
+                d->colorOwner = 0;
+    m_color = QColor();
+    m_color_variation = 0.0f;
+    m_redVariation = 0.0f;
+    m_blueVariation = 0.0f;
+    m_greenVariation = 0.0f;
+    m_alpha = 1.0f;
+    m_alphaVariation = 0.0f;
+}
+
+void QSGImageParticle::resetRotation()
+{
+    m_explicitRotation = false;
+    foreach (const QString &str, m_groups)
+        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+            if (d->rotationOwner == this)
+                d->rotationOwner = 0;
+    m_rotation = 0;
+    m_rotationVariation = 0;
+    m_rotationSpeed = 0;
+    m_rotationSpeedVariation = 0;
+    m_autoRotation = false;
+}
+
+void QSGImageParticle::resetDeformation()
+{
+    m_explicitDeformation = false;
+    foreach (const QString &str, m_groups)
+        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+            if (d->deformationOwner == this)
+                d->deformationOwner = 0;
+    if (m_xVector)
+        delete m_xVector;
+    if (m_yVector)
+        delete m_yVector;
+    m_xVector = 0;
+    m_yVector = 0;
 }
 
 void QSGImageParticle::reset()
@@ -1273,15 +1324,20 @@ void QSGImageParticle::initialize(int gIdx, int pIdx)
     switch (perfLevel){//Fall-through is intended on all of them
         case Sprites:
             // Initial Sprite State
-            datum->animT = datum->t;
-            datum->animIdx = 0;
-            if (m_spriteEngine){
-                m_spriteEngine->start(spriteIdx);
-                datum->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
-                datum->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
-            }else{
-                datum->frameCount = 1;
-                datum->frameDuration = 9999;
+            if (m_explicitAnimation){
+                if (!datum->animationOwner)
+                    datum->animationOwner = this;
+                QSGParticleData* writeTo = (datum->animationOwner == this ? datum : getShadowDatum(datum));
+                writeTo->animT = writeTo->t;
+                writeTo->animIdx = 0;
+                if (m_spriteEngine){
+                    m_spriteEngine->start(spriteIdx);
+                    writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
+                    writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                }else{
+                    writeTo->frameCount = 1;
+                    writeTo->frameDuration = 9999;
+                }
             }
         case Tabled:
         case Deformable:
@@ -1393,7 +1449,7 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].rotation = shadow->rotation;
                 spriteVertices[i].rotationSpeed = shadow->rotationSpeed;
                 spriteVertices[i].autoRotate = shadow->autoRotate;
-            }  else {
+            } else {
                 spriteVertices[i].rotation = datum->rotation;
                 spriteVertices[i].rotationSpeed = datum->rotationSpeed;
                 spriteVertices[i].autoRotate = datum->autoRotate;
@@ -1404,7 +1460,7 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].frameDuration = shadow->frameDuration;
                 spriteVertices[i].frameCount = shadow->frameCount;
                 spriteVertices[i].animT = shadow->animT;
-            }  else {
+            } else {
                 spriteVertices[i].animIdx = datum->animIdx;
                 spriteVertices[i].frameDuration = datum->frameDuration;
                 spriteVertices[i].frameCount = datum->frameCount;
@@ -1416,7 +1472,7 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].color.g = shadow->color.g;
                 spriteVertices[i].color.b = shadow->color.b;
                 spriteVertices[i].color.a = shadow->color.a;
-            }  else {
+            } else {
                 spriteVertices[i].color.r = datum->color.r;
                 spriteVertices[i].color.g = datum->color.g;
                 spriteVertices[i].color.b = datum->color.b;
