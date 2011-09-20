@@ -117,16 +117,32 @@ public:
     QList<QDeclarativeScriptData *> scripts;
     QList<QUrl> urls;
 
+    struct Instruction {
+#define QML_INSTR_DATA_TYPEDEF(I, FMT) typedef QDeclarativeInstructionData<QDeclarativeInstruction::I> I;
+    FOR_EACH_QML_INSTR(QML_INSTR_DATA_TYPEDEF)
+#undef QML_INSTR_DATA_TYPEDEF
+    private:
+        Instruction();
+    };
+
     void dumpInstructions();
 
-    int addInstruction(const QDeclarativeInstruction &instr);
+    template <int Instr>
+    int addInstruction(const QDeclarativeInstructionData<Instr> &data)
+    {
+        QDeclarativeInstruction genericInstr;
+        QDeclarativeInstructionMeta<Instr>::setData(genericInstr, data);
+        return addInstructionHelper(static_cast<QDeclarativeInstruction::Type>(Instr), genericInstr);
+    }
     int nextInstructionIndex();
     QDeclarativeInstruction *instruction(int index);
+    QDeclarativeInstruction::Type instructionType(const QDeclarativeInstruction *instr);
 
 protected:
     virtual void clear(); // From QDeclarativeCleanup
 
 private:
+    int addInstructionHelper(QDeclarativeInstruction::Type type, QDeclarativeInstruction &instr);
     void dump(QDeclarativeInstruction *, int idx = -1);
     QDeclarativeCompiledData(const QDeclarativeCompiledData &other);
     QDeclarativeCompiledData &operator=(const QDeclarativeCompiledData &other);
@@ -238,6 +254,8 @@ public:
     int rewriteBinding(const QString& expression, const QString& name); // for QDeclarativeCustomParser::rewriteBinding
 
 private:
+    typedef QDeclarativeCompiledData::Instruction Instruction;
+
     static void reset(QDeclarativeCompiledData *);
 
     void compileTree(QDeclarativeScript::Object *tree);

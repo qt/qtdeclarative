@@ -45,6 +45,9 @@
 #include "private/qdeclarativecomponent_p.h"
 #include "qdeclarativecontext.h"
 #include "private/qdeclarativecontext_p.h"
+#ifdef QML_THREADED_VME_INTERPRETER
+#include "private/qdeclarativevme_p.h"
+#endif
 
 #include <QtCore/qdebug.h>
 
@@ -192,17 +195,22 @@ void QDeclarativeCompiledData::dumpInstructions()
     while (instructionStream < endInstructionStream) {
         QDeclarativeInstruction *instr = (QDeclarativeInstruction *)instructionStream;
         dump(instr, instructionCount);
-        instructionStream += instr->size();
+        instructionStream += QDeclarativeInstruction::size(instructionType(instr));
         instructionCount++;
     }
 
     qWarning().nospace() << "-------------------------------------------------------------------------------";
 }
 
-int QDeclarativeCompiledData::addInstruction(const QDeclarativeInstruction &instr) 
-{ 
+int QDeclarativeCompiledData::addInstructionHelper(QDeclarativeInstruction::Type type, QDeclarativeInstruction &instr)
+{
+#ifdef QML_THREADED_VME_INTERPRETER
+    instr.common.code = QDeclarativeVME::instructionJumpTable()[static_cast<int>(type)];
+#else
+    instr.common.instructionType = type;
+#endif
     int ptrOffset = bytecode.size();
-    int size = instr.size();
+    int size = QDeclarativeInstruction::size(type);
     if (bytecode.capacity() <= bytecode.size() + size)
         bytecode.reserve(bytecode.size() + size + 512);
     bytecode.append(reinterpret_cast<const char *>(&instr), size);
@@ -217,6 +225,25 @@ int QDeclarativeCompiledData::nextInstructionIndex()
 QDeclarativeInstruction *QDeclarativeCompiledData::instruction(int index) 
 { 
     return (QDeclarativeInstruction *)(bytecode.constData() + index);
+}
+
+QDeclarativeInstruction::Type QDeclarativeCompiledData::instructionType(const QDeclarativeInstruction *instr)
+{
+#ifdef QML_THREADED_VME_INTERPRETER
+    void **jumpTable = QDeclarativeVME::instructionJumpTable();
+    void *code = instr->common.code;
+
+#  define QML_CHECK_INSTR_CODE(I, FMT) \
+    if (jumpTable[static_cast<int>(QDeclarativeInstruction::I)] == code) \
+        return QDeclarativeInstruction::I;
+
+    FOR_EACH_QML_INSTR(QML_CHECK_INSTR_CODE)
+    Q_ASSERT_X(false, Q_FUNC_INFO, "Invalid instruction address");
+    return static_cast<QDeclarativeInstruction::Type>(0);
+#  undef QML_CHECK_INSTR_CODE
+#else
+    return static_cast<QDeclarativeInstruction::Type>(instr->common.instructionType);
+#endif
 }
 
 QT_END_NAMESPACE

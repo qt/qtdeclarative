@@ -166,22 +166,55 @@ static void removeBindingOnProperty(QObject *o, int index)
     if (binding) binding->destroy();
 }
 
-#define QML_BEGIN_INSTR(I) \
-    case QDeclarativeInstruction::I: { \
-        const QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::DataType &instr = QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::data(genericInstr); \
-        instructionStream += QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::Size; \
-        Q_UNUSED(instr); 
+#define QML_BEGIN_INSTR_COMMON(I) { \
+    const QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::DataType &instr = QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::data(*genericInstr); \
+    instructionStream += QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::Size; \
+    Q_UNUSED(instr);
 
-#define QML_NEXT_INSTR(I) break;
-#define QML_END_INSTR(I) } break;
+#ifdef QML_THREADED_VME_INTERPRETER
+#  define QML_BEGIN_INSTR(I) op_##I: \
+    QML_BEGIN_INSTR_COMMON(I)
+
+#  define QML_NEXT_INSTR(I) { \
+    genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(instructionStream); \
+    goto *genericInstr->common.code; \
+    }
+
+#  define QML_END_INSTR(I) } \
+    genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(instructionStream); \
+    goto *genericInstr->common.code;
+
+#else
+#  define QML_BEGIN_INSTR(I) \
+    case QDeclarativeInstruction::I: \
+    QML_BEGIN_INSTR_COMMON(I)
+
+#  define QML_NEXT_INSTR(I) break;
+#  define QML_END_INSTR(I) } break;
+#endif
 
 #define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
 
 QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack, 
                               QDeclarativeContextData *ctxt, 
                               QDeclarativeCompiledData *comp, 
-                              int start, const QBitField &bindingSkipList)
+                              int start, const QBitField &bindingSkipList
+#ifdef QML_THREADED_VME_INTERPRETER
+                              , void ***storeJumpTable
+#endif
+                              )
 {
+#ifdef QML_THREADED_VME_INTERPRETER
+    if (storeJumpTable) {
+#define QML_INSTR_ADDR(I, FMT) &&op_##I,
+        static void *jumpTable[] = {
+            FOR_EACH_QML_INSTR(QML_INSTR_ADDR)
+        };
+#undef QML_INSTR_ADDR
+        *storeJumpTable = jumpTable;
+        return 0;
+    }
+#endif
     Q_ASSERT(comp);
     Q_ASSERT(ctxt);
     const QList<QDeclarativeCompiledData::TypeReference> &types = comp->types;
@@ -205,10 +238,15 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
 
     const char *instructionStream = comp->bytecode.constData() + start;
 
+#ifdef QML_THREADED_VME_INTERPRETER
+    const QDeclarativeInstruction *genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(instructionStream);
+    goto *genericInstr->common.code;
+#else
     for (;;) {
-        const QDeclarativeInstruction &genericInstr = *((QDeclarativeInstruction *)instructionStream);
+        const QDeclarativeInstruction *genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(instructionStream);
 
-        switch(genericInstr.type()) {
+        switch (genericInstr->common.instructionType) {
+#endif
         QML_BEGIN_INSTR(Init)
             if (instr.bindingsSize) 
                 bindValues = QDeclarativeEnginePrivate::SimpleList<QDeclarativeAbstractBinding>(instr.bindingsSize);
@@ -966,11 +1004,15 @@ QObject *QDeclarativeVME::run(QDeclarativeVMEObjectStack &stack,
             valueHandler->write(target, instr.property, QDeclarativePropertyPrivate::BypassInterceptor);
         QML_END_INSTR(PopValueType)
 
+#ifdef QML_THREADED_VME_INTERPRETER
+    // nothing to do
+#else
         default:
-            qFatal("QDeclarativeCompiledData: Internal error - unknown instruction %d", genericInstr.type());
+            qFatal("QDeclarativeCompiledData: Internal error - unknown instruction %d", genericInstr->common.instructionType);
             break;
         }
     }
+#endif
 
     exceptionExit:
     Q_ASSERT(isError());
@@ -1108,6 +1150,19 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
 
     return rv;
 }
+
+#ifdef QML_THREADED_VME_INTERPRETER
+void **QDeclarativeVME::instructionJumpTable()
+{
+    static void **jumpTable = 0;
+    if (!jumpTable) {
+        QDeclarativeVME dummy;
+        QDeclarativeVMEObjectStack stack;
+        dummy.run(stack, 0, 0, 0, QBitField(), &jumpTable);
+    }
+    return jumpTable;
+}
+#endif
 
 template<typename T>
 QDeclarativeVMEStack<T>::QDeclarativeVMEStack()

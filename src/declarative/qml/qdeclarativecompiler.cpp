@@ -361,16 +361,14 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
 void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *prop,
                                                 QDeclarativeScript::Value *v)
 {
-    QDeclarativeInstruction instr;
-
     if (prop->core.isEnum()) {
         Q_ASSERT(v->value.isNumber());
         // Preresolved value
         int value = (int)v->value.asNumber();
 
-        instr.setType(QDeclarativeInstruction::StoreInteger);
-        instr.storeInteger.propertyIndex = prop->index;
-        instr.storeInteger.value = value;
+        Instruction::StoreInteger instr;
+        instr.propertyIndex = prop->index;
+        instr.value = value;
         output->addInstruction(instr);
         return;
     }
@@ -382,219 +380,243 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             if (v->value.isNumber()) {
                 double n = v->value.asNumber();
                 if (double(int(n)) == n) {
-                    instr.setType(QDeclarativeInstruction::StoreVariantInteger);
-                    instr.storeInteger.propertyIndex = prop->index;
-                    instr.storeInteger.value = int(n);
+                    Instruction::StoreVariantInteger instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = int(n);
+                    output->addInstruction(instr);
                 } else {
-                    instr.setType(QDeclarativeInstruction::StoreVariantDouble);
-                    instr.storeDouble.propertyIndex = prop->index;
-                    instr.storeDouble.value = n;
+                    Instruction::StoreVariantDouble instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = n;
+                    output->addInstruction(instr);
                 }
             } else if(v->value.isBoolean()) {
-                instr.setType(QDeclarativeInstruction::StoreVariantBool);
-                instr.storeBool.propertyIndex = prop->index;
-                instr.storeBool.value = v->value.asBoolean();
+                Instruction::StoreVariantBool instr;
+                instr.propertyIndex = prop->index;
+                instr.value = v->value.asBoolean();
+                output->addInstruction(instr);
             } else {
-                instr.setType(QDeclarativeInstruction::StoreVariant);
-                instr.storeString.propertyIndex = prop->index;
-                instr.storeString.value = output->indexForString(v->value.asString());
+                Instruction::StoreVariant instr;
+                instr.propertyIndex = prop->index;
+                instr.value = output->indexForString(v->value.asString());
+                output->addInstruction(instr);
             }
             }
             break;
         case QVariant::String:
             {
-            instr.setType(QDeclarativeInstruction::StoreString);
-            instr.storeString.propertyIndex = prop->index;
-            instr.storeString.value = output->indexForString(v->value.asString());
+            Instruction::StoreString instr;
+            instr.propertyIndex = prop->index;
+            instr.value = output->indexForString(v->value.asString());
+            output->addInstruction(instr);
             }
             break;
         case QVariant::ByteArray:
             {
-            instr.setType(QDeclarativeInstruction::StoreByteArray);
-            instr.storeByteArray.propertyIndex = prop->index;
-            instr.storeByteArray.value = output->indexForByteArray(v->value.asString().toLatin1());
+            Instruction::StoreByteArray instr;
+            instr.propertyIndex = prop->index;
+            instr.value = output->indexForByteArray(v->value.asString().toLatin1());
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Url:
             {
-            instr.setType(QDeclarativeInstruction::StoreUrl);
+            Instruction::StoreUrl instr;
             QString string = v->value.asString();
             QUrl u = string.isEmpty() ? QUrl() : output->url.resolved(QUrl(string));
-            instr.storeUrl.propertyIndex = prop->index;
-            instr.storeUrl.value = output->indexForUrl(u);
+            instr.propertyIndex = prop->index;
+            instr.value = output->indexForUrl(u);
+            output->addInstruction(instr);
             }
             break;
         case QVariant::UInt:
             {
-            instr.setType(QDeclarativeInstruction::StoreInteger);
-            instr.storeInteger.propertyIndex = prop->index;
-            instr.storeInteger.value = uint(v->value.asNumber());
+            Instruction::StoreInteger instr;
+            instr.propertyIndex = prop->index;
+            instr.value = uint(v->value.asNumber());
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Int:
             {
-            instr.setType(QDeclarativeInstruction::StoreInteger);
-            instr.storeInteger.propertyIndex = prop->index;
-            instr.storeInteger.value = int(v->value.asNumber());
+            Instruction::StoreInteger instr;
+            instr.propertyIndex = prop->index;
+            instr.value = int(v->value.asNumber());
+            output->addInstruction(instr);
             }
             break;
         case QMetaType::Float:
             {
-            instr.setType(QDeclarativeInstruction::StoreFloat);
-            instr.storeFloat.propertyIndex = prop->index;
-            instr.storeFloat.value = float(v->value.asNumber());
+            Instruction::StoreFloat instr;
+            instr.propertyIndex = prop->index;
+            instr.value = float(v->value.asNumber());
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Double:
             {
-            instr.setType(QDeclarativeInstruction::StoreDouble);
-            instr.storeDouble.propertyIndex = prop->index;
-            instr.storeDouble.value = v->value.asNumber();
+            Instruction::StoreDouble instr;
+            instr.propertyIndex = prop->index;
+            instr.value = v->value.asNumber();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Color:
             {
+            Instruction::StoreColor instr;
             QColor c = QDeclarativeStringConverters::colorFromString(v->value.asString());
-            instr.setType(QDeclarativeInstruction::StoreColor);
-            instr.storeColor.propertyIndex = prop->index;
-            instr.storeColor.value = c.rgba();
+            instr.propertyIndex = prop->index;
+            instr.value = c.rgba();
+            output->addInstruction(instr);
             }
             break;
 #ifndef QT_NO_DATESTRING
         case QVariant::Date:
             {
+            Instruction::StoreDate instr;
             QDate d = QDeclarativeStringConverters::dateFromString(v->value.asString());
-            instr.setType(QDeclarativeInstruction::StoreDate);
-            instr.storeDate.propertyIndex = prop->index;
-            instr.storeDate.value = d.toJulianDay();
+            instr.propertyIndex = prop->index;
+            instr.value = d.toJulianDay();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Time:
             {
+            Instruction::StoreTime instr;
             QTime time = QDeclarativeStringConverters::timeFromString(v->value.asString());
-            instr.setType(QDeclarativeInstruction::StoreTime);
-            instr.storeTime.propertyIndex = prop->index;
-            Q_ASSERT(sizeof(instr.storeTime.time) == sizeof(QTime));
-            ::memcpy(&instr.storeTime.time, &time, sizeof(QTime));
+            instr.propertyIndex = prop->index;
+            Q_ASSERT(sizeof(instr.time) == sizeof(QTime));
+            ::memcpy(&instr.time, &time, sizeof(QTime));
+            output->addInstruction(instr);
             }
             break;
         case QVariant::DateTime:
             {
+            Instruction::StoreDateTime instr;
             QDateTime dateTime = QDeclarativeStringConverters::dateTimeFromString(v->value.asString());
             QTime time = dateTime.time();
-            instr.setType(QDeclarativeInstruction::StoreDateTime);
-            instr.storeDateTime.propertyIndex = prop->index;
-            instr.storeDateTime.date = dateTime.date().toJulianDay();
-            Q_ASSERT(sizeof(instr.storeDateTime.time) == sizeof(QTime));
-            ::memcpy(&instr.storeDateTime.time, &time, sizeof(QTime));
+            instr.propertyIndex = prop->index;
+            instr.date = dateTime.date().toJulianDay();
+            Q_ASSERT(sizeof(instr.time) == sizeof(QTime));
+            ::memcpy(&instr.time, &time, sizeof(QTime));
+            output->addInstruction(instr);
             }
             break;
 #endif // QT_NO_DATESTRING
         case QVariant::Point:
             {
+            Instruction::StorePoint instr;
             bool ok;
             QPoint point = QDeclarativeStringConverters::pointFFromString(v->value.asString(), &ok).toPoint();
-            instr.setType(QDeclarativeInstruction::StorePoint);
-            instr.storePoint.propertyIndex = prop->index;
-            instr.storePoint.point.xp = point.x();
-            instr.storePoint.point.yp = point.y();
+            instr.propertyIndex = prop->index;
+            instr.point.xp = point.x();
+            instr.point.yp = point.y();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::PointF:
             {
+            Instruction::StorePointF instr;
             bool ok;
             QPointF point = QDeclarativeStringConverters::pointFFromString(v->value.asString(), &ok);
-            instr.setType(QDeclarativeInstruction::StorePointF);
-            instr.storePointF.propertyIndex = prop->index;
-            instr.storePointF.point.xp = point.x();
-            instr.storePointF.point.yp = point.y();
+            instr.propertyIndex = prop->index;
+            instr.point.xp = point.x();
+            instr.point.yp = point.y();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Size:
             {
+            Instruction::StoreSize instr;
             bool ok;
             QSize size = QDeclarativeStringConverters::sizeFFromString(v->value.asString(), &ok).toSize();
-            instr.setType(QDeclarativeInstruction::StoreSize);
-            instr.storeSize.propertyIndex = prop->index;
-            instr.storeSize.size.wd = size.width();
-            instr.storeSize.size.ht = size.height();
+            instr.propertyIndex = prop->index;
+            instr.size.wd = size.width();
+            instr.size.ht = size.height();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::SizeF:
             {
+            Instruction::StoreSizeF instr;
             bool ok;
             QSizeF size = QDeclarativeStringConverters::sizeFFromString(v->value.asString(), &ok);
-            instr.setType(QDeclarativeInstruction::StoreSizeF);
-            instr.storeSizeF.propertyIndex = prop->index;
-            instr.storeSizeF.size.wd = size.width();
-            instr.storeSizeF.size.ht = size.height();
+            instr.propertyIndex = prop->index;
+            instr.size.wd = size.width();
+            instr.size.ht = size.height();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Rect:
             {
+            Instruction::StoreRect instr;
             bool ok;
             QRect rect = QDeclarativeStringConverters::rectFFromString(v->value.asString(), &ok).toRect();
-            instr.setType(QDeclarativeInstruction::StoreRect);
-            instr.storeRect.propertyIndex = prop->index;
-            instr.storeRect.rect.x1 = rect.left();
-            instr.storeRect.rect.y1 = rect.top();
-            instr.storeRect.rect.x2 = rect.right();
-            instr.storeRect.rect.y2 = rect.bottom();
+            instr.propertyIndex = prop->index;
+            instr.rect.x1 = rect.left();
+            instr.rect.y1 = rect.top();
+            instr.rect.x2 = rect.right();
+            instr.rect.y2 = rect.bottom();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::RectF:
             {
+            Instruction::StoreRectF instr;
             bool ok;
             QRectF rect = QDeclarativeStringConverters::rectFFromString(v->value.asString(), &ok);
-            instr.setType(QDeclarativeInstruction::StoreRectF);
-            instr.storeRectF.propertyIndex = prop->index;
-            instr.storeRectF.rect.xp = rect.left();
-            instr.storeRectF.rect.yp = rect.top();
-            instr.storeRectF.rect.w = rect.width();
-            instr.storeRectF.rect.h = rect.height();
+            instr.propertyIndex = prop->index;
+            instr.rect.xp = rect.left();
+            instr.rect.yp = rect.top();
+            instr.rect.w = rect.width();
+            instr.rect.h = rect.height();
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Bool:
             {
+            Instruction::StoreBool instr;
             bool b = v->value.asBoolean();
-            instr.setType(QDeclarativeInstruction::StoreBool);
-            instr.storeBool.propertyIndex = prop->index;
-            instr.storeBool.value = b;
+            instr.propertyIndex = prop->index;
+            instr.value = b;
+            output->addInstruction(instr);
             }
             break;
         case QVariant::Vector3D:
             {
+            Instruction::StoreVector3D instr;
             bool ok;
             QVector3D vector = QDeclarativeStringConverters::vector3DFromString(v->value.asString(), &ok);
-            instr.setType(QDeclarativeInstruction::StoreVector3D);
-            instr.storeVector3D.propertyIndex = prop->index;
-            instr.storeVector3D.vector.xp = vector.x();
-            instr.storeVector3D.vector.yp = vector.y();
-            instr.storeVector3D.vector.zp = vector.z();
+            instr.propertyIndex = prop->index;
+            instr.vector.xp = vector.x();
+            instr.vector.yp = vector.y();
+            instr.vector.zp = vector.z();
+            output->addInstruction(instr);
             }
             break;
     case QVariant::Vector4D:
             {
+            Instruction::StoreVector4D instr;
             bool ok;
             QVector4D vector = QDeclarativeStringConverters::vector4DFromString(v->value.asString(), &ok);
-            instr.setType(QDeclarativeInstruction::StoreVector4D);
-            instr.storeVector4D.propertyIndex = prop->index;
-            instr.storeVector4D.vector.xp = vector.x();
-            instr.storeVector4D.vector.yp = vector.y();
-            instr.storeVector4D.vector.zp = vector.z();
-            instr.storeVector4D.vector.wp = vector.w();
+            instr.propertyIndex = prop->index;
+            instr.vector.xp = vector.x();
+            instr.vector.yp = vector.y();
+            instr.vector.zp = vector.z();
+            instr.vector.wp = vector.w();
+            output->addInstruction(instr);
             }
             break;
         default:
             {
-            instr.setType(QDeclarativeInstruction::AssignCustomType);
-            instr.assignCustomType.propertyIndex = prop->index;
-            instr.assignCustomType.primitive = output->indexForString(v->value.asString());
-            instr.assignCustomType.type = type;
+            Instruction::AssignCustomType instr;
+            instr.propertyIndex = prop->index;
+            instr.primitive = output->indexForString(v->value.asString());
+            instr.type = type;
+            output->addInstruction(instr);
             }
             break;
     }
-    output->addInstruction(instr);
 }
 
 /*!
@@ -710,9 +732,8 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
     foreach (const QDeclarativeTypeData::ScriptReference &script, unit->resolvedScripts()) {
         importedScriptIndexes.append(script.qualifier);
 
-        QDeclarativeInstruction import;
-        import.setType(QDeclarativeInstruction::StoreImportedScript);
-        import.storeScript.value = output->scripts.count();
+        Instruction::StoreImportedScript import;
+        import.value = output->scripts.count();
 
         QDeclarativeScriptData *scriptData = script.script->scriptData();
         scriptData->addref();
@@ -731,34 +752,30 @@ void QDeclarativeCompiler::compileTree(QDeclarativeScript::Object *tree)
     if (!buildObject(tree, BindingContext()) || !completeComponentBuild())
         return;
 
-    QDeclarativeInstruction init;
-    init.setType(QDeclarativeInstruction::Init);
-    init.init.bindingsSize = compileState->bindings.count();
-    init.init.parserStatusSize = compileState->parserStatusCount;
-    init.init.contextCache = genContextCache();
+    Instruction::Init init;
+    init.bindingsSize = compileState->bindings.count();
+    init.parserStatusSize = compileState->parserStatusCount;
+    init.contextCache = genContextCache();
     if (compileState->compiledBindingData.isEmpty())
-        init.init.compiledBinding = -1;
+        init.compiledBinding = -1;
     else
-        init.init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
+        init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
 
     if (!compileState->v8BindingProgram.isEmpty()) {
-        QDeclarativeInstruction bindings;
-        bindings.setType(QDeclarativeInstruction::InitV8Bindings);
-        bindings.initV8Bindings.program = output->indexForString(compileState->v8BindingProgram);
-        bindings.initV8Bindings.programIndex = compileState->v8BindingProgramIndex;
-        bindings.initV8Bindings.line = compileState->v8BindingProgramLine;
+        Instruction::InitV8Bindings bindings;
+        bindings.program = output->indexForString(compileState->v8BindingProgram);
+        bindings.programIndex = compileState->v8BindingProgramIndex;
+        bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
 
     genObject(tree);
 
-    QDeclarativeInstruction def;
-    def.setType(QDeclarativeInstruction::SetDefault);
+    Instruction::SetDefault def;
     output->addInstruction(def);
 
-    QDeclarativeInstruction done;
-    done.setType(QDeclarativeInstruction::Done);
+    Instruction::Done done;
     output->addInstruction(done);
 
     Q_ASSERT(tree->metatype);
@@ -1004,32 +1021,30 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
     if (obj->custom.isEmpty() && output->types.at(obj->type).type &&
         !output->types.at(obj->type).type->isExtendedType() && obj != compileState->root) {
 
-        QDeclarativeInstruction create;
-        create.setType(QDeclarativeInstruction::CreateSimpleObject);
-        create.createSimple.create = output->types.at(obj->type).type->createFunction();
-        create.createSimple.typeSize = output->types.at(obj->type).type->createSize();
-        create.createSimple.type = obj->type;
-        create.createSimple.line = obj->location.start.line;
-        create.createSimple.column = obj->location.start.column;
+        Instruction::CreateSimpleObject create;
+        create.create = output->types.at(obj->type).type->createFunction();
+        create.typeSize = output->types.at(obj->type).type->createSize();
+        create.type = obj->type;
+        create.line = obj->location.start.line;
+        create.column = obj->location.start.column;
         output->addInstruction(create);
 
     } else {
 
-        QDeclarativeInstruction create;
-        create.setType(QDeclarativeInstruction::CreateObject);
-        create.create.line = obj->location.start.line;
-        create.create.column = obj->location.start.column;
-        create.create.data = -1;
+        Instruction::CreateObject create;
+        create.line = obj->location.start.line;
+        create.column = obj->location.start.column;
+        create.data = -1;
         if (!obj->custom.isEmpty())
-            create.create.data = output->indexForByteArray(obj->custom);
-        create.create.type = obj->type;
-        if (!output->types.at(create.create.type).type && 
+            create.data = output->indexForByteArray(obj->custom);
+        create.type = obj->type;
+        if (!output->types.at(create.type).type &&
             !obj->bindingBitmask.isEmpty()) {
             Q_ASSERT(obj->bindingBitmask.size() % 4 == 0);
-            create.create.bindingBits = 
+            create.bindingBits =
                 output->indexForByteArray(obj->bindingBitmask);
         } else {
-            create.create.bindingBits = -1;
+            create.bindingBits = -1;
         }
         output->addInstruction(create);
 
@@ -1037,11 +1052,10 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
 
     // Setup the synthesized meta object if necessary
     if (!obj->metadata.isEmpty()) {
-        QDeclarativeInstruction meta;
-        meta.setType(QDeclarativeInstruction::StoreMetaObject);
-        meta.storeMeta.data = output->indexForByteArray(obj->metadata);
-        meta.storeMeta.aliasData = output->indexForByteArray(obj->synthdata);
-        meta.storeMeta.propertyCache = output->propertyCaches.count();
+        Instruction::StoreMetaObject meta;
+        meta.data = output->indexForByteArray(obj->metadata);
+        meta.aliasData = output->indexForByteArray(obj->synthdata);
+        meta.propertyCache = output->propertyCaches.count();
 
         QDeclarativePropertyCache *propertyCache = obj->synthCache;
         Q_ASSERT(propertyCache);
@@ -1072,18 +1086,16 @@ void QDeclarativeCompiler::genObject(QDeclarativeScript::Object *obj)
 
     // Set the object id
     if (!obj->id.isEmpty()) {
-        QDeclarativeInstruction id;
-        id.setType(QDeclarativeInstruction::SetId);
-        id.setId.value = output->indexForString(obj->id);
-        id.setId.index = obj->idIndex;
+        Instruction::SetId id;
+        id.value = output->indexForString(obj->id);
+        id.index = obj->idIndex;
         output->addInstruction(id);
     }
 
     // Begin the class
     if (tr.type && obj->parserStatusCast != -1) {
-        QDeclarativeInstruction begin;
-        begin.setType(QDeclarativeInstruction::BeginObject);
-        begin.begin.castValue = obj->parserStatusCast;
+        Instruction::BeginObject begin;
+        begin.castValue = obj->parserStatusCast;
         output->addInstruction(begin);
     }
 
@@ -1095,14 +1107,13 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
     for (Property *prop = obj->scriptStringProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
         Q_ASSERT(prop->scriptStringScope != -1);
         const QString &script = prop->values.first()->value.asScript();
-        QDeclarativeInstruction ss;
-        ss.setType(QDeclarativeInstruction::StoreScriptString);
-        ss.storeScriptString.propertyIndex = prop->index;
-        ss.storeScriptString.value = output->indexForString(script);
-        ss.storeScriptString.scope = prop->scriptStringScope;
-//        ss.storeScriptString.bindingId = rewriteBinding(script, prop->name());
-        ss.storeScriptString.bindingId = rewriteBinding(script, QString()); // XXX
-        ss.storeScriptString.line = prop->location.start.line;
+        Instruction::StoreScriptString ss;
+        ss.propertyIndex = prop->index;
+        ss.value = output->indexForString(script);
+        ss.scope = prop->scriptStringScope;
+//        ss.bindingId = rewriteBinding(script, prop->name());
+        ss.bindingId = rewriteBinding(script, QString()); // XXX
+        ss.line = prop->location.start.line;
         output->addInstruction(ss);
     }
 
@@ -1116,18 +1127,16 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
             genValueProperty(prop, obj);
     }
     if (seenDefer) {
-        QDeclarativeInstruction defer;
-        defer.setType(QDeclarativeInstruction::Defer);
-        defer.defer.deferCount = 0;
+        Instruction::Defer defer;
+        defer.deferCount = 0;
         int deferIdx = output->addInstruction(defer);
         int nextInstructionIndex = output->nextInstructionIndex();
 
-        QDeclarativeInstruction init;
-        init.setType(QDeclarativeInstruction::Init);
-        init.init.bindingsSize = compileState->bindings.count(); // XXX - bigger than necessary
-        init.init.parserStatusSize = compileState->parserStatusCount; // XXX - bigger than necessary
-        init.init.contextCache = -1;
-        init.init.compiledBinding = -1;
+        Instruction::Init init;
+        init.bindingsSize = compileState->bindings.count(); // XXX - bigger than necessary
+        init.parserStatusSize = compileState->parserStatusCount; // XXX - bigger than necessary
+        init.contextCache = -1;
+        init.compiledBinding = -1;
         output->addInstruction(init);
 
         for (Property *prop = obj->valueProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
@@ -1136,8 +1145,7 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
             genValueProperty(prop, obj);
         }
 
-        QDeclarativeInstruction done;
-        done.setType(QDeclarativeInstruction::Done);
+        Instruction::Done done;
         output->addInstruction(done);
 
         output->instruction(deferIdx)->defer.deferCount = output->nextInstructionIndex() - nextInstructionIndex;
@@ -1151,22 +1159,20 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
             genObject(v->object);
 
-            QDeclarativeInstruction assign;
-            assign.setType(QDeclarativeInstruction::AssignSignalObject);
-            assign.assignSignalObject.line = v->location.start.line;
-            assign.assignSignalObject.signal = output->indexForString(prop->name().toString());
+            Instruction::AssignSignalObject assign;
+            assign.line = v->location.start.line;
+            assign.signal = output->indexForString(prop->name().toString());
             output->addInstruction(assign);
 
         } else if (v->type == Value::SignalExpression) {
 
-            QDeclarativeInstruction store;
-            store.setType(QDeclarativeInstruction::StoreSignal);
-            store.storeSignal.signalIndex = prop->index;
-            store.storeSignal.value =
+            Instruction::StoreSignal store;
+            store.signalIndex = prop->index;
+            store.value =
                 output->indexForString(v->value.asScript().trimmed());
-            store.storeSignal.context = v->signalExpressionContextStack;
-            store.storeSignal.name = output->indexForByteArray(prop->name().toUtf8());
-            store.storeSignal.line = v->location.start.line;
+            store.context = v->signalExpressionContextStack;
+            store.name = output->indexForByteArray(prop->name().toUtf8());
+            store.line = v->location.start.line;
             output->addInstruction(store);
 
         }
@@ -1174,39 +1180,34 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
     }
 
     for (Property *prop = obj->attachedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
-        QDeclarativeInstruction fetch;
-        fetch.setType(QDeclarativeInstruction::FetchAttached);
-        fetch.fetchAttached.id = prop->index;
-        fetch.fetchAttached.line = prop->location.start.line;
+        Instruction::FetchAttached fetch;
+        fetch.id = prop->index;
+        fetch.line = prop->location.start.line;
         output->addInstruction(fetch);
 
         genObjectBody(prop->value);
 
-        QDeclarativeInstruction pop;
-        pop.setType(QDeclarativeInstruction::PopFetchedObject);
+        Instruction::PopFetchedObject pop;
         output->addInstruction(pop);
     }
 
     for (Property *prop = obj->groupedProperties.first(); prop; prop = Object::PropertyList::next(prop)) {
-        QDeclarativeInstruction fetch;
-        fetch.setType(QDeclarativeInstruction::FetchObject);
-        fetch.fetch.property = prop->index;
-        fetch.fetch.line = prop->location.start.line;
+        Instruction::FetchObject fetch;
+        fetch.property = prop->index;
+        fetch.line = prop->location.start.line;
         output->addInstruction(fetch);
 
         if (!prop->value->metadata.isEmpty()) {
-            QDeclarativeInstruction meta;
-            meta.setType(QDeclarativeInstruction::StoreMetaObject);
-            meta.storeMeta.data = output->indexForByteArray(prop->value->metadata);
-            meta.storeMeta.aliasData = output->indexForByteArray(prop->value->synthdata);
-            meta.storeMeta.propertyCache = -1;
+            Instruction::StoreMetaObject meta;
+            meta.data = output->indexForByteArray(prop->value->metadata);
+            meta.aliasData = output->indexForByteArray(prop->value->synthdata);
+            meta.propertyCache = -1;
             output->addInstruction(meta);
         }
 
         genObjectBody(prop->value);
 
-        QDeclarativeInstruction pop;
-        pop.setType(QDeclarativeInstruction::PopFetchedObject);
+        Instruction::PopFetchedObject pop;
         output->addInstruction(pop);
     }
 
@@ -1230,11 +1231,10 @@ void QDeclarativeCompiler::genObjectBody(QDeclarativeScript::Object *obj)
 
 void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeScript::Object *obj,QDeclarativeScript::Property *prop)
 {
-    QDeclarativeInstruction fetch;
-    fetch.setType(QDeclarativeInstruction::FetchValueType);
-    fetch.fetchValue.property = prop->index;
-    fetch.fetchValue.type = prop->type;
-    fetch.fetchValue.bindingSkipList = 0;
+    Instruction::FetchValueType fetch;
+    fetch.property = prop->index;
+    fetch.type = prop->type;
+    fetch.bindingSkipList = 0;
 
     if (obj->type == -1 || output->types.at(obj->type).component) {
         // We only have to do this if this is a composite type.  If it is a builtin
@@ -1242,7 +1242,7 @@ void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeScript::Object *obj,
         for (Property *vprop = prop->value->valueProperties.first(); vprop; vprop = Object::PropertyList::next(vprop)) {
             if (!vprop->values.isEmpty()) {
                 Q_ASSERT(vprop->index >= 0 && vprop->index < 32);
-                fetch.fetchValue.bindingSkipList |= (1 << vprop->index);
+                fetch.bindingSkipList |= (1 << vprop->index);
             }
         }
     }
@@ -1253,11 +1253,10 @@ void QDeclarativeCompiler::genValueTypeProperty(QDeclarativeScript::Object *obj,
         genPropertyAssignment(vprop, prop->value, prop);
     }
 
-    QDeclarativeInstruction pop;
-    pop.setType(QDeclarativeInstruction::PopValueType);
-    pop.fetchValue.property = prop->index;
-    pop.fetchValue.type = prop->type;
-    pop.fetchValue.bindingSkipList = 0;
+    Instruction::PopValueType pop;
+    pop.property = prop->index;
+    pop.type = prop->type;
+    pop.bindingSkipList = 0;
     output->addInstruction(pop);
 }
 
@@ -1266,45 +1265,40 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
     QDeclarativeScript::Object *root = obj->defaultProperty->values.first()->object;
     Q_ASSERT(root);
 
-    QDeclarativeInstruction create;
-    create.setType(QDeclarativeInstruction::CreateComponent);
-    create.createComponent.line = root->location.start.line;
-    create.createComponent.column = root->location.start.column;
-    create.createComponent.endLine = root->location.end.line;
+    Instruction::CreateComponent create;
+    create.line = root->location.start.line;
+    create.column = root->location.start.column;
+    create.endLine = root->location.end.line;
     int createInstruction = output->addInstruction(create);
     int nextInstructionIndex = output->nextInstructionIndex();
 
     ComponentCompileState *oldCompileState = compileState;
     compileState = componentState(root);
 
-    QDeclarativeInstruction init;
-    init.setType(QDeclarativeInstruction::Init);
-    init.init.bindingsSize = compileState->bindings.count();
-    init.init.parserStatusSize = compileState->parserStatusCount;
-    init.init.contextCache = genContextCache();
+    Instruction::Init init;
+    init.bindingsSize = compileState->bindings.count();
+    init.parserStatusSize = compileState->parserStatusCount;
+    init.contextCache = genContextCache();
     if (compileState->compiledBindingData.isEmpty())
-        init.init.compiledBinding = -1;
+        init.compiledBinding = -1;
     else
-        init.init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
+        init.compiledBinding = output->indexForByteArray(compileState->compiledBindingData);
     output->addInstruction(init);
 
     if (!compileState->v8BindingProgram.isEmpty()) {
-        QDeclarativeInstruction bindings;
-        bindings.setType(QDeclarativeInstruction::InitV8Bindings);
-        bindings.initV8Bindings.program = output->indexForString(compileState->v8BindingProgram);
-        bindings.initV8Bindings.programIndex = compileState->v8BindingProgramIndex;
-        bindings.initV8Bindings.line = compileState->v8BindingProgramLine;
+        Instruction::InitV8Bindings bindings;
+        bindings.program = output->indexForString(compileState->v8BindingProgram);
+        bindings.programIndex = compileState->v8BindingProgramIndex;
+        bindings.line = compileState->v8BindingProgramLine;
         output->addInstruction(bindings);
     }
 
     genObject(root);
 
-    QDeclarativeInstruction def;
-    def.setType(QDeclarativeInstruction::SetDefault);
+    Instruction::SetDefault def;
     output->addInstruction(def);
 
-    QDeclarativeInstruction done;
-    done.setType(QDeclarativeInstruction::Done);
+    Instruction::Done done;
     output->addInstruction(done);
 
     output->instruction(createInstruction)->createComponent.count = 
@@ -1313,10 +1307,9 @@ void QDeclarativeCompiler::genComponent(QDeclarativeScript::Object *obj)
     compileState = oldCompileState;
 
     if (!obj->id.isEmpty()) {
-        QDeclarativeInstruction id;
-        id.setType(QDeclarativeInstruction::SetId);
-        id.setId.value = output->indexForString(obj->id);
-        id.setId.index = obj->idIndex;
+        Instruction::SetId id;
+        id.value = output->indexForString(obj->id);
+        id.index = obj->idIndex;
         output->addInstruction(id);
     }
 
@@ -1711,11 +1704,10 @@ void QDeclarativeCompiler::genListProperty(QDeclarativeScript::Property *prop,
 {
     int listType = enginePrivate->listType(prop->type);
 
-    QDeclarativeInstruction fetch;
-    fetch.setType(QDeclarativeInstruction::FetchQList);
-    fetch.fetchQmlList.property = prop->index;
+    Instruction::FetchQList fetch;
+    fetch.property = prop->index;
     bool listTypeIsInterface = QDeclarativeMetaType::isInterface(listType);
-    fetch.fetchQmlList.type = listType;
+    fetch.type = listType;
     output->addInstruction(fetch);
 
     for (Value *v = prop->values.first(); v; v = Property::ValueList::next(v)) {
@@ -1724,13 +1716,11 @@ void QDeclarativeCompiler::genListProperty(QDeclarativeScript::Property *prop,
 
             genObject(v->object);
             if (listTypeIsInterface) {
-                QDeclarativeInstruction assign;
-                assign.setType(QDeclarativeInstruction::AssignObjectList);
-                assign.assignObjectList.line = prop->location.start.line;
+                Instruction::AssignObjectList assign;
+                assign.line = prop->location.start.line;
                 output->addInstruction(assign);
             } else {
-                QDeclarativeInstruction store;
-                store.setType(QDeclarativeInstruction::StoreObjectQList);
+                Instruction::StoreObjectQList store;
                 output->addInstruction(store);
             }
 
@@ -1742,8 +1732,7 @@ void QDeclarativeCompiler::genListProperty(QDeclarativeScript::Property *prop,
 
     }
 
-    QDeclarativeInstruction pop;
-    pop.setType(QDeclarativeInstruction::PopQList);
+    Instruction::PopQList pop;
     output->addInstruction(pop);
 }
 
@@ -1763,26 +1752,23 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeScript::Property *p
 
             if (QDeclarativeMetaType::isInterface(prop->type)) {
 
-                QDeclarativeInstruction store;
-                store.setType(QDeclarativeInstruction::StoreInterface);
-                store.storeObject.line = v->object->location.start.line;
-                store.storeObject.propertyIndex = prop->index;
+                Instruction::StoreInterface store;
+                store.line = v->object->location.start.line;
+                store.propertyIndex = prop->index;
                 output->addInstruction(store);
 
             } else if (prop->type == QMetaType::QVariant) {
 
-                QDeclarativeInstruction store;
-                store.setType(QDeclarativeInstruction::StoreVariantObject);
-                store.storeObject.line = v->object->location.start.line;
-                store.storeObject.propertyIndex = prop->index;
+                Instruction::StoreVariantObject store;
+                store.line = v->object->location.start.line;
+                store.propertyIndex = prop->index;
                 output->addInstruction(store);
 
             } else {
 
-                QDeclarativeInstruction store;
-                store.setType(QDeclarativeInstruction::StoreObject);
-                store.storeObject.line = v->object->location.start.line;
-                store.storeObject.propertyIndex = prop->index;
+                Instruction::StoreObject store;
+                store.line = v->object->location.start.line;
+                store.propertyIndex = prop->index;
                 output->addInstruction(store);
 
             }
@@ -1806,33 +1792,31 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeScript::Property *p
         if (v->type == Value::ValueSource) {
             genObject(v->object);
 
-            QDeclarativeInstruction store;
-            store.setType(QDeclarativeInstruction::StoreValueSource);
+            Instruction::StoreValueSource store;
             if (valueTypeProperty) {
-                store.assignValueSource.property = genValueTypeData(prop, valueTypeProperty);
-                store.assignValueSource.owner = 1;
+                store.property = genValueTypeData(prop, valueTypeProperty);
+                store.owner = 1;
             } else {
-                store.assignValueSource.property = genPropertyData(prop);
-                store.assignValueSource.owner = 0;
+                store.property = genPropertyData(prop);
+                store.owner = 0;
             }
             QDeclarativeType *valueType = toQmlType(v->object);
-            store.assignValueSource.castValue = valueType->propertyValueSourceCast();
+            store.castValue = valueType->propertyValueSourceCast();
             output->addInstruction(store);
 
         } else if (v->type == Value::ValueInterceptor) {
             genObject(v->object);
 
-            QDeclarativeInstruction store;
-            store.setType(QDeclarativeInstruction::StoreValueInterceptor);
+            Instruction::StoreValueInterceptor store;
             if (valueTypeProperty) {
-                store.assignValueInterceptor.property = genValueTypeData(prop, valueTypeProperty);
-                store.assignValueInterceptor.owner = 1;
+                store.property = genValueTypeData(prop, valueTypeProperty);
+                store.owner = 1;
             } else {
-                store.assignValueInterceptor.property = genPropertyData(prop);
-                store.assignValueInterceptor.owner = 0;
+                store.property = genPropertyData(prop);
+                store.owner = 0;
             }
             QDeclarativeType *valueType = toQmlType(v->object);
-            store.assignValueInterceptor.castValue = valueType->propertyValueInterceptorCast();
+            store.castValue = valueType->propertyValueInterceptorCast();
             output->addInstruction(store);
         }
 
@@ -3076,42 +3060,36 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
 
     const BindingReference &ref = *binding->bindingReference;
     if (ref.dataType == BindingReference::V4) {
-        QDeclarativeInstruction store;
-        store.setType(QDeclarativeInstruction::StoreV4Binding);
-        store.assignBinding.value = ref.compiledIndex;
-        store.assignBinding.context = ref.bindingContext.stack;
-        store.assignBinding.owner = ref.bindingContext.owner;
+        Instruction::StoreV4Binding store;
+        store.value = ref.compiledIndex;
+        store.context = ref.bindingContext.stack;
+        store.owner = ref.bindingContext.owner;
         if (valueTypeProperty) 
-            store.assignBinding.property = (valueTypeProperty->index & 0xFFFF) |
-                                           ((valueTypeProperty->type & 0xFF)) << 16 |
-                                           ((prop->index & 0xFF) << 24);
+            store.property = (valueTypeProperty->index & 0xFFFF) |
+                             ((valueTypeProperty->type & 0xFF)) << 16 |
+                             ((prop->index & 0xFF) << 24);
         else 
-            store.assignBinding.property = prop->index;
-        store.assignBinding.line = binding->location.start.line;
+            store.property = prop->index;
+        store.line = binding->location.start.line;
         output->addInstruction(store);
     } else if (ref.dataType == BindingReference::V8) {
-        QDeclarativeInstruction store;
-        store.setType(QDeclarativeInstruction::StoreV8Binding);
-        store.assignBinding.value = ref.compiledIndex;
-        store.assignBinding.context = ref.bindingContext.stack;
-        store.assignBinding.owner = ref.bindingContext.owner;
-        store.assignBinding.line = binding->location.start.line;
+        Instruction::StoreV8Binding store;
+        store.value = ref.compiledIndex;
+        store.context = ref.bindingContext.stack;
+        store.owner = ref.bindingContext.owner;
+        store.line = binding->location.start.line;
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
                  (ref.bindingContext.owner != 0 && valueTypeProperty));
         if (ref.bindingContext.owner) {
-            store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
+            store.property = genValueTypeData(prop, valueTypeProperty);
         } else {
-            store.assignBinding.property = genPropertyData(prop);
+            store.property = genPropertyData(prop);
         }
 
         output->addInstruction(store);
     } else {
         QDeclarativeInstruction store;
-        if (!prop->isAlias)
-            store.setType(QDeclarativeInstruction::StoreBinding);
-        else
-            store.setType(QDeclarativeInstruction::StoreBindingOnAlias);
         store.assignBinding.value = output->indexForString(ref.rewrittenExpression);
         store.assignBinding.context = ref.bindingContext.stack;
         store.assignBinding.owner = ref.bindingContext.owner;
@@ -3124,7 +3102,10 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         } else {
             store.assignBinding.property = genPropertyData(prop);
         }
-        output->addInstruction(store);
+        output->addInstructionHelper(
+            !prop->isAlias ? QDeclarativeInstruction::StoreBinding
+                           : QDeclarativeInstruction::StoreBindingOnAlias
+            , store);
     }
 }
 

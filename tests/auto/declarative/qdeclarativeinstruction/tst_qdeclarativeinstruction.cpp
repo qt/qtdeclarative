@@ -77,12 +77,11 @@ void tst_qdeclarativeinstruction::dump()
 {
     QDeclarativeCompiledData *data = new QDeclarativeCompiledData(0);
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::Init);
-        i.init.bindingsSize = 0;
-        i.init.parserStatusSize = 3;
-        i.init.contextCache = -1;
-        i.init.compiledBinding = -1;
+        QDeclarativeCompiledData::Instruction::Init i;
+        i.bindingsSize = 0;
+        i.parserStatusSize = 3;
+        i.contextCache = -1;
+        i.compiledBinding = -1;
         data->addInstruction(i);
     }
 
@@ -91,417 +90,367 @@ void tst_qdeclarativeinstruction::dump()
         ref.className = "Test";
         data->types << ref;
 
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::CreateObject);
-        i.create.type = 0;
-        i.create.data = -1;
-        i.create.bindingBits = -1;
-        i.create.column = 10;
+        QDeclarativeCompiledData::Instruction::CreateObject i;
+        i.type = 0;
+        i.data = -1;
+        i.bindingBits = -1;
+        i.column = 10;
         data->addInstruction(i);
     }
 
     {
         data->primitives << "testId";
 
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::SetId);
-        i.setId.value = data->primitives.count() - 1;
-        i.setId.index = 0;
+        QDeclarativeCompiledData::Instruction::SetId i;
+        i.value = data->primitives.count() - 1;
+        i.index = 0;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::SetDefault);
+        QDeclarativeCompiledData::Instruction::SetDefault i;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::CreateComponent);
-        i.createComponent.count = 3;
-        i.createComponent.column = 4;
-        i.createComponent.endLine = 14;
-        i.createComponent.metaObject = 0;
-
-        data->addInstruction(i);
-    }
-
-    {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreMetaObject);
-        i.storeMeta.data = 3;
-        i.storeMeta.aliasData = 6;
-        i.storeMeta.propertyCache = 7;
+        QDeclarativeCompiledData::Instruction::CreateComponent i;
+        i.count = 3;
+        i.column = 4;
+        i.endLine = 14;
+        i.metaObject = 0;
 
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreFloat);
-        i.storeFloat.propertyIndex = 3;
-        i.storeFloat.value = 11.3;
+        QDeclarativeCompiledData::Instruction::StoreMetaObject i;
+        i.data = 3;
+        i.aliasData = 6;
+        i.propertyCache = 7;
+
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreDouble);
-        i.storeDouble.propertyIndex = 4;
-        i.storeDouble.value = 14.8;
+        QDeclarativeCompiledData::Instruction::StoreFloat i;
+        i.propertyIndex = 3;
+        i.value = 11.3;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreInteger);
-        i.storeInteger.propertyIndex = 5;
-        i.storeInteger.value = 9;
+        QDeclarativeCompiledData::Instruction::StoreDouble i;
+        i.propertyIndex = 4;
+        i.value = 14.8;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreBool);
-        i.storeBool.propertyIndex = 6;
-        i.storeBool.value = true;
+        QDeclarativeCompiledData::Instruction::StoreInteger i;
+        i.propertyIndex = 5;
+        i.value = 9;
+        data->addInstruction(i);
+    }
+
+    {
+        QDeclarativeCompiledData::Instruction::StoreBool i;
+        i.propertyIndex = 6;
+        i.value = true;
 
         data->addInstruction(i);
     }
 
     {
         data->primitives << "Test String";
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreString);
-        i.storeString.propertyIndex = 7;
-        i.storeString.value = data->primitives.count() - 1;
+        QDeclarativeCompiledData::Instruction::StoreString i;
+        i.propertyIndex = 7;
+        i.value = data->primitives.count() - 1;
         data->addInstruction(i);
     }
 
     {
         data->urls << QUrl("http://www.nokia.com");
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreUrl);
-        i.storeUrl.propertyIndex = 8;
-        i.storeUrl.value = data->urls.count() - 1;
+        QDeclarativeCompiledData::Instruction::StoreUrl i;
+        i.propertyIndex = 8;
+        i.value = data->urls.count() - 1;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreColor);
-        i.storeColor.propertyIndex = 9;
-        i.storeColor.value = 0xFF00FF00;
+        QDeclarativeCompiledData::Instruction::StoreColor i;
+        i.propertyIndex = 9;
+        i.value = 0xFF00FF00;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreDate);
-        i.storeDate.propertyIndex = 10;
-        i.storeDate.value = 9;
+        QDeclarativeCompiledData::Instruction::StoreDate i;
+        i.propertyIndex = 10;
+        i.value = 9;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreTime);
-        i.storeTime.propertyIndex = 11;
+        QDeclarativeCompiledData::Instruction::StoreTime i;
+        i.propertyIndex = 11;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreDateTime);
-        i.storeDateTime.propertyIndex = 12;
+        QDeclarativeCompiledData::Instruction::StoreDateTime i;
+        i.propertyIndex = 12;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StorePoint);
-        i.storePoint.propertyIndex = 13;
-        i.storePoint.point.xp = 3;
-        i.storePoint.point.yp = 7;
+        QDeclarativeCompiledData::Instruction::StorePoint i;
+        i.propertyIndex = 13;
+        i.point.xp = 3;
+        i.point.yp = 7;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StorePointF);
-        i.storePointF.propertyIndex = 13;
-        i.storePointF.point.xp = 3;
-        i.storePointF.point.yp = 7;
+        QDeclarativeCompiledData::Instruction::StorePointF i;
+        i.propertyIndex = 13;
+        i.point.xp = 3;
+        i.point.yp = 7;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreSize);
-        i.storeSize.propertyIndex = 15;
-        i.storeSize.size.wd = 8;
-        i.storeSize.size.ht = 11;
+        QDeclarativeCompiledData::Instruction::StoreSize i;
+        i.propertyIndex = 15;
+        i.size.wd = 8;
+        i.size.ht = 11;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreSizeF);
-        i.storeSizeF.propertyIndex = 15;
-        i.storeSizeF.size.wd = 8;
-        i.storeSizeF.size.ht = 11;
+        QDeclarativeCompiledData::Instruction::StoreSizeF i;
+        i.propertyIndex = 15;
+        i.size.wd = 8;
+        i.size.ht = 11;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreRect);
-        i.storeRect.propertyIndex = 17;
-        i.storeRect.rect.x1 = 7;
-        i.storeRect.rect.y1 = 9;
-        i.storeRect.rect.x2 = 11;
-        i.storeRect.rect.y2 = 13;
+        QDeclarativeCompiledData::Instruction::StoreRect i;
+        i.propertyIndex = 17;
+        i.rect.x1 = 7;
+        i.rect.y1 = 9;
+        i.rect.x2 = 11;
+        i.rect.y2 = 13;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreRectF);
-        i.storeRectF.propertyIndex = 18;
-        i.storeRectF.rect.xp = 11.3;
-        i.storeRectF.rect.yp = 9.8;
-        i.storeRectF.rect.w = 3;
-        i.storeRectF.rect.h = 2.1;
+        QDeclarativeCompiledData::Instruction::StoreRectF i;
+        i.propertyIndex = 18;
+        i.rect.xp = 11.3;
+        i.rect.yp = 9.8;
+        i.rect.w = 3;
+        i.rect.h = 2.1;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreVector3D);
-        i.storeVector3D.propertyIndex = 19;
-        i.storeVector3D.vector.xp = 9;
-        i.storeVector3D.vector.yp = 3;
-        i.storeVector3D.vector.zp = 92;
+        QDeclarativeCompiledData::Instruction::StoreVector3D i;
+        i.propertyIndex = 19;
+        i.vector.xp = 9;
+        i.vector.yp = 3;
+        i.vector.zp = 92;
         data->addInstruction(i);
     }
 
     {
         data->primitives << "color(1, 1, 1, 1)";
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreVariant);
-        i.storeString.propertyIndex = 20;
-        i.storeString.value = data->primitives.count() - 1;
+        QDeclarativeCompiledData::Instruction::StoreVariant i;
+        i.propertyIndex = 20;
+        i.value = data->primitives.count() - 1;
 
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreObject);
-        i.storeObject.propertyIndex = 21;
+        QDeclarativeCompiledData::Instruction::StoreObject i;
+        i.propertyIndex = 21;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreVariantObject);
-        i.storeObject.propertyIndex = 22;
+        QDeclarativeCompiledData::Instruction::StoreVariantObject i;
+        i.propertyIndex = 22;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreInterface);
-        i.storeObject.propertyIndex = 23;
+        QDeclarativeCompiledData::Instruction::StoreInterface i;
+        i.propertyIndex = 23;
         data->addInstruction(i);
     }
 
     {
         data->primitives << "console.log(1921)";
 
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreSignal);
-        i.storeSignal.signalIndex = 2;
-        i.storeSignal.value = data->primitives.count() - 1;
+        QDeclarativeCompiledData::Instruction::StoreSignal i;
+        i.signalIndex = 2;
+        i.value = data->primitives.count() - 1;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreScriptString);
-        i.storeScriptString.propertyIndex = 24;
-        i.storeScriptString.value = 3;
-        i.storeScriptString.scope = 1;
-        i.storeScriptString.bindingId = 4;
+        QDeclarativeCompiledData::Instruction::StoreScriptString i;
+        i.propertyIndex = 24;
+        i.value = 3;
+        i.scope = 1;
+        i.bindingId = 4;
         data->addInstruction(i);
     }
 
     {
         data->datas << "mySignal";
 
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::AssignSignalObject);
-        i.assignSignalObject.signal = 0;
+        QDeclarativeCompiledData::Instruction::AssignSignalObject i;
+        i.signal = 0;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::AssignCustomType);
-        i.assignCustomType.propertyIndex = 25;
-        i.assignCustomType.primitive = 6;
-        i.assignCustomType.type = 9;
+        QDeclarativeCompiledData::Instruction::AssignCustomType i;
+        i.propertyIndex = 25;
+        i.primitive = 6;
+        i.type = 9;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreBinding);
-        i.assignBinding.property = 26;
-        i.assignBinding.value = 3;
-        i.assignBinding.context = 2;
-        i.assignBinding.owner = 0;
+        QDeclarativeCompiledData::Instruction::StoreBinding i;
+        i.property = 26;
+        i.value = 3;
+        i.context = 2;
+        i.owner = 0;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreV4Binding);
-        i.assignBinding.property = 27;
-        i.assignBinding.value = 2;
-        i.assignBinding.context = 4;
-        i.assignBinding.owner = 0;
+        QDeclarativeCompiledData::Instruction::StoreV4Binding i;
+        i.property = 27;
+        i.value = 2;
+        i.context = 4;
+        i.owner = 0;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreValueSource);
-        i.assignValueSource.property = 29;
-        i.assignValueSource.owner = 1;
-        i.assignValueSource.castValue = 4;
+        QDeclarativeCompiledData::Instruction::StoreValueSource i;
+        i.property = 29;
+        i.owner = 1;
+        i.castValue = 4;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreValueInterceptor);
-        i.assignValueInterceptor.property = 30;
-        i.assignValueInterceptor.owner = 2;
-        i.assignValueInterceptor.castValue = -4;
+        QDeclarativeCompiledData::Instruction::StoreValueInterceptor i;
+        i.property = 30;
+        i.owner = 2;
+        i.castValue = -4;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::BeginObject);
-        i.begin.castValue = 4;
+        QDeclarativeCompiledData::Instruction::BeginObject i;
+        i.castValue = 4;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreObjectQList);
+        QDeclarativeCompiledData::Instruction::StoreObjectQList i;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::AssignObjectList);
+        QDeclarativeCompiledData::Instruction::AssignObjectList i;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::FetchAttached);
-        i.fetchAttached.id = 23;
+        QDeclarativeCompiledData::Instruction::FetchAttached i;
+        i.id = 23;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::FetchQList);
-        i.fetch.property = 32;
+        QDeclarativeCompiledData::Instruction::FetchQList i;
+        i.property = 32;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::FetchObject);
-        i.fetch.property = 33;
+        QDeclarativeCompiledData::Instruction::FetchObject i;
+        i.property = 33;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::FetchValueType);
-        i.fetchValue.property = 34;
-        i.fetchValue.type = 6;
-        i.fetchValue.bindingSkipList = 7;
+        QDeclarativeCompiledData::Instruction::FetchValueType i;
+        i.property = 34;
+        i.type = 6;
+        i.bindingSkipList = 7;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::PopFetchedObject);
+        QDeclarativeCompiledData::Instruction::PopFetchedObject i;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::PopQList);
+        QDeclarativeCompiledData::Instruction::PopQList i;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::PopValueType);
-        i.fetchValue.property = 35;
-        i.fetchValue.type = 8;
+        QDeclarativeCompiledData::Instruction::PopValueType i;
+        i.property = 35;
+        i.type = 8;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::Defer);
-        i.defer.deferCount = 7;
+        QDeclarativeCompiledData::Instruction::Defer i;
+        i.deferCount = 7;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::Defer);
-        i.defer.deferCount = 7;
+        QDeclarativeCompiledData::Instruction::Defer i;
+        i.deferCount = 7;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreImportedScript);
-        i.storeScript.value = 2;
+        QDeclarativeCompiledData::Instruction::StoreImportedScript i;
+        i.value = 2;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreVariantInteger);
-        i.storeInteger.value = 11;
-        i.storeInteger.propertyIndex = 32;
+        QDeclarativeCompiledData::Instruction::StoreVariantInteger i;
+        i.value = 11;
+        i.propertyIndex = 32;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::StoreVariantDouble);
-        i.storeDouble.value = 33.7;
-        i.storeDouble.propertyIndex = 19;
+        QDeclarativeCompiledData::Instruction::StoreVariantDouble i;
+        i.value = 33.7;
+        i.propertyIndex = 19;
         data->addInstruction(i);
     }
 
     {
-        QDeclarativeInstruction i;
-        i.setType(QDeclarativeInstruction::Done);
+        QDeclarativeCompiledData::Instruction::Done i;
         data->addInstruction(i);
     }
 

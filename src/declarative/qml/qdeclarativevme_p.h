@@ -55,6 +55,7 @@
 
 #include "qdeclarativeerror.h"
 #include "private/qbitfield_p.h"
+#include "private/qdeclarativeinstruction_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStack>
@@ -89,8 +90,17 @@ private:
 
     QObject *run(QDeclarativeVMEObjectStack &, 
                  QDeclarativeContextData *, QDeclarativeCompiledData *, 
-                 int start, const QBitField &);
+                 int start, const QBitField &
+#ifdef QML_THREADED_VME_INTERPRETER
+                 , void ***storeJumpTable = 0
+#endif
+                 );
     QList<QDeclarativeError> vmeErrors;
+
+#ifdef QML_THREADED_VME_INTERPRETER
+    static void **instructionJumpTable();
+    friend class QDeclarativeCompiledData;
+#endif
 };
 
 QT_END_NAMESPACE

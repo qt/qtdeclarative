@@ -116,13 +116,22 @@ QT_BEGIN_NAMESPACE
     F(FetchValueType, fetchValue) \
     F(PopValueType, fetchValue) 
 
+#if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
+#  define QML_THREADED_VME_INTERPRETER
+#endif
+
 #ifdef Q_ALIGNOF
 #  define QML_INSTR_ALIGN_MASK (Q_ALIGNOF(QDeclarativeInstruction) - 1)
 #else
 #  define QML_INSTR_ALIGN_MASK (sizeof(void *) - 1)
 #endif
 
-#define QML_INSTR_HEADER quint8 instructionType;
+#ifdef QML_THREADED_VME_INTERPRETER
+#  define QML_INSTR_HEADER void *code;
+#else
+#  define QML_INSTR_HEADER quint8 instructionType;
+#endif
+
 #define QML_INSTR_ENUM(I, FMT)  I,
 #define QML_INSTR_SIZE(I, FMT) ((sizeof(QDeclarativeInstruction::instr_##FMT) + QML_INSTR_ALIGN_MASK) & ~QML_INSTR_ALIGN_MASK)
 
@@ -132,9 +141,6 @@ union QDeclarativeInstruction
     enum Type { 
         FOR_EACH_QML_INSTR(QML_INSTR_ENUM)
     };
-
-    inline void setType(Type type) { common.instructionType = type; }
-    inline Type type() const { return (Type)common.instructionType; }
 
     struct instr_common {
         QML_INSTR_HEADER
@@ -461,7 +467,7 @@ union QDeclarativeInstruction
     instr_defer defer;
     instr_assignObjectList assignObjectList;
 
-    int size() const;
+    static int size(Type type);
 };
 
 template<int N>
@@ -473,9 +479,15 @@ struct QDeclarativeInstructionMeta {
         enum { Size = QML_INSTR_SIZE(I, FMT) }; \
         typedef QDeclarativeInstruction::instr_##FMT DataType; \
         static const DataType &data(const QDeclarativeInstruction &instr) { return instr.FMT; } \
+        static void setData(QDeclarativeInstruction &instr, const DataType &v) { instr.FMT = v; } \
     }; 
 FOR_EACH_QML_INSTR(QML_INSTR_META_TEMPLATE);
 #undef QML_INSTR_META_TEMPLATE
+
+template<int Instr>
+class QDeclarativeInstructionData : public QDeclarativeInstructionMeta<Instr>::DataType
+{
+};
 
 QT_END_NAMESPACE
 
