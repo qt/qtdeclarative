@@ -435,12 +435,30 @@ Item {
             qtest_fail("window not shown", 2)
     }
 
-    function mouseMove(item, x, y, delay) {
+    function mouseMove(item, x, y, delay, buttons) {
         if (delay == undefined)
             delay = -1
-        if (!qtest_events.mouseMove(item, x, y, delay))
+        if (buttons == undefined)
+            buttons = Qt.NoButton
+        if (!qtest_events.mouseMove(item, x, y, delay, buttons))
             qtest_fail("window not shown", 2)
     }
+
+    function mouseWheel(item, x, y, delta, buttons, modifiers, delay, orientation) {
+        if (delay == undefined)
+            delay = -1
+        if (buttons == undefined)
+            buttons = Qt.NoButton
+        if (modifiers === undefined)
+            modifiers = Qt.NoModifier
+        if (delta == undefined)
+            delta = 0
+        if (orientation == undefined)
+            orientation = Qt.Vertical
+        if (!qtest_events.mouseWheel(item, x, y, buttons, modifiers, delta, delay, orientation))
+            qtest_fail("window not shown", 2)
+   }
+
 
     // Functions that can be overridden in subclasses for init/cleanup duties.
     function initTestCase() {}

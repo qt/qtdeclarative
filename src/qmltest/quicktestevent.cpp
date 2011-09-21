@@ -133,7 +133,6 @@ namespace QtQuickTest
             pos = view->mapFromScene(ditem->mapToScene(_pos));
             eventWindow = view->viewport()->windowHandle();
         }
-
         QTEST_ASSERT(button == Qt::NoButton || button & Qt::MouseButtonMask);
         QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
 
@@ -152,9 +151,9 @@ namespace QtQuickTest
                 me = QMouseEvent(QEvent::MouseButtonDblClick, pos, window->mapToGlobal(pos), button, button, stateKey);
                 break;
             case MouseMove:
-                QCursor::setPos(window->mapToGlobal(pos));
-                qApp->processEvents();
-                return;
+                // with move event the button is NoButton, but 'buttons' holds the currently pressed buttons
+                me = QMouseEvent(QEvent::MouseMove, pos, window->mapToGlobal(pos), Qt::NoButton, button, stateKey);
+                break;
             default:
                 QTEST_ASSERT(false);
         }
@@ -165,6 +164,46 @@ namespace QtQuickTest
             QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
             QTest::qWarn(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toAscii().data());
         }
+    }
+
+    static void mouseWheel(QWindow* window, QObject* item, Qt::MouseButtons buttons,
+                                Qt::KeyboardModifiers stateKey,
+                                QPointF _pos, int delta, int delay = -1, Qt::Orientation orientation = Qt::Vertical)
+    {
+        QTEST_ASSERT(window);
+        QTEST_ASSERT(item);
+        if (delay == -1 || delay < QTest::defaultMouseDelay())
+            delay = QTest::defaultMouseDelay();
+        if (delay > 0)
+            QTest::qWait(delay);
+
+        QPoint pos;
+        QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
+        QWindow *eventWindow = window;
+#ifdef QUICK_TEST_SCENEGRAPH
+        QSGItem *sgitem = qobject_cast<QSGItem *>(item);
+        if (sgitem) {
+            pos = sgitem->mapToScene(_pos).toPoint();
+        } else
+#endif
+        {
+            QDeclarativeItem *ditem = qobject_cast<QDeclarativeItem *>(item);
+            if (!ditem) {
+                qWarning("Mouse event target is not an Item");
+                return;
+            }
+            pos = view->mapFromScene(ditem->mapToScene(_pos));
+            eventWindow = view->viewport()->windowHandle();
+        }
+        QTEST_ASSERT(buttons == Qt::NoButton || buttons & Qt::MouseButtonMask);
+        QTEST_ASSERT(stateKey == 0 || stateKey & Qt::KeyboardModifierMask);
+
+        stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
+        QWheelEvent we(pos, window->mapToGlobal(pos), delta, buttons, stateKey, orientation);
+
+        QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
+        if (!qApp->notify(eventWindow, &we))
+            QTest::qWarn("Wheel event not accepted by receiving window");
     }
 };
 
@@ -179,6 +218,19 @@ bool QuickTestEvent::mousePress
                             Qt::MouseButton(button),
                             Qt::KeyboardModifiers(modifiers),
                             QPointF(x, y), delay);
+    return true;
+}
+
+bool QuickTestEvent::mouseWheel(
+    QObject *item, qreal x, qreal y, int buttons,
+    int modifiers, int delta, int delay, int orientation)
+{
+    QWindow *view = eventWindow();
+    if (!view)
+        return false;
+    QtQuickTest::mouseWheel(view, item, Qt::MouseButtons(buttons),
+                            Qt::KeyboardModifiers(modifiers),
+                            QPointF(x, y), delta, delay, Qt::Orientation(orientation));
     return true;
 }
 
@@ -225,13 +277,13 @@ bool QuickTestEvent::mouseDoubleClick
 }
 
 bool QuickTestEvent::mouseMove
-    (QObject *item, qreal x, qreal y, int delay)
+    (QObject *item, qreal x, qreal y, int delay, int buttons)
 {
     QWindow *view = eventWindow();
     if (!view)
         return false;
     QtQuickTest::mouseEvent(QtQuickTest::MouseMove, view, item,
-                            Qt::NoButton, Qt::NoModifier,
+                            Qt::MouseButton(buttons), Qt::NoModifier,
                             QPointF(x, y), delay);
     return true;
 }

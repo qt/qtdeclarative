@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
@@ -67,7 +67,10 @@ public Q_SLOTS:
                     int modifiers, int delay);
     bool mouseDoubleClick(QObject *item, qreal x, qreal y, int button,
                           int modifiers, int delay);
-    bool mouseMove(QObject *item, qreal x, qreal y, int delay);
+    bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons);
+
+    bool mouseWheel(QObject *item, qreal x, qreal y, int buttons,
+               int modifiers, int delta, int delay, int orientation);
 
 private:
     QWindow *eventWindow();
