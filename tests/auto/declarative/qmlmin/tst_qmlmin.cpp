@@ -46,6 +46,7 @@
 #include <QDebug>
 #include <QSGView>
 #include <QDeclarativeError>
+#include <cstdlib>
 
 class tst_qmlmin : public QObject
 {
@@ -61,8 +62,10 @@ private slots:
 private:
     QString qmlminPath;
     QStringList excludedDirs;
+    QStringList invalidFiles;
 
     QStringList findFiles(const QDir &);
+    bool isInvalidFile(const QFileInfo &fileName) const;
 };
 
 tst_qmlmin::tst_qmlmin()
@@ -90,6 +93,22 @@ void tst_qmlmin::initTestCase()
     excludedDirs << "doc/src/snippets/qtquick1/visualdatamodel_rootindex";
     excludedDirs << "doc/src/snippets/qtquick1/qtbinding";
     excludedDirs << "doc/src/snippets/qtquick1/imports";
+
+    // Add invalid files (i.e. files with syntax errors)
+    invalidFiles << "tests/auto/declarative/qsgloader/data/InvalidSourceComponent.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/dynamicObjectProperties.2.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.3.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/property.4.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/empty.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/signal.2.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/missingObject.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/insertedSemicolon.1.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/nonexistantProperty.5.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativefolderlistmodel/data/dummy.qml";
+    invalidFiles << "tests/auto/declarative/qdeclarativeecmascript/data/blank.js";
+    invalidFiles << "tests/auto/declarative/qdeclarativeworkerscript/data/script_error_onLoad.js";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/test.js";
+    invalidFiles << "tests/auto/declarative/qdeclarativelanguage/data/test2.js";
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)
@@ -119,6 +138,15 @@ QStringList tst_qmlmin::findFiles(const QDir &d)
     return rv;
 }
 
+bool tst_qmlmin::isInvalidFile(const QFileInfo &fileName) const
+{
+    foreach (const QString &invalidFile, invalidFiles) {
+        if (fileName.absoluteFilePath().endsWith(invalidFile))
+            return true;
+    }
+    return false;
+}
+
 /*
 This test runs all the examples in the declarative UI source tree and ensures
 that they start and exit cleanly.
@@ -132,9 +160,11 @@ void tst_qmlmin::qmlMinify_data()
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
+    QString tests = QLatin1String(SRCDIR) + "/../../../../tests/";
 
     QStringList files;
     files << findFiles(QDir(examples));
+    files << findFiles(QDir(tests));
 
     foreach (const QString &file, files)
         QTest::newRow(qPrintable(file)) << file;
@@ -150,7 +180,11 @@ void tst_qmlmin::qmlMinify()
 
     QCOMPARE(qmlminify.error(), QProcess::UnknownError);
     QCOMPARE(qmlminify.exitStatus(), QProcess::NormalExit);
-    QCOMPARE(qmlminify.exitCode(), 0);
+
+    if (isInvalidFile(file))
+        QCOMPARE(qmlminify.exitCode(), EXIT_FAILURE); // cannot minify files with syntax errors
+    else
+        QCOMPARE(qmlminify.exitCode(), 0);
 }
 
 QTEST_MAIN(tst_qmlmin)
