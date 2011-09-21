@@ -110,6 +110,22 @@ void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
+
+    // try to use a single line
+    QString singleLine;
+    singleLine += QString("%1: [").arg(name);
+    for (int i = 0; i < elements.size(); ++i) {
+        singleLine += elements.at(i);
+        if (i != elements.size() - 1)
+            singleLine += QLatin1String(", ");
+    }
+    singleLine += QLatin1String("]\n");
+    if (singleLine.size() + m_indentDepth * 4 < 80) {
+        m_stream->write(singleLine.toUtf8());
+        return;
+    }
+
+    // write multi-line
     m_stream->write(QString("%1: [\n").arg(name).toUtf8());
     ++m_indentDepth;
     for (int i = 0; i < elements.size(); ++i) {

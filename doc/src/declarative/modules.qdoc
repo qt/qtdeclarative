@@ -445,6 +445,13 @@ Module {
             "QtQuick/Animation 1.0"
         ]
 
+        // The meta object revisions for the exports specified in 'exports'.
+        // Describes with revisioned properties will be visible in an export.
+        // The list must have exactly the same length as the 'exports' list.
+        // For example the 'animations' propery described below will only be
+        // available through the QtQuick/Animation 1.0 export.
+        exportMetaObjectRevisions: [0, 1]
+
         Property {
             name: "animations";
             type: "QDeclarativeAbstractAnimation"
@@ -454,7 +461,7 @@ Module {
             isPointer: true
             // defaults to false: whether the type actually is a QDeclarativeListProperty<type>
             isList: true
-            // defaults to 0: the minor version that introduced this property
+            // defaults to 0: the meta object revision that introduced this property
             revision: 1
         }
         Property { name: "loops"; type: "int" }

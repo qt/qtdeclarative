@@ -256,30 +256,43 @@ public:
 
         QSet<const QDeclarativeType *> qmlTypes = qmlTypesByCppName.value(meta->className());
         if (!qmlTypes.isEmpty()) {
-            QStringList exports;
+            QHash<QString, const QDeclarativeType *> exports;
 
             foreach (const QDeclarativeType *qmlTy, qmlTypes) {
                 QString qmlTyName = qmlTy->qmlTypeName();
-                // some qmltype names are missing the actual names, ignore that import
-                if (qmlTyName.endsWith('/'))
-                    continue;
                 if (qmlTyName.startsWith(relocatableModuleUri + QLatin1Char('/'))) {
                     qmlTyName.remove(0, relocatableModuleUri.size() + 1);
                 }
                 if (qmlTyName.startsWith("./")) {
                     qmlTyName.remove(0, 2);
                 }
-                exports += enquote(QString("%1 %2.%3").arg(
-                                       qmlTyName,
-                                       QString::number(qmlTy->majorVersion()),
-                                       QString::number(qmlTy->minorVersion())));
+                if (qmlTyName.startsWith("/")) {
+                    qmlTyName.remove(0, 1);
+                }
+                const QString exportString = enquote(
+                            QString("%1 %2.%3").arg(
+                                qmlTyName,
+                                QString::number(qmlTy->majorVersion()),
+                                QString::number(qmlTy->minorVersion())));
+                exports.insert(exportString, qmlTy);
             }
 
             // ensure exports are sorted and don't change order when the plugin is dumped again
-            exports.removeDuplicates();
-            qSort(exports);
+            QStringList exportStrings = exports.keys();
+            qSort(exportStrings);
+            qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
 
-            qml->writeArrayBinding(QLatin1String("exports"), exports);
+            // write meta object revisions unless they're all zero
+            QStringList metaObjectRevisions;
+            bool shouldWriteMetaObjectRevisions = false;
+            foreach (const QString &exportString, exportStrings) {
+                int metaObjectRevision = exports[exportString]->metaObjectRevision();
+                if (metaObjectRevision != 0)
+                    shouldWriteMetaObjectRevisions = true;
+                metaObjectRevisions += QString::number(metaObjectRevision);
+            }
+            if (shouldWriteMetaObjectRevisions)
+                qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
 
             if (const QMetaObject *attachedType = (*qmlTypes.begin())->attachedPropertiesType()) {
                 qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
