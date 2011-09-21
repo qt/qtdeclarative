@@ -43,7 +43,7 @@
 #include <qdebug.h>
 #include <qdatetime.h>
 #include <qbasictimer.h>
-#include <qapplication.h>
+#include <qcoreapplication.h>
 
 // Implements a "TimeModel" class with hour and minute properties
 // that change on-the-minute yet efficiently sleep the rest
@@ -109,7 +109,7 @@ public:
     {
         if (++instances == 1) {
             if (!timer)
-                timer = new MinuteTimer(qApp);
+                timer = new MinuteTimer(QCoreApplication::instance());
             connect(timer, SIGNAL(timeChanged()), this, SIGNAL(timeChanged()));
             timer->start();
         }

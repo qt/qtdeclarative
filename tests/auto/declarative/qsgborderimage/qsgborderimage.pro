@@ -1,5 +1,4 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui network
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/testhttpserver.h
@@ -15,6 +14,6 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private network widgets
 
 qpa:CONFIG+=insignificant_test  # QTBUG-21004 fails, unstably

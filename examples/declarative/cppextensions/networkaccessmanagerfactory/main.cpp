@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QNetworkAccessManager>
 #include <QNetworkProxy>
 
@@ -80,7 +80,7 @@ int main(int argc, char ** argv)
 {
     QUrl source("qrc:view.qml");
 
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     for (int i = 1; i < argc; ++i) {
         QString arg(argv[i]);

@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QStringList>
 
 #include <qdeclarativeengine.h>
@@ -55,7 +55,7 @@
 
 int main(int argc, char ** argv)
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
 //![0]
     QStringList dataList;

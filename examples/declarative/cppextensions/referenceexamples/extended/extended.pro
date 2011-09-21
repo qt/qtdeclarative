@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = extended
 DEPENDPATH += .
 INCLUDEPATH += .
-QT += declarative
+QT += declarative widgets
 
 # Input
 SOURCES += main.cpp \

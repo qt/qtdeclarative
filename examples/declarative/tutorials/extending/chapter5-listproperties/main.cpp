@@ -41,11 +41,11 @@
 #include "pieslice.h"
 
 #include <QSGView>
-#include <QApplication>
+#include <QGuiApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
     qmlRegisterType<PieSlice>("Charts", 1, 0, "PieSlice");

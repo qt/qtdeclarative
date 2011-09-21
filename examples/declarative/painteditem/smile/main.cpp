@@ -38,7 +38,7 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QPainter>
 #include <QtDeclarative/qdeclarative.h>
 #include <QtDeclarative/qsgview.h>
@@ -68,7 +68,7 @@ public:
 
 int main(int argc, char ** argv)
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qmlRegisterType<MyPaintItem>("MyModule", 1, 0, "MyPaintItem");
 

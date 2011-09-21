@@ -40,11 +40,11 @@
 //![0]
 #include "piechart.h"
 #include <QSGView>
-#include <QApplication>
+#include <QGuiApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 
     qmlRegisterType<PieChart>("Charts", 1, 0, "PieChart");
 
