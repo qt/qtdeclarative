@@ -54,6 +54,8 @@ QT_BEGIN_NAMESPACE
     \brief The QSGPaintedItem class provides a way to use the QPainter API in the
     QML Scene Graph.
 
+    \inmodule QtDeclarative
+
     The QSGPaintedItem makes it possible to use the QPainter API with the QML Scene Graph.
     It sets up a textured rectangle in the Scene Graph and uses a QPainter to paint
     onto the texture. The render target can be either a QImage or a QOpenGLFramebufferObject.

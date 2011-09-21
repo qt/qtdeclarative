@@ -119,8 +119,10 @@ const char *FlatColorMaterialShader::fragmentShader() const {
 
 /*!
     \class QSGFlatColorMaterial
-    \brief The QSGFlatColorMaterial provides a convenient way of rendering
+    \brief The QSGFlatColorMaterial class provides a convenient way of rendering
     solid colored geometry in the scene graph.
+
+    \inmodule QtDeclarative
 
     The flat color material will fill every pixel in a geometry using
     a solid color. The color can contain transparency.

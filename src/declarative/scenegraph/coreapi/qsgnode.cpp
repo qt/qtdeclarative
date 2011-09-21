@@ -62,6 +62,8 @@ static void qt_print_node_count()
     \class QSGNode
     \brief The QSGNode class is the base class for all nodes in the scene graph.
 
+    \inmodule QtDeclarative
+
     The QSGNode class can be used as a child container. Children are added with
     the appendChildNode(), prependChildNode(), insertChildNodeBefore() and
     insertChildNodeAfter(). Ordering of nodes is important as geometry nodes
@@ -476,7 +478,9 @@ void QSGNode::markDirty(DirtyFlags flags)
 
 /*!
     \class QSGBasicGeometryNode
-    \brief The QSGBasicGeometryNode serves as a baseclass for geometry based nodes
+    \brief The QSGBasicGeometryNode class serves as a baseclass for geometry based nodes
+
+    \inmodule QtDeclarative
 
     The QSGBasicGeometryNode class should not be used by itself. It is only encapsulates
     shared functionality between the QSGGeometryNode and QSGClipNode classes.
@@ -538,6 +542,8 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 /*!
     \class QSGGeometryNode
     \brief The QSGGeometryNode class is used for all rendered content in the scene graph.
+
+    \inmodule QtDeclarative
 
     The QSGGeometryNode consists of geometry and material. The geometry defines the mesh,
     the vertices and their structure, to be drawn. The Material defines how the shape is
@@ -704,7 +710,9 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
 
 /*!
     \class QSGClipNode
-    \brief The QSGClipNode implements the clipping functionality in the scene graph.
+    \brief The QSGClipNode class implements the clipping functionality in the scene graph.
+
+    \inmodule QtDeclarative
 
     Clipping applies to the node's subtree and can be nested. Multiple clip nodes will be
     accumulated by intersecting all their geometries. The accumulation happens
@@ -790,7 +798,9 @@ void QSGClipNode::setClipRect(const QRectF &rect)
 
 /*!
     \class QSGTransformNode
-    \brief The QSGTransformNode implements transformations in the scene graph
+    \brief The QSGTransformNode class implements transformations in the scene graph
+
+    \inmodule QtDeclarative
 
     Transformations apply the node's subtree and can be nested. Multiple transform nodes
     will be accumulated by intersecting all their matrices. The accumulation happens
@@ -909,9 +919,11 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyFlags flags)
 
 /*!
     \class QSGOpacityNode
-    \brief The QSGOpacityNode is used
+    \brief The QSGOpacityNode class is used to change opacity of nodes.
 
-    Opacity apply to its subtree and can be nested. Multiple opacity nodes
+    \inmodule QtDeclarative
+
+    Opacity applies to its subtree and can be nested. Multiple opacity nodes
     will be accumulated by multiplying their opacity. The accumulation happens
     as part of the rendering.
 
@@ -926,7 +938,7 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyFlags flags)
 /*!
     Constructs an opacity node with a default opacity of 1.
 
-    Opacity accumulate downwards in the scene graph so a node with two
+    Opacity accumulates downwards in the scene graph so a node with two
     QSGOpacityNode instances above it, both with opacity of 0.5, will have
     effective opacity of 0.25.
 

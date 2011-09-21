@@ -58,10 +58,12 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
 
 /*!
   \class QSGSimpleTextureNode
-  \brief The QSGSimpleTextureNode provided for convenience to easily draw
+  \brief The QSGSimpleTextureNode class is provided for convenience to easily draw
   textured content using the QML scene graph.
 
-  \warning The simple texture node class must have texture before being
+  \inmodule QtDeclarative
+
+  \warning The simple texture node class must have a texture before being
   added to the scene graph to be rendered.
 */
 
