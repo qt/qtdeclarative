@@ -91,6 +91,7 @@
 
 QSGParticleGroup::QSGParticleGroup(QObject* parent)
     : QSGStochasticState(parent)
+    , m_system(0)
 {
 
 }
