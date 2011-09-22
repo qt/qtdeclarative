@@ -206,9 +206,9 @@ QT_BEGIN_NAMESPACE
     as if the Emitter was positioned at x,y but all other properties are the same.
 */
 
-/*! \qmlmethod QtQuick.Particles2::Emitter::pulse(real duration)
+/*! \qmlmethod QtQuick.Particles2::Emitter::pulse(int duration)
 
-    If the emitter is not enabled, enables it for duration seconds and then switches
+    If the emitter is not enabled, enables it for duration milliseconds and then switches
     it back off.
 */
 
@@ -227,7 +227,7 @@ QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
   , m_particleEndSize(-1)
   , m_particleSizeVariation(0)
   , m_startTime(0)
-  , m_burstLeft(0)
+  , m_pulseLeft(0)
   , m_maxParticleCount(-1)
   , m_speed_from_movement(0)
   , m_reset_last(true)
@@ -282,12 +282,12 @@ QSGParticleExtruder* QSGParticleEmitter::effectiveExtruder()
     return m_defaultExtruder;
 }
 
-void QSGParticleEmitter::pulse(qreal seconds)
+void QSGParticleEmitter::pulse(int milliseconds)
 {
     if (!particleCount())
         qWarning() << "pulse called on an emitter with a particle count of zero";
     if (!m_enabled)
-        m_burstLeft = seconds*1000.0;//TODO: Change name to match
+        m_pulseLeft = milliseconds;
 }
 
 void QSGParticleEmitter::burst(int num)
@@ -348,7 +348,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if ((!m_enabled || !m_particlesPerSecond)&& !m_burstLeft && m_burstQueue.isEmpty()){
+    if ((!m_enabled || !m_particlesPerSecond)&& !m_pulseLeft && m_burstQueue.isEmpty()){
         m_reset_last = true;
         return;
     }
@@ -364,12 +364,12 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
         m_emitCap = particleCount();
     }
 
-    if (m_burstLeft){
-        m_burstLeft -= timeStamp - m_last_timestamp * 1000.;
-        if (m_burstLeft < 0){
+    if (m_pulseLeft){
+        m_pulseLeft -= timeStamp - m_last_timestamp * 1000.;
+        if (m_pulseLeft < 0){
             if (!m_enabled)
-                timeStamp += m_burstLeft;
-            m_burstLeft = 0;
+                timeStamp += m_pulseLeft;
+            m_pulseLeft = 0;
         }
     }
     qreal time = timeStamp / 1000.;
@@ -395,7 +395,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
     qreal emitter_x_offset = m_last_emitter.x() - x();
     qreal emitter_y_offset = m_last_emitter.y() - y();
-    if (!m_burstQueue.isEmpty() && !m_burstLeft && !m_enabled)//'outside time' emissions only
+    if (!m_burstQueue.isEmpty() && !m_pulseLeft && !m_enabled)//'outside time' emissions only
         pt = time;
 
     QList<QSGParticleData*> toEmit;

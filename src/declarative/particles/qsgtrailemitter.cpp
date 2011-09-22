@@ -139,7 +139,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
 {
     if (m_system == 0)
         return;
-    if (!m_enabled && !m_burstLeft && m_burstQueue.isEmpty())
+    if (!m_enabled && !m_pulseLeft && m_burstQueue.isEmpty())
         return;
     if (m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size()){
         qreal oldPPS = m_particlesPerSecond;
@@ -148,11 +148,11 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
             return;//system may need to update
     }
 
-    if (m_burstLeft){
-        m_burstLeft -= timeStamp - m_lastTimeStamp * 1000.;
-        if (m_burstLeft < 0){
-            timeStamp += m_burstLeft;
-            m_burstLeft = 0;
+    if (m_pulseLeft){
+        m_pulseLeft -= timeStamp - m_lastTimeStamp * 1000.;
+        if (m_pulseLeft < 0){
+            timeStamp += m_pulseLeft;
+            m_pulseLeft = 0;
         }
     }
 

@@ -154,7 +154,7 @@ signals:
     void startTimeChanged(int arg);
 
 public slots:
-    void pulse(qreal seconds);
+    void pulse(int milliseconds);
     void burst(int num);
     void burst(int num, qreal x, qreal y);
 
@@ -322,7 +322,7 @@ protected:
        int m_startTime;
        bool m_overwrite;
 
-       int m_burstLeft;//TODO: Rename to pulse
+       int m_pulseLeft;
        QList<QPair<int, QPointF > > m_burstQueue;
        int m_maxParticleCount;
 
