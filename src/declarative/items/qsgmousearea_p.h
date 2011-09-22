@@ -149,7 +149,8 @@ private:
 };
 
 class QSGMouseAreaPrivate;
-class Q_AUTOTEST_EXPORT QSGMouseArea : public QSGItem
+// used in QtLocation
+class Q_DECLARATIVE_EXPORT QSGMouseArea : public QSGItem
 {
     Q_OBJECT
 
