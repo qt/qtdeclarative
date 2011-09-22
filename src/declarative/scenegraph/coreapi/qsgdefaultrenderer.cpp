@@ -112,23 +112,23 @@ static bool nodeLessThanWithRenderOrder(QSGGeometryNode *a, QSGGeometryNode *b)
 }
 
 
-IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
+QSGDefaultRenderer::IndexGeometryNodePair::IndexGeometryNodePair(int i, QSGGeometryNode *node)
     : QPair<int, QSGGeometryNode *>(i, node)
 {
 }
 
-bool IndexGeometryNodePair::operator < (const IndexGeometryNodePair &other) const
+bool QSGDefaultRenderer::IndexGeometryNodePair::operator < (const QSGDefaultRenderer::IndexGeometryNodePair &other) const
 {
     return nodeLessThan(second, other.second);
 }
 
 
-IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
+QSGDefaultRenderer::IndexGeometryNodePairHeap::IndexGeometryNodePairHeap()
     : v(64)
 {
 }
 
-void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
+void QSGDefaultRenderer::IndexGeometryNodePairHeap::insert(const QSGDefaultRenderer::IndexGeometryNodePair &x)
 {
     int i = v.size();
     v.add(x);
@@ -138,7 +138,7 @@ void IndexGeometryNodePairHeap::insert(const IndexGeometryNodePair &x)
     }
 }
 
-IndexGeometryNodePair IndexGeometryNodePairHeap::pop()
+QSGDefaultRenderer::IndexGeometryNodePair QSGDefaultRenderer::IndexGeometryNodePairHeap::pop()
 {
     IndexGeometryNodePair x = top();
     if (v.size() > 1)
