@@ -130,7 +130,6 @@ struct PlainVertices {
 
 QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
-    , m_pleaseReset(true)
     , m_dirtyData(true)
     , m_material(0)
     , m_rootNode(0)

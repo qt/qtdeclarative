@@ -338,8 +338,6 @@ private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
 
 private:
-    bool m_do_reset;
-
     QUrl m_image_name;
     QUrl m_colortable_name;
     QUrl m_sizetable_name;

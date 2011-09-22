@@ -634,7 +634,6 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
 QSGImageParticle::QSGImageParticle(QSGItem* parent)
     : QSGParticlePainter(parent)
-    , m_do_reset(false)
     , m_color_variation(0.0)
     , m_rootNode(0)
     , m_material(0)

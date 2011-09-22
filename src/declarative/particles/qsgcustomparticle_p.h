@@ -98,8 +98,6 @@ protected:
 private:
     void buildData();
 
-
-    bool m_pleaseReset;
     bool m_dirtyData;
     QSGShaderEffectProgram m_source;
     struct SourceData
