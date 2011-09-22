@@ -175,8 +175,10 @@ void QDeclarativeBehavior::setEnabled(bool enabled)
 void QDeclarativeBehavior::write(const QVariant &value)
 {
     Q_D(QDeclarativeBehavior);
-    qmlExecuteDeferred(this);
-    if (!d->animation || !d->enabled || !d->finalized) {
+    bool bypass = !d->enabled || !d->finalized;
+    if (!bypass)
+        qmlExecuteDeferred(this);
+    if (!d->animation || bypass) {
         QDeclarativePropertyPrivate::write(d->property, value, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         d->targetValue = value;
         return;
