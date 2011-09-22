@@ -1367,7 +1367,7 @@ void QSGPathView::refill()
             }
             ++it;
         } else {
-//            qDebug() << "release";
+            // qDebug() << "release";
             d->updateItem(item, 1.0);
             d->releaseItem(item);
             if (it == d->items.begin()) {
@@ -1397,7 +1397,7 @@ void QSGPathView::refill()
             }
             qreal pos = d->positionOfIndex(idx);
             while ((pos > startPos || !d->items.count()) && d->items.count() < count) {
-    //            qDebug() << "append" << idx;
+                // qDebug() << "append" << idx;
                 QSGItem *item = d->getItem(idx);
                 if (d->model->completePending())
                     item->setZ(idx+1);
@@ -1421,8 +1421,8 @@ void QSGPathView::refill()
             if (idx < 0)
                 idx = d->modelCount - 1;
             pos = d->positionOfIndex(idx);
-            while (pos >= 0.0 && pos < startPos) {
-    //            qDebug() << "prepend" << idx;
+            while ((pos >= 0.0 && pos < startPos) && d->items.count() < count) {
+                // qDebug() << "prepend" << idx;
                 QSGItem *item = d->getItem(idx);
                 if (d->model->completePending())
                     item->setZ(idx+1);
