@@ -99,8 +99,6 @@ Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin propert
 Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
 fillMode (Image.Pad) that does not transform the image.
 
-Text will now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
-
 Grid now has rowSpacing and columnSpacing properties.
 
 Positioners now have attached properties that can be used to determine a subitem's location within a
@@ -111,6 +109,11 @@ Loader improvements:
  - "setSource(JSObject)" method added to Loader to allow initial property values to be specified (similar to Component.createObject())
  - now only emits the \c sourceChanged signal when the source is changed and the
 \c sourceComponentChanged signal when the sourceComponent is changed. It used to emit both signals when one of the properties was changed.
+
+Text improvements:
+ - a \c onLineLaidOut handler is called for every line during the layout process. This gives the opportunity to position and resize a line as it is being laid out.
+ - a \c doLayout method was added to trigger the layout from Javascript.
+ - now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
 
 PathView now has a \c currentItem property
 

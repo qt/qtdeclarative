@@ -106,11 +106,11 @@ QSGTextPrivate::QSGTextPrivate()
   imageCacheDirty(false), updateOnComponentComplete(true),
   richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
-  layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
-  doc(0), nodeType(NodeIsNull)
+  layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), textHasChanged(true),
+  naturalWidth(0), doc(0), textLine(0), nodeType(NodeIsNull)
 
 #if defined(Q_OS_MAC)
-  , layoutThread(0)
+, layoutThread(0), paintingThread(0)
 #endif
 
 {
@@ -203,6 +203,7 @@ QSet<QUrl> QSGTextDocumentWithImageResources::errors;
 
 QSGTextPrivate::~QSGTextPrivate()
 {
+    delete textLine; textLine = 0;
 }
 
 qreal QSGTextPrivate::getImplicitWidth() const
@@ -248,7 +249,10 @@ void QSGTextPrivate::updateLayout()
             layout.setText(tmp);
         } else {
             singleline = false;
-            QDeclarativeStyledText::parse(text, layout);
+            if (textHasChanged) {
+                QDeclarativeStyledText::parse(text, layout);
+                textHasChanged = false;
+            }
         }
     } else {
         ensureDoc();
@@ -362,6 +366,157 @@ void QSGTextPrivate::updateSize()
     q->update();
 }
 
+QSGTextLine::QSGTextLine()
+    : QObject(), m_line(0), m_height(0)
+{
+}
+
+void QSGTextLine::setLine(QTextLine *line)
+{
+    m_line = line;
+}
+
+int QSGTextLine::number() const
+{
+    if (m_line)
+        return m_line->lineNumber();
+    return 0;
+}
+
+qreal QSGTextLine::width() const
+{
+    if (m_line)
+        return m_line->width();
+    return 0;
+}
+
+void QSGTextLine::setWidth(qreal width)
+{
+    if (m_line)
+        m_line->setLineWidth(width);
+}
+
+qreal QSGTextLine::height() const
+{
+    if (m_height)
+        return m_height;
+    if (m_line)
+        return m_line->height();
+    return 0;
+}
+
+void QSGTextLine::setHeight(qreal height)
+{
+    if (m_line)
+        m_line->setPosition(QPointF(m_line->x(), m_line->y() - m_line->height() + height));
+    m_height = height;
+}
+
+qreal QSGTextLine::x() const
+{
+    if (m_line)
+        return m_line->x();
+    return 0;
+}
+
+void QSGTextLine::setX(qreal x)
+{
+    if (m_line)
+        m_line->setPosition(QPointF(x, m_line->y()));
+}
+
+qreal QSGTextLine::y() const
+{
+    if (m_line)
+        return m_line->y();
+    return 0;
+}
+
+void QSGTextLine::setY(qreal y)
+{
+    if (m_line)
+        m_line->setPosition(QPointF(m_line->x(), y));
+}
+
+void QSGText::doLayout()
+{
+    Q_D(QSGText);
+    d->updateSize();
+}
+
+/*!
+    \qmlsignal QtQuick2::Text::onLineLaidOut(line)
+
+    This handler is called for every line during the layout process.
+    This gives the opportunity to position and resize a line as it is being laid out.
+    It can for example be used to create columns or lay out text around objects.
+
+    The properties of a line are:
+    \list
+    \o number (read-only)
+    \o x
+    \o y
+    \o width
+    \o height
+    \endlist
+
+    For example, this will move the first 5 lines of a text element by 100 pixels to the right:
+    \code
+    onLineLaidOut: {
+        if (line.number < 5) {
+            line.x = line.x + 100
+            line.width = line.width - 100
+        }
+    }
+    \endcode
+*/
+
+bool QSGTextPrivate::isLineLaidOutConnected()
+{
+    static int idx = this->signalIndex("lineLaidOut(QSGTextLine*)");
+    return this->isSignalConnected(idx);
+}
+
+void QSGTextPrivate::setupCustomLineGeometry(QTextLine &line, qreal &height, qreal elideWidth = 0)
+{
+    Q_Q(QSGText);
+
+#if defined(Q_OS_MAC)
+    if (QThread::currentThread() != paintingThread) {
+#endif
+        if (!line.lineNumber())
+            linesRects.clear();
+
+        if (!textLine)
+            textLine = new QSGTextLine;
+        textLine->setLine(&line);
+        textLine->setY(height);
+        textLine->setHeight(0);
+
+        // use the text item's width by default if it has one and wrap is on
+        if (q->widthValid() && q->wrapMode() != QSGText::NoWrap)
+            textLine->setWidth(q->width() - elideWidth);
+        else
+            textLine->setWidth(INT_MAX);
+        if (lineHeight != 1.0)
+            textLine->setHeight((lineHeightMode == QSGText::FixedHeight) ? lineHeight : line.height() * lineHeight);
+
+        emit q->lineLaidOut(textLine);
+
+        linesRects << QRectF(textLine->x(), textLine->y(), textLine->width(), textLine->height());
+        height += textLine->height();
+
+#if defined(Q_OS_MAC)
+    } else {
+        if (line.lineNumber() < linesRects.count()) {
+            QRectF r = linesRects.at(line.lineNumber());
+            line.setLineWidth(r.width());
+            line.setPosition(r.topLeft());
+        }
+    }
+#endif
+}
+
 /*!
     Lays out the QSGTextPrivate::layout QTextLayout in the constraints of the QSGText.
 
@@ -420,6 +575,9 @@ QRect QSGTextPrivate::setupTextLayout()
             layout.setText(elidedText);
     }
 
+    qreal height = 0;
+    bool customLayout = isLineLaidOutConnected();
+
     if (maximumLineCountValid) {
         layout.beginLayout();
         if (!lineWidth)
@@ -432,17 +590,23 @@ QRect QSGTextPrivate::setupTextLayout()
                 break;
 
             visibleCount++;
-            if (lineWidth)
+
+            if (customLayout)
+                setupCustomLineGeometry(line, height);
+            else if (lineWidth)
                 line.setLineWidth(lineWidth);
             visibleTextLength += line.textLength();
 
             if (--linesLeft == 0) {
                 if (visibleTextLength < text.length()) {
                     truncate = true;
-                    if (elideMode==QSGText::ElideRight && q->widthValid()) {
+                    if (elideMode == QSGText::ElideRight && q->widthValid()) {
                         qreal elideWidth = fm.width(elideChar);
                         // Need to correct for alignment
-                        line.setLineWidth(lineWidth-elideWidth);
+                        if (customLayout)
+                            setupCustomLineGeometry(line, height, elideWidth);
+                        else
+                            line.setLineWidth(lineWidth - elideWidth);
                         if (layout.text().mid(line.textStart(), line.textLength()).isRightToLeft()) {
                             line.setPosition(QPointF(line.position().x() + elideWidth, line.position().y()));
                             elidePos.setX(line.naturalTextRect().left() - elideWidth);
@@ -468,18 +632,23 @@ QRect QSGTextPrivate::setupTextLayout()
             if (!line.isValid())
                 break;
             visibleCount++;
-            if (lineWidth)
-                line.setLineWidth(lineWidth);
+            if (customLayout)
+                setupCustomLineGeometry(line, height);
+            else {
+                if (lineWidth)
+                    line.setLineWidth(lineWidth);
+            }
         }
         layout.endLayout();
     }
 
-    qreal height = 0;
+    height = 0;
     QRectF br;
     for (int i = 0; i < layout.lineCount(); ++i) {
         QTextLine line = layout.lineAt(i);
         // set line spacing
-        line.setPosition(QPointF(line.position().x(), height));
+        if (!customLayout)
+            line.setPosition(QPointF(line.position().x(), height));
         if (elideText && i == layout.lineCount()-1) {
             elidePos.setY(height + fm.ascent());
             br = br.united(QRectF(elidePos, QSizeF(fm.width(elideChar), fm.ascent())));
@@ -487,7 +656,8 @@ QRect QSGTextPrivate::setupTextLayout()
         br = br.united(line.naturalTextRect());
         height += (lineHeightMode == QSGText::FixedHeight) ? lineHeight : line.height() * lineHeight;
     }
-    br.setHeight(height);
+    if (!customLayout)
+        br.setHeight(height);
 
     if (!q->widthValid())
         naturalWidth = br.width();
@@ -965,6 +1135,7 @@ void QSGText::setText(const QString &n)
         }
         d->determineHorizontalAlignment();
     }
+    d->textHasChanged = true;
     d->updateLayout();
     emit textChanged(d->text);
 }
@@ -1500,7 +1671,8 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 
     // We need to make sure the layout is done in the current thread
 #if defined(Q_OS_MAC)
-    if (d->layoutThread != QThread::currentThread())
+    d->paintingThread = QThread::currentThread();
+    if (d->layoutThread != d->paintingThread)
         d->updateLayout();
 #endif
 
@@ -1555,7 +1727,6 @@ QSGNode *QSGText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
         node->setMatrix(QMatrix4x4());
 
         if (d->richText) {
-
             d->ensureDoc();
             node->addTextDocument(bounds.topLeft(), d->doc, QColor(), d->style, d->styleColor);
 

@@ -103,9 +103,10 @@ private slots:
 
     void clickLink();
 
-
     void implicitSize_data();
     void implicitSize();
+
+    void lineLaidOut();
 
 
 private:
@@ -1402,6 +1403,32 @@ void tst_qsgtext::implicitSize()
     delete textObject;
 }
 
+void tst_qsgtext::lineLaidOut()
+{
+    QSGView *canvas = createView(SRCDIR "/data/lineLayout.qml");
+
+    QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
+    QVERIFY(myText != 0);
+
+    QSGTextPrivate *textPrivate = QSGTextPrivate::get(myText);
+    QVERIFY(textPrivate != 0);
+
+    QTextDocument *doc = textPrivate->textDocument();
+    QVERIFY(doc == 0);
+
+    QVERIFY(myText->lineCount() == textPrivate->linesRects.count());
+
+    for (int i = 0; i < textPrivate->linesRects.count(); ++i) {
+        QRectF r = textPrivate->linesRects.at(i);
+        QVERIFY(r.width() == i * 15);
+        if (i >= 30)
+            QVERIFY(r.x() == r.width() + 30);
+        if (i >= 60) {
+            QVERIFY(r.x() == r.width() * 2 + 60);
+            QVERIFY(r.height() == 20);
+        }
+    }
+}
 
 QTEST_MAIN(tst_qsgtext)
 

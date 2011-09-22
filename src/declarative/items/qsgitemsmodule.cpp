@@ -159,6 +159,7 @@ static void qt_sgitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QDeclarativePathElement>();
     qmlRegisterType<QDeclarativeCurve>();
     qmlRegisterType<QSGScaleGrid>();
+    qmlRegisterType<QSGTextLine>();
 #ifndef QT_NO_VALIDATOR
     qmlRegisterType<QValidator>();
 #endif
