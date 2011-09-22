@@ -60,7 +60,6 @@ Rectangle {
         groups: ["goingDown"]
         source: "../images/squarefacespriteXX.png"
         yVector: PointDirection { y: 0.5; yVariation: 0.25; xVariation: 0.25; }
-        rotation: 180
     }
 
     Timer {
