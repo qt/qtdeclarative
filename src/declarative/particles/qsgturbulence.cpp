@@ -136,7 +136,9 @@ void QSGTurbulenceAffector::initializeGrid()
     for (int i=0; i<m_gridSize; i++)
         m_vectorField[i] = (QPointF*)malloc(m_gridSize * sizeof(QPointF));
 
-    QImage image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
+    QImage image;
+    if (!m_noiseSource.isEmpty())
+        image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
     if (image.isNull())
         image = QImage(":defaultshaders/noise.png").scaled(QSize(m_gridSize, m_gridSize));
 
@@ -177,9 +179,12 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
     if (!m_system || !m_enabled)
         return;
     ensureInit();
+    if (!m_gridSize)
+        return;
+
     updateOffsets();//### Needed if an ancestor is transformed.
 
-    QRectF boundsRect(0, 0, width()-1, height()-1);
+    QRect boundsRect(0,0,m_gridSize,m_gridSize);
     foreach (QSGParticleGroupData *gd, m_system->m_groupData){
         if (!activeGroup(m_system->m_groupData.key(gd)))
             continue;
@@ -187,6 +192,8 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
             if (!shouldAffect(d))
                 continue;
             QPoint pos = (QPointF(d->curX(), d->curY()) - m_offset).toPoint();
+            if (!boundsRect.contains(pos,true))//Need to redo bounds checking due to quantization.
+                continue;
             qreal fx = 0.0;
             qreal fy = 0.0;
             fx += m_vectorField[pos.x()][pos.y()].x() * m_strength;
