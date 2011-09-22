@@ -132,10 +132,10 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
     if (d->animation) {
         d->animation->setDefaultTarget(d->property);
         d->animation->setDisableUserControl();
-        connect(d->animation->qtAnimation(),
-                SIGNAL(stateChanged(QAbstractAnimation::State,QAbstractAnimation::State)),
-                this,
-                SLOT(qtAnimationStateChanged(QAbstractAnimation::State,QAbstractAnimation::State)));
+        FAST_CONNECT(d->animation->qtAnimation(),
+                     SIGNAL(stateChanged(QAbstractAnimation::State,QAbstractAnimation::State)),
+                     this,
+                     SLOT(qtAnimationStateChanged(QAbstractAnimation::State,QAbstractAnimation::State)))
     }
 }
 

@@ -215,8 +215,7 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
         }
 
         if (!d->connectedTimeLine) {
-            QObject::connect(qtAnimation(), SIGNAL(finished()),
-                             this, SLOT(timelineComplete()));
+            FAST_CONNECT(qtAnimation(), SIGNAL(finished()), this, SLOT(timelineComplete()))
             d->connectedTimeLine = true;
         }
         if (!supressStart)

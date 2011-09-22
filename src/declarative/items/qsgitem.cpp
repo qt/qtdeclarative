@@ -3244,8 +3244,8 @@ QDeclarativeStateGroup *QSGItemPrivate::_states()
         _stateGroup = new QDeclarativeStateGroup;
         if (!componentComplete)
             _stateGroup->classBegin();
-        QObject::connect(_stateGroup, SIGNAL(stateChanged(QString)),
-                         q, SIGNAL(stateChanged(QString)));
+        FAST_CONNECT(_stateGroup, SIGNAL(stateChanged(QString)),
+                     q, SIGNAL(stateChanged(QString)))
     }
 
     return _stateGroup;

@@ -64,6 +64,32 @@ QT_MODULE(Declarative)
         return status == Yes; \
     }
 
+#define FAST_CONNECT(Sender, Signal, Receiver, Method) \
+{ \
+    QObject *sender = (Sender); \
+    QObject *receiver = (Receiver); \
+    const char *signal = (Signal); \
+    const char *method = (Method); \
+    static int signalIdx = -1; \
+    static int methodIdx = -1; \
+    if (signalIdx < 0) { \
+        if (((int)(*signal) - '0') == QSIGNAL_CODE) \
+            signalIdx = sender->metaObject()->indexOfSignal(signal+1); \
+        else \
+            qWarning("FAST_CONNECT: Invalid signal %s. Please make sure you are using the SIGNAL macro.", signal); \
+    } \
+    if (methodIdx < 0) { \
+        int code = ((int)(*method) - '0'); \
+        if (code == QSLOT_CODE) \
+            methodIdx = receiver->metaObject()->indexOfSlot(method+1); \
+        else if (code == QSIGNAL_CODE) \
+            methodIdx = receiver->metaObject()->indexOfSignal(method+1); \
+        else \
+            qWarning("FAST_CONNECT: Invalid method %s. Please make sure you are using the SIGNAL or SLOT macro.", method); \
+    } \
+    QMetaObject::connect(sender, signalIdx, receiver, methodIdx, Qt::DirectConnection); \
+}
+
 #ifdef Q_OS_SYMBIAN
 #define Q_DECLARATIVE_PRIVATE_EXPORT Q_AUTOTEST_EXPORT
 #else

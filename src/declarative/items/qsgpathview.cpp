@@ -101,16 +101,9 @@ void QSGPathViewPrivate::init()
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QSGItem::ItemIsFocusScope);
     q->setFiltersChildMouseEvents(true);
-    q->connect(&tl, SIGNAL(updated()), q, SLOT(ticked()));
+    FAST_CONNECT(&tl, SIGNAL(updated()), q, SLOT(ticked()))
     lastPosTime.invalidate();
-    static int timelineCompletedIdx = -1;
-    static int movementEndingIdx = -1;
-    if (timelineCompletedIdx == -1) {
-        timelineCompletedIdx = QDeclarativeTimeLine::staticMetaObject.indexOfSignal("completed()");
-        movementEndingIdx = QSGPathView::staticMetaObject.indexOfSlot("movementEnding()");
-    }
-    QMetaObject::connect(&tl, timelineCompletedIdx,
-                         q, movementEndingIdx, Qt::DirectConnection);
+    FAST_CONNECT(&tl, SIGNAL(completed()), q, SLOT(movementEnding()))
 }
 
 QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)

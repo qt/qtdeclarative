@@ -190,20 +190,8 @@ void QSGFlickablePrivate::init()
     Q_Q(QSGFlickable);
     QDeclarative_setParent_noEvent(contentItem, q);
     contentItem->setParentItem(q);
-    static int timelineUpdatedIdx = -1;
-    static int timelineCompletedIdx = -1;
-    static int flickableTickedIdx = -1;
-    static int flickableMovementEndingIdx = -1;
-    if (timelineUpdatedIdx == -1) {
-        timelineUpdatedIdx = QDeclarativeTimeLine::staticMetaObject.indexOfSignal("updated()");
-        timelineCompletedIdx = QDeclarativeTimeLine::staticMetaObject.indexOfSignal("completed()");
-        flickableTickedIdx = QSGFlickable::staticMetaObject.indexOfSlot("ticked()");
-        flickableMovementEndingIdx = QSGFlickable::staticMetaObject.indexOfSlot("movementEnding()");
-    }
-    QMetaObject::connect(&timeline, timelineUpdatedIdx,
-                         q, flickableTickedIdx, Qt::DirectConnection);
-    QMetaObject::connect(&timeline, timelineCompletedIdx,
-                         q, flickableMovementEndingIdx, Qt::DirectConnection);
+    FAST_CONNECT(&timeline, SIGNAL(updated()), q, SLOT(ticked()))
+    FAST_CONNECT(&timeline, SIGNAL(completed()), q, SLOT(movementEnding()))
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFiltersChildMouseEvents(true);
     QSGItemPrivate *viewportPrivate = QSGItemPrivate::get(contentItem);

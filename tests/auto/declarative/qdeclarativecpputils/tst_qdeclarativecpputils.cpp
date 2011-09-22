@@ -1,11 +1,10 @@
-// Commit: ac5c099cc3c5b8c7eec7a49fdeb8a21037230350
 /****************************************************************************
 **
 ** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -40,64 +39,68 @@
 **
 ****************************************************************************/
 
-#ifndef QSGBORDERIMAGE_P_P_H
-#define QSGBORDERIMAGE_P_P_H
+#include <qtest.h>
+#include <qsignalspy.h>
+#include <private/qdeclarativeglobal_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qsgimagebase_p_p.h"
-#include "qsgscalegrid_p_p.h"
-
-QT_BEGIN_NAMESPACE
-
-class QNetworkReply;
-class QSGBorderImagePrivate : public QSGImageBasePrivate
+class tst_qdeclarativecpputils : public QObject
 {
-    Q_DECLARE_PUBLIC(QSGBorderImage)
-
+    Q_OBJECT
 public:
-    QSGBorderImagePrivate()
-      : border(0), sciReply(0),
-        horizontalTileMode(QSGBorderImage::Stretch),
-        verticalTileMode(QSGBorderImage::Stretch),
-        redirectCount(0), pixmapChanged(false)
-    {
-    }
+    tst_qdeclarativecpputils() {}
 
-    ~QSGBorderImagePrivate()
-    {
-    }
-
-
-    QSGScaleGrid *getScaleGrid()
-    {
-        Q_Q(QSGBorderImage);
-        if (!border) {
-            border = new QSGScaleGrid(q);
-            FAST_CONNECT(border, SIGNAL(borderChanged()), q, SLOT(doUpdate()))
-        }
-        return border;
-    }
-
-    QSGScaleGrid *border;
-    QUrl sciurl;
-    QNetworkReply *sciReply;
-    QSGBorderImage::TileMode horizontalTileMode;
-    QSGBorderImage::TileMode verticalTileMode;
-    int redirectCount;
-
-    bool pixmapChanged : 1;
+private slots:
+    void fastConnect();
 };
 
-QT_END_NAMESPACE
+class MyObject : public QObject {
+    Q_OBJECT
+public:
+    MyObject() : slotCount(0) {}
+    friend class tst_qdeclarativecpputils;
 
-#endif // QSGBORDERIMAGE_P_P_H
+    int slotCount;
+
+signals:
+    void signal1();
+    void signal2();
+
+public slots:
+    void slot1() { slotCount++; }
+};
+
+void tst_qdeclarativecpputils::fastConnect()
+{
+    {
+        MyObject *obj = new MyObject;
+        FAST_CONNECT(obj, SIGNAL(signal1()), obj, SLOT(slot1()));
+
+        obj->signal1();
+        QCOMPARE(obj->slotCount, 1);
+
+        delete obj;
+    }
+
+    {
+        MyObject obj;
+        FAST_CONNECT(&obj, SIGNAL(signal1()), &obj, SLOT(slot1()))
+
+        obj.signal1();
+        QCOMPARE(obj.slotCount, 1);
+    }
+
+    {
+        MyObject *obj = new MyObject;
+        QSignalSpy spy(obj, SIGNAL(signal2()));
+        FAST_CONNECT(obj, SIGNAL(signal1()), obj, SIGNAL(signal2()));
+
+        obj->signal1();
+        QCOMPARE(spy.count(), 1);
+
+        delete obj;
+    }
+}
+
+QTEST_MAIN(tst_qdeclarativecpputils)
+
+#include "tst_qdeclarativecpputils.moc"

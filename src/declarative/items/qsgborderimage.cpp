@@ -314,18 +314,7 @@ void QSGBorderImage::load()
             } else {
                 QNetworkRequest req(d->url);
                 d->sciReply = qmlEngine(this)->networkAccessManager()->get(req);
-
-                static int sciReplyFinished = -1;
-                static int thisSciRequestFinished = -1;
-                if (sciReplyFinished == -1) {
-                    sciReplyFinished =
-                        QNetworkReply::staticMetaObject.indexOfSignal("finished()");
-                    thisSciRequestFinished =
-                        QSGBorderImage::staticMetaObject.indexOfSlot("sciRequestFinished()");
-                }
-
-                QMetaObject::connect(d->sciReply, sciReplyFinished, this,
-                                     thisSciRequestFinished, Qt::DirectConnection);
+                FAST_CONNECT(d->sciReply, SIGNAL(finished()), this, SLOT(sciRequestFinished()))
             }
         } else {
 
