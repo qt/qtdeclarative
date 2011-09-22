@@ -667,7 +667,6 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
 
 QSGImageParticle::~QSGImageParticle()
 {
-    delete m_material;
 }
 
 QDeclarativeListProperty<QSGSprite> QSGImageParticle::sprites()
@@ -1106,10 +1105,8 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     }
 
     clearShadows();
-    if (m_material) {
-        delete m_material;
+    if (m_material)
         m_material = 0;
-    }
 
     //Setup material
     QImage colortable;
@@ -1212,8 +1209,9 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
 
     foreach (QSGGeometryNode* node, m_nodes){
         if (node == *(m_nodes.begin()))
-            continue;
-        (*(m_nodes.begin()))->appendChildNode(node);
+            node->setFlag(QSGGeometryNode::OwnsMaterial);//Root node owns the material for memory management purposes
+        else
+            (*(m_nodes.begin()))->appendChildNode(node);
     }
 
     return *(m_nodes.begin());
@@ -1224,15 +1222,13 @@ QSGNode *QSGImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
     if (m_pleaseReset){
         m_lastLevel = perfLevel;
 
-        delete m_rootNode;//Automatically deletes children
+        delete m_rootNode;//Automatically deletes children, and SG manages material lifetime
         m_rootNode = 0;
         m_nodes.clear();
 
         m_idxStarts.clear();
         m_lastIdxStart = 0;
 
-        if (m_material)
-            delete m_material;
         m_material = 0;
 
         m_pleaseReset = false;
