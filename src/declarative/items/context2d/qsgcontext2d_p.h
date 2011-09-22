@@ -69,7 +69,7 @@ class QSGCanvasItem;
 class QSGContext2DCommandBuffer;
 class QDeclarativePixmap;
 
-class QSGContext2D
+class Q_DECLARATIVE_EXPORT QSGContext2D
 {
 public:
     enum TextBaseLineType { Alphabetic=0, Top, Middle, Bottom, Hanging};
@@ -111,6 +111,10 @@ public:
         QPainterPath clipPath;
         QBrush strokeStyle;
         QBrush fillStyle;
+        bool fillPatternRepeatX:1;
+        bool fillPatternRepeatY:1;
+        bool strokePatternRepeatX:1;
+        bool strokePatternRepeatY:1;
         Qt::FillRule fillRule;
         qreal globalAlpha;
         qreal lineWidth;

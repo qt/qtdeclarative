@@ -163,11 +163,15 @@ bool QSGContext2DTexture::setCanvasWindow(const QRect& r)
 bool QSGContext2DTexture::setDirtyRect(const QRect &r)
 {
     bool doDirty = false;
-    foreach (QSGContext2DTile* t, m_tiles) {
-        bool dirty = t->rect().intersected(r).isValid();
-        t->markDirty(dirty);
-        if (dirty)
-            doDirty = true;
+    if (m_tiledCanvas) {
+        foreach (QSGContext2DTile* t, m_tiles) {
+            bool dirty = t->rect().intersected(r).isValid();
+            t->markDirty(dirty);
+            if (dirty)
+                doDirty = true;
+        }
+    } else {
+        doDirty = m_canvasWindow.intersected(r).isValid();
     }
     return doDirty;
 }
@@ -186,23 +190,24 @@ void QSGContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize& ti
     bool canvasChanged = setCanvasSize(canvasSize);
     bool tileChanged = setTileSize(ts);
 
-    bool doDirty = false;
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;
         m_dirtyCanvas = false;
     } else {
         m_tiledCanvas = true;
-        if (dirtyRect.isValid())
-            doDirty = setDirtyRect(dirtyRect);
     }
 
-    bool windowChanged = setCanvasWindow(canvasWindow);
+    bool doDirty = false;
+    if (dirtyRect.isValid())
+        doDirty = setDirtyRect(dirtyRect);
 
+    bool windowChanged = setCanvasWindow(canvasWindow);
     if (windowChanged || doDirty) {
         if (m_threadRendering)
             QMetaObject::invokeMethod(this, "paint", Qt::QueuedConnection);
-        else if (supportDirectRendering())
-            QMetaObject::invokeMethod(this, "paint", Qt::DirectConnection);
+        else if (supportDirectRendering()) {
+           QMetaObject::invokeMethod(this, "paint", Qt::DirectConnection);
+        }
     }
 
     setSmooth(smooth);
@@ -312,7 +317,7 @@ void QSGContext2DTexture::paint()
                         return;
                     } else if (dirtyTile) {
                         m_state = ccb->replay(tile->createPainter(smooth), oldState);
-
+                        tile->drawFinished();
                         lock();
                         tile->markDirty(false);
                         unlock();
@@ -568,12 +573,20 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
 
     m_fbo->bind();
 
-    if (!m_paint_device)
-        m_paint_device = new QOpenGLPaintDevice(m_fbo->size());
+    if (!m_paint_device) {
+        QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
+        m_paint_device = gl_device;
+    }
 
     return m_paint_device;
 }
 
+void QSGContext2DFBOTexture::endPainting()
+{
+    QSGContext2DTexture::endPainting();
+    if (m_fbo)
+        m_fbo->release();
+}
 void qt_quit_context2d_render_thread()
 {
     QThread* thread = globalCanvasThreadRenderInstance();
@@ -698,7 +711,7 @@ QPaintDevice* QSGContext2DImageTexture::beginPainting()
     lock();
     if (m_image.size() != m_canvasWindow.size()) {
         m_image = QImage(m_canvasWindow.size(), QImage::Format_ARGB32_Premultiplied);
-        m_image.fill(Qt::transparent);
+        m_image.fill(0x00000000);
     }
     unlock();
     return &m_image;

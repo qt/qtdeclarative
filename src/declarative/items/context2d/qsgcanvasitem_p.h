@@ -45,8 +45,6 @@
 #include "qsgitem.h"
 #include <private/qv8engine_p.h>
 
-
-
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
@@ -54,7 +52,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 class QSGContext2D;
 class QSGCanvasItemPrivate;
-class QSGCanvasItem : public QSGItem
+class Q_DECLARATIVE_EXPORT QSGCanvasItem : public QSGItem
 {
     Q_OBJECT
     Q_ENUMS(RenderTarget)

@@ -89,10 +89,11 @@ public:
         ints << cm;
     }
 
-    inline void setStrokeStyle(const QBrush &style)
+    inline void setStrokeStyle(const QBrush &style, bool repeatX = false, bool repeatY = false)
     {
         commands << QSGContext2D::StrokeStyle;
         brushes << style;
+        bools << repeatX << repeatY;
     }
 
     inline void drawImage(const QImage& image, qreal sx, qreal sy, qreal sw, qreal sh, qreal dx, qreal dy, qreal dw, qreal dh)
@@ -157,10 +158,11 @@ public:
 
 
 
-    inline void setFillStyle(const QBrush &style)
+    inline void setFillStyle(const QBrush &style, bool repeatX = false, bool repeatY = false)
     {
-        commands << QSGContext2D::UpdateBrush;
+        commands << QSGContext2D::FillStyle;
         brushes << style;
+        bools << repeatX << repeatY;
     }
 
 
@@ -229,6 +231,7 @@ public:
     inline const QImage& takeImage() { return images[imageIdx++]; }
 
     inline int takeInt() { return ints[intIdx++]; }
+    inline bool takeBool() {return bools[boolIdx++]; }
     inline qreal takeReal() { return reals[realIdx++]; }
     inline QColor takeColor() { return colors[colorIdx++]; }
     inline QBrush takeBrush() { return brushes[brushIdx++]; }
@@ -239,6 +242,7 @@ private:
     void setPainterState(QPainter* painter, QSGContext2D::State state, const QPen& pen);
     int cmdIdx;
     int intIdx;
+    int boolIdx;
     int realIdx;
     int colorIdx;
     int matrixIdx;
@@ -248,6 +252,7 @@ private:
     QVector<QSGContext2D::PaintCommand> commands;
 
     QVector<int> ints;
+    QVector<bool> bools;
     QVector<qreal> reals;
     QVector<QColor> colors;
     QVector<QTransform> matrixes;

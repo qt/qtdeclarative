@@ -216,6 +216,7 @@ void QSGCanvasItem::setCanvasSize(const QSizeF & size)
         d->canvasSize = size;
         emit canvasSizeChanged();
         polish();
+        update();
     }
 }
 
@@ -249,6 +250,7 @@ void QSGCanvasItem::setTileSize(const QSize & size)
 
         emit tileSizeChanged();
         polish();
+        update();
     }
 }
 
@@ -279,6 +281,7 @@ void QSGCanvasItem::setCanvasWindow(const QRectF& rect)
         d->hasCanvasWindow = true;
         emit canvasWindowChanged();
         polish();
+        update();
     }
 }
 
@@ -378,6 +381,7 @@ void QSGCanvasItem::setRenderInThread(bool renderInThread)
             disconnect(this, SIGNAL(painted()), this, SLOT(update()));
         emit renderInThreadChanged();
         polish();
+        update();
     }
 }
 
@@ -406,26 +410,29 @@ void QSGCanvasItem::geometryChanged(const QRectF &newGeometry,
     }
 
     polish();
+    update();
 }
 
 void QSGCanvasItem::componentComplete()
 {
     Q_D(QSGCanvasItem);
 
-    createContext();
+    if (!d->context)
+        createContext();
     createTexture();
 
-    markDirty(d->canvasWindow);
+
+    _doPainting(canvasWindow());
     QSGItem::componentComplete();
 
     d->baseUrl = qmlEngine(this)->contextForObject(this)->baseUrl();
     d->componentCompleted = true;
+    update();
 }
 
 void QSGCanvasItem::updatePolish()
 {
     Q_D(QSGCanvasItem);
-
     QSGItem::updatePolish();
     if (d->texture) {
         if (!d->renderInThread && d->dirtyRect.isValid())
@@ -507,9 +514,9 @@ QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
     Q_D(QSGCanvasItem);
     Q_UNUSED(contextId);
 
-    if (d->context)
-       return QDeclarativeV8Handle::fromHandle(d->context->v8value());
-    return QDeclarativeV8Handle::fromHandle(v8::Undefined());
+    if (!d->context)
+        createContext();
+    return QDeclarativeV8Handle::fromHandle(d->context->v8value());
 }
 
 /*!
@@ -527,6 +534,7 @@ void QSGCanvasItem::markDirty(const QRectF& region)
     Q_D(QSGCanvasItem);
     d->dirtyRect |= region;
     polish();
+    update();
 }
 
 

@@ -54,7 +54,7 @@ static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY,
 {
     QImage shadowImg(image.width() + blur + qAbs(offsetX),
                      image.height() + blur + qAbs(offsetY),
-                     QImage::Format_ARGB32);
+                     QImage::Format_ARGB32_Premultiplied);
     shadowImg.fill(0);
     QPainter tmpPainter(&shadowImg);
     tmpPainter.setCompositionMode(QPainter::CompositionMode_Source);
@@ -80,7 +80,7 @@ static void fillRectShadow(QPainter* p, QRectF shadowRect, qreal offsetX, qreal 
     QRectF r = shadowRect;
     r.moveTo(0, 0);
 
-    QImage shadowImage(r.size().width() + 1, r.size().height() + 1, QImage::Format_ARGB32);
+    QImage shadowImage(r.size().width() + 1, r.size().height() + 1, QImage::Format_ARGB32_Premultiplied);
     QPainter tp;
     tp.begin(&shadowImage);
     tp.fillRect(r, p->brush());
@@ -99,7 +99,7 @@ static void fillShadowPath(QPainter* p, const QPainterPath& path, qreal offsetX,
     QRectF r = path.boundingRect();
     QImage img(r.size().width() + r.left() + 1,
                r.size().height() + r.top() + 1,
-               QImage::Format_ARGB32);
+               QImage::Format_ARGB32_Premultiplied);
     img.fill(0);
     QPainter tp(&img);
     tp.fillPath(path.translated(0, 0), p->brush());
@@ -118,7 +118,7 @@ static void strokeShadowPath(QPainter* p, const QPainterPath& path, qreal offset
     QRectF r = path.boundingRect();
     QImage img(r.size().width() + r.left() + 1,
                r.size().height() + r.top() + 1,
-               QImage::Format_ARGB32);
+               QImage::Format_ARGB32_Premultiplied);
     img.fill(0);
     QPainter tp(&img);
     tp.strokePath(path, p->pen());
@@ -129,6 +129,72 @@ static void strokeShadowPath(QPainter* p, const QPainterPath& path, qreal offset
     qreal dy = r.top() + (offsetY < 0? offsetY:0);
     p->drawImage(dx, dy, shadowImage);
     p->strokePath(path, p->pen());
+}
+static inline void drawRepeatPattern(QPainter* p, const QImage& image, const QRectF& rect, const bool repeatX, const bool repeatY)
+{
+    // Patterns must be painted so that the top left of the first image is anchored at
+    // the origin of the coordinate space
+    if (!image.isNull()) {
+        int w = image.width();
+        int h = image.height();
+        int startX, startY;
+        QRect r(static_cast<int>(rect.x()), static_cast<int>(rect.y()), static_cast<int>(rect.width()), static_cast<int>(rect.height()));
+
+        // startX, startY is the coordinate of the first image we need to put on the left-top of the rect
+        if (repeatX && repeatY) {
+            // repeat
+            // startX, startY is at the left top side of the left-top of the rect
+            startX = r.x() >=0 ? r.x() - (r.x() % w) : r.x() - (w - qAbs(r.x()) % w);
+            startY = r.y() >=0 ? r.y() - (r.y() % h) : r.y() - (h - qAbs(r.y()) % h);
+        } else {
+           if (!repeatX && !repeatY) {
+               // no-repeat
+               // only draw the image once at orgin once, check if need to draw
+               QRect imageRect(0, 0, w, h);
+               if (imageRect.intersects(r)) {
+                   startX = 0;
+                   startY = 0;
+               } else
+                   return;
+           } else if (repeatX && !repeatY) {
+               // repeat-x
+               // startY is fixed, but startX change based on the left-top of the rect
+               QRect imageRect(r.x(), 0, r.width(), h);
+               if (imageRect.intersects(r)) {
+                   startX = r.x() >=0 ? r.x() - (r.x() % w) : r.x() - (w - qAbs(r.x()) % w);
+                   startY = 0;
+               } else
+                   return;
+           } else {
+               // repeat-y
+               // startX is fixed, but startY change based on the left-top of the rect
+               QRect imageRect(0, r.y(), w, r.height());
+               if (imageRect.intersects(r)) {
+                   startX = 0;
+                   startY = r.y() >=0 ? r.y() - (r.y() % h) : r.y() - (h - qAbs(r.y()) % h);
+               } else
+                   return;
+           }
+        }
+
+        int x = startX;
+        int y = startY;
+        do {
+            // repeat Y
+            do {
+                // repeat X
+                QRect   imageRect(x, y, w, h);
+                QRect   intersectRect = imageRect.intersected(r);
+                QPoint  destStart(intersectRect.x(), intersectRect.y());
+                QRect   sourceRect(intersectRect.x() - imageRect.x(), intersectRect.y() - imageRect.y(), intersectRect.width(), intersectRect.height());
+
+                p->drawImage(destStart, image, sourceRect);
+                x += w;
+            } while (repeatX && x < r.x() + r.width());
+            x = startX;
+            y += h;
+        } while (repeatY && y < r.y() + r.height());
+    }
 }
 
 QPen QSGContext2DCommandBuffer::makePen(QSGContext2D::State state)
@@ -186,7 +252,7 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
         }
         case QSGContext2D::ClearRect:
         {
-            p->eraseRect(takeRect());
+            p->fillRect(takeRect(), QColor(qRgba(0, 0, 0, 0)));
             break;
         }
         case QSGContext2D::FillRect:
@@ -221,12 +287,16 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
         case QSGContext2D::FillStyle:
         {
             state.fillStyle = takeFillStyle();
+            state.fillPatternRepeatX = takeBool();
+            state.fillPatternRepeatY = takeBool();
             p->setBrush(state.fillStyle);
             break;
         }
         case QSGContext2D::StrokeStyle:
         {
             state.strokeStyle = takeStrokeStyle();
+            state.strokePatternRepeatX = takeBool();
+            state.strokePatternRepeatY = takeBool();
             pen.setBrush(state.strokeStyle);
             p->setPen(pen);
             break;
@@ -264,6 +334,7 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
             break;
         case QSGContext2D::Fill:
         {
+            bool hasPattern = p->brush().style() == Qt::TexturePattern;
             if (HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor))
                 fillShadowPath(p,takePath(), state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
             else
@@ -289,13 +360,6 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
             p->setClipPath(clipPath);
             break;
         }
-        case QSGContext2D::UpdateBrush:
-        {
-            state.fillStyle = takeBrush();
-            p->setBrush(state.fillStyle);
-            break;
-        }
-
         case QSGContext2D::GlobalAlpha:
         {
             state.globalAlpha = takeGlobalAlpha();
@@ -357,6 +421,7 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
 QSGContext2DCommandBuffer::QSGContext2DCommandBuffer()
     : cmdIdx(0)
     , intIdx(0)
+    , boolIdx(0)
     , realIdx(0)
     , colorIdx(0)
     , matrixIdx(0)
@@ -375,6 +440,7 @@ void QSGContext2DCommandBuffer::clear()
 {
     commands.clear();
     ints.clear();
+    bools.clear();
     reals.clear();
     colors.clear();
     matrixes.clear();
@@ -388,6 +454,7 @@ void QSGContext2DCommandBuffer::reset()
 {
     cmdIdx = 0;
     intIdx = 0;
+    boolIdx = 0;
     realIdx = 0;
     colorIdx = 0;
     matrixIdx = 0;

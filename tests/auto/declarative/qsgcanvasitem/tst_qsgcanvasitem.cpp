@@ -1,10 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Nokia Corporation and/or its subsidiary(-ies).
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,75 +38,5 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef QSGCONTEXT2DTILE_P_H
-#define QSGCONTEXT2DTILE_P_H
-
-#include "qsgcontext2d_p.h"
-#include <QOpenGLFramebufferObject>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(Declarative)
-
-class QSGContext2DTexture;
-class QSGContext2DCommandBuffer;
-
-class QSGContext2DTile
-{
-public:
-    QSGContext2DTile();
-    ~QSGContext2DTile();
-
-    bool dirty() const {return m_dirty;}
-    void markDirty(bool dirty) {m_dirty = dirty;}
-
-    QRect rect() const {return m_rect;}
-
-    virtual void setRect(const QRect& r) = 0;
-    virtual QPainter* createPainter(bool smooth = false);
-    virtual void drawFinished() {}
-
-protected:
-    virtual void aboutToDraw() {}
-    uint m_dirty : 1;
-    QRect m_rect;
-    QPaintDevice* m_device;
-    QPainter m_painter;
-};
-
-
-class QSGContext2DFBOTile : public QSGContext2DTile
-{
-public:
-    QSGContext2DFBOTile();
-    ~QSGContext2DFBOTile();
-    virtual void setRect(const QRect& r);
-    QOpenGLFramebufferObject* fbo() const {return m_fbo;}
-    void drawFinished();
-
-protected:
-    void aboutToDraw();
-private:
-
-
-    QOpenGLFramebufferObject *m_fbo;
-};
-
-class QSGContext2DImageTile : public QSGContext2DTile
-{
-public:
-    QSGContext2DImageTile();
-    ~QSGContext2DImageTile();
-    void setRect(const QRect& r);
-    const QImage& image() const {return m_image;}
-private:
-    QImage m_image;
-};
-QT_END_HEADER
-
-QT_END_NAMESPACE
-
-#endif // QSGCONTEXT2DTILE_P_H
+#include <QtQuickTest/quicktest.h>
+QUICK_TEST_MAIN(qsgcanvasitem)
