@@ -567,9 +567,9 @@ void tst_qsgtextedit::hAlign_RightToLeft()
     QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignLeft);
     QVERIFY(textEdit->positionToRectangle(0).x() < canvas.width()/2);
 
-    QApplication::setActiveWindow(&canvas);
+    canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&canvas));
+    QTRY_COMPARE(QGuiApplication::activeWindow(), &canvas);
 
     textEdit->setText(QString());
     { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QApplication::sendEvent(&canvas, &ev); }
@@ -1933,6 +1933,7 @@ public:
         if (event->type() == QEvent::CloseSoftwareInputPanel)
             closeInputPanelReceived = true;
         return QInputContext::filterEvent(event);
+
     }
 
     void update() { updateReceived = true; }
@@ -2005,7 +2006,7 @@ void tst_qsgtextedit::openInputPanelOnClick()
     view.show();
 
     qApp->setAutoSipEnabled(true);
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
 
@@ -2056,7 +2057,7 @@ void tst_qsgtextedit::openInputPanelOnFocus()
     view.show();
 
     qApp->setAutoSipEnabled(true);
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
 
@@ -2299,7 +2300,7 @@ void tst_qsgtextedit::preeditMicroFocus()
     view.setInputContext(&ic);
     view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
 
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
@@ -2362,7 +2363,7 @@ void tst_qsgtextedit::inputContextMouseHandler()
     view.setInputContext(&ic);
     view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
 
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
@@ -2474,7 +2475,7 @@ void tst_qsgtextedit::inputMethodComposing()
 
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
     view.show();
-    QApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(&view));
     QSGTextEdit *edit = qobject_cast<QSGTextEdit *>(view.rootObject());
@@ -2511,7 +2512,7 @@ void tst_qsgtextedit::cursorRectangleSize()
     QVERIFY(canvas->rootObject() != 0);
     canvas->show();
     canvas->setFocus();
-    QApplication::setActiveWindow(canvas);
+    canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
 
     QSGTextEdit *textEdit = qobject_cast<QSGTextEdit *>(canvas->rootObject());

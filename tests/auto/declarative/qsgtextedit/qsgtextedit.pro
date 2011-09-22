@@ -1,5 +1,5 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui network
+contains(QT_CONFIG,declarative): QT += declarative gui network widgets widgets-private
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qsgtextedit.cpp ../shared/testhttpserver.cpp
