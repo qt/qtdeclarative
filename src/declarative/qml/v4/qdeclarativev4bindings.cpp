@@ -789,7 +789,7 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
     QDeclarativeEnginePrivate *engine = QDeclarativeEnginePrivate::get(context->engine);
     const char *code = program->instructions();
     code += instrIndex * QML_V4_INSTR_SIZE(Jump, jump);
-    const Instr *instr = (const Instr *) code;
+    const V4Instr *instr = reinterpret_cast<const V4Instr *>(code);
 
     const char *data = program->data();
 
@@ -1110,26 +1110,26 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
     }
     QML_V4_END_INSTR(MathPIReal, unaryop)
 
-    QML_V4_BEGIN_INSTR(Real, real_value)
+    QML_V4_BEGIN_INSTR(LoadReal, real_value)
         registers[instr->real_value.reg].setqreal(instr->real_value.value);
-    QML_V4_END_INSTR(Real, real_value)
+    QML_V4_END_INSTR(LoadReal, real_value)
 
-    QML_V4_BEGIN_INSTR(Int, int_value)
+    QML_V4_BEGIN_INSTR(LoadInt, int_value)
         registers[instr->int_value.reg].setint(instr->int_value.value);
-    QML_V4_END_INSTR(Int, int_value)
+    QML_V4_END_INSTR(LoadInt, int_value)
 
-    QML_V4_BEGIN_INSTR(Bool, bool_value)
+    QML_V4_BEGIN_INSTR(LoadBool, bool_value)
         registers[instr->bool_value.reg].setbool(instr->bool_value.value);
-    QML_V4_END_INSTR(Bool, bool_value)
+    QML_V4_END_INSTR(LoadBool, bool_value)
 
-    QML_V4_BEGIN_INSTR(String, string_value)
+    QML_V4_BEGIN_INSTR(LoadString, string_value)
     {
         Register &output = registers[instr->string_value.reg];
         QChar *string = (QChar *)(data + instr->string_value.offset);
         new (output.getstringptr()) QString(string, instr->string_value.length);
         STRING_REGISTER(instr->string_value.reg);
     }
-    QML_V4_END_INSTR(String, string_value)
+    QML_V4_END_INSTR(LoadString, string_value)
 
     QML_V4_BEGIN_INSTR(EnableV4Test, string_value)
     {

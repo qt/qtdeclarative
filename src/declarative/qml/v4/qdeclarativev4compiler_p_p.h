@@ -209,8 +209,15 @@ public:
     void convertToBool(QDeclarativeJS::IR::Expr *expr, int reg);
     quint8 instructionOpcode(QDeclarativeJS::IR::Binop *e);
 
-protected:
+    struct Instr {
+#define QML_V4_INSTR_DATA_TYPEDEF(I, FMT) typedef QDeclarativeJS::V4InstrData<QDeclarativeJS::V4Instr::I> I;
+    FOR_EACH_V4_INSTR(QML_V4_INSTR_DATA_TYPEDEF)
+#undef QML_v4_INSTR_DATA_TYPEDEF
+    private:
+        Instr();
+    };
 
+protected:
     //
     // tracing
     //
@@ -218,7 +225,14 @@ protected:
     void trace(QVector<QDeclarativeJS::IR::BasicBlock *> *blocks);
     void traceExpression(QDeclarativeJS::IR::Expr *e, quint8 r);
 
-    inline void gen(const QDeclarativeJS::Instr &i) { bytecode.append(i); }
+    template <int Instr>
+    inline void gen(const QDeclarativeJS::V4InstrData<Instr> &i)
+    { bytecode.append(i); }
+    inline void gen(QDeclarativeJS::V4Instr::Type type, QDeclarativeJS::V4Instr &instr)
+    { bytecode.append(type, instr); }
+
+    inline QDeclarativeJS::V4Instr::Type instructionType(const QDeclarativeJS::V4Instr *i) const
+    { return bytecode.instructionType(i); }
 
     //
     // expressions

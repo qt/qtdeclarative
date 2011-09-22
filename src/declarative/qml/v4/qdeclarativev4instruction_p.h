@@ -94,10 +94,10 @@ QT_BEGIN_NAMESPACE
     F(MathRoundReal, unaryop) \
     F(MathFloorReal, unaryop) \
     F(MathPIReal, unaryop) \
-    F(Real, real_value) \
-    F(Int, int_value) \
-    F(Bool, bool_value) \
-    F(String, string_value) \
+    F(LoadReal, real_value) \
+    F(LoadInt, int_value) \
+    F(LoadBool, bool_value) \
+    F(LoadString, string_value) \
     F(EnableV4Test, string_value) \
     F(TestV4Store, storetest) \
     F(BitAndInt, binaryop) \
@@ -147,85 +147,52 @@ QT_BEGIN_NAMESPACE
 #endif
 
 #ifdef Q_ALIGNOF
-#  define QML_V4_INSTR_ALIGN_MASK (Q_ALIGNOF(Instr) - 1)
+#  define QML_V4_INSTR_ALIGN_MASK (Q_ALIGNOF(V4Instr) - 1)
 #else
 #  define QML_V4_INSTR_ALIGN_MASK (sizeof(void *) - 1)
 #endif
 
 #define QML_V4_INSTR_ENUM(I, FMT) I,
 #define QML_V4_INSTR_ADDR(I, FMT) &&op_##I,
-#define QML_V4_INSTR_SIZE(I, FMT) ((sizeof(Instr::instr_##FMT) + QML_V4_INSTR_ALIGN_MASK) & ~QML_V4_INSTR_ALIGN_MASK)
+#define QML_V4_INSTR_SIZE(I, FMT) ((sizeof(V4Instr::instr_##FMT) + QML_V4_INSTR_ALIGN_MASK) & ~QML_V4_INSTR_ALIGN_MASK)
 
 #ifdef QML_THREADED_INTERPRETER
 #  define QML_V4_BEGIN_INSTR(I,FMT) op_##I:
-#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const Instr *) code; goto *instr->common.code;
+#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const V4Instr *) code; goto *instr->common.code;
 #  define QML_V4_INSTR_HEADER void *code;
 #else
 #  define QML_V4_BEGIN_INSTR(I,FMT) case Instr::I:
-#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const Instr *) code; break;
-#  define QML_V4_INSTR_HEADER
+#  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const V4Instr *) code; break;
+#  define QML_V4_INSTR_HEADER quint8 type;
 #endif
 
 namespace QDeclarativeJS {
 
-union Instr {
-    int size() const;
-    void dump(int = -1) const;
-    void noop();
-    void load_root(quint8 reg);
-    void load_scope(quint8 reg);
-    void load_id(quint8 reg, quint32 idIndex);
-    void subscribe(qint8 reg, quint16 offset, quint32 index);
-    void subscribeId(qint8 reg, quint16 offset, quint32 index);
-    void move_reg_bool(quint8 reg, bool value);
-    void move_reg_int(quint8 reg, int value);
-    void move_reg_qreal(quint8 reg, qreal value);
-    void move_reg_reg(quint8 reg, quint8 src);
-
-    void unary_not(quint8 dest, quint8 src);
-    void uminus_real(quint8 dest, quint8 src);
-    void uminus_int(quint8 dest, quint8 src);
-    void uplus_real(quint8 dest, quint8 src);
-    void uplus_int(quint8 dest, quint8 src);
-    void ucompl_real(quint8 dest, quint8 src);
-    void ucompl_int(quint8 dest, quint8 src);
-
-    void math_sin_real(quint8 reg);
-    void math_cos_real(quint8 reg);
-    void math_round_real(quint8 reg);
-    void math_floor_real(quint8 reg);
-    void math_pi_real(quint8 reg);
-    void branch_true(quint8 reg, qint16 offset);
-    void branch_false(quint8 reg, qint16 offset);
-    void branch(qint16 offset);
-    void block(quint32 mask);
-
-    enum {
+union V4Instr {
+    enum Type {
         FOR_EACH_V4_INSTR(QML_V4_INSTR_ENUM)
     };
 
+    static int size(Type type);
+
     struct instr_common {
         QML_V4_INSTR_HEADER
-        quint8 type;
     };
 
     struct instr_id {
         QML_V4_INSTR_HEADER
-        quint8 type;
         quint16 column;
         quint32 line;
     };
 
     struct instr_init {
         QML_V4_INSTR_HEADER
-        quint8 type;
         quint16 subscriptions;
         quint16 identifiers;
     };
 
     struct instr_subscribeop {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint16 offset;
         quint32 index;
@@ -233,14 +200,12 @@ union Instr {
 
     struct instr_load {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint32 index;
     };
 
     struct instr_attached {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 output;
         qint8 reg;
         quint8 exceptionId;
@@ -249,7 +214,6 @@ union Instr {
 
     struct instr_store {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 output;
         qint8 reg;
         quint8 exceptionId;
@@ -258,14 +222,12 @@ union Instr {
 
     struct instr_storetest {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         qint32 regType;
     };
 
     struct instr_fetchAndSubscribe {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint8 exceptionId;
         quint8 valueType;
@@ -275,7 +237,6 @@ union Instr {
 
     struct instr_fetch{
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint8 exceptionId;
         quint8 valueType;
@@ -284,41 +245,35 @@ union Instr {
 
     struct instr_copy {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         qint8 src;
     };
 
     struct instr_construct {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
     };
 
     struct instr_real_value {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         qreal value; // XXX Makes the instruction 12 bytes
     };
 
     struct instr_int_value {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         int value;
     };
 
     struct instr_bool_value {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         bool value;
     };
 
     struct instr_string_value {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint16 length;
         quint32 offset;
@@ -326,7 +281,6 @@ union Instr {
 
     struct instr_binaryop {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 output;
         qint8 left;
         qint8 right;
@@ -334,21 +288,18 @@ union Instr {
 
     struct instr_unaryop {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 output;
         qint8 src;
     };
 
     struct instr_jump {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         quint32 count;
     };
 
     struct instr_find {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
         qint8 src;
         quint8 exceptionId;
@@ -358,27 +309,23 @@ union Instr {
 
     struct instr_cleanup {
         QML_V4_INSTR_HEADER
-        quint8 type;
         qint8 reg;
     };
 
     struct instr_initstring {
         QML_V4_INSTR_HEADER
-        quint8 type;
         quint16 offset;
         quint32 dataIdx;
     };
 
     struct instr_branchop {
         QML_V4_INSTR_HEADER
-        quint8 type;
         quint8 reg;
         qint16 offset;
     };
 
     struct instr_blockop {
         QML_V4_INSTR_HEADER
-        quint8 type;
         quint32 block;
     };
 
@@ -408,6 +355,25 @@ union Instr {
     instr_blockop blockop;
 };
 
+template<int N>
+struct V4InstrMeta {
+};
+
+#define QML_V4_INSTR_META_TEMPLATE(I, FMT) \
+    template<> struct V4InstrMeta<(int)V4Instr::I> { \
+        enum { Size = QML_V4_INSTR_SIZE(I, FMT) }; \
+        typedef V4Instr::instr_##FMT DataType; \
+        static const DataType &data(const V4Instr &instr) { return instr.FMT; } \
+        static void setData(V4Instr &instr, const DataType &v) { instr.FMT = v; } \
+    };
+FOR_EACH_V4_INSTR(QML_V4_INSTR_META_TEMPLATE);
+#undef QML_V4_INSTR_META_TEMPLATE
+
+template<int Instr>
+class V4InstrData : public V4InstrMeta<Instr>::DataType
+{
+};
+
 class Bytecode
 {
     Q_DISABLE_COPY(Bytecode)
@@ -420,21 +386,27 @@ public:
     int count() const { return d.count(); }
     void clear() { d.clear(); }
     bool isEmpty() const { return d.isEmpty(); }
-    void append(const Instr &instr);
+    V4Instr::Type instructionType(const V4Instr *instr) const;
 
-    template <typename _It>
-    void append(_It it, _It last)
+    template <int Instr>
+    void append(const V4InstrData<Instr> &data)
     {
-        for (; it != last; ++it)
-            append(*it);
+        V4Instr genericInstr;
+        V4InstrMeta<Instr>::setData(genericInstr, data);
+        return append(static_cast<V4Instr::Type>(Instr), genericInstr);
     }
+    void append(V4Instr::Type type, V4Instr &instr);
 
     int remove(int index);
 
-    const Instr &operator[](int offset) const;
-    Instr &operator[](int offset);
+    const V4Instr &operator[](int offset) const;
+    V4Instr &operator[](int offset);
+
+    void dump(const char *start, const char *end) const;
 
 private:
+    void dump(const V4Instr *instr, int = -1) const;
+
     QVarLengthArray<char, 4 * 1024> d;
 #ifdef QML_THREADED_INTERPRETER
     void **decodeInstr;
