@@ -1530,7 +1530,7 @@ QSGNode *QSGTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *upd
         QColor selectedTextColor = d->control->palette().color(QPalette::HighlightedText);
         node->addTextDocument(bounds.topLeft(), d->document, d->color, QSGText::Normal, QColor(),
                               selectionColor, selectedTextColor, selectionStart(),
-                              selectionEnd());
+                              selectionEnd() - 1);
 
 #if defined(Q_WS_MAC)
         // We also need to make sure the document layout is redone when

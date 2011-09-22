@@ -663,7 +663,7 @@ namespace {
 
         bool hasSelection = selectionStart >= 0
                          && selectionEnd >= 0
-                         && selectionStart != selectionEnd;
+                         && selectionStart <= selectionEnd;
 
         QTextLine &line = m_currentLine;
         int rangeEnd = rangeStart + rangeLength;
