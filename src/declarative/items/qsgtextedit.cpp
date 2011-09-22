@@ -1966,7 +1966,7 @@ void QSGTextEdit::openSoftwareInputPanel()
 void QSGTextEdit::closeSoftwareInputPanel()
 {  
     if (qGuiApp)
-        qGuiApp->inputPanel()->show();
+        qGuiApp->inputPanel()->hide();
 }
 
 void QSGTextEdit::focusInEvent(QFocusEvent *event)
