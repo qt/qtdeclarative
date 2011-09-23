@@ -423,6 +423,16 @@ void QSGFlickablePrivate::updateBeginningEnd()
         atBoundaryChange = true;
     }
 
+    if (vData.extentsChanged) {
+        vData.extentsChanged = false;
+        emit q->yOriginChanged();
+    }
+
+    if (hData.extentsChanged) {
+        hData.extentsChanged = false;
+        emit q->xOriginChanged();
+    }
+
     if (atBoundaryChange)
         emit q->isAtBoundaryChanged();
 
@@ -594,6 +604,7 @@ qreal QSGFlickable::contentX() const
 void QSGFlickable::setContentX(qreal pos)
 {
     Q_D(QSGFlickable);
+    d->hData.explicitValue = true;
     d->timeline.reset(d->hData.move);
     d->vTime = d->timeline.time();
     movementXEnding();
@@ -612,6 +623,7 @@ qreal QSGFlickable::contentY() const
 void QSGFlickable::setContentY(qreal pos)
 {
     Q_D(QSGFlickable);
+    d->vData.explicitValue = true;
     d->timeline.reset(d->vData.move);
     d->vTime = d->timeline.time();
     movementYEnding();
@@ -1137,23 +1149,37 @@ void QSGFlickable::timerEvent(QTimerEvent *event)
 
 qreal QSGFlickable::minYExtent() const
 {
-    return 0.0;
+    Q_D(const QSGFlickable);
+    return d->vData.startMargin;
 }
 
 qreal QSGFlickable::minXExtent() const
 {
-    return 0.0;
+    Q_D(const QSGFlickable);
+    return d->hData.startMargin;
 }
 
 /* returns -ve */
 qreal QSGFlickable::maxXExtent() const
 {
-    return width() - vWidth();
+    Q_D(const QSGFlickable);
+    return width() - vWidth() - d->hData.endMargin;
 }
 /* returns -ve */
 qreal QSGFlickable::maxYExtent() const
 {
-    return height() - vHeight();
+    Q_D(const QSGFlickable);
+    return height() - vHeight() - d->vData.endMargin;
+}
+
+void QSGFlickable::componentComplete()
+{
+    Q_D(QSGFlickable);
+    QSGItem::componentComplete();
+    if (!d->hData.explicitValue && d->hData.startMargin != 0.)
+        setContentX(-minXExtent());
+    if (!d->vData.explicitValue && d->vData.startMargin != 0.)
+        setContentY(-minYExtent());
 }
 
 void QSGFlickable::viewportMoved()
@@ -1372,6 +1398,7 @@ void QSGFlickable::setContentWidth(qreal w)
         d->contentItem->setWidth(width());
     else
         d->contentItem->setWidth(w);
+    d->hData.markExtentsDirty();
     // Make sure that we're entirely in view.
     if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
         d->fixupMode = QSGFlickablePrivate::Immediate;
@@ -1400,6 +1427,7 @@ void QSGFlickable::setContentHeight(qreal h)
         d->contentItem->setHeight(height());
     else
         d->contentItem->setHeight(h);
+    d->vData.markExtentsDirty();
     // Make sure that we're entirely in view.
     if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
         d->fixupMode = QSGFlickablePrivate::Immediate;
@@ -1413,8 +1441,124 @@ void QSGFlickable::setContentHeight(qreal h)
 }
 
 /*!
+    \qmlproperty real QtQuick2::Flickable::topMargin
+    \qmlproperty real QtQuick2::Flickable::leftMargin
+    \qmlproperty real QtQuick2::Flickable::bottomMargin
+    \qmlproperty real QtQuick2::Flickable::rightMargin
+
+    These properties hold the margins around the content.  This space is reserved
+    in addition to the contentWidth and contentHeight.
+*/
+
+
+qreal QSGFlickable::topMargin() const
+{
+    Q_D(const QSGFlickable);
+    return d->vData.startMargin;
+}
+
+void QSGFlickable::setTopMargin(qreal m)
+{
+    Q_D(QSGFlickable);
+    if (d->vData.startMargin == m)
+        return;
+    d->vData.startMargin = m;
+    d->vData.markExtentsDirty();
+    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        d->fixupMode = QSGFlickablePrivate::Immediate;
+        d->fixupY();
+    }
+    emit topMarginChanged();
+    d->updateBeginningEnd();
+}
+
+qreal QSGFlickable::bottomMargin() const
+{
+    Q_D(const QSGFlickable);
+    return d->vData.endMargin;
+}
+
+void QSGFlickable::setBottomMargin(qreal m)
+{
+    Q_D(QSGFlickable);
+    if (d->vData.endMargin == m)
+        return;
+    d->vData.endMargin = m;
+    d->vData.markExtentsDirty();
+    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        d->fixupMode = QSGFlickablePrivate::Immediate;
+        d->fixupY();
+    }
+    emit bottomMarginChanged();
+    d->updateBeginningEnd();
+}
+
+qreal QSGFlickable::leftMargin() const
+{
+    Q_D(const QSGFlickable);
+    return d->hData.startMargin;
+}
+
+void QSGFlickable::setLeftMargin(qreal m)
+{
+    Q_D(QSGFlickable);
+    if (d->hData.startMargin == m)
+        return;
+    d->hData.startMargin = m;
+    d->hData.markExtentsDirty();
+    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        d->fixupMode = QSGFlickablePrivate::Immediate;
+        d->fixupX();
+    }
+    emit leftMarginChanged();
+    d->updateBeginningEnd();
+}
+
+qreal QSGFlickable::rightMargin() const
+{
+    Q_D(const QSGFlickable);
+    return d->hData.endMargin;
+}
+
+void QSGFlickable::setRightMargin(qreal m)
+{
+    Q_D(QSGFlickable);
+    if (d->hData.endMargin == m)
+        return;
+    d->hData.endMargin = m;
+    d->hData.markExtentsDirty();
+    if (!d->pressed && !d->movingHorizontally && !d->movingVertically) {
+        d->fixupMode = QSGFlickablePrivate::Immediate;
+        d->fixupX();
+    }
+    emit rightMarginChanged();
+    d->updateBeginningEnd();
+}
+
+/*!
+    \qmlproperty real QtQuick2::Flickable::xOrigin
+    \qmlproperty real QtQuick2::Flickable::yOrigin
+
+    These properties hold the origin of the content.  This is usually (0,0), however
+    ListView and GridView may have an arbitrary origin due to delegate size variation,
+    or item insertion/removal outside the visible region.
+*/
+
+qreal QSGFlickable::yOrigin() const
+{
+    Q_D(const QSGFlickable);
+    return -minYExtent() + d->vData.startMargin;
+}
+
+qreal QSGFlickable::xOrigin() const
+{
+    Q_D(const QSGFlickable);
+    return -minXExtent() + d->hData.startMargin;
+}
+
+
+/*!
     \qmlmethod QtQuick2::Flickable::resizeContent(real width, real height, QPointF center)
-    \preliminary
 
     Resizes the content to \a width x \a height about \a center.
 
@@ -1453,7 +1597,6 @@ void QSGFlickable::resizeContent(qreal w, qreal h, QPointF center)
 
 /*!
     \qmlmethod QtQuick2::Flickable::returnToBounds()
-    \preliminary
 
     Ensures the content is within legal bounds.
 

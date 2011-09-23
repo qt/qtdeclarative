@@ -94,6 +94,7 @@ The Binding element can now be used as a value source, and will also restore any
 set binding when its \e when clause becomes false.
 
 Flickable: added dragging, draggingHorizontally and draggingVerically properties.
+Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin properties.
 
 Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
 fillMode (Image.Pad) that does not transform the image.

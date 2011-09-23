@@ -136,6 +136,7 @@ private slots:
     void onRemove_data();
     void rightToLeft();
     void test_mirroring();
+    void margins();
 
 private:
     template <class T> void items();
@@ -3540,6 +3541,68 @@ void tst_QSGListView::test_mirroring()
 
     delete canvasA;
     delete canvasB;
+}
+
+void tst_QSGListView::margins()
+{
+    QSGView *canvas = createView();
+
+    TestModel2 model;
+    for (int i = 0; i < 50; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/margins.qml"));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QCOMPARE(listview->contentY(), -30.);
+    QCOMPARE(listview->yOrigin(), 0.);
+    
+    // check end bound
+    listview->positionViewAtEnd();
+    qreal pos = listview->contentY();
+    listview->setContentY(pos + 80);
+    listview->returnToBounds();
+    QTRY_COMPARE(listview->contentY(), pos + 50);
+
+    // remove item before visible and check that top margin is maintained
+    // and yOrigin is updated
+    listview->setContentY(100);
+    model.removeItem(1);
+    QTest::qWait(100);
+    listview->setContentY(-50);
+    listview->returnToBounds();
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), -10.);
+
+    // reduce top margin
+    listview->setTopMargin(20);
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), 0.);
+    
+    // check end bound
+    listview->positionViewAtEnd();
+    pos = listview->contentY();
+    listview->setContentY(pos + 80);
+    listview->returnToBounds();
+    QTRY_COMPARE(listview->contentY(), pos + 50);
+
+    // reduce bottom margin
+    pos = listview->contentY();
+    listview->setBottomMargin(40);
+    QCOMPARE(listview->yOrigin(), 20.);
+    QTRY_COMPARE(listview->contentY(), pos-10);
+
+    delete canvas;
 }
 
 void tst_QSGListView::qListModelInterface_items()

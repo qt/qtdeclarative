@@ -110,6 +110,7 @@ private slots:
     void testQtQuick11Attributes();
     void testQtQuick11Attributes_data();
     void columnCount();
+    void margins();
 
 private:
     QSGView *createView();
@@ -2801,6 +2802,136 @@ void tst_QSGGridView::columnCount()
     QCOMPARE(items.size(), 18);
     QCOMPARE(items.at(8)->y(), qreal(0));
     QCOMPARE(items.at(9)->y(), qreal(100));
+}
+
+void tst_QSGGridView::margins()
+{
+    {
+        QSGView *canvas = createView();
+        canvas->show();
+
+        TestModel model;
+        for (int i = 0; i < 40; i++)
+            model.addItem("Item" + QString::number(i), "");
+
+        QDeclarativeContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+        ctxt->setContextProperty("testRightToLeft", QVariant(false));
+
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/margins.qml"));
+        qApp->processEvents();
+
+        QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+        QTRY_VERIFY(gridview != 0);
+
+        QSGItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QCOMPARE(gridview->contentX(), -30.);
+        QCOMPARE(gridview->xOrigin(), 0.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        qreal pos = gridview->contentX();
+        gridview->setContentX(pos + 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos + 50);
+
+        // remove item before visible and check that left margin is maintained
+        // and xOrigin is updated
+        gridview->setContentX(200);
+        model.removeItems(0, 4);
+        QTest::qWait(100);
+        gridview->setContentX(-50);
+        gridview->returnToBounds();
+        QCOMPARE(gridview->xOrigin(), 100.);
+        QTRY_COMPARE(gridview->contentX(), 70.);
+
+        // reduce left margin
+        gridview->setLeftMargin(20);
+        QCOMPARE(gridview->xOrigin(), 100.);
+        QTRY_COMPARE(gridview->contentX(), 80.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        pos = gridview->contentX();
+        gridview->setContentX(pos + 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos + 50);
+
+        // reduce right margin
+        pos = gridview->contentX();
+        gridview->setRightMargin(40);
+        QCOMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->contentX(), pos-10);
+
+        delete canvas;
+    }
+    {
+        //RTL
+        QSGView *canvas = createView();
+        canvas->show();
+
+        TestModel model;
+        for (int i = 0; i < 40; i++)
+            model.addItem("Item" + QString::number(i), "");
+
+        QDeclarativeContext *ctxt = canvas->rootContext();
+        ctxt->setContextProperty("testModel", &model);
+        ctxt->setContextProperty("testRightToLeft", QVariant(true));
+
+        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/margins.qml"));
+        qApp->processEvents();
+
+        QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+        QTRY_VERIFY(gridview != 0);
+
+        QSGItem *contentItem = gridview->contentItem();
+        QTRY_VERIFY(contentItem != 0);
+
+        QCOMPARE(gridview->contentX(), -240+30.);
+        QCOMPARE(gridview->xOrigin(), 0.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        qreal pos = gridview->contentX();
+        gridview->setContentX(pos - 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos - 50);
+
+        // remove item before visible and check that left margin is maintained
+        // and xOrigin is updated
+        gridview->setContentX(-400);
+        model.removeItems(0, 4);
+        QTest::qWait(100);
+        gridview->setContentX(-240+50);
+        gridview->returnToBounds();
+        QCOMPARE(gridview->xOrigin(), -100.);
+        QTRY_COMPARE(gridview->contentX(), -240-70.);
+
+        // reduce left margin (i.e. right side due to RTL)
+        pos = gridview->contentX();
+        gridview->setLeftMargin(20);
+        QCOMPARE(gridview->xOrigin(), -100.);
+        QTRY_COMPARE(gridview->contentX(), -240-80.);
+
+        // check end bound
+        gridview->positionViewAtEnd();
+        QCOMPARE(gridview->xOrigin(), 0.); // positionViewAtEnd() resets origin
+        pos = gridview->contentX();
+        gridview->setContentX(pos - 80);
+        gridview->returnToBounds();
+        QTRY_COMPARE(gridview->contentX(), pos - 50);
+
+        // reduce right margin (i.e. left side due to RTL)
+        pos = gridview->contentX();
+        gridview->setRightMargin(40);
+        QCOMPARE(gridview->xOrigin(), 0.);
+        QTRY_COMPARE(gridview->contentX(), pos+10);
+
+        delete canvas;
+    }
 }
 
 QSGView *tst_QSGGridView::createView()

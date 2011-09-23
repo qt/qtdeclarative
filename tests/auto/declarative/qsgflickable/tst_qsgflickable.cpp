@@ -80,6 +80,7 @@ private slots:
     void movingAndDragging();
     void disabled();
     void flickVelocity();
+    void margins();
 
 private:
     QDeclarativeEngine engine;
@@ -561,6 +562,65 @@ void tst_qsgflickable::flickVelocity()
     QTRY_VERIFY(flickable->verticalVelocity() == 0.0);
 
     delete canvas;
+}
+
+void tst_qsgflickable::margins()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/margins.qml"));
+    QSGItem *root = qobject_cast<QSGItem*>(c.create());
+    QSGFlickable *obj = qobject_cast<QSGFlickable*>(root);
+    QVERIFY(obj != 0);
+
+    // starting state
+    QCOMPARE(obj->contentX(), -40.);
+    QCOMPARE(obj->contentY(), -20.);
+    QCOMPARE(obj->contentWidth(), 1600.);
+    QCOMPARE(obj->contentHeight(), 600.);
+    QCOMPARE(obj->xOrigin(), 0.);
+    QCOMPARE(obj->yOrigin(), 0.);
+
+    // Reduce left margin
+    obj->setLeftMargin(30);
+    QTRY_COMPARE(obj->contentX(), -30.);
+
+    // Reduce top margin
+    obj->setTopMargin(20);
+    QTRY_COMPARE(obj->contentY(), -20.);
+
+    // position to the far right, including margin
+    obj->setContentX(1600 + 50 - obj->width());
+    obj->returnToBounds();
+    QTest::qWait(200);
+    QCOMPARE(obj->contentX(), 1600. + 50. - obj->width());
+
+    // position beyond the far right, including margin
+    obj->setContentX(1600 + 50 - obj->width() + 1.);
+    obj->returnToBounds();
+    QTRY_COMPARE(obj->contentX(), 1600. + 50. - obj->width());
+
+    // Reduce right margin
+    obj->setRightMargin(40);
+    QTRY_COMPARE(obj->contentX(), 1600. + 40. - obj->width());
+    QCOMPARE(obj->contentWidth(), 1600.);
+
+    // position to the far bottom, including margin
+    obj->setContentY(600 + 30 - obj->height());
+    obj->returnToBounds();
+    QTest::qWait(200);
+    QCOMPARE(obj->contentY(), 600. + 30. - obj->height());
+
+    // position beyond the far bottom, including margin
+    obj->setContentY(600 + 30 - obj->height() + 1.);
+    obj->returnToBounds();
+    QTRY_COMPARE(obj->contentY(), 600. + 30. - obj->height());
+
+    // Reduce bottom margin
+    obj->setBottomMargin(20);
+    QTRY_COMPARE(obj->contentY(), 600. + 20. - obj->height());
+    QCOMPARE(obj->contentHeight(), 600.);
+
+    delete root;
 }
 
 void tst_qsgflickable::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)

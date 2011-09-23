@@ -142,6 +142,13 @@ public:
 
     void checkVisible() const;
 
+    void markExtentsDirty() {
+        if (layoutOrientation() == Qt::Vertical)
+            vData.markExtentsDirty();
+        else
+            hData.markExtentsDirty();
+    }
+
     QDeclarativeGuard<QSGVisualModel> model;
     QVariant modelVariant;
     int itemCount;
@@ -188,8 +195,6 @@ public:
     bool autoHighlight : 1;
     bool highlightRangeStartValid : 1;
     bool highlightRangeEndValid : 1;
-    mutable bool minExtentDirty : 1;
-    mutable bool maxExtentDirty : 1;
 
 protected:
     virtual Qt::Orientation layoutOrientation() const = 0;

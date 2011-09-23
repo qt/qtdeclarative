@@ -401,8 +401,7 @@ void QSGItemView::setHeader(QDeclarativeComponent *headerComponent)
         d->header = 0;
         d->headerComponent = headerComponent;
 
-        d->minExtentDirty = true;
-        d->maxExtentDirty = true;
+        d->markExtentsDirty();
 
         if (isComponentComplete()) {
             d->updateHeader();
@@ -724,14 +723,12 @@ void QSGItemViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
 
     if (header && header->item == item) {
         updateHeader();
-        minExtentDirty = true;
-        maxExtentDirty = true;
+        markExtentsDirty();
         if (!q->isMoving() && !q->isFlicking())
             fixupPosition();
     } else if (footer && footer->item == item) {
         updateFooter();
-        minExtentDirty = true;
-        maxExtentDirty = true;
+        markExtentsDirty();
         if (!q->isMoving() && !q->isFlicking())
             fixupPosition();
     }
@@ -892,8 +889,7 @@ void QSGItemView::trackedPositionChanged()
 void QSGItemView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QSGItemView);
-    d->maxExtentDirty = true;
-    d->minExtentDirty = true;
+    d->markExtentsDirty();
     QSGFlickable::geometryChanged(newGeometry, oldGeometry);
 }
 
@@ -904,8 +900,8 @@ qreal QSGItemView::minYExtent() const
     if (d->layoutOrientation() == Qt::Horizontal)
         return QSGFlickable::minYExtent();
 
-    if (d->minExtentDirty) {
-        d->minExtent = -d->startPosition();
+    if (d->vData.minExtentDirty) {
+        d->minExtent = d->vData.startMargin-d->startPosition();
         if (d->header)
             d->minExtent += d->headerSize();
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
@@ -914,7 +910,7 @@ qreal QSGItemView::minYExtent() const
                 d->minExtent -= d->visibleItem(0)->sectionSize();
             d->minExtent = qMax(d->minExtent, -(d->endPositionAt(0) - d->highlightRangeEnd));
         }
-        d->minExtentDirty = false;
+        d->vData.minExtentDirty = false;
     }
 
     return d->minExtent;
@@ -926,7 +922,7 @@ qreal QSGItemView::maxYExtent() const
     if (d->layoutOrientation() == Qt::Horizontal)
         return height();
 
-    if (d->maxExtentDirty) {
+    if (d->vData.maxExtentDirty) {
         if (!d->model || !d->model->count()) {
             d->maxExtent = d->header ? -d->headerSize() : 0;
             d->maxExtent += height();
@@ -940,10 +936,11 @@ qreal QSGItemView::maxYExtent() const
 
         if (d->footer)
             d->maxExtent -= d->footerSize();
+        d->maxExtent -= d->vData.endMargin;
         qreal minY = minYExtent();
         if (d->maxExtent > minY)
             d->maxExtent = minY;
-        d->maxExtentDirty = false;
+        d->vData.maxExtentDirty = false;
     }
     return d->maxExtent;
 }
@@ -954,12 +951,13 @@ qreal QSGItemView::minXExtent() const
     if (d->layoutOrientation() == Qt::Vertical)
         return QSGFlickable::minXExtent();
 
-    if (d->minExtentDirty) {
+    if (d->hData.minExtentDirty) {
         d->minExtent = -d->startPosition();
         qreal highlightStart;
         qreal highlightEnd;
         qreal endPositionFirstItem = 0;
         if (d->isContentFlowReversed()) {
+            d->minExtent += d->hData.endMargin;
             if (d->model && d->model->count())
                 endPositionFirstItem = d->positionAt(d->model->count()-1);
             else if (d->header)
@@ -974,6 +972,7 @@ qreal QSGItemView::minXExtent() const
             if (d->minExtent < maxX)
                 d->minExtent = maxX;
         } else {
+            d->minExtent += d->hData.startMargin;
             endPositionFirstItem = d->endPositionAt(0);
             highlightStart = d->highlightRangeStart;
             highlightEnd = d->highlightRangeEnd;
@@ -984,7 +983,7 @@ qreal QSGItemView::minXExtent() const
             d->minExtent += highlightStart;
             d->minExtent = qMax(d->minExtent, -(endPositionFirstItem - highlightEnd));
         }
-        d->minExtentDirty = false;
+        d->hData.minExtentDirty = false;
     }
 
     return d->minExtent;
@@ -996,7 +995,7 @@ qreal QSGItemView::maxXExtent() const
     if (d->layoutOrientation() == Qt::Vertical)
         return width();
 
-    if (d->maxExtentDirty) {
+    if (d->hData.maxExtentDirty) {
         qreal highlightStart;
         qreal highlightEnd;
         qreal lastItemPosition = 0;
@@ -1028,14 +1027,16 @@ qreal QSGItemView::maxXExtent() const
         if (d->isContentFlowReversed()) {
             if (d->header)
                 d->maxExtent -= d->headerSize();
+            d->maxExtent -= d->hData.startMargin;
         } else {
             if (d->footer)
                 d->maxExtent -= d->footerSize();
+            d->maxExtent -= d->hData.endMargin;
             qreal minX = minXExtent();
             if (d->maxExtent > minX)
                 d->maxExtent = minX;
         }
-        d->maxExtentDirty = false;
+        d->hData.maxExtentDirty = false;
     }
 
     return d->maxExtent;
@@ -1057,6 +1058,14 @@ void QSGItemView::setContentY(qreal pos)
     QSGFlickable::setContentY(pos);
 }
 
+qreal QSGItemView::xOrigin() const
+{
+    Q_D(const QSGItemView);
+    if (d->isContentFlowReversed())
+        return -maxXExtent() + d->size() - d->hData.startMargin;
+    else
+        return -minXExtent() + d->hData.startMargin;
+}
 
 void QSGItemView::updatePolish()
 {
@@ -1111,7 +1120,6 @@ QSGItemViewPrivate::QSGItemViewPrivate()
     , ownModel(false), wrap(false), lazyRelease(false), deferredRelease(false)
     , inApplyModelChanges(false), inViewportMoved(false), forceLayout(false), currentIndexCleared(false)
     , haveHighlightRange(false), autoHighlight(true), highlightRangeStartValid(false), highlightRangeEndValid(false)
-    , minExtentDirty(true), maxExtentDirty(true)
 {
 }
 
@@ -1144,7 +1152,16 @@ qreal QSGItemViewPrivate::endPosition() const
 
 qreal QSGItemViewPrivate::contentStartPosition() const
 {
-    return -headerSize();
+    Q_Q(const QSGItemView);
+    qreal pos = -headerSize();
+    if (layoutOrientation() == Qt::Vertical)
+        pos -= vData.startMargin;
+    else if (isContentFlowReversed())
+        pos -= hData.endMargin;
+    else
+        pos -= hData.startMargin;
+
+    return pos;
 }
 
 int QSGItemViewPrivate::findLastVisibleIndex(int defaultValue) const
@@ -1263,8 +1280,7 @@ void QSGItemViewPrivate::clear()
     createHighlight();
     trackedItem = 0;
 
-    minExtentDirty = true;
-    maxExtentDirty = true;
+    markExtentsDirty();
     itemCount = 0;
 }
 
@@ -1318,8 +1334,7 @@ void QSGItemViewPrivate::refill(qreal from, qreal to, bool doBuffer)
     }
 
     if (changed) {
-        minExtentDirty = true;
-        maxExtentDirty = true;
+        markExtentsDirty();
         visibleItemsChanged();
     } else if (!doBuffer && buffer && bufferMode != NoBuffer) {
         refill(from, to, true);
@@ -1376,8 +1391,7 @@ void QSGItemViewPrivate::layout()
     layoutVisibleItems();
     refill();
 
-    minExtentDirty = true;
-    maxExtentDirty = true;
+    markExtentsDirty();
 
     updateHighlight();
 
@@ -1404,6 +1418,8 @@ bool QSGItemViewPrivate::applyModelChanges()
 
     int prevCount = itemCount;
     bool removedVisible = false;
+    bool viewportChanged = !currentChanges.pendingChanges.removes().isEmpty()
+            || !currentChanges.pendingChanges.inserts().isEmpty();
 
     FxViewItem *firstVisible = firstVisibleItem();
     FxViewItem *origVisibleItemsFirst = visibleItems.count() ? visibleItems.first() : 0;
@@ -1516,8 +1532,12 @@ bool QSGItemViewPrivate::applyModelChanges()
     if (prevCount != itemCount)
         emit q->countChanged();
 
+    bool visibleAffected = removedVisible || addedVisible || !currentChanges.pendingChanges.changes().isEmpty();
+    if (!visibleAffected && viewportChanged)
+        updateViewport();
+
     inApplyModelChanges = false;
-    return removedVisible || addedVisible || !currentChanges.pendingChanges.changes().isEmpty();
+    return visibleAffected;
 }
 
 FxViewItem *QSGItemViewPrivate::createItem(int modelIndex)
