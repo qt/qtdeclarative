@@ -480,11 +480,19 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
     foreach (const QString &str, m_groups){
         int gIdx = m_system->m_groupIds[str];
         int count = m_system->m_groupData[gIdx]->size();
+
+        QSGShaderEffectNode* node = new QSGShaderEffectNode();
+        m_nodes.insert(gIdx, node);
+
+        node->setMaterial(m_material);
+        node->markDirty(QSGNode::DirtyMaterial);
+
         //Create Particle Geometry
         int vCount = count * 4;
         int iCount = count * 6;
         QSGGeometry *g = new QSGGeometry(PlainParticle_AttributeSet, vCount, iCount);
         g->setDrawingMode(GL_TRIANGLES);
+        node->setGeometry(g);
         PlainVertex *vertices = (PlainVertex *) g->vertexData();
         for (int p=0; p < count; ++p) {
             commit(gIdx, p);
@@ -512,14 +520,6 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
             indices[5] = o + 2;
             indices += 6;
         }
-
-        QSGShaderEffectNode* node = new QSGShaderEffectNode();
-
-        node->setGeometry(g);
-        node->setMaterial(m_material);
-        node->markDirty(QSGNode::DirtyMaterial);
-
-        m_nodes.insert(gIdx, node);
     }
     foreach (QSGShaderEffectNode* node, m_nodes){
         if (node == *(m_nodes.begin()))
