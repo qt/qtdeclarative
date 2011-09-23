@@ -938,6 +938,9 @@ void QSGParticleSystem::particleStateChange(int idx)
 
 void QSGParticleSystem::moveGroups(QSGParticleData *d, int newGIdx)
 {
+    if (!d || newGIdx == d->group)
+        return;
+
     QSGParticleData* pd = newDatum(newGIdx, false, d->systemIndex);
     pd->clone(*d);
     finishNewDatum(pd);
