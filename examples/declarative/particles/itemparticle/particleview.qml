@@ -225,7 +225,6 @@ Item {
                 fillMode: Image.PreserveAspectFit; 
                 width: parent.width-4; height: parent.height-4
                 onStatusChanged: if (img.status == Image.Ready) {
-                    container.opacity = 0;
                     loading.opacity = 0;
                     mp.take(container);
                 }
