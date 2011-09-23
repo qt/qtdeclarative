@@ -47,7 +47,7 @@
 #include <QDeclarativeComponent>
 #include <QDir>
 #include <QCryptographicHash>
-#include <private/qabstractanimation_p.h>
+#include "private/qabstractanimation2_p_p.h"
 #include <QGraphicsObject>
 #ifndef Q_OS_SYMBIAN
 #include <QtQuick1/private/qdeclarativeitem_p.h>
@@ -64,7 +64,7 @@ QDeclarativeTester::QDeclarativeTester(const QString &script, QDeclarativeViewer
 {
     parent->viewport()->installEventFilter(this);
     parent->installEventFilter(this);
-    QUnifiedTimer::instance()->setConsistentTiming(true);
+    QUnifiedTimer2::instance()->setConsistentTiming(true);
 
     //Font antialiasing makes tests system-specific, so disable it
     QFont noAA = QApplication::font();

@@ -116,12 +116,12 @@ private:
 };
 
 
-class QUnifiedTimer;
+class QUnifiedTimer2;
 class QDefaultAnimationDriver : public QAnimationDriver2
 {
     Q_OBJECT
 public:
-    QDefaultAnimationDriver(QUnifiedTimer *timer);
+    QDefaultAnimationDriver(QUnifiedTimer2 *timer);
     void timerEvent(QTimerEvent *e);
 
 private Q_SLOTS:
@@ -130,7 +130,7 @@ private Q_SLOTS:
 
 private:
     QBasicTimer m_timer;
-    QUnifiedTimer *m_unified_timer;
+    QUnifiedTimer2 *m_unified_timer;
 };
 
 class Q_CORE_EXPORT QAnimationDriver2Private : public QObjectPrivate
@@ -142,15 +142,15 @@ public:
 
 typedef QElapsedTimer ElapsedTimer;
 
-class Q_CORE_EXPORT QUnifiedTimer : public QObject
+class Q_CORE_EXPORT QUnifiedTimer2 : public QObject
 {
 private:
-    QUnifiedTimer();
+    QUnifiedTimer2();
 
 public:
     //XXX this is needed by dui
-    static QUnifiedTimer *instance();
-    static QUnifiedTimer *instance(bool create);
+    static QUnifiedTimer2 *instance();
+    static QUnifiedTimer2 *instance(bool create);
 
     static void registerAnimation(QAbstractAnimation2 *animation, bool isTopLevel);
     static void unregisterAnimation(QAbstractAnimation2 *animation);

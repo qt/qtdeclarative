@@ -164,7 +164,7 @@ protected:
     QAnimationDriver2(QAnimationDriver2Private &dd, QObject *parent = 0);
 
 private:
-    friend class QUnifiedTimer;
+    friend class QUnifiedTimer2;
 
 };
 

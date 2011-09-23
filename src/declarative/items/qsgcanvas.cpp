@@ -426,7 +426,7 @@ QSGCanvasPrivate::~QSGCanvasPrivate()
 
 void QSGCanvasPrivate::init(QSGCanvas *c)
 {
-    QUnifiedTimer::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
+    QUnifiedTimer2::instance(true)->setConsistentTiming(qmlFixedAnimationStep());
 
     q_ptr = c;
 

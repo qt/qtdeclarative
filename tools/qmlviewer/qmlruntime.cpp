@@ -59,8 +59,8 @@
 #include <qdeclarativeengine.h>
 #include <qdeclarativenetworkaccessmanagerfactory.h>
 #include "qdeclarative.h"
-#include <QAbstractAnimation>
-#include <private/qabstractanimation_p.h>
+#include "private/qabstractanimation2_p.h"
+#include "private/qabstractanimation2_p_p.h"
 
 #include <QSettings>
 #include <QXmlStreamReader>
@@ -1004,7 +1004,7 @@ void QDeclarativeViewer::toggleRecording()
 
 void QDeclarativeViewer::setSlowMode(bool enable)
 {
-    QUnifiedTimer::instance()->setSlowModeEnabled(enable);
+    QUnifiedTimer2::instance()->setSlowModeEnabled(enable);
 }
 
 void QDeclarativeViewer::addLibraryPath(const QString& lib)
@@ -1269,8 +1269,8 @@ void QDeclarativeViewer::setRecording(bool on)
         return;
 
     int period = int(1000/record_rate+0.5);
-    QUnifiedTimer::instance()->setTimingInterval(on ? period:16);
-    QUnifiedTimer::instance()->setConsistentTiming(on);
+    QUnifiedTimer2::instance()->setTimingInterval(on ? period:16);
+    QUnifiedTimer2::instance()->setConsistentTiming(on);
     if (on) {
         canvas->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
         recordTimer.setInterval(period);

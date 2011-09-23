@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
 void QDeclarativeDebugHelper::setAnimationSlowDownFactor(qreal factor)
 {
-    QUnifiedTimer *timer = QUnifiedTimer::instance();
+    QUnifiedTimer2 *timer = QUnifiedTimer2::instance();
     timer->setSlowModeEnabled(factor != 1.0);
     timer->setSlowdownFactor(factor);
 }
