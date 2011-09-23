@@ -84,12 +84,11 @@ class QSGAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QSGAnchorAnimation)
 public:
-    QSGAnchorAnimationPrivate() : rangeIsSet(false), va(0),
-        interpolator(QVariantAnimation2Private::getInterpolator(QMetaType::QReal)) {}
+    QSGAnchorAnimationPrivate() : va(0),
+        interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
 
-    bool rangeIsSet;
     QDeclarativeBulkValueAnimator *va;
-    QVariantAnimation2::Interpolator interpolator;
+    QVariantAnimation::Interpolator interpolator;
     QList<QSGItem*> targets;
 };
 
@@ -134,11 +133,10 @@ class QSGPathAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QSGPathAnimation)
 public:
     QSGPathAnimationPrivate() : path(0), target(0),
-        rangeIsSet(false), orientation(QSGPathAnimation::Fixed), entryInterval(0), exitInterval(0), pa(0) {}
+        orientation(QSGPathAnimation::Fixed), entryInterval(0), exitInterval(0), pa(0) {}
 
     QDeclarativePath *path;
     QSGItem *target;
-    bool rangeIsSet;
     QSGPathAnimation::Orientation orientation;
     QPointF anchorPoint;
     qreal entryInterval;

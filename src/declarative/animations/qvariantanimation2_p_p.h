@@ -68,19 +68,9 @@ class QVariantAnimation2Private : public QAbstractAnimation2Private
 {
     Q_DECLARE_PUBLIC(QVariantAnimation2)
 public:
-
     QVariantAnimation2Private();
 
-    static QVariantAnimation2Private *get(QVariantAnimation2 *q)
-    {
-        return q->d_func();
-    }
-
-    void setDefaultStartEndValue(const QVariant &value);
-
-
-    QVariant currentValue;
-    QVariant defaultStartEndValue;
+    qreal currentValue;
 
     //this is used to keep track of the KeyValue interval in which we currently are
     struct
@@ -91,31 +81,12 @@ public:
     QEasingCurve easing;
     int duration;
     QVariantAnimation2::KeyValues keyValues;
-    QVariantAnimation2::Interpolator interpolator;
 
     void setCurrentValueForProgress(const qreal progress);
     void recalculateCurrentInterval(bool force=false);
-    void setValueAt(qreal, const QVariant &);
-    QVariant valueAt(qreal step) const;
-    void convertValues(int t);
-
-    void updateInterpolator();
-
-    //XXX this is needed by dui
-    static Q_CORE_EXPORT QVariantAnimation2::Interpolator getInterpolator(int interpolationType);
+    void setValueAt(qreal, const qreal &);
+    qreal valueAt(qreal step) const;
 };
-
-//this should make the interpolation faster
-template<typename T> inline T _q_interpolate(const T &f, const T &t, qreal progress)
-{
-    return T(f + (t - f) * progress);
-}
-
-template<typename T > inline QVariant _q_interpolateVariant(const T &from, const T &to, qreal progress)
-{
-    return _q_interpolate(from, to, progress);
-}
-
 
 QT_END_NAMESPACE
 

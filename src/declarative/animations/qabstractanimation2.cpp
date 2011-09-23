@@ -577,26 +577,26 @@ qint64 QAnimationDriver2::elapsed() const
 /*!
    The default animation driver just spins the timer...
  */
-QDefaultAnimationDriver::QDefaultAnimationDriver(QUnifiedTimer2 *timer)
+QDefaultAnimationDriver2::QDefaultAnimationDriver2(QUnifiedTimer2 *timer)
     : QAnimationDriver2(0), m_unified_timer(timer)
 {
     connect(this, SIGNAL(started()), this, SLOT(startTimer()));
     connect(this, SIGNAL(stopped()), this, SLOT(stopTimer()));
 }
 
-void QDefaultAnimationDriver::timerEvent(QTimerEvent *e)
+void QDefaultAnimationDriver2::timerEvent(QTimerEvent *e)
 {
     Q_ASSERT(e->timerId() == m_timer.timerId());
     Q_UNUSED(e); // if the assertions are disabled
     advance();
 }
 
-void QDefaultAnimationDriver::startTimer()
+void QDefaultAnimationDriver2::startTimer()
 {
     m_timer.start(m_unified_timer->timingInterval, this);
 }
 
-void QDefaultAnimationDriver::stopTimer()
+void QDefaultAnimationDriver2::stopTimer()
 {
     m_timer.stop();
 }

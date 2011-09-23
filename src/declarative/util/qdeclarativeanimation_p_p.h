@@ -68,6 +68,7 @@
 
 #include <private/qobject_p.h>
 #include "private/qvariantanimation2_p_p.h"
+#include <private/qvariantanimation_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -165,13 +166,13 @@ public:
         fromSourced = value;
     }
 protected:
-    virtual void updateCurrentValue(const QVariant &value)
+    virtual void updateCurrentValue(const qreal &value)
     {
         if (state() == QAbstractAnimation2::Stopped)
             return;
 
         if (animValue)
-            animValue->setValue(value.toReal());
+            animValue->setValue(value);
     }
     virtual void updateState(State newState, State oldState)
     {   
@@ -306,7 +307,7 @@ class QDeclarativePropertyAnimationPrivate : public QDeclarativeAbstractAnimatio
 public:
     QDeclarativePropertyAnimationPrivate()
     : QDeclarativeAbstractAnimationPrivate(), target(0), fromSourced(false), fromIsDefined(false), toIsDefined(false),
-      rangeIsSet(false), defaultToInterpolatorType(0), interpolatorType(0), interpolator(0), va(0), actions(0) {}
+      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0), va(0), actions(0) {}
 
     void init();
 
@@ -323,10 +324,9 @@ public:
     bool fromSourced;
     bool fromIsDefined:1;
     bool toIsDefined:1;
-    bool rangeIsSet:1;
     bool defaultToInterpolatorType:1;
     int interpolatorType;
-    QVariantAnimation2::Interpolator interpolator;
+    QVariantAnimation::Interpolator interpolator;
 
     QDeclarativeBulkValueAnimator *va;
 
@@ -352,7 +352,7 @@ public:
     QDeclarativeStateActions actions;
     int interpolatorType;       //for Number/ColorAnimation
     int prevInterpolatorType;   //for generic
-    QVariantAnimation2::Interpolator interpolator;
+    QVariantAnimation::Interpolator interpolator;
     bool reverse;
     bool fromSourced;
     bool fromDefined;

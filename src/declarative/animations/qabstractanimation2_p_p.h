@@ -117,11 +117,11 @@ private:
 
 
 class QUnifiedTimer2;
-class QDefaultAnimationDriver : public QAnimationDriver2
+class QDefaultAnimationDriver2 : public QAnimationDriver2
 {
     Q_OBJECT
 public:
-    QDefaultAnimationDriver(QUnifiedTimer2 *timer);
+    QDefaultAnimationDriver2(QUnifiedTimer2 *timer);
     void timerEvent(QTimerEvent *e);
 
 private Q_SLOTS:
@@ -194,11 +194,11 @@ protected:
     void timerEvent(QTimerEvent *);
 
 private:
-    friend class QDefaultAnimationDriver;
+    friend class QDefaultAnimationDriver2;
     friend class QAnimationDriver2;
 
     QAnimationDriver2 *driver;
-    QDefaultAnimationDriver defaultDriver;
+    QDefaultAnimationDriver2 defaultDriver;
 
     QBasicTimer animationTimer;
     // timer used to delay the check if we should start/stop the animation timer

@@ -430,11 +430,6 @@ void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
     }
 
     if (data->actions.count()) {
-        if (!d->rangeIsSet) {
-            d->va->setStartValue(qreal(0));
-            d->va->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
         d->va->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
         d->va->setFromSourcedValue(&data->fromSourced);
     } else {
@@ -645,11 +640,6 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
         (modified.count() > origModifiedSize || data->toDefined)) {
         data->target = d->target;
         data->path = d->path;
-        if (!d->rangeIsSet) {
-            d->pa->setStartValue(qreal(0));
-            d->pa->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
         /*
             NOTE: The following block relies on the fact that the previous value hasn't
             yet been deleted, and has the same target, etc, which may be a bit fragile.

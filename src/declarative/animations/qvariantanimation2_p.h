@@ -54,46 +54,30 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
 class QVariantAnimation2Private;
 class Q_CORE_EXPORT QVariantAnimation2 : public QAbstractAnimation2
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant startValue READ startValue WRITE setStartValue)
-    Q_PROPERTY(QVariant endValue READ endValue WRITE setEndValue)
-    Q_PROPERTY(QVariant currentValue READ currentValue NOTIFY valueChanged)
-    Q_PROPERTY(int duration READ duration WRITE setDuration)
-    Q_PROPERTY(QEasingCurve easingCurve READ easingCurve WRITE setEasingCurve)
-
 public:
-    typedef QPair<qreal, QVariant> KeyValue;
+    typedef QPair<qreal, qreal> KeyValue;
     typedef QVector<KeyValue> KeyValues;
 
     QVariantAnimation2(QObject *parent = 0);
     ~QVariantAnimation2();
 
-    QVariant startValue() const;
-    void setStartValue(const QVariant &value);
-
-    QVariant endValue() const;
-    void setEndValue(const QVariant &value);
-
-    QVariant keyValueAt(qreal step) const;
-    void setKeyValueAt(qreal step, const QVariant &value);
+    qreal keyValueAt(qreal step) const;
+    void setKeyValueAt(qreal step, const qreal &value);
 
     KeyValues keyValues() const;
     void setKeyValues(const KeyValues &values);
 
-    QVariant currentValue() const;
+    qreal currentValue() const;
 
     int duration() const;
     void setDuration(int msecs);
 
     QEasingCurve easingCurve() const;
     void setEasingCurve(const QEasingCurve &easing);
-
-    typedef QVariant (*Interpolator)(const void *from, const void *to, qreal progress);
 
 Q_SIGNALS:
     void valueChanged(const QVariant &value);
@@ -105,23 +89,12 @@ protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
 
-    virtual void updateCurrentValue(const QVariant &value) = 0;
-    virtual QVariant interpolated(const QVariant &from, const QVariant &to, qreal progress) const;
-
-private:
-    template <typename T> friend void qRegisterAnimationInterpolator(QVariant (*func)(const T &, const T &, qreal));
-    static void registerInterpolator(Interpolator func, int interpolationType);
+    virtual void updateCurrentValue(const qreal &value) = 0;
+    virtual qreal interpolated(const qreal &from, const qreal &to, qreal progress) const;
 
     Q_DISABLE_COPY(QVariantAnimation2)
     Q_DECLARE_PRIVATE(QVariantAnimation2)
 };
-
-template <typename T>
-void qRegisterAnimationInterpolator(QVariant (*func)(const T &from, const T &to, qreal progress)) {
-    QVariantAnimation2::registerInterpolator(reinterpret_cast<QVariantAnimation2::Interpolator>(func), qMetaTypeId<T>());
-}
-
-
 
 QT_END_NAMESPACE
 

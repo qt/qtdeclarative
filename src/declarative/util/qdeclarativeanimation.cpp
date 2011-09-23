@@ -665,7 +665,7 @@ QDeclarativeColorAnimation::QDeclarativeColorAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QColor;
-    d->interpolator = QVariantAnimation2Private::getInterpolator(d->interpolatorType);
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
 }
 
@@ -1173,7 +1173,7 @@ void QDeclarativeNumberAnimation::init()
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QReal;
-    d->interpolator = QVariantAnimation2Private::getInterpolator(d->interpolatorType);
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
 }
 
 /*!
@@ -1260,7 +1260,7 @@ QDeclarativeVector3dAnimation::QDeclarativeVector3dAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QVector3D;
-    d->interpolator = QVariantAnimation2Private::getInterpolator(d->interpolatorType);
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
 }
 
@@ -1396,7 +1396,7 @@ QDeclarativeRotationAnimation::QDeclarativeRotationAnimation(QObject *parent)
 {
     Q_D(QDeclarativeRotationAnimation);
     d->interpolatorType = QMetaType::QReal;
-    d->interpolator = QVariantAnimation2Private::getInterpolator(d->interpolatorType);
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultProperties = QLatin1String("rotation,angle");
 }
 
@@ -1493,16 +1493,16 @@ void QDeclarativeRotationAnimation::setDirection(QDeclarativeRotationAnimation::
     d->direction = direction;
     switch(d->direction) {
     case Clockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation2::Interpolator>(&_q_interpolateClockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateClockwiseRotation);
         break;
     case Counterclockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation2::Interpolator>(&_q_interpolateCounterclockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateCounterclockwiseRotation);
         break;
     case Shortest:
-        d->interpolator = reinterpret_cast<QVariantAnimation2::Interpolator>(&_q_interpolateShortestRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateShortestRotation);
         break;
     default:
-        d->interpolator = QVariantAnimation2Private::getInterpolator(d->interpolatorType);
+        d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
         break;
     }
 
@@ -2308,7 +2308,7 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
                 int propType = action.property.propertyType();
                 if (!prevInterpolatorType || prevInterpolatorType != propType) {
                     prevInterpolatorType = propType;
-                    interpolator = QVariantAnimation2Private::getInterpolator(prevInterpolatorType);
+                    interpolator = QVariantAnimationPrivate::getInterpolator(prevInterpolatorType);
                 }
             }
             if (interpolator)
@@ -2419,11 +2419,6 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
     }
 
     if (data->actions.count()) {
-        if (!d->rangeIsSet) {
-            d->va->setStartValue(qreal(0));
-            d->va->setEndValue(qreal(1));
-            d->rangeIsSet = true;
-        }
         d->va->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
         d->va->setFromSourcedValue(&data->fromSourced);
         d->actions = &data->actions;
