@@ -5,7 +5,7 @@ METATYPETESTS += \
     qmetaobjectbuilder
 
 PUBLICTESTS += \
-#   examples \
+    examples \
     geometry \
     nodes \
     parserstress \
