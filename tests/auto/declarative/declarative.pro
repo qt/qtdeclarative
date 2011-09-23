@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 
 METATYPETESTS += \
-#   qdeclarativemetatype \
+    qdeclarativemetatype \
     qmetaobjectbuilder
 
 PUBLICTESTS += \

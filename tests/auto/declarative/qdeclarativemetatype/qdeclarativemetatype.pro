@@ -1,5 +1,5 @@
 load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+contains(QT_CONFIG,declarative): QT += declarative widgets
 SOURCES += tst_qdeclarativemetatype.cpp
 macx:CONFIG -= app_bundle
 
