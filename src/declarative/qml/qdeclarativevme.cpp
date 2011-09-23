@@ -1174,6 +1174,7 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
     if (script->m_loaded)
         return qPersistentNew<v8::Object>(script->m_value);
 
+    Q_ASSERT(parentCtxt && parentCtxt->engine);
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(parentCtxt->engine);
     QV8Engine *v8engine = ep->v8engine();
 
@@ -1208,8 +1209,11 @@ v8::Persistent<v8::Object> QDeclarativeVME::run(QDeclarativeContextData *parentC
         ctxt->imports->addref();
     }
 
-    if (effectiveCtxt)
+    if (effectiveCtxt) {
         ctxt->setParent(effectiveCtxt, true);
+    } else {
+        ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
+    }
 
     for (int ii = 0; ii < script->scripts.count(); ++ii) {
         ctxt->importedScripts << run(ctxt, script->scripts.at(ii)->scriptData());

@@ -147,6 +147,7 @@ private slots:
     void signalWithJSValueInVariant_twoEngines();
     void moduleApi_data();
     void moduleApi();
+    void importScripts_data();
     void importScripts();
     void scarceResources();
     void propertyChangeSlots();
@@ -3014,78 +3015,125 @@ void tst_qdeclarativeecmascript::moduleApi()
     }
 }
 
+void tst_qdeclarativeecmascript::importScripts_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::addColumn<QStringList>("warningMessages");
+    QTest::addColumn<QStringList>("propertyNames");
+    QTest::addColumn<QVariantList>("propertyValues");
+
+    QTest::newRow("basic functionality")
+            << TEST_FILE("jsimport/testImport.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("importedScriptStringValue")
+                              << QLatin1String("importedScriptFunctionValue")
+                              << QLatin1String("importedModuleAttachedPropertyValue")
+                              << QLatin1String("importedModuleEnumValue"))
+            << (QVariantList() << QVariant(QLatin1String("Hello, World!"))
+                               << QVariant(20)
+                               << QVariant(19)
+                               << QVariant(2));
+
+    QTest::newRow("import scoping")
+            << TEST_FILE("jsimport/testImportScoping.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("componentError"))
+            << (QVariantList() << QVariant(5));
+
+    QTest::newRow("parent scope shouldn't be inherited by import with imports")
+            << TEST_FILE("jsimportfail/failOne.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined")))
+            << (QStringList() << QLatin1String("importScriptFunctionValue"))
+            << (QVariantList() << QVariant(QString()));
+
+    QTest::newRow("javascript imports in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failTwo.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: ImportOneJs")))
+            << (QStringList() << QLatin1String("importScriptFunctionValue"))
+            << (QVariantList() << QVariant(QString()));
+
+    QTest::newRow("module imports in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failThree.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined")))
+            << (QStringList() << QLatin1String("importedModuleAttachedPropertyValue"))
+            << (QVariantList() << QVariant(false));
+
+    QTest::newRow("typenames in an import should be private to the import scope")
+            << TEST_FILE("jsimportfail/failFour.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: JsQtTest")))
+            << (QStringList() << QLatin1String("importedModuleEnumValue"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import with imports has it's own activation scope")
+            << TEST_FILE("jsimportfail/failFive.qml")
+            << QString()
+            << (QStringList() << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component"))
+                              << QString(QLatin1String("file://") + TEST_FILE("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component")))
+            << (QStringList() << QLatin1String("componentError"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import pragma library script")
+            << TEST_FILE("jsimport/testImportPragmaLibrary.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(31));
+
+    QTest::newRow("pragma library imports shouldn't inherit parent imports or scope")
+            << TEST_FILE("jsimportfail/testImportPragmaLibrary.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(0));
+
+    QTest::newRow("import pragma library script which has an import")
+            << TEST_FILE("jsimport/testImportPragmaLibraryWithImports.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(55));
+
+    QTest::newRow("import pragma library script which has a pragma library import")
+            << TEST_FILE("jsimport/testImportPragmaLibraryWithPragmaLibraryImports.qml")
+            << QString()
+            << QStringList()
+            << (QStringList() << QLatin1String("testValue"))
+            << (QVariantList() << QVariant(18));
+}
+
 void tst_qdeclarativeecmascript::importScripts()
 {
-    QObject *object = 0;
+    QFETCH(QUrl, testfile);
+    QFETCH(QString, errorMessage);
+    QFETCH(QStringList, warningMessages);
+    QFETCH(QStringList, propertyNames);
+    QFETCH(QVariantList, propertyValues);
 
-    // first, ensure that the required behaviour works.
-    QDeclarativeComponent component(&engine, TEST_FILE("jsimport/testImport.qml"));
-    object = component.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedScriptStringValue"), QVariant(QString(QLatin1String("Hello, World!"))));
-    QCOMPARE(object->property("importedScriptFunctionValue"), QVariant(20));
-    QCOMPARE(object->property("importedModuleAttachedPropertyValue"), QVariant(19));
-    QCOMPARE(object->property("importedModuleEnumValue"), QVariant(2));
-    delete object;
+    QDeclarativeComponent component(&engine, testfile);
 
-    QDeclarativeComponent componentTwo(&engine, TEST_FILE("jsimport/testImportScoping.qml"));
-    object = componentTwo.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("componentError"), QVariant(5));
-    delete object;
+    if (!errorMessage.isEmpty())
+        QTest::ignoreMessage(QtWarningMsg, errorMessage.toAscii().constData());
 
-    // then, ensure that unintended behaviour does not work.
-    QDeclarativeComponent failOneComponent(&engine, TEST_FILE("jsimportfail/failOne.qml"));
-    QString expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failOne.qml").toLocalFile() + QLatin1String(":6: TypeError: Cannot call method 'greetingString' of undefined");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failOneComponent.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("importScriptFunctionValue").toString().isEmpty());
-    delete object;
-    QDeclarativeComponent failTwoComponent(&engine, TEST_FILE("jsimportfail/failTwo.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failTwo.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: ImportOneJs");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failTwoComponent.create();
-    QVERIFY(object != 0);
-    QVERIFY(object->property("importScriptFunctionValue").toString().isEmpty());
-    delete object;
-    QDeclarativeComponent failThreeComponent(&engine, TEST_FILE("jsimportfail/failThree.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failThree.qml").toLocalFile() + QLatin1String(":7: TypeError: Cannot read property 'JsQtTest' of undefined");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failThreeComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedModuleAttachedPropertyValue"), QVariant(false));
-    delete object;
-    QDeclarativeComponent failFourComponent(&engine, TEST_FILE("jsimportfail/failFour.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/failFour.qml").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: JsQtTest");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failFourComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("importedModuleEnumValue"), QVariant(0));
-    delete object;
-    QDeclarativeComponent failFiveComponent(&engine, TEST_FILE("jsimportfail/failFive.qml"));
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/importWithImports.js").toLocalFile() + QLatin1String(":8: ReferenceError: Can't find variable: Component");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    expectedWarning = QLatin1String("file://") + TEST_FILE("jsimportfail/importPragmaLibrary.js").toLocalFile() + QLatin1String(":6: ReferenceError: Can't find variable: Component");
-    QTest::ignoreMessage(QtWarningMsg, expectedWarning.toAscii().constData());
-    object = failFiveComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("componentError"), QVariant(0));
-    delete object;
+    if (warningMessages.size())
+        foreach (const QString &warning, warningMessages)
+            QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
 
-    // also, test that importing scripts with .pragma library works as required
-    QDeclarativeComponent pragmaLibraryComponent(&engine, TEST_FILE("jsimport/testImportPragmaLibrary.qml"));
-    object = pragmaLibraryComponent.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("testValue"), QVariant(31));
-    delete object;
-
-    // and that .pragma library scripts don't inherit imports from any .qml file
-    QDeclarativeComponent pragmaLibraryComponentTwo(&engine, TEST_FILE("jsimportfail/testImportPragmaLibrary.qml"));
-    object = pragmaLibraryComponentTwo.create();
-    QVERIFY(object != 0);
-    QCOMPARE(object->property("testValue"), QVariant(0));
-    delete object;
+    QObject *object = component.create();
+    if (!errorMessage.isEmpty()) {
+        QVERIFY(object == 0);
+    } else {
+        QVERIFY(object != 0);
+        for (int i = 0; i < propertyNames.size(); ++i)
+            QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
+        delete object;
+    }
 }
 
 void tst_qdeclarativeecmascript::scarceResources()
