@@ -429,9 +429,8 @@ QSGNode *QSGCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
         prepareNextFrame();
         if (m_rootNode) {
             update();
-            //### Should I be using dirty geometry too/instead?
             foreach (QSGGeometryNode* node, m_nodes)
-                node->markDirty(QSGNode::DirtyMaterial);//done in buildData?
+                node->markDirty(QSGNode::DirtyGeometry);//done in buildData?
         }
     }
 

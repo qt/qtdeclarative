@@ -1148,6 +1148,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         int count = m_system->m_groupData[gIdx]->size();
         QSGGeometryNode* node = new QSGGeometryNode();
         node->setMaterial(m_material);
+        node->markDirty(QSGNode::DirtyMaterial);
 
         m_nodes.insert(gIdx, node);
         m_idxStarts.insert(gIdx, m_lastIdxStart);
@@ -1237,9 +1238,8 @@ QSGNode *QSGImageParticle::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
         prepareNextFrame();
         if (m_rootNode) {
             update();
-            //### Should I be using dirty geometry too/instead?
             foreach (QSGGeometryNode* node, m_nodes)
-                node->markDirty(QSGNode::DirtyMaterial);
+                node->markDirty(QSGNode::DirtyGeometry);
         }
     }
 
@@ -1298,6 +1298,8 @@ void QSGImageParticle::prepareNextFrame()
         break;
     }
 
+    foreach (QSGGeometryNode* node, m_nodes)
+        node->markDirty(QSGNode::DirtyMaterial);
 }
 
 void QSGImageParticle::reloadColor(const Color4ub &c, QSGParticleData* d)
