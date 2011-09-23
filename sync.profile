@@ -2,8 +2,10 @@
     "QtDeclarative" => "$basedir/src/declarative",
     "QtQuick1" => "$basedir/src/qtquick1",
     "QtQuickTest" => "$basedir/src/qmltest",
+    "QtQmlDevTools" => "$basedir/src/qmldevtools",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
+    "QtQmlDevTools" => "../declarative/qml/parser",
 );
 %classnames = (
     "qtdeclarativeversion.h" => "QtDeclarativeVersion",
@@ -18,6 +20,7 @@
     "QtDeclarative" => "$basedir/modules/qt_declarative.pri",
     "QtQuick1" => "$basedir/modules/qt_qtquick1.pri",
     "QtQuickTest" => "$basedir/modules/qt_qmltest.pri",
+    "QtQmlDevTools" => "$basedir/modules/qt_qmldevtools.pri",
 );
 # Module dependencies.
 # Every module that is required to build this module should have one entry.

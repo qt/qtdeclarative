@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,32 +38,25 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QDECLARATIVEJSGLOBAL_P_H
-#define QDECLARATIVEJSGLOBAL_P_H
+#include <qtest.h>
 
-#include <QtCore/qglobal.h>
+#include <private/qdeclarativejsengine_p.h>
+#include <private/qdeclarativejslexer_p.h>
+#include <private/qdeclarativejsparser_p.h>
+#include <private/qdeclarativejsastvisitor_p.h>
+#include <private/qdeclarativejsast_p.h>
 
-#ifdef QT_CREATOR
-#  define QT_QML_BEGIN_NAMESPACE
-#  define QT_QML_END_NAMESPACE
+class tst_compile : public QObject
+{
+    Q_OBJECT
+public:
+    tst_compile() { }
 
-#  ifdef QDECLARATIVEJS_BUILD_DIR
-#    define QML_PARSER_EXPORT Q_DECL_EXPORT
-#  elif QML_BUILD_STATIC_LIB
-#    define QML_PARSER_EXPORT
-#  else
-#    define QML_PARSER_EXPORT Q_DECL_IMPORT
-#  endif // QDECLARATIVEJS_BUILD_DIR
+private slots:
+    // Nothing - this test just makes sure that the QmlDevTools headers
+    // are present, and that we can link against the library.
+};
 
-#else // !QT_CREATOR
-#  define QT_QML_BEGIN_NAMESPACE QT_BEGIN_NAMESPACE
-#  define QT_QML_END_NAMESPACE QT_END_NAMESPACE
-#  if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-     // QmlDevTools is a static library
-#    define QML_PARSER_EXPORT
-#  else
-#    define QML_PARSER_EXPORT Q_AUTOTEST_EXPORT
-#  endif
-#endif // QT_CREATOR
+QTEST_MAIN(tst_compile)
 
-#endif // QDECLARATIVEJSGLOBAL_P_H
+#include "tst_compile.moc"
