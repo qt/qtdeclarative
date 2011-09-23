@@ -343,10 +343,9 @@ private:
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode
 class QSGParticleSystemAnimation : public QAbstractAnimation2
 {
-    Q_OBJECT
 public:
     QSGParticleSystemAnimation(QSGParticleSystem* system)
-        : QAbstractAnimation2(static_cast<QObject*>(system)), m_system(system)
+        : m_system(system)
     { }
 protected:
     virtual void updateCurrentTime( int t )

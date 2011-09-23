@@ -54,25 +54,24 @@ QT_MODULE(Declarative)
 
 class QPauseAnimation2Private;
 
-class Q_CORE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
+class Q_DECLARATIVE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
 {
-    Q_OBJECT
-    Q_PROPERTY(int duration READ duration WRITE setDuration)
 public:
-    QPauseAnimation2(QObject *parent = 0);
-    QPauseAnimation2(int msecs, QObject *parent = 0);
+    QPauseAnimation2(QDeclarativeAbstractAnimation *animation=0);
+    QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation=0);
     ~QPauseAnimation2();
 
     int duration() const;
     void setDuration(int msecs);
 
 protected:
-    bool event(QEvent *e);
+    QPauseAnimation2(QPauseAnimation2Private* dd, QDeclarativeAbstractAnimation *animation=0);
     void updateCurrentTime(int);
 
 private:
     Q_DISABLE_COPY(QPauseAnimation2)
-    Q_DECLARE_PRIVATE(QPauseAnimation2)
+    QPauseAnimation2Private* d_func() {return reinterpret_cast<QPauseAnimation2Private*>(d);}
+    const QPauseAnimation2Private* d_func() const {return reinterpret_cast<const QPauseAnimation2Private*>(d);}
 };
 
 

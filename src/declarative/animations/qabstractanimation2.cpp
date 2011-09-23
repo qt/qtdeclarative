@@ -39,122 +39,17 @@
 **
 ****************************************************************************/
 
-/*!
-    \class QAbstractAnimation2
-    \ingroup animation
-    \brief The QAbstractAnimation2 class is the base of all animations.
-    \since 4.6
-
-    The class defines the functions for the functionality shared by
-    all animations. By inheriting this class, you can create custom
-    animations that plug into the rest of the animation framework.
-
-    The progress of an animation is given by its current time
-    (currentLoopTime()), which is measured in milliseconds from the start
-    of the animation (0) to its end (duration()). The value is updated
-    automatically while the animation is running. It can also be set
-    directly with setCurrentTime().
-
-    At any point an animation is in one of three states:
-    \l{QAbstractAnimation2::}{Running},
-    \l{QAbstractAnimation2::}{Stopped}, or
-    \l{QAbstractAnimation2::}{Paused}--as defined by the
-    \l{QAbstractAnimation2::}{State} enum. The current state can be
-    changed by calling start(), stop(), pause(), or resume(). An
-    animation will always reset its \l{currentTime()}{current time}
-    when it is started. If paused, it will continue with the same
-    current time when resumed. When an animation is stopped, it cannot
-    be resumed, but will keep its current time (until started again).
-    QAbstractAnimation2 will emit stateChanged() whenever its state
-    changes.
-
-    An animation can loop any number of times by setting the loopCount
-    property. When an animation's current time reaches its duration(),
-    it will reset the current time and keep running. A loop count of 1
-    (the default value) means that the animation will run one time.
-    Note that a duration of -1 means that the animation will run until
-    stopped; the current time will increase indefinitely. When the
-    current time equals duration() and the animation is in its
-    final loop, the \l{QAbstractAnimation2::}{Stopped} state is
-    entered, and the finished() signal is emitted.
-
-    QAbstractAnimation2 provides pure virtual functions used by
-    subclasses to track the progress of the animation: duration() and
-    updateCurrentTime(). The duration() function lets you report a
-    duration for the animation (as discussed above). The animation
-    framework calls updateCurrentTime() when current time has changed.
-    By reimplementing this function, you can track the animation
-    progress. Note that neither the interval between calls nor the
-    number of calls to this function are defined; though, it will
-    normally be 60 updates per second.
-
-    By reimplementing updateState(), you can track the animation's
-    state changes, which is particularly useful for animations that
-    are not driven by time.
-
-    \sa QVariantAnimation2, QPropertyAnimation2, QAnimationGroup2, {The Animation Framework}
-*/
-
-/*!
-    \enum QAbstractAnimation2::DeletionPolicy
-
-    \value KeepWhenStopped The animation will not be deleted when stopped.
-    \value DeleteWhenStopped The animation will be automatically deleted when
-    stopped.
-*/
-
-/*!
-    \fn QAbstractAnimation2::finished()
-
-    QAbstractAnimation2 emits this signal after the animation has stopped and
-    has reached the end.
-
-    This signal is emitted after stateChanged().
-
-    \sa stateChanged()
-*/
-
-/*!
-    \fn QAbstractAnimation2::stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState)
-
-    QAbstractAnimation2 emits this signal whenever the state of the animation has
-    changed from \a oldState to \a newState. This signal is emitted after the virtual
-    updateState() function is called.
-
-    \sa updateState()
-*/
-
-/*!
-    \fn QAbstractAnimation2::currentLoopChanged(int currentLoop)
-
-    QAbstractAnimation2 emits this signal whenever the current loop
-    changes. \a currentLoop is the current loop.
-
-    \sa currentLoop(), loopCount()
-*/
-
-/*!
-    \fn QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction newDirection);
-
-    QAbstractAnimation2 emits this signal whenever the direction has been
-    changed. \a newDirection is the new direction.
-
-    \sa direction
-*/
-
 #include "private/qabstractanimation2_p.h"
 #include "private/qanimationgroup2_p.h"
 
 #include <QtCore/qdebug.h>
 
 #include "private/qabstractanimation2_p_p.h"
-
+#include "private/qdeclarativeanimation_p.h"
 #include <QtCore/qmath.h>
 #include <QtCore/qthreadstorage.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qpointer.h>
-
-
 
 #define DEFAULT_TIMER_INTERVAL 16
 #define STARTSTOP_TIMER_DELAY 0
@@ -605,7 +500,6 @@ void QDefaultAnimationDriver2::stopTimer()
 
 void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
 {
-    Q_Q(QAbstractAnimation2);
     if (state == newState)
         return;
 
@@ -628,7 +522,7 @@ void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
     }
 
     state = newState;
-    QWeakPointer<QAbstractAnimation2> guard(q);
+    //QWeakPointer<QAbstractAnimation2> guard(q);
 
     //(un)registration of the animation must always happen before calls to
     //virtual function (updateState) to ensure a correct state of the timer
@@ -643,12 +537,12 @@ void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
     }
 
     q->updateState(newState, oldState);
-    if (!guard || newState != state) //this is to be safe if updateState changes the state
+    if (newState != state) //this is to be safe if updateState changes the state
         return;
 
     // Notify state change
-    emit q->stateChanged(newState, oldState);
-    if (!guard || newState != state) //this is to be safe if updateState changes the state
+    q->stateChanged(newState, oldState);
+    if (newState != state) //this is to be safe if updateState changes the state
         return;
 
     switch (state) {
@@ -672,137 +566,63 @@ void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
         int dura = q->duration();
 
         if (deleteWhenStopped)
-            q->deleteLater();
+            delete q;
 
         if (dura == -1 || loopCount < 0
             || (oldDirection == QAbstractAnimation2::Forward && (oldCurrentTime * (oldCurrentLoop + 1)) == (dura * loopCount))
             || (oldDirection == QAbstractAnimation2::Backward && oldCurrentTime == 0)) {
-                emit q->finished();
+               q->finished();
         }
         break;
     }
 }
 
-/*!
-    Constructs the QAbstractAnimation2 base class, and passes \a parent to
-    QObject's constructor.
-
-    \sa QVariantAnimation2, QAnimationGroup2
-*/
-QAbstractAnimation2::QAbstractAnimation2(QObject *parent)
-    : QObject(*new QAbstractAnimation2Private, 0)
+QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation *animation)
+    :d(new QAbstractAnimation2Private)
 {
-    // Allow auto-add on reparent
-    setParent(parent);
+    d->animationGuard = animation;
+    d->q = this;
 }
 
-/*!
-    \internal
-*/
-QAbstractAnimation2::QAbstractAnimation2(QAbstractAnimation2Private &dd, QObject *parent)
-    : QObject(dd, 0)
+QAbstractAnimation2::QAbstractAnimation2(QAbstractAnimation2Private *dd, QDeclarativeAbstractAnimation *animation)
+    :d(dd)
 {
-    // Allow auto-add on reparent
-   setParent(parent);
+    d->animationGuard = animation;
+    d->q = this;
 }
 
-/*!
-    Stops the animation if it's running, then destroys the
-    QAbstractAnimation2. If the animation is part of a QAnimationGroup2, it is
-    automatically removed before it's destroyed.
-*/
 QAbstractAnimation2::~QAbstractAnimation2()
 {
-    Q_D(QAbstractAnimation2);
     //we can't call stop here. Otherwise we get pure virtual calls
     if (d->state != Stopped) {
         QAbstractAnimation2::State oldState = d->state;
         d->state = Stopped;
-        emit stateChanged(oldState, d->state);
+        stateChanged(oldState, d->state);
         if (oldState == QAbstractAnimation2::Running)
             QUnifiedTimer2::unregisterAnimation(this);
     }
 }
-
-/*!
-    \property QAbstractAnimation2::state
-    \brief state of the animation.
-
-    This property describes the current state of the animation. When the
-    animation state changes, QAbstractAnimation2 emits the stateChanged()
-    signal.
-*/
 QAbstractAnimation2::State QAbstractAnimation2::state() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->state;
 }
 
-/*!
-    If this animation is part of a QAnimationGroup2, this function returns a
-    pointer to the group; otherwise, it returns 0.
+QDeclarativeAbstractAnimation *QAbstractAnimation2::animation() const
+{
+    return d->animationGuard;
+}
 
-    \sa QAnimationGroup2::addAnimation()
-*/
 QAnimationGroup2 *QAbstractAnimation2::group() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->group;
 }
 
-/*!
-    \enum QAbstractAnimation2::State
-
-    This enum describes the state of the animation.
-
-    \value Stopped The animation is not running. This is the initial state
-    of QAbstractAnimation2, and the state QAbstractAnimation2 reenters when finished. The current
-    time remain unchanged until either setCurrentTime() is
-    called, or the animation is started by calling start().
-
-    \value Paused The animation is paused (i.e., temporarily
-    suspended). Calling resume() will resume animation activity.
-
-    \value Running The animation is running. While control is in the event
-    loop, QAbstractAnimation2 will update its current time at regular intervals,
-    calling updateCurrentTime() when appropriate.
-
-    \sa state(), stateChanged()
-*/
-
-/*!
-    \enum QAbstractAnimation2::Direction
-
-    This enum describes the direction of the animation when in \l Running state.
-
-    \value Forward The current time of the animation increases with time (i.e.,
-    moves from 0 and towards the end / duration).
-
-    \value Backward The current time of the animation decreases with time (i.e.,
-    moves from the end / duration and towards 0).
-
-    \sa direction
-*/
-
-/*!
-    \property QAbstractAnimation2::direction
-    \brief the direction of the animation when it is in \l Running
-    state.
-
-    This direction indicates whether the time moves from 0 towards the
-    animation duration, or from the value of the duration and towards 0 after
-    start() has been called.
-
-    By default, this property is set to \l Forward.
-*/
 QAbstractAnimation2::Direction QAbstractAnimation2::direction() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->direction;
 }
 void QAbstractAnimation2::setDirection(Direction direction)
 {
-    Q_D(QAbstractAnimation2);
     if (d->direction == direction)
         return;
 
@@ -828,84 +648,23 @@ void QAbstractAnimation2::setDirection(Direction direction)
         // needed to update the timer interval in case of a pause animation
         QUnifiedTimer2::updateAnimationTimer();
 
-    emit directionChanged(direction);
+    directionChanged(direction);
 }
 
-/*!
-    \property QAbstractAnimation2::duration
-    \brief the duration of the animation.
-
-    If the duration is -1, it means that the duration is undefined.
-    In this case, loopCount is ignored.
-*/
-
-/*!
-    \property QAbstractAnimation2::loopCount
-    \brief the loop count of the animation
-
-    This property describes the loop count of the animation as an integer.
-    By default this value is 1, indicating that the animation
-    should run once only, and then stop. By changing it you can let the
-    animation loop several times. With a value of 0, the animation will not
-    run at all, and with a value of -1, the animation will loop forever
-    until stopped.
-    It is not supported to have loop on an animation that has an undefined
-    duration. It will only run once.
-*/
 int QAbstractAnimation2::loopCount() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->loopCount;
 }
 void QAbstractAnimation2::setLoopCount(int loopCount)
 {
-    Q_D(QAbstractAnimation2);
     d->loopCount = loopCount;
 }
 
-/*!
-    \property QAbstractAnimation2::currentLoop
-    \brief the current loop of the animation
-
-    This property describes the current loop of the animation. By default,
-    the animation's loop count is 1, and so the current loop will
-    always be 0. If the loop count is 2 and the animation runs past its
-    duration, it will automatically rewind and restart at current time 0, and
-    current loop 1, and so on.
-
-    When the current loop changes, QAbstractAnimation2 emits the
-    currentLoopChanged() signal.
-*/
 int QAbstractAnimation2::currentLoop() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->currentLoop;
 }
 
-/*!
-    \fn virtual int QAbstractAnimation2::duration() const = 0
-
-    This pure virtual function returns the duration of the animation, and
-    defines for how long QAbstractAnimation2 should update the current
-    time. This duration is local, and does not include the loop count.
-
-    A return value of -1 indicates that the animation has no defined duration;
-    the animation should run forever until stopped. This is useful for
-    animations that are not time driven, or where you cannot easily predict
-    its duration (e.g., event driven audio playback in a game).
-
-    If the animation is a parallel QAnimationGroup2, the duration will be the longest
-    duration of all its animations. If the animation is a sequential QAnimationGroup2,
-    the duration will be the sum of the duration of all its animations.
-    \sa loopCount
-*/
-
-/*!
-    Returns the total and effective duration of the animation, including the
-    loop count.
-
-    \sa duration(), currentTime
-*/
 int QAbstractAnimation2::totalDuration() const
 {
     int dura = duration();
@@ -917,39 +676,18 @@ int QAbstractAnimation2::totalDuration() const
     return dura * loopcount;
 }
 
-/*!
-    Returns the current time inside the current loop. It can go from 0 to duration().
-
-    \sa duration(), currentTime
-*/
-
 int QAbstractAnimation2::currentLoopTime() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->currentTime;
 }
 
-/*!
-    \property QAbstractAnimation2::currentTime
-    \brief the current time and progress of the animation
 
-    This property describes the animation's current time. You can change the
-    current time by calling setCurrentTime, or you can call start() and let
-    the animation run, setting the current time automatically as the animation
-    progresses.
-
-    The animation's current time starts at 0, and ends at totalDuration().
-
-    \sa loopCount, currentLoopTime()
- */
 int QAbstractAnimation2::currentTime() const
 {
-    Q_D(const QAbstractAnimation2);
     return d->totalCurrentTime;
 }
 void QAbstractAnimation2::setCurrentTime(int msecs)
 {
-    Q_D(QAbstractAnimation2);
     msecs = qMax(msecs, 0);
 
     // Calculate new time and loop.
@@ -977,8 +715,10 @@ void QAbstractAnimation2::setCurrentTime(int msecs)
     }
 
     updateCurrentTime(d->currentTime);
+
+    //TODO:XXXX
     if (d->currentLoop != oldLoop)
-        emit currentLoopChanged(d->currentLoop);
+        currentLoopChanged(d->currentLoop);
 
     // All animations are responsible for stopping the animation when their
     // own end state is reached; in this case the animation is time driven,
@@ -989,61 +729,23 @@ void QAbstractAnimation2::setCurrentTime(int msecs)
     }
 }
 
-/*!
-    Starts the animation. The \a policy argument says whether or not the
-    animation should be deleted when it's done. When the animation starts, the
-    stateChanged() signal is emitted, and state() returns Running. When control
-    reaches the event loop, the animation will run by itself, periodically
-    calling updateCurrentTime() as the animation progresses.
-
-    If the animation is currently stopped or has already reached the end,
-    calling start() will rewind the animation and start again from the beginning.
-    When the animation reaches the end, the animation will either stop, or
-    if the loop level is more than 1, it will rewind and continue from the beginning.
-
-    If the animation is already running, this function does nothing.
-
-    \sa stop(), state()
-*/
 void QAbstractAnimation2::start(DeletionPolicy policy)
 {
-    Q_D(QAbstractAnimation2);
     if (d->state == Running)
         return;
     d->deleteWhenStopped = policy;
     d->setState(Running);
 }
 
-/*!
-    Stops the animation. When the animation is stopped, it emits the stateChanged()
-    signal, and state() returns Stopped. The current time is not changed.
-
-    If the animation stops by itself after reaching the end (i.e.,
-    currentLoopTime() == duration() and currentLoop() > loopCount() - 1), the
-    finished() signal is emitted.
-
-    \sa start(), state()
- */
 void QAbstractAnimation2::stop()
 {
-    Q_D(QAbstractAnimation2);
-
     if (d->state == Stopped)
         return;
-
     d->setState(Stopped);
 }
 
-/*!
-    Pauses the animation. When the animation is paused, state() returns Paused.
-    The value of currentTime will remain unchanged until resume() or start()
-    is called. If you want to continue from the current time, call resume().
-
-    \sa start(), state(), resume()
- */
 void QAbstractAnimation2::pause()
 {
-    Q_D(QAbstractAnimation2);
     if (d->state == Stopped) {
         qWarning("QAbstractAnimation2::pause: Cannot pause a stopped animation");
         return;
@@ -1052,31 +754,16 @@ void QAbstractAnimation2::pause()
     d->setState(Paused);
 }
 
-/*!
-    Resumes the animation after it was paused. When the animation is resumed,
-    it emits the resumed() and stateChanged() signals. The currenttime is not
-    changed.
-
-    \sa start(), pause(), state()
- */
 void QAbstractAnimation2::resume()
 {
-    Q_D(QAbstractAnimation2);
     if (d->state != Paused) {
         qWarning("QAbstractAnimation2::resume: "
                  "Cannot resume an animation that is not paused");
         return;
     }
-
     d->setState(Running);
 }
 
-/*!
-    If \a paused is true, the animation is paused.
-    If \a paused is false, the animation is resumed.
-
-    \sa state(), pause(), resume()
-*/
 void QAbstractAnimation2::setPaused(bool paused)
 {
     if (paused)
@@ -1085,30 +772,6 @@ void QAbstractAnimation2::setPaused(bool paused)
         resume();
 }
 
-
-/*!
-    \reimp
-*/
-bool QAbstractAnimation2::event(QEvent *event)
-{
-    return QObject::event(event);
-}
-
-/*!
-    \fn virtual void QAbstractAnimation2::updateCurrentTime(int currentTime) = 0;
-
-    This pure virtual function is called every time the animation's
-    \a currentTime changes.
-
-    \sa updateState()
-*/
-
-/*!
-    This virtual function is called by QAbstractAnimation2 when the state
-    of the animation is changed from \a oldState to \a newState.
-
-    \sa start(), stop(), pause(), resume()
-*/
 void QAbstractAnimation2::updateState(QAbstractAnimation2::State newState,
                                      QAbstractAnimation2::State oldState)
 {
@@ -1116,20 +779,105 @@ void QAbstractAnimation2::updateState(QAbstractAnimation2::State newState,
     Q_UNUSED(newState);
 }
 
-/*!
-    This virtual function is called by QAbstractAnimation2 when the direction
-    of the animation is changed. The \a direction argument is the new direction.
-
-    \sa setDirection(), direction()
-*/
 void QAbstractAnimation2::updateDirection(QAbstractAnimation2::Direction direction)
 {
     Q_UNUSED(direction);
 }
 
+void QAbstractAnimation2::finished()
+{
+    for (int ii = 0; ii < d->finishedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = d->finishedSlots.at(ii);
+        QObject *obj = slot.first;
+        if (obj) {
+            void *args[] = { 0 };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
+                                  slot.second, args);
+        }
+    }
+
+    if (animation())
+        animation()->timelineComplete();
+
+    if (group() && (duration() == -1 || loopCount() < 0)) {
+        //this is an uncontrolled animation, need to notify the group animation we are finished
+        group()->uncontrolledAnimationFinished(this);
+    }
+}
+
+void QAbstractAnimation2::stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState)
+{
+    for (int ii = 0; ii < d->stateChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = d->stateChangedSlots.at(ii);
+        QObject *obj = slot.first;
+        if (obj) {
+            void *args[] = { &newState, &oldState };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
+                                  slot.second, args);
+        }
+    }
+}
+
+void QAbstractAnimation2::currentLoopChanged(int currentLoop)
+{
+    for (int ii = 0; ii < d->currentLoopChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = d->currentLoopChangedSlots.at(ii);
+        QObject *obj = slot.first;
+        if (obj) {
+            void *args[] = { &currentLoop };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
+                                  slot.second, args);
+        }
+    }
+}
+
+void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direction)
+{
+    for (int ii = 0; ii < d->directionChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = d->directionChangedSlots.at(ii);
+        QObject *obj = slot.first;
+        if (obj) {
+            void *args[] = { &direction };
+            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
+                                  slot.second, args);
+        }
+    }
+}
+
+
+void QAbstractAnimation2::registerFinished(QObject* object, const char* method)
+{
+    if (object && object != animation()) {
+        d->finishedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+                              , object->metaObject()->indexOfSlot(method)));
+    }
+}
+
+void QAbstractAnimation2::registerStateChanged(QObject* object, const char* method)
+{
+    if (object) {
+        d->stateChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+                                  , object->metaObject()->indexOfSlot(method)));
+    }
+}
+
+void QAbstractAnimation2::registerCurrentLoopChanged(QObject* object, const char* method)
+{
+    if (object) {
+        d->currentLoopChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+                                        , object->metaObject()->indexOfSlot(method)));
+    }
+}
+
+void QAbstractAnimation2::registerDirectionChanged(QObject* object, const char* method)
+{
+    if (object) {
+        d->directionChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+                                      , object->metaObject()->indexOfSlot(method)));
+    }
+}
 
 QT_END_NAMESPACE
 
 #include "moc_qabstractanimation2_p.cpp"
-
 

@@ -97,11 +97,10 @@ private:
 //performs an action of type QAbstractAnimation2Action
 class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
 {
-    Q_OBJECT
 public:
-    QActionAnimation(QObject *parent = 0) : QAbstractAnimation2(parent), animAction(0), policy(KeepWhenStopped) {}
-    QActionAnimation(QAbstractAnimation2Action *action, QObject *parent = 0)
-        : QAbstractAnimation2(parent), animAction(action), policy(KeepWhenStopped) {}
+    QActionAnimation(QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), animAction(0), policy(KeepWhenStopped) {}
+    QActionAnimation(QAbstractAnimation2Action *action, QDeclarativeAbstractAnimation *animation = 0)
+        : QAbstractAnimation2(animation), animAction(action), policy(KeepWhenStopped) {}
     ~QActionAnimation() { if (policy == DeleteWhenStopped) { delete animAction; animAction = 0; } }
     virtual int duration() const { return 0; }
     void setAnimAction(QAbstractAnimation2Action *action, DeletionPolicy p)
@@ -144,9 +143,8 @@ public:
 //animates QDeclarativeBulkValueUpdater (assumes start and end values will be reals or compatible)
 class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QVariantAnimation2
 {
-    Q_OBJECT
 public:
-    QDeclarativeBulkValueAnimator(QObject *parent = 0) : QVariantAnimation2(parent), animValue(0), fromSourced(0), policy(KeepWhenStopped) {}
+    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0) : QVariantAnimation2(animation), animValue(0), fromSourced(0), policy(KeepWhenStopped) {}
     ~QDeclarativeBulkValueAnimator() { if (policy == DeleteWhenStopped) { delete animValue; animValue = 0; } }
     void setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p)
     {
@@ -194,9 +192,8 @@ private:
 template<class T, void (T::*method)(int)>
 class QTickAnimationProxy : public QAbstractAnimation2
 {
-    //Q_OBJECT //doesn't work with templating
 public:
-    QTickAnimationProxy(T *p, QObject *parent = 0) : QAbstractAnimation2(parent), m_p(p) {}
+    QTickAnimationProxy(T *p, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_p(p) {}
     virtual int duration() const { return -1; }
 protected:
     virtual void updateCurrentTime(int msec) { (m_p->*method)(msec); }
@@ -211,14 +208,14 @@ class QDeclarativeAbstractAnimationPrivate : public QObjectPrivate
 public:
     QDeclarativeAbstractAnimationPrivate()
     : running(false), paused(false), alwaysRunToEnd(false),
-      connectedTimeLine(false), componentComplete(true),
+      /*connectedTimeLine(false), */componentComplete(true),
       avoidPropertyValueSourceStart(false), disableUserControl(false),
       registered(false), loopCount(1), group(0) {}
 
     bool running:1;
     bool paused:1;
     bool alwaysRunToEnd:1;
-    bool connectedTimeLine:1;
+    //bool connectedTimeLine:1;
     bool componentComplete:1;
     bool avoidPropertyValueSourceStart:1;
     bool disableUserControl:1;

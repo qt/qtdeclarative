@@ -63,27 +63,19 @@ QT_BEGIN_NAMESPACE
 
 class QParallelAnimationGroup2Private : public QAnimationGroup2Private
 {
-    Q_DECLARE_PUBLIC(QParallelAnimationGroup2)
 public:
     QParallelAnimationGroup2Private()
         : lastLoop(0), lastCurrentTime(0)
     {
     }
 
-    QHash<QAbstractAnimation2*, int> uncontrolledFinishTime;
     int lastLoop;
     int lastCurrentTime;
 
     bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
     void applyGroupState(QAbstractAnimation2 *animation);
-    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
-    void connectUncontrolledAnimations();
-    void disconnectUncontrolledAnimations();
 
     void animationRemoved(int index, QAbstractAnimation2 *);
-
-    // private slot
-    void _q_uncontrolledAnimationFinished();
 };
 
 QT_END_NAMESPACE

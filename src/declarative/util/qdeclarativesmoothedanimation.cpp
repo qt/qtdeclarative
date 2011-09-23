@@ -57,14 +57,36 @@
 
 QT_BEGIN_NAMESPACE
 
-QSmoothedAnimation::QSmoothedAnimation(QObject *parent)
-    : QAbstractAnimation2(parent), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
-      reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
-      trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0)
+
+QSmoothedAnimationTimer::QSmoothedAnimationTimer(QSmoothedAnimation* animation, QObject *parent)
+    : QTimer(parent)
+    , m_animation(animation)
 {
-    delayedStopTimer.setInterval(DELAY_STOP_TIMER_INTERVAL);
-    delayedStopTimer.setSingleShot(true);
-    connect(&delayedStopTimer, SIGNAL(timeout()), this, SLOT(stop()));
+    connect(this, SIGNAL(timeout()), this, SLOT(stopAnimation()));
+}
+
+QSmoothedAnimationTimer::~QSmoothedAnimationTimer()
+{
+}
+
+void QSmoothedAnimationTimer::stopAnimation()
+{
+    m_animation->stop();
+}
+
+QSmoothedAnimation::QSmoothedAnimation(QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(animation), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
+      reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
+      trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0),
+      delayedStopTimer(new QSmoothedAnimationTimer(this))
+{
+    delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
+    delayedStopTimer->setSingleShot(true);
+}
+
+QSmoothedAnimation::~QSmoothedAnimation()
+{
+    delete delayedStopTimer;
 }
 
 void QSmoothedAnimation::restart()
@@ -84,8 +106,8 @@ void QSmoothedAnimation::updateState(QAbstractAnimation2::State newState, QAbstr
 
 void QSmoothedAnimation::delayedStop()
 {
-    if (!delayedStopTimer.isActive())
-        delayedStopTimer.start();
+    if (!delayedStopTimer->isActive())
+        delayedStopTimer->start();
 }
 
 int QSmoothedAnimation::duration() const
@@ -205,8 +227,8 @@ void QSmoothedAnimation::init()
         return;
     }
 
-    if (delayedStopTimer.isActive())
-        delayedStopTimer.stop();
+    if (delayedStopTimer->isActive())
+        delayedStopTimer->stop();
 
     initialValue = target.read().toReal();
     lastTime = this->currentTime();
@@ -305,14 +327,21 @@ QDeclarativeSmoothedAnimation::QDeclarativeSmoothedAnimation(QObject *parent)
 
 QDeclarativeSmoothedAnimation::~QDeclarativeSmoothedAnimation()
 {
+
 }
 
 QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
-    : wrapperGroup(new QParallelAnimationGroup2), anim(new QSmoothedAnimation)
+    : wrapperGroup(0), anim(new QSmoothedAnimation)
 {
     Q_Q(QDeclarativeSmoothedAnimation);
-    QDeclarative_setParent_noEvent(wrapperGroup, q);
-    QDeclarative_setParent_noEvent(anim, q);
+    wrapperGroup = new QParallelAnimationGroup2(q);
+}
+
+QDeclarativeSmoothedAnimationPrivate::~QDeclarativeSmoothedAnimationPrivate()
+{
+    delete wrapperGroup;
+    delete anim;
+    qDeleteAll(activeAnimations);
 }
 
 void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()

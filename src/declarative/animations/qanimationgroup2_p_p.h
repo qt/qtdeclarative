@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
 
 class QAnimationGroup2Private : public QAbstractAnimation2Private
 {
-    Q_DECLARE_PUBLIC(QAnimationGroup2)
 public:
     QAnimationGroup2Private()
     {
@@ -74,19 +73,15 @@ public:
 
     virtual void animationInsertedAt(int) { }
     virtual void animationRemoved(int, QAbstractAnimation2 *);
-
-    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
-    {
-        //0 for the signal here because we might be called from the animation destructor
-        QObject::disconnect(anim, 0, q_func(), SLOT(_q_uncontrolledAnimationFinished()));
-    }
-
-    void connectUncontrolledAnimation(QAbstractAnimation2 *anim)
-    {
-        QObject::connect(anim, SIGNAL(finished()), q_func(), SLOT(_q_uncontrolledAnimationFinished()));
-    }
+    void connectUncontrolledAnimations();
+    void disconnectUncontrolledAnimations();
+    void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    bool isAnimationConnected(QAbstractAnimation2 *anim) const;
+    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
 
     QList<QAbstractAnimation2 *> animations;
+    QHash<QAbstractAnimation2 *, int> uncontrolledFinishTime;
 };
 
 QT_END_NAMESPACE

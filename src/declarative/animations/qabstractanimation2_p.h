@@ -42,7 +42,7 @@
 #ifndef QABSTRACTANIMATION2_P_H
 #define QABSTRACTANIMATION2_P_H
 
-#include <QtCore/qobject.h>
+#include "private/qdeclarativeglobal_p.h"
 
 QT_BEGIN_HEADER
 
@@ -55,20 +55,11 @@ QT_MODULE(Declarative)
 class QAnimationGroup2;
 class QSequentialAnimationGroup2;
 class QAnimationDriver2;
+class QDeclarativeAbstractAnimation;
 
 class QAbstractAnimation2Private;
-class Q_CORE_EXPORT QAbstractAnimation2 : public QObject
+class Q_DECLARATIVE_EXPORT QAbstractAnimation2
 {
-    Q_OBJECT
-    Q_ENUMS(State)
-    Q_ENUMS(Direction)
-    Q_PROPERTY(State state READ state NOTIFY stateChanged)
-    Q_PROPERTY(int loopCount READ loopCount WRITE setLoopCount)
-    Q_PROPERTY(int currentTime READ currentTime WRITE setCurrentTime)
-    Q_PROPERTY(int currentLoop READ currentLoop NOTIFY currentLoopChanged)
-    Q_PROPERTY(Direction direction READ direction WRITE setDirection NOTIFY directionChanged)
-    Q_PROPERTY(int duration READ duration)
-
 public:
     enum Direction {
         Forward,
@@ -86,12 +77,15 @@ public:
         DeleteWhenStopped
     };
 
-    QAbstractAnimation2(QObject *parent = 0);
+    explicit QAbstractAnimation2(QDeclarativeAbstractAnimation *animation=0);
+    explicit QAbstractAnimation2(QAbstractAnimation2Private *dd, QDeclarativeAbstractAnimation *animation=0);
+
     virtual ~QAbstractAnimation2();
 
     State state() const;
 
     QAnimationGroup2 *group() const;
+    QDeclarativeAbstractAnimation *animation() const;
 
     Direction direction() const;
     void setDirection(Direction direction);
@@ -106,13 +100,6 @@ public:
     virtual int duration() const = 0;
     int totalDuration() const;
 
-Q_SIGNALS:
-    void finished();
-    void stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
-    void currentLoopChanged(int currentLoop);
-    void directionChanged(QAbstractAnimation2::Direction);
-
-public Q_SLOTS:
     void start(QAbstractAnimation2::DeletionPolicy policy = KeepWhenStopped);
     void pause();
     void resume();
@@ -120,21 +107,27 @@ public Q_SLOTS:
     void stop();
     void setCurrentTime(int msecs);
 
-protected:
-    QAbstractAnimation2(QAbstractAnimation2Private &dd, QObject *parent = 0);
-    bool event(QEvent *event);
+    void registerFinished(QObject* object, const char* method);
+    void registerStateChanged(QObject* object, const char* method);
+    void registerCurrentLoopChanged(QObject* object, const char* method);
+    void registerDirectionChanged(QObject* object, const char* method);
 
+protected:
     virtual void updateCurrentTime(int currentTime) = 0;
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     virtual void updateDirection(QAbstractAnimation2::Direction direction);
+    void finished();
+    void stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
+    void currentLoopChanged(int currentLoop);
+    void directionChanged(QAbstractAnimation2::Direction);
 
-private:
     Q_DISABLE_COPY(QAbstractAnimation2)
-    Q_DECLARE_PRIVATE(QAbstractAnimation2)
+    friend class QAbstractAnimation2Private;
+    QAbstractAnimation2Private* d;
 };
 
 class QAnimationDriver2Private;
-class Q_CORE_EXPORT QAnimationDriver2 : public QObject
+class Q_DECLARATIVE_EXPORT QAnimationDriver2 : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QAnimationDriver2)
@@ -162,7 +155,6 @@ protected:
     virtual void stop();
 
     QAnimationDriver2(QAnimationDriver2Private &dd, QObject *parent = 0);
-
 private:
     friend class QUnifiedTimer2;
 

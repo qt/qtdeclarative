@@ -39,49 +39,6 @@
 **
 ****************************************************************************/
 
-/*!
-    \class QAnimationGroup2
-    \brief The QAnimationGroup2 class is an abstract base class for groups of animations.
-    \since 4.6
-    \ingroup animation
-
-    An animation group is a container for animations (subclasses of
-    QAbstractAnimation2). A group is usually responsible for managing
-    the \l{QAbstractAnimation2::State}{state} of its animations, i.e.,
-    it decides when to start, stop, resume, and pause them. Currently,
-    Qt provides two such groups: QParallelAnimationGroup2 and
-    QSequentialAnimationGroup2. Look up their class descriptions for
-    details.
-
-    Since QAnimationGroup2 inherits from QAbstractAnimation2, you can
-    combine groups, and easily construct complex animation graphs.
-    You can query QAbstractAnimation2 for the group it belongs to
-    (using the \l{QAbstractAnimation2::}{group()} function).
-
-    To start a top-level animation group, you simply use the
-    \l{QAbstractAnimation2::}{start()} function from
-    QAbstractAnimation2. By a top-level animation group, we think of a
-    group that itself is not contained within another group. Starting
-    sub groups directly is not supported, and may lead to unexpected
-    behavior.
-
-    \omit OK, we'll put in a snippet on this here \endomit
-
-    QAnimationGroup2 provides methods for adding and retrieving
-    animations. Besides that, you can remove animations by calling
-    remove(), and clear the animation group by calling
-    clear(). You may keep track of changes in the group's
-    animations by listening to QEvent::ChildAdded and
-    QEvent::ChildRemoved events.
-
-    \omit OK, let's find a snippet here as well. \endomit
-
-    QAnimationGroup2 takes ownership of the animations it manages, and
-    ensures that they are deleted when the animation group is deleted.
-
-    \sa QAbstractAnimation2, QVariantAnimation2, {The Animation Framework}
-*/
-
 #include "private/qanimationgroup2_p.h"
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
@@ -91,102 +48,47 @@
 
 QT_BEGIN_NAMESPACE
 
-
-/*!
-    Constructs a QAnimationGroup2.
-    \a parent is passed to QObject's constructor.
-*/
-QAnimationGroup2::QAnimationGroup2(QObject *parent)
-    : QAbstractAnimation2(*new QAnimationGroup2Private, parent)
+QAnimationGroup2::QAnimationGroup2(QDeclarativeAbstractAnimation *animation)
+    :QAbstractAnimation2(new QAnimationGroup2Private, animation)
+{
+}
+QAnimationGroup2::QAnimationGroup2(QAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation)
+    :QAbstractAnimation2(dd, animation)
 {
 }
 
-/*!
-    \internal
-*/
-QAnimationGroup2::QAnimationGroup2(QAnimationGroup2Private &dd, QObject *parent)
-    : QAbstractAnimation2(dd, parent)
-{
-}
-
-/*!
-    Destroys the animation group. It will also destroy all its animations.
-*/
 QAnimationGroup2::~QAnimationGroup2()
 {
 }
 
-/*!
-    Returns a pointer to the animation at \a index in this group. This
-    function is useful when you need access to a particular animation.  \a
-    index is between 0 and animationCount() - 1.
-
-    \sa animationCount(), indexOfAnimation()
-*/
 QAbstractAnimation2 *QAnimationGroup2::animationAt(int index) const
 {
-    Q_D(const QAnimationGroup2);
-
-    if (index < 0 || index >= d->animations.size()) {
+    if (index < 0 || index >= d_func()->animations.size()) {
         qWarning("QAnimationGroup2::animationAt: index is out of bounds");
         return 0;
     }
 
-    return d->animations.at(index);
+    return d_func()->animations.at(index);
 }
 
-
-/*!
-    Returns the number of animations managed by this group.
-
-    \sa indexOfAnimation(), addAnimation(), animationAt()
-*/
 int QAnimationGroup2::animationCount() const
 {
-    Q_D(const QAnimationGroup2);
-    return d->animations.size();
+    return d_func()->animations.size();
 }
 
-/*!
-    Returns the index of \a animation. The returned index can be passed
-    to the other functions that take an index as an argument.
-
-    \sa insertAnimation(), animationAt(), takeAnimation()
-*/
 int QAnimationGroup2::indexOfAnimation(QAbstractAnimation2 *animation) const
 {
-    Q_D(const QAnimationGroup2);
-    return d->animations.indexOf(animation);
+    return d_func()->animations.indexOf(animation);
 }
 
-/*!
-    Adds \a animation to this group. This will call insertAnimation with
-    index equals to animationCount().
-
-    \note The group takes ownership of the animation.
-
-    \sa removeAnimation()
-*/
 void QAnimationGroup2::addAnimation(QAbstractAnimation2 *animation)
 {
-    Q_D(QAnimationGroup2);
-    insertAnimation(d->animations.count(), animation);
+    insertAnimation(d_func()->animations.count(), animation);
 }
 
-/*!
-    Inserts \a animation into this animation group at \a index.
-    If \a index is 0 the animation is inserted at the beginning.
-    If \a index is animationCount(), the animation is inserted at the end.
-
-    \note The group takes ownership of the animation.
-
-    \sa takeAnimation(), addAnimation(), indexOfAnimation(), removeAnimation()
-*/
 void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation)
 {
-    Q_D(QAnimationGroup2);
-
-    if (index < 0 || index > d->animations.size()) {
+    if (index < 0 || index > d_func()->animations.size()) {
         qWarning("QAnimationGroup2::insertAnimation: index is out of bounds");
         return;
     }
@@ -194,28 +96,19 @@ void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation
     if (QAnimationGroup2 *oldGroup = animation->group())
         oldGroup->removeAnimation(animation);
 
-    d->animations.insert(index, animation);
+    d_func()->animations.insert(index, animation);
     QAbstractAnimation2Private::get(animation)->group = this;
-    // this will make sure that ChildAdded event is sent to 'this'
-    animation->setParent(this);
-    d->animationInsertedAt(index);
+//    animation->setParent(this);
+    d_func()->animationInsertedAt(index);
 }
 
-/*!
-    Removes \a animation from this group. The ownership of \a animation is
-    transferred to the caller.
-
-    \sa takeAnimation(), insertAnimation(), addAnimation()
-*/
 void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
 {
-    Q_D(QAnimationGroup2);
-
     if (!animation) {
         qWarning("QAnimationGroup2::remove: cannot remove null animation");
         return;
     }
-    int index = d->animations.indexOf(animation);
+    int index = d_func()->animations.indexOf(animation);
     if (index == -1) {
         qWarning("QAnimationGroup2::remove: animation is not part of this group");
         return;
@@ -224,70 +117,65 @@ void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
     takeAnimation(index);
 }
 
-/*!
-    Returns the animation at \a index and removes it from the animation group.
-
-    \note The ownership of the animation is transferred to the caller.
-
-    \sa removeAnimation(), addAnimation(), insertAnimation(), indexOfAnimation()
-*/
 QAbstractAnimation2 *QAnimationGroup2::takeAnimation(int index)
 {
-    Q_D(QAnimationGroup2);
-    if (index < 0 || index >= d->animations.size()) {
+    if (index < 0 || index >= d_func()->animations.size()) {
         qWarning("QAnimationGroup2::takeAnimation: no animation at index %d", index);
         return 0;
     }
-    QAbstractAnimation2 *animation = d->animations.at(index);
+    QAbstractAnimation2 *animation = d_func()->animations.at(index);
     QAbstractAnimation2Private::get(animation)->group = 0;
-    // ### removing from list before doing setParent to avoid inifinite recursion
-    // in ChildRemoved event
-    d->animations.removeAt(index);
-    animation->setParent(0);
-    d->animationRemoved(index, animation);
+    d_func()->animations.removeAt(index);
+//    animation->setParent(0);
+    d_func()->animationRemoved(index, animation);
     return animation;
 }
 
-/*!
-    Removes and deletes all animations in this animation group, and resets the current
-    time to 0.
-
-    \sa addAnimation(), removeAnimation()
-*/
 void QAnimationGroup2::clear()
 {
-    Q_D(QAnimationGroup2);
-    qDeleteAll(d->animations);
+    qDeleteAll(d_func()->animations);
 }
 
-/*!
-    \reimp
-*/
-bool QAnimationGroup2::event(QEvent *event)
+bool QAnimationGroup2Private::isAnimationConnected(QAbstractAnimation2 *anim) const
 {
-    Q_D(QAnimationGroup2);
-    if (event->type() == QEvent::ChildAdded) {
-        QChildEvent *childEvent = static_cast<QChildEvent *>(event);
-        if (QAbstractAnimation2 *a = qobject_cast<QAbstractAnimation2 *>(childEvent->child())) {
-            if (a->group() != this)
-                addAnimation(a);
-        }
-    } else if (event->type() == QEvent::ChildRemoved) {
-        QChildEvent *childEvent = static_cast<QChildEvent *>(event);
-        QAbstractAnimation2 *a = static_cast<QAbstractAnimation2 *>(childEvent->child());
-        // You can only rely on the child being a QObject because in the QEvent::ChildRemoved
-        // case it might be called from the destructor.
-        int index = d->animations.indexOf(a);
-        if (index != -1)
-            takeAnimation(index);
-    }
-    return QAbstractAnimation2::event(event);
+    return uncontrolledFinishTime.contains(anim);
+}
+bool QAnimationGroup2Private::isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const
+{
+    return uncontrolledFinishTime.value(anim, -1) >= 0;
 }
 
+void QAnimationGroup2Private::disconnectUncontrolledAnimations()
+{
+    uncontrolledFinishTime.clear();
+}
+
+void QAnimationGroup2Private::connectUncontrolledAnimations()
+{
+    for (int i = 0; i < animations.size(); ++i) {
+        QAbstractAnimation2 *animation = animations.at(i);
+        if (animation->duration() == -1 || animation->loopCount() < 0) {
+            uncontrolledFinishTime[animation] = -1;
+        }
+    }
+}
+void QAnimationGroup2Private::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
+{
+    uncontrolledFinishTime[anim] = -1;
+}
+
+void QAnimationGroup2Private::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
+{
+    uncontrolledFinishTime.remove(anim);
+}
+
+void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2* animation)
+{
+    Q_UNUSED(animation);
+}
 
 void QAnimationGroup2Private::animationRemoved(int index, QAbstractAnimation2 *)
 {
-    Q_Q(QAnimationGroup2);
     Q_UNUSED(index);
     if (animations.isEmpty()) {
         currentTime = 0;
@@ -296,7 +184,3 @@ void QAnimationGroup2Private::animationRemoved(int index, QAbstractAnimation2 *)
 }
 
 QT_END_NAMESPACE
-
-#include "moc_qanimationgroup2_p.cpp"
-
-

@@ -39,34 +39,8 @@
 **
 ****************************************************************************/
 
-/*!
-    \class QPauseAnimation2
-    \brief The QPauseAnimation2 class provides a pause for QSequentialAnimationGroup2.
-    \since 4.6
-    \ingroup animation
-
-    If you wish to introduce a delay between animations in a
-    QSequentialAnimationGroup2, you can insert a QPauseAnimation2. This
-    class does not animate anything, but does not
-    \l{QAbstractAnimation2::finished()}{finish} before a specified
-    number of milliseconds have elapsed from when it was started. You
-    specify the duration of the pause in the constructor. It can also
-    be set directly with setDuration().
-
-    It is not necessary to construct a QPauseAnimation2 yourself.
-    QSequentialAnimationGroup2 provides the convenience functions
-    \l{QSequentialAnimationGroup2::}{addPause()} and
-    \l{QSequentialAnimationGroup2::}{insertPause()}. These functions
-    simply take the number of milliseconds the pause should last.
-
-    \sa QSequentialAnimationGroup2
-*/
-
 #include "private/qpauseanimation2_p.h"
 #include "private/qabstractanimation2_p_p.h"
-
-
-
 
 QT_BEGIN_NAMESPACE
 
@@ -81,45 +55,29 @@ public:
     int duration;
 };
 
-/*!
-    Constructs a QPauseAnimation2.
-    \a parent is passed to QObject's constructor.
-    The default duration is 0.
-*/
-
-QPauseAnimation2::QPauseAnimation2(QObject *parent) : QAbstractAnimation2(*new QPauseAnimation2Private, parent)
+QPauseAnimation2::QPauseAnimation2(QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(new QPauseAnimation2Private, animation)
 {
 }
 
-/*!
-    Constructs a QPauseAnimation2.
-    \a msecs is the duration of the pause.
-    \a parent is passed to QObject's constructor.
-*/
-
-QPauseAnimation2::QPauseAnimation2(int msecs, QObject *parent) : QAbstractAnimation2(*new QPauseAnimation2Private, parent)
+QPauseAnimation2::QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(new QPauseAnimation2Private, animation)
 {
     setDuration(msecs);
 }
 
-/*!
-    Destroys the pause animation.
-*/
+QPauseAnimation2::QPauseAnimation2(QPauseAnimation2Private* dd, QDeclarativeAbstractAnimation *animation)
+    :QAbstractAnimation2(dd, animation)
+{
+}
+
 QPauseAnimation2::~QPauseAnimation2()
 {
 }
 
-/*!
-    \property QPauseAnimation2::duration
-    \brief the duration of the pause.
-
-    The duration of the pause. The duration should not be negative.
-    The default duration is 250 milliseconds.
-*/
 int QPauseAnimation2::duration() const
 {
-    Q_D(const QPauseAnimation2);
-    return d->duration;
+    return d_func()->duration;
 }
 
 void QPauseAnimation2::setDuration(int msecs)
@@ -128,28 +86,12 @@ void QPauseAnimation2::setDuration(int msecs)
         qWarning("QPauseAnimation2::setDuration: cannot set a negative duration");
         return;
     }
-    Q_D(QPauseAnimation2);
-    d->duration = msecs;
+    d_func()->duration = msecs;
 }
 
-/*!
-    \reimp
- */
-bool QPauseAnimation2::event(QEvent *e)
-{
-    return QAbstractAnimation2::event(e);
-}
-
-/*!
-    \reimp
- */
 void QPauseAnimation2::updateCurrentTime(int)
 {
 }
 
 
 QT_END_NAMESPACE
-
-#include "moc_qpauseanimation2_p.cpp"
-
-

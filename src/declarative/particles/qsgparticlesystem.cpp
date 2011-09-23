@@ -622,6 +622,9 @@ QSGParticleSystem::~QSGParticleSystem()
 {
     foreach (QSGParticleGroupData* gd, m_groupData)
         delete gd;
+
+    if (m_animation)
+        delete m_animation;
 }
 
 void QSGParticleSystem::initGroups()

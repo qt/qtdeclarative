@@ -58,9 +58,6 @@
 #include <qdeclarativecontext.h>
 #include <qdeclarativeengine.h>
 #include <qdeclarativenetworkaccessmanagerfactory.h>
-#include "qdeclarative.h"
-#include "private/qabstractanimation2_p.h"
-#include "private/qabstractanimation2_p_p.h"
 
 #include <QSettings>
 #include <QXmlStreamReader>
@@ -104,6 +101,8 @@
 #endif
 
 #include <qdeclarativetester.h>
+#include "qdeclarative.h"
+#include "private/qabstractanimation2_p_p.h"
 
 QT_BEGIN_NAMESPACE
 

@@ -129,7 +129,7 @@ public:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation2 *qtAnimation() = 0;
+    virtual QAbstractAnimation2 *qtAnimation() {return 0;}
 
 private Q_SLOTS:
     void timelineComplete();
@@ -138,7 +138,7 @@ private:
     virtual void setTarget(const QDeclarativeProperty &);
     void notifyRunningChanged(bool running);
     friend class QDeclarativeBehavior;
-
+    friend class QAbstractAnimation2;
 
 };
 

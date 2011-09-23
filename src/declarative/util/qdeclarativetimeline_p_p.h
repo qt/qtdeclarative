@@ -63,11 +63,11 @@ class QDeclarativeTimeLineValue;
 class QDeclarativeTimeLineCallback;
 struct QDeclarativeTimeLinePrivate;
 class QDeclarativeTimeLineObject;
-class Q_AUTOTEST_EXPORT QDeclarativeTimeLine : public QAbstractAnimation2
+class Q_AUTOTEST_EXPORT QDeclarativeTimeLine : public QObject, QAbstractAnimation2
 {
 Q_OBJECT
 public:
-    QDeclarativeTimeLine(QObject *parent = 0);
+    QDeclarativeTimeLine(QObject* parent = 0);
     ~QDeclarativeTimeLine();
 
     enum SyncMode { LocalSync, GlobalSync };

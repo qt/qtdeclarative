@@ -62,7 +62,6 @@ QT_BEGIN_NAMESPACE
 
 class QSequentialAnimationGroup2Private : public QAnimationGroup2Private
 {
-    Q_DECLARE_PUBLIC(QSequentialAnimationGroup2)
 public:
     QSequentialAnimationGroup2Private()
         : currentAnimation(0), currentAnimationIndex(-1), lastLoop(0)
@@ -102,9 +101,6 @@ public:
     // handle time changes
     void rewindForwards(const AnimationIndex &newAnimationIndex);
     void advanceForwards(const AnimationIndex &newAnimationIndex);
-
-    // private slot
-    void _q_uncontrolledAnimationFinished();
 };
 
 QT_END_NAMESPACE

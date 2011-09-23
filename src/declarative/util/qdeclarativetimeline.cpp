@@ -311,7 +311,7 @@ qreal QDeclarativeTimeLinePrivate::value(const Op &op, int time, qreal base, boo
     Construct a new QDeclarativeTimeLine with the specified \a parent.
 */
 QDeclarativeTimeLine::QDeclarativeTimeLine(QObject *parent)
-: QAbstractAnimation2(parent)
+    : QObject(parent)
 {
     d = new QDeclarativeTimeLinePrivate(this);
 }

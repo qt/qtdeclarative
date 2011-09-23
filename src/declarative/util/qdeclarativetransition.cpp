@@ -99,9 +99,8 @@ QT_BEGIN_NAMESPACE
 //and disconnecting signals and slots frequently
 class ParallelAnimationWrapper : public QParallelAnimationGroup2
 {
-    Q_OBJECT
 public:
-    ParallelAnimationWrapper(QObject *parent = 0) : QParallelAnimationGroup2(parent) {}
+    ParallelAnimationWrapper(QDeclarativeAbstractAnimation *animation = 0) : QParallelAnimationGroup2(animation) {}
     QDeclarativeTransitionPrivate *trans;
 protected:
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
@@ -388,4 +387,4 @@ QDeclarativeListProperty<QDeclarativeAbstractAnimation> QDeclarativeTransition::
 
 QT_END_NAMESPACE
 
-#include <qdeclarativetransition.moc>
+//#include <qdeclarativetransition.moc>

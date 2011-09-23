@@ -47,8 +47,8 @@
 #include <QDeclarativeComponent>
 #include <QDir>
 #include <QCryptographicHash>
-#include "private/qabstractanimation2_p_p.h"
 #include <QGraphicsObject>
+#include "private/qabstractanimation2_p_p.h"
 #ifndef Q_OS_SYMBIAN
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #endif
@@ -59,7 +59,7 @@ extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
 
 QDeclarativeTester::QDeclarativeTester(const QString &script, QDeclarativeViewer::ScriptOptions opts,
                      QDeclarativeView *parent)
-: QAbstractAnimation(parent), m_script(script), m_view(parent), filterEvents(true), options(opts),
+: QObject(parent), m_script(script), m_view(parent), filterEvents(true), options(opts),
   testscript(0), hasCompleted(false), hasFailed(false)
 {
     parent->viewport()->installEventFilter(this);

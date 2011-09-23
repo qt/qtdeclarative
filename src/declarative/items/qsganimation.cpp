@@ -59,18 +59,14 @@ QSGParentAnimation::QSGParentAnimation(QObject *parent)
 {
     Q_D(QSGParentAnimation);
     d->topLevelGroup = new QSequentialAnimationGroup2;
-    QDeclarative_setParent_noEvent(d->topLevelGroup, this);
 
     d->startAction = new QActionAnimation;
-    QDeclarative_setParent_noEvent(d->startAction, d->topLevelGroup);
     d->topLevelGroup->addAnimation(d->startAction);
 
     d->ag = new QParallelAnimationGroup2;
-    QDeclarative_setParent_noEvent(d->ag, d->topLevelGroup);
     d->topLevelGroup->addAnimation(d->ag);
 
     d->endAction = new QActionAnimation;
-    QDeclarative_setParent_noEvent(d->endAction, d->topLevelGroup);
     d->topLevelGroup->addAnimation(d->endAction);
 }
 
@@ -351,8 +347,7 @@ QSGAnchorAnimation::QSGAnchorAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QSGAnchorAnimationPrivate), parent)
 {
     Q_D(QSGAnchorAnimation);
-    d->va = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(d->va, this);
+    d->va = new QDeclarativeBulkValueAnimator(this);
 }
 
 QSGAnchorAnimation::~QSGAnchorAnimation()
@@ -441,8 +436,7 @@ QSGPathAnimation::QSGPathAnimation(QObject *parent)
 : QDeclarativeAbstractAnimation(*(new QSGPathAnimationPrivate), parent)
 {
     Q_D(QSGPathAnimation);
-    d->pa = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(d->pa, this);
+    d->pa = new QDeclarativeBulkValueAnimator(this);
 }
 
 QSGPathAnimation::~QSGPathAnimation()

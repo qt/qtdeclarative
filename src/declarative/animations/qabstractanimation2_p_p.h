@@ -58,8 +58,10 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qelapsedtimer.h>
 #include <private/qobject_p.h>
+#include <QtCore/QObject>
 #include "private/qabstractanimation2_p.h"
-
+#include "private/qdeclarativeanimation_p.h"
+#include "private/qdeclarativeguard_p.h"
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
 #endif
@@ -70,7 +72,7 @@ QT_BEGIN_NAMESPACE
 
 class QAnimationGroup2;
 class QAbstractAnimation2;
-class QAbstractAnimation2Private : public QObjectPrivate
+class QAbstractAnimation2Private
 {
 public:
     QAbstractAnimation2Private()
@@ -84,15 +86,17 @@ public:
           hasRegisteredTimer(false),
           isPause(false),
           isGroup(false),
-          group(0)
+          group(0),
+          animationGuard(0),
+          q(0)
     {
     }
 
     virtual ~QAbstractAnimation2Private() {}
 
-    static QAbstractAnimation2Private *get(QAbstractAnimation2 *q)
+    static QAbstractAnimation2Private *get(QAbstractAnimation2 *qptr)
     {
-        return q->d_func();
+        return qptr->d;
     }
 
     QAbstractAnimation2::State state;
@@ -110,9 +114,15 @@ public:
     bool isGroup;
 
     QAnimationGroup2 *group;
+    QDeclarativeGuard<QDeclarativeAbstractAnimation> animationGuard;
+    QList<QPair<QDeclarativeGuard<QObject>,int> > finishedSlots;
+    QList<QPair<QDeclarativeGuard<QObject>,int> > stateChangedSlots;
+    QList<QPair<QDeclarativeGuard<QObject>,int> > currentLoopChangedSlots;
+    QList<QPair<QDeclarativeGuard<QObject>,int> > directionChangedSlots;
 
-private:
-    Q_DECLARE_PUBLIC(QAbstractAnimation2)
+protected:
+    friend class QAbstractAnimation2;
+    QAbstractAnimation2* q;
 };
 
 
@@ -133,7 +143,7 @@ private:
     QUnifiedTimer2 *m_unified_timer;
 };
 
-class Q_CORE_EXPORT QAnimationDriver2Private : public QObjectPrivate
+class Q_DECLARATIVE_EXPORT QAnimationDriver2Private : public QObjectPrivate
 {
 public:
     QAnimationDriver2Private() : running(false) {}
@@ -142,7 +152,7 @@ public:
 
 typedef QElapsedTimer ElapsedTimer;
 
-class Q_CORE_EXPORT QUnifiedTimer2 : public QObject
+class Q_DECLARATIVE_EXPORT QUnifiedTimer2 : public QObject
 {
 private:
     QUnifiedTimer2();

@@ -55,14 +55,13 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QVariantAnimation2Private;
-class Q_CORE_EXPORT QVariantAnimation2 : public QAbstractAnimation2
+class Q_DECLARATIVE_EXPORT QVariantAnimation2 : public QAbstractAnimation2
 {
-    Q_OBJECT
 public:
     typedef QPair<qreal, qreal> KeyValue;
     typedef QVector<KeyValue> KeyValues;
 
-    QVariantAnimation2(QObject *parent = 0);
+    QVariantAnimation2(QDeclarativeAbstractAnimation *animation=0);
     ~QVariantAnimation2();
 
     qreal keyValueAt(qreal step) const;
@@ -79,21 +78,22 @@ public:
     QEasingCurve easingCurve() const;
     void setEasingCurve(const QEasingCurve &easing);
 
-Q_SIGNALS:
-    void valueChanged(const QVariant &value);
+    //void valueChanged(const QVariant &value);
+    typedef QVariant (*Interpolator)(const void *from, const void *to, qreal progress);
 
 protected:
-    QVariantAnimation2(QVariantAnimation2Private &dd, QObject *parent = 0);
-    bool event(QEvent *event);
+    QVariantAnimation2(QVariantAnimation2Private *dd, QDeclarativeAbstractAnimation *animation=0);
 
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
 
     virtual void updateCurrentValue(const qreal &value) = 0;
     virtual qreal interpolated(const qreal &from, const qreal &to, qreal progress) const;
-
+private:
     Q_DISABLE_COPY(QVariantAnimation2)
-    Q_DECLARE_PRIVATE(QVariantAnimation2)
+    friend class QVariantAnimation2Private;
+    QVariantAnimation2Private* d_func() {return reinterpret_cast<QVariantAnimation2Private*>(d);}
+    const QVariantAnimation2Private* d_func() const{return reinterpret_cast<const QVariantAnimation2Private*>(d);}
 };
 
 QT_END_NAMESPACE

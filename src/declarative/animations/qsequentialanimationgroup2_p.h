@@ -55,13 +55,10 @@ QT_MODULE(Declarative)
 class QPauseAnimation2;
 class QSequentialAnimationGroup2Private;
 
-class Q_CORE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
+class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
-    Q_OBJECT
-    Q_PROPERTY(QAbstractAnimation2* currentAnimation READ currentAnimation NOTIFY currentAnimationChanged)
-
 public:
-    QSequentialAnimationGroup2(QObject *parent = 0);
+    QSequentialAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QSequentialAnimationGroup2();
 
     QPauseAnimation2 *addPause(int msecs);
@@ -70,21 +67,20 @@ public:
     QAbstractAnimation2 *currentAnimation() const;
     int duration() const;
 
-Q_SIGNALS:
-    void currentAnimationChanged(QAbstractAnimation2 *current);
+//Q_SIGNALS:
+//    void currentAnimationChanged(QAbstractAnimation2 *current);
 
 protected:
-    QSequentialAnimationGroup2(QSequentialAnimationGroup2Private &dd, QObject *parent);
-    bool event(QEvent *event);
+    QSequentialAnimationGroup2(QSequentialAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation=0);
 
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
-
+    void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 private:
     Q_DISABLE_COPY(QSequentialAnimationGroup2)
-    Q_DECLARE_PRIVATE(QSequentialAnimationGroup2)
-    Q_PRIVATE_SLOT(d_func(), void _q_uncontrolledAnimationFinished())
+    QSequentialAnimationGroup2Private* d_func() {return reinterpret_cast<QSequentialAnimationGroup2Private*>(d);}
+    const QSequentialAnimationGroup2Private* d_func() const{return reinterpret_cast<const QSequentialAnimationGroup2Private*>(d);}
 };
 
 

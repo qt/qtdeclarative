@@ -212,26 +212,24 @@ void QVariantAnimation2Private::recalculateCurrentInterval(bool force/*=false*/)
 
 void QVariantAnimation2Private::setCurrentValueForProgress(const qreal progress)
 {
-    Q_Q(QVariantAnimation2);
-
     const qreal startProgress = currentInterval.start.first;
     const qreal endProgress = currentInterval.end.first;
     const qreal localProgress = (progress - startProgress) / (endProgress - startProgress);
-
-    qreal ret = q->interpolated(currentInterval.start.second,
+    QVariantAnimation2* anim = static_cast<QVariantAnimation2*>(q);
+    qreal ret = anim->interpolated(currentInterval.start.second,
                                    currentInterval.end.second,
                                    localProgress);
     qSwap(currentValue, ret);
-    q->updateCurrentValue(currentValue);
-    static QBasicAtomicInt changedSignalIndex = Q_BASIC_ATOMIC_INITIALIZER(0);
-    if (!changedSignalIndex) {
-        //we keep the mask so that we emit valueChanged only when needed (for performance reasons)
-        changedSignalIndex.testAndSetRelaxed(0, signalIndex("valueChanged(QVariant)"));
-    }
-    if (isSignalConnected(changedSignalIndex) && currentValue != ret) {
-        //the value has changed
-        emit q->valueChanged(currentValue);
-    }
+    anim->updateCurrentValue(currentValue);
+//    static QBasicAtomicInt changedSignalIndex = Q_BASIC_ATOMIC_INITIALIZER(0);
+//    if (!changedSignalIndex) {
+//        //we keep the mask so that we emit valueChanged only when needed (for performance reasons)
+//        changedSignalIndex.testAndSetRelaxed(0, signalIndex("valueChanged(QVariant)"));
+//    }
+//    if (isSignalConnected(changedSignalIndex) && currentValue != ret) {
+//        //the value has changed
+//        //anim->valueChanged(currentValue);
+//    }
 }
 
 qreal QVariantAnimation2Private::valueAt(qreal step) const
@@ -263,188 +261,73 @@ void QVariantAnimation2Private::setValueAt(qreal step, const qreal &value)
     recalculateCurrentInterval(/*force=*/true);
 }
 
-/*!
-    Construct a QVariantAnimation2 object. \a parent is passed to QAbstractAnimation2's
-    constructor.
-*/
-QVariantAnimation2::QVariantAnimation2(QObject *parent) : QAbstractAnimation2(*new QVariantAnimation2Private, parent)
+QVariantAnimation2::QVariantAnimation2(QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(new QVariantAnimation2Private, animation)
 {
 }
 
-/*!
-    \internal
-*/
-QVariantAnimation2::QVariantAnimation2(QVariantAnimation2Private &dd, QObject *parent) : QAbstractAnimation2(dd, parent)
+QVariantAnimation2::QVariantAnimation2(QVariantAnimation2Private *dd, QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(dd, animation)
 {
 }
 
-/*!
-    Destroys the animation.
-*/
 QVariantAnimation2::~QVariantAnimation2()
 {
 }
 
-/*!
-    \property QVariantAnimation2::easingCurve
-    \brief the easing curve of the animation
-
-    This property defines the easing curve of the animation. By
-    default, a linear easing curve is used, resulting in linear
-    interpolation. Other curves are provided, for instance,
-    QEasingCurve::InCirc, which provides a circular entry curve.
-    Another example is QEasingCurve::InOutElastic, which provides an
-    elastic effect on the values of the interpolated variant.
-
-    QVariantAnimation2 will use the QEasingCurve::valueForProgress() to
-    transform the "normalized progress" (currentTime / totalDuration)
-    of the animation into the effective progress actually
-    used by the animation. It is this effective progress that will be
-    the progress when interpolated() is called. Also, the steps in the
-    keyValues are referring to this effective progress.
-
-    The easing curve is used with the interpolator, the interpolated()
-    virtual function, the animation's duration, and iterationCount, to
-    control how the current value changes as the animation progresses.
-*/
 QEasingCurve QVariantAnimation2::easingCurve() const
 {
-    Q_D(const QVariantAnimation2);
-    return d->easing;
+    return d_func()->easing;
 }
 
 void QVariantAnimation2::setEasingCurve(const QEasingCurve &easing)
 {
-    Q_D(QVariantAnimation2);
-    d->easing = easing;
-    d->recalculateCurrentInterval();
+    d_func()->easing = easing;
+    d_func()->recalculateCurrentInterval();
 }
 
-
-/*!
-    \property QVariantAnimation2::duration
-    \brief the duration of the animation
-
-    This property describes the duration in milliseconds of the
-    animation. The default duration is 250 milliseconds.
-
-    \sa QAbstractAnimation2::duration()
- */
 int QVariantAnimation2::duration() const
 {
-    Q_D(const QVariantAnimation2);
-    return d->duration;
+    return d_func()->duration;
 }
 
 void QVariantAnimation2::setDuration(int msecs)
 {
-    Q_D(QVariantAnimation2);
     if (msecs < 0) {
         qWarning("QVariantAnimation2::setDuration: cannot set a negative duration");
         return;
     }
-    if (d->duration == msecs)
+    if (d_func()->duration == msecs)
         return;
-    d->duration = msecs;
-    d->recalculateCurrentInterval();
+    d_func()->duration = msecs;
+    d_func()->recalculateCurrentInterval();
 }
 
-/*!
-    Returns the key frame value for the given \a step. The given \a step
-    must be in the range 0 to 1. If there is no KeyValue for \a step,
-    it returns an invalid QVariant.
-
-    \sa keyValues(), setKeyValueAt()
-*/
-qreal QVariantAnimation2::keyValueAt(qreal step) const
-{
-    return d_func()->valueAt(step);
-}
-
-/*!
-    \typedef QVariantAnimation2::KeyValue
-
-    This is a typedef for QPair<qreal, qreal>.
-*/
-/*!
-    \typedef QVariantAnimation2::KeyValues
-
-    This is a typedef for QVector<KeyValue>
-*/
-
-/*!
-    Creates a key frame at the given \a step with the given \a value.
-    The given \a step must be in the range 0 to 1.
-
-    \sa setKeyValues(), keyValueAt()
-*/
 void QVariantAnimation2::setKeyValueAt(qreal step, const qreal &value)
 {
     d_func()->setValueAt(step, value);
 }
 
-/*!
-    Returns the key frames of this animation.
-
-    \sa keyValueAt(), setKeyValues()
-*/
 QVariantAnimation2::KeyValues QVariantAnimation2::keyValues() const
 {
     return d_func()->keyValues;
 }
 
-/*!
-    Replaces the current set of key frames with the given \a keyValues.
-    the step of the key frames must be in the range 0 to 1.
-
-    \sa keyValues(), keyValueAt()
-*/
 void QVariantAnimation2::setKeyValues(const KeyValues &keyValues)
 {
-    Q_D(QVariantAnimation2);
-    d->keyValues = keyValues;
-    qSort(d->keyValues.begin(), d->keyValues.end(), animationValueLessThan);
-    d->recalculateCurrentInterval(/*force=*/true);
+    d_func()->keyValues = keyValues;
+    qSort(d_func()->keyValues.begin(), d_func()->keyValues.end(), animationValueLessThan);
+    d_func()->recalculateCurrentInterval(/*force=*/true);
 }
 
-/*!
-    \property QVariantAnimation2::currentValue
-    \brief the current value of the animation.
-
-    This property describes the current value; an interpolated value
-    between the \l{startValue}{start value} and the \l{endValue}{end
-    value}, using the current time for progress. The value itself is
-    obtained from interpolated(), which is called repeatedly as the
-    animation is running.
-
-    QVariantAnimation2 calls the virtual updateCurrentValue() function
-    when the current value changes. This is particularly useful for
-    subclasses that need to track updates. For example,
-    QPropertyAnimation2 uses this function to animate Qt \l{Qt's
-    Property System}{properties}.
-
-    \sa startValue, endValue
-*/
 qreal QVariantAnimation2::currentValue() const
 {
-    Q_D(const QVariantAnimation2);
 /*FIXME*/
-//    if (!d->currentValue.isValid())
+//    if (!d_func()->currentValue.isValid())
 //        const_cast<QVariantAnimation2Private*>(d)->recalculateCurrentInterval();
-    return d->currentValue;
+    return d_func()->currentValue;
 }
 
-/*!
-    \reimp
- */
-bool QVariantAnimation2::event(QEvent *event)
-{
-    return QAbstractAnimation2::event(event);
-}
-
-/*!
-    \reimp
-*/
 void QVariantAnimation2::updateState(QAbstractAnimation2::State newState,
                                     QAbstractAnimation2::State oldState)
 {
@@ -452,41 +335,15 @@ void QVariantAnimation2::updateState(QAbstractAnimation2::State newState,
     Q_UNUSED(newState);
 }
 
-/*!
-
-    This virtual function returns the linear interpolation between
-    variants \a from and \a to, at \a progress, usually a value
-    between 0 and 1. You can reimplement this function in a subclass
-    of QVariantAnimation2 to provide your own interpolation algorithm.
-
-    Note that in order for the interpolation to work with a
-    QEasingCurve that return a value smaller than 0 or larger than 1
-    (such as QEasingCurve::InBack) you should make sure that it can
-    extrapolate. If the semantic of the datatype does not allow
-    extrapolation this function should handle that gracefully.
-
-    You should call the QVariantAnimation2 implementation of this
-    function if you want your class to handle the types already
-    supported by Qt (see class QVariantAnimation2 description for a
-    list of supported types).
-
-    \sa QEasingCurve
- */
 qreal QVariantAnimation2::interpolated(const qreal &from, const qreal &to, qreal progress) const
 {
     return (from + (to - from) * progress);
 }
 
-/*!
-    \reimp
- */
 void QVariantAnimation2::updateCurrentTime(int)
 {
     d_func()->recalculateCurrentInterval();
 }
 
 QT_END_NAMESPACE
-
-#include "moc_qvariantanimation2_p.cpp"
-
 

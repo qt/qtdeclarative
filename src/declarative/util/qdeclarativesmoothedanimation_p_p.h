@@ -64,12 +64,25 @@
 #include <QTimer>
 
 QT_BEGIN_NAMESPACE
+class QSmoothedAnimation;
+class QSmoothedAnimationTimer : public QTimer
+{
+    Q_OBJECT
+public:
+    explicit QSmoothedAnimationTimer(QSmoothedAnimation* animation, QObject *parent = 0);
+    ~QSmoothedAnimationTimer();
+public Q_SLOTS:
+    void stopAnimation();
+private:
+    QSmoothedAnimation* m_animation;
+};
+
 
 class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
 public:
-    QSmoothedAnimation(QObject *parent=0);
-
+    QSmoothedAnimation(QDeclarativeAbstractAnimation *animation=0);
+    ~QSmoothedAnimation();
     qreal to;
     qreal velocity;
     int userDuration;
@@ -115,7 +128,7 @@ private:
     bool recalc();
     void delayedStop();
 
-    QTimer delayedStopTimer;
+    QSmoothedAnimationTimer* delayedStopTimer;
 };
 
 class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimationPrivate
@@ -123,6 +136,7 @@ class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimatio
     Q_DECLARE_PUBLIC(QDeclarativeSmoothedAnimation)
 public:
     QDeclarativeSmoothedAnimationPrivate();
+    ~QDeclarativeSmoothedAnimationPrivate();
     void updateRunningAnimations();
 
     QParallelAnimationGroup2 *wrapperGroup;

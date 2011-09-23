@@ -66,7 +66,6 @@ QT_BEGIN_NAMESPACE
 
 class QVariantAnimation2Private : public QAbstractAnimation2Private
 {
-    Q_DECLARE_PUBLIC(QVariantAnimation2)
 public:
     QVariantAnimation2Private();
 

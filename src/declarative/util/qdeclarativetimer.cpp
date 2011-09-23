@@ -111,8 +111,8 @@ QDeclarativeTimer::QDeclarativeTimer(QObject *parent)
     : QObject(*(new QDeclarativeTimerPrivate), parent)
 {
     Q_D(QDeclarativeTimer);
-    connect(&d->pause, SIGNAL(currentLoopChanged(int)), this, SLOT(ticked()));
-    connect(&d->pause, SIGNAL(finished()), this, SLOT(finished()));
+    d->pause.registerCurrentLoopChanged(this, SLOT(ticked()));
+    d->pause.registerFinished(this, SLOT(finished()));
     d->pause.setLoopCount(1);
     d->pause.setDuration(d->interval);
 }

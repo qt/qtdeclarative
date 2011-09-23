@@ -53,12 +53,10 @@ QT_MODULE(Declarative)
 
 
 class QAnimationGroup2Private;
-class Q_CORE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
+class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
-    Q_OBJECT
-
 public:
-    QAnimationGroup2(QObject *parent = 0);
+    QAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QAnimationGroup2();
 
     QAbstractAnimation2 *animationAt(int index) const;
@@ -69,14 +67,14 @@ public:
     void removeAnimation(QAbstractAnimation2 *animation);
     QAbstractAnimation2 *takeAnimation(int index);
     void clear();
-
+    virtual void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 protected:
-    QAnimationGroup2(QAnimationGroup2Private &dd, QObject *parent);
-    bool event(QEvent *event);
+    QAnimationGroup2(QAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation=0);
 
 private:
     Q_DISABLE_COPY(QAnimationGroup2)
-    Q_DECLARE_PRIVATE(QAnimationGroup2)
+    QAnimationGroup2Private* d_func() {return reinterpret_cast<QAnimationGroup2Private*>(d);}
+    const QAnimationGroup2Private* d_func() const {return reinterpret_cast<const QAnimationGroup2Private*>(d);}
 };
 
 

@@ -91,6 +91,9 @@ QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QObject *parent)
 
 QDeclarativeAbstractAnimation::~QDeclarativeAbstractAnimation()
 {
+    QAbstractAnimation2* anim = qtAnimation();
+    if (anim)
+        delete anim;
 }
 
 QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QDeclarativeAbstractAnimationPrivate &dd, QObject *parent)
@@ -214,11 +217,6 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
             supressStart = true;    //we want the animation to continue, rather than restart
         }
 
-        if (!d->connectedTimeLine) {
-            QObject::connect(qtAnimation(), SIGNAL(finished()),
-                             this, SLOT(timelineComplete()));
-            d->connectedTimeLine = true;
-        }
         if (!supressStart)
             d->commence();
         emit started();
@@ -226,9 +224,9 @@ void QDeclarativeAbstractAnimation::setRunning(bool r)
         if (d->alwaysRunToEnd) {
             if (d->loopCount != 1)
                 qtAnimation()->setLoopCount(qtAnimation()->currentLoop()+1);    //finish the current loop
-        } else
+        } else {
             qtAnimation()->stop();
-
+        }
         emit completed();
     }
 
@@ -595,8 +593,7 @@ QDeclarativePauseAnimation::~QDeclarativePauseAnimation()
 void QDeclarativePauseAnimationPrivate::init()
 {
     Q_Q(QDeclarativePauseAnimation);
-    pa = new QPauseAnimation2;
-    QDeclarative_setParent_noEvent(pa, q);
+    pa = new QPauseAnimation2(q);
 }
 
 /*!
@@ -777,8 +774,7 @@ QDeclarativeScriptAction::~QDeclarativeScriptAction()
 void QDeclarativeScriptActionPrivate::init()
 {
     Q_Q(QDeclarativeScriptAction);
-    rsa = new QActionAnimation(&proxy);
-    QDeclarative_setParent_noEvent(rsa, q);
+    rsa = new QActionAnimation(q);
 }
 
 /*!
@@ -919,8 +915,7 @@ QDeclarativePropertyAction::~QDeclarativePropertyAction()
 void QDeclarativePropertyActionPrivate::init()
 {
     Q_Q(QDeclarativePropertyAction);
-    spa = new QActionAnimation;
-    QDeclarative_setParent_noEvent(spa, q);
+    spa = new QActionAnimation(q);
 }
 
 QObject *QDeclarativePropertyAction::target() const
@@ -1527,7 +1522,6 @@ void QDeclarativeAnimationGroupPrivate::append_animation(QDeclarativeListPropert
     if (q) {
         a->setGroup(q);
         // This is an optimization for the parenting that already occurs via addAnimation
-        QDeclarative_setParent_noEvent(a->qtAnimation(), q->d_func()->ag);
         q->d_func()->ag->addAnimation(a->qtAnimation());
     }
 }
@@ -1538,7 +1532,6 @@ void QDeclarativeAnimationGroupPrivate::clear_animation(QDeclarativeListProperty
     if (q) {
         while (q->d_func()->animations.count()) {
             QDeclarativeAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
-            QDeclarative_setParent_noEvent(firstAnim->qtAnimation(), 0);
             q->d_func()->ag->removeAnimation(firstAnim->qtAnimation());
             firstAnim->setGroup(0);
         }
@@ -1595,8 +1588,7 @@ QDeclarativeSequentialAnimation::QDeclarativeSequentialAnimation(QObject *parent
     QDeclarativeAnimationGroup(parent)
 {
     Q_D(QDeclarativeAnimationGroup);
-    d->ag = new QSequentialAnimationGroup2;
-    QDeclarative_setParent_noEvent(d->ag, this);
+    d->ag = new QSequentialAnimationGroup2(this);
 }
 
 QDeclarativeSequentialAnimation::~QDeclarativeSequentialAnimation()
@@ -1664,8 +1656,7 @@ QDeclarativeParallelAnimation::QDeclarativeParallelAnimation(QObject *parent) :
     QDeclarativeAnimationGroup(parent)
 {
     Q_D(QDeclarativeAnimationGroup);
-    d->ag = new QParallelAnimationGroup2;
-    QDeclarative_setParent_noEvent(d->ag, this);
+    d->ag = new QParallelAnimationGroup2(this);
 }
 
 QDeclarativeParallelAnimation::~QDeclarativeParallelAnimation()
@@ -1829,8 +1820,7 @@ QDeclarativePropertyAnimation::~QDeclarativePropertyAnimation()
 void QDeclarativePropertyAnimationPrivate::init()
 {
     Q_Q(QDeclarativePropertyAnimation);
-    va = new QDeclarativeBulkValueAnimator;
-    QDeclarative_setParent_noEvent(va, q);
+    va = new QDeclarativeBulkValueAnimator(q);
 }
 
 /*!

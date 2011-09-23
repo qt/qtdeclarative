@@ -53,28 +53,25 @@ QT_MODULE(Declarative)
 
 
 class QParallelAnimationGroup2Private;
-class Q_CORE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
+class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
-    Q_OBJECT
-
 public:
-    QParallelAnimationGroup2(QObject *parent = 0);
+    QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QParallelAnimationGroup2();
 
     int duration() const;
 
 protected:
-    QParallelAnimationGroup2(QParallelAnimationGroup2Private &dd, QObject *parent);
-    bool event(QEvent *event);
-
+    QParallelAnimationGroup2(QParallelAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation);
     void updateCurrentTime(int currentTime);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
+    void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 
 private:
     Q_DISABLE_COPY(QParallelAnimationGroup2)
-    Q_DECLARE_PRIVATE(QParallelAnimationGroup2)
-    Q_PRIVATE_SLOT(d_func(), void _q_uncontrolledAnimationFinished())
+    QParallelAnimationGroup2Private* d_func() {return reinterpret_cast<QParallelAnimationGroup2Private*>(d);}
+    const QParallelAnimationGroup2Private* d_func() const {return reinterpret_cast<const QParallelAnimationGroup2Private*>(d);}
 };
 
 
