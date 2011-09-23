@@ -22,4 +22,5 @@ SOURCES += \
         $$PWD/qanimationgroup2.cpp \
         $$PWD/qsequentialanimationgroup2.cpp \
         $$PWD/qparallelanimationgroup2.cpp \
-        $$PWD/qpauseanimation2.cpp
+        $$PWD/qpauseanimation2.cpp \
+        $$PWD/qguivariantanimation2.cpp
