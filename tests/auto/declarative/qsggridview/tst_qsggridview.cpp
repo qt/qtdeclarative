@@ -737,7 +737,12 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 60.0;    // moved 3 items (i.e. 1 row) down
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, before visible items")
+            << 120.0     // show 6-23
+            << 3 << 4 << 3      // 3, 4, 5 move to after 6
+            << 60.0;      // row of 3,4,5 has moved down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 120.0     // show 6-23
@@ -757,7 +762,7 @@ void tst_QSGGridView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 60.0;
+            << 0.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")

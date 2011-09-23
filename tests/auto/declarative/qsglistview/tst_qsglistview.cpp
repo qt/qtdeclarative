@@ -981,7 +981,7 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move 1 forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 1
-            << 20.0;
+            << 0.0;
 
 
     QTest::newRow("move 1 backwards, within visible items")
@@ -1018,7 +1018,12 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move multiple forwards, within visible items")
             << 0.0
             << 0 << 5 << 3
-            << 20.0 * 3;
+            << 0.0;
+
+    QTest::newRow("move multiple forwards, before visible items")
+            << 140.0     // show 7-22
+            << 4 << 5 << 3      // 4,5,6 move to below 7
+            << 20.0 * 3;      // 4,5,6 moved down
 
     QTest::newRow("move multiple forwards, from non-visible -> visible")
             << 80.0     // show 4-19
@@ -1038,7 +1043,7 @@ void tst_QSGListView::moved_data()
     QTest::newRow("move multiple forwards, from visible -> non-visible (move first item)")
             << 0.0
             << 0 << 16 << 3
-            << 20.0 * 3;
+            << 0.0;
 
 
     QTest::newRow("move multiple backwards, within visible items")

@@ -1489,15 +1489,26 @@ bool QSGItemViewPrivate::applyModelChanges()
     for (int i=0; i<addedItems.count(); ++i)
         addedItems.at(i)->attached->emitAdd();
 
-    // if first visible item is moving but another item is moving up to replace it,
-    // do this positioning now to avoid shifting all content forwards
+    // if the first visible item has moved, ensure another one takes its place
+    // so that we avoid shifting all content forwards
+    // (don't use items from removedBeforeFirstVisible - if an item is removed from
+    // before the first visible, the first visible should not move upwards)
     if (firstVisible && firstItemIndex >= 0) {
+        bool found = false;
         for (int i=0; i<movedBackwards.count(); i++) {
             if (movedBackwards[i]->index == firstItemIndex) {
+                // an item has moved backwards up to the first visible's position
                 resetItemPosition(movedBackwards[i], firstVisible);
                 movedBackwards.removeAt(i);
+                found = true;
                 break;
             }
+        }
+        if (!found) {
+            // first visible item has moved forward, another item takes its place
+            FxViewItem *item = visibleItem(firstItemIndex);
+            if (item)
+                resetItemPosition(item, firstVisible);
         }
     }
 

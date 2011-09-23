@@ -574,6 +574,8 @@ void QSGGridViewPrivate::repositionPackageItemAt(QSGItem *item, int index)
 
 void QSGGridViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
 {
+    if (item == toItem)
+        return;
     FxGridItemSG *toGridItem = static_cast<FxGridItemSG*>(toItem);
     static_cast<FxGridItemSG*>(item)->setPosition(toGridItem->colPos(), toGridItem->rowPos());
 }

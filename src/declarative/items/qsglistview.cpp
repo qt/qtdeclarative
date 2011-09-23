@@ -716,6 +716,8 @@ void QSGListViewPrivate::repositionPackageItemAt(QSGItem *item, int index)
 
 void QSGListViewPrivate::resetItemPosition(FxViewItem *item, FxViewItem *toItem)
 {
+    if (item == toItem)
+        return;
     static_cast<FxListItemSG*>(item)->setPosition(toItem->position());
 }
 
