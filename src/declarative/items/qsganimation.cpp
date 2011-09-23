@@ -48,8 +48,8 @@
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
-#include <QtCore/qsequentialanimationgroup.h>
-#include <QtCore/qparallelanimationgroup.h>
+#include "private/qsequentialanimationgroup2_p.h"
+#include "private/qparallelanimationgroup2_p.h"
 #include <QtGui/qtransform.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,14 +58,14 @@ QSGParentAnimation::QSGParentAnimation(QObject *parent)
     : QDeclarativeAnimationGroup(*(new QSGParentAnimationPrivate), parent)
 {
     Q_D(QSGParentAnimation);
-    d->topLevelGroup = new QSequentialAnimationGroup;
+    d->topLevelGroup = new QSequentialAnimationGroup2;
     QDeclarative_setParent_noEvent(d->topLevelGroup, this);
 
     d->startAction = new QActionAnimation;
     QDeclarative_setParent_noEvent(d->startAction, d->topLevelGroup);
     d->topLevelGroup->addAnimation(d->startAction);
 
-    d->ag = new QParallelAnimationGroup;
+    d->ag = new QParallelAnimationGroup2;
     QDeclarative_setParent_noEvent(d->ag, d->topLevelGroup);
     d->topLevelGroup->addAnimation(d->ag);
 
@@ -158,7 +158,7 @@ void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
 {
     Q_D(QSGParentAnimation);
 
-    struct QSGParentAnimationData : public QAbstractAnimationAction
+    struct QSGParentAnimationData : public QAbstractAnimation2Action
     {
         QSGParentAnimationData() {}
         ~QSGParentAnimationData() { qDeleteAll(pc); }
@@ -341,7 +341,7 @@ void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
 
 }
 
-QAbstractAnimation *QSGParentAnimation::qtAnimation()
+QAbstractAnimation2 *QSGParentAnimation::qtAnimation()
 {
     Q_D(QSGParentAnimation);
     return d->topLevelGroup;
@@ -359,7 +359,7 @@ QSGAnchorAnimation::~QSGAnchorAnimation()
 {
 }
 
-QAbstractAnimation *QSGAnchorAnimation::qtAnimation()
+QAbstractAnimation2 *QSGAnchorAnimation::qtAnimation()
 {
     Q_D(QSGAnchorAnimation);
     return d->va;
@@ -435,7 +435,7 @@ void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
             d->va->setEndValue(qreal(1));
             d->rangeIsSet = true;
         }
-        d->va->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
+        d->va->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
         d->va->setFromSourcedValue(&data->fromSourced);
     } else {
         delete data;
@@ -601,7 +601,7 @@ void QSGPathAnimation::setEndRotation(qreal rotation)
 }
 
 
-QAbstractAnimation *QSGPathAnimation::qtAnimation()
+QAbstractAnimation2 *QSGPathAnimation::qtAnimation()
 {
     Q_D(QSGPathAnimation);
     return d->pa;
@@ -679,10 +679,10 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
             }
         }
         d->pa->setFromSourcedValue(&data->fromSourced);
-        d->pa->setAnimValue(data, QAbstractAnimation::DeleteWhenStopped);
+        d->pa->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
     } else {
         d->pa->setFromSourcedValue(0);
-        d->pa->setAnimValue(0, QAbstractAnimation::DeleteWhenStopped);
+        d->pa->setAnimValue(0, QAbstractAnimation2::DeleteWhenStopped);
         delete data;
     }
 }

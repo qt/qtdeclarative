@@ -44,7 +44,7 @@
 
 #include <QImage>
 #include <QObject>
-#include <qabstractanimation.h>
+#include "private/qabstractanimation2_p.h"
 
 #include "qsgnode.h"
 
@@ -119,7 +119,7 @@ public:
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
 
-    virtual QAnimationDriver *createAnimationDriver(QObject *parent);
+    virtual QAnimationDriver2 *createAnimationDriver(QObject *parent);
 
 signals:
     void ready();

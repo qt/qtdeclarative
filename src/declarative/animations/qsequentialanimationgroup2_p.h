@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,15 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEBEHAVIOR_H
-#define QDECLARATIVEBEHAVIOR_H
+#ifndef QSEQUENTIALANIMATIONGROUP2_P_H
+#define QSEQUENTIALANIMATIONGROUP2_P_H
 
-#include "private/qdeclarativestate_p.h"
-
-#include <qdeclarativepropertyvaluesource.h>
-#include <qdeclarativepropertyvalueinterceptor.h>
-#include <qdeclarative.h>
-#include "private/qabstractanimation2_p.h"
+#include <private/qanimationgroup2_p.h>
 
 QT_BEGIN_HEADER
 
@@ -55,44 +50,47 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeAbstractAnimation;
-class QDeclarativeBehaviorPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBehavior : public QObject, public QDeclarativePropertyValueInterceptor
+
+
+class QPauseAnimation2;
+class QSequentialAnimationGroup2Private;
+
+class Q_CORE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QDeclarativeBehavior)
-
-    Q_INTERFACES(QDeclarativePropertyValueInterceptor)
-    Q_CLASSINFO("DefaultProperty", "animation")
-    Q_PROPERTY(QDeclarativeAbstractAnimation *animation READ animation WRITE setAnimation)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_CLASSINFO("DeferredPropertyNames", "animation")
+    Q_PROPERTY(QAbstractAnimation2* currentAnimation READ currentAnimation NOTIFY currentAnimationChanged)
 
 public:
-    QDeclarativeBehavior(QObject *parent=0);
-    ~QDeclarativeBehavior();
+    QSequentialAnimationGroup2(QObject *parent = 0);
+    ~QSequentialAnimationGroup2();
 
-    virtual void setTarget(const QDeclarativeProperty &);
-    virtual void write(const QVariant &value);
+    QPauseAnimation2 *addPause(int msecs);
+    QPauseAnimation2 *insertPause(int index, int msecs);
 
-    QDeclarativeAbstractAnimation *animation();
-    void setAnimation(QDeclarativeAbstractAnimation *);
-
-    bool enabled() const;
-    void setEnabled(bool enabled);
+    QAbstractAnimation2 *currentAnimation() const;
+    int duration() const;
 
 Q_SIGNALS:
-    void enabledChanged();
+    void currentAnimationChanged(QAbstractAnimation2 *current);
 
-private Q_SLOTS:
-    void componentFinalized();
-    void qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State);
+protected:
+    QSequentialAnimationGroup2(QSequentialAnimationGroup2Private &dd, QObject *parent);
+    bool event(QEvent *event);
+
+    void updateCurrentTime(int);
+    void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
+    void updateDirection(QAbstractAnimation2::Direction direction);
+
+private:
+    Q_DISABLE_COPY(QSequentialAnimationGroup2)
+    Q_DECLARE_PRIVATE(QSequentialAnimationGroup2)
+    Q_PRIVATE_SLOT(d_func(), void _q_uncontrolledAnimationFinished())
 };
+
+
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QDeclarativeBehavior)
-
 QT_END_HEADER
 
-#endif // QDECLARATIVEBEHAVIOR_H
+#endif //QSEQUENTIALANIMATIONGROUP2_P_H

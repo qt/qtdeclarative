@@ -685,7 +685,7 @@ void QSGParticleSystem::setRunning(bool arg)
 void QSGParticleSystem::setPaused(bool arg){
     if (m_paused != arg) {
         m_paused = arg;
-        if (m_animation && m_animation->state() != QAbstractAnimation::Stopped)
+        if (m_animation && m_animation->state() != QAbstractAnimation2::Stopped)
             m_paused ? m_animation->pause() : m_animation->resume();
         if (!m_paused){
             foreach (QSGParticlePainter *p, m_painters)
@@ -780,7 +780,7 @@ void QSGParticleSystem::reset()
     //### Do affectors need reset too?
 
     if (m_running) {//reset restarts animation (if running)
-        if ((m_animation->state() == QAbstractAnimation::Running))
+        if ((m_animation->state() == QAbstractAnimation2::Running))
             m_animation->stop();
         m_animation->start();
         if (m_paused)

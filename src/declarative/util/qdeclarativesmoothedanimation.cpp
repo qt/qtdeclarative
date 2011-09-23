@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 QSmoothedAnimation::QSmoothedAnimation(QObject *parent)
-    : QAbstractAnimation(parent), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
+    : QAbstractAnimation2(parent), to(0), velocity(200), userDuration(-1), maximumEasingTime(-1),
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0)
 {
@@ -70,15 +70,15 @@ QSmoothedAnimation::QSmoothedAnimation(QObject *parent)
 void QSmoothedAnimation::restart()
 {
     initialVelocity = trackVelocity;
-    if (state() != QAbstractAnimation::Running)
+    if (state() != QAbstractAnimation2::Running)
         start();
     else
         init();
 }
 
-void QSmoothedAnimation::updateState(QAbstractAnimation::State newState, QAbstractAnimation::State /*oldState*/)
+void QSmoothedAnimation::updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State /*oldState*/)
 {
-    if (newState == QAbstractAnimation::Running)
+    if (newState == QAbstractAnimation2::Running)
         init();
 }
 
@@ -308,7 +308,7 @@ QDeclarativeSmoothedAnimation::~QDeclarativeSmoothedAnimation()
 }
 
 QDeclarativeSmoothedAnimationPrivate::QDeclarativeSmoothedAnimationPrivate()
-    : wrapperGroup(new QParallelAnimationGroup), anim(new QSmoothedAnimation)
+    : wrapperGroup(new QParallelAnimationGroup2), anim(new QSmoothedAnimation)
 {
     Q_Q(QDeclarativeSmoothedAnimation);
     QDeclarative_setParent_noEvent(wrapperGroup, q);
@@ -326,7 +326,7 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation* QDeclarativeSmoothedAnimation::qtAnimation()
+QAbstractAnimation2* QDeclarativeSmoothedAnimation::qtAnimation()
 {
     Q_D(QDeclarativeSmoothedAnimation);
     return d->wrapperGroup;
@@ -342,7 +342,7 @@ void QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions
     if (!d->actions)
         return;
 
-    QSet<QAbstractAnimation*> anims;
+    QSet<QAbstractAnimation2*> anims;
     for (int i = 0; i < d->actions->size(); i++) {
         QSmoothedAnimation *ease;
         bool needsRestart;

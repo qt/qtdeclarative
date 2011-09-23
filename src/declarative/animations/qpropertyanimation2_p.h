@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,13 +39,10 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESPRINGANIMATION2_H
-#define QDECLARATIVESPRINGANIMATION2_H
+#ifndef QPROPERTYANIMATION2_P_H
+#define QPROPERTYANIMATION2_P_H
 
-#include <qdeclarative.h>
-#include "private/qdeclarativeanimation_p.h"
-
-#include <QtCore/qobject.h>
+#include <private/qvariantanimation2_p.h>
 
 QT_BEGIN_HEADER
 
@@ -53,59 +50,40 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QDeclarativeSpringAnimationPrivate;
-class Q_AUTOTEST_EXPORT QDeclarativeSpringAnimation : public QDeclarativeNumberAnimation
+
+
+class QPropertyAnimation2Private;
+class Q_CORE_EXPORT QPropertyAnimation2 : public QVariantAnimation2
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QDeclarativeSpringAnimation)
-    Q_INTERFACES(QDeclarativePropertyValueSource)
-
-    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity)
-    Q_PROPERTY(qreal spring READ spring WRITE setSpring)
-    Q_PROPERTY(qreal damping READ damping WRITE setDamping)
-    Q_PROPERTY(qreal epsilon READ epsilon WRITE setEpsilon)
-    Q_PROPERTY(qreal modulus READ modulus WRITE setModulus NOTIFY modulusChanged)
-    Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged)
+    Q_PROPERTY(QByteArray propertyName READ propertyName WRITE setPropertyName)
+    Q_PROPERTY(QObject* targetObject READ targetObject WRITE setTargetObject)
 
 public:
-    QDeclarativeSpringAnimation(QObject *parent=0);
-    ~QDeclarativeSpringAnimation();
+    QPropertyAnimation2(QObject *parent = 0);
+    QPropertyAnimation2(QObject *target, const QByteArray &propertyName, QObject *parent = 0);
+    ~QPropertyAnimation2();
 
-    qreal velocity() const;
-    void setVelocity(qreal velocity);
+    QObject *targetObject() const;
+    void setTargetObject(QObject *target);
 
-    qreal spring() const;
-    void setSpring(qreal spring);
-
-    qreal damping() const;
-    void setDamping(qreal damping);
-
-    qreal epsilon() const;
-    void setEpsilon(qreal epsilon);
-
-    qreal mass() const;
-    void setMass(qreal modulus);
-
-    qreal modulus() const;
-    void setModulus(qreal modulus);
-
-    virtual void transition(QDeclarativeStateActions &actions,
-                            QDeclarativeProperties &modified,
-                            TransitionDirection direction);
+    QByteArray propertyName() const;
+    void setPropertyName(const QByteArray &propertyName);
 
 protected:
-    virtual QAbstractAnimation2 *qtAnimation();
+    bool event(QEvent *event);
+    void updateCurrentValue(const QVariant &value);
+    void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
 
-Q_SIGNALS:
-    void modulusChanged();
-    void massChanged();
-    void syncChanged();
+private:
+    Q_DISABLE_COPY(QPropertyAnimation2)
+    Q_DECLARE_PRIVATE(QPropertyAnimation2)
 };
+
+
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QDeclarativeSpringAnimation)
-
 QT_END_HEADER
 
-#endif // QDECLARATIVESPRINGANIMATION2_H
+#endif // QPROPERTYANIMATION2_P_H

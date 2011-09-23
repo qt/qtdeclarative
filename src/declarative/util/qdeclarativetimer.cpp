@@ -42,7 +42,7 @@
 #include "private/qdeclarativetimer_p.h"
 
 #include <QtCore/qcoreapplication.h>
-#include <QtCore/qpauseanimation.h>
+#include "private/qpauseanimation2_p.h"
 #include <qdebug.h>
 
 #include <private/qobject_p.h>
@@ -59,7 +59,7 @@ public:
         : interval(1000), running(false), repeating(false), triggeredOnStart(false)
         , classBegun(false), componentComplete(false), firstTick(true) {}
     int interval;
-    QPauseAnimation pause;
+    QPauseAnimation2 pause;
     bool running : 1;
     bool repeating : 1;
     bool triggeredOnStart : 1;

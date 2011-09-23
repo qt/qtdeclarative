@@ -34,6 +34,7 @@ include(scenegraph/scenegraph.pri)
 include(items/items.pri)
 include(particles/particles.pri)
 include(designer/designer.pri)
+include(animations/animations.pri)
 
 symbian: {
     TARGET.UID3=0x2001E623

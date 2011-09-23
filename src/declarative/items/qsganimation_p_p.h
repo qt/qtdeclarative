@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGANIMATION_P_H
-#define QSGANIMATION_P_H
+#ifndef QSGANIMATION2_P_H
+#define QSGANIMATION2_P_H
 
 //
 //  W A R N I N G
@@ -73,7 +73,7 @@ public:
     QSGItem *newParent;
     QSGItem *via;
 
-    QSequentialAnimationGroup *topLevelGroup;
+    QSequentialAnimationGroup2 *topLevelGroup;
     QActionAnimation *startAction;
     QActionAnimation *endAction;
 
@@ -85,11 +85,11 @@ class QSGAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QSGAnchorAnimation)
 public:
     QSGAnchorAnimationPrivate() : rangeIsSet(false), va(0),
-        interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
+        interpolator(QVariantAnimation2Private::getInterpolator(QMetaType::QReal)) {}
 
     bool rangeIsSet;
     QDeclarativeBulkValueAnimator *va;
-    QVariantAnimation::Interpolator interpolator;
+    QVariantAnimation2::Interpolator interpolator;
     QList<QSGItem*> targets;
 };
 
@@ -150,4 +150,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QSGANIMATION_P_H
+#endif // QSGANIMATION2_P_H

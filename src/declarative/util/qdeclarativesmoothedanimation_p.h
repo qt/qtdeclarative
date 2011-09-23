@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESMOOTHEDANIMATION_H
-#define QDECLARATIVESMOOTHEDANIMATION_H
+#ifndef QDECLARATIVESMOOTHEDANIMATION2_H
+#define QDECLARATIVESMOOTHEDANIMATION2_H
 
 #include <qdeclarative.h>
 #include "private/qdeclarativeanimation_p.h"
@@ -86,7 +86,7 @@ public:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    QAbstractAnimation* qtAnimation();
+    QAbstractAnimation2* qtAnimation();
 
 Q_SIGNALS:
     void velocityChanged();
@@ -100,4 +100,4 @@ QML_DECLARE_TYPE(QDeclarativeSmoothedAnimation)
 
 QT_END_HEADER
 
-#endif // QDECLARATIVESMOOTHEDANIMATION_H
+#endif // QDECLARATIVESMOOTHEDANIMATION2_H

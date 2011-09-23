@@ -45,7 +45,7 @@
 #include <qdeclarative.h>
 
 #include <QtCore/qobject.h>
-#include <QtCore/qabstractanimation.h>
+#include "private/qabstractanimation2_p.h"
 
 #include <private/qdeclarativeglobal_p.h>
 

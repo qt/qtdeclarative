@@ -325,7 +325,7 @@ void tst_qdeclarativebehaviors::dontStart()
 
     QDeclarativeAbstractAnimation *myAnim = rect->findChild<QDeclarativeAbstractAnimation*>("MyAnim");
     QVERIFY(myAnim && myAnim->qtAnimation());
-    QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimation::Stopped);
+    QVERIFY(myAnim->qtAnimation()->state() == QAbstractAnimation2::Stopped);
 
     delete rect;
 }

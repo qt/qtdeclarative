@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,60 +39,52 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEBEHAVIOR_H
-#define QDECLARATIVEBEHAVIOR_H
+#ifndef QPROPERTYANIMATION2_P_P_H
+#define QPROPERTYANIMATION2_P_P_H
 
-#include "private/qdeclarativestate_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QIODevice. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <qdeclarativepropertyvaluesource.h>
-#include <qdeclarativepropertyvalueinterceptor.h>
-#include <qdeclarative.h>
-#include "private/qabstractanimation2_p.h"
+#include "private/qpropertyanimation2_p.h"
 
-QT_BEGIN_HEADER
+#include "private/qvariantanimation2_p_p.h"
+
+
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
-
-class QDeclarativeAbstractAnimation;
-class QDeclarativeBehaviorPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBehavior : public QObject, public QDeclarativePropertyValueInterceptor
+class QPropertyAnimation2Private : public QVariantAnimation2Private
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QDeclarativeBehavior)
-
-    Q_INTERFACES(QDeclarativePropertyValueInterceptor)
-    Q_CLASSINFO("DefaultProperty", "animation")
-    Q_PROPERTY(QDeclarativeAbstractAnimation *animation READ animation WRITE setAnimation)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_CLASSINFO("DeferredPropertyNames", "animation")
-
+   Q_DECLARE_PUBLIC(QPropertyAnimation2)
 public:
-    QDeclarativeBehavior(QObject *parent=0);
-    ~QDeclarativeBehavior();
+    QPropertyAnimation2Private()
+        : targetValue(0), propertyType(0), propertyIndex(-1)
+    {
+    }
 
-    virtual void setTarget(const QDeclarativeProperty &);
-    virtual void write(const QVariant &value);
+    QWeakPointer<QObject> target;
+    //we use targetValue to be able to unregister the target from the global hash
+    QObject *targetValue;
 
-    QDeclarativeAbstractAnimation *animation();
-    void setAnimation(QDeclarativeAbstractAnimation *);
+    //for the QProperty
+    int propertyType;
+    int propertyIndex;
 
-    bool enabled() const;
-    void setEnabled(bool enabled);
-
-Q_SIGNALS:
-    void enabledChanged();
-
-private Q_SLOTS:
-    void componentFinalized();
-    void qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State);
+    QByteArray propertyName;
+    void updateProperty(const QVariant &);
+    void updateMetaProperty();
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QDeclarativeBehavior)
 
-QT_END_HEADER
 
-#endif // QDECLARATIVEBEHAVIOR_H
+#endif //QPROPERTYANIMATION2_P_P_H

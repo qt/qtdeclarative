@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,60 +39,55 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEBEHAVIOR_H
-#define QDECLARATIVEBEHAVIOR_H
+#ifndef QPARALLELANIMATIONGROUP2_P_P_H
+#define QPARALLELANIMATIONGROUP2_P_P_H
 
-#include "private/qdeclarativestate_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of QIODevice. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <qdeclarativepropertyvaluesource.h>
-#include <qdeclarativepropertyvalueinterceptor.h>
-#include <qdeclarative.h>
-#include "private/qabstractanimation2_p.h"
+#include "private/qparallelanimationgroup2_p.h"
+#include "private/qanimationgroup2_p_p.h"
+#include <QtCore/qhash.h>
 
-QT_BEGIN_HEADER
+
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(Declarative)
-
-class QDeclarativeAbstractAnimation;
-class QDeclarativeBehaviorPrivate;
-class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeBehavior : public QObject, public QDeclarativePropertyValueInterceptor
+class QParallelAnimationGroup2Private : public QAnimationGroup2Private
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QDeclarativeBehavior)
-
-    Q_INTERFACES(QDeclarativePropertyValueInterceptor)
-    Q_CLASSINFO("DefaultProperty", "animation")
-    Q_PROPERTY(QDeclarativeAbstractAnimation *animation READ animation WRITE setAnimation)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
-    Q_CLASSINFO("DeferredPropertyNames", "animation")
-
+    Q_DECLARE_PUBLIC(QParallelAnimationGroup2)
 public:
-    QDeclarativeBehavior(QObject *parent=0);
-    ~QDeclarativeBehavior();
+    QParallelAnimationGroup2Private()
+        : lastLoop(0), lastCurrentTime(0)
+    {
+    }
 
-    virtual void setTarget(const QDeclarativeProperty &);
-    virtual void write(const QVariant &value);
+    QHash<QAbstractAnimation2*, int> uncontrolledFinishTime;
+    int lastLoop;
+    int lastCurrentTime;
 
-    QDeclarativeAbstractAnimation *animation();
-    void setAnimation(QDeclarativeAbstractAnimation *);
+    bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
+    void applyGroupState(QAbstractAnimation2 *animation);
+    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
+    void connectUncontrolledAnimations();
+    void disconnectUncontrolledAnimations();
 
-    bool enabled() const;
-    void setEnabled(bool enabled);
+    void animationRemoved(int index, QAbstractAnimation2 *);
 
-Q_SIGNALS:
-    void enabledChanged();
-
-private Q_SLOTS:
-    void componentFinalized();
-    void qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State);
+    // private slot
+    void _q_uncontrolledAnimationFinished();
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QDeclarativeBehavior)
 
-QT_END_HEADER
 
-#endif // QDECLARATIVEBEHAVIOR_H
+#endif //QPARALLELANIMATIONGROUP2_P_P_H

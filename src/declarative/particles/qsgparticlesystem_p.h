@@ -49,7 +49,7 @@
 #include <QPointer>
 #include <QSignalMapper>
 #include <QtDeclarative/private/qsgsprite_p.h>
-#include <QAbstractAnimation>
+#include "private/qabstractanimation2_p.h"
 #include <QtDeclarative/qdeclarative.h>
 #include <private/qv8engine_p.h> //For QDeclarativeV8Handle
 
@@ -341,12 +341,12 @@ private:
 };
 
 // Internally, this animation drives all the timing. Painters sync up in their updatePaintNode
-class QSGParticleSystemAnimation : public QAbstractAnimation
+class QSGParticleSystemAnimation : public QAbstractAnimation2
 {
     Q_OBJECT
 public:
     QSGParticleSystemAnimation(QSGParticleSystem* system)
-        : QAbstractAnimation(static_cast<QObject*>(system)), m_system(system)
+        : QAbstractAnimation2(static_cast<QObject*>(system)), m_system(system)
     { }
 protected:
     virtual void updateCurrentTime( int t )

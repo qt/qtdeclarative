@@ -40,14 +40,14 @@
 **
 ****************************************************************************/
 
-#ifndef QSGANIMATION_H
-#define QSGANIMATION_H
+#ifndef QSGANIMATION2_H
+#define QSGANIMATION2_H
 
 #include "qsgitem.h"
 
 #include <private/qdeclarativeanimation_p.h>
 
-#include <QtCore/qabstractanimation.h>
+#include "private/qabstractanimation2_p.h"
 
 QT_BEGIN_HEADER
 
@@ -87,7 +87,7 @@ protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
+    virtual QAbstractAnimation2 *qtAnimation();
 };
 
 class QSGAnchorAnimationPrivate;
@@ -119,7 +119,7 @@ protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
+    virtual QAbstractAnimation2 *qtAnimation();
 };
 
 class QSGItem;
@@ -184,7 +184,7 @@ protected:
     virtual void transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation *qtAnimation();
+    virtual QAbstractAnimation2 *qtAnimation();
 
 Q_SIGNALS:
     void durationChanged(int);
@@ -206,4 +206,4 @@ QML_DECLARE_TYPE(QSGPathAnimation)
 
 QT_END_HEADER
 
-#endif // QSGANIMATION_H
+#endif // QSGANIMATION2_H

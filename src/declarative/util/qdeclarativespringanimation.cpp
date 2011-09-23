@@ -422,7 +422,7 @@ void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
     Q_D(QDeclarativeSpringAnimation);
     Q_UNUSED(direction);
 
-    if (d->clock->state() != QAbstractAnimation::Running) {
+    if (d->clock->state() != QAbstractAnimation2::Running) {
         d->lastTime = 0;
     }
 
@@ -453,7 +453,7 @@ void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
 }
 
 
-QAbstractAnimation *QDeclarativeSpringAnimation::qtAnimation()
+QAbstractAnimation2 *QDeclarativeSpringAnimation::qtAnimation()
 {
     Q_D(QDeclarativeSpringAnimation);
     return d->clock;

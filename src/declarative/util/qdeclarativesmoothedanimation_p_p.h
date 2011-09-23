@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVESMOOTHEDANIMATION_P_H
-#define QDECLARATIVESMOOTHEDANIMATION_P_H
+#ifndef QDECLARATIVESMOOTHEDANIMATION2_P_H
+#define QDECLARATIVESMOOTHEDANIMATION2_P_H
 
 //
 //  W A R N I N G
@@ -58,14 +58,14 @@
 
 #include "private/qdeclarativeanimation_p_p.h"
 
-#include <qparallelanimationgroup.h>
+#include "private/qparallelanimationgroup2_p.h"
 
 #include <private/qobject_p.h>
 #include <QTimer>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation
+class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
 public:
     QSmoothedAnimation(QObject *parent=0);
@@ -88,7 +88,7 @@ public:
 
 protected:
     virtual void updateCurrentTime(int);
-    virtual void updateState(QAbstractAnimation::State, QAbstractAnimation::State);
+    virtual void updateState(QAbstractAnimation2::State, QAbstractAnimation2::State);
 
 private:
     qreal easeFollow(qreal);
@@ -125,11 +125,11 @@ public:
     QDeclarativeSmoothedAnimationPrivate();
     void updateRunningAnimations();
 
-    QParallelAnimationGroup *wrapperGroup;
+    QParallelAnimationGroup2 *wrapperGroup;
     QSmoothedAnimation *anim;
     QHash<QDeclarativeProperty, QSmoothedAnimation*> activeAnimations;
 };
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVESMOOTHEDANIMATION_P_H
+#endif // QDECLARATIVESMOOTHEDANIMATION2_P_H

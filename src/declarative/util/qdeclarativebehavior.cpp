@@ -133,18 +133,18 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
         d->animation->setDefaultTarget(d->property);
         d->animation->setDisableUserControl();
         connect(d->animation->qtAnimation(),
-                SIGNAL(stateChanged(QAbstractAnimation::State,QAbstractAnimation::State)),
+                SIGNAL(stateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)),
                 this,
-                SLOT(qtAnimationStateChanged(QAbstractAnimation::State,QAbstractAnimation::State)));
+                SLOT(qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)));
     }
 }
 
 
-void QDeclarativeBehavior::qtAnimationStateChanged(QAbstractAnimation::State newState,QAbstractAnimation::State)
+void QDeclarativeBehavior::qtAnimationStateChanged(QAbstractAnimation2::State newState,QAbstractAnimation2::State)
 {
     Q_D(QDeclarativeBehavior);
     if (!d->blockRunningChanged)
-        d->animation->notifyRunningChanged(newState == QAbstractAnimation::Running);
+        d->animation->notifyRunningChanged(newState == QAbstractAnimation2::Running);
 }
 
 
@@ -189,7 +189,7 @@ void QDeclarativeBehavior::write(const QVariant &value)
     d->targetValue = value;
 
     if (d->animation->qtAnimation()->duration() != -1
-            && d->animation->qtAnimation()->state() != QAbstractAnimation::Stopped) {
+            && d->animation->qtAnimation()->state() != QAbstractAnimation2::Stopped) {
         d->blockRunningChanged = true;
         d->animation->qtAnimation()->stop();
     }
