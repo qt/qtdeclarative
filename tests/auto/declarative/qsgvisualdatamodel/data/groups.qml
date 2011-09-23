@@ -3,6 +3,14 @@ import QtQuick 2.0
 ListView {
     width: 100
     height: 100
+
+    function contains(array, value) {
+        for (var i = 0; i < array.length; ++i)
+            if (array[i] == value)
+                return true
+        return false
+    }
+
     model: VisualDataModel {
         groups: [
             VisualDataGroup { id: visibleItems; objectName: "visibleItems"; name: "visible"; includeByDefault: true },

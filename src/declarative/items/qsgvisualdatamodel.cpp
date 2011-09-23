@@ -290,28 +290,42 @@ QSGVisualDataModelParts::QSGVisualDataModelParts(QSGVisualDataModel *parent)
 class QSGVisualDataModelCacheMetaType : public QDeclarativeRefCount
 {
 public:
-    QSGVisualDataModelCacheMetaType(QSGVisualDataModel *model, const QStringList &groupNames);
+    QSGVisualDataModelCacheMetaType(QV8Engine *engine, QSGVisualDataModel *model, const QStringList &groupNames);
     ~QSGVisualDataModelCacheMetaType();
 
     int parseGroups(const QStringList &groupNames) const;
     int parseGroups(QV8Engine *engine, const v8::Local<v8::Value> &groupNames) const;
 
+    static v8::Handle<v8::Value> get_model(v8::Local<v8::String>, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_groups(v8::Local<v8::String>, const v8::AccessorInfo &info);
+    static void set_groups(
+            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_member(v8::Local<v8::String>, const v8::AccessorInfo &info);
+    static void set_member(
+            v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info);
+    static v8::Handle<v8::Value> get_index(v8::Local<v8::String>, const v8::AccessorInfo &info);
+
     QDeclarativeGuard<QSGVisualDataModel> model;
     const int groupCount;
     const int memberPropertyOffset;
     const int indexPropertyOffset;
+    QV8Engine * const v8Engine;
     QMetaObject *metaObject;
     const QStringList groupNames;
+    v8::Persistent<v8::Function> constructor;
 };
 
-class QSGVisualDataModelCacheItem
+class QSGVisualDataModelCacheItem : public QV8ObjectResource
 {
+    V8_RESOURCE_TYPE(VisualDataItemType)
 public:
     QSGVisualDataModelCacheItem(QSGVisualDataModelCacheMetaType *metaType)
-        : metaType(metaType)
+        : QV8ObjectResource(metaType->v8Engine)
+        , metaType(metaType)
         , object(0)
         , attached(0)
         , objectRef(0)
+        , scriptRef(0)
         , groups(0)
     {
         metaType->addref();
@@ -319,6 +333,7 @@ public:
 
     ~QSGVisualDataModelCacheItem()
     {
+        Q_ASSERT(scriptRef == 0);
         Q_ASSERT(objectRef == 0);
         Q_ASSERT(!object);
 
@@ -328,12 +343,15 @@ public:
     void referenceObject() { ++objectRef; }
     bool releaseObject() { return --objectRef == 0; }
 
-    bool isReferenced() const { return objectRef; }
+    bool isReferenced() const { return objectRef || scriptRef; }
+
+    void Dispose();
 
     QSGVisualDataModelCacheMetaType * const metaType;
     QDeclarativeGuard<QObject> object;
     QSGVisualDataModelAttached *attached;
     int objectRef;
+    int scriptRef;
     int groups;
     int index[Compositor::MaximumGroupCount];
 };
@@ -437,7 +455,8 @@ QSGVisualDataModel::~QSGVisualDataModel()
     foreach (QSGVisualDataModelCacheItem *cacheItem, d->m_cache) {
         cacheItem->object = 0;
         cacheItem->objectRef = 0;
-        delete cacheItem;
+        if (!cacheItem->isReferenced())
+            delete cacheItem;
     }
 
     delete d->m_adaptorModel;
@@ -483,7 +502,8 @@ void QSGVisualDataModel::componentComplete()
     if (!d->m_context)
         d->m_context = qmlContext(this);
 
-    d->m_cacheMetaType = new QSGVisualDataModelCacheMetaType(this, groupNames);
+    d->m_cacheMetaType = new QSGVisualDataModelCacheMetaType(
+            QDeclarativeEnginePrivate::getV8Engine(d->m_context->engine()), this, groupNames);
 
     d->m_compositor.setGroupCount(d->m_groupCount);
     d->m_compositor.setDefaultGroups(defaultGroups);
@@ -681,10 +701,12 @@ QSGVisualDataModel::ReleaseFlags QSGVisualDataModelPrivate::release(QObject *obj
             object->deleteLater();
             cacheItem->object = 0;
             stat |= QSGVisualModel::Destroyed;
-            m_compositor.clearFlags(Compositor::Cache, cacheIndex, 1, Compositor::CacheFlag);
-            m_cache.removeAt(cacheIndex);
-            delete cacheItem;
-            Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
+            if (!cacheItem->isReferenced()) {
+                m_compositor.clearFlags(Compositor::Cache, cacheIndex, 1, Compositor::CacheFlag);
+                m_cache.removeAt(cacheIndex);
+                delete cacheItem;
+                Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
+            }
         } else {
             stat |= QSGVisualDataModel::Referenced;
         }
@@ -1390,11 +1412,12 @@ QSGVisualDataModelAttached *QSGVisualDataModel::qmlAttachedProperties(QObject *o
 //============================================================================
 
 QSGVisualDataModelCacheMetaType::QSGVisualDataModelCacheMetaType(
-        QSGVisualDataModel *model, const QStringList &groupNames)
+        QV8Engine *engine, QSGVisualDataModel *model, const QStringList &groupNames)
     : model(model)
     , groupCount(groupNames.count() + 1)
     , memberPropertyOffset(QSGVisualDataModelAttached::staticMetaObject.propertyCount())
     , indexPropertyOffset(QSGVisualDataModelAttached::staticMetaObject.propertyCount() + groupNames.count())
+    , v8Engine(engine)
     , metaObject(0)
     , groupNames(groupNames)
 {
@@ -1402,6 +1425,13 @@ QSGVisualDataModelCacheMetaType::QSGVisualDataModelCacheMetaType(
     builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
     builder.setClassName(QSGVisualDataModelAttached::staticMetaObject.className());
     builder.setSuperClass(&QSGVisualDataModelAttached::staticMetaObject);
+
+    v8::HandleScope handleScope;
+    v8::Context::Scope contextScope(engine->context());
+    v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
+    ft->InstanceTemplate()->SetHasExternalResource(true);
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("model"), get_model);
+    ft->PrototypeTemplate()->SetAccessor(v8::String::New("groups"), get_groups, set_groups);
 
     int notifierId = 0;
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
@@ -1411,6 +1441,9 @@ QSGVisualDataModelCacheMetaType::QSGVisualDataModelCacheMetaType(
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
                 propertyName.toUtf8(), "bool", notifierId);
         propertyBuilder.setWritable(true);
+
+        ft->PrototypeTemplate()->SetAccessor(
+                engine->toString(propertyName), get_member, set_member, v8::Int32::New(i + 1));
     }
     for (int i = 0; i < groupNames.count(); ++i, ++notifierId) {
         const QString propertyName = groupNames.at(i) + QStringLiteral("Index");
@@ -1418,14 +1451,20 @@ QSGVisualDataModelCacheMetaType::QSGVisualDataModelCacheMetaType(
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
                 propertyName.toUtf8(), "int", notifierId);
         propertyBuilder.setWritable(true);
+
+        ft->PrototypeTemplate()->SetAccessor(
+                engine->toString(propertyName), get_index, 0, v8::Int32::New(i + 1));
     }
 
     metaObject = builder.toMetaObject();
+
+    constructor = qPersistentNew<v8::Function>(ft->GetFunction());
 }
 
 QSGVisualDataModelCacheMetaType::~QSGVisualDataModelCacheMetaType()
 {
     qFree(metaObject);
+    qPersistentDispose(constructor);
 }
 
 int QSGVisualDataModelCacheMetaType::parseGroups(const QStringList &groups) const
@@ -1457,6 +1496,135 @@ int QSGVisualDataModelCacheMetaType::parseGroups(QV8Engine *engine, const v8::Lo
         }
     }
     return groupFlags;
+}
+
+v8::Handle<v8::Value> QSGVisualDataModelCacheMetaType::get_model(
+        v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR("Not a valid VisualData object");
+    if (!cacheItem->metaType->model)
+        return v8::Undefined();
+    QObject *data = 0;
+
+    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(cacheItem->metaType->model);
+    for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
+        if (cacheItem->groups & (1 << i)) {
+            Compositor::iterator it = model->m_compositor.find(
+                    Compositor::Group(i), cacheItem->index[i]);
+            if (QSGVisualAdaptorModel *list = it.list<QSGVisualAdaptorModel>())
+                data = list->data(it.modelIndex());
+            break;
+        }
+    }
+    if (!data)
+        return v8::Undefined();
+    return cacheItem->engine->newQObject(data);
+}
+
+v8::Handle<v8::Value> QSGVisualDataModelCacheMetaType::get_groups(
+        v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR("Not a valid VisualData object");
+
+    QStringList groups;
+    for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
+        if (cacheItem->groups & (1 << i))
+            groups.append(cacheItem->metaType->groupNames.at(i - 1));
+    }
+
+    return cacheItem->engine->fromVariant(groups);
+}
+
+void QSGVisualDataModelCacheMetaType::set_groups(
+        v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR_SETTER("Not a valid VisualData object");
+
+    if (!cacheItem->metaType->model)
+        return;
+    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(cacheItem->metaType->model);
+
+    const int groupFlags = model->m_cacheMetaType->parseGroups(cacheItem->engine, value);
+    for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
+        if (cacheItem->groups & (1 << i)) {
+            model->setGroups(Compositor::Group(i), cacheItem->index[i], 1, groupFlags);
+            break;
+        }
+    }
+}
+
+v8::Handle<v8::Value> QSGVisualDataModelCacheMetaType::get_member(
+        v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR("Not a valid VisualData object");
+
+    return v8::Boolean::New(cacheItem->groups & (1 << info.Data()->Int32Value()));
+}
+
+void QSGVisualDataModelCacheMetaType::set_member(
+        v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR_SETTER("Not a valid VisualData object");
+
+    if (!cacheItem->metaType->model)
+        return;
+    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(cacheItem->metaType->model);
+
+    Compositor::Group group = Compositor::Group(info.Data()->Int32Value());
+    const bool member = value->BooleanValue();
+    const int groupFlag = (1 << group);
+    if (member == ((cacheItem->groups & groupFlag) != 0))
+        return;
+
+    for (int i = 1; i < cacheItem->metaType->groupCount; ++i) {
+        if (cacheItem->groups & (1 << i)) {
+            if (member)
+                model->addGroups(Compositor::Group(i), cacheItem->index[i], 1, groupFlag);
+            else
+                model->removeGroups(Compositor::Group(i), cacheItem->index[i], 1, groupFlag);
+            break;
+        }
+    }
+}
+
+v8::Handle<v8::Value> QSGVisualDataModelCacheMetaType::get_index(
+        v8::Local<v8::String>, const v8::AccessorInfo &info)
+{
+    QSGVisualDataModelCacheItem *cacheItem = v8_resource_cast<QSGVisualDataModelCacheItem>(info.This());
+    if (!cacheItem)
+        V8THROW_ERROR("Not a valid VisualData object");
+
+    return v8::Integer::New(cacheItem->index[info.Data()->Int32Value()]);
+}
+
+
+//---------------------------------------------------------------------------
+
+void QSGVisualDataModelCacheItem::Dispose()
+{
+    --scriptRef;
+    if (isReferenced())
+        return;
+
+    if (metaType->model) {
+        QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(metaType->model);
+        const int cacheIndex = model->m_cache.indexOf(this);
+        if (cacheIndex != -1) {
+            model->m_compositor.clearFlags(Compositor::Cache, cacheIndex, 1, Compositor::CacheFlag);
+            model->m_cache.removeAt(cacheIndex);
+        }
+    }
+    delete this;
 }
 
 //---------------------------------------------------------------------------
@@ -1740,6 +1908,62 @@ void QSGVisualDataGroup::setDefaultInclude(bool include)
         }
         emit defaultIncludeChanged();
     }
+}
+
+/*!
+    \qmlmethod var QtQuick2::VisualDataGroup::get(int index)
+
+    Returns a javascript object describing the item at \a index in the group.
+
+    The returned object contains the same information that is available to a delegate from the
+    VisualDataModel attached as well as the model for that item.  It has the properties:
+
+    \list
+    \o \b model The model data of the item.  This is the same as the model context property in
+    a delegate
+    \o \b groups A list the of names of groups the item is a member of.  This property can be
+    written to change the item's membership.
+    \o \b inItems Whether the item belongs to the \l {VisualDataModel::items}{items} group.
+    Writing to this property will add or remove the item from the group.
+    \o \b itemsIndex The index of the item within the \l {VisualDataModel::items}{items} group.
+    \o \b {in\i{GroupName}} Whether the item belongs to the dynamic group \i groupName.  Writing to
+    this property will add or remove the item from the group.
+    \o \b {\i{groupName}Index} The index of the item within the dynamic group \i groupName.
+    \endlist
+*/
+
+QDeclarativeV8Handle QSGVisualDataGroup::get(int index)
+{
+    Q_D(QSGVisualDataGroup);
+    if (!d->model)
+        return QDeclarativeV8Handle::fromHandle(v8::Undefined());;
+
+    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(d->model);
+    if (index < 0 || index >= model->m_compositor.count(d->group)) {
+        qmlInfo(this) << tr("get: index out of range");
+        return QDeclarativeV8Handle::fromHandle(v8::Undefined());
+    }
+
+    Compositor::iterator it = model->m_compositor.find(d->group, index);
+    QSGVisualDataModelCacheItem *cacheItem = it->inCache()
+            ? model->m_cache.at(it.cacheIndex)
+            : 0;
+
+    if (!cacheItem) {
+        cacheItem = new QSGVisualDataModelCacheItem(model->m_cacheMetaType);
+        for (int i = 0; i < model->m_groupCount; ++i)
+            cacheItem->index[i] = it.index[i];
+        cacheItem->groups = it->flags & Compositor::GroupMask;
+
+        model->m_cache.insert(it.cacheIndex, cacheItem);
+        model->m_compositor.setFlags(it, 1, Compositor::CacheFlag);
+    }
+
+    ++cacheItem->scriptRef;
+
+    v8::Local<v8::Object> rv = model->m_cacheMetaType->constructor->NewInstance();
+    rv->SetExternalResource(cacheItem);
+    return QDeclarativeV8Handle::fromHandle(rv);
 }
 
 /*!

@@ -52,6 +52,7 @@
 #include <private/qsgvisualdatamodel_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include <private/qdeclarativechangeset_p.h>
+#include <private/qdeclarativeengine_p.h>
 #include <math.h>
 #include <QtOpenGL/QGLShaderProgram>
 
@@ -133,11 +134,24 @@ private slots:
     void remove();
     void move();
     void groups();
+    void get();
 
 private:
     template <int N> void groups_verify(
             const SingleRoleModel &model,
             QSGItem *contentItem,
+            const int (&mIndex)[N],
+            const int (&iIndex)[N],
+            const int (&vIndex)[N],
+            const int (&sIndex)[N],
+            const bool (&vMember)[N],
+            const bool (&sMember)[N]);
+
+    template <int N> void get_verify(
+            const SingleRoleModel &model,
+            QSGVisualDataModel *visualModel,
+            QSGVisualDataGroup *visibleItems,
+            QSGVisualDataGroup *selectedItems,
             const int (&mIndex)[N],
             const int (&iIndex)[N],
             const int (&vIndex)[N],
@@ -203,12 +217,11 @@ private:
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
     QDeclarativeExpression expr(qmlContext(scope), scope, expression);
-    QVariant result = expr.evaluate();
+    T result = expr.evaluate().value<T>();
     if (expr.hasError())
         qWarning() << expr.error().toString();
-    return result.value<T>();
+    return result;
 }
-
 
 template <> void evaluate<void>(QObject *scope, const QString &expression)
 {
@@ -217,7 +230,6 @@ template <> void evaluate<void>(QObject *scope, const QString &expression)
     if (expr.hasError())
         qWarning() << expr.error().toString();
 }
-
 
 tst_qsgvisualdatamodel::tst_qsgvisualdatamodel()
 {
@@ -1180,6 +1192,221 @@ void tst_qsgvisualdatamodel::groups()
         static const int  sIndex [] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3 };
         static const bool sMember[] = { f, f, t, f, f, t, f, f, f, t, f, f };
         VERIFY_GROUPS;
+    }
+}
+
+template <int N> void tst_qsgvisualdatamodel::get_verify(
+        const SingleRoleModel &model,
+        QSGVisualDataModel *visualModel,
+        QSGVisualDataGroup *visibleItems,
+        QSGVisualDataGroup *selectedItems,
+        const int (&mIndex)[N],
+        const int (&iIndex)[N],
+        const int (&vIndex)[N],
+        const int (&sIndex)[N],
+        const bool (&vMember)[N],
+        const bool (&sMember)[N])
+{
+    failed = true;
+    for (int i = 0; i < N; ++i) {
+        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.name").arg(i)), model.list.at(mIndex[i]));
+        QCOMPARE(evaluate<QString>(visualModel, QString("items.get(%1).model.modelData").arg(i)), model.list.at(mIndex[i]));
+        QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).model.index").arg(i)), mIndex[i]);
+        QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).itemsIndex").arg(i)), iIndex[i]);
+        QCOMPARE(evaluate<bool>(visualModel, QString("items.get(%1).inItems").arg(i)), true);
+        QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).visibleIndex").arg(i)), vIndex[i]);
+        QCOMPARE(evaluate<bool>(visualModel, QString("items.get(%1).inVisible").arg(i)), vMember[i]);
+        QCOMPARE(evaluate<int>(visualModel, QString("items.get(%1).selectedIndex").arg(i)), sIndex[i]);
+        QCOMPARE(evaluate<bool>(visualModel, QString("items.get(%1).inSelected").arg(i)), sMember[i]);
+        QCOMPARE(evaluate<bool>(visualModel, QString("contains(items.get(%1).groups, \"items\")").arg(i)), true);
+        QCOMPARE(evaluate<bool>(visualModel, QString("contains(items.get(%1).groups, \"visible\")").arg(i)), vMember[i]);
+        QCOMPARE(evaluate<bool>(visualModel, QString("contains(items.get(%1).groups, \"selected\")").arg(i)), sMember[i]);
+
+        if (vMember[i]) {
+            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.name").arg(vIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(visibleItems, QString("get(%1).model.modelData").arg(vIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).model.index").arg(vIndex[i])), mIndex[i]);
+            QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).itemsIndex").arg(vIndex[i])), iIndex[i]);
+            QCOMPARE(evaluate<bool>(visibleItems, QString("get(%1).inItems").arg(vIndex[i])), true);
+            QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).visibleIndex").arg(vIndex[i])), vIndex[i]);
+            QCOMPARE(evaluate<bool>(visibleItems, QString("get(%1).inVisible").arg(vIndex[i])), vMember[i]);
+            QCOMPARE(evaluate<int>(visibleItems, QString("get(%1).selectedIndex").arg(vIndex[i])), sIndex[i]);
+            QCOMPARE(evaluate<bool>(visibleItems, QString("get(%1).inSelected").arg(vIndex[i])), sMember[i]);
+
+            QCOMPARE(evaluate<bool>(visibleItems, QString("contains(get(%1).groups, \"items\")").arg(vIndex[i])), true);
+            QCOMPARE(evaluate<bool>(visibleItems, QString("contains(get(%1).groups, \"visible\")").arg(vIndex[i])), vMember[i]);
+            QCOMPARE(evaluate<bool>(visibleItems, QString("contains(get(%1).groups, \"selected\")").arg(vIndex[i])), sMember[i]);
+        }
+        if (sMember[i]) {
+            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.name").arg(sIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<QString>(selectedItems, QString("get(%1).model.modelData").arg(sIndex[i])), model.list.at(mIndex[i]));
+            QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).model.index").arg(sIndex[i])), mIndex[i]);
+            QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).itemsIndex").arg(sIndex[i])), iIndex[i]);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("get(%1).inItems").arg(sIndex[i])), true);
+            QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).visibleIndex").arg(sIndex[i])), vIndex[i]);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("get(%1).inVisible").arg(sIndex[i])), vMember[i]);
+            QCOMPARE(evaluate<int>(selectedItems, QString("get(%1).selectedIndex").arg(sIndex[i])), sIndex[i]);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("get(%1).inSelected").arg(sIndex[i])), sMember[i]);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("contains(get(%1).groups, \"items\")").arg(sIndex[i])), true);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("contains(get(%1).groups, \"visible\")").arg(sIndex[i])), vMember[i]);
+            QCOMPARE(evaluate<bool>(selectedItems, QString("contains(get(%1).groups, \"selected\")").arg(sIndex[i])), sMember[i]);
+        }
+    }
+    failed = false;
+}
+
+#define VERIFY_GET \
+    get_verify(model, visualModel, visibleItems, selectedItems, mIndex, iIndex, vIndex, sIndex, vMember, sMember); \
+    QVERIFY(!failed)
+
+void tst_qsgvisualdatamodel::get()
+{
+    QSGView view;
+
+    SingleRoleModel model;
+    model.list = QStringList()
+            << "one"
+            << "two"
+            << "three"
+            << "four"
+            << "five"
+            << "six"
+            << "seven"
+            << "eight"
+            << "nine"
+            << "ten"
+            << "eleven"
+            << "twelve";
+
+    QDeclarativeContext *ctxt = view.rootContext();
+    ctxt->setContextProperty("myModel", &model);
+
+    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/groups.qml"));
+
+    QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
+    QVERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    QSGVisualDataModel *visualModel = qobject_cast<QSGVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QVERIFY(visualModel);
+
+    QSGVisualDataGroup *visibleItems = visualModel->findChild<QSGVisualDataGroup *>("visibleItems");
+    QVERIFY(visibleItems);
+
+    QSGVisualDataGroup *selectedItems = visualModel->findChild<QSGVisualDataGroup *>("selectedItems");
+    QVERIFY(selectedItems);
+
+    QV8Engine *v8Engine = QDeclarativeEnginePrivate::getV8Engine(ctxt->engine());
+    QVERIFY(v8Engine);
+
+    const bool f = false;
+    const bool t = true;
+
+    {
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 12);
+        QCOMPARE(selectedItems->count(), 0);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const bool vMember[] = { t, t, t, t, t, t, t, t, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        static const bool sMember[] = { f, f, f, f, f, f, f, f, f, f, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.addGroups(8, \"selected\")");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 12);
+        QCOMPARE(selectedItems->count(), 1);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const bool vMember[] = { t, t, t, t, t, t, t, t, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1 };
+        static const bool sMember[] = { f, f, f, f, f, f, f, f, t, f, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.addGroups(6, 4, [\"visible\", \"selected\"])");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 12);
+        QCOMPARE(selectedItems->count(), 4);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const bool vMember[] = { t, t, t, t, t, t, t, t, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 4 };
+        static const bool sMember[] = { f, f, f, f, f, f, t, t, t, t, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.setGroups(2, [\"items\", \"selected\"])");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 11);
+        QCOMPARE(selectedItems->count(), 5);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9,10 };
+        static const bool vMember[] = { t, t, f, t, t, t, t, t, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 1, 1, 1, 1, 2, 3, 4, 5, 5 };
+        static const bool sMember[] = { f, f, t, f, f, f, t, t, t, t, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(selectedItems, "setGroups(0, 3, \"items\")");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 9);
+        QCOMPARE(selectedItems->count(), 2);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 2, 3, 4, 5, 5, 5, 6, 7, 8 };
+        static const bool vMember[] = { t, t, f, t, t, t, f, f, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2 };
+        static const bool sMember[] = { f, f, f, f, f, f, f, f, t, t, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.get(5).inVisible = false");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 8);
+        QCOMPARE(selectedItems->count(), 2);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 2, 3, 4, 4, 4, 4, 5, 6, 7 };
+        static const bool vMember[] = { t, t, f, t, t, f, f, f, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2 };
+        static const bool sMember[] = { f, f, f, f, f, f, f, f, t, t, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.get(5).inSelected = true");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 8);
+        QCOMPARE(selectedItems->count(), 3);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 2, 3, 4, 4, 4, 4, 5, 6, 7 };
+        static const bool vMember[] = { t, t, f, t, t, f, f, f, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 3, 3 };
+        static const bool sMember[] = { f, f, f, f, f, t, f, f, t, t, f, f };
+        VERIFY_GET;
+    } {
+        evaluate<void>(visualModel, "items.get(5).groups = [\"visible\", \"items\"]");
+        QCOMPARE(listview->count(), 12);
+        QCOMPARE(visualModel->items()->count(), 12);
+        QCOMPARE(visibleItems->count(), 9);
+        QCOMPARE(selectedItems->count(), 2);
+        static const int  mIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  iIndex [] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11 };
+        static const int  vIndex [] = { 0, 1, 2, 2, 3, 4, 5, 5, 5, 6, 7, 8 };
+        static const bool vMember[] = { t, t, f, t, t, t, f, f, t, t, t, t };
+        static const int  sIndex [] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2 };
+        static const bool sMember[] = { f, f, f, f, f, f, f, f, t, t, f, f };
+        VERIFY_GET;
     }
 }
 

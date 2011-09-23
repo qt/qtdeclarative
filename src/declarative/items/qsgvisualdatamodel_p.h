@@ -50,6 +50,8 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
 
+#include <private/qv8engine_p.h>
+
 QT_BEGIN_HEADER
 
 Q_DECLARE_METATYPE(QModelIndex)
@@ -63,7 +65,6 @@ class QDeclarativeChangeSet;
 class QDeclarativeComponent;
 class QDeclarativePackage;
 class QDeclarativeV8Function;
-class QDeclarativeV8Handle;
 class QSGVisualDataGroup;
 class QSGVisualDataModelAttached;
 class QSGVisualDataModelPrivate;
@@ -160,6 +161,8 @@ public:
 
     bool defaultInclude() const;
     void setDefaultInclude(bool include);
+
+    Q_INVOKABLE QDeclarativeV8Handle get(int index);
 
 public Q_SLOTS:
     void remove(QDeclarativeV8Function *);

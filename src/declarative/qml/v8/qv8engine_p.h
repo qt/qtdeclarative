@@ -136,7 +136,7 @@ public:
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
                         ListModelType, Context2DType, Context2DStyleType, Context2DPixelArrayType, 
-                        ParticleDataType, SignalHandlerType, IncubatorType };
+                        ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
