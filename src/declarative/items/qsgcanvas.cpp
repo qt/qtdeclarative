@@ -459,6 +459,7 @@ void QSGCanvasPrivate::init(QSGCanvas *c)
     thread->moveContextToThread(context);
 
     q->setSurfaceType(QWindow::OpenGLSurface);
+    q->setFormat(context->defaultSurfaceFormat());
 }
 
 void QSGCanvasPrivate::transformTouchPoints(QList<QTouchEvent::TouchPoint> &touchPoints, const QTransform &transform)
@@ -1831,7 +1832,7 @@ QImage QSGCanvas::grabFrameBuffer()
 void QSGCanvasRenderLoop::createGLContext()
 {
     gl = new QOpenGLContext();
-    gl->setFormat(renderer->format());
+    gl->setFormat(d->context->defaultSurfaceFormat());
     gl->create();
 }
 

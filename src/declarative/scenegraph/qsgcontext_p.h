@@ -42,9 +42,11 @@
 #ifndef QSGCONTEXT_H
 #define QSGCONTEXT_H
 
-#include <QImage>
-#include <QObject>
-#include <qabstractanimation.h>
+#include <QtCore/QObject>
+#include <QtCore/qabstractanimation.h>
+
+#include <QtGui/QImage>
+#include <QtGui/QSurfaceFormat>
 
 #include "qsgnode.h"
 
@@ -104,6 +106,8 @@ public:
                                                      const QSize &requestSize);
     virtual QSGTexture *createTexture(const QImage &image = QImage()) const;
     virtual QSize minimumFBOSize() const;
+
+    virtual QSurfaceFormat defaultSurfaceFormat() const;
 
     static QSGContext *createDefaultContext();
 
