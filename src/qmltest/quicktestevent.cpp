@@ -162,7 +162,7 @@ namespace QtQuickTest
             static const char *mouseActionNames[] =
                 { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove" };
             QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
-            QTest::qWarn(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toAscii().data());
+            QWARN(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toAscii().data());
         }
     }
 
