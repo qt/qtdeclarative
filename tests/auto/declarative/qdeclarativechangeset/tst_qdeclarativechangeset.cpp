@@ -132,8 +132,13 @@ private slots:
     void sequence();
 };
 
-bool operator ==(const tst_qdeclarativemodelchange::Signal &left, const tst_qdeclarativemodelchange::Signal &right) {
-    return left.index == right.index && left.count == right.count && left.to == right.to; }
+bool operator ==(const tst_qdeclarativemodelchange::Signal &left, const tst_qdeclarativemodelchange::Signal &right)
+{
+    return left.index == right.index
+            && left.count == right.count
+            && left.to == right.to
+            && ((left.moveId == -1 && right.moveId == -1) || left.moveId != -1 && right.moveId != -1);
+}
 
 
 QDebug operator <<(QDebug debug, const tst_qdeclarativemodelchange::Signal &signal)

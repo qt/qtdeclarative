@@ -219,7 +219,8 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
             }
 
             if (rit->moveId != -1 && difference > 0) {
-                iit = insertions.insert(iit, Insert(iit->index, difference, moveId));
+                iit = insertions.insert(iit, Insert(
+                        iit->index, difference, insert->moveId != -1 ? moveId : -1));
                 ++iit;
                 iit->index += difference;
                 iit->count -= difference;
