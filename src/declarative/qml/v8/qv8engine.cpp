@@ -460,13 +460,7 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
         int length = properties->Length();
         if (length == 0)
             return QVariant();
-
-        QVariantMap map; 
-        for (int ii = 0; ii < length; ++ii) {
-            v8::Handle<v8::Value> property = properties->Get(ii);
-            map.insert(toString(property), toVariant(object->Get(property), -1));
-        }
-        return map;
+        return variantMapFromJS(object);
     }
 
     return QVariant();

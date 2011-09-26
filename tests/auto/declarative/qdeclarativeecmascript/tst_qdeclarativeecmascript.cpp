@@ -152,6 +152,7 @@ private slots:
     void propertyChangeSlots();
     void elementAssign();
     void objectPassThroughSignals();
+    void objectConversion();
     void booleanConversion();
     void handleReferenceManagement();
     void stringArg();
@@ -3313,6 +3314,21 @@ void tst_qdeclarativeecmascript::objectPassThroughSignals()
 
     delete object;
 }
+
+// QTBUG-21626
+void tst_qdeclarativeecmascript::objectConversion()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("objectConversion.qml"));
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QVariant retn;
+    QMetaObject::invokeMethod(object, "circularObject", Q_RETURN_ARG(QVariant, retn));
+    QCOMPARE(retn.value<QVariantMap>().value("test"), QVariant(100));
+
+    delete object;
+}
+
 
 // QTBUG-20242
 void tst_qdeclarativeecmascript::booleanConversion()
