@@ -68,8 +68,6 @@
 #include <QtCore/qsize.h>
 #include <QtCore/qmath.h>
 
-#include "private/qvariantanimation2_p_p.h"
-
 QT_BEGIN_NAMESPACE
 
 /*!

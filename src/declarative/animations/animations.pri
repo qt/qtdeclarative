@@ -3,8 +3,6 @@ INCLUDEPATH += $$PWD
 HEADERS += \
         $$PWD/qabstractanimation2_p.h \
         $$PWD/qabstractanimation2_p_p.h \
-        $$PWD/qvariantanimation2_p.h \
-        $$PWD/qvariantanimation2_p_p.h \
         $$PWD/qanimationgroup2_p.h \
         $$PWD/qanimationgroup2_p_p.h \
         $$PWD/qsequentialanimationgroup2_p.h \
@@ -15,7 +13,6 @@ HEADERS += \
 
 SOURCES += \
         $$PWD/qabstractanimation2.cpp \
-        $$PWD/qvariantanimation2.cpp \
         $$PWD/qanimationgroup2.cpp \
         $$PWD/qsequentialanimationgroup2.cpp \
         $$PWD/qparallelanimationgroup2.cpp \

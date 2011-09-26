@@ -62,12 +62,11 @@
 #include <qdeclarativecontext.h>
 
 #include "private/qpauseanimation2_p.h"
-#include "private/qvariantanimation2_p_p.h"
 #include "private/qanimationgroup2_p_p.h"
 #include <QDebug>
 
 #include <private/qobject_p.h>
-#include "private/qvariantanimation2_p_p.h"
+#include "private/qabstractanimation2_p_p.h"
 #include <private/qvariantanimation_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -141,10 +140,10 @@ public:
 };
 
 //animates QDeclarativeBulkValueUpdater (assumes start and end values will be reals or compatible)
-class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QVariantAnimation2
+class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimation2
 {
 public:
-    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0) : QVariantAnimation2(animation), animValue(0), fromSourced(0), policy(KeepWhenStopped) {}
+    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), animValue(0), fromSourced(0), policy(KeepWhenStopped), m_duration(250) {}
     ~QDeclarativeBulkValueAnimator() { if (policy == DeleteWhenStopped) { delete animValue; animValue = 0; } }
     void setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p)
     {
@@ -163,18 +162,28 @@ public:
     {
         fromSourced = value;
     }
+
+    int duration() const { return m_duration; }
+    void setDuration(int msecs) { m_duration = msecs; }
+
+    QEasingCurve easingCurve() const { return easing; }
+    void setEasingCurve(const QEasingCurve &curve) { easing = curve; }
+
 protected:
-    virtual void updateCurrentValue(const qreal &value)
+    void updateCurrentTime(int currentTime)
     {
+        const qreal progress = easing.valueForProgress(((m_duration == 0) ? qreal(1) : qreal(currentTime) / qreal(m_duration)));
+
         if (state() == QAbstractAnimation2::Stopped)
             return;
 
         if (animValue)
-            animValue->setValue(value);
+            animValue->setValue(progress);
     }
+
     virtual void updateState(State newState, State oldState)
     {   
-        QVariantAnimation2::updateState(newState, oldState);
+        QAbstractAnimation2::updateState(newState, oldState);
         if (newState == Running) {
             //check for new from every loop
             if (fromSourced)
@@ -186,6 +195,8 @@ private:
     QDeclarativeBulkValueUpdater *animValue;
     bool *fromSourced;
     DeletionPolicy policy;
+    int m_duration;
+    QEasingCurve easing;
 };
 
 //an animation that just gives a tick
