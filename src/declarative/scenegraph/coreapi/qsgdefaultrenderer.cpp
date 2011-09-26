@@ -377,7 +377,7 @@ void QSGDefaultRenderer::buildLists(QSGNode *node)
 #ifdef FORCE_NO_REORDER
     static bool reorder = false;
 #else
-    static bool reorder = !qApp->arguments().contains(QLatin1String("--no-reorder"));
+    static bool reorder = qApp->arguments().contains(QLatin1String("--reorder"));
 #endif
 
     if (reorder && node->firstChild() != node->lastChild() && (node->flags() & QSGNode::ChildrenDoNotOverlap)) {
