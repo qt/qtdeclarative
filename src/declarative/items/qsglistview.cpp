@@ -52,8 +52,13 @@
 
 #include <private/qdeclarativesmoothedanimation_p_p.h>
 #include <private/qlistmodelinterface_p.h>
+#include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
+
+#ifndef QML_FLICK_SNAPONETHRESHOLD
+#define QML_FLICK_SNAPONETHRESHOLD 30
+#endif
 
 class FxListItemSG;
 
@@ -72,7 +77,6 @@ public:
     virtual qreal originPosition() const;
     virtual qreal lastPosition() const;
 
-    FxViewItem *nextVisibleItem() const;
     FxViewItem *itemBefore(int modelIndex) const;
     QString sectionAt(int modelIndex);
     qreal snapPosAt(qreal pos);
@@ -325,22 +329,6 @@ bool QSGListViewPrivate::isRightToLeft() const
 {
     Q_Q(const QSGListView);
     return orient == QSGListView::Horizontal && q->effectiveLayoutDirection() == Qt::RightToLeft;
-}
-
-FxViewItem *QSGListViewPrivate::nextVisibleItem() const
-{
-    const qreal pos = isRightToLeft() ? -position()-size() : position();
-    bool foundFirst = false;
-    for (int i = 0; i < visibleItems.count(); ++i) {
-        FxViewItem *item = visibleItems.at(i);
-        if (item->index != -1) {
-            if (foundFirst)
-                return item;
-            else if (item->position() < pos && item->endPosition() >= pos)
-                foundFirst = true;
-        }
-    }
-    return 0;
 }
 
 // Returns the item before modelIndex, if created.
@@ -1261,6 +1249,7 @@ void QSGListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 
     correctFlick = false;
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
+    bool strictHighlightRange = haveHighlightRange && highlightRange == QSGListView::StrictlyEnforceRange;
 
     qreal highlightStart;
     qreal highlightEnd;
@@ -1276,8 +1265,65 @@ void QSGListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
         highlightEnd = highlightRangeEnd;
     }
 
-    if (currentItem && haveHighlightRange && highlightRange == QSGListView::StrictlyEnforceRange
-            && moveReason != QSGListViewPrivate::SetIndex) {
+    if (snapMode != QSGListView::NoSnap && moveReason != QSGListViewPrivate::SetIndex) {
+        qreal tempPosition = isRightToLeft() ? -position()-size() : position();
+        if (snapMode == QSGListView::SnapOneItem && moveReason == Mouse) {
+            // if we've been dragged < averageSize/2 then bias towards the next item
+            qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+            qreal bias = 0;
+            if (data.velocity > 0 && dist > QML_FLICK_SNAPONETHRESHOLD && dist < averageSize/2)
+                bias = averageSize/2;
+            else if (data.velocity < 0 && dist < -QML_FLICK_SNAPONETHRESHOLD && dist > -averageSize/2)
+                bias = -averageSize/2;
+            if (isRightToLeft())
+                bias = -bias;
+            tempPosition -= bias;
+        }
+        FxViewItem *topItem = snapItemAt(tempPosition+highlightStart);
+        if (!topItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            topItem = currentItem;
+        }
+        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightEnd);
+        if (!bottomItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            bottomItem = currentItem;
+        }
+        qreal pos;
+        bool isInBounds = -position() > maxExtent && -position() <= minExtent;
+        if (topItem && (isInBounds || strictHighlightRange)) {
+            if (topItem->index == 0 && header && tempPosition+highlightStart < header->position()+header->size()/2 && !strictHighlightRange) {
+                pos = isRightToLeft() ? - header->position() + highlightStart - size() : header->position() - highlightStart;
+            } else {
+                if (isRightToLeft())
+                    pos = qMax(qMin(-topItem->position() + highlightStart - size(), -maxExtent), -minExtent);
+                else
+                    pos = qMax(qMin(topItem->position() - highlightStart, -maxExtent), -minExtent);
+            }
+        } else if (bottomItem && isInBounds) {
+            if (isRightToLeft())
+                pos = qMax(qMin(-bottomItem->position() + highlightEnd - size(), -maxExtent), -minExtent);
+            else
+                pos = qMax(qMin(bottomItem->position() - highlightEnd, -maxExtent), -minExtent);
+        } else {
+            QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
+            return;
+        }
+
+        qreal dist = qAbs(data.move + pos);
+        if (dist > 0) {
+            timeline.reset(data.move);
+            if (fixupMode != Immediate) {
+                timeline.move(data.move, -pos, QEasingCurve(QEasingCurve::InOutQuad), fixupDuration/2);
+                data.fixingUp = true;
+            } else {
+                timeline.set(data.move, -pos);
+            }
+            vTime = timeline.time();
+        }
+    } else if (currentItem && strictHighlightRange && moveReason != QSGListViewPrivate::SetIndex) {
         updateHighlight();
         qreal pos = static_cast<FxListItemSG*>(currentItem)->itemPosition();
         if (viewPos < pos + static_cast<FxListItemSG*>(currentItem)->itemSize() - highlightEnd)
@@ -1297,42 +1343,6 @@ void QSGListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
             }
         }
         vTime = timeline.time();
-    } else if (snapMode != QSGListView::NoSnap && moveReason != QSGListViewPrivate::SetIndex) {
-        qreal tempPosition = isRightToLeft() ? -position()-size() : position();
-        FxViewItem *topItem = snapItemAt(tempPosition+highlightStart);
-        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightEnd);
-        qreal pos;
-        bool isInBounds = -position() > maxExtent && -position() < minExtent;
-        if (topItem && isInBounds) {
-            if (topItem->index == 0 && header && tempPosition+highlightStart < header->position()+headerSize()/2) {
-                pos = isRightToLeft() ? - header->position() + highlightStart - size() : header->position() - highlightStart;
-            } else {
-                if (isRightToLeft())
-                    pos = qMax(qMin(-topItem->position() + highlightStart - size(), -maxExtent), -minExtent);
-                else
-                    pos = qMax(qMin(topItem->position() - highlightStart, -maxExtent), -minExtent);
-            }
-        } else if (bottomItem && isInBounds) {
-            if (isRightToLeft())
-                pos = qMax(qMin(-bottomItem->position() + highlightStart - size(), -maxExtent), -minExtent);
-            else
-                pos = qMax(qMin(bottomItem->position() - highlightStart, -maxExtent), -minExtent);
-        } else {
-            QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
-            return;
-        }
-
-        qreal dist = qAbs(data.move + pos);
-        if (dist > 0) {
-            timeline.reset(data.move);
-            if (fixupMode != Immediate) {
-                timeline.move(data.move, -pos, QEasingCurve(QEasingCurve::InOutQuad), fixupDuration/2);
-                data.fixingUp = true;
-            } else {
-                timeline.set(data.move, -pos);
-            }
-            vTime = timeline.time();
-        }
     } else {
         QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
     }
@@ -1354,12 +1364,19 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     }
     qreal maxDistance = 0;
     qreal dataValue = isRightToLeft() ? -data.move.value()+size() : data.move.value();
+    qreal highlightStart = isRightToLeft() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
     // -ve velocity means list is moving up/left
     if (velocity > 0) {
         if (data.move.value() < minExtent) {
-            if (snapMode == QSGListView::SnapOneItem) {
-                if (FxViewItem *item = isRightToLeft() ? nextVisibleItem() : firstVisibleItem())
-                    maxDistance = qAbs(item->position() + dataValue);
+            if (snapMode == QSGListView::SnapOneItem && !hData.flicking && !vData.flicking) {
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = dist < averageSize/2 ? averageSize/2 : 0;
+                if (isRightToLeft())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-(dataValue - highlightStart) - bias) + highlightStart;
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = maxVelocity;
             } else {
                 maxDistance = qAbs(minExtent - data.move.value());
             }
@@ -1368,9 +1385,15 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             data.flickTarget = minExtent;
     } else {
         if (data.move.value() > maxExtent) {
-            if (snapMode == QSGListView::SnapOneItem) {
-                if (FxViewItem *item = isRightToLeft() ? firstVisibleItem() : nextVisibleItem())
-                    maxDistance = qAbs(item->position() + dataValue);
+            if (snapMode == QSGListView::SnapOneItem && !hData.flicking && !vData.flicking) {
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = -dist < averageSize/2 ? averageSize/2 : 0;
+                if (isRightToLeft())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-(dataValue - highlightStart) + bias) + highlightStart;
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = -maxVelocity;
             } else {
                 maxDistance = qAbs(maxExtent - data.move.value());
             }
@@ -1379,7 +1402,6 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             data.flickTarget = maxExtent;
     }
     bool overShoot = boundsBehavior == QSGFlickable::DragAndOvershootBounds;
-    qreal highlightStart = isRightToLeft() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
     if (maxDistance > 0 || overShoot) {
         // These modes require the list to stop exactly on an item boundary.
         // The initial flick will estimate the boundary to stop on.
@@ -1392,7 +1414,7 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             else
                 v = maxVelocity;
         }
-        if (!flickingHorizontally && !flickingVertically) {
+        if (!hData.flicking && !vData.flicking) {
             // the initial flick - estimate boundary
             qreal accel = deceleration;
             qreal v2 = v * v;
@@ -1404,8 +1426,10 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             if (v > 0)
                 dist = -dist;
             if ((maxDistance > 0.0 && v2 / (2.0f * maxDistance) < accel) || snapMode == QSGListView::SnapOneItem) {
-                qreal distTemp = isRightToLeft() ? -dist : dist;
-                data.flickTarget = -snapPosAt(-(dataValue - highlightStart) + distTemp) + highlightStart;
+                if (snapMode != QSGListView::SnapOneItem) {
+                    qreal distTemp = isRightToLeft() ? -dist : dist;
+                    data.flickTarget = -snapPosAt(-(dataValue - highlightStart) + distTemp) + highlightStart;
+                }
                 data.flickTarget = isRightToLeft() ? -data.flickTarget+size() : data.flickTarget;
                 if (overShoot) {
                     if (data.flickTarget >= minExtent) {
@@ -1442,14 +1466,14 @@ void QSGListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             timeline.reset(data.move);
             timeline.accel(data.move, v, accel, maxDistance + overshootDist);
             timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
-            if (!flickingHorizontally && q->xflick()) {
-                flickingHorizontally = true;
+            if (!hData.flicking && q->xflick()) {
+                hData.flicking = true;
                 emit q->flickingChanged();
                 emit q->flickingHorizontallyChanged();
                 emit q->flickStarted();
             }
-            if (!flickingVertically && q->yflick()) {
-                flickingVertically = true;
+            if (!vData.flicking && q->yflick()) {
+                vData.flicking = true;
                 emit q->flickingChanged();
                 emit q->flickingVerticallyChanged();
                 emit q->flickStarted();
@@ -2137,7 +2161,7 @@ void QSGListView::viewportMoved()
     d->inViewportMoved = true;
     d->lazyRelease = true;
     d->refill();
-    if (d->flickingHorizontally || d->flickingVertically || d->movingHorizontally || d->movingVertically)
+    if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QSGListViewPrivate::Mouse;
     if (d->moveReason != QSGListViewPrivate::SetIndex) {
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
@@ -2175,7 +2199,7 @@ void QSGListView::viewportMoved()
         }
     }
 
-    if ((d->flickingHorizontally || d->flickingVertically) && d->correctFlick && !d->inFlickCorrection) {
+    if ((d->hData.flicking || d->vData.flicking) && d->correctFlick && !d->inFlickCorrection) {
         d->inFlickCorrection = true;
         // Near an end and it seems that the extent has changed?
         // Recalculate the flick so that we don't end up in an odd position.

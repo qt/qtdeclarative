@@ -51,8 +51,13 @@
 #include <QtCore/qmath.h>
 #include <QtCore/qcoreapplication.h>
 #include <math.h>
+#include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
+
+#ifndef QML_FLICK_SNAPONETHRESHOLD
+#define QML_FLICK_SNAPONETHRESHOLD 30
+#endif
 
 //----------------------------------------------------------------------------
 
@@ -329,9 +334,12 @@ qreal QSGGridViewPrivate::snapPosAt(qreal pos) const
     Q_Q(const QSGGridView);
     qreal snapPos = 0;
     if (!visibleItems.isEmpty()) {
+        qreal highlightStart = isRightToLeftTopToBottom() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
+        pos += highlightStart;
         pos += rowSize()/2;
         snapPos = static_cast<FxGridItemSG*>(visibleItems.first())->rowPos() - visibleIndex / columns * rowSize();
         snapPos = pos - fmodf(pos - snapPos, qreal(rowSize()));
+        snapPos -= highlightStart;
         qreal maxExtent;
         qreal minExtent;
         if (isRightToLeftTopToBottom()) {
@@ -810,12 +818,35 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
         highlightEnd = highlightRangeEnd;
     }
 
+    bool strictHighlightRange = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
     if (snapMode != QSGGridView::NoSnap) {
         qreal tempPosition = isRightToLeftTopToBottom() ? -position()-size() : position();
+        if (snapMode == QSGGridView::SnapOneRow && moveReason == Mouse) {
+            // if we've been dragged < rowSize()/2 then bias towards the next row
+            qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+            qreal bias = 0;
+            if (data.velocity > 0 && dist > QML_FLICK_SNAPONETHRESHOLD && dist < rowSize()/2)
+                bias = rowSize()/2;
+            else if (data.velocity < 0 && dist < -QML_FLICK_SNAPONETHRESHOLD && dist > -rowSize()/2)
+                bias = -rowSize()/2;
+            if (isRightToLeftTopToBottom())
+                bias = -bias;
+            tempPosition -= bias;
+        }
         FxViewItem *topItem = snapItemAt(tempPosition+highlightStart);
+        if (!topItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            topItem = currentItem;
+        }
         FxViewItem *bottomItem = snapItemAt(tempPosition+highlightEnd);
+        if (!bottomItem && strictHighlightRange && currentItem) {
+            // StrictlyEnforceRange always keeps an item in range
+            updateHighlight();
+            bottomItem = currentItem;
+        }
         qreal pos;
-        if (topItem && bottomItem && haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange) {
+        if (topItem && bottomItem && strictHighlightRange) {
             qreal topPos = qMin(topItem->position() - highlightStart, -maxExtent);
             qreal bottomPos = qMax(bottomItem->position() - highlightEnd, -minExtent);
             pos = qAbs(data.move + topPos) < qAbs(data.move + bottomPos) ? topPos : bottomPos;
@@ -823,7 +854,7 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
             qreal headerPos = 0;
             if (header)
                 headerPos = isRightToLeftTopToBottom() ? static_cast<FxGridItemSG*>(header)->rowPos() + cellWidth - headerSize() : static_cast<FxGridItemSG*>(header)->rowPos();
-            if (topItem->index == 0 && header && tempPosition+highlightStart < headerPos+headerSize()/2) {
+            if (topItem->index == 0 && header && tempPosition+highlightStart < headerPos+headerSize()/2 && !strictHighlightRange) {
                 pos = isRightToLeftTopToBottom() ? - headerPos + highlightStart - size() : headerPos - highlightStart;
             } else {
                 if (isRightToLeftTopToBottom())
@@ -833,24 +864,12 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
             }
         } else if (bottomItem) {
             if (isRightToLeftTopToBottom())
-                pos = qMax(qMin(-bottomItem->position() + highlightStart - size(), -maxExtent), -minExtent);
+                pos = qMax(qMin(-bottomItem->position() + highlightEnd - size(), -maxExtent), -minExtent);
             else
-                pos = qMax(qMin(bottomItem->position() - highlightStart, -maxExtent), -minExtent);
+                pos = qMax(qMin(bottomItem->position() - highlightEnd, -maxExtent), -minExtent);
         } else {
             QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
-        }
-        if (currentItem && haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange) {
-            updateHighlight();
-            qreal currPos = static_cast<FxGridItemSG*>(currentItem)->rowPos();
-            if (isRightToLeftTopToBottom())
-                pos = -pos-size(); // Transform Pos if required
-            if (pos < currPos + rowSize() - highlightEnd)
-                pos = currPos + rowSize() - highlightEnd;
-            if (pos > currPos - highlightStart)
-                pos = currPos - highlightStart;
-            if (isRightToLeftTopToBottom())
-                pos = -pos-size(); // Untransform
         }
 
         qreal dist = qAbs(data.move + pos);
@@ -909,8 +928,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     if (velocity > 0) {
         if (data.move.value() < minExtent) {
             if (snapMode == QSGGridView::SnapOneRow) {
-                if (FxViewItem *item = firstVisibleItem())
-                    maxDistance = qAbs(item->position() + dataValue);
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = dist < rowSize()/2 ? rowSize()/2 : 0;
+                if (isRightToLeftTopToBottom())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-dataValue - bias);
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = maxVelocity;
             } else {
                 maxDistance = qAbs(minExtent - data.move.value());
             }
@@ -920,8 +945,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
     } else {
         if (data.move.value() > maxExtent) {
             if (snapMode == QSGGridView::SnapOneRow) {
-                qreal pos = snapPosAt(-dataValue) + (isRightToLeftTopToBottom() ? 0 : rowSize());
-                maxDistance = qAbs(pos + dataValue);
+                // if we've been dragged < averageSize/2 then bias towards the next item
+                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal bias = -dist < rowSize()/2 ? rowSize()/2 : 0;
+                if (isRightToLeftTopToBottom())
+                    bias = -bias;
+                data.flickTarget = -snapPosAt(-dataValue + bias);
+                maxDistance = qAbs(data.flickTarget - data.move.value());
+                velocity = -maxVelocity;
             } else {
                 maxDistance = qAbs(maxExtent - data.move.value());
             }
@@ -930,7 +961,6 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             data.flickTarget = maxExtent;
     }
     bool overShoot = boundsBehavior == QSGFlickable::DragAndOvershootBounds;
-    qreal highlightStart = isRightToLeftTopToBottom() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
     if (maxDistance > 0 || overShoot) {
         // This mode requires the grid to stop exactly on a row boundary.
         qreal v = velocity;
@@ -949,9 +979,20 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
             dist = qMin(dist, maxDistance);
             if (v > 0)
                 dist = -dist;
-            qreal distTemp = isRightToLeftTopToBottom() ? -dist : dist;
-            data.flickTarget = -snapPosAt(-(dataValue - highlightStart) + distTemp) + highlightStart;
+            if (snapMode != QSGGridView::SnapOneRow) {
+                qreal distTemp = isRightToLeftTopToBottom() ? -dist : dist;
+                data.flickTarget = -snapPosAt(-dataValue + distTemp);
+            }
             data.flickTarget = isRightToLeftTopToBottom() ? -data.flickTarget+size() : data.flickTarget;
+            if (overShoot) {
+                if (data.flickTarget >= minExtent) {
+                    overshootDist = overShootDistance(vSize);
+                    data.flickTarget += overshootDist;
+                } else if (data.flickTarget <= maxExtent) {
+                    overshootDist = overShootDistance(vSize);
+                    data.flickTarget -= overshootDist;
+                }
+            }
             qreal adjDist = -data.flickTarget + data.move.value();
             if (qAbs(adjDist) > qAbs(dist)) {
                 // Prevent painfully slow flicking - adjust velocity to suit flickDeceleration
@@ -972,14 +1013,14 @@ void QSGGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExtent,
         timeline.reset(data.move);
         timeline.accel(data.move, v, accel, maxDistance + overshootDist);
         timeline.callback(QDeclarativeTimeLineCallback(&data.move, fixupCallback, this));
-        if (!flickingHorizontally && q->xflick()) {
-            flickingHorizontally = true;
+        if (!hData.flicking && q->xflick()) {
+            hData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingHorizontallyChanged();
             emit q->flickStarted();
         }
-        if (!flickingVertically && q->yflick()) {
-            flickingVertically = true;
+        if (!vData.flicking && q->yflick()) {
+            vData.flicking = true;
             emit q->flickingChanged();
             emit q->flickingVerticallyChanged();
             emit q->flickStarted();
@@ -1477,7 +1518,7 @@ void QSGGridView::viewportMoved()
     d->inViewportMoved = true;
 
     d->lazyRelease = true;
-    if (d->flickingHorizontally || d->flickingVertically) {
+    if (d->hData.flicking || d->vData.flicking) {
         if (yflick()) {
             if (d->vData.velocity > 0)
                 d->bufferMode = QSGGridViewPrivate::BufferBefore;
@@ -1493,7 +1534,7 @@ void QSGGridView::viewportMoved()
         }
     }
     d->refill();
-    if (d->flickingHorizontally || d->flickingVertically || d->movingHorizontally || d->movingVertically)
+    if (d->hData.flicking || d->vData.flicking || d->hData.moving || d->vData.moving)
         d->moveReason = QSGGridViewPrivate::Mouse;
     if (d->moveReason != QSGGridViewPrivate::SetIndex) {
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
