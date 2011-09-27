@@ -704,6 +704,10 @@ void QSGImage::pixmapChange()
         QSGImageBase::pixmapChange();
     updatePaintedGeometry();
     d->pixmapChanged = true;
+
+    // Make sure we update the texture provider when the image has changed.
+    if (d->provider)
+        update();
 }
 
 QSGImage::VAlignment QSGImage::verticalAlignment() const
