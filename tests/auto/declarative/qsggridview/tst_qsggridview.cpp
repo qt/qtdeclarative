@@ -1157,6 +1157,9 @@ void tst_QSGGridView::currentIndex()
     // to be safe and avoid failing setFocus with window managers
     qt_x11_wait_for_window_manager(canvas);
 #endif
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21680 - Waiting for active window fails for Developer build", Abort);
+#endif
     QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
     qApp->processEvents();
 
