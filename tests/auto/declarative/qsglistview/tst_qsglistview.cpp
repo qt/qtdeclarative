@@ -1925,6 +1925,9 @@ void tst_QSGListView::currentIndex()
     listview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21682 - Waiting for active window fails for developer build", Abort);
+#endif
     QCOMPARE(listview->currentIndex(), 1);
 
     QTest::keyClick(canvas, Qt::Key_Up);
