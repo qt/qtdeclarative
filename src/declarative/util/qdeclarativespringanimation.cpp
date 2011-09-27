@@ -58,7 +58,13 @@ class QDeclarativeSpringAnimationPrivate : public QDeclarativePropertyAnimationP
 {
     Q_DECLARE_PUBLIC(QDeclarativeSpringAnimation)
 public:
-
+    QDeclarativeSpringAnimationPrivate()
+          : maxVelocity(0), velocityms(0), lastTime(0)
+          , mass(1.0), spring(0.), damping(0.), epsilon(0.01)
+          , modulus(0.0), useMass(false), haveModulus(false)
+          , mode(Track), clock(0)
+    { }
+    ~QDeclarativeSpringAnimationPrivate() { delete clock; }
 
     struct SpringAnimation {
         SpringAnimation()
@@ -89,13 +95,6 @@ public:
         Spring
     };
     Mode mode;
-
-    QDeclarativeSpringAnimationPrivate()
-          : maxVelocity(0), velocityms(0), lastTime(0)
-          , mass(1.0), spring(0.), damping(0.), epsilon(0.01)
-          , modulus(0.0), useMass(false), haveModulus(false)
-          , mode(Track), clock(0)
-    { }
 
     void tick(int time);
     bool animate(const QDeclarativeProperty &property, SpringAnimation &animation, int elapsed);
