@@ -133,6 +133,8 @@ public:
     QRect setupTextLayout();
     QPixmap textLayoutImage(bool drawStyle);
     void drawTextLayout(QPainter *p, const QPointF &pos, bool drawStyle);
+    bool isLinkActivatedConnected();
+    QString anchorAt(const QPointF &pos);
     QTextLayout layout;
 
     static QPixmap drawOutline(const QPixmap &source, const QPixmap &styleSource);

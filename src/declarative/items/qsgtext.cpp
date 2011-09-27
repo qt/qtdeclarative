@@ -1683,17 +1683,48 @@ void QSGText::componentComplete()
     }
 }
 
+
+QString QSGTextPrivate::anchorAt(const QPointF &mousePos)
+{
+    if (format == QSGText::StyledText) {
+        for (int i = 0; i < layout.lineCount(); ++i) {
+            QTextLine line = layout.lineAt(i);
+            if (line.naturalTextRect().contains(mousePos)) {
+                int charPos = line.xToCursor(mousePos.x());
+                foreach (const QTextLayout::FormatRange &formatRange, layout.additionalFormats()) {
+                    if (formatRange.format.isAnchor()
+                            && charPos >= formatRange.start
+                            && charPos <= formatRange.start + formatRange.length) {
+                        return formatRange.format.anchorHref();
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return QString();
+}
+
+bool QSGTextPrivate::isLinkActivatedConnected()
+{
+    static int idx = this->signalIndex("linkActivated(QString)");
+    return this->isSignalConnected(idx);
+}
+
 /*!  \internal */
 void QSGText::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QSGText);
 
-    if (!d->richText || !d->doc || d->doc->documentLayout()->anchorAt(event->localPos()).isEmpty()) {
-        event->setAccepted(false);
-        d->activeLink.clear();
-    } else {
-        d->activeLink = d->doc->documentLayout()->anchorAt(event->localPos());
+    if (d->isLinkActivatedConnected()) {
+        if (d->format == QSGText::StyledText)
+            d->activeLink = d->anchorAt(event->localPos());
+        else if (d->richText && d->doc)
+            d->activeLink = d->doc->documentLayout()->anchorAt(event->localPos());
     }
+
+    if (d->activeLink.isEmpty())
+        event->setAccepted(false);
 
     // ### may malfunction if two of the same links are clicked & dragged onto each other)
 
@@ -1707,8 +1738,17 @@ void QSGText::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGText);
 
-        // ### confirm the link, and send a signal out
-    if (d->richText && d->doc && d->activeLink == d->doc->documentLayout()->anchorAt(event->localPos()))
+    // ### confirm the link, and send a signal out
+
+    QString link;
+    if (d->isLinkActivatedConnected()) {
+        if (d->format == QSGText::StyledText)
+            link = d->anchorAt(event->localPos());
+        else if (d->richText && d->doc)
+            link = d->doc->documentLayout()->anchorAt(event->localPos());
+    }
+
+    if (!link.isEmpty() && d->activeLink == link)
         emit linkActivated(d->activeLink);
     else
         event->setAccepted(false);
