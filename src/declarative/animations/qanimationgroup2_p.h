@@ -51,8 +51,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
 class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
 public:
@@ -85,8 +83,6 @@ private:
     QList<QAbstractAnimation2 *> m_animations;
     QHash<QAbstractAnimation2 *, int> m_uncontrolledFinishTime;
 };
-
-
 
 QT_END_NAMESPACE
 

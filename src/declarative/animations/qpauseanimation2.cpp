@@ -44,18 +44,17 @@
 QT_BEGIN_NAMESPACE
 
 QPauseAnimation2::QPauseAnimation2(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation)
+    : QAbstractAnimation2(animation), m_duration(250)
 {
     m_isPause = true;
-    m_duration = 250;
 }
 
 QPauseAnimation2::QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation)
+    : QAbstractAnimation2(animation), m_duration(msecs)
 {
     m_isPause = true;
-    m_duration = 250;
 }
+
 QPauseAnimation2::~QPauseAnimation2()
 {
 }
@@ -67,16 +66,11 @@ int QPauseAnimation2::duration() const
 
 void QPauseAnimation2::setDuration(int msecs)
 {
-    if (msecs < 0) {
-        qWarning("QPauseAnimation2::setDuration: cannot set a negative duration");
-        return;
-    }
     m_duration = msecs;
 }
 
 void QPauseAnimation2::updateCurrentTime(int)
 {
 }
-
 
 QT_END_NAMESPACE

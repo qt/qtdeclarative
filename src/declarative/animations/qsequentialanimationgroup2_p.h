@@ -50,10 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
 class QPauseAnimation2;
-
 class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
 public:
@@ -110,8 +107,6 @@ private:
     void rewindForwards(const AnimationIndex &newAnimationIndex);
     void advanceForwards(const AnimationIndex &newAnimationIndex);
 };
-
-
 
 QT_END_NAMESPACE
 
