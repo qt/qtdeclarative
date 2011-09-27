@@ -649,6 +649,9 @@ void tst_QSGMouseArea::clickThrough()
     QApplication::sendEvent(canvas, &releaseEvent);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21685 - Unstable test for developer build", Abort);
+#endif
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
