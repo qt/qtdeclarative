@@ -69,6 +69,7 @@
 #include "private/qdeclarativeapplication_p.h"
 #include "private/qv8debugservice_p.h"
 #include "qdeclarativeincubator.h"
+#include "private/qv8profilerservice_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QNetworkAccessManager>
@@ -436,6 +437,7 @@ void QDeclarativeEnginePrivate::init()
         isDebugging = true;
         QDeclarativeEngineDebugService::instance()->addEngine(q);
         QV8DebugService::instance()->addEngine(q);
+        QV8ProfilerService::instance()->addEngine(q);
     }
 }
 
@@ -498,8 +500,10 @@ QDeclarativeEngine::QDeclarativeEngine(QObject *parent)
 QDeclarativeEngine::~QDeclarativeEngine()
 {
     Q_D(QDeclarativeEngine);
-    if (d->isDebugging)
+    if (d->isDebugging) {
         QDeclarativeEngineDebugService::instance()->remEngine(this);
+        QV8ProfilerService::instance()->removeEngine(this);
+    }
 
     // if we are the parent of any of the qobject module api instances,
     // we need to remove them from our internal list, in order to prevent
