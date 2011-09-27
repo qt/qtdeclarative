@@ -765,7 +765,7 @@ void QActionAnimation::updateCurrentTime(int)
 {
 }
 
-void QActionAnimation::updateState(State newState, State /*oldState*/)
+void QActionAnimation::updateState(State newState, State oldState)
 {
     if (newState == Running) {
         if (animAction) {
@@ -823,7 +823,7 @@ QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
 void QDeclarativeScriptActionPrivate::init()
 {
     Q_Q(QDeclarativeScriptAction);
-    rsa = new QActionAnimation(q);
+    rsa = new QActionAnimation(&proxy, q);
 }
 
 /*!
@@ -2374,15 +2374,14 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
 {
     bool deleted = false;
     wasDeleted = &deleted;
-
     if (reverse)
         v = 1 - v;
     for (int ii = 0; ii < actions.count(); ++ii) {
         QDeclarativeAction &action = actions[ii];
 
-        if (v == 1.)
+        if (v == 1.) {
             QDeclarativePropertyPrivate::write(action.property, action.toValue, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
-        else {
+        } else {
             if (!fromSourced && !fromDefined) {
                 action.fromValue = action.property.read();
                 if (interpolatorType) {

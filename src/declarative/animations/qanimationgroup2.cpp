@@ -55,6 +55,9 @@ QAnimationGroup2::QAnimationGroup2(QDeclarativeAbstractAnimation *animation)
 
 QAnimationGroup2::~QAnimationGroup2()
 {
+    foreach (QAbstractAnimation2* child, m_animations) {
+        child->setGroup(0);
+    }
 }
 
 QAbstractAnimation2 *QAnimationGroup2::animationAt(int index) const

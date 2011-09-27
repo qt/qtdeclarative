@@ -594,14 +594,16 @@ QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation *animatio
 
 QAbstractAnimation2::~QAbstractAnimation2()
 {
+    if (m_group)
+        m_group->removeAnimation(this);
+
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         QAbstractAnimation2::State oldState = m_state;
         m_state = Stopped;
         stateChanged(oldState, m_state);
-        if (oldState == QAbstractAnimation2::Running)
-            QUnifiedTimer2::unregisterAnimation(this);
     }
+    QUnifiedTimer2::unregisterAnimation(this);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)
@@ -787,7 +789,7 @@ void QAbstractAnimation2::currentLoopChanged(int currentLoop)
         QPair<QDeclarativeGuard<QObject>, int> slot = m_currentLoopChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &m_currentLoop };
+            void *args[] = { &currentLoop };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
@@ -800,7 +802,7 @@ void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direct
         QPair<QDeclarativeGuard<QObject>, int> slot = m_directionChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &m_direction };
+            void *args[] = { &direction };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
