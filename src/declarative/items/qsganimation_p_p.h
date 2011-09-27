@@ -84,8 +84,7 @@ class QSGAnchorAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QSGAnchorAnimation)
 public:
-    QSGAnchorAnimationPrivate() : va(0),
-        interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
+    QSGAnchorAnimationPrivate() : va(0),interpolator(QVariantAnimationPrivate::getInterpolator(QMetaType::QReal)) {}
 
     QDeclarativeBulkValueAnimator *va;
     QVariantAnimation::Interpolator interpolator;

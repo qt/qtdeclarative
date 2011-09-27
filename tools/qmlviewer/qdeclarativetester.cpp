@@ -48,7 +48,7 @@
 #include <QDir>
 #include <QCryptographicHash>
 #include <QGraphicsObject>
-#include "private/qabstractanimation2_p_p.h"
+#include <QtCore/private/qabstractanimation_p.h>
 #ifndef Q_OS_SYMBIAN
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #endif
@@ -59,12 +59,12 @@ extern Q_GUI_EXPORT bool qt_applefontsmoothing_enabled;
 
 QDeclarativeTester::QDeclarativeTester(const QString &script, QDeclarativeViewer::ScriptOptions opts,
                      QDeclarativeView *parent)
-: QObject(parent), m_script(script), m_view(parent), filterEvents(true), options(opts),
+: QAbstractAnimation(parent), m_script(script), m_view(parent), filterEvents(true), options(opts),
   testscript(0), hasCompleted(false), hasFailed(false)
 {
     parent->viewport()->installEventFilter(this);
     parent->installEventFilter(this);
-    QUnifiedTimer2::instance()->setConsistentTiming(true);
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 
     //Font antialiasing makes tests system-specific, so disable it
     QFont noAA = QApplication::font();

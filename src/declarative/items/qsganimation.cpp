@@ -411,7 +411,6 @@ void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
     QDeclarativeAnimationPropertyUpdater *data = new QDeclarativeAnimationPropertyUpdater;
     data->interpolatorType = QMetaType::QReal;
     data->interpolator = d->interpolator;
-
     data->reverse = direction == Backward ? true : false;
     data->fromSourced = false;
     data->fromDefined = false;

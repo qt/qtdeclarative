@@ -42,19 +42,15 @@
 #include "private/qanimationgroup2_p.h"
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreevent.h>
-#include "private/qanimationgroup2_p_p.h"
 
 
 
 QT_BEGIN_NAMESPACE
 
 QAnimationGroup2::QAnimationGroup2(QDeclarativeAbstractAnimation *animation)
-    :QAbstractAnimation2(new QAnimationGroup2Private, animation)
+    :QAbstractAnimation2(animation)
 {
-}
-QAnimationGroup2::QAnimationGroup2(QAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation)
-    :QAbstractAnimation2(dd, animation)
-{
+    m_isGroup = true;
 }
 
 QAnimationGroup2::~QAnimationGroup2()
@@ -63,32 +59,32 @@ QAnimationGroup2::~QAnimationGroup2()
 
 QAbstractAnimation2 *QAnimationGroup2::animationAt(int index) const
 {
-    if (index < 0 || index >= d_func()->animations.size()) {
+    if (index < 0 || index >= m_animations.size()) {
         qWarning("QAnimationGroup2::animationAt: index is out of bounds");
         return 0;
     }
 
-    return d_func()->animations.at(index);
+    return m_animations.at(index);
 }
 
 int QAnimationGroup2::animationCount() const
 {
-    return d_func()->animations.size();
+    return m_animations.size();
 }
 
 int QAnimationGroup2::indexOfAnimation(QAbstractAnimation2 *animation) const
 {
-    return d_func()->animations.indexOf(animation);
+    return m_animations.indexOf(animation);
 }
 
 void QAnimationGroup2::addAnimation(QAbstractAnimation2 *animation)
 {
-    insertAnimation(d_func()->animations.count(), animation);
+    insertAnimation(m_animations.count(), animation);
 }
 
 void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation)
 {
-    if (index < 0 || index > d_func()->animations.size()) {
+    if (index < 0 || index > m_animations.size()) {
         qWarning("QAnimationGroup2::insertAnimation: index is out of bounds");
         return;
     }
@@ -96,10 +92,9 @@ void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation
     if (QAnimationGroup2 *oldGroup = animation->group())
         oldGroup->removeAnimation(animation);
 
-    d_func()->animations.insert(index, animation);
-    QAbstractAnimation2Private::get(animation)->group = this;
-//    animation->setParent(this);
-    d_func()->animationInsertedAt(index);
+    m_animations.insert(index, animation);
+    m_group = this;
+    animationInsertedAt(index);
 }
 
 void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
@@ -108,7 +103,7 @@ void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
         qWarning("QAnimationGroup2::remove: cannot remove null animation");
         return;
     }
-    int index = d_func()->animations.indexOf(animation);
+    int index = m_animations.indexOf(animation);
     if (index == -1) {
         qWarning("QAnimationGroup2::remove: animation is not part of this group");
         return;
@@ -119,54 +114,53 @@ void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
 
 QAbstractAnimation2 *QAnimationGroup2::takeAnimation(int index)
 {
-    if (index < 0 || index >= d_func()->animations.size()) {
+    if (index < 0 || index >= m_animations.size()) {
         qWarning("QAnimationGroup2::takeAnimation: no animation at index %d", index);
         return 0;
     }
-    QAbstractAnimation2 *animation = d_func()->animations.at(index);
-    QAbstractAnimation2Private::get(animation)->group = 0;
-    d_func()->animations.removeAt(index);
-//    animation->setParent(0);
-    d_func()->animationRemoved(index, animation);
+    QAbstractAnimation2 *animation = m_animations.at(index);
+    animation->setGroup(0);
+    m_animations.removeAt(index);
+    animationRemoved(index, animation);
     return animation;
 }
 
 void QAnimationGroup2::clear()
 {
-    qDeleteAll(d_func()->animations);
+    qDeleteAll(m_animations);
 }
 
-bool QAnimationGroup2Private::isAnimationConnected(QAbstractAnimation2 *anim) const
+bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2 *anim) const
 {
-    return uncontrolledFinishTime.contains(anim);
+    return m_uncontrolledFinishTime.contains(anim);
 }
-bool QAnimationGroup2Private::isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const
+bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const
 {
-    return uncontrolledFinishTime.value(anim, -1) >= 0;
-}
-
-void QAnimationGroup2Private::disconnectUncontrolledAnimations()
-{
-    uncontrolledFinishTime.clear();
+    return m_uncontrolledFinishTime.value(anim, -1) >= 0;
 }
 
-void QAnimationGroup2Private::connectUncontrolledAnimations()
+void QAnimationGroup2::disconnectUncontrolledAnimations()
 {
-    for (int i = 0; i < animations.size(); ++i) {
-        QAbstractAnimation2 *animation = animations.at(i);
+    m_uncontrolledFinishTime.clear();
+}
+
+void QAnimationGroup2::connectUncontrolledAnimations()
+{
+    for (int i = 0; i < m_animations.size(); ++i) {
+        QAbstractAnimation2 *animation = m_animations.at(i);
         if (animation->duration() == -1 || animation->loopCount() < 0) {
-            uncontrolledFinishTime[animation] = -1;
+            m_uncontrolledFinishTime[animation] = -1;
         }
     }
 }
-void QAnimationGroup2Private::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
 {
-    uncontrolledFinishTime[anim] = -1;
+    m_uncontrolledFinishTime[anim] = -1;
 }
 
-void QAnimationGroup2Private::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
 {
-    uncontrolledFinishTime.remove(anim);
+    m_uncontrolledFinishTime.remove(anim);
 }
 
 void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2* animation)
@@ -174,12 +168,12 @@ void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2* animat
     Q_UNUSED(animation);
 }
 
-void QAnimationGroup2Private::animationRemoved(int index, QAbstractAnimation2 *)
+void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2 *)
 {
     Q_UNUSED(index);
-    if (animations.isEmpty()) {
-        currentTime = 0;
-        q->stop();
+    if (m_animations.isEmpty()) {
+        m_currentTime = 0;
+        stop();
     }
 }
 

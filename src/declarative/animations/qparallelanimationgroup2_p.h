@@ -43,6 +43,7 @@
 #define QPARALLELANIMATIONGROUP2_P_H
 
 #include "private/qanimationgroup2_p.h"
+#include <QtCore/qhash.h>
 
 QT_BEGIN_HEADER
 
@@ -52,7 +53,6 @@ QT_MODULE(Declarative)
 
 
 
-class QParallelAnimationGroup2Private;
 class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
 public:
@@ -62,7 +62,6 @@ public:
     int duration() const;
 
 protected:
-    QParallelAnimationGroup2(QParallelAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation);
     void updateCurrentTime(int currentTime);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
@@ -70,8 +69,11 @@ protected:
 
 private:
     Q_DISABLE_COPY(QParallelAnimationGroup2)
-    QParallelAnimationGroup2Private* d_func() {return reinterpret_cast<QParallelAnimationGroup2Private*>(d);}
-    const QParallelAnimationGroup2Private* d_func() const {return reinterpret_cast<const QParallelAnimationGroup2Private*>(d);}
+    int m_lastLoop;
+    int m_lastCurrentTime;
+    bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
+    void applyGroupState(QAbstractAnimation2 *animation);
+    void animationRemoved(int index, QAbstractAnimation2 *);
 };
 
 

@@ -39,17 +39,15 @@
 **
 ****************************************************************************/
 
-#include "private/qabstractanimation2_p.h"
-#include "private/qanimationgroup2_p.h"
-
 #include <QtCore/qdebug.h>
-
-#include "private/qabstractanimation2_p_p.h"
-#include "private/qdeclarativeanimation_p.h"
 #include <QtCore/qmath.h>
 #include <QtCore/qthreadstorage.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qpointer.h>
+
+#include "private/qabstractanimation2_p.h"
+#include "private/qanimationgroup2_p.h"
+#include "private/qdeclarativeanimation_p.h"
 
 #define DEFAULT_TIMER_INTERVAL 16
 #define STARTSTOP_TIMER_DELAY 0
@@ -126,7 +124,7 @@ void QUnifiedTimer2::updateAnimationsTime(qint64 timeStep)
         insideTick = true;
         for (currentAnimationIdx = 0; currentAnimationIdx < animations.count(); ++currentAnimationIdx) {
             QAbstractAnimation2 *animation = animations.at(currentAnimationIdx);
-            int elapsed = QAbstractAnimation2Private::get(animation)->totalCurrentTime
+            int elapsed = animation->currentTime()
                           + (animation->direction() == QAbstractAnimation2::Forward ? delta : -delta);
             animation->setCurrentTime(elapsed);
         }
@@ -209,8 +207,8 @@ void QUnifiedTimer2::registerAnimation(QAbstractAnimation2 *animation, bool isTo
     QUnifiedTimer2 *inst = instance(true); //we create the instance if needed
     inst->registerRunningAnimation(animation);
     if (isTopLevel) {
-        Q_ASSERT(!QAbstractAnimation2Private::get(animation)->hasRegisteredTimer);
-        QAbstractAnimation2Private::get(animation)->hasRegisteredTimer = true;
+        Q_ASSERT(!animation->m_hasRegisteredTimer);
+        animation->m_hasRegisteredTimer = true;
         inst->animationsToStart << animation;
         if (!inst->startStopAnimationTimer.isActive())
             inst->startStopAnimationTimer.start(STARTSTOP_TIMER_DELAY, inst);
@@ -226,7 +224,7 @@ void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
 
         inst->unregisterRunningAnimation(animation);
 
-        if (!QAbstractAnimation2Private::get(animation)->hasRegisteredTimer)
+        if (!animation->m_hasRegisteredTimer)
             return;
 
         int idx = inst->animations.indexOf(animation);
@@ -242,15 +240,15 @@ void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
             inst->animationsToStart.removeOne(animation);
         }
     }
-    QAbstractAnimation2Private::get(animation)->hasRegisteredTimer = false;
+    animation->m_hasRegisteredTimer = false;
 }
 
 void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2 *animation)
 {
-    if (QAbstractAnimation2Private::get(animation)->isGroup)
+    if (animation->m_isGroup)
         return;
 
-    if (QAbstractAnimation2Private::get(animation)->isPause) {
+    if (animation->m_isPause) {
         runningPauseAnimations << animation;
     } else
         runningLeafAnimations++;
@@ -258,10 +256,10 @@ void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2 *animation)
 
 void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2 *animation)
 {
-    if (QAbstractAnimation2Private::get(animation)->isGroup)
+    if (animation->m_isGroup)
         return;
 
-    if (QAbstractAnimation2Private::get(animation)->isPause)
+    if (animation->m_isPause)
         runningPauseAnimations.removeOne(animation);
     else
         runningLeafAnimations--;
@@ -498,18 +496,18 @@ void QDefaultAnimationDriver2::stopTimer()
 
 
 
-void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
+void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
 {
-    if (state == newState)
+    if (m_state == newState)
         return;
 
-    if (loopCount == 0)
+    if (m_loopCount == 0)
         return;
 
-    QAbstractAnimation2::State oldState = state;
-    int oldCurrentTime = currentTime;
-    int oldCurrentLoop = currentLoop;
-    QAbstractAnimation2::Direction oldDirection = direction;
+    QAbstractAnimation2::State oldState = m_state;
+    int oldCurrentTime = m_currentTime;
+    int oldCurrentLoop = m_currentLoop;
+    QAbstractAnimation2::Direction oldDirection = m_direction;
 
     // check if we should Rewind
     if ((newState == QAbstractAnimation2::Paused || newState == QAbstractAnimation2::Running)
@@ -517,35 +515,35 @@ void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
             //here we reset the time if needed
             //we don't call setCurrentTime because this might change the way the animation
             //behaves: changing the state or changing the current value
-            totalCurrentTime = currentTime = (direction == QAbstractAnimation2::Forward) ?
-                0 : (loopCount == -1 ? q->duration() : q->totalDuration());
+            m_totalCurrentTime = m_currentTime = (m_direction == QAbstractAnimation2::Forward) ?
+                0 : (m_loopCount == -1 ? duration() : totalDuration());
     }
 
-    state = newState;
+    m_state = newState;
     //QWeakPointer<QAbstractAnimation2> guard(q);
 
     //(un)registration of the animation must always happen before calls to
     //virtual function (updateState) to ensure a correct state of the timer
-    bool isTopLevel = !group || group->state() == QAbstractAnimation2::Stopped;
+    bool isTopLevel = !m_group || m_group->state() == QAbstractAnimation2::Stopped;
     if (oldState == QAbstractAnimation2::Running) {
-        if (newState == QAbstractAnimation2::Paused && hasRegisteredTimer)
+        if (newState == QAbstractAnimation2::Paused && m_hasRegisteredTimer)
             QUnifiedTimer2::ensureTimerUpdate();
         //the animation, is not running any more
-        QUnifiedTimer2::unregisterAnimation(q);
+        QUnifiedTimer2::unregisterAnimation(this);
     } else if (newState == QAbstractAnimation2::Running) {
-        QUnifiedTimer2::registerAnimation(q, isTopLevel);
+        QUnifiedTimer2::registerAnimation(this, isTopLevel);
     }
 
-    q->updateState(newState, oldState);
-    if (newState != state) //this is to be safe if updateState changes the state
+    updateState(newState, oldState);
+    if (newState != m_state) //this is to be safe if updateState changes the state
         return;
 
     // Notify state change
-    q->stateChanged(newState, oldState);
-    if (newState != state) //this is to be safe if updateState changes the state
+    stateChanged(newState, oldState);
+    if (newState != m_state) //this is to be safe if updateState changes the state
         return;
 
-    switch (state) {
+    switch (m_state) {
     case QAbstractAnimation2::Paused:
         break;
     case QAbstractAnimation2::Running:
@@ -556,113 +554,89 @@ void QAbstractAnimation2Private::setState(QAbstractAnimation2::State newState)
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
                     QUnifiedTimer2::ensureTimerUpdate();
-                    q->setCurrentTime(totalCurrentTime);
+                    setCurrentTime(m_totalCurrentTime);
                 }
             }
         }
         break;
     case QAbstractAnimation2::Stopped:
         // Leave running state.
-        int dura = q->duration();
+        int dura = duration();
 
-        if (deleteWhenStopped)
-            delete q;
+        if (m_deleteWhenStopped)
+            delete this; //??? FIXME
 
-        if (dura == -1 || loopCount < 0
-            || (oldDirection == QAbstractAnimation2::Forward && (oldCurrentTime * (oldCurrentLoop + 1)) == (dura * loopCount))
+        if (dura == -1 || m_loopCount < 0
+            || (oldDirection == QAbstractAnimation2::Forward && (oldCurrentTime * (oldCurrentLoop + 1)) == (dura * m_loopCount))
             || (oldDirection == QAbstractAnimation2::Backward && oldCurrentTime == 0)) {
-               q->finished();
+               finished();
         }
         break;
     }
 }
 
 QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation *animation)
-    :d(new QAbstractAnimation2Private)
+    : m_state(QAbstractAnimation2::Stopped)
+    , m_direction(QAbstractAnimation2::Forward)
+    , m_totalCurrentTime(0)
+    , m_currentTime(0)
+    , m_loopCount(1)
+    , m_currentLoop(0)
+    , m_deleteWhenStopped(false)
+    , m_hasRegisteredTimer(false)
+    , m_isPause(false)
+    , m_isGroup(false)
+    , m_group(0)
+    , m_animationGuard(animation)
 {
-    d->animationGuard = animation;
-    d->q = this;
 }
 
-QAbstractAnimation2::QAbstractAnimation2(QAbstractAnimation2Private *dd, QDeclarativeAbstractAnimation *animation)
-    :d(dd)
-{
-    d->animationGuard = animation;
-    d->q = this;
-}
 
 QAbstractAnimation2::~QAbstractAnimation2()
 {
     //we can't call stop here. Otherwise we get pure virtual calls
-    if (d->state != Stopped) {
-        QAbstractAnimation2::State oldState = d->state;
-        d->state = Stopped;
-        stateChanged(oldState, d->state);
+    if (m_state != Stopped) {
+        QAbstractAnimation2::State oldState = m_state;
+        m_state = Stopped;
+        stateChanged(oldState, m_state);
         if (oldState == QAbstractAnimation2::Running)
             QUnifiedTimer2::unregisterAnimation(this);
     }
 }
-QAbstractAnimation2::State QAbstractAnimation2::state() const
-{
-    return d->state;
-}
 
-QDeclarativeAbstractAnimation *QAbstractAnimation2::animation() const
-{
-    return d->animationGuard;
-}
-
-QAnimationGroup2 *QAbstractAnimation2::group() const
-{
-    return d->group;
-}
-
-QAbstractAnimation2::Direction QAbstractAnimation2::direction() const
-{
-    return d->direction;
-}
 void QAbstractAnimation2::setDirection(Direction direction)
 {
-    if (d->direction == direction)
+    if (m_direction == direction)
         return;
 
-    if (state() == Stopped) {
-        if (direction == Backward) {
-            d->currentTime = duration();
-            d->currentLoop = d->loopCount - 1;
+    if (m_state == Stopped) {
+        if (m_direction == Backward) {
+            m_currentTime = duration();
+            m_currentLoop = m_loopCount - 1;
         } else {
-            d->currentTime = 0;
-            d->currentLoop = 0;
+            m_currentTime = 0;
+            m_currentLoop = 0;
         }
     }
 
     // the commands order below is important: first we need to setCurrentTime with the old direction,
     // then update the direction on this and all children and finally restart the pauseTimer if needed
-    if (d->hasRegisteredTimer)
+    if (m_hasRegisteredTimer)
         QUnifiedTimer2::ensureTimerUpdate();
 
-    d->direction = direction;
+    m_direction = direction;
     updateDirection(direction);
 
-    if (d->hasRegisteredTimer)
+    if (m_hasRegisteredTimer)
         // needed to update the timer interval in case of a pause animation
         QUnifiedTimer2::updateAnimationTimer();
 
     directionChanged(direction);
 }
 
-int QAbstractAnimation2::loopCount() const
-{
-    return d->loopCount;
-}
 void QAbstractAnimation2::setLoopCount(int loopCount)
 {
-    d->loopCount = loopCount;
-}
-
-int QAbstractAnimation2::currentLoop() const
-{
-    return d->currentLoop;
+    m_loopCount = loopCount;
 }
 
 int QAbstractAnimation2::totalDuration() const
@@ -676,92 +650,81 @@ int QAbstractAnimation2::totalDuration() const
     return dura * loopcount;
 }
 
-int QAbstractAnimation2::currentLoopTime() const
-{
-    return d->currentTime;
-}
-
-
-int QAbstractAnimation2::currentTime() const
-{
-    return d->totalCurrentTime;
-}
 void QAbstractAnimation2::setCurrentTime(int msecs)
 {
     msecs = qMax(msecs, 0);
 
     // Calculate new time and loop.
     int dura = duration();
-    int totalDura = dura <= 0 ? dura : ((d->loopCount < 0) ? -1 : dura * d->loopCount);
+    int totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : dura * m_loopCount);
     if (totalDura != -1)
         msecs = qMin(totalDura, msecs);
-    d->totalCurrentTime = msecs;
+    m_totalCurrentTime = msecs;
 
     // Update new values.
-    int oldLoop = d->currentLoop;
-    d->currentLoop = ((dura <= 0) ? 0 : (msecs / dura));
-    if (d->currentLoop == d->loopCount) {
+    int oldLoop = m_currentLoop;
+    m_currentLoop = ((dura <= 0) ? 0 : (msecs / dura));
+    if (m_currentLoop == m_loopCount) {
         //we're at the end
-        d->currentTime = qMax(0, dura);
-        d->currentLoop = qMax(0, d->loopCount - 1);
+        m_currentTime = qMax(0, dura);
+        m_currentLoop = qMax(0, m_loopCount - 1);
     } else {
-        if (d->direction == Forward) {
-            d->currentTime = (dura <= 0) ? msecs : (msecs % dura);
+        if (m_direction == Forward) {
+            m_currentTime = (dura <= 0) ? msecs : (msecs % dura);
         } else {
-            d->currentTime = (dura <= 0) ? msecs : ((msecs - 1) % dura) + 1;
-            if (d->currentTime == dura)
-                --d->currentLoop;
+            m_currentTime = (dura <= 0) ? msecs : ((msecs - 1) % dura) + 1;
+            if (m_currentTime == dura)
+                --m_currentLoop;
         }
     }
 
-    updateCurrentTime(d->currentTime);
+    updateCurrentTime(m_currentTime);
 
-    //TODO:XXXX
-    if (d->currentLoop != oldLoop)
-        currentLoopChanged(d->currentLoop);
+    if (m_currentLoop != oldLoop)
+        currentLoopChanged(m_currentLoop);
 
     // All animations are responsible for stopping the animation when their
     // own end state is reached; in this case the animation is time driven,
     // and has reached the end.
-    if ((d->direction == Forward && d->totalCurrentTime == totalDura)
-        || (d->direction == Backward && d->totalCurrentTime == 0)) {
+    if ((m_direction == Forward && m_totalCurrentTime == totalDura)
+        || (m_direction == Backward && m_totalCurrentTime == 0)) {
         stop();
     }
 }
 
 void QAbstractAnimation2::start(DeletionPolicy policy)
 {
-    if (d->state == Running)
+    if (m_state == Running)
         return;
-    d->deleteWhenStopped = policy;
-    d->setState(Running);
+    m_deleteWhenStopped = policy;
+    setState(Running);
 }
 
 void QAbstractAnimation2::stop()
 {
-    if (d->state == Stopped)
+    if (m_state == Stopped)
         return;
-    d->setState(Stopped);
+    setState(Stopped);
 }
 
 void QAbstractAnimation2::pause()
 {
-    if (d->state == Stopped) {
+    if (m_state == Stopped) {
         qWarning("QAbstractAnimation2::pause: Cannot pause a stopped animation");
         return;
     }
 
-    d->setState(Paused);
+    setState(Paused);
 }
 
 void QAbstractAnimation2::resume()
 {
-    if (d->state != Paused) {
+    if (m_state != Paused) {
         qWarning("QAbstractAnimation2::resume: "
                  "Cannot resume an animation that is not paused");
         return;
     }
-    d->setState(Running);
+    setState(Running);
 }
 
 void QAbstractAnimation2::setPaused(bool paused)
@@ -786,8 +749,8 @@ void QAbstractAnimation2::updateDirection(QAbstractAnimation2::Direction directi
 
 void QAbstractAnimation2::finished()
 {
-    for (int ii = 0; ii < d->finishedSlots.count(); ++ii) {
-        QPair<QDeclarativeGuard<QObject>, int> slot = d->finishedSlots.at(ii);
+    for (int ii = 0; ii < m_finishedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = m_finishedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
             void *args[] = { 0 };
@@ -796,8 +759,8 @@ void QAbstractAnimation2::finished()
         }
     }
 
-    if (animation())
-        animation()->timelineComplete();
+    if (!m_animationGuard.isNull())
+        m_animationGuard->timelineComplete();
 
     if (group() && (duration() == -1 || loopCount() < 0)) {
         //this is an uncontrolled animation, need to notify the group animation we are finished
@@ -807,8 +770,8 @@ void QAbstractAnimation2::finished()
 
 void QAbstractAnimation2::stateChanged(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState)
 {
-    for (int ii = 0; ii < d->stateChangedSlots.count(); ++ii) {
-        QPair<QDeclarativeGuard<QObject>, int> slot = d->stateChangedSlots.at(ii);
+    for (int ii = 0; ii < m_stateChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = m_stateChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
             void *args[] = { &newState, &oldState };
@@ -820,11 +783,11 @@ void QAbstractAnimation2::stateChanged(QAbstractAnimation2::State newState, QAbs
 
 void QAbstractAnimation2::currentLoopChanged(int currentLoop)
 {
-    for (int ii = 0; ii < d->currentLoopChangedSlots.count(); ++ii) {
-        QPair<QDeclarativeGuard<QObject>, int> slot = d->currentLoopChangedSlots.at(ii);
+    for (int ii = 0; ii < m_currentLoopChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = m_currentLoopChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &currentLoop };
+            void *args[] = { &m_currentLoop };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
@@ -833,11 +796,11 @@ void QAbstractAnimation2::currentLoopChanged(int currentLoop)
 
 void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direction)
 {
-    for (int ii = 0; ii < d->directionChangedSlots.count(); ++ii) {
-        QPair<QDeclarativeGuard<QObject>, int> slot = d->directionChangedSlots.at(ii);
+    for (int ii = 0; ii < m_directionChangedSlots.count(); ++ii) {
+        QPair<QDeclarativeGuard<QObject>, int> slot = m_directionChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &direction };
+            void *args[] = { &m_direction };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
@@ -848,7 +811,7 @@ void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direct
 void QAbstractAnimation2::registerFinished(QObject* object, const char* method)
 {
     if (object && object != animation()) {
-        d->finishedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+        m_finishedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
                               , object->metaObject()->indexOfSlot(method)));
     }
 }
@@ -856,7 +819,7 @@ void QAbstractAnimation2::registerFinished(QObject* object, const char* method)
 void QAbstractAnimation2::registerStateChanged(QObject* object, const char* method)
 {
     if (object) {
-        d->stateChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+        m_stateChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
                                   , object->metaObject()->indexOfSlot(method)));
     }
 }
@@ -864,7 +827,7 @@ void QAbstractAnimation2::registerStateChanged(QObject* object, const char* meth
 void QAbstractAnimation2::registerCurrentLoopChanged(QObject* object, const char* method)
 {
     if (object) {
-        d->currentLoopChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+        m_currentLoopChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
                                         , object->metaObject()->indexOfSlot(method)));
     }
 }
@@ -872,7 +835,7 @@ void QAbstractAnimation2::registerCurrentLoopChanged(QObject* object, const char
 void QAbstractAnimation2::registerDirectionChanged(QObject* object, const char* method)
 {
     if (object) {
-        d->directionChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
+        m_directionChangedSlots.append(qMakePair(QDeclarativeGuard<QObject>(object)
                                       , object->metaObject()->indexOfSlot(method)));
     }
 }

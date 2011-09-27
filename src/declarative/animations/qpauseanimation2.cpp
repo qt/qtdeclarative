@@ -40,44 +40,29 @@
 ****************************************************************************/
 
 #include "private/qpauseanimation2_p.h"
-#include "private/qabstractanimation2_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QPauseAnimation2Private : public QAbstractAnimation2Private
-{
-public:
-    QPauseAnimation2Private() : QAbstractAnimation2Private(), duration(250)
-    {
-        isPause = true;
-    }
-
-    int duration;
-};
-
 QPauseAnimation2::QPauseAnimation2(QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(new QPauseAnimation2Private, animation)
+    : QAbstractAnimation2(animation)
 {
+    m_isPause = true;
+    m_duration = 250;
 }
 
 QPauseAnimation2::QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(new QPauseAnimation2Private, animation)
+    : QAbstractAnimation2(animation)
 {
-    setDuration(msecs);
+    m_isPause = true;
+    m_duration = 250;
 }
-
-QPauseAnimation2::QPauseAnimation2(QPauseAnimation2Private* dd, QDeclarativeAbstractAnimation *animation)
-    :QAbstractAnimation2(dd, animation)
-{
-}
-
 QPauseAnimation2::~QPauseAnimation2()
 {
 }
 
 int QPauseAnimation2::duration() const
 {
-    return d_func()->duration;
+    return m_duration;
 }
 
 void QPauseAnimation2::setDuration(int msecs)
@@ -86,7 +71,7 @@ void QPauseAnimation2::setDuration(int msecs)
         qWarning("QPauseAnimation2::setDuration: cannot set a negative duration");
         return;
     }
-    d_func()->duration = msecs;
+    m_duration = msecs;
 }
 
 void QPauseAnimation2::updateCurrentTime(int)

@@ -40,14 +40,9 @@
 ****************************************************************************/
 
 #include "private/qdeclarativedebughelper_p.h"
-
 #include "private/qabstractanimation2_p.h"
+#include <private/qdeclarativeengine_p.h>
 #include <QtDeclarative/QJSEngine>
-
-#include <private/qdeclarativeengine_p.h>
-#include <private/qabstractanimation2_p_p.h>
-
-#include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 

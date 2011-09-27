@@ -53,7 +53,6 @@ QT_MODULE(Declarative)
 
 
 class QPauseAnimation2;
-class QSequentialAnimationGroup2Private;
 
 class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
@@ -71,16 +70,45 @@ public:
 //    void currentAnimationChanged(QAbstractAnimation2 *current);
 
 protected:
-    QSequentialAnimationGroup2(QSequentialAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation=0);
-
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
     void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 private:
     Q_DISABLE_COPY(QSequentialAnimationGroup2)
-    QSequentialAnimationGroup2Private* d_func() {return reinterpret_cast<QSequentialAnimationGroup2Private*>(d);}
-    const QSequentialAnimationGroup2Private* d_func() const{return reinterpret_cast<const QSequentialAnimationGroup2Private*>(d);}
+    struct AnimationIndex
+    {
+        AnimationIndex() : index(0), timeOffset(0) {}
+        // index points to the animation at timeOffset, skipping 0 duration animations.
+        // Note that the index semantic is slightly different depending on the direction.
+        int index; // the index of the animation in timeOffset
+        int timeOffset; // time offset when the animation at index starts.
+    };
+
+    int animationActualTotalDuration(int index) const;
+    AnimationIndex indexForCurrentTime() const;
+
+    void setCurrentAnimation(int index, bool intermediate = false);
+    void activateCurrentAnimation(bool intermediate = false);
+
+    void animationInsertedAt(int index);
+    void animationRemoved(int index, QAbstractAnimation2 *anim);
+
+    bool atEnd() const;
+
+    QAbstractAnimation2 *m_currentAnimation;
+    int m_currentAnimationIndex;
+
+    // this is the actual duration of uncontrolled animations
+    // it helps seeking and even going forward
+    QList<int> m_actualDuration;
+
+    void restart();
+    int m_lastLoop;
+
+    // handle time changes
+    void rewindForwards(const AnimationIndex &newAnimationIndex);
+    void advanceForwards(const AnimationIndex &newAnimationIndex);
 };
 
 

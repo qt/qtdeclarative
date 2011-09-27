@@ -61,13 +61,16 @@
 #include <qdeclarative.h>
 #include <qdeclarativecontext.h>
 
+#include <private/qvariantanimation_p.h>
 #include "private/qpauseanimation2_p.h"
-#include "private/qanimationgroup2_p_p.h"
 #include <QDebug>
 
 #include <private/qobject_p.h>
-#include "private/qabstractanimation2_p_p.h"
-#include <private/qvariantanimation_p.h>
+#include "private/qanimationgroup2_p.h"
+#include <QDebug>
+
+#include <private/qobject_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -266,7 +269,7 @@ class QDeclarativePropertyAnimationPrivate : public QDeclarativeAbstractAnimatio
 public:
     QDeclarativePropertyAnimationPrivate()
     : QDeclarativeAbstractAnimationPrivate(), target(0), fromSourced(false), fromIsDefined(false), toIsDefined(false),
-      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0), va(0), actions(0) {}
+      defaultToInterpolatorType(0), interpolatorType(0), interpolator(0),  va(0), actions(0) {}
 
     void init();
 
@@ -286,7 +289,6 @@ public:
     bool defaultToInterpolatorType:1;
     int interpolatorType;
     QVariantAnimation::Interpolator interpolator;
-
     QDeclarativeBulkValueAnimator *va;
 
     // for animations that don't use the QDeclarativeBulkValueAnimator
@@ -315,8 +317,8 @@ public:
 
     QDeclarativeStateActions actions;
     int interpolatorType;       //for Number/ColorAnimation
-    int prevInterpolatorType;   //for generic
     QVariantAnimation::Interpolator interpolator;
+    int prevInterpolatorType;   //for generic
     bool reverse;
     bool fromSourced;
     bool fromDefined;

@@ -60,7 +60,6 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qmatrix4x4.h>
 #include <QtCore/qvarlengtharray.h>
-#include "private/qabstractanimation2_p_p.h"
 
 #include <private/qdeclarativedebugtrace_p.h>
 

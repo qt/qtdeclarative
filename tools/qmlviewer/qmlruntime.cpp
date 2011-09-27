@@ -102,7 +102,7 @@
 
 #include <qdeclarativetester.h>
 #include "qdeclarative.h"
-#include "private/qabstractanimation2_p_p.h"
+#include "private/qabstractanimation_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -1003,7 +1003,7 @@ void QDeclarativeViewer::toggleRecording()
 
 void QDeclarativeViewer::setSlowMode(bool enable)
 {
-    QUnifiedTimer2::instance()->setSlowModeEnabled(enable);
+    QUnifiedTimer::instance()->setSlowModeEnabled(enable);
 }
 
 void QDeclarativeViewer::addLibraryPath(const QString& lib)
@@ -1268,8 +1268,8 @@ void QDeclarativeViewer::setRecording(bool on)
         return;
 
     int period = int(1000/record_rate+0.5);
-    QUnifiedTimer2::instance()->setTimingInterval(on ? period:16);
-    QUnifiedTimer2::instance()->setConsistentTiming(on);
+    QUnifiedTimer::instance()->setTimingInterval(on ? period:16);
+    QUnifiedTimer::instance()->setConsistentTiming(on);
     if (on) {
         canvas->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
         recordTimer.setInterval(period);

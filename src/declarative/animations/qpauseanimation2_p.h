@@ -50,10 +50,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
-class QPauseAnimation2Private;
-
 class Q_DECLARATIVE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
 {
 public:
@@ -65,13 +61,11 @@ public:
     void setDuration(int msecs);
 
 protected:
-    QPauseAnimation2(QPauseAnimation2Private* dd, QDeclarativeAbstractAnimation *animation=0);
     void updateCurrentTime(int);
 
 private:
     Q_DISABLE_COPY(QPauseAnimation2)
-    QPauseAnimation2Private* d_func() {return reinterpret_cast<QPauseAnimation2Private*>(d);}
-    const QPauseAnimation2Private* d_func() const {return reinterpret_cast<const QPauseAnimation2Private*>(d);}
+    int m_duration;
 };
 
 

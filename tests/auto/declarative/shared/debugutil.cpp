@@ -74,7 +74,6 @@ void QDeclarativeDebugTestService::statusChanged(Status)
     emit statusHasChanged();
 }
 
-
 QDeclarativeDebugTestClient::QDeclarativeDebugTestClient(const QString &s, QDeclarativeDebugConnection *c)
     : QDeclarativeDebugClient(s, c)
 {

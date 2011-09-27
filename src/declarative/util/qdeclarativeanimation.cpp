@@ -660,8 +660,8 @@ QDeclarativeColorAnimation::QDeclarativeColorAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QColor;
-    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
 }
 
 QDeclarativeColorAnimation::~QDeclarativeColorAnimation()
@@ -1304,8 +1304,8 @@ QDeclarativeVector3dAnimation::QDeclarativeVector3dAnimation(QObject *parent)
 {
     Q_D(QDeclarativePropertyAnimation);
     d->interpolatorType = QMetaType::QVector3D;
-    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
     d->defaultToInterpolatorType = true;
+    d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
 }
 
 QDeclarativeVector3dAnimation::~QDeclarativeVector3dAnimation()
@@ -1549,7 +1549,6 @@ void QDeclarativeRotationAnimation::setDirection(QDeclarativeRotationAnimation::
         d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
         break;
     }
-
     emit directionChanged();
 }
 
@@ -2375,7 +2374,8 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
 {
     bool deleted = false;
     wasDeleted = &deleted;
-    if (reverse)    //QVariantAnimation2 sends us 1->0 when reversed, but we are expecting 0->1
+
+    if (reverse)
         v = 1 - v;
     for (int ii = 0; ii < actions.count(); ++ii) {
         QDeclarativeAction &action = actions[ii];
@@ -2385,8 +2385,9 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
         else {
             if (!fromSourced && !fromDefined) {
                 action.fromValue = action.property.read();
-                if (interpolatorType)
+                if (interpolatorType) {
                     QDeclarativePropertyAnimationPrivate::convertVariant(action.fromValue, interpolatorType);
+                }
             }
             if (!interpolatorType) {
                 int propType = action.property.propertyType();
@@ -2395,9 +2396,9 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
                     interpolator = QVariantAnimationPrivate::getInterpolator(prevInterpolatorType);
                 }
             }
-            if (interpolator)
-                QDeclarativePropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         }
+        if (interpolator)
+            QDeclarativePropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         if (deleted)
             return;
     }

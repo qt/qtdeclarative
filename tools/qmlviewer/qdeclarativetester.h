@@ -50,7 +50,7 @@
 #include <qmlruntime.h>
 #include <qdeclarativelist.h>
 #include <qdeclarative.h>
-#include "private/qabstractanimation2_p.h"
+#include <QtCore/qabstractanimation.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -205,8 +205,9 @@ QML_DECLARE_TYPE(QDeclarativeVisualTestKey)
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeTester : public QObject, public QAbstractAnimation2
+class QDeclarativeTester : public QAbstractAnimation
 {
+    Q_OBJECT
 public:
     QDeclarativeTester(const QString &script, QDeclarativeViewer::ScriptOptions options, QDeclarativeView *parent);
     ~QDeclarativeTester();

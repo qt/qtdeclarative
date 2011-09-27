@@ -42,6 +42,7 @@
 #ifndef QANIMATIONGROUP2_P_H
 #define QANIMATIONGROUP2_P_H
 
+#include <QtCore/qlist.h>
 #include "private/qabstractanimation2_p.h"
 
 QT_BEGIN_HEADER
@@ -52,7 +53,6 @@ QT_MODULE(Declarative)
 
 
 
-class QAnimationGroup2Private;
 class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
 public:
@@ -68,13 +68,22 @@ public:
     QAbstractAnimation2 *takeAnimation(int index);
     void clear();
     virtual void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
-protected:
-    QAnimationGroup2(QAnimationGroup2Private *dd, QDeclarativeAbstractAnimation *animation=0);
 
 private:
     Q_DISABLE_COPY(QAnimationGroup2)
-    QAnimationGroup2Private* d_func() {return reinterpret_cast<QAnimationGroup2Private*>(d);}
-    const QAnimationGroup2Private* d_func() const {return reinterpret_cast<const QAnimationGroup2Private*>(d);}
+    virtual void animationInsertedAt(int) { }
+    virtual void animationRemoved(int, QAbstractAnimation2 *);
+    void connectUncontrolledAnimations();
+    void disconnectUncontrolledAnimations();
+    void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim);
+    bool isAnimationConnected(QAbstractAnimation2 *anim) const;
+    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
+
+    friend class QParallelAnimationGroup2;
+    friend class QSequentialAnimationGroup2;
+    QList<QAbstractAnimation2 *> m_animations;
+    QHash<QAbstractAnimation2 *, int> m_uncontrolledFinishTime;
 };
 
 

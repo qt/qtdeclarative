@@ -52,7 +52,6 @@
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qeasingcurve.h>
-#include "private/qabstractanimation2_p.h"
 #include <QtGui/qcolor.h>
 
 QT_BEGIN_HEADER
@@ -61,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
+class QAbstractAnimation2;
 class QDeclarativeAbstractAnimationPrivate;
 class QDeclarativeAnimationGroup;
 class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeAbstractAnimation : public QObject, public QDeclarativePropertyValueSource, public QDeclarativeParserStatus

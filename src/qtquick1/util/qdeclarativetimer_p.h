@@ -45,9 +45,13 @@
 #include <QtDeclarative/qdeclarative.h>
 
 #include <QtCore/qobject.h>
-#include <QtCore/qabstractanimation.h>
-
 #include <QtDeclarative/private/qdeclarativeglobal_p.h>
+#include <QtCore/qeasingcurve.h>
+#include <QtCore/qabstractanimation.h>
+#include <QtCore/qvector.h>
+#include <QtCore/qvariant.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_HEADER
 
