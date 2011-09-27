@@ -55,20 +55,15 @@
 // These don't let normal people run tests!
 //#include "../network-settings.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativepixmapcache : public QObject
 {
     Q_OBJECT
 public:
     tst_qdeclarativepixmapcache() :
-        thisfile(QUrl::fromLocalFile(__FILE__)),
+        thisfile(QUrl::fromLocalFile(QCoreApplication::applicationFilePath())),
         server(14452)
     {
-        server.serveDirectory(SRCDIR "/data/http");
+        server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http");
     }
 
 private slots:
@@ -368,7 +363,7 @@ void createNetworkServer()
 {
    QEventLoop eventLoop;
    TestHTTPServer server(14453);
-   server.serveDirectory(SRCDIR "/data/http");
+   server.serveDirectory(QCoreApplication::applicationDirPath() + "/data/http");
    QTimer::singleShot(100, &eventLoop, SLOT(quit()));
    eventLoop.exec();
 }
