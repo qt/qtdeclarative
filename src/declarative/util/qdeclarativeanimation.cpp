@@ -1905,6 +1905,7 @@ QDeclarativePropertyAnimation::QDeclarativePropertyAnimation(QDeclarativePropert
 
 QDeclarativePropertyAnimation::~QDeclarativePropertyAnimation()
 {
+
 }
 
 void QDeclarativePropertyAnimationPrivate::init()

@@ -602,8 +602,9 @@ QAbstractAnimation2::~QAbstractAnimation2()
         QAbstractAnimation2::State oldState = m_state;
         m_state = Stopped;
         stateChanged(oldState, m_state);
+        if (oldState == QAbstractAnimation2::Running)
+            QUnifiedTimer2::unregisterAnimation(this);
     }
-    QUnifiedTimer2::unregisterAnimation(this);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)
