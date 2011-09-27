@@ -404,6 +404,9 @@ void tst_qdeclarativebehaviors::sameValue()
     QCOMPARE(target->x(), qreal(100));
 
     target->setProperty("x", 0);
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-12295 - Behaviour on x {} does not work consistently.", Continue);
+#endif
     QTRY_VERIFY(target->x() != qreal(0) && target->x() != qreal(100));
     QTRY_VERIFY(target->x() == qreal(0));   //make sure Behavior has finished.
 
