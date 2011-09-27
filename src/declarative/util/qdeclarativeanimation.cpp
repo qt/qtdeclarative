@@ -728,7 +728,55 @@ void QDeclarativeColorAnimation::setTo(const QColor &t)
     QDeclarativePropertyAnimation::setTo(t);
 }
 
+QActionAnimation::QActionAnimation(QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(animation), animAction(0), policy(KeepWhenStopped)
+{
+}
 
+QActionAnimation::QActionAnimation(QAbstractAnimationAction *action, QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(animation), animAction(action), policy(KeepWhenStopped)
+{
+}
+
+QActionAnimation::~QActionAnimation()
+{
+    if (policy == DeleteWhenStopped) {
+        delete animAction;
+        animAction = 0;
+    }
+}
+
+int QActionAnimation::duration() const
+{
+    return 0;
+}
+
+void QActionAnimation::setAnimAction(QAbstractAnimationAction *action, DeletionPolicy p)
+{
+    if (state() == Running)
+        stop();
+    if (policy == DeleteWhenStopped)
+        delete animAction;
+    animAction = action;
+    policy = p;
+}
+
+void QActionAnimation::updateCurrentTime(int)
+{
+}
+
+void QActionAnimation::updateState(State newState, State /*oldState*/)
+{
+    if (newState == Running) {
+        if (animAction) {
+            animAction->doAction();
+            if (state() == Stopped && policy == DeleteWhenStopped) {
+                delete animAction;
+                animAction = 0;
+            }
+        }
+    }
+}
 
 /*!
     \qmlclass ScriptAction QDeclarativeScriptAction
@@ -768,6 +816,9 @@ QDeclarativeScriptAction::QDeclarativeScriptAction(QObject *parent)
 QDeclarativeScriptAction::~QDeclarativeScriptAction()
 {
 }
+
+QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
+    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false), proxy(this), rsa(0) {}
 
 void QDeclarativeScriptActionPrivate::init()
 {
@@ -1031,7 +1082,7 @@ void QDeclarativePropertyAction::transition(QDeclarativeStateActions &actions,
     Q_D(QDeclarativePropertyAction);
     Q_UNUSED(direction);
 
-    struct QDeclarativeSetPropertyAnimationAction : public QAbstractAnimation2Action
+    struct QDeclarativeSetPropertyAnimationAction : public QAbstractAnimationAction
     {
         QDeclarativeStateActions actions;
         virtual void doAction()
@@ -1735,6 +1786,51 @@ void QDeclarativePropertyAnimationPrivate::convertVariant(QVariant &variant, int
     }
 }
 
+QDeclarativeBulkValueAnimator::QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation)
+    : QAbstractAnimation2(animation), animValue(0), fromSourced(0), policy(KeepWhenStopped), m_duration(250)
+{
+}
+
+QDeclarativeBulkValueAnimator::~QDeclarativeBulkValueAnimator()
+{
+    if (policy == DeleteWhenStopped) {
+        delete animValue;
+        animValue = 0;
+    }
+}
+
+void QDeclarativeBulkValueAnimator::setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p)
+{
+    if (state() == Running)
+        stop();
+    if (policy == DeleteWhenStopped)
+        delete animValue;
+    animValue = value;
+    policy = p;
+}
+
+void QDeclarativeBulkValueAnimator::updateCurrentTime(int currentTime)
+{
+    const qreal progress = easing.valueForProgress(((m_duration == 0) ? qreal(1) : qreal(currentTime) / qreal(m_duration)));
+
+    if (state() == QAbstractAnimation2::Stopped)
+        return;
+
+    if (animValue)
+        animValue->setValue(progress);
+}
+
+void QDeclarativeBulkValueAnimator::updateState(State newState, State oldState)
+{
+    QAbstractAnimation2::updateState(newState, oldState);
+    if (newState == Running) {
+        //check for new from every loop
+        if (fromSourced)
+            *fromSourced = false;
+    }
+}
+
+
 /*!
     \qmlclass PropertyAnimation QDeclarativePropertyAnimation
     \inqmlmodule QtQuick 2
@@ -2417,10 +2513,5 @@ void QDeclarativePropertyAnimation::transition(QDeclarativeStateActions &actions
         d->actions = 0;
     }
 }
-
-
-QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
-    : QDeclarativeAbstractAnimationPrivate(), hasRunScriptScript(false), reversing(false), proxy(this), rsa(0) {}
-
 
 QT_END_NAMESPACE

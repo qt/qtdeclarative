@@ -154,7 +154,7 @@ void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
 {
     Q_D(QSGParentAnimation);
 
-    struct QSGParentAnimationData : public QAbstractAnimation2Action
+    struct QSGParentAnimationData : public QAbstractAnimationAction
     {
         QSGParentAnimationData() {}
         ~QSGParentAnimationData() { qDeleteAll(pc); }

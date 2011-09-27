@@ -72,10 +72,10 @@
 QT_BEGIN_NAMESPACE
 
 //interface for classes that provide animation actions for QActionAnimation
-class QAbstractAnimation2Action
+class QAbstractAnimationAction
 {
 public:
-    virtual ~QAbstractAnimation2Action() {}
+    virtual ~QAbstractAnimationAction() {}
     virtual void doAction() = 0;
 };
 
@@ -83,52 +83,33 @@ public:
 //allows us to specify an action that calls a function of a class.
 //(so that class doesn't have to inherit QDeclarativeAbstractAnimationAction)
 template<class T, void (T::*method)()>
-class QAnimationActionProxy : public QAbstractAnimation2Action
+class QAnimationActionProxy : public QAbstractAnimationAction
 {
 public:
-    QAnimationActionProxy(T *p) : m_p(p) {}
-    virtual void doAction() { (m_p->*method)(); }
+    QAnimationActionProxy(T *instance) : m_instance(instance) {}
+    virtual void doAction() { (m_instance->*method)(); }
 
 private:
-    T *m_p;
+    T *m_instance;
 };
 
-//performs an action of type QAbstractAnimation2Action
+//performs an action of type QAbstractAnimationAction
 class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
 {
 public:
-    QActionAnimation(QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), animAction(0), policy(KeepWhenStopped) {}
-    QActionAnimation(QAbstractAnimation2Action *action, QDeclarativeAbstractAnimation *animation = 0)
-        : QAbstractAnimation2(animation), animAction(action), policy(KeepWhenStopped) {}
-    ~QActionAnimation() { if (policy == DeleteWhenStopped) { delete animAction; animAction = 0; } }
-    virtual int duration() const { return 0; }
-    void setAnimAction(QAbstractAnimation2Action *action, DeletionPolicy p)
-    {
-        if (state() == Running)
-            stop();
-        if (policy == DeleteWhenStopped)
-            delete animAction;
-        animAction = action;
-        policy = p;
-    }
-protected:
-    virtual void updateCurrentTime(int) {}
+    QActionAnimation(QDeclarativeAbstractAnimation *animation = 0);
+    QActionAnimation(QAbstractAnimationAction *action, QDeclarativeAbstractAnimation *animation = 0);
+    ~QActionAnimation();
 
-    virtual void updateState(State newState, State /*oldState*/)
-    {
-        if (newState == Running) {
-            if (animAction) {
-                animAction->doAction();
-                if (state() == Stopped && policy == DeleteWhenStopped) {
-                    delete animAction;
-                    animAction = 0;
-                }
-            }
-        }
-    }
+    virtual int duration() const;
+    void setAnimAction(QAbstractAnimationAction *action, DeletionPolicy p);
+
+protected:
+    virtual void updateCurrentTime(int);
+    virtual void updateState(State newState, State oldState);
 
 private:
-    QAbstractAnimation2Action *animAction;
+    QAbstractAnimationAction *animAction;
     DeletionPolicy policy;
 };
 
@@ -143,25 +124,13 @@ public:
 class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimation2
 {
 public:
-    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), animValue(0), fromSourced(0), policy(KeepWhenStopped), m_duration(250) {}
-    ~QDeclarativeBulkValueAnimator() { if (policy == DeleteWhenStopped) { delete animValue; animValue = 0; } }
-    void setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p)
-    {
-        if (state() == Running)
-            stop();
-        if (policy == DeleteWhenStopped)
-            delete animValue;
-        animValue = value;
-        policy = p;
-    }
-    QDeclarativeBulkValueUpdater *getAnimValue() const
-    {
-        return animValue;
-    }
-    void setFromSourcedValue(bool *value)
-    {
-        fromSourced = value;
-    }
+    QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0);
+    ~QDeclarativeBulkValueAnimator();
+
+    void setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p);
+    QDeclarativeBulkValueUpdater *getAnimValue() const { return animValue; }
+
+    void setFromSourcedValue(bool *value) { fromSourced = value; }
 
     int duration() const { return m_duration; }
     void setDuration(int msecs) { m_duration = msecs; }
@@ -170,26 +139,8 @@ public:
     void setEasingCurve(const QEasingCurve &curve) { easing = curve; }
 
 protected:
-    void updateCurrentTime(int currentTime)
-    {
-        const qreal progress = easing.valueForProgress(((m_duration == 0) ? qreal(1) : qreal(currentTime) / qreal(m_duration)));
-
-        if (state() == QAbstractAnimation2::Stopped)
-            return;
-
-        if (animValue)
-            animValue->setValue(progress);
-    }
-
-    virtual void updateState(State newState, State oldState)
-    {   
-        QAbstractAnimation2::updateState(newState, oldState);
-        if (newState == Running) {
-            //check for new from every loop
-            if (fromSourced)
-                *fromSourced = false;
-        }
-    }
+    void updateCurrentTime(int currentTime);
+    void updateState(State newState, State oldState);
 
 private:
     QDeclarativeBulkValueUpdater *animValue;
@@ -204,13 +155,13 @@ template<class T, void (T::*method)(int)>
 class QTickAnimationProxy : public QAbstractAnimation2
 {
 public:
-    QTickAnimationProxy(T *p, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_p(p) {}
+    QTickAnimationProxy(T *instance, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_instance(instance) {}
     virtual int duration() const { return -1; }
 protected:
-    virtual void updateCurrentTime(int msec) { (m_p->*method)(msec); }
+    virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }
 
 private:
-    T *m_p;
+    T *m_instance;
 };
 
 class QDeclarativeAbstractAnimationPrivate : public QObjectPrivate
@@ -357,6 +308,11 @@ public:
 class Q_AUTOTEST_EXPORT QDeclarativeAnimationPropertyUpdater : public QDeclarativeBulkValueUpdater
 {
 public:
+    QDeclarativeAnimationPropertyUpdater() : prevInterpolatorType(0), wasDeleted(0) {}
+    ~QDeclarativeAnimationPropertyUpdater() { if (wasDeleted) *wasDeleted = true; }
+
+    void setValue(qreal v);
+
     QDeclarativeStateActions actions;
     int interpolatorType;       //for Number/ColorAnimation
     int prevInterpolatorType;   //for generic
@@ -365,9 +321,6 @@ public:
     bool fromSourced;
     bool fromDefined;
     bool *wasDeleted;
-    QDeclarativeAnimationPropertyUpdater() : prevInterpolatorType(0), wasDeleted(0) {}
-    ~QDeclarativeAnimationPropertyUpdater() { if (wasDeleted) *wasDeleted = true; }
-    void setValue(qreal v);
 };
 
 QT_END_NAMESPACE
