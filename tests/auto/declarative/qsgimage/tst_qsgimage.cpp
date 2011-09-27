@@ -485,7 +485,9 @@ void tst_qsgimage::tiling_QTBUG_6716()
 void tst_qsgimage::tiling_QTBUG_6716_data()
 {
     QTest::addColumn<QString>("source");
+#ifdef QT_BUILD_INTERNAL // QTBUG-21688 - unstable test on developer build
     QTest::newRow("vertical_tiling") << "/data/vtiling.qml";
+#endif
     QTest::newRow("horizontal_tiling") << "/data/htiling.qml";
 }
 
