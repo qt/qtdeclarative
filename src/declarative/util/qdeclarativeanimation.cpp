@@ -2393,9 +2393,9 @@ void QDeclarativeAnimationPropertyUpdater::setValue(qreal v)
                     interpolator = QVariantAnimationPrivate::getInterpolator(prevInterpolatorType);
                 }
             }
+            if (interpolator)
+                QDeclarativePropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         }
-        if (interpolator)
-            QDeclarativePropertyPrivate::write(action.property, interpolator(action.fromValue.constData(), action.toValue.constData(), v), QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);
         if (deleted)
             return;
     }
