@@ -89,9 +89,6 @@ QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QObject *parent)
 
 QDeclarativeAbstractAnimation::~QDeclarativeAbstractAnimation()
 {
-    QAbstractAnimation2* anim = qtAnimation();
-    if (anim)
-        delete anim;
 }
 
 QDeclarativeAbstractAnimation::QDeclarativeAbstractAnimation(QDeclarativeAbstractAnimationPrivate &dd, QObject *parent)

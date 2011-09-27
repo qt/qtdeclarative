@@ -203,6 +203,10 @@ class QDeclarativePauseAnimationPrivate : public QDeclarativeAbstractAnimationPr
 public:
     QDeclarativePauseAnimationPrivate()
     : QDeclarativeAbstractAnimationPrivate(), pa(0) {}
+    ~QDeclarativePauseAnimationPrivate()
+    {
+        delete pa;
+    }
 
     void init();
 
@@ -214,6 +218,10 @@ class QDeclarativeScriptActionPrivate : public QDeclarativeAbstractAnimationPriv
     Q_DECLARE_PUBLIC(QDeclarativeScriptAction)
 public:
     QDeclarativeScriptActionPrivate();
+    ~QDeclarativeScriptActionPrivate()
+    {
+        delete rsa;
+    }
 
     void init();
 
@@ -236,6 +244,10 @@ class QDeclarativePropertyActionPrivate : public QDeclarativeAbstractAnimationPr
 public:
     QDeclarativePropertyActionPrivate()
     : QDeclarativeAbstractAnimationPrivate(), target(0), spa(0) {}
+    ~QDeclarativePropertyActionPrivate()
+    {
+        delete spa;
+    }
 
     void init();
 
@@ -256,6 +268,10 @@ class QDeclarativeAnimationGroupPrivate : public QDeclarativeAbstractAnimationPr
 public:
     QDeclarativeAnimationGroupPrivate()
     : QDeclarativeAbstractAnimationPrivate(), ag(0) {}
+    ~QDeclarativeAnimationGroupPrivate()
+    {
+        delete ag;
+    }
 
     static void append_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list, QDeclarativeAbstractAnimation *role);
     static void clear_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list);
@@ -270,7 +286,10 @@ public:
     QDeclarativePropertyAnimationPrivate()
     : QDeclarativeAbstractAnimationPrivate(), target(0), fromSourced(false), fromIsDefined(false), toIsDefined(false),
       defaultToInterpolatorType(0), interpolatorType(0), interpolator(0),  va(0), actions(0) {}
-
+    ~QDeclarativePropertyAnimationPrivate()
+    {
+        delete va;
+    }
     void init();
 
     QVariant from;
