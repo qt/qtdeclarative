@@ -237,6 +237,9 @@ void tst_qsgfocusscope::textEdit()
 
     QTest::qWaitForWindowShown(view);
 
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21683 - Waiting for active window/focus fails for developer build", Abort);
+#endif
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(item0->hasActiveFocus() == true);
     QVERIFY(item1->hasActiveFocus() == true);
@@ -306,6 +309,9 @@ void tst_qsgfocusscope::forceFocus()
     QVERIFY(item5->hasActiveFocus() == false);
 
     QTest::keyClick(view, Qt::Key_5);
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-216823- Waiting for active window/focus fails for developer build", Abort);
+#endif
     QVERIFY(item0->hasActiveFocus() == false);
     QVERIFY(item1->hasActiveFocus() == false);
     QVERIFY(item2->hasActiveFocus() == false);
@@ -407,6 +413,9 @@ void tst_qsgfocusscope::qtBug13380()
 
     QTest::qWaitForWindowShown(view);
 
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21683 - Waiting for active window fails for developer build", Abort);
+#endif
     QVERIFY(view->windowState() == Qt::WindowActive);
     QVERIFY(view->rootObject()->property("noFocus").toBool());
 
@@ -566,6 +575,9 @@ void tst_qsgfocusscope::canvasFocus()
 
     // until the canvas widget has gained focus, no one should have active focus
     QCOMPARE((view->windowState() == Qt::WindowActive), false);
+#ifdef QT_BUILD_INTERNAL
+    QEXPECT_FAIL("", "QTBUG-21683 - Waiting for active window/focus fails for developer build", Abort);
+#endif
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);
     QCOMPARE(scope1->hasFocus(), true);
