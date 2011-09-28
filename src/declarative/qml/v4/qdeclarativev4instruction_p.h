@@ -161,7 +161,7 @@ QT_BEGIN_NAMESPACE
 #  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const V4Instr *) code; goto *instr->common.code;
 #  define QML_V4_INSTR_HEADER void *code;
 #else
-#  define QML_V4_BEGIN_INSTR(I,FMT) case Instr::I:
+#  define QML_V4_BEGIN_INSTR(I,FMT) case V4Instr::I:
 #  define QML_V4_END_INSTR(I,FMT) code += QML_V4_INSTR_SIZE(I, FMT); instr = (const V4Instr *) code; break;
 #  define QML_V4_INSTR_HEADER quint8 type;
 #endif

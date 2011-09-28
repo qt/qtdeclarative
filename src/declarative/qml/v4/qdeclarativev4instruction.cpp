@@ -362,7 +362,7 @@ V4Instr::Type Bytecode::instructionType(const V4Instr *instr) const
     return static_cast<V4Instr::Type>(0);
 #  undef CHECK_V4_INSTR_CODE
 #else
-    return static_cast<V4Instr::Type>(instr.common.type);
+    return static_cast<V4Instr::Type>(instr->common.type);
 #endif
 
 }
