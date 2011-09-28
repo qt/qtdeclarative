@@ -58,6 +58,7 @@ QAnimationGroup2::~QAnimationGroup2()
     foreach (QAbstractAnimation2* child, m_animations) {
         child->setGroup(0);
     }
+    m_animations.clear();   //### can remove if setGroup handles this
 }
 
 QAbstractAnimation2 *QAnimationGroup2::animationAt(int index) const
@@ -96,7 +97,7 @@ void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation
         oldGroup->removeAnimation(animation);
 
     m_animations.insert(index, animation);
-    m_group = this;
+    animation->setGroup(this);
     animationInsertedAt(index);
 }
 

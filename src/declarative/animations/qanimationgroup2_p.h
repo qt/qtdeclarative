@@ -57,14 +57,15 @@ public:
     QAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QAnimationGroup2();
 
-    QAbstractAnimation2 *animationAt(int index) const;
     int animationCount() const;
+    void clear();
+
+    QAbstractAnimation2 *animationAt(int index) const;
     int indexOfAnimation(QAbstractAnimation2 *animation) const;
     void addAnimation(QAbstractAnimation2 *animation);
     void insertAnimation(int index, QAbstractAnimation2 *animation);
     void removeAnimation(QAbstractAnimation2 *animation);
     QAbstractAnimation2 *takeAnimation(int index);
-    void clear();
     virtual void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 
 private:

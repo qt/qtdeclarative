@@ -594,9 +594,6 @@ QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation *animatio
 
 QAbstractAnimation2::~QAbstractAnimation2()
 {
-    if (m_group)
-        m_group->removeAnimation(this);
-
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         QAbstractAnimation2::State oldState = m_state;
@@ -605,6 +602,9 @@ QAbstractAnimation2::~QAbstractAnimation2()
         if (oldState == QAbstractAnimation2::Running)
             QUnifiedTimer2::unregisterAnimation(this);
     }
+
+    if (m_group)
+        m_group->removeAnimation(this);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)

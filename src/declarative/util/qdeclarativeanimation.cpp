@@ -583,6 +583,8 @@ QDeclarativePauseAnimation::QDeclarativePauseAnimation(QObject *parent)
 
 QDeclarativePauseAnimation::~QDeclarativePauseAnimation()
 {
+    Q_D(QDeclarativePauseAnimation);
+    delete d->pa;
 }
 
 void QDeclarativePauseAnimationPrivate::init()
@@ -812,6 +814,8 @@ QDeclarativeScriptAction::QDeclarativeScriptAction(QObject *parent)
 
 QDeclarativeScriptAction::~QDeclarativeScriptAction()
 {
+    Q_D(QDeclarativeScriptAction);
+    delete d->rsa;
 }
 
 QDeclarativeScriptActionPrivate::QDeclarativeScriptActionPrivate()
@@ -956,6 +960,8 @@ QDeclarativePropertyAction::QDeclarativePropertyAction(QObject *parent)
 
 QDeclarativePropertyAction::~QDeclarativePropertyAction()
 {
+    Q_D(QDeclarativePropertyAction);
+    delete d->spa;
 }
 
 void QDeclarativePropertyActionPrivate::init()
@@ -1585,6 +1591,8 @@ void QDeclarativeAnimationGroupPrivate::clear_animation(QDeclarativeListProperty
 
 QDeclarativeAnimationGroup::~QDeclarativeAnimationGroup()
 {
+    Q_D(QDeclarativeAnimationGroup);
+    delete d->ag;
 }
 
 QDeclarativeListProperty<QDeclarativeAbstractAnimation> QDeclarativeAnimationGroup::animations()
@@ -1905,7 +1913,8 @@ QDeclarativePropertyAnimation::QDeclarativePropertyAnimation(QDeclarativePropert
 
 QDeclarativePropertyAnimation::~QDeclarativePropertyAnimation()
 {
-
+    Q_D(QDeclarativePropertyAnimation);
+    delete d->va;
 }
 
 void QDeclarativePropertyAnimationPrivate::init()

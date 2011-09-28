@@ -95,7 +95,7 @@ public:
     inline State state() const {return m_state;}
 
     inline QAnimationGroup2 *group() const {return m_group;}
-    void setGroup(QAnimationGroup2* group) {m_group = group;}
+    void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
     QDeclarativeAbstractAnimation *animation() const {return m_animationGuard;}
 
     inline Direction direction() const {return m_direction;}

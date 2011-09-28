@@ -64,7 +64,6 @@ public:
           , modulus(0.0), useMass(false), haveModulus(false)
           , mode(Track), clock(0)
     { }
-    ~QDeclarativeSpringAnimationPrivate() { delete clock; }
 
     struct SpringAnimation {
         SpringAnimation()
@@ -269,6 +268,8 @@ QDeclarativeSpringAnimation::QDeclarativeSpringAnimation(QObject *parent)
 
 QDeclarativeSpringAnimation::~QDeclarativeSpringAnimation()
 {
+    Q_D(QDeclarativeSpringAnimation);
+    delete d->clock;
 }
 
 /*!
