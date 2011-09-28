@@ -50,6 +50,8 @@
 #include <iostream>
 #include <cstdlib>
 
+QT_BEGIN_NAMESPACE
+
 //
 // QML/JS minifier
 //
@@ -483,7 +485,7 @@ static void usage(bool showHelp = false)
     }
 }
 
-int main(int argc, char *argv[])
+int runQmlmin(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
@@ -588,4 +590,11 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+QT_END_NAMESPACE
+
+int main(int argc, char **argv)
+{
+    return QT_PREPEND_NAMESPACE(runQmlmin(argc, argv));
 }

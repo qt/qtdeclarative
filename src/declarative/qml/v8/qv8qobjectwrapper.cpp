@@ -56,10 +56,10 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qatomic.h>
 
-QT_BEGIN_NAMESPACE
-
 Q_DECLARE_METATYPE(QJSValue);
 Q_DECLARE_METATYPE(QDeclarativeV8Handle);
+
+QT_BEGIN_NAMESPACE
 
 #if defined(__GNUC__)
 # if (__GNUC__ * 100 + __GNUC_MINOR__) >= 405
@@ -2070,3 +2070,6 @@ v8::Handle<v8::Value> MetaCallArgument::toValue(QV8Engine *engine)
         return v8::Undefined();
     }
 }
+
+QT_END_NAMESPACE
+

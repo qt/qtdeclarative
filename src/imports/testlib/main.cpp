@@ -48,12 +48,13 @@
 #include "private/qtestoptions_p.h"
 #include "QtDeclarative/qsgitem.h"
 #include <QtDeclarative/private/qdeclarativeengine_p.h>
-QT_BEGIN_NAMESPACE
 
 QML_DECLARE_TYPE(QuickTestResult)
 QML_DECLARE_TYPE(QuickTestEvent)
 
 #include <QtDebug>
+
+QT_BEGIN_NAMESPACE
 
 class QuickTestUtil : public QObject
 {
@@ -145,7 +146,12 @@ public Q_SLOTS:
         return -1;
     }
 };
+
+QT_END_NAMESPACE
+
 QML_DECLARE_TYPE(QuickTestUtil)
+
+QT_BEGIN_NAMESPACE
 
 class QTestQmlModule : public QDeclarativeExtensionPlugin
 {

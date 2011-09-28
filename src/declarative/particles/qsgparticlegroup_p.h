@@ -44,6 +44,8 @@
 #include "qsgparticlesystem_p.h"
 #include "qdeclarativeparserstatus.h"
 
+QT_BEGIN_NAMESPACE
+
 class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserStatus
 {
     Q_OBJECT
@@ -103,5 +105,7 @@ private:
     QSGParticleSystem* m_system;
     QList<QObject*> m_delayedRedirects;
 };
+
+QT_END_NAMESPACE
 
 #endif

@@ -41,6 +41,8 @@
 
 #include "qdeclarativechangeset_p.h"
 
+QT_BEGIN_NAMESPACE
+
 QDeclarativeChangeSet::QDeclarativeChangeSet()
     : m_moveCounter(0)
 {
@@ -468,4 +470,6 @@ QDebug operator <<(QDebug debug, const QDeclarativeChangeSet::Change &change)
 {
     return (debug.nospace() << "Change(" << change.index << "," << change.count << ")").space();
 }
+
+QT_END_NAMESPACE
 

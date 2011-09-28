@@ -43,6 +43,8 @@
 #include "qsgitem_p.h"
 #include "qsgcanvas.h"
 
+QT_BEGIN_NAMESPACE
+
 /*!
     \qmlclass DragEvent QSGDragEvent
     \brief The DragEvent object provides information about a drag event.

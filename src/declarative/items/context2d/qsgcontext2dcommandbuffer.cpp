@@ -46,6 +46,8 @@
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))
 
+QT_BEGIN_NAMESPACE
+
 void qt_image_boxblur(QImage& image, int radius, bool quality);
 
 static QImage makeShadowImage(const QImage& image, qreal offsetX, qreal offsetY, qreal blur, const QColor& color)
@@ -394,4 +396,5 @@ void QSGContext2DCommandBuffer::reset()
     imageIdx = 0;
 }
 
+QT_END_NAMESPACE
 
