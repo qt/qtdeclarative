@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 */
 QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
     QSGItem(parent),
-    m_system(0), m_count(0), m_sentinel(new QSGParticleData(0)), m_pleaseReset(true)
+    m_system(0), m_count(0), m_pleaseReset(true), m_sentinel(new QSGParticleData(0))
 {
 }
 

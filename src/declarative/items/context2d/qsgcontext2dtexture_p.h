@@ -100,7 +100,7 @@ public Q_SLOTS:
 
 protected:
     void paintWithoutTiles();
-    virtual QPaintDevice* beginPainting() {m_painting = true;}
+    virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
     virtual void endPainting() {m_painting = false;}
     virtual QSGContext2DTile* createTile() const = 0;
     virtual void compositeTile(QSGContext2DTile* tile) = 0;

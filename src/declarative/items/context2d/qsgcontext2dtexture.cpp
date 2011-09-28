@@ -155,7 +155,9 @@ bool QSGContext2DTexture::setCanvasWindow(const QRect& r)
 {
     if (m_canvasWindow != r) {
         m_canvasWindow = r;
+        return true;
     }
+    return false;
 }
 
 bool QSGContext2DTexture::setDirtyRect(const QRect &r)

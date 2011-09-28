@@ -57,6 +57,7 @@ class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserSta
     //Intercept children requests and assign to the group & system
     Q_PROPERTY(QDeclarativeListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
     Q_CLASSINFO("DefaultProperty", "particleChildren")
+    Q_INTERFACES(QDeclarativeParserStatus)
 
 public:
     explicit QSGParticleGroup(QObject* parent = 0);

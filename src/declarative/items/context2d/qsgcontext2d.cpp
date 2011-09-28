@@ -332,9 +332,8 @@ public:
     v8::Persistent<v8::Function> constructorPixelArray;
     v8::Persistent<v8::Function> constructorImageData;
 };
-V8_DEFINE_EXTENSION(QSGContext2DEngineData, engineData);
 
-
+V8_DEFINE_EXTENSION(QSGContext2DEngineData, engineData)
 
 class QV8Context2DResource : public QV8ObjectResource
 {
@@ -2639,7 +2638,6 @@ v8::Handle<v8::Value> ctx2d_pixelArray_indexed_set(uint32_t index, v8::Local<v8:
     const int v = value->Uint32Value();
     if (r && index > 0 && index < r->image.width() * r->image.height() * 4 && v > 0 && v <= 255) {
         const int w = r->image.width();
-        const int h = r->image.height();
         const int row = (index / 4) / w;
         const int col = (index / 4) % w;
 
@@ -3082,14 +3080,14 @@ int baseLineOffset(QSGContext2D::TextBaseLineType value, const QFontMetrics &met
 {
     int offset = 0;
     switch (value) {
-    case QSGContext2D::QSGContext2D::Top:
+    case QSGContext2D::Top:
         break;
-    case QSGContext2D::QSGContext2D::Alphabetic:
-    case QSGContext2D::QSGContext2D::Middle:
-    case QSGContext2D::QSGContext2D::Hanging:
+    case QSGContext2D::Alphabetic:
+    case QSGContext2D::Middle:
+    case QSGContext2D::Hanging:
         offset = metrics.ascent();
         break;
-    case QSGContext2D::QSGContext2D::Bottom:
+    case QSGContext2D::Bottom:
         offset = metrics.height();
        break;
     }
@@ -3104,12 +3102,12 @@ static int textAlignOffset(QSGContext2D::TextAlignType value, const QFontMetrics
     else if (value == QSGContext2D::End)
         value = QGuiApplication::layoutDirection() == Qt::LeftToRight ? QSGContext2D::Right: QSGContext2D::Left;
     switch (value) {
-    case QSGContext2D::QSGContext2D::Center:
+    case QSGContext2D::Center:
         offset = metrics.width(text)/2;
         break;
-    case QSGContext2D::QSGContext2D::Right:
+    case QSGContext2D::Right:
         offset = metrics.width(text);
-    case QSGContext2D::QSGContext2D::Left:
+    case QSGContext2D::Left:
     default:
         break;
     }
