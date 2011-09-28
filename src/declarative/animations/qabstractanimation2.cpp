@@ -777,7 +777,7 @@ void QAbstractAnimation2::stateChanged(QAbstractAnimation2::State newState, QAbs
         QPair<QDeclarativeGuard<QObject>, int> slot = m_stateChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &newState, &oldState };
+            void *args[] = { 0, &newState, &oldState };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
@@ -790,7 +790,7 @@ void QAbstractAnimation2::currentLoopChanged(int currentLoop)
         QPair<QDeclarativeGuard<QObject>, int> slot = m_currentLoopChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &currentLoop };
+            void *args[] = { 0, &currentLoop };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }
@@ -803,7 +803,7 @@ void QAbstractAnimation2::directionChanged(QAbstractAnimation2::Direction direct
         QPair<QDeclarativeGuard<QObject>, int> slot = m_directionChangedSlots.at(ii);
         QObject *obj = slot.first;
         if (obj) {
-            void *args[] = { &direction };
+            void *args[] = { 0, &direction };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod,
                                   slot.second, args);
         }

@@ -9,4 +9,4 @@ SOURCES += tst_qdeclarativetimer.cpp
 }
 
 CONFIG += parallel_test
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private v8-private

@@ -133,12 +133,12 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
         d->animation->setDefaultTarget(d->property);
         d->animation->setDisableUserControl();
         d->animation->qtAnimation()->registerStateChanged(this,
-                                                          SLOT(qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)));
+                                                          "qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)");
     }
 }
 
 
-void QDeclarativeBehavior::qtAnimationStateChanged(QAbstractAnimation2::State newState,QAbstractAnimation2::State)
+void QDeclarativeBehavior::qtAnimationStateChanged(QAbstractAnimation2::State newState,QAbstractAnimation2::State oldState)
 {
     Q_D(QDeclarativeBehavior);
     if (!d->blockRunningChanged)
