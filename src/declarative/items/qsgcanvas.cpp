@@ -722,7 +722,10 @@ void QSGCanvasPrivate::notifyFocusChangesRecur(QSGItem **items, int remaining)
 
 void QSGCanvasPrivate::updateInputMethodData()
 {
-    qApp->inputPanel()->setInputItem(activeFocusItem);
+    QSGItem *inputItem = 0;
+    if (activeFocusItem && activeFocusItem->flags() & QSGItem::ItemAcceptsInputMethod)
+        inputItem = activeFocusItem;
+    qApp->inputPanel()->setInputItem(inputItem);
 }
 
 QVariant QSGCanvas::inputMethodQuery(Qt::InputMethodQuery query) const

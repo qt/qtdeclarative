@@ -1105,16 +1105,9 @@ void QSGTextInput::mousePressEvent(QMouseEvent *event)
     if(d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
-        if (d->showInputPanelOnFocus) {
-            if (hasActiveFocus() && hadActiveFocus && !isReadOnly()) {
-                // re-open input panel on press if already focused
-                openSoftwareInputPanel();
-            }
-        } else { // show input panel on click
-            if (hasActiveFocus() && !hadActiveFocus) {
-                d->clickCausedFocus = true;
-            }
-        }
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
+            openSoftwareInputPanel();
     }
     if (d->selectByMouse) {
         setKeepMouseGrab(false);
@@ -1158,16 +1151,6 @@ void QSGTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
-    if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
-            if (canvas() && canvas() == QGuiApplication::activeWindow()) {
-                // ### refactor: implement virtual keyboard properly..
-                qDebug("QSGTextInput: virtual keyboard no implemented...");
-//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-            }
-        }
-    }
-    d->clickCausedFocus = false;
     d->control->processEvent(event);
     if (!event->isAccepted())
         QSGImplicitSizeItem::mouseReleaseEvent(event);
@@ -1797,11 +1780,8 @@ void QSGTextInput::closeSoftwareInputPanel()
 void QSGTextInput::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QSGTextInput);
-    if (d->showInputPanelOnFocus) {
-        if (d->focusOnPress && !isReadOnly()) {
-            openSoftwareInputPanel();
-        }
-    }
+    if (d->focusOnPress && !isReadOnly())
+        openSoftwareInputPanel();
     QSGImplicitSizeItem::focusInEvent(event);
 }
 

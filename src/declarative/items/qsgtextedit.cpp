@@ -1332,16 +1332,9 @@ void QSGTextEdit::mousePressEvent(QMouseEvent *event)
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
         forceActiveFocus();
-        if (d->showInputPanelOnFocus) {
-            if (hasActiveFocus() && hadActiveFocus && !isReadOnly()) {
-                // re-open input panel on press if already focused
-                openSoftwareInputPanel();
-            }
-        } else { // show input panel on click
-            if (hasActiveFocus() && !hadActiveFocus) {
-                d->clickCausedFocus = true;
-            }
-        }
+        // re-open input panel on press if already focused
+        if (hasActiveFocus() && hadActiveFocus && !isReadOnly())
+            openSoftwareInputPanel();
     }
     d->control->processEvent(event, QPointF(0, -d->yoff));
     if (!event->isAccepted())
@@ -1356,16 +1349,6 @@ void QSGTextEdit::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QSGTextEdit);
     d->control->processEvent(event, QPointF(0, -d->yoff));
-    if (!d->showInputPanelOnFocus) { // input panel on click
-        if (d->focusOnPress && !isReadOnly() && boundingRect().contains(event->localPos())) {
-            // ### refactor: port properly
-            qDebug("QSGTextEdit: virtual keyboard handling not implemented");
-//            if (canvas() && canvas() == qApp->focusWidget()) {
-//                qt_widget_private(canvas())->handleSoftwareInputPanel(event->button(), d->clickCausedFocus);
-//            }
-        }
-    }
-    d->clickCausedFocus = false;
 
     if (!event->isAccepted())
         QSGImplicitSizeItem::mouseReleaseEvent(event);
@@ -1972,11 +1955,8 @@ void QSGTextEdit::closeSoftwareInputPanel()
 void QSGTextEdit::focusInEvent(QFocusEvent *event)
 {
     Q_D(const QSGTextEdit);
-    if (d->showInputPanelOnFocus) {
-        if (d->focusOnPress && !isReadOnly()) {
-            openSoftwareInputPanel();
-        }
-    }
+    if (d->focusOnPress && !isReadOnly())
+        openSoftwareInputPanel();
     QSGImplicitSizeItem::focusInEvent(event);
 }
 

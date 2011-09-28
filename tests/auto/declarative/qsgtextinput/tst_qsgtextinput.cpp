@@ -45,6 +45,7 @@
 #include <QFile>
 #include <QtDeclarative/qsgview.h>
 #include <QtGui/qguiapplication.h>
+#include <QInputPanel>
 #include <private/qsgtextinput_p.h>
 #include <private/qsgtextinput_p_p.h>
 #include <QDebug>
@@ -134,8 +135,7 @@ private slots:
     void canPaste();
     void readOnly();
 
-    void openInputPanelOnClick();
-    void openInputPanelOnFocus();
+    void openInputPanel();
     void setHAlignClearCache();
     void focusOutClearSelection();
 
@@ -1842,7 +1842,7 @@ void tst_qsgtextinput::cursorRectangle()
 
         QVERIFY(r.left() < textWidth + error);
         QVERIFY(r.right() > textWidth - error);
-        QCOMPARE(input.inputMethodQuery(Qt::ImMicroFocus).toRect(), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
     }
 
     // Check the cursor rectangle remains within the input bounding rect when auto scrolling.
@@ -1852,14 +1852,14 @@ void tst_qsgtextinput::cursorRectangle()
     for (int i = 6; i < text.length(); ++i) {
         input.setCursorPosition(i);
         QCOMPARE(r, input.cursorRectangle());
-        QCOMPARE(input.inputMethodQuery(Qt::ImMicroFocus).toRect(), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
     }
 
     for (int i = text.length() - 2; i >= 0; --i) {
         input.setCursorPosition(i);
         r = input.cursorRectangle();
         QVERIFY(r.right() >= 0);
-        QCOMPARE(input.inputMethodQuery(Qt::ImMicroFocus).toRect(), r);
+        QCOMPARE(input.inputMethodQuery(Qt::ImCursorRectangle).toRect(), r);
     }
 
     input.setText("Hi!");
@@ -2033,7 +2033,7 @@ void tst_qsgtextinput::simulateKey(QSGView *view, int key)
 class MyInputContext : public QInputContext
 {
 public:
-    MyInputContext() : openInputPanelReceived(false), closeInputPanelReceived(false), updateReceived(false), eventType(QEvent::None) {}
+    MyInputContext() : updateReceived(false), eventType(QEvent::None) {}
     ~MyInputContext() {}
 
     QString identifierName() { return QString(); }
@@ -2042,15 +2042,6 @@ public:
     void reset() {}
 
     bool isComposing() const { return false; }
-
-    bool filterEvent( const QEvent *event )
-    {
-        if (event->type() == QEvent::RequestSoftwareInputPanel)
-            openInputPanelReceived = true;
-        if (event->type() == QEvent::CloseSoftwareInputPanel)
-            closeInputPanelReceived = true;
-        return QInputContext::filterEvent(event);
-    }
 
     void update() { updateReceived = true; }
 
@@ -2075,8 +2066,6 @@ public:
         sendEvent(event);
     }
 
-    bool openInputPanelReceived;
-    bool closeInputPanelReceived;
     bool updateReceived;
     int cursor;
     QEvent::Type eventType;
@@ -2088,196 +2077,92 @@ public:
 };
 #endif
 
-void tst_qsgtextinput::openInputPanelOnClick()
+void tst_qsgtextinput::openInputPanel()
 {
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
     QSGView view(QUrl::fromLocalFile(SRCDIR "/data/openInputPanel.qml"));
-    MyInputContext ic;
-    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
-    // and QWidget won't allow an input context to be set when the flag is not set.
-    view.setAttribute(Qt::WA_InputMethodEnabled, true);
-    view.setInputContext(&ic);
-    view.setAttribute(Qt::WA_InputMethodEnabled, false);
     view.show();
-    QGuiApplication::setActiveWindow(&view);
+    view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
     QEXPECT_FAIL("", QTBUG_21489_MESSAGE, Continue);
     QTRY_COMPARE(view.windowState(), Qt::WindowActive);
+
     QSGTextInput *input = qobject_cast<QSGTextInput *>(view.rootObject());
     QVERIFY(input);
 
-    QSGItemPrivate* pri = QSGItemPrivate::get(input);
-    QSGTextInputPrivate *inputPrivate = static_cast<QSGTextInputPrivate*>(pri);
-
-    // input panel on click
-    inputPrivate->showInputPanelOnFocus = false;
-
-    // No longer relevant?
-//    QStyle::RequestSoftwareInputPanel behavior = QStyle::RequestSoftwareInputPanel(
-//            view.style()->styleHint(QStyle::SH_RequestSoftwareInputPanel));
-    QTest::mouseClick(&view, Qt::LeftButton, 0, input->pos().toPoint());
-    QApplication::processEvents();
-//    if (behavior == QStyle::RSIP_OnMouseClickAndAlreadyFocused) {
-//        QCOMPARE(ic.openInputPanelReceived, false);
-//        QTest::mouseClick(&view, Qt::LeftButton, 0, input->pos().toPoint());
-//        QApplication::processEvents();
-//        QCOMPARE(ic.openInputPanelReceived, true);
-//    } else if (behavior == QStyle::RSIP_OnMouseClick) {
-        QCOMPARE(ic.openInputPanelReceived, true);
-//    }
-    ic.openInputPanelReceived = false;
-
-
-
-    // focus should not cause input panels to open or close
-    input->setFocus(false);
-    input->setFocus(true);
-    input->setFocus(false);
-    input->setFocus(true);
-    input->setFocus(false);
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QCOMPARE(ic.closeInputPanelReceived, false);
-#endif
-}
-
-void tst_qsgtextinput::openInputPanelOnFocus()
-{
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/openInputPanel.qml"));
-    MyInputContext ic;
-    // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
-    // and QWidget won't allow an input context to be set when the flag is not set.
-    view.setAttribute(Qt::WA_InputMethodEnabled, true);
-    view.setInputContext(&ic);
-    view.setAttribute(Qt::WA_InputMethodEnabled, false);
-    view.show();
-    QGuiApplication::setActiveWindow(&view);
-    QTest::qWaitForWindowShown(&view);
-    QEXPECT_FAIL("", QTBUG_21489_MESSAGE, Continue);
-    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
-    QSGTextInput *input = qobject_cast<QSGTextInput *>(view.rootObject());
-    QVERIFY(input);
-    QSignalSpy focusOnPressSpy(input, SIGNAL(activeFocusOnPressChanged(bool)));
-
-    QSGItemPrivate* pri = QSGItemPrivate::get(input);
-    QSGTextInputPrivate *inputPrivate = static_cast<QSGTextInputPrivate*>(pri);
-    inputPrivate->showInputPanelOnFocus = true;
-
-    // test default values
+    // check default values
     QVERIFY(input->focusOnPress());
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QCOMPARE(ic.closeInputPanelReceived, false);
+    QVERIFY(!input->hasActiveFocus());
+    qDebug() << &input << qApp->inputPanel()->inputItem();
+    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QCOMPARE(qApp->inputPanel()->visible(), false);
 
-    // focus on press, input panel on focus
-    QTest::mousePress(&view, Qt::LeftButton, 0, input->pos().toPoint());
+    // input panel should open on focus
+    QPoint centerPoint(view.width()/2, view.height()/2);
+    Qt::KeyboardModifiers noModifiers = 0;
+    QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QVERIFY(input->hasActiveFocus());
-    QCOMPARE(ic.openInputPanelReceived, true);
-    ic.openInputPanelReceived = false;
+    QCOMPARE(qApp->inputPanel()->inputItem(), input);
+    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
-    // no events on release
-    QTest::mouseRelease(&view, Qt::LeftButton, 0, input->pos().toPoint());
-    QCOMPARE(ic.openInputPanelReceived, false);
-    ic.openInputPanelReceived = false;
-
-    // if already focused, input panel can be opened on press
+    // input panel should be re-opened when pressing already focused TextInput
+    qApp->inputPanel()->hide();
+    QCOMPARE(qApp->inputPanel()->visible(), false);
     QVERIFY(input->hasActiveFocus());
-    QTest::mousePress(&view, Qt::LeftButton, 0, input->pos().toPoint());
+    QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, true);
-    ic.openInputPanelReceived = false;
+    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
 
-    // input method should stay enabled if focus
-    // is lost to an item that also accepts inputs
+    // input panel should stay visible if focus is lost to another text inputor
+    QSignalSpy inputPanelVisibilitySpy(qApp->inputPanel(), SIGNAL(visibleChanged()));
     QSGTextInput anotherInput;
-    anotherInput.setParentItem(view.rootItem());
+    anotherInput.setParentItem(view.rootObject());
     anotherInput.setFocus(true);
-    QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, true);
-    ic.openInputPanelReceived = false;
-    QCOMPARE(view.inputContext(), (QInputContext*)&ic);
-    QVERIFY(view.testAttribute(Qt::WA_InputMethodEnabled));
+    QCOMPARE(qApp->inputPanel()->visible(), true);
+    QCOMPARE(qApp->inputPanel()->inputItem(), qobject_cast<QObject*>(&anotherInput));
+    QCOMPARE(inputPanelVisibilitySpy.count(), 0);
 
-    // input method should be disabled if focus
-    // is lost to an item that doesn't accept inputs
+    anotherInput.setFocus(false);
+    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QCOMPARE(view.activeFocusItem(), view.rootItem());
+    anotherInput.setFocus(true);
+
+    // input item should be null if focus is lost to an item that doesn't accept inputs
     QSGItem item;
-    item.setParentItem(view.rootItem());
+    item.setParentItem(view.rootObject());
     item.setFocus(true);
-    QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QVERIFY(view.inputContext() == 0);
-    QVERIFY(!view.testAttribute(Qt::WA_InputMethodEnabled));
+    QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QCOMPARE(view.activeFocusItem(), &item);
 
-    // no automatic input panel events should
-    // be sent if activeFocusOnPress is false
-    input->setFocusOnPress(false);
-    QCOMPARE(focusOnPressSpy.count(),1);
-    input->setFocusOnPress(false);
-    QCOMPARE(focusOnPressSpy.count(),1);
-    input->setFocus(false);
-    input->setFocus(true);
-    QTest::mousePress(&view, Qt::LeftButton, 0, input->pos().toPoint());
-    QTest::mouseRelease(&view, Qt::LeftButton, 0, input->pos().toPoint());
-    QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QCOMPARE(ic.closeInputPanelReceived, false);
+    qApp->inputPanel()->hide();
 
-    // one show input panel event should
-    // be set when openSoftwareInputPanel is called
-    input->openSoftwareInputPanel();
-    QCOMPARE(ic.openInputPanelReceived, true);
-    QCOMPARE(ic.closeInputPanelReceived, false);
-    ic.openInputPanelReceived = false;
-
-    // one close input panel event should
-    // be sent when closeSoftwareInputPanel is called
-    input->closeSoftwareInputPanel();
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QCOMPARE(ic.closeInputPanelReceived, true);
-    ic.closeInputPanelReceived = false;
-
-    // set activeFocusOnPress back to true
-    input->setFocusOnPress(true);
-    QCOMPARE(focusOnPressSpy.count(),2);
-    input->setFocusOnPress(true);
-    QCOMPARE(focusOnPressSpy.count(),2);
-    input->setFocus(false);
-    QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QCOMPARE(ic.closeInputPanelReceived, false);
-    ic.closeInputPanelReceived = false;
-
-    // input panel should not re-open
-    // if focus has already been set
-    input->setFocus(true);
-    QCOMPARE(ic.openInputPanelReceived, true);
-    ic.openInputPanelReceived = false;
-    input->setFocus(true);
-    QCOMPARE(ic.openInputPanelReceived, false);
-
-    // input method should be disabled
-    // if TextInput loses focus
-    input->setFocus(false);
-    QGuiApplication::processEvents();
-    QVERIFY(view.inputContext() == 0);
-    QVERIFY(!view.testAttribute(Qt::WA_InputMethodEnabled));
-
-    // input method should not be enabled
-    // if TextEdit is read only.
+    // input panel should not be opened if TextInput is read only
     input->setReadOnly(true);
-    ic.openInputPanelReceived = false;
     input->setFocus(true);
+    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
+    QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
-    QCOMPARE(ic.openInputPanelReceived, false);
-    QVERIFY(view.inputContext() == 0);
-    QVERIFY(!view.testAttribute(Qt::WA_InputMethodEnabled));
-#endif
+    QCOMPARE(qApp->inputPanel()->visible(), false);
+
+    // input panel should not be opened if focusOnPress is set to false
+    input->setFocusOnPress(false);
+    input->setFocus(false);
+    input->setFocus(true);
+    QCOMPARE(qApp->inputPanel()->visible(), false);
+    QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
+    QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
+    QCOMPARE(qApp->inputPanel()->visible(), false);
+
+    // input panel should open when openSoftwareInputPanel is called
+    input->openSoftwareInputPanel();
+    QCOMPARE(qApp->inputPanel()->visible(), true);
+
+    // input panel should close when closeSoftwareInputPanel is called
+    input->closeSoftwareInputPanel();
+    QCOMPARE(qApp->inputPanel()->visible(), false);
 }
 
 class MyTextInput : public QSGTextInput
@@ -2500,13 +2385,13 @@ void tst_qsgtextinput::preeditMicroFocus()
     QVERIFY(input);
 
     QRect currentRect;
-    QRect previousRect = input->inputMethodQuery(Qt::ImMicroFocus).toRect();
+    QRect previousRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
 
     // Verify that the micro focus rect is positioned the same for position 0 as
     // it would be if there was no preedit text.
     ic.updateReceived = false;
     ic.sendPreeditText(preeditText, 0);
-    currentRect = input->inputMethodQuery(Qt::ImMicroFocus).toRect();
+    currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
     QCOMPARE(ic.updateReceived, true);
@@ -2517,7 +2402,7 @@ void tst_qsgtextinput::preeditMicroFocus()
     for (int i = 1; i <= 5; ++i) {
         ic.updateReceived = false;
         ic.sendPreeditText(preeditText, i);
-        currentRect = input->inputMethodQuery(Qt::ImMicroFocus).toRect();
+        currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
         QCOMPARE(ic.updateReceived, true);
@@ -2530,7 +2415,7 @@ void tst_qsgtextinput::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     ic.updateReceived = false;
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
-    currentRect = input->inputMethodQuery(Qt::ImMicroFocus).toRect();
+    currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
     QCOMPARE(ic.updateReceived, true);
@@ -2714,8 +2599,8 @@ void tst_qsgtextinput::cursorRectangleSize()
     QVERIFY(textInput != 0);
     textInput->setFocus(Qt::OtherFocusReason);
     QRectF cursorRect = textInput->positionToRectangle(textInput->cursorPosition());
-    QRectF microFocusFromScene = canvas->inputMethodQuery(Qt::ImMicroFocus).toRectF();
-    QRectF microFocusFromApp= QGuiApplication::focusWidget()->inputMethodQuery(Qt::ImMicroFocus).toRectF();
+    QRectF microFocusFromScene = canvas->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
+    QRectF microFocusFromApp= QGuiApplication::focusWidget()->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
 
     QCOMPARE(microFocusFromScene.size(), cursorRect.size());
     QCOMPARE(microFocusFromApp.size(), cursorRect.size());

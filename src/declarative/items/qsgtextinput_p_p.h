@@ -88,8 +88,6 @@ public:
                  , oldValidity(false)
                  , focused(false)
                  , focusOnPress(true)
-                 , showInputPanelOnFocus(true)
-                 , clickCausedFocus(false)
                  , cursorVisible(false)
                  , autoScroll(true)
                  , selectByMouse(false)
@@ -98,11 +96,6 @@ public:
                  , selectPressed(false)
                  , textLayoutDirty(true)
     {
-#ifdef Q_OS_SYMBIAN
-        if (QSysInfo::symbianVersion() == QSysInfo::SV_SF_1 || QSysInfo::symbianVersion() == QSysInfo::SV_SF_3) {
-            showInputPanelOnFocus = false;
-        }
-#endif
     }
 
     ~QSGTextInputPrivate()
@@ -158,8 +151,6 @@ public:
     bool oldValidity:1;
     bool focused:1;
     bool focusOnPress:1;
-    bool showInputPanelOnFocus:1;
-    bool clickCausedFocus:1;
     bool cursorVisible:1;
     bool autoScroll:1;
     bool selectByMouse:1;
