@@ -286,6 +286,13 @@ of their use.
     \o Qt.RightToLeft - Text and graphics elements should be positioned
                         from right to left.
     \endlist
+
+    \row
+    \o \c application.inputPanel
+    \o
+    This read-only property allows access to application's QInputPanel object
+    and all its properties and slots. See the QInputPanel documentation for
+    further details.
     \endtable
 
     The following example uses the \c application object to indicate

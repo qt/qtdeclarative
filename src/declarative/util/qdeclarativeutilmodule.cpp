@@ -66,6 +66,7 @@
 #include "private/qdeclarativexmllistmodel_p.h"
 #endif
 #include <QtCore/qcoreapplication.h>
+#include <QtGui/QInputPanel>
 
 void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
@@ -76,7 +77,7 @@ void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor
 void QDeclarativeUtilModule::defineModule()
 {
     qmlRegisterUncreatableType<QDeclarativeApplication>("QtQuick",2,0,"Application", QDeclarativeApplication::tr("Application is an abstract class"));
-
+    qmlRegisterUncreatableType<QInputPanel>("QtQuick",2,0,"InputPanel", QInputPanel::tr("InputPanel is an abstract class"));
     qmlRegisterUncreatableType<QDeclarativeAbstractAnimation>("QtQuick",2,0,"Animation",QDeclarativeAbstractAnimation::tr("Animation is an abstract class"));
 
     qmlRegisterType<QDeclarativeBehavior>("QtQuick",2,0,"Behavior");

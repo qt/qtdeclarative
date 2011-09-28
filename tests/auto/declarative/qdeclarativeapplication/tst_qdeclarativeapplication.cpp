@@ -45,6 +45,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qsgitem.h>
 #include <QtDeclarative/qsgview.h>
+#include <QtGui/qinputpanel.h>
 
 class tst_qdeclarativeapplication : public QObject
 {
@@ -55,6 +56,7 @@ public:
 private slots:
     void active();
     void layoutDirection();
+    void inputPanel();
 
 private:
     QDeclarativeEngine engine;
@@ -118,6 +120,19 @@ void tst_qdeclarativeapplication::layoutDirection()
     // not mirrored again
     QGuiApplication::setLayoutDirection(Qt::LeftToRight);
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::LeftToRight);
+}
+
+void tst_qdeclarativeapplication::inputPanel()
+{
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0; Item { property variant inputPanel: Qt.application.inputPanel }", QUrl::fromLocalFile(""));
+    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QVERIFY(item);
+    QSGView view;
+    item->setParentItem(view.rootObject());
+
+    // check that the inputPanel property maches with application's input panel
+    QCOMPARE(qvariant_cast<QObject*>(item->property("inputPanel")), qApp->inputPanel());
 }
 
 QTEST_MAIN(tst_qdeclarativeapplication)
