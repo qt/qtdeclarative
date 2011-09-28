@@ -4,13 +4,7 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativerepeater.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 QT += core-private gui-private widgets-private declarative-private qtquick1-private

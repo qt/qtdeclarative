@@ -55,12 +55,6 @@ Q_DECLARE_METATYPE(QObjectList)
 //TESTED_CLASS=
 //TESTED_FILES=
 
-#if defined(Q_OS_SYMBIAN)
-# define STRINGIFY(x) #x
-# define TOSTRING(x) STRINGIFY(x)
-# define SRCDIR "C:/Private/" TOSTRING(SYMBIAN_SRCDIR_UID)
-#endif
-
 // The JavaScriptCore GC marks the C stack. To try to ensure that there is
 // no JSObject* left in stack memory by the compiler, we call this function
 // to zap some bytes of memory before calling collectGarbage().

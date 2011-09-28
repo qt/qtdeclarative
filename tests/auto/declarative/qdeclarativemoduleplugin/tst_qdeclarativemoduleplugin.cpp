@@ -74,11 +74,6 @@ private slots:
     void implicitQmldir_data();
 };
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 #define VERIFY_ERRORS(errorfile) \
     if (!errorfile) { \
         if (qgetenv("DEBUG") != "" && !component.errors().isEmpty()) \

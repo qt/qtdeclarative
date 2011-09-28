@@ -53,11 +53,6 @@
 #include <QDebug>
 #include <QTextStream>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_compilation : public QObject
 {
     Q_OBJECT

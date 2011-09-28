@@ -55,11 +55,6 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativesqldatabase : public QObject
 {
     Q_OBJECT

@@ -50,11 +50,6 @@
 #include <QtQuick1/private/qdeclarativeanchors_p_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 Q_DECLARE_METATYPE(QDeclarative1Anchors::Anchor)
 Q_DECLARE_METATYPE(QDeclarative1AnchorLine::AnchorLine)
 

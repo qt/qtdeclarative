@@ -9,13 +9,7 @@ INCLUDEPATH += ../../declarative/shared/
 HEADERS += ../../declarative/shared/testhttpserver.h
 SOURCES += ../../declarative/shared/testhttpserver.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 

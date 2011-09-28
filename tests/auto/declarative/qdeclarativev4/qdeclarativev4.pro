@@ -6,13 +6,7 @@ SOURCES += tst_qdeclarativev4.cpp \
            testtypes.cpp 
 HEADERS += testtypes.h 
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 

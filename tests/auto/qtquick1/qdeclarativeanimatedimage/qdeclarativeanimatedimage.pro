@@ -4,13 +4,7 @@ HEADERS += ../../declarative/shared/testhttpserver.h
 SOURCES += tst_qdeclarativeanimatedimage.cpp ../../declarative/shared/testhttpserver.cpp
 macx:CONFIG -= app_bundle
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 

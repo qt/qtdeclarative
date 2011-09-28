@@ -5,18 +5,10 @@ SOURCES += tst_qjsengine.cpp
 #temporary
 CONFIG += insignificant_test
 wince* {
+    addFiles.files = script
+    addFiles.path = .
+    DEPLOYMENT += addFiles
     DEFINES += SRCDIR=\\\"./\\\"
-} else:!symbian {
+} else {
     DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
-
-wince*|symbian: {
-   addFiles.files = script
-   addFiles.path = .
-   DEPLOYMENT += addFiles
-}
-
-symbian: {
-   TARGET.UID3 = 0xE0340006
-   DEFINES += SYMBIAN_SRCDIR_UID=$$lower($$replace(TARGET.UID3,"0x",""))
 }

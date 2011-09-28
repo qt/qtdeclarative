@@ -6,10 +6,3 @@ macx:CONFIG -= app_bundle
 
 SOURCES += qmltime.cpp 
 
-symbian {
-    TARGET.CAPABILITY = "All -TCB"
-    example.files = example.qml tests
-    example.path = .
-    DEPLOYMENT += example
-}
-

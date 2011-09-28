@@ -47,11 +47,6 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtOpenGL/QGLShaderProgram>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_QSGPinchArea: public QObject
 {
     Q_OBJECT

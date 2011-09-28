@@ -59,11 +59,6 @@
 #include <QtQuick1/private/qdeclarativexmllistmodel_p.h>
 #include "../../../shared/util.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 typedef QPair<int, int> QDeclarativeXmlListRange;
 typedef QList<QVariantList> QDeclarativeXmlModelData;
 

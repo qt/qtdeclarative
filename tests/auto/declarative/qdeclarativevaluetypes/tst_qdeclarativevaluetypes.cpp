@@ -46,11 +46,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include "testtypes.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 QT_BEGIN_NAMESPACE
 extern int qt_defaultDpi();
 QT_END_NAMESPACE

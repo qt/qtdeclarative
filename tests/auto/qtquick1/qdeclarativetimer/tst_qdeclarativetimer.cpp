@@ -46,11 +46,6 @@
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QDebug>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativetimer : public QObject
 {
     Q_OBJECT
@@ -85,12 +80,7 @@ public slots:
     }
 };
 
-#if defined(Q_OS_SYMBIAN) && defined(Q_CC_NOKIAX86)
-// Increase wait as emulator startup can cause unexpected delays
-#define TIMEOUT_TIMEOUT 2000
-#else
 #define TIMEOUT_TIMEOUT 200
-#endif
 
 tst_qdeclarativetimer::tst_qdeclarativetimer()
 {

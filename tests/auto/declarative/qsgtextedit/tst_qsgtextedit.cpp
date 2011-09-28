@@ -68,11 +68,6 @@
 #include <Carbon/Carbon.h>
 #endif
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 #define QTBUG_21691
 #define QTBUG_21691_MESSAGE "QTBUG-21691: The test needs to be rewritten to not use QInputContext"
 
@@ -2226,7 +2221,7 @@ void tst_qsgtextedit::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
 #endif
     QCOMPARE(cursorRectangleSpy.count(), 0);
@@ -2238,7 +2233,7 @@ void tst_qsgtextedit::preeditMicroFocus()
         ic.sendPreeditText(preeditText, i);
         currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
         QCOMPARE(ic.updateReceived, true);
 #endif
         QVERIFY(cursorRectangleSpy.count() > 0);
@@ -2253,7 +2248,7 @@ void tst_qsgtextedit::preeditMicroFocus()
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
     currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_SYMBIAN)
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
 #endif
     QVERIFY(cursorRectangleSpy.count() > 0);

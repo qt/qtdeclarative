@@ -56,11 +56,6 @@
 #include "incrementalmodel.h"
 #include <QtOpenGL/QGLShaderProgram>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QSGListView::Orientation)
 

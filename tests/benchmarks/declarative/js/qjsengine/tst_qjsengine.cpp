@@ -540,13 +540,8 @@ void tst_QJSEngine::nativeCall()
     newEngine();
     m_engine->globalObject().setProperty("fun", m_engine->newFunction(native_function));
     QBENCHMARK{
-#if !defined(Q_OS_SYMBIAN)
         m_engine->evaluate("var w = 0; for (i = 0; i < 100000; ++i) {\n"
                      "  w += fun() + fun(); w -= fun(); fun(); w -= fun(); }");
-#else
-        m_engine->evaluate("var w = 0; for (i = 0; i < 25000; ++i) {\n"
-                     "  w += fun() + fun(); w -= fun(); fun(); w -= fun(); }");
-#endif
     }
 }
 

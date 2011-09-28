@@ -55,13 +55,7 @@
 #include "../../../shared/util.h"
 #include "testhttpserver.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
-
 
 /*
 This test case covers QML language issues.  This covers everything that does not

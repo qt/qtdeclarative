@@ -10,10 +10,4 @@ SOURCES += tst_holistic.cpp \
            testtypes.cpp
 HEADERS += testtypes.h
 
-symbian {
-  data.files += data
-  data.path = .
-  DEPLOYMENT += data
-} else {
-  DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"

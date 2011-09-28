@@ -82,9 +82,7 @@ SGTESTS =  \
 
 SUBDIRS += $$PUBLICTESTS
 
-!symbian: {
-    SUBDIRS += $$METATYPETESTS
-}
+SUBDIRS += $$METATYPETESTS
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS

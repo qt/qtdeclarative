@@ -4,11 +4,6 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qsgview.cpp
 
-symbian: {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-} else {
-    DEFINES += SRCDIR=\\\"$$PWD\\\"
-}
+DEFINES += SRCDIR=\\\"$$PWD\\\"
+
 QT += core-private gui-private declarative-private

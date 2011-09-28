@@ -57,11 +57,6 @@
 #include "../../declarative/shared/testhttpserver.h"
 #include "../../../shared/util.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 #define SERVER_PORT 14446
 #define SERVER_ADDR "http://127.0.0.1:14446"
 

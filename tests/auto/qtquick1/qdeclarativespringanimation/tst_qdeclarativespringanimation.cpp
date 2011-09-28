@@ -45,11 +45,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include "../../../shared/util.h"
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativespringanimation : public QObject
 {
     Q_OBJECT

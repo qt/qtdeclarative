@@ -12,12 +12,6 @@ INCLUDEPATH += ../shared
 # QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
 # LIBS += -lgcov
 
-symbian {
-    importFiles.files = data
-    importFiles.path = .
-    DEPLOYMENT += importFiles
-}
-
 OTHER_FILES =   data/test.qml \
                 data/test.js
 

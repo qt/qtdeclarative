@@ -51,11 +51,6 @@
 #include <QDeclarativeNetworkAccessManagerFactory>
 #include <QDeclarativeExpression>
 
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
-
 class tst_qdeclarativeengine : public QObject
 {
     Q_OBJECT
