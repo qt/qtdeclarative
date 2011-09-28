@@ -439,7 +439,7 @@ bool QuickTestResult::expectFailContinue
 
 void QuickTestResult::warn(const QString &message)
 {
-    QTestLog::warn(message.toLatin1().constData());
+    QTestLog::warn(message.toLatin1().constData(), 0, 0);
 }
 
 void QuickTestResult::ignoreWarning(const QString &message)
