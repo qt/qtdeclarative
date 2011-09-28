@@ -1805,18 +1805,18 @@ void tst_QSGListView::sectionsPositioning()
     QTRY_VERIFY(topItem = findVisibleChild(contentItem, "sect_aaa")); // section header
     QCOMPARE(topItem->y(), 120.);
     QVERIFY(topItem = findVisibleChild(contentItem, "sect_1"));
-    QCOMPARE(topItem->y(), 140.);
+    QTRY_COMPARE(topItem->y(), 140.);
 
     // Change the next section
     listview->setContentY(0);
     bottomItem = findVisibleChild(contentItem, "sect_3"); // section footer
     QVERIFY(bottomItem);
-    QCOMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 320.);
 
     model.modifyItem(14, "New", "new");
 
     QTRY_VERIFY(bottomItem = findVisibleChild(contentItem, "sect_new")); // section footer
-    QCOMPARE(bottomItem->y(), 320.);
+    QTRY_COMPARE(bottomItem->y(), 320.);
 
     // Turn sticky footer off
     listview->setContentY(50);
