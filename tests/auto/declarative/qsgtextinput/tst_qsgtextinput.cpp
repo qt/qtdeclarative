@@ -2562,21 +2562,20 @@ void tst_qsgtextinput::inputMethodComposing()
     QCOMPARE(input->isInputMethodComposing(), false);
     {
         QInputMethodEvent event(text.mid(3), QList<QInputMethodEvent::Attribute>());
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(input, &event);
     }
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
     QCOMPARE(input->isInputMethodComposing(), true);
     QCOMPARE(spy.count(), 1);
 
     {
         QInputMethodEvent event(text.mid(12), QList<QInputMethodEvent::Attribute>());
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(spy.count(), 1);
 
     {
         QInputMethodEvent event;
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(input, &event);
     }
     QCOMPARE(input->isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);

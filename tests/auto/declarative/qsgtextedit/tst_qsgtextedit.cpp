@@ -2404,21 +2404,21 @@ void tst_qsgtextedit::inputMethodComposing()
 
     {
         QInputMethodEvent event(text.mid(3), QList<QInputMethodEvent::Attribute>());
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(edit, &event);
     }
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
+
     QCOMPARE(edit->isInputMethodComposing(), true);
     QCOMPARE(spy.count(), 1);
 
     {
         QInputMethodEvent event(text.mid(12), QList<QInputMethodEvent::Attribute>());
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(edit, &event);
     }
     QCOMPARE(spy.count(), 1);
 
     {
         QInputMethodEvent event;
-        QGuiApplication::sendEvent(&view, &event);
+        QGuiApplication::sendEvent(edit, &event);
     }
     QCOMPARE(edit->isInputMethodComposing(), false);
     QCOMPARE(spy.count(), 2);
