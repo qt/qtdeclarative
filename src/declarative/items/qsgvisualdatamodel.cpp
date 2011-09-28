@@ -131,14 +131,14 @@ public:
     void init();
     void connectModel(QSGVisualAdaptorModel *model);
 
-    QObject *object(Compositor::Group group, int index, bool complete);
-    QSGItem *item(Compositor::Group group, int index, bool complete);
+    QObject *object(Compositor::Group group, int index, bool complete, bool reference);
     void destroy(QObject *object);
     QSGVisualDataModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
     int cacheIndexOf(QObject *object) const;
     void emitCreatedPackage(Compositor::iterator at, QDeclarativePackage *package);
-    void emitCreatedItem(int index, QSGItem *item) { emit q_func()->createdItem(index, item); }
+    void emitCreatedItem(Compositor::iterator at, QSGItem *item) {
+        emit q_func()->createdItem(at.index[m_compositorGroup], item); }
     void emitDestroyingPackage(QDeclarativePackage *package);
     void emitDestroyingItem(QSGItem *item) { emit q_func()->destroyingItem(item); }
 
@@ -194,6 +194,7 @@ public:
         struct {
             QSGVisualDataGroup *m_cacheItems;
             QSGVisualDataGroup *m_items;
+            QSGVisualDataGroup *m_persistedItems;
         };
         QSGVisualDataGroup *m_groups[Compositor::MaximumGroupCount];
     };
@@ -341,9 +342,10 @@ public:
     }
 
     void referenceObject() { ++objectRef; }
-    bool releaseObject() { return --objectRef == 0; }
+    bool releaseObject() { return --objectRef == 0 && !(groups & Compositor::PersistedFlag); }
+    bool isObjectReferenced() const { return objectRef == 0 && !(groups & Compositor::PersistedFlag); }
 
-    bool isReferenced() const { return objectRef || scriptRef; }
+    bool isReferenced() const { return objectRef || scriptRef || (groups & Compositor::PersistedFlag); }
 
     void Dispose();
 
@@ -409,7 +411,7 @@ QSGVisualDataModelPrivate::QSGVisualDataModelPrivate(QDeclarativeContext *ctxt)
     , m_filterGroup(QStringLiteral("items"))
     , m_cacheItems(0)
     , m_items(0)
-    , m_groupCount(2)
+    , m_groupCount(3)
 {
 }
 
@@ -427,11 +429,14 @@ void QSGVisualDataModelPrivate::connectModel(QSGVisualAdaptorModel *model)
 void QSGVisualDataModelPrivate::init()
 {
     Q_Q(QSGVisualDataModel);
+    m_compositor.setRemoveGroups(Compositor::GroupMask & ~Compositor::PersistedFlag);
+
     m_adaptorModel = new QSGVisualAdaptorModel;
     QObject::connect(m_adaptorModel, SIGNAL(rootIndexChanged()), q, SIGNAL(rootIndexChanged()));
 
     m_items = new QSGVisualDataGroup(QStringLiteral("items"), q, Compositor::Default, q);
     m_items->setDefaultInclude(true);
+    m_persistedItems = new QSGVisualDataGroup(QStringLiteral("persistedItems"), q, Compositor::Persisted, q);
     QSGVisualDataGroupPrivate::get(m_items)->emitters.insert(this);
 }
 
@@ -477,9 +482,12 @@ void QSGVisualDataModel::componentComplete()
     int defaultGroups = 0;
     QStringList groupNames;
     groupNames.append(QStringLiteral("items"));
+    groupNames.append(QStringLiteral("persistedItems"));
     if (QSGVisualDataGroupPrivate::get(d->m_items)->defaultInclude)
         defaultGroups |= Compositor::DefaultFlag;
-    for (int i = 2; i < d->m_groupCount; ++i) {
+    if (QSGVisualDataGroupPrivate::get(d->m_persistedItems)->defaultInclude)
+        defaultGroups |= Compositor::PersistedFlag;
+    for (int i = 3; i < d->m_groupCount; ++i) {
         QString name = d->m_groups[i]->name();
         if (name.isEmpty()) {
             d->m_groups[i] = d->m_groups[d->m_groupCount - 1];
@@ -683,6 +691,16 @@ int QSGVisualDataModel::count() const
     return d->m_compositor.count(d->m_compositorGroup);
 }
 
+void QSGVisualDataModelPrivate::destroy(QObject *object)
+{
+    QObjectPrivate *p = QObjectPrivate::get(object);
+    Q_ASSERT(p->declarativeData);
+    QDeclarativeData *data = static_cast<QDeclarativeData*>(p->declarativeData);
+    if (data->ownContext && data->context)
+        data->context->clearContext();
+    object->deleteLater();
+}
+
 QSGVisualDataModel::ReleaseFlags QSGVisualDataModelPrivate::release(QObject *object)
 {
     QSGVisualDataModel::ReleaseFlags stat = 0;
@@ -693,12 +711,7 @@ QSGVisualDataModel::ReleaseFlags QSGVisualDataModelPrivate::release(QObject *obj
     if (cacheIndex != -1) {
         QSGVisualDataModelCacheItem *cacheItem = m_cache.at(cacheIndex);
         if (cacheItem->releaseObject()) {
-            QObjectPrivate *p = QObjectPrivate::get(object);
-            Q_ASSERT(p->declarativeData);
-            QDeclarativeData *data = static_cast<QDeclarativeData*>(p->declarativeData);
-            if (data->ownContext && data->context)
-                data->context->clearContext();
-            object->deleteLater();
+            destroy(object);
             cacheItem->object = 0;
             stat |= QSGVisualModel::Destroyed;
             if (!cacheItem->isReferenced()) {
@@ -733,7 +746,7 @@ void QSGVisualDataModelPrivate::group_append(
     QSGVisualDataModelPrivate *d = static_cast<QSGVisualDataModelPrivate *>(property->data);
     if (d->m_complete)
         return;
-    if (d->m_groupCount == 10) {
+    if (d->m_groupCount == 11) {
         qmlInfo(d->q_func()) << QSGVisualDataModel::tr("The maximum number of supported VisualDataGroups is 8");
         return;
     }
@@ -796,6 +809,29 @@ QSGVisualDataGroup *QSGVisualDataModel::items()
 {
     Q_D(QSGVisualDataModel);
     return d->m_items;
+}
+
+/*!
+    \qmlproperty VisualDataGroup QtQuick2::VisualDataModel::persistedItems
+
+    This property holds visual data model's persisted items group.
+
+    Items in this group are not destroyed when released by a view, instead they are persisted
+    until removed from the group.
+
+    An item can be removed from the persistedItems group by setting the
+    VisualDataModel.inPersistedItems property to false.  If the item is not referenced by a view
+    at that time it will be destroyed.  Adding an item to this group will not create a new
+    instance.
+
+    Items returned by the \l QtQuick2::VisualDataGroup::create() function are automatically added
+    to this group.
+*/
+
+QSGVisualDataGroup *QSGVisualDataModel::persistedItems()
+{
+    Q_D(QSGVisualDataModel);
+    return d->m_persistedItems;
 }
 
 /*!
@@ -918,13 +954,9 @@ void QSGVisualDataModelPrivate::emitDestroyingPackage(QDeclarativePackage *packa
         QSGVisualDataGroupPrivate::get(m_groups[i])->destroyingPackage(package);
 }
 
-QObject *QSGVisualDataModelPrivate::object(Compositor::Group group, int index, bool complete)
+QObject *QSGVisualDataModelPrivate::object(Compositor::Group group, int index, bool complete, bool reference)
 {
     Q_Q(QSGVisualDataModel);
-    if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
-        qWarning() << "VisualDataModel::item: index out range" << index << m_compositor.count(group);
-        return 0;
-    }
 
     Compositor::iterator it = m_compositor.find(group, index);
     QSGVisualDataModelCacheItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
@@ -970,8 +1002,12 @@ QObject *QSGVisualDataModelPrivate::object(Compositor::Group group, int index, b
             new QSGVisualDataModelAttachedMetaObject(cacheItem->attached, m_cacheMetaType);
             cacheItem->attached->emitChanges();
 
-            if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object))
+            if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object)) {
                 emitCreatedPackage(it, package);
+            } else if (!reference) {
+                if (QSGItem *item = qobject_cast<QSGItem *>(cacheItem->object))
+                    emitCreatedItem(it, item);
+            }
 
             m_completePending = !complete;
             if (complete)
@@ -987,14 +1023,20 @@ QObject *QSGVisualDataModelPrivate::object(Compositor::Group group, int index, b
 
     if (index == m_compositor.count(group) - 1 && m_adaptorModel->canFetchMore())
         QCoreApplication::postEvent(q, new QEvent(QEvent::UpdateRequest));
-    cacheItem->referenceObject();
+    if (reference)
+        cacheItem->referenceObject();
     return cacheItem->object;
 }
 
 QSGItem *QSGVisualDataModel::item(int index, bool complete)
 {
     Q_D(QSGVisualDataModel);
-    QObject *object = d->object(d->m_compositorGroup, index, complete);
+    if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
+        qWarning() << "VisualDataModel::item: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
+        return 0;
+    }
+
+    QObject *object = d->object(d->m_compositorGroup, index, complete, true);
     if (QSGItem *item = qobject_cast<QSGItem *>(object))
         return item;
     if (d->m_completePending)
@@ -1251,6 +1293,14 @@ void QSGVisualDataModelPrivate::itemsRemoved(
         } else {
             for (; cacheIndex < remove.cacheIndex + remove.count - removedCache; ++cacheIndex) {
                 QSGVisualDataModelCacheItem *cacheItem = m_cache.at(cacheIndex);
+                if (remove.inGroup(Compositor::Persisted) && cacheItem->objectRef == 0) {
+                    destroy(cacheItem->object);
+                    if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(cacheItem->object))
+                        emitDestroyingPackage(package);
+                    else if (QSGItem *item = qobject_cast<QSGItem *>(cacheItem->object))
+                        emitDestroyingItem(item);
+                    cacheItem->object = 0;
+                }
                 if (remove.groups() == cacheItem->groups && !cacheItem->isReferenced()) {
                     m_compositor.clearFlags(Compositor::Cache, cacheIndex, 1, Compositor::CacheFlag);
                     m_cache.removeAt(cacheIndex);
@@ -1742,6 +1792,26 @@ void QSGVisualDataModelAttached::setGroups(const QStringList &groups)
     It is attached to each instance of the delegate.
 */
 
+/*!
+    \qmlattachedproperty int QtQuick2::VisualDataModel::inPersistedItems
+
+    This attached property holds whether the item belongs to the \l persistedItems VisualDataGroup.
+
+    Changing this property will add or remove the item from the items group.  Change with caution
+    as removing an item from the persistedItems group will destroy the current instance if it is
+    not referenced by a model.
+
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedproperty int QtQuick2::VisualDataModel::persistedItemsIndex
+
+    This attached property holds the index of the item in the \l persistedItems VisualDataGroup.
+
+    It is attached to each instance of the delegate.
+*/
+
 void QSGVisualDataModelAttached::emitChanges()
 {
     if (m_modelChanged) {
@@ -1925,9 +1995,9 @@ void QSGVisualDataGroup::setDefaultInclude(bool include)
     a delegate
     \o \b groups A list the of names of groups the item is a member of.  This property can be
     written to change the item's membership.
-    \o \b inItems Whether the item belongs to the \l {VisualDataModel::items}{items} group.
+    \o \b inItems Whether the item belongs to the \l {QtQuick2::VisualDataModel::items}{items} group.
     Writing to this property will add or remove the item from the group.
-    \o \b itemsIndex The index of the item within the \l {VisualDataModel::items}{items} group.
+    \o \b itemsIndex The index of the item within the \l {QtQuick2::VisualDataModel::items}{items} group.
     \o \b {in\i{GroupName}} Whether the item belongs to the dynamic group \i groupName.  Writing to
     this property will add or remove the item from the group.
     \o \b {\i{groupName}Index} The index of the item within the dynamic group \i groupName.
@@ -1966,6 +2036,33 @@ QDeclarativeV8Handle QSGVisualDataGroup::get(int index)
     v8::Local<v8::Object> rv = model->m_cacheMetaType->constructor->NewInstance();
     rv->SetExternalResource(cacheItem);
     return QDeclarativeV8Handle::fromHandle(rv);
+}
+
+/*!
+    \qmlmethod QtQuick2::VisualDataGroup::create(int index)
+
+    Returns a reference to the instantiated item at \a index in the group.
+
+    All items returned by create are added to the persistedItems group.  Items in this
+    group remain instantiated when not referenced by any view.
+*/
+
+QObject *QSGVisualDataGroup::create(int index)
+{
+    Q_D(QSGVisualDataGroup);
+    if (!d->model)
+        return 0;
+
+    QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(d->model);
+    if (index < 0 || index >= model->m_compositor.count(d->group)) {
+        qmlInfo(this) << tr("create: index out of range");
+        return 0;
+    }
+
+    QObject *object = model->object(d->group, index, true, false);
+    if (object)
+        model->addGroups(d->group, index, 1, Compositor::PersistedFlag);
+    return object;
 }
 
 /*!
@@ -2332,7 +2429,12 @@ QSGItem *QSGVisualPartsModel::item(int index, bool complete)
 {
     QSGVisualDataModelPrivate *model = QSGVisualDataModelPrivate::get(m_model);
 
-    QObject *object = model->object(m_compositorGroup, index, complete);
+    if (!model->m_delegate || index < 0 || index >= model->m_compositor.count(m_compositorGroup)) {
+        qWarning() << "VisualDataModel::item: index out range" << index << model->m_compositor.count(m_compositorGroup);
+        return 0;
+    }
+
+    QObject *object = model->object(m_compositorGroup, index, complete, true);
 
     if (QDeclarativePackage *package = qobject_cast<QDeclarativePackage *>(object)) {
         QObject *part = package->part(m_part);

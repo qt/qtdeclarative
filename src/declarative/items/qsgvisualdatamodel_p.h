@@ -79,6 +79,7 @@ class Q_DECLARATIVE_EXPORT QSGVisualDataModel : public QSGVisualModel, public QD
     Q_PROPERTY(QDeclarativeComponent *delegate READ delegate WRITE setDelegate)
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
     Q_PROPERTY(QSGVisualDataGroup *items READ items CONSTANT)
+    Q_PROPERTY(QSGVisualDataGroup *persistedItems READ persistedItems CONSTANT)
     Q_PROPERTY(QDeclarativeListProperty<QSGVisualDataGroup> groups READ groups CONSTANT)
     Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
@@ -120,6 +121,7 @@ public:
     void resetFilterGroup();
 
     QSGVisualDataGroup *items();
+    QSGVisualDataGroup *persistedItems();
     QDeclarativeListProperty<QSGVisualDataGroup> groups();
     QObject *parts();
 
@@ -163,6 +165,7 @@ public:
     void setDefaultInclude(bool include);
 
     Q_INVOKABLE QDeclarativeV8Handle get(int index);
+    Q_INVOKABLE QObject *create(int index);
 
 public Q_SLOTS:
     void remove(QDeclarativeV8Function *);

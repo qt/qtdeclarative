@@ -65,23 +65,24 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QDeclarativeListCompositor
 {
 public:
-    enum { MaximumGroupCount = 10 };
+    enum { MaximumGroupCount = 11 };
 
     enum Group
     {
         Cache   = 0,
-        Default = 1
+        Default = 1,
+        Persisted = 2
     };
 
     enum Flag
     {
         CacheFlag   = 0x000001,
         DefaultFlag = 0x000002,
+        PersistedFlag = 0x000004,
         GroupMask   = 0x00FFFE,
         PrependFlag = 0x100000,
         AppendFlag  = 0x200000,
-        MovedFlag   = 0x400000,
-        RemoveFlags = GroupMask | PrependFlag | AppendFlag
+        MovedFlag   = 0x400000
     };
 
     class Range
@@ -215,6 +216,7 @@ public:
     void setDefaultGroups(int groups) { m_defaultFlags = groups | PrependFlag; }
     void setDefaultGroup(Group group) { m_defaultFlags |= (1 << group); }
     void clearDefaultGroup(Group group) { m_defaultFlags &= ~(1 << group); }
+    void setRemoveGroups(int groups) { m_removeFlags = PrependFlag | AppendFlag | groups; }
     void setGroupCount(int count);
 
     int count(Group group) const;
@@ -272,6 +274,7 @@ private:
     iterator m_cacheIt;
     int m_groupCount;
     int m_defaultFlags;
+    int m_removeFlags;
 
     inline Range *insert(Range *before, void *list, int index, int count, int flags);
     inline Range *erase(Range *range);

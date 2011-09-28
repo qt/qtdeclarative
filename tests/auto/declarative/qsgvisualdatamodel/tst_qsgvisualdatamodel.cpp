@@ -135,6 +135,7 @@ private slots:
     void move();
     void groups();
     void get();
+    void create();
 
 private:
     template <int N> void groups_verify(
@@ -1408,6 +1409,119 @@ void tst_qsgvisualdatamodel::get()
         static const bool sMember[] = { f, f, f, f, f, f, f, f, t, t, f, f };
         VERIFY_GET;
     }
+}
+
+void tst_qsgvisualdatamodel::create()
+{
+    QSGView view;
+
+    SingleRoleModel model;
+    model.list = QStringList()
+            << "one"
+            << "two"
+            << "three"
+            << "four"
+            << "five"
+            << "six"
+            << "seven"
+            << "eight"
+            << "nine"
+            << "ten"
+            << "eleven"
+            << "twelve"
+            << "thirteen"
+            << "fourteen"
+            << "fifteen"
+            << "sixteen"
+            << "seventeen"
+            << "eighteen"
+            << "nineteen"
+            << "twenty";
+
+    QDeclarativeContext *ctxt = view.rootContext();
+    ctxt->setContextProperty("myModel", &model);
+
+    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/create.qml"));
+
+    QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
+    QVERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem != 0);
+
+    QSGVisualDataModel *visualModel = qobject_cast<QSGVisualDataModel *>(qvariant_cast<QObject *>(listview->model()));
+    QVERIFY(visualModel);
+
+    QCOMPARE(listview->count(), 20);
+
+    QSGItem *delegate;
+
+    // Request an item instantiated by the view.
+    QVERIFY(findItem<QSGItem>(contentItem, "delegate", 1));
+    QVERIFY(delegate = qobject_cast<QSGItem *>(evaluate<QObject *>(visualModel, "items.create(1)")));
+    QCOMPARE(delegate, findItem<QSGItem>(contentItem, "delegate", 1));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
+
+    evaluate<void>(delegate, "VisualDataModel.inPersistedItems = false");
+    QCOMPARE(listview->count(), 20);
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
+
+    // Request an item not instantiated by the view.
+    QVERIFY(!findItem<QSGItem>(contentItem, "delegate", 15));
+    QVERIFY(delegate = qobject_cast<QSGItem *>(evaluate<QObject *>(visualModel, "items.create(15)")));
+    QCOMPARE(delegate, findItem<QSGItem>(contentItem, "delegate", 15));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
+
+    evaluate<void>(visualModel, "persistedItems.remove(0)");
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), true);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
+
+    // Request an item not instantiated by the view, then scroll the view so it will request it.
+    QVERIFY(!findItem<QSGItem>(contentItem, "delegate", 16));
+    QVERIFY(delegate = qobject_cast<QSGItem *>(evaluate<QObject *>(visualModel, "items.create(16)")));
+    QCOMPARE(delegate, findItem<QSGItem>(contentItem, "delegate", 16));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
+
+    evaluate<void>(listview, "positionViewAtIndex(19, ListView.End)");
+    QCOMPARE(listview->count(), 20);
+    evaluate<void>(delegate, "VisualDataModel.groups = [\"items\"]");
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
+
+    // Request and release an item instantiated by the view, then scroll the view so it releases it.
+    QVERIFY(findItem<QSGItem>(contentItem, "delegate", 17));
+    QVERIFY(delegate = qobject_cast<QSGItem *>(evaluate<QObject *>(visualModel, "items.create(17)")));
+    QCOMPARE(delegate, findItem<QSGItem>(contentItem, "delegate", 17));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
+
+    evaluate<void>(visualModel, "items.removeGroups(17, \"persistedItems\")");
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), false);
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 0);
+    evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
+    QCOMPARE(listview->count(), 20);
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), true);
+
+    // Adding an item to the persistedItems group won't instantiate it, but if later requested by
+    // the view it will be persisted.
+    evaluate<void>(visualModel, "items.addGroups(18, \"persistedItems\")");
+    QCOMPARE(evaluate<int>(visualModel, "persistedItems.count"), 1);
+    QVERIFY(!findItem<QSGItem>(contentItem, "delegate", 18));
+    evaluate<void>(listview, "positionViewAtIndex(19, ListView.End)");
+    QCOMPARE(listview->count(), 20);
+    QVERIFY(delegate = findItem<QSGItem>(contentItem, "delegate", 18));
+    QCOMPARE(evaluate<bool>(delegate, "VisualDataModel.inPersistedItems"), true);
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
+    evaluate<void>(listview, "positionViewAtIndex(1, ListView.Beginning)");
+    QCOMPARE(listview->count(), 20);
+    QCOMPARE(evaluate<bool>(delegate, "destroyed"), false);
 }
 
 template<typename T>

@@ -283,6 +283,7 @@ QDeclarativeListCompositor::QDeclarativeListCompositor()
     , m_cacheIt(m_end)
     , m_groupCount(2)
     , m_defaultFlags(PrependFlag | DefaultFlag)
+    , m_removeFlags(AppendFlag | PrependFlag | GroupMask)
 {
 }
 
@@ -896,7 +897,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
                 const int offset = qMax(0, relativeIndex);
                 int removeCount = qMin(it->count, relativeIndex + removal->count) - offset;
                 it->count -= removeCount;
-                int removeFlags = it->flags & RemoveFlags;
+                int removeFlags = it->flags & m_removeFlags;
                 Remove translatedRemoval(it, removeCount, it->flags);
                 for (int i = 0; i < m_groupCount; ++i) {
                     if (it->inGroup(i))
