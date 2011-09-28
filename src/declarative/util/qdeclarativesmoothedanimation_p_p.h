@@ -61,7 +61,7 @@
 #include <qparallelanimationgroup.h>
 
 #include <private/qobject_p.h>
-#include <QTimer>
+#include <QBasicTimer>
 
 QT_BEGIN_NAMESPACE
 
@@ -89,6 +89,7 @@ public:
 protected:
     virtual void updateCurrentTime(int);
     virtual void updateState(QAbstractAnimation::State, QAbstractAnimation::State);
+    virtual void timerEvent(QTimerEvent *);
 
 private:
     qreal easeFollow(qreal);
@@ -115,7 +116,7 @@ private:
     bool recalc();
     void delayedStop();
 
-    QTimer delayedStopTimer;
+    QBasicTimer delayedStopTimer;
 };
 
 class QDeclarativeSmoothedAnimationPrivate : public QDeclarativePropertyAnimationPrivate

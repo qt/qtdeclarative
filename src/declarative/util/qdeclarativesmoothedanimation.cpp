@@ -62,9 +62,6 @@ QSmoothedAnimation::QSmoothedAnimation(QObject *parent)
       reversingMode(QDeclarativeSmoothedAnimation::Eased), initialVelocity(0),
       trackVelocity(0), initialValue(0), invert(false), finalDuration(-1), lastTime(0)
 {
-    delayedStopTimer.setInterval(DELAY_STOP_TIMER_INTERVAL);
-    delayedStopTimer.setSingleShot(true);
-    connect(&delayedStopTimer, SIGNAL(timeout()), this, SLOT(stop()));
 }
 
 void QSmoothedAnimation::restart()
@@ -82,10 +79,20 @@ void QSmoothedAnimation::updateState(QAbstractAnimation::State newState, QAbstra
         init();
 }
 
+void QSmoothedAnimation::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == delayedStopTimer.timerId()) {
+        delayedStopTimer.stop();
+        stop();
+    } else {
+        QAbstractAnimation::timerEvent(event);
+    }
+}
+
 void QSmoothedAnimation::delayedStop()
 {
     if (!delayedStopTimer.isActive())
-        delayedStopTimer.start();
+        delayedStopTimer.start(DELAY_STOP_TIMER_INTERVAL, this);
 }
 
 int QSmoothedAnimation::duration() const
