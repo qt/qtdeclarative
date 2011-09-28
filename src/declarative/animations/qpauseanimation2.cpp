@@ -49,12 +49,6 @@ QPauseAnimation2::QPauseAnimation2(QDeclarativeAbstractAnimation *animation)
     m_isPause = true;
 }
 
-QPauseAnimation2::QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation)
-    : QAbstractAnimation2(animation), m_duration(msecs)
-{
-    m_isPause = true;
-}
-
 QPauseAnimation2::~QPauseAnimation2()
 {
 }

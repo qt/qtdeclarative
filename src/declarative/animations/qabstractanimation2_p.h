@@ -63,8 +63,6 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-
-
 class QAnimationGroup2;
 class QSequentialAnimationGroup2;
 class QAnimationDriver2;

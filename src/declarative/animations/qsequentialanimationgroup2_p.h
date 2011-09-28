@@ -57,9 +57,6 @@ public:
     QSequentialAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QSequentialAnimationGroup2();
 
-    QPauseAnimation2 *addPause(int msecs);
-    QPauseAnimation2 *insertPause(int index, int msecs);
-
     QAbstractAnimation2 *currentAnimation() const;
     int duration() const;
 

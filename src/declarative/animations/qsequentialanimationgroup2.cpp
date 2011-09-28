@@ -187,31 +187,12 @@ QSequentialAnimationGroup2::~QSequentialAnimationGroup2()
 {
 }
 
-QPauseAnimation2 *QSequentialAnimationGroup2::addPause(int msecs)
-{
-    QPauseAnimation2 *pause = new QPauseAnimation2(msecs);
-    addAnimation(pause);
-    return pause;
-}
-
-QPauseAnimation2 *QSequentialAnimationGroup2::insertPause(int index, int msecs)
-{
-    if (index < 0 || index > m_animations.size()) {
-        qWarning("QSequentialAnimationGroup2::insertPause: index is out of bounds");
-        return 0;
-    }
-
-    QPauseAnimation2 *pause = new QPauseAnimation2(msecs);
-    insertAnimation(index, pause);
-    return pause;
-}
-
-
 QAbstractAnimation2 *QSequentialAnimationGroup2::currentAnimation() const
 {
     return m_currentAnimation;
 }
 
+//only calculate once
 int QSequentialAnimationGroup2::duration() const
 {
     int ret = 0;

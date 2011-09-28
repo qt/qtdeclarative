@@ -57,21 +57,26 @@ public:
     QAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
     ~QAnimationGroup2();
 
+    //unused
     int animationCount() const;
     void clear();
-
     QAbstractAnimation2 *animationAt(int index) const;
     int indexOfAnimation(QAbstractAnimation2 *animation) const;
-    void addAnimation(QAbstractAnimation2 *animation);
-    void insertAnimation(int index, QAbstractAnimation2 *animation);
+
+    //can be removed after refactor
     void removeAnimation(QAbstractAnimation2 *animation);
     QAbstractAnimation2 *takeAnimation(int index);
+
+    void addAnimation(QAbstractAnimation2 *animation);
+    void insertAnimation(int index, QAbstractAnimation2 *animation);
     virtual void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
 
 private:
     Q_DISABLE_COPY(QAnimationGroup2)
+    //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }
     virtual void animationRemoved(int, QAbstractAnimation2 *);
+
     void connectUncontrolledAnimations();
     void disconnectUncontrolledAnimations();
     void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
