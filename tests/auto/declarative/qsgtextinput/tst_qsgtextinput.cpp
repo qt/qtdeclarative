@@ -1247,7 +1247,7 @@ void tst_qsgtextinput::positionAt()
     int diff = abs(textWidth - (textLeftWidth+textinputObject->width()/2));
 
     // some tollerance for different fonts.
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
+    QEXPECT_FAIL("", "QTBUG-21689", Abort);
 #ifdef Q_OS_LINUX
     QVERIFY(diff < 2);
 #else
@@ -1336,11 +1336,11 @@ void tst_qsgtextinput::maxLength()
     textinputObject->setText("");
     QTRY_VERIFY(textinputObject->hasActiveFocus() == true);
     for(int i=0; i<20; i++){
-        QCOMPARE(textinputObject->text().length(), qMin(i,10));
+        QTRY_COMPARE(textinputObject->text().length(), qMin(i,10));
         //simulateKey(&canvas, Qt::Key_A);
         QTest::keyPress(&canvas, Qt::Key_A);
         QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-        QEXPECT_FAIL("", "QTBUG-21690", Abort);
+        QTest::qWait(50);
     }
 }
 
@@ -1358,12 +1358,12 @@ void tst_qsgtextinput::masks()
     QVERIFY(textinputObject->text().length() == 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
     for(int i=0; i<10; i++){
-        QCOMPARE(qMin(i,8), textinputObject->text().length());
+        QTRY_COMPARE(qMin(i,8), textinputObject->text().length());
         QCOMPARE(i>=4, textinputObject->hasAcceptableInput());
         //simulateKey(&canvas, Qt::Key_A);
         QTest::keyPress(&canvas, Qt::Key_A);
         QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-        QEXPECT_FAIL("", "QTBUG-21690", Abort);
+        QTest::qWait(50);
     }
 }
 
@@ -1385,19 +1385,22 @@ void tst_qsgtextinput::validators()
     QTRY_VERIFY(intInput->hasActiveFocus());
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
-    QCOMPARE(intInput->text(), QLatin1String("1"));
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QTest::keyPress(&canvas, Qt::Key_2);
     QTest::keyRelease(&canvas, Qt::Key_2, Qt::NoModifier ,10);
-    QCOMPARE(intInput->text(), QLatin1String("1"));
+    QTest::qWait(50);
+    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
+    QTest::qWait(50);
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_0);
     QTest::keyRelease(&canvas, Qt::Key_0, Qt::NoModifier ,10);
+    QTest::qWait(50);
     QCOMPARE(intInput->text(), QLatin1String("11"));
     QCOMPARE(intInput->hasAcceptableInput(), true);
 
@@ -1407,27 +1410,33 @@ void tst_qsgtextinput::validators()
     QVERIFY(dblInput->hasActiveFocus() == true);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("1"));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("1"));
     QCOMPARE(dblInput->hasAcceptableInput(), false);
     QTest::keyPress(&canvas, Qt::Key_2);
     QTest::keyRelease(&canvas, Qt::Key_2, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("12"));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_Period);
     QTest::keyRelease(&canvas, Qt::Key_Period, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("12."));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12."));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("12.1"));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.1"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("12.11"));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QCOMPARE(dblInput->text(), QLatin1String("12.11"));
+    QTest::qWait(50);
+    QTRY_COMPARE(dblInput->text(), QLatin1String("12.11"));
     QCOMPARE(dblInput->hasAcceptableInput(), true);
 
     QSGTextInput *strInput = qobject_cast<QSGTextInput *>(qvariant_cast<QObject *>(canvas.rootObject()->property("strInput")));
@@ -1436,27 +1445,33 @@ void tst_qsgtextinput::validators()
     QVERIFY(strInput->hasActiveFocus() == true);
     QTest::keyPress(&canvas, Qt::Key_1);
     QTest::keyRelease(&canvas, Qt::Key_1, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String(""));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String(""));
     QCOMPARE(strInput->hasAcceptableInput(), false);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String("a"));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String("a"));
     QCOMPARE(strInput->hasAcceptableInput(), false);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String("aa"));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String("aa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String("aaa"));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String("aaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String("aaaa"));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
     QTest::keyPress(&canvas, Qt::Key_A);
     QTest::keyRelease(&canvas, Qt::Key_A, Qt::NoModifier ,10);
-    QCOMPARE(strInput->text(), QLatin1String("aaaa"));
+    QTest::qWait(50);
+    QTRY_COMPARE(strInput->text(), QLatin1String("aaaa"));
     QCOMPARE(strInput->hasAcceptableInput(), true);
 }
 

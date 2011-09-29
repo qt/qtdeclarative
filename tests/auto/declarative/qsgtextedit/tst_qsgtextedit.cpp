@@ -575,7 +575,7 @@ void tst_qsgtextedit::hAlign_RightToLeft()
 
     textEdit->setText(QString());
     { QInputMethodEvent ev(rtlText, QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
+    QEXPECT_FAIL("", "QTBUG-21691", Abort);
     QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignRight);
     { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
     QCOMPARE(textEdit->hAlign(), QSGTextEdit::AlignLeft);
@@ -1395,14 +1395,16 @@ void tst_qsgtextedit::mouseSelection()
     QTest::mousePress(&canvas, Qt::LeftButton, 0, p1);
     QTest::mouseMove(&canvas, p2);
     QTest::mouseRelease(&canvas, Qt::LeftButton, 0, p2);
-    QCOMPARE(textEditObject->selectedText(), selectedText);
+    QTest::qWait(50);
+    QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 
     // Clicking and shift to clicking between the same points should select the same text.
     textEditObject->setCursorPosition(0);
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::NoModifier, p1);
     QTest::mouseClick(&canvas, Qt::LeftButton, Qt::ShiftModifier, p2);
+    QTest::qWait(50);
     if (!selectedText.isEmpty())
-        QEXPECT_FAIL("", "QTBUG-21690", Continue);
+        QEXPECT_FAIL("", "QTBUG-21743", Continue);
     QTRY_COMPARE(textEditObject->selectedText(), selectedText);
 }
 
@@ -1607,8 +1609,8 @@ void tst_qsgtextedit::cursorDelegate()
     textEditObject->setCursorPosition(0);
     const QPoint point1 = textEditObject->positionToRectangle(5).center().toPoint();
     QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
-    QVERIFY(textEditObject->cursorPosition() != 0);
+    QTest::qWait(50);
+    QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
     QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
 
@@ -1619,19 +1621,22 @@ void tst_qsgtextedit::cursorDelegate()
     QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QGuiApplication::sendEvent(&view, &mv);
     QTest::mouseRelease(&view, Qt::LeftButton, 0, point2);
-    QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
+    QTest::qWait(50);
+    QTRY_COMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
     QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
 
     textEditObject->setReadOnly(true);
     textEditObject->setCursorPosition(0);
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
-    QVERIFY(textEditObject->cursorPosition() != 0);
+    QTest::qWait(50);
+    QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
     QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
 
     textEditObject->setCursorPosition(0);
     QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
-    QVERIFY(textEditObject->cursorPosition() != 0);
+    QTest::qWait(50);
+    QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
     QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
 
@@ -1986,7 +1991,7 @@ void tst_qsgtextedit::textInput()
     QInputMethodEvent event;
     event.setCommitString( "Hello world!", 0, 0);
     QGuiApplication::sendEvent(&view, &event);
-    QEXPECT_FAIL("", "QTBUG-21690", Abort);
+    QEXPECT_FAIL("", "QTBUG-21689", Abort);
     QCOMPARE(edit->text(), QString("Hello world!"));
 
     // QTBUG-12339
