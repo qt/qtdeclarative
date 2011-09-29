@@ -73,7 +73,7 @@ public:
     virtual ~QDeclarativeIncubator();
 
     void clear();
-    void forceIncubation();
+    void forceCompletion();
 
     bool isNull() const;
     bool isReady() const;

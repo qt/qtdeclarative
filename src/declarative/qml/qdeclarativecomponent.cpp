@@ -75,7 +75,7 @@ public:
 
     v8::Persistent<v8::Function> incubationConstructor;
     v8::Persistent<v8::Script> initialProperties;
-    v8::Persistent<v8::Function> forceIncubation;
+    v8::Persistent<v8::Function> forceCompletion;
 };
 static V8_DEFINE_EXTENSION(QDeclarativeComponentExtension, componentExtension);
 
@@ -891,10 +891,8 @@ void QDeclarativeComponent::create(QDeclarativeIncubator &i, QDeclarativeContext
 {
     Q_D(QDeclarativeComponent);
 
-    if (!context) {
-        qWarning("QDeclarativeComponent: Cannot create a component in a null context");
-        return;
-    }
+    if (!context) 
+        context = d->engine->rootContext();
 
     QDeclarativeContextData *contextData = QDeclarativeContextData::get(context);
     QDeclarativeContextData *forContextData = contextData;
@@ -939,9 +937,9 @@ public:
                                               const v8::AccessorInfo& info);
     static v8::Handle<v8::Value> ObjectGetter(v8::Local<v8::String>, 
                                               const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ForceIncubationGetter(v8::Local<v8::String>, 
+    static v8::Handle<v8::Value> ForceCompletionGetter(v8::Local<v8::String>, 
                                                        const v8::AccessorInfo& info);
-    static v8::Handle<v8::Value> ForceIncubation(const v8::Arguments &args);
+    static v8::Handle<v8::Value> ForceCompletion(const v8::Arguments &args);
 
     static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
                                     const v8::AccessorInfo& info);
@@ -1165,7 +1163,7 @@ QDeclarativeComponentExtension::QDeclarativeComponentExtension(QV8Engine *engine
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(engine->context());
 
-    forceIncubation = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceIncubation, engine));
+    forceCompletion = qPersistentNew(V8FUNCTION(QV8IncubatorResource::ForceCompletion, engine));
 
     {
     v8::Local<v8::FunctionTemplate> ft = v8::FunctionTemplate::New();
@@ -1178,8 +1176,8 @@ QDeclarativeComponentExtension::QDeclarativeComponentExtension(QV8Engine *engine
                                         QV8IncubatorResource::StatusGetter);
     ft->InstanceTemplate()->SetAccessor(v8::String::New("object"), 
                                         QV8IncubatorResource::ObjectGetter); 
-    ft->InstanceTemplate()->SetAccessor(v8::String::New("forceIncubation"), 
-                                        QV8IncubatorResource::ForceIncubationGetter); 
+    ft->InstanceTemplate()->SetAccessor(v8::String::New("forceCompletion"), 
+                                        QV8IncubatorResource::ForceCompletionGetter); 
     incubationConstructor = qPersistentNew(ft->GetFunction());
     }
 
@@ -1211,20 +1209,20 @@ v8::Handle<v8::Value> QV8IncubatorResource::ObjectGetter(v8::Local<v8::String>,
     return r->engine->newQObject(r->object());
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceIncubationGetter(v8::Local<v8::String>, 
+v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletionGetter(v8::Local<v8::String>, 
                                                                   const v8::AccessorInfo& info)
 {
     QV8IncubatorResource *r = v8_resource_check<QV8IncubatorResource>(info.This());
-    return componentExtension(r->engine)->forceIncubation;
+    return componentExtension(r->engine)->forceCompletion;
 }
 
-v8::Handle<v8::Value> QV8IncubatorResource::ForceIncubation(const v8::Arguments &args) 
+v8::Handle<v8::Value> QV8IncubatorResource::ForceCompletion(const v8::Arguments &args) 
 {
     QV8IncubatorResource *r = v8_resource_cast<QV8IncubatorResource>(args.This());
     if (!r)
         V8THROW_TYPE("Not an incubator object");
 
-    r->forceIncubation();
+    r->forceCompletion();
 
     return v8::Undefined();
 }

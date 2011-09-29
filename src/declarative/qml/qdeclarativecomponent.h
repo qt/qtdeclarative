@@ -100,7 +100,7 @@ public:
     virtual QObject *beginCreate(QDeclarativeContext *);
     virtual void completeCreate();
 
-    void create(QDeclarativeIncubator &, QDeclarativeContext *context,
+    void create(QDeclarativeIncubator &, QDeclarativeContext *context = 0,
                 QDeclarativeContext *forContext = 0);
 
     QDeclarativeContext *creationContext() const;

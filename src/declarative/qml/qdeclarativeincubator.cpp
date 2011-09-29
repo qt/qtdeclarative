@@ -48,6 +48,7 @@
 // XXX TODO 
 //   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and 
 //     async if nested cases
+//   - implement QDeclarativeIncubator::clear()
 void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeContextData *forContext)
 {
     QDeclarativeIncubatorPrivate *p = i.d;
@@ -88,13 +89,24 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
     }
 }
 
-void QDeclarativeEngine::setIncubationController(QDeclarativeIncubationController *i)
+/*!
+Sets the engine's incubation \a controller.  The engine can only have one active controller 
+and it does not take ownership of it.
+
+\sa incubationController()
+*/
+void QDeclarativeEngine::setIncubationController(QDeclarativeIncubationController *controller)
 {
     Q_D(QDeclarativeEngine);
-    d->incubationController = i;
-    if (i) i->d = d;
+    d->incubationController = controller;
+    if (controller) controller->d = d;
 }
 
+/*!
+Returns the currently set incubation controller, or 0 if no controller has been set.
+
+\sa setIncubationController()
+*/
 QDeclarativeIncubationController *QDeclarativeEngine::incubationController() const
 {
     Q_D(const QDeclarativeEngine);
@@ -133,6 +145,12 @@ void QDeclarativeIncubatorPrivate::clear()
     }
 
 }
+
+/*!
+
+\class QDeclarativeIncubationController
+
+*/
 
 QDeclarativeIncubationController::QDeclarativeIncubationController()
 : d(0)
@@ -247,21 +265,141 @@ void QDeclarativeIncubationController::incubateWhile(bool *flag)
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
-QDeclarativeIncubator::QDeclarativeIncubator(IncubationMode m)
-: d(new QDeclarativeIncubatorPrivate(this, m))
+/*!
+\class QDeclarativeIncubator
+\brief The QDeclarativeIncubator class allows QML objects to be created asynchronously.
+
+Creating QML objects - like delegates in a view, or a new page in an application - can take
+a noticable amount of time, especially on resource constrained mobile devices.  When an
+application uses QDeclarativeComponent::create() directly, the QML object instance is created
+synchronously which, depending on the complexity of the object,  can cause noticable pauses or 
+stutters in the application.
+
+The use of QDeclarativeIncubator gives more control over the creation of a QML object, 
+including allowing it to be created asynchronously using application idle time.  The following 
+example shows a simple use of QDeclarativeIncubator.
+
+\code
+QDeclarativeIncubator incubator;
+component->create(incubator);
+
+while (incubator.isReady()) {
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+}
+
+QObject *object = incubator.object();
+\endcode
+
+Asynchronous incubators are controlled by a QDeclarativeIncubationController that is 
+set on the QDeclarativeEngine, which lets the engine know when the application is idle and
+incubating objects should be processed.  If an incubation controller is not set on the
+QDeclarativeEngine, QDeclarativeIncubator creates objects synchronously regardless of the
+specified IncubationMode.  
+
+QDeclarativeIncubator supports three incubation modes:
+\list
+\i Synchronous The creation occurs synchronously.  That is, once the 
+QDeclarativeComponent::create() call returns, the incubator will already be in either the
+Error or Ready state.  A synchronous incubator has no real advantage compared to using
+the synchronous creation methods on QDeclarativeComponent directly, but it may simplify an 
+application's implementation to use the same API for both synchronous and asynchronous 
+creations.
+
+\i Asynchronous (default) The creation occurs asynchronously, assuming a 
+QDeclarativeIncubatorController is set on the QDeclarativeEngine.  
+
+The incubator will remain in the Loading state until either the creation is complete or an error 
+occurs.  The statusChanged() callback can be used to be notified of status changes.
+
+Applications should use the Asynchronous incubation mode to create objects that are not needed
+immediately.  For example, the ListView element uses Asynchronous incubation to create objects
+that are slightly off screen while the list is being scrolled.  If, during asynchronous creation,
+the object is needed immediately the QDeclarativeIncubator::forceCompletion() method can be called
+to complete the creation process synchronously.
+
+\i AsynchronousIfNested The creation will occur asynchronously if part of a nested asynchronous 
+creation, or synchronously if not.  
+
+In most scenarios where a QML element or component wants the appearance of a synchronous 
+instantiation, it should use this mode.  
+
+This mode is best explained with an example.  When the ListView element is first created, it needs
+to populate itself with an initial set of delegates to show.  If the ListView was 400 pixels high, 
+and each delegate was 100 pixels high, it would need to create four initial delegate instances.  If
+the ListView used the Asynchronous incubation mode, the ListView would always be created empty and
+then, sometime later, the four initial elements would appear.  
+
+Conversely, if the ListView was to use the Synchronous incubation mode it would behave correctly 
+but it may introduce stutters into the application.  As QML would have to stop and instantiate the 
+ListView's delegates synchronously, if the ListView was part of a QML component that was being 
+instantiated asynchronously this would undo much of the benefit of asynchronous instantiation.
+
+The AsynchronousIfNested mode reconciles this problem.  By using AsynchronousIfNested, the ListView
+delegates are instantiated asynchronously if the ListView itself is already part of an asynchronous
+instantiation, and synchronously otherwise.  In the case of a nested asynchronous instantiation, the
+outer asynchronous instantiation will not complete until after all the nested instantiations have also
+completed.  This ensures that by the time the outer asynchronous instantitation completes, inner 
+elements like ListView have already completed loading their initial delegates.
+
+It is almost always incorrect to use the Synchronous incubation mode - elements or components that 
+want the appearance of synchronous instantiation, but without the downsides of introducing freezes 
+or stutters into the application, should use the AsynchronousIfNested incubation mode.
+\endlist
+*/
+
+/*!
+Create a new incubator with the specified \a mode
+*/
+QDeclarativeIncubator::QDeclarativeIncubator(IncubationMode mode)
+: d(new QDeclarativeIncubatorPrivate(this, mode))
 {
 }
 
+/*! \internal */
 QDeclarativeIncubator::~QDeclarativeIncubator()
 {
     delete d; d = 0;
 }
 
+/*!
+\enum QDeclarativeIncubator::IncubationMode
+
+Specifies the mode the incubator operates in.  Regardless of the incubation mode, a 
+QDeclarativeIncubator will behave synchronously if the QDeclarativeEngine does not have
+a QDeclarativeIncubationController set.
+
+\value Asynchronous The object will be created asynchronously.
+\value AsynchronousIfNested If the object is being created in a context that is already part
+of an asynchronous creation, this incubator will join that existing incubation and execute 
+asynchronously.  The existing incubation will not become Ready until both it and this 
+incubation have completed.  Otherwise, the incubation will execute synchronously.
+\value Synchronous The object will be created synchronously.
+*/
+
+/*!
+\enum QDeclarativeIncubator::Status
+
+Specifies the status of the QDeclarativeIncubator.
+
+\value Null Incubation is not in progress.  Call QDeclarativeComponent::create() to begin incubating.
+\value Ready The object is fully created and can be accessed by calling object().
+\value Loading The object is in the process of being created.
+\value Error An error occurred.  The errors can be access by calling errors().
+*/
+
+/*!
+Clears the incubator.  Any in-progress incubation is aborted.  If the incubator is in the 
+Ready state, the created object is \b not deleted.
+*/
 void QDeclarativeIncubator::clear()
 {
 }
 
-void QDeclarativeIncubator::forceIncubation()
+/*!
+Force any in-progress incubation to finish synchronously.  Once this call
+returns, the incubator will not be in the Loading state.
+*/
+void QDeclarativeIncubator::forceCompletion()
 {
     QDeclarativeVME::Interrupt i;
     while (Loading == status()) {
@@ -273,36 +411,57 @@ void QDeclarativeIncubator::forceIncubation()
 
 }
 
+/*!
+Returns true if the incubator's status() is Null.
+*/
 bool QDeclarativeIncubator::isNull() const
 {
     return status() == Null;
 }
 
+/*!
+Returns true if the incubator's status() is Ready.
+*/
 bool QDeclarativeIncubator::isReady() const
 {
     return status() == Ready;
 }
 
+/*!
+Returns true if the incubator's status() is Error.
+*/
 bool QDeclarativeIncubator::isError() const
 {
     return status() == Error;
 }
 
+/*!
+Returns true if the incubator's status() is Loading.
+*/
 bool QDeclarativeIncubator::isLoading() const
 {
     return status() == Loading;
 }
 
+/*!
+Return the list of errors encountered while incubating the object.
+*/
 QList<QDeclarativeError> QDeclarativeIncubator::errors() const
 {
     return d->errors;
 }
 
+/*!
+Return the incubation mode passed to the QDeclarativeIncubator constructor.
+*/
 QDeclarativeIncubator::IncubationMode QDeclarativeIncubator::incubationMode() const
 {
     return d->mode;
 }
 
+/*!
+Return the current status of the incubator.
+*/
 QDeclarativeIncubator::Status QDeclarativeIncubator::status() const
 {
     if (!d->errors.isEmpty()) return Error;
@@ -312,16 +471,35 @@ QDeclarativeIncubator::Status QDeclarativeIncubator::status() const
     else return Null;
 }
 
+/*!
+Return the incubated object if the status is Ready, otherwise 0.
+*/
 QObject *QDeclarativeIncubator::object() const
 {
     if (status() != Ready) return 0;
     else return d->result;
 }
 
-void QDeclarativeIncubator::statusChanged(Status)
+/*!
+Called when the status of the incubator changes.  \a status is the new status.
+
+The default implementation does nothing.
+*/
+void QDeclarativeIncubator::statusChanged(Status status)
 {
+    Q_UNUSED(status);
 }
 
-void QDeclarativeIncubator::setInitialState(QObject *)
+/*!
+Called after the object is first created, but before property bindings are
+evaluated and, if applicable, QDeclarativeParserStatus::componentComplete() is
+called.  This is equivalent to the point between QDeclarativeComponent::beginCreate()
+and QDeclarativeComponent::endCreate(), and can be used to assign initial values
+to the object's properties.
+
+The default implementation does nothing.
+*/
+void QDeclarativeIncubator::setInitialState(QObject *object)
 {
+    Q_UNUSED(object);
 }
