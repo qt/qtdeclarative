@@ -63,7 +63,6 @@
 #include <qstringlist.h>
 #include <qvector.h>
 #include <qlocale.h>
-#include <QtCore/qcryptographichash.h>
 #include <QtDeclarative/qjsvalue.h>
 
 #include <ctype.h>

@@ -49,22 +49,15 @@
 #include "private/qdeclarativefontloader_p.h"
 #include "private/qdeclarativelistaccessor_p.h"
 #include "private/qdeclarativelistmodel_p.h"
-#include "private/qdeclarativenullablevalue_p_p.h"
-#include "private/qdeclarativeopenmetaobject_p.h"
 #include "private/qdeclarativepackage_p.h"
-#include "private/qdeclarativepixmapcache_p.h"
 #include "private/qdeclarativepropertychanges_p.h"
-#include "qdeclarativepropertymap.h"
 #include "private/qdeclarativespringanimation_p.h"
 #include "private/qdeclarativestategroup_p.h"
 #include "private/qdeclarativestateoperations_p.h"
 #include "private/qdeclarativestate_p.h"
 #include "private/qdeclarativestate_p_p.h"
-#include "private/qdeclarativestyledtext_p.h"
 #include "private/qdeclarativesystempalette_p.h"
-#include "private/qdeclarativetimeline_p_p.h"
 #include "private/qdeclarativetimer_p.h"
-#include "private/qdeclarativetransitionmanager_p_p.h"
 #include "private/qdeclarativetransition_p.h"
 #include "private/qdeclarativeapplication_p.h"
 #include "qdeclarativeinfo.h"
@@ -72,6 +65,7 @@
 #ifndef QT_NO_XMLPATTERNS
 #include "private/qdeclarativexmllistmodel_p.h"
 #endif
+#include <QtCore/qcoreapplication.h>
 
 void QDeclarativeUtilModule::registerBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {

@@ -71,26 +71,12 @@
 #include "qdeclarativeincubator.h"
 
 #include <QtCore/qmetaobject.h>
-#include <QNetworkReply>
-#include <QNetworkRequest>
 #include <QNetworkAccessManager>
-#include <QTimer>
-#include <QList>
-#include <QPair>
 #include <QDebug>
 #include <QMetaObject>
-#include <QStack>
-#include <QMap>
-#include <QPluginLoader>
-#include <QtGui/qfontdatabase.h>
-#include <QtCore/qlibraryinfo.h>
-#include <QtCore/qthreadstorage.h>
-#include <QtCore/qthread.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmutex.h>
-#include <QtGui/qcolor.h>
-#include <QtCore/qcryptographichash.h>
 #include <QtNetwork/qnetworkconfigmanager.h>
 
 #include <private/qobject_p.h>
@@ -98,7 +84,6 @@
 #include <private/qdeclarativeutilmodule_p.h>
 #include <private/qsgitemsmodule_p.h>
 #include <private/qsgparticlesmodule_p.h>
-#include <qsgtexture.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #include <qt_windows.h>
