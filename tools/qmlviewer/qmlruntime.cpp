@@ -90,6 +90,7 @@
 #include <QGraphicsObject>
 #include <QNetworkProxyFactory>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QMutex>
 #include <QMutexLocker>
 #include "proxysettings.h"
