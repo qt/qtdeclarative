@@ -94,6 +94,8 @@ private slots:
 
     void swapWithFirstItem();
     void itemList();
+    void currentIndex_delayedItemCreation();
+    void currentIndex_delayedItemCreation_data();
     void currentIndex();
     void noCurrentIndex();
     void enforceRange();
@@ -1833,6 +1835,42 @@ void tst_QSGListView::sectionsPositioning()
     delete canvas;
 }
 
+void tst_QSGListView::currentIndex_delayedItemCreation()
+{
+    QFETCH(bool, setCurrentToZero);
+
+    QSGView *canvas = createView();
+
+    TestModel model;
+
+    // test currentIndexChanged() is emitted even if currentIndex = 0 on start up
+    // (since the currentItem will have changed and that shares the same index)
+    canvas->rootContext()->setContextProperty("setCurrentToZero", setCurrentToZero);
+
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/fillModelOnComponentCompleted.qml"));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    QSignalSpy spy(listview, SIGNAL(currentIndexChanged()));
+    QCOMPARE(listview->currentIndex(), 0);
+    QTRY_COMPARE(spy.count(), 1);
+
+    delete canvas;
+}
+
+void tst_QSGListView::currentIndex_delayedItemCreation_data()
+{
+    QTest::addColumn<bool>("setCurrentToZero");
+
+    QTest::newRow("set to 0") << true;
+    QTest::newRow("don't set to 0") << false;
+}
+
 void tst_QSGListView::currentIndex()
 {
     TestModel model;
@@ -2733,7 +2771,8 @@ void tst_QSGListView::header_delayItemCreation()
 
     TestModel model;
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/header1.qml"));
+    canvas->rootContext()->setContextProperty("setCurrentToZero", false);
+    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/fillModelOnComponentCompleted.qml"));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");

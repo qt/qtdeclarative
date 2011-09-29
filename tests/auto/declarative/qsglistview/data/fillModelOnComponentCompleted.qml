@@ -14,6 +14,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         model: testModel
+
         delegate: Text {
             objectName: "wrapper"
             font.pointSize: 20
@@ -28,6 +29,8 @@ Rectangle {
     }
 
     Component.onCompleted: {
+        if (setCurrentToZero == 0)
+            list.currentIndex = 0
         for (var i=0; i<30; i++) testModel.append({"name" : i, "val": i})
     }
 }

@@ -97,18 +97,21 @@ void QSGItemViewChangeSet::applyChanges(const QDeclarativeChangeSet &changeSet)
         }
     }
     foreach (const QDeclarativeChangeSet::Insert &i, changeSet.inserts()) {
-        itemCount += i.count;
         if (moveId == -1) {
-            if (newCurrentIndex >= i.index) {
+            if (itemCount && newCurrentIndex >= i.index) {
                 newCurrentIndex += i.count;
                 currentChanged = true;
             } else if (newCurrentIndex < 0) {
                 newCurrentIndex = 0;
                 currentChanged = true;
+            } else if (newCurrentIndex == 0 && !itemCount) {
+                // this is the first item, set the initial current index
+                currentChanged = true;
             }
         } else if (moveId == i.moveId) {
             newCurrentIndex = i.index + moveOffset;
         }
+        itemCount += i.count;
     }
 }
 
