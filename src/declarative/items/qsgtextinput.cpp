@@ -1088,6 +1088,10 @@ void QSGTextInput::mouseDoubleClickEvent(QMouseEvent *event)
         int cursor = d->xToPos(event->localPos().x());
         d->control->selectWordAtPos(cursor);
         event->setAccepted(true);
+        if (!d->hasPendingTripleClick()) {
+            d->tripleClickStartPoint = event->localPos().toPoint();
+            d->tripleClickTimer.start();
+        }
     } else {
         QSGImplicitSizeItem::mouseDoubleClickEvent(event);
     }
@@ -1116,6 +1120,13 @@ void QSGTextInput::mousePressEvent(QMouseEvent *event)
         setKeepMouseGrab(false);
         d->selectPressed = true;
         d->pressPos = event->localPos();
+        QPoint distanceVector = d->pressPos.toPoint() - d->tripleClickStartPoint;
+        if (d->hasPendingTripleClick()
+            && distanceVector.manhattanLength() < qApp->styleHints()->startDragDistance()) {
+            event->setAccepted(true);
+            selectAll();
+            return;
+        }
     }
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
     int cursor = d->xToPos(event->localPos().x());

@@ -110,6 +110,7 @@ private slots:
     void dragMouseSelection();
     void mouseSelectionMode_data();
     void mouseSelectionMode();
+    void tripleClickSelectsAll();
 
     void horizontalAlignment_data();
     void horizontalAlignment();
@@ -2721,6 +2722,49 @@ void tst_qsgtextinput::cursorRectangleSize()
 
     delete canvas;
 #endif
+}
+
+void tst_qsgtextinput::tripleClickSelectsAll()
+{
+    QString qmlfile = SRCDIR "/data/positionAt.qml";
+    QSGView view(QUrl::fromLocalFile(qmlfile));
+    view.requestActivateWindow();
+    view.show();
+    QTest::qWaitForWindowShown(&view);
+
+    QEXPECT_FAIL("", QTBUG_21489_MESSAGE, Continue);
+    QTRY_COMPARE(view.windowState(), Qt::WindowActive);
+
+    QSGTextInput* input = qobject_cast<QSGTextInput*>(view.rootObject());
+    QVERIFY(input);
+
+    QLatin1String hello("Hello world!");
+    input->setSelectByMouse(true);
+    input->setText(hello);
+
+    // Clicking on the same point inside TextInput three times in a row
+    // should trigger a triple click, thus selecting all the text.
+    QPoint pointInside = input->pos().toPoint() + QPoint(2,2);
+    QTest::mouseDClick(&view, Qt::LeftButton, 0, pointInside);
+    QTest::mouseClick(&view, Qt::LeftButton, 0, pointInside);
+    QGuiApplication::processEvents();
+    QCOMPARE(input->selectedText(), hello);
+
+    // Now it simulates user moving the mouse between the second and the third click.
+    // In this situation, we don't expect a triple click.
+    QPoint pointInsideButFar = QPoint(input->width(),input->height()) - QPoint(2,2);
+    QTest::mouseDClick(&view, Qt::LeftButton, 0, pointInside);
+    QTest::mouseClick(&view, Qt::LeftButton, 0, pointInsideButFar);
+    QGuiApplication::processEvents();
+    QVERIFY(input->selectedText().isEmpty());
+
+    // And now we press the third click too late, so no triple click event is triggered.
+    QTest::mouseDClick(&view, Qt::LeftButton, 0, pointInside);
+    QGuiApplication::processEvents();
+    QTest::qWait(QApplication::doubleClickInterval() + 1);
+    QTest::mouseClick(&view, Qt::LeftButton, 0, pointInside);
+    QGuiApplication::processEvents();
+    QVERIFY(input->selectedText().isEmpty());
 }
 
 QTEST_MAIN(tst_qsgtextinput)

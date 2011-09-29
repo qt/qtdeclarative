@@ -50,7 +50,10 @@
 #include <private/qlinecontrol_p.h>
 
 #include <QtDeclarative/qdeclarative.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qpointer.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 
 //
@@ -142,6 +145,8 @@ public:
     QPointer<QSGItem> cursorItem;
     QPointF pressPos;
     QSGTextNode *textNode;
+    QElapsedTimer tripleClickTimer;
+    QPoint tripleClickStartPoint;
 
     int lastSelectionStart;
     int lastSelectionEnd;
@@ -165,6 +170,9 @@ public:
 
     static inline QSGTextInputPrivate *get(QSGTextInput *t) {
         return t->d_func();
+    }
+    bool hasPendingTripleClick() const {
+        return !tripleClickTimer.hasExpired(qApp->styleHints()->mouseDoubleClickInterval());
     }
 };
 
