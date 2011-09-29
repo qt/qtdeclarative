@@ -38,53 +38,29 @@
 **
 ****************************************************************************/
 
-import QtQuick 1.0
+import QtQuick 2.0
 
 Rectangle {
-    property bool rising: false
-    property bool verticalRise: true
-    property real xAttractor: 0
-    property real yAttractor: 0
+    width: 490
+    height: 285
 
-    width: 5 + 10*Math.random()
-    height: width
-    radius: Math.floor(width/2)-1
-    property real amountOfGray: Math.random()
-    color: Qt.rgba(amountOfGray,amountOfGray,amountOfGray,1)
+    Grid {
+        property int cellWidth: (width - (spacing * (columns - 1))) / columns
+        property int cellHeight: (height - (spacing * (rows - 1))) / rows
 
-    y: (rising && verticalRise) ? yAttractor : Math.random()*(main.inPortrait ? main.baseHeight : main.baseWidth)
-    x: (rising && !verticalRise) ? xAttractor : Math.random()*(main.inPortrait ? main.baseWidth : main.baseHeight)
-    Behavior on x {
-        id: xBehavior
-        SmoothedAnimation { 
-            velocity: 100+Math.random()*100 
-        } 
-    }
-    Behavior on y { 
-        id: yBehavior
-        SmoothedAnimation { 
-            velocity: 100+Math.random()*100 
-        } 
-    }
-    Timer {
-       interval: 80+Math.random()*40 
-        repeat: true
-        running: true
-        onTriggered: {
-            if (rising) {
-                if (x > main.width || x < 0) {
-                    xBehavior.enabled = false;
-                    rising = false;
-                    xBehavior.enabled = true;
-                    rising = true;
-                }
-                if (y > main.height || y < 0) {
-                    yBehavior.enabled = false;
-                    rising = false;
-                    yBehavior.enabled = true;
-                    rising = true;
-                }  
-            }
-        }
+        anchors.fill: parent
+        anchors.margins: 30
+
+        columns: 3
+        rows: 2
+        spacing: 30
+
+        ImageCell { mode: Image.Stretch; caption: "Stretch" }
+        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
+        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
+
+        ImageCell { mode: Image.Tile; caption: "Tile" }
+        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
+        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
     }
 }

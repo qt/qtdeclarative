@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -37,18 +37,25 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+import QtQuick 2.0
+import "content"
 
-#include <QtGui/QApplication>
-#include "qmlapplicationviewer.h"
+Item {
+    property alias mode: image.fillMode
+    property alias caption: captionItem.text
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
+    width: parent.cellWidth; height: parent.cellHeight
 
-    QmlApplicationViewer viewer;
-    viewer.setOrientation(QmlApplicationViewer::ScreenOrientationLockLandscape);
-    viewer.setMainQmlFile(QLatin1String("qml/qml/image.qml"));
-    viewer.showExpanded();
+    Image {
+        id: image
+        width: parent.width; height: parent.height - captionItem.height
+        source: "content/qt-logo.png"
+        clip: true      // only makes a difference if mode is PreserveAspectCrop
+        smooth: true
+    }
 
-    return app.exec();
+    Text { 
+        id: captionItem
+        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
+    }
 }
