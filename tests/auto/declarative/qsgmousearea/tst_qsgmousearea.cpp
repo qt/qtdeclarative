@@ -48,6 +48,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtOpenGL/QGLShaderProgram>
+#include "../../../shared/util.h"
 
 #ifdef Q_OS_SYMBIAN
 // In Symbian OS test data is located in applications private dir
@@ -635,36 +636,28 @@ void tst_QSGMouseArea::clickThrough()
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
 
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTRY_COMPARE(canvas->rootObject()->property("presses").toInt(), 0);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
 
-    QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
-    QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
+    QTest::qWait(800); // to avoid generating a double click.
 
-    QApplication::sendEvent(canvas, &pressEvent);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
+
+    QTRY_COMPARE(canvas->rootObject()->property("presses").toInt(), 0);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
+    QTRY_COMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
+
+    QTest::mouseDClick(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-21685 - Unstable test for developer build", Abort);
-#endif
-    QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
-    QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
-
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
-
-    QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
-    QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 2);
-    QCOMPARE(canvas->rootObject()->property("doubleClicks").toInt(), 1);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 2);
+    QTRY_COMPARE(canvas->rootObject()->property("doubleClicks").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
     delete canvas;
@@ -676,29 +669,25 @@ void tst_QSGMouseArea::clickThrough()
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
 
-    pressEvent = QMouseEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
-
-    releaseEvent = QMouseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 0);
 
-    QApplication::sendEvent(canvas, &pressEvent);
+    QTest::qWait(800); // to avoid generating a double click.
+
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 0);
 
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
-
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mouseDClick(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 0);
@@ -707,32 +696,28 @@ void tst_QSGMouseArea::clickThrough()
 
     canvas->rootObject()->setProperty("letThrough", QVariant(true));
 
-    pressEvent = QMouseEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &pressEvent);
-
-    releaseEvent = QMouseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::qWait(800); // to avoid generating a double click.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
-    QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
 
-    QApplication::sendEvent(canvas, &pressEvent);
+    QTest::qWait(800); // to avoid generating a double click.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(100,100));
     QTest::qWait(1000);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
     QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
-
-    QApplication::sendEvent(canvas, &pressEvent);
-    QApplication::sendEvent(canvas, &releaseEvent);
+    QTest::mouseDClick(canvas, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::qWait(100);
 
     QCOMPARE(canvas->rootObject()->property("presses").toInt(), 0);
-    QCOMPARE(canvas->rootObject()->property("clicks").toInt(), 2);
+    QTRY_COMPARE(canvas->rootObject()->property("clicks").toInt(), 2);
     QCOMPARE(canvas->rootObject()->property("doubleClicks").toInt(), 1);
     QCOMPARE(canvas->rootObject()->property("pressAndHolds").toInt(), 1);
 
