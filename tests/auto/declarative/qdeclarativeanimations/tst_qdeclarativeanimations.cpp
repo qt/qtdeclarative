@@ -75,6 +75,7 @@ private slots:
     void simpleRotation();
     void simplePath();
     void pathInterpolator();
+    void pathInterpolatorBackwardJump();
     void pathWithNoStart();
     void alwaysRunToEnd();
     void complete();
@@ -314,6 +315,38 @@ void tst_qdeclarativeanimations::pathInterpolator()
     QCOMPARE(interpolator->x(), qreal(300));
     QCOMPARE(interpolator->y(), qreal(300));
     QCOMPARE(interpolator->angle(), qreal(0));
+}
+
+void tst_qdeclarativeanimations::pathInterpolatorBackwardJump()
+{
+    QDeclarativeEngine engine;
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/pathInterpolatorBack.qml"));
+    QDeclarativePathInterpolator *interpolator = qobject_cast<QDeclarativePathInterpolator*>(c.create());
+    QVERIFY(interpolator);
+
+    QCOMPARE(interpolator->progress(), qreal(0));
+    QCOMPARE(interpolator->x(), qreal(50));
+    QCOMPARE(interpolator->y(), qreal(50));
+    QCOMPARE(interpolator->angle(), qreal(270));
+
+    interpolator->setProgress(.5);
+    QCOMPARE(interpolator->progress(), qreal(.5));
+    QCOMPARE(interpolator->x(), qreal(100));
+    QCOMPARE(interpolator->y(), qreal(75));
+    QCOMPARE(interpolator->angle(), qreal(90));
+
+    interpolator->setProgress(1);
+    QCOMPARE(interpolator->progress(), qreal(1));
+    QCOMPARE(interpolator->x(), qreal(200));
+    QCOMPARE(interpolator->y(), qreal(50));
+    QCOMPARE(interpolator->angle(), qreal(0));
+
+    //make sure we don't get caught in infinite loop here
+    interpolator->setProgress(0);
+    QCOMPARE(interpolator->progress(), qreal(0));
+    QCOMPARE(interpolator->x(), qreal(50));
+    QCOMPARE(interpolator->y(), qreal(50));
+    QCOMPARE(interpolator->angle(), qreal(270));
 }
 
 void tst_qdeclarativeanimations::pathWithNoStart()
