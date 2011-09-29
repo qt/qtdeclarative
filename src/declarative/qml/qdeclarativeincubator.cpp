@@ -147,27 +147,71 @@ void QDeclarativeIncubatorPrivate::clear()
 }
 
 /*!
-
 \class QDeclarativeIncubationController
+\brief QDeclarativeIncubationController instances drive the progress of QDeclarativeIncubators
 
+In order to behave asynchronously and not introduce stutters or freezes in an application,
+the process of creating objects a QDeclarativeIncubators must be driven only during the
+application's idle time.  QDeclarativeIncubationController allows the application to control
+exactly when, how often and for how long this processing occurs.
+
+A QDeclarativeIncubationController derived instance should be created and set on a 
+QDeclarativeEngine by calling the QDeclarativeEngine::setIncubationController() method.
+Processing is then controlled by calling the QDeclarativeIncubationController::incubateFor()
+or QDeclarativeIncubationController::incubateWhile() methods as dictated by the application's
+requirements.
+
+For example, this is an example of a incubation controller that will incubate for a maximum
+of 5 milliseconds out of every 16 milliseconds.
+
+\code
+class PeriodicIncubationController : public QObject, 
+                                     public QDeclarativeIncubationController 
+{
+public:
+    PeriodicIncubationController() { 
+        startTimer(16); 
+    }
+
+protected:
+    virtual void timerEvent(QTimerEvent *) {
+        incubateFor(5);
+    }
+};
+\endcode
+
+Although the previous example would work, it is not optimal.  Real world incubation
+controllers should try and maximize the amount of idle time they consume - rather
+than a static amount like 5 milliseconds - while not disturbing the application.  
 */
 
+/*!
+Create a new incubation controller.
+*/
 QDeclarativeIncubationController::QDeclarativeIncubationController()
 : d(0)
 {
 }
 
+/*! \internal */
 QDeclarativeIncubationController::~QDeclarativeIncubationController()
 {
     if (d) QDeclarativeEnginePrivate::get(d)->setIncubationController(0);
     d = 0;
 }
 
+/*!
+Return the QDeclarativeEngine this incubation controller is set on, or 0 if it
+has not been set on any engine.
+*/
 QDeclarativeEngine *QDeclarativeIncubationController::engine() const
 {
     return QDeclarativeEnginePrivate::get(d);
 }
 
+/*!
+Return the number of objects currently incubating.
+*/
 int QDeclarativeIncubationController::incubatingObjectCount() const
 {
     if (d)
@@ -176,8 +220,15 @@ int QDeclarativeIncubationController::incubatingObjectCount() const
         return 0;
 }
 
-void QDeclarativeIncubationController::incubatingObjectCountChanged(int)
+/*!
+Called when the number of incubating objects changes.  \a incubatingObjectCount is the 
+new number of incubating objects.
+
+The default implementation does nothing.
+*/
+void QDeclarativeIncubationController::incubatingObjectCountChanged(int incubatingObjectCount)
 {
+    Q_UNUSED(incubatingObjectCount);
 }
 
 void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
@@ -240,6 +291,9 @@ finishIncubate:
     }
 }
 
+/*!
+Incubate objects for \a msecs, or until there are no more objects to incubate.
+*/
 void QDeclarativeIncubationController::incubateFor(int msecs)
 {
     if (!d || d->incubatorCount == 0)
@@ -253,6 +307,13 @@ void QDeclarativeIncubationController::incubateFor(int msecs)
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
+/*!
+Incubate objects while the bool pointed to by \a flag is true, or until there are no
+more objects to incubate.
+
+Generally this method is used in conjunction with a thread or a UNIX signal that sets
+the bool pointed to by \a flag to false when it wants incubation to be interrupted.
+*/
 void QDeclarativeIncubationController::incubateWhile(bool *flag)
 {
     if (!d || d->incubatorCount == 0)
