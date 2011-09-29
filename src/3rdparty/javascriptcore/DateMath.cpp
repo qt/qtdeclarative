@@ -75,7 +75,7 @@
 #include <limits>
 #include <stdint.h>
 #include <time.h>
-#include <math.h>
+#include <cmath>
 
 //#if HAVE(SYS_TIME_H)
 #if defined(EXISTS_SYS_TIME)
@@ -346,7 +346,7 @@ double timeClip(double t)
         return  NaN;
     return t >= 0 ? floor(t) : ceil(t);
 #else
-    if (!isfinite(t) || fabs(t) > maxECMAScriptTime)
+    if (!std::isfinite(t) || fabs(t) > maxECMAScriptTime)
         return NaN;
     return trunc(t);
 #endif
