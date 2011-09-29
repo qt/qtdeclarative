@@ -1893,7 +1893,7 @@ QDeclarativeIncubationController *QSGCanvas::incubationController() const
 void QSGCanvasRenderLoop::createGLContext()
 {
     gl = new QOpenGLContext();
-    gl->setFormat(d->context->defaultSurfaceFormat());
+    gl->setFormat(renderer->requestedFormat());
     gl->create();
 }
 
