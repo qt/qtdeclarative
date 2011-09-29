@@ -104,7 +104,7 @@ Item {
 
         State {
             name: "DeathState"; when: dying == true
-            StateChangeScript { script: particles.pulse(0.1); }
+            StateChangeScript { script: particles.pulse(100); }
             PropertyChanges { target: img; opacity: 0 }
             StateChangeScript { script: block.destroy(1000); }
         }

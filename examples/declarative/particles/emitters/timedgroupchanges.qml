@@ -82,7 +82,7 @@ Rectangle {
             running: true
             triggeredOnStart: true
             repeat: true
-            onTriggered:startingEmitter.pulse(0.1);
+            onTriggered:startingEmitter.pulse(100);
         }
         Emitter {
             id: startingEmitter
