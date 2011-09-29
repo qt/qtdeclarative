@@ -72,7 +72,7 @@ QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
 void QSGSpriteGoalAffector::updateStateIndex(QSGStochasticEngine* e)
 {
     if (m_systemStates){
-        m_goalIdx = m_system->m_groupIds[m_goalState];
+        m_goalIdx = m_system->groupIds[m_goalState];
     }else{
         m_lastEngine = e;
         for (int i=0; i<e->stateCount(); i++){
@@ -103,11 +103,11 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
     QSGStochasticEngine *engine = 0;
     if (!m_systemStates){
         //TODO: Affect all engines
-        foreach (QSGParticlePainter *p, m_system->m_groupData[d->group]->painters)
+        foreach (QSGParticlePainter *p, m_system->groupData[d->group]->painters)
             if (qobject_cast<QSGImageParticle*>(p))
                 engine = qobject_cast<QSGImageParticle*>(p)->spriteEngine();
     }else{
-        engine = m_system->m_stateEngine;
+        engine = m_system->stateEngine;
         if (!engine)
             m_notUsingEngine = true;
     }

@@ -185,8 +185,8 @@ void QSGTurbulenceAffector::affectSystem(qreal dt)
     updateOffsets();//### Needed if an ancestor is transformed.
 
     QRect boundsRect(0,0,m_gridSize,m_gridSize);
-    foreach (QSGParticleGroupData *gd, m_system->m_groupData){
-        if (!activeGroup(m_system->m_groupData.key(gd)))
+    foreach (QSGParticleGroupData *gd, m_system->groupData){
+        if (!activeGroup(m_system->groupData.key(gd)))
             continue;
         foreach (QSGParticleData *d, gd->data){
             if (!shouldAffect(d))

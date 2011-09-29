@@ -300,7 +300,7 @@ int QSGParticleGroupData::size()
 
 QString QSGParticleGroupData::name()//### Worth caching as well?
 {
-    return m_system->m_groupIds.key(index);
+    return m_system->groupIds.key(index);
 }
 
 void QSGParticleGroupData::setSize(int newSize){
@@ -358,7 +358,7 @@ QSGParticleData* QSGParticleGroupData::newDatum(bool respectsLimits)
 
 bool QSGParticleGroupData::recycle()
 {
-    while (dataHeap.top() <= m_system->m_timeInt){
+    while (dataHeap.top() <= m_system->timeInt){
         foreach (QSGParticleData* datum, dataHeap.pop()){
             if (!datum->stillAlive()){
                 reusableIndexes << datum->index;
@@ -376,7 +376,7 @@ void QSGParticleGroupData::prepareRecycler(QSGParticleData* d){
     if (d->lifeSpan*1000 < m_system->maxLife){
         dataHeap.insert(d);
     } else {
-        while ((roundedTime(d->t) + 2*m_system->maxLife/3) <= m_system->m_timeInt)
+        while ((roundedTime(d->t) + 2*m_system->maxLife/3) <= m_system->timeInt)
             d->extendLife(m_system->maxLife/3000.0);
         dataHeap.insertTimed(d, roundedTime(d->t) + 2*m_system->maxLife/3);
     }
@@ -470,7 +470,7 @@ QDeclarativeV8Handle QSGParticleData::v8Value()
 //sets the x accleration without affecting the instantaneous x velocity or position
 void QSGParticleData::setInstantaneousAX(qreal ax)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     qreal vx = (this->vx + t*this->ax) - t*ax;
     qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
     qreal x = ex - t*vx - 0.5 * t*t*ax;
@@ -483,7 +483,7 @@ void QSGParticleData::setInstantaneousAX(qreal ax)
 //sets the x velocity without affecting the instantaneous x postion
 void QSGParticleData::setInstantaneousVX(qreal vx)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     qreal evx = vx - t*this->ax;
     qreal ex = this->x + this->vx * t + 0.5 * this->ax * t * t;
     qreal x = ex - t*evx - 0.5 * t*t*this->ax;
@@ -495,14 +495,14 @@ void QSGParticleData::setInstantaneousVX(qreal vx)
 //sets the instantaneous x postion
 void QSGParticleData::setInstantaneousX(qreal x)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     this->x = x - t*this->vx - 0.5 * t*t*this->ax;
 }
 
 //sets the y accleration without affecting the instantaneous y velocity or position
 void QSGParticleData::setInstantaneousAY(qreal ay)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     qreal vy = (this->vy + t*this->ay) - t*ay;
     qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*vy - 0.5 * t*t*ay;
@@ -515,7 +515,7 @@ void QSGParticleData::setInstantaneousAY(qreal ay)
 //sets the y velocity without affecting the instantaneous y position
 void QSGParticleData::setInstantaneousVY(qreal vy)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     qreal evy = vy - t*this->ay;
     qreal ey = this->y + this->vy * t + 0.5 * this->ay * t * t;
     qreal y = ey - t*evy - 0.5 * t*t*this->ay;
@@ -527,31 +527,31 @@ void QSGParticleData::setInstantaneousVY(qreal vy)
 //sets the instantaneous Y position
 void QSGParticleData::setInstantaneousY(qreal y)
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     this->y = y - t*this->vy - 0.5 * t*t*this->ay;
 }
 
 qreal QSGParticleData::curX() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     return this->x + this->vx * t + 0.5 * this->ax * t * t;
 }
 
 qreal QSGParticleData::curVX() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     return this->vx + t*this->ax;
 }
 
 qreal QSGParticleData::curY() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     return y + vy * t + 0.5 * ay * t * t;
 }
 
 qreal QSGParticleData::curVY() const
 {
-    qreal t = (system->m_timeInt / 1000.0) - this->t;
+    qreal t = (system->timeInt / 1000.0) - this->t;
     return vy + t*ay;
 }
 
@@ -562,14 +562,14 @@ void QSGParticleData::debugDump()
              << "Vel: " << vx << "," << vy
              << "Acc: " << ax << "," << ay
              << "Size: " << size << "," << endSize
-             << "Time: " << t << "," <<lifeSpan << ";" << (system->m_timeInt / 1000.0) ;
+             << "Time: " << t << "," <<lifeSpan << ";" << (system->timeInt / 1000.0) ;
 }
 
 bool QSGParticleData::stillAlive()
 {
     if (!system)
         return false;
-    return (t + lifeSpan - EPSILON) > ((qreal)system->m_timeInt/1000.0);
+    return (t + lifeSpan - EPSILON) > ((qreal)system->timeInt/1000.0);
 }
 
 float QSGParticleData::curSize()
@@ -583,7 +583,7 @@ float QSGParticleData::lifeLeft()
 {
     if (!system)
         return 0.0f;
-    return (t + lifeSpan) - (system->m_timeInt/1000.0);
+    return (t + lifeSpan) - (system->timeInt/1000.0);
 }
 
 void QSGParticleData::extendLife(float time)
@@ -596,7 +596,7 @@ void QSGParticleData::extendLife(float time)
     t += time;
     animT += time;
 
-    qreal elapsed = (system->m_timeInt / 1000.0) - t;
+    qreal elapsed = (system->timeInt / 1000.0) - t;
     qreal evy = newVY - elapsed*ay;
     qreal ey = newY - elapsed*evy - 0.5 * elapsed*elapsed*ay;
     qreal evx = newVX - elapsed*ax;
@@ -609,8 +609,8 @@ void QSGParticleData::extendLife(float time)
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent), m_particle_count(0), m_running(true), m_paused(false)
-  , m_nextIndex(0), m_componentComplete(false), m_stateEngine(0)
+    QSGItem(parent), particleCount(0), m_running(true), m_paused(false)
+  , m_nextIndex(0), m_componentComplete(false), stateEngine(0)
 {
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));
@@ -620,7 +620,7 @@ QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
 
 QSGParticleSystem::~QSGParticleSystem()
 {
-    foreach (QSGParticleGroupData* gd, m_groupData)
+    foreach (QSGParticleGroupData* gd, groupData)
         delete gd;
 }
 
@@ -629,13 +629,13 @@ void QSGParticleSystem::initGroups()
     m_reusableIndexes.clear();
     m_nextIndex = 0;
 
-    qDeleteAll(m_groupData);
-    m_groupData.clear();
-    m_groupIds.clear();
+    qDeleteAll(groupData);
+    groupData.clear();
+    groupIds.clear();
 
     QSGParticleGroupData* gd = new QSGParticleGroupData(0, this);//Default group
-    m_groupData.insert(0,gd);
-    m_groupIds.insert("",0);
+    groupData.insert(0,gd);
+    groupIds.insert("",0);
     m_nextGroupId = 1;
 }
 
@@ -754,14 +754,14 @@ void QSGParticleSystem::reset()
     if (!m_componentComplete)
         return;
 
-    m_timeInt = 0;
+    timeInt = 0;
     //Clear guarded pointers which have been deleted
     int cleared = 0;
     cleared += m_emitters.removeAll(0);
     cleared += m_painters.removeAll(0);
     cleared += m_affectors.removeAll(0);
 
-    m_bySysIdx.resize(0);
+    bySysIdx.resize(0);
     initGroups();//Also clears all logical particles
 
     if (!m_running)
@@ -786,7 +786,7 @@ void QSGParticleSystem::reset()
         if (m_paused)
             m_animation->pause();
     }
-    m_initialized = true;
+    initialized = true;
 }
 
 
@@ -797,25 +797,25 @@ void QSGParticleSystem::loadPainter(QObject *p)
 
     QSGParticlePainter* painter = qobject_cast<QSGParticlePainter*>(p);
     Q_ASSERT(painter);//XXX
-    foreach (QSGParticleGroupData* sg, m_groupData)
+    foreach (QSGParticleGroupData* sg, groupData)
         sg->painters.remove(painter);
     int particleCount = 0;
     if (painter->groups().isEmpty()){//Uses default particle
         QStringList def;
         def << "";
         painter->setGroups(def);
-        particleCount += m_groupData[0]->size();
-        m_groupData[0]->painters << painter;
+        particleCount += groupData[0]->size();
+        groupData[0]->painters << painter;
     }else{
         foreach (const QString &group, painter->groups()){
-            if (group != QLatin1String("") && !m_groupIds[group]){//new group
+            if (group != QLatin1String("") && !groupIds[group]){//new group
                 int id = m_nextGroupId++;
                 QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
-                m_groupIds.insert(group, id);
-                m_groupData.insert(id, gd);
+                groupIds.insert(group, id);
+                groupData.insert(id, gd);
             }
-            particleCount += m_groupData[m_groupIds[group]]->size();
-            m_groupData[m_groupIds[group]]->painters << painter;
+            particleCount += groupData[groupIds[group]]->size();
+            groupData[groupIds[group]]->painters << painter;
         }
     }
     painter->setCount(particleCount);
@@ -834,36 +834,36 @@ void QSGParticleSystem::emittersChanged()
     QList<int> previousSizes;
     QList<int> newSizes;
     for (int i=0; i<m_nextGroupId; i++){
-        previousSizes << m_groupData[i]->size();
+        previousSizes << groupData[i]->size();
         newSizes << 0;
     }
 
     foreach (QSGParticleEmitter* e, m_emitters){//Populate groups and set sizes.
-        if (!m_groupIds.contains(e->group())
-                || (!e->group().isEmpty() && !m_groupIds[e->group()])){//or it was accidentally inserted by a failed lookup earlier
+        if (!groupIds.contains(e->group())
+                || (!e->group().isEmpty() && !groupIds[e->group()])){//or it was accidentally inserted by a failed lookup earlier
             int id = m_nextGroupId++;
             QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
-            m_groupIds.insert(e->group(), id);
-            m_groupData.insert(id, gd);
+            groupIds.insert(e->group(), id);
+            groupData.insert(id, gd);
             previousSizes << 0;
             newSizes << 0;
         }
-        newSizes[m_groupIds[e->group()]] += e->particleCount();
+        newSizes[groupIds[e->group()]] += e->particleCount();
         //###: Cull emptied groups?
     }
 
     //TODO: Garbage collection?
-    m_particle_count = 0;
+    particleCount = 0;
     for (int i=0; i<m_nextGroupId; i++){
-        m_groupData[i]->setSize(qMax(newSizes[i], previousSizes[i]));
-        m_particle_count += m_groupData[i]->size();
+        groupData[i]->setSize(qMax(newSizes[i], previousSizes[i]));
+        particleCount += groupData[i]->size();
     }
 
     if (m_debugMode)
-        qDebug() << "Particle system emitters changed. New particle count: " << m_particle_count;
+        qDebug() << "Particle system emitters changed. New particle count: " << particleCount;
 
-    if (m_particle_count > m_bySysIdx.size())//New datum requests haven't updated it
-        m_bySysIdx.resize(m_particle_count);
+    if (particleCount > bySysIdx.size())//New datum requests haven't updated it
+        bySysIdx.resize(particleCount);
 
     foreach (QSGParticlePainter *p, m_painters)
         loadPainter(p);
@@ -877,19 +877,19 @@ void QSGParticleSystem::createEngine()
 {
     if (!m_componentComplete)
         return;
-    if (m_stateEngine && m_debugMode)
+    if (stateEngine && m_debugMode)
         qDebug() << "Resetting Existing Sprite Engine...";
     //### Solve the losses if size/states go down
     foreach (QSGParticleGroup* group, m_groups){
         bool exists = false;
-        foreach (const QString &name, m_groupIds.keys())
+        foreach (const QString &name, groupIds.keys())
             if (group->name() == name)
                 exists = true;
         if (!exists){
             int id = m_nextGroupId++;
             QSGParticleGroupData* gd = new QSGParticleGroupData(id, this);
-            m_groupIds.insert(group->name(), id);
-            m_groupData.insert(id, gd);
+            groupIds.insert(group->name(), id);
+            groupData.insert(id, gd);
         }
     }
 
@@ -898,7 +898,7 @@ void QSGParticleSystem::createEngine()
         QList<QSGParticleGroup*> newList;
         for (int i=0; i<m_nextGroupId; i++){
             bool exists = false;
-            QString name = m_groupData[i]->name();
+            QString name = groupData[i]->name();
             foreach (QSGParticleGroup* existing, m_groups){
                 if (existing->name() == name){
                     newList << existing;
@@ -915,25 +915,25 @@ void QSGParticleSystem::createEngine()
         foreach (QSGParticleGroup* g, m_groups)
             states << (QSGStochasticState*)g;
 
-        if (!m_stateEngine)
-            m_stateEngine = new QSGStochasticEngine(this);
-        m_stateEngine->setCount(m_particle_count);
-        m_stateEngine->m_states = states;
+        if (!stateEngine)
+            stateEngine = new QSGStochasticEngine(this);
+        stateEngine->setCount(particleCount);
+        stateEngine->m_states = states;
 
-        connect(m_stateEngine, SIGNAL(stateChanged(int)),
+        connect(stateEngine, SIGNAL(stateChanged(int)),
                 this, SLOT(particleStateChange(int)));
 
     }else{
-        if (m_stateEngine)
-            delete m_stateEngine;
-        m_stateEngine = 0;
+        if (stateEngine)
+            delete stateEngine;
+        stateEngine = 0;
     }
 
 }
 
 void QSGParticleSystem::particleStateChange(int idx)
 {
-    moveGroups(m_bySysIdx[idx], m_stateEngine->curState(idx));
+    moveGroups(bySysIdx[idx], stateEngine->curState(idx));
 }
 
 void QSGParticleSystem::moveGroups(QSGParticleData *d, int newGIdx)
@@ -946,7 +946,7 @@ void QSGParticleSystem::moveGroups(QSGParticleData *d, int newGIdx)
     finishNewDatum(pd);
 
     d->systemIndex = -1;
-    m_groupData[d->group]->kill(d);
+    groupData[d->group]->kill(d);
 }
 
 int QSGParticleSystem::nextSystemIndex()
@@ -956,10 +956,10 @@ int QSGParticleSystem::nextSystemIndex()
         m_reusableIndexes.remove(ret);
         return ret;
     }
-    if (m_nextIndex >= m_bySysIdx.size()){
-        m_bySysIdx.resize(m_bySysIdx.size() < 10 ? 10 : m_bySysIdx.size()*1.1);//###+1,10%,+10? Choose something non-arbitrarily
-        if (m_stateEngine)
-            m_stateEngine->setCount(m_bySysIdx.size());
+    if (m_nextIndex >= bySysIdx.size()){
+        bySysIdx.resize(bySysIdx.size() < 10 ? 10 : bySysIdx.size()*1.1);//###+1,10%,+10? Choose something non-arbitrarily
+        if (stateEngine)
+            stateEngine->setCount(bySysIdx.size());
 
     }
     return m_nextIndex++;
@@ -967,9 +967,9 @@ int QSGParticleSystem::nextSystemIndex()
 
 QSGParticleData* QSGParticleSystem::newDatum(int groupId, bool respectLimits, int sysIndex)
 {
-    Q_ASSERT(groupId < m_groupData.count());//XXX shouldn't really be an assert
+    Q_ASSERT(groupId < groupData.count());//XXX shouldn't really be an assert
 
-    QSGParticleData* ret = m_groupData[groupId]->newDatum(respectLimits);
+    QSGParticleData* ret = groupData[groupId]->newDatum(respectLimits);
     if (!ret){
         return 0;
     }
@@ -978,17 +978,17 @@ QSGParticleData* QSGParticleSystem::newDatum(int groupId, bool respectLimits, in
             ret->systemIndex = nextSystemIndex();
     }else{
         if (ret->systemIndex != -1){
-            if (m_stateEngine)
-                m_stateEngine->stop(ret->systemIndex);
+            if (stateEngine)
+                stateEngine->stop(ret->systemIndex);
             m_reusableIndexes << ret->systemIndex;
-            m_bySysIdx[ret->systemIndex] = 0;
+            bySysIdx[ret->systemIndex] = 0;
         }
         ret->systemIndex = sysIndex;
     }
-    m_bySysIdx[ret->systemIndex] = ret;
+    bySysIdx[ret->systemIndex] = ret;
 
-    if (m_stateEngine)
-        m_stateEngine->start(ret->systemIndex, ret->group);
+    if (stateEngine)
+        stateEngine->start(ret->systemIndex, ret->group);
 
     m_empty = false;
     return ret;
@@ -1008,44 +1008,44 @@ void QSGParticleSystem::emitParticle(QSGParticleData* pd)
 
 void QSGParticleSystem::finishNewDatum(QSGParticleData *pd){
     Q_ASSERT(pd);
-    m_groupData[pd->group]->prepareRecycler(pd);
+    groupData[pd->group]->prepareRecycler(pd);
 
     foreach (QSGParticleAffector *a, m_affectors)
         if (a && a->m_needsReset)
             a->reset(pd);
-    foreach (QSGParticlePainter* p, m_groupData[pd->group]->painters)
+    foreach (QSGParticlePainter* p, groupData[pd->group]->painters)
         if (p)
             p->load(pd);
 }
 
 void QSGParticleSystem::updateCurrentTime( int currentTime )
 {
-    if (!m_initialized)
+    if (!initialized)
         return;//error in initialization
 
     //### Elapsed time never shrinks - may cause problems if left emitting for weeks at a time.
-    qreal dt = m_timeInt / 1000.;
-    m_timeInt = currentTime;
-    qreal time =  m_timeInt / 1000.;
+    qreal dt = timeInt / 1000.;
+    timeInt = currentTime;
+    qreal time =  timeInt / 1000.;
     dt = time - dt;
-    m_needsReset.clear();
+    needsReset.clear();
 
     bool oldClear = m_empty;
     m_empty = true;
-    foreach (QSGParticleGroupData* gd, m_groupData)//Recycle all groups and see if they're out of live particles
+    foreach (QSGParticleGroupData* gd, groupData)//Recycle all groups and see if they're out of live particles
         m_empty = gd->recycle() && m_empty;
 
-    if (m_stateEngine)
-        m_stateEngine->updateSprites(m_timeInt);
+    if (stateEngine)
+        stateEngine->updateSprites(timeInt);
 
     foreach (QSGParticleEmitter* emitter, m_emitters)
         if (emitter)
-            emitter->emitWindow(m_timeInt);
+            emitter->emitWindow(timeInt);
     foreach (QSGParticleAffector* a, m_affectors)
         if (a)
             a->affectSystem(dt);
-    foreach (QSGParticleData* d, m_needsReset)
-        foreach (QSGParticlePainter* p, m_groupData[d->group]->painters)
+    foreach (QSGParticleData* d, needsReset)
+        foreach (QSGParticlePainter* p, groupData[d->group]->painters)
             if (p && d)
                 p->reload(d);
 
@@ -1057,10 +1057,10 @@ int QSGParticleSystem::systemSync(QSGParticlePainter* p)
 {
     if (!m_running)
         return 0;
-    if (!m_initialized)
+    if (!initialized)
         return 0;//error in initialization
     p->performPendingCommits();
-    return m_timeInt;
+    return timeInt;
 }
 
 

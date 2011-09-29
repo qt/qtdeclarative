@@ -242,7 +242,7 @@ public:
         return m_running;
     }
 
-    int count(){ return m_particle_count; }
+    int count(){ return particleCount; }
 
     static const int maxLife = 600000;
 
@@ -277,7 +277,7 @@ private slots:
     void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
     void particleStateChange(int idx);
 
-public://###but only really for related class usage. Perhaps we should all be friends?
+public:
     //These can be called multiple times per frame, performance critical
     void emitParticle(QSGParticleData* p);
     QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);//TODO: implement respectLimits in emitters (which means interacting with maxCount?)
@@ -288,21 +288,22 @@ public://###but only really for related class usage. Perhaps we should all be fr
     //This one only once per painter per frame
     int systemSync(QSGParticlePainter* p);
 
-    QSet<QSGParticleData*> m_needsReset;
-    QVector<QSGParticleData*> m_bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
-    QHash<QString, int> m_groupIds;
-    QHash<int, QSGParticleGroupData*> m_groupData;
-    QSGStochasticEngine* m_stateEngine;
+    //Data members here for ease of related class and auto-test usage. Not "public" API.
+    QSet<QSGParticleData*> needsReset;
+    QVector<QSGParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
+    QHash<QString, int> groupIds;
+    QHash<int, QSGParticleGroupData*> groupData;
+    QSGStochasticEngine* stateEngine;
 
-    int m_timeInt;
-    bool m_initialized;
+    int timeInt;
+    bool initialized;
+    int particleCount;
 
     void registerParticlePainter(QSGParticlePainter* p);
     void registerParticleEmitter(QSGParticleEmitter* e);
     void registerParticleAffector(QSGParticleAffector* a);
     void registerParticleGroup(QSGParticleGroup* g);
 
-    int m_particle_count;
     static void statePropertyRedirect(QDeclarativeListProperty<QObject> *prop, QObject *value);
     static void stateRedirect(QSGParticleGroup* group, QSGParticleSystem* sys, QObject *value);
     bool isPaused() const

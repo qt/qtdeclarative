@@ -86,7 +86,7 @@ bool QSGAgeAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
     if (d->stillAlive()){
-        qreal curT = (qreal)m_system->m_timeInt/1000.0;
+        qreal curT = (qreal)m_system->timeInt/1000.0;
         qreal ttl = (qreal)m_lifeLeft/1000.0;
         if (!m_advancePosition && ttl > 0){
             qreal x = d->curX();

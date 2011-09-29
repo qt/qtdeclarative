@@ -150,7 +150,7 @@ bool QSGParticleAffector::activeGroup(int g) {
     if (m_updateIntSet){
         m_groupIds.clear();
         foreach (const QString &p, m_groups)
-            m_groupIds << m_system->m_groupIds[p];//###Can this occur before group ids are properly assigned?
+            m_groupIds << m_system->groupIds[p];//###Can this occur before group ids are properly assigned?
         m_updateIntSet = false;
     }
     return m_groupIds.isEmpty() || m_groupIds.contains(g);
@@ -178,7 +178,7 @@ bool QSGParticleAffector::shouldAffect(QSGParticleData* d)
 
 void QSGParticleAffector::postAffect(QSGParticleData* d)
 {
-    m_system->m_needsReset << d;
+    m_system->needsReset << d;
     if (m_onceOff)
         m_onceOffed << qMakePair(d->group, d->index);
     if (isAffectedConnected())
@@ -192,8 +192,8 @@ void QSGParticleAffector::affectSystem(qreal dt)
     //If not reimplemented, calls affect particle per particle
     //But only on particles in targeted system/area
     updateOffsets();//### Needed if an ancestor is transformed.
-    foreach (QSGParticleGroupData* gd, m_system->m_groupData)
-        if (activeGroup(m_system->m_groupData.key(gd)))
+    foreach (QSGParticleGroupData* gd, m_system->groupData)
+        if (activeGroup(m_system->groupData.key(gd)))
             foreach (QSGParticleData* d, gd->data)
                 if (shouldAffect(d))
                     if (affectParticle(d, dt))
@@ -224,7 +224,7 @@ bool QSGParticleAffector::isColliding(QSGParticleData *d)
     qreal myCurY = d->curY();
     qreal myCurSize = d->curSize()/2;
     foreach (const QString &group, m_whenCollidingWith){
-        foreach (QSGParticleData* other, m_system->m_groupData[m_system->m_groupIds[group]]->data){
+        foreach (QSGParticleData* other, m_system->groupData[m_system->groupIds[group]]->data){
             if (!other->stillAlive())
                 continue;
             qreal otherCurX = other->curX();

@@ -132,8 +132,8 @@ void QSGParticlePainter::calcSystemOffset(bool resetPending)
     if (lastOffset != m_systemOffset && !resetPending){
         //Reload all particles//TODO: Necessary?
         foreach (const QString &g, m_groups){
-            int gId = m_system->m_groupIds[g];
-            foreach (QSGParticleData* d, m_system->m_groupData[gId]->data)
+            int gId = m_system->groupIds[g];
+            foreach (QSGParticleData* d, m_system->groupData[gId]->data)
                 reload(d);
         }
     }

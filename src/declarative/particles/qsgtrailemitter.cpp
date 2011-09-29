@@ -120,7 +120,7 @@ bool QSGTrailEmitter::isEmitFollowConnected()
 void QSGTrailEmitter::recalcParticlesPerSecond(){
     if (!m_system)
         return;
-    m_followCount = m_system->m_groupData[m_system->m_groupIds[m_follow]]->size();
+    m_followCount = m_system->groupData[m_system->groupIds[m_follow]]->size();
     if (!m_followCount){
         setParticlesPerSecond(1);//XXX: Fix this horrendous hack, needed so they aren't turned off from start (causes crashes - test that when gone you don't crash with 0 PPPS)
     }else{
@@ -141,7 +141,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
         return;
     if (!m_enabled && !m_pulseLeft && m_burstQueue.isEmpty())
         return;
-    if (m_followCount != m_system->m_groupData[m_system->m_groupIds[m_follow]]->size()){
+    if (m_followCount != m_system->groupData[m_system->groupIds[m_follow]]->size()){
         qreal oldPPS = m_particlesPerSecond;
         recalcParticlesPerSecond();
         if (m_particlesPerSecond != oldPPS)
@@ -165,9 +165,9 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
     QPointF offset = m_system->mapFromItem(this, QPointF(0, 0));
     qreal sizeAtEnd = m_particleEndSize >= 0 ? m_particleEndSize : m_particleSize;
 
-    int gId = m_system->m_groupIds[m_follow];
-    int gId2 = m_system->m_groupIds[m_group];
-    foreach (QSGParticleData *d, m_system->m_groupData[gId]->data){
+    int gId = m_system->groupIds[m_follow];
+    int gId2 = m_system->groupIds[m_group];
+    foreach (QSGParticleData *d, m_system->groupData[gId]->data){
         if (!d || !d->stillAlive()){
             m_lastEmission[d->index] = time; //Should only start emitting when it returns to life
             continue;

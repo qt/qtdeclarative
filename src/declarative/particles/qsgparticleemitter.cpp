@@ -402,7 +402,7 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
 
     while ((pt < time && m_emitCap) || !m_burstQueue.isEmpty()) {
         //int pos = m_last_particle % m_particle_count;
-        QSGParticleData* datum = m_system->newDatum(m_system->m_groupIds[m_group], !m_overwrite);
+        QSGParticleData* datum = m_system->newDatum(m_system->groupIds[m_group], !m_overwrite);
         if (datum){//actually emit(otherwise we've been asked to skip this one)
             datum->e = this;//###useful?
             qreal t = 1 - (pt - opt) / dt;

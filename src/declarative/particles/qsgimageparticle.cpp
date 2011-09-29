@@ -888,7 +888,7 @@ void QSGImageParticle::resetColor()
 {
     m_explicitColor = false;
     foreach (const QString &str, m_groups)
-        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+        foreach (QSGParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
             if (d->colorOwner == this)
                 d->colorOwner = 0;
     m_color = QColor();
@@ -904,7 +904,7 @@ void QSGImageParticle::resetRotation()
 {
     m_explicitRotation = false;
     foreach (const QString &str, m_groups)
-        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+        foreach (QSGParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
             if (d->rotationOwner == this)
                 d->rotationOwner = 0;
     m_rotation = 0;
@@ -918,7 +918,7 @@ void QSGImageParticle::resetDeformation()
 {
     m_explicitDeformation = false;
     foreach (const QString &str, m_groups)
-        foreach (QSGParticleData* d, m_system->m_groupData[m_system->m_groupIds[str]]->data)
+        foreach (QSGParticleData* d, m_system->groupData[m_system->groupIds[str]]->data)
             if (d->deformationOwner == this)
                 d->deformationOwner = 0;
     if (m_xVector)
@@ -1021,7 +1021,7 @@ void QSGImageParticle::clearShadows()
 //Only call if you need to, may initialize the whole array first time
 QSGParticleData* QSGImageParticle::getShadowDatum(QSGParticleData* datum)
 {
-    QSGParticleGroupData* gd = m_system->m_groupData[datum->group];
+    QSGParticleGroupData* gd = m_system->groupData[datum->group];
     if (!m_shadowData.contains(datum->group)) {
         QVector<QSGParticleData*> data;
         for (int i=0; i<gd->size(); i++){
@@ -1065,8 +1065,8 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     }
 
     foreach (const QString &str, m_groups){//For sharing higher levels, need to have highest used so it renders
-        int gIdx = m_system->m_groupIds[str];
-        foreach (QSGParticlePainter* p, m_system->m_groupData[gIdx]->painters){
+        int gIdx = m_system->groupIds[str];
+        foreach (QSGParticlePainter* p, m_system->groupData[gIdx]->painters){
             QSGImageParticle* other = qobject_cast<QSGImageParticle*>(p);
             if (other){
                 if (other->perfLevel > perfLevel) {
@@ -1144,8 +1144,8 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     }
 
     foreach (const QString &str, m_groups){
-        int gIdx = m_system->m_groupIds[str];
-        int count = m_system->m_groupData[gIdx]->size();
+        int gIdx = m_system->groupIds[str];
+        int count = m_system->groupData[gIdx]->size();
         QSGGeometryNode* node = new QSGGeometryNode();
         node->setMaterial(m_material);
         node->markDirty(QSGNode::DirtyMaterial);
@@ -1257,8 +1257,8 @@ void QSGImageParticle::prepareNextFrame()
             qDebug() << "QSGImageParticle Nodes: ";
             int count = 0;
             foreach(int i, m_nodes.keys()){
-                qDebug() << "Group " << i << " (" << m_system->m_groupData[i]->size() << " particles)";
-                count += m_system->m_groupData[i]->size();
+                qDebug() << "Group " << i << " (" << m_system->groupData[i]->size() << " particles)";
+                count += m_system->groupData[i]->size();
             }
             qDebug() << "Total count: " << count;
         }
@@ -1273,8 +1273,8 @@ void QSGImageParticle::prepareNextFrame()
         getState<ImageMaterialData>(m_material)->animcount = m_spriteEngine->spriteCount();
         m_spriteEngine->updateSprites(timeStamp);
         foreach (const QString &str, m_groups){
-            int gIdx = m_system->m_groupIds[str];
-            int count = m_system->m_groupData[gIdx]->size();
+            int gIdx = m_system->groupIds[str];
+            int count = m_system->groupData[gIdx]->size();
 
             Vertices<SpriteVertex>* particles = (Vertices<SpriteVertex> *) m_nodes[gIdx]->geometry()->vertexData();
             for (int i=0; i < count; i++){
@@ -1311,7 +1311,7 @@ void QSGImageParticle::reloadColor(const Color4ub &c, QSGParticleData* d)
 void QSGImageParticle::initialize(int gIdx, int pIdx)
 {
     Color4ub color;
-    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    QSGParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
     qreal redVariation = m_color_variation + m_redVariation;
     qreal greenVariation = m_color_variation + m_greenVariation;
     qreal blueVariation = m_color_variation + m_blueVariation;
@@ -1410,7 +1410,7 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
     QSGGeometryNode *node = m_nodes[gIdx];
     if (!node)
         return;
-    QSGParticleData* datum = m_system->m_groupData[gIdx]->data[pIdx];
+    QSGParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
     node->setFlag(QSGNode::OwnsGeometry, false);
     SpriteVertex *spriteVertices = (SpriteVertex *) node->geometry()->vertexData();
     DeformableVertex *deformableVertices = (DeformableVertex *) node->geometry()->vertexData();

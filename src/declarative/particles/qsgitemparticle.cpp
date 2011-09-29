@@ -138,7 +138,7 @@ void QSGItemParticle::give(QSGItem *item)
 
 void QSGItemParticle::initialize(int gIdx, int pIdx)
 {
-    m_loadables << m_system->m_groupData[gIdx]->data[pIdx];//defer to other thread
+    m_loadables << m_system->groupData[gIdx]->data[pIdx];//defer to other thread
 }
 
 void QSGItemParticle::commit(int, int)
@@ -227,11 +227,11 @@ void QSGItemParticle::prepareNextFrame()
 
     //TODO: Size, better fade?
     foreach (const QString &str, m_groups){
-        int gIdx = m_system->m_groupIds[str];
-        int count = m_system->m_groupData[gIdx]->size();
+        int gIdx = m_system->groupIds[str];
+        int count = m_system->groupData[gIdx]->size();
 
         for (int i=0; i<count; i++){
-            QSGParticleData* data = m_system->m_groupData[gIdx]->data[i];
+            QSGParticleData* data = m_system->groupData[gIdx]->data[i];
             QSGItem* item = data->delegate;
             if (!item)
                 continue;
