@@ -42,6 +42,7 @@
 #include "private/qdeclarativebehavior_p.h"
 
 #include "private/qdeclarativeanimation_p.h"
+#include "private/qabstractanimation2_p.h"
 #include "private/qdeclarativetransition_p.h"
 
 #include <qdeclarativecontext.h>
@@ -58,13 +59,14 @@ class QDeclarativeBehaviorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QDeclarativeBehavior)
 public:
-    QDeclarativeBehaviorPrivate() : animation(0), enabled(true), finalized(false)
+    QDeclarativeBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
     QDeclarativeProperty property;
     QVariant currentValue;
     QVariant targetValue;
     QDeclarativeGuard<QDeclarativeAbstractAnimation> animation;
+    QAbstractAnimation2 *animationInstance;
     bool enabled;
     bool finalized;
     bool blockRunningChanged;
@@ -132,8 +134,6 @@ void QDeclarativeBehavior::setAnimation(QDeclarativeAbstractAnimation *animation
     if (d->animation) {
         d->animation->setDefaultTarget(d->property);
         d->animation->setDisableUserControl();
-        d->animation->qtAnimation()->registerStateChanged(this,
-                                                          "qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)");
     }
 }
 
@@ -186,10 +186,10 @@ void QDeclarativeBehavior::write(const QVariant &value)
     d->currentValue = d->property.read();
     d->targetValue = value;
 
-    if (d->animation->qtAnimation()->duration() != -1
-            && d->animation->qtAnimation()->state() != QAbstractAnimation2::Stopped) {
+    if (d->animationInstance && d->animationInstance->duration() != -1
+            && d->animationInstance->state() != QAbstractAnimation2::Stopped) {
         d->blockRunningChanged = true;
-        d->animation->qtAnimation()->stop();
+        d->animationInstance->stop();
     }
 
     QDeclarativeStateOperation::ActionList actions;
@@ -200,8 +200,12 @@ void QDeclarativeBehavior::write(const QVariant &value)
     actions << action;
 
     QList<QDeclarativeProperty> after;
-    d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
-    d->animation->qtAnimation()->start();
+    QAbstractAnimation2 *prev = d->animationInstance;
+    //TODO: cleanup old instance as needed
+    d->animationInstance = d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
+    if (d->animationInstance != prev)
+        d->animationInstance->registerStateChanged(this, "qtAnimationStateChanged(QAbstractAnimation2::State,QAbstractAnimation2::State)");
+    d->animationInstance->start();
     d->blockRunningChanged = false;
     if (!after.contains(d->property))
         QDeclarativePropertyPrivate::write(d->property, value, QDeclarativePropertyPrivate::BypassInterceptor | QDeclarativePropertyPrivate::DontRemoveBinding);

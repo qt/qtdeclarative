@@ -84,10 +84,9 @@ Q_SIGNALS:
     void viaChanged();
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation2 *qtAnimation();
 };
 
 class QSGAnchorAnimationPrivate;
@@ -116,10 +115,9 @@ Q_SIGNALS:
     void easingChanged(const QEasingCurve&);
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation2 *qtAnimation();
 };
 
 class QSGItem;
@@ -181,10 +179,9 @@ public:
     void setEndRotation(qreal);
 
 protected:
-    virtual void transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
-    virtual QAbstractAnimation2 *qtAnimation();
 
 Q_SIGNALS:
     void durationChanged(int);

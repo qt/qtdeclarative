@@ -415,7 +415,7 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
     }
 }
 
-void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
                                              QDeclarativeProperties &modified,
                                              TransitionDirection direction)
 {
@@ -429,7 +429,7 @@ void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
     QDeclarativeNumberAnimation::transition(actions, modified, direction);
 
     if (!d->actions)
-        return;
+        return d->clock;
 
     if (!d->actions->isEmpty()) {
         for (int i = 0; i < d->actions->size(); ++i) {
@@ -450,12 +450,6 @@ void QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
             }
         }
     }
-}
-
-
-QAbstractAnimation2 *QDeclarativeSpringAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeSpringAnimation);
     return d->clock;
 }
 

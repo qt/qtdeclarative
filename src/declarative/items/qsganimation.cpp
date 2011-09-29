@@ -148,7 +148,7 @@ QPointF QSGParentAnimationPrivate::computeTransformOrigin(QSGItem::TransformOrig
     }
 }
 
-void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QSGParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -334,12 +334,6 @@ void QSGParentAnimation::transition(QDeclarativeStateActions &actions,
             d->animations.at(ii)->setDefaultTarget(d->defaultProperty);
         d->animations.at(ii)->transition(actions, modified, direction);
     }
-
-}
-
-QAbstractAnimation2 *QSGParentAnimation::qtAnimation()
-{
-    Q_D(QSGParentAnimation);
     return d->topLevelGroup;
 }
 
@@ -352,12 +346,6 @@ QSGAnchorAnimation::QSGAnchorAnimation(QObject *parent)
 
 QSGAnchorAnimation::~QSGAnchorAnimation()
 {
-}
-
-QAbstractAnimation2 *QSGAnchorAnimation::qtAnimation()
-{
-    Q_D(QSGAnchorAnimation);
-    return d->va;
 }
 
 QDeclarativeListProperty<QSGItem> QSGAnchorAnimation::targets()
@@ -402,7 +390,7 @@ void QSGAnchorAnimation::setEasing(const QEasingCurve &e)
     emit easingChanged(e);
 }
 
-void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -429,6 +417,7 @@ void QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
     } else {
         delete data;
     }
+    return d->va;
 }
 
 QSGPathAnimation::QSGPathAnimation(QObject *parent)
@@ -588,14 +577,7 @@ void QSGPathAnimation::setEndRotation(qreal rotation)
     emit endRotationChanged(d->endRotation);
 }
 
-
-QAbstractAnimation2 *QSGPathAnimation::qtAnimation()
-{
-    Q_D(QSGPathAnimation);
-    return d->pa;
-}
-
-void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QSGPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
                                            TransitionDirection direction)
 {
@@ -668,6 +650,7 @@ void QSGPathAnimation::transition(QDeclarativeStateActions &actions,
         d->pa->setAnimValue(0, QAbstractAnimation2::DeleteWhenStopped);
         delete data;
     }
+    return d->pa;
 }
 
 void QSGPathAnimationUpdater::setValue(qreal v)

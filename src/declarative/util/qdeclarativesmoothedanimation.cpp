@@ -355,13 +355,7 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation2* QDeclarativeSmoothedAnimation::qtAnimation()
-{
-    Q_D(QDeclarativeSmoothedAnimation);
-    return d->wrapperGroup;
-}
-
-void QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
@@ -369,7 +363,7 @@ void QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions
     QDeclarativeNumberAnimation::transition(actions, modified, direction);
 
     if (!d->actions)
-        return;
+        return d->wrapperGroup;
 
     QSet<QAbstractAnimation2*> anims;
     for (int i = 0; i < d->actions->size(); i++) {
@@ -408,6 +402,7 @@ void QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions
             delete ease;
         }
     }
+    return d->wrapperGroup;
 }
 
 /*!

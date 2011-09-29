@@ -131,7 +131,12 @@ QAbstractAnimation2 *QAnimationGroup2::takeAnimation(int index)
 
 void QAnimationGroup2::clear()
 {
-    qDeleteAll(m_animations);
+    //qDeleteAll(m_animations);
+    foreach (QAbstractAnimation2* child, m_animations) {
+        child->setGroup(0);
+    }
+    m_animations.clear();
+    //TODO: other cleanup
 }
 
 bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2 *anim) const

@@ -175,7 +175,7 @@ public:
     : running(false), paused(false), alwaysRunToEnd(false),
       /*connectedTimeLine(false), */componentComplete(true),
       avoidPropertyValueSourceStart(false), disableUserControl(false),
-      registered(false), loopCount(1), group(0) {}
+      registered(false), loopCount(1), group(0), animationInstance(0) {}
 
     bool running:1;
     bool paused:1;
@@ -193,6 +193,7 @@ public:
     QDeclarativeProperty defaultProperty;
 
     QDeclarativeAnimationGroup *group;
+    QAbstractAnimation2 *animationInstance;
 
     static QDeclarativeProperty createProperty(QObject *obj, const QString &str, QObject *infoObj);
 };

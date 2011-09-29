@@ -140,7 +140,6 @@ void QDeclarativeTransitionPrivate::append_animation(QDeclarativeListProperty<QD
 {
     QDeclarativeTransition *q = static_cast<QDeclarativeTransition *>(list->object);
     q->d_func()->animations.append(a);
-    q->d_func()->group.addAnimation(a->qtAnimation());
     a->setDisableUserControl();
 }
 
@@ -161,7 +160,6 @@ void QDeclarativeTransitionPrivate::clear_animations(QDeclarativeListProperty<QD
     QDeclarativeTransition *q = static_cast<QDeclarativeTransition *>(list->object);
     while (q->d_func()->animations.count()) {
         QDeclarativeAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
-        q->d_func()->group.removeAnimation(firstAnim->qtAnimation());
         q->d_func()->animations.removeAll(firstAnim);
     }
 }
@@ -208,14 +206,17 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
 
     qmlExecuteDeferred(this);
 
-    if (d->reversed) {
-        for (int ii = d->animations.count() - 1; ii >= 0; --ii) {
-            d->animations.at(ii)->transition(actions, after, QDeclarativeAbstractAnimation::Backward);
-        }
-    } else {
-        for (int ii = 0; ii < d->animations.count(); ++ii) {
-            d->animations.at(ii)->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
-        }
+    d->group.clear();
+    QDeclarativeAbstractAnimation::TransitionDirection direction = d->reversed ? QDeclarativeAbstractAnimation::Backward : QDeclarativeAbstractAnimation::Forward;
+    int start = d->reversed ? d->animations.count() - 1 : 0;
+    int end = d->reversed ? -1 : d->animations.count();
+
+    QAbstractAnimation2 *anim;
+    for (int i = start; i != end;) {
+        anim = d->animations.at(i)->transition(actions, after, direction);
+        if (anim)
+            d->reversed ? d->group.insertAnimation(0, anim) : d->group.addAnimation(anim);
+        d->reversed ? --i : ++i;
     }
 
     d->manager = manager;
