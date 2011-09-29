@@ -175,7 +175,7 @@ public:
 
 QSGViewSection::QSGViewSection(QSGListView *parent)
     : QObject(parent), m_criteria(FullString), m_delegate(0), m_labelPositioning(InlineLabels)
-    , m_view(QSGListViewPrivate::get(parent))
+    , m_view(parent ? QSGListViewPrivate::get(parent) : 0)
 {
 }
 
