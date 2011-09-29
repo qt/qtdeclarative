@@ -468,7 +468,10 @@ void QSGDefaultRenderer::renderNodes(const QDataBuffer<QSGGeometryNode *> &list)
         bool changeClip = geomNode->clipList() != m_currentClip;
         QSGRenderer::ClipType clipType = QSGRenderer::NoClip;
         if (changeClip) {
+            // The clip function relies on there not being any depth testing..
+            glDisable(GL_DEPTH_TEST);
             clipType = updateStencilClip(geomNode->clipList());
+            glEnable(GL_DEPTH_TEST);
             m_currentClip = geomNode->clipList();
 #ifdef FORCE_NO_REORDER
             glDepthMask(false);
