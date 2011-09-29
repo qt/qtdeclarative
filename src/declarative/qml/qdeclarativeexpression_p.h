@@ -222,7 +222,7 @@ public:
 
     QString url; // This is a QString for a reason.  QUrls are slooooooow...
     int line;
-    QByteArray name; //function name, hint for the debugger
+    QString name; //function name, hint for the debugger
 
     QDeclarativeRefCount *dataRef;
 };

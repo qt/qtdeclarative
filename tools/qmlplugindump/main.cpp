@@ -204,8 +204,8 @@ QSet<const QMetaObject *> collectReachableMetaObjects(const QList<QDeclarativeTy
         if (ty->typeName() == "QDeclarativeComponent")
             continue;
 
-        QByteArray tyName = ty->qmlTypeName();
-        tyName = tyName.mid(tyName.lastIndexOf('/') + 1);
+        QString tyName = ty->qmlTypeName();
+        tyName = tyName.mid(tyName.lastIndexOf(QLatin1Char('/')) + 1);
         if (tyName.isEmpty())
             continue;
 
@@ -583,8 +583,8 @@ int main(int argc, char *argv[])
             qWarning() << "Could not find QtObject type";
             importCode = QByteArray("import QtQuick 2.0\n");
         } else {
-            QByteArray module = qtObjectType->qmlTypeName();
-            module = module.mid(0, module.lastIndexOf('/'));
+            QString module = qtObjectType->qmlTypeName();
+            module = module.mid(0, module.lastIndexOf(QLatin1Char('/')));
             importCode = QString("import %1 %2.%3\n").arg(module,
                                                           QString::number(qtObjectType->majorVersion()),
                                                           QString::number(qtObjectType->minorVersion())).toUtf8();

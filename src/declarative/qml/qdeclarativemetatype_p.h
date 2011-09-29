@@ -137,7 +137,7 @@ class Q_DECLARATIVE_PRIVATE_EXPORT QDeclarativeType
 {
 public:
     QByteArray typeName() const;
-    const QByteArray &qmlTypeName() const;
+    const QString &qmlTypeName() const;
     const QString &elementName() const;
 
     QString module() const;

@@ -309,7 +309,7 @@ public:
     int type;
 
     // The fully-qualified name of this type
-    QByteArray typeName;
+    QString typeName;
     // The id assigned to the object (if any).  Set by the QDeclarativeCompiler
     QString id;
     // The id index assigned to the object (if any).  Set by the QDeclarativeCompiler

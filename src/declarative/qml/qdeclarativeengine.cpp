@@ -952,7 +952,7 @@ Q_AUTOTEST_EXPORT void qmlExecuteDeferred(QObject *object)
         if (QDeclarativeDebugService::isDebuggingEnabled()) {
             QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
             QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
-            QString typeName = type ? QLatin1String(type->qmlTypeName()) : QString::fromLatin1(object->metaObject()->className());
+            QString typeName = type ? type->qmlTypeName() : QString::fromUtf8(object->metaObject()->className());
             QDeclarativeDebugTrace::rangeData(QDeclarativeDebugTrace::Creating, typeName);
             if (data->outerContext)
                 QDeclarativeDebugTrace::rangeLocation(QDeclarativeDebugTrace::Creating, data->outerContext->url, data->lineNumber);
@@ -1580,7 +1580,7 @@ QDeclarativePropertyCache *QDeclarativeEnginePrivate::createCache(QDeclarativeTy
     if (overloadError) {
         if (hasCopied) raw->release();
 
-        error.setDescription(QLatin1String("Type ") + QString::fromUtf8(type->qmlTypeName()) + QLatin1String(" ") + QString::number(type->majorVersion()) + QLatin1String(".") + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
+        error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1String(" ") + QString::number(type->majorVersion()) + QLatin1String(".") + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
         return 0;
     }
 

@@ -120,7 +120,7 @@ QDeclarativeInfo::~QDeclarativeInfo()
                 QString typeName;
                 QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
                 if (type) {
-                    typeName = QLatin1String(type->qmlTypeName());
+                    typeName = type->qmlTypeName();
                     int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
                     if (lastSlash != -1)
                         typeName = typeName.mid(lastSlash+1);
@@ -136,7 +136,7 @@ QDeclarativeInfo::~QDeclarativeInfo()
                         typeName += QLatin1Char('*');
                         type = QDeclarativeMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
                         if (type) {
-                            typeName = QLatin1String(type->qmlTypeName());
+                            typeName = type->qmlTypeName();
                             int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
                             if (lastSlash != -1)
                                 typeName = typeName.mid(lastSlash+1);

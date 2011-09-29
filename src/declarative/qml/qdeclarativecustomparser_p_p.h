@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeCustomParserNodePrivate
 {
 public:
-    QByteArray name;
+    QString name;
     QList<QDeclarativeCustomParserProperty> properties;
     QDeclarativeScript::Location location;
 
@@ -78,7 +78,7 @@ public:
     QDeclarativeCustomParserPropertyPrivate()
         : isList(false) {}
 
-    QByteArray name;
+    QString name;
     bool isList;
     QDeclarativeScript::Location location;
     QList<QVariant> values;

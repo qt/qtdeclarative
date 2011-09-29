@@ -2235,7 +2235,7 @@ bool QDeclarativeCompiler::buildPropertyObjectAssignment(QDeclarativeScript::Pro
             QDeclarativeScript::Object *root = v->object;
             QDeclarativeScript::Object *component = pool->New<Object>();
             component->type = componentTypeRef();
-            component->typeName = "Qt/Component";
+            component->typeName = QStringLiteral("Qt/Component");
             component->metatype = &QDeclarativeComponent::staticMetaObject;
             component->location = root->location;
             QDeclarativeScript::Value *componentValue = pool->New<Value>();
@@ -2294,7 +2294,7 @@ bool QDeclarativeCompiler::buildPropertyOnAssignment(QDeclarativeScript::Propert
             buildDynamicMeta(baseObj, ForceCreation);
         v->type = isPropertyValue ? Value::ValueSource : Value::ValueInterceptor;
     } else {
-        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(QString::fromUtf8(v->object->typeName)).arg(prop->name().toString()));
+        COMPILE_EXCEPTION(v, tr("\"%1\" cannot operate on \"%2\"").arg(v->object->typeName).arg(prop->name().toString()));
     }
 
     return true;
@@ -2360,7 +2360,7 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
     unit->imports().resolveType(typeName, &type, 0, 0, 0, 0);
 
     //handle enums on value types (where obj->typeName is empty)
-    QByteArray objTypeName = obj->typeName;
+    QString objTypeName = obj->typeName;
     if (objTypeName.isEmpty()) {
         QDeclarativeType *objType = toQmlType(obj);
         if (objType)
@@ -2429,10 +2429,10 @@ int QDeclarativeCompiler::evaluateEnum(const QByteArray& script) const
     return -1;
 }
 
-const QMetaObject *QDeclarativeCompiler::resolveType(const QByteArray& name) const
+const QMetaObject *QDeclarativeCompiler::resolveType(const QString& name) const
 {
     QDeclarativeType *qmltype = 0;
-    if (!unit->imports().resolveType(QString::fromUtf8(name), &qmltype, 0, 0, 0, 0))
+    if (!unit->imports().resolveType(name, &qmltype, 0, 0, 0, 0))
         return 0;
     if (!qmltype)
         return 0;

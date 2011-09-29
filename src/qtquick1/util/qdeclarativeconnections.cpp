@@ -205,7 +205,7 @@ QDeclarative1ConnectionsParser::compile(const QList<QDeclarativeCustomParserProp
 
     for(int ii = 0; ii < props.count(); ++ii)
     {
-        QString propName = QString::fromUtf8(props.at(ii).name());
+        QString propName = props.at(ii).name();
         if (!propName.startsWith(QLatin1String("on")) || !propName.at(2).isUpper()) {
             error(props.at(ii), QDeclarative1Connections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
             return QByteArray();

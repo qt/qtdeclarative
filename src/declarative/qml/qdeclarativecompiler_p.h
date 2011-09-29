@@ -278,7 +278,7 @@ public:
     static bool isSignalPropertyName(const QHashedStringRef &);
 
     int evaluateEnum(const QByteArray& script) const; // for QDeclarativeCustomParser::evaluateEnum
-    const QMetaObject *resolveType(const QByteArray& name) const; // for QDeclarativeCustomParser::resolveType
+    const QMetaObject *resolveType(const QString& name) const; // for QDeclarativeCustomParser::resolveType
     int rewriteBinding(const QString& expression, const QString& name); // for QDeclarativeCustomParser::rewriteBinding
 
 private:

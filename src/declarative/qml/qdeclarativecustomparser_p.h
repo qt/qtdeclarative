@@ -78,7 +78,7 @@ public:
     QDeclarativeCustomParserProperty &operator=(const QDeclarativeCustomParserProperty &);
     ~QDeclarativeCustomParserProperty();
 
-    QByteArray name() const;
+    QString name() const;
     QDeclarativeScript::Location location() const;
 
     bool isList() const;
@@ -101,7 +101,7 @@ public:
     QDeclarativeCustomParserNode &operator=(const QDeclarativeCustomParserNode &);
     ~QDeclarativeCustomParserNode();
 
-    QByteArray name() const;
+    QString name() const;
     QDeclarativeScript::Location location() const;
 
     QList<QDeclarativeCustomParserProperty> properties() const;
@@ -140,9 +140,9 @@ protected:
 
     int evaluateEnum(const QByteArray&) const;
 
-    const QMetaObject *resolveType(const QByteArray&) const;
+    const QMetaObject *resolveType(const QString&) const;
 
-    QDeclarativeBinding::Identifier rewriteBinding(const QString&, const QByteArray&);
+    QDeclarativeBinding::Identifier rewriteBinding(const QString&, const QString&);
 
 private:
     QList<QDeclarativeError> exceptions;

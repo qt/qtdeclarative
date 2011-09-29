@@ -372,7 +372,7 @@ QDeclarativeEngineDebugService::objectData(QObject *object)
 
     QDeclarativeType *type = QDeclarativeMetaType::qmlType(object->metaObject());
     if (type) {
-        QString typeName = QLatin1String(type->qmlTypeName());
+        QString typeName = type->qmlTypeName();
         int lastSlash = typeName.lastIndexOf(QLatin1Char('/'));
         rv.objectType = lastSlash < 0 ? typeName : typeName.mid(lastSlash+1);
     } else {

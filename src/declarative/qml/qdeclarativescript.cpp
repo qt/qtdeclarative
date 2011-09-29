@@ -736,7 +736,7 @@ ProcessAST::defineObjectBinding(AST::UiQualifiedId *propertyName,
 
         // XXX this doesn't do anything (_scope never builds up)
         _scope.append(resolvableObjectType);
-        obj->typeName = qualifiedNameId().toUtf8();
+        obj->typeName = qualifiedNameId();
         _scope.removeLast();
 
         obj->location = location;

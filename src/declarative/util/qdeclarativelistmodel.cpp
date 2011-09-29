@@ -792,14 +792,14 @@ bool QDeclarativeListModelParser::compileProperty(const QDeclarativeCustomParser
                     error(nodeProp, QDeclarativeListModel::tr("ListElement: cannot contain nested elements"));
                     return false;
                 }
-                if (nodeProp.name() == "id") {
+                if (nodeProp.name() == QStringLiteral("id")) {
                     error(nodeProp, QDeclarativeListModel::tr("ListElement: cannot use reserved \"id\" property"));
                     return false;
                 }
 
                 ListInstruction li;
                 int ref = data.count();
-                data.append(nodeProp.name());
+                data.append(nodeProp.name().toUtf8());
                 data.append('\0');
                 li.type = ListInstruction::Set;
                 li.dataIdx = ref;
@@ -895,12 +895,12 @@ QByteArray QDeclarativeListModelParser::compile(const QList<QDeclarativeCustomPa
 {
     QList<ListInstruction> instr;
     QByteArray data;
-    listElementTypeName = QByteArray(); // unknown
+    listElementTypeName = QString(); // unknown
 
     for(int ii = 0; ii < customProps.count(); ++ii) {
         const QDeclarativeCustomParserProperty &prop = customProps.at(ii);
         if(!prop.name().isEmpty()) { // isn't default property
-            error(prop, QDeclarativeListModel::tr("ListModel: undefined property '%1'").arg(QString::fromUtf8(prop.name())));
+            error(prop, QDeclarativeListModel::tr("ListModel: undefined property '%1'").arg(prop.name()));
             return QByteArray();
         }
 
