@@ -63,6 +63,7 @@
 #include <private/qabstractanimation_p.h>
 
 #include <QSettings>
+#include <QMimeData>
 #include <QXmlStreamReader>
 #include <QBuffer>
 #include <QNetworkReply>
