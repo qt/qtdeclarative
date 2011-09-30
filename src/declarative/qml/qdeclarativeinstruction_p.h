@@ -73,6 +73,10 @@ QT_BEGIN_NAMESPACE
     F(StoreVariantInteger, storeInteger) \
     F(StoreVariantDouble, storeDouble) \
     F(StoreVariantBool, storeBool) \
+    F(StoreVar, storeString) \
+    F(StoreVarInteger, storeInteger) \
+    F(StoreVarDouble, storeDouble) \
+    F(StoreVarBool, storeBool) \
     F(StoreString, storeString) \
     F(StoreByteArray, storeByteArray) \
     F(StoreUrl, storeUrl) \
@@ -109,6 +113,7 @@ QT_BEGIN_NAMESPACE
     F(StoreObjectQList, common) \
     F(AssignObjectList, assignObjectList) \
     F(StoreVariantObject, storeObject) \
+    F(StoreVarObject, storeObject) \
     F(StoreInterface, storeObject) \
     F(FetchAttached, fetchAttached) \
     F(FetchQList, fetchQmlList) \

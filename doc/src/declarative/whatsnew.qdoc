@@ -120,6 +120,9 @@ header and footer items).
 ListView section.labelPositioning property added to allow keeping the current section label
 at the start and/or next section label at the end of the view.
 
+A new property type ("var") has been introduced which obsoletes "variant" properties in QML.
+Properties of this type are equivalent to regular JavaScript variables.  See the documentation
+on \l{QML Basic Types} for more information about "var" properties.
 
 \section2 QtQuick 1 is now a separate library and module
 

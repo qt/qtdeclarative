@@ -1327,13 +1327,14 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
     QDeclarativeDeleteWatcher watcher(expression);
 
     QVariant value;
+    bool isVmeProperty = pp->core.isVMEProperty();
 
     if (isUndefined) {
     } else if (that.propertyTypeCategory() == QDeclarativeProperty::List) {
         value = engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result->IsNull() && that.propertyTypeCategory() == QDeclarativeProperty::Object) {
         value = QVariant::fromValue((QObject *)0);
-    } else {
+    } else if (!isVmeProperty) {
         value = engine->toVariant(result, type);
     }
 
@@ -1351,6 +1352,8 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
     } else if (result->IsFunction()) {
         expression->error.setDescription(QLatin1String("Unable to assign a function to a property."));
         return false;
+    } else if (isVmeProperty) {
+        static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(that.object()->metaObject()))->setVMEProperty(that.index(), result);
     } else if (object && !QDeclarativePropertyPrivate::write(that, value, flags)) {
 
         if (watcher.wasDeleted()) 
@@ -1599,6 +1602,17 @@ QByteArray QDeclarativePropertyPrivate::saveProperty(const QMetaObject *metaObje
     memset(&sd, 0, sizeof(sd));
     sd.isValueType = false;
     sd.core.load(metaObject->property(index), engine);
+
+    QByteArray rv((const char *)&sd, sizeof(sd));
+    return rv;
+}
+
+QByteArray QDeclarativePropertyPrivate::saveProperty(QDeclarativePropertyCache::Data *core)
+{
+    SerializedData sd;
+    memset(&sd, 0, sizeof(sd));
+    sd.isValueType = false;
+    sd.core = *core;
 
     QByteArray rv((const char *)&sd, sizeof(sd));
     return rv;

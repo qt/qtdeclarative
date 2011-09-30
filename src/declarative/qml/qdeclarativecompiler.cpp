@@ -380,26 +380,54 @@ void QDeclarativeCompiler::genLiteralAssignment(QDeclarativeScript::Property *pr
             if (v->value.isNumber()) {
                 double n = v->value.asNumber();
                 if (double(int(n)) == n) {
-                    Instruction::StoreVariantInteger instr;
+                    if (prop->core.isVMEProperty()) {
+                        Instruction::StoreVarInteger instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = int(n);
+                        output->addInstruction(instr);
+                    } else {
+                        Instruction::StoreVariantInteger instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = int(n);
+                        output->addInstruction(instr);
+                    }
+                } else {
+                    if (prop->core.isVMEProperty()) {
+                        Instruction::StoreVarDouble instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = n;
+                        output->addInstruction(instr);
+                    } else {
+                        Instruction::StoreVariantDouble instr;
+                        instr.propertyIndex = prop->index;
+                        instr.value = n;
+                        output->addInstruction(instr);
+                    }
+                }
+            } else if (v->value.isBoolean()) {
+                if (prop->core.isVMEProperty()) {
+                    Instruction::StoreVarBool instr;
                     instr.propertyIndex = prop->index;
-                    instr.value = int(n);
+                    instr.value = v->value.asBoolean();
                     output->addInstruction(instr);
                 } else {
-                    Instruction::StoreVariantDouble instr;
+                    Instruction::StoreVariantBool instr;
                     instr.propertyIndex = prop->index;
-                    instr.value = n;
+                    instr.value = v->value.asBoolean();
                     output->addInstruction(instr);
                 }
-            } else if(v->value.isBoolean()) {
-                Instruction::StoreVariantBool instr;
-                instr.propertyIndex = prop->index;
-                instr.value = v->value.asBoolean();
-                output->addInstruction(instr);
             } else {
-                Instruction::StoreVariant instr;
-                instr.propertyIndex = prop->index;
-                instr.value = output->indexForString(v->value.asString());
-                output->addInstruction(instr);
+                if (prop->core.isVMEProperty()) {
+                    Instruction::StoreVar instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = output->indexForString(v->value.asString());
+                    output->addInstruction(instr);
+                } else {
+                    Instruction::StoreVariant instr;
+                    instr.propertyIndex = prop->index;
+                    instr.value = output->indexForString(v->value.asString());
+                    output->addInstruction(instr);
+                }
             }
             }
             break;
@@ -1796,10 +1824,18 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeScript::Property *p
 
             } else if (prop->type == QMetaType::QVariant) {
 
-                Instruction::StoreVariantObject store;
-                store.line = v->object->location.start.line;
-                store.propertyIndex = prop->index;
-                output->addInstruction(store);
+                if (prop->core.isVMEProperty()) {
+                    Instruction::StoreVarObject store;
+                    store.line = v->object->location.start.line;
+                    store.propertyIndex = prop->index;
+                    output->addInstruction(store);
+                } else {
+                    Instruction::StoreVariantObject store;
+                    store.line = v->object->location.start.line;
+                    store.propertyIndex = prop->index;
+                    output->addInstruction(store);
+                }
+
 
             } else {
 
@@ -2570,11 +2606,16 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
 
     const Object::DynamicProperty *defaultProperty = 0;
     int aliasCount = 0;
+    int varPropCount = 0;
+    int totalPropCount = 0;
+    int firstPropertyVarIndex = 0;
 
     for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
 
         if (p->type == Object::DynamicProperty::Alias)
             aliasCount++;
+        if (p->type == Object::DynamicProperty::Var)
+            varPropCount++;
 
         if (p->isDefaultProperty && 
             (resolveAlias || p->type != Object::DynamicProperty::Alias))
@@ -2628,6 +2669,7 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
         int metaType;
         const char *cppType;
     } builtinTypes[] = {
+        { Object::DynamicProperty::Var, 0, "QVariant" },
         { Object::DynamicProperty::Variant, 0, "QVariant" },
         { Object::DynamicProperty::Int, QMetaType::Int, "int" },
         { Object::DynamicProperty::Bool, QMetaType::Bool, "bool" },
@@ -2706,6 +2748,9 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
                 typeRef = p->typeRef;
             }
 
+            if (p->type == Object::DynamicProperty::Var)
+                continue;
+
             if (buildData) {
                 VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
                 vmd->propertyCount++;
@@ -2725,6 +2770,31 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
             builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
 
             effectivePropertyIndex++;
+        }
+
+        if (varPropCount) {
+            VMD *vmd = (QDeclarativeVMEMetaData *)dynamicData.data();
+            if (buildData)
+                vmd->varPropertyCount = varPropCount;
+            firstPropertyVarIndex = effectivePropertyIndex;
+            totalPropCount = varPropCount + effectivePropertyIndex;
+            for (Object::DynamicProperty *p = obj->dynamicProperties.first(); p; p = obj->dynamicProperties.next(p)) {
+                if (p->type == Object::DynamicProperty::Var) {
+                    QFastMetaBuilder::StringRef typeRef = typeRefs[p->type];
+                    if (buildData) {
+                        vmd->propertyCount++;
+                        (vmd->propertyData() + effectivePropertyIndex)->propertyType = -1;
+                    }
+
+                    builder.setProperty(effectivePropertyIndex, p->nameRef, typeRef, (QMetaType::Type)-1,
+                                        QFastMetaBuilder::Writable, effectivePropertyIndex);
+
+                    p->changedSignatureRef = builder.newString(p->name.utf8length() + strlen("Changed()"));
+                    builder.setSignal(effectivePropertyIndex, p->changedSignatureRef);
+
+                    effectivePropertyIndex++;
+                }
+            }
         }
         
         if (aliasCount) {
@@ -2913,9 +2983,19 @@ bool QDeclarativeCompiler::buildDynamicMeta(QDeclarativeScript::Object *obj, Dyn
 
     if (obj->type != -1) {
         QDeclarativePropertyCache *cache = output->types[obj->type].createPropertyCache(engine)->copy();
-        cache->append(engine, &obj->extObject, QDeclarativePropertyCache::Data::NoFlags,
+        cache->append(engine, &obj->extObject,
+                      QDeclarativePropertyCache::Data::NoFlags,
                       QDeclarativePropertyCache::Data::IsVMEFunction, 
                       QDeclarativePropertyCache::Data::IsVMESignal);
+
+        // now we modify the flags appropriately for var properties.
+        int propertyOffset = obj->extObject.propertyOffset();
+        QDeclarativePropertyCache::Data *currPropData = 0;
+        for (int pvi = firstPropertyVarIndex; pvi < totalPropCount; ++pvi) {
+            currPropData = cache->property(pvi + propertyOffset);
+            currPropData->setFlags(currPropData->getFlags() | QDeclarativePropertyCache::Data::IsVMEProperty);
+        }
+
         obj->synthCache = cache;
     }
 
@@ -3205,8 +3285,7 @@ int QDeclarativeCompiler::genValueTypeData(QDeclarativeScript::Property *valueTy
 int QDeclarativeCompiler::genPropertyData(QDeclarativeScript::Property *prop)
 {
     typedef QDeclarativePropertyPrivate QDPP;
-    QByteArray data = QDPP::saveProperty(prop->parent->metaObject(), prop->index, engine);
-
+    QByteArray data = QDPP::saveProperty(&prop->core);
     return output->indexForByteArray(data);
 }
 

@@ -385,8 +385,8 @@ public:
     {
         DynamicProperty();
 
-        enum Type { Variant, Int, Bool, Real, String, Url, Color, Time, 
-                    Date, DateTime, Alias, Custom, CustomList };
+        enum Type { Var, Variant, Int, Bool, Real, String, Url, Color,
+                    Time, Date, DateTime, Alias, Custom, CustomList };
 
         bool isDefaultProperty;
         Type type;

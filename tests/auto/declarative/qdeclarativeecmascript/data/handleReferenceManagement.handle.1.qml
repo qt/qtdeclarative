@@ -18,8 +18,4 @@ Item {
         // NOTE: manually add reference from first to second
         // in unit test prior reparenting and gc.
     }
-
-    function performGc() {
-        gc();
-    }
 }

@@ -98,9 +98,10 @@ class MyQmlObject : public QObject
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
     Q_PROPERTY(QRegExp regExp READ regExp WRITE setRegExp)
     Q_PROPERTY(int nonscriptable READ nonscriptable WRITE setNonscriptable SCRIPTABLE false)
+    Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
 
 public:
-    MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13) {}
+    MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
     enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3 };
@@ -161,6 +162,9 @@ public:
         int value;
     };
     QVariant variant() const { return m_variant; }
+
+    int intProperty() const { return m_intProperty; }
+    void setIntProperty(int i) { m_intProperty = i; emit intChanged(); }
     
 signals:
     void basicSignal();
@@ -171,6 +175,7 @@ signals:
     void thirdBasicSignal();
     void signalWithUnknownType(const MyQmlObject::MyType &arg);
     void signalWithVariant(const QVariant &arg);
+    void intChanged();
 
 public slots:
     void deleteMe() { delete this; }
@@ -192,6 +197,7 @@ private:
     int m_resetProperty;
     QRegExp m_regExp;
     QVariant m_variant;
+    int m_intProperty;
 };
 
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
@@ -928,12 +934,24 @@ public:
 
     bool scarceResourceIsDetached() const { return m_value.isDetached(); }
 
+    // this particular one returns a new one each time
+    // this means that every Scarce Resource Copy will
+    // consume resources (so that we can track disposal
+    // of v8 handles with circular references).
+    Q_INVOKABLE QPixmap newScarceResource() const
+    {
+        QPixmap retn(800, 600);
+        retn.fill(QColor(100, 110, 120, 45));
+        return retn;
+    }
+
 signals:
     void scarceResourceChanged();
 
 private:
     QPixmap m_value;
 };
+QML_DECLARE_TYPE(ScarceResourceObject)
 
 class testQObjectApi : public QObject
 {

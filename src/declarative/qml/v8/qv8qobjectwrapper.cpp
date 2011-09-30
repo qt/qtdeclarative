@@ -522,6 +522,9 @@ v8::Handle<v8::Value> QV8QObjectWrapper::GetProperty(QV8Engine *engine, QObject 
             ep->capturedProperties << CapturedProperty(object, result->coreIndex, result->notifyIndex);
     }
 
+    if (result->isVMEProperty())
+        return static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject*>(object->metaObject()))->vmeProperty(result->coreIndex);
+
     if (result->isDirect())  {
         return LoadPropertyDirect(engine, object, *result);
     } else {
@@ -589,6 +592,8 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
         PROPERTY_STORE(double, double(value->ToNumber()->Value()));
     } else if (property->propType == QMetaType::QString && value->IsString()) {
         PROPERTY_STORE(QString, engine->toString(value->ToString()));
+    } else if (property->isVMEProperty()) {
+        static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(object->metaObject()))->setVMEProperty(property->coreIndex, value);
     } else {
         QVariant v;
         if (property->isQList()) 

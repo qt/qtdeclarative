@@ -41,6 +41,7 @@
 
 #include "qv8engine_p.h"
 
+#include "qv8gccallback_p.h"
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8gccallback_p.h"
@@ -134,6 +135,8 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_listWrapper.init(this);
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
+
+    QV8GCCallback::registerGcPrologueCallback();
 
     {
     v8::Handle<v8::Value> v = global()->Get(v8::String::New("Object"))->ToObject()->Get(v8::String::New("getOwnPropertyNames"));

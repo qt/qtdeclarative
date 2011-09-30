@@ -116,6 +116,7 @@ public:
                                     QDeclarativeEngine *);
     static QByteArray saveProperty(const QMetaObject *, int, 
                                    QDeclarativeEngine *);
+    static QByteArray saveProperty(QDeclarativePropertyCache::Data *);
 
     static QDeclarativeProperty restore(const QByteArray &, QObject *, QDeclarativeContextData *);
     static QDeclarativeProperty restore(const QDeclarativePropertyCache::Data &,

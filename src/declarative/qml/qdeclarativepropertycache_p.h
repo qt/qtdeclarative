@@ -95,19 +95,20 @@ public:
                     IsEnumType        = 0x00000100, // Property type is an enum
                     IsQList           = 0x00000200, // Property type is a QML list
                     IsQmlBinding      = 0x00000400, // Property type is a QDeclarativeBinding*
-                    IsQJSValue    = 0x00000800, // Property type is a QScriptValue
+                    IsQJSValue        = 0x00000800, // Property type is a QScriptValue
                     IsV8Handle        = 0x00001000, // Property type is a QDeclarativeV8Handle
+                    IsVMEProperty     = 0x00002000, // Property type is a "var" property of VMEMO
 
                     // Apply only to IsFunctions
-                    IsVMEFunction     = 0x00002000, // Function was added by QML
-                    HasArguments      = 0x00004000, // Function takes arguments
-                    IsSignal          = 0x00008000, // Function is a signal
-                    IsVMESignal       = 0x00010000, // Signal was added by QML
-                    IsV8Function      = 0x00020000, // Function takes QDeclarativeV8Function* args
-                    IsSignalHandler   = 0x00040000, // Function is a signal handler
+                    IsVMEFunction     = 0x00004000, // Function was added by QML
+                    HasArguments      = 0x00008000, // Function takes arguments
+                    IsSignal          = 0x00010000, // Function is a signal
+                    IsVMESignal       = 0x00020000, // Signal was added by QML
+                    IsV8Function      = 0x00040000, // Function takes QDeclarativeV8Function* args
+                    IsSignalHandler   = 0x00080000, // Function is a signal handler
 
                     // Internal QDeclarativePropertyCache flags
-                    NotFullyResolved  = 0x00080000  // True if the type data is to be lazily resolved
+                    NotFullyResolved  = 0x00100000  // True if the type data is to be lazily resolved
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -129,6 +130,7 @@ public:
         bool isQmlBinding() const { return flags & IsQmlBinding; }
         bool isQJSValue() const { return flags & IsQJSValue; }
         bool isV8Handle() const { return flags & IsV8Handle; }
+        bool isVMEProperty() const { return flags & IsVMEProperty; }
         bool isVMEFunction() const { return flags & IsVMEFunction; }
         bool hasArguments() const { return flags & HasArguments; }
         bool isSignal() const { return flags & IsSignal; }

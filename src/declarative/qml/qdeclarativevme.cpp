@@ -251,6 +251,10 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
     QDeclarativeEngine *engine = states.at(0).context->engine;
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
 
+    // Need a v8 handle scope and execution context for StoreVar instructions.
+    v8::HandleScope handleScope;
+    v8::Context::Scope contextScope(ep->v8engine()->context());
+
     int status = -1; // needed for dbus
     QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::BypassInterceptor |
                                                     QDeclarativePropertyPrivate::RemoveBindingOnAliasWrite;
@@ -541,6 +545,41 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreVariantBool)
+
+        QML_BEGIN_INSTR(StoreVar)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            // Note that we don't use QDeclarativeStringConverters::variantFromString() here, which
+            // means that automatic generation of value types from strings doesn't occur.
+            // This is a deliberate behaviour difference to variant properties.
+            v8::Handle<v8::Value> v8Value = ep->v8engine()->fromVariant(PRIMITIVES.at(instr.value));
+            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
+        QML_END_INSTR(StoreVar)
+
+        QML_BEGIN_INSTR(StoreVarInteger)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            v8::Handle<v8::Value> v8Value = v8::Integer::New(instr.value);
+            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
+        QML_END_INSTR(StoreVarInteger)
+
+        QML_BEGIN_INSTR(StoreVarDouble)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            v8::Handle<v8::Value> v8Value = v8::Number::New(instr.value);
+            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
+        QML_END_INSTR(StoreVarDouble)
+
+        QML_BEGIN_INSTR(StoreVarBool)
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            v8::Handle<v8::Value> v8Value = v8::Boolean::New(instr.value);
+            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
+        QML_END_INSTR(StoreVarBool)
 
         QML_BEGIN_INSTR(StoreString)
             QObject *target = objects.top();
@@ -973,6 +1012,15 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QMetaObject::metacall(target, QMetaObject::WriteProperty, 
                                   instr.propertyIndex, a);
         QML_END_INSTR(StoreVariantObject)
+
+        QML_BEGIN_INSTR(StoreVarObject)
+            QObject *assign = objects.pop();
+            QObject *target = objects.top();
+            CLEAN_PROPERTY(target, instr.propertyIndex);
+
+            v8::Handle<v8::Value> v8Value = ep->v8engine()->newQObject(assign);
+            static_cast<QDeclarativeVMEMetaObject *>(const_cast<QMetaObject *>(target->metaObject()))->setVMEProperty(instr.propertyIndex, v8Value);
+        QML_END_INSTR(StoreVarObject)
 
         QML_BEGIN_INSTR(StoreInterface)
             QObject *assign = objects.pop();

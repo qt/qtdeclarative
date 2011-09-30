@@ -422,14 +422,69 @@
     \sa {QML Basic Types}
 */
 
+ /*!
+    \qmlbasictype var
+    \ingroup qmlbasictypes
+
+    \brief A var type is a generic property type.
+
+    A var is a generic property type capable of storing any data type.
+    It is equivalent to a regular JavaScript variable.
+    For example, var properties can store numbers, strings, objects and
+    arrays:
+
+    \qml
+    Item {
+        property var aNumber: 100
+        property var aBool: false
+        property var aString: "Hello world!"
+        property var anotherString: String("#FF008800")
+        property var aColor: Qt.rgba(0.2, 0.3, 0.4, 0.5)
+        property var aRect: Qt.rect(10, 10, 10, 10)
+        property var aPoint: Qt.point(10, 10)
+        property var aSize: Qt.size(10, 10)
+        property var aVector3d: Qt.vector3d(100, 100, 100)
+        property var anArray: [1, 2, 3, "four", "five"]
+        property var anObject: { "foo": 10, "bar": 20 }
+    }
+    \endqml
+
+    It is important to note that properties of JavaScript objects cannot
+    be bound to:
+
+    \qml
+    Item {
+        property var car: new vehicle(4)
+        property int wheelCount: car.wheels
+
+        function vehicle(wheels) {
+            this.wheels = wheels;
+            this.talk = function() { print("I have " + this.wheels + " wheels!"); }
+        }
+
+        Component.onCompleted: {
+            car.wheels = 6; // wheelCount will _not_ be updated
+        }
+    }
+    \endqml
+
+    \sa {QML Basic Types}
+*/
+
+
 /*!
+    \obsolete
     \qmlbasictype variant
     \ingroup qmlbasictypes
 
     \brief A variant type is a generic property type.
 
-    A variant is a generic property type. A variant type property can hold
-    any of the \l {QML Basic Types}{basic type} values:
+    A variant is a generic property type. It is obsolete and exists only to
+    support old applications; new applications should use "var" type
+    properties instead.
+
+    A variant type property can hold any of the \l {QML Basic Types}{basic type}
+    values:
 
     \qml
     Item {

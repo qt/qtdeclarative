@@ -69,6 +69,8 @@
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativecontext_p.h"
 
+#include "private/qv8gccallback_p.h"
+
 #include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -77,6 +79,7 @@ QT_BEGIN_NAMESPACE
 
 struct QDeclarativeVMEMetaData
 {
+    short varPropertyCount;
     short propertyCount;
     short aliasCount;
     short signalCount;
@@ -131,9 +134,11 @@ struct QDeclarativeVMEMetaData
     }
 };
 
+class QV8QObjectWrapper;
 class QDeclarativeVMEVariant;
 class QDeclarativeRefCount;
-class QDeclarativeVMEMetaObject : public QAbstractDynamicMetaObject
+class Q_AUTOTEST_EXPORT QDeclarativeVMEMetaObject : public QAbstractDynamicMetaObject,
+                                                    public QV8GCCallback::Node
 {
 public:
     QDeclarativeVMEMetaObject(QObject *obj, const QMetaObject *other, const QDeclarativeVMEMetaData *data,
@@ -145,10 +150,8 @@ public:
     v8::Handle<v8::Function> vmeMethod(int index);
     int vmeMethodLineNumber(int index);
     void setVmeMethod(int index, v8::Persistent<v8::Function>);
-#if 0
-    QScriptValue vmeProperty(int index);
-    void setVMEProperty(int index, const QScriptValue &);
-#endif
+    v8::Handle<v8::Value> vmeProperty(int index);
+    void setVMEProperty(int index, v8::Handle<v8::Value> v);
 
     void connectAliasSignal(int index);
 
@@ -166,6 +169,14 @@ private:
 
     QDeclarativeVMEVariant *data;
 
+    v8::Persistent<v8::Array> varProperties;
+    int firstVarPropertyIndex;
+    bool varPropertiesInitialized;
+    static void VarPropertiesWeakReferenceCallback(v8::Persistent<v8::Value> object, void* parameter);
+    static void GcPrologueCallback(QV8GCCallback::Referencer *r, QV8GCCallback::Node *node);
+    inline void allocateVarPropertiesArray();
+    inline void ensureVarPropertiesAllocated();
+
     void connectAlias(int aliasId);
     QBitArray aConnected;
     QBitArray aInterceptors;
@@ -174,12 +185,10 @@ private:
     v8::Persistent<v8::Function> *v8methods;
     v8::Handle<v8::Function> method(int);
 
-#if 0
-    QScriptValue readVarProperty(int);
-    void writeVarProperty(int, const QScriptValue &);
-#endif
-    QVariant readVarPropertyAsVariant(int);
-    void writeVarProperty(int, const QVariant &);
+    v8::Handle<v8::Value> readVarProperty(int);
+    void writeVarProperty(int, v8::Handle<v8::Value>);
+    QVariant readPropertyAsVariant(int);
+    void writeProperty(int, const QVariant &);
 
     QAbstractDynamicMetaObject *parent;
 
@@ -196,6 +205,9 @@ private:
     static int list_count(QDeclarativeListProperty<QObject> *);
     static QObject *list_at(QDeclarativeListProperty<QObject> *, int);
     static void list_clear(QDeclarativeListProperty<QObject> *);
+
+    friend class QV8GCCallback;
+    friend class QV8QObjectWrapper;
 };
 
 QT_END_NAMESPACE
