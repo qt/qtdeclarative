@@ -2426,10 +2426,6 @@ void tst_qsgtextedit::inputMethodComposing()
 
 void tst_qsgtextedit::cursorRectangleSize()
 {
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
     QSGView *canvas = new QSGView(QUrl::fromLocalFile(SRCDIR "/data/CursorRect.qml"));
     QVERIFY(canvas->rootObject() != 0);
     canvas->show();
@@ -2441,13 +2437,15 @@ void tst_qsgtextedit::cursorRectangleSize()
     textEdit->setFocus(Qt::OtherFocusReason);
     QRectF cursorRect = textEdit->positionToRectangle(textEdit->cursorPosition());
     QRectF microFocusFromScene = canvas->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
-    QRectF microFocusFromApp= QGuiApplication::focusWidget()->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
+    QInputMethodQueryEvent event(Qt::ImCursorRectangle);
+    qApp->sendEvent(qApp->inputPanel()->inputItem(), &event);
+
+    QRectF microFocusFromApp = event.value(Qt::ImCursorRectangle).toRectF();
 
     QCOMPARE(microFocusFromScene.size(), cursorRect.size());
     QCOMPARE(microFocusFromApp.size(), cursorRect.size());
 
     delete canvas;
-#endif
 }
 
 QTEST_MAIN(tst_qsgtextedit)

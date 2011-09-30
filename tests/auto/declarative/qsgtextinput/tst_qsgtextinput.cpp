@@ -2593,15 +2593,10 @@ void tst_qsgtextinput::inputMethodComposing()
 
 void tst_qsgtextinput::cursorRectangleSize()
 {
-#ifdef QTBUG_21691
-    QEXPECT_FAIL("", QTBUG_21691_MESSAGE, Abort);
-    QVERIFY(false);
-#else
     QSGView *canvas = new QSGView(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
     QVERIFY(canvas->rootObject() != 0);
     canvas->show();
-    canvas->setFocus();
-    QGuiApplication::setActiveWindow(canvas);
+    canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
 
     QSGTextInput *textInput = qobject_cast<QSGTextInput *>(canvas->rootObject());
@@ -2609,13 +2604,15 @@ void tst_qsgtextinput::cursorRectangleSize()
     textInput->setFocus(Qt::OtherFocusReason);
     QRectF cursorRect = textInput->positionToRectangle(textInput->cursorPosition());
     QRectF microFocusFromScene = canvas->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
-    QRectF microFocusFromApp= QGuiApplication::focusWidget()->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
+    QInputMethodQueryEvent event(Qt::ImCursorRectangle);
+    qApp->sendEvent(qApp->inputPanel()->inputItem(), &event);
+
+    QRectF microFocusFromApp = event.value(Qt::ImCursorRectangle).toRectF();
 
     QCOMPARE(microFocusFromScene.size(), cursorRect.size());
     QCOMPARE(microFocusFromApp.size(), cursorRect.size());
 
     delete canvas;
-#endif
 }
 
 void tst_qsgtextinput::tripleClickSelectsAll()
