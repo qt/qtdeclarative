@@ -63,7 +63,6 @@ class QDeclarativeCompiledData;
 class QDeclarativeIncubator;
 class QDeclarativeIncubatorPrivate : public QDeclarativeEnginePrivate::Incubator
 {
-    QIntrusiveListNode nextWaitingFor;
 public:
     QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, QDeclarativeIncubator::IncubationMode m);
     ~QDeclarativeIncubatorPrivate();
@@ -83,6 +82,7 @@ public:
 
     typedef QDeclarativeIncubatorPrivate QIP;
     QIP *waitingOnMe;
+    QIntrusiveListNode nextWaitingFor;
     QIntrusiveList<QIP, &QIP::nextWaitingFor> waitingFor;
 
     void clear();

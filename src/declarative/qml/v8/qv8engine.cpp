@@ -502,6 +502,8 @@ void QV8Engine::initializeGlobal(v8::Handle<v8::Object> global)
             qt->Set(v8::String::New(enumerator.key(jj)), v8::Integer::New(enumerator.value(jj)));
         }
     }
+    qt->Set(v8::String::New("Asynchronous"), v8::Integer::New(0));
+    qt->Set(v8::String::New("Synchronous"), v8::Integer::New(1));
 
     qt->Set(v8::String::New("include"), V8FUNCTION(QV8Include::include, this));
     qt->Set(v8::String::New("isQtObject"), V8FUNCTION(isQtObject, this));

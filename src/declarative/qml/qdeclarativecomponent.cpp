@@ -944,6 +944,8 @@ public:
     static void StatusChangedSetter(v8::Local<v8::String>, v8::Local<v8::Value> value, 
                                     const v8::AccessorInfo& info);
 
+    void dispose();
+
     v8::Persistent<v8::Object> me;
     QDeclarativeGuard<QObject> parent;
     v8::Persistent<v8::Value> valuemap;
@@ -1098,35 +1100,31 @@ void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 
     if (args->Length() >= 3) {
         quint32 v = (*args)[2]->Uint32Value();
-        if (v == QDeclarativeIncubator::Asynchronous) 
+        if (v == 0)
             mode = QDeclarativeIncubator::Asynchronous;
-        else if (v == QDeclarativeIncubator::AsynchronousIfNested) 
+        else if (v == 1)
             mode = QDeclarativeIncubator::AsynchronousIfNested;
-        else if (v == QDeclarativeIncubator::Synchronous) 
-            mode = QDeclarativeIncubator::Synchronous;
     }
 
     QDeclarativeComponentExtension *e = componentExtension(args->engine());
     
     QV8IncubatorResource *r = new QV8IncubatorResource(args->engine(), mode);
+    v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
+    o->SetExternalResource(r);
+
     if (!valuemap.IsEmpty()) {
         r->valuemap = qPersistentNew(valuemap);
         r->qmlGlobal = qPersistentNew(args->qmlGlobal());
     }
     r->parent = parent;
+    r->me = qPersistentNew(o);
 
     create(*r, creationContext());
 
     if (r->status() == QDeclarativeIncubator::Null) {
-        delete r;
+        r->dispose();
         args->returnValue(v8::Null());
     } else {
-        v8::Local<v8::Object> o = e->incubationConstructor->NewInstance();
-        o->SetExternalResource(r);
-
-        if (r->status() == QDeclarativeIncubator::Loading) 
-            r->me = qPersistentNew(o);
-
         args->returnValue(o);
     }
 }
@@ -1275,6 +1273,14 @@ void QV8IncubatorResource::setInitialState(QObject *o)
         qPersistentDispose(qmlGlobal);
     }
 }
+    
+void QV8IncubatorResource::dispose()
+{
+    qPersistentDispose(valuemap);
+    qPersistentDispose(qmlGlobal);
+    // No further status changes are forthcoming, so we no long need a self reference
+    qPersistentDispose(me);
+}
 
 void QV8IncubatorResource::statusChanged(Status s)
 {
@@ -1293,18 +1299,20 @@ void QV8IncubatorResource::statusChanged(Status s)
                 v8::Context::Scope context_scope(engine->context());
                 v8::Local<v8::Function> f = v8::Local<v8::Function>::Cast(callback);
                 v8::Handle<v8::Value> args[] = { v8::Integer::NewFromUnsigned(s) };
-                // XXX TryCatch
+                v8::TryCatch tc;
                 f->Call(me, 1, args);
+                if (tc.HasCaught()) {
+                    QDeclarativeError error;
+                    QDeclarativeExpressionPrivate::exceptionToError(tc.Message(), error);
+                    QDeclarativeEnginePrivate::warning(QDeclarativeEnginePrivate::get(engine->engine()),
+                                                       error);
+                }
             }
         }
     }
 
-    if (s == Ready || s == Error) {
-        qPersistentDispose(valuemap);
-        qPersistentDispose(qmlGlobal);
-        // No further status changes are forthcoming, so we no long need a self reference
-        qPersistentDispose(me);
-    }
+    if (s == Ready || s == Error) 
+        dispose();
 }
 
 QT_END_NAMESPACE

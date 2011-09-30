@@ -131,6 +131,7 @@ void QDeclarativeIncubatorPrivate::clear()
         Q_ASSERT(component);
         QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(component->engine);
         component->release();
+        component = 0;
 
         enginePriv->incubatorCount--;
         QDeclarativeIncubationController *controller = enginePriv->incubationController;
@@ -143,7 +144,6 @@ void QDeclarativeIncubatorPrivate::clear()
         nextWaitingFor.remove();
         waitingOnMe = 0;
     }
-
 }
 
 /*!
@@ -454,6 +454,22 @@ Ready state, the created object is \b not deleted.
 */
 void QDeclarativeIncubator::clear()
 {
+    Status s = status();
+
+    if (s == Loading)
+        qFatal("QDeclarativeIncubator::clear(): Clear not implemented for loading incubator");
+
+    if (s == Null)
+        return;
+
+    Q_ASSERT(d->component == 0);
+    Q_ASSERT(d->waitingOnMe == 0);
+    Q_ASSERT(d->waitingFor.isEmpty());
+    Q_ASSERT(!d->nextWaitingFor.isInList());
+
+    d->errors.clear();
+    d->progress = QDeclarativeIncubatorPrivate::Execute;
+    d->result = 0;
 }
 
 /*!
