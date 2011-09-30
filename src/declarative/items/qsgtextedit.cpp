@@ -891,7 +891,9 @@ void QSGTextEdit::loadCursorDelegate()
     Q_D(QSGTextEdit);
     if(d->cursorComponent->isLoading())
         return;
-    d->cursor = qobject_cast<QSGItem*>(d->cursorComponent->create(qmlContext(this)));
+    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
+    d->cursor = qobject_cast<QSGItem*>(object);
     if(d->cursor){
         d->control->setCursorWidth(0);
         updateCursor();
@@ -900,6 +902,7 @@ void QSGTextEdit::loadCursorDelegate()
         d->cursor->setHeight(QFontMetrics(d->font).height());
         moveCursorDelegate();
     }else{
+        delete object;
         qmlInfo(this) << "Error loading cursor delegate.";
     }
 }

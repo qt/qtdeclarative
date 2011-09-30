@@ -971,8 +971,11 @@ void QSGTextInput::createCursor()
 
     if(d->cursorItem)
         delete d->cursorItem;
-    d->cursorItem = qobject_cast<QSGItem*>(d->cursorComponent->create());
+    QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
+    QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
+    d->cursorItem = qobject_cast<QSGItem*>(object);
     if(!d->cursorItem){
+        delete object;
         qmlInfo(this, d->cursorComponent->errors()) << tr("Could not instantiate cursor delegate");
         return;
     }

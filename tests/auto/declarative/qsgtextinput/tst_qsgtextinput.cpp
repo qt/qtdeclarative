@@ -1742,6 +1742,7 @@ void tst_qsgtextinput::cursorDelegate()
     textInputObject->setFocus(true);
     QSGItem* delegateObject = textInputObject->findChild<QSGItem*>("cursorInstance");
     QVERIFY(delegateObject);
+    QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
     //Test Delegate gets moved
     for(int i=0; i<= textInputObject->text().length(); i++){
         textInputObject->setCursorPosition(i);
