@@ -525,7 +525,7 @@ void QDeclarativeIncubator::forceCompletion()
     QDeclarativeVME::Interrupt i;
     while (Loading == status()) {
         while (Loading == status() && !d->waitingFor.isEmpty())
-            d->waitingFor.first()->incubate(i);
+            static_cast<QDeclarativeIncubatorPrivate *>(d->waitingFor.first())->incubate(i);
         if (Loading == status())
             d->incubate(i);
     }

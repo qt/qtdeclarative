@@ -195,7 +195,11 @@ public:
 
     // Unfortunate workaround to avoid a circular dependency between 
     // qdeclarativeengine_p.h and qdeclarativeincubator_p.h
-    struct Incubator { QIntrusiveListNode next; };
+    struct Incubator {
+        QIntrusiveListNode next;
+        // Unfortunate workaround for MSVC
+        QIntrusiveListNode nextWaitingFor;
+    };
     QIntrusiveList<Incubator, &Incubator::next> incubatorList;
     unsigned int incubatorCount;
     QDeclarativeIncubationController *incubationController;

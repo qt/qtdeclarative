@@ -81,10 +81,9 @@ public:
     QDeclarativeVME vme;
     QDeclarativeVMEGuard vmeGuard;
 
-    typedef QDeclarativeIncubatorPrivate QIP;
-    QIP *waitingOnMe;
-    QIntrusiveListNode nextWaitingFor;
-    QIntrusiveList<QIP, &QIP::nextWaitingFor> waitingFor;
+    QDeclarativeIncubatorPrivate *waitingOnMe;
+    typedef QDeclarativeEnginePrivate::Incubator QIPBase;
+    QIntrusiveList<QIPBase, &QIPBase::nextWaitingFor> waitingFor;
 
     void clear();
 
