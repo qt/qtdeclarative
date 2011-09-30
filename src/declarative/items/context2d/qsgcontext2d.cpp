@@ -165,7 +165,13 @@ QColor qt_color_from_string(const QString& name)
             while (pos < len && !isdigit(data[pos])) pos++;
             if (pos >= len)
                 return QColor();
-            alpha = qRound(strtof(&(data[pos]), 0) * 255);
+#ifndef Q_CC_MSVC
+            const float alphaF = strtof(data + pos, 0);
+#else
+            // MSVC does not have strtof
+            const double alphaF = strtod(data + pos, 0);
+#endif
+            alpha = qRound(alphaF * 255);
         }
 
         if (isRgb)
