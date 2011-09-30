@@ -727,6 +727,28 @@ void tst_qdeclarativemodelchange::sequence_data()
     QTest::newRow("m(12-23,6),r(20,4)")
             << (SignalList() << Move(12,23,6) << Remove(20,4))
             << (SignalList() << Remove(12,1) << Remove(12,5,0) << Remove(20,3) << Insert(20,5,0));
+
+
+    // Complex
+    QTest::newRow("r(15,1),r(22,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1))
+            << (SignalList() << Remove(15,1) << Remove(22,1));
+    QTest::newRow("r(15,1),r(22,1),r(25,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1))
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1));
+    QTest::newRow("r(15,1),r(22,1),r(25,1),r(15,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1) << Remove(15,1))
+            << (SignalList() << Remove(15,2) << Remove(21,1) << Remove(24,1));
+    QTest::newRow("r(15,1),r(22,1),r(25,1),r(15,1),r(13,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1) << Remove(15,1) << Remove(13,1))
+            << (SignalList() << Remove(13,1) << Remove(14,2) << Remove(20,1) << Remove(23,1));
+    QTest::newRow("r(15,1),r(22,1),r(25,1),r(15,1),r(13,1),r(13,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1) << Remove(15,1) << Remove(13,1) << Remove(13,1))
+            << (SignalList() << Remove(13,4) << Remove(19,1) << Remove(22,1));
+    QTest::newRow("r(15,1),r(22,1),r(25,1),r(15,1),r(13,1),r(13,1),m(12,13,1)")
+            << (SignalList() << Remove(15,1) << Remove(22,1) << Remove(25,1) << Remove(15,1) << Remove(13,1) << Remove(13,1) << Move(12,13,1))
+            << (SignalList() << Remove(12,1,0) << Remove(12,4) << Remove(18,1) << Remove(21,1) << Insert(13,1,0));
+
 }
 
 void tst_qdeclarativemodelchange::sequence()

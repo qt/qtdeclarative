@@ -31,6 +31,7 @@ PRIVATETESTS += \
     qdeclarativeapplication \
     qdeclarativebehaviors \
     qdeclarativebinding \
+    qdeclarativechangeset \
     qdeclarativeconnection \
     qdeclarativeenginedebug \
     qdeclarativedebugclient \

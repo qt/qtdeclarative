@@ -276,7 +276,7 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
             for (; rend != m_removes.end()
                     && rit->moveId == -1
                     && rend->moveId == -1
-                    && rit->index + rit->count > rend->index; ++rend) {
+                    && rit->index + rit->count >= rend->index; ++rend) {
                 count += rend->count;
             }
             if (remove != rend) {
@@ -288,7 +288,6 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
                 index += difference;
                 rit->count -= difference;
                 removeCount += difference;
-
                 remove->index = rit->index;
                 remove->count = count;
                 remove = m_removes.erase(++remove, rend);
@@ -302,10 +301,10 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
                     remove = m_removes.insert(remove, Remove(rit->index, offset, moveId));
                     ++remove;
                     rit->count -= offset;
+                    removeCount += offset;
                 }
                 remove->index = rit->index;
                 index += offset;
-                removeCount += offset;
 
                 ++remove;
             } else {
@@ -313,15 +312,14 @@ void QDeclarativeChangeSet::applyRemovals(QVector<Remove> &removals, QVector<Ins
                     remove = m_removes.insert(remove, Remove(rit->index, offset));
                     ++remove;
                     rit->count -= offset;
+                    removeCount += offset;
                 }
                 remove->index = rit->index;
                 index += offset;
-                removeCount += offset;
 
                 ++remove;
             }
             index += count;
-            rit->count -= count;
         }
 
         if (rit->count > 0) {
