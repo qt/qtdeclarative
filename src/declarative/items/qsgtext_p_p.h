@@ -110,6 +110,7 @@ public:
     bool imageCacheDirty:1;
     bool updateOnComponentComplete:1;
     bool richText:1;
+    bool styledText:1;
     bool singleline:1;
     bool cacheAllTextAsImage:1;
     bool internalWidthUpdate:1;

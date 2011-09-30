@@ -99,6 +99,8 @@ Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin propert
 Image has two new properties: horizontalAlignment and verticalAlignment. It also has a new value for
 fillMode (Image.Pad) that does not transform the image.
 
+Text will now automatically switch to StyledText instead of RichText if textFormat is set to AutoText.
+
 Grid now has rowSpacing and columnSpacing properties.
 
 Positioners now have attached properties that can be used to determine a subitem's location within a

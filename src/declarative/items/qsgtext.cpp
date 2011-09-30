@@ -104,7 +104,7 @@ QSGTextPrivate::QSGTextPrivate()
   maximumLineCountValid(false),
   texture(0),
   imageCacheDirty(false), updateOnComponentComplete(true),
-  richText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
+  richText(false), styledText(false), singleline(false), cacheAllTextAsImage(true), internalWidthUpdate(false),
   requireImplicitWidth(false), truncated(false), hAlignImplicit(true), rightToLeftText(false),
   layoutTextElided(false), richTextAsImage(false), textureImageCacheDirty(false), naturalWidth(0),
   doc(0), nodeType(NodeIsNull)
@@ -230,7 +230,7 @@ void QSGTextPrivate::updateLayout()
     if (!richText) {
         layout.clearLayout();
         layout.setFont(font);
-        if (format != QSGText::StyledText) {
+        if (!styledText) {
             QString tmp = text;
             tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
             singleline = !tmp.contains(QChar::LineSeparator);
@@ -937,7 +937,7 @@ void QSGText::setFont(const QFont &font)
     The text to display. Text supports both plain and rich text strings.
 
     The item will try to automatically determine whether the text should
-    be treated as rich text. This determination is made using Qt::mightBeRichText().
+    be treated as styled text. This determination is made using Qt::mightBeRichText().
 */
 QString QSGText::text() const
 {
@@ -951,7 +951,8 @@ void QSGText::setText(const QString &n)
     if (d->text == n)
         return;
 
-    d->richText = d->format == RichText || (d->format == AutoText && Qt::mightBeRichText(n));
+    d->richText = d->format == RichText;
+    d->styledText = d->format == StyledText || (d->format == AutoText && Qt::mightBeRichText(n));
     d->text = n;
     if (isComponentComplete()) {
         if (d->richText) {
@@ -1316,13 +1317,13 @@ void QSGText::resetMaximumLineCount()
     \list
     \o Text.AutoText (default)
     \o Text.PlainText
-    \o Text.RichText
     \o Text.StyledText
+    \o Text.RichText
     \endlist
 
     If the text format is \c Text.AutoText the text element
     will automatically determine whether the text should be treated as
-    rich text.  This determination is made using Qt::mightBeRichText().
+    styled text.  This determination is made using Qt::mightBeRichText().
 
     Text.StyledText is an optimized format supporting some basic text
     styling markup, in the style of html 3.2:
@@ -1379,7 +1380,8 @@ void QSGText::setTextFormat(TextFormat format)
         return;
     d->format = format;
     bool wasRich = d->richText;
-    d->richText = format == RichText || (format == AutoText && Qt::mightBeRichText(d->text));
+    d->richText = format == RichText;
+    d->styledText = format == StyledText || (format == AutoText && Qt::mightBeRichText(d->text));
 
     if (!wasRich && d->richText && isComponentComplete()) {
         d->ensureDoc();
@@ -1686,7 +1688,7 @@ void QSGText::componentComplete()
 
 QString QSGTextPrivate::anchorAt(const QPointF &mousePos)
 {
-    if (format == QSGText::StyledText) {
+    if (styledText) {
         for (int i = 0; i < layout.lineCount(); ++i) {
             QTextLine line = layout.lineAt(i);
             if (line.naturalTextRect().contains(mousePos)) {
@@ -1717,7 +1719,7 @@ void QSGText::mousePressEvent(QMouseEvent *event)
     Q_D(QSGText);
 
     if (d->isLinkActivatedConnected()) {
-        if (d->format == QSGText::StyledText)
+        if (d->styledText)
             d->activeLink = d->anchorAt(event->localPos());
         else if (d->richText && d->doc)
             d->activeLink = d->doc->documentLayout()->anchorAt(event->localPos());
@@ -1742,7 +1744,7 @@ void QSGText::mouseReleaseEvent(QMouseEvent *event)
 
     QString link;
     if (d->isLinkActivatedConnected()) {
-        if (d->format == QSGText::StyledText)
+        if (d->styledText)
             link = d->anchorAt(event->localPos());
         else if (d->richText && d->doc)
             link = d->doc->documentLayout()->anchorAt(event->localPos());

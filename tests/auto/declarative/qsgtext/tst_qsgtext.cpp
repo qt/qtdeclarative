@@ -321,14 +321,14 @@ void tst_qsgtext::width()
 
         int documentWidth = document.idealWidth();
 
-        QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\" }";
+        QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\"; textFormat: Text.RichText }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
 
         QVERIFY(textObject != 0);
         QCOMPARE(textObject->width(), qreal(documentWidth));
-        QVERIFY(textObject->textFormat() == QSGText::AutoText); // setting text doesn't change format
+        QVERIFY(textObject->textFormat() == QSGText::RichText);
 
         delete textObject;
     }
@@ -464,6 +464,24 @@ void tst_qsgtext::textFormat()
 
         QVERIFY(textObject != 0);
         QVERIFY(textObject->textFormat() == QSGText::RichText);
+
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->richText == true);
+
+        delete textObject;
+    }
+    {
+        QDeclarativeComponent textComponent(&engine);
+        textComponent.setData("import QtQuick 2.0\nText { text: \"<b>Hello</b>\" }", QUrl::fromLocalFile(""));
+        QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
+
+        QVERIFY(textObject != 0);
+        QVERIFY(textObject->textFormat() == QSGText::AutoText);
+
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+        QVERIFY(textPrivate->styledText == true);
 
         delete textObject;
     }
