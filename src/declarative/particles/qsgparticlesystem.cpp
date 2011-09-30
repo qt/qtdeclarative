@@ -635,7 +635,7 @@ void QSGParticleSystem::initGroups()
 
     QSGParticleGroupData* gd = new QSGParticleGroupData(0, this);//Default group
     groupData.insert(0,gd);
-    groupIds.insert("",0);
+    groupIds.insert(QString(), 0);
     m_nextGroupId = 1;
 }
 
@@ -802,7 +802,7 @@ void QSGParticleSystem::loadPainter(QObject *p)
     int particleCount = 0;
     if (painter->groups().isEmpty()){//Uses default particle
         QStringList def;
-        def << "";
+        def << QString();
         painter->setGroups(def);
         particleCount += groupData[0]->size();
         groupData[0]->painters << painter;

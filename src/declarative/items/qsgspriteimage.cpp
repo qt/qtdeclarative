@@ -98,11 +98,11 @@ class SpriteMaterialData : public QSGMaterialShader
 public:
     SpriteMaterialData(const char *vertexFile = 0, const char *fragmentFile = 0)
     {
-        QFile vf(vertexFile ? vertexFile : ":defaultshaders/spriteimagevertex.shader");
+        QFile vf(vertexFile ? QLatin1String(vertexFile) : QLatin1String(":defaultshaders/spriteimagevertex.shader"));
         vf.open(QFile::ReadOnly);
         m_vertex_code = vf.readAll();
 
-        QFile ff(fragmentFile ? fragmentFile : ":defaultshaders/spriteimagefragment.shader");
+        QFile ff(fragmentFile ? QLatin1String(fragmentFile) : QLatin1String(":defaultshaders/spriteimagefragment.shader"));
         ff.open(QFile::ReadOnly);
         m_fragment_code = ff.readAll();
 

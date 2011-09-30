@@ -829,10 +829,10 @@ static v8::Handle<v8::Value> ctx2d_fillStyle(v8::Local<v8::String>, const v8::Ac
         if (color.alpha() == 255)
             return engine->toString(color.name());
         QString alphaString = QString::number(color.alphaF(), 'f');
-        while (alphaString.endsWith('0'))
+        while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
-        if (alphaString.endsWith('.'))
-            alphaString += '0';
+        if (alphaString.endsWith(QLatin1Char('.')))
+            alphaString += QLatin1Char('0');
         return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
     }
     return r->context->m_fillStyle;
@@ -898,10 +898,10 @@ static void ctx2d_fillRule_set(v8::Local<v8::String>, v8::Local<v8::Value> value
 
     QV8Engine *engine = V8ENGINE_ACCESSOR();
 
-    if ((value->IsString() && engine->toString(value) == "WindingFill")
+    if ((value->IsString() && engine->toString(value) == QStringLiteral("WindingFill"))
       ||(value->IsNumber() && value->NumberValue() == Qt::WindingFill)) {
         r->context->state.fillRule = Qt::WindingFill;
-    } else if ((value->IsString() && engine->toString(value) == "OddEvenFill")
+    } else if ((value->IsString() && engine->toString(value) == QStringLiteral("OddEvenFill"))
                ||(value->IsNumber() && value->NumberValue() == Qt::OddEvenFill)) {
         r->context->state.fillRule = Qt::OddEvenFill;
     } else {
@@ -934,10 +934,10 @@ v8::Handle<v8::Value> ctx2d_strokeStyle(v8::Local<v8::String>, const v8::Accesso
         if (color.alpha() == 255)
             return engine->toString(color.name());
         QString alphaString = QString::number(color.alphaF(), 'f');
-        while (alphaString.endsWith('0'))
+        while (alphaString.endsWith(QLatin1Char('0')))
             alphaString.chop(1);
-        if (alphaString.endsWith('.'))
-            alphaString += '0';
+        if (alphaString.endsWith(QLatin1Char('.')))
+            alphaString += QLatin1Char('0');
         return engine->toString(QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString));
     }
     return r->context->m_strokeStyle;
@@ -1177,14 +1177,14 @@ static v8::Handle<v8::Value> ctx2d_createPattern(const v8::Arguments &args)
                 styleResouce->brush.setTextureImage(patternTexture);
 
                 QString repetition = engine->toString(args[1]);
-                if (repetition == "repeat" || repetition.isEmpty()) {
+                if (repetition == QStringLiteral("repeat") || repetition.isEmpty()) {
                     styleResouce->patternRepeatX = true;
                     styleResouce->patternRepeatY = true;
-                } else if (repetition == "repeat-x") {
+                } else if (repetition == QStringLiteral("repeat-x")) {
                     styleResouce->patternRepeatX = true;
-                } else if (repetition == "repeat-y") {
+                } else if (repetition == QStringLiteral("repeat-y")) {
                     styleResouce->patternRepeatY = true;
-                } else if (repetition == "no-repeat") {
+                } else if (repetition == QStringLiteral("no-repeat")) {
                     styleResouce->patternRepeatY = false;
                     styleResouce->patternRepeatY = false;
                 } else {
@@ -3320,7 +3320,7 @@ void QSGContext2D::reset()
     newState.textAlign = QSGContext2D::Start;
     newState.textBaseline = QSGContext2D::Alphabetic;
 
-    m_fontString = "";
+    m_fontString.clear();
     m_stateStack.clear();
     m_stateStack.push(newState);
     popState();

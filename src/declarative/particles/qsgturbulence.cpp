@@ -140,7 +140,7 @@ void QSGTurbulenceAffector::initializeGrid()
     if (!m_noiseSource.isEmpty())
         image = QImage(m_noiseSource.toLocalFile()).scaled(QSize(m_gridSize, m_gridSize));
     if (image.isNull())
-        image = QImage(":defaultshaders/noise.png").scaled(QSize(m_gridSize, m_gridSize));
+        image = QImage(QStringLiteral(":defaultshaders/noise.png")).scaled(QSize(m_gridSize, m_gridSize));
 
     for (int i=0; i<m_gridSize; i++)
         for (int j=0; j<m_gridSize; j++)

@@ -106,10 +106,14 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
 
     //Exposed just for completeness
-    qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder", "Abstract type. Use one of the inheriting types instead.");
-    qmlRegisterUncreatableType<QSGDirection>(uri, 2, 0, "NullVector", "Abstract type. Use one of the inheriting types instead.");
+    qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector",
+                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGParticlePainter>(uri, 2, 0, "ParticlePainter",
+                                                   QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGParticleExtruder>(uri, 2, 0, "ParticleExtruder",
+                                                    QStringLiteral("Abstract type. Use one of the inheriting types instead."));
+    qmlRegisterUncreatableType<QSGDirection>(uri, 2, 0, "NullVector",
+                                             QStringLiteral("Abstract type. Use one of the inheriting types instead."));
 }
 
 QT_END_NAMESPACE
