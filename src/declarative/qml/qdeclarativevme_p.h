@@ -141,8 +141,6 @@ private:
     QFiniteStack<QObject *> objects;
     QFiniteStack<QDeclarativeVMETypes::List> lists;
 
-    int bindValuesCount;
-    int parserStatusCount;
     QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
     QFiniteStack<QDeclarativeParserStatus *> parserStatus;
     QDeclarativeContextData *rootContext;

@@ -116,8 +116,6 @@ void QDeclarativeVME::init(QDeclarativeContextData *ctxt, QDeclarativeCompiledDa
 
     rootContext = 0;
     engine = ctxt->engine;
-    bindValuesCount = 0;
-    parserStatusCount = 0;
 }
 
 bool QDeclarativeVME::initDeferred(QObject *object)
@@ -151,8 +149,6 @@ bool QDeclarativeVME::initDeferred(QObject *object)
 
     rootContext = 0;
     engine = ctxt->engine;
-    bindValuesCount = 0;
-    parserStatusCount = 0;
 
     return true;
 }
@@ -1248,31 +1244,28 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
 {
     ActiveVMERestorer restore(this, QDeclarativeEnginePrivate::get(engine));
 
-    while (bindValuesCount < bindValues.count()) {
-        if(bindValues.at(bindValuesCount)) {
-            QDeclarativeAbstractBinding *b = bindValues.at(bindValuesCount);
+    while (!bindValues.isEmpty()) {
+        QDeclarativeAbstractBinding *b = bindValues.pop();
+
+        if(b) {
             b->m_mePtr = 0;
             b->setEnabled(true, QDeclarativePropertyPrivate::BypassInterceptor | 
                                 QDeclarativePropertyPrivate::DontRemoveBinding);
         }
-        ++bindValuesCount;
 
         if (interrupt.shouldInterrupt())
             return false;
     }
     bindValues.deallocate();
 
-    while (parserStatusCount < parserStatus.count()) {
-        QDeclarativeParserStatus *status = 
-            parserStatus.at(parserStatus.count() - parserStatusCount - 1);
+    while (!parserStatus.isEmpty()) {
+        QDeclarativeParserStatus *status = parserStatus.pop();
 
         if (status && status->d) {
             status->d = 0;
             status->componentComplete();
         }
         
-        ++parserStatusCount;
-
         if (interrupt.shouldInterrupt())
             return false;
     }
