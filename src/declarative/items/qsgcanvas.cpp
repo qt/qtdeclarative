@@ -60,6 +60,7 @@
 #include <QtGui/qmatrix4x4.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractanimation.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 
 #include <private/qdeclarativedebugtrace_p.h>
 
@@ -77,6 +78,45 @@ void QSGCanvasPrivate::updateFocusItemTransform()
     if (focus && qApp->inputPanel()->inputItem() == focus)
         qApp->inputPanel()->setInputItemTransform(QSGItemPrivate::get(focus)->itemToCanvasTransform());
 }
+
+class QSGCanvasIncubationController : public QObject, public QDeclarativeIncubationController
+{
+public:
+    QSGCanvasIncubationController(QSGCanvasPrivate *canvas) 
+    : m_canvas(canvas), m_eventSent(false) {}
+
+protected:
+    virtual bool event(QEvent *e)
+    {
+        if (e->type() == QEvent::User) {
+            Q_ASSERT(m_eventSent);
+
+            bool *amtp = m_canvas->thread->allowMainThreadProcessing();
+            while (incubatingObjectCount()) {
+                if (amtp)
+                    incubateWhile(amtp);
+                else
+                    incubateFor(5);
+                QCoreApplication::processEvents();
+            }
+
+            m_eventSent = false;
+        }
+        return QObject::event(e);
+    }
+
+    virtual void incubatingObjectCountChanged(int count)
+    {
+        if (count && !m_eventSent) {
+            m_eventSent = true;
+            QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+        }
+    }
+
+private:
+    QSGCanvasPrivate *m_canvas;
+    bool m_eventSent;
+};
 
 class QSGCanvasPlainRenderLoop : public QObject, public QSGCanvasRenderLoop
 {
@@ -416,6 +456,7 @@ QSGCanvasPrivate::QSGCanvasPrivate()
     , thread(0)
     , animationDriver(0)
     , renderTarget(0)
+    , incubationController(0)
 {
 }
 
@@ -791,6 +832,8 @@ QSGCanvas::~QSGCanvas()
     // manually cleanup for the root item (item destructor only handles these when an item is parented)
     QSGItemPrivate *rootItemPrivate = QSGItemPrivate::get(d->rootItem);
     rootItemPrivate->removeFromDirtyList();
+
+    delete d->incubationController; d->incubationController = 0;
 
     delete d->rootItem; d->rootItem = 0;
     d->cleanupNodes();
@@ -1830,6 +1873,21 @@ QImage QSGCanvas::grabFrameBuffer()
     return d->thread ? d->thread->grab() : QImage();
 }
 
+/*!
+    Returns an incubation controller that splices incubation between frames 
+    for this canvas.  QSGView automatically installs this controller for you.
+
+    The controller is owned by the canvas and will be destroyed when the canvas
+    is deleted.
+*/
+QDeclarativeIncubationController *QSGCanvas::incubationController() const
+{
+    Q_D(const QSGCanvas);
+
+    if (!d->incubationController)
+        d->incubationController = new QSGCanvasIncubationController(const_cast<QSGCanvasPrivate *>(d));
+    return d->incubationController;
+}
 
 
 void QSGCanvasRenderLoop::createGLContext()
@@ -1878,6 +1936,7 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
             printf("                RenderThread: aquired sync lock...\n");
 #endif
+            allowMainThreadProcessingFlag = false;
             QCoreApplication::postEvent(this, new QEvent(QEvent::User));
 #ifdef THREAD_DEBUG
             printf("                RenderThread: going to sleep...\n");
@@ -1895,6 +1954,7 @@ void QSGCanvasRenderThread::run()
         inSync = false;
 
         // Wake GUI after sync to let it continue animating and event processing.
+        allowMainThreadProcessingFlag = true;
         wake();
         unlock();
 #ifdef THREAD_DEBUG

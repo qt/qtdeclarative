@@ -84,6 +84,7 @@ class QSGCanvasPrivate;
 
 class QTouchEvent;
 class QSGCanvasRenderLoop;
+class QSGCanvasIncubationController;
 
 class QSGCanvasPrivate : public QWindowPrivate
 {
@@ -167,6 +168,8 @@ public:
     QOpenGLFramebufferObject *renderTarget;
 
     QHash<int, QSGItem *> itemForTouchPointId;
+
+    mutable QSGCanvasIncubationController *incubationController;
 };
 
 class QSGCanvasRenderLoop
@@ -196,6 +199,7 @@ public:
     virtual void animationStarted() = 0;
     virtual void animationStopped() = 0;
     virtual void moveContextToThread(QSGContext *) { }
+    virtual bool *allowMainThreadProcessing() { return 0; }
 
 protected:
     void initializeSceneGraph() { d->initializeSceneGraph(); }
@@ -226,6 +230,7 @@ class QSGCanvasRenderThread : public QThread, public QSGCanvasRenderLoop
 public:
     QSGCanvasRenderThread()
         : mutex(QMutex::NonRecursive)
+        , allowMainThreadProcessingFlag(true)
         , animationRunning(false)
         , isGuiBlocked(0)
         , isPaintCompleted(false)
@@ -258,6 +263,7 @@ public:
     void setWindowSize(const QSize &size) { windowSize = size; }
     void maybeUpdate();
     void moveContextToThread(QSGContext *c) { c->moveToThread(this); }
+    bool *allowMainThreadProcessing() { return &allowMainThreadProcessingFlag; }
 
     bool event(QEvent *);
 
@@ -270,6 +276,8 @@ public slots:
 public:
     QMutex mutex;
     QWaitCondition condition;
+
+    bool allowMainThreadProcessingFlag;
 
     QSize windowSize;
     QSize renderedSize;

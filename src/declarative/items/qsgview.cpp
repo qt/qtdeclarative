@@ -62,9 +62,13 @@ DEFINE_BOOL_CONFIG_OPTION(frameRateDebug, QML_SHOW_FRAMERATE)
 
 void QSGViewPrivate::init()
 {
+    Q_Q(QSGView);
+
     QDeclarativeEnginePrivate::get(&engine)->sgContext = QSGCanvasPrivate::context;
 
-    QDeclarativeInspectorService::instance()->addView(q_func());
+    engine.setIncubationController(q->incubationController());
+
+    QDeclarativeInspectorService::instance()->addView(q);
 }
 
 QSGViewPrivate::QSGViewPrivate()
