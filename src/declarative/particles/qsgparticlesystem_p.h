@@ -103,7 +103,7 @@ private:
     QHash<int,int> m_lookups;
 };
 
-class QSGParticleGroupData{
+class Q_AUTOTEST_EXPORT QSGParticleGroupData {
 public:
     QSGParticleGroupData(int id, QSGParticleSystem* sys);
     ~QSGParticleGroupData();
@@ -143,7 +143,7 @@ struct Color4ub {
     uchar a;
 };
 
-class QSGParticleData{
+class Q_AUTOTEST_EXPORT QSGParticleData {
 public:
     //TODO: QObject like memory management (without the cost, just attached to system)
     QSGParticleData(QSGParticleSystem* sys);
@@ -225,7 +225,7 @@ private:
     QSGV8ParticleData* v8Datum;
 };
 
-class QSGParticleSystem : public QSGItem
+class Q_AUTOTEST_EXPORT QSGParticleSystem : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)

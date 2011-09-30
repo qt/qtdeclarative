@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,48 +39,45 @@
 **
 ****************************************************************************/
 
-#include "qsgfriction_p.h"
-QT_BEGIN_NAMESPACE
-/*!
-    \qmlclass Friction QSGFrictionAffector
-    \inqmlmodule QtQuick.Particles 2
-    \inherits Affector
-    \brief The Friction affector slows down movement proportional to the particle's current speed.
+#include <QtTest/QtTest>
+#include "../shared/particlestestsshared.h"
+#include <private/qsgparticlesystem_p.h>
 
-*/
-
-/*!
-    \qmlproperty real QtQuick.Particles2::Friction::factor
-
-    A drag will be applied to moving objects which is this factor of their current velocity.
-*/
-static qreal sign(qreal a)
+class tst_qsgparticlegroup : public QObject
 {
-    return a >= 0 ? 1 : -1;
-}
+    Q_OBJECT
+public:
+    tst_qsgparticlegroup();
 
-QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_factor(0.0)
+private slots:
+    void test_instantTransition();
+};
+
+tst_qsgparticlegroup::tst_qsgparticlegroup()
 {
 }
 
-bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
+void tst_qsgparticlegroup::test_instantTransition()
 {
-    if (!m_factor)
-        return false;
-    qreal curVX = d->curVX();
-    qreal curVY = d->curVY();
-    qreal newVX = curVX + (curVX * m_factor * -1 * dt);
-    qreal newVY = curVY + (curVY * m_factor * -1 * dt);
+    QSGView* view = createView(SRCDIR "/data/basic.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
-    //Since we're modelling a continuous function, it will never pass 0.
-    if (sign(curVX) != sign(newVX))
-        newVX = 0;
-    if (sign(curVY) != sign(newVY))
-        newVY = 0;
-
-    d->setInstantaneousVX(newVX);
-    d->setInstantaneousVY(newVY);
-    return true;
+    //A frame or two worth of particles will be missed, the transition doesn't take effect on the frame it's spawned (QTBUG-21781)
+    QVERIFY(system->groupData[0]->size() <= 500 && system->groupData[0]->size() >= 450);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+    }
 }
-QT_END_NAMESPACE
+
+QTEST_MAIN(tst_qsgparticlegroup);
+
+#include "tst_qsgparticlegroup.moc"

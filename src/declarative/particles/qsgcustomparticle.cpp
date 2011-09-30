@@ -79,7 +79,7 @@ static const char qt_particles_default_fragment_code[] =
         "varying highp vec2 qt_TexCoord0;                           \n"
         "uniform lowp float qt_Opacity;                             \n"
         "void main() {                                              \n"
-        "    gl_FragColor = texture2D(source, fTex) * qt_Opacity;   \n"
+        "    gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;   \n"
         "}";
 
 static QSGGeometry::Attribute PlainParticle_Attributes[] = {

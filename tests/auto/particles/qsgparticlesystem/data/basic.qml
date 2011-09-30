@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,48 +39,28 @@
 **
 ****************************************************************************/
 
-#include "qsgfriction_p.h"
-QT_BEGIN_NAMESPACE
-/*!
-    \qmlclass Friction QSGFrictionAffector
-    \inqmlmodule QtQuick.Particles 2
-    \inherits Affector
-    \brief The Friction affector slows down movement proportional to the particle's current speed.
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-*/
+Rectangle {
+    color: "black"
+    width: 320
+    height: 320
 
-/*!
-    \qmlproperty real QtQuick.Particles2::Friction::factor
+    ParticleSystem {
+        id: sys
+        objectName: "system"
+        anchors.fill: parent
 
-    A drag will be applied to moving objects which is this factor of their current velocity.
-*/
-static qreal sign(qreal a)
-{
-    return a >= 0 ? 1 : -1;
+        ImageParticle {
+            source: "../../shared/star.png"
+        }
+
+        Emitter{
+            //0,0 position
+            size: 32
+            emitRate: 1000
+            lifeSpan: 500
+        }
+    }
 }
-
-QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_factor(0.0)
-{
-}
-
-bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
-{
-    if (!m_factor)
-        return false;
-    qreal curVX = d->curVX();
-    qreal curVY = d->curVY();
-    qreal newVX = curVX + (curVX * m_factor * -1 * dt);
-    qreal newVY = curVY + (curVY * m_factor * -1 * dt);
-
-    //Since we're modelling a continuous function, it will never pass 0.
-    if (sign(curVX) != sign(newVX))
-        newVX = 0;
-    if (sign(curVY) != sign(newVY))
-        newVY = 0;
-
-    d->setInstantaneousVX(newVX);
-    d->setInstantaneousVY(newVY);
-    return true;
-}
-QT_END_NAMESPACE
