@@ -1439,13 +1439,13 @@ bool QSGCanvasPrivate::sendFilteredMouseEvent(QSGItem *target, QSGItem *item, QM
     if (!target)
         return false;
 
-    if (sendFilteredMouseEvent(target->parentItem(), item, event))
-        return true;
-
     QSGItemPrivate *targetPrivate = QSGItemPrivate::get(target);
     if (targetPrivate->filtersChildMouseEvents)
         if (target->childMouseEventFilter(item, event))
             return true;
+
+    if (sendFilteredMouseEvent(target->parentItem(), item, event))
+        return true;
 
     return false;
 }
