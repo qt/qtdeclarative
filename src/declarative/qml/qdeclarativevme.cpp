@@ -130,6 +130,7 @@ bool QDeclarativeVME::initDeferred(QObject *object)
     int start = data->deferredIdx;
 
     State initState;
+    initState.flags = State::Deferred;
     initState.context = ctxt;
     initState.compiledData = comp;
     initState.instructionStream = comp->bytecode.constData() + start;
@@ -195,7 +196,6 @@ static void removeBindingOnProperty(QObject *o, int index)
 // XXX we probably need some form of "work count" here to prevent us checking this 
 // for every instruction.
 #define QML_BEGIN_INSTR_COMMON(I) { \
-    if (interrupt.shouldInterrupt()) return 0; \
     const QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::DataType &instr = QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::data(*genericInstr); \
     INSTRUCTIONSTREAM += QDeclarativeInstructionMeta<(int)QDeclarativeInstruction::I>::Size; \
     Q_UNUSED(instr);
@@ -211,6 +211,7 @@ static void removeBindingOnProperty(QObject *o, int index)
 
 #  define QML_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(INSTRUCTIONSTREAM); \
+    if (interrupt.shouldInterrupt()) return 0; \
     goto *genericInstr->common.code;
 
 #else
@@ -219,7 +220,9 @@ static void removeBindingOnProperty(QObject *o, int index)
     QML_BEGIN_INSTR_COMMON(I)
 
 #  define QML_NEXT_INSTR(I) break;
-#  define QML_END_INSTR(I) } break;
+#  define QML_END_INSTR(I) \
+    if (interrupt.shouldInterrupt()) return 0; \
+    } break;
 #endif
 
 #define CLEAN_PROPERTY(o, index) if (fastHasBinding(o, index)) removeBindingOnProperty(o, index)
@@ -1099,23 +1102,10 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
 #endif
 
 exceptionExit:
-    if (!objects.isEmpty()) 
-        delete objects.at(0); // XXX What about failures in deferred creation?
-    
-    // XXX does context get leaked in this case?
-
+    Q_ASSERT(!states.isEmpty());
     Q_ASSERT(!errors->isEmpty());
 
-    // Remove the QDeclarativeParserStatus and QDeclarativeAbstractBinding back pointers
-    blank(parserStatus);
-    blank(bindValues);
-
-    objects.deallocate();
-    lists.deallocate();
-    states.clear();
-    bindValues.deallocate();
-    parserStatus.deallocate();
-    finalizeCallbacks.clear();
+    reset();
 
     return 0;
 
@@ -1129,6 +1119,35 @@ normalExit:
     states.clear();
 
     return rv;
+}
+
+void QDeclarativeVME::reset()
+{
+    Q_ASSERT(!states.isEmpty() || objects.isEmpty());
+
+    if (!objects.isEmpty() && !(states.at(0).flags & State::Deferred))
+        delete objects.at(0); 
+    
+    if (!rootContext.isNull()) 
+        rootContext->activeVME = 0;
+
+    // Remove the QDeclarativeParserStatus and QDeclarativeAbstractBinding back pointers
+    blank(parserStatus);
+    blank(bindValues);
+
+    while (componentAttached) {
+        QDeclarativeComponentAttached *a = componentAttached;
+        a->rem();
+    }
+    
+    engine = 0;
+    objects.deallocate();
+    lists.deallocate();
+    bindValues.deallocate();
+    parserStatus.deallocate();
+    finalizeCallbacks.clear();
+    states.clear();
+    rootContext = 0;
 }
 
 // Must be called with a handle scope and context
@@ -1242,6 +1261,16 @@ void **QDeclarativeVME::instructionJumpTable()
 
 bool QDeclarativeVME::complete(const Interrupt &interrupt) 
 {
+    Q_ASSERT(engine ||
+             (bindValues.isEmpty() &&
+              parserStatus.isEmpty() &&
+              componentAttached == 0 &&
+              rootContext.isNull() &&
+              finalizeCallbacks.isEmpty()));
+
+    if (!engine)
+        return true;
+
     ActiveVMERestorer restore(this, QDeclarativeEnginePrivate::get(engine));
 
     while (!bindValues.isEmpty()) {
@@ -1284,8 +1313,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
             return false;
     }
 
-    // XXX (what if its deleted?)
-    if (rootContext) 
+    if (!rootContext.isNull()) 
         rootContext->activeVME = 0;
 
     for (int ii = 0; ii < finalizeCallbacks.count(); ++ii) {
@@ -1297,6 +1325,8 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         }
     }
     finalizeCallbacks.clear();
+
+    reset();
 
     return true;
 }
@@ -1315,6 +1345,57 @@ void QDeclarativeVME::blank(QFiniteStack<QDeclarativeParserStatus *> &pss)
         QDeclarativeParserStatus *ps = pss.at(ii);
         if(ps) ps->d = 0;
     }
+}
+
+QDeclarativeVMEGuard::QDeclarativeVMEGuard()
+: m_objectCount(0), m_objects(0), m_contextCount(0), m_contexts(0)
+{
+}
+
+QDeclarativeVMEGuard::~QDeclarativeVMEGuard()
+{
+    clear();
+}
+
+void QDeclarativeVMEGuard::guard(QDeclarativeVME *vme)
+{
+    clear();
+    
+    m_objectCount = vme->objects.count();
+    m_objects = new QDeclarativeGuard<QObject>[m_objectCount];
+    for (int ii = 0; ii < m_objectCount; ++ii)
+        m_objects[ii] = vme->objects[ii];
+
+    m_contextCount = (vme->rootContext.isNull())?0:1 + vme->states.count();
+    m_contexts = new QDeclarativeGuardedContextData[m_contextCount];
+    for (int ii = 0; ii < vme->states.count(); ++ii) 
+        m_contexts[ii] = vme->states.at(ii).context;
+    if (!vme->rootContext.isNull())
+        m_contexts[m_contextCount - 1] = vme->rootContext.contextData();
+}
+
+void QDeclarativeVMEGuard::clear()
+{
+    delete [] m_objects;
+    delete [] m_contexts;
+
+    m_objectCount = 0;
+    m_objects = 0;
+    m_contextCount = 0;
+    m_contexts = 0;
+}
+
+bool QDeclarativeVMEGuard::isOK() const
+{
+    for (int ii = 0; ii < m_objectCount; ++ii)
+        if (m_objects[ii].isNull())
+            return false;
+
+    for (int ii = 0; ii < m_contextCount; ++ii)
+        if (m_contexts[ii].isNull())
+            return false;
+
+    return true;
 }
 
 QT_END_NAMESPACE

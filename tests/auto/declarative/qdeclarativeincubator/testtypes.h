@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,60 +38,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef TESTTYPES_H
+#define TESTTYPES_H
 
-#ifndef QDECLARATIVEINCUBATOR_P_H
-#define QDECLARATIVEINCUBATOR_P_H
+#include <QtCore/qobject.h>
 
-#include <private/qintrusivelist_p.h>
-#include <private/qdeclarativevme_p.h>
-#include <private/qdeclarativeengine_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-QT_BEGIN_NAMESPACE
-
-class QDeclarativeCompiledData;
-class QDeclarativeIncubator;
-class QDeclarativeIncubatorPrivate : public QDeclarativeEnginePrivate::Incubator
+class SelfRegisteringType : public QObject
 {
+Q_OBJECT
+Q_PROPERTY(int value READ value WRITE setValue);
 public:
-    QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, QDeclarativeIncubator::IncubationMode m);
-    ~QDeclarativeIncubatorPrivate();
+    SelfRegisteringType();
 
-    QDeclarativeIncubator *q;
+    int value() const { return m_v; }
+    void setValue(int v) { m_v = v; }
 
-    QDeclarativeIncubator::IncubationMode mode;
+    static SelfRegisteringType *me();
+    static void clearMe();
 
-    QList<QDeclarativeError> errors;
+private:
+    static SelfRegisteringType *m_me;
 
-    enum Progress { Execute, Completing, Completed };
-    Progress progress;
-
-    QObject *result;
-    QDeclarativeCompiledData *component;
-    QDeclarativeVME vme;
-    QDeclarativeVMEGuard vmeGuard;
-
-    typedef QDeclarativeIncubatorPrivate QIP;
-    QIP *waitingOnMe;
-    QIntrusiveListNode nextWaitingFor;
-    QIntrusiveList<QIP, &QIP::nextWaitingFor> waitingFor;
-
-    void clear();
-
-    void incubate(QDeclarativeVME::Interrupt &i);
+    int m_v;
 };
 
-QT_END_NAMESPACE
+void registerTypes();
 
-#endif // QDECLARATIVEINCUBATOR_P_H
-
+#endif // TESTTYPES_H

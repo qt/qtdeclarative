@@ -120,11 +120,14 @@ public:
 
     void init(QDeclarativeContextData *, QDeclarativeCompiledData *, int start);
     bool initDeferred(QObject *);
+    void reset();
 
     QObject *execute(QList<QDeclarativeError> *errors, const Interrupt & = Interrupt());
     bool complete(const Interrupt & = Interrupt());
 
 private:
+    friend class QDeclarativeVMEGuard;
+
     QObject *run(QList<QDeclarativeError> *errors, const Interrupt &
 #ifdef QML_THREADED_VME_INTERPRETER
                  , void ***storeJumpTable = 0
@@ -138,15 +141,19 @@ private:
 #endif
 
     QDeclarativeEngine *engine;
+
     QFiniteStack<QObject *> objects;
     QFiniteStack<QDeclarativeVMETypes::List> lists;
 
     QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
     QFiniteStack<QDeclarativeParserStatus *> parserStatus;
-    QDeclarativeContextData *rootContext;
+    QDeclarativeGuardedContextData rootContext;
 
     struct State {
-        State() : context(0), compiledData(0), instructionStream(0) {}
+        enum Flag { Deferred = 0x00000001 };
+
+        State() : flags(0), context(0), compiledData(0), instructionStream(0) {}
+        quint32 flags;
         QDeclarativeContextData *context;
         QDeclarativeCompiledData *compiledData;
         const char *instructionStream;
@@ -157,6 +164,27 @@ private:
 
     static void blank(QFiniteStack<QDeclarativeParserStatus *> &);
     static void blank(QFiniteStack<QDeclarativeAbstractBinding *> &);
+};
+
+// Used to check that a QDeclarativeVME that is interrupted mid-execution
+// is still valid.  Checks all the objects and contexts have not been 
+// deleted.
+class QDeclarativeVMEGuard
+{
+public:
+    QDeclarativeVMEGuard();
+    ~QDeclarativeVMEGuard();
+
+    void guard(QDeclarativeVME *);
+    void clear();
+
+    bool isOK() const;
+
+private:
+    int m_objectCount;
+    QDeclarativeGuard<QObject> *m_objects;
+    int m_contextCount;
+    QDeclarativeGuardedContextData *m_contexts;
 };
 
 QDeclarativeVME::Interrupt::Interrupt()

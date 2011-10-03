@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qdeclarativeincubator.h"
+#include "qdeclarativecomponent.h"
 #include "qdeclarativeincubator_p.h"
 
 #include <private/qdeclarativecompiler_p.h>
@@ -121,7 +122,6 @@ QDeclarativeIncubatorPrivate::QDeclarativeIncubatorPrivate(QDeclarativeIncubator
 
 QDeclarativeIncubatorPrivate::~QDeclarativeIncubatorPrivate()
 {
-    clear();
 }
 
 void QDeclarativeIncubatorPrivate::clear()
@@ -236,13 +236,26 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
     QDeclarativeEngine *engine = component->engine;
     QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
 
+    bool guardOk = vmeGuard.isOK();
+    vmeGuard.clear();
+
+    if (!guardOk) {
+        QDeclarativeError error;
+        error.setUrl(component->url);
+        error.setDescription(QDeclarativeComponent::tr("Object destroyed during incubation"));
+        errors << error;
+        progress = QDeclarativeIncubatorPrivate::Completed;
+
+        goto finishIncubate;
+    }
+
     if (progress == QDeclarativeIncubatorPrivate::Execute) {
         enginePriv->referenceScarceResources();
         result = vme.execute(&errors, i);
         enginePriv->dereferenceScarceResources();
 
         if (errors.isEmpty() && result == 0) 
-            return; // Interrupted
+            goto finishIncubate;
 
         if (result) {
             QDeclarativeData *ddata = QDeclarativeData::get(result);
@@ -288,6 +301,8 @@ finishIncubate:
                 enginePriv->erroredBindings->removeError();
             }
         }
+    } else {
+        vmeGuard.guard(&vme);
     }
 }
 
@@ -419,6 +434,8 @@ QDeclarativeIncubator::QDeclarativeIncubator(IncubationMode mode)
 /*! \internal */
 QDeclarativeIncubator::~QDeclarativeIncubator()
 {
+    clear();
+
     delete d; d = 0;
 }
 
@@ -456,11 +473,13 @@ void QDeclarativeIncubator::clear()
 {
     Status s = status();
 
-    if (s == Loading)
-        qFatal("QDeclarativeIncubator::clear(): Clear not implemented for loading incubator");
-
     if (s == Null)
         return;
+
+    d->clear();
+
+    d->vme.reset();
+    d->vmeGuard.clear();
 
     Q_ASSERT(d->component == 0);
     Q_ASSERT(d->waitingOnMe == 0);

@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtDeclarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -38,60 +38,27 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "testtypes.h"
+#include <QtDeclarative/qdeclarative.h>
 
-#ifndef QDECLARATIVEINCUBATOR_P_H
-#define QDECLARATIVEINCUBATOR_P_H
-
-#include <private/qintrusivelist_p.h>
-#include <private/qdeclarativevme_p.h>
-#include <private/qdeclarativeengine_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-QT_BEGIN_NAMESPACE
-
-class QDeclarativeCompiledData;
-class QDeclarativeIncubator;
-class QDeclarativeIncubatorPrivate : public QDeclarativeEnginePrivate::Incubator
+SelfRegisteringType *SelfRegisteringType::m_me = 0;
+SelfRegisteringType::SelfRegisteringType()
+: m_v(0)
 {
-public:
-    QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, QDeclarativeIncubator::IncubationMode m);
-    ~QDeclarativeIncubatorPrivate();
+    m_me = this;
+}
 
-    QDeclarativeIncubator *q;
+SelfRegisteringType *SelfRegisteringType::me()
+{
+    return m_me;
+}
 
-    QDeclarativeIncubator::IncubationMode mode;
+void SelfRegisteringType::clearMe()
+{
+    m_me = 0;
+}
 
-    QList<QDeclarativeError> errors;
-
-    enum Progress { Execute, Completing, Completed };
-    Progress progress;
-
-    QObject *result;
-    QDeclarativeCompiledData *component;
-    QDeclarativeVME vme;
-    QDeclarativeVMEGuard vmeGuard;
-
-    typedef QDeclarativeIncubatorPrivate QIP;
-    QIP *waitingOnMe;
-    QIntrusiveListNode nextWaitingFor;
-    QIntrusiveList<QIP, &QIP::nextWaitingFor> waitingFor;
-
-    void clear();
-
-    void incubate(QDeclarativeVME::Interrupt &i);
-};
-
-QT_END_NAMESPACE
-
-#endif // QDECLARATIVEINCUBATOR_P_H
-
+void registerTypes()
+{
+    qmlRegisterType<SelfRegisteringType>("Qt.test", 1,0, "SelfRegistering");
+}
