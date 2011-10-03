@@ -152,7 +152,7 @@ private:
     uint m_grab : 1;
 };
 
-class QSGShaderEffectSource : public QSGItem
+class Q_DECLARATIVE_EXPORT QSGShaderEffectSource : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
