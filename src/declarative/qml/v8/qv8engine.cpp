@@ -45,6 +45,7 @@
 #include "qv8contextwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
 #include "qv8gccallback_p.h"
+#include "qv8sequencewrapper_p.h"
 #include "qv8include_p.h"
 #include "../../../3rdparty/javascriptcore/DateMath.h"
 
@@ -82,6 +83,7 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
 
         switch (lhst) {
         case QV8ObjectResource::ValueTypeType:
+            // a value type might be equal to a variant or another value type
             if (rhst == QV8ObjectResource::ValueTypeType) {
                 return lhsr->engine->valueTypeWrapper()->isEqual(lhsr, lhsr->engine->valueTypeWrapper()->toVariant(rhsr));
             } else if (rhst == QV8ObjectResource::VariantType) {
@@ -89,11 +91,18 @@ static bool ObjectComparisonCallback(v8::Local<v8::Object> lhs, v8::Local<v8::Ob
             }
             break;
         case QV8ObjectResource::VariantType:
+            // a variant might be equal to a value type or other variant.
             if (rhst == QV8ObjectResource::VariantType) {
                 return lhsr->engine->variantWrapper()->toVariant(lhsr) == 
                        lhsr->engine->variantWrapper()->toVariant(rhsr);
             } else if (rhst == QV8ObjectResource::ValueTypeType) {
                 return rhsr->engine->valueTypeWrapper()->isEqual(rhsr, rhsr->engine->variantWrapper()->toVariant(lhsr));
+            }
+            break;
+        case QV8ObjectResource::SequenceType:
+            // a sequence might be equal to itself.
+            if (rhst == QV8ObjectResource::SequenceType) {
+                return lhsr->engine->sequenceWrapper()->isEqual(lhsr, rhsr);
             }
             break;
         default:
@@ -135,6 +144,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
     m_listWrapper.init(this);
     m_variantWrapper.init(this);
     m_valueTypeWrapper.init(this);
+    m_sequenceWrapper.init(this);
 
     QV8GCCallback::registerGcPrologueCallback();
 
@@ -164,6 +174,7 @@ QV8Engine::~QV8Engine()
     invalidateAllValues();
     clearExceptions();
 
+    m_sequenceWrapper.destroy();
     m_valueTypeWrapper.destroy();
     m_variantWrapper.destroy();
     m_listWrapper.destroy();
@@ -226,25 +237,33 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
                 return m_variantWrapper.toVariant(r);
             case QV8ObjectResource::ValueTypeType:
                 return m_valueTypeWrapper.toVariant(r);
+            case QV8ObjectResource::SequenceType:
+                return m_sequenceWrapper.toVariant(r);
             }
         }
     }
 
-    if (typeHint == qMetaTypeId<QList<QObject *> >() && value->IsArray()) {
+    if (value->IsArray()) {
         v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
-
-        QList<QObject *> list;
-        uint32_t length = array->Length();
-        for (uint32_t ii = 0; ii < length; ++ii) {
-            v8::Local<v8::Value> arrayItem = array->Get(ii);
-            if (arrayItem->IsObject()) {
-                list << toQObject(arrayItem->ToObject());
-            } else {
-                list << 0;
+        if (typeHint == qMetaTypeId<QList<QObject *> >()) {
+            QList<QObject *> list;
+            uint32_t length = array->Length();
+            for (uint32_t ii = 0; ii < length; ++ii) {
+                v8::Local<v8::Value> arrayItem = array->Get(ii);
+                if (arrayItem->IsObject()) {
+                    list << toQObject(arrayItem->ToObject());
+                } else {
+                    list << 0;
+                }
             }
+
+            return qVariantFromValue<QList<QObject*> >(list);
         }
 
-        return qVariantFromValue<QList<QObject*> >(list);
+        bool succeeded = false;
+        QVariant retn = m_sequenceWrapper.toVariant(array, typeHint, &succeeded);
+        if (succeeded)
+            return retn;
     }
 
     return toBasicVariant(value);
@@ -325,8 +344,14 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
             case QMetaType::QObjectStar:
             case QMetaType::QWidgetStar:
                 return newQObject(*reinterpret_cast<QObject* const *>(ptr));
-            case QMetaType::QStringList: 
+            case QMetaType::QStringList:
+                {
+                bool succeeded = false;
+                v8::Handle<v8::Value> retn = m_sequenceWrapper.fromVariant(variant, &succeeded);
+                if (succeeded)
+                    return retn;
                 return arrayFromStringList(this, *reinterpret_cast<const QStringList *>(ptr));
+                }
             case QMetaType::QVariantList:
                 return arrayFromVariantList(this, *reinterpret_cast<const QVariantList *>(ptr));
             case QMetaType::QVariantMap:
@@ -369,6 +394,11 @@ v8::Handle<v8::Value> QV8Engine::fromVariant(const QVariant &variant)
         QObject *obj = QDeclarativeMetaType::toQObject(variant, &objOk);
         if (objOk) 
             return newQObject(obj);
+
+        bool succeeded = false;
+        v8::Handle<v8::Value> retn = m_sequenceWrapper.fromVariant(variant, &succeeded);
+        if (succeeded)
+            return retn;
     }
 
     // XXX TODO: To be compatible, we still need to handle:
@@ -459,7 +489,6 @@ QVariant QV8Engine::toBasicVariant(v8::Handle<v8::Value> value)
         int length = array->Length();
         for (int ii = 0; ii < length; ++ii)
             rv << toVariant(array->Get(ii), -1);
-
         return rv;
     }
     if (!value->IsFunction()) {

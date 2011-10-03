@@ -196,6 +196,8 @@ void registerTypes()
 
     qmlRegisterType<MyDynamicCreationDestructionObject>("Qt.test", 1, 0, "MyDynamicCreationDestructionObject");
     qmlRegisterType<WriteCounter>("Qt.test", 1, 0, "WriteCounter");
+
+    qmlRegisterType<MySequenceConversionObject>("Qt.test", 1, 0, "MySequenceConversionObject");
 }
 
 #include "testtypes.moc"

@@ -92,7 +92,7 @@ QDeclarativeValueTypeFactory::~QDeclarativeValueTypeFactory()
 
 bool QDeclarativeValueTypeFactory::isValueType(int idx)
 {
-    if ((uint)idx < QVariant::UserType)
+    if ((uint)idx < QVariant::UserType && (uint)idx != QVariant::StringList)
         return true;
     return false;
 }

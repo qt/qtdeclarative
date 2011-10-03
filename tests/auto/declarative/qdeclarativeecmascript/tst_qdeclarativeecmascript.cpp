@@ -170,6 +170,13 @@ private slots:
     void handleReferenceManagement();
     void stringArg();
     void readonlyDeclaration();
+    void sequenceConversionRead();
+    void sequenceConversionWrite();
+    void sequenceConversionArray();
+    void sequenceConversionThreads();
+    void sequenceConversionBindings();
+    void sequenceConversionCopy();
+
     void bug1();
     void bug2();
     void dynamicCreationCrash();
@@ -4045,6 +4052,232 @@ void tst_qdeclarativeecmascript::readonlyDeclaration()
 
     QCOMPARE(object->property("test").toBool(), true);
 
+    delete object;
+}
+
+Q_DECLARE_METATYPE(QList<int>)
+Q_DECLARE_METATYPE(QList<qreal>)
+Q_DECLARE_METATYPE(QList<bool>)
+Q_DECLARE_METATYPE(QList<QString>)
+Q_DECLARE_METATYPE(QList<QUrl>)
+void tst_qdeclarativeecmascript::sequenceConversionRead()
+{
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.read.qml");
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
+        QVERIFY(seq != 0);
+
+        QMetaObject::invokeMethod(object, "readSequences");
+        QList<int> intList; intList << 1 << 2 << 3 << 4;
+        QCOMPARE(object->property("intListLength").toInt(), intList.length());
+        QCOMPARE(object->property("intList").value<QList<int> >(), intList);
+        QList<qreal> qrealList; qrealList << 1.1 << 2.2 << 3.3 << 4.4;
+        QCOMPARE(object->property("qrealListLength").toInt(), qrealList.length());
+        QCOMPARE(object->property("qrealList").value<QList<qreal> >(), qrealList);
+        QList<bool> boolList; boolList << true << false << true << false;
+        QCOMPARE(object->property("boolListLength").toInt(), boolList.length());
+        QCOMPARE(object->property("boolList").value<QList<bool> >(), boolList);
+        QList<QString> stringList; stringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
+        QCOMPARE(object->property("stringListLength").toInt(), stringList.length());
+        QCOMPARE(object->property("stringList").value<QList<QString> >(), stringList);
+        QList<QUrl> urlList; urlList << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com");
+        QCOMPARE(object->property("urlListLength").toInt(), urlList.length());
+        QCOMPARE(object->property("urlList").value<QList<QUrl> >(), urlList);
+        QStringList qstringList; qstringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
+        QCOMPARE(object->property("qstringListLength").toInt(), qstringList.length());
+        QCOMPARE(object->property("qstringList").value<QStringList>(), qstringList);
+
+        QMetaObject::invokeMethod(object, "readSequenceElements");
+        QCOMPARE(object->property("intVal").toInt(), 2);
+        QCOMPARE(object->property("qrealVal").toReal(), 2.2);
+        QCOMPARE(object->property("boolVal").toBool(), false);
+        QCOMPARE(object->property("stringVal").toString(), QString(QLatin1String("second")));
+        QCOMPARE(object->property("urlVal").toUrl(), QUrl("http://www.example2.com"));
+        QCOMPARE(object->property("qstringVal").toString(), QString(QLatin1String("second")));
+
+        QMetaObject::invokeMethod(object, "enumerateSequenceElements");
+        QCOMPARE(object->property("enumerationMatches").toBool(), true);
+
+        intList.clear(); intList << 1 << 2 << 3 << 4 << 5; // set by the enumerateSequenceElements test.
+        QDeclarativeProperty seqProp(seq, "intListProperty");
+        QCOMPARE(seqProp.read().value<QList<int> >(), intList);
+        QDeclarativeProperty seqProp2(seq, "intListProperty", &engine);
+        QCOMPARE(seqProp2.read().value<QList<int> >(), intList);
+
+        QMetaObject::invokeMethod(object, "testReferenceDeletion");
+        QCOMPARE(object->property("referenceDeletion").toBool(), true);
+
+        delete object;
+    }
+
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.read.error.qml");
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
+        QVERIFY(seq != 0);
+
+        // we haven't registered QList<QPoint> as a sequence type.
+        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QList<QPoint>' for property 'MySequenceConversionObject::pointListProperty'");
+        QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
+        QTest::ignoreMessage(QtWarningMsg, warningOne.toAscii().constData());
+        QTest::ignoreMessage(QtWarningMsg, warningTwo.toAscii().constData());
+
+        QMetaObject::invokeMethod(object, "performTest");
+
+        // QList<QPoint> has not been registered as a sequence type.
+        QCOMPARE(object->property("pointListLength").toInt(), 0);
+        QVERIFY(!object->property("pointList").isValid());
+        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QList<QPoint>' for property 'MySequenceConversionObject::pointListProperty'");
+        QDeclarativeProperty seqProp(seq, "pointListProperty", &engine);
+        QVERIFY(!seqProp.read().isValid()); // not a valid/known sequence type
+
+        delete object;
+    }
+}
+
+void tst_qdeclarativeecmascript::sequenceConversionWrite()
+{
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.write.qml");
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
+        QVERIFY(seq != 0);
+
+        QMetaObject::invokeMethod(object, "writeSequences");
+        QCOMPARE(object->property("success").toBool(), true);
+
+        QMetaObject::invokeMethod(object, "writeSequenceElements");
+        QCOMPARE(object->property("success").toBool(), true);
+
+        QMetaObject::invokeMethod(object, "writeOtherElements");
+        QCOMPARE(object->property("success").toBool(), true);
+
+        QMetaObject::invokeMethod(object, "testReferenceDeletion");
+        QCOMPARE(object->property("referenceDeletion").toBool(), true);
+
+        delete object;
+    }
+
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.write.error.qml");
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
+        QVERIFY(seq != 0);
+
+        // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
+        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QVariantList to void");
+        QTest::ignoreMessage(QtWarningMsg, warningOne.toAscii().constData());
+
+        QMetaObject::invokeMethod(object, "performTest");
+
+        QList<QPoint> pointList; pointList << QPoint(1, 2) << QPoint(3, 4) << QPoint(5, 6); // original values, shouldn't have changed
+        QCOMPARE(seq->pointListProperty(), pointList);
+
+        delete object;
+    }
+}
+
+void tst_qdeclarativeecmascript::sequenceConversionArray()
+{
+    // ensure that in JS the returned sequences act just like normal JS Arrays.
+    QUrl qmlFile = TEST_FILE("sequenceConversion.array.qml");
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    //QMetaObject::invokeMethod(object, "indexedAccess");
+    //QVERIFY(object->property("success").toBool());
+    //QMetaObject::invokeMethod(object, "arrayOperations");
+    //QVERIFY(object->property("success").toBool());
+    QMetaObject::invokeMethod(object, "testEqualitySemantics");
+    QVERIFY(object->property("success").toBool());
+    //QMetaObject::invokeMethod(object, "testReferenceDeletion");
+    //QCOMPARE(object->property("referenceDeletion").toBool(), true);
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::sequenceConversionThreads()
+{
+    // ensure that sequence conversion operations work correctly in a worker thread
+    // and that serialisation between the main and worker thread succeeds.
+    QUrl qmlFile = TEST_FILE("sequenceConversion.threads.qml");
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+
+    QMetaObject::invokeMethod(object, "testIntSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    QMetaObject::invokeMethod(object, "testQrealSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    QMetaObject::invokeMethod(object, "testBoolSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    QMetaObject::invokeMethod(object, "testStringSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    QMetaObject::invokeMethod(object, "testQStringSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    QMetaObject::invokeMethod(object, "testUrlSequence");
+    QTRY_VERIFY(object->property("finished").toBool());
+    QVERIFY(object->property("success").toBool());
+
+    delete object;
+}
+
+void tst_qdeclarativeecmascript::sequenceConversionBindings()
+{
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.bindings.qml");
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QList<int> intList; intList << 1 << 2 << 3 << 12 << 7;
+        QCOMPARE(object->property("boundSequence").value<QList<int> >(), intList);
+        QCOMPARE(object->property("boundElement").toInt(), intList.at(3));
+        QList<int> intListTwo; intListTwo << 1 << 2 << 3 << 12 << 14;
+        QCOMPARE(object->property("boundSequenceTwo").value<QList<int> >(), intListTwo);
+        delete object;
+    }
+
+    {
+        QUrl qmlFile = TEST_FILE("sequenceConversion.bindings.error.qml");
+        QString warning = QString(QLatin1String("%1:17: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
+        QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
+        QDeclarativeComponent component(&engine, qmlFile);
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        delete object;
+    }
+}
+
+void tst_qdeclarativeecmascript::sequenceConversionCopy()
+{
+    QUrl qmlFile = TEST_FILE("sequenceConversion.copy.qml");
+    QDeclarativeComponent component(&engine, qmlFile);
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QMetaObject::invokeMethod(object, "testCopySequences");
+    QCOMPARE(object->property("success").toBool(), true);
+    QMetaObject::invokeMethod(object, "readSequenceCopyElements");
+    QCOMPARE(object->property("success").toBool(), true);
+    QMetaObject::invokeMethod(object, "testEqualitySemantics");
+    QCOMPARE(object->property("success").toBool(), true);
     delete object;
 }
 

@@ -77,6 +77,7 @@
 #include "qv8listwrapper_p.h"
 #include "qv8variantwrapper_p.h"
 #include "qv8valuetypewrapper_p.h"
+#include "qv8sequencewrapper_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -136,7 +137,8 @@ public:
     enum ResourceType { ContextType, QObjectType, TypeType, ListType, VariantType, 
                         ValueTypeType, XMLHttpRequestType, DOMNodeType, SQLDatabaseType,
                         ListModelType, Context2DType, Context2DStyleType, Context2DPixelArrayType, 
-                        ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType };
+                        ParticleDataType, SignalHandlerType, IncubatorType, VisualDataItemType,
+                        SequenceType };
     virtual ResourceType resourceType() const = 0;
 
     QV8Engine *engine;
@@ -279,6 +281,7 @@ public:
     QV8ListWrapper *listWrapper() { return &m_listWrapper; }
     QV8VariantWrapper *variantWrapper() { return &m_variantWrapper; }
     QV8ValueTypeWrapper *valueTypeWrapper() { return &m_valueTypeWrapper; }
+    QV8SequenceWrapper *sequenceWrapper() { return &m_sequenceWrapper; }
 
     void *xmlHttpRequestData() { return m_xmlHttpRequestData; }
     void *sqlDatabaseData() { return m_sqlDatabaseData; }
@@ -325,6 +328,9 @@ public:
     // Create a new value type object
     inline v8::Handle<v8::Value> newValueType(QObject *, int coreIndex, QDeclarativeValueType *);
     inline v8::Handle<v8::Value> newValueType(const QVariant &, QDeclarativeValueType *);
+
+    // Create a new sequence type object
+    inline v8::Handle<v8::Value> newSequence(int sequenceType, QObject *, int coreIndex, bool *succeeded);
 
     // Create a new QVariant object.  This doesn't examine the type of the variant, but always returns
     // a QVariant wrapper
@@ -415,6 +421,7 @@ protected:
     QV8ListWrapper m_listWrapper;
     QV8VariantWrapper m_variantWrapper;
     QV8ValueTypeWrapper m_valueTypeWrapper;
+    QV8SequenceWrapper m_sequenceWrapper;
 
     v8::Persistent<v8::Function> m_getOwnPropertyNames;
     v8::Persistent<v8::Function> m_freezeObject;
@@ -543,6 +550,11 @@ v8::Handle<v8::Value> QV8Engine::newValueType(QObject *object, int property, QDe
 v8::Handle<v8::Value> QV8Engine::newValueType(const QVariant &value, QDeclarativeValueType *type)
 {
     return m_valueTypeWrapper.newValueType(value, type);
+}
+
+v8::Handle<v8::Value> QV8Engine::newSequence(int sequenceType, QObject *object, int property, bool *succeeded)
+{
+    return m_sequenceWrapper.newSequence(sequenceType, object, property, succeeded);
 }
 
 // XXX Can this be made more optimal?  It is called prior to resolving each and every 

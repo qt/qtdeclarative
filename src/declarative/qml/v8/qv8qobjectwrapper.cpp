@@ -385,7 +385,13 @@ static v8::Handle<v8::Value> LoadProperty(QV8Engine *engine, QObject *object,
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
         if (valueType)
             return engine->newValueType(object, property.coreIndex, valueType);
-    } 
+    } else {
+        // see if it's a sequence type
+        bool succeeded = false;
+        v8::Handle<v8::Value> retn = engine->newSequence(property.propType, object, property.coreIndex, &succeeded);
+        if (succeeded)
+            return retn;
+    }
 
     QVariant var = object->metaObject()->property(property.coreIndex).read(object);
     return engine->fromVariant(var);
@@ -425,13 +431,18 @@ static v8::Handle<v8::Value> LoadPropertyDirect(QV8Engine *engine, QObject *obje
         void *args[] = { &handle, 0 };
         object->qt_metacall(QMetaObject::ReadProperty, property.coreIndex, args); 
         return handle.toHandle();
-    } else if (QDeclarativeValueTypeFactory::isValueType((uint)property.propType)
-               && engine->engine()) {
+    } else if (engine->engine() && QDeclarativeValueTypeFactory::isValueType((uint)property.propType)) {
         QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine->engine());
         QDeclarativeValueType *valueType = ep->valueTypes[property.propType];
         if (valueType)
             return engine->newValueType(object, property.coreIndex, valueType);
-    } 
+    } else {
+        // see if it's a sequence type
+        bool success = false;
+        v8::Handle<v8::Value> retn = engine->newSequence(property.propType, object, property.coreIndex, &success);
+        if (success)
+            return retn;
+    }
 
     QVariant var = object->metaObject()->property(property.coreIndex).read(object);
     return engine->fromVariant(var);
@@ -601,7 +612,6 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
             v = engine->toVariant(value, property->propType);
 
         QDeclarativeContextData *context = engine->callingContext();
-
         if (!QDeclarativePropertyPrivate::write(object, *property, v, context)) {
             const char *valueType = 0;
             if (v.userType() == QVariant::Invalid) valueType = "null";

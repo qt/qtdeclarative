@@ -9,6 +9,8 @@ HEADERS += \
     $$PWD/qv8stringwrapper_p.h \
     $$PWD/qv8engine_p.h \
     $$PWD/qv8gccallback_p.h \
+    $$PWD/qv8sequencewrapper_p.h \
+    $$PWD/qv8sequencewrapper_p_p.h \
     $$PWD/qv8contextwrapper_p.h \
     $$PWD/qv8qobjectwrapper_p.h \
     $$PWD/qv8typewrapper_p.h \
@@ -26,6 +28,7 @@ HEADERS += \
 SOURCES += \
     $$PWD/qv8stringwrapper.cpp \
     $$PWD/qv8engine.cpp \
+    $$PWD/qv8sequencewrapper.cpp \
     $$PWD/qv8contextwrapper.cpp \
     $$PWD/qv8qobjectwrapper.cpp \
     $$PWD/qv8typewrapper.cpp \

@@ -1148,6 +1148,87 @@ private:
     int m_count;
 };
 
+class MySequenceConversionObject : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY (QList<int> intListProperty READ intListProperty WRITE setIntListProperty NOTIFY intListPropertyChanged)
+    Q_PROPERTY (QList<int> intListProperty2 READ intListProperty2 WRITE setIntListProperty2 NOTIFY intListProperty2Changed)
+    Q_PROPERTY (QList<qreal> qrealListProperty READ qrealListProperty WRITE setQrealListProperty NOTIFY qrealListPropertyChanged)
+    Q_PROPERTY (QList<bool> boolListProperty READ boolListProperty WRITE setBoolListProperty NOTIFY boolListPropertyChanged)
+    Q_PROPERTY (QList<QString> stringListProperty READ stringListProperty WRITE setStringListProperty NOTIFY stringListPropertyChanged)
+    Q_PROPERTY (QList<QUrl> urlListProperty READ urlListProperty WRITE setUrlListProperty NOTIFY urlListPropertyChanged)
+
+    Q_PROPERTY (QStringList qstringListProperty READ qstringListProperty WRITE setQStringListProperty NOTIFY qstringListPropertyChanged)
+    Q_PROPERTY (QList<QPoint> pointListProperty READ pointListProperty WRITE setPointListProperty NOTIFY pointListPropertyChanged)
+
+public:
+    MySequenceConversionObject()
+    {
+        m_intList << 1 << 2 << 3 << 4;
+        m_intList2 << 1 << 2 << 3 << 4;
+        m_qrealList << 1.1 << 2.2 << 3.3 << 4.4;
+        m_boolList << true << false << true << false;
+        m_stringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
+        m_urlList << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com");
+
+        m_qstringList << QLatin1String("first") << QLatin1String("second") << QLatin1String("third") << QLatin1String("fourth");
+        m_pointList << QPoint(1, 2) << QPoint(3, 4) << QPoint(5, 6);
+    }
+
+    ~MySequenceConversionObject() {}
+
+    QList<int> intListProperty() const { return m_intList; }
+    void setIntListProperty(const QList<int> &list) { m_intList = list; emit intListPropertyChanged(); }
+    QList<int> intListProperty2() const { return m_intList2; }
+    void setIntListProperty2(const QList<int> &list) { m_intList2 = list; emit intListProperty2Changed(); }
+    QList<qreal> qrealListProperty() const { return m_qrealList; }
+    void setQrealListProperty(const QList<qreal> &list) { m_qrealList = list; emit qrealListPropertyChanged(); }
+    QList<bool> boolListProperty() const { return m_boolList; }
+    void setBoolListProperty(const QList<bool> &list) { m_boolList = list; emit boolListPropertyChanged(); }
+    QList<QString> stringListProperty() const { return m_stringList; }
+    void setStringListProperty(const QList<QString> &list) { m_stringList = list; emit stringListPropertyChanged(); }
+    QList<QUrl> urlListProperty() const { return m_urlList; }
+    void setUrlListProperty(const QList<QUrl> &list) { m_urlList = list; emit urlListPropertyChanged(); }
+    QStringList qstringListProperty() const { return m_qstringList; }
+    void setQStringListProperty(const QStringList &list) { m_qstringList = list; emit qstringListPropertyChanged(); }
+    QList<QPoint> pointListProperty() const { return m_pointList; }
+    void setPointListProperty(const QList<QPoint> &list) { m_pointList = list; emit pointListPropertyChanged(); }
+
+    // now for "copy resource" sequences:
+    Q_INVOKABLE QList<int> generateIntSequence() const { QList<int> retn; retn << 1 << 2 << 3; return retn; }
+    Q_INVOKABLE QList<qreal> generateQrealSequence() const { QList<qreal> retn; retn << 1.1 << 2.2 << 3.3; return retn; }
+    Q_INVOKABLE QList<bool> generateBoolSequence() const { QList<bool> retn; retn << true << false << true; return retn; }
+    Q_INVOKABLE QList<QString> generateStringSequence() const { QList<QString> retn; retn << "one" << "two" << "three"; return retn; }
+    Q_INVOKABLE QList<QUrl> generateUrlSequence() const { QList<QUrl> retn; retn << QUrl("http://www.example1.com") << QUrl("http://www.example2.com") << QUrl("http://www.example3.com"); return retn; }
+    Q_INVOKABLE QStringList generateQStringSequence() const { QStringList retn; retn << "one" << "two" << "three"; return retn; }
+
+    // "reference resource" underlying qobject deletion test:
+    Q_INVOKABLE MySequenceConversionObject *generateTestObject() const { return new MySequenceConversionObject; }
+    Q_INVOKABLE void deleteTestObject(QObject *object) const { delete object; }
+
+signals:
+    void intListPropertyChanged();
+    void intListProperty2Changed();
+    void qrealListPropertyChanged();
+    void boolListPropertyChanged();
+    void stringListPropertyChanged();
+    void urlListPropertyChanged();
+    void qstringListPropertyChanged();
+    void pointListPropertyChanged();
+
+private:
+    QList<int> m_intList;
+    QList<int> m_intList2;
+    QList<qreal> m_qrealList;
+    QList<bool> m_boolList;
+    QList<QString> m_stringList;
+    QList<QUrl> m_urlList;
+
+    QStringList m_qstringList; // not a supported sequence type, but QStringList support is hardcoded.
+    QList<QPoint> m_pointList; // not a supported sequence type
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
