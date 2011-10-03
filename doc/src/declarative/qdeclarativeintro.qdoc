@@ -123,7 +123,7 @@ line opacity: 0.5 has been turned into a comment.
 
 \section1 Object Identifiers
 
-Each object can be given a special \e id value that allows the object to be identified
+Each object can be given a special \i id value that allows the object to be identified
 and referred to by other objects.
 
 For example, below we have two \l Text objects. The first \l Text object
@@ -208,7 +208,7 @@ Item {
 }
 \endqml
 
-QML properties are what is known as \e type-safe. That is, they only allow you to assign a value that
+QML properties are what is known as \i type-safe. That is, they only allow you to assign a value that
 matches the property type. For example, the \c x property of item is a real, and if you try to assign
 a string to it you will get an error.
 
@@ -226,7 +226,7 @@ letter.
 
 When a property changes value, it can send a signal to notify others of this change.
 
-To receive these signals, simply create a \e {signal handler} named with an \c on<Property>Changed
+To receive these signals, simply create a \i {signal handler} named with an \c on<Property>Changed
 syntax. For example, the \l Rectangle element has \l {Item::}{width} and \l {Rectangle::}{color}
 properties.  Below, we have a \l Rectangle object that has defined two signal handlers,
 \c onWidthChanged and \c onColorChanged, which will automaticallly be called whenever these
@@ -332,10 +332,10 @@ Text {
 \target attached-properties
 
 Some objects attach properties to another object.  Attached Properties
-are of the form \e {Type.property} where \e Type is the type of the
-element that attaches \e property.
+are of the form \i {Type.property} where \i Type is the type of the
+element that attaches \i property.
 
-For example, the \l ListView element attaches the \e ListView.isCurrentItem property
+For example, the \l ListView element attaches the \i ListView.isCurrentItem property
 to each delegate it creates:
 
 \qml
@@ -385,7 +385,7 @@ Item {
 }
 \endqml
 
-All signal handlers begin with \e "on".
+All signal handlers begin with \i "on".
 
 Some signal handlers include an optional parameter. For example
 the MouseArea \l{MouseArea::}{onPressed} signal handler has a \c mouse parameter

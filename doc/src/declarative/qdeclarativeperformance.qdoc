@@ -37,7 +37,7 @@ this is when a "details" page is shown over the main application view.
 
 \section1 Clipping
 
-\e clip is set to false by default.  Enable clipping only when necessary.
+\i clip is set to false by default.  Enable clipping only when necessary.
 
 \section1 Anchors vs. Binding
 

@@ -61,7 +61,7 @@ If the signal has no parameters, the "\c{()}" brackets are optional. If
 parameters are used, the parameter types must be declared, as for the \c string
 and \c variant arguments of the \c perform signal.
 
-Adding a signal to an item automatically adds a \e{signal handler} as well. The
+Adding a signal to an item automatically adds a \i{signal handler} as well. The
 signal hander is named \c on<SignalName>, with the first letter of the signal in
 uppercase.  The previous signals have the following signal handlers:
 \snippet doc/src/snippets/declarative/events.qml signal handler declaration
@@ -85,7 +85,7 @@ Note that the \c Component.onCompleted is an
 Signal objects have a \c connect() method to a connect a signal either to a
 method or another signal. When a signal is connected to a method, the method is
 automatically invoked whenever the signal is emitted. (In Qt terminology, the
-method is a \e slot that is connected to the \e signal; all methods defined in
+method is a \i slot that is connected to the \i signal; all methods defined in
 QML are created as \l{Signals & Slots}{Qt slots}.) This enables a signal
 to be received by a method instead of a \l {Signal Handlers}{signal handler}.
 

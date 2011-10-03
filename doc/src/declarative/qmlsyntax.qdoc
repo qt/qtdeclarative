@@ -103,7 +103,7 @@ Rotation {
 \endcode
 
 These expressions can include references to other objects and properties, in which case
-a \e binding is established: when the value of the expression changes, the property the
+a \i binding is established: when the value of the expression changes, the property the
 expression has been assigned to is automatically updated to that value.
 
 \code
@@ -122,8 +122,8 @@ Item {
 In the example above, the \c text2 object will display the same text as \c text1. If \c text1 is changed,
 \c text2 is automatically changed to the same value.
 
-Note that to refer to other objects, we use their \e id values. (See below for more
-information on the \e id property.)
+Note that to refer to other objects, we use their \i id values. (See below for more
+information on the \i id property.)
 
 \section1 QML Comments
 

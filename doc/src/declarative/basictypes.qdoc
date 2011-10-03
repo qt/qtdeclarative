@@ -480,12 +480,12 @@
     \endqml
 
     While this is a convenient way to store array and map-type values, you
-    must be aware that the \c items and \c attributes properties above are \e not
+    must be aware that the \c items and \c attributes properties above are \i not
     QML objects (and certainly not JavaScript object either) and the key-value
-    pairs in \c attributes are \e not QML properties. Rather, the \c items
+    pairs in \c attributes are \i not QML properties. Rather, the \c items
     property holds an array of values, and \c attributes holds a set of key-value
     pairs. Since they are stored as a set of values, instead of as an object,
-    their contents \e cannot be modified individually:
+    their contents \i cannot be modified individually:
 
     \qml
     Item {
@@ -511,7 +511,7 @@
     One way to "update" the contents of an array or map is to copy the property
     to a JavaScript object, modify the copy as desired, and then reassign the
     property to the updated copy. Note, however, that this is not efficient.
-    In the example below, which reassigns the \c attributes property, the \e entire
+    In the example below, which reassigns the \c attributes property, the \i entire
     set of key-value pairs must be serialized and deserialized every time it is
     copied between a JavaScript object and a QML property:
 
@@ -534,7 +534,7 @@
     within a JavaScript file.
 
     JavaScript programmers should also note that when a JavaScript object is
-    copied to an array or map property, the \e contents of the object (that is,
+    copied to an array or map property, the \i contents of the object (that is,
     its key-value properties) are copied, rather than the object itself. The
     property does not hold a reference to the original JavaScript object, and
     extra data such as the object's JavaScript prototype chain is also lost in

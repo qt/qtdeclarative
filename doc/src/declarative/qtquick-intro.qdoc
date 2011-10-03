@@ -44,7 +44,7 @@ environment (IDE) introduces tools for developing Qt Quick applications.
 \section1 The QML Language
 
 QML is a high level, scripted language. Its commands, more correctly
-\e elements, leverage the power and efficiency of the Qt libraries to make easy
+\i elements, leverage the power and efficiency of the Qt libraries to make easy
 to use commands that perform intuitive functions. Drawing a rectangle,
 displaying an image, and application events -- all are possible with declarative
 programming.
@@ -53,7 +53,7 @@ The language also allows more flexibility of these commands by using
 \l{About JavaScript}{JavaScript} to implement the high level user interface
 logic.
 
-A QML element usually has various \e properties that help define the element.
+A QML element usually has various \i properties that help define the element.
 For example, if we created an element called Circle then the radius of the
 circle would be a property. Building user interfaces by importing these elements
 is one of the great feature of QML and Qt Quick.

@@ -91,7 +91,7 @@ These will now be propagated to the highest-stacking-order enabled MouseArea whi
 You can still ignore these events in the handler to let them pass through.
 
 The Binding element can now be used as a value source, and will also restore any previously
-set binding when its \e when clause becomes false.
+set binding when its \i when clause becomes false.
 
 Flickable: added dragging, draggingHorizontally and draggingVerically properties.
 Added topMargin, bottomMargin, leftMargin, rightMargin, xOrigin, yOrigin properties.
