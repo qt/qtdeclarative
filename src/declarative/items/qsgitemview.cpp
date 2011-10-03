@@ -1381,6 +1381,9 @@ void QSGItemViewPrivate::updateViewport()
 void QSGItemViewPrivate::layout()
 {
     Q_Q(QSGItemView);
+    if (inApplyModelChanges)
+        return;
+
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartPosition());
