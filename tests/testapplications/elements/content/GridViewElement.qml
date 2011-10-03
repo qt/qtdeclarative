@@ -116,5 +116,12 @@ Rectangle {
         ListElement { label: "ParallelAnimation"; help: "The ParallelAnimation element allows animations to be run in parallel." }
         ListElement { label: "XmlListModel"; help: "The XmlListModel element is used to specify a read-only model using XPath expressions." }
         ListElement { label: "Scale"; help: "The Scale element provides a way to scale an Item." }
+        ListElement { label: "ParticleSystem"; help: "The ParticleSystem brings together ParticlePainter, Emitter and Affector elements." }
+        ListElement { label: "ImageParticle"; help: "The ImageParticle element visualizes logical particles using an image." }
+        ListElement { label: "Emitter"; help: "The Emitter element allows you to emit logical particles." }
+        ListElement { label: "Affector"; help: "Affector elements can alter the attributes of logical particles at any point in their lifetime." }
+        ListElement { label: "Shape"; help: "The Shape element allows you to specify an area for affectors and emitter." }
+        ListElement { label: "TrailEmitter"; help: "The TrailEmitter element allows you to emit logical particles from other logical particles." }
+        ListElement { label: "Direction"; help: "The Direction elements allow you to specify a vector space." }
     }
 }
