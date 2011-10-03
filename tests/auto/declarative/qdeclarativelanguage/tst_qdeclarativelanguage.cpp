@@ -41,6 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qfileinfo.h>
@@ -58,6 +59,32 @@
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
 /*
+    Returns the path to some testdata file or directory.
+*/
+QString testdata(QString const& name = QString())
+{
+    /*
+        Try to find it relative to the binary.
+        Note we are looking for a _directory_ which exists, but the _file_ itself need not exist,
+        to support the case of finding a path to a testdata file which doesn't exist yet (i.e.
+        a file we are about to create).
+    */
+    QFileInfo relative = QDir(QCoreApplication::applicationDirPath()).filePath(QLatin1String("data/") + name);
+    if (relative.dir().exists()) {
+        return relative.absoluteFilePath();
+    }
+
+    qWarning("requested testdata %s could not be found (looked at %s)",
+        qPrintable(name),
+        qPrintable(relative.filePath())
+    );
+
+    // Chances are the calling test will now fail.
+    return QString();
+}
+
+
+/*
 This test case covers QML language issues.  This covers everything that does not
 involve evaluating ECMAScript expressions and bindings.
 
@@ -69,8 +96,7 @@ class tst_qdeclarativelanguage : public QObject
 public:
     tst_qdeclarativelanguage() {
         QDeclarativeMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
-        QFileInfo fileInfo(__FILE__);
-        engine.addImportPath(fileInfo.absoluteDir().filePath(QLatin1String("data/lib")));
+        engine.addImportPath(testdata("lib"));
     }
 
 private slots:
@@ -172,7 +198,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QFile file(QLatin1String(SRCDIR) + QLatin1String("/data/") + QLatin1String(errorfile)); \
+        QFile file(testdata(QLatin1String(errorfile))); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \
@@ -203,8 +229,7 @@ private:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath(QLatin1String("data/") + filename));
+    return QUrl::fromLocalFile(testdata(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)
@@ -1636,7 +1661,7 @@ void tst_qdeclarativelanguage::basicRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     QDeclarativeComponent component(&engine, url);
 
@@ -1680,7 +1705,7 @@ void tst_qdeclarativelanguage::importsRemote()
     QFETCH(QString, error);
 
     TestHTTPServer server(14447);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     testType(qml,type,error);
 }
@@ -1841,7 +1866,7 @@ void tst_qdeclarativelanguage::importIncorrectCase()
     QCOMPARE(errors.count(), 1);
 
 #if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
-    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + QFileInfo(__FILE__).absoluteDir().filePath("data/lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
+    QString expectedError = QLatin1String("cannot load module \"com.Nokia.installedtest\": File name case mismatch for \"") + testdata("lib/com/Nokia/installedtest/qmldir") + QLatin1String("\"");
 #else
     QString expectedError = QLatin1String("module \"com.Nokia.installedtest\" is not installed");
 #endif
@@ -2071,10 +2096,10 @@ void tst_qdeclarativelanguage::registrationOrder()
 void tst_qdeclarativelanguage::remoteLoadCrash()
 {
     TestHTTPServer server(14448);
-    server.serveDirectory(SRCDIR);
+    server.serveDirectory(testdata());
 
     QDeclarativeComponent component(&engine);
-    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/data/remoteLoadCrash.qml"));
+    component.setData("import QtQuick 1.0; Text {}", QUrl("http://127.0.0.1:14448/remoteLoadCrash.qml"));
     while (component.isLoading()) 
         QCoreApplication::processEvents( QEventLoop::ExcludeUserInputEvents | QEventLoop::WaitForMoreEvents, 50);
 
