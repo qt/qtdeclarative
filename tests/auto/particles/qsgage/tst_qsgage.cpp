@@ -67,6 +67,8 @@ void tst_qsgage::test_kill()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1) //Recycler out-smarted me and never needed to init this datum
+            continue;
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 1000.f);

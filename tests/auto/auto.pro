@@ -1,6 +1,7 @@
 TEMPLATE=subdirs
 SUBDIRS=\
-    declarative
+    declarative \
+    particles
 
 # ### refactor: port properly
 # contains(QT_CONFIG, qmltest): SUBDIRS += qmltest
