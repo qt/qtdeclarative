@@ -51,17 +51,32 @@ QT_BEGIN_NAMESPACE
     \qmlclass SpriteGoal QSGSpriteGoalAffector
     \inqmlmodule QtQuick.Particles 2
     \inherits Affector
-    \brief The SpriteGoal Affector allows you to change the state of a sprite or group of a particle.
+    \brief The SpriteGoal Affector allows you to change the state of a sprite particle.
 
 */
 /*!
     \qmlproperty string QtQuick.Particles2::SpriteGoal::goalState
+
+    The name of the Sprite which the affected particles should move to.
+
+    Sprite states have defined durations and transitions between them, setting goalState
+    will cause it to disregard any path weightings (including 0) and head down the path
+    which will reach the goalState quickest. It will pass through intermediate states
+    on that path.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::SpriteGoal::jump
+
+    If true, affected sprites will jump directly to the goal state instead of taking the
+    the shortest valid path to get there. They will also not finish their current state,
+    but immediately move to the beginning of the goal state.
+
+    Default is false.
 */
 /*!
     \qmlproperty bool QtQuick.Particles2::SpriteGoal::systemStates
+
+    deprecated, use GroupGoal instead
 */
 
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
@@ -124,7 +139,6 @@ bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
         m_system->moveGroups(d, m_goalIdx);
     }else if (engine->curState(index) != m_goalIdx){
         engine->setGoal(m_goalIdx, index, m_jump);
-        emit affected(QPointF(d->curX(), d->curY()));//###Expensive if unconnected? Move to Affector?
         return true; //Doesn't affect particle data, but necessary for onceOff
     }
     return false;

@@ -39,10 +39,9 @@
 **
 ****************************************************************************/
 
-#ifndef SPRITEGOALAFFECTOR_H
-#define SPRITEGOALAFFECTOR_H
+#ifndef GROUPGOALAFFECTOR_H
+#define GROUPGOALAFFECTOR_H
 #include "qsgparticleaffector_p.h"
-#include <QtDeclarative/qdeclarativeinfo.h>
 
 QT_BEGIN_HEADER
 
@@ -52,14 +51,13 @@ QT_MODULE(Declarative)
 
 class QSGStochasticEngine;
 
-class QSGSpriteGoalAffector : public QSGParticleAffector
+class QSGGroupGoalAffector : public QSGParticleAffector
 {
     Q_OBJECT
     Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
-    Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
 public:
-    explicit QSGSpriteGoalAffector(QSGItem *parent = 0);
+    explicit QSGGroupGoalAffector(QSGItem *parent = 0);
 
     QString goalState() const
     {
@@ -70,56 +68,35 @@ public:
     {
         return m_jump;
     }
-    bool systemStates() const
-    {
-        return m_systemStates;
-    }
 
 protected:
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
+
 signals:
 
     void goalStateChanged(QString arg);
 
     void jumpChanged(bool arg);
 
-    void systemStatesChanged(bool arg);
-
 public slots:
 
-void setGoalState(QString arg);
+    void setGoalState(QString arg);
 
-void setJump(bool arg)
-{
-    if (m_jump != arg) {
-        m_jump = arg;
-        emit jumpChanged(arg);
+    void setJump(bool arg)
+    {
+        if (m_jump != arg) {
+            m_jump = arg;
+            emit jumpChanged(arg);
+        }
     }
-}
-
-void setSystemStates(bool arg)
-{
-    if (m_systemStates != arg) {
-        //TODO: GroupGoal was added (and this deprecated) Oct 4 - remove it in a few weeks.
-        qmlInfo(this) << "systemStates is deprecated and will be removed soon. Use GroupGoal instead.";
-        m_systemStates = arg;
-        emit systemStatesChanged(arg);
-    }
-}
 
 private:
-    void updateStateIndex(QSGStochasticEngine* e);
     QString m_goalState;
-    int m_goalIdx;
-    QSGStochasticEngine* m_lastEngine;
     bool m_jump;
-    bool m_systemStates;
-
-    bool m_notUsingEngine;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // SPRITEGOALAFFECTOR_H
+#endif // GROUPGOALAFFECTOR_H

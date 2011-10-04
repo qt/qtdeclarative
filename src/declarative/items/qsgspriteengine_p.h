@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 class QSGSprite;
-class QSGStochasticState : public QObject //For internal use
+class Q_AUTOTEST_EXPORT QSGStochasticState : public QObject //For internal use
 {
     Q_OBJECT
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
@@ -188,7 +188,7 @@ private:
     friend class QSGStochasticEngine;
 };
 
-class QSGStochasticEngine : public QObject
+class Q_AUTOTEST_EXPORT QSGStochasticEngine : public QObject
 {
     Q_OBJECT
     //TODO: Optimize single state case?
