@@ -59,7 +59,7 @@ tst_qsgfriction::tst_qsgfriction()
 
 void tst_qsgfriction::test_basic()
 {
-    QSGView* view = createView(SRCDIR "/data/basic.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     //Default is just slowed a little

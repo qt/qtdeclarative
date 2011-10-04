@@ -59,7 +59,7 @@ tst_qsgparticlegroup::tst_qsgparticlegroup()
 
 void tst_qsgparticlegroup::test_instantTransition()
 {
-    QSGView* view = createView(SRCDIR "/data/basic.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     //A frame or two worth of particles will be missed, the transition doesn't take effect on the frame it's spawned (QTBUG-21781)

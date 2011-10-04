@@ -59,7 +59,7 @@ tst_qsgturbulence::tst_qsgturbulence()
 
 void tst_qsgturbulence::test_basic()
 {
-    QSGView* view = createView(SRCDIR "/data/basic.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     //Note that the noise image built-in provides the 'randomness', so this test should be stable so long as it and the size

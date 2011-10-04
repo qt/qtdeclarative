@@ -3,7 +3,9 @@ contains(QT_CONFIG,declarative): QT += declarative
 SOURCES += tst_qsgpointdirection.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

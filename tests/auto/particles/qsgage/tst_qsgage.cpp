@@ -62,7 +62,7 @@ tst_qsgage::tst_qsgage()
 
 void tst_qsgage::test_kill()
 {
-    QSGView* view = createView(SRCDIR "/data/kill.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/kill.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -82,7 +82,7 @@ void tst_qsgage::test_kill()
 
 void tst_qsgage::test_jump()
 {
-    QSGView* view = createView(SRCDIR "/data/jump.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/jump.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -103,7 +103,7 @@ void tst_qsgage::test_jump()
 
 void tst_qsgage::test_onceOff()
 {
-    QSGView* view = createView(SRCDIR "/data/onceoff.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/onceoff.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -125,7 +125,7 @@ void tst_qsgage::test_onceOff()
 
 void tst_qsgage::test_sustained()
 {
-    QSGView* view = createView(SRCDIR "/data/sustained.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sustained.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     QCOMPARE(system->groupData[0]->size(), 500);

@@ -59,7 +59,7 @@ tst_qsgcustomparticle::tst_qsgcustomparticle()
 
 void tst_qsgcustomparticle::test_basic()
 {
-    QSGView* view = createView(SRCDIR "/data/basic.qml", 600);
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QVERIFY(view);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
