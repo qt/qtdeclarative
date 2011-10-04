@@ -85,7 +85,7 @@ QSGCanvasItemPrivate::QSGCanvasItemPrivate()
     , hasTileSize(false)
     , hasCanvasWindow(false)
     , componentCompleted(false)
-    , renderTarget(QSGCanvasItem::Image)
+    , renderTarget(QSGCanvasItem::FramebufferObject)
 {
 }
 
@@ -512,7 +512,9 @@ void QSGCanvasItem::createContext()
 QDeclarativeV8Handle QSGCanvasItem::getContext(const QString &contextId)
 {
     Q_D(QSGCanvasItem);
-    Q_UNUSED(contextId);
+
+    if (contextId.toLower() != QLatin1String("2d"))
+        return QDeclarativeV8Handle::fromHandle(v8::Undefined());
 
     if (!d->context)
         createContext();
@@ -552,7 +554,9 @@ void QSGCanvasItem::markDirty(const QRectF& region)
   */
 bool QSGCanvasItem::save(const QString &filename) const
 {
-    return toImage().save(filename);
+    Q_D(const QSGCanvasItem);
+    QUrl url = d->baseUrl.resolved(QUrl::fromLocalFile(filename));
+    return toImage().save(url.toLocalFile());
 }
 
 QImage QSGCanvasItem::loadedImage(const QUrl& url)
@@ -683,24 +687,25 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
         QByteArray ba;
         QBuffer buffer(&ba);
         buffer.open(QIODevice::WriteOnly);
-        QString mime = mimeType;
+        QString mime = mimeType.toLower();
         QString type;
-        if (mimeType == QLatin1Literal("image/bmp"))
-            type = QLatin1Literal("BMP");
-        else if (mimeType == QLatin1Literal("image/jpeg"))
-            type = QLatin1Literal("JPEG");
-        else if (mimeType == QLatin1Literal("image/x-portable-pixmap"))
-            type = QLatin1Literal("PPM");
-        else if (mimeType == QLatin1Literal("image/tiff"))
-            type = QLatin1Literal("TIFF");
-        else if (mimeType == QLatin1Literal("image/xbm"))
-            type = QLatin1Literal("XBM");
-        else if (mimeType == QLatin1Literal("image/xpm"))
-            type = QLatin1Literal("XPM");
-        else {
+        if (mime == QLatin1Literal("image/png")) {
             type = QLatin1Literal("PNG");
-            mime = QLatin1Literal("image/png");
-        }
+        } else if (mime == QLatin1Literal("image/bmp"))
+            type = QLatin1Literal("BMP");
+        else if (mime == QLatin1Literal("image/jpeg"))
+            type = QLatin1Literal("JPEG");
+        else if (mime == QLatin1Literal("image/x-portable-pixmap"))
+            type = QLatin1Literal("PPM");
+        else if (mime == QLatin1Literal("image/tiff"))
+            type = QLatin1Literal("TIFF");
+        else if (mime == QLatin1Literal("image/xbm"))
+            type = QLatin1Literal("XBM");
+        else if (mime == QLatin1Literal("image/xpm"))
+            type = QLatin1Literal("XPM");
+        else
+            return QLatin1Literal("data:,");
+
         image.save(&buffer, type.toAscii());
         buffer.close();
         QString dataUrl = QLatin1Literal("data:%1;base64,%2");

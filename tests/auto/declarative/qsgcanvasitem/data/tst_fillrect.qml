@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtTest 1.0
 
 Canvas {
-   id:canvas; width:1;height:1
+   id:canvas; width:1;height:1; renderTarget:Canvas.Image
    onPaint: {
      context.fillStyle = "red";
      context.fillRect(0, 0, canvas.width, canvas.height);

@@ -3,7 +3,7 @@ import QtTest 1.0
 import "testhelper.js" as Helper
 
 Canvas {
-   id:canvas; width:1;height:1
+   id:canvas; width:100;height:50; renderTarget:Canvas.Image
    TestCase {
        name: "strokeStyle"; when: windowShown
        function test_default() {

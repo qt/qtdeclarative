@@ -3,7 +3,7 @@ import QtTest 1.0
 import "testhelper.js" as Helper
 
 Canvas {
-   id:canvas; width:1;height:1
+   id:canvas; width:1;height:1;renderTarget:Canvas.Image
    TestCase {
        name: "fillStyle"; when: windowShown
        function test_default() {
@@ -43,7 +43,9 @@ Canvas {
            compare(ctx.fillStyle, '#ffaa00');
            ctx.fillStyle = "rgb (1, 2, 3)";
            compare(ctx.fillStyle, '#ffaa00');
-           ctx.fillStyle = "rgba(1, 2, 3)";
+           ctx.fillStyle = '#fa0';
+
+           ctx.fillStyle = "rgba(3, 1, 2)";
            compare(ctx.fillStyle, '#ffaa00');
            ctx.fillStyle = "rgb((3,4,1)";
            compare(ctx.fillStyle, '#ffaa00');
@@ -96,9 +98,7 @@ Canvas {
            ctx.clearRect(0, 0, 1, 1);
            ctx.fillStyle = 'rgba(0%, 100%, 0%, 0.499)';
            ctx.fillRect(0, 0, 1, 1);
-           //FIXME: currently we only return premultipled pixels
-           verify(Helper.comparePixel(ctx, 0,0, 0,127,0,255));
-           //verify(Helper.comparePixel(ctx, 0,0, 0,255,0,127));
+           verify(Helper.comparePixel(ctx, 0,0, 0,255,0,127));
        }
 
        function test_hsla() {
@@ -106,7 +106,7 @@ Canvas {
            ctx.reset();
            ctx.fillStyle = "hsla(120, 100%, 50%, 0.499)";
            ctx.fillRect(0, 0, 1, 1);
-           verify(Helper.comparePixel(ctx,0,0,0,127,0,255));
+           verify(Helper.comparePixel(ctx,0,0,0,255,0,127));
        }
 
    }

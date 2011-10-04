@@ -590,8 +590,11 @@ void QSGContext2DFBOTexture::endPainting()
 void qt_quit_context2d_render_thread()
 {
     QThread* thread = globalCanvasThreadRenderInstance();
-    thread->quit();
-    thread->wait();
+
+    if (thread->isRunning()) {
+        thread->exit(0);
+        thread->wait(1000);
+    }
 }
 
 QSGContext2DImageTexture::QSGContext2DImageTexture(bool threadRendering)

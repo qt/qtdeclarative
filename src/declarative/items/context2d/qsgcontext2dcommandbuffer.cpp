@@ -252,7 +252,13 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
         }
         case QSGContext2D::ClearRect:
         {
+            QPainter::CompositionMode  cm = p->compositionMode();
+            qreal alpha = p->opacity();
+            p->setCompositionMode(QPainter::CompositionMode_Source);
+            p->setOpacity(0);
             p->fillRect(takeRect(), QColor(qRgba(0, 0, 0, 0)));
+            p->setCompositionMode(cm);
+            p->setOpacity(alpha);
             break;
         }
         case QSGContext2D::FillRect:
@@ -335,10 +341,12 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
         case QSGContext2D::Fill:
         {
             bool hasPattern = p->brush().style() == Qt::TexturePattern;
+            QPainterPath path = takePath();
+            path.closeSubpath();
             if (HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor))
-                fillShadowPath(p,takePath(), state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
+                fillShadowPath(p,path, state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor);
             else
-                p->fillPath(takePath(), p->brush());
+                p->fillPath(path, p->brush());
             break;
         }
         case QSGContext2D::Stroke:
@@ -351,13 +359,9 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
         }
         case QSGContext2D::Clip:
         {
-            QPainterPath clipPath = takePath();
-            clipPath.closeSubpath();
-            state.clipPath = state.clipPath.intersected(clipPath);
-            if (!p->clipPath().isEmpty())
-                clipPath = clipPath.intersected(p->clipPath());
+            state.clipPath = takePath();
             p->setClipping(true);
-            p->setClipPath(clipPath);
+            p->setClipPath(state.clipPath);
             break;
         }
         case QSGContext2D::GlobalAlpha:
