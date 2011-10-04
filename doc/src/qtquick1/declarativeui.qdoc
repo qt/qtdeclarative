@@ -140,7 +140,7 @@ examples for porting}
 
 \list
 \o \l{QML Best Practices: Coding Conventions}{Coding Tips}
-\o \l{QML Performance}{Performance Tips}
+\o \l{QML Performance - Qt Quick 1}{Performance Tips}
 \endlist
 
 \section1 License Information
