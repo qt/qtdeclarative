@@ -1056,6 +1056,21 @@ QDeclarativeMetaType::moduleApi(const QString &uri, int versionMajor, int versio
     return ModuleApi();
 }
 
+QHash<QString, QList<QDeclarativeMetaType::ModuleApi> > QDeclarativeMetaType::moduleApis()
+{
+    QReadLocker lock(metaTypeDataLock());
+    QDeclarativeMetaTypeData *data = metaTypeData();
+
+    QHash<QString, QList<ModuleApi> > moduleApis;
+    QHashIterator<QString, QDeclarativeMetaTypeData::ModuleApiList> it(data->moduleApis);
+    while (it.hasNext()) {
+        it.next();
+        moduleApis[it.key()] = it.value().moduleApis;
+    }
+
+    return moduleApis;
+}
+
 QObject *QDeclarativeMetaType::toQObject(const QVariant &v, bool *ok)
 {
     if (!isQObject(v.userType())) {
