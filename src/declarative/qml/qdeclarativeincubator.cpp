@@ -56,6 +56,9 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
 
     QDeclarativeIncubator::IncubationMode mode = i.incubationMode();
 
+    if (!incubationController)
+        mode = QDeclarativeIncubator::Synchronous;
+
     if (mode == QDeclarativeIncubator::AsynchronousIfNested) {
         mode = QDeclarativeIncubator::Synchronous;
 
@@ -77,11 +80,12 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
         }
     }
 
+    inProgressCreations++;
+
     if (mode == QDeclarativeIncubator::Synchronous) {
         QDeclarativeVME::Interrupt i;
         p->incubate(i);
     } else {
-        inProgressCreations++;
         incubatorList.insert(p);
         incubatorCount++;
 
@@ -132,11 +136,13 @@ void QDeclarativeIncubatorPrivate::clear()
         QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(component->engine);
         component->release();
         component = 0;
-
         enginePriv->incubatorCount--;
         QDeclarativeIncubationController *controller = enginePriv->incubationController;
         if (controller)
             controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
+    } else if (component) {
+        component->release();
+        component = 0;
     }
 
     if (nextWaitingFor.isInList()) {
@@ -476,6 +482,12 @@ void QDeclarativeIncubator::clear()
     if (s == Null)
         return;
 
+    QDeclarativeEnginePrivate *enginePriv = 0;
+    if (s == Loading) {
+        Q_ASSERT(d->component);
+        enginePriv = QDeclarativeEnginePrivate::get(d->component->engine);
+    }
+
     d->clear();
 
     d->vme.reset();
@@ -489,6 +501,19 @@ void QDeclarativeIncubator::clear()
     d->errors.clear();
     d->progress = QDeclarativeIncubatorPrivate::Execute;
     d->result = 0;
+
+    if (s == Loading) {
+        Q_ASSERT(enginePriv);
+
+        enginePriv->inProgressCreations--;
+        if (0 == enginePriv->inProgressCreations) {
+            while (enginePriv->erroredBindings) {
+                enginePriv->warning(enginePriv->erroredBindings->error);
+                enginePriv->erroredBindings->removeError();
+            }
+        }
+    }
+
 }
 
 /*!

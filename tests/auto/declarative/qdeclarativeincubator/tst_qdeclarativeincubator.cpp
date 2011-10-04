@@ -47,6 +47,7 @@
 #include <QPointer>
 #include <QFileInfo>
 #include <QDeclarativeEngine>
+#include <QDeclarativeProperty>
 #include <QDeclarativeComponent>
 #include <QDeclarativeIncubator>
 
@@ -73,6 +74,9 @@ private slots:
     void incubationMode();
     void objectDeleted();
     void clear();
+    void noIncubationController();
+    void forceCompletion();
+    void setInitialState();
 
 private:
     QDeclarativeIncubationController controller;
@@ -232,6 +236,163 @@ void tst_qdeclarativeincubator::clear()
     }
 
     // XXX Clear in error state
+}
+
+void tst_qdeclarativeincubator::noIncubationController()
+{
+    // All incubators should behave synchronously when there is no controller
+
+    QDeclarativeEngine engine;
+    QDeclarativeComponent component(&engine, TEST_FILE("noIncubationController.qml"));
+
+    QVERIFY(component.isReady());
+
+    {
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 1913);
+    delete incubator.object();
+    }
+
+    {
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::AsynchronousIfNested);
+    component.create(incubator);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 1913);
+    delete incubator.object();
+    }
+
+    {
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::Synchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 1913);
+    delete incubator.object();
+    }
+}
+
+void tst_qdeclarativeincubator::forceCompletion()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("forceCompletion.qml"));
+    QVERIFY(component.isReady());
+
+    {
+    // forceCompletion on a null incubator does nothing
+    QDeclarativeIncubator incubator;
+    QVERIFY(incubator.isNull());
+    incubator.forceCompletion();
+    QVERIFY(incubator.isNull());
+    }
+
+    {
+    // forceCompletion immediately after creating an asynchronous object completes it
+    QDeclarativeIncubator incubator;
+    QVERIFY(incubator.isNull());
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+
+    incubator.forceCompletion();
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object() != 0);
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
+
+    delete incubator.object();
+    }
+
+    {
+    // forceCompletion during creation completes it
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeIncubator incubator;
+    QVERIFY(incubator.isNull());
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+
+    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator.isLoading());
+
+    incubator.forceCompletion();
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object() != 0);
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
+
+    delete incubator.object();
+    }
+
+    {
+    // forceCompletion on a ready incubator has no effect
+    QDeclarativeIncubator incubator;
+    QVERIFY(incubator.isNull());
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+
+    incubator.forceCompletion();
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object() != 0);
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
+
+    incubator.forceCompletion();
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object() != 0);
+    QCOMPARE(incubator.object()->property("testValue").toInt(), 3499);
+
+    delete incubator.object();
+    }
+}
+
+void tst_qdeclarativeincubator::setInitialState()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("setInitialState.qml"));
+    QVERIFY(component.isReady());
+
+    struct MyIncubator : public QDeclarativeIncubator
+    {
+        MyIncubator(QDeclarativeIncubator::IncubationMode mode)
+        : QDeclarativeIncubator(mode) {}
+
+        virtual void setInitialState(QObject *o) {
+            QDeclarativeProperty::write(o, "test2", 19);
+            QDeclarativeProperty::write(o, "testData1", 201);
+        }
+    };
+
+    {
+    MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+    bool b = true;
+    controller.incubateWhile(&b);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("myValueFunctionCalled").toBool(), false);
+    QCOMPARE(incubator.object()->property("test1").toInt(), 502);
+    QCOMPARE(incubator.object()->property("test2").toInt(), 19);
+    delete incubator.object();
+    }
+
+    {
+    MyIncubator incubator(QDeclarativeIncubator::Synchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("myValueFunctionCalled").toBool(), false);
+    QCOMPARE(incubator.object()->property("test1").toInt(), 502);
+    QCOMPARE(incubator.object()->property("test2").toInt(), 19);
+    delete incubator.object();
+    }
 }
 
 QTEST_MAIN(tst_qdeclarativeincubator)
