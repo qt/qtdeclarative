@@ -24,7 +24,8 @@ PUBLICTESTS += \
     qjsvalue \
     qjsvalueiterator \
     qjsengine \
-    qmlmin
+    qmlmin \
+    qmlplugindump
 
 PRIVATETESTS += \
     qdeclarativeanimations \
