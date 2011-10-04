@@ -77,8 +77,7 @@ public:
     bool ownsTexture() const { return m_owns_texture; }
 
     void setTextureId(int id);
-    int textureId() const { return m_texture_id; }
-
+    int textureId() const;
     void setTextureSize(const QSize &size) { m_texture_size = size; }
     QSize textureSize() const { return m_texture_size; }
 
