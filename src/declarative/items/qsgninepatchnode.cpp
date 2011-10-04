@@ -54,6 +54,9 @@ QSGNinePatchNode::QSGNinePatchNode()
     setMaterial(&m_materialO);
     setGeometry(&m_geometry);
     m_geometry.setDrawingMode(GL_TRIANGLES);
+#ifdef QML_RUNTIME_TESTING
+    description = "borderimage";
+#endif
 }
 
 void QSGNinePatchNode::setInnerRect(const QRectF &rect)
