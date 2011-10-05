@@ -193,11 +193,33 @@ QSGTexture::~QSGTexture()
 
     Binding a texture may also include uploading the texture data from
     a previously set QImage.
+
+    \warning This function can only be called from the rendering thread.
  */
 
-void QSGTexture::removeFromAtlas()
+/*!
+    This function returns a copy of the current texture which is removed
+    from its atlas.
+
+    The current texture remains unchanged, so texture coordinates do not
+    need to be updated.
+
+    Removing a texture from an atlas is primarily useful when passing
+    it to a shader that operates on the texture coordinates 0-1 instead
+    of the texture subrect inside the atlas.
+
+    If the texture is not part of a texture atlas, this function returns 0.
+
+    Implementations of this function are recommended to return the same instance
+    for multiple calls to limit memory usage.
+
+    \warning This function can only be called from the rendering thread.
+ */
+
+QSGTexture *QSGTexture::removedFromAtlas() const
 {
-    // default textures are not in atlasses, so do nothing...
+    Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
+    return 0;
 }
 
 /*!
