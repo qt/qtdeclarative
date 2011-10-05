@@ -1163,8 +1163,7 @@ void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
                     engine.setPosition(blockPosition);
                     if (text.contains(QChar::ObjectReplacementCharacter)) {
                         QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
-                        if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow
-                            && frame->firstPosition() <= frame->lastPosition()) {
+                        if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow) {
                             BinaryTreeNode::SelectionState selectionState =
                                     (selectionStart < textPos + text.length()
                                      && selectionEnd >= textPos)
