@@ -197,6 +197,7 @@ QDeclarativeSqlDatabaseData::~QDeclarativeSqlDatabaseData()
 {
     qPersistentDispose(constructor);
     qPersistentDispose(queryConstructor);
+    qPersistentDispose(rowsConstructor);
 }
 
 static QString qmlsqldatabase_databasesPath(QV8Engine *engine)

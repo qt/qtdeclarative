@@ -70,7 +70,7 @@ public:
 
     class Referencer {
     public:
-        ~Referencer() {}
+        ~Referencer();
         void addRelationship(QObject *object, v8::Persistent<v8::Value> handle);
         void addRelationship(QObject *object, QObject *other);
     private:

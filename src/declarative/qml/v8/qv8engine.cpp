@@ -1390,6 +1390,11 @@ QV8GCCallback::Node::~Node()
     node.remove();
 }
 
+QV8GCCallback::Referencer::~Referencer()
+{
+    qPersistentDispose(strongReferencer);
+}
+
 QV8GCCallback::Referencer::Referencer()
 {
     v8::HandleScope handleScope;
