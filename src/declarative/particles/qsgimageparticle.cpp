@@ -51,6 +51,7 @@
 #include "qsgspriteengine_p.h"
 #include <QOpenGLFunctions>
 #include <qsgengine.h>
+#include <private/qsgtexture_p.h>
 
 QT_BEGIN_NAMESPACE
 //###Switch to define later, for now user-friendly (no compilation) debugging is worth it
@@ -1137,7 +1138,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         if (colortable.isNull())
             colortable = QImage(QStringLiteral(":defaultshaders/identitytable.png"));
         Q_ASSERT(!colortable.isNull());
-        getState<ImageMaterialData>(m_material)->colorTable = sceneGraphEngine()->createTextureFromImage(colortable);
+        getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->opacityTable, opacitytable, UNIFORM_ARRAY_SIZE);
     case Deformable:
@@ -1149,7 +1150,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     default://Also Simple
         if (!m_material)
             m_material = SimpleMaterial::createMaterial();
-        getState<ImageMaterialData>(m_material)->texture = sceneGraphEngine()->createTextureFromImage(image);
+        getState<ImageMaterialData>(m_material)->texture = QSGPlainTexture::fromImage(image);
         getState<ImageMaterialData>(m_material)->texture->setFiltering(QSGTexture::Linear);
         getState<ImageMaterialData>(m_material)->entry = (qreal) m_entryEffect;
         m_material->setFlag(QSGMaterial::Blending);

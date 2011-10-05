@@ -92,6 +92,12 @@ public:
 
     virtual void bind();
 
+    static QSGPlainTexture *fromImage(const QImage &image) {
+        QSGPlainTexture *t = new QSGPlainTexture();
+        t->setImage(image);
+        return t;
+    }
+
 protected:
     QImage m_image;
 
