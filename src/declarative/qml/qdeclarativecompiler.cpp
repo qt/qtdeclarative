@@ -3118,13 +3118,15 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.value = ref.compiledIndex;
         store.context = ref.bindingContext.stack;
         store.owner = ref.bindingContext.owner;
-        if (valueTypeProperty) 
+        if (valueTypeProperty) {
             store.property = (valueTypeProperty->index & 0xFFFF) |
                              ((valueTypeProperty->type & 0xFF)) << 16 |
                              ((prop->index & 0xFF) << 24);
-        else 
+            store.isRoot = (compileState->root == valueTypeProperty->parent);
+        } else {
             store.property = prop->index;
-        store.isRoot = (compileState->root == obj);
+            store.isRoot = (compileState->root == obj);
+        }
         store.line = binding->location.start.line;
         output->addInstruction(store);
     } else if (ref.dataType == BindingReference::V8) {
@@ -3132,7 +3134,11 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.value = ref.compiledIndex;
         store.context = ref.bindingContext.stack;
         store.owner = ref.bindingContext.owner;
-        store.isRoot = (compileState->root == obj);
+        if (valueTypeProperty) {
+            store.isRoot = (compileState->root == valueTypeProperty->parent);
+        } else {
+            store.isRoot = (compileState->root == obj);
+        }
         store.line = binding->location.start.line;
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
@@ -3149,8 +3155,13 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         store.assignBinding.value = output->indexForString(ref.rewrittenExpression);
         store.assignBinding.context = ref.bindingContext.stack;
         store.assignBinding.owner = ref.bindingContext.owner;
-        store.assignBinding.isRoot = (compileState->root == obj);
         store.assignBinding.line = binding->location.start.line;
+
+        if (valueTypeProperty) {
+            store.assignBinding.isRoot = (compileState->root == valueTypeProperty->parent);
+        } else {
+            store.assignBinding.isRoot = (compileState->root == obj);
+        }
 
         Q_ASSERT(ref.bindingContext.owner == 0 ||
                  (ref.bindingContext.owner != 0 && valueTypeProperty));
