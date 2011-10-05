@@ -11,7 +11,7 @@ SOURCES += ../shared/testhttpserver.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
-CONFIG += parallel_test
+CONFIG += insignificant_test parallel_test
 
 QT += core-private gui-private v8-private declarative-private widgets-private
 QT += opengl-private

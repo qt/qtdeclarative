@@ -7,6 +7,6 @@ SOURCES += tst_qsglistview.cpp incrementalmodel.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
-CONFIG += parallel_test
+CONFIG += insignificant_test parallel_test
 QT += core-private gui-private declarative-private widgets widgets-private v8-private
 QT += opengl-private
