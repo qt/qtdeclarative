@@ -429,7 +429,6 @@ QSGVisualDataModel::QSGVisualDataModel(QDeclarativeContext *ctxt, QObject *paren
 {
     Q_D(QSGVisualDataModel);
     d->init();
-    componentComplete();
 }
 
 QSGVisualDataModel::~QSGVisualDataModel()
@@ -504,6 +503,9 @@ void QSGVisualDataModel::componentComplete()
             &inserts);
     d->itemsInserted(inserts);
     d->emitChanges();
+
+    if (d->m_adaptorModel->canFetchMore())
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
 }
 
 /*!
@@ -530,7 +532,7 @@ void QSGVisualDataModel::setModel(const QVariant &model)
 {
     Q_D(QSGVisualDataModel);
     d->m_adaptorModel->setModel(model, d->m_context ? d->m_context->engine() : qmlEngine(this));
-    if (d->m_adaptorModel->canFetchMore())
+    if (d->m_complete && d->m_adaptorModel->canFetchMore())
         QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest));
 }
 

@@ -206,6 +206,8 @@ void QSGRepeater::setModel(const QVariant &model)
         if (!d->ownModel) {
             d->model = new QSGVisualDataModel(qmlContext(this));
             d->ownModel = true;
+            if (isComponentComplete())
+                static_cast<QSGVisualDataModel *>(d->model)->componentComplete();
         }
         if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model))
             dataModel->setModel(model);
@@ -314,8 +316,13 @@ QSGItem *QSGRepeater::itemAt(int index) const
 
 void QSGRepeater::componentComplete()
 {
+    Q_D(QSGRepeater);
+    if (d->model && d->ownModel)
+        static_cast<QSGVisualDataModel *>(d->model)->componentComplete();
     QSGItem::componentComplete();
     regenerate();
+    if (d->model && d->model->count())
+        emit countChanged();
 }
 
 void QSGRepeater::itemChange(ItemChange change, const ItemChangeData &value)

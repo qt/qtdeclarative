@@ -201,6 +201,8 @@ void QSGItemView::setModel(const QVariant &model)
         if (!d->ownModel) {
             d->model = new QSGVisualDataModel(qmlContext(this), this);
             d->ownModel = true;
+            if (isComponentComplete())
+                static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
         } else {
             d->model = oldModel;
         }
@@ -1080,6 +1082,9 @@ void QSGItemView::updatePolish()
 void QSGItemView::componentComplete()
 {
     Q_D(QSGItemView);
+    if (d->model && d->ownModel)
+        static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
+
     QSGFlickable::componentComplete();
 
     updateSections();
@@ -1102,6 +1107,8 @@ void QSGItemView::componentComplete()
         d->moveReason = QSGItemViewPrivate::Other;
         d->fixupPosition();
     }
+    if (d->model && d->model->count())
+        emit countChanged();
 }
 
 

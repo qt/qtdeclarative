@@ -510,6 +510,8 @@ void QSGPathView::setModel(const QVariant &model)
         if (!d->ownModel) {
             d->model = new QSGVisualDataModel(qmlContext(this));
             d->ownModel = true;
+            if (isComponentComplete())
+                static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
         }
         if (QSGVisualDataModel *dataModel = qobject_cast<QSGVisualDataModel*>(d->model))
             dataModel->setModel(model);
@@ -1325,7 +1327,11 @@ void QSGPathView::updatePolish()
 void QSGPathView::componentComplete()
 {
     Q_D(QSGPathView);
+    if (d->model && d->ownModel)
+        static_cast<QSGVisualDataModel *>(d->model.data())->componentComplete();
+
     QSGItem::componentComplete();
+
     d->createHighlight();
     // It is possible that a refill has already happended to to Path
     // bindings being handled in the componentComplete().  If so
@@ -1335,6 +1341,9 @@ void QSGPathView::componentComplete()
         d->regenerate();
     }
     d->updateHighlight();
+
+    if (d->modelCount)
+        emit countChanged();
 }
 
 void QSGPathView::refill()

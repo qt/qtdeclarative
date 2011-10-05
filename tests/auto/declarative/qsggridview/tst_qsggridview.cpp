@@ -2798,7 +2798,7 @@ void tst_QSGGridView::columnCount()
 
     QSGGridView *view = qobject_cast<QSGGridView*>(canvas.rootObject());
 
-    QCOMPARE(view->cellWidth(), qreal(400)/qreal(9));
+    QCOMPARE(view->cellWidth(), qreal(405)/qreal(9));
     QCOMPARE(view->cellHeight(), qreal(100));
 
     QList<QSGItem*> items = findItems<QSGItem>(view, "delegate");
