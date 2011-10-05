@@ -325,10 +325,12 @@ namespace {
                        const QBrush &borderBrush);
         void addFrameDecorations(QTextDocument *document, QTextFrame *frame);
         void addImage(const QRectF &rect, const QImage &image, qreal ascent,
-                      BinaryTreeNode::SelectionState selectionState);
+                      BinaryTreeNode::SelectionState selectionState,
+                      QTextFrameFormat::Position layoutPosition);
         void addTextObject(const QPointF &position, const QTextCharFormat &format,
                            BinaryTreeNode::SelectionState selectionState,
-                           QTextDocument *textDocument, int pos);
+                           QTextDocument *textDocument, int pos,
+                           QTextFrameFormat::Position layoutPosition = QTextFrameFormat::InFlow);
         void addSelectedGlyphs(const QGlyphRun &glyphRun);
         void addUnselectedGlyphs(const QGlyphRun &glyphRun);
         void addGlyphsInRange(int rangeStart, int rangeEnd,
@@ -619,10 +621,11 @@ namespace {
     }
 
     void SelectionEngine::addImage(const QRectF &rect, const QImage &image, qreal ascent,
-                                   BinaryTreeNode::SelectionState selectionState)
+                                   BinaryTreeNode::SelectionState selectionState,
+                                   QTextFrameFormat::Position layoutPosition)
     {
         QRectF searchRect = rect;
-        if (searchRect.topLeft().isNull()) {
+        if (layoutPosition == QTextFrameFormat::InFlow) {
             if (m_currentLineTree.isEmpty()) {
                 searchRect.moveTopLeft(m_position);
             } else {
@@ -642,7 +645,8 @@ namespace {
 
     void SelectionEngine::addTextObject(const QPointF &position, const QTextCharFormat &format,
                                         BinaryTreeNode::SelectionState selectionState,
-                                        QTextDocument *textDocument, int pos)
+                                        QTextDocument *textDocument, int pos,
+                                        QTextFrameFormat::Position layoutPosition)
     {
         QTextObjectInterface *handler = textDocument->documentLayout()->handlerForObject(format.objectType());
         if (handler != 0) {
@@ -678,7 +682,7 @@ namespace {
                 ascent = size.height() - 1;
             }
 
-            addImage(QRectF(position, size), image, ascent, selectionState);
+            addImage(QRectF(position, size), image, ascent, selectionState, layoutPosition);
         }
     }
 
@@ -941,8 +945,7 @@ namespace {
                 if (node->selectionState == BinaryTreeNode::Selected) {
                     QColor color = m_selectionColor;
                     color.setAlpha(128);
-                    parentNode->appendChildNode(new QSGSimpleRectNode(node->boundingRect,
-                                                                      color));
+                    parentNode->appendChildNode(new QSGSimpleRectNode(node->boundingRect, color));
                 }
             }
         }
@@ -1071,8 +1074,10 @@ void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
             QTextCharFormat format = a->formatAccessor(pos);
             QRectF rect = a->frameBoundingRect(textFrame);
 
+            QTextBlock block = textFrame->firstCursorPosition().block();
+            engine.setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
             engine.addTextObject(rect.topLeft(), format, BinaryTreeNode::Unselected, textDocument,
-                                 pos);
+                                 pos, textFrame->frameFormat().position());
         } else {
             QTextFrame::iterator it = textFrame->begin();
 
@@ -1158,7 +1163,8 @@ void QSGTextNode::addTextDocument(const QPointF &, QTextDocument *textDocument,
                     engine.setPosition(blockPosition);
                     if (text.contains(QChar::ObjectReplacementCharacter)) {
                         QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
-                        if (frame) {
+                        if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow
+                            && frame->firstPosition() <= frame->lastPosition()) {
                             BinaryTreeNode::SelectionState selectionState =
                                     (selectionStart < textPos + text.length()
                                      && selectionEnd >= textPos)
