@@ -42,6 +42,7 @@
 #define TESTTYPES_H
 
 #include <QtCore/qobject.h>
+#include <QDeclarativeParserStatus>
 
 class SelfRegisteringType : public QObject
 {
@@ -60,6 +61,22 @@ private:
     static SelfRegisteringType *m_me;
 
     int m_v;
+};
+
+class CompletionRegisteringType : public QObject, public QDeclarativeParserStatus
+{
+Q_OBJECT
+public:
+    CompletionRegisteringType();
+
+    virtual void classBegin();
+    virtual void componentComplete();
+
+    static CompletionRegisteringType *me();
+    static void clearMe();
+
+private:
+    static CompletionRegisteringType *m_me;
 };
 
 void registerTypes();

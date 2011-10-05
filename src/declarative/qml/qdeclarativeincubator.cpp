@@ -486,6 +486,8 @@ void QDeclarativeIncubator::clear()
     if (s == Loading) {
         Q_ASSERT(d->component);
         enginePriv = QDeclarativeEnginePrivate::get(d->component->engine);
+        delete d->result;
+        d->result = 0;
     }
 
     d->clear();

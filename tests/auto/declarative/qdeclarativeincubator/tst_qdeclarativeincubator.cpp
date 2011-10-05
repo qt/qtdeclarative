@@ -77,6 +77,7 @@ private slots:
     void noIncubationController();
     void forceCompletion();
     void setInitialState();
+    void clearDuringCompletion();
 
 private:
     QDeclarativeIncubationController controller;
@@ -393,6 +394,36 @@ void tst_qdeclarativeincubator::setInitialState()
     QCOMPARE(incubator.object()->property("test2").toInt(), 19);
     delete incubator.object();
     }
+}
+
+void tst_qdeclarativeincubator::clearDuringCompletion()
+{
+    CompletionRegisteringType::clearMe();
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeComponent component(&engine, TEST_FILE("clearDuringCompletion.qml"));
+    QVERIFY(component.isReady());
+
+    QDeclarativeIncubator incubator;
+    component.create(incubator);
+
+    QCOMPARE(incubator.status(), QDeclarativeIncubator::Loading);
+    QVERIFY(CompletionRegisteringType::me() == 0);
+
+    while (CompletionRegisteringType::me() == 0 && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(CompletionRegisteringType::me() != 0);
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator.isLoading());
+
+    QPointer<QObject> srt = SelfRegisteringType::me();
+
+    incubator.clear();
+    QVERIFY(incubator.isNull());
+    QVERIFY(srt.isNull());
 }
 
 QTEST_MAIN(tst_qdeclarativeincubator)

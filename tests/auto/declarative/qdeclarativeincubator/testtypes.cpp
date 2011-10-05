@@ -58,7 +58,32 @@ void SelfRegisteringType::clearMe()
     m_me = 0;
 }
 
+CompletionRegisteringType *CompletionRegisteringType::m_me = 0;
+CompletionRegisteringType::CompletionRegisteringType()
+{
+}
+
+void CompletionRegisteringType::classBegin()
+{
+}
+
+void CompletionRegisteringType::componentComplete()
+{
+    m_me = this;
+}
+
+CompletionRegisteringType *CompletionRegisteringType::me()
+{
+    return m_me;
+}
+
+void CompletionRegisteringType::clearMe()
+{
+    m_me = 0;
+}
+
 void registerTypes()
 {
     qmlRegisterType<SelfRegisteringType>("Qt.test", 1,0, "SelfRegistering");
+    qmlRegisterType<CompletionRegisteringType>("Qt.test", 1,0, "CompletionRegistering");
 }
