@@ -258,7 +258,7 @@ void QSGTextPrivate::updateLayout()
         blockFormat.setLineHeight((lineHeightMode == QSGText::FixedHeight ? lineHeight : lineHeight * 100), type);
         for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {
             QTextCursor cursor(it);
-            cursor.setBlockFormat(blockFormat);
+            cursor.mergeBlockFormat(blockFormat);
         }
     }
 
