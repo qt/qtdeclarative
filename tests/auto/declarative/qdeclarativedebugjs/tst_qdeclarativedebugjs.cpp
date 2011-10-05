@@ -297,6 +297,7 @@ void QJSDebugProcess::processAppOutput()
                 continue;
             }
         }
+//        qWarning() << line;
     }
     m_mutex.unlock();
 }
