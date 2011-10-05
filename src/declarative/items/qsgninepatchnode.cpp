@@ -55,7 +55,7 @@ QSGNinePatchNode::QSGNinePatchNode()
     setGeometry(&m_geometry);
     m_geometry.setDrawingMode(GL_TRIANGLES);
 #ifdef QML_RUNTIME_TESTING
-    description = "borderimage";
+    description = QLatin1String("borderimage");
 #endif
 }
 
@@ -145,6 +145,9 @@ void QSGNinePatchNode::update()
     float tw = m_material.texture()->textureSize().width();
     float th = m_material.texture()->textureSize().height();
 
+    QRectF textureSubRect = m_material.texture()->textureSubRect();
+    QSize textureSize = m_material.texture()->textureSize();
+
     float rightBorder = tw - m_innerRect.right();
     float bottomBorder = th - m_innerRect.bottom();
 
@@ -202,26 +205,26 @@ void QSGNinePatchNode::update()
     float yTexChunk1 = m_innerRect.top() / th;
     float yTexChunk2 = m_innerRect.bottom() / th;
 
-    fillRow(v, 0, 0, xChunkCount, xChunkSize);
-    fillRow(v, m_innerRect.y(), yTexChunk1, xChunkCount, xChunkSize);
+    fillRow(v, 0, 0, xChunkCount, xChunkSize, textureSubRect, textureSize);
+    fillRow(v, m_innerRect.y(), yTexChunk1, xChunkCount, xChunkSize, textureSubRect, textureSize);
 
     for (int yc=0; yc<yChunkCount; ++yc) {
         float yy = m_innerRect.y() + yChunkSize * yc;
-        fillRow(v, yy, yTexChunk1, xChunkCount, xChunkSize);
+        fillRow(v, yy, yTexChunk1, xChunkCount, xChunkSize, textureSubRect, textureSize);
 
         // Special case the last one
         if (yc == yChunkCount - 1) {
             float t = m_verticalTileMode == QSGBorderImage::Repeat
                     ? yTexChunk1 + (yTexChunk2 - yTexChunk1) * (m_targetRect.height() - bottomBorder - yy) / yChunkSize
                     : yTexChunk2;
-            fillRow(v, m_targetRect.height() - bottomBorder, t, xChunkCount, xChunkSize);
+            fillRow(v, m_targetRect.height() - bottomBorder, t, xChunkCount, xChunkSize, textureSubRect, textureSize);
         } else {
-            fillRow(v, yy + yChunkSize, yTexChunk2, xChunkCount, xChunkSize);
+            fillRow(v, yy + yChunkSize, yTexChunk2, xChunkCount, xChunkSize, textureSubRect, textureSize);
         }
     }
 
-    fillRow(v, m_targetRect.height() - bottomBorder, yTexChunk2, xChunkCount, xChunkSize);
-    fillRow(v, m_targetRect.height(), 1, xChunkCount, xChunkSize);
+    fillRow(v, m_targetRect.height() - bottomBorder, yTexChunk2, xChunkCount, xChunkSize, textureSubRect, textureSize);
+    fillRow(v, m_targetRect.height(), 1, xChunkCount, xChunkSize, textureSubRect, textureSize);
 
     if (m_mirror) {
         v = m_geometry.vertexDataAsTexturedPoint2D();
@@ -264,14 +267,18 @@ void QSGNinePatchNode::update()
     markDirty(QSGNode::DirtyGeometry);
 }
 
-void QSGNinePatchNode::fillRow(QSGGeometry::TexturedPoint2D *&v, float y, float ty, int xChunkCount, float xChunkSize)
+void QSGNinePatchNode::fillRow(QSGGeometry::TexturedPoint2D *&v, float y, float ty, int xChunkCount, float xChunkSize,
+                               const QRectF &tsr,   // texture sub rect, for atlasses
+                               const QSize &ts)     // texture size in pixels
 {
-    float tw = m_material.texture()->textureSize().width();
-    float rightBorder = tw - m_innerRect.right();
-    float xTexChunk1 = m_innerRect.left() / tw;
-    float xTexChunk2 = m_innerRect.right() / tw;
+    ty = tsr.y() + ty * tsr.width();
 
-    v++->set(0, y, 0, ty);
+    float tw = ts.width();
+    float rightBorder = tw - m_innerRect.right();
+    float xTexChunk1 = tsr.left() + tsr.width() * m_innerRect.left() / tw;
+    float xTexChunk2 = tsr.left() + tsr.width() * m_innerRect.right() / tw;
+
+    v++->set(0, y, tsr.left(), ty);
     v++->set(m_innerRect.x(), y, xTexChunk1, ty);
 
     for (int xc=0; xc<xChunkCount; ++xc) {
@@ -291,5 +298,5 @@ void QSGNinePatchNode::fillRow(QSGGeometry::TexturedPoint2D *&v, float y, float 
     }
 
     v++->set(m_targetRect.width() - rightBorder, y, xTexChunk2, ty);
-    v++->set(m_targetRect.width(), y, 1, ty);
+    v++->set(m_targetRect.width(), y, tsr.right(), ty);
 }
