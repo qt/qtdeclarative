@@ -277,6 +277,10 @@ public:
     int spriteStart(int sprite=0);
     int spriteFrames(int sprite=0);
     int spriteDuration(int sprite=0);
+    int spriteX(int sprite=0) { return 0; }//Currently all rows are 0 aligned, if we get more space efficient we might change this
+    int spriteY(int sprite=0);
+    int spriteWidth(int sprite=0);
+    int spriteHeight(int sprite=0);
     int spriteCount();//Like state count, but for the image states
     int maxFrames();
     QImage assembledImage();

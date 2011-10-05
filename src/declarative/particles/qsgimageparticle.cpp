@@ -85,8 +85,7 @@ class ImageMaterialData
 
     qreal timestamp;
     qreal entry;
-    qreal framecount;
-    qreal animcount;
+    QSizeF animSheetSize;
 };
 
 //TODO: Move shaders inline once they've stablilized
@@ -142,8 +141,6 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue("framecount", (float) 1);
-        program()->setUniformValue("animcount", (float) 1);
         program()->setUniformValue(m_entry_id, (float) d->entry);
         program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, UNIFORM_ARRAY_SIZE, 1);
         program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
@@ -243,7 +240,7 @@ public:
 
     QList<QByteArray> attributes() const {
         return QList<QByteArray>() << "vPos" << "vTex" << "vData" << "vVec"
-            << "vColor" << "vDeformVec" << "vRotation" << "vAnimData";
+            << "vColor" << "vDeformVec" << "vRotation" << "vAnimData" << "vAnimPos";
     };
 
     void initialize() {
@@ -253,8 +250,7 @@ public:
         program()->setUniformValue("colortable", 1);
         glFuncs = QOpenGLContext::currentContext()->functions();
         m_timestamp_id = program()->uniformLocation("timestamp");
-        m_framecount_id = program()->uniformLocation("framecount");
-        m_animcount_id = program()->uniformLocation("animcount");
+        m_animsize_id = program()->uniformLocation("animSheetSize");
         m_entry_id = program()->uniformLocation("entry");
         m_sizetable_id = program()->uniformLocation("sizetable");
         m_opacitytable_id = program()->uniformLocation("opacitytable");
@@ -269,16 +265,14 @@ public:
         d->texture->bind();
 
         program()->setUniformValue(m_timestamp_id, (float) d->timestamp);
-        program()->setUniformValue(m_framecount_id, (float) d->framecount);
-        program()->setUniformValue(m_animcount_id, (float) d->animcount);
+        program()->setUniformValue(m_animsize_id, d->animSheetSize);
         program()->setUniformValue(m_entry_id, (float) d->entry);
         program()->setUniformValueArray(m_sizetable_id, (float*) d->sizeTable, 64, 1);
         program()->setUniformValueArray(m_opacitytable_id, (float*) d->opacityTable, UNIFORM_ARRAY_SIZE, 1);
     }
 
     int m_timestamp_id;
-    int m_framecount_id;
-    int m_animcount_id;
+    int m_animsize_id;
     int m_entry_id;
     int m_sizetable_id;
     int m_opacitytable_id;
@@ -630,6 +624,14 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 
     Default value is Fade.
 */
+/*!
+    \qmlproperty bool QtQuick.Particles2::ImageParticle::spritesInterpolate
+
+    If set to true, sprite particles will interpolate between sprite frames each rendered frame, making
+    the sprites look smoother.
+
+    Default is true.
+*/
 
 
 QSGImageParticle::QSGImageParticle(QSGItem* parent)
@@ -650,6 +652,7 @@ QSGImageParticle::QSGImageParticle(QSGItem* parent)
     , m_xVector(0)
     , m_yVector(0)
     , m_spriteEngine(0)
+    , m_spritesInterpolate(true)
     , m_explicitColor(false)
     , m_explicitRotation(false)
     , m_explicitDeformation(false)
@@ -864,6 +867,14 @@ void QSGImageParticle::setYVector(QSGDirection* arg)
         reset();
 }
 
+void QSGImageParticle::setSpritesInterpolate(bool arg)
+{
+    if (m_spritesInterpolate != arg) {
+        m_spritesInterpolate = arg;
+        emit spritesInterpolateChanged(arg);
+    }
+}
+
 void QSGImageParticle::setBloat(bool arg)
 {
     if (m_bloat != arg) {
@@ -1000,13 +1011,14 @@ static QSGGeometry::Attribute SpriteParticle_Attributes[] = {
     QSGGeometry::Attribute::create(4, 4, GL_UNSIGNED_BYTE),     // Colors
     QSGGeometry::Attribute::create(5, 4, GL_FLOAT),             // DeformationVectors
     QSGGeometry::Attribute::create(6, 3, GL_FLOAT),             // Rotation
-    QSGGeometry::Attribute::create(7, 4, GL_FLOAT)              // Anim Data
+    QSGGeometry::Attribute::create(7, 4, GL_FLOAT),             // Anim Data
+    QSGGeometry::Attribute::create(8, 4, GL_FLOAT)              // Anim Pos
 };
 
 static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 {
-    8, // Attribute Count
-    (2 + 2 + 4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
+    9, // Attribute Count
+    (2 + 2 + 4 + 4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
     SpriteParticle_Attributes
 };
 
@@ -1114,7 +1126,7 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
     switch (perfLevel) {//Fallthrough intended
     case Sprites:
         m_material = SpriteMaterial::createMaterial();
-        getState<ImageMaterialData>(m_material)->framecount = m_spriteEngine->maxFrames();
+        getState<ImageMaterialData>(m_material)->animSheetSize = QSizeF(image.size());
         m_spriteEngine->setCount(m_count);
     case Tabled:
         if (!m_material)
@@ -1270,7 +1282,6 @@ void QSGImageParticle::prepareNextFrame()
     switch (perfLevel){//Fall-through intended
     case Sprites:
         //Advance State
-        getState<ImageMaterialData>(m_material)->animcount = m_spriteEngine->spriteCount();
         m_spriteEngine->updateSprites(timeStamp);
         foreach (const QString &str, m_groups){
             int gIdx = m_system->groupIds[str];
@@ -1280,12 +1291,15 @@ void QSGImageParticle::prepareNextFrame()
             for (int i=0; i < count; i++){
                 int spriteIdx = m_idxStarts[gIdx] + i;
                 Vertices<SpriteVertex> &p = particles[i];
-                int curIdx = m_spriteEngine->spriteState(spriteIdx);
-                if (curIdx != p.v1.animIdx){
-                    p.v1.animIdx = p.v2.animIdx = p.v3.animIdx = p.v4.animIdx = curIdx;
+                int curY = m_spriteEngine->spriteY(spriteIdx);//Y is fixed per sprite row, used to distinguish rows here
+                if (curY != p.v1.animY){
                     p.v1.animT = p.v2.animT = p.v3.animT = p.v4.animT = m_spriteEngine->spriteStart(spriteIdx)/1000.0;
                     p.v1.frameCount = p.v2.frameCount = p.v3.frameCount = p.v4.frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                     p.v1.frameDuration = p.v2.frameDuration = p.v3.frameDuration = p.v4.frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    p.v1.animX = p.v2.animX = p.v3.animX = p.v4.animX = m_spriteEngine->spriteX(spriteIdx);
+                    p.v1.animY = p.v2.animY = p.v3.animY = p.v4.animY = m_spriteEngine->spriteY(spriteIdx);
+                    p.v1.animWidth = p.v2.animWidth = p.v3.animWidth = p.v4.animWidth = m_spriteEngine->spriteWidth(spriteIdx);
+                    p.v1.animHeight = p.v2.animHeight = p.v3.animHeight = p.v4.animHeight = m_spriteEngine->spriteHeight(spriteIdx);
                 }
             }
         }
@@ -1327,14 +1341,19 @@ void QSGImageParticle::initialize(int gIdx, int pIdx)
                     datum->animationOwner = this;
                 QSGParticleData* writeTo = (datum->animationOwner == this ? datum : getShadowDatum(datum));
                 writeTo->animT = writeTo->t;
-                writeTo->animIdx = 0;
+                //writeTo->animInterpolate = m_spritesInterpolate;
                 if (m_spriteEngine){
                     m_spriteEngine->start(spriteIdx);
                     writeTo->frameCount = m_spriteEngine->spriteFrames(spriteIdx);
                     writeTo->frameDuration = m_spriteEngine->spriteDuration(spriteIdx);
+                    writeTo->animX = m_spriteEngine->spriteX(spriteIdx);
+                    writeTo->animY = m_spriteEngine->spriteY(spriteIdx);
+                    writeTo->animWidth = m_spriteEngine->spriteWidth(spriteIdx);
+                    writeTo->animHeight = m_spriteEngine->spriteHeight(spriteIdx);
                 }else{
                     writeTo->frameCount = 1;
                     writeTo->frameDuration = 9999;
+                    writeTo->animX = writeTo->animY = writeTo->animWidth = writeTo->animHeight = 0;
                 }
             }
         case Tabled:
@@ -1452,17 +1471,24 @@ void QSGImageParticle::commit(int gIdx, int pIdx)
                 spriteVertices[i].rotationSpeed = datum->rotationSpeed;
                 spriteVertices[i].autoRotate = datum->autoRotate;
             }
+            spriteVertices[i].animInterpolate = m_spritesInterpolate ? 1.0 : 0.0;//### Shadow? In particleData? Or uniform?
             if (m_explicitAnimation && datum->animationOwner != this) {
                 QSGParticleData* shadow = getShadowDatum(datum);
-                spriteVertices[i].animIdx = shadow->animIdx;
                 spriteVertices[i].frameDuration = shadow->frameDuration;
                 spriteVertices[i].frameCount = shadow->frameCount;
                 spriteVertices[i].animT = shadow->animT;
+                spriteVertices[i].animX = shadow->animX;
+                spriteVertices[i].animY = shadow->animY;
+                spriteVertices[i].animWidth = shadow->animWidth;
+                spriteVertices[i].animHeight = shadow->animHeight;
             } else {
-                spriteVertices[i].animIdx = datum->animIdx;
                 spriteVertices[i].frameDuration = datum->frameDuration;
                 spriteVertices[i].frameCount = datum->frameCount;
                 spriteVertices[i].animT = datum->animT;
+                spriteVertices[i].animX = datum->animX;
+                spriteVertices[i].animY = datum->animY;
+                spriteVertices[i].animWidth = datum->animWidth;
+                spriteVertices[i].animHeight = datum->animHeight;
             }
             if (m_explicitColor && datum->colorOwner != this) {
                 QSGParticleData* shadow = getShadowDatum(datum);

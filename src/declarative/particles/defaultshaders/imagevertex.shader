@@ -11,9 +11,9 @@ attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector
 attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate
 #endif
 #ifdef SPRITE
-attribute highp vec4 vAnimData;// idx, duration, frameCount (this anim), timestamp (this anim)
-uniform highp float framecount; //maximum of all anims
-uniform highp float animcount;
+attribute highp vec4 vAnimData;// interpolate(bool), duration, frameCount (this anim), timestamp (this anim)
+attribute highp vec4 vAnimPos;//sheet x,y, width/height of this anim
+uniform highp vec2 animSheetSize; //width/height of whole sheet
 #endif
 
 uniform highp mat4 qt_Matrix;
@@ -54,13 +54,13 @@ void main() {
     tt.y = mod((timestamp - vAnimData.w)*1000., vAnimData.y) / vAnimData.y;
 
     frameIndex = floor(frameIndex);
-    fTexS.xy = vec2(((frameIndex + vTex.x) / framecount), ((vAnimData.x + vTex.y) / animcount));
+    fTexS.xy = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));
 
     //Next frame is also passed, for interpolation
     //### Should the next anim be precalculated to allow for interpolation there?
-    if(frameIndex != vAnimData.z - 1.)//Can't do it for the last frame though, this anim may not loop
+    if(vAnimData.x == 1.0 && frameIndex != vAnimData.z - 1.)//Can't do it for the last frame though, this anim may not loop
         frameIndex = mod(frameIndex+1., vAnimData.z);
-    fTexS.zw = vec2(((frameIndex + vTex.x) / framecount), ((vAnimData.x + vTex.y) / animcount));
+    fTexS.zw = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));
 #else
 #ifdef DEFORM
     fTex = vTex;

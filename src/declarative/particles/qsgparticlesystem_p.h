@@ -203,6 +203,10 @@ public:
     float frameDuration;
     float frameCount;
     float animT;
+    float animX;
+    float animY;
+    float animWidth;
+    float animHeight;
     float r;
     QSGItem* delegate;
     int modelIndex;

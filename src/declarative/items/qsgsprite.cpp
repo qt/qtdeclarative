@@ -50,6 +50,7 @@ QSGSprite::QSGSprite(QObject *parent) :
     , m_framesPerRow(0)
     , m_frameHeight(0)
     , m_frameWidth(0)
+    , m_rowY(0)
 {
 }
 

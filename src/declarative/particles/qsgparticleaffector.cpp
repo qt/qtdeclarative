@@ -208,7 +208,7 @@ bool QSGParticleAffector::affectParticle(QSGParticleData *, qreal )
 void QSGParticleAffector::reset(QSGParticleData* pd)
 {//TODO: This, among other ones, should be restructured so they don't all need to remember to call the superclass
     if (m_onceOff)
-        if (activeGroup(d->group))
+        if (activeGroup(pd->group))
             m_onceOffed.remove(qMakePair(pd->group, pd->index));
 }
 
