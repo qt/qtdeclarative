@@ -119,7 +119,8 @@ public:
     QDeclarativeComponentAttached *componentAttached;
     QList<QDeclarativeEnginePrivate::FinalizeCallback> finalizeCallbacks;
 
-    void init(QDeclarativeContextData *, QDeclarativeCompiledData *, int start);
+    void init(QDeclarativeContextData *, QDeclarativeCompiledData *, int start,
+              QDeclarativeContextData * = 0);
     bool initDeferred(QObject *);
     void reset();
 
@@ -150,6 +151,7 @@ private:
     QFiniteStack<QDeclarativeAbstractBinding *> bindValues;
     QFiniteStack<QDeclarativeParserStatus *> parserStatus;
     QDeclarativeGuardedContextData rootContext;
+    QDeclarativeGuardedContextData creationContext;
 
     struct State {
         enum Flag { Deferred = 0x00000001 };

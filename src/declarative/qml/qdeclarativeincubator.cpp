@@ -81,6 +81,9 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
 
     inProgressCreations++;
 
+    Q_ASSERT(i.isLoading());
+    i.statusChanged(i.status());
+
     if (mode == QDeclarativeIncubator::Synchronous) {
         QDeclarativeVME::Interrupt i;
         p->incubate(i);
@@ -247,6 +250,8 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
     bool guardOk = vmeGuard.isOK();
     vmeGuard.clear();
 
+    QDeclarativeIncubator::Status oldStatus = q->status();
+
     if (!guardOk) {
         QDeclarativeError error;
         error.setUrl(component->url);
@@ -285,7 +290,12 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
         else
             progress = QDeclarativeIncubatorPrivate::Completed;
 
-        q->statusChanged(q->status());
+        QDeclarativeIncubator::Status newStatus = q->status();
+        
+        if (oldStatus != newStatus) {
+            q->statusChanged(newStatus);
+            oldStatus = newStatus;
+        }
 
         if (watcher.hasRecursed())
             return;
@@ -314,7 +324,11 @@ finishIncubate:
 
         enginePriv->inProgressCreations--;
 
-        q->statusChanged(q->status());
+        QDeclarativeIncubator::Status newStatus = q->status();
+        if (newStatus != oldStatus) {
+            q->statusChanged(newStatus);
+            oldStatus = newStatus;
+        }
 
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {

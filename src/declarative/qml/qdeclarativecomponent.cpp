@@ -747,32 +747,9 @@ QDeclarativeComponentPrivate::beginCreate(QDeclarativeContextData *context)
         QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Creating);
 
     enginePriv->referenceScarceResources();
-    state.vme.init(context, cc, start);
+    state.vme.init(context, cc, start, creationContext);
     QObject *rv = state.vme.execute(&state.errors);
     enginePriv->dereferenceScarceResources();
-
-    if (rv && creationContext && start != -1) {
-        // A component that is logically created within another component instance shares the same
-        // instances of script imports.  For example:
-        //
-        //     import QtQuick 1.0
-        //     import "test.js" as Test
-        //     ListView {
-        //         model: Test.getModel()
-        //         delegate: Component {
-        //             Text { text: Test.getValue(index); }
-        //         }
-        //     }
-        //
-        // Has the same "Test" instance.  To implement this, we simply copy the v8 handles into
-        // the inner context.  We have to create a fresh persistent handle for each to prevent 
-        // double dispose.  It is possible we could do this more efficiently using some form of
-        // referencing instead.
-        QDeclarativeContextData *objectContext = QDeclarativeData::get(rv, false)->outerContext;
-        objectContext->importedScripts = creationContext->importedScripts;
-        for (int ii = 0; ii < objectContext->importedScripts.count(); ++ii)
-            objectContext->importedScripts[ii] = qPersistentNew<v8::Object>(objectContext->importedScripts[ii]);
-    }
 
     if (rv) {
         QDeclarativeData *ddata = QDeclarativeData::get(rv);
@@ -919,7 +896,7 @@ void QDeclarativeComponent::create(QDeclarativeIncubator &i, QDeclarativeContext
     QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(d->engine);
 
     p->component = d->cc; p->component->addref();
-    p->vme.init(contextData, d->cc, d->start);
+    p->vme.init(contextData, d->cc, d->start, d->creationContext);
 
     enginePriv->incubate(i, forContextData);
 }

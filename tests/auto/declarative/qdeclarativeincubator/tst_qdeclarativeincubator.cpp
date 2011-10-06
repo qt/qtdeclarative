@@ -79,6 +79,9 @@ private slots:
     void setInitialState();
     void clearDuringCompletion();
     void recursiveClear();
+    void statusChanged();
+    void asynchronousIfNested();
+    void nestedComponent();
 
 private:
     QDeclarativeIncubationController controller;
@@ -236,8 +239,6 @@ void tst_qdeclarativeincubator::clear()
     delete obj;
     QVERIFY(obj.isNull());
     }
-
-    // XXX Clear in error state
 }
 
 void tst_qdeclarativeincubator::noIncubationController()
@@ -471,6 +472,153 @@ void tst_qdeclarativeincubator::recursiveClear()
 {
     Switcher switcher(&engine);
     switcher.start();
+}
+
+void tst_qdeclarativeincubator::statusChanged()
+{
+    class MyIncubator : public QDeclarativeIncubator
+    {
+    public:
+        MyIncubator(QDeclarativeIncubator::IncubationMode mode = QDeclarativeIncubator::Asynchronous)
+        : QDeclarativeIncubator(mode) {}
+
+        QList<int> statuses;
+    protected:
+        virtual void statusChanged(Status s) { statuses << s; }
+        virtual void setInitialState(QObject *) { statuses << -1; }
+    };
+
+    QDeclarativeComponent component(&engine, TEST_FILE("statusChanged.qml"));
+    QVERIFY(component.isReady());
+
+    {
+    MyIncubator incubator(QDeclarativeIncubator::Synchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isReady());
+    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
+    QCOMPARE(incubator.statuses.at(1), -1);
+    QCOMPARE(incubator.statuses.at(2), int(QDeclarativeIncubator::Ready));
+    delete incubator.object();
+    }
+
+    {
+    MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+    QCOMPARE(incubator.statuses.count(), 1);
+    QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
+
+    {
+    bool b = true;
+    controller.incubateWhile(&b);
+    }
+
+    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
+    QCOMPARE(incubator.statuses.at(1), -1);
+    QCOMPARE(incubator.statuses.at(2), int(QDeclarativeIncubator::Ready));
+    delete incubator.object();
+    }
+}
+
+void tst_qdeclarativeincubator::asynchronousIfNested()
+{
+    // Asynchronous if nested within a finalized context behaves synchronously
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.1.qml"));
+    QVERIFY(component.isReady());
+
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    QCOMPARE(object->property("a").toInt(), 10);
+
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::AsynchronousIfNested);
+    component.create(incubator, 0, qmlContext(object));
+
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("a").toInt(), 10);
+    delete incubator.object();
+    delete object;
+    }
+
+    // Asynchronous if nested within an executing context behaves asynchronously, but prevents
+    // the parent from finishing
+    {
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.2.qml"));
+    QVERIFY(component.isReady());
+
+    QDeclarativeIncubator incubator;
+    component.create(incubator);
+
+    QVERIFY(incubator.isLoading());
+    QVERIFY(SelfRegisteringType::me() == 0);
+    while (SelfRegisteringType::me() == 0 && incubator.isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator.isLoading());
+
+    QDeclarativeIncubator nested(QDeclarativeIncubator::AsynchronousIfNested);
+    component.create(nested, 0, qmlContext(SelfRegisteringType::me()));
+    QVERIFY(nested.isLoading());
+
+    while (nested.isLoading()) {
+        QVERIFY(incubator.isLoading());
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(nested.isReady());
+    QVERIFY(incubator.isLoading());
+
+    {
+        bool b = true;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(nested.isReady());
+    QVERIFY(incubator.isReady());
+
+    delete nested.object();
+    delete incubator.object();
+    }
+}
+
+void tst_qdeclarativeincubator::nestedComponent()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("nestedComponent.qml"));
+    QVERIFY(component.isReady());
+
+    QObject *object = component.create();
+
+    QDeclarativeComponent *nested = object->property("c").value<QDeclarativeComponent*>();
+    QVERIFY(nested);
+    QVERIFY(nested->isReady());
+
+    // Test without incubator
+    {
+    QObject *nestedObject = nested->create();
+    QCOMPARE(nestedObject->property("value").toInt(), 19988);
+    delete nestedObject;
+    }
+
+    // Test with incubator
+    {
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::Synchronous);
+    nested->create(incubator);
+    QVERIFY(incubator.isReady());
+    QVERIFY(incubator.object());
+    QCOMPARE(incubator.object()->property("value").toInt(), 19988);
+    delete incubator.object();
+    }
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qdeclarativeincubator)

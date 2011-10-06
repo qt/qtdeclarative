@@ -91,12 +91,17 @@ using namespace QDeclarativeVMETypes;
         goto exceptionExit; \
     }
 
-void QDeclarativeVME::init(QDeclarativeContextData *ctxt, QDeclarativeCompiledData *comp, int start)
+void QDeclarativeVME::init(QDeclarativeContextData *ctxt, QDeclarativeCompiledData *comp, int start,
+                           QDeclarativeContextData *creation)
 {
     Q_ASSERT(ctxt);
     Q_ASSERT(comp);
 
-    if (start == -1) start = 0;
+    if (start == -1) {
+        start = 0;
+    } else {
+        creationContext = creation;
+    }
 
     State initState;
     initState.context = ctxt;
@@ -306,6 +311,27 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             if (states.count() == 1) {
                 rootContext = CTXT;
                 rootContext->activeVME = this;
+            }
+            if (states.count() == 1 && !creationContext.isNull()) {
+                // A component that is logically created within another component instance shares the 
+                // same instances of script imports.  For example:
+                //
+                //     import QtQuick 1.0
+                //     import "test.js" as Test
+                //     ListView {
+                //         model: Test.getModel()
+                //         delegate: Component {
+                //             Text { text: Test.getValue(index); }
+                //         }
+                //     }
+                //
+                // Has the same "Test" instance.  To implement this, we simply copy the v8 handles into
+                // the inner context.  We have to create a fresh persistent handle for each to prevent 
+                // double dispose.  It is possible we could do this more efficiently using some form of
+                // referencing instead.
+                CTXT->importedScripts = creationContext->importedScripts;
+                for (int ii = 0; ii < CTXT->importedScripts.count(); ++ii)
+                    CTXT->importedScripts[ii] = qPersistentNew<v8::Object>(CTXT->importedScripts[ii]);
             }
         QML_END_INSTR(Init)
 
@@ -1204,6 +1230,7 @@ void QDeclarativeVME::reset()
     finalizeCallbacks.clear();
     states.clear();
     rootContext = 0;
+    creationContext = 0;
 }
 
 // Must be called with a handle scope and context
