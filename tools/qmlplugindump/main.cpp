@@ -306,11 +306,15 @@ public:
         for (int index = meta->enumeratorOffset(); index < meta->enumeratorCount(); ++index)
             dump(meta->enumerator(index));
 
-        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index)
-            dump(meta->property(index));
+        QSet<QString> implicitSignals;
+        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
+            const QMetaProperty &property = meta->property(index);
+            dump(property);
+            implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
+        }
 
         for (int index = meta->methodOffset(); index < meta->methodCount(); ++index)
-            dump(meta->method(index));
+            dump(meta->method(index), implicitSignals);
 
         qml->writeEndObject();
     }
@@ -378,7 +382,7 @@ private:
         qml->writeEndObject();
     }
 
-    void dump(const QMetaMethod &meth)
+    void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
             if (meth.access() != QMetaMethod::Protected)
@@ -393,6 +397,16 @@ private:
             return; // invalid signature
         }
         name = name.left(lparenIndex);
+        const QString typeName = convertToId(meth.typeName());
+
+        if (implicitSignals.contains(name)
+                && !meth.revision()
+                && meth.methodType() == QMetaMethod::Signal
+                && meth.parameterNames().isEmpty()
+                && typeName.isEmpty()) {
+            // don't mention implicit signals
+            return;
+        }
 
         if (meth.methodType() == QMetaMethod::Signal)
             qml->writeStartObject(QLatin1String("Signal"));
@@ -406,7 +420,6 @@ private:
             qml->writeScriptBinding(QLatin1String("revision"), QString::number(revision));
 #endif
 
-        const QString typeName = convertToId(meth.typeName());
         if (! typeName.isEmpty())
             qml->writeScriptBinding(QLatin1String("type"), enquote(typeName));
 
