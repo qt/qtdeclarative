@@ -44,6 +44,8 @@
 #include <QtCore/qdatastream.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qtimer.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -75,6 +77,16 @@ QDeclarativeDebugTrace::QDeclarativeDebugTrace()
         while (!m_messageReceived)
             waitForMessage();
     }
+}
+
+void QDeclarativeDebugTrace::addEngine(QDeclarativeEngine * /*engine*/)
+{
+    // just make sure that the service is properly registered
+    traceInstance();
+}
+
+void QDeclarativeDebugTrace::removeEngine(QDeclarativeEngine */*engine*/)
+{
 }
 
 void QDeclarativeDebugTrace::addEvent(EventType t)
@@ -188,7 +200,9 @@ void QDeclarativeDebugTrace::endRangeImpl(RangeType range)
 */
 void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message)
 {
-    if (m_deferredSend)
+    QMutexLocker locker(&m_mutex);
+    if (m_deferredSend
+            || (QThread::currentThread() != QCoreApplication::instance()->thread()))
         m_data.append(message);
     else
         sendMessage(message.toByteArray());
@@ -200,6 +214,7 @@ void QDeclarativeDebugTrace::processMessage(const QDeclarativeDebugData &message
 void QDeclarativeDebugTrace::sendMessages()
 {
     if (m_deferredSend) {
+        QMutexLocker locker(&m_mutex);
         //### this is a suboptimal way to send batched messages
         for (int i = 0; i < m_data.count(); ++i)
             sendMessage(m_data.at(i).toByteArray());

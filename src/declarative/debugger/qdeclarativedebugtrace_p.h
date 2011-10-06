@@ -55,6 +55,7 @@
 
 #include <private/qdeclarativedebugservice_p.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qmutex.h>
 
 QT_BEGIN_HEADER
 
@@ -74,6 +75,8 @@ struct QDeclarativeDebugData
 };
 
 class QUrl;
+class QDeclarativeEngine;
+
 class Q_DECLARATIVE_EXPORT QDeclarativeDebugTrace : public QDeclarativeDebugService
 {
 public:
@@ -106,6 +109,9 @@ public:
         MaximumRangeType
     };
 
+    static void addEngine(QDeclarativeEngine *engine);
+    static void removeEngine(QDeclarativeEngine *engine);
+
     static void addEvent(EventType);
 
     static void startRange(RangeType);
@@ -133,6 +139,7 @@ private:
     bool m_deferredSend;
     bool m_messageReceived;
     QList<QDeclarativeDebugData> m_data;
+    QMutex m_mutex;
 };
 
 QT_END_NAMESPACE
