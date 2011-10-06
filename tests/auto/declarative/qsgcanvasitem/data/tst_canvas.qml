@@ -234,17 +234,17 @@ Rectangle {
            var c = canvas.createObject();
            verify(c);
 
-           c.loadImage("qt-logo.png");
+           c.loadImage("red.png");
            wait(200);
            compare(c.imageLoadedCount, 1);
-           verify(c.isImageLoaded("qt-logo.png"));
-           verify(!c.isImageLoading("qt-logo.png"));
-           verify(!c.isImageError("qt-logo.png"));
+           verify(c.isImageLoaded("red.png"));
+           verify(!c.isImageLoading("red.png"));
+           verify(!c.isImageError("red.png"));
 
-           c.unloadImage("qt-logo.png");
-           verify(!c.isImageLoaded("qt-logo.png"));
-           verify(!c.isImageLoading("qt-logo.png"));
-           verify(!c.isImageError("qt-logo.png"));
+           c.unloadImage("red.png");
+           verify(!c.isImageLoaded("red.png"));
+           verify(!c.isImageLoading("red.png"));
+           verify(!c.isImageError("red.png"));
            c.destroy();
 
       }

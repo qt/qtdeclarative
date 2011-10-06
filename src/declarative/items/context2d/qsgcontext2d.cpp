@@ -2411,7 +2411,7 @@ static v8::Handle<v8::Value> ctx2d_measureText(const v8::Arguments &args)
 
 
   Note:
-  The \a image type can be an Image item, an image url or a \a {QtQuick2::CanvasImageData} object.
+  The \a image type can be an Image or Canvas item, an image url or a \a {QtQuick2::CanvasImageData} object.
   When given as Image item, if the image isn't fully loaded, this method draws nothing.
   When given as url string, the image should be loaded by calling Canvas item's \a QtQuick2::Canvas::loadImage() method first.
   This image been drawing is subject to the current context clip path, even the given \c image is a  {QtQuick2::CanvasImageData} object.
@@ -2437,32 +2437,42 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
 
     QImage image;
     if (args[0]->IsString()) {
-        image = r->context->createImage(QUrl(engine->toString(args[0]->ToString())));
+        QUrl url(engine->toString(args[0]->ToString()));
+        if (!url.isValid())
+            V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
+
+        image = r->context->createImage(url);
     } else if (args[0]->IsObject()) {
-        QSGImage* imageItem = qobject_cast<QSGImage*>(engine->toQObject(args[0]->ToObject()));
-        QV8Context2DPixelArrayResource *r = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
-        if (r) {
-            image = r->image;
+        QSGImage *imageItem = qobject_cast<QSGImage*>(engine->toQObject(args[0]->ToObject()));
+        QSGCanvasItem *canvas = qobject_cast<QSGCanvasItem*>(engine->toQObject(args[0]->ToObject()));
+
+        QV8Context2DPixelArrayResource *pix = v8_resource_cast<QV8Context2DPixelArrayResource>(args[0]->ToObject()->GetInternalField(0)->ToObject());
+        if (pix) {
+            image = pix->image;
         } else if (imageItem) {
             image = imageItem->pixmap().toImage();
+        } else if (canvas) {
+            image = canvas->toImage();
         } else {
             V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
         }
+    } else {
+        V8THROW_DOM(DOMEXCEPTION_TYPE_MISMATCH_ERR, "drawImage(), type mismatch");
     }
     if (args.Length() == 3) {
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         sx = 0;
         sy = 0;
-        sw = image.isNull()? -1 : image.width();
-        sh = image.isNull()? -1 : image.height();
+        sw = image.width();
+        sh = image.height();
         dw = sw;
         dh = sh;
     } else if (args.Length() == 5) {
         sx = 0;
         sy = 0;
-        sw = image.isNull()? -1 : image.width();
-        sh = image.isNull()? -1 : image.height();
+        sw = image.width();
+        sh = image.height();
         dx = args[1]->NumberValue();
         dy = args[2]->NumberValue();
         dw = args[3]->NumberValue();
@@ -2490,7 +2500,15 @@ static v8::Handle<v8::Value> ctx2d_drawImage(const v8::Arguments &args)
      || !qIsFinite(dh))
         return args.This();
 
-    r->context->buffer()->drawImage(image,sx, sy, sw, sh, dx, dy, dw, dh);
+    if (!image.isNull()) {
+        if (sx < 0 || sy < 0 || sw == 0 || sh == 0
+         || sx + sw > image.width() || sy + sh > image.height()
+         || sx + sw < 0 || sy + sh < 0) {
+            V8THROW_DOM(DOMEXCEPTION_INDEX_SIZE_ERR, "drawImage(), index size error");
+        }
+
+        r->context->buffer()->drawImage(image,sx, sy, sw, sh, dx, dy, dw, dh);
+    }
 
     return args.This();
 }
