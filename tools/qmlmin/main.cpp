@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativejsengine_p.h"
-#include "qdeclarativejslexer_p.h"
-#include "qdeclarativejsparser_p.h"
+#include <private/qdeclarativejsengine_p.h>
+#include <private/qdeclarativejslexer_p.h>
+#include <private/qdeclarativejsparser_p.h>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtCore/QFile>
