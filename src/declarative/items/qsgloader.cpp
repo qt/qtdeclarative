@@ -266,7 +266,6 @@ void QSGLoader::setActive(bool newVal)
             } else {
                 loadFromSourceComponent();
             }
-            d->disposeInitialPropertyValues(); // release persistent handles
         } else {
             if (d->item) {
                 QSGItemPrivate *p = QSGItemPrivate::get(d->item);
@@ -487,6 +486,7 @@ void QSGLoader::setSource(QDeclarativeV8Function *args)
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
     if (!ipv.IsEmpty()) {
+        d->disposeInitialPropertyValues();
         d->initialPropertyValues = qPersistentNew(ipv);
         d->qmlGlobalForIpv = qPersistentNew(args->qmlGlobal());
     }
@@ -539,6 +539,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
                 emit q->sourceComponentChanged();
             emit q->statusChanged();
             emit q->progressChanged();
+            disposeInitialPropertyValues(); // cleanup
             return;
         }
 
@@ -557,6 +558,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
                 completeCreateWithInitialPropertyValues(c, obj, initialPropertyValues, qmlGlobalForIpv);
             delete obj;
             delete ctxt;
+            disposeInitialPropertyValues(); // cleanup
             return;
         }
         if (obj) {
@@ -589,6 +591,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
         emit q->itemChanged();
         emit q->loaded();
     }
+    disposeInitialPropertyValues(); // cleanup
 }
 
 /*!

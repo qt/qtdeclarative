@@ -1134,6 +1134,9 @@ QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties
 {
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
+
+    v8::HandleScope handle_scope;
+    v8::Context::Scope scope(v8engine->context());
     v8::Handle<v8::Value> ov = v8engine->newQObject(toCreate);
     Q_ASSERT(ov->IsObject());
     v8::Handle<v8::Object> object = v8::Handle<v8::Object>::Cast(ov);

@@ -651,6 +651,11 @@ void tst_QSGLoader::initialPropertyValues_data()
             << QStringList()
             << (QStringList() << "loaderValue" << "createObjectValue")
             << (QVariantList() << 1 << 1);
+
+    QTest::newRow("ensure initial property values aren't disposed prior to component completion") << TEST_FILE("initialPropertyValues.8.qml")
+            << QStringList()
+            << (QStringList() << "initialValue")
+            << (QVariantList() << 6);
 }
 
 void tst_QSGLoader::initialPropertyValues()
@@ -660,12 +665,18 @@ void tst_QSGLoader::initialPropertyValues()
     QFETCH(QStringList, propertyNames);
     QFETCH(QVariantList, propertyValues);
 
+    TestHTTPServer server(SERVER_PORT);
+    QVERIFY(server.isValid());
+    server.serveDirectory(SRCDIR "/data");
+
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
 
     QDeclarativeComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
+    qApp->processEvents();
+    QTest::qWait(50);
 
     for (int i = 0; i < propertyNames.size(); ++i)
         QCOMPARE(object->property(propertyNames.at(i).toAscii().constData()), propertyValues.at(i));
