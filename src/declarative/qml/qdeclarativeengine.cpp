@@ -502,6 +502,7 @@ QDeclarativeEngine::~QDeclarativeEngine()
     Q_D(QDeclarativeEngine);
     if (d->isDebugging) {
         QDeclarativeEngineDebugService::instance()->remEngine(this);
+        QV8DebugService::instance()->removeEngine(this);
         QV8ProfilerService::instance()->removeEngine(this);
     }
 
