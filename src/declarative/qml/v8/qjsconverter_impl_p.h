@@ -174,7 +174,7 @@ QRegExp QJSConverter::toRegExp(v8::Handle<v8::RegExp> jsRegExp)
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
-v8::Handle<v8::RegExp> QJSConverter::toRegExp(const QRegExp &re)
+v8::Local<v8::RegExp> QJSConverter::toRegExp(const QRegExp &re)
 {
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = qt_regexp_toCanonical(re.pattern(), re.patternSyntax());
@@ -224,9 +224,9 @@ v8::Handle<v8::RegExp> QJSConverter::toRegExp(const QRegExp &re)
 // The result is a new Array object with length equal to the length
 // of the QStringList, and the elements being the QStringList's
 // elements converted to JS Strings.
-v8::Handle<v8::Array> QJSConverter::toStringList(const QStringList &lst)
+v8::Local<v8::Array> QJSConverter::toStringList(const QStringList &lst)
 {
-    v8::Handle<v8::Array> result = v8::Array::New(lst.size());
+    v8::Local<v8::Array> result = v8::Array::New(lst.size());
     for (int i = 0; i < lst.size(); ++i)
         result->Set(i, toString(lst.at(i)));
     return result;
@@ -253,7 +253,7 @@ QDateTime QJSConverter::toDateTime(v8::Handle<v8::Date> jsDate)
 }
 
 // Converts a QDateTime to a JS Date.
-v8::Handle<v8::Value> QJSConverter::toDateTime(const QDateTime &dt)
+v8::Local<v8::Value> QJSConverter::toDateTime(const QDateTime &dt)
 {
     double date;
     if (!dt.isValid())

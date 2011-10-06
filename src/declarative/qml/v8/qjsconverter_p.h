@@ -67,13 +67,13 @@ public:
     // Converts a QRegExp to a JS RegExp.
     // The conversion is not 100% exact since ECMA regexp and QRegExp
     // have different semantics/flags, but we try to do our best.
-    static inline v8::Handle<v8::RegExp> toRegExp(const QRegExp &re);
+    static inline v8::Local<v8::RegExp> toRegExp(const QRegExp &re);
 
     // Converts a QStringList to JS.
     // The result is a new Array object with length equal to the length
     // of the QStringList, and the elements being the QStringList's
     // elements converted to JS Strings.
-    static inline v8::Handle<v8::Array> toStringList(const QStringList &lst);
+    static inline v8::Local<v8::Array> toStringList(const QStringList &lst);
 
     // Converts a JS Array object to a QStringList.
     // The result is a QStringList with length equal to the length
@@ -85,7 +85,7 @@ public:
     static inline QDateTime toDateTime(v8::Handle<v8::Date> jsDate);
 
     // Converts a QDateTime to a JS Date.
-    static inline v8::Handle<v8::Value> toDateTime(const QDateTime &dt);
+    static inline v8::Local<v8::Value> toDateTime(const QDateTime &dt);
 };
 
 QT_END_NAMESPACE

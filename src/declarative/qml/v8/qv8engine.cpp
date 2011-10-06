@@ -915,9 +915,9 @@ QScriptPassPointer<QJSValuePrivate> QV8Engine::newRegExp(const QRegExp &regexp)
 // The result is a new Array object with length equal to the length
 // of the QVariantList, and the elements being the QVariantList's
 // elements converted to JS, recursively.
-v8::Handle<v8::Array> QV8Engine::variantListToJS(const QVariantList &lst)
+v8::Local<v8::Array> QV8Engine::variantListToJS(const QVariantList &lst)
 {
-    v8::Handle<v8::Array> result = v8::Array::New(lst.size());
+    v8::Local<v8::Array> result = v8::Array::New(lst.size());
     for (int i = 0; i < lst.size(); ++i)
         result->Set(i, variantToJS(lst.at(i)));
     return result;
@@ -946,9 +946,9 @@ QVariantList QV8Engine::variantListFromJS(v8::Handle<v8::Array> jsArray)
 // The result is a new Object object with property names being
 // the keys of the QVariantMap, and values being the values of
 // the QVariantMap converted to JS, recursively.
-v8::Handle<v8::Object> QV8Engine::variantMapToJS(const QVariantMap &vmap)
+v8::Local<v8::Object> QV8Engine::variantMapToJS(const QVariantMap &vmap)
 {
-    v8::Handle<v8::Object> result = v8::Object::New();
+    v8::Local<v8::Object> result = v8::Object::New();
     QVariantMap::const_iterator it;
     for (it = vmap.constBegin(); it != vmap.constEnd(); ++it)
         result->Set(QJSConverter::toString(it.key()), variantToJS(it.value()));
@@ -1319,10 +1319,9 @@ QVariant &QV8Engine::variantValue(v8::Handle<v8::Value> value)
 }
 
 // Creates a QVariant wrapper object.
-v8::Handle<v8::Object> QV8Engine::newVariant(const QVariant &value)
+v8::Local<v8::Object> QV8Engine::newVariant(const QVariant &value)
 {
-    v8::Handle<v8::Object> instance = variantWrapper()->newVariant(value);
-    return instance;
+    return variantWrapper()->newVariant(value);
 }
 
 QScriptPassPointer<QJSValuePrivate> QV8Engine::evaluate(v8::Handle<v8::Script> script, v8::TryCatch& tryCatch)
