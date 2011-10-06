@@ -13,6 +13,7 @@ HEADERS +=  \
     $$PWD/qhashfield_p.h \
     $$PWD/qdeclarativethread_p.h \
     $$PWD/qfinitestack_p.h \
+    $$PWD/qrecursionwatcher_p.h \
 
 SOURCES += \
     $$PWD/qintrusivelist.cpp \

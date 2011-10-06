@@ -205,11 +205,13 @@ static void removeBindingOnProperty(QObject *o, int index)
     QML_BEGIN_INSTR_COMMON(I)
 
 #  define QML_NEXT_INSTR(I) { \
+    if (watcher.hasRecursed()) return 0; \
     genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(INSTRUCTIONSTREAM); \
     goto *genericInstr->common.code; \
     }
 
 #  define QML_END_INSTR(I) } \
+    if (watcher.hasRecursed()) return 0; \
     genericInstr = reinterpret_cast<const QDeclarativeInstruction *>(INSTRUCTIONSTREAM); \
     if (interrupt.shouldInterrupt()) return 0; \
     goto *genericInstr->common.code;
@@ -219,9 +221,11 @@ static void removeBindingOnProperty(QObject *o, int index)
     case QDeclarativeInstruction::I: \
     QML_BEGIN_INSTR_COMMON(I)
 
-#  define QML_NEXT_INSTR(I) break;
+#  define QML_NEXT_INSTR(I) \
+    if (watcher.hasRecursed()) return 0; \
+    break;
 #  define QML_END_INSTR(I) \
-    if (interrupt.shouldInterrupt()) return 0; \
+    if (watcher.hasRecursed() || interrupt.shouldInterrupt()) return 0; \
     } break;
 #endif
 
@@ -258,6 +262,8 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
     int status = -1; // needed for dbus
     QDeclarativePropertyPrivate::WriteFlags flags = QDeclarativePropertyPrivate::BypassInterceptor |
                                                     QDeclarativePropertyPrivate::RemoveBindingOnAliasWrite;
+
+    QRecursionWatcher<QDeclarativeVME, &QDeclarativeVME::recursion> watcher(this);
 
 #define COMP states.top().compiledData
 #define CTXT states.top().context
@@ -1173,6 +1179,8 @@ void QDeclarativeVME::reset()
 {
     Q_ASSERT(!states.isEmpty() || objects.isEmpty());
 
+    QRecursionWatcher<QDeclarativeVME, &QDeclarativeVME::recursion> watcher(this);
+
     if (!objects.isEmpty() && !(states.at(0).flags & State::Deferred))
         delete objects.at(0); 
     
@@ -1324,6 +1332,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         return true;
 
     ActiveVMERestorer restore(this, QDeclarativeEnginePrivate::get(engine));
+    QRecursionWatcher<QDeclarativeVME, &QDeclarativeVME::recursion> watcher(this);
 
     while (!bindValues.isEmpty()) {
         QDeclarativeAbstractBinding *b = bindValues.pop();
@@ -1334,7 +1343,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
                                 QDeclarativePropertyPrivate::DontRemoveBinding);
         }
 
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }
     bindValues.deallocate();
@@ -1347,7 +1356,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
             status->componentComplete();
         }
         
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }
     parserStatus.deallocate();
@@ -1361,7 +1370,7 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
         a->add(&d->context->componentAttached);
         emit a->completed();
 
-        if (interrupt.shouldInterrupt())
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }
 
@@ -1375,6 +1384,8 @@ bool QDeclarativeVME::complete(const Interrupt &interrupt)
             void *args[] = { 0 };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
+        if (watcher.hasRecursed())
+            return false;
     }
     finalizeCallbacks.clear();
 

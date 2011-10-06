@@ -56,6 +56,7 @@
 #include "qdeclarativeerror.h"
 #include "private/qbitfield_p.h"
 #include "private/qdeclarativeinstruction_p.h"
+#include "private/qrecursionwatcher_p.h"
 
 #include <QtCore/QStack>
 #include <QtCore/QString>
@@ -141,6 +142,7 @@ private:
 #endif
 
     QDeclarativeEngine *engine;
+    QRecursionNode recursion;
 
     QFiniteStack<QObject *> objects;
     QFiniteStack<QDeclarativeVMETypes::List> lists;

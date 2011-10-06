@@ -39,13 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEINCUBATOR_P_H
-#define QDECLARATIVEINCUBATOR_P_H
-
-#include <private/qintrusivelist_p.h>
-#include <private/qdeclarativevme_p.h>
-#include <private/qrecursionwatcher_p.h>
-#include <private/qdeclarativeengine_p.h>
+#ifndef QRECURSIONWATCHER_P_H
+#define QRECURSIONWATCHER_P_H
 
 //
 //  W A R N I N G
@@ -58,42 +53,53 @@
 // We mean it.
 //
 
+#include <QtCore/qglobal.h>
+
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeCompiledData;
-class QDeclarativeIncubator;
-class QDeclarativeIncubatorPrivate : public QDeclarativeEnginePrivate::Incubator
-{
+class QRecursionNode;
+class QRecursionNode {
 public:
-    QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, QDeclarativeIncubator::IncubationMode m);
-    ~QDeclarativeIncubatorPrivate();
-
-    QDeclarativeIncubator *q;
-
-    QDeclarativeIncubator::IncubationMode mode;
-
-    QList<QDeclarativeError> errors;
-
-    enum Progress { Execute, Completing, Completed };
-    Progress progress;
-
-    QObject *result;
-    QDeclarativeCompiledData *component;
-    QDeclarativeVME vme;
-    QDeclarativeVMEGuard vmeGuard;
-
-    QDeclarativeIncubatorPrivate *waitingOnMe;
-    typedef QDeclarativeEnginePrivate::Incubator QIPBase;
-    QIntrusiveList<QIPBase, &QIPBase::nextWaitingFor> waitingFor;
-
-    QRecursionNode recursion;
-
-    void clear();
-
-    void incubate(QDeclarativeVME::Interrupt &i);
+    inline QRecursionNode();
+    bool *_r;
 };
+
+template<class T, QRecursionNode T::*Node>
+class QRecursionWatcher {
+public:
+    inline QRecursionWatcher(T *);
+    inline ~QRecursionWatcher();
+    inline bool hasRecursed() const;
+private:
+    T *_t;
+    bool _r;
+};
+
+QRecursionNode::QRecursionNode()
+: _r(0) 
+{
+}
+
+template<class T, QRecursionNode T::*Node>
+QRecursionWatcher<T, Node>::QRecursionWatcher(T *t)
+: _t(t), _r(false)
+{
+    if ((_t->*Node)._r) *(_t->*Node)._r = true;
+    (_t->*Node)._r = &_r;
+}
+
+template<class T, QRecursionNode T::*Node>
+QRecursionWatcher<T, Node>::~QRecursionWatcher()
+{
+    if ((_t->*Node)._r == &_r) (_t->*Node)._r = 0;
+}
+
+template<class T, QRecursionNode T::*Node>
+bool QRecursionWatcher<T, Node>::hasRecursed() const
+{
+    return _r;
+}
 
 QT_END_NAMESPACE
 
-#endif // QDECLARATIVEINCUBATOR_P_H
-
+#endif // QRECURSIONWATCHER_P_H

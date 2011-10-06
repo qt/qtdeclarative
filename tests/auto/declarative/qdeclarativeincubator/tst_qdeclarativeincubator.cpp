@@ -78,6 +78,7 @@ private slots:
     void forceCompletion();
     void setInitialState();
     void clearDuringCompletion();
+    void recursiveClear();
 
 private:
     QDeclarativeIncubationController controller;
@@ -422,8 +423,54 @@ void tst_qdeclarativeincubator::clearDuringCompletion()
     QPointer<QObject> srt = SelfRegisteringType::me();
 
     incubator.clear();
+    QCoreApplication::processEvents(QEventLoop::DeferredDeletion);
     QVERIFY(incubator.isNull());
     QVERIFY(srt.isNull());
+}
+
+class Switcher : public QObject
+{
+    Q_OBJECT
+public:
+    Switcher(QDeclarativeEngine *e) : QObject(), engine(e) { }
+
+    struct MyIncubator : public QDeclarativeIncubator
+    {
+        MyIncubator(QDeclarativeIncubator::IncubationMode mode, QObject *s)
+        : QDeclarativeIncubator(mode), switcher(s) {}
+
+        virtual void setInitialState(QObject *o) {
+            if (o->objectName() == "switchMe")
+                connect(o, SIGNAL(switchMe()), switcher, SLOT(switchIt()));
+        }
+
+        QObject *switcher;
+    };
+
+    void start()
+    {
+        incubator = new MyIncubator(QDeclarativeIncubator::Synchronous, this);
+        component = new QDeclarativeComponent(engine,  TEST_FILE("recursiveClear.1.qml"));
+        component->create(*incubator);
+    }
+
+    QDeclarativeEngine *engine;
+    MyIncubator *incubator;
+    QDeclarativeComponent *component;
+
+public slots:
+    void switchIt() {
+        component->deleteLater();
+        incubator->clear();
+        component = new QDeclarativeComponent(engine,  TEST_FILE("recursiveClear.2.qml"));
+        component->create(*incubator);
+    }
+};
+
+void tst_qdeclarativeincubator::recursiveClear()
+{
+    Switcher switcher(&engine);
+    switcher.start();
 }
 
 QTEST_MAIN(tst_qdeclarativeincubator)

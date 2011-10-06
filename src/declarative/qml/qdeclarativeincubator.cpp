@@ -49,7 +49,6 @@
 // XXX TODO 
 //   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and 
 //     async if nested cases
-//   - implement QDeclarativeIncubator::clear()
 void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeContextData *forContext)
 {
     QDeclarativeIncubatorPrivate *p = i.d;
@@ -239,6 +238,9 @@ void QDeclarativeIncubationController::incubatingObjectCountChanged(int incubati
 
 void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
 {
+    typedef QDeclarativeIncubatorPrivate IP;
+    QRecursionWatcher<IP, &IP::recursion> watcher(this);
+
     QDeclarativeEngine *engine = component->engine;
     QDeclarativeEnginePrivate *enginePriv = QDeclarativeEnginePrivate::get(engine);
 
@@ -257,9 +259,13 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
 
     if (progress == QDeclarativeIncubatorPrivate::Execute) {
         enginePriv->referenceScarceResources();
-        result = vme.execute(&errors, i);
+        QObject *tresult = vme.execute(&errors, i);
         enginePriv->dereferenceScarceResources();
 
+        if (watcher.hasRecursed())
+            return;
+
+        result = tresult;
         if (errors.isEmpty() && result == 0) 
             goto finishIncubate;
 
@@ -271,6 +277,9 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
             q->setInitialState(result);
         }
 
+        if (watcher.hasRecursed())
+            return;
+
         if (errors.isEmpty())
             progress = QDeclarativeIncubatorPrivate::Completing;
         else
@@ -278,12 +287,18 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
 
         q->statusChanged(q->status());
 
+        if (watcher.hasRecursed())
+            return;
+
         if (i.shouldInterrupt())
             goto finishIncubate;
     }
 
     if (progress == QDeclarativeIncubatorPrivate::Completing) {
         do {
+            if (watcher.hasRecursed())
+                return;
+
             if (vme.complete(i)) {
                 progress = QDeclarativeIncubatorPrivate::Completed;
                 goto finishIncubate;
@@ -477,6 +492,9 @@ Ready state, the created object is \b not deleted.
 */
 void QDeclarativeIncubator::clear()
 {
+    typedef QDeclarativeIncubatorPrivate IP;
+    QRecursionWatcher<IP, &IP::recursion> watcher(d);
+
     Status s = status();
 
     if (s == Null)
@@ -486,7 +504,7 @@ void QDeclarativeIncubator::clear()
     if (s == Loading) {
         Q_ASSERT(d->component);
         enginePriv = QDeclarativeEnginePrivate::get(d->component->engine);
-        delete d->result;
+        if (d->result) d->result->deleteLater();
         d->result = 0;
     }
 
