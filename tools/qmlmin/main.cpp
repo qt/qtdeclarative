@@ -141,6 +141,7 @@ protected:
                 else if (ch == QLatin1Char('\r')) quotedString += QLatin1String("\\r");
                 else if (ch == QLatin1Char('\t')) quotedString += QLatin1String("\\t");
                 else if (ch == QLatin1Char('\v')) quotedString += QLatin1String("\\v");
+                else if (ch == QLatin1Char('\0')) quotedString += QLatin1String("\\0");
                 else quotedString += ch;
             }
         }
