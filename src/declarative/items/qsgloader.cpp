@@ -53,8 +53,9 @@
 QT_BEGIN_NAMESPACE
 
 QSGLoaderPrivate::QSGLoaderPrivate()
-    : item(0), component(0), ownComponent(false), updatingSize(false),
-      itemWidthValid(false), itemHeightValid(false), active(true)
+    : item(0), component(0), updatingSize(false),
+      itemWidthValid(false), itemHeightValid(false),
+      active(true), loadingFromSource(false)
 {
 }
 
@@ -79,10 +80,9 @@ void QSGLoaderPrivate::clear()
 {
     disposeInitialPropertyValues();
 
-    if (ownComponent) {
+    if (loadingFromSource && component) {
         component->deleteLater();
         component = 0;
-        ownComponent = false;
     }
     source = QUrl();
 
@@ -340,11 +340,10 @@ void QSGLoader::loadFromSource()
         return;
     }
 
-    d->component = new QDeclarativeComponent(qmlEngine(this), d->source, this);
-    d->ownComponent = true;
-
-    if (isComponentComplete())
+    if (isComponentComplete()) {
+        d->component = new QDeclarativeComponent(qmlEngine(this), d->source, this);
         d->load();
+    }
 }
 
 /*!
@@ -384,7 +383,6 @@ void QSGLoader::setSourceComponent(QDeclarativeComponent *comp)
     d->clear();
 
     d->component = comp;
-    d->ownComponent = false;
     d->loadingFromSource = false;
 
     if (d->active)
@@ -520,7 +518,7 @@ void QSGLoaderPrivate::load()
                 q, SIGNAL(progressChanged()));
         emit q->statusChanged();
         emit q->progressChanged();
-        if (ownComponent)
+        if (loadingFromSource)
             emit q->sourceChanged();
         else
             emit q->sourceComponentChanged();
@@ -535,7 +533,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
     if (component) {
         if (!component->errors().isEmpty()) {
             QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
-            if (ownComponent)
+            if (loadingFromSource)
                 emit q->sourceChanged();
             else
                 emit q->sourceComponentChanged();
@@ -582,7 +580,7 @@ void QSGLoaderPrivate::_q_sourceLoaded()
             source = QUrl();
         }
         completeCreateWithInitialPropertyValues(component, obj, initialPropertyValues, qmlGlobalForIpv);
-        if (ownComponent)
+        if (loadingFromSource)
             emit q->sourceChanged();
         else
             emit q->sourceComponentChanged();
@@ -653,7 +651,12 @@ void QSGLoader::componentComplete()
 {
     Q_D(QSGLoader);
     QSGItem::componentComplete();
-    d->load();
+    if (active()) {
+        if (d->loadingFromSource) {
+            d->component = new QDeclarativeComponent(qmlEngine(this), d->source, this);
+        }
+        d->load();
+    }
 }
 
 /*!

@@ -141,9 +141,14 @@ void tst_QSGLoader::sourceOrComponent()
     QCOMPARE(static_cast<QSGItem*>(loader)->childItems().count(), error ? 0: 1);
 
     if (!error) {
-        QDeclarativeComponent *c = qobject_cast<QDeclarativeComponent*>(loader->children().at(0));
-        QVERIFY(c);
-        QCOMPARE(loader->sourceComponent(), c);
+        bool sourceComponentIsChildOfLoader = false;
+        for (int ii = 0; ii < loader->children().size(); ++ii) {
+            QDeclarativeComponent *c = qobject_cast<QDeclarativeComponent*>(loader->children().at(ii));
+            if (c && c == loader->sourceComponent()) {
+                sourceComponentIsChildOfLoader = true;
+            }
+        }
+        QVERIFY(sourceComponentIsChildOfLoader);
     }
 
     if (sourceOrComponent == "component") {
@@ -583,6 +588,24 @@ void tst_QSGLoader::active()
         loader->setActive(true);           // change signal should be emitted
         QCOMPARE(loader->property("activeChangedCount").toInt(), 6);
 
+        delete object;
+    }
+
+    // check that the component isn't loaded until active is set to true
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.7.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("success").toBool(), true);
+        delete object;
+    }
+
+    // check that the component is loaded if active is not set (true by default)
+    {
+        QDeclarativeComponent component(&engine, TEST_FILE("active.8.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != 0);
+        QCOMPARE(object->property("success").toBool(), true);
         delete object;
     }
 }

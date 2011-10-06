@@ -86,7 +86,6 @@ public:
     QDeclarativeComponent *component;
     v8::Persistent<v8::Object> initialPropertyValues;
     v8::Persistent<v8::Object> qmlGlobalForIpv;
-    bool ownComponent : 1;
     bool updatingSize: 1;
     bool itemWidthValid : 1;
     bool itemHeightValid : 1;
