@@ -1578,9 +1578,11 @@ FxViewItem *QSGItemViewPrivate::createItem(int modelIndex)
             if (model->completePending()) {
                 // complete
                 viewItem->item->setZ(1);
+                QDeclarative_setParent_noEvent(viewItem->item, q->contentItem());
                 viewItem->item->setParentItem(q->contentItem());
                 model->completeItem();
             } else {
+                QDeclarative_setParent_noEvent(viewItem->item, q->contentItem());
                 viewItem->item->setParentItem(q->contentItem());
             }
             // do other set up for the new item that should not happen
