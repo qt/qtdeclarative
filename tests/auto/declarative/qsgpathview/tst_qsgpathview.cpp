@@ -973,10 +973,7 @@ void tst_QSGPathView::mouseDrag()
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-21687 - Waiting for active window fails for developer build", Abort);
-#endif
-    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);
@@ -984,6 +981,7 @@ void tst_QSGPathView::mouseDrag()
     int current = pathview->currentIndex();
 
     QTest::mousePress(canvas, Qt::LeftButton, 0, QPoint(10,100));
+    QTest::qWait(100);
 
     {
         QMouseEvent mv(QEvent::MouseMove, QPoint(30,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
@@ -1037,10 +1035,7 @@ void tst_QSGPathView::changePreferredHighlight()
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-21687 - Waiting for active window fails for developer build", Abort);
-#endif
-    QTRY_COMPARE(canvas->windowState(), Qt::WindowActive);
+    QTRY_COMPARE(canvas, qGuiApp->focusWindow());
 
     QSGPathView *pathview = qobject_cast<QSGPathView*>(canvas->rootObject());
     QVERIFY(pathview != 0);

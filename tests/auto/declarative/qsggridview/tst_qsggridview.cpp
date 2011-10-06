@@ -53,6 +53,7 @@
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include "../../../shared/util.h"
 #include <QtOpenGL/QGLShaderProgram>
+#include <QtGui/qguiapplication.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QSGGridView::Flow)
@@ -1153,15 +1154,8 @@ void tst_QSGGridView::currentIndex()
 
     // Test keys
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-21680 - Waiting for active window fails for Developer build", Abort);
-#endif
-    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
-    qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
 
     gridview->setCurrentIndex(0);
 
@@ -1193,11 +1187,8 @@ void tst_QSGGridView::currentIndex()
     gridview->setFlow(QSGGridView::TopToBottom);
 
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-    QTRY_VERIFY((canvas->windowState() == Qt::WindowActive));
+    QTest::qWaitForWindowShown(canvas);
+    QVERIFY(qGuiApp->focusWindow() == canvas);
     qApp->processEvents();
 
     QTest::keyClick(canvas, Qt::Key_Right);
@@ -1217,6 +1208,7 @@ void tst_QSGGridView::currentIndex()
         QTest::simulateEvent(canvas, true, Qt::Key_Right, Qt::NoModifier, "", true);
         QTRY_COMPARE(gridview->currentIndex(), i*5 + 5);
     }
+
     QTest::keyRelease(canvas, Qt::Key_Right);
     QTRY_COMPARE(gridview->currentIndex(), 55);
     QTRY_COMPARE(gridview->contentX(), 720.0);
@@ -1260,11 +1252,8 @@ void tst_QSGGridView::currentIndex()
     gridview->setLayoutDirection(Qt::RightToLeft);
 
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-    QTRY_VERIFY(canvas->windowState() == Qt::WindowActive);
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
     qApp->processEvents();
 
     gridview->setCurrentIndex(35);

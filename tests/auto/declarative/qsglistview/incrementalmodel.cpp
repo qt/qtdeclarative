@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "incrementalmodel.h"
-#include <QApplication>
+#include <QGuiApplication>
 #include <QDebug>
 
 IncrementalModel::IncrementalModel(QObject *parent)

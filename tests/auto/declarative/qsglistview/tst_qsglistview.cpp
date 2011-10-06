@@ -1953,19 +1953,12 @@ void tst_QSGListView::currentIndex()
     // Test keys
     canvas->show();
     canvas->requestActivateWindow();
-#ifdef Q_WS_X11
-    // to be safe and avoid failing setFocus with window managers
-    qt_x11_wait_for_window_manager(canvas);
-#endif
-
-    qApp->processEvents();
+    QTest::qWaitForWindowShown(canvas);
+    QTRY_VERIFY(qGuiApp->focusWindow() == canvas);
 
     listview->setCurrentIndex(0);
 
     QTest::keyClick(canvas, Qt::Key_Down);
-#ifdef QT_BUILD_INTERNAL
-    QEXPECT_FAIL("", "QTBUG-21682 - Waiting for active window fails for developer build", Abort);
-#endif
     QCOMPARE(listview->currentIndex(), 1);
 
     QTest::keyClick(canvas, Qt::Key_Up);
