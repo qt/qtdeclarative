@@ -309,19 +309,19 @@ void tst_qsgtext::width()
     {
         QVERIFY(Qt::mightBeRichText(richText.at(i))); // self-test
 
-        QTextDocument document;
-        document.setHtml(richText.at(i));
-        document.setDocumentMargin(0);
-
-        int documentWidth = document.idealWidth();
-
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + richText.at(i) + "\"; textFormat: Text.RichText }";
         QDeclarativeComponent textComponent(&engine);
         textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGText *textObject = qobject_cast<QSGText*>(textComponent.create());
-
         QVERIFY(textObject != 0);
-        QCOMPARE(textObject->width(), qreal(documentWidth));
+
+        QSGTextPrivate *textPrivate = QSGTextPrivate::get(textObject);
+        QVERIFY(textPrivate != 0);
+
+        QTextDocument *doc = textPrivate->textDocument();
+        QVERIFY(doc != 0);
+
+        QCOMPARE(int(textObject->width()), int(doc->idealWidth()));
         QVERIFY(textObject->textFormat() == QSGText::RichText);
 
         delete textObject;

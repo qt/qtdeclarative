@@ -1386,9 +1386,12 @@ void QSGText::setTextFormat(TextFormat format)
     if (!wasRich && d->richText && isComponentComplete()) {
         d->ensureDoc();
         d->doc->setText(d->text);
+        d->rightToLeftText = d->doc->toPlainText().isRightToLeft();
         d->richTextAsImage = enableImageCache();
+    } else {
+        d->rightToLeftText = d->text.isRightToLeft();
     }
-
+    d->determineHorizontalAlignment();
     d->updateLayout();
 
     emit textFormatChanged(d->format);
