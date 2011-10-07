@@ -111,6 +111,7 @@ private slots:
     void treeModel();
     void changePreferredHighlight();
     void missingPercent();
+    void creationContext();
 
 private:
     QSGView *createView();
@@ -1064,6 +1065,21 @@ void tst_QSGPathView::changePreferredHighlight()
     QCOMPARE(pathview->currentIndex(), 0);
 
     delete canvas;
+}
+
+void tst_QSGPathView::creationContext()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,240,320);
+    canvas.setSource(QUrl::fromLocalFile(SRCDIR "/data/creationContext.qml"));
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QVERIFY(rootItem->property("count").toInt() > 0);
+
+    QSGItem *item;
+    QVERIFY(item = findItem<QSGItem>(rootItem, "listItem", 0));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
 }
 
 QSGView *tst_QSGPathView::createView()

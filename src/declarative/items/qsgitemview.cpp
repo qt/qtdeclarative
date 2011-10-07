@@ -1624,7 +1624,9 @@ QSGItem *QSGItemViewPrivate::createComponentItem(QDeclarativeComponent *componen
 
     QSGItem *item = 0;
     if (component) {
-        QDeclarativeContext *context = new QDeclarativeContext(qmlContext(q));
+        QDeclarativeContext *creationContext = component->creationContext();
+        QDeclarativeContext *context = new QDeclarativeContext(
+                creationContext ? creationContext : qmlContext(q));
         QObject *nobj = component->create(context);
         if (nobj) {
             QDeclarative_setParent_noEvent(context, nobj);

@@ -134,6 +134,7 @@ private slots:
     void rightToLeft();
     void test_mirroring();
     void margins();
+    void creationContext();
 
 private:
     template <class T> void items();
@@ -3712,6 +3713,28 @@ void tst_QSGListView::qAbstractItemModel_clear()
     clear<TestModel2>();
 }
 
+void tst_QSGListView::creationContext()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,240,320);
+    canvas.setSource(QUrl::fromLocalFile(SRCDIR "/data/creationContext.qml"));
+    qApp->processEvents();
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QVERIFY(rootItem->property("count").toInt() > 0);
+
+    QSGItem *item;
+    QVERIFY(item = rootItem->findChild<QSGItem *>("listItem"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("header"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("footer"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+    QVERIFY(item = rootItem->findChild<QSGItem *>("section"));
+    QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
 QSGView *tst_QSGListView::createView()
 {
     QSGView *canvas = new QSGView(0);
@@ -3793,7 +3816,6 @@ void tst_QSGListView::dumpTree(QSGItem *parent, int depth)
         dumpTree(item, depth+1);
     }
 }
-
 
 QTEST_MAIN(tst_QSGListView)
 

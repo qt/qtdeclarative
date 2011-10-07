@@ -832,7 +832,9 @@ QSGItem * QSGListViewPrivate::getSectionItem(const QString &section)
         QDeclarativeContext *context = QDeclarativeEngine::contextForObject(sectionItem)->parentContext();
         context->setContextProperty(QLatin1String("section"), section);
     } else {
-        QDeclarativeContext *context = new QDeclarativeContext(qmlContext(q));
+        QDeclarativeContext *creationContext = sectionCriteria->delegate()->creationContext();
+        QDeclarativeContext *context = new QDeclarativeContext(
+                creationContext ? creationContext : qmlContext(q));
         context->setContextProperty(QLatin1String("section"), section);
         QObject *nobj = sectionCriteria->delegate()->beginCreate(context);
         if (nobj) {

@@ -939,7 +939,9 @@ QObject *QSGVisualDataModelPrivate::object(Compositor::Group group, int index, b
     if (!cacheItem->object) {
         QObject *data = m_adaptorModel->data(it.modelIndex());
 
-        QDeclarativeContext *rootContext = new QDeclarativeContext(m_context);
+        QDeclarativeContext *creationContext = m_delegate->creationContext();
+        QDeclarativeContext *rootContext = new QDeclarativeContext(
+                creationContext ? creationContext : m_context.data());
         QDeclarativeContext *ctxt = rootContext;
         if (m_adaptorModel->flags() & QSGVisualAdaptorModel::ProxiedObject) {
             if (QSGVisualAdaptorModelProxyInterface *proxy = qobject_cast<QSGVisualAdaptorModelProxyInterface *>(data)) {
