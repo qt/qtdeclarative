@@ -44,6 +44,7 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
+#include <QtDeclarative/qdeclarativeincubator.h>
 #include <private/qsgloader_p.h>
 #include "testhttpserver.h"
 #include "../../../shared/util.h"
@@ -54,6 +55,20 @@ inline QUrl TEST_FILE(const QString &filename)
 {
     return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
 }
+
+class PeriodicIncubationController : public QObject,
+    public QDeclarativeIncubationController
+{
+public:
+    PeriodicIncubationController() {
+        startTimer(16);
+    }
+
+protected:
+    virtual void timerEvent(QTimerEvent *) {
+        incubateFor(15);
+    }
+};
 
 class tst_QSGLoader : public QObject
 
@@ -89,6 +104,9 @@ private slots:
     void QTBUG_16928();
     void implicitSize();
     void QTBUG_17114();
+    void asynchronous_data();
+    void asynchronous();
+    void asynchronous_clear();
 
 private:
     QDeclarativeEngine engine;
@@ -747,7 +765,8 @@ void tst_QSGLoader::deleteComponentCrash()
     QCOMPARE(loader->item()->objectName(), QLatin1String("blue"));
     QCOMPARE(loader->progress(), 1.0);
     QCOMPARE(loader->status(), QSGLoader::Ready);
-    QCOMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 1);
+    qApp->processEvents(QEventLoop::DeferredDeletion);
+    QTRY_COMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 1);
     QVERIFY(loader->source() == QUrl::fromLocalFile(SRCDIR "/data/BlueRect.qml"));
 
     delete item;
@@ -829,6 +848,102 @@ void tst_QSGLoader::QTBUG_17114()
 
     delete item;
 }
+
+void tst_QSGLoader::asynchronous_data()
+{
+    QTest::addColumn<QUrl>("qmlFile");
+    QTest::addColumn<QStringList>("expectedWarnings");
+
+    QTest::newRow("Valid component") << TEST_FILE("BigComponent.qml")
+            << QStringList();
+
+    QTest::newRow("Non-existant component") << TEST_FILE("IDoNotExist.qml")
+            << (QStringList() << QString(TEST_FILE("IDoNotExist.qml").toString() + ": File not found"));
+
+    QTest::newRow("Invalid component") << TEST_FILE("InvalidSourceComponent.qml")
+            << (QStringList() << QString(TEST_FILE("InvalidSourceComponent.qml").toString() + ":5:1: Syntax error"));
+}
+
+void tst_QSGLoader::asynchronous()
+{
+    QFETCH(QUrl, qmlFile);
+    QFETCH(QStringList, expectedWarnings);
+
+    if (!engine.incubationController())
+        engine.setIncubationController(new PeriodicIncubationController);
+    QDeclarativeComponent component(&engine, TEST_FILE("asynchronous.qml"));
+    QSGItem *root = qobject_cast<QSGItem*>(component.create());
+    QVERIFY(root);
+
+    QSGLoader *loader = root->findChild<QSGLoader*>("loader");
+    QVERIFY(loader);
+
+    foreach (const QString &warning, expectedWarnings)
+        QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
+
+    QVERIFY(!loader->item());
+    root->setProperty("comp", qmlFile.toString());
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+
+    if (expectedWarnings.isEmpty()) {
+        QCOMPARE(loader->status(), QSGLoader::Loading);
+        QCOMPARE(engine.incubationController()->incubatingObjectCount(), 1);
+
+        QTRY_VERIFY(loader->item());
+        QCOMPARE(loader->progress(), 1.0);
+        QCOMPARE(loader->status(), QSGLoader::Ready);
+    } else {
+        QCOMPARE(loader->progress(), 1.0);
+        QTRY_COMPARE(loader->status(), QSGLoader::Error);
+    }
+
+    delete root;
+}
+
+void tst_QSGLoader::asynchronous_clear()
+{
+    if (!engine.incubationController())
+        engine.setIncubationController(new PeriodicIncubationController);
+    QDeclarativeComponent component(&engine, TEST_FILE("asynchronous.qml"));
+    QSGItem *root = qobject_cast<QSGItem*>(component.create());
+    QVERIFY(root);
+
+    QSGLoader *loader = root->findChild<QSGLoader*>("loader");
+    QVERIFY(loader);
+
+    QVERIFY(!loader->item());
+    root->setProperty("comp", "BigComponent.qml");
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+
+    QCOMPARE(loader->status(), QSGLoader::Loading);
+    QCOMPARE(engine.incubationController()->incubatingObjectCount(), 1);
+
+    // clear before component created
+    root->setProperty("comp", "");
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+    QCOMPARE(engine.incubationController()->incubatingObjectCount(), 0);
+
+    QCOMPARE(loader->progress(), 0.0);
+    QCOMPARE(loader->status(), QSGLoader::Null);
+    QCOMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 0);
+
+    // check loading component
+    root->setProperty("comp", "Rect120x60.qml");
+    QMetaObject::invokeMethod(root, "loadComponent");
+    QVERIFY(!loader->item());
+
+    QCOMPARE(loader->status(), QSGLoader::Loading);
+    QCOMPARE(engine.incubationController()->incubatingObjectCount(), 1);
+
+    QTRY_VERIFY(loader->item());
+    QCOMPARE(loader->progress(), 1.0);
+    QCOMPARE(loader->status(), QSGLoader::Ready);
+    QCOMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 1);
+}
+
 
 QTEST_MAIN(tst_QSGLoader)
 

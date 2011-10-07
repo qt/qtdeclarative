@@ -57,10 +57,26 @@
 #include "qsgloader_p.h"
 #include "qsgimplicitsizeitem_p_p.h"
 #include "qsgitemchangelistener_p.h"
+#include "qdeclarativeincubator.h"
 
 #include <private/qv8_p.h>
 
 QT_BEGIN_NAMESPACE
+
+
+class QSGLoaderPrivate;
+class QSGLoaderIncubator : public QDeclarativeIncubator
+{
+public:
+    QSGLoaderIncubator(QSGLoaderPrivate *l, IncubationMode mode) : QDeclarativeIncubator(mode), loader(l) {}
+
+protected:
+    virtual void statusChanged(Status);
+    virtual void setInitialState(QObject *);
+
+private:
+    QSGLoaderPrivate *loader;
+};
 
 class QDeclarativeContext;
 class QSGLoaderPrivate : public QSGImplicitSizeItemPrivate, public QSGItemChangeListener
@@ -76,14 +92,17 @@ public:
     void initResize();
     void load();
 
+    void incubatorStateChanged(QDeclarativeIncubator::Status status);
+    void setInitialState(QObject *o);
     void disposeInitialPropertyValues();
     QUrl resolveSourceUrl(QDeclarativeV8Function *args);
     v8::Handle<v8::Object> extractInitialPropertyValues(QDeclarativeV8Function *args, QObject *loader, bool *error);
-    void completeCreateWithInitialPropertyValues(QDeclarativeComponent *component, QObject *object, v8::Handle<v8::Object> initialPropertyValues, v8::Handle<v8::Object> qmlGlobal);
 
     QUrl source;
     QSGItem *item;
     QDeclarativeComponent *component;
+    QDeclarativeContext *itemContext;
+    QSGLoaderIncubator *incubator;
     v8::Persistent<v8::Object> initialPropertyValues;
     v8::Persistent<v8::Object> qmlGlobalForIpv;
     bool updatingSize: 1;
@@ -91,6 +110,7 @@ public:
     bool itemHeightValid : 1;
     bool active : 1;
     bool loadingFromSource : 1;
+    bool asynchronous : 1;
 
     void _q_sourceLoaded();
     void _q_updateSize(bool loaderGeometryChanged = true);

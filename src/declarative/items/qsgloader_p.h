@@ -63,6 +63,7 @@ class Q_AUTOTEST_EXPORT QSGLoader : public QSGImplicitSizeItem
     Q_PROPERTY(QSGItem *item READ item NOTIFY itemChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
 
 public:
     QSGLoader(QSGItem *parent = 0);
@@ -84,6 +85,9 @@ public:
     Status status() const;
     qreal progress() const;
 
+    bool asynchronous() const;
+    void setAsynchronous(bool a);
+
     QSGItem *item() const;
 
 Q_SIGNALS:
@@ -94,6 +98,7 @@ Q_SIGNALS:
     void statusChanged();
     void progressChanged();
     void loaded();
+    void asynchronousChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);

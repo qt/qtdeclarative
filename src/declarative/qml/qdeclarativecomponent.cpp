@@ -1107,7 +1107,7 @@ void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 }
 
 // XXX used by QSGLoader
-QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate)
+void QDeclarativeComponentPrivate::initializeObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate)
 {
     QDeclarativeEnginePrivate *ep = QDeclarativeEnginePrivate::get(engine);
     QV8Engine *v8engine = ep->v8engine();
@@ -1126,13 +1126,9 @@ QObject *QDeclarativeComponentPrivate::completeCreateObjectWithInitialProperties
         v8::Handle<v8::Function>::Cast(function)->Call(v8engine->global(), 2, args);
     }
 
-    completeCreate();
-
     QDeclarativeData *ddata = QDeclarativeData::get(toCreate);
     Q_ASSERT(ddata);
     ddata->setImplicitDestructible();
-
-    return v8engine->toQObject(object);
 }
 
 

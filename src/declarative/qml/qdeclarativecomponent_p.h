@@ -87,7 +87,7 @@ public:
 
     QObject *beginCreate(QDeclarativeContextData *);
     void completeCreate();
-    QObject *completeCreateObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
+    void initializeObjectWithInitialProperties(v8::Handle<v8::Object> qmlGlobal, v8::Handle<v8::Object> valuemap, QObject *toCreate);
 
     QDeclarativeTypeData *typeData;
     virtual void typeDataReady(QDeclarativeTypeData *);

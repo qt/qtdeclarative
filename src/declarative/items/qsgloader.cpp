@@ -53,14 +53,15 @@
 QT_BEGIN_NAMESPACE
 
 QSGLoaderPrivate::QSGLoaderPrivate()
-    : item(0), component(0), updatingSize(false),
+    : item(0), component(0), itemContext(0), incubator(0), updatingSize(false),
       itemWidthValid(false), itemHeightValid(false),
-      active(true), loadingFromSource(false)
+      active(true), loadingFromSource(false), asynchronous(false)
 {
 }
 
 QSGLoaderPrivate::~QSGLoaderPrivate()
 {
+    delete incubator;
     disposeInitialPropertyValues();
 }
 
@@ -79,6 +80,9 @@ void QSGLoaderPrivate::itemGeometryChanged(QSGItem *resizeItem, const QRectF &ne
 void QSGLoaderPrivate::clear()
 {
     disposeInitialPropertyValues();
+
+    if (incubator)
+        incubator->clear();
 
     if (loadingFromSource && component) {
         component->deleteLater();
@@ -526,72 +530,106 @@ void QSGLoaderPrivate::load()
     }
 }
 
-void QSGLoaderPrivate::_q_sourceLoaded()
+void QSGLoaderIncubator::setInitialState(QObject *o)
+{
+    loader->setInitialState(o);
+}
+
+void QSGLoaderPrivate::setInitialState(QObject *obj)
 {
     Q_Q(QSGLoader);
 
-    if (component) {
-        if (!component->errors().isEmpty()) {
-            QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
-            if (loadingFromSource)
-                emit q->sourceChanged();
-            else
-                emit q->sourceComponentChanged();
-            emit q->statusChanged();
-            emit q->progressChanged();
-            disposeInitialPropertyValues(); // cleanup
-            return;
-        }
+    QSGItem *item = qobject_cast<QSGItem*>(obj);
+    if (item) {
+        QDeclarative_setParent_noEvent(itemContext, obj);
+        QDeclarative_setParent_noEvent(item, q);
+        item->setParentItem(q);
+    }
 
-        QDeclarativeContext *creationContext = component->creationContext();
-        if (!creationContext) creationContext = qmlContext(q);
-        QDeclarativeContext *ctxt = new QDeclarativeContext(creationContext);
-        ctxt->setContextObject(q);
+    if (initialPropertyValues.IsEmpty())
+        return;
 
-        QDeclarativeGuard<QDeclarativeComponent> c = component;
-        QObject *obj = component->beginCreate(ctxt);
-        if (component != c) {
-            // component->create could trigger a change in source that causes
-            // component to be set to something else. In that case we just
-            // need to cleanup.
-            if (c)
-                completeCreateWithInitialPropertyValues(c, obj, initialPropertyValues, qmlGlobalForIpv);
-            delete obj;
-            delete ctxt;
-            disposeInitialPropertyValues(); // cleanup
-            return;
-        }
-        if (obj) {
-            item = qobject_cast<QSGItem *>(obj);
-            if (item) {
-                QDeclarative_setParent_noEvent(ctxt, obj);
-                QDeclarative_setParent_noEvent(item, q);
-                item->setParentItem(q);
-//                item->setFocus(true);
-                initResize();
-            } else {
-                qmlInfo(q) << QSGLoader::tr("Loader does not support loading non-visual elements.");
-                delete obj;
-                delete ctxt;
-            }
+    QDeclarativeComponentPrivate *d = QDeclarativeComponentPrivate::get(component);
+    Q_ASSERT(d && d->engine);
+    d->initializeObjectWithInitialProperties(qmlGlobalForIpv, initialPropertyValues, obj);
+}
+
+void QSGLoaderIncubator::statusChanged(Status status)
+{
+    loader->incubatorStateChanged(status);
+}
+
+void QSGLoaderPrivate::incubatorStateChanged(QDeclarativeIncubator::Status status)
+{
+    Q_Q(QSGLoader);
+    if (status == QDeclarativeIncubator::Loading || status == QDeclarativeIncubator::Null)
+        return;
+
+    if (status == QDeclarativeIncubator::Ready) {
+        QObject *obj = incubator->object();
+        item = qobject_cast<QSGItem*>(obj);
+        if (item) {
+            initResize();
         } else {
-            if (!component->errors().isEmpty())
-                QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
+            qmlInfo(q) << QSGLoader::tr("Loader does not support loading non-visual elements.");
+            delete itemContext;
+            itemContext = 0;
             delete obj;
-            delete ctxt;
-            source = QUrl();
         }
-        completeCreateWithInitialPropertyValues(component, obj, initialPropertyValues, qmlGlobalForIpv);
+    } else if (status == QDeclarativeIncubator::Error) {
+        if (!incubator->errors().isEmpty())
+            QDeclarativeEnginePrivate::warning(qmlEngine(q), incubator->errors());
+        delete itemContext;
+        itemContext = 0;
+        delete incubator->object();
+        source = QUrl();
+    }
+    if (loadingFromSource)
+        emit q->sourceChanged();
+    else
+        emit q->sourceComponentChanged();
+    emit q->statusChanged();
+    emit q->progressChanged();
+    emit q->itemChanged();
+    emit q->loaded();
+    disposeInitialPropertyValues(); // cleanup
+}
+
+void QSGLoaderPrivate::_q_sourceLoaded()
+{
+    Q_Q(QSGLoader);
+    if (!component || !component->errors().isEmpty()) {
+        if (component)
+            QDeclarativeEnginePrivate::warning(qmlEngine(q), component->errors());
         if (loadingFromSource)
             emit q->sourceChanged();
         else
             emit q->sourceComponentChanged();
         emit q->statusChanged();
         emit q->progressChanged();
-        emit q->itemChanged();
-        emit q->loaded();
+        disposeInitialPropertyValues(); // cleanup
+        return;
     }
-    disposeInitialPropertyValues(); // cleanup
+
+    QDeclarativeContext *creationContext = component->creationContext();
+    if (!creationContext) creationContext = qmlContext(q);
+    itemContext = new QDeclarativeContext(creationContext);
+    itemContext->setContextObject(q);
+
+    if (incubator) {
+        bool async = incubator->incubationMode() == QDeclarativeIncubator::Asynchronous;
+        if (asynchronous != async) {
+            delete incubator;
+            incubator = 0;
+        }
+    }
+    if (!incubator)
+        incubator = new QSGLoaderIncubator(this, asynchronous ? QDeclarativeIncubator::Asynchronous : QDeclarativeIncubator::AsynchronousIfNested);
+
+    component->create(*incubator, itemContext);
+
+    if (incubator->status() == QDeclarativeIncubator::Loading)
+        emit q->statusChanged();
 }
 
 /*!
@@ -641,8 +679,29 @@ QSGLoader::Status QSGLoader::status() const
     if (!d->active)
         return Null;
 
-    if (d->component)
-        return static_cast<QSGLoader::Status>(d->component->status());
+    if (d->component) {
+        switch (d->component->status()) {
+        case QDeclarativeComponent::Loading:
+            return Loading;
+        case QDeclarativeComponent::Error:
+            return Error;
+        case QDeclarativeComponent::Null:
+            return Null;
+        default:
+            break;
+        }
+    }
+
+    if (d->incubator) {
+        switch (d->incubator->status()) {
+        case QDeclarativeIncubator::Loading:
+            return Loading;
+        case QDeclarativeIncubator::Error:
+            return Error;
+        default:
+            break;
+        }
+    }
 
     if (d->item)
         return Ready;
@@ -690,6 +749,30 @@ qreal QSGLoader::progress() const
         return d->component->progress();
 
     return 0.0;
+}
+
+/*!
+\qmlproperty bool QtQuick2::Loader::asynchronous
+
+This property holds whether the component will be instantiated asynchronously.
+
+Note that this property affects object instantiation only; it is unrelated to
+loading a component asynchronously via a network.
+*/
+bool QSGLoader::asynchronous() const
+{
+    Q_D(const QSGLoader);
+    return d->asynchronous;
+}
+
+void QSGLoader::setAsynchronous(bool a)
+{
+    Q_D(QSGLoader);
+    if (d->asynchronous == a)
+        return;
+
+    d->asynchronous = a;
+    emit asynchronousChanged();
 }
 
 void QSGLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
@@ -763,18 +846,6 @@ v8::Handle<v8::Object> QSGLoaderPrivate::extractInitialPropertyValues(QDeclarati
     }
 
     return valuemap;
-}
-
-void QSGLoaderPrivate::completeCreateWithInitialPropertyValues(QDeclarativeComponent *component, QObject *object, v8::Handle<v8::Object> initialPropertyValues, v8::Handle<v8::Object> qmlGlobal)
-{
-    if (initialPropertyValues.IsEmpty()) {
-        component->completeCreate();
-        return;
-    }
-
-    QDeclarativeComponentPrivate *d = QDeclarativeComponentPrivate::get(component);
-    Q_ASSERT(d && d->engine);
-    d->completeCreateObjectWithInitialProperties(qmlGlobal, initialPropertyValues, object);
 }
 
 #include <moc_qsgloader_p.cpp>
