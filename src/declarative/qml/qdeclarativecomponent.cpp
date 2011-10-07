@@ -1052,6 +1052,57 @@ void QDeclarativeComponent::createObject(QDeclarativeV8Function *args)
         args->returnValue(object);
 }
 
+/*!
+    \qmlmethod object Component::incubateObject(Item parent, object properties, enum mode)
+
+    Creates an incubator for instance of this component.  Incubators allow new component 
+    instances to be instantiated asynchronously and not cause freezes in the UI.
+
+    The \a parent argument specifies the parent the created instance will have.  Omitting the 
+    parameter or passing null will create anobject with no parent.  In this case, a reference
+    to the created object must be maintained by the application of the object will eventually
+    be garbage collected.
+
+    The \a properties argument is specified as a map of property-value items which will be
+    set on the created object during its construction.  \a mode may be Qt.Synchronous or 
+    Qt.Asynchronous and controls whether the instance is created synchronously or asynchronously. 
+    The default is asynchronously.  In some circumstances, even if Qt.Synchronous is specified,
+    the incubator may create the object asynchronously.  This happens if the component calling
+    incubateObject() is itself being created asynchronously.
+
+    All three arguments are optional.
+
+    If successful, the method returns an incubator, otherwise null.  The incubator has the following
+    properties:
+
+    \list
+    \i status The status of the incubator.  Valid values are Component.Ready, Component.Loading and
+       Component.Error.
+    \i object The created object instance.  Will only be available once the incubator is in the 
+       Ready status.
+    \i onStatusChanged Specifies a callback function to be invoked when the status changes.  The
+       status is passed as a parameter to the callback.
+    \i forceCompletion() Call to complete incubation synchronously.
+    \endlist
+
+    The following example demonstrates how to use an incubator:
+
+    \js
+        var component = Qt.createComponent("Button.qml");
+
+        var incubator = component.incubateObject(parent, { x: 10, y: 10 });
+        if (incubator.status != Component.Ready) {
+            incubator.onStatusChanged = function(status) {
+                if (status == Component.Ready) {
+                    print ("Object", incubator.object, "is now ready!");
+                }
+            }
+        } else {
+            print ("Object", incubator.object, "is ready immediately!");
+        }
+    \endjs
+*/
+
 void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 {
     Q_D(QDeclarativeComponent);
@@ -1067,12 +1118,14 @@ void QDeclarativeComponent::incubateObject(QDeclarativeV8Function *args)
 
     if (args->Length() >= 2) {
         v8::Local<v8::Value> v = (*args)[1];
-        if (!v->IsObject() || v->IsArray()) {
+        if (v->IsNull()) {
+        } else if (!v->IsObject() || v->IsArray()) {
             qmlInfo(this) << tr("createObject: value is not an object");
             args->returnValue(v8::Null());
             return;
+        } else {
+            valuemap = v8::Local<v8::Object>::Cast(v);
         }
-        valuemap = v8::Local<v8::Object>::Cast(v);
     }
 
     if (args->Length() >= 3) {
@@ -1159,7 +1212,7 @@ QDeclarativeComponentExtension::QDeclarativeComponentExtension(QV8Engine *engine
 #define INITIALPROPERTIES_SOURCE \
         "(function(object, values) {"\
             "try {"\
-                "for(var property in values) {"\
+                "for(var property in values) {" \
                     "try {"\
                         "var properties = property.split(\".\");"\
                         "var o = object;"\
@@ -1242,7 +1295,7 @@ void QV8IncubatorResource::setInitialState(QObject *o)
         v8::Context::Scope scope(engine->context());
 
         v8::Handle<v8::Value> function = e->initialProperties->Run(qmlGlobal);
-        v8::Handle<v8::Value> args[] = { me, valuemap };
+        v8::Handle<v8::Value> args[] = { engine->newQObject(o), valuemap };
         v8::Handle<v8::Function>::Cast(function)->Call(engine->global(), 2, args);
 
         qPersistentDispose(valuemap);
