@@ -146,6 +146,7 @@ QV8Engine::QV8Engine(QJSEngine* qq, QJSEngine::ContextOwnership ownership)
 
 QV8Engine::~QV8Engine()
 {
+    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8Engine::~QV8Engine()", "called after v8::Isolate has exited");
     for (int ii = 0; ii < m_extensionData.count(); ++ii) 
         delete m_extensionData[ii];
     m_extensionData.clear();
@@ -1383,6 +1384,26 @@ void QV8GCCallback::registerGcPrologueCallback()
     }
 }
 
+void QV8GCCallback::ThreadData::releaseStrongReferencer()
+{
+    // NOTE: must be called with a valid current isolate
+    if (!referencer.strongReferencer.IsEmpty()) {
+        qPersistentDispose(referencer.strongReferencer);
+    }
+}
+
+void QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()
+{
+    // Note that only worker-thread implementations with their
+    // own QV8Engine should explicitly release the Referencer
+    // by calling this functions.
+    Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::releaseWorkerThreadGcPrologueCallbackData()", "called after v8::Isolate has exited");
+    if (threadData.hasLocalData()) {
+        QV8GCCallback::ThreadData *td = threadData.localData();
+        td->releaseStrongReferencer();
+    }
+}
+
 QV8GCCallback::Node::Node(PrologueCallback callback)
     : prologueCallback(callback)
 {
@@ -1395,7 +1416,12 @@ QV8GCCallback::Node::~Node()
 
 QV8GCCallback::Referencer::~Referencer()
 {
-    qPersistentDispose(strongReferencer);
+    if (!strongReferencer.IsEmpty()) {
+        Q_ASSERT_X(v8::Isolate::GetCurrent(), "QV8GCCallback::Referencer::~Referencer()", "called after v8::Isolate has exited");
+        // automatically release the strongReferencer if it hasn't
+        // been explicitly released already.
+        qPersistentDispose(strongReferencer);
+    }
 }
 
 QV8GCCallback::Referencer::Referencer()
