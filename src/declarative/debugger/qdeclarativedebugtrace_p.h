@@ -70,6 +70,8 @@ struct QDeclarativeDebugData
     //###
     QString detailData; //used by RangeData and RangeLocation
     int line;           //used by RangeLocation
+    int framerate;      //used by animation events
+    int animationcount; //used by animation events
 
     QByteArray toByteArray() const;
 };
@@ -95,6 +97,7 @@ public:
         FramePaint,
         Mouse,
         Key,
+        AnimationFrame,
 
         MaximumEventType
     };
@@ -120,8 +123,10 @@ public:
     static void rangeLocation(RangeType, const QString &, int);
     static void rangeLocation(RangeType, const QUrl &, int);
     static void endRange(RangeType);
+    static void animationFrame(qint64);
 
     QDeclarativeDebugTrace();
+    ~QDeclarativeDebugTrace();
 protected:
     virtual void messageReceived(const QByteArray &);
 private:
@@ -132,6 +137,7 @@ private:
     void rangeLocationImpl(RangeType, const QString &, int);
     void rangeLocationImpl(RangeType, const QUrl &, int);
     void endRangeImpl(RangeType);
+    void animationFrameImpl(qint64);
     void processMessage(const QDeclarativeDebugData &);
     void sendMessages();
     QElapsedTimer m_timer;
