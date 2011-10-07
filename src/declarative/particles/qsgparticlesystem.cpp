@@ -88,9 +88,9 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 */
 
 /*!
-    \qmlproperty bool QtQuick.Particles2::ParticleSystem::clear
+    \qmlproperty bool QtQuick.Particles2::ParticleSystem::empty
 
-    clear is set to true when there are no live particles left in the system.
+    empty is set to true when there are no live particles left in the system.
 
     You can use this to pause the system, keeping it from spending any time updating,
     but you will need to resume it in order for additional particles to be generated
