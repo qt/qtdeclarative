@@ -273,8 +273,12 @@ void QDeclarativeDebugTrace::messageReceived(const QByteArray &message)
 
     m_messageReceived = true;
 
-    if (!m_enabled)
+    if (!m_enabled) {
+        m_enabled = true;
+        addEvent(EndTrace);
+        m_enabled = false;
         sendMessages();
+    }
 }
 
 QT_END_NAMESPACE

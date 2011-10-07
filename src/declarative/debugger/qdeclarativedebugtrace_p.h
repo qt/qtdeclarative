@@ -98,6 +98,7 @@ public:
         Mouse,
         Key,
         AnimationFrame,
+        EndTrace,
 
         MaximumEventType
     };
