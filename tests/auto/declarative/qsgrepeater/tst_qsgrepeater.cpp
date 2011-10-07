@@ -49,9 +49,11 @@
 #include <private/qsgrepeater_p.h>
 #include <private/qsgtext_p.h>
 
+#include "../shared/util.h"
+
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 class tst_QSGRepeater : public QObject
@@ -178,7 +180,7 @@ void tst_QSGRepeater::numberModel()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/intmodel.qml"));
+    canvas->setSource(TEST_FILE("intmodel.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -219,7 +221,7 @@ void tst_QSGRepeater::objectList()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", QVariant::fromValue(data));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/objlist.qml"));
+    canvas->setSource(TEST_FILE("objlist.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -260,7 +262,7 @@ void tst_QSGRepeater::stringList()
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", data);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/repeater1.qml"));
+    canvas->setSource(TEST_FILE("repeater1.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -308,7 +310,7 @@ void tst_QSGRepeater::dataModel_adding()
 
     TestModel testModel;
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/repeater2.qml"));
+    canvas->setSource(TEST_FILE("repeater2.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -378,7 +380,7 @@ void tst_QSGRepeater::dataModel_removing()
     testModel.addItem("five", "5");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/repeater2.qml"));
+    canvas->setSource(TEST_FILE("repeater2.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -444,7 +446,7 @@ void tst_QSGRepeater::dataModel_changes()
     testModel.addItem("three", "3");
 
     ctxt->setContextProperty("testData", &testModel);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/repeater2.qml"));
+    canvas->setSource(TEST_FILE("repeater2.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -478,7 +480,7 @@ void tst_QSGRepeater::itemModel()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/itemlist.qml"));
+    canvas->setSource(TEST_FILE("itemlist.qml"));
     qApp->processEvents();
 
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
@@ -522,7 +524,7 @@ void tst_QSGRepeater::resetModel()
 
     QDeclarativeContext *ctxt = canvas->rootContext();
     ctxt->setContextProperty("testData", dataA);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/repeater1.qml"));
+    canvas->setSource(TEST_FILE("repeater1.qml"));
     qApp->processEvents();
     QSGRepeater *repeater = findItem<QSGRepeater>(canvas->rootObject(), "repeater");
     QVERIFY(repeater != 0);
@@ -584,7 +586,7 @@ void tst_QSGRepeater::resetModel()
 void tst_QSGRepeater::modelChanged()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("/modelChanged.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("modelChanged.qml"));
 
     QSGItem *rootObject = qobject_cast<QSGItem*>(component.create());
     QVERIFY(rootObject);
@@ -607,7 +609,7 @@ void tst_QSGRepeater::modelChanged()
 void tst_QSGRepeater::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, TEST_FILE("/properties.qml"));
+    QDeclarativeComponent component(&engine, TEST_FILE("properties.qml"));
 
     QSGItem *rootObject = qobject_cast<QSGItem*>(component.create());
     QVERIFY(rootObject);
