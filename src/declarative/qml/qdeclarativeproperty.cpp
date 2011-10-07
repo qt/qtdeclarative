@@ -1297,7 +1297,7 @@ bool QDeclarativePropertyPrivate::writeBinding(const QDeclarativeProperty &that,
         } \
 
 
-    if (object && pp->valueType.valueTypeCoreIdx == -1) {
+    if (!isUndefined && object && pp->valueType.valueTypeCoreIdx == -1) {
         switch (type) {
         case QMetaType::Int:
             if (result->IsInt32()) 
