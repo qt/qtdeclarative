@@ -30,6 +30,5 @@
 #
 %dependencies = (
         "qtbase" => "refs/heads/master",
-        "qtsvg" => "refs/heads/master",
         "qtxmlpatterns" => "refs/heads/master",
 );
