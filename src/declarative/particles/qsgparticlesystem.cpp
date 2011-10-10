@@ -415,6 +415,10 @@ QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     frameDuration = 1;
     frameCount = 1;
     animT = -1;
+    animX = 0;
+    animY = 0;
+    animWidth = 1;
+    animHeight = 1;
     color.r = 255;
     color.g = 255;
     color.b = 255;
@@ -447,6 +451,10 @@ void QSGParticleData::clone(const QSGParticleData& other)
     frameDuration = other.frameDuration;
     frameCount = other.frameCount;
     animT = other.animT;
+    animX = other.animX;
+    animY = other.animY;
+    animWidth = other.animWidth;
+    animHeight = other.animHeight;
     color.r = other.color.r;
     color.g = other.color.g;
     color.b = other.color.b;
