@@ -55,6 +55,47 @@
 
 QT_BEGIN_NAMESPACE
 
+static const char vertexShaderCode[] =
+    "attribute highp vec2 vTex;\n"
+    "uniform highp vec4 animData;// interpolate(bool), duration, frameCount (this anim), timestamp (this anim)\n"
+    "uniform highp vec4 animPos;//sheet x,y, width/height of this anim\n"
+    "uniform highp vec4 animSheetSize; //width/height of whole sheet, width/height of element\n"
+    "\n"
+    "uniform highp mat4 qt_Matrix;\n"
+    "uniform highp float timestamp;\n"
+    "\n"
+    "varying highp vec4 fTexS;\n"
+    "varying lowp float progress;\n"
+    "\n"
+    "\n"
+    "void main() {\n"
+    "    //Calculate frame location in texture\n"
+    "    highp float frameIndex = mod((((timestamp - animData.w)*1000.)/animData.y),animData.z);\n"
+    "    progress = mod((timestamp - animData.w)*1000., animData.y) / animData.y;\n"
+    "\n"
+    "    frameIndex = floor(frameIndex);\n"
+    "    fTexS.xy = vec2(((frameIndex + vTex.x) * animPos.z / animSheetSize.x), ((animPos.y + vTex.y * animPos.w) / animSheetSize.y));\n"
+    "\n"
+    "    //Next frame is also passed, for interpolation\n"
+    "    //### Should the next anim be precalculated to allow for interpolation there?\n"
+    "    if (animData.x == 1.0 && frameIndex != animData.z - 1.)//Can't do it for the last frame though, this anim may not loop\n"
+    "        frameIndex = mod(frameIndex+1., animData.z);\n"
+    "    fTexS.zw = vec2(((frameIndex + vTex.x) * animPos.z / animSheetSize.x), ((animPos.y + vTex.y * animPos.w) / animSheetSize.y));\n"
+    "\n"
+    "    gl_Position = qt_Matrix * vec4(animSheetSize.z * vTex.x, animSheetSize.w * vTex.y, 0, 1);\n"
+    "}\n";
+
+static const char fragmentShaderCode[] =
+    "uniform sampler2D texture;\n"
+    "uniform lowp float qt_Opacity;\n"
+    "\n"
+    "varying highp vec4 fTexS;\n"
+    "varying lowp float progress;\n"
+    "\n"
+    "void main() {\n"
+    "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), progress) * qt_Opacity;\n"
+    "}\n";
+
 class QSGSpriteMaterial : public QSGMaterial
 {
 public:
@@ -70,20 +111,34 @@ public:
     QSGTexture *texture;
 
     qreal timestamp;
-    qreal timelength;
-    int framecount;
-    int animcount;
-    int width;
-    int height;
+    float interpolate;
+    float frameDuration;
+    float frameCount;
+    float animT;
+    float animX;
+    float animY;
+    float animWidth;
+    float animHeight;
+    float sheetWidth;
+    float sheetHeight;
+    float elementWidth;
+    float elementHeight;
 };
 
 QSGSpriteMaterial::QSGSpriteMaterial()
     : timestamp(0)
-    , timelength(1)
-    , framecount(1)
-    , animcount(1)
-    , width(0)
-    , height(0)
+    , interpolate(1.0f)
+    , frameDuration(1.0f)
+    , frameCount(1.0f)
+    , animT(0.0f)
+    , animX(0.0f)
+    , animY(0.0f)
+    , animWidth(1.0f)
+    , animHeight(1.0f)
+    , sheetWidth(1.0f)
+    , sheetHeight(1.0f)
+    , elementWidth(1.0f)
+    , elementHeight(1.0f)
 {
     setFlag(Blending, true);
 }
@@ -98,16 +153,6 @@ class SpriteMaterialData : public QSGMaterialShader
 public:
     SpriteMaterialData(const char *vertexFile = 0, const char *fragmentFile = 0)
     {
-        QFile vf(vertexFile ? QLatin1String(vertexFile) : QLatin1String(":defaultshaders/spriteimagevertex.shader"));
-        vf.open(QFile::ReadOnly);
-        m_vertex_code = vf.readAll();
-
-        QFile ff(fragmentFile ? QLatin1String(fragmentFile) : QLatin1String(":defaultshaders/spriteimagefragment.shader"));
-        ff.open(QFile::ReadOnly);
-        m_fragment_code = ff.readAll();
-
-        Q_ASSERT(!m_vertex_code.isNull());
-        Q_ASSERT(!m_fragment_code.isNull());
     }
 
     void deactivate() {
@@ -125,52 +170,44 @@ public:
 
         program()->setUniformValue(m_opacity_id, state.opacity());
         program()->setUniformValue(m_timestamp_id, (float) m->timestamp);
-        program()->setUniformValue(m_framecount_id, (float) m->framecount);
-        program()->setUniformValue(m_animcount_id, (float) m->animcount);
-        program()->setUniformValue(m_width_id, (float) m->width);
-        program()->setUniformValue(m_height_id, (float) m->height);
+        program()->setUniformValue(m_animData_id, m->interpolate, m->frameDuration, m->frameCount, m->animT);
+        program()->setUniformValue(m_animPos_id, m->animX, m->animY, m->animWidth, m->animHeight);
+        program()->setUniformValue(m_animSheetSize_id, m->sheetWidth, m->sheetHeight, m->elementWidth, m->elementHeight);
 
         if (state.isMatrixDirty())
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
     virtual void initialize() {
-        m_matrix_id = program()->uniformLocation("matrix");
-        m_opacity_id = program()->uniformLocation("opacity");
+        m_matrix_id = program()->uniformLocation("qt_Matrix");
+        m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_timestamp_id = program()->uniformLocation("timestamp");
-        m_framecount_id = program()->uniformLocation("framecount");
-        m_animcount_id = program()->uniformLocation("animcount");
-        m_width_id = program()->uniformLocation("width");
-        m_height_id = program()->uniformLocation("height");
+        m_animData_id = program()->uniformLocation("animData");
+        m_animPos_id = program()->uniformLocation("animPos");
+        m_animSheetSize_id = program()->uniformLocation("animSheetSize");
     }
 
-    virtual const char *vertexShader() const { return m_vertex_code.constData(); }
-    virtual const char *fragmentShader() const { return m_fragment_code.constData(); }
+    virtual const char *vertexShader() const { return vertexShaderCode; }
+    virtual const char *fragmentShader() const { return fragmentShaderCode; }
 
     virtual char const *const *attributeNames() const {
         static const char *attr[] = {
            "vTex",
-           "vAnimData",
             0
         };
         return attr;
     }
 
-    virtual bool isColorTable() const { return false; }
-
     int m_matrix_id;
     int m_opacity_id;
     int m_timestamp_id;
-    int m_framecount_id;
-    int m_animcount_id;
-    int m_width_id;
-    int m_height_id;
-
-    QByteArray m_vertex_code;
-    QByteArray m_fragment_code;
+    int m_animData_id;
+    int m_animPos_id;
+    int m_animSheetSize_id;
 
     static float chunkOfBytes[1024];
 };
+
 float SpriteMaterialData::chunkOfBytes[1024];
 
 QSGMaterialShader *QSGSpriteMaterial::createShader() const
@@ -181,10 +218,6 @@ QSGMaterialShader *QSGSpriteMaterial::createShader() const
 struct SpriteVertex {
     float tx;
     float ty;
-    float animIdx;
-    float frameDuration;
-    float frameCount;
-    float animT;
 };
 
 struct SpriteVertices {
@@ -194,6 +227,35 @@ struct SpriteVertices {
     SpriteVertex v4;
 };
 
+/*!
+    \qmlclass SpriteImage QSGSpriteImage
+    \inqmlmodule QtQuick 2
+    \inherits Item
+    \brief The SpriteImage element draws a sprite animation
+
+*/
+/*!
+    \qmlproperty bool QtQuick2::SpriteImage::running
+
+    Whether the sprite is animating or not.
+
+    Default is true
+*/
+/*!
+    \qmlproperty bool QtQuick2::SpriteImage::interpolate
+
+    If true, interpolation will occur between sprite frames to make the
+    animation appear smoother.
+
+    Default is true.
+*/
+/*!
+    \qmlproperty list<Sprite> QtQuick2::SpriteImage::sprites
+
+    The sprite or sprites to draw. Sprites will be scaled to the size of this element.
+*/
+
+//TODO: Implicitly size element to size of first sprite?
 QSGSpriteImage::QSGSpriteImage(QSGItem *parent) :
     QSGItem(parent)
     , m_node(0)
@@ -201,6 +263,7 @@ QSGSpriteImage::QSGSpriteImage(QSGItem *parent) :
     , m_spriteEngine(0)
     , m_pleaseReset(false)
     , m_running(true)
+    , m_interpolate(true)
 {
     setFlag(ItemHasContents);
     connect(this, SIGNAL(runningChanged(bool)),
@@ -226,13 +289,12 @@ void QSGSpriteImage::createEngine()
 
 static QSGGeometry::Attribute SpriteImage_Attributes[] = {
     QSGGeometry::Attribute::create(0, 2, GL_FLOAT),         // tex
-    QSGGeometry::Attribute::create(1, 4, GL_FLOAT)          // animData
 };
 
 static QSGGeometry::AttributeSet SpriteImage_AttributeSet =
 {
-    2, // Attribute Count
-    (4 + 2) * sizeof(float),
+    1, // Attribute Count
+    2 * sizeof(float),
     SpriteImage_Attributes
 };
 
@@ -243,11 +305,6 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
         return 0;
     }
 
-    if (m_material) {
-        delete m_material;
-        m_material = 0;
-    }
-
     m_material = new QSGSpriteMaterial();
 
     QImage image = m_spriteEngine->assembledImage();
@@ -255,7 +312,19 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
         return 0;
     m_material->texture = sceneGraphEngine()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
-    m_material->framecount = m_spriteEngine->maxFrames();
+    m_spriteEngine->start(0);
+    m_material->interpolate = m_interpolate ? 1.0 : 0.0;
+    m_material->frameCount = m_spriteEngine->spriteFrames();
+    m_material->frameDuration = m_spriteEngine->spriteDuration();
+    m_material->animT = 0;
+    m_material->animX = m_spriteEngine->spriteX();
+    m_material->animY = m_spriteEngine->spriteY();
+    m_material->animWidth = m_spriteEngine->spriteWidth();
+    m_material->animHeight = m_spriteEngine->spriteHeight();
+    m_material->sheetWidth = image.width();
+    m_material->sheetHeight = image.height();
+    m_material->elementWidth = width();
+    m_material->elementHeight = height();
 
     int vCount = 4;
     int iCount = 6;
@@ -263,11 +332,6 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
     g->setDrawingMode(GL_TRIANGLES);
 
     SpriteVertices *p = (SpriteVertices *) g->vertexData();
-    m_spriteEngine->start(0);
-    p->v1.animT = p->v2.animT = p->v3.animT = p->v4.animT = 0;
-    p->v1.animIdx = p->v2.animIdx = p->v3.animIdx = p->v4.animIdx = 0;
-    p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->spriteFrames();
-    p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = m_spriteEngine->spriteDuration();
 
     p->v1.tx = 0;
     p->v1.ty = 0;
@@ -294,6 +358,7 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
     m_node = new QSGGeometryNode();
     m_node->setGeometry(g);
     m_node->setMaterial(m_material);
+    m_node->setFlag(QSGGeometryNode::OwnsMaterial);
     return m_node;
 }
 
@@ -334,19 +399,22 @@ void QSGSpriteImage::prepareNextFrame()
     uint timeInt = m_timestamp.elapsed();
     qreal time =  timeInt / 1000.;
     m_material->timestamp = time;
-    m_material->animcount = m_spriteEngine->spriteCount();
-    m_material->height = height();
-    m_material->width = width();
+    m_material->elementHeight = height();
+    m_material->elementWidth = width();
+    m_material->interpolate = m_interpolate;
 
     //Advance State
     SpriteVertices *p = (SpriteVertices *) m_node->geometry()->vertexData();
     m_spriteEngine->updateSprites(timeInt);
-    int curIdx = m_spriteEngine->spriteState();
-    if(curIdx != p->v1.animIdx){
-        p->v1.animIdx = p->v2.animIdx = p->v3.animIdx = p->v4.animIdx = curIdx;
-        p->v1.animT = p->v2.animT = p->v3.animT = p->v4.animT = m_spriteEngine->spriteStart()/1000.0;
-        p->v1.frameCount = p->v2.frameCount = p->v3.frameCount = p->v4.frameCount = m_spriteEngine->spriteFrames();
-        p->v1.frameDuration = p->v2.frameDuration = p->v3.frameDuration = p->v4.frameDuration = m_spriteEngine->spriteDuration();
+    int curY = m_spriteEngine->spriteY();
+    if (curY != m_material->animY){
+        m_material->animT = m_spriteEngine->spriteStart()/1000.0;
+        m_material->frameCount = m_spriteEngine->spriteFrames();
+        m_material->frameDuration = m_spriteEngine->spriteDuration();
+        m_material->animX = m_spriteEngine->spriteX();
+        m_material->animY = m_spriteEngine->spriteY();
+        m_material->animWidth = m_spriteEngine->spriteWidth();
+        m_material->animHeight = m_spriteEngine->spriteHeight();
     }
 }
 

@@ -60,6 +60,7 @@ class QSGSpriteImage : public QSGItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
     //###try to share similar spriteEngines for less overhead?
     Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
@@ -74,10 +75,15 @@ public:
         return m_running;
     }
 
+    bool interpolate() const
+    {
+        return m_interpolate;
+    }
+
 signals:
 
-
     void runningChanged(bool arg);
+    void interpolateChanged(bool arg);
 
 public slots:
 
@@ -86,6 +92,14 @@ void setRunning(bool arg)
     if (m_running != arg) {
         m_running = arg;
         emit runningChanged(arg);
+    }
+}
+
+void setInterpolate(bool arg)
+{
+    if (m_interpolate != arg) {
+        m_interpolate = arg;
+        emit interpolateChanged(arg);
     }
 }
 
@@ -105,6 +119,7 @@ private:
     int m_maxFrames;
     bool m_pleaseReset;
     bool m_running;
+    bool m_interpolate;
 };
 
 QT_END_NAMESPACE

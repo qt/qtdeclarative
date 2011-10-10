@@ -66,6 +66,186 @@ DEFINE_BOOL_CONFIG_OPTION(qmlParticlesDebug, QML_PARTICLES_DEBUG)
 //TODO: Make it larger on desktop? Requires fixing up shader code with the same define
 #define UNIFORM_ARRAY_SIZE 64
 
+static const char vertexShaderCode[] =
+    "attribute highp vec2 vPos;\n"
+    "attribute highp vec4 vData; //  x = time,  y = lifeSpan, z = size,  w = endSize\n"
+    "attribute highp vec4 vVec; // x,y = constant speed,  z,w = acceleration\n"
+    "uniform highp float entry;\n"
+    "#ifdef COLOR\n"
+    "attribute lowp vec4 vColor;\n"
+    "#endif\n"
+    "#ifdef DEFORM\n"
+    "attribute highp vec2 vTex;\n"
+    "attribute highp vec4 vDeformVec; //x,y x unit vector; z,w = y unit vector\n"
+    "attribute highp vec3 vRotation; //x = radians of rotation, y=rotation speed, z= bool autoRotate\n"
+    "#endif\n"
+    "#ifdef SPRITE\n"
+    "attribute highp vec4 vAnimData;// interpolate(bool), duration, frameCount (this anim), timestamp (this anim)\n"
+    "attribute highp vec4 vAnimPos;//sheet x,y, width/height of this anim\n"
+    "uniform highp vec2 animSheetSize; //width/height of whole sheet\n"
+    "#endif\n"
+    "\n"
+    "uniform highp mat4 qt_Matrix;\n"
+    "uniform highp float timestamp;\n"
+    "#ifdef TABLE\n"
+    "varying lowp vec2 tt;//y is progress if Sprite mode\n"
+    "uniform highp float sizetable[64];\n"
+    "uniform highp float opacitytable[64];\n"
+    "#endif\n"
+    "#ifdef SPRITE\n"
+    "varying highp vec4 fTexS;\n"
+    "#else\n"
+    "#ifdef DEFORM\n"
+    "varying highp vec2 fTex;\n"
+    "#endif\n"
+    "#endif\n"
+    "#ifdef COLOR\n"
+    "varying lowp vec4 fColor;\n"
+    "#else\n"
+    "varying lowp float fFade;\n"
+    "#endif\n"
+    "\n"
+    "\n"
+    "void main() {\n"
+    "\n"
+    "    highp float t = (timestamp - vData.x) / vData.y;\n"
+    "    if (t < 0. || t > 1.){\n"
+    "#ifdef DEFORM //Not point sprites\n"
+    "        gl_Position = qt_Matrix * vec4(vPos.x, vPos.y, 0., 1.);\n"
+    "#else\n"
+    "        gl_PointSize = 0.;\n"
+    "#endif\n"
+    "        return;\n"
+    "    }\n"
+    "#ifdef SPRITE\n"
+    "    //Calculate frame location in texture\n"
+    "    highp float frameIndex = mod((((timestamp - vAnimData.w)*1000.)/vAnimData.y),vAnimData.z);\n"
+    "    tt.y = mod((timestamp - vAnimData.w)*1000., vAnimData.y) / vAnimData.y;\n"
+    "\n"
+    "    frameIndex = floor(frameIndex);\n"
+    "    fTexS.xy = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));\n"
+    "\n"
+    "    //Next frame is also passed, for interpolation\n"
+    "    //### Should the next anim be precalculated to allow for interpolation there?\n"
+    "    if (vAnimData.x == 1.0 && frameIndex != vAnimData.z - 1.)//Can't do it for the last frame though, this anim may not loop\n"
+    "        frameIndex = mod(frameIndex+1., vAnimData.z);\n"
+    "    fTexS.zw = vec2(((frameIndex + vTex.x) * vAnimPos.z / animSheetSize.x), ((vAnimPos.y + vTex.y * vAnimPos.w) / animSheetSize.y));\n"
+    "#else\n"
+    "#ifdef DEFORM\n"
+    "    fTex = vTex;\n"
+    "#endif\n"
+    "#endif\n"
+    "    highp float currentSize = mix(vData.z, vData.w, t * t);\n"
+    "    lowp float fade = 1.;\n"
+    "    highp float fadeIn = min(t * 10., 1.);\n"
+    "    highp float fadeOut = 1. - clamp((t - 0.75) * 4.,0., 1.);\n"
+    "\n"
+    "#ifdef TABLE\n"
+    "    currentSize = currentSize * sizetable[int(floor(t*64.))];\n"
+    "    fade = fade * opacitytable[int(floor(t*64.))];\n"
+    "#endif\n"
+    "\n"
+    "    if (entry == 1.)\n"
+    "        fade = fade * fadeIn * fadeOut;\n"
+    "    else if (entry == 2.)\n"
+    "        currentSize = currentSize * fadeIn * fadeOut;\n"
+    "\n"
+    "    if (currentSize <= 0)//Sizes too small look jittery as they move\n"
+    "        currentSize = 0;\n"
+    "    else if (currentSize < 3)\n"
+    "        currentSize = 3;\n"
+    "\n"
+    "    highp vec2 pos;\n"
+    "#ifdef DEFORM\n"
+    "    highp float rotation = vRotation.x + vRotation.y * t * vData.y;\n"
+    "    if (vRotation.z == 1.0){\n"
+    "        highp vec2 curVel = vVec.zw * t * vData.y + vVec.xy;\n"
+    "        rotation += atan(curVel.y, curVel.x);\n"
+    "    }\n"
+    "    highp vec2 trigCalcs = vec2(cos(rotation), sin(rotation));\n"
+    "    highp vec4 deform = vDeformVec * currentSize * (vTex.xxyy - 0.5);\n"
+    "    highp vec4 rotatedDeform = deform.xxzz * trigCalcs.xyxy;\n"
+    "    rotatedDeform = rotatedDeform + (deform.yyww * trigCalcs.yxyx * vec4(-1.,1.,-1.,1.));\n"
+    "    /* The readable version:\n"
+    "    highp vec2 xDeform = vDeformVec.xy * currentSize * (vTex.x-0.5);\n"
+    "    highp vec2 yDeform = vDeformVec.zw * currentSize * (vTex.y-0.5);\n"
+    "    highp vec2 xRotatedDeform;\n"
+    "    xRotatedDeform.x = trigCalcs.x*xDeform.x - trigCalcs.y*xDeform.y;\n"
+    "    xRotatedDeform.y = trigCalcs.y*xDeform.x + trigCalcs.x*xDeform.y;\n"
+    "    highp vec2 yRotatedDeform;\n"
+    "    yRotatedDeform.x = trigCalcs.x*yDeform.x - trigCalcs.y*yDeform.y;\n"
+    "    yRotatedDeform.y = trigCalcs.y*yDeform.x + trigCalcs.x*yDeform.y;\n"
+    "    */\n"
+    "    pos = vPos\n"
+    "          + rotatedDeform.xy\n"
+    "          + rotatedDeform.zw\n"
+    "          + vVec.xy * t * vData.y         // apply speed\n"
+    "          + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration\n"
+    "#else\n"
+    "    pos = vPos\n"
+    "          + vVec.xy * t * vData.y         // apply speed vector..\n"
+    "          + 0.5 * vVec.zw * pow(t * vData.y, 2.);\n"
+    "    gl_PointSize = currentSize;\n"
+    "#endif\n"
+    "    gl_Position = qt_Matrix * vec4(pos.x, pos.y, 0, 1);\n"
+    "\n"
+    "#ifdef COLOR\n"
+    "    fColor = vColor * fade;\n"
+    "#else\n"
+    "    fFade = fade;\n"
+    "#endif\n"
+    "#ifdef TABLE\n"
+    "    tt.x = t;\n"
+    "#endif\n"
+    "}\n";
+
+static const char fragmentShaderCode[] =
+    "uniform sampler2D texture;\n"
+    "uniform lowp float qt_Opacity;\n"
+    "\n"
+    "#ifdef SPRITE\n"
+    "varying highp vec4 fTexS;\n"
+    "#else\n"
+    "#ifdef DEFORM //First non-pointsprite\n"
+    "varying highp vec2 fTex;\n"
+    "#endif\n"
+    "#endif\n"
+    "#ifdef COLOR\n"
+    "varying lowp vec4 fColor;\n"
+    "#else\n"
+    "varying lowp float fFade;\n"
+    "#endif\n"
+    "#ifdef TABLE\n"
+    "varying lowp vec2 tt;\n"
+    "uniform sampler2D colortable;\n"
+    "#endif\n"
+    "\n"
+    "void main() {\n"
+    "#ifdef SPRITE\n"
+    "    gl_FragColor = mix(texture2D(texture, fTexS.xy), texture2D(texture, fTexS.zw), tt.y)\n"
+    "            * fColor\n"
+    "            * texture2D(colortable, tt)\n"
+    "            * qt_Opacity;\n"
+    "#else\n"
+    "#ifdef TABLE\n"
+    "    gl_FragColor = texture2D(texture, fTex)\n"
+    "            * fColor\n"
+    "            * texture2D(colortable, tt)\n"
+    "            * qt_Opacity;\n"
+    "#else\n"
+    "#ifdef DEFORM\n"
+    "    gl_FragColor = (texture2D(texture, fTex)) * fColor * qt_Opacity;\n"
+    "#else\n"
+    "#ifdef COLOR\n"
+    "    gl_FragColor = (texture2D(texture, gl_PointCoord)) * fColor * qt_Opacity;\n"
+    "#else\n"
+    "    gl_FragColor = texture2D(texture, gl_PointCoord) * (fFade * qt_Opacity);\n"
+    "#endif //COLOR\n"
+    "#endif //DEFORM\n"
+    "#endif //TABLE\n"
+    "#endif //SPRITE\n"
+    "}\n";
+
 const qreal CONV = 0.017453292519943295;
 class ImageMaterialData
 {
@@ -89,7 +269,6 @@ class ImageMaterialData
     QSizeF animSheetSize;
 };
 
-//TODO: Move shaders inline once they've stablilized
 class TabledMaterialData : public ImageMaterialData {};
 class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 {
@@ -98,17 +277,13 @@ class TabledMaterial : public QSGSimpleMaterialShader<TabledMaterialData>
 public:
     TabledMaterial()
     {
-        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
-        vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + vf.readAll();
+            + vertexShaderCode;
 
-        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
-        ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + ff.readAll();
+            + fragmentShaderCode;
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -164,17 +339,13 @@ class DeformableMaterial : public QSGSimpleMaterialShader<DeformableMaterialData
 public:
     DeformableMaterial()
     {
-        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
-        vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
-            + vf.readAll();
+            + vertexShaderCode;
 
-        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
-        ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define DEFORM\n#define COLOR\n")
-            + ff.readAll();
+            + fragmentShaderCode;
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -220,17 +391,13 @@ class SpriteMaterial : public QSGSimpleMaterialShader<SpriteMaterialData>
 public:
     SpriteMaterial()
     {
-        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
-        vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + vf.readAll();
+            + vertexShaderCode;
 
-        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
-        ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define SPRITE\n#define TABLE\n#define DEFORM\n#define COLOR\n")
-            + ff.readAll();
+            + fragmentShaderCode;
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -290,17 +457,13 @@ class ColoredMaterial : public QSGSimpleMaterialShader<ColoredMaterialData>
 public:
     ColoredMaterial()
     {
-        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
-        vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
-            + vf.readAll();
+            + vertexShaderCode;
 
-        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
-        ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
             + QByteArray("#define COLOR\n")
-            + ff.readAll();
+            + fragmentShaderCode;
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -361,15 +524,11 @@ class SimpleMaterial : public QSGSimpleMaterialShader<SimpleMaterialData>
 public:
     SimpleMaterial()
     {
-        QFile vf(QStringLiteral(":defaultshaders/imagevertex.shader"));
-        vf.open(QFile::ReadOnly);
         m_vertex_code = QByteArray(SHADER_DEFINES)
-            + vf.readAll();
+            + vertexShaderCode;
 
-        QFile ff(QStringLiteral(":defaultshaders/imagefragment.shader"));
-        ff.open(QFile::ReadOnly);
         m_fragment_code = QByteArray(SHADER_DEFINES)
-            + ff.readAll();
+            + fragmentShaderCode;
 
         Q_ASSERT(!m_vertex_code.isNull());
         Q_ASSERT(!m_fragment_code.isNull());
@@ -473,6 +632,9 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
     \qmlproperty list<Sprite> QtQuick.Particles2::ImageParticle::sprites
 
     The sprite or sprites used to draw this particle.
+
+    Note that the sprite image will be scaled to a square based on the size of
+    the particle being rendered.
 */
 /*!
     \qmlproperty url QtQuick.Particles2::ImageParticle::colorTable
@@ -1135,8 +1297,10 @@ QSGGeometryNode* QSGImageParticle::buildParticleNodes()
         colortable = QImage(m_colortable_name.toLocalFile());
         sizetable = QImage(m_sizetable_name.toLocalFile());
         opacitytable = QImage(m_opacitytable_name.toLocalFile());
-        if (colortable.isNull())
-            colortable = QImage(QStringLiteral(":defaultshaders/identitytable.png"));
+        if (colortable.isNull()){
+            colortable = QImage(1,1,QImage::Format_ARGB32);
+            colortable.fill(Qt::white);
+        }
         Q_ASSERT(!colortable.isNull());
         getState<ImageMaterialData>(m_material)->colorTable = QSGPlainTexture::fromImage(colortable);
         fillUniformArrayFromImage(getState<ImageMaterialData>(m_material)->sizeTable, sizetable, UNIFORM_ARRAY_SIZE);
