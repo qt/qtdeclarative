@@ -65,6 +65,9 @@ void tst_qsgparticlegroup::test_instantTransition()
     //A frame or two worth of particles will be missed, the transition doesn't take effect on the frame it's spawned (QTBUG-21781)
     QVERIFY(system->groupData[0]->size() <= 500 && system->groupData[0]->size() >= 450);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 0.f);

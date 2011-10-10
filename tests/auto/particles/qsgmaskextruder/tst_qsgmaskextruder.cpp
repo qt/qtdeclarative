@@ -64,6 +64,9 @@ void tst_qsgmaskextruder::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(d->x >= 100.0f && d->x <= 200.0f);
         QVERIFY(d->y >= 100.0f && d->y <= 200.0f);
         QCOMPARE(d->vx, 0.f);

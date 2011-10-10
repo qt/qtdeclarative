@@ -65,6 +65,9 @@ void tst_qsgfriction::test_basic()
     //Default is just slowed a little
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(d->vx < 100.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vy, 0.f);
@@ -79,6 +82,9 @@ void tst_qsgfriction::test_basic()
     //Nondefault comes to a complete stop within the first half of its life
     QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[1]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         if (d->t > ((qreal)system->timeInt/1000.0) - 0.25)
             continue;
         QVERIFY(myFuzzyCompare(d->vx, 0.f));

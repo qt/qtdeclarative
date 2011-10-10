@@ -64,6 +64,9 @@ void tst_qsgcumulativedirection::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(myFuzzyCompare(d->x, 0.0f));
         QVERIFY(myFuzzyCompare(d->y, 0.0f));
         QVERIFY(myFuzzyCompare(d->vx, 0.0f));

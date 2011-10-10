@@ -64,6 +64,9 @@ void tst_qsggravity::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->ax, 707.10678f);
         QCOMPARE(d->ay, 707.10678f);
         QCOMPARE(d->lifeSpan, 0.5f);

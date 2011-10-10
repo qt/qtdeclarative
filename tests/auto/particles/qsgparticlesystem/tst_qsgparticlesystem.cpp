@@ -63,7 +63,13 @@ void tst_qsgparticlesystem::test_basic()
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
 
     QCOMPARE(system->groupData[0]->size(), 500);
+    int stillAlive = 0;
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        if (d->stillAlive())
+            stillAlive++;
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 0.f);
@@ -75,6 +81,7 @@ void tst_qsgparticlesystem::test_basic()
         QCOMPARE(d->endSize, 32.f);
         QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
     }
+    QVERIFY(extremelyFuzzyCompare(stillAlive, 500, 5));//Small simulation variance is permissible.
 }
 
 QTEST_MAIN(tst_qsgparticlesystem);

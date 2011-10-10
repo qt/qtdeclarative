@@ -64,6 +64,9 @@ void tst_qsglineextruder::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x, d->y);
         QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);
@@ -77,6 +80,9 @@ void tst_qsglineextruder::test_basic()
 
     QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[1]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x + d->y, 320.0f);
         QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);

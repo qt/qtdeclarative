@@ -64,6 +64,9 @@ void tst_qsgpointattractor::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(d->x != 0.f);
         QVERIFY(d->y != 0.f);
         QVERIFY(d->x == d->y);

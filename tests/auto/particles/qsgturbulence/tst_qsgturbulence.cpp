@@ -66,6 +66,9 @@ void tst_qsgturbulence::test_basic()
     //of the Turbulence item remain the same
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(d->vx != 0.f);
         QVERIFY(d->vy != 0.f);
         QCOMPARE(d->lifeSpan, 0.5f);

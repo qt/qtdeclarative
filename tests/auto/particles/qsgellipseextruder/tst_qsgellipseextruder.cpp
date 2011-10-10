@@ -81,6 +81,9 @@ void tst_qsgellipseextruder::test_basic()
     //Filled
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(inCircle(d->x, d->y, 160, false));
         QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);
@@ -94,6 +97,9 @@ void tst_qsgellipseextruder::test_basic()
     //Just border
     QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[1]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QVERIFY(inCircle(d->x, d->y, 160, true));
         QCOMPARE(d->vx, 0.f);
         QCOMPARE(d->vy, 0.f);

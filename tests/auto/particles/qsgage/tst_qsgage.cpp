@@ -67,8 +67,9 @@ void tst_qsgage::test_kill()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
-        if (d->t == -1) //Recycler out-smarted me and never needed to init this datum
-            continue;
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 1000.f);
@@ -89,6 +90,9 @@ void tst_qsgage::test_jump()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         //Allow for a small variance because jump is trying to simulate off wall time
         extremelyFuzzyCompare(d->x, -100.f, 5.0f);
         extremelyFuzzyCompare(d->y, -100.f, 5.0f);
@@ -111,7 +115,8 @@ void tst_qsgage::test_onceOff()
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
-            continue; //Recycling process means not all initialized/used
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 500.f);
@@ -133,7 +138,8 @@ void tst_qsgage::test_sustained()
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
-            continue; //Recycling process means not all initialized/used
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 0.f);
         QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vx, 500.f);

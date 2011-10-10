@@ -64,6 +64,9 @@ void tst_qsgtrailemitter::test_basic()
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 4.f);
         QCOMPARE(d->y, 4.f);
         QCOMPARE(d->vx, 0.f);
@@ -78,6 +81,9 @@ void tst_qsgtrailemitter::test_basic()
 
     QCOMPARE(system->groupData[1]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[1]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->x, 4.f);
         QCOMPARE(d->y, 4.f);
         QCOMPARE(d->vx, 500.f);

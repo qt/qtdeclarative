@@ -68,6 +68,9 @@ void tst_qsgwander::test_basic()
     bool vxChanged = false;
     bool vyChanged = false;
     foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
         QCOMPARE(d->ax, 0.f);
         QCOMPARE(d->ay, 0.f);
         QCOMPARE(d->lifeSpan, 0.5f);
