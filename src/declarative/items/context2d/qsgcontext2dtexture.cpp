@@ -410,6 +410,7 @@ void QSGContext2DTexture::clearTiles()
 QSGContext2DFBOTexture::QSGContext2DFBOTexture()
     : QSGContext2DTexture()
     , m_fbo(0)
+    , m_multisampledFbo(0)
     , m_paint_device(0)
 {
     m_threadRendering = false;
@@ -509,6 +510,21 @@ void QSGContext2DFBOTexture::grabImage()
     }
 }
 
+bool QSGContext2DFBOTexture::doMultisampling() const
+{
+    static bool extensionsChecked = false;
+    static bool multisamplingSupported = false;
+
+    if (!extensionsChecked) {
+        QList<QByteArray> extensions = QByteArray((const char *)glGetString(GL_EXTENSIONS)).split(' ');
+        multisamplingSupported = extensions.contains("GL_EXT_framebuffer_multisample")
+                && extensions.contains("GL_EXT_framebuffer_blit");
+        extensionsChecked = true;
+    }
+
+    return multisamplingSupported  && m_smooth;
+}
+
 QImage QSGContext2DFBOTexture::toImage(const QRectF& region)
 {
 #define QML_CONTEXT2D_WAIT_MAX 5000
@@ -555,23 +571,35 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
 
     if (m_canvasWindow.size().isEmpty() && !m_threadRendering) {
         delete m_fbo;
+        delete m_multisampledFbo;
         m_fbo = 0;
+        m_multisampledFbo = 0;
     } else if (!m_fbo || m_fbo->size() != m_fboSize) {
-        QOpenGLFramebufferObjectFormat format;
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        format.setInternalTextureFormat(GL_RGBA);
-        format.setMipmap(false);
-        format.setTextureTarget(GL_TEXTURE_2D);
         delete m_fbo;
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(false);
+        delete m_multisampledFbo;
+        if (doMultisampling()) {
+            {
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+                format.setSamples(8);
+                m_multisampledFbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            }
+            {
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+                m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            }
+            m_multisampledFbo->bind();
+        } else {
+            QOpenGLFramebufferObjectFormat format;
+            format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            delete m_fbo;
 
-        m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
-        glBindTexture(GL_TEXTURE_2D, m_fbo->texture());
-        updateBindOptions(false);
+            m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            m_fbo->bind();
+        }
     }
 
-    m_fbo->bind();
 
     if (!m_paint_device) {
         QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
@@ -584,7 +612,10 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
 void QSGContext2DFBOTexture::endPainting()
 {
     QSGContext2DTexture::endPainting();
-    if (m_fbo)
+    if (m_multisampledFbo) {
+        QOpenGLFramebufferObject::blitFramebuffer(m_fbo, m_multisampledFbo);
+        m_multisampledFbo->release();
+    } else if (m_fbo)
         m_fbo->release();
 }
 void qt_quit_context2d_render_thread()

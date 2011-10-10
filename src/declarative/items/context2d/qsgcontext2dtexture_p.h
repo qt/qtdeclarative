@@ -152,8 +152,10 @@ private Q_SLOTS:
     void grabImage();
 
 private:
+    bool doMultisampling() const;
     QImage m_grabedImage;
     QOpenGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_multisampledFbo;
     QMutex m_mutex;
     QWaitCondition m_condition;
     QSize m_fboSize;
