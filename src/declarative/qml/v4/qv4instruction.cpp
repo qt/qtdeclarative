@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativev4instruction_p.h"
-#include "qdeclarativev4bindings_p.h"
+#include "qv4instruction_p.h"
+#include "qv4bindings_p.h"
 
 #include <QtCore/qdebug.h>
 #include <private/qdeclarativeglobal_p.h>
@@ -344,7 +344,7 @@ void Bytecode::dump(const char *start, const char *end) const
 Bytecode::Bytecode()
 {
 #ifdef QML_THREADED_INTERPRETER
-    decodeInstr = QDeclarativeV4Bindings::getDecodeInstrTable();
+    decodeInstr = QV4Bindings::getDecodeInstrTable();
 #endif
 }
 

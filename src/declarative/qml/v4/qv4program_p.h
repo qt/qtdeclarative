@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4PROGRAM_P_H
-#define QDECLARATIVEV4PROGRAM_P_H
+#ifndef QV4PROGRAM_P_H
+#define QV4PROGRAM_P_H
 
 //
 //  W A R N I N G
@@ -53,13 +53,13 @@
 // We mean it.
 //
 
-#include "qdeclarativev4instruction_p.h"
+#include "qv4instruction_p.h"
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-struct QDeclarativeV4Program {
+struct QV4Program {
     quint32 bindings;
     quint32 dataLength;
     quint32 signalTableOffset;
@@ -98,17 +98,17 @@ enum QDeclarativeRegisterType {
     QVariantType,
 };
 
-const char *QDeclarativeV4Program::data() const 
+const char *QV4Program::data() const 
 { 
-    return ((const char *)this) + sizeof(QDeclarativeV4Program); 
+    return ((const char *)this) + sizeof(QV4Program); 
 }
 
-const char *QDeclarativeV4Program::instructions() const
+const char *QV4Program::instructions() const
 { 
     return (const char *)(data() + dataLength);
 }
 
-QDeclarativeV4Program::BindingReferenceList *QDeclarativeV4Program::signalTable(int signalIndex) const 
+QV4Program::BindingReferenceList *QV4Program::signalTable(int signalIndex) const 
 { 
     quint32 *signalTable = (quint32 *)(data() + signalTableOffset);
     return (BindingReferenceList *)(signalTable + signalTable[signalIndex]);
@@ -118,5 +118,5 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4PROGRAM_P_H
+#endif // QV4PROGRAM_P_H
 

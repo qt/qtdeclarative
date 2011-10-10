@@ -61,7 +61,7 @@
 #include "qdeclarativescriptstring.h"
 #include "private/qdeclarativeglobal_p.h"
 #include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativev4compiler_p.h"
+#include "private/qv4compiler_p.h"
 
 #include <QColor>
 #include <QDebug>
@@ -3298,12 +3298,12 @@ bool QDeclarativeCompiler::completeComponentBuild()
          aliasObject = compileState->aliasingObjects.next(aliasObject)) 
         COMPILE_CHECK(buildDynamicMeta(aliasObject, ResolveAliases));
 
-    QDeclarativeV4Compiler::Expression expr(unit->imports());
+    QV4Compiler::Expression expr(unit->imports());
     expr.component = compileState->root;
     expr.ids = &compileState->ids;
     expr.importCache = output->importCache;
 
-    QDeclarativeV4Compiler bindingCompiler;
+    QV4Compiler bindingCompiler;
 
     QList<BindingReference*> sharedBindings;
 

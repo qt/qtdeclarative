@@ -58,7 +58,7 @@ PRIVATETESTS += \
     qdeclarativeworkerscript \
     qdeclarativexmllistmodel \
     qpacketprotocol \
-    qdeclarativev4
+    v4
 
 SGTESTS =  \
     qsganimatedimage \

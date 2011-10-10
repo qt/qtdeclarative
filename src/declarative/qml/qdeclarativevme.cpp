@@ -58,7 +58,7 @@
 #include "private/qdeclarativevmemetaobject_p.h"
 #include "private/qdeclarativebinding_p_p.h"
 #include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativev4bindings_p.h"
+#include "private/qv4bindings_p.h"
 #include "private/qv8bindings_p.h"
 #include "private/qdeclarativeglobal_p.h"
 #include "private/qfinitestack_p.h"
@@ -306,7 +306,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 CTXT->setIdPropertyData(COMP->contextCaches.at(instr.contextCache));
             if (instr.compiledBinding != -1) {
                 const char *v4data = DATAS.at(instr.compiledBinding).constData();
-                CTXT->v4bindings = new QDeclarativeV4Bindings(v4data, CTXT, COMP);
+                CTXT->v4bindings = new QV4Bindings(v4data, CTXT, COMP);
             }
             if (states.count() == 1) {
                 rootContext = CTXT;

@@ -39,21 +39,21 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4IRBUILDER_P_H
-#define QDECLARATIVEV4IRBUILDER_P_H
+#ifndef QV4IRBUILDER_P_H
+#define QV4IRBUILDER_P_H
 
 #include <QtCore/qglobal.h>
 
-#include "qdeclarativev4ir_p.h"
+#include "qv4ir_p.h"
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeV4IRBuilder : public QDeclarativeJS::AST::Visitor
+class QV4IRBuilder : public QDeclarativeJS::AST::Visitor
 {
 public:
-    QDeclarativeV4IRBuilder(const QDeclarativeV4Compiler::Expression *, QDeclarativeEnginePrivate *);
+    QV4IRBuilder(const QV4Compiler::Expression *, QDeclarativeEnginePrivate *);
 
     bool operator()(QDeclarativeJS::IR::Function *, QDeclarativeJS::AST::Node *);
 
@@ -226,7 +226,7 @@ private:
                    QList<QDeclarativeJS::AST::ExpressionNode *> *nodes);
     void discard();
 
-    const QDeclarativeV4Compiler::Expression *m_expression;
+    const QV4Compiler::Expression *m_expression;
     QDeclarativeEnginePrivate *m_engine;
 
     QDeclarativeJS::IR::Function *_function;
@@ -240,4 +240,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4IRBUILDER_P_H 
+#endif // QV4IRBUILDER_P_H 

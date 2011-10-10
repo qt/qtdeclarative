@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativev4irbuilder_p.h"
-#include "qdeclarativev4compiler_p_p.h"
+#include "qv4irbuilder_p.h"
+#include "qv4compiler_p_p.h"
 
 #include <private/qsganchors_p_p.h> // For AnchorLine
 #include <private/qdeclarativetypenamecache_p.h>
@@ -83,13 +83,13 @@ static IR::Type irTypeFromVariantType(int t, QDeclarativeEnginePrivate *engine, 
     }
 }
 
-QDeclarativeV4IRBuilder::QDeclarativeV4IRBuilder(const QDeclarativeV4Compiler::Expression *expr, 
+QV4IRBuilder::QV4IRBuilder(const QV4Compiler::Expression *expr, 
                                                              QDeclarativeEnginePrivate *engine)
 : m_expression(expr), m_engine(engine), _function(0), _block(0), _discard(false)
 {
 }
 
-bool QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Function *function,
+bool QV4IRBuilder::operator()(QDeclarativeJS::IR::Function *function,
                                          QDeclarativeJS::AST::Node *ast)
 {
     bool discarded = false;
@@ -129,7 +129,7 @@ bool QDeclarativeV4IRBuilder::operator()(QDeclarativeJS::IR::Function *function,
     return !discarded;
 }
 
-bool QDeclarativeV4IRBuilder::buildName(QList<QStringRef> &name,
+bool QV4IRBuilder::buildName(QList<QStringRef> &name,
                                               AST::Node *node,
                                               QList<AST::ExpressionNode *> *nodes)
 {
@@ -152,13 +152,13 @@ bool QDeclarativeV4IRBuilder::buildName(QList<QStringRef> &name,
     return true;
 }
 
-void QDeclarativeV4IRBuilder::discard() 
+void QV4IRBuilder::discard() 
 { 
     _discard = true; 
 }
 
-QDeclarativeV4IRBuilder::ExprResult 
-QDeclarativeV4IRBuilder::expression(AST::ExpressionNode *ast)
+QV4IRBuilder::ExprResult 
+QV4IRBuilder::expression(AST::ExpressionNode *ast)
 {
     ExprResult r;
     if (ast) {
@@ -176,7 +176,7 @@ QDeclarativeV4IRBuilder::expression(AST::ExpressionNode *ast)
     return r;
 }
 
-void QDeclarativeV4IRBuilder::condition(AST::ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+void QV4IRBuilder::condition(AST::ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
 {
     if (! ast)
         return;
@@ -202,8 +202,8 @@ void QDeclarativeV4IRBuilder::condition(AST::ExpressionNode *ast, IR::BasicBlock
     }
 }
 
-QDeclarativeV4IRBuilder::ExprResult
-QDeclarativeV4IRBuilder::statement(AST::Statement *ast)
+QV4IRBuilder::ExprResult
+QV4IRBuilder::statement(AST::Statement *ast)
 {
     ExprResult r;
     if (ast) {
@@ -221,12 +221,12 @@ QDeclarativeV4IRBuilder::statement(AST::Statement *ast)
     return r;
 }
 
-void QDeclarativeV4IRBuilder::sourceElement(AST::SourceElement *ast)
+void QV4IRBuilder::sourceElement(AST::SourceElement *ast)
 {
     accept(ast);
 }
 
-void QDeclarativeV4IRBuilder::implicitCvt(ExprResult &expr, IR::Type type)
+void QV4IRBuilder::implicitCvt(ExprResult &expr, IR::Type type)
 {
     if (expr.type() == type)
         return; // nothing to do
@@ -237,97 +237,97 @@ void QDeclarativeV4IRBuilder::implicitCvt(ExprResult &expr, IR::Type type)
 }
 
 // QML
-bool QDeclarativeV4IRBuilder::visit(AST::UiProgram *)
+bool QV4IRBuilder::visit(AST::UiProgram *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiImportList *)
+bool QV4IRBuilder::visit(AST::UiImportList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiImport *)
+bool QV4IRBuilder::visit(AST::UiImport *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiPublicMember *)
+bool QV4IRBuilder::visit(AST::UiPublicMember *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiSourceElement *)
+bool QV4IRBuilder::visit(AST::UiSourceElement *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiObjectDefinition *)
+bool QV4IRBuilder::visit(AST::UiObjectDefinition *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiObjectInitializer *)
+bool QV4IRBuilder::visit(AST::UiObjectInitializer *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiObjectBinding *)
+bool QV4IRBuilder::visit(AST::UiObjectBinding *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiScriptBinding *)
+bool QV4IRBuilder::visit(AST::UiScriptBinding *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiArrayBinding *)
+bool QV4IRBuilder::visit(AST::UiArrayBinding *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiObjectMemberList *)
+bool QV4IRBuilder::visit(AST::UiObjectMemberList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiArrayMemberList *)
+bool QV4IRBuilder::visit(AST::UiArrayMemberList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiQualifiedId *)
+bool QV4IRBuilder::visit(AST::UiQualifiedId *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiSignature *)
+bool QV4IRBuilder::visit(AST::UiSignature *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiFormalList *)
+bool QV4IRBuilder::visit(AST::UiFormalList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UiFormal *)
+bool QV4IRBuilder::visit(AST::UiFormal *)
 {
     Q_ASSERT(!"unreachable");
     return false;
@@ -335,50 +335,50 @@ bool QDeclarativeV4IRBuilder::visit(AST::UiFormal *)
 
 
 // JS
-bool QDeclarativeV4IRBuilder::visit(AST::Program *)
+bool QV4IRBuilder::visit(AST::Program *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::SourceElements *)
+bool QV4IRBuilder::visit(AST::SourceElements *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FunctionSourceElement *)
+bool QV4IRBuilder::visit(AST::FunctionSourceElement *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::StatementSourceElement *)
+bool QV4IRBuilder::visit(AST::StatementSourceElement *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
 // object literals
-bool QDeclarativeV4IRBuilder::visit(AST::PropertyNameAndValueList *)
+bool QV4IRBuilder::visit(AST::PropertyNameAndValueList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::IdentifierPropertyName *)
+bool QV4IRBuilder::visit(AST::IdentifierPropertyName *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::StringLiteralPropertyName *)
+bool QV4IRBuilder::visit(AST::StringLiteralPropertyName *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NumericLiteralPropertyName *)
+bool QV4IRBuilder::visit(AST::NumericLiteralPropertyName *)
 {
     Q_ASSERT(!"unreachable");
     return false;
@@ -386,13 +386,13 @@ bool QDeclarativeV4IRBuilder::visit(AST::NumericLiteralPropertyName *)
 
 
 // array literals
-bool QDeclarativeV4IRBuilder::visit(AST::ElementList *)
+bool QV4IRBuilder::visit(AST::ElementList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::Elision *)
+bool QV4IRBuilder::visit(AST::Elision *)
 {
     Q_ASSERT(!"unreachable");
     return false;
@@ -400,29 +400,29 @@ bool QDeclarativeV4IRBuilder::visit(AST::Elision *)
 
 
 // function calls
-bool QDeclarativeV4IRBuilder::visit(AST::ArgumentList *)
+bool QV4IRBuilder::visit(AST::ArgumentList *)
 {
     Q_ASSERT(!"unreachable");
     return false;
 }
 
 // expressions
-bool QDeclarativeV4IRBuilder::visit(AST::ObjectLiteral *)
+bool QV4IRBuilder::visit(AST::ObjectLiteral *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ArrayLiteral *)
+bool QV4IRBuilder::visit(AST::ArrayLiteral *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ThisExpression *)
+bool QV4IRBuilder::visit(AST::ThisExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
+bool QV4IRBuilder::visit(AST::IdentifierExpression *ast)
 {
     const quint32 line = ast->identifierToken.startLine;
     const quint32 column = ast->identifierToken.startColumn;
@@ -514,35 +514,35 @@ bool QDeclarativeV4IRBuilder::visit(AST::IdentifierExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NullExpression *)
+bool QV4IRBuilder::visit(AST::NullExpression *)
 {
     // ### TODO: cx format
     _expr.code = _block->CONST(IR::NullType, 0);
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::TrueLiteral *)
+bool QV4IRBuilder::visit(AST::TrueLiteral *)
 {
     // ### TODO: cx format
     _expr.code = _block->CONST(IR::BoolType, 1);
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FalseLiteral *)
+bool QV4IRBuilder::visit(AST::FalseLiteral *)
 {
     // ### TODO: cx format
     _expr.code = _block->CONST(IR::BoolType, 0);
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::StringLiteral *ast)
+bool QV4IRBuilder::visit(AST::StringLiteral *ast)
 {
     // ### TODO: cx format
     _expr.code = _block->STRING(ast->value);
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NumericLiteral *ast)
+bool QV4IRBuilder::visit(AST::NumericLiteral *ast)
 {
     if (_expr.hint == ExprResult::cx) {
         _expr.format = ExprResult::cx;
@@ -553,22 +553,22 @@ bool QDeclarativeV4IRBuilder::visit(AST::NumericLiteral *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::RegExpLiteral *)
+bool QV4IRBuilder::visit(AST::RegExpLiteral *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NestedExpression *)
+bool QV4IRBuilder::visit(AST::NestedExpression *)
 {
     return true; // the value of the nested expression
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ArrayMemberExpression *)
+bool QV4IRBuilder::visit(AST::ArrayMemberExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
+bool QV4IRBuilder::visit(AST::FieldMemberExpression *ast)
 {
     if (IR::Expr *left = expression(ast->base)) {
         if (IR::Name *baseName = left->asName()) {
@@ -677,22 +677,22 @@ bool QDeclarativeV4IRBuilder::visit(AST::FieldMemberExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::preVisit(AST::Node *)
+bool QV4IRBuilder::preVisit(AST::Node *)
 {
     return ! _discard;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NewMemberExpression *)
+bool QV4IRBuilder::visit(AST::NewMemberExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NewExpression *)
+bool QV4IRBuilder::visit(AST::NewExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
+bool QV4IRBuilder::visit(AST::CallExpression *ast)
 {
     QList<QStringRef> names;
     QList<AST::ExpressionNode *> nameNodes;
@@ -729,42 +729,42 @@ bool QDeclarativeV4IRBuilder::visit(AST::CallExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::PostIncrementExpression *)
+bool QV4IRBuilder::visit(AST::PostIncrementExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::PostDecrementExpression *)
+bool QV4IRBuilder::visit(AST::PostDecrementExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::DeleteExpression *)
+bool QV4IRBuilder::visit(AST::DeleteExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::VoidExpression *)
+bool QV4IRBuilder::visit(AST::VoidExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::TypeOfExpression *)
+bool QV4IRBuilder::visit(AST::TypeOfExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::PreIncrementExpression *)
+bool QV4IRBuilder::visit(AST::PreIncrementExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::PreDecrementExpression *)
+bool QV4IRBuilder::visit(AST::PreDecrementExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UnaryPlusExpression *ast)
+bool QV4IRBuilder::visit(AST::UnaryPlusExpression *ast)
 {
     ExprResult expr = expression(ast->expression);
     if (expr.isNot(IR::InvalidType)) {
@@ -781,7 +781,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::UnaryPlusExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::UnaryMinusExpression *ast)
+bool QV4IRBuilder::visit(AST::UnaryMinusExpression *ast)
 {
     ExprResult expr = expression(ast->expression);
     if (expr.isNot(IR::InvalidType)) {
@@ -799,7 +799,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::UnaryMinusExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::TildeExpression *ast)
+bool QV4IRBuilder::visit(AST::TildeExpression *ast)
 {
     ExprResult expr = expression(ast->expression);
     if (expr.isNot(IR::InvalidType)) {
@@ -816,7 +816,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::TildeExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::NotExpression *ast)
+bool QV4IRBuilder::visit(AST::NotExpression *ast)
 {
     ExprResult expr = expression(ast->expression);
 
@@ -840,7 +840,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::NotExpression *ast)
     return false;
 }
 
-void QDeclarativeV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult right)
+void QV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left, ExprResult right)
 {
     if (IR::Type t = maxType(left.type(), right.type())) {
         implicitCvt(left, t);
@@ -857,7 +857,7 @@ void QDeclarativeV4IRBuilder::binop(AST::BinaryExpression *ast, ExprResult left,
     }
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::BinaryExpression *ast)
+bool QV4IRBuilder::visit(AST::BinaryExpression *ast)
 {
     switch (ast->op) {
     case QSOperator::And: {
@@ -1071,7 +1071,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::BinaryExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ConditionalExpression *ast)
+bool QV4IRBuilder::visit(AST::ConditionalExpression *ast)
 {
     IR::BasicBlock *iftrue = _function->newBasicBlock();
     IR::BasicBlock *iffalse = _function->newBasicBlock();
@@ -1101,7 +1101,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::ConditionalExpression *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::Expression *ast)
+bool QV4IRBuilder::visit(AST::Expression *ast)
 {
     _block->EXP(expression(ast->left));
     _expr = expression(ast->right);
@@ -1111,7 +1111,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::Expression *ast)
 
 
 // statements
-bool QDeclarativeV4IRBuilder::visit(AST::Block *ast)
+bool QV4IRBuilder::visit(AST::Block *ast)
 {
     if (ast->statements && ! ast->statements->next) {
         // we have one and only one statement
@@ -1121,32 +1121,32 @@ bool QDeclarativeV4IRBuilder::visit(AST::Block *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::StatementList *)
+bool QV4IRBuilder::visit(AST::StatementList *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::VariableStatement *)
+bool QV4IRBuilder::visit(AST::VariableStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::VariableDeclarationList *)
+bool QV4IRBuilder::visit(AST::VariableDeclarationList *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::VariableDeclaration *)
+bool QV4IRBuilder::visit(AST::VariableDeclaration *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::EmptyStatement *)
+bool QV4IRBuilder::visit(AST::EmptyStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ExpressionStatement *ast)
+bool QV4IRBuilder::visit(AST::ExpressionStatement *ast)
 {
     if (ast->expression) {
          // return the value of this expression
@@ -1156,7 +1156,7 @@ bool QDeclarativeV4IRBuilder::visit(AST::ExpressionStatement *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::IfStatement *ast)
+bool QV4IRBuilder::visit(AST::IfStatement *ast)
 {
     if (! ast->ko) {
         // This is an if statement without an else branch.
@@ -1191,48 +1191,48 @@ bool QDeclarativeV4IRBuilder::visit(AST::IfStatement *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::DoWhileStatement *)
+bool QV4IRBuilder::visit(AST::DoWhileStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::WhileStatement *)
+bool QV4IRBuilder::visit(AST::WhileStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ForStatement *)
+bool QV4IRBuilder::visit(AST::ForStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::LocalForStatement *)
+bool QV4IRBuilder::visit(AST::LocalForStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ForEachStatement *)
+bool QV4IRBuilder::visit(AST::ForEachStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::LocalForEachStatement *)
+bool QV4IRBuilder::visit(AST::LocalForEachStatement *)
 {
     discard();
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ContinueStatement *)
+bool QV4IRBuilder::visit(AST::ContinueStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::BreakStatement *)
+bool QV4IRBuilder::visit(AST::BreakStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ReturnStatement *ast)
+bool QV4IRBuilder::visit(AST::ReturnStatement *ast)
 {
     if (ast->expression) {
         // return the value of the expression
@@ -1242,82 +1242,82 @@ bool QDeclarativeV4IRBuilder::visit(AST::ReturnStatement *ast)
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::WithStatement *)
+bool QV4IRBuilder::visit(AST::WithStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::SwitchStatement *)
+bool QV4IRBuilder::visit(AST::SwitchStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::CaseBlock *)
+bool QV4IRBuilder::visit(AST::CaseBlock *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::CaseClauses *)
+bool QV4IRBuilder::visit(AST::CaseClauses *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::CaseClause *)
+bool QV4IRBuilder::visit(AST::CaseClause *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::DefaultClause *)
+bool QV4IRBuilder::visit(AST::DefaultClause *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::LabelledStatement *)
+bool QV4IRBuilder::visit(AST::LabelledStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::ThrowStatement *)
+bool QV4IRBuilder::visit(AST::ThrowStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::TryStatement *)
+bool QV4IRBuilder::visit(AST::TryStatement *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::Catch *)
+bool QV4IRBuilder::visit(AST::Catch *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::Finally *)
+bool QV4IRBuilder::visit(AST::Finally *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FunctionDeclaration *)
+bool QV4IRBuilder::visit(AST::FunctionDeclaration *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FunctionExpression *)
+bool QV4IRBuilder::visit(AST::FunctionExpression *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FormalParameterList *)
+bool QV4IRBuilder::visit(AST::FormalParameterList *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::FunctionBody *)
+bool QV4IRBuilder::visit(AST::FunctionBody *)
 {
     return false;
 }
 
-bool QDeclarativeV4IRBuilder::visit(AST::DebuggerStatement *)
+bool QV4IRBuilder::visit(AST::DebuggerStatement *)
 {
     return false;
 }

@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4BINDINGS_P_H
-#define QDECLARATIVEV4BINDINGS_P_H
+#ifndef QV4BINDINGS_P_H
+#define QV4BINDINGS_P_H
 
 //
 //  W A R N I N G
@@ -55,21 +55,21 @@
 
 #include "private/qdeclarativeexpression_p.h"
 #include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativev4instruction_p.h"
+#include "private/qv4instruction_p.h"
 
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeV4Program;
-class QDeclarativeV4Bindings : public QDeclarativeAbstractExpression, 
+class QV4Program;
+class QV4Bindings : public QDeclarativeAbstractExpression, 
                                public QDeclarativeRefCount
 {
-    Q_DECLARE_TR_FUNCTIONS(QDeclarativeV4Bindings)
+    Q_DECLARE_TR_FUNCTIONS(QV4Bindings)
 public:
-    QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context,
+    QV4Bindings(const char *program, QDeclarativeContextData *context,
                            QDeclarativeRefCount *);
-    virtual ~QDeclarativeV4Bindings();
+    virtual ~QV4Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, 
                                                QObject *scope, int property);
@@ -79,7 +79,7 @@ public:
 #endif
 
 private:
-    Q_DISABLE_COPY(QDeclarativeV4Bindings)
+    Q_DISABLE_COPY(QV4Bindings)
 
     struct Binding : public QDeclarativeAbstractBinding, public QDeclarativeDelayedError {
         Binding() : enabled(false), updating(0), property(0),
@@ -98,14 +98,14 @@ private:
         QObject *target;
         quint32 executedBlocks;
 
-        QDeclarativeV4Bindings *parent;
+        QV4Bindings *parent;
     };
 
     struct Subscription : public QDeclarativeNotifierEndpoint
     {
         Subscription() : bindings(0), method(-1) { callback = &subscriptionCallback; }
         static void subscriptionCallback(QDeclarativeNotifierEndpoint *e);
-        QDeclarativeV4Bindings *bindings;
+        QV4Bindings *bindings;
         int method;
     };
     friend class Subscription;
@@ -115,7 +115,7 @@ private:
     void subscriptionNotify(int);
     void run(Binding *, QDeclarativePropertyPrivate::WriteFlags flags);
 
-    QDeclarativeV4Program *program;
+    QV4Program *program;
     QDeclarativeRefCount *dataRef;
     Binding *bindings;
 
@@ -143,5 +143,5 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4BINDINGS_P_H
+#endif // QV4BINDINGS_P_H
 

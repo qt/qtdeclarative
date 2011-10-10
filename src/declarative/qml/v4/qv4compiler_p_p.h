@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4COMPILER_P_P_H
-#define QDECLARATIVEV4COMPILER_P_P_H
+#ifndef QV4COMPILER_P_P_H
+#define QV4COMPILER_P_P_H
 
 //
 //  W A R N I N G
@@ -53,8 +53,8 @@
 // We mean it.
 //
 
-#include "qdeclarativev4instruction_p.h"
-#include "qdeclarativev4ir_p.h"
+#include "qv4instruction_p.h"
+#include "qv4ir_p.h"
 #include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
@@ -141,16 +141,16 @@ private:
     Container _container;
 };
 
-class QDeclarativeV4CompilerPrivate: protected QDeclarativeJS::IR::ExprVisitor, 
+class QV4CompilerPrivate: protected QDeclarativeJS::IR::ExprVisitor, 
                                      protected QDeclarativeJS::IR::StmtVisitor
 {
 public:
-    QDeclarativeV4CompilerPrivate();
+    QV4CompilerPrivate();
 
     void resetInstanceState();
     int commitCompile();
 
-    const QDeclarativeV4Compiler::Expression *expression;
+    const QV4Compiler::Expression *expression;
     QDeclarativeEnginePrivate *engine;
 
     QString contextName() const { return QLatin1String("$$$SCOPE_") + QString::number((quintptr)expression->context, 16); }
@@ -273,5 +273,5 @@ Q_DECLARE_METATYPE(QDeclarative1AnchorLine)
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4COMPILER_P_P_H
+#endif // QV4COMPILER_P_P_H
 

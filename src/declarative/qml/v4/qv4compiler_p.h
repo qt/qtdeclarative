@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4COMPILER_P_H
-#define QDECLARATIVEV4COMPILER_P_H
+#ifndef QV4COMPILER_P_H
+#define QV4COMPILER_P_H
 
 //
 //  W A R N I N G
@@ -62,12 +62,12 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 class QDeclarativeTypeNameCache;
-class QDeclarativeV4CompilerPrivate;
-class Q_AUTOTEST_EXPORT QDeclarativeV4Compiler
+class QV4CompilerPrivate;
+class Q_AUTOTEST_EXPORT QV4Compiler
 {
 public:
-    QDeclarativeV4Compiler();
-    ~QDeclarativeV4Compiler();
+    QV4Compiler();
+    ~QV4Compiler();
 
     // Returns true if bindings were compiled
     bool isValid() const;
@@ -93,12 +93,12 @@ public:
     static void dump(const QByteArray &);
     static void enableBindingsTest(bool);
 private:
-    QDeclarativeV4CompilerPrivate *d;
+    QV4CompilerPrivate *d;
 };
 
 QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4COMPILER_P_H
+#endif // QV4COMPILER_P_H
 

@@ -47,7 +47,7 @@
 #include "private/qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
 #include "qdeclarativeinfo.h"
-#include "private/qdeclarativev4bindings_p.h"
+#include "private/qv4bindings_p.h"
 #include "private/qv8bindings_p.h"
 
 #include <qjsengine.h>

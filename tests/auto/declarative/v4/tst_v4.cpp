@@ -46,7 +46,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtCore/qdebug.h>
 
-#include <private/qdeclarativev4compiler_p.h>
+#include <private/qv4compiler_p.h>
 
 #include "testtypes.h"
 
@@ -61,11 +61,11 @@ inline QUrl TEST_FILE(const char *filename)
     return TEST_FILE(QLatin1String(filename));
 }
 
-class tst_qdeclarativev4 : public QObject
+class tst_v4 : public QObject
 {
     Q_OBJECT
 public:
-    tst_qdeclarativev4() {}
+    tst_v4() {}
 
 private slots:
     void initTestCase();
@@ -82,7 +82,7 @@ private:
     QDeclarativeEngine engine;
 };
 
-void tst_qdeclarativev4::initTestCase()
+void tst_v4::initTestCase()
 {
     registerTypes();
 }
@@ -91,14 +91,14 @@ static int v4ErrorsMsgCount = 0;
 static void v4ErrorsMsgHandler(QtMsgType, const char *message)
 {
     QByteArray m(message);
-    if (m.contains("QDeclarativeV4"))
+    if (m.contains("QV4"))
         v4ErrorsMsgCount++;
 }
 
-void tst_qdeclarativev4::qtscript()
+void tst_v4::qtscript()
 {
     QFETCH(QString, file);
-    QDeclarativeV4Compiler::enableBindingsTest(true);
+    QV4Compiler::enableBindingsTest(true);
 
     QDeclarativeComponent component(&engine, TEST_FILE(file));
 
@@ -112,10 +112,10 @@ void tst_qdeclarativev4::qtscript()
 
     QCOMPARE(v4ErrorsMsgCount, 0);
 
-    QDeclarativeV4Compiler::enableBindingsTest(false);
+    QV4Compiler::enableBindingsTest(false);
 }
 
-void tst_qdeclarativev4::qtscript_data()
+void tst_v4::qtscript_data()
 {
     QTest::addColumn<QString>("file");
 
@@ -128,7 +128,7 @@ void tst_qdeclarativev4::qtscript_data()
     QTest::newRow("null qobject") << "nullQObject.qml";
 }
 
-void tst_qdeclarativev4::unnecessaryReeval()
+void tst_v4::unnecessaryReeval()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("unnecessaryReeval.qml"));
 
@@ -161,7 +161,7 @@ void tst_qdeclarativev4::unnecessaryReeval()
     delete o;
 }
 
-void tst_qdeclarativev4::logicalOr()
+void tst_v4::logicalOr()
 {
     {
         QDeclarativeComponent component(&engine, TEST_FILE("logicalOr.qml"));
@@ -190,7 +190,7 @@ void tst_qdeclarativev4::logicalOr()
     }
 }
 
-void tst_qdeclarativev4::conditionalExpr()
+void tst_v4::conditionalExpr()
 {
     {
         QDeclarativeComponent component(&engine, TEST_FILE("conditionalExpr.qml"));
@@ -209,7 +209,7 @@ void tst_qdeclarativev4::conditionalExpr()
 // This would previously use the metaObject of the root element to result the nested access.
 // That is, the index for accessing "result" would have been RootObject::result, instead of
 // NestedObject::result.
-void tst_qdeclarativev4::nestedObjectAccess()
+void tst_v4::nestedObjectAccess()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("nestedObjectAccess.qml"));
 
@@ -224,7 +224,7 @@ void tst_qdeclarativev4::nestedObjectAccess()
     delete o;
 }
 
-void tst_qdeclarativev4::subscriptionsInConditionalExpressions()
+void tst_v4::subscriptionsInConditionalExpressions()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("subscriptionsInConditionalExpressions.qml"));
 
@@ -239,6 +239,6 @@ void tst_qdeclarativev4::subscriptionsInConditionalExpressions()
     delete o;
 }
 
-QTEST_MAIN(tst_qdeclarativev4)
+QTEST_MAIN(tst_v4)
 
-#include "tst_qdeclarativev4.moc"
+#include "tst_v4.moc"

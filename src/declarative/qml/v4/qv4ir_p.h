@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4IR_P_H
-#define QDECLARATIVEV4IR_P_H
+#ifndef QV4IR_P_H
+#define QV4IR_P_H
 
 //
 //  W A R N I N G
@@ -58,7 +58,7 @@
 #include <private/qdeclarativescript_p.h>
 #include <private/qdeclarativeimport_p.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativev4compiler_p.h>
+#include <private/qv4compiler_p.h>
 
 #include <qdeclarativepool_p.h>
 #include <QtCore/qvarlengtharray.h>
@@ -602,4 +602,4 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4IR_P_H
+#endif // QV4IR_P_H

@@ -80,7 +80,7 @@ class QDeclarativeEngine;
 class QDeclarativeExpression;
 class QDeclarativeExpressionPrivate;
 class QDeclarativeAbstractExpression;
-class QDeclarativeV4Bindings;
+class QV4Bindings;
 class QDeclarativeContextData;
 
 class QDeclarativeContextPrivate : public QObjectPrivate
@@ -206,7 +206,7 @@ public:
     QDeclarativeComponentAttached *componentAttached;
 
     // Optimized binding objects.  Needed for deferred properties.
-    QDeclarativeV4Bindings *v4bindings;
+    QV4Bindings *v4bindings;
     QV8Bindings *v8bindings;
 
     // Return the outermost id for obj, if any.

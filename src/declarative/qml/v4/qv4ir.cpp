@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativev4ir_p.h"
+#include "qv4ir_p.h"
 
 #include <QtCore/qtextstream.h>
 #include <QtCore/qdebug.h>

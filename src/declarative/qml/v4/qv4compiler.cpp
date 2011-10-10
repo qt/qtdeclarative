@@ -39,11 +39,11 @@
 **
 ****************************************************************************/
 
-#include "qdeclarativev4compiler_p.h"
-#include "qdeclarativev4compiler_p_p.h"
-#include "qdeclarativev4program_p.h"
-#include "qdeclarativev4ir_p.h"
-#include "qdeclarativev4irbuilder_p.h"
+#include "qv4compiler_p.h"
+#include "qv4compiler_p_p.h"
+#include "qv4program_p.h"
+#include "qv4ir_p.h"
+#include "qv4irbuilder_p.h"
 
 #include <private/qdeclarativejsast_p.h>
 #include <private/qdeclarativefastproperties_p.h>
@@ -61,7 +61,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlBindingsTestEnv, QML_BINDINGS_TEST)
 static bool qmlBindingsTest = false;
 
 using namespace QDeclarativeJS;
-QDeclarativeV4CompilerPrivate::QDeclarativeV4CompilerPrivate()
+QV4CompilerPrivate::QV4CompilerPrivate()
 : _function(0) , _block(0) , _discarded(false)
 {
 }
@@ -69,7 +69,7 @@ QDeclarativeV4CompilerPrivate::QDeclarativeV4CompilerPrivate()
 //
 // tracing
 //
-void QDeclarativeV4CompilerPrivate::trace(int line, int column)
+void QV4CompilerPrivate::trace(int line, int column)
 {
     bytecode.clear();
 
@@ -176,7 +176,7 @@ void QDeclarativeV4CompilerPrivate::trace(int line, int column)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
+void QV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
 {
     for (int i = 0; i < _function->basicBlocks.size(); ++i) {
         IR::BasicBlock *block = _function->basicBlocks.at(i);
@@ -194,7 +194,7 @@ void QDeclarativeV4CompilerPrivate::trace(QVector<IR::BasicBlock *> *blocks)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::traceExpression(IR::Expr *e, quint8 r)
+void QV4CompilerPrivate::traceExpression(IR::Expr *e, quint8 r)
 {
     if (!e) {
         discard();
@@ -208,7 +208,7 @@ void QDeclarativeV4CompilerPrivate::traceExpression(IR::Expr *e, quint8 r)
 //
 // expressions
 //
-void QDeclarativeV4CompilerPrivate::visitConst(IR::Const *e)
+void QV4CompilerPrivate::visitConst(IR::Const *e)
 {
     switch (e->type) {
     case IR::BoolType: {
@@ -239,12 +239,12 @@ void QDeclarativeV4CompilerPrivate::visitConst(IR::Const *e)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::visitString(IR::String *e)
+void QV4CompilerPrivate::visitString(IR::String *e)
 {
     registerLiteralString(currentReg, e->value);
 }
 
-void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
+void QV4CompilerPrivate::visitName(IR::Name *e)
 {
     if (e->base) {
         // fetch the object and store it in reg.
@@ -384,7 +384,7 @@ void QDeclarativeV4CompilerPrivate::visitName(IR::Name *e)
     } // switch
 }
 
-void QDeclarativeV4CompilerPrivate::visitTemp(IR::Temp *e)
+void QV4CompilerPrivate::visitTemp(IR::Temp *e)
 {
     if (currentReg != e->index) {
         Instr::Copy i;
@@ -394,7 +394,7 @@ void QDeclarativeV4CompilerPrivate::visitTemp(IR::Temp *e)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::visitUnop(IR::Unop *e)
+void QV4CompilerPrivate::visitUnop(IR::Unop *e)
 {
     quint8 src = currentReg;
     
@@ -492,7 +492,7 @@ void QDeclarativeV4CompilerPrivate::visitUnop(IR::Unop *e)
     } // switch
 }
 
-void QDeclarativeV4CompilerPrivate::convertToReal(IR::Expr *expr, int reg)
+void QV4CompilerPrivate::convertToReal(IR::Expr *expr, int reg)
 {
     if (expr->type == IR::RealType)
         return;
@@ -520,7 +520,7 @@ void QDeclarativeV4CompilerPrivate::convertToReal(IR::Expr *expr, int reg)
     } // switch
 }
 
-void QDeclarativeV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
+void QV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
 {
     if (expr->type == IR::IntType)
         return;
@@ -548,7 +548,7 @@ void QDeclarativeV4CompilerPrivate::convertToInt(IR::Expr *expr, int reg)
     } // switch
 }
 
-void QDeclarativeV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
+void QV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
 {
     if (expr->type == IR::BoolType)
         return;
@@ -582,7 +582,7 @@ void QDeclarativeV4CompilerPrivate::convertToBool(IR::Expr *expr, int reg)
     } // switch
 }
 
-quint8 QDeclarativeV4CompilerPrivate::instructionOpcode(IR::Binop *e)
+quint8 QV4CompilerPrivate::instructionOpcode(IR::Binop *e)
 {
     switch (e->op) {
     case IR::OpInvalid:
@@ -679,7 +679,7 @@ quint8 QDeclarativeV4CompilerPrivate::instructionOpcode(IR::Binop *e)
     return V4Instr::Noop;
 }
 
-void QDeclarativeV4CompilerPrivate::visitBinop(IR::Binop *e)
+void QV4CompilerPrivate::visitBinop(IR::Binop *e)
 {
     int left = currentReg;
     int right = currentReg + 1; 
@@ -774,7 +774,7 @@ void QDeclarativeV4CompilerPrivate::visitBinop(IR::Binop *e)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::visitCall(IR::Call *call)
+void QV4CompilerPrivate::visitCall(IR::Call *call)
 {
     if (IR::Name *name = call->base->asName()) {
         IR::Expr *arg = call->onlyArgument();
@@ -824,12 +824,12 @@ void QDeclarativeV4CompilerPrivate::visitCall(IR::Call *call)
 //
 // statements
 //
-void QDeclarativeV4CompilerPrivate::visitExp(IR::Exp *s)
+void QV4CompilerPrivate::visitExp(IR::Exp *s)
 {
     traceExpression(s->expr, currentReg);
 }
 
-void QDeclarativeV4CompilerPrivate::visitMove(IR::Move *s)
+void QV4CompilerPrivate::visitMove(IR::Move *s)
 {
     IR::Temp *target = s->target->asTemp();
     Q_ASSERT(target != 0);
@@ -893,7 +893,7 @@ void QDeclarativeV4CompilerPrivate::visitMove(IR::Move *s)
     }
 }
 
-void QDeclarativeV4CompilerPrivate::visitJump(IR::Jump *s)
+void QV4CompilerPrivate::visitJump(IR::Jump *s)
 {
     patches.append(Patch(s->target, bytecode.size()));
 
@@ -902,7 +902,7 @@ void QDeclarativeV4CompilerPrivate::visitJump(IR::Jump *s)
     gen(i);
 }
 
-void QDeclarativeV4CompilerPrivate::visitCJump(IR::CJump *s)
+void QV4CompilerPrivate::visitCJump(IR::CJump *s)
 {
     traceExpression(s->cond, currentReg);
 
@@ -914,7 +914,7 @@ void QDeclarativeV4CompilerPrivate::visitCJump(IR::CJump *s)
     gen(i);
 }
 
-void QDeclarativeV4CompilerPrivate::visitRet(IR::Ret *s)
+void QV4CompilerPrivate::visitRet(IR::Ret *s)
 {
     Q_ASSERT(s->expr != 0);
 
@@ -969,9 +969,9 @@ void QDeclarativeV4CompilerPrivate::visitRet(IR::Ret *s)
     gen(store);
 }
 
-void QDeclarativeV4Compiler::dump(const QByteArray &programData)
+void QV4Compiler::dump(const QByteArray &programData)
 {
-    const QDeclarativeV4Program *program = (const QDeclarativeV4Program *)programData.constData();
+    const QV4Program *program = (const QV4Program *)programData.constData();
 
     qWarning() << "Program.bindings:" << program->bindings;
     qWarning() << "Program.dataLength:" << program->dataLength;
@@ -989,7 +989,7 @@ void QDeclarativeV4Compiler::dump(const QByteArray &programData)
 Clear the state associated with attempting to compile a specific binding.
 This does not clear the global "committed binding" states.
 */
-void QDeclarativeV4CompilerPrivate::resetInstanceState()
+void QV4CompilerPrivate::resetInstanceState()
 {
     data = committed.data;
     exceptions = committed.exceptions;
@@ -1008,7 +1008,7 @@ section.
 
 Returns the index for the committed binding.
 */
-int QDeclarativeV4CompilerPrivate::commitCompile()
+int QV4CompilerPrivate::commitCompile()
 {
     int rv = committed.count();
     committed.offsets << committed.bytecode.count();
@@ -1021,7 +1021,7 @@ int QDeclarativeV4CompilerPrivate::commitCompile()
     return rv;
 }
 
-bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
+bool QV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
 {
     resetInstanceState();
 
@@ -1044,7 +1044,7 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
 
     IR::Function thisFunction(&pool), *function = &thisFunction;
 
-    QDeclarativeV4IRBuilder irBuilder(expression, engine);
+    QV4IRBuilder irBuilder(expression, engine);
     if (!irBuilder(function, node))
         return false;
 
@@ -1076,7 +1076,7 @@ bool QDeclarativeV4CompilerPrivate::compile(QDeclarativeJS::AST::Node *node)
 }
 
 // Returns a reg
-int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
+int QV4CompilerPrivate::registerLiteralString(quint8 reg, const QStringRef &str)
 {
     // ### string cleanup
 
@@ -1094,7 +1094,7 @@ int QDeclarativeV4CompilerPrivate::registerLiteralString(quint8 reg, const QStri
 }
 
 // Returns an identifier offset
-int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
+int QV4CompilerPrivate::registerString(const QString &string)
 {
     Q_ASSERT(!string.isEmpty());
 
@@ -1122,7 +1122,7 @@ int QDeclarativeV4CompilerPrivate::registerString(const QString &string)
 /*!
 Returns true if the current expression has not already subscribed to \a sub in currentBlockMask.
 */
-bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &sub)
+bool QV4CompilerPrivate::blockNeedsSubscription(const QStringList &sub)
 {
     QString str = sub.join(QLatin1String("."));
 
@@ -1137,7 +1137,7 @@ bool QDeclarativeV4CompilerPrivate::blockNeedsSubscription(const QStringList &su
         return !(*uiter & currentBlockMask);
 }
 
-int QDeclarativeV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
+int QV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
 {
     QString str = sub.join(QLatin1String("."));
     int *iter = subscriptionIds.value(str);
@@ -1154,7 +1154,7 @@ int QDeclarativeV4CompilerPrivate::subscriptionIndex(const QStringList &sub)
     return *iter;
 }
 
-quint32 QDeclarativeV4CompilerPrivate::subscriptionBlockMask(const QStringList &sub)
+quint32 QV4CompilerPrivate::subscriptionBlockMask(const QStringList &sub)
 {
     QString str = sub.join(QLatin1String("."));
 
@@ -1167,7 +1167,7 @@ quint32 QDeclarativeV4CompilerPrivate::subscriptionBlockMask(const QStringList &
     return *uiter;
 }
 
-quint8 QDeclarativeV4CompilerPrivate::exceptionId(quint32 line, quint32 column)
+quint8 QV4CompilerPrivate::exceptionId(quint32 line, quint32 column)
 {
     quint8 rv = 0xFF;
     if (exceptions.count() < 0xFF) {
@@ -1180,7 +1180,7 @@ quint8 QDeclarativeV4CompilerPrivate::exceptionId(quint32 line, quint32 column)
     return rv;
 }
 
-quint8 QDeclarativeV4CompilerPrivate::exceptionId(QDeclarativeJS::AST::ExpressionNode *n)
+quint8 QV4CompilerPrivate::exceptionId(QDeclarativeJS::AST::ExpressionNode *n)
 {
     quint8 rv = 0xFF;
     if (n && exceptions.count() < 0xFF) {
@@ -1190,13 +1190,13 @@ quint8 QDeclarativeV4CompilerPrivate::exceptionId(QDeclarativeJS::AST::Expressio
     return rv;
 }
 
-QDeclarativeV4Compiler::QDeclarativeV4Compiler()
-: d(new QDeclarativeV4CompilerPrivate)
+QV4Compiler::QV4Compiler()
+: d(new QV4CompilerPrivate)
 {
     qmlBindingsTest |= qmlBindingsTestEnv();
 }
 
-QDeclarativeV4Compiler::~QDeclarativeV4Compiler()
+QV4Compiler::~QV4Compiler()
 {
     delete d; d = 0;
 }
@@ -1204,7 +1204,7 @@ QDeclarativeV4Compiler::~QDeclarativeV4Compiler()
 /* 
 Returns true if any bindings were compiled.
 */
-bool QDeclarativeV4Compiler::isValid() const
+bool QV4Compiler::isValid() const
 {
     return !d->committed.bytecode.isEmpty();
 }
@@ -1212,7 +1212,7 @@ bool QDeclarativeV4Compiler::isValid() const
 /* 
 -1 on failure, otherwise the binding index to use.
 */
-int QDeclarativeV4Compiler::compile(const Expression &expression, QDeclarativeEnginePrivate *engine)
+int QV4Compiler::compile(const Expression &expression, QDeclarativeEnginePrivate *engine)
 {
     if (!expression.expression.asAST()) return false;
 
@@ -1232,7 +1232,7 @@ int QDeclarativeV4Compiler::compile(const Expression &expression, QDeclarativeEn
     }
 }
 
-QByteArray QDeclarativeV4CompilerPrivate::buildSignalTable() const
+QByteArray QV4CompilerPrivate::buildSignalTable() const
 {
     QHash<int, QList<QPair<int, quint32> > > table;
 
@@ -1258,7 +1258,7 @@ QByteArray QDeclarativeV4CompilerPrivate::buildSignalTable() const
     return QByteArray((const char *)header.constData(), header.count() * sizeof(quint32));
 }
 
-QByteArray QDeclarativeV4CompilerPrivate::buildExceptionData() const
+QByteArray QV4CompilerPrivate::buildExceptionData() const
 {
     QByteArray rv;
     rv.resize(committed.exceptions.count() * sizeof(quint64));
@@ -1269,16 +1269,16 @@ QByteArray QDeclarativeV4CompilerPrivate::buildExceptionData() const
 /* 
 Returns the compiled program.
 */
-QByteArray QDeclarativeV4Compiler::program() const
+QByteArray QV4Compiler::program() const
 {
     QByteArray programData;
 
     if (isValid()) {
-        QDeclarativeV4Program prog;
+        QV4Program prog;
         prog.bindings = d->committed.count();
 
         Bytecode bc;
-        QDeclarativeV4CompilerPrivate::Instr::Jump jump;
+        QV4CompilerPrivate::Instr::Jump jump;
         jump.reg = -1;
 
         for (int ii = 0; ii < d->committed.count(); ++ii) {
@@ -1306,15 +1306,15 @@ QByteArray QDeclarativeV4Compiler::program() const
         prog.subscriptions = d->committed.subscriptionIds.count();
         prog.identifiers = d->committed.registeredStrings.count();
         prog.instructionCount = bytecode.count();
-        int size = sizeof(QDeclarativeV4Program) + bytecode.count();
+        int size = sizeof(QV4Program) + bytecode.count();
         size += prog.dataLength;
 
         programData.resize(size);
-        memcpy(programData.data(), &prog, sizeof(QDeclarativeV4Program));
+        memcpy(programData.data(), &prog, sizeof(QV4Program));
         if (prog.dataLength)
-            memcpy((char *)((QDeclarativeV4Program *)programData.data())->data(), data.constData(), 
+            memcpy((char *)((QV4Program *)programData.data())->data(), data.constData(), 
                    data.size());
-        memcpy((char *)((QDeclarativeV4Program *)programData.data())->instructions(), bytecode.constData(),
+        memcpy((char *)((QV4Program *)programData.data())->instructions(), bytecode.constData(),
                bytecode.count());
     } 
 
@@ -1327,13 +1327,13 @@ QByteArray QDeclarativeV4Compiler::program() const
             qWarning().nospace() << "    " << iter->first << "\t-> " << iter->second;
         }
 
-        QDeclarativeV4Compiler::dump(programData);
+        QV4Compiler::dump(programData);
     }
 
     return programData;
 }
 
-void QDeclarativeV4Compiler::enableBindingsTest(bool e)
+void QV4Compiler::enableBindingsTest(bool e)
 {
     if (e)
         qmlBindingsTest = true;

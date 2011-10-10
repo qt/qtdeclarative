@@ -41,10 +41,10 @@
 
 // #define REGISTER_CLEANUP_DEBUG
 
-#include "private/qdeclarativev4bindings_p.h"
-#include "private/qdeclarativev4program_p.h"
-#include "private/qdeclarativev4compiler_p.h"
-#include "private/qdeclarativev4compiler_p_p.h"
+#include "private/qv4bindings_p.h"
+#include "private/qv4program_p.h"
+#include "private/qv4compiler_p.h"
+#include "private/qv4compiler_p_p.h"
 
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativedebugtrace_p.h>
@@ -187,12 +187,12 @@ void Register::init(Type type)
 
 } // end of anonymous namespace
 
-QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *programData, 
+QV4Bindings::QV4Bindings(const char *programData, 
                                                QDeclarativeContextData *context, 
                                                QDeclarativeRefCount *ref)
 : subscriptions(0), program(0), dataRef(0), bindings(0)
 {
-    program = (QDeclarativeV4Program *)programData;
+    program = (QV4Program *)programData;
     dataRef = ref;
     if (dataRef) dataRef->addref();
 
@@ -204,14 +204,14 @@ QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *programData,
     }
 }
 
-QDeclarativeV4Bindings::~QDeclarativeV4Bindings()
+QV4Bindings::~QV4Bindings()
 {
     delete [] bindings;
     delete [] subscriptions; subscriptions = 0;
     if (dataRef) dataRef->release();
 }
 
-QDeclarativeAbstractBinding *QDeclarativeV4Bindings::configBinding(int index, QObject *target, 
+QDeclarativeAbstractBinding *QV4Bindings::configBinding(int index, QObject *target, 
                                                                    QObject *scope, int property)
 {
     Binding *rv = bindings + index;
@@ -227,7 +227,7 @@ QDeclarativeAbstractBinding *QDeclarativeV4Bindings::configBinding(int index, QO
     return rv;
 }
 
-void QDeclarativeV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
+void QV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
 {
     if (enabled != e) {
         enabled = e;
@@ -236,14 +236,14 @@ void QDeclarativeV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPri
     }
 }
 
-void QDeclarativeV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
+void QV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
     parent->run(this, flags);
     QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }
 
-void QDeclarativeV4Bindings::Binding::destroy()
+void QV4Bindings::Binding::destroy()
 {
     enabled = false;
     removeFromObject();
@@ -252,18 +252,18 @@ void QDeclarativeV4Bindings::Binding::destroy()
     parent->release();
 }
 
-void QDeclarativeV4Bindings::Subscription::subscriptionCallback(QDeclarativeNotifierEndpoint *e) 
+void QV4Bindings::Subscription::subscriptionCallback(QDeclarativeNotifierEndpoint *e) 
 {
     Subscription *s = static_cast<Subscription *>(e);
     s->bindings->subscriptionNotify(s->method);
 }
 
-void QDeclarativeV4Bindings::subscriptionNotify(int id)
+void QV4Bindings::subscriptionNotify(int id)
 {
-    QDeclarativeV4Program::BindingReferenceList *list = program->signalTable(id);
+    QV4Program::BindingReferenceList *list = program->signalTable(id);
 
     for (quint32 ii = 0; ii < list->count; ++ii) {
-        QDeclarativeV4Program::BindingReference *bindingRef = list->bindings + ii;
+        QV4Program::BindingReference *bindingRef = list->bindings + ii;
 
         Binding *binding = bindings + bindingRef->binding;
         if (binding->executedBlocks & bindingRef->blockMask)
@@ -271,7 +271,7 @@ void QDeclarativeV4Bindings::subscriptionNotify(int id)
     }
 }
 
-void QDeclarativeV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags flags)
+void QV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags flags)
 {
     if (!binding->enabled)
         return;
@@ -317,13 +317,13 @@ void QDeclarativeV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::
 }
 
 
-void QDeclarativeV4Bindings::unsubscribe(int subIndex)
+void QV4Bindings::unsubscribe(int subIndex)
 {
     Subscription *sub = (subscriptions + subIndex);
     sub->disconnect();
 }
 
-void QDeclarativeV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex)
+void QV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex)
 {
     unsubscribe(subIndex);
 
@@ -335,7 +335,7 @@ void QDeclarativeV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex
     }
 }
  
-void QDeclarativeV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
+void QV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
 {
     Subscription *sub = (subscriptions + subIndex);
     sub->bindings = this;
@@ -544,7 +544,7 @@ static void testBindingResult(const QString &binding, int line, int column,
         iserror = true;
 
     if (iserror) {
-        qWarning().nospace() << "QDeclarativeV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
+        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
 
         qWarning().nospace() << "    Binding:  " << binding;
         qWarning().nospace() << "    QtScript: " << qtscriptResult.constData();
@@ -561,7 +561,7 @@ static void testBindingException(const QString &binding, int line, int column,
 
     if (!expression.hasError()) {
         QByteArray qtscriptResult = testResultToString(value, isUndefined);
-        qWarning().nospace() << "QDeclarativeV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
+        qWarning().nospace() << "QV4: Optimization error @" << context->url.toString().toUtf8().constData() << ":" << line << ":" << column;
         qWarning().nospace() << "    Binding:  " << binding;
         qWarning().nospace() << "    QtScript: " << qtscriptResult.constData();
         qWarning().nospace() << "    V4:       exception";
@@ -569,7 +569,7 @@ static void testBindingException(const QString &binding, int line, int column,
 }
 
 static void throwException(int id, QDeclarativeDelayedError *error, 
-                           QDeclarativeV4Program *program, QDeclarativeContextData *context,
+                           QV4Program *program, QDeclarativeContextData *context,
                            const QString &description = QString())
 {
     error->error.setUrl(context->url);
@@ -589,9 +589,9 @@ static void throwException(int id, QDeclarativeDelayedError *error,
         QDeclarativeEnginePrivate::warning(context->engine, error->error);
 }
 
-const qreal QDeclarativeV4Bindings::D32 = 4294967296.0;
+const qreal QV4Bindings::D32 = 4294967296.0;
 
-qint32 QDeclarativeV4Bindings::toInt32(qreal n)
+qint32 QV4Bindings::toInt32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
@@ -611,7 +611,7 @@ qint32 QDeclarativeV4Bindings::toInt32(qreal n)
     return qint32 (n);
 }
 
-inline quint32 QDeclarativeV4Bindings::toUint32(qreal n)
+inline quint32 QV4Bindings::toUint32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
@@ -654,11 +654,11 @@ inline quint32 QDeclarativeV4Bindings::toUint32(qreal n)
 }
 
 #ifdef QML_THREADED_INTERPRETER
-void **QDeclarativeV4Bindings::getDecodeInstrTable()
+void **QV4Bindings::getDecodeInstrTable()
 {
     static void **decode_instr;
     if (!decode_instr) {
-        QDeclarativeV4Bindings *dummy = new QDeclarativeV4Bindings(0, 0, 0);
+        QV4Bindings *dummy = new QV4Bindings(0, 0, 0);
         quint32 executedBlocks = 0;
         dummy->run(0, executedBlocks, 0, 0, 0, 0, 
                    QDeclarativePropertyPrivate::BypassInterceptor, 
@@ -669,7 +669,7 @@ void **QDeclarativeV4Bindings::getDecodeInstrTable()
 }
 #endif
 
-void QDeclarativeV4Bindings::run(int instrIndex, quint32 &executedBlocks,
+void QV4Bindings::run(int instrIndex, quint32 &executedBlocks,
                                  QDeclarativeContextData *context, QDeclarativeDelayedError *error,
                                  QObject *scope, QObject *output, 
                                  QDeclarativePropertyPrivate::WriteFlags storeFlags
@@ -1411,7 +1411,7 @@ void QDeclarativeV4Bindings::run(int instrIndex, quint32 &executedBlocks,
     // nothing to do
 #else
     default:
-        qFatal("QDeclarativeV4: Unknown instruction %d encountered.", instr->common.type);
+        qFatal("QV4: Unknown instruction %d encountered.", instr->common.type);
         break;
     } // switch
 

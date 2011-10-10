@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 
-#ifndef QDECLARATIVEV4INSTRUCTION_P_H
-#define QDECLARATIVEV4INSTRUCTION_P_H
+#ifndef QV4INSTRUCTION_P_H
+#define QV4INSTRUCTION_P_H
 
 //
 //  W A R N I N G
@@ -419,5 +419,5 @@ QT_END_NAMESPACE
 
 QT_END_HEADER
 
-#endif // QDECLARATIVEV4INSTRUCTION_P_H
+#endif // QV4INSTRUCTION_P_H
 
