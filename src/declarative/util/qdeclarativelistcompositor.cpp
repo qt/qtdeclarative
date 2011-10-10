@@ -544,13 +544,14 @@ void QDeclarativeListCompositor::clearFlags(
         const int difference = qMin(count, from->count);
         count -= difference;
 
-        const int removeFlags = from->flags & flags;
+        const int removeFlags = from->flags & flags & ~(AppendFlag | PrependFlag);
         const int clearedFlags = from->flags & ~(flags | AppendFlag);
         if (removeFlags && removes) {
             const int maskedFlags = clearCache
                     ? (removeFlags & ~CacheFlag)
                     : (removeFlags | (from->flags & CacheFlag));
-            removes->append(Remove(from, difference, maskedFlags));
+            if (maskedFlags)
+                removes->append(Remove(from, difference, maskedFlags));
         }
         m_end.decrementIndexes(difference, removeFlags);
         from.incrementIndexes(difference, clearedFlags);
@@ -793,7 +794,7 @@ void QDeclarativeListCompositor::listItemsInserted(
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << insertions)
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
-        if (it->list != list) {
+        if (it->list != list || it->flags == CacheFlag) {
             it.incrementIndexes(it->count);
             continue;
         } else if (it->flags & MovedFlag) {
@@ -818,12 +819,14 @@ void QDeclarativeListCompositor::listItemsInserted(
                             }
                         }
                     }
-                    Insert translatedInsert(it, insertion.count, flags, insertion.moveId);
-                    for (int i = 0; i < m_groupCount; ++i) {
-                        if (it->inGroup(i))
-                            translatedInsert.index[i] += offset;
+                    if (flags & ~(AppendFlag | PrependFlag)) {
+                        Insert translatedInsert(it, insertion.count, flags, insertion.moveId);
+                        for (int i = 0; i < m_groupCount; ++i) {
+                            if (it->inGroup(i))
+                                translatedInsert.index[i] += offset;
+                        }
+                        translatedInsertions->append(translatedInsert);
                     }
-                    translatedInsertions->append(translatedInsert);
                     if ((it->flags & ~AppendFlag) == flags) {
                         it->count += insertion.count;
                     } else {
@@ -879,7 +882,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
     for (iterator it(m_ranges.next, 0, Default, m_groupCount);
             *it != &m_ranges && !removals->isEmpty();
             *it = it->next) {
-        if (it->list != list) {
+        if (it->list != list || it->flags == CacheFlag) {
             it.incrementIndexes(it->count);
             continue;
         }
@@ -1042,10 +1045,10 @@ void QDeclarativeListCompositor::listItemsChanged(
 {
     QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(<< list << changes)
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
-        if (!it->inGroup()) {
-            continue;
-        } else if (it->list != list) {
+        if (it->list != list || it->flags == CacheFlag) {
             it.incrementIndexes(it->count);
+            continue;
+        } else if (!it->inGroup()) {
             continue;
         }
         foreach (const QDeclarativeChangeSet::Change &change, changes) {
