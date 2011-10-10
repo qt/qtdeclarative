@@ -64,7 +64,7 @@ class tst_QSGGridView : public QObject
 public:
     tst_QSGGridView();
 
-//private slots:
+private slots:
     void initTestCase();
     void cleanupTestCase();
     void items();
@@ -107,7 +107,6 @@ public:
     void testQtQuick11Attributes_data();
     void columnCount();
     void margins();
-private slots:
     void creationContext();
 
 private:
