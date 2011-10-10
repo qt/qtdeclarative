@@ -950,6 +950,9 @@ void QSGParticleSystem::moveGroups(QSGParticleData *d, int newGIdx)
         return;
 
     QSGParticleData* pd = newDatum(newGIdx, false, d->systemIndex);
+    if (!pd)
+        return;
+
     pd->clone(*d);
     finishNewDatum(pd);
 

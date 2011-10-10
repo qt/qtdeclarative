@@ -43,6 +43,8 @@
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
 
+const double CONV_FACTOR = 0.017453292519943295;//Degrees to radians
+
 class tst_qsgimageparticle : public QObject
 {
     Q_OBJECT
@@ -51,6 +53,10 @@ public:
 
 private slots:
     void test_basic();
+    void test_colored();
+    void test_deformed();
+    void test_tabled();
+    void test_sprite();
 };
 
 tst_qsgimageparticle::tst_qsgimageparticle()
@@ -88,10 +94,182 @@ void tst_qsgimageparticle::test_basic()
         QCOMPARE(d->rotation, 0.0f);
         QCOMPARE(d->rotationSpeed, 0.0f);
         QCOMPARE(d->autoRotate, 0.0f);
-        QCOMPARE(d->animIdx, 0.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 1.0f);
+        QCOMPARE(d->animHeight, 1.0f);
         QCOMPARE(d->frameDuration, 1.0f);
         QCOMPARE(d->frameCount, 1.0f);
         QCOMPARE(d->animT, -1.0f);
+    }
+}
+
+
+void tst_qsgimageparticle::test_colored()
+{
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/colored.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QCOMPARE(d->color.r, (uchar)003);
+        QCOMPARE(d->color.g, (uchar)002);
+        QCOMPARE(d->color.b, (uchar)001);
+        QCOMPARE(d->color.a, (uchar)127);
+        QCOMPARE(d->xx, 1.0f);
+        QCOMPARE(d->xy, 0.0f);
+        QCOMPARE(d->yy, 1.0f);
+        QCOMPARE(d->yx, 0.0f);
+        QCOMPARE(d->rotation, 0.0f);
+        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->autoRotate, 0.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 1.0f);
+        QCOMPARE(d->animHeight, 1.0f);
+        QCOMPARE(d->frameDuration, 1.0f);
+        QCOMPARE(d->frameCount, 1.0f);
+        QCOMPARE(d->animT, -1.0f);
+    }
+}
+
+
+void tst_qsgimageparticle::test_deformed()
+{
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/deformed.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QCOMPARE(d->color.r, (uchar)255);
+        QCOMPARE(d->color.g, (uchar)255);
+        QCOMPARE(d->color.b, (uchar)255);
+        QCOMPARE(d->color.a, (uchar)255);
+        QCOMPARE(d->xx, 0.5f);
+        QCOMPARE(d->xy, 0.5f);
+        QCOMPARE(d->yy, 0.5f);
+        QCOMPARE(d->yx, 0.5f);
+        QCOMPARE(d->rotation, 90.0f * (float)CONV_FACTOR);
+        QCOMPARE(d->rotationSpeed, 90.0f * (float)CONV_FACTOR);
+        QCOMPARE(d->autoRotate, 1.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 1.0f);
+        QCOMPARE(d->animHeight, 1.0f);
+        QCOMPARE(d->frameDuration, 1.0f);
+        QCOMPARE(d->frameCount, 1.0f);
+        QCOMPARE(d->animT, -1.0f);
+    }
+}
+
+
+void tst_qsgimageparticle::test_tabled()
+{
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/tabled.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QCOMPARE(d->color.r, (uchar)255);
+        QCOMPARE(d->color.g, (uchar)255);
+        QCOMPARE(d->color.b, (uchar)255);
+        QCOMPARE(d->color.a, (uchar)255);
+        QCOMPARE(d->xx, 1.0f);
+        QCOMPARE(d->xy, 0.0f);
+        QCOMPARE(d->yy, 1.0f);
+        QCOMPARE(d->yx, 0.0f);
+        QCOMPARE(d->rotation, 0.0f);
+        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->autoRotate, 0.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 1.0f);
+        QCOMPARE(d->animHeight, 1.0f);
+        QCOMPARE(d->frameDuration, 1.0f);
+        QCOMPARE(d->frameCount, 1.0f);
+        QCOMPARE(d->animT, -1.0f);
+        //TODO: This performance level doesn't alter particleData, but goes straight to shaders. Find something to test
+    }
+}
+
+
+void tst_qsgimageparticle::test_sprite()
+{
+    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sprite.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+
+        QCOMPARE(d->x, 0.f);
+        QCOMPARE(d->y, 0.f);
+        QCOMPARE(d->vx, 0.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QCOMPARE(d->color.r, (uchar)255);
+        QCOMPARE(d->color.g, (uchar)255);
+        QCOMPARE(d->color.b, (uchar)255);
+        QCOMPARE(d->color.a, (uchar)255);
+        QCOMPARE(d->xx, 1.0f);
+        QCOMPARE(d->xy, 0.0f);
+        QCOMPARE(d->yy, 1.0f);
+        QCOMPARE(d->yx, 0.0f);
+        QCOMPARE(d->rotation, 0.0f);
+        QCOMPARE(d->rotationSpeed, 0.0f);
+        QCOMPARE(d->autoRotate, 0.0f);
+        QVERIFY(myFuzzyCompare(d->frameDuration, 120.f));
+        QCOMPARE(d->frameCount, 6.0f);
+        QVERIFY(d->animT > 0.0f);
+        QCOMPARE(d->animX, 0.0f);
+        QCOMPARE(d->animY, 0.0f);
+        QCOMPARE(d->animWidth, 31.0f);
+        QCOMPARE(d->animHeight, 30.0f);
     }
 }
 

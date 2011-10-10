@@ -160,6 +160,7 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerParticlePerSecond;
     qreal pt;
+    qreal maxLife = (m_particleDuration + m_particleDurationVariation)/1000.0;
 
     //Have to map it into this system, because particlesystem automaps it back
     QPointF offset = m_system->mapFromItem(this, QPointF(0, 0));
@@ -175,6 +176,8 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
         pt = m_lastEmission[d->index];
         if (pt < d->t)
             pt = d->t;
+        if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now
+            pt = time - maxLife;
 
         if ((width() || height()) && !effectiveExtruder()->contains(QRectF(offset.x(), offset.y(), width(), height()),QPointF(d->curX(), d->curY()))){
             m_lastEmission[d->index] = time;//jump over this time period without emitting, because it's outside

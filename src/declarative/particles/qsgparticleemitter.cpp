@@ -375,6 +375,9 @@ void QSGParticleEmitter::emitWindow(int timeStamp)
     qreal time = timeStamp / 1000.;
     qreal particleRatio = 1. / m_particlesPerSecond;
     qreal pt = m_last_emission;
+    qreal maxLife = (m_particleDuration + m_particleDurationVariation)/1000.0;
+    if (pt + maxLife < time)//We missed so much, that we should skip emiting particles that are dead by now
+        pt = time - maxLife;
 
     qreal opt = pt; // original particle time
     qreal dt = time - m_last_timestamp; // timestamp delta...
