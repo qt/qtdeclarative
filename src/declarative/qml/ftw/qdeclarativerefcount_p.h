@@ -109,18 +109,18 @@ QDeclarativeRefCount::QDeclarativeRefCount()
 
 QDeclarativeRefCount::~QDeclarativeRefCount() 
 {
-    Q_ASSERT(refCount == 0);
+    Q_ASSERT(refCount.load() == 0);
 }
 
 void QDeclarativeRefCount::addref() 
 { 
-    Q_ASSERT(refCount > 0); 
+    Q_ASSERT(refCount.load() > 0);
     refCount.ref(); 
 }
 
 void QDeclarativeRefCount::release() 
 { 
-    Q_ASSERT(refCount > 0); 
+    Q_ASSERT(refCount.load() > 0);
     if (!refCount.deref()) 
         destroy(); 
 }

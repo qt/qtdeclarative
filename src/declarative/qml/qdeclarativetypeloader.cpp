@@ -692,13 +692,13 @@ QDeclarativeDataBlob::ThreadData::ThreadData()
 
 QDeclarativeDataBlob::Status QDeclarativeDataBlob::ThreadData::status() const
 {
-    return QDeclarativeDataBlob::Status((_p & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
+    return QDeclarativeDataBlob::Status((_p.load() & TD_STATUS_MASK) >> TD_STATUS_SHIFT);
 }
 
 void QDeclarativeDataBlob::ThreadData::setStatus(QDeclarativeDataBlob::Status status)
 {
     while (true) {
-        int d = _p;
+        int d = _p.load();
         int nd = (d & ~TD_STATUS_MASK) | ((status << TD_STATUS_SHIFT) & TD_STATUS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -706,13 +706,13 @@ void QDeclarativeDataBlob::ThreadData::setStatus(QDeclarativeDataBlob::Status st
 
 bool QDeclarativeDataBlob::ThreadData::isAsync() const
 {
-    return _p & TD_ASYNC_MASK;
+    return _p.load() & TD_ASYNC_MASK;
 }
 
 void QDeclarativeDataBlob::ThreadData::setIsAsync(bool v)
 {
     while (true) {
-        int d = _p;
+        int d = _p.load();
         int nd = (d & ~TD_ASYNC_MASK) | (v?TD_ASYNC_MASK:0);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }
@@ -720,13 +720,13 @@ void QDeclarativeDataBlob::ThreadData::setIsAsync(bool v)
 
 quint8 QDeclarativeDataBlob::ThreadData::progress() const
 {
-    return quint8((_p & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
+    return quint8((_p.load() & TD_PROGRESS_MASK) >> TD_PROGRESS_SHIFT);
 }
 
 void QDeclarativeDataBlob::ThreadData::setProgress(quint8 v)
 {
     while (true) {
-        int d = _p;
+        int d = _p.load();
         int nd = (d & ~TD_PROGRESS_MASK) | ((v << TD_PROGRESS_SHIFT) & TD_PROGRESS_MASK);
         if (d == nd || _p.testAndSetOrdered(d, nd)) return;
     }

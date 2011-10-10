@@ -179,12 +179,12 @@ public:
         {
             QMutexLocker m1(&m_mutex);
             m_queryIds.ref();
-            if (m_queryIds <= 0)
-                m_queryIds = 1;
+            if (m_queryIds.load() <= 0)
+                m_queryIds.store(1);
         }
 
         XmlQueryJob job;
-        job.queryId = m_queryIds;
+        job.queryId = m_queryIds.load();
         job.data = data;
         job.query = QLatin1String("doc($src)") + query;
         job.namespaces = namespaces;
@@ -203,7 +203,7 @@ public:
 
         {
             QMutexLocker ml(&m_mutex);
-            m_jobs.insert(m_queryIds, job);
+            m_jobs.insert(m_queryIds.load(), job);
         }
 
         QMetaObject::invokeMethod(this, "processQuery", Qt::QueuedConnection, Q_ARG(int, job.queryId));
