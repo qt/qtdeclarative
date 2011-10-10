@@ -503,7 +503,7 @@ void QSGCanvasItem::createContext()
 }
 
 /*!
-  \qmlmethod QtQuick2::Context2D QtQuick2::Canvas::getContext(string contextId)
+  \qmlmethod object QtQuick2::Canvas::getContext(string contextId)
 
   Currently, the canvas item only support the 2D context. If the \a contextId
   parameter isn't provided or is "2d", then the QtQuick2::Context2D object is
