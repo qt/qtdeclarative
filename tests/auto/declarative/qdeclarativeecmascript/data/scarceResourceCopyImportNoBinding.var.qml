@@ -2,7 +2,7 @@ import QtQuick 2.0
 import Qt.test 1.0
 
 // the following js import doesn't manually preserve or destroy any resources
-import "scarceResourceCopyImportNoBinding.js" as ScarceResourceCopyImportNoBindingJs
+import "scarceResourceCopyImportNoBinding.var.js" as ScarceResourceCopyImportNoBindingJs
 
 QtObject {
     // in this case, there is an import but no binding evaluated.

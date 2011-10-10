@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Qt.test 1.0
-import "scarceResourceTest.js" as ScarceResourceProviderJs
+import "scarceResourceTest.var.js" as ScarceResourceProviderJs
 
 // In this case, following the evaluation of the binding,
 // the scarceResourceTest value should be an invalid variant,
@@ -9,6 +9,5 @@ import "scarceResourceTest.js" as ScarceResourceProviderJs
 QtObject {
     property MyScarceResourceObject a;
     a: MyScarceResourceObject { id: scarceResourceProvider }
-    property variant scarceResourceCopy: ScarceResourceProviderJs.importReleasedScarceResource(scarceResourceProvider);
+    property var scarceResourceCopy: ScarceResourceProviderJs.importReleasedScarceResource(scarceResourceProvider);
 }
-

@@ -7,8 +7,8 @@ QtObject {
     property MyScarceResourceObject a;
     a: MyScarceResourceObject { id: scarceResourceProvider }
 
-    property ScarceResourceSignalComponent b;
-    b: ScarceResourceSignalComponent {
+    property ScarceResourceSignalComponentVar b;
+    b: ScarceResourceSignalComponentVar {
         objectName: "srsc"
 
         onTestSignal: {

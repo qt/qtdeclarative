@@ -4,8 +4,7 @@ import Qt.test 1.0
 // In this example, a common syntax error will only be "caught"
 // when the function is called via:
 // QDeclarativeVMEMetaObject::metaCall->invokeMetaMethod()
-// We would like to ensure that a useful error message is printed,
-// rather than having QScriptValue::call() function fail silently.
+// We would like to ensure that a useful error message is printed.
 
 QtObject {
     id: root

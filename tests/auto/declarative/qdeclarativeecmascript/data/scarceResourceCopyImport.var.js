@@ -6,7 +6,7 @@
 // resource would automatically be released after import completes
 // but before the binding is evaluated.
 
-var component = Qt.createComponent("scarceResourceCopy.qml");
+var component = Qt.createComponent("scarceResourceCopy.var.qml");
 var scarceResourceElement = component.createObject(null);
 var scarceResourceProvider = scarceResourceElement.a;
 var retn = scarceResourceProvider.scarceResource;
@@ -22,3 +22,4 @@ function importScarceResource() {
 function destroyScarceResource() {
     retn.destroy();
 }
+

@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Qt.test 1.0
-import "scarceResourceTest.js" as ScarceResourceProviderJs
+import "scarceResourceTest.variant.js" as ScarceResourceProviderJs
 
 // In this case, multiple scarce resource are explicity preserved
 // and then explicitly destroyed, while others are automatically
@@ -13,4 +13,3 @@ QtObject {
     a: MyScarceResourceObject { id: scarceResourceProvider }
     property int scarceResourceTest: ScarceResourceProviderJs.importPreservedScarceResourceFromMultiple(scarceResourceProvider), 100
 }
-

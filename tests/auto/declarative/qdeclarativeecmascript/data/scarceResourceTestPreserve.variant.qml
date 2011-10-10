@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Qt.test 1.0
-import "scarceResourceTest.js" as ScarceResourceProviderJs
+import "scarceResourceTest.variant.js" as ScarceResourceProviderJs
 
 // In this case, the scarce resource is explicity preserved.
 // It should not be automatically released after the evaluation

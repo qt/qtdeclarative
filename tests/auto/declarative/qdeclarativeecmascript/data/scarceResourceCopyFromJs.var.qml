@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Qt.test 1.0
-import "scarceResourceTest.js" as ScarceResourceProviderJs
+import "scarceResourceTest.var.js" as ScarceResourceProviderJs
 
 // Here we import a scarce resource directly, from JS module.
 // It is not preserved or released manually, so it should be
@@ -10,6 +10,5 @@ import "scarceResourceTest.js" as ScarceResourceProviderJs
 QtObject {
     property MyScarceResourceObject a;
     a: MyScarceResourceObject { id: scarceResourceProvider }
-    property variant scarceResourceCopy: ScarceResourceProviderJs.importScarceResource(scarceResourceProvider)
+    property var scarceResourceCopy: ScarceResourceProviderJs.importScarceResource(scarceResourceProvider)
 }
-

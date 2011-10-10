@@ -1,10 +1,10 @@
 import QtQuick 2.0
 import Qt.test 1.0
-import "scarceResourceCopyImport.js" as ScarceResourceCopyImportJs
+import "scarceResourceCopyImport.variant.js" as ScarceResourceCopyImportJs
 
 QtObject {
     // this binding is evaluated once, prior to the resource being released
-    property variant scarceResourceCopy: ScarceResourceCopyImportJs.importScarceResource()
+    property variant scarceResourceImportedCopy: ScarceResourceCopyImportJs.importScarceResource()
 
     // this code is evaluated on completion, and so copy one should be valid, copy two invalid.
     property variant scarceResourceAssignedCopyOne;

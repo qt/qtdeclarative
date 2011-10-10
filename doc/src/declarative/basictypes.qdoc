@@ -479,6 +479,19 @@
     }
     \endqml
 
+    A \c var type property can also hold an image or pixmap.
+    A \c var which contains a QPixmap or QImage is known as a
+    "scarce resource" and the declarative engine will attempt to
+    automatically release such resources after evaluation of any JavaScript
+    expression which requires one to be copied has completed.
+
+    Clients may explicitly release such a scarce resource by calling the
+    "destroy" method on the \c var property from within JavaScript.  They
+    may also explicitly preserve the scarce resource by calling the
+    "preserve" method on the \c var property from within JavaScript.
+    For more information regarding the usage of a scarce resource, please
+    see \l{Scarce Resources in JavaScript}.
+
     \sa {QML Basic Types}
 */
 

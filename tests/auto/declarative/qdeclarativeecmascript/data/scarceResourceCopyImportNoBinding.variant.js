@@ -8,11 +8,8 @@
 // Thus, "importScarceResource()" will return a released (invalid)
 // scarce resource.
 
-var component = Qt.createComponent("scarceResourceCopy.qml");
+var component = Qt.createComponent("scarceResourceCopyNoBinding.variant.qml");
 var scarceResourceElement = component.createObject(null);
 var scarceResourceProvider = scarceResourceElement.a;
 var retn = scarceResourceProvider.scarceResource;
 
-function importScarceResource() {
-    return retn; // should return a released (invalid) scarce resource
-}

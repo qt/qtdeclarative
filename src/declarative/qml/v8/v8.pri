@@ -16,6 +16,7 @@ HEADERS += \
     $$PWD/qv8typewrapper_p.h \
     $$PWD/qv8listwrapper_p.h \
     $$PWD/qv8variantwrapper_p.h \
+    $$PWD/qv8variantresource_p.h \
     $$PWD/qv8valuetypewrapper_p.h \
     $$PWD/qv8include_p.h \
     $$PWD/qv8worker_p.h \
