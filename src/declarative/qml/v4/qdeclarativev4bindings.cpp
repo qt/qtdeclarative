@@ -187,92 +187,18 @@ void Register::init(Type type)
 
 } // end of anonymous namespace
 
-class QDeclarativeV4BindingsPrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QDeclarativeV4Bindings)
-
-public:
-    QDeclarativeV4BindingsPrivate();
-    virtual ~QDeclarativeV4BindingsPrivate();
-
-    struct Binding : public QDeclarativeAbstractBinding, public QDeclarativeDelayedError {
-        Binding() : enabled(false), updating(0), property(0),
-                    scope(0), target(0), executedBlocks(0), parent(0) {}
-
-        // Inherited from QDeclarativeAbstractBinding
-        virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
-        virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
-        virtual void destroy();
-
-        int index:30;
-        bool enabled:1;
-        bool updating:1;
-        int property;
-        QObject *scope;
-        QObject *target;
-        quint32 executedBlocks;
-
-        QDeclarativeV4BindingsPrivate *parent;
-    };
-
-    typedef QDeclarativeNotifierEndpoint Subscription;
-    Subscription *subscriptions;
-
-    void run(Binding *, QDeclarativePropertyPrivate::WriteFlags flags);
-
-    QDeclarativeV4Program *program;
-    QDeclarativeRefCount *dataRef;
-    Binding *bindings;
-
-    static int methodCount;
-
-    void init();
-    void run(int instr, quint32 &executedBlocks, QDeclarativeContextData *context,
-             QDeclarativeDelayedError *error, QObject *scope, QObject *output, 
-             QDeclarativePropertyPrivate::WriteFlags storeFlags
-#ifdef QML_THREADED_INTERPRETER
-             , void ***decode_instr = 0
-#endif
-             );
-
-
-    inline void unsubscribe(int subIndex);
-    inline void subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex);
-    inline void subscribe(QObject *o, int notifyIndex, int subIndex);
-
-    inline static qint32 toInt32(qreal n);
-    static const qreal D32;
-    static quint32 toUint32(qreal n);
-};
-
-QDeclarativeV4BindingsPrivate::QDeclarativeV4BindingsPrivate()
+QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *programData, 
+                                               QDeclarativeContextData *context, 
+                                               QDeclarativeRefCount *ref)
 : subscriptions(0), program(0), dataRef(0), bindings(0)
 {
-}
-
-QDeclarativeV4BindingsPrivate::~QDeclarativeV4BindingsPrivate()
-{
-    delete [] subscriptions; subscriptions = 0;
-    if (dataRef) dataRef->release();
-}
-
-int QDeclarativeV4BindingsPrivate::methodCount = -1;
-
-QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context, 
-                                               QDeclarativeRefCount *dataRef)
-: QObject(*(new QDeclarativeV4BindingsPrivate))
-{
-    Q_D(QDeclarativeV4Bindings);
-
-    if (d->methodCount == -1)
-        d->methodCount = QDeclarativeV4Bindings::staticMetaObject.methodCount();
-
-    d->program = (QDeclarativeV4Program *)program;
-    d->dataRef = dataRef;
+    program = (QDeclarativeV4Program *)programData;
+    dataRef = ref;
     if (dataRef) dataRef->addref();
 
     if (program) {
-        d->init();
+        subscriptions = new Subscription[program->subscriptions];
+        bindings = new Binding[program->bindings];
 
         QDeclarativeAbstractExpression::setContext(context);
     }
@@ -280,30 +206,28 @@ QDeclarativeV4Bindings::QDeclarativeV4Bindings(const char *program, QDeclarative
 
 QDeclarativeV4Bindings::~QDeclarativeV4Bindings()
 {
-    Q_D(QDeclarativeV4Bindings);
-
-    delete [] d->bindings;
+    delete [] bindings;
+    delete [] subscriptions; subscriptions = 0;
+    if (dataRef) dataRef->release();
 }
 
 QDeclarativeAbstractBinding *QDeclarativeV4Bindings::configBinding(int index, QObject *target, 
-                                                        QObject *scope, int property)
+                                                                   QObject *scope, int property)
 {
-    Q_D(QDeclarativeV4Bindings);
-
-    QDeclarativeV4BindingsPrivate::Binding *rv = d->bindings + index;
+    Binding *rv = bindings + index;
 
     rv->index = index;
     rv->property = property;
     rv->target = target;
     rv->scope = scope;
-    rv->parent = d;
+    rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
 
     return rv;
 }
 
-void QDeclarativeV4BindingsPrivate::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
+void QDeclarativeV4Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
 {
     if (enabled != e) {
         enabled = e;
@@ -312,50 +236,47 @@ void QDeclarativeV4BindingsPrivate::Binding::setEnabled(bool e, QDeclarativeProp
     }
 }
 
-void QDeclarativeV4BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
+void QDeclarativeV4Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     QDeclarativeDebugTrace::startRange(QDeclarativeDebugTrace::Binding);
     parent->run(this, flags);
     QDeclarativeDebugTrace::endRange(QDeclarativeDebugTrace::Binding);
 }
 
-void QDeclarativeV4BindingsPrivate::Binding::destroy()
+void QDeclarativeV4Bindings::Binding::destroy()
 {
     enabled = false;
     removeFromObject();
     clear();
     removeError();
-    parent->q_func()->release();
+    parent->release();
 }
 
-int QDeclarativeV4Bindings::qt_metacall(QMetaObject::Call c, int id, void **)
+void QDeclarativeV4Bindings::Subscription::subscriptionCallback(QDeclarativeNotifierEndpoint *e) 
 {
-    Q_D(QDeclarativeV4Bindings);
+    Subscription *s = static_cast<Subscription *>(e);
+    s->bindings->subscriptionNotify(s->method);
+}
 
-    if (c == QMetaObject::InvokeMetaMethod && id >= d->methodCount) {
-        id -= d->methodCount;
+void QDeclarativeV4Bindings::subscriptionNotify(int id)
+{
+    QDeclarativeV4Program::BindingReferenceList *list = program->signalTable(id);
 
-        QDeclarativeV4Program::BindingReferenceList *list = d->program->signalTable(id);
+    for (quint32 ii = 0; ii < list->count; ++ii) {
+        QDeclarativeV4Program::BindingReference *bindingRef = list->bindings + ii;
 
-        for (quint32 ii = 0; ii < list->count; ++ii) {
-            QDeclarativeV4Program::BindingReference *bindingRef = list->bindings + ii;
-
-            QDeclarativeV4BindingsPrivate::Binding *binding = d->bindings + bindingRef->binding;
-            if (binding->executedBlocks & bindingRef->blockMask)
-                d->run(binding, QDeclarativePropertyPrivate::DontRemoveBinding);
-        }
+        Binding *binding = bindings + bindingRef->binding;
+        if (binding->executedBlocks & bindingRef->blockMask)
+            run(binding, QDeclarativePropertyPrivate::DontRemoveBinding);
     }
-    return -1;
 }
 
-void QDeclarativeV4BindingsPrivate::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags flags)
+void QDeclarativeV4Bindings::run(Binding *binding, QDeclarativePropertyPrivate::WriteFlags flags)
 {
-    Q_Q(QDeclarativeV4Bindings);
-
     if (!binding->enabled)
         return;
 
-    QDeclarativeContextData *context = q->QDeclarativeAbstractExpression::context();
+    QDeclarativeContextData *context = QDeclarativeAbstractExpression::context();
     if (!context || !context->isValid()) 
         return;
 
@@ -373,7 +294,7 @@ void QDeclarativeV4BindingsPrivate::run(Binding *binding, QDeclarativePropertyPr
         } else {
             name = QLatin1String(binding->target->metaObject()->property(binding->property).name());
         }
-        qmlInfo(binding->target) << QCoreApplication::translate("QDeclarativeV4Bindings", "Binding loop detected for property \"%1\"").arg(name);
+        qmlInfo(binding->target) << tr("Binding loop detected for property \"%1\"").arg(name);
         return;
     }
 
@@ -396,33 +317,29 @@ void QDeclarativeV4BindingsPrivate::run(Binding *binding, QDeclarativePropertyPr
 }
 
 
-void QDeclarativeV4BindingsPrivate::unsubscribe(int subIndex)
+void QDeclarativeV4Bindings::unsubscribe(int subIndex)
 {
-    QDeclarativeV4BindingsPrivate::Subscription *sub = (subscriptions + subIndex);
+    Subscription *sub = (subscriptions + subIndex);
     sub->disconnect();
 }
 
-void QDeclarativeV4BindingsPrivate::subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex)
+void QDeclarativeV4Bindings::subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex)
 {
-    Q_Q(QDeclarativeV4Bindings);
-
     unsubscribe(subIndex);
 
     if (p->idValues[idIndex]) {
-        QDeclarativeV4BindingsPrivate::Subscription *sub = (subscriptions + subIndex);
-        sub->target = q;
-        sub->targetMethod = methodCount + subIndex;
+        Subscription *sub = (subscriptions + subIndex);
+        sub->bindings = this;
+        sub->method = subIndex;
         sub->connect(&p->idValues[idIndex].bindings);
     }
 }
  
-void QDeclarativeV4BindingsPrivate::subscribe(QObject *o, int notifyIndex, int subIndex)
+void QDeclarativeV4Bindings::subscribe(QObject *o, int notifyIndex, int subIndex)
 {
-    Q_Q(QDeclarativeV4Bindings);
-
-    QDeclarativeV4BindingsPrivate::Subscription *sub = (subscriptions + subIndex);
-    sub->target = q;
-    sub->targetMethod = methodCount + subIndex; 
+    Subscription *sub = (subscriptions + subIndex);
+    sub->bindings = this;
+    sub->method = subIndex; 
     if (o)
         sub->connect(o, notifyIndex);
     else
@@ -505,14 +422,6 @@ inline static QUrl toUrl(Register *reg, int type, QDeclarativeContextData *conte
         return context->url.resolved(base);
     else
         return base;
-}
-
-void QDeclarativeV4BindingsPrivate::init()
-{
-    if (program->subscriptions)
-        subscriptions = new QDeclarativeV4BindingsPrivate::Subscription[program->subscriptions];
-
-    bindings = new QDeclarativeV4BindingsPrivate::Binding[program->bindings];
 }
 
 static bool testCompareVariants(const QVariant &qtscriptRaw, const QVariant &v4)
@@ -680,9 +589,9 @@ static void throwException(int id, QDeclarativeDelayedError *error,
         QDeclarativeEnginePrivate::warning(context->engine, error->error);
 }
 
-const qreal QDeclarativeV4BindingsPrivate::D32 = 4294967296.0;
+const qreal QDeclarativeV4Bindings::D32 = 4294967296.0;
 
-qint32 QDeclarativeV4BindingsPrivate::toInt32(qreal n)
+qint32 QDeclarativeV4Bindings::toInt32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
@@ -702,7 +611,7 @@ qint32 QDeclarativeV4BindingsPrivate::toInt32(qreal n)
     return qint32 (n);
 }
 
-inline quint32 QDeclarativeV4BindingsPrivate::toUint32(qreal n)
+inline quint32 QDeclarativeV4Bindings::toUint32(qreal n)
 {
     if (qIsNaN(n) || qIsInf(n) || (n == 0))
         return 0;
@@ -751,25 +660,24 @@ void **QDeclarativeV4Bindings::getDecodeInstrTable()
     if (!decode_instr) {
         QDeclarativeV4Bindings *dummy = new QDeclarativeV4Bindings(0, 0, 0);
         quint32 executedBlocks = 0;
-        dummy->d_func()->run(0, executedBlocks, 0, 0, 0, 0, 
-                             QDeclarativePropertyPrivate::BypassInterceptor, 
-                             &decode_instr);
+        dummy->run(0, executedBlocks, 0, 0, 0, 0, 
+                   QDeclarativePropertyPrivate::BypassInterceptor, 
+                   &decode_instr);
         dummy->release();
     }
     return decode_instr;
 }
 #endif
 
-void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
-                                        QDeclarativeContextData *context, QDeclarativeDelayedError *error,
-                                        QObject *scope, QObject *output, QDeclarativePropertyPrivate::WriteFlags storeFlags
+void QDeclarativeV4Bindings::run(int instrIndex, quint32 &executedBlocks,
+                                 QDeclarativeContextData *context, QDeclarativeDelayedError *error,
+                                 QObject *scope, QObject *output, 
+                                 QDeclarativePropertyPrivate::WriteFlags storeFlags
 #ifdef QML_THREADED_INTERPRETER
-                                        ,void ***table
+                                 ,void ***table
 #endif
-                                        )
+                                 )
 {
-    Q_Q(QDeclarativeV4Bindings);
-
 #ifdef QML_THREADED_INTERPRETER
     if (table) {
         static void *decode_instr[] = {
@@ -840,11 +748,11 @@ void QDeclarativeV4BindingsPrivate::run(int instrIndex, quint32 &executedBlocks,
             reg.setUndefined();
         } else {
             int subIdx = instr->fetchAndSubscribe.subscription;
-            QDeclarativeV4BindingsPrivate::Subscription *sub = 0;
+            Subscription *sub = 0;
             if (subIdx != -1) {
                 sub = (subscriptions + subIdx);
-                sub->target = q;
-                sub->targetMethod = methodCount + subIdx;
+                sub->bindings = this;
+                sub->method = subIdx;
             }
             reg.init((Register::Type)instr->fetchAndSubscribe.valueType);
             if (instr->fetchAndSubscribe.valueType >= FirstCleanupType)

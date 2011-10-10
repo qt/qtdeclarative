@@ -67,7 +67,7 @@ public:
     QDeclarativeBindingPrivate();
     ~QDeclarativeBindingPrivate();
 
-    virtual void emitValueChanged();
+    virtual void expressionChanged();
 
     static void printBindingLoopError(QDeclarativeProperty &prop);
 

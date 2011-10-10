@@ -178,7 +178,7 @@ public Q_SLOTS:
 
 protected:
     ~QDeclarativeBinding();
-    void emitValueChanged();
+    void expressionChanged();
 
 private:
     Q_DECLARE_PRIVATE(QDeclarativeBinding)

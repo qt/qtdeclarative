@@ -147,6 +147,7 @@ public:
                         const QObject *receiver, int method_index,
                         int type = 0, int *types = 0);
     static const QMetaObject *metaObjectForProperty(const QMetaObject *, int);
+    static void flushSignal(const QObject *sender, int signal_index);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QDeclarativePropertyPrivate::WriteFlags)

@@ -61,28 +61,82 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-class QDeclarativeV4BindingsPrivate;
-class QDeclarativeV4Bindings : public QObject, 
-                               public QDeclarativeAbstractExpression, 
+class QDeclarativeV4Program;
+class QDeclarativeV4Bindings : public QDeclarativeAbstractExpression, 
                                public QDeclarativeRefCount
 {
+    Q_DECLARE_TR_FUNCTIONS(QDeclarativeV4Bindings)
 public:
     QDeclarativeV4Bindings(const char *program, QDeclarativeContextData *context,
                            QDeclarativeRefCount *);
     virtual ~QDeclarativeV4Bindings();
 
-    QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, int property);
+    QDeclarativeAbstractBinding *configBinding(int index, QObject *target, 
+                                               QObject *scope, int property);
 
 #ifdef QML_THREADED_INTERPRETER
     static void **getDecodeInstrTable();
 #endif
 
-protected:
-    int qt_metacall(QMetaObject::Call, int, void **);
-
 private:
     Q_DISABLE_COPY(QDeclarativeV4Bindings)
-    Q_DECLARE_PRIVATE(QDeclarativeV4Bindings)
+
+    struct Binding : public QDeclarativeAbstractBinding, public QDeclarativeDelayedError {
+        Binding() : enabled(false), updating(0), property(0),
+                    scope(0), target(0), executedBlocks(0), parent(0) {}
+
+        // Inherited from QDeclarativeAbstractBinding
+        virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
+        virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
+        virtual void destroy();
+
+        int index:30;
+        bool enabled:1;
+        bool updating:1;
+        int property;
+        QObject *scope;
+        QObject *target;
+        quint32 executedBlocks;
+
+        QDeclarativeV4Bindings *parent;
+    };
+
+    struct Subscription : public QDeclarativeNotifierEndpoint
+    {
+        Subscription() : bindings(0), method(-1) { callback = &subscriptionCallback; }
+        static void subscriptionCallback(QDeclarativeNotifierEndpoint *e);
+        QDeclarativeV4Bindings *bindings;
+        int method;
+    };
+    friend class Subscription;
+
+    Subscription *subscriptions;
+
+    void subscriptionNotify(int);
+    void run(Binding *, QDeclarativePropertyPrivate::WriteFlags flags);
+
+    QDeclarativeV4Program *program;
+    QDeclarativeRefCount *dataRef;
+    Binding *bindings;
+
+    void init();
+    void run(int instr, quint32 &executedBlocks, QDeclarativeContextData *context,
+             QDeclarativeDelayedError *error, QObject *scope, QObject *output, 
+             QDeclarativePropertyPrivate::WriteFlags storeFlags
+#ifdef QML_THREADED_INTERPRETER
+             , void ***decode_instr = 0
+#endif
+             );
+
+
+    inline void unsubscribe(int subIndex);
+    inline void subscribeId(QDeclarativeContextData *p, int idIndex, int subIndex);
+    inline void subscribe(QObject *o, int notifyIndex, int subIndex);
+
+    inline static qint32 toInt32(qreal n);
+    static const qreal D32;
+    static quint32 toUint32(qreal n);
+
 };
 
 QT_END_NAMESPACE

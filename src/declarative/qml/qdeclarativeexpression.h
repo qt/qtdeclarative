@@ -106,7 +106,6 @@ private:
 
     Q_DISABLE_COPY(QDeclarativeExpression)
     Q_DECLARE_PRIVATE(QDeclarativeExpression)
-    Q_PRIVATE_SLOT(d_func(), void _q_notify())
     friend class QDeclarativeDebugger;
     friend class QDeclarativeContext;
     friend class QDeclarativeVME;

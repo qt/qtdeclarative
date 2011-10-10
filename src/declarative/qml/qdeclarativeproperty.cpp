@@ -1777,6 +1777,11 @@ bool QDeclarativePropertyPrivate::connect(const QObject *sender, int signal_inde
     return QMetaObject::connect(sender, signal_index, receiver, method_index, type, types);
 }
 
+void QDeclarativePropertyPrivate::flushSignal(const QObject *sender, int signal_index)
+{
+    flush_vme_signal(sender, signal_index);
+}
+
 /*!
 Return \a metaObject's [super] meta object that provides data for \a property.
 */

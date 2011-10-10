@@ -410,6 +410,15 @@ void QDeclarativeData::objectNameChanged(QAbstractDeclarativeData *d, QObject *o
     static_cast<QDeclarativeData *>(d)->objectNameChanged(o);
 }
 
+void QDeclarativeData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int index, void **)
+{
+    QDeclarativeData *ddata = QDeclarativeData::get(object, false);
+    if (!ddata) return; // Probably being deleted
+
+    QDeclarativeNotifierEndpoint *ep = ddata->notify(index);
+    if (ep) QDeclarativeNotifier::emitNotify(ep);
+}
+
 void QDeclarativeEnginePrivate::init()
 {
     Q_Q(QDeclarativeEngine);
@@ -1047,6 +1056,80 @@ QDeclarativeDataExtended::~QDeclarativeDataExtended()
 {
 }
 
+void QDeclarativeData::NotifyList::layout(QDeclarativeNotifierEndpoint *endpoint)
+{
+    if (endpoint->next)
+        layout(endpoint->next);
+
+    int index = endpoint->sourceSignal;
+    index = qMin(index, 0xFFFF - 1);
+
+    endpoint->next = notifies[index];
+    if (endpoint->next) endpoint->next->prev = &endpoint->next;
+    endpoint->prev = &notifies[index];
+    notifies[index] = endpoint;
+}
+
+void QDeclarativeData::NotifyList::layout()
+{
+    Q_ASSERT(maximumTodoIndex >= notifiesSize);
+
+    if (todo) {
+        QDeclarativeNotifierEndpoint **old = notifies;
+        const int reallocSize = (maximumTodoIndex + 1) * sizeof(QDeclarativeNotifierEndpoint*);
+        notifies = (QDeclarativeNotifierEndpoint**)realloc(notifies, reallocSize);
+        const int memsetSize = (maximumTodoIndex - notifiesSize + 1) * 
+                               sizeof(QDeclarativeNotifierEndpoint*);
+        memset(notifies + notifiesSize, 0, memsetSize);
+
+        if (notifies != old) {
+            for (int ii = 0; ii < notifiesSize; ++ii)
+                if (notifies[ii]) 
+                    notifies[ii]->prev = &notifies[ii];
+        }
+
+        notifiesSize = maximumTodoIndex + 1;
+
+        layout(todo);
+    }
+
+    maximumTodoIndex = 0;
+    todo = 0;
+}
+
+void QDeclarativeData::addNotify(int index, QDeclarativeNotifierEndpoint *endpoint)
+{
+    if (!notifyList) {
+        notifyList = (NotifyList *)malloc(sizeof(NotifyList));
+        notifyList->connectionMask = 0;
+        notifyList->maximumTodoIndex = 0;
+        notifyList->notifiesSize = 0;
+        notifyList->todo = 0;
+        notifyList->notifies = 0;
+    }
+
+    Q_ASSERT(!endpoint->isConnected());
+
+    index = qMin(index, 0xFFFF - 1);
+    notifyList->connectionMask |= (1 << (index % 64));
+
+    if (index < notifyList->notifiesSize) {
+
+        endpoint->next = notifyList->notifies[index];
+        if (endpoint->next) endpoint->next->prev = &endpoint->next;
+        endpoint->prev = &notifyList->notifies[index];
+        notifyList->notifies[index] = endpoint;
+
+    } else {
+        notifyList->maximumTodoIndex = qMax(int(notifyList->maximumTodoIndex), index);
+
+        endpoint->next = notifyList->todo;
+        if (endpoint->next) endpoint->next->prev = &endpoint->next;
+        endpoint->prev = &notifyList->todo;
+        notifyList->todo = endpoint;
+    }
+}
+
 QDeclarativeNotifier *QDeclarativeData::objectNameNotifier() const
 {
     if (!extendedData) extendedData = new QDeclarativeDataExtended;
@@ -1091,6 +1174,17 @@ void QDeclarativeData::destroyed(QObject *object)
         QDeclarativeGuard<QObject> *guard = static_cast<QDeclarativeGuard<QObject> *>(guards);
         *guard = (QObject *)0;
         guard->objectDestroyed(object);
+    }
+
+    if (notifyList) {
+        while (notifyList->todo)
+            notifyList->todo->disconnect();
+        for (int ii = 0; ii < notifyList->notifiesSize; ++ii) {
+            while (QDeclarativeNotifierEndpoint *ep = notifyList->notifies[ii])
+                ep->disconnect();
+        }
+        free(notifyList->notifies);
+        free(notifyList);
     }
 
     if (extendedData)

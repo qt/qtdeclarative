@@ -412,7 +412,7 @@ void QDeclarativeBindingPrivate::printBindingLoopError(QDeclarativeProperty &pro
     qmlInfo(prop.object()) << QDeclarativeBinding::tr("Binding loop detected for property \"%1\"").arg(prop.name());
 }
 
-void QDeclarativeBindingPrivate::emitValueChanged()
+void QDeclarativeBindingPrivate::expressionChanged()
 {
     Q_Q(QDeclarativeBinding);
     q->update();

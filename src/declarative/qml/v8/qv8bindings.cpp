@@ -51,52 +51,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8BindingsPrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QV8Bindings)
-public:
-    QV8BindingsPrivate();
-
-    struct Binding : public QDeclarativeJavaScriptExpression,
-                     public QDeclarativeAbstractBinding {
-        Binding();
-
-        void update() { QDeclarativeAbstractBinding::update(); }
-
-        // Inherited from QDeclarativeJavaScriptExpression
-        inline virtual QString expressionIdentifier();
-
-        // Inherited from QDeclarativeAbstractBinding
-        virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
-        virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
-        virtual void destroy();
-        virtual void refresh();
-
-        int index:30;
-        bool enabled:1;
-        bool updating:1;
-        int line;
-        QDeclarativeProperty property;
-        QV8BindingsPrivate *parent;
-    };
-
-    QUrl url;
-    int bindingsCount;
-    Binding *bindings;
-    v8::Persistent<v8::Array> functions;
-};
-
-QV8BindingsPrivate::QV8BindingsPrivate()
-: bindingsCount(0), bindings(0)
-{
-}
-
-QV8BindingsPrivate::Binding::Binding()
+QV8Bindings::Binding::Binding()
 : index(-1), enabled(false), updating(false), line(-1), parent(0)
 {
 }
 
-void QV8BindingsPrivate::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
+void QV8Bindings::Binding::setEnabled(bool e, QDeclarativePropertyPrivate::WriteFlags flags)
 {
     if (enabled != e) {
         enabled = e;
@@ -105,12 +65,12 @@ void QV8BindingsPrivate::Binding::setEnabled(bool e, QDeclarativePropertyPrivate
     }
 }
 
-void QV8BindingsPrivate::Binding::refresh()
+void QV8Bindings::Binding::refresh()
 {
     update();
 }
 
-void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
+void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
 {
     if (!enabled)
         return;
@@ -164,27 +124,30 @@ void QV8BindingsPrivate::Binding::update(QDeclarativePropertyPrivate::WriteFlags
     }
 }
 
-QString QV8BindingsPrivate::Binding::expressionIdentifier()
+QString QV8Bindings::Binding::expressionIdentifier()
 {
     return parent->url.toString() + QLatin1String(":") + QString::number(line);
 }
 
-void QV8BindingsPrivate::Binding::destroy()
+void QV8Bindings::Binding::expressionChanged()
+{
+    update(QDeclarativePropertyPrivate::DontRemoveBinding);
+}
+
+void QV8Bindings::Binding::destroy()
 {
     enabled = false;
     removeFromObject();
     clear();
     removeError();
-    parent->q_func()->release();
+    parent->release();
 }
 
 QV8Bindings::QV8Bindings(const QString &program, int index, int line,
                          QDeclarativeCompiledData *compiled, 
                          QDeclarativeContextData *context)
-: QObject(*(new QV8BindingsPrivate))
+: bindingsCount(0), bindings(0)
 {
-    Q_D(QV8Bindings);
-
     QV8Engine *engine = QDeclarativeEnginePrivate::getV8Engine(context->engine);
 
     if (compiled->v8bindings[index].IsEmpty()) {
@@ -198,29 +161,27 @@ QV8Bindings::QV8Bindings(const QString &program, int index, int line,
             compiled->v8bindings[index] = qPersistentNew(v8::Local<v8::Array>::Cast(result));
     }
 
-    d->url = compiled->url;
-    d->functions = qPersistentNew(compiled->v8bindings[index]);
-    d->bindingsCount = d->functions->Length();
-    d->bindings = new QV8BindingsPrivate::Binding[d->bindingsCount];
+    url = compiled->url;
+    functions = qPersistentNew(compiled->v8bindings[index]);
+    bindingsCount = functions->Length();
+    bindings = new QV8Bindings::Binding[bindingsCount];
     
     setContext(context);
 }
 
 QV8Bindings::~QV8Bindings()
 {
-    Q_D(QV8Bindings);
-    qPersistentDispose(d->functions);
+    qPersistentDispose(functions);
 
-    delete [] d->bindings;
-    d->bindings = 0;
-    d->bindingsCount = 0;
+    delete [] bindings;
+    bindings = 0;
+    bindingsCount = 0;
 }
 
 QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *target, QObject *scope, 
                                                         const QDeclarativeProperty &property, int line)
 {
-    Q_D(QV8Bindings);
-    QV8BindingsPrivate::Binding *rv = d->bindings + index;
+    QV8Bindings::Binding *rv = bindings + index;
 
     rv->line = line;
     rv->index = index;
@@ -229,23 +190,11 @@ QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *targ
     rv->setScopeObject(scope);
     rv->setUseSharedContext(true);
     rv->setNotifyOnValueChanged(true);
-    rv->setNotifyObject(this, index);
-    rv->parent = d;
+    rv->parent = this;
 
     addref(); // This is decremented in Binding::destroy()
 
     return rv;
-}
-
-int QV8Bindings::qt_metacall(QMetaObject::Call c, int id, void **)
-{
-    Q_D(QV8Bindings);
-
-    if (c == QMetaObject::InvokeMetaMethod) {
-        QV8BindingsPrivate::Binding *binding = d->bindings + id;
-        binding->update(QDeclarativePropertyPrivate::DontRemoveBinding);
-    }
-    return -1;
 }
 
 QT_END_NAMESPACE

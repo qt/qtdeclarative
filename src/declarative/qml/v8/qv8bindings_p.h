@@ -64,8 +64,7 @@ QT_BEGIN_NAMESPACE
 class QDeclarativeCompiledData;
 
 class QV8BindingsPrivate;
-class QV8Bindings : public QObject, 
-                    public QDeclarativeAbstractExpression, 
+class QV8Bindings : public QDeclarativeAbstractExpression, 
                     public QDeclarativeRefCount
 {
 public:
@@ -77,12 +76,37 @@ public:
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
                                                const QDeclarativeProperty &prop, int line);
 
-protected:
-    int qt_metacall(QMetaObject::Call, int, void **);
-
 private:
     Q_DISABLE_COPY(QV8Bindings)
-    Q_DECLARE_PRIVATE(QV8Bindings)
+
+    struct Binding : public QDeclarativeJavaScriptExpression,
+                     public QDeclarativeAbstractBinding {
+        Binding();
+
+        void update() { QDeclarativeAbstractBinding::update(); }
+
+        // Inherited from QDeclarativeJavaScriptExpression
+        inline virtual QString expressionIdentifier();
+        virtual void expressionChanged();
+
+        // Inherited from QDeclarativeAbstractBinding
+        virtual void setEnabled(bool, QDeclarativePropertyPrivate::WriteFlags flags);
+        virtual void update(QDeclarativePropertyPrivate::WriteFlags flags);
+        virtual void destroy();
+        virtual void refresh();
+
+        int index:30;
+        bool enabled:1;
+        bool updating:1;
+        int line;
+        QDeclarativeProperty property;
+        QV8Bindings *parent;
+    };
+
+    QUrl url;
+    int bindingsCount;
+    Binding *bindings;
+    v8::Persistent<v8::Array> functions;
 };
 
 QT_END_NAMESPACE
