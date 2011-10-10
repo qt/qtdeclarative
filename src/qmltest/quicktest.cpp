@@ -147,16 +147,21 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     if (testPath.isEmpty())
         testPath = QLatin1String(".");
 
-    // Scan the test data directory recursively, looking for "tst_*.qml" files.
-    QStringList filters;
-    filters += QLatin1String("tst_*.qml");
     QStringList files;
-    QDirIterator iter(testPath, filters, QDir::Files,
-                      QDirIterator::Subdirectories |
-                      QDirIterator::FollowSymlinks);
-    while (iter.hasNext())
-        files += iter.next();
-    files.sort();
+
+    if (testPath.endsWith(QLatin1String(".qml")) && QFileInfo(testPath).isFile()) {
+        files << testPath;
+    } else {
+        // Scan the test data directory recursively, looking for "tst_*.qml" files.
+        QStringList filters;
+        filters += QLatin1String("tst_*.qml");
+        QDirIterator iter(testPath, filters, QDir::Files,
+                          QDirIterator::Subdirectories |
+                          QDirIterator::FollowSymlinks);
+        while (iter.hasNext())
+            files += iter.next();
+        files.sort();
+    }
 
     // Bail out if we didn't find any test cases.
     if (files.isEmpty()) {
