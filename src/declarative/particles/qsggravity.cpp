@@ -50,7 +50,8 @@ const qreal CONV = 0.017453292520444443;
     \brief The Gravity element allows you to set a constant accleration in an angle
 
     This element will set the acceleration of all affected particles to a vector of
-    the specified magnitude in the specified angle.
+    the specified magnitude in the specified angle. If the angle or acceleration is
+    not varying, it is more efficient to set the specified acceleration on the Emitter.
 
     This element models the gravity of a massive object whose center of
     gravity is far away (and thus the gravitational pull is effectively constant
