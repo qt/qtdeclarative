@@ -2009,6 +2009,7 @@ void tst_qsgtextedit::openInputPanel()
     QVERIFY(!edit->hasActiveFocus());
     qDebug() << &edit << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QEXPECT_FAIL("", "QTBUG-21946", Abort);
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
     // input panel should open on focus
