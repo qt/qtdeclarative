@@ -163,9 +163,7 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
             QByteArray snapshotType;
             ds >> snapshotType;
 
-            if (snapshotType == "aggregated")
-                d->takeSnapshot(v8::HeapSnapshot::kAggregated);
-            else if (snapshotType == "full")
+            if (snapshotType == "full")
                 d->takeSnapshot(v8::HeapSnapshot::kFull);
         } else if (command == "deletesnapshots") {
             v8::HeapProfiler::DeleteAllSnapshots();
