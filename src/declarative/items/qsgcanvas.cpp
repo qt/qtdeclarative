@@ -64,6 +64,15 @@
 
 QT_BEGIN_NAMESPACE
 
+#define QSG_CANVAS_TIMING
+#ifdef QSG_CANVAS_TIMING
+static bool qsg_canvas_timing = !qgetenv("QML_CANVAS_TIMING").isEmpty();
+static QTime threadTimer;
+static int syncTime;
+static int renderTime;
+static int swapTime;
+#endif
+
 DEFINE_BOOL_CONFIG_OPTION(qmlFixedAnimationStep, QML_FIXED_ANIMATION_STEP)
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP)
 
@@ -1943,7 +1952,6 @@ void QSGCanvasRenderLoop::createGLContext()
     gl->create();
 }
 
-
 void QSGCanvasRenderThread::run()
 {
 #ifdef THREAD_DEBUG
@@ -1995,6 +2003,10 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: Doing locked sync\n");
 #endif
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            threadTimer.start();
+#endif
         inSync = true;
         syncSceneGraph();
         inSync = false;
@@ -2006,14 +2018,20 @@ void QSGCanvasRenderThread::run()
 #ifdef THREAD_DEBUG
         printf("                RenderThread: sync done\n");
 #endif
-
-
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            syncTime = threadTimer.elapsed();
+#endif
 
 #ifdef THREAD_DEBUG
         printf("                RenderThread: rendering... %d x %d\n", windowSize.width(), windowSize.height());
 #endif
 
         renderSceneGraph(windowSize);
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing)
+            renderTime = threadTimer.elapsed() - syncTime;
+#endif
 
         // The content of the target buffer is undefined after swap() so grab needs
         // to happen before swap();
@@ -2032,6 +2050,14 @@ void QSGCanvasRenderThread::run()
         swapBuffers();
 #ifdef THREAD_DEBUG
         printf("                RenderThread: swap complete...\n");
+#endif
+#ifdef QSG_CANVAS_TIMING
+        if (qsg_canvas_timing) {
+            swapTime = threadTimer.elapsed() - renderTime;
+            qDebug() << "- Breakdown of frame time: sync:" << syncTime
+                     << "ms render:" << renderTime << "ms swap:" << swapTime
+                     << "ms total:" << swapTime + renderTime << "ms";
+        }
 #endif
 
         lock();
