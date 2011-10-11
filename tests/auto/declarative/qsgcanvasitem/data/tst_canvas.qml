@@ -9,10 +9,10 @@ Rectangle {
         id:canvas
         Canvas {
             id:c
-             width:10;height:10
+             width:100;height:100
              onPaint: {
                  context.fillStyle = "red";
-                 context.fillRect(0, 0, 10, 10);
+                 context.fillRect(0, 0, 100, 100);
              }
              property int paintCount:spyPaint.count
              property int paintedCount:spyPainted.count
@@ -183,7 +183,6 @@ Rectangle {
                    {mimeType:"image/jpeg"},
                    {mimeType:"image/x-portable-pixmap"},
                    {mimeType:"image/tiff"},
-                   {mimeType:"image/xbm"},
                    {mimeType:"image/xpm"},
                    ];
        }
@@ -210,7 +209,8 @@ Rectangle {
            ctx.fillStyle = "blue";
            ctx.fillRect(0, 0, c.width, c.height);
            ctx.restore();
-
+           c.requestPaint();
+           wait(100);
            var dataUrl2 = c.toDataURL(data.mimeType);
            verify (dataUrl2 != "data:,");
            verify (dataUrl2 != dataUrl);
@@ -224,7 +224,9 @@ Rectangle {
            c.renderTarget = Canvas.Image;
 
            c.requestPaint();
-           wait(200);
+           wait(100);
+           c.toDataURL();
+
            compare(c.paintedCount, 1);
            compare(c.paintCount, 1);
            c.destroy();

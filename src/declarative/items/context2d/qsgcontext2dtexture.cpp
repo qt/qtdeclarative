@@ -101,6 +101,8 @@ void QSGContext2DTexture::markDirtyTexture()
     m_dirtyTexture = true;
     unlock();
     emit textureChanged();
+    if (m_item)
+        emit m_item->painted();
 }
 
 bool QSGContext2DTexture::setCanvasSize(const QSize &size)
@@ -142,12 +144,6 @@ void QSGContext2DTexture::setItem(QSGCanvasItem* item)
         m_context = item->context();
         m_state = m_context->state;
         unlock();
-        connect(this, SIGNAL(textureChanged()), m_item, SIGNAL(painted()), Qt::QueuedConnection);
-        canvasChanged(item->canvasSize().toSize()
-                    , item->tileSize()
-                    , item->canvasWindow().toAlignedRect()
-                    , item->canvasWindow().toAlignedRect()
-                    , item->smooth());
     }
 }
 

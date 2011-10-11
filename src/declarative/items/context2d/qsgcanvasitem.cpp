@@ -416,18 +416,16 @@ void QSGCanvasItem::geometryChanged(const QRectF &newGeometry,
 void QSGCanvasItem::componentComplete()
 {
     Q_D(QSGCanvasItem);
+    QSGItem::componentComplete();
 
     if (!d->context)
         createContext();
     createTexture();
 
-
-    _doPainting(canvasWindow());
-    QSGItem::componentComplete();
-
     d->baseUrl = qmlEngine(this)->contextForObject(this)->baseUrl();
+    requestPaint();
+    updatePolish(); //force update the canvas sizes to texture for the first time
     d->componentCompleted = true;
-    update();
 }
 
 void QSGCanvasItem::updatePolish()
@@ -535,7 +533,8 @@ void QSGCanvasItem::markDirty(const QRectF& region)
 {
     Q_D(QSGCanvasItem);
     d->dirtyRect |= region;
-    polish();
+    if (d->componentCompleted)
+        polish();
     update();
 }
 
@@ -699,8 +698,6 @@ QString QSGCanvasItem::toDataURL(const QString& mimeType) const
             type = QLatin1Literal("PPM");
         else if (mime == QLatin1Literal("image/tiff"))
             type = QLatin1Literal("TIFF");
-        else if (mime == QLatin1Literal("image/xbm"))
-            type = QLatin1Literal("XBM");
         else if (mime == QLatin1Literal("image/xpm"))
             type = QLatin1Literal("XPM");
         else
