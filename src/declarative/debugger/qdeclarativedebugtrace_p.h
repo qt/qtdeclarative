@@ -56,6 +56,7 @@
 #include <private/qdeclarativedebugservice_p.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qvector.h>
 
 QT_BEGIN_HEADER
 
@@ -75,6 +76,8 @@ struct QDeclarativeDebugData
 
     QByteArray toByteArray() const;
 };
+
+Q_DECLARE_TYPEINFO(QDeclarativeDebugData, Q_MOVABLE_TYPE);
 
 class QUrl;
 class QDeclarativeEngine;
@@ -145,7 +148,7 @@ private:
     bool m_enabled;
     bool m_deferredSend;
     bool m_messageReceived;
-    QList<QDeclarativeDebugData> m_data;
+    QVector<QDeclarativeDebugData> m_data;
     QMutex m_mutex;
 };
 
