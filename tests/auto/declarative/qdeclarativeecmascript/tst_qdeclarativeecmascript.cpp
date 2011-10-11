@@ -207,6 +207,7 @@ private slots:
     void dynamicString();
     void include();
     void signalHandlers();
+    void doubleEvaluate();
 
     void callQtInvokables();
     void invokableObjectArg();
@@ -4761,6 +4762,23 @@ void tst_qdeclarativeecmascript::automaticSemicolon()
     QDeclarativeComponent component(&engine, TEST_FILE("automaticSemicolon.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
+}
+
+// Makes sure that a binding isn't double re-evaluated when it depends on the same variable twice
+void tst_qdeclarativeecmascript::doubleEvaluate()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("doubleEvaluate.qml"));
+    QObject *object = component.create();
+    QVERIFY(object != 0);
+    WriteCounter *wc = qobject_cast<WriteCounter *>(object);
+    QVERIFY(wc != 0);
+    QCOMPARE(wc->count(), 1);
+
+    wc->setProperty("x", 9);
+
+    QCOMPARE(wc->count(), 2);
+
+    delete object;
 }
 
 QTEST_MAIN(tst_qdeclarativeecmascript)

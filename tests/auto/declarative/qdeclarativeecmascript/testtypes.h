@@ -1131,6 +1131,23 @@ private:
     int *m_dtorCount;
 };
 
+class WriteCounter : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue);
+public:
+    WriteCounter() : m_value(0), m_count(0) {}
+
+    int value() const { return m_value; }
+    void setValue(int v) { m_value = v; ++m_count; }
+
+    int count() const { return m_count; }
+
+private:
+    int m_value;
+    int m_count;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -48,14 +48,15 @@ void QDeclarativeNotifier::emitNotify(QDeclarativeNotifierEndpoint *endpoint)
 {
     QDeclarativeNotifierEndpoint **oldDisconnected = endpoint->disconnected;
     endpoint->disconnected = &endpoint;
+    endpoint->notifying = 1;
 
     if (endpoint->next)
         emitNotify(endpoint->next);
 
     if (endpoint) {
-        void *args[] = { 0 };
 
         Q_ASSERT(endpoint->callback);
+        
         endpoint->callback(endpoint);
 
         if (endpoint) 
@@ -63,6 +64,7 @@ void QDeclarativeNotifier::emitNotify(QDeclarativeNotifierEndpoint *endpoint)
     } 
 
     if (oldDisconnected) *oldDisconnected = endpoint;
+    else if (endpoint) endpoint->notifying = 0;
 }
 
 void QDeclarativeNotifierEndpoint::connect(QObject *source, int sourceSignal)
@@ -91,6 +93,7 @@ void QDeclarativeNotifierEndpoint::copyAndClear(QDeclarativeNotifierEndpoint &ot
     other.notifier = notifier;
     other.sourceSignal = sourceSignal;
     other.disconnected = disconnected;
+    other.notifying = notifying;
     if (other.disconnected) *other.disconnected = &other;
 
     if (next) {
@@ -104,6 +107,7 @@ void QDeclarativeNotifierEndpoint::copyAndClear(QDeclarativeNotifierEndpoint &ot
     next = 0;
     disconnected = 0;
     notifier = 0;
+    notifying = 0;
     sourceSignal = -1;
 }
 

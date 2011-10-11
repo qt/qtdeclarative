@@ -80,6 +80,9 @@ public:
     inline void connect(QDeclarativeNotifier *);
     inline void disconnect();
 
+    inline bool isNotifying() const;
+    inline void cancelNotify();
+
     void copyAndClear(QDeclarativeNotifierEndpoint &other);
 
 private:
@@ -90,7 +93,8 @@ private:
         QDeclarativeNotifier *notifier;
         QObject *source;
     };
-    int sourceSignal;
+    unsigned int notifying : 1;
+    signed int sourceSignal : 31;
     QDeclarativeNotifierEndpoint **disconnected;
     QDeclarativeNotifierEndpoint  *next;
     QDeclarativeNotifierEndpoint **prev;
@@ -124,7 +128,7 @@ void QDeclarativeNotifier::notify()
 }
 
 QDeclarativeNotifierEndpoint::QDeclarativeNotifierEndpoint()
-: callback(0), notifier(0), sourceSignal(-1), disconnected(0), next(0), prev(0)
+: callback(0), notifier(0), notifying(0), sourceSignal(-1), disconnected(0), next(0), prev(0)
 {
 }
 
@@ -140,7 +144,7 @@ bool QDeclarativeNotifierEndpoint::isConnected()
 
 bool QDeclarativeNotifierEndpoint::isConnected(QObject *source, int sourceSignal)
 {
-    return sourceSignal != -1 && this->source == source && this->sourceSignal == sourceSignal;
+    return this->sourceSignal != -1 && this->source == source && this->sourceSignal == sourceSignal;
 }
 
 bool QDeclarativeNotifierEndpoint::isConnected(QDeclarativeNotifier *notifier)
@@ -168,7 +172,32 @@ void QDeclarativeNotifierEndpoint::disconnect()
     prev = 0;
     disconnected = 0;
     notifier = 0;
+    notifying = 0;
     sourceSignal = -1;
+}
+
+/*!
+Returns true if a notify is in progress.  This means that the signal or QDeclarativeNotifier
+that this endpoing is connected to has been triggered, but this endpoint's callback has not
+yet been called.
+
+An in progress notify can be cancelled by calling cancelNotify.
+*/
+bool QDeclarativeNotifierEndpoint::isNotifying() const
+{
+    return notifying == 1;
+}
+
+/*!
+Cancel any notifies that are in progress.
+*/
+void QDeclarativeNotifierEndpoint::cancelNotify() 
+{
+    notifying = 0;
+    if (disconnected) {
+        *disconnected = 0;
+        disconnected = 0;
+    }
 }
 
 QT_END_NAMESPACE

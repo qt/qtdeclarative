@@ -515,45 +515,18 @@ QDeclarativeJavaScriptExpression::GuardList::updateGuards(QDeclarativeJavaScript
 
         if (property.notifier != 0) {
 
-            if (!noChanges && guard.isConnected(property.notifier)) {
-                // Nothing to do
-
+            if (guard.isConnected(property.notifier)) {
+                 guard.cancelNotify();
             } else {
-                noChanges = false;
-
-                bool existing = false;
-                for (int jj = 0; !existing && jj < ii; ++jj) 
-                    if (endpoints[jj].isConnected(property.notifier)) 
-                        existing = true;
-
-                if (existing) {
-                    // duplicate
-                    guard.disconnect();
-                } else {
-                    guard.connect(property.notifier);
-                }
+                guard.connect(property.notifier);
             }
-
 
         } else if (property.notifyIndex != -1) {
 
-            if (!noChanges && guard.isConnected(property.object, property.notifyIndex)) {
-                // Nothing to do
-
-            } else {
-                noChanges = false;
-
-                bool existing = false;
-                for (int jj = 0; !existing && jj < ii; ++jj) 
-                    if (endpoints[jj].isConnected(property.object, property.notifyIndex)) 
-                        existing = true;
-
-                if (existing) {
-                    // duplicate
-                    guard.disconnect();
-                } else {
-                    guard.connect(property.object, property.notifyIndex);
-                }
+            if (guard.isConnected(property.object, property.notifyIndex)) {
+                guard.cancelNotify();
+            } else { 
+                guard.connect(property.object, property.notifyIndex);
             }
 
         } else {
