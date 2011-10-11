@@ -222,10 +222,11 @@ Rectangle {
            verify(c);
 
            c.renderTarget = Canvas.Image;
-
-           c.requestPaint();
-           wait(100);
+           c.renderInThread = true;
+           var ctx = c.getContext();
+           ctx.fillRect(0, 0, c.width, c.height);
            c.toDataURL();
+           wait(100);
 
            compare(c.paintedCount, 1);
            compare(c.paintCount, 1);

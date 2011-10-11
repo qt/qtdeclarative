@@ -133,6 +133,7 @@ class QSGContext2DFBOTexture : public QSGContext2DTexture
 
 public:
     QSGContext2DFBOTexture();
+    ~QSGContext2DFBOTexture();
     virtual int textureId() const;
     virtual bool updateTexture();
     virtual QSGContext2DTile* createTile() const;

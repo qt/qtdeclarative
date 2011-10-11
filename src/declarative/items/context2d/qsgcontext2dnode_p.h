@@ -63,6 +63,7 @@ public:
     void setTexture(QSGContext2DTexture* texture);
     void update();
     void preprocess();
+    void setSize(const QSizeF& size);
 private:
     void updateTexture();
     void updateGeometry();
@@ -72,6 +73,7 @@ private:
     QSGTextureMaterial m_materialO;
     QSGGeometry m_geometry;
     QSGContext2DTexture* m_texture;
+    QSizeF m_size;
 
     bool m_dirtyGeometry;
     bool m_dirtyTexture;

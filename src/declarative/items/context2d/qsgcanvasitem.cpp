@@ -425,6 +425,7 @@ void QSGCanvasItem::componentComplete()
     d->baseUrl = qmlEngine(this)->contextForObject(this)->baseUrl();
     requestPaint();
     updatePolish(); //force update the canvas sizes to texture for the first time
+    update();
     d->componentCompleted = true;
 }
 
@@ -453,6 +454,7 @@ QSGNode *QSGCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         node = new QSGContext2DNode(this);
 
     node->setTexture(d->texture);
+    node->setSize(d->canvasWindow.size());
     node->update();
     return node;
 }

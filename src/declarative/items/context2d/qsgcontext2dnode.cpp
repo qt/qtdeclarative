@@ -52,6 +52,7 @@ QSGContext2DNode::QSGContext2DNode(QSGCanvasItem* item)
     , m_item(item)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_texture(0)
+    , m_size(1, 1)
     , m_dirtyGeometry(false)
     , m_dirtyTexture(false)
 {
@@ -65,13 +66,20 @@ QSGContext2DNode::~QSGContext2DNode()
 {
 }
 
+void QSGContext2DNode::setSize(const QSizeF& size)
+{
+    if (m_size != size) {
+        m_dirtyGeometry = true;
+        m_size = size;
+    }
+}
+
 void QSGContext2DNode::preprocess()
 {
     bool doDirty = false;
     QSGDynamicTexture *t = qobject_cast<QSGDynamicTexture *>(m_material.texture());
     if (t) {
         doDirty = t->updateTexture();
-        updateGeometry();
     }
     if (doDirty) {
         m_dirtyTexture = true;
@@ -106,10 +114,9 @@ void QSGContext2DNode::updateTexture()
 
 void QSGContext2DNode::updateGeometry()
 {
-    QSizeF size = m_item->canvasWindow().size();
     QRectF source = m_texture->textureSubRect();
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
-                                            QRectF(0, 0, size.width(), size.height()),
+                                            QRectF(0, 0, m_size.width(), m_size.height()),
                                             source);
     markDirty(DirtyGeometry);
 }

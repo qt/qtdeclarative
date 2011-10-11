@@ -101,8 +101,6 @@ void QSGContext2DTexture::markDirtyTexture()
     m_dirtyTexture = true;
     unlock();
     emit textureChanged();
-    if (m_item)
-        emit m_item->painted();
 }
 
 bool QSGContext2DTexture::setCanvasSize(const QSize &size)
@@ -144,6 +142,7 @@ void QSGContext2DTexture::setItem(QSGCanvasItem* item)
         m_context = item->context();
         m_state = m_context->state;
         unlock();
+        connect(this, SIGNAL(textureChanged()), m_item, SIGNAL(painted()));
     }
 }
 
@@ -412,6 +411,13 @@ QSGContext2DFBOTexture::QSGContext2DFBOTexture()
     m_threadRendering = false;
 }
 
+QSGContext2DFBOTexture::~QSGContext2DFBOTexture()
+{
+    delete m_fbo;
+    delete m_multisampledFbo;
+    delete m_paint_device;
+}
+
 bool QSGContext2DFBOTexture::setCanvasSize(const QSize &size)
 {
     QSize s = QSize(qMax(QT_MINIMUM_FBO_SIZE, qt_next_power_of_two(size.width()))
@@ -464,9 +470,9 @@ void QSGContext2DFBOTexture::bind()
 QRectF QSGContext2DFBOTexture::textureSubRect() const
 {
     return QRectF(0
-                , 1
+                , 0
                 , qreal(m_canvasWindow.width()) / m_fboSize.width()
-                , qreal(-m_canvasWindow.height()) / m_fboSize.height());
+                , qreal(m_canvasWindow.height()) / m_fboSize.height());
 }
 
 
@@ -570,6 +576,7 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
         delete m_multisampledFbo;
         m_fbo = 0;
         m_multisampledFbo = 0;
+        return 0;
     } else if (!m_fbo || m_fbo->size() != m_fboSize) {
         delete m_fbo;
         delete m_multisampledFbo;
@@ -585,20 +592,23 @@ QPaintDevice* QSGContext2DFBOTexture::beginPainting()
                 format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
                 m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
             }
-            m_multisampledFbo->bind();
         } else {
             QOpenGLFramebufferObjectFormat format;
             format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            delete m_fbo;
 
             m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
-            m_fbo->bind();
         }
     }
+
+    if (doMultisampling())
+        m_multisampledFbo->bind();
+    else
+        m_fbo->bind();
 
 
     if (!m_paint_device) {
         QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(m_fbo->size());
+        gl_device->setPaintFlipped(true);
         m_paint_device = gl_device;
     }
 
