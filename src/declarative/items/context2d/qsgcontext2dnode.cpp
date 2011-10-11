@@ -64,6 +64,7 @@ QSGContext2DNode::QSGContext2DNode(QSGCanvasItem* item)
 
 QSGContext2DNode::~QSGContext2DNode()
 {
+    delete m_texture;
 }
 
 void QSGContext2DNode::setSize(const QSizeF& size)

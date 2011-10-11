@@ -184,10 +184,6 @@ QSGCanvasItem::QSGCanvasItem(QSGItem *parent)
 QSGCanvasItem::~QSGCanvasItem()
 {
     Q_D(QSGCanvasItem);
-    if (d->texture) {
-        d->texture->setItem(0);
-        d->texture->deleteLater();
-    }
     delete d->context;
 }
 

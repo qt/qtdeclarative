@@ -656,7 +656,7 @@ QSGContext2DImageTexture::QSGContext2DImageTexture(bool threadRendering)
 
 QSGContext2DImageTexture::~QSGContext2DImageTexture()
 {
-    m_texture->deleteLater();
+    delete m_texture;
 }
 
 int QSGContext2DImageTexture::textureId() const
