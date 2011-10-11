@@ -91,13 +91,26 @@ QSGTrailEmitter::QSGTrailEmitter(QSGItem *parent) :
     \qmlproperty Shape QtQuick.Particles2::TrailEmitter::emitShape
 
     As the area of a TrailEmitter is the area it follows, a separate shape can be provided
-    to be the shape it emits out of.
+    to be the shape it emits out of. This shape has width and height specified by emitWidth
+    and emitHeight, and is centered on the followed particle's position.
+
+    The default shape is a filled Rectangle.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitWidth
+
+    The width in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
+    the width will be the current size of the particle being followed.
+
+    Default is 0.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitHeight
+
+    The height in pixels the emitShape is scaled to. If set to TrailEmitter.ParticleSize,
+    the height will be the current size of the particle being followed.
+
+    Default is 0.
 */
 /*!
     \qmlproperty real QtQuick.Particles2::TrailEmitter::emitRatePerParticle
@@ -202,17 +215,12 @@ void QSGTrailEmitter::emitWindow(int timeStamp)
                 // Note that burst location doesn't get used for follow emitter
                 qreal followT =  pt - d->t;
                 qreal followT2 = followT * followT * 0.5;
-                //qreal sizeOffset = d->size/2;//TODO: Current size? As an option
-                //TODO: Set variations
+                qreal eW = m_emitterXVariation < 0 ? d->curSize() : m_emitterXVariation;
+                qreal eH = m_emitterYVariation < 0 ? d->curSize() : m_emitterYVariation;
                 //Subtract offset, because PS expects this in emitter coordinates
-                QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - m_emitterXVariation/2,
-                                  d->y - offset.y() + d->vy * followT + d->ay * followT2 - m_emitterYVariation/2,
-                                  m_emitterXVariation,
-                                  m_emitterYVariation);
-    //            QRectF boundsRect(d->x + d->vx * followT + d->ax * followT2 + offset.x() - sizeOffset,
-    //                              d->y + d->vy * followT + d->ay * followT2 + offset.y() - sizeOffset,
-    //                              sizeOffset*2,
-    //                              sizeOffset*2);
+                QRectF boundsRect(d->x - offset.x() + d->vx * followT + d->ax * followT2 - eW/2,
+                                  d->y - offset.y() + d->vy * followT + d->ay * followT2 - eH/2,
+                                  eW, eH);
 
                 QSGParticleExtruder* effectiveEmissionExtruder = m_emissionExtruder ? m_emissionExtruder : m_defaultEmissionExtruder;
                 const QPointF &newPos = effectiveEmissionExtruder->extrude(boundsRect);
