@@ -322,7 +322,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreBinding i;
-        i.property = 26;
+        i.property.coreIndex = 26;
         i.value = 3;
         i.context = 2;
         i.owner = 0;
@@ -340,7 +340,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreValueSource i;
-        i.property = 29;
+        i.property.coreIndex = 29;
         i.owner = 1;
         i.castValue = 4;
         data->addInstruction(i);
@@ -348,7 +348,7 @@ void tst_qdeclarativeinstruction::dump()
 
     {
         QDeclarativeCompiledData::Instruction::StoreValueInterceptor i;
-        i.property = 30;
+        i.property.coreIndex = 30;
         i.owner = 2;
         i.castValue = -4;
         data->addInstruction(i);

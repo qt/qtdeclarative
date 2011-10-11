@@ -1870,7 +1870,7 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeScript::Property *p
                 store.property = genValueTypeData(prop, valueTypeProperty);
                 store.owner = 1;
             } else {
-                store.property = genPropertyData(prop);
+                store.property = prop->core;
                 store.owner = 0;
             }
             QDeclarativeType *valueType = toQmlType(v->object);
@@ -1885,7 +1885,7 @@ void QDeclarativeCompiler::genPropertyAssignment(QDeclarativeScript::Property *p
                 store.property = genValueTypeData(prop, valueTypeProperty);
                 store.owner = 1;
             } else {
-                store.property = genPropertyData(prop);
+                store.property = prop->core;
                 store.owner = 0;
             }
             QDeclarativeType *valueType = toQmlType(v->object);
@@ -3226,7 +3226,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         if (ref.bindingContext.owner) {
             store.property = genValueTypeData(prop, valueTypeProperty);
         } else {
-            store.property = genPropertyData(prop);
+            store.property = prop->core;
         }
 
         output->addInstruction(store);
@@ -3248,7 +3248,7 @@ void QDeclarativeCompiler::genBindingAssignment(QDeclarativeScript::Value *bindi
         if (ref.bindingContext.owner) {
             store.assignBinding.property = genValueTypeData(prop, valueTypeProperty);
         } else {
-            store.assignBinding.property = genPropertyData(prop);
+            store.assignBinding.property = prop->core;
         }
         output->addInstructionHelper(
             !prop->isAlias ? QDeclarativeInstruction::StoreBinding
@@ -3271,22 +3271,14 @@ int QDeclarativeCompiler::genContextCache()
     return output->contextCaches.count() - 1;
 }
 
-int QDeclarativeCompiler::genValueTypeData(QDeclarativeScript::Property *valueTypeProp, 
-                                  QDeclarativeScript::Property *prop)
+QDeclarativePropertyCache::Data 
+QDeclarativeCompiler::genValueTypeData(QDeclarativeScript::Property *valueTypeProp, 
+                                       QDeclarativeScript::Property *prop)
 {
     typedef QDeclarativePropertyPrivate QDPP;
-    QByteArray data = QDPP::saveValueType(prop->parent->metaObject(), prop->index, 
-                                          enginePrivate->valueTypes[prop->type]->metaObject(), 
-                                          valueTypeProp->index, engine);
-
-    return output->indexForByteArray(data);
-}
-
-int QDeclarativeCompiler::genPropertyData(QDeclarativeScript::Property *prop)
-{
-    typedef QDeclarativePropertyPrivate QDPP;
-    QByteArray data = QDPP::saveProperty(&prop->core);
-    return output->indexForByteArray(data);
+    return QDPP::saveValueType(prop->parent->metaObject(), prop->index, 
+                               enginePrivate->valueTypes[prop->type]->metaObject(), 
+                               valueTypeProp->index, engine);
 }
 
 bool QDeclarativeCompiler::completeComponentBuild()

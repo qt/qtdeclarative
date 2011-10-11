@@ -549,10 +549,9 @@ static inline void StoreProperty(QV8Engine *engine, QObject *object, QDeclarativ
         int lineNumber = frame->GetLineNumber();
         QString url = engine->toString(frame->GetScriptName());
 
-        QDeclarativePropertyCache::ValueTypeData valueTypeData;
         newBinding = new QDeclarativeBinding(&function, object, context);
         newBinding->setSourceLocation(url, lineNumber);
-        newBinding->setTarget(QDeclarativePropertyPrivate::restore(*property, valueTypeData, object, context));
+        newBinding->setTarget(QDeclarativePropertyPrivate::restore(*property, object, context));
         newBinding->setEvaluateFlags(newBinding->evaluateFlags() | QDeclarativeBinding::RequiresThisObject);
     }
 

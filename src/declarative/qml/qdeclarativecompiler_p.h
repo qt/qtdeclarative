@@ -373,8 +373,8 @@ private:
                               QDeclarativeScript::Property *valueTypeProperty = 0);
     int genContextCache();
 
-    int genValueTypeData(QDeclarativeScript::Property *prop, QDeclarativeScript::Property *valueTypeProp);
-    int genPropertyData(QDeclarativeScript::Property *prop);
+    QDeclarativePropertyCache::Data genValueTypeData(QDeclarativeScript::Property *prop, 
+                                                     QDeclarativeScript::Property *valueTypeProp);
 
     int componentTypeRef();
 

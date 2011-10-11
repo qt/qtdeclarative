@@ -54,6 +54,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <private/qdeclarativepropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -106,8 +107,8 @@ QT_BEGIN_NAMESPACE
     F(InitV8Bindings, initV8Bindings) \
     F(StoreBinding, assignBinding) \
     F(StoreBindingOnAlias, assignBinding) \
-    F(StoreV4Binding, assignBinding) \
     F(StoreV8Binding, assignBinding) \
+    F(StoreV4Binding, assignV4Binding) \
     F(StoreValueSource, assignValueSource) \
     F(StoreValueInterceptor, assignValueInterceptor) \
     F(StoreObjectQList, common) \
@@ -210,13 +211,13 @@ union QDeclarativeInstruction
     };
     struct instr_assignValueSource {
         QML_INSTR_HEADER
-        int property;
+        QDeclarativePropertyCache::RawData property;
         int owner;
         int castValue;
     };
     struct instr_assignValueInterceptor {
         QML_INSTR_HEADER
-        int property;
+        QDeclarativePropertyCache::RawData property;
         int owner;
         int castValue;
     };
@@ -226,9 +227,18 @@ union QDeclarativeInstruction
         ushort programIndex;
         ushort line;
     };
-    struct instr_assignBinding {
+    struct instr_assignV4Binding {
         QML_INSTR_HEADER
         unsigned int property;
+        int value;
+        short context;
+        short owner;
+        bool isRoot;
+        ushort line;
+    };
+    struct instr_assignBinding {
+        QML_INSTR_HEADER
+        QDeclarativePropertyCache::RawData property;
         int value;
         short context;
         short owner;
@@ -466,6 +476,7 @@ union QDeclarativeInstruction
     instr_assignValueSource assignValueSource;
     instr_assignValueInterceptor assignValueInterceptor;
     instr_initV8Bindings initV8Bindings;
+    instr_assignV4Binding assignV4Binding;
     instr_assignBinding assignBinding;
     instr_fetch fetch;
     instr_fetchValue fetchValue;

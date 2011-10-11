@@ -184,22 +184,22 @@ void QDeclarativeCompiledData::dump(QDeclarativeInstruction *instr, int idx)
         qWarning().nospace() << idx << "\t\t" << "INIT_V8_BINDING\t" << instr->initV8Bindings.program << "\t" << instr->initV8Bindings.programIndex << "\t" << instr->initV8Bindings.line;
         break;
     case QDeclarativeInstruction::StoreBinding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreBindingOnAlias:
-        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING_ALIAS\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_BINDING_ALIAS\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreV4Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_COMPILED_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_COMPILED_BINDING\t" << instr->assignV4Binding.property << "\t" << instr->assignV4Binding.value << "\t" << instr->assignV4Binding.context;
         break;
     case QDeclarativeInstruction::StoreV8Binding:
-        qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
+        qWarning().nospace() << idx << "\t\t" << "STORE_V8_BINDING\t" << instr->assignBinding.property.coreIndex << "\t" << instr->assignBinding.value << "\t" << instr->assignBinding.context;
         break;
     case QDeclarativeInstruction::StoreValueSource:
-        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_SOURCE\t" << instr->assignValueSource.property << "\t" << instr->assignValueSource.castValue;
+        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_SOURCE\t" << instr->assignValueSource.property.coreIndex << "\t" << instr->assignValueSource.castValue;
         break;
     case QDeclarativeInstruction::StoreValueInterceptor:
-        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_INTERCEPTOR\t" << instr->assignValueInterceptor.property << "\t" << instr->assignValueInterceptor.castValue;
+        qWarning().nospace() << idx << "\t\t" << "STORE_VALUE_INTERCEPTOR\t" << instr->assignValueInterceptor.property.coreIndex << "\t" << instr->assignValueInterceptor.castValue;
         break;
     case QDeclarativeInstruction::BeginObject:
         qWarning().nospace() << idx << "\t\t" << "BEGIN\t\t\t" << instr->begin.castValue;

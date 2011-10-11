@@ -53,6 +53,7 @@
 // We mean it.
 //
 
+#include "private/qdeclarativepropertycache_p.h"
 #include "private/qdeclarativeexpression_p.h"
 #include "private/qdeclarativebinding_p.h"
 
@@ -73,7 +74,8 @@ public:
     virtual ~QV8Bindings();
 
     QDeclarativeAbstractBinding *configBinding(int index, QObject *target, QObject *scope, 
-                                               const QDeclarativeProperty &prop, int line);
+                                               const QDeclarativePropertyCache::Data &prop,
+                                               int line);
 
 private:
     Q_DISABLE_COPY(QV8Bindings)
@@ -98,7 +100,8 @@ private:
         bool enabled:1;
         bool updating:1;
         int line;
-        QDeclarativeProperty property;
+        QObject *object;
+        QDeclarativePropertyCache::Data property;
         QV8Bindings *parent;
     };
 

@@ -643,7 +643,7 @@ void tst_qdeclarativeecmascript::deferredPropertiesErrors()
     QVERIFY(object->objectProperty() == 0);
     QVERIFY(object->objectProperty2() == 0);
 
-    QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QObject* objectProperty";
+    QString warning = component.url().toString() + ":6: Unable to assign [undefined] to QObject*";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     qmlExecuteDeferred(object);
@@ -754,8 +754,8 @@ void tst_qdeclarativeecmascript::enums()
     {
     QDeclarativeComponent component(&engine, TEST_FILE("enums.2.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Unable to assign [undefined] to int a";
-    QString warning2 = component.url().toString() + ":6: Unable to assign [undefined] to int b";
+    QString warning1 = component.url().toString() + ":5: Unable to assign [undefined] to int";
+    QString warning2 = component.url().toString() + ":6: Unable to assign [undefined] to int";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -893,7 +893,7 @@ void tst_qdeclarativeecmascript::nonExistentAttachedObject()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("nonExistentAttachedObject.qml"));
 
-    QString warning = component.url().toString() + ":4: Unable to assign [undefined] to QString stringProperty";
+    QString warning = component.url().toString() + ":4: Unable to assign [undefined] to QString";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QObject *object = component.create();
@@ -1349,7 +1349,7 @@ void tst_qdeclarativeecmascript::scriptErrors()
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":10: ReferenceError: Can't find variable: a";
     QString warning5 = url + ":8: ReferenceError: Can't find variable: a";
-    QString warning6 = url + ":7: Unable to assign [undefined] to int x";
+    QString warning6 = url + ":7: Unable to assign [undefined] to int";
     QString warning7 = url + ":12: Error: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":13: Error: Cannot assign to non-existent property \"fakeProperty\"";
 

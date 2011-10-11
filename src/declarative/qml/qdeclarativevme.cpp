@@ -907,7 +907,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 objects.at(objects.count() - 1 - instr.context);
 
             QDeclarativeProperty mp = 
-                QDeclarativePropertyPrivate::restore(DATAS.at(instr.property), target, CTXT);
+                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
 
             int coreIndex = mp.index();
 
@@ -930,7 +930,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
                 objects.at(objects.count() - 1 - instr.context);
 
             QDeclarativeProperty mp = 
-                QDeclarativePropertyPrivate::restore(DATAS.at(instr.property), target, CTXT);
+                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
 
             int coreIndex = mp.index();
 
@@ -970,19 +970,15 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QObject *scope = 
                 objects.at(objects.count() - 1 - instr.context);
 
-            QDeclarativeProperty mp = 
-                QDeclarativePropertyPrivate::restore(DATAS.at(instr.property), target, CTXT);
-
-            int coreIndex = mp.index();
-
-            if (instr.isRoot && BINDINGSKIPLIST.testBit(coreIndex))
+            if (instr.isRoot && BINDINGSKIPLIST.testBit(instr.property.coreIndex))
                 QML_NEXT_INSTR(StoreV8Binding);
 
             QDeclarativeAbstractBinding *binding = 
-                CTXT->v8bindings->configBinding(instr.value, target, scope, mp, instr.line);
+                CTXT->v8bindings->configBinding(instr.value, target, scope, 
+                                                instr.property, instr.line);
             bindValues.push(binding);
             binding->m_mePtr = &bindValues.top();
-            binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(mp));
+            binding->addToObject(target, QDeclarativePropertyPrivate::bindingIndex(instr.property));
         QML_END_INSTR(StoreV8Binding)
 
         QML_BEGIN_INSTR(StoreValueSource)
@@ -991,7 +987,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QObject *target = objects.at(objects.count() - 1 - instr.owner);
 
             QDeclarativeProperty prop = 
-                QDeclarativePropertyPrivate::restore(DATAS.at(instr.property), target, CTXT);
+                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
             obj->setParent(target);
             vs->setTarget(prop);
         QML_END_INSTR(StoreValueSource)
@@ -1001,7 +997,7 @@ QObject *QDeclarativeVME::run(QList<QDeclarativeError> *errors,
             QDeclarativePropertyValueInterceptor *vi = reinterpret_cast<QDeclarativePropertyValueInterceptor *>(reinterpret_cast<char *>(obj) + instr.castValue);
             QObject *target = objects.at(objects.count() - 1 - instr.owner);
             QDeclarativeProperty prop = 
-                QDeclarativePropertyPrivate::restore(DATAS.at(instr.property), target, CTXT);
+                QDeclarativePropertyPrivate::restore(instr.property, target, CTXT);
             obj->setParent(target);
             vi->setTarget(prop);
             QDeclarativeVMEMetaObject *mo = static_cast<QDeclarativeVMEMetaObject *>((QMetaObject*)target->metaObject());

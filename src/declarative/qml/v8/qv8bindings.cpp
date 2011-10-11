@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 QV8Bindings::Binding::Binding()
-: index(-1), enabled(false), updating(false), line(-1), parent(0)
+: index(-1), enabled(false), updating(false), line(-1), object(0), parent(0)
 {
 }
 
@@ -94,8 +94,10 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
                                                &isUndefined);
 
         bool needsErrorData = false;
-        if (!watcher.wasDeleted() && !error.isValid()) 
-            needsErrorData = !QDeclarativePropertyPrivate::writeBinding(property, this, result, isUndefined, flags);
+        if (!watcher.wasDeleted() && !error.isValid()) {
+            typedef QDeclarativePropertyPrivate PP;
+            needsErrorData = !PP::writeBinding(object, property, this, result, isUndefined, flags);
+        }
 
         if (!watcher.wasDeleted()) {
 
@@ -120,7 +122,8 @@ void QV8Bindings::Binding::update(QDeclarativePropertyPrivate::WriteFlags flags)
         ep->dereferenceScarceResources(); 
 
     } else {
-        QDeclarativeBindingPrivate::printBindingLoopError(property);
+        QDeclarativeProperty p = QDeclarativePropertyPrivate::restore(property, object, context);
+        QDeclarativeBindingPrivate::printBindingLoopError(p);
     }
 }
 
@@ -179,13 +182,15 @@ QV8Bindings::~QV8Bindings()
 }
 
 QDeclarativeAbstractBinding *QV8Bindings::configBinding(int index, QObject *target, QObject *scope, 
-                                                        const QDeclarativeProperty &property, int line)
+                                                        const QDeclarativePropertyCache::Data &p,
+                                                        int line)
 {
     QV8Bindings::Binding *rv = bindings + index;
 
     rv->line = line;
     rv->index = index;
-    rv->property = property;
+    rv->object = target;
+    rv->property = p;
     rv->setContext(context());
     rv->setScopeObject(scope);
     rv->setUseSharedContext(true);

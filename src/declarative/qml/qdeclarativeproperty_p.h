@@ -84,9 +84,6 @@ public:
     QDeclarativePropertyCache::Data core;
     QString nameCache;
 
-    // Describes the "virtual" value-type sub-property.  
-    QDeclarativePropertyCache::ValueTypeData valueType;
-
     void initProperty(QObject *obj, const QString &name);
     void initDefault(QObject *obj);
 
@@ -101,6 +98,10 @@ public:
     static const QMetaObject *rawMetaObjectForType(QDeclarativeEnginePrivate *, int);
     static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object, 
                                   const QVariant &value, int flags);
+    static bool writeValueProperty(QObject *, QDeclarativeEngine *,
+                                   const QDeclarativePropertyCache::Data &, 
+                                   const QVariant &, QDeclarativeContextData *, 
+                                   WriteFlags flags = 0);
     static bool write(QObject *, const QDeclarativePropertyCache::Data &, const QVariant &, 
                       QDeclarativeContextData *, WriteFlags flags = 0);
     static void findAliasTarget(QObject *, int, QObject **, int *);
@@ -111,21 +112,18 @@ public:
                                                            QDeclarativeAbstractBinding *);
     static QDeclarativeAbstractBinding *binding(QObject *, int coreIndex, int valueTypeIndex /* -1 */);
 
-    static QByteArray saveValueType(const QMetaObject *, int, 
-                                    const QMetaObject *, int,
-                                    QDeclarativeEngine *);
-    static QByteArray saveProperty(const QMetaObject *, int, 
-                                   QDeclarativeEngine *);
-    static QByteArray saveProperty(QDeclarativePropertyCache::Data *);
-
-    static QDeclarativeProperty restore(const QByteArray &, QObject *, QDeclarativeContextData *);
+    static QDeclarativePropertyCache::Data saveValueType(const QMetaObject *, int, 
+                                                         const QMetaObject *, int,
+                                                         QDeclarativeEngine *);
     static QDeclarativeProperty restore(const QDeclarativePropertyCache::Data &,
-                                        const QDeclarativePropertyCache::ValueTypeData &,
                                         QObject *,
                                         QDeclarativeContextData *);
 
     static bool equal(const QMetaObject *, const QMetaObject *);
     static bool canConvert(const QMetaObject *from, const QMetaObject *to);
+    static inline QDeclarativePropertyPrivate *get(const QDeclarativeProperty &p) {
+        return p.d;
+    }
 
     // "Public" (to QML) methods
     static QDeclarativeAbstractBinding *binding(const QDeclarativeProperty &that);
@@ -140,8 +138,13 @@ public:
                              QDeclarativeJavaScriptExpression *expression, 
                              v8::Handle<v8::Value> result, bool isUndefined,
                              WriteFlags flags);
+    static bool writeBinding(QObject *, const QDeclarativePropertyCache::Data &,
+                             QDeclarativeJavaScriptExpression *expression, 
+                             v8::Handle<v8::Value> result, bool isUndefined,
+                             WriteFlags flags);
     static int valueTypeCoreIndex(const QDeclarativeProperty &that);
     static int bindingIndex(const QDeclarativeProperty &that);
+    static int bindingIndex(const QDeclarativePropertyCache::Data &that);
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);
     static bool connect(const QObject *sender, int signal_index,
                         const QObject *receiver, int method_index,

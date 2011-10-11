@@ -268,7 +268,7 @@ void tst_qdeclarativeengine::outputWarningsToStandardError()
     delete o;
 
     QCOMPARE(warnings.count(), 1);
-    QCOMPARE(warnings.at(0), QLatin1String("<Unknown File>:1: Unable to assign [undefined] to int a"));
+    QCOMPARE(warnings.at(0), QLatin1String("<Unknown File>:1: Unable to assign [undefined] to int"));
     warnings.clear();
 
 
