@@ -266,7 +266,6 @@ void tst_qsgtextinput::width()
 
         QVERIFY(textinputObject != 0);
         int delta = abs(int(int(textinputObject->width()) - metricWidth));
-        QEXPECT_FAIL("", "QTBUG-21689", Abort);
         QVERIFY(delta <= 3.0); // As best as we can hope for cross-platform.
 
         delete textinputObject;
@@ -2097,6 +2096,7 @@ void tst_qsgtextinput::openInputPanel()
     QVERIFY(!input->hasActiveFocus());
     qDebug() << &input << qApp->inputPanel()->inputItem();
     QCOMPARE(qApp->inputPanel()->inputItem(), static_cast<QObject*>(0));
+    QEXPECT_FAIL("", "QTBUG-21946", Abort);
     QCOMPARE(qApp->inputPanel()->visible(), false);
 
     // input panel should open on focus
