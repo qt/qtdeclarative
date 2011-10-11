@@ -119,7 +119,8 @@ void tst_QSGDropArea::containsDrag_internal()
                     "width: 10; height: 10\n"
                 "}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     QVERIFY(dropArea);
     dropArea->setParentItem(canvas.rootItem());
 
@@ -182,8 +183,8 @@ void tst_QSGDropArea::containsDrag_external()
                 "onEntered: {++enterEvents}\n"
                 "onExited: {++exitEvents}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QMimeData data;
@@ -249,8 +250,8 @@ void tst_QSGDropArea::keys_internal()
                     "Drag.keys: [\"red\", \"blue\"]\n"
                 "}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QSGItem *dragItem = dropArea->findChild<QSGItem *>("dragItem");
@@ -308,6 +309,32 @@ void tst_QSGDropArea::keys_internal()
     evaluate<void>(dragItem, "Drag.active = true");
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
+
+    evaluate<void>(dragItem, "Drag.active = false");
+    evaluate<void>(dropArea, "keys = []");
+    QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
+    QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
+    evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
+    evaluate<void>(dragItem, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList());
+
+    evaluate<void>(dragItem, "Drag.active = false");
+    evaluate<void>(dropArea, "keys = []");
+    evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
+    evaluate<void>(dragItem, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList());
+
+    evaluate<void>(dragItem, "Drag.active = false");
+    evaluate<void>(dragItem, "Drag.keys = [\"red\", \"blue\"]");
+    evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
+    evaluate<void>(dragItem, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "red" << "blue");
 }
 
 void tst_QSGDropArea::keys_external()
@@ -323,8 +350,8 @@ void tst_QSGDropArea::keys_external()
                 "width: 100; height: 100\n"
                 "onEntered: {++enterEvents; dragKeys = drag.keys }\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QMimeData data;
@@ -387,6 +414,27 @@ void tst_QSGDropArea::keys_external()
     QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
 
+    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50));
+    evaluate<void>(dropArea, "keys = []");
+    QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
+    QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
+    evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
+    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50));
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList());
+
+    QWindowSystemInterface::handleDrag(&alternateCanvas, &data, QPoint(50, 50));
+    data.setData("text/x-red", "red");
+    data.setData("text/x-blue", "blue");
+    QCOMPARE(dropArea->property("keys").toStringList(), QStringList());
+    QCOMPARE(dropArea->property("dropKeys").toStringList(), QStringList());
+    evaluate<void>(dropArea, "{ enterEvents = 0; dragKeys = undefined }");
+    QWindowSystemInterface::handleDrag(&canvas, &data, QPoint(50, 50));
+    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
+    QCOMPARE(dropArea->property("dragKeys").toStringList(), QStringList() << "text/x-red" << "text/x-blue");
+
     QWindowSystemInterface::handleDrop(&canvas, &data, QPoint(50, 50));
 }
 
@@ -408,8 +456,8 @@ void tst_QSGDropArea::source_internal()
                 "}\n"
                 "Item { id: dragSource; objectName: \"dragSource\" }\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QSGItem *dragItem = dropArea->findChild<QSGItem *>("dragItem");
@@ -472,8 +520,8 @@ void tst_QSGDropArea::position_internal()
                     "width: 10; height: 10\n"
                 "}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QSGItem *dragItem = dropArea->findChild<QSGItem *>("dragItem");
@@ -531,8 +579,8 @@ void tst_QSGDropArea::position_external()
                 "onEntered: {++enterEvents; eventX = drag.x; eventY = drag.y}\n"
                 "onPositionChanged: {++moveEvents; eventX = drag.x; eventY = drag.y}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QMimeData data;
@@ -607,8 +655,8 @@ void tst_QSGDropArea::drop_internal()
                     "width: 10; height: 10\n"
                 "}\n"
             "}", QUrl());
-    QSGItem *dropArea = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea = qobject_cast<QSGItem *>(object.data());
     dropArea->setParentItem(canvas.rootItem());
 
     QSGItem *dragItem = dropArea->findChild<QSGItem *>("dragItem");
@@ -745,8 +793,8 @@ void tst_QSGDropArea::simultaneousDrags()
                 "}\n"
             "}", QUrl());
 
-    QSGItem *dropArea1 = qobject_cast<QSGItem *>(component.create());
-    QVERIFY(dropArea1);
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *dropArea1 = qobject_cast<QSGItem *>(object.data());
     dropArea1->setParentItem(canvas.rootItem());
 
     QSGItem *dropArea2 = dropArea1->findChild<QSGItem *>("dropArea2");

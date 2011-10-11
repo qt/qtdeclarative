@@ -178,7 +178,7 @@ void QSGDrag::setFilterChildren(bool filter)
 
 QSGDragAttached *QSGDrag::qmlAttachedProperties(QObject *obj)
 {
-    return QSGDragAttached::properties(obj);
+    return new QSGDragAttached(obj);
 }
 
 QSGMouseAreaPrivate::QSGMouseAreaPrivate()

@@ -189,7 +189,8 @@ void tst_QSGDrag::active()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&dropTarget);
 
@@ -322,6 +323,41 @@ void tst_QSGDrag::active()
     QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 1);
+
+    // Events are sent to hidden or disabled items.
+    dropTarget.accept = true;
+    dropTarget.setVisible(false);
+    dropTarget.reset();
+    evaluate<void>(item, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), true);
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
+
+    evaluate<void>(item, "Drag.active = false");
+    dropTarget.setVisible(true);
+
+    dropTarget.setOpacity(0.0);
+    dropTarget.reset();
+    evaluate<void>(item, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), true);
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
+
+    evaluate<void>(item, "Drag.active = false");
+    dropTarget.setOpacity(1.0);
+
+    dropTarget.setEnabled(false);
+    dropTarget.reset();
+    evaluate<void>(item, "Drag.active = true");
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), true);
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 }
 
 void tst_QSGDrag::drop()
@@ -342,7 +378,8 @@ void tst_QSGDrag::drop()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&outerTarget);
 
@@ -428,6 +465,18 @@ void tst_QSGDrag::drop()
     QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
     QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 0); QCOMPARE(outerTarget.dropEvents, 1);
     QCOMPARE(innerTarget.enterEvents, 0); QCOMPARE(innerTarget.leaveEvents, 0); QCOMPARE(innerTarget.dropEvents, 0);
+
+    // drop doesn't send an event and returns Qt.IgnoreAction if not active.
+    innerTarget.accept = true;
+    outerTarget.accept = true;
+    innerTarget.reset(); outerTarget.reset();
+    QCOMPARE(evaluate<bool>(item, "Drag.drop() == Qt.IgnoreAction"), true);
+    QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
+    QCOMPARE(evaluate<bool>(item, "dragActive"), false);
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 0); QCOMPARE(outerTarget.dropEvents, 0);
+    QCOMPARE(innerTarget.enterEvents, 0); QCOMPARE(innerTarget.leaveEvents, 0); QCOMPARE(innerTarget.dropEvents, 0);
 }
 
 void tst_QSGDrag::move()
@@ -450,7 +499,8 @@ void tst_QSGDrag::move()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&outerTarget);
 
@@ -580,7 +630,8 @@ void tst_QSGDrag::hotSpot()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&dropTarget);
 
@@ -634,7 +685,8 @@ void tst_QSGDrag::supportedActions()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&dropTarget);
 
@@ -681,9 +733,11 @@ void tst_QSGDrag::proposedAction()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
     item->setParentItem(&dropTarget);
+
 
     QCOMPARE(evaluate<bool>(item, "Drag.proposedAction == Qt.MoveAction"), true);
     QCOMPARE(evaluate<bool>(item, "proposedAction == Qt.MoveAction"), true);
@@ -724,7 +778,8 @@ void tst_QSGDrag::keys()
                 "x: 50; y: 50\n"
                 "width: 10; height: 10\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
 
 //    QCOMPARE(evaluate<QStringList>(item, "Drag.keys"), QStringList());
@@ -749,7 +804,8 @@ void tst_QSGDrag::source()
                 "width: 10; height: 10\n"
                 "Item { id: proxySource; objectName: \"proxySource\" }\n"
             "}", QUrl());
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QScopedPointer<QObject> object(component.create());
+    QSGItem *item = qobject_cast<QSGItem *>(object.data());
     QVERIFY(item);
 
     QCOMPARE(evaluate<QObject *>(item, "Drag.source"), static_cast<QObject *>(item));
@@ -761,6 +817,10 @@ void tst_QSGDrag::source()
     evaluate<void>(item, "Drag.source = proxySource");
     QCOMPARE(evaluate<QObject *>(item, "Drag.source"), static_cast<QObject *>(proxySource));
     QCOMPARE(evaluate<QObject *>(item, "source"), static_cast<QObject *>(proxySource));
+
+    evaluate<void>(item, "Drag.source = undefined");
+    QCOMPARE(evaluate<QObject *>(item, "Drag.source"), static_cast<QObject *>(item));
+    QCOMPARE(evaluate<QObject *>(item, "source"), static_cast<QObject *>(item));
 }
 
 QTEST_MAIN(tst_QSGDrag)

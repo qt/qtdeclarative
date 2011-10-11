@@ -183,8 +183,6 @@ public:
 
     Q_INVOKABLE int drop();
 
-    static QSGDragAttached *properties(QObject *obj);
-
 public Q_SLOTS:
     void start(QDeclarativeV8Function *);
     void cancel();
@@ -199,8 +197,6 @@ Q_SIGNALS:
     void proposedActionChanged();
 
 private:
-    static QHash<QObject*, QSGDragAttached *> attachedProperties;
-
     Q_DECLARE_PRIVATE(QSGDragAttached)
 };
 

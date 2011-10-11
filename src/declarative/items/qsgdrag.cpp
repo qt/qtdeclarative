@@ -113,18 +113,6 @@ public:
 
 */
 
-QSGDragAttached *QSGDragAttached::properties(QObject *obj)
-{
-    QSGDragAttached *rv = attachedProperties.value(obj);
-    if (!rv) {
-        rv = new QSGDragAttached(obj);
-        attachedProperties.insert(obj, rv);
-    }
-    return rv;
-}
-
-QHash<QObject*, QSGDragAttached *> QSGDragAttached::attachedProperties;
-
 void QSGDragAttachedPrivate::itemGeometryChanged(QSGItem *, const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_Q(QSGDragAttached);
