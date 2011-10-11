@@ -1,6 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
-QT += network
+CONFIG += testcase
+TARGET = tst_qdeclarativelanguage
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativelanguage.cpp \
@@ -16,4 +15,4 @@ importFiles.path = .
 DEPLOYMENT += importFiles
 
 CONFIG += parallel_test
-QT += core-private gui-private v8-private declarative-private
+QT += core-private gui-private v8-private declarative-private network testlib

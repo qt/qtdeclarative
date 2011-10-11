@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative network widgets
+CONFIG += testcase
+TARGET = tst_qdeclarativeincubator
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativeincubator.cpp \
@@ -10,4 +10,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 
-QT += core-private gui-private v8-private declarative-private
+QT += core-private gui-private v8-private declarative-private network widgets testlib

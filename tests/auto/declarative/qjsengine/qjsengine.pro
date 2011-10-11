@@ -1,5 +1,6 @@
-load(qttest_p4)
-QT += declarative widgets
+CONFIG += testcase
+TARGET = tst_qjsengine
+QT += declarative widgets testlib
 macx:CONFIG -= app_bundle
 SOURCES += tst_qjsengine.cpp
 #temporary

@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qdeclarativestates
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativestates.cpp
@@ -9,4 +9,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 CONFIG += parallel_test
 #temporary
 CONFIG += insignificant_test
-QT += core-private gui-private v8-private declarative-private opengl-private
+QT += core-private gui-private v8-private declarative-private opengl-private testlib

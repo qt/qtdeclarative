@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = qmltime
-QT += declarative widgets
+QT += declarative widgets testlib
 macx:CONFIG -= app_bundle
 
 SOURCES += qmltime.cpp 

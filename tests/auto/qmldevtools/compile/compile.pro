@@ -1,5 +1,6 @@
-load(qttest_p4)
-QT = core qmldevtools-private
+CONFIG += testcase
+TARGET = tst_compile
+QT = core qmldevtools-private testlib
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_compile.cpp

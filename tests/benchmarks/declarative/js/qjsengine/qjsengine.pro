@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_bench_qjsengine
 
 SOURCES += tst_qjsengine.cpp
 
-QT += declarative
+QT += declarative testlib

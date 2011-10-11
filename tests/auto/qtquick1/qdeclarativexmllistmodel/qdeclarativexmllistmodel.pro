@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui network qtquick1
+CONFIG += testcase
+TARGET = tst_qdeclarativexmllistmodel
 contains(QT_CONFIG,xmlpatterns) {
     QT += xmlpatterns
     DEFINES += QTEST_XMLPATTERNS
@@ -12,4 +12,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += parallel_test
 
-QT += core-private gui-private widgets-private v8-private declarative-private qtquick1-private
+QT += core-private gui-private widgets-private v8-private declarative-private qtquick1-private network testlib

@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_qdeclarativeimage
-QT += declarative
+QT += declarative testlib
 macx:CONFIG -= app_bundle
 CONFIG += release
 

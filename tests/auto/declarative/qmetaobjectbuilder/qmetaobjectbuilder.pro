@@ -1,9 +1,9 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qmetaobjectbuilder
 macx:CONFIG -= app_bundle
 
 SOURCES += \
     tst_qmetaobjectbuilder.cpp
 
 CONFIG += parallel_test
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private testlib

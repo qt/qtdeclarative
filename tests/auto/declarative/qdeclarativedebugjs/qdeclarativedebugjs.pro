@@ -1,5 +1,6 @@
-load(qttest_p4)
-QT += declarative network script declarative-private
+CONFIG += testcase
+TARGET = tst_qdeclarativedebugjs
+QT += network script declarative-private testlib
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/debugutil_p.h

@@ -1,5 +1,6 @@
-load(qttest_p4)
-QT += declarative widgets
+CONFIG += testcase
+TARGET = tst_qjsvalue
+QT += declarative widgets testlib
 SOURCES  += tst_qjsvalue.cpp
 HEADERS  += tst_qjsvalue.h
 

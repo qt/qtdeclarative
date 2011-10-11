@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui
+CONFIG += testcase
+TARGET = tst_qdeclarativelistcompositor
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativelistcompositor.cpp
@@ -14,4 +14,4 @@ symbian: {
 
 CONFIG += parallel_test
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private testlib

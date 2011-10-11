@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative gui network
+CONFIG += testcase
+TARGET = tst_qsgimage
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/testhttpserver.h
@@ -10,4 +10,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 CONFIG += parallel_test
 #temporary
 CONFIG += insignificant_test
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private network testlib

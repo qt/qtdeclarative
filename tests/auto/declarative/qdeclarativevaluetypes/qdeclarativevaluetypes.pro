@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += declarative
+CONFIG += testcase
+TARGET = tst_qdeclarativevaluetypes
 macx:CONFIG -= app_bundle
 
 HEADERS += testtypes.h
@@ -11,4 +11,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 CONFIG += insignificant_test parallel_test
 
-QT += core-private gui-private v8-private declarative-private
+QT += core-private gui-private v8-private declarative-private testlib

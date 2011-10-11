@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_holistic
-QT += declarative network
+QT += declarative network testlib
 macx:CONFIG -= app_bundle
 
 CONFIG += release

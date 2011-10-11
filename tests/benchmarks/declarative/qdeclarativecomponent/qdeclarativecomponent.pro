@@ -1,7 +1,7 @@
-load(qttest_p4)
+CONFIG += testcase
 TEMPLATE = app
 TARGET = tst_qdeclarativecomponent
-QT += declarative
+QT += declarative testlib
 macx:CONFIG -= app_bundle
 
 SOURCES += tst_qdeclarativecomponent.cpp testtypes.cpp

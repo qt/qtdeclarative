@@ -1,5 +1,5 @@
-load(qttest_p4)
-contains(QT_CONFIG,declarative): QT += network declarative
+CONFIG += testcase
+TARGET = tst_qdeclarativedebugclient
 macx:CONFIG -= app_bundle
 
 HEADERS += ../shared/debugutil_p.h
@@ -8,5 +8,5 @@ SOURCES += tst_qdeclarativedebugclient.cpp \
 
 CONFIG += declarative_debug
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private network testlib
 
