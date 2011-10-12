@@ -49,7 +49,6 @@
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativedata_p.h"
 #include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativestate_p_p.h"
 #include "private/qdeclarativedebugtrace_p.h"
 
 #include <QVariant>
