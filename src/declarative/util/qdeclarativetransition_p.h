@@ -42,7 +42,7 @@
 #ifndef QDECLARATIVETRANSITION_H
 #define QDECLARATIVETRANSITION_H
 
-#include "private/qdeclarativestate_p.h"
+#include "qdeclarativestate_p.h"
 
 #include <qdeclarative.h>
 

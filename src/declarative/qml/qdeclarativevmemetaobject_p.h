@@ -65,11 +65,11 @@
 
 #include <private/qobject_p.h>
 
-#include "private/qdeclarativeguard_p.h"
-#include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativecontext_p.h"
+#include "qdeclarativeguard_p.h"
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativecontext_p.h"
 
-#include "private/qv8gccallback_p.h"
+#include <private/qv8gccallback_p.h>
 
 #include <private/qv8_p.h>
 

@@ -60,7 +60,7 @@
 #include <private/qdeclarativeengine_p.h>
 #include <private/qv4compiler_p.h>
 
-#include <qdeclarativepool_p.h>
+#include <private/qdeclarativepool_p.h>
 #include <QtCore/qvarlengtharray.h>
 
 // #define DEBUG_IR_STRUCTURE

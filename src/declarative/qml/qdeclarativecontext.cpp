@@ -40,15 +40,15 @@
 ****************************************************************************/
 
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativecontext_p.h"
+#include "qdeclarativecontext_p.h"
 
-#include "private/qdeclarativecomponent_p.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativecomponent_p.h"
+#include "qdeclarativeexpression_p.h"
+#include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
 #include "qdeclarativeinfo.h"
-#include "private/qv4bindings_p.h"
-#include "private/qv8bindings_p.h"
+#include <private/qv4bindings_p.h>
+#include <private/qv8bindings_p.h>
 
 #include <qjsengine.h>
 #include <QtCore/qvarlengtharray.h>

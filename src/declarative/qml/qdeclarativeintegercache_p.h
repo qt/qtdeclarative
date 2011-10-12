@@ -53,8 +53,8 @@
 // We mean it.
 //
 
-#include "private/qdeclarativerefcount_p.h"
-#include "private/qhashedstring_p.h"
+#include <private/qdeclarativerefcount_p.h>
+#include <private/qhashedstring_p.h>
 
 QT_BEGIN_NAMESPACE
 

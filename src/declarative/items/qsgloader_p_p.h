@@ -57,7 +57,7 @@
 #include "qsgloader_p.h"
 #include "qsgimplicitsizeitem_p_p.h"
 #include "qsgitemchangelistener_p.h"
-#include "qdeclarativeincubator.h"
+#include <qdeclarativeincubator.h>
 
 #include <private/qv8_p.h>
 

@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 SOURCES += \
     $$PWD/qdeclarativedebuggerstatus.cpp \
     $$PWD/qpacketprotocol.cpp \

@@ -39,37 +39,37 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
 
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativecompiler_p.h"
 #include "qdeclarative.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativeexpression.h"
 #include "qdeclarativecomponent.h"
-#include "private/qdeclarativebinding_p_p.h"
-#include "private/qdeclarativevme_p.h"
-#include "private/qdeclarativeenginedebugservice_p.h"
-#include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativexmlhttprequest_p.h"
-#include "private/qdeclarativesqldatabase_p.h"
+#include "qdeclarativebinding_p_p.h"
+#include "qdeclarativevme_p.h"
+#include <private/qdeclarativeenginedebugservice_p.h>
+#include "qdeclarativestringconverters_p.h"
+#include "qdeclarativexmlhttprequest_p.h"
+#include "qdeclarativesqldatabase_p.h"
 #include "qdeclarativescriptstring.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativeworkerscript_p.h"
-#include "private/qdeclarativecomponent_p.h"
+#include "qdeclarativeglobal_p.h"
+#include "qdeclarativeworkerscript_p.h"
+#include "qdeclarativecomponent_p.h"
 #include "qdeclarativenetworkaccessmanagerfactory.h"
 #include "qdeclarativeimageprovider.h"
-#include "private/qdeclarativedirparser_p.h"
+#include "qdeclarativedirparser_p.h"
 #include "qdeclarativeextensioninterface.h"
-#include "private/qdeclarativelist_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativenotifier_p.h"
-#include "private/qdeclarativedebugtrace_p.h"
-#include "private/qdeclarativeapplication_p.h"
-#include "private/qv8debugservice_p.h"
+#include "qdeclarativelist_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativenotifier_p.h"
+#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeapplication_p.h>
+#include <private/qv8debugservice_p.h>
 #include "qdeclarativeincubator.h"
-#include "private/qv8profilerservice_p.h"
+#include <private/qv8profilerservice_p.h>
 
 #include <QtCore/qmetaobject.h>
 #include <QNetworkAccessManager>

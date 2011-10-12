@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 SOURCES += \
     $$PWD/qdeclarativeapplication.cpp \
     $$PWD/qdeclarativeutilmodule.cpp\

@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecompiler_p.h"
 #include "qdeclarativeengine.h"
 #include "qdeclarativecomponent.h"
-#include "private/qdeclarativecomponent_p.h"
+#include "qdeclarativecomponent_p.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativecontext_p.h"
+#include "qdeclarativecontext_p.h"
 #ifdef QML_THREADED_VME_INTERPRETER
-#include "private/qdeclarativevme_p.h"
+#include "qdeclarativevme_p.h"
 #endif
 
 #include <QtCore/qdebug.h>

@@ -42,8 +42,8 @@
 #include "qsgcontext2dtexture_p.h"
 #include "qsgcontext2dtile_p.h"
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
-#include "private/qsgtexture_p.h"
+#include <private/qsgitem_p.h>
+#include <private/qsgtexture_p.h>
 #include "qsgcontext2dcommandbuffer_p.h"
 #include <QOpenGLPaintDevice>
 

@@ -73,9 +73,9 @@
 #include "qsganimation_p.h"
 #include <private/qsgshadereffect_p.h>
 #include <private/qsgshadereffectsource_p.h>
-//#include "private/qsgpincharea_p.h"
-#include "qsgcanvasitem_p.h"
-#include "qsgcontext2d_p.h"
+//#include <private/qsgpincharea_p.h>
+#include <private/qsgcanvasitem_p.h>
+#include <private/qsgcontext2d_p.h>
 #include "qsgsprite_p.h"
 #include "qsgspriteimage_p.h"
 #include "qsgdrag_p.h"

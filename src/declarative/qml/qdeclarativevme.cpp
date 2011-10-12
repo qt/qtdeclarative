@@ -39,29 +39,29 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativevme_p.h"
+#include "qdeclarativevme_p.h"
 
-#include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativeboundsignal_p.h"
-#include "private/qdeclarativestringconverters_p.h"
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativeboundsignal_p.h"
+#include "qdeclarativestringconverters_p.h"
 #include <private/qmetaobjectbuilder_p.h>
-#include "private/qfastmetabuilder_p.h"
-#include "private/qdeclarativedata_p.h"
+#include <private/qfastmetabuilder_p.h>
+#include "qdeclarativedata_p.h"
 #include "qdeclarative.h"
-#include "private/qdeclarativecustomparser_p.h"
+#include "qdeclarativecustomparser_p.h"
 #include "qdeclarativeengine.h"
 #include "qdeclarativecontext.h"
 #include "qdeclarativecomponent.h"
-#include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativecomponent_p.h"
-#include "private/qdeclarativevmemetaobject_p.h"
-#include "private/qdeclarativebinding_p_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qv4bindings_p.h"
-#include "private/qv8bindings_p.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qfinitestack_p.h"
+#include "qdeclarativebinding_p.h"
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativecomponent_p.h"
+#include "qdeclarativevmemetaobject_p.h"
+#include "qdeclarativebinding_p_p.h"
+#include "qdeclarativecontext_p.h"
+#include <private/qv4bindings_p.h>
+#include <private/qv8bindings_p.h>
+#include "qdeclarativeglobal_p.h"
+#include <private/qfinitestack_p.h>
 #include "qdeclarativescriptstring.h"
 #include "qdeclarativescriptstring_p.h"
 

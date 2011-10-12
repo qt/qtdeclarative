@@ -42,24 +42,24 @@
 #include "qsgcontext2d_p.h"
 #include "qsgcontext2dcommandbuffer_p.h"
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
-#include "qsgshadereffectsource_p.h"
+#include <private/qsgitem_p.h>
+#include <private/qsgshadereffectsource_p.h>
 #include <QtGui/qopenglframebufferobject.h>
 
 #include <QtCore/qdebug.h>
-#include "private/qsgcontext_p.h"
-#include "private/qdeclarativesvgparser_p.h"
-#include "private/qdeclarativepath_p.h"
+#include <private/qsgcontext_p.h>
+#include <private/qdeclarativesvgparser_p.h>
+#include <private/qdeclarativepath_p.h>
 
-#include "private/qsgimage_p_p.h"
+#include <private/qsgimage_p_p.h>
 
 #include <QtGui/qguiapplication.h>
 #include <qdeclarativeinfo.h>
 #include <QtCore/qmath.h>
-#include "qv8engine_p.h"
+#include <private/qv8engine_p.h>
 
-#include "qdeclarativeengine.h"
-#include "qv8domerrors_p.h"
+#include <qdeclarativeengine.h>
+#include <private/qv8domerrors_p.h>
 #include <QtCore/qnumeric.h>
 
 QT_BEGIN_NAMESPACE

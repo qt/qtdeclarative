@@ -42,8 +42,8 @@
 #ifndef QSGCONTEXT2DNODE_P_H
 #define QSGCONTEXT2DNODE_P_H
 
-#include "qsgnode.h"
-#include "qsgtexturematerial.h"
+#include <qsgnode.h>
+#include <qsgtexturematerial.h>
 
 #include "qsgcanvasitem_p.h"
 #include "qsgcontext2dtexture_p.h"

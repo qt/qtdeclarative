@@ -53,9 +53,9 @@
 // We mean it.
 //
 
-#include "private/qdeclarativerefcount_p.h"
-#include "private/qdeclarativecleanup_p.h"
-#include "private/qdeclarativemetatype_p.h"
+#include <private/qdeclarativerefcount_p.h>
+#include "qdeclarativecleanup_p.h"
+#include "qdeclarativemetatype_p.h"
 
 #include <private/qhashedstring_p.h>
 

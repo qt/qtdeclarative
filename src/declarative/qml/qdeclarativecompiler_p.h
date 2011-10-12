@@ -55,15 +55,15 @@
 
 #include "qdeclarative.h"
 #include "qdeclarativeerror.h"
-#include "private/qv8_p.h"
-#include "private/qdeclarativeinstruction_p.h"
-#include "private/qdeclarativescript_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qbitfield_p.h"
-#include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativeintegercache_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativetypeloader_p.h"
+#include <private/qv8_p.h>
+#include "qdeclarativeinstruction_p.h"
+#include "qdeclarativescript_p.h"
+#include "qdeclarativeengine_p.h"
+#include <private/qbitfield_p.h>
+#include "qdeclarativepropertycache_p.h"
+#include "qdeclarativeintegercache_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativetypeloader_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qset.h>

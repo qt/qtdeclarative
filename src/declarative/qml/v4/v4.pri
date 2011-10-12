@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS += \
     $$PWD/qv4compiler_p.h \
     $$PWD/qv4compiler_p_p.h \

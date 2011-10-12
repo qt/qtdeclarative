@@ -53,10 +53,10 @@
 // We mean it.
 //
 
-#include "private/qdeclarativemetatype_p.h"
+#include "qdeclarativemetatype_p.h"
 #include "qdeclarativeerror.h"
-#include "private/qdeclarativescript_p.h"
-#include "private/qdeclarativebinding_p.h"
+#include "qdeclarativescript_p.h"
+#include "qdeclarativebinding_p.h"
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qxmlstream.h>

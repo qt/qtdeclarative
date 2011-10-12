@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "qdeclarative.h"
+#include <qdeclarative.h>
 
 #include <QtGui/qevent.h>
 #include <QMutex>

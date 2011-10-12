@@ -1,4 +1,3 @@
-INCLUDEPATH += $$PWD
 SOURCES += \
     $$PWD/qdeclarativeinstruction.cpp \
     $$PWD/qdeclarativevmemetaobject.cpp \

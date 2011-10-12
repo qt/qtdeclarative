@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qsgitemparticle_p.h"
-#include <QtDeclarative/private/qsgvisualitemmodel_p.h>
+#include <private/qsgvisualitemmodel_p.h>
 #include <qsgnode.h>
 #include <QTimer>
 #include <QDeclarativeComponent>

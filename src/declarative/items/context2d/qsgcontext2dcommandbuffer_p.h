@@ -43,7 +43,7 @@
 #define QSGCONTEXT2DCOMMANDBUFFER_P_H
 
 #include "qsgcontext2d_p.h"
-#include "qdeclarativepixmapcache_p.h"
+#include <private/qdeclarativepixmapcache_p.h>
 
 
 QT_BEGIN_HEADER

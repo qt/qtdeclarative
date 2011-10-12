@@ -39,29 +39,29 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecompiler_p.h"
 
 #include "qdeclarativepropertyvaluesource.h"
 #include "qdeclarativecomponent.h"
 #include <private/qmetaobjectbuilder_p.h>
-#include "private/qfastmetabuilder_p.h"
-#include "private/qdeclarativestringconverters_p.h"
-#include "private/qdeclarativeengine_p.h"
+#include <private/qfastmetabuilder_p.h>
+#include "qdeclarativestringconverters_p.h"
+#include "qdeclarativeengine_p.h"
 #include "qdeclarativeengine.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativemetatype_p.h"
-#include "private/qdeclarativecustomparser_p_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativecomponent_p.h"
-#include "parser/qdeclarativejsast_p.h"
-#include "private/qdeclarativevmemetaobject_p.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativeproperty_p.h"
-#include "private/qdeclarativerewrite_p.h"
+#include "qdeclarativemetatype_p.h"
+#include "qdeclarativecustomparser_p_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativecomponent_p.h"
+#include <private/qdeclarativejsast_p.h>
+#include "qdeclarativevmemetaobject_p.h"
+#include "qdeclarativeexpression_p.h"
+#include "qdeclarativeproperty_p.h"
+#include "qdeclarativerewrite_p.h"
 #include "qdeclarativescriptstring.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativebinding_p.h"
-#include "private/qv4compiler_p.h"
+#include "qdeclarativeglobal_p.h"
+#include "qdeclarativebinding_p.h"
+#include <private/qv4compiler_p.h>
 
 #include <QColor>
 #include <QDebug>
@@ -3027,7 +3027,7 @@ bool QDeclarativeCompiler::checkValidId(QDeclarativeScript::Value *v, const QStr
     return true;
 }
 
-#include <qdeclarativejsparser_p.h>
+#include <private/qdeclarativejsparser_p.h>
 
 static QStringList astNodeToStringList(QDeclarativeJS::AST::Node *node)
 {

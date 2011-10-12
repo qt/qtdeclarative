@@ -53,9 +53,9 @@
 // We mean it.
 //
 
-#include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativebinding_p.h"
+#include <private/qdeclarativepropertycache_p.h>
+#include <private/qdeclarativeexpression_p.h>
+#include <private/qdeclarativebinding_p.h>
 
 QT_BEGIN_HEADER
 

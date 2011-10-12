@@ -39,9 +39,9 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeopenmetaobject_p.h"
-#include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativedata_p.h"
+#include "qdeclarativeopenmetaobject_p.h"
+#include <private/qdeclarativepropertycache_p.h>
+#include <private/qdeclarativedata_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <qdebug.h>
 

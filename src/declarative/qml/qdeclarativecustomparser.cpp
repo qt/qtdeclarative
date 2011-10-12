@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativecustomparser_p.h"
-#include "private/qdeclarativecustomparser_p_p.h"
+#include "qdeclarativecustomparser_p.h"
+#include "qdeclarativecustomparser_p_p.h"
 
-#include "private/qdeclarativecompiler_p.h"
+#include "qdeclarativecompiler_p.h"
 
 #include <QtCore/qdebug.h>
 

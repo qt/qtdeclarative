@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS +=  \
     $$PWD/qbitfield_p.h \
     $$PWD/qintrusivelist_p.h \

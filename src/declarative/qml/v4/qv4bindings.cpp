@@ -41,10 +41,10 @@
 
 // #define REGISTER_CLEANUP_DEBUG
 
-#include "private/qv4bindings_p.h"
-#include "private/qv4program_p.h"
-#include "private/qv4compiler_p.h"
-#include "private/qv4compiler_p_p.h"
+#include "qv4bindings_p.h"
+#include "qv4program_p.h"
+#include "qv4compiler_p.h"
+#include "qv4compiler_p_p.h"
 
 #include <private/qdeclarativefastproperties_p.h>
 #include <private/qdeclarativedebugtrace_p.h>

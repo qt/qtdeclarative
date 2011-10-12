@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS += \
     $$PWD/qdeclarativejsast_p.h \
     $$PWD/qdeclarativejsastfwd_p.h \

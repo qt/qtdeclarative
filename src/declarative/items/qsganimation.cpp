@@ -43,8 +43,8 @@
 #include "qsganimation_p_p.h"
 #include "qsgstateoperations_p.h"
 
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativepath_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativepath_p.h>
 
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtCore/qmath.h>

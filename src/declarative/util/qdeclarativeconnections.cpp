@@ -39,13 +39,13 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeconnections_p.h"
+#include "qdeclarativeconnections_p.h"
 
 #include <qdeclarativeexpression.h>
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativeboundsignal_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativeboundsignal_p.h>
 #include <qdeclarativecontext.h>
-#include <qdeclarativecontext_p.h>
+#include <private/qdeclarativecontext_p.h>
 #include <qdeclarativeinfo.h>
 
 #include <QtCore/qdebug.h>

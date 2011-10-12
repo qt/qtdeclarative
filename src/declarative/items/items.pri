@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS += \
     $$PWD/qsgevents_p_p.h \
     $$PWD/qsgitemchangelistener_p.h \

@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativevmemetaobject_p.h"
+#include "qdeclarativevmemetaobject_p.h"
 
 #include "qdeclarative.h"
-#include "private/qdeclarativerefcount_p.h"
+#include <private/qdeclarativerefcount_p.h>
 #include "qdeclarativeexpression.h"
-#include "private/qdeclarativeexpression_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativebinding_p.h"
+#include "qdeclarativeexpression_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativebinding_p.h"
 
 Q_DECLARE_METATYPE(QJSValue);
 

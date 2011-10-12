@@ -48,7 +48,7 @@
 #include <QHash>
 #include <QPointer>
 #include <QSignalMapper>
-#include <QtDeclarative/private/qsgsprite_p.h>
+#include <private/qsgsprite_p.h>
 #include <QAbstractAnimation>
 #include <QtDeclarative/qdeclarative.h>
 #include <private/qv8engine_p.h> //For QDeclarativeV8Handle

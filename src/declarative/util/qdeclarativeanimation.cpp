@@ -39,23 +39,23 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativeanimation_p.h"
-#include "private/qdeclarativeanimation_p_p.h"
+#include "qdeclarativeanimation_p.h"
+#include "qdeclarativeanimation_p_p.h"
 
-#include "private/qdeclarativebehavior_p.h"
-#include "private/qdeclarativestateoperations_p.h"
-#include "private/qdeclarativecontext_p.h"
+#include <private/qdeclarativebehavior_p.h>
+#include <private/qdeclarativestateoperations_p.h>
+#include <private/qdeclarativecontext_p.h>
 
 #include <qdeclarativepropertyvaluesource.h>
 #include <qdeclarative.h>
 #include <qdeclarativeinfo.h>
 #include <qdeclarativeexpression.h>
-#include <qdeclarativestringconverters_p.h>
-#include <qdeclarativeglobal_p.h>
-#include <qdeclarativemetatype_p.h>
-#include <qdeclarativevaluetype_p.h>
-#include <qdeclarativeproperty_p.h>
-#include <qdeclarativeengine_p.h>
+#include <private/qdeclarativestringconverters_p.h>
+#include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativemetatype_p.h>
+#include <private/qdeclarativevaluetype_p.h>
+#include <private/qdeclarativeproperty_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 #include <qvariant.h>
 #include <qcolor.h>

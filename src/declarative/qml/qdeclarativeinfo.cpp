@@ -41,11 +41,11 @@
 
 #include "qdeclarativeinfo.h"
 
-#include "private/qdeclarativedata_p.h"
+#include "qdeclarativedata_p.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativemetatype_p.h"
-#include "private/qdeclarativeengine_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativemetatype_p.h"
+#include "qdeclarativeengine_p.h"
 
 #include <QCoreApplication>
 

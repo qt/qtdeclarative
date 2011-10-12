@@ -44,7 +44,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgtexture.h"
-#include <qsgtext_p.h>
+#include <private/qsgtext_p.h>
 
 QT_BEGIN_HEADER
 

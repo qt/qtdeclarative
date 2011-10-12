@@ -42,7 +42,7 @@
 #ifndef QSGCONTEXT2DTEXTURE_P_H
 #define QSGCONTEXT2DTEXTURE_P_H
 
-#include "qsgtexture.h"
+#include <qsgtexture.h>
 #include "qsgcanvasitem_p.h"
 #include "qsgcontext2d_p.h"
 

@@ -41,7 +41,7 @@
 
 #include "qsgcontext2dcommandbuffer_p.h"
 #include "qsgcanvasitem_p.h"
-#include "qdeclarative.h"
+#include <qdeclarative.h>
 #include <QtCore/QMutex>
 
 #define HAS_SHADOW(offsetX, offsetY, blur, color) (color.isValid() && color.alpha() && (blur || offsetX || offsetY))

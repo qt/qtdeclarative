@@ -47,8 +47,8 @@
 #include <QFile>
 #include "qsgimageparticle_p.h"
 #include "qsgparticleemitter_p.h"
-#include "qsgsprite_p.h"
-#include "qsgspriteengine_p.h"
+#include <private/qsgsprite_p.h>
+#include <private/qsgspriteengine_p.h>
 #include <QOpenGLFunctions>
 #include <qsgengine.h>
 #include <private/qsgtexture_p.h>

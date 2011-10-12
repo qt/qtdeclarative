@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativetimer_p.h"
+#include "qdeclarativetimer_p.h"
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qpauseanimation.h>

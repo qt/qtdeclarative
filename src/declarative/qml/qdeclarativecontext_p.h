@@ -55,19 +55,19 @@
 
 #include "qdeclarativecontext.h"
 
-#include "private/qdeclarativedata_p.h"
-#include "private/qdeclarativeintegercache_p.h"
-#include "private/qdeclarativetypenamecache_p.h"
-#include "private/qdeclarativenotifier_p.h"
+#include "qdeclarativedata_p.h"
+#include "qdeclarativeintegercache_p.h"
+#include "qdeclarativetypenamecache_p.h"
+#include "qdeclarativenotifier_p.h"
 #include "qdeclarativelist.h"
-#include "private/qdeclarativescript_p.h"
+#include "qdeclarativescript_p.h"
 
 #include <QtCore/qhash.h>
 #include <QtDeclarative/qjsvalue.h>
 #include <QtCore/qset.h>
 
 #include <private/qobject_p.h>
-#include "private/qdeclarativeguard_p.h"
+#include "qdeclarativeguard_p.h"
 
 #include <private/qv8_p.h>
 

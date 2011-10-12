@@ -41,7 +41,7 @@
 
 #include "qdeclarativepathinterpolator_p.h"
 
-#include "private/qdeclarativepath_p.h"
+#include "qdeclarativepath_p.h"
 
 QT_BEGIN_NAMESPACE
 

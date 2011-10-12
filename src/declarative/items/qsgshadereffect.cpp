@@ -49,8 +49,8 @@
 #include <private/qsgtextureprovider_p.h>
 #include "qsgcanvas.h"
 
-#include <qsgimage_p.h>
-#include <qsgshadereffectsource_p.h>
+#include "qsgimage_p.h"
+#include "qsgshadereffectsource_p.h"
 
 #include <QtCore/qsignalmapper.h>
 #include <QtGui/qopenglframebufferobject.h>

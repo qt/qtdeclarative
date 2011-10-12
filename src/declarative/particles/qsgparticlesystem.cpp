@@ -44,8 +44,8 @@
 #include "qsgparticleemitter_p.h"
 #include "qsgparticleaffector_p.h"
 #include "qsgparticlepainter_p.h"
-#include "qsgspriteengine_p.h"
-#include "qsgsprite_p.h"
+#include <private/qsgspriteengine_p.h>
+#include <private/qsgsprite_p.h>
 #include "qsgv8particledata_p.h"
 #include "qsgparticlegroup_p.h"
 

@@ -24,9 +24,9 @@
 #ifndef QJSVALUEITERATOR_IMPL_P_H
 #define QJSVALUEITERATOR_IMPL_P_H
 
-#include <qjsvalueiterator_p.h>
-#include <qv8engine_p.h>
-#include <qjsconverter_p.h>
+#include "qjsvalueiterator_p.h"
+#include <private/qv8engine_p.h>
+#include "qjsconverter_p.h"
 
 inline QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValuePrivate* value)
     : m_object(const_cast<QJSValuePrivate*>(value))

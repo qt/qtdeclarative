@@ -53,10 +53,10 @@
 // We mean it.
 //
 
-#include "private/qdeclarativebinding_p.h"
+#include "qdeclarativebinding_p.h"
 
 #include "qdeclarativeproperty.h"
-#include "private/qdeclarativeexpression_p.h"
+#include "qdeclarativeexpression_p.h"
 
 QT_BEGIN_NAMESPACE
 

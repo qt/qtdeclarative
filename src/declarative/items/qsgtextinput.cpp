@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeinfo.h>
 #include <QtGui/qevent.h>
 #include <QTextBoundaryFinder>
-#include <qsgtextnode_p.h>
+#include "qsgtextnode_p.h"
 #include <qsgsimplerectnode.h>
 
 #include <QtGui/qstylehints.h>

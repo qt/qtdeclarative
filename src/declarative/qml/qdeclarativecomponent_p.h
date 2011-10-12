@@ -55,11 +55,11 @@
 
 #include "qdeclarativecomponent.h"
 
-#include "private/qv8_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativetypeloader_p.h"
-#include "private/qbitfield_p.h"
-#include "private/qdeclarativevme_p.h"
+#include <private/qv8_p.h>
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativetypeloader_p.h"
+#include <private/qbitfield_p.h>
+#include "qdeclarativevme_p.h"
 #include "qdeclarativeerror.h"
 #include "qdeclarative.h"
 

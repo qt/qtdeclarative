@@ -43,8 +43,8 @@
 #include "qdeclarativecomponent.h"
 #include "qdeclarativeincubator_p.h"
 
-#include <private/qdeclarativecompiler_p.h>
-#include <private/qdeclarativeexpression_p.h>
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativeexpression_p.h"
 
 // XXX TODO 
 //   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and 

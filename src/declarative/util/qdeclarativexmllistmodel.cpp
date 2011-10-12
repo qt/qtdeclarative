@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativexmllistmodel_p.h"
+#include "qdeclarativexmllistmodel_p.h"
 
 #include <qdeclarativecontext.h>
-#include <qdeclarativeengine_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 #include <QDebug>
 #include <QStringList>

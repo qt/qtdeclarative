@@ -41,9 +41,9 @@
 
 #include "qv8debugservice_p.h"
 #include "qdeclarativedebugservice_p_p.h"
-#include "qv8debug_p.h"
-#include "qv8engine_p.h"
-#include "qdeclarativeengine_p.h"
+#include <private/qv8debug_p.h>
+#include <private/qv8engine_p.h>
+#include <private/qdeclarativeengine_p.h>
 
 #include <QtCore/QEventLoop>
 #include <QtCore/QHash>

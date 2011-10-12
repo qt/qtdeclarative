@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativescript_p.h"
+#include "qdeclarativescript_p.h"
 
 #include "parser/qdeclarativejsengine_p.h"
 #include "parser/qdeclarativejsparser_p.h"
@@ -47,7 +47,7 @@
 #include "parser/qdeclarativejsmemorypool_p.h"
 #include "parser/qdeclarativejsastvisitor_p.h"
 #include "parser/qdeclarativejsast_p.h"
-#include "private/qdeclarativerewrite_p.h"
+#include <private/qdeclarativerewrite_p.h>
 
 #include <QStack>
 #include <QCoreApplication>

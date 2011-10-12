@@ -40,7 +40,7 @@
 ****************************************************************************/
 #ifndef QSGPARTICLEGROUP
 #define QSGPARTICLEGROUP
-#include "qsgspriteengine_p.h"
+#include <private/qsgspriteengine_p.h>
 #include "qsgparticlesystem_p.h"
 #include "qdeclarativeparserstatus.h"
 

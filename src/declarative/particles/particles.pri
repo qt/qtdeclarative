@@ -1,5 +1,3 @@
-INCLUDEPATH += $$PWD
-
 HEADERS += \
     $$PWD/qsgangledirection_p.h \
     $$PWD/qsgcustomparticle_p.h \

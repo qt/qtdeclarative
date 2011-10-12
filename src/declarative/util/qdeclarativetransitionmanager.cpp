@@ -39,14 +39,14 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativetransitionmanager_p_p.h"
+#include "qdeclarativetransitionmanager_p_p.h"
 
-#include "private/qdeclarativestate_p_p.h"
-#include "private/qdeclarativestate_p.h"
+#include "qdeclarativestate_p_p.h"
+#include "qdeclarativestate_p.h"
 
-#include <qdeclarativebinding_p.h>
-#include <qdeclarativeglobal_p.h>
-#include <qdeclarativeproperty_p.h>
+#include <private/qdeclarativebinding_p.h>
+#include <private/qdeclarativeglobal_p.h>
+#include <private/qdeclarativeproperty_p.h>
 
 QT_BEGIN_NAMESPACE
 

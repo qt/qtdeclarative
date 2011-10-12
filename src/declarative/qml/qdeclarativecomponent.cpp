@@ -40,25 +40,25 @@
 ****************************************************************************/
 
 #include "qdeclarativecomponent.h"
-#include "private/qdeclarativecomponent_p.h"
+#include "qdeclarativecomponent_p.h"
 
-#include "private/qdeclarativecompiler_p.h"
-#include "private/qdeclarativecontext_p.h"
-#include "private/qdeclarativeengine_p.h"
-#include "private/qdeclarativevme_p.h"
+#include "qdeclarativecompiler_p.h"
+#include "qdeclarativecontext_p.h"
+#include "qdeclarativeengine_p.h"
+#include "qdeclarativevme_p.h"
 #include "qdeclarative.h"
 #include "qdeclarativeengine.h"
-#include "private/qdeclarativebinding_p.h"
-#include "private/qdeclarativebinding_p_p.h"
-#include "private/qdeclarativeglobal_p.h"
-#include "private/qdeclarativescript_p.h"
-#include "private/qdeclarativedebugtrace_p.h"
-#include "private/qdeclarativeenginedebugservice_p.h"
+#include "qdeclarativebinding_p.h"
+#include "qdeclarativebinding_p_p.h"
+#include "qdeclarativeglobal_p.h"
+#include "qdeclarativescript_p.h"
+#include <private/qdeclarativedebugtrace_p.h>
+#include <private/qdeclarativeenginedebugservice_p.h>
 #include "qdeclarativeincubator.h"
-#include "private/qdeclarativeincubator_p.h"
+#include "qdeclarativeincubator_p.h"
 
-#include "private/qv8engine_p.h"
-#include "private/qv8include_p.h"
+#include <private/qv8engine_p.h>
+#include <private/qv8include_p.h>
 
 #include <QStack>
 #include <QStringList>

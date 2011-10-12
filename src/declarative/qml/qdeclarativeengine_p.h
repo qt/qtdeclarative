@@ -55,20 +55,20 @@
 
 #include "qdeclarativeengine.h"
 
-#include "private/qdeclarativetypeloader_p.h"
-#include "private/qdeclarativeimport_p.h"
-#include "private/qpodvector_p.h"
+#include "qdeclarativetypeloader_p.h"
+#include "qdeclarativeimport_p.h"
+#include <private/qpodvector_p.h>
 #include "qdeclarative.h"
-#include "private/qdeclarativevaluetype_p.h"
+#include "qdeclarativevaluetype_p.h"
 #include "qdeclarativecontext.h"
-#include "private/qdeclarativecontext_p.h"
+#include "qdeclarativecontext_p.h"
 #include "qdeclarativeexpression.h"
 #include "qdeclarativeimageprovider.h"
-#include "private/qdeclarativeproperty_p.h"
-#include "private/qdeclarativepropertycache_p.h"
-#include "private/qdeclarativemetatype_p.h"
-#include "private/qdeclarativedirparser_p.h"
-#include "private/qintrusivelist_p.h"
+#include "qdeclarativeproperty_p.h"
+#include "qdeclarativepropertycache_p.h"
+#include "qdeclarativemetatype_p.h"
+#include "qdeclarativedirparser_p.h"
+#include <private/qintrusivelist_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>

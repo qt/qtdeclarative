@@ -39,15 +39,15 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativelistmodel_p_p.h"
-#include "private/qdeclarativelistmodelworkeragent_p.h"
-#include "private/qdeclarativeopenmetaobject_p.h"
-#include "parser/qdeclarativejsast_p.h"
-#include "parser/qdeclarativejsengine_p.h"
+#include "qdeclarativelistmodel_p_p.h"
+#include "qdeclarativelistmodelworkeragent_p.h"
+#include "qdeclarativeopenmetaobject_p.h"
+#include <private/qdeclarativejsast_p.h>
+#include <private/qdeclarativejsengine_p.h>
 
-#include <qdeclarativecustomparser_p.h>
-#include <qdeclarativescript_p.h>
-#include <qdeclarativeengine_p.h>
+#include <private/qdeclarativecustomparser_p.h>
+#include <private/qdeclarativescript_p.h>
+#include <private/qdeclarativeengine_p.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarativeinfo.h>
 

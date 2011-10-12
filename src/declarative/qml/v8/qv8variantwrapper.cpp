@@ -41,7 +41,7 @@
 
 #include "qv8variantwrapper_p.h"
 #include "qv8engine_p.h"
-#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativeengine_p.h>
 
 QT_BEGIN_NAMESPACE
 

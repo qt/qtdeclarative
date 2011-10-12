@@ -39,16 +39,16 @@
 **
 ****************************************************************************/
 
-#include "private/qsgadaptationlayer_p.h"
+#include <private/qsgadaptationlayer_p.h>
 #include "qsgcanvasitem_p.h"
-#include "qsgitem_p.h"
+#include <private/qsgitem_p.h>
 #include "qsgcontext2d_p.h"
 #include "qsgcontext2dnode_p.h"
 #include "qsgcontext2dtexture_p.h"
-#include "qdeclarativepixmapcache_p.h"
+#include <private/qdeclarativepixmapcache_p.h>
 
 #include <qdeclarativeinfo.h>
-#include "qdeclarativeengine_p.h"
+#include <private/qdeclarativeengine_p.h>
 #include <QtCore/QBuffer>
 
 QT_BEGIN_NAMESPACE

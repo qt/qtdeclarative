@@ -53,7 +53,7 @@
 // We mean it.
 //
 
-#include "private/qdeclarativedebugservice_p.h"
+#include "qdeclarativedebugservice_p.h"
 #include <private/qdeclarativeglobal_p.h>
 
 #include <QtCore/QList>

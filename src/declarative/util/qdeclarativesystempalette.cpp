@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "private/qdeclarativesystempalette_p.h"
+#include "qdeclarativesystempalette_p.h"
 
 #include <QGuiApplication>
 

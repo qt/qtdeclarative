@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qsgspritegoal_p.h"
-#include "private/qsgspriteengine_p.h"
-#include "private/qsgsprite_p.h"
+#include <private/qsgspriteengine_p.h>
+#include <private/qsgsprite_p.h>
 #include "qsgimageparticle_p.h"
 #include <QDebug>
 

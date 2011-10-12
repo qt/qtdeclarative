@@ -43,7 +43,7 @@
 #define QSGTEXTNODE_P_H
 
 #include <qsgnode.h>
-#include <qsgtext_p.h>
+#include "qsgtext_p.h"
 #include <qglyphrun.h>
 
 #include <QtGui/qcolor.h>

@@ -52,7 +52,7 @@
 #include <private/qdeclarativeengine_p.h>
 
 #ifdef Q_OS_SYMBIAN
-#include "private/qcore_symbian_p.h"
+#include <private/qcore_symbian_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE

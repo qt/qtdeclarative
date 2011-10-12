@@ -45,7 +45,7 @@
 #include "qsgnodeupdater_p.h"
 #include "qsggeometry_p.h"
 
-#include "private/qsgadaptationlayer_p.h"
+#include <private/qsgadaptationlayer_p.h>
 
 #include <QOpenGLShaderProgram>
 #include <qopenglframebufferobject.h>

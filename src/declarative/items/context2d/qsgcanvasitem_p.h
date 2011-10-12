@@ -42,7 +42,7 @@
 #ifndef QSGCANVASITEM_P_H
 #define QSGCANVASITEM_P_H
 
-#include "qsgitem.h"
+#include <qsgitem.h>
 #include <private/qv8engine_p.h>
 
 QT_BEGIN_HEADER

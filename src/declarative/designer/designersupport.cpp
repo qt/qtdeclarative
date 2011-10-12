@@ -40,13 +40,13 @@
 ****************************************************************************/
 
 #include "designersupport.h"
-#include "qsgitem_p.h"
+#include <private/qsgitem_p.h>
 
-#include <QtDeclarative/private/qsgshadereffectsource_p.h>
-#include <QtDeclarative/private/qsgrectangle_p.h>
-#include <QtDeclarative/private/qdeclarativeengine_p.h>
-#include <QtDeclarative/private/qsgview_p.h>
-#include <QtDeclarative/private/qdeclarativestategroup_p.h>
+#include <private/qsgshadereffectsource_p.h>
+#include <private/qsgrectangle_p.h>
+#include <private/qdeclarativeengine_p.h>
+#include <private/qsgview_p.h>
+#include <private/qdeclarativestategroup_p.h>
 #include <QtGui/QImage>
 
 QT_BEGIN_NAMESPACE

@@ -1,5 +1,4 @@
 INCLUDEPATH += $$PWD/../../../3rdparty/javascriptcore
-INCLUDEPATH += $$PWD
 
 include(script.pri)
 

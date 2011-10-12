@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include <QtDeclarative/qdeclarativeprivate.h>
-#include "private/qdeclarativemetatype_p.h"
+#include "qdeclarativemetatype_p.h"
 
 #include <private/qdeclarativeproxymetaobject_p.h>
 #include <private/qdeclarativecustomparser_p.h>
