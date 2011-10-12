@@ -1856,6 +1856,7 @@ void QSGTextInputPrivate::init()
     q->connect(control, SIGNAL(displayTextChanged(QString)),
                q, SLOT(updateRect()));
     q->updateSize();
+    imHints &= ~Qt::ImhMultiLine;
     oldValidity = control->hasAcceptableInput();
     lastSelectionStart = 0;
     lastSelectionEnd = 0;

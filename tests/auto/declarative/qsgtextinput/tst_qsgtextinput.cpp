@@ -1925,7 +1925,6 @@ void tst_qsgtextinput::echoMode()
     //Normal
     ref &= ~Qt::ImhHiddenText;
     ref &= ~(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
-    QEXPECT_FAIL("", "QTBUG-21686", Abort);
     QCOMPARE(input->inputMethodHints(), ref);
     input->setEchoMode(QSGTextInput::NoEcho);
     QCOMPARE(input->text(), initial);
@@ -1964,9 +1963,10 @@ void tst_qsgtextinput::echoMode()
     QCOMPARE(input->displayText(), QLatin1String("Q"));
     QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), QLatin1String("Q"));
     input->setFocus(true);
+    QVERIFY(input->hasActiveFocus());
     QInputMethodEvent inputEvent;
     inputEvent.setCommitString(initial);
-    QGuiApplication::sendEvent(&canvas, &inputEvent);
+    QGuiApplication::sendEvent(input, &inputEvent);
     QCOMPARE(input->text(), initial);
     QCOMPARE(input->displayText(), initial);
     QCOMPARE(input->inputMethodQuery(Qt::ImSurroundingText).toString(), initial);
