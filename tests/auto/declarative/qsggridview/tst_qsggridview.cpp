@@ -70,6 +70,8 @@ private slots:
     void items();
     void changed();
     void inserted();
+    void inserted_more();
+    void inserted_more_data();
     void removed();
     void clear();
     void moved();
@@ -415,6 +417,178 @@ void tst_QSGGridView::inserted()
     QTRY_VERIFY(gridview->contentY() == 120);
 
     delete canvas;
+}
+
+void tst_QSGGridView::inserted_more()
+{
+    QFETCH(qreal, contentY);
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("testRightToLeft", QVariant(false));
+    ctxt->setContextProperty("testTopToBottom", QVariant(false));
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("/data/gridview1.qml")));
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    gridview->setContentY(contentY);
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(gridview->property("count").toInt(), model.count());
+
+    // check visibleItems.first() is in correct position
+    QSGItem *item0 = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+
+    QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+
+        QCOMPARE(item->x(), (i%3)*80.0);
+        QCOMPARE(item->y(), (i/3)*60.0 + itemsOffsetAfterMove);
+
+        name = findItem<QSGText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QCOMPARE(name->text(), model.name(i));
+        number = findItem<QSGText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QCOMPARE(number->text(), model.number(i));
+    }
+
+    delete canvas;
+}
+
+void tst_QSGGridView::inserted_more_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    QTest::newRow("add 1, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 1
+            << 0.0;   // insert 1 above first visible, grid is rearranged; first visible moves forward within its row
+                      // new 1st visible item is at 0
+
+    QTest::newRow("add 2, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 2
+            << 0.0;   // insert 2 above first visible, grid is rearranged; first visible moves forward within its row
+
+    QTest::newRow("add 3, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 3
+            << -60.0;   // insert 3 (1 row) above first visible in negative pos, first visible does not move
+
+    QTest::newRow("add 5, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 5
+            << -60.0;   // insert 1 row + 2 items above first visible, 1 row added at negative pos,
+                        // grid is rearranged and first visible moves forward within its row
+
+    QTest::newRow("add 6, before visible items")
+            << 120.0     // show 6-23
+            << 5 << 6
+            << -60.0 * 2;   // insert 2 rows above first visible in negative pos, first visible does not move
+
+
+
+   QTest::newRow("add 1, at start of visible, content at start")
+            << 0.0
+            << 0 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content at start")
+            << 0.0
+            << 0 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at start of visible, content not at start")
+            << 120.0     // show 6-23
+            << 6 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content not at start")
+            << 120.0     // show 6-23
+            << 6 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 17 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 17 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content not at start")
+            << 120.0     // show 6-23
+            << 23 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at end of visible, content not at start")
+            << 120.0     // show 6-23
+            << 23 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 20 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 20 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content not at start")
+            << 120.0     // show 6-23
+            << 24 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, after visible, content not at start")
+            << 120.0     // show 6-23
+            << 24 << 3
+            << 0.0;
 }
 
 void tst_QSGGridView::removed()

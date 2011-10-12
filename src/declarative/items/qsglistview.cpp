@@ -95,7 +95,7 @@ public:
     virtual void repositionPackageItemAt(QSGItem *item, int index);
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
     virtual void resetFirstItemPosition();
-    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
+    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -103,7 +103,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
-    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *> *, FxViewItem *firstVisible);
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *firstVisible, InsertionsResult *);
 
     virtual void updateSections();
     QSGItem *getSectionItem(const QString &section);
@@ -727,14 +727,10 @@ void QSGListViewPrivate::resetFirstItemPosition()
     item->setPosition(0);
 }
 
-void QSGListViewPrivate::moveItemBy(FxViewItem *item, const QList<FxViewItem *> &forwards, const QList<FxViewItem *> &backwards)
+void QSGListViewPrivate::moveItemBy(FxViewItem *item, qreal forwards, qreal backwards)
 {
-    qreal pos = 0;
-    for (int i=0; i<forwards.count(); i++)
-        pos += forwards[i]->size();
-    for (int i=0; i<backwards.count(); i++)
-        pos -= backwards[i]->size();
-    static_cast<FxListItemSG*>(item)->setPosition(item->position() + pos);
+    qreal diff = forwards - backwards;
+    static_cast<FxListItemSG*>(item)->setPosition(item->position() + diff);
 }
 
 void QSGListViewPrivate::createHighlight()
@@ -2347,7 +2343,7 @@ void QSGListView::updateSections()
     }
 }
 
-bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, QList<FxViewItem *> *movedBackwards, QList<FxViewItem *> *addedItems, FxViewItem *firstVisible)
+bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
 {
     Q_Q(QSGListView);
 
@@ -2390,27 +2386,34 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
                                                 : visibleItems.last()->endPosition()+spacing;
     }
 
-    int prevAddedCount = addedItems->count();
+    int prevAddedCount = insertResult->addedItems.count();
     if (firstVisible && pos < firstVisible->position()) {
         // Insert items before the visible item.
         int insertionIdx = index;
         int i = 0;
         int from = tempPos - buffer;
 
-        for (i = count-1; i >= 0 && pos > from; --i) {
-            FxViewItem *item = 0;
-            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
-                if (item->index > modelIndex + i)
-                    movedBackwards->append(item);
-                item->index = modelIndex + i;
-            }
-            if (!item)
-                item = createItem(modelIndex + i);
+        for (i = count-1; i >= 0; --i) {
+            if (pos > from) {
+                insertResult->sizeAddedBeforeVisible += averageSize;
+                pos -= averageSize;
+            } else {
+                FxViewItem *item = 0;
+                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                    if (item->index > modelIndex + i)
+                        insertResult->movedBackwards.append(item);
+                    item->index = modelIndex + i;
+                }
+                if (!item)
+                    item = createItem(modelIndex + i);
 
-            visibleItems.insert(insertionIdx, item);
-            if (!change.isMove())
-                addedItems->append(item);
-            pos -= item->size() + spacing;
+                visibleItems.insert(insertionIdx, item);
+                if (!change.isMove()) {
+                    insertResult->addedItems.append(item);
+                    insertResult->sizeAddedBeforeVisible += item->size();
+                }
+                pos -= item->size() + spacing;
+            }
             index++;
         }
     } else {
@@ -2420,7 +2423,7 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
                 if (item->index > modelIndex + i)
-                    movedBackwards->append(item);
+                    insertResult->movedBackwards.append(item);
                 item->index = modelIndex + i;
             }
             if (!item)
@@ -2428,7 +2431,7 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
 
             visibleItems.insert(index, item);
             if (!change.isMove())
-                addedItems->append(item);
+                insertResult->addedItems.append(item);
             pos += item->size() + spacing;
             ++index;
         }
@@ -2440,7 +2443,9 @@ bool QSGListViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             item->index += count;
     }
 
-    return addedItems->count() > prevAddedCount;
+    updateVisibleIndex();
+
+    return insertResult->addedItems.count() > prevAddedCount;
 }
 
 

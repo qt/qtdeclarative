@@ -76,7 +76,11 @@ private slots:
     void qAbstractItemModel_changed();
 
     void qListModelInterface_inserted();
+    void qListModelInterface_inserted_more();
+    void qListModelInterface_inserted_more_data();
     void qAbstractItemModel_inserted();
+    void qAbstractItemModel_inserted_more();
+    void qAbstractItemModel_inserted_more_data();
 
     void qListModelInterface_removed();
     void qAbstractItemModel_removed();
@@ -140,6 +144,7 @@ private:
     template <class T> void items();
     template <class T> void changed();
     template <class T> void inserted();
+    template <class T> void inserted_more();
     template <class T> void removed(bool animated);
     template <class T> void moved();
     template <class T> void clear();
@@ -151,6 +156,7 @@ private:
     QList<T*> findItems(QSGItem *parent, const QString &objectName);
     void dumpTree(QSGItem *parent, int depth = 0);
 
+    void inserted_more_data();
     void moved_data();
 };
 
@@ -651,6 +657,159 @@ void tst_QSGListView::inserted()
 
     delete canvas;
     delete testObject;
+}
+
+template <class T>
+void tst_QSGListView::inserted_more()
+{
+    QFETCH(qreal, contentY);
+    QFETCH(int, insertIndex);
+    QFETCH(int, insertCount);
+    QFETCH(qreal, itemsOffsetAfterMove);
+
+    QSGText *name;
+    QSGText *number;
+    QSGView *canvas = createView();
+    canvas->show();
+
+    T model;
+    for (int i = 0; i < 30; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    TestObject *testObject = new TestObject;
+    ctxt->setContextProperty("testObject", testObject);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("/data/listviewtest.qml")));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    listview->setContentY(contentY);
+
+    QList<QPair<QString, QString> > newData;
+    for (int i=0; i<insertCount; i++)
+        newData << qMakePair(QString("value %1").arg(i), QString::number(i));
+    model.insertItems(insertIndex, newData);
+    QTRY_COMPARE(listview->property("count").toInt(), model.count());
+
+    // check visibleItems.first() is in correct position
+    QSGItem *item0 = findItem<QSGItem>(contentItem, "wrapper", 0);
+    QVERIFY(item0);
+    QCOMPARE(item0->y(), itemsOffsetAfterMove);
+
+    QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
+    int firstVisibleIndex = -1;
+    for (int i=0; i<items.count(); i++) {
+        if (items[i]->y() >= contentY) {
+            QDeclarativeExpression e(qmlContext(items[i]), items[i], "index");
+            firstVisibleIndex = e.evaluate().toInt();
+            break;
+        }
+    }
+    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+
+    // Confirm items positioned correctly and indexes correct
+    int itemCount = findItems<QSGItem>(contentItem, "wrapper").count();
+    for (int i = firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
+        QSGItem *item = findItem<QSGItem>(contentItem, "wrapper", i);
+        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
+        name = findItem<QSGText>(contentItem, "textName", i);
+        QVERIFY(name != 0);
+        QTRY_COMPARE(name->text(), model.name(i));
+        number = findItem<QSGText>(contentItem, "textNumber", i);
+        QVERIFY(number != 0);
+        QTRY_COMPARE(number->text(), model.number(i));
+    }
+
+    delete canvas;
+    delete testObject;
+}
+
+void tst_QSGListView::inserted_more_data()
+{
+    QTest::addColumn<qreal>("contentY");
+    QTest::addColumn<int>("insertIndex");
+    QTest::addColumn<int>("insertCount");
+    QTest::addColumn<qreal>("itemsOffsetAfterMove");
+
+    QTest::newRow("add 1, before visible items")
+            << 80.0     // show 4-19
+            << 3 << 1
+            << -20.0;   // insert above first visible i.e. 0 is at -20, first visible should not move
+
+    QTest::newRow("add multiple, before visible")
+            << 80.0     // show 4-19
+            << 3 << 3
+            << -20.0 * 3;   // again first visible should not move
+
+    QTest::newRow("add 1, at start of visible, content at start")
+            << 0.0
+            << 0 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, start of visible, content at start")
+            << 0.0
+            << 0 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at start of visible, content not at start")
+            << 80.0     // show 4-19
+            << 4 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 15 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content at start")
+            << 0.0
+            << 15 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, at end of visible, content not at start")
+            << 80.0     // show 4-19
+            << 19 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, at end of visible, content not at start")
+            << 80.0     // show 4-19
+            << 19 << 3
+            << 0.0;
+
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 16 << 1
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content at start")
+            << 0.0
+            << 16 << 3
+            << 0.0;
+
+    QTest::newRow("add 1, after visible, content not at start")
+            << 80.0     // show 4-19
+            << 20 << 1
+            << 0.0;
+
+    QTest::newRow("add multiple, after visible, content not at start")
+            << 80.0     // show 4-19
+            << 20 << 3
+            << 0.0;
 }
 
 template <class T>
@@ -3666,9 +3825,29 @@ void tst_QSGListView::qListModelInterface_inserted()
     inserted<TestModel>();
 }
 
+void tst_QSGListView::qListModelInterface_inserted_more()
+{
+    inserted_more<TestModel>();
+}
+
+void tst_QSGListView::qListModelInterface_inserted_more_data()
+{
+    inserted_more_data();
+}
+
 void tst_QSGListView::qAbstractItemModel_inserted()
 {
     inserted<TestModel2>();
+}
+
+void tst_QSGListView::qAbstractItemModel_inserted_more()
+{
+    inserted_more<TestModel2>();
+}
+
+void tst_QSGListView::qAbstractItemModel_inserted_more_data()
+{
+    inserted_more_data();
 }
 
 void tst_QSGListView::qListModelInterface_removed()

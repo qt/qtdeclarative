@@ -173,7 +173,7 @@ public:
     virtual void repositionPackageItemAt(QSGItem *item, int index);
     virtual void resetItemPosition(FxViewItem *item, FxViewItem *toItem);
     virtual void resetFirstItemPosition();
-    virtual void moveItemBy(FxViewItem *item, const QList<FxViewItem *> &items, const QList<FxViewItem *> &movedBackwards);
+    virtual void moveItemBy(FxViewItem *item, qreal forwards, qreal backwards);
 
     virtual void createHighlight();
     virtual void updateHighlight();
@@ -181,7 +181,7 @@ public:
 
     virtual void setPosition(qreal pos);
     virtual void layoutVisibleItems();
-    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, QList<FxViewItem *> *, QList<FxViewItem *>*, FxViewItem *);
+    bool applyInsertionChange(const QDeclarativeChangeSet::Insert &, FxViewItem *, InsertionsResult *);
 
     virtual qreal headerSize() const;
     virtual qreal footerSize() const;
@@ -586,9 +586,10 @@ void QSGGridViewPrivate::resetFirstItemPosition()
     item->setPosition(0, 0);
 }
 
-void QSGGridViewPrivate::moveItemBy(FxViewItem *item, const QList<FxViewItem *> &forwards, const QList<FxViewItem *> &backwards)
+void QSGGridViewPrivate::moveItemBy(FxViewItem *item, qreal forwards, qreal backwards)
 {
-    int moveCount = forwards.count() - backwards.count();
+    int moveCount = (forwards / rowSize()) - (backwards / rowSize());
+
     FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
     gridItem->setPosition(gridItem->colPos(), gridItem->rowPos() + ((moveCount / columns) * rowSize()));
 }
@@ -1757,7 +1758,7 @@ void QSGGridView::moveCurrentIndexRight()
     }
 }
 
-bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, QList<FxViewItem *> *movedBackwards, QList<FxViewItem *> *addedItems, FxViewItem *firstVisible)
+bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Insert &change, FxViewItem *firstVisible, InsertionsResult *insertResult)
 {
     Q_Q(QSGGridView);
 
@@ -1772,7 +1773,7 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             --i;
         if (visibleItems.at(i)->index + 1 == modelIndex) {
             // Special case of appending an item to the model.
-            index = visibleIndex + visibleItems.count();
+            index = visibleItems.count();
         } else {
             if (modelIndex <= visibleIndex) {
                 // Insert before visible items
@@ -1787,19 +1788,10 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
         }
     }
 
-    int insertCount = count;
-    if (index < visibleIndex && visibleItems.count()) {
-        insertCount -= visibleIndex - index;
-        index = visibleIndex;
-        modelIndex = visibleIndex;
-    }
-
     qreal tempPos = isRightToLeftTopToBottom() ? -position()-size()+q->width()+1 : position();
-    int to = buffer+tempPos+size()-1;
     int colPos = 0;
     int rowPos = 0;
     if (visibleItems.count()) {
-        index -= visibleIndex;
         if (index < visibleItems.count()) {
             FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(visibleItems.at(index));
             colPos = gridItem->colPos();
@@ -1823,30 +1815,69 @@ bool QSGGridViewPrivate::applyInsertionChange(const QDeclarativeChangeSet::Inser
             item->index += count;
     }
 
-    int i = 0;
-    bool prevAddedCount = addedItems->count();
-    while (i < insertCount && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
-        FxViewItem *item = 0;
-        if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
-            if (item->index > modelIndex + i)
-                movedBackwards->append(item);
-            item->index = modelIndex + i;
+    int prevAddedCount = insertResult->addedItems.count();
+    if (firstVisible && rowPos < firstVisible->position()) {
+        // Insert items before the visible item.
+        int insertionIdx = index;
+        int i = count - 1;
+        int from = tempPos - buffer;
+
+        while (i >= 0) {
+            if (rowPos > from) {
+                insertResult->sizeAddedBeforeVisible += rowSize();
+            } else {
+                FxViewItem *item = 0;
+                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                    if (item->index > modelIndex + i)
+                        insertResult->movedBackwards.append(item);
+                    item->index = modelIndex + i;
+                }
+                if (!item)
+                    item = createItem(modelIndex + i);
+
+                visibleItems.insert(insertionIdx, item);
+                if (!change.isMove()) {
+                    insertResult->addedItems.append(item);
+                    insertResult->sizeAddedBeforeVisible += rowSize();
+                }
+            }
+            colPos -= colSize();
+            if (colPos < 0) {
+                colPos = colSize() * (columns - 1);
+                rowPos -= rowSize();
+            }
+            index++;
+            i--;
         }
-        if (!item)
-            item = createItem(modelIndex + i);
-        visibleItems.insert(index, item);
-        if (!change.isMove())
-            addedItems->append(item);
-        colPos += colSize();
-        if (colPos > colSize() * (columns-1)) {
-            colPos = 0;
-            rowPos += rowSize();
+    } else {
+        int i = 0;
+        int to = buffer+tempPos+size()-1;
+        while (i < count && rowPos <= to + rowSize()*(columns - (colPos/colSize()))/qreal(columns)) {
+            FxViewItem *item = 0;
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i)))) {
+                if (item->index > modelIndex + i)
+                    insertResult->movedBackwards.append(item);
+                item->index = modelIndex + i;
+            }
+            if (!item)
+                item = createItem(modelIndex + i);
+
+            visibleItems.insert(index, item);
+            if (!change.isMove())
+                insertResult->addedItems.append(item);
+            colPos += colSize();
+            if (colPos > colSize() * (columns-1)) {
+                colPos = 0;
+                rowPos += rowSize();
+            }
+            ++index;
+            ++i;
         }
-        ++index;
-        ++i;
     }
 
-    return addedItems->count() > prevAddedCount;
+    updateVisibleIndex();
+
+    return insertResult->addedItems.count() > prevAddedCount;
 }
 
 /*!

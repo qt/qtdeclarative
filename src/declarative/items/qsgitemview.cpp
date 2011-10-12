@@ -1437,7 +1437,7 @@ bool QSGItemViewPrivate::applyModelChanges()
     FxViewItem *firstVisible = firstVisibleItem();
     FxViewItem *origVisibleItemsFirst = visibleItems.count() ? visibleItems.first() : 0;
     int firstItemIndex = firstVisible ? firstVisible->index : -1;
-    QList<FxViewItem *> removedBeforeFirstVisible;
+    qreal removedBeforeFirstVisibleBy = 0;
 
     const QVector<QDeclarativeChangeSet::Remove> &removals = currentChanges.pendingChanges.removes();
     for (int i=0; i<removals.count(); i++) {
@@ -1468,7 +1468,7 @@ bool QSGItemViewPrivate::applyModelChanges()
                     ++it;
                 } else {
                     if (firstVisible && item->position() < firstVisible->position() && item != visibleItems.first())
-                        removedBeforeFirstVisible.append(item);
+                        removedBeforeFirstVisibleBy += item->size();
                     if (removals[i].isMove()) {
                         currentChanges.removedItems.insert(removals[i].moveKey(item->index), item);
                     } else {
@@ -1487,38 +1487,38 @@ bool QSGItemViewPrivate::applyModelChanges()
 
     const QVector<QDeclarativeChangeSet::Insert> &insertions = currentChanges.pendingChanges.inserts();
     bool addedVisible = false;
-    QList<FxViewItem *> addedItems;
-    QList<FxViewItem *> movedBackwards;
+    InsertionsResult insertResult;
+    bool allInsertionsBeforeVisible = true;
 
     for (int i=0; i<insertions.count(); i++) {
         bool wasEmpty = visibleItems.isEmpty();
-        if (applyInsertionChange(insertions[i], &movedBackwards, &addedItems, firstVisible))
+        if (applyInsertionChange(insertions[i], firstVisible, &insertResult))
             addedVisible = true;
+        if (insertions[i].index >= visibleIndex)
+            allInsertionsBeforeVisible = false;
         if (wasEmpty && !visibleItems.isEmpty())
             resetFirstItemPosition();
         itemCount += insertions[i].count;
-        updateVisibleIndex();
     }
-    for (int i=0; i<addedItems.count(); ++i)
-        addedItems.at(i)->attached->emitAdd();
+    for (int i=0; i<insertResult.addedItems.count(); ++i)
+        insertResult.addedItems.at(i)->attached->emitAdd();
 
     // if the first visible item has moved, ensure another one takes its place
     // so that we avoid shifting all content forwards
-    // (don't use items from removedBeforeFirstVisible - if an item is removed from
-    // before the first visible, the first visible should not move upwards)
+    // (if an item is removed from before the first visible, the first visible should not move upwards)
     if (firstVisible && firstItemIndex >= 0) {
         bool found = false;
-        for (int i=0; i<movedBackwards.count(); i++) {
-            if (movedBackwards[i]->index == firstItemIndex) {
+        for (int i=0; i<insertResult.movedBackwards.count(); i++) {
+            if (insertResult.movedBackwards[i]->index == firstItemIndex) {
                 // an item has moved backwards up to the first visible's position
-                resetItemPosition(movedBackwards[i], firstVisible);
-                movedBackwards.removeAt(i);
+                resetItemPosition(insertResult.movedBackwards[i], firstVisible);
+                insertResult.movedBackwards.removeAt(i);
                 found = true;
                 break;
             }
         }
-        if (!found) {
-            // first visible item has moved forward, another item takes its place
+        if (!found && !allInsertionsBeforeVisible) {
+            // first visible item has moved forward, another visible item takes its place
             FxViewItem *item = visibleItem(firstItemIndex);
             if (item)
                 resetItemPosition(item, firstVisible);
@@ -1529,9 +1529,12 @@ bool QSGItemViewPrivate::applyModelChanges()
     if (firstVisible && visibleItems.count() && visibleItems.first() != firstVisible) {
         // ensure first item is placed at correct postion if moving backward
         // since it will be used to position all subsequent items
-        if (movedBackwards.count() && origVisibleItemsFirst)
+        if (insertResult.movedBackwards.count() && origVisibleItemsFirst)
             resetItemPosition(visibleItems.first(), origVisibleItemsFirst);
-        moveItemBy(visibleItems.first(), removedBeforeFirstVisible, movedBackwards);
+        qreal moveBackwardsBy = insertResult.sizeAddedBeforeVisible;
+        for (int i=0; i<insertResult.movedBackwards.count(); i++)
+            moveBackwardsBy += insertResult.movedBackwards[i]->size();
+        moveItemBy(visibleItems.first(), removedBeforeFirstVisibleBy, moveBackwardsBy);
     }
 
     // Whatever removed/moved items remain are no longer visible items.
