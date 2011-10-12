@@ -44,7 +44,7 @@
 #include "private/qdeclarativecompiler_p.h"
 #include "private/qdeclarativeboundsignal_p.h"
 #include "private/qdeclarativestringconverters_p.h"
-#include "private/qmetaobjectbuilder_p.h"
+#include <private/qmetaobjectbuilder_p.h>
 #include "private/qfastmetabuilder_p.h"
 #include "private/qdeclarativedata_p.h"
 #include "qdeclarative.h"

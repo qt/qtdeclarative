@@ -60,7 +60,7 @@
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include <qhash.h>
 #include <qlist.h>
-#include <QtDeclarative/private/qmetaobjectbuilder_p.h>
+#include <private/qmetaobjectbuilder_p.h>
 #include <QtCore/qdebug.h>
 
 #include <private/qobject_p.h>

@@ -43,7 +43,7 @@
 
 #include "qdeclarativepropertyvaluesource.h"
 #include "qdeclarativecomponent.h"
-#include "private/qmetaobjectbuilder_p.h"
+#include <private/qmetaobjectbuilder_p.h>
 #include "private/qfastmetabuilder_p.h"
 #include "private/qdeclarativestringconverters_p.h"
 #include "private/qdeclarativeengine_p.h"
