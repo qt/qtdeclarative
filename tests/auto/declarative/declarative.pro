@@ -60,6 +60,9 @@ PRIVATETESTS += \
     qpacketprotocol \
     v4
 
+# This test requires the xmlpatterns module
+!contains(QT_CONFIG,xmlpatterns):PRIVATETESTS -= qdeclarativexmllistmodel
+
 SGTESTS =  \
     qsganimatedimage \
     qsgborderimage \

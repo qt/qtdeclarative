@@ -53,7 +53,6 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qtemporaryfile.h>
 
-#ifdef QTEST_XMLPATTERNS
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativexmllistmodel_p.h>
@@ -960,7 +959,3 @@ void tst_qdeclarativexmllistmodel::roleCrash()
 QTEST_MAIN(tst_qdeclarativexmllistmodel)
 
 #include "tst_qdeclarativexmllistmodel.moc"
-
-#else
-QTEST_NOOP_MAIN
-#endif
