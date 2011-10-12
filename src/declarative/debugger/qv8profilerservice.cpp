@@ -160,14 +160,12 @@ void QV8ProfilerService::messageReceived(const QByteArray &message)
     }
 
     if (command == "V8SNAPSHOT") {
-            QByteArray snapshotType;
-            ds >> snapshotType;
-
-            if (snapshotType == "full")
-                d->takeSnapshot(v8::HeapSnapshot::kFull);
-        } else if (command == "deletesnapshots") {
+        if (option == "full")
+            d->takeSnapshot(v8::HeapSnapshot::kFull);
+        else if (option == "delete") {
             v8::HeapProfiler::DeleteAllSnapshots();
         }
+    }
 
     QDeclarativeDebugService::messageReceived(message);
 }
@@ -218,14 +216,14 @@ void QV8ProfilerServicePrivate::takeSnapshot(v8::HeapSnapshot::Type snapshotType
     v8::HandleScope scope;
     v8::Local<v8::String> title = v8::String::New("");
 
+    QByteArray jsonSnapshot;
+    ByteArrayOutputStream bos(&jsonSnapshot);
     const v8::HeapSnapshot *snapshot = v8::HeapProfiler::TakeSnapshot(title, snapshotType);
+    snapshot->Serialize(&bos, v8::HeapSnapshot::kJSON);
 
     QByteArray data;
     QDataStream ds(&data, QIODevice::WriteOnly);
-    ds << (int)QV8ProfilerService::V8Snapshot;
-
-    ByteArrayOutputStream bos(&data);
-    snapshot->Serialize(&bos, v8::HeapSnapshot::kJSON);
+    ds << (int)QV8ProfilerService::V8Snapshot << jsonSnapshot;
 
     q->sendMessage(data);
 }
