@@ -46,6 +46,3 @@ contains(QT_CONFIG, private_tests) {
            examples
 
 }
-
-# Tests which should run in Pulse
-PULSE_TESTS = $$SUBDIRS

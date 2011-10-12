@@ -94,6 +94,3 @@ contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS
     SUBDIRS += $$SGTESTS
 }
-
-# Tests which should run in Pulse
-PULSE_TESTS = $$SUBDIRS
