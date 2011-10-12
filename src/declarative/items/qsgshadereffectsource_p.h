@@ -77,7 +77,7 @@ private Q_SLOTS:
     void markDirtyTexture();
 };
 
-class QSGShaderEffectTexture : public QSGDynamicTexture
+class Q_DECLARATIVE_EXPORT QSGShaderEffectTexture : public QSGDynamicTexture
 {
     Q_OBJECT
 public:
