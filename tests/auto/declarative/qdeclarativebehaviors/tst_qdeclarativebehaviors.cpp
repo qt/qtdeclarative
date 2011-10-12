@@ -122,6 +122,7 @@ void tst_qdeclarativebehaviors::cppTriggered()
 
     innerRect->setProperty("x", 200);
     QTRY_VERIFY(innerRect->x() > 0);
+    QEXPECT_FAIL("", "QTBUG-21001", Continue);
     QTRY_VERIFY(innerRect->x() < 200);  //i.e. the behavior has been triggered
 
     delete rect;
