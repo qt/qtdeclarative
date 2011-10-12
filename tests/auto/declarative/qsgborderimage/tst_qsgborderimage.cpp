@@ -56,6 +56,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 
 #include "../shared/testhttpserver.h"
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 #define SERVER_PORT 14446
@@ -113,9 +114,9 @@ void tst_qsgborderimage::imageSource_data()
     QTest::addColumn<bool>("remote");
     QTest::addColumn<QString>("error");
 
-    QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() << false << "";
-    QTest::newRow("local not found") << QUrl::fromLocalFile(SRCDIR "/data/no-such-file.png").toString() << false
-        << "file::2:1: QML BorderImage: Cannot open: " + QUrl::fromLocalFile(SRCDIR "/data/no-such-file.png").toString();
+    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("colors.png")).toString() << false << "";
+    QTest::newRow("local not found") << QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString() << false
+        << "file::2:1: QML BorderImage: Cannot open: " + QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString();
     QTest::newRow("remote") << SERVER_ADDR "/colors.png" << true << "";
     QTest::newRow("remote not found") << SERVER_ADDR "/no-such-file.png" << true
         << "file::2:1: QML BorderImage: Error downloading " SERVER_ADDR "/no-such-file.png - server replied: Not found";
@@ -131,7 +132,7 @@ void tst_qsgborderimage::imageSource()
     if (remote) {
         server = new TestHTTPServer(SERVER_PORT);
         QVERIFY(server->isValid());
-        server->serveDirectory(SRCDIR "/data");
+        server->serveDirectory(TESTDATA(""));
     }
 
     if (!error.isEmpty())
@@ -168,7 +169,7 @@ void tst_qsgborderimage::clearSource()
 {
     QString componentStr = "import QtQuick 2.0\nBorderImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.png")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -186,7 +187,7 @@ void tst_qsgborderimage::clearSource()
 
 void tst_qsgborderimage::resized()
 {
-    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() + "\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(TESTDATA("colors.png")).toString() + "\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -203,7 +204,7 @@ void tst_qsgborderimage::resized()
 
 void tst_qsgborderimage::smooth()
 {
-    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + TESTDATA("colors.png") + "\"; smooth: true; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -222,7 +223,7 @@ void tst_qsgborderimage::mirror()
     QSGView *canvas = new QSGView;
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("mirror.qml")));
     QSGBorderImage *image = qobject_cast<QSGBorderImage*>(canvas->rootObject());
     QVERIFY(image != 0);
     canvas->show();
@@ -244,7 +245,7 @@ void tst_qsgborderimage::mirror()
 void tst_qsgborderimage::tileModes()
 {
     {
-        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 100; height: 300; horizontalTileMode: BorderImage.Repeat; verticalTileMode: BorderImage.Repeat }";
+        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + TESTDATA("colors.png") + "\"; width: 100; height: 300; horizontalTileMode: BorderImage.Repeat; verticalTileMode: BorderImage.Repeat }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -257,7 +258,7 @@ void tst_qsgborderimage::tileModes()
         delete obj;
     }
     {
-        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 150; horizontalTileMode: BorderImage.Round; verticalTileMode: BorderImage.Round }";
+        QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + TESTDATA("colors.png") + "\"; width: 300; height: 150; horizontalTileMode: BorderImage.Round; verticalTileMode: BorderImage.Round }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());
@@ -281,7 +282,7 @@ void tst_qsgborderimage::sciSource()
     if (remote) {
         server = new TestHTTPServer(SERVER_PORT);
         QVERIFY(server->isValid());
-        server->serveDirectory(SRCDIR "/data");
+        server->serveDirectory(TESTDATA(""));
     }
 
     QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + source + "\"; width: 300; height: 300 }";
@@ -318,9 +319,9 @@ void tst_qsgborderimage::sciSource_data()
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("valid");
 
-    QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/colors-round.sci").toString() << true;
-    QTest::newRow("local quoted filename") << QUrl::fromLocalFile(SRCDIR "/data/colors-round-quotes.sci").toString() << true;
-    QTest::newRow("local not found") << QUrl::fromLocalFile(SRCDIR "/data/no-such-file.sci").toString() << false;
+    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("colors-round.sci")).toString() << true;
+    QTest::newRow("local quoted filename") << QUrl::fromLocalFile(TESTDATA("colors-round-quotes.sci")).toString() << true;
+    QTest::newRow("local not found") << QUrl::fromLocalFile(TESTDATA("no-such-file.sci")).toString() << false;
     QTest::newRow("remote") << SERVER_ADDR "/colors-round.sci" << true;
     QTest::newRow("remote filename quoted") << SERVER_ADDR "/colors-round-quotes.sci" << true;
     QTest::newRow("remote image") << SERVER_ADDR "/colors-round-remote.sci" << true;
@@ -332,7 +333,7 @@ void tst_qsgborderimage::invalidSciFile()
     QTest::ignoreMessage(QtWarningMsg, "QSGGridScaledImage: Invalid tile rule specified. Using Stretch."); // for "Roun"
     QTest::ignoreMessage(QtWarningMsg, "QSGGridScaledImage: Invalid tile rule specified. Using Stretch."); // for "Repea"
 
-    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(SRCDIR "/data/invalid.sci").toString() +"\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nBorderImage { source: \"" + QUrl::fromLocalFile(TESTDATA("invalid.sci")).toString() +"\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGBorderImage *obj = qobject_cast<QSGBorderImage*>(component.create());

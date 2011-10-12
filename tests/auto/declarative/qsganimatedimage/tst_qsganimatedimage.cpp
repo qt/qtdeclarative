@@ -49,6 +49,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 
 #include "../shared/testhttpserver.h"
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 class tst_qsganimatedimage : public QObject
@@ -79,7 +80,7 @@ private slots:
 void tst_qsganimatedimage::play()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickman.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickman.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QVERIFY(anim->isPlaying());
@@ -90,7 +91,7 @@ void tst_qsganimatedimage::play()
 void tst_qsganimatedimage::pause()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickmanpause.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickmanpause.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QVERIFY(anim->isPlaying());
@@ -102,7 +103,7 @@ void tst_qsganimatedimage::pause()
 void tst_qsganimatedimage::stopped()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickmanstopped.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickmanstopped.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QVERIFY(!anim->isPlaying());
@@ -114,7 +115,7 @@ void tst_qsganimatedimage::stopped()
 void tst_qsganimatedimage::setFrame()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickmanpause.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickmanpause.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QVERIFY(anim->isPlaying());
@@ -126,7 +127,7 @@ void tst_qsganimatedimage::setFrame()
 void tst_qsganimatedimage::frameCount()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/colors.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("colors.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QVERIFY(anim->isPlaying());
@@ -142,7 +143,7 @@ void tst_qsganimatedimage::mirror_running()
     QSGView *canvas = new QSGView;
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/hearts.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("hearts.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(canvas->rootObject());
     QVERIFY(anim);
 
@@ -222,8 +223,8 @@ void tst_qsganimatedimage::mirror_notRunning_data()
 {
     QTest::addColumn<QUrl>("fileUrl");
 
-    QTest::newRow("paused") << QUrl::fromLocalFile(SRCDIR "/data/stickmanpause.qml");
-    QTest::newRow("stopped") << QUrl::fromLocalFile(SRCDIR "/data/stickmanstopped.qml");
+    QTest::newRow("paused") << QUrl::fromLocalFile(TESTDATA("stickmanpause.qml"));
+    QTest::newRow("stopped") << QUrl::fromLocalFile(TESTDATA("stickmanstopped.qml"));
 }
 
 void tst_qsganimatedimage::remote()
@@ -233,7 +234,7 @@ void tst_qsganimatedimage::remote()
 
     TestHTTPServer server(14449);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl("http://127.0.0.1:14449/" + fileName));
@@ -255,7 +256,7 @@ void tst_qsganimatedimage::remote()
 void tst_qsganimatedimage::sourceSize()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickmanscaled.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickmanscaled.qml")));
     QSGAnimatedImage *anim = qobject_cast<QSGAnimatedImage *>(component.create());
     QVERIFY(anim);
     QCOMPARE(anim->width(),240.0);
@@ -268,7 +269,7 @@ void tst_qsganimatedimage::sourceSize()
 void tst_qsganimatedimage::sourceSizeReadOnly()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/stickmanerror1.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("stickmanerror1.qml")));
     QVERIFY(component.isError());
     QCOMPARE(component.errors().at(0).description(), QString("Invalid property assignment: \"sourceSize\" is a read-only property"));
 }
@@ -305,10 +306,10 @@ void tst_qsganimatedimage::qtbug_16520()
 {
     TestHTTPServer server(14449);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/qtbug-16520.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("qtbug-16520.qml")));
     QTRY_VERIFY(component.isReady());
 
     QSGRectangle *root = qobject_cast<QSGRectangle *>(component.create());
@@ -327,12 +328,12 @@ void tst_qsganimatedimage::progressAndStatusChanges()
 {
     TestHTTPServer server(14449);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeEngine engine;
     QString componentStr = "import QtQuick 2.0\nAnimatedImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/stickman.gif"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("stickman.gif")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -345,7 +346,7 @@ void tst_qsganimatedimage::progressAndStatusChanges()
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QSGImageBase::Status)));
 
     // Loading local file
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.gif"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.gif")));
     QTRY_VERIFY(obj->status() == QSGImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);

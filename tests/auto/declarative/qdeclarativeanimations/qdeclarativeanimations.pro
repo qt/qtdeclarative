@@ -3,7 +3,9 @@ TARGET = tst_qdeclarativeanimations
 SOURCES += tst_qdeclarativeanimations.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

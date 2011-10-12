@@ -46,6 +46,7 @@
 #include <private/qsgflickable_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include <QtOpenGL/QGLShaderProgram>
 
@@ -102,7 +103,7 @@ void tst_qsgflickable::cleanupTestCase()
 void tst_qsgflickable::create()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/flickable01.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable01.qml")));
     QSGFlickable *obj = qobject_cast<QSGFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -127,7 +128,7 @@ void tst_qsgflickable::create()
 void tst_qsgflickable::horizontalViewportSize()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/flickable02.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable02.qml")));
     QSGFlickable *obj = qobject_cast<QSGFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -144,7 +145,7 @@ void tst_qsgflickable::horizontalViewportSize()
 void tst_qsgflickable::verticalViewportSize()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
     QSGFlickable *obj = qobject_cast<QSGFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -161,7 +162,7 @@ void tst_qsgflickable::verticalViewportSize()
 void tst_qsgflickable::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/flickable04.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("flickable04.qml")));
     QSGFlickable *obj = qobject_cast<QSGFlickable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -261,7 +262,7 @@ void tst_qsgflickable::pressDelay()
 void tst_qsgflickable::nestedPressDelay()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/nestedPressDelay.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("nestedPressDelay.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -316,7 +317,7 @@ void tst_qsgflickable::flickableDirection()
 void tst_qsgflickable::resizeContent()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/resize.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("resize.qml")));
     QSGItem *root = qobject_cast<QSGItem*>(c.create());
     QSGFlickable *obj = findItem<QSGFlickable>(root, "flick");
 
@@ -340,7 +341,7 @@ void tst_qsgflickable::resizeContent()
 void tst_qsgflickable::returnToBounds()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/resize.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("resize.qml")));
     QSGItem *root = qobject_cast<QSGItem*>(c.create());
     QSGFlickable *obj = findItem<QSGFlickable>(root, "flick");
 
@@ -366,7 +367,7 @@ void tst_qsgflickable::returnToBounds()
 void tst_qsgflickable::wheel()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/wheel.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("wheel.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -401,7 +402,7 @@ void tst_qsgflickable::wheel()
 void tst_qsgflickable::movingAndDragging()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWaitForWindowShown(canvas);
@@ -506,7 +507,7 @@ void tst_qsgflickable::movingAndDragging()
 void tst_qsgflickable::disabled()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/disabled.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("disabled.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -538,7 +539,7 @@ void tst_qsgflickable::flickVelocity()
 #endif
 
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flickable03.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flickable03.qml")));
     canvas->show();
     canvas->requestActivateWindow();
     QVERIFY(canvas->rootObject() != 0);
@@ -562,7 +563,7 @@ void tst_qsgflickable::flickVelocity()
 void tst_qsgflickable::margins()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/margins.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("margins.qml")));
     QSGItem *root = qobject_cast<QSGItem*>(c.create());
     QSGFlickable *obj = qobject_cast<QSGFlickable*>(root);
     QVERIFY(obj != 0);

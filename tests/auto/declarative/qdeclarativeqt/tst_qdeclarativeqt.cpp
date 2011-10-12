@@ -52,6 +52,7 @@
 #include <QCryptographicHash>
 #include <QSGItem>
 #include <QSignalSpy>
+#include "../shared/util.h"
 
 class tst_qdeclarativeqt : public QObject
 {
@@ -95,7 +96,7 @@ private:
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 void tst_qdeclarativeqt::enums()

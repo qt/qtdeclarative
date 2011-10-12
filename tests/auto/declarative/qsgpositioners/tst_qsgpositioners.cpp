@@ -47,7 +47,7 @@
 #include <private/qdeclarativetransition_p.h>
 #include <private/qsgitem_p.h>
 #include <qdeclarativeexpression.h>
-#include <QtWidgets/qgraphicswidget.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 class tst_qsgpositioners : public QObject
@@ -100,7 +100,7 @@ tst_qsgpositioners::tst_qsgpositioners()
 
 void tst_qsgpositioners::test_horizontal()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal.qml");
+    QSGView *canvas = createView(TESTDATA("horizontal.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -129,7 +129,7 @@ void tst_qsgpositioners::test_horizontal()
 
 void tst_qsgpositioners::test_horizontal_rtl()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal.qml");
+    QSGView *canvas = createView(TESTDATA("horizontal.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -167,7 +167,7 @@ void tst_qsgpositioners::test_horizontal_rtl()
 
 void tst_qsgpositioners::test_horizontal_spacing()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-spacing.qml");
+    QSGView *canvas = createView(TESTDATA("horizontal-spacing.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -196,7 +196,7 @@ void tst_qsgpositioners::test_horizontal_spacing()
 
 void tst_qsgpositioners::test_horizontal_spacing_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-spacing.qml");
+    QSGView *canvas = createView(TESTDATA("horizontal-spacing.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -225,7 +225,7 @@ void tst_qsgpositioners::test_horizontal_spacing_rightToLeft()
 
 void tst_qsgpositioners::test_horizontal_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml", false);
+    QSGView *canvas = createView(TESTDATA("horizontal-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -279,7 +279,7 @@ void tst_qsgpositioners::test_horizontal_animated()
 
 void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated.qml", false);
+    QSGView *canvas = createView(TESTDATA("horizontal-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -335,7 +335,7 @@ void tst_qsgpositioners::test_horizontal_animated_rightToLeft()
 
 void tst_qsgpositioners::test_horizontal_animated_disabled()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontal-animated-disabled.qml");
+    QSGView *canvas = createView(TESTDATA("horizontal-animated-disabled.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -375,7 +375,7 @@ void tst_qsgpositioners::test_horizontal_animated_disabled()
 
 void tst_qsgpositioners::test_vertical()
 {
-    QSGView *canvas = createView(SRCDIR "/data/vertical.qml");
+    QSGView *canvas = createView(TESTDATA("vertical.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -403,7 +403,7 @@ void tst_qsgpositioners::test_vertical()
 
 void tst_qsgpositioners::test_vertical_spacing()
 {
-    QSGView *canvas = createView(SRCDIR "/data/vertical-spacing.qml");
+    QSGView *canvas = createView(TESTDATA("vertical-spacing.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -430,7 +430,7 @@ void tst_qsgpositioners::test_vertical_spacing()
 
 void tst_qsgpositioners::test_vertical_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/vertical-animated.qml", false);
+    QSGView *canvas = createView(TESTDATA("vertical-animated.qml"), false);
 
     //Note that they animate in
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
@@ -480,7 +480,7 @@ void tst_qsgpositioners::test_vertical_animated()
 
 void tst_qsgpositioners::test_grid()
 {
-    QSGView *canvas = createView(SRCDIR "/data/gridtest.qml");
+    QSGView *canvas = createView(TESTDATA("gridtest.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -514,7 +514,7 @@ void tst_qsgpositioners::test_grid()
 
 void tst_qsgpositioners::test_grid_topToBottom()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-toptobottom.qml");
+    QSGView *canvas = createView(TESTDATA("grid-toptobottom.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -548,7 +548,7 @@ void tst_qsgpositioners::test_grid_topToBottom()
 
 void tst_qsgpositioners::test_grid_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/gridtest.qml");
+    QSGView *canvas = createView(TESTDATA("gridtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -597,7 +597,7 @@ void tst_qsgpositioners::test_grid_rightToLeft()
 
 void tst_qsgpositioners::test_grid_spacing()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-spacing.qml");
+    QSGView *canvas = createView(TESTDATA("grid-spacing.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -630,7 +630,7 @@ void tst_qsgpositioners::test_grid_spacing()
 
 void tst_qsgpositioners::test_grid_row_column_spacing()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-row-column-spacing.qml");
+    QSGView *canvas = createView(TESTDATA("grid-row-column-spacing.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -663,7 +663,7 @@ void tst_qsgpositioners::test_grid_row_column_spacing()
 
 void tst_qsgpositioners::test_grid_animated()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml", false);
+    QSGView *canvas = createView(TESTDATA("grid-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -748,7 +748,7 @@ void tst_qsgpositioners::test_grid_animated()
 
 void tst_qsgpositioners::test_grid_animated_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/grid-animated.qml", false);
+    QSGView *canvas = createView(TESTDATA("grid-animated.qml"), false);
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -833,7 +833,7 @@ void tst_qsgpositioners::test_grid_animated_rightToLeft()
 
 void tst_qsgpositioners::test_grid_zero_columns()
 {
-    QSGView *canvas = createView(SRCDIR "/data/gridzerocolumns.qml");
+    QSGView *canvas = createView(TESTDATA("gridzerocolumns.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -866,7 +866,7 @@ void tst_qsgpositioners::test_grid_zero_columns()
 
 void tst_qsgpositioners::test_propertychanges()
 {
-    QSGView *canvas = createView(SRCDIR "/data/propertychangestest.qml");
+    QSGView *canvas = createView(TESTDATA("propertychangestest.qml"));
 
     QSGGrid *grid = qobject_cast<QSGGrid*>(canvas->rootObject());
     QVERIFY(grid != 0);
@@ -925,7 +925,7 @@ void tst_qsgpositioners::test_propertychanges()
 
 void tst_qsgpositioners::test_repeater()
 {
-    QSGView *canvas = createView(SRCDIR "/data/repeatertest.qml");
+    QSGView *canvas = createView(TESTDATA("repeatertest.qml"));
 
     QSGRectangle *one = canvas->rootObject()->findChild<QSGRectangle*>("one");
     QVERIFY(one != 0);
@@ -948,7 +948,7 @@ void tst_qsgpositioners::test_repeater()
 
 void tst_qsgpositioners::test_flow()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flowtest.qml");
+    QSGView *canvas = createView(TESTDATA("flowtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -984,7 +984,7 @@ void tst_qsgpositioners::test_flow()
 
 void tst_qsgpositioners::test_flow_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flowtest.qml");
+    QSGView *canvas = createView(TESTDATA("flowtest.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", true);
 
@@ -1020,7 +1020,7 @@ void tst_qsgpositioners::test_flow_rightToLeft()
 
 void tst_qsgpositioners::test_flow_topToBottom()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flowtest-toptobottom.qml");
+    QSGView *canvas = createView(TESTDATA("flowtest-toptobottom.qml"));
 
     canvas->rootObject()->setProperty("testRightToLeft", false);
 
@@ -1073,7 +1073,7 @@ void tst_qsgpositioners::test_flow_topToBottom()
 
 void tst_qsgpositioners::test_flow_resize()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flowtest.qml");
+    QSGView *canvas = createView(TESTDATA("flowtest.qml"));
 
     QSGItem *root = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1107,7 +1107,7 @@ void tst_qsgpositioners::test_flow_resize()
 
 void tst_qsgpositioners::test_flow_resize_rightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flowtest.qml");
+    QSGView *canvas = createView(TESTDATA("flowtest.qml"));
 
     QSGItem *root = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1141,7 +1141,7 @@ void tst_qsgpositioners::test_flow_resize_rightToLeft()
 
 void tst_qsgpositioners::test_flow_implicit_resize()
 {
-    QSGView *canvas = createView(SRCDIR "/data/flow-testimplicitsize.qml");
+    QSGView *canvas = createView(TESTDATA("flow-testimplicitsize.qml"));
     QVERIFY(canvas->rootObject() != 0);
 
     QSGFlow *flow = canvas->rootObject()->findChild<QSGFlow*>("flow");
@@ -1284,10 +1284,10 @@ void tst_qsgpositioners::test_mirroring()
     objectNames << "one" << "two" << "three" << "four" << "five";
 
     foreach(const QString qmlFile, qmlFiles) {
-        QSGView *canvasA = createView(QString(SRCDIR) + "/data/" + qmlFile);
+        QSGView *canvasA = createView(TESTDATA(qmlFile));
         QSGItem *rootA = qobject_cast<QSGItem*>(canvasA->rootObject());
 
-        QSGView *canvasB = createView(QString(SRCDIR) + "/data/" + qmlFile);
+        QSGView *canvasB = createView(TESTDATA(qmlFile));
         QSGItem *rootB = qobject_cast<QSGItem*>(canvasB->rootObject());
 
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
@@ -1339,7 +1339,7 @@ void tst_qsgpositioners::test_mirroring()
 void tst_qsgpositioners::test_allInvisible()
 {
     //QTBUG-19361
-    QSGView *canvas = createView(SRCDIR "/data/allInvisible.qml");
+    QSGView *canvas = createView(TESTDATA("allInvisible.qml"));
 
     QSGItem *root = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(root);
@@ -1397,15 +1397,15 @@ void tst_qsgpositioners::test_attachedproperties_data()
 {
     QTest::addColumn<QString>("filename");
 
-    QTest::newRow("column") << SRCDIR "/data/attachedproperties-column.qml";
-    QTest::newRow("row") << SRCDIR "/data/attachedproperties-row.qml";
-    QTest::newRow("grid") << SRCDIR "/data/attachedproperties-grid.qml";
-    QTest::newRow("flow") << SRCDIR "/data/attachedproperties-flow.qml";
+    QTest::newRow("column") << TESTDATA("attachedproperties-column.qml");
+    QTest::newRow("row") << TESTDATA("attachedproperties-row.qml");
+    QTest::newRow("grid") << TESTDATA("attachedproperties-grid.qml");
+    QTest::newRow("flow") << TESTDATA("attachedproperties-flow.qml");
 }
 
 void tst_qsgpositioners::test_attachedproperties_dynamic()
 {
-    QSGView *canvas = createView(SRCDIR "/data/attachedproperties-dynamic.qml");
+    QSGView *canvas = createView(TESTDATA("attachedproperties-dynamic.qml"));
     QVERIFY(canvas->rootObject() != 0);
 
     QSGRow *row = canvas->rootObject()->findChild<QSGRow *>("pos");

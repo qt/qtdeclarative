@@ -50,11 +50,11 @@
 #include <QDeclarativeProperty>
 #include <QDeclarativeComponent>
 #include <QDeclarativeIncubator>
+#include "../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath("data/" + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)
@@ -95,7 +95,7 @@ private:
         QVERIFY(!component.isError()); \
         QVERIFY(component.errors().isEmpty()); \
     } else { \
-        QFile file(QLatin1String(SRCDIR) + QLatin1String("/data/") + QLatin1String(errorfile)); \
+        QFile file(TESTDATA(errorfile)); \
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text)); \
         QByteArray data = file.readAll(); \
         file.close(); \

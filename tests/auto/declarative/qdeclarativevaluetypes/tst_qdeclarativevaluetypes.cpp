@@ -44,6 +44,7 @@
 #include <QDeclarativeComponent>
 #include <QDebug>
 #include <private/qdeclarativevaluetype_p.h>
+#include "../shared/util.h"
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE
@@ -104,7 +105,7 @@ void tst_qdeclarativevaluetypes::initTestCase()
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 void tst_qdeclarativevaluetypes::point()

@@ -5,7 +5,9 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qdeclarativetranslation.cpp
 RESOURCES += data/translation.qrc
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

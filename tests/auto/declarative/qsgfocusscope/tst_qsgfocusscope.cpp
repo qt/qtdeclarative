@@ -47,8 +47,8 @@
 #include <private/qsgtextedit_p.h>
 #include <private/qsgtext_p.h>
 #include <QtDeclarative/private/qsgfocusscope_p.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
-#include <QtOpenGL/QGLShaderProgram>
 
 class tst_qsgfocusscope : public QObject
 {
@@ -107,7 +107,7 @@ T *tst_qsgfocusscope::findItem(QSGItem *parent, const QString &objectName)
 void tst_qsgfocusscope::basic()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/test.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("test.qml")));
 
     QSGFocusScope *item0 = findItem<QSGFocusScope>(view->rootObject(), QLatin1String("item0"));
     QSGRectangle *item1 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -149,7 +149,7 @@ void tst_qsgfocusscope::basic()
 void tst_qsgfocusscope::nested()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/test2.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("test2.qml")));
 
     QSGFocusScope *item1 = findItem<QSGFocusScope>(view->rootObject(), QLatin1String("item1"));
     QSGFocusScope *item2 = findItem<QSGFocusScope>(view->rootObject(), QLatin1String("item2"));
@@ -178,7 +178,7 @@ void tst_qsgfocusscope::nested()
 void tst_qsgfocusscope::noFocus()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/test4.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("test4.qml")));
 
     QSGRectangle *item0 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item0"));
     QSGRectangle *item1 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -216,7 +216,7 @@ void tst_qsgfocusscope::noFocus()
 void tst_qsgfocusscope::textEdit()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/test5.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("test5.qml")));
 
     QSGFocusScope *item0 = findItem<QSGFocusScope>(view->rootObject(), QLatin1String("item0"));
     QSGTextEdit *item1 = findItem<QSGTextEdit>(view->rootObject(), QLatin1String("item1"));
@@ -266,7 +266,7 @@ void tst_qsgfocusscope::textEdit()
 void tst_qsgfocusscope::forceFocus()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/forcefocus.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("forcefocus.qml")));
 
     QSGFocusScope *item0 = findItem<QSGFocusScope>(view->rootObject(), QLatin1String("item0"));
     QSGRectangle *item1 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item1"));
@@ -314,7 +314,7 @@ void tst_qsgfocusscope::forceFocus()
 void tst_qsgfocusscope::noParentFocus()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/chain.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("chain.qml")));
     QVERIFY(view->rootObject());
 
     view->show();
@@ -338,7 +338,7 @@ void tst_qsgfocusscope::noParentFocus()
 void tst_qsgfocusscope::signalEmission()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/signalEmission.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("signalEmission.qml")));
 
     QSGRectangle *item1 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item1"));
     QSGRectangle *item2 = findItem<QSGRectangle>(view->rootObject(), QLatin1String("item2"));
@@ -393,7 +393,7 @@ void tst_qsgfocusscope::signalEmission()
 void tst_qsgfocusscope::qtBug13380()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/qtBug13380.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("qtBug13380.qml")));
 
     view->show();
     QVERIFY(view->rootObject());
@@ -414,7 +414,7 @@ void tst_qsgfocusscope::qtBug13380()
 void tst_qsgfocusscope::forceActiveFocus()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/forceActiveFocus.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("forceActiveFocus.qml")));
 
     view->show();
     view->requestActivateWindow();
@@ -532,7 +532,7 @@ void tst_qsgfocusscope::forceActiveFocus()
 void tst_qsgfocusscope::canvasFocus()
 {
     QSGView *view = new QSGView;
-    view->setSource(QUrl::fromLocalFile(SRCDIR "/data/canvasFocus.qml"));
+    view->setSource(QUrl::fromLocalFile(TESTDATA("canvasFocus.qml")));
 
     QSGItem *rootObject = view->rootObject();
     QVERIFY(rootObject);

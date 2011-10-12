@@ -48,6 +48,7 @@
 #include <private/qsgrectangle_p.h>
 #include <math.h>
 #include <QtOpenGL/QGLShaderProgram>
+#include "../shared/util.h"
 
 class tst_qsgflipable : public QObject
 {
@@ -85,7 +86,7 @@ void tst_qsgflipable::cleanupTestCase()
 void tst_qsgflipable::create()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-flipable.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
     QSGFlipable *obj = qobject_cast<QSGFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -95,7 +96,7 @@ void tst_qsgflipable::create()
 void tst_qsgflipable::checkFrontAndBack()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-flipable.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
     QSGFlipable *obj = qobject_cast<QSGFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -107,7 +108,7 @@ void tst_qsgflipable::checkFrontAndBack()
 void tst_qsgflipable::setFrontAndBack()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-flipable.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-flipable.qml")));
     QSGFlipable *obj = qobject_cast<QSGFlipable*>(c.create());
 
     QVERIFY(obj != 0);
@@ -127,7 +128,7 @@ void tst_qsgflipable::setFrontAndBack()
 void tst_qsgflipable::QTBUG_9161_crash()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/crash.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("crash.qml")));
     QSGItem *root = canvas->rootObject();
     QVERIFY(root != 0);
     canvas->show();
@@ -137,7 +138,7 @@ void tst_qsgflipable::QTBUG_9161_crash()
 void tst_qsgflipable::QTBUG_8474_qgv_abort()
 {
     QSGView *canvas = new QSGView;
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/flipable-abort.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("flipable-abort.qml")));
     QSGItem *root = canvas->rootObject();
     QVERIFY(root != 0);
     canvas->show();

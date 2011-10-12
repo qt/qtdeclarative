@@ -53,9 +53,9 @@
 #include <private/qapplication_p.h>
 #include <limits.h>
 #include <QtGui/QMouseEvent>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include "testhttpserver.h"
-#include <QtOpenGL/QGLShaderProgram>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
@@ -499,17 +499,17 @@ void tst_qsgtext::alignments_data()
     QTest::addColumn<int>("vAlign");
     QTest::addColumn<QString>("expectfile");
 
-    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << SRCDIR "/data/alignments_lt.png";
-    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << SRCDIR "/data/alignments_rt.png";
-    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << SRCDIR "/data/alignments_ct.png";
+    QTest::newRow("LT") << int(Qt::AlignLeft) << int(Qt::AlignTop) << TESTDATA("alignments_lt.png");
+    QTest::newRow("RT") << int(Qt::AlignRight) << int(Qt::AlignTop) << TESTDATA("alignments_rt.png");
+    QTest::newRow("CT") << int(Qt::AlignHCenter) << int(Qt::AlignTop) << TESTDATA("alignments_ct.png");
 
-    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_lb.png";
-    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_rb.png";
-    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << SRCDIR "/data/alignments_cb.png";
+    QTest::newRow("LB") << int(Qt::AlignLeft) << int(Qt::AlignBottom) << TESTDATA("alignments_lb.png");
+    QTest::newRow("RB") << int(Qt::AlignRight) << int(Qt::AlignBottom) << TESTDATA("alignments_rb.png");
+    QTest::newRow("CB") << int(Qt::AlignHCenter) << int(Qt::AlignBottom) << TESTDATA("alignments_cb.png");
 
-    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_lc.png";
-    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_rc.png";
-    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << SRCDIR "/data/alignments_cc.png";
+    QTest::newRow("LC") << int(Qt::AlignLeft) << int(Qt::AlignVCenter) << TESTDATA("alignments_lc.png");
+    QTest::newRow("RC") << int(Qt::AlignRight) << int(Qt::AlignVCenter) << TESTDATA("alignments_rc.png");
+    QTest::newRow("CC") << int(Qt::AlignHCenter) << int(Qt::AlignVCenter) << TESTDATA("alignments_cc.png");
 }
 
 
@@ -529,7 +529,7 @@ void tst_qsgtext::alignments()
     QApplication::setFont(fn);
 #endif
 
-    QSGView *canvas = createView(SRCDIR "/data/alignments.qml");
+    QSGView *canvas = createView(TESTDATA("alignments.qml"));
 
     canvas->show();
     canvas->requestActivateWindow();
@@ -598,7 +598,7 @@ void tst_qsgtext::horizontalAlignment()
 
 void tst_qsgtext::horizontalAlignment_RightToLeft()
 {
-    QSGView *canvas = createView(SRCDIR "/data/horizontalAlignment_RightToLeft.qml");
+    QSGView *canvas = createView(TESTDATA("horizontalAlignment_RightToLeft.qml"));
     QSGText *text = canvas->rootObject()->findChild<QSGText*>("text");
     QVERIFY(text != 0);
     canvas->show();
@@ -1268,12 +1268,12 @@ void tst_qsgtext::embeddedImages_data()
 {
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
-    QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocal.qml") << "";
-    QTest::newRow("local-error") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocalError.qml")
-        << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + QUrl::fromLocalFile(SRCDIR "/data/http/notexists.png").toString();
-    QTest::newRow("remote") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemote.qml") << "";
-    QTest::newRow("remote-error") << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemoteError.qml")
-        << QUrl::fromLocalFile(SRCDIR "/data/embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
+    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocal.qml")) << "";
+    QTest::newRow("local-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml"))
+        << QUrl::fromLocalFile(TESTDATA("embeddedImagesLocalError.qml")).toString()+":3:1: QML Text: Cannot open: " + QUrl::fromLocalFile(TESTDATA("http/notexists.png")).toString();
+    QTest::newRow("remote") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemote.qml")) << "";
+    QTest::newRow("remote-error") << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml"))
+        << QUrl::fromLocalFile(TESTDATA("embeddedImagesRemoteError.qml")).toString()+":3:1: QML Text: Error downloading http://127.0.0.1:14453/notexists.png - server replied: Not found";
 }
 
 void tst_qsgtext::embeddedImages()
@@ -1284,7 +1284,7 @@ void tst_qsgtext::embeddedImages()
     QFETCH(QString, error);
 
     TestHTTPServer server(14453);
-    server.serveDirectory(SRCDIR "/data/http");
+    server.serveDirectory(TESTDATA("http"));
 
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
@@ -1296,7 +1296,7 @@ void tst_qsgtext::embeddedImages()
 
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
-    QPixmap pm(SRCDIR "/data/http/exists.png");
+    QPixmap pm(TESTDATA("http/exists.png"));
     if (error.isEmpty()) {
         QCOMPARE(textObject->width(), double(pm.width()));
         QCOMPARE(textObject->height(), double(pm.height()));
@@ -1311,7 +1311,7 @@ void tst_qsgtext::embeddedImages()
 
 void tst_qsgtext::lineCount()
 {
-    QSGView *canvas = createView(SRCDIR "/data/lineCount.qml");
+    QSGView *canvas = createView(TESTDATA("lineCount.qml"));
 
     QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
     QVERIFY(myText != 0);
@@ -1340,7 +1340,7 @@ void tst_qsgtext::lineCount()
 
 void tst_qsgtext::lineHeight()
 {
-    QSGView *canvas = createView(SRCDIR "/data/lineHeight.qml");
+    QSGView *canvas = createView(TESTDATA("lineHeight.qml"));
 
     QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
     QVERIFY(myText != 0);
@@ -1405,7 +1405,7 @@ void tst_qsgtext::implicitSize()
 
 void tst_qsgtext::lineLaidOut()
 {
-    QSGView *canvas = createView(SRCDIR "/data/lineLayout.qml");
+    QSGView *canvas = createView(TESTDATA("lineLayout.qml"));
 
     QSGText *myText = canvas->rootObject()->findChild<QSGText*>("myText");
     QVERIFY(myText != 0);

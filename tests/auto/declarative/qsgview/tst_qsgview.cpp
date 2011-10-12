@@ -44,6 +44,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qsgitem.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
@@ -73,7 +74,7 @@ void tst_QSGView::resizemodeitem()
     QVERIFY(canvas);
     canvas->setResizeMode(QSGView::SizeRootObjectToView);
     QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/resizemodeitem.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
     QSGItem* item = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
@@ -87,13 +88,9 @@ void tst_QSGView::resizemodeitem()
     QCOMPARE(canvas->size(), canvas->sizeHint());
     QCOMPARE(canvas->size(), canvas->initialSize());
 
-    qDebug() << window.size();
-    qDebug() << "canvas size:" << canvas->size();
     // size update from view
     canvas->resize(QSize(80,100));
     QTest::qWait(50);
-    qDebug() << window.size();
-    qDebug() << "canvas size:" << canvas->size();
 
     QCOMPARE(item->width(), 80.0);
     QCOMPARE(item->height(), 100.0);
@@ -124,7 +121,7 @@ void tst_QSGView::resizemodeitem()
     canvas = new QSGView(&window);
     QVERIFY(canvas);
     canvas->setResizeMode(QSGView::SizeViewToRootObject);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/resizemodeitem.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
     item = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(item);
     window.show();
@@ -171,7 +168,7 @@ void tst_QSGView::resizemodeitem()
     canvas->resize(300, 300);
     canvas->setResizeMode(QSGView::SizeRootObjectToView);
     QCOMPARE(QSize(0,0), canvas->initialSize());
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/resizemodeitem.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizemodeitem.qml")));
     canvas->resize(300, 300);
     item = qobject_cast<QSGItem*>(canvas->rootObject());
     QVERIFY(item);
@@ -199,7 +196,7 @@ void tst_QSGView::errors()
     QSGView *canvas = new QSGView;
     QVERIFY(canvas);
     QtMsgHandler old = qInstallMsgHandler(silentErrorsMsgHandler);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/error1.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("error1.qml")));
     qInstallMsgHandler(old);
     QVERIFY(canvas->status() == QSGView::Error);
     QVERIFY(canvas->errors().count() == 1);

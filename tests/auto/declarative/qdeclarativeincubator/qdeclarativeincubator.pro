@@ -6,7 +6,9 @@ SOURCES += tst_qdeclarativeincubator.cpp \
            testtypes.cpp
 HEADERS += testtypes.h
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

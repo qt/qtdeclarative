@@ -46,6 +46,7 @@
 #include <QtDeclarative/qsgview.h>
 #include <private/qsgrectangle_p.h>
 #include <private/qsgitem_p.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 class tst_QSGItem : public QObject
@@ -211,7 +212,7 @@ void tst_QSGItem::keys()
     canvas->rootContext()->setContextProperty("enableKeyHanding", QVariant(true));
     canvas->rootContext()->setContextProperty("forwardeeVisible", QVariant(true));
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keystest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keystest.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -332,7 +333,7 @@ void tst_QSGItem::keysProcessingOrder()
     KeysTestObject *testObject = new KeysTestObject;
     canvas->rootContext()->setContextProperty("keysTestObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keyspriority.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keyspriority.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -403,7 +404,7 @@ bool anchorsMirrored(QSGItem *rootItem, const char * itemString)
 void tst_QSGItem::layoutMirroring()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/layoutmirroring.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("layoutmirroring.qml")));
     canvas->show();
 
     QSGItem *rootItem = qobject_cast<QSGItem*>(canvas->rootObject());
@@ -544,7 +545,7 @@ void tst_QSGItem::keyNavigation()
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keynavigationtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -624,7 +625,7 @@ void tst_QSGItem::keyNavigation_RightToLeft()
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keynavigationtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -677,7 +678,7 @@ void tst_QSGItem::keyNavigation_skipNotVisible()
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keynavigationtest.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -755,7 +756,7 @@ void tst_QSGItem::keyNavigation_implicitSetting()
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/keynavigationtest_implicit.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest_implicit.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -941,7 +942,7 @@ void tst_QSGItem::mapCoordinates()
 
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(300, 300);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mapCoordinates.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -970,8 +971,8 @@ void tst_QSGItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QSGItem*>(a)->mapFromScene(QPointF(x, y)));
 
-    QString warning1 = QUrl::fromLocalFile(SRCDIR "/data/mapCoordinates.qml").toString() + ":7:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
-    QString warning2 = QUrl::fromLocalFile(SRCDIR "/data/mapCoordinates.qml").toString() + ":7:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning1 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":7:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning2 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":7:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
@@ -1022,7 +1023,7 @@ void tst_QSGItem::transforms()
 
 void tst_QSGItem::childrenProperty()
 {
-    QDeclarativeComponent component(&engine, SRCDIR "/data/childrenProperty.qml");
+    QDeclarativeComponent component(&engine, TESTDATA("childrenProperty.qml"));
     
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -1037,7 +1038,7 @@ void tst_QSGItem::childrenProperty()
 
 void tst_QSGItem::resourcesProperty()
 {
-    QDeclarativeComponent component(&engine, SRCDIR "/data/resourcesProperty.qml");
+    QDeclarativeComponent component(&engine, TESTDATA("resourcesProperty.qml"));
     
     QObject *o = component.create();
     QVERIFY(o != 0);
@@ -1054,7 +1055,7 @@ void tst_QSGItem::propertyChanges()
 {
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/propertychanges.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
     canvas->show();
 
     QApplication::setActiveWindow(canvas);
@@ -1137,7 +1138,7 @@ void tst_QSGItem::childrenRect()
 {
     QSGView *canvas = new QSGView(0);
     canvas->setFixedSize(240,320);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/childrenRect.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRect.qml")));
     canvas->show();
 
     QSGItem *o = canvas->rootObject();
@@ -1165,7 +1166,7 @@ void tst_QSGItem::childrenRect()
 void tst_QSGItem::childrenRectBug()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/childrenRectBug.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug.qml")));
     canvas->show();
 
     QSGItem *o = canvas->rootObject();
@@ -1181,7 +1182,7 @@ void tst_QSGItem::childrenRectBug()
 void tst_QSGItem::childrenRectBug2()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/childrenRectBug2.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug2.qml")));
     canvas->show();
 
     QSGRectangle *rect = qobject_cast<QSGRectangle*>(canvas->rootObject());
@@ -1204,7 +1205,7 @@ void tst_QSGItem::childrenRectBug2()
 void tst_QSGItem::childrenRectBug3()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/childrenRectBug3.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRectBug3.qml")));
     canvas->show();
 
     //don't crash on delete
@@ -1215,7 +1216,7 @@ void tst_QSGItem::childrenRectBug3()
 void tst_QSGItem::transformCrash()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/transformCrash.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("transformCrash.qml")));
     canvas->show();
 
     delete canvas;
@@ -1224,7 +1225,7 @@ void tst_QSGItem::transformCrash()
 void tst_QSGItem::implicitSize()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/implicitsize.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("implicitsize.qml")));
     canvas->show();
 
     QSGItem *item = qobject_cast<QSGItem*>(canvas->rootObject());
@@ -1252,7 +1253,7 @@ void tst_QSGItem::implicitSize()
 
 void tst_QSGItem::qtbug_16871()
 {
-    QDeclarativeComponent component(&engine, SRCDIR "/data/qtbug_16871.qml");
+    QDeclarativeComponent component(&engine, TESTDATA("qtbug_16871.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
     delete o;

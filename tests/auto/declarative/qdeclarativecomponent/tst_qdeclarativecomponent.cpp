@@ -47,12 +47,8 @@
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 #include <qcolor.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
-
-#ifdef Q_OS_SYMBIAN
-// In Symbian OS test data is located in applications private dir
-#define SRCDIR "."
-#endif
 
 class MyIC : public QObject, public QDeclarativeIncubationController
 {
@@ -113,7 +109,7 @@ void tst_qdeclarativecomponent::loadEmptyUrl()
 
 void tst_qdeclarativecomponent::qmlIncubateObject()
 {
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/incubateObject.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("incubateObject.qml")));
     QObject *object = component.create();
     QVERIFY(object != 0);
     QCOMPARE(object->property("test1").toBool(), true);
@@ -127,7 +123,7 @@ void tst_qdeclarativecomponent::qmlIncubateObject()
 void tst_qdeclarativecomponent::qmlCreateObject()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/createObject.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObject.qml")));
     QObject *object = component.create();
     QVERIFY(object != 0);
 
@@ -144,7 +140,7 @@ void tst_qdeclarativecomponent::qmlCreateObject()
 void tst_qdeclarativecomponent::qmlCreateObjectWithProperties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/createObjectWithScript.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("createObjectWithScript.qml")));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
     QVERIFY(object != 0);

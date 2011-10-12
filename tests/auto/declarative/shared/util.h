@@ -43,6 +43,7 @@
 #define QDECLARATIVETESTUTILS_H
 
 #include <QtCore/qdir.h>
+#include <QtCore/qcoreapplication.h>
 
 namespace QDeclarativeTestUtils
 {

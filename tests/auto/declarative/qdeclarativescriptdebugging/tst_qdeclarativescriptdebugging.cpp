@@ -46,6 +46,7 @@
 #include <QtCore/QDir>
 #include <QtScript/QScriptEngineAgent>
 #include <private/qdeclarativeengine_p.h>
+#include "../shared/util.h"
 
 class MyTestObject : public QObject {
     Q_OBJECT
@@ -91,8 +92,7 @@ Static QML language issues are covered in qmllanguage
 */
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath("data/" + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)

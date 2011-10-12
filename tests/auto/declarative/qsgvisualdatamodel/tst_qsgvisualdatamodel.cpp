@@ -38,6 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
@@ -54,7 +55,6 @@
 #include <private/qdeclarativechangeset_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <math.h>
-#include <QtOpenGL/QGLShaderProgram>
 
 template <typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
@@ -239,7 +239,7 @@ tst_qsgvisualdatamodel::tst_qsgvisualdatamodel()
 void tst_qsgvisualdatamodel::rootIndex()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/visualdatamodel.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("visualdatamodel.qml")));
 
     QStandardItemModel model;
     initStandardTreeModel(&model);
@@ -272,7 +272,7 @@ void tst_qsgvisualdatamodel::updateLayout()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/datalist.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -312,7 +312,7 @@ void tst_qsgvisualdatamodel::childChanged()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/datalist.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -371,7 +371,7 @@ void tst_qsgvisualdatamodel::objectListModel()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/objectlist.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("objectlist.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -399,7 +399,7 @@ void tst_qsgvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/singlerole1.qml"));
+        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole1.qml")));
 
         QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -421,7 +421,7 @@ void tst_qsgvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/singlerole2.qml"));
+        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole2.qml")));
 
         QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -443,7 +443,7 @@ void tst_qsgvisualdatamodel::singleRole()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/singlerole2.qml"));
+        view.setSource(QUrl::fromLocalFile(TESTDATA("singlerole2.qml")));
 
         QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -469,7 +469,7 @@ void tst_qsgvisualdatamodel::modelProperties()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", &model);
 
-        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/modelproperties.qml"));
+        view.setSource(QUrl::fromLocalFile(TESTDATA("modelproperties.qml")));
 
         QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -502,7 +502,7 @@ void tst_qsgvisualdatamodel::modelProperties()
         QDeclarativeContext *ctxt = view.rootContext();
         ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 
-        view.setSource(QUrl::fromLocalFile(SRCDIR "/data/modelproperties.qml"));
+        view.setSource(QUrl::fromLocalFile(TESTDATA("modelproperties.qml")));
 
         QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
         QVERIFY(listview != 0);
@@ -531,7 +531,7 @@ void tst_qsgvisualdatamodel::modelProperties()
 
         view.rootContext()->setContextProperty("myModel", &model);
 
-        QUrl source(QUrl::fromLocalFile(SRCDIR "/data/modelproperties2.qml"));
+        QUrl source(QUrl::fromLocalFile(TESTDATA("modelproperties2.qml")));
 
         //3 items, 3 warnings each
         QTest::ignoreMessage(QtWarningMsg, source.toString().toLatin1() + ":13: ReferenceError: Can't find variable: modelData");
@@ -577,7 +577,7 @@ void tst_qsgvisualdatamodel::noDelegate()
 
     view.rootContext()->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/datalist.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("datalist.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -603,7 +603,7 @@ void tst_qsgvisualdatamodel::qaimRowsMoved()
     QFETCH(int, expectCount);
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/visualdatamodel.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("visualdatamodel.qml")));
 
     SingleRoleModel model;
     model.list.clear();
@@ -692,7 +692,7 @@ void tst_qsgvisualdatamodel::remove()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/groups.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -789,7 +789,7 @@ void tst_qsgvisualdatamodel::move()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/groups.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -964,7 +964,7 @@ void tst_qsgvisualdatamodel::groups()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/groups.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -1282,7 +1282,7 @@ void tst_qsgvisualdatamodel::get()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/groups.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("groups.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);
@@ -1441,7 +1441,7 @@ void tst_qsgvisualdatamodel::create()
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 
-    view.setSource(QUrl::fromLocalFile(SRCDIR "/data/create.qml"));
+    view.setSource(QUrl::fromLocalFile(TESTDATA("create.qml")));
 
     QSGListView *listview = qobject_cast<QSGListView*>(view.rootObject());
     QVERIFY(listview != 0);

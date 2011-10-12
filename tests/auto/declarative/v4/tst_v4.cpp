@@ -48,12 +48,12 @@
 
 #include <private/qv4compiler_p.h>
 
+#include "../shared/util.h"
 #include "testtypes.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath("data/" + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)

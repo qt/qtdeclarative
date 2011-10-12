@@ -7,7 +7,9 @@ HEADERS += ../shared/testhttpserver.h
 SOURCES += tst_qsgloader.cpp \
            ../shared/testhttpserver.cpp
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

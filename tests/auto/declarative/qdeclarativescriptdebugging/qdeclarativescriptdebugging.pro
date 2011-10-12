@@ -5,10 +5,9 @@ macx:CONFIG -= app_bundle
 SOURCES += tst_qdeclarativescriptdebugging.cpp
 INCLUDEPATH += ../shared
 
-# QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
-# LIBS += -lgcov
-
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

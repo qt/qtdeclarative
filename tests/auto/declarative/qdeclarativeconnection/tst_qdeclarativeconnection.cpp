@@ -43,6 +43,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativeconnections_p.h>
 #include <private/qsgitem_p.h>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativescriptstring.h>
 
@@ -75,7 +76,7 @@ tst_qdeclarativeconnection::tst_qdeclarativeconnection()
 void tst_qdeclarativeconnection::defaultValues()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-connection3.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-connection3.qml")));
     QDeclarativeConnections *item = qobject_cast<QDeclarativeConnections*>(c.create());
 
     QVERIFY(item != 0);
@@ -87,7 +88,7 @@ void tst_qdeclarativeconnection::defaultValues()
 void tst_qdeclarativeconnection::properties()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-connection2.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-connection2.qml")));
     QDeclarativeConnections *item = qobject_cast<QDeclarativeConnections*>(c.create());
 
     QVERIFY(item != 0);
@@ -101,7 +102,7 @@ void tst_qdeclarativeconnection::properties()
 void tst_qdeclarativeconnection::connection()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/test-connection.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-connection.qml")));
     QSGItem *item = qobject_cast<QSGItem*>(c.create());
 
     QVERIFY(item != 0);
@@ -118,7 +119,7 @@ void tst_qdeclarativeconnection::connection()
 void tst_qdeclarativeconnection::trimming()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/trimming.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("trimming.qml")));
     QSGItem *item = qobject_cast<QSGItem*>(c.create());
 
     QVERIFY(item != 0);
@@ -139,7 +140,7 @@ void tst_qdeclarativeconnection::trimming()
 void tst_qdeclarativeconnection::targetChanged()
 {
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/connection-targetchange.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("connection-targetchange.qml")));
     QSGItem *item = qobject_cast<QSGItem*>(c.create());
     QVERIFY(item != 0);
 
@@ -176,7 +177,7 @@ void tst_qdeclarativeconnection::unknownSignals()
     QFETCH(QString, file);
     QFETCH(QString, error);
 
-    QUrl url = QUrl::fromLocalFile(SRCDIR "/data/" + file);
+    QUrl url = QUrl::fromLocalFile(TESTDATA(file));
     if (!error.isEmpty()) {
         QTest::ignoreMessage(QtWarningMsg, (url.toString() + error).toLatin1());
     } else {
@@ -214,7 +215,7 @@ void tst_qdeclarativeconnection::errors()
     QFETCH(QString, file);
     QFETCH(QString, error);
 
-    QUrl url = QUrl::fromLocalFile(SRCDIR "/data/" + file);
+    QUrl url = QUrl::fromLocalFile(TESTDATA(file));
 
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, url);
@@ -264,7 +265,7 @@ static QObject *module_api_factory(QDeclarativeEngine *engine, QJSEngine *script
 void tst_qdeclarativeconnection::moduleApiTarget()
 {
     qmlRegisterModuleApi("MyTestModuleApi", 1, 0, module_api_factory);
-    QDeclarativeComponent component(&engine, QUrl(SRCDIR "/data/moduleapi-target.qml"));
+    QDeclarativeComponent component(&engine, QUrl::fromLocalFile(TESTDATA("moduleapi-target.qml")));
     QObject *object = component.create();
     QVERIFY(object != 0);
 

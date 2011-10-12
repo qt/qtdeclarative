@@ -53,6 +53,7 @@
 #include <private/qdeclarativevmemetaobject_p.h>
 #include "testtypes.h"
 #include "testhttpserver.h"
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 /*
@@ -63,8 +64,7 @@ Static QML language issues are covered in qmllanguage
 */
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath("data/" + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 inline QUrl TEST_FILE(const char *filename)
@@ -4380,7 +4380,7 @@ void tst_qdeclarativeecmascript::include()
     {
     TestHTTPServer server(8111);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeComponent component(&engine, TEST_FILE("include_remote.qml"));
     QObject *o = component.create();
@@ -4408,7 +4408,7 @@ void tst_qdeclarativeecmascript::include()
     {
     TestHTTPServer server(8111);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeComponent component(&engine, TEST_FILE("include_remote_missing.qml"));
     QObject *o = component.create();

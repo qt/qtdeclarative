@@ -8,7 +8,9 @@ INCLUDEPATH += ../shared/
 HEADERS += ../shared/testhttpserver.h
 SOURCES += ../shared/testhttpserver.cpp
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += insignificant_test parallel_test
 

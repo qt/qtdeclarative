@@ -7,7 +7,9 @@ HEADERS += testtypes.h
 SOURCES += tst_qdeclarativevaluetypes.cpp \
            testtypes.cpp
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

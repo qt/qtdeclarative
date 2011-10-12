@@ -3,10 +3,9 @@ TARGET = tst_qdeclarativeqt
 SOURCES += tst_qdeclarativeqt.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
-
-# QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
-# LIBS += -lgcov
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

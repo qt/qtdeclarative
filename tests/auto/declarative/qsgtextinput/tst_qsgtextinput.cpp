@@ -40,6 +40,7 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QFile>
@@ -68,7 +69,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
     // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = SRCDIR "/data";
+    QString persistent_dir = TESTDATA("");
     QString arch = "unknown-architecture"; // QTest needs to help with this.
 
     QString expectfile = persistent_dir + QDir::separator() + filebasename + "-" + arch + ".png";
@@ -956,7 +957,7 @@ void tst_qsgtextinput::moveCursorSelectionSequence()
 
 void tst_qsgtextinput::dragMouseSelection()
 {
-    QString qmlfile = SRCDIR "/data/mouseselection_true.qml";
+    QString qmlfile = TESTDATA("mouseselection_true.qml");
 
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1001,9 +1002,9 @@ void tst_qsgtextinput::mouseSelectionMode_data()
     QTest::addColumn<bool>("selectWords");
 
     // import installed
-    QTest::newRow("SelectWords") << SRCDIR "/data/mouseselectionmode_words.qml" << true;
-    QTest::newRow("SelectCharacters") << SRCDIR "/data/mouseselectionmode_characters.qml" << false;
-    QTest::newRow("default") << SRCDIR "/data/mouseselectionmode_default.qml" << false;
+    QTest::newRow("SelectWords") << TESTDATA("mouseselectionmode_words.qml") << true;
+    QTest::newRow("SelectCharacters") << TESTDATA("mouseselectionmode_characters.qml") << false;
+    QTest::newRow("default") << TESTDATA("mouseselectionmode_default.qml") << false;
 }
 
 void tst_qsgtextinput::mouseSelectionMode()
@@ -1057,7 +1058,7 @@ void tst_qsgtextinput::horizontalAlignment()
     QFETCH(int, hAlign);
     QFETCH(QString, expectfile);
 
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment.qml")));
 
     canvas.show();
     canvas.requestActivateWindow();
@@ -1077,7 +1078,7 @@ void tst_qsgtextinput::horizontalAlignment()
 
 void tst_qsgtextinput::horizontalAlignment_RightToLeft()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment_RightToLeft.qml")));
     QSGTextInput *textInput = canvas.rootObject()->findChild<QSGTextInput*>("text");
     QVERIFY(textInput != 0);
     canvas.show();
@@ -1189,7 +1190,7 @@ void tst_qsgtextinput::horizontalAlignment_RightToLeft()
 
 void tst_qsgtextinput::positionAt()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1313,7 +1314,7 @@ void tst_qsgtextinput::positionAt()
 
 void tst_qsgtextinput::maxLength()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/maxLength.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("maxLength.qml")));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1344,7 +1345,7 @@ void tst_qsgtextinput::masks()
 {
     //Not a comprehensive test of the possible masks, that's done elsewhere (QLineEdit)
     //QString componentStr = "import QtQuick 2.0\nTextInput {  inputMask: 'HHHHhhhh'; }";
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/masks.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("masks.qml")));
     canvas.show();
     canvas.requestActivateWindow();
     QVERIFY(canvas.rootObject() != 0);
@@ -1369,7 +1370,7 @@ void tst_qsgtextinput::validators()
     // so you may need to run their tests first. All validators are checked
     // here to ensure that their exposure to QML is working.
 
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/validators.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("validators.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1473,7 +1474,7 @@ void tst_qsgtextinput::validators()
 
 void tst_qsgtextinput::inputMethods()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/inputmethods.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("inputmethods.qml")));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1521,7 +1522,7 @@ the extent of the text, then they should ignore the keys.
 */
 void tst_qsgtextinput::navigation()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1560,7 +1561,7 @@ void tst_qsgtextinput::navigation()
 
 void tst_qsgtextinput::navigation_RTL()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1732,7 +1733,7 @@ void tst_qsgtextinput::passwordCharacter()
 
 void tst_qsgtextinput::cursorDelegate()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorTest.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("cursorTest.qml")));
     view.show();
     view.requestActivateWindow();
     QSGTextInput *textInputObject = view.rootObject()->findChild<QSGTextInput*>("textInputObject");
@@ -1759,7 +1760,7 @@ void tst_qsgtextinput::cursorDelegate()
 
 void tst_qsgtextinput::cursorVisible()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorVisible.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("cursorVisible.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -1877,7 +1878,7 @@ void tst_qsgtextinput::cursorRectangle()
 
 void tst_qsgtextinput::readOnly()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/readOnly.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("readOnly.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1904,7 +1905,7 @@ void tst_qsgtextinput::readOnly()
 
 void tst_qsgtextinput::echoMode()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/echoMode.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("echoMode.qml")));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1974,7 +1975,7 @@ void tst_qsgtextinput::echoMode()
 #ifdef QT_GUI_PASSWORD_ECHO_DELAY
 void tst_qdeclarativetextinput::passwordEchoDelay()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/echoMode.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("echoMode.qml")));
     canvas.show();
     canvas.setFocus();
     QGuiApplication::setActiveWindow(&canvas);
@@ -2083,7 +2084,7 @@ public:
 
 void tst_qsgtextinput::openInputPanel()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/openInputPanel.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2222,7 +2223,7 @@ void tst_qsgtextinput::focusOutClearSelection()
 
 void tst_qsgtextinput::geometrySignals()
 {
-    QDeclarativeComponent component(&engine, SRCDIR "/data/geometrySignals.qml");
+    QDeclarativeComponent component(&engine, TESTDATA("geometrySignals.qml"));
     QObject *o = component.create();
     QVERIFY(o);
     QCOMPARE(o->property("bindingWidth").toInt(), 400);
@@ -2281,7 +2282,7 @@ void tst_qsgtextinput::preeditAutoScroll()
 #else
     QString preeditText = "califragisiticexpialidocious!";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/preeditAutoScroll.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("preeditAutoScroll.qml")));
     MyInputContext ic;
     // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
     // and QWidget won't allow an input context to be set when the flag is not set.
@@ -2372,7 +2373,7 @@ void tst_qsgtextinput::preeditMicroFocus()
 #else
     QString preeditText = "super";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
     MyInputContext ic;
     // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
     // and QWidget won't allow an input context to be set when the flag is not set.
@@ -2433,7 +2434,7 @@ void tst_qsgtextinput::inputContextMouseHandler()
 #else
     QString text = "supercalifragisiticexpialidocious!";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
     MyInputContext ic;
     // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has active focus
     // and QWidget won't allow an input context to be set when the flag is not set.
@@ -2550,7 +2551,7 @@ void tst_qsgtextinput::inputMethodComposing()
 {
     QString text = "supercalifragisiticexpialidocious!";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2583,7 +2584,7 @@ void tst_qsgtextinput::inputMethodComposing()
 
 void tst_qsgtextinput::cursorRectangleSize()
 {
-    QSGView *canvas = new QSGView(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
+    QSGView *canvas = new QSGView(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
     QVERIFY(canvas->rootObject() != 0);
     canvas->show();
     canvas->requestActivateWindow();
@@ -2607,7 +2608,7 @@ void tst_qsgtextinput::cursorRectangleSize()
 
 void tst_qsgtextinput::tripleClickSelectsAll()
 {
-    QString qmlfile = SRCDIR "/data/positionAt.qml";
+    QString qmlfile = TESTDATA("positionAt.qml");
     QSGView view(QUrl::fromLocalFile(qmlfile));
     view.show();
     view.requestActivateWindow();

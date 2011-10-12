@@ -4,7 +4,9 @@ HEADERS += ../shared/testhttpserver.h
 SOURCES += tst_qsganimatedimage.cpp ../shared/testhttpserver.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

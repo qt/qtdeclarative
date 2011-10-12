@@ -56,6 +56,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QImageReader>
 
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 #include "../shared/testhttpserver.h"
 
@@ -127,13 +128,13 @@ void tst_qsgimage::imageSource_data()
     QTest::addColumn<bool>("cache");
     QTest::addColumn<QString>("error");
 
-    QTest::newRow("local") << QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() << 120.0 << 120.0 << false << false << true << "";
-    QTest::newRow("local no cache") << QUrl::fromLocalFile(SRCDIR "/data/colors.png").toString() << 120.0 << 120.0 << false << false << false << "";
-    QTest::newRow("local async") << QUrl::fromLocalFile(SRCDIR "/data/colors1.png").toString() << 120.0 << 120.0 << false << true << true << "";
-    QTest::newRow("local not found") << QUrl::fromLocalFile(SRCDIR "/data/no-such-file.png").toString() << 0.0 << 0.0 << false
-        << false << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(SRCDIR "/data/no-such-file.png").toString();
-    QTest::newRow("local async not found") << QUrl::fromLocalFile(SRCDIR "/data/no-such-file-1.png").toString() << 0.0 << 0.0 << false
-        << true << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(SRCDIR "/data/no-such-file-1.png").toString();
+    QTest::newRow("local") << QUrl::fromLocalFile(TESTDATA("colors.png")).toString() << 120.0 << 120.0 << false << false << true << "";
+    QTest::newRow("local no cache") << QUrl::fromLocalFile(TESTDATA("colors.png")).toString() << 120.0 << 120.0 << false << false << false << "";
+    QTest::newRow("local async") << QUrl::fromLocalFile(TESTDATA("colors1.png")).toString() << 120.0 << 120.0 << false << true << true << "";
+    QTest::newRow("local not found") << QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString() << 0.0 << 0.0 << false
+        << false << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(TESTDATA("no-such-file.png")).toString();
+    QTest::newRow("local async not found") << QUrl::fromLocalFile(TESTDATA("no-such-file-1.png")).toString() << 0.0 << 0.0 << false
+        << true << true << "file::2:1: QML Image: Cannot open: " + QUrl::fromLocalFile(TESTDATA("no-such-file-1.png")).toString();
     QTest::newRow("remote") << SERVER_ADDR "/colors.png" << 120.0 << 120.0 << true << false << true << "";
     QTest::newRow("remote redirected") << SERVER_ADDR "/oldcolors.png" << 120.0 << 120.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svg"))
@@ -157,7 +158,7 @@ void tst_qsgimage::imageSource()
     TestHTTPServer server(SERVER_PORT);
     if (remote) {
         QVERIFY(server.isValid());
-        server.serveDirectory(SRCDIR "/data");
+        server.serveDirectory(TESTDATA(""));
         server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
     }
 
@@ -204,7 +205,7 @@ void tst_qsgimage::clearSource()
 {
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.png")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -226,7 +227,7 @@ void tst_qsgimage::clearSource()
 
 void tst_qsgimage::resized()
 {
-    QString componentStr = "import QtQuick 2.0\nImage { source: \"" SRCDIR "/data/colors.png\"; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + TESTDATA("colors.png") + "\"; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -243,14 +244,14 @@ void tst_qsgimage::preserveAspectRatio()
     QSGView *canvas = new QSGView(0);
     canvas->show();
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/aspectratio.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("aspectratio.qml")));
     QSGImage *image = qobject_cast<QSGImage*>(canvas->rootObject());
     QVERIFY(image != 0);
     image->setWidth(80.0);
     QCOMPARE(image->width(), 80.);
     QCOMPARE(image->height(), 80.);
 
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/aspectratio.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("aspectratio.qml")));
     image = qobject_cast<QSGImage*>(canvas->rootObject());
     image->setHeight(60.0);
     QVERIFY(image != 0);
@@ -261,7 +262,7 @@ void tst_qsgimage::preserveAspectRatio()
 
 void tst_qsgimage::smooth()
 {
-    QString componentStr = "import QtQuick 2.0\nImage { source: \"" SRCDIR "/data/colors.png\"; smooth: true; width: 300; height: 300 }";
+    QString componentStr = "import QtQuick 2.0\nImage { source: \"" + TESTDATA("colors.png") + "\"; smooth: true; width: 300; height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -286,7 +287,7 @@ void tst_qsgimage::mirror()
 
     foreach (QSGImage::FillMode fillMode, fillModes) {
         QSGView *canvas = new QSGView;
-        canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/mirror.qml"));
+        canvas->setSource(QUrl::fromLocalFile(TESTDATA("mirror.qml")));
 
         QSGImage *obj = canvas->rootObject()->findChild<QSGImage*>("image");
         QVERIFY(obj != 0);
@@ -302,7 +303,7 @@ void tst_qsgimage::mirror()
 
     foreach (QSGImage::FillMode fillMode, fillModes) {
         QPixmap srcPixmap;
-        QVERIFY(srcPixmap.load(SRCDIR "/data/pattern.png"));
+        QVERIFY(srcPixmap.load(TESTDATA("pattern.png")));
 
         QPixmap expected(width, height);
         expected.fill();
@@ -354,7 +355,7 @@ void tst_qsgimage::svg()
     if (!QImageReader::supportedImageFormats().contains("svg"))
         QSKIP("svg support not available", SkipAll);
 
-    QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.svg").toString();
+    QString src = QUrl::fromLocalFile(TESTDATA("heart.svg")).toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -418,7 +419,7 @@ void tst_qsgimage::geometry()
     QFETCH(double, boundingWidth);
     QFETCH(double, boundingHeight);
 
-    QString src = QUrl::fromLocalFile(SRCDIR "/data/rect.png").toString();
+    QString src = QUrl::fromLocalFile(TESTDATA("rect.png")).toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; fillMode: Image." + fillMode + "; ";
 
     if (explicitWidth)
@@ -446,7 +447,7 @@ void tst_qsgimage::big()
     // If the JPEG loader does not implement scaling efficiently, it would
     // have to build a 400 MB image. That would be a bug in the JPEG loader.
 
-    QString src = QUrl::fromLocalFile(SRCDIR "/data/big.jpeg").toString();
+    QString src = QUrl::fromLocalFile(TESTDATA("big.jpeg")).toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 100; sourceSize.height: 256 }";
 
     QDeclarativeComponent component(&engine);
@@ -464,7 +465,7 @@ void tst_qsgimage::tiling_QTBUG_6716()
     QFETCH(QString, source);
 
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR + source));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA(source)));
     canvas->show();
     qApp->processEvents();
 
@@ -487,21 +488,21 @@ void tst_qsgimage::tiling_QTBUG_6716_data()
 {
     QTest::addColumn<QString>("source");
 #ifdef QT_BUILD_INTERNAL // QTBUG-21688 - unstable test on developer build
-    QTest::newRow("vertical_tiling") << "/data/vtiling.qml";
+    QTest::newRow("vertical_tiling") << "vtiling.qml";
 #endif
-    QTest::newRow("horizontal_tiling") << "/data/htiling.qml";
+    QTest::newRow("horizontal_tiling") << "htiling.qml";
 }
 
 void tst_qsgimage::noLoading()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
     server.addRedirect("oldcolors.png", SERVER_ADDR "/colors.png");
 
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage; cache: true }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart.png")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -513,7 +514,7 @@ void tst_qsgimage::noLoading()
     QSignalSpy statusSpy(obj, SIGNAL(statusChanged(QSGImageBase::Status)));
 
     // Loading local file
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/green.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("green.png")));
     QTRY_VERIFY(obj->status() == QSGImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
     QTRY_COMPARE(sourceSpy.count(), 1);
@@ -531,7 +532,7 @@ void tst_qsgimage::noLoading()
     QTRY_COMPARE(statusSpy.count(), 2);
 
     // Loading remote file again - should not go through 'Loading' state.
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/green.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("green.png")));
     ctxt->setContextProperty("srcImage", QString(SERVER_ADDR) + "/rect.png");
     QTRY_VERIFY(obj->status() == QSGImage::Ready);
     QTRY_VERIFY(obj->progress() == 1.0);
@@ -545,7 +546,7 @@ void tst_qsgimage::noLoading()
 void tst_qsgimage::paintedWidthHeight()
 {
     {
-        QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.png").toString();
+        QString src = QUrl::fromLocalFile(TESTDATA("heart.png")).toString();
         QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 200; height: 25; fillMode: Image.PreserveAspectFit }";
 
         QDeclarativeComponent component(&engine);
@@ -561,7 +562,7 @@ void tst_qsgimage::paintedWidthHeight()
     }
 
     {
-        QString src = QUrl::fromLocalFile(SRCDIR "/data/heart.png").toString();
+        QString src = QUrl::fromLocalFile(TESTDATA("heart.png")).toString();
         QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; width: 26; height: 175; fillMode: Image.PreserveAspectFit }";
         QDeclarativeComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -580,7 +581,7 @@ void tst_qsgimage::sourceSize_QTBUG_14303()
 {
     QString componentStr = "import QtQuick 2.0\nImage { source: srcImage }";
     QDeclarativeContext *ctxt = engine.rootContext();
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart200.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart200.png")));
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QSGImage *obj = qobject_cast<QSGImage*>(component.create());
@@ -594,12 +595,12 @@ void tst_qsgimage::sourceSize_QTBUG_14303()
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 0);
 
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/colors.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("colors.png")));
     QTRY_COMPARE(obj->sourceSize().width(), 120);
     QTRY_COMPARE(obj->sourceSize().height(), 120);
     QTRY_COMPARE(sourceSizeSpy.count(), 1);
 
-    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(SRCDIR "/data/heart200.png"));
+    ctxt->setContextProperty("srcImage", QUrl::fromLocalFile(TESTDATA("heart200.png")));
     QTRY_COMPARE(obj->sourceSize().width(), 200);
     QTRY_COMPARE(obj->sourceSize().height(), 200);
     QTRY_COMPARE(sourceSizeSpy.count(), 2);
@@ -610,7 +611,7 @@ void tst_qsgimage::sourceSize_QTBUG_14303()
 void tst_qsgimage::sourceSize_QTBUG_16389()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/qtbug_16389.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("qtbug_16389.qml")));
     canvas->show();
     qApp->processEvents();
 
@@ -641,7 +642,7 @@ static void checkWarnings(QtMsgType, const char *msg)
 void tst_qsgimage::nullPixmapPaint()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setSource(QUrl::fromLocalFile(SRCDIR "/data/nullpixmap.qml"));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("nullpixmap.qml")));
     canvas->show();
 
     QSGImage *image = qobject_cast<QSGImage*>(canvas->rootObject());

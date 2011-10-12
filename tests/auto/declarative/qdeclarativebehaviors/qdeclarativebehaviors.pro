@@ -3,7 +3,9 @@ TARGET = tst_qdeclarativebehaviors
 SOURCES += tst_qdeclarativebehaviors.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 

@@ -47,11 +47,11 @@
 #include <QtWidgets/QLineEdit>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include "../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    QFileInfo fileInfo(__FILE__);
-    return QUrl::fromLocalFile(fileInfo.absoluteDir().filePath(QLatin1String("data/") + filename));
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 class MyQmlObject : public QObject

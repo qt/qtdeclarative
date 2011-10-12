@@ -3,7 +3,9 @@ TARGET = tst_qsgpositioners
 SOURCES += tst_qsgpositioners.cpp
 macx:CONFIG -= app_bundle
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 #temporary

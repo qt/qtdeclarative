@@ -44,6 +44,7 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
 #include <QtDeclarative/qdeclarativescriptstring.h>
+#include "../shared/util.h"
 
 class tst_qdeclarativeexpression : public QObject
 {
@@ -81,7 +82,7 @@ void tst_qdeclarativeexpression::scriptString()
     qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
 
     QDeclarativeEngine engine;
-    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(SRCDIR "/data/scriptString.qml"));
+    QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("scriptString.qml")));
     TestObject *testObj = qobject_cast<TestObject*>(c.create());
     QVERIFY(testObj != 0);
 

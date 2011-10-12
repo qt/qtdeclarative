@@ -47,13 +47,14 @@
 #include <QtDeclarative/qdeclarativeincubator.h>
 #include <private/qsgloader_p.h>
 #include "testhttpserver.h"
+#include "../shared/util.h"
 #include "../../../shared/util.h"
 
 #define SERVER_PORT 14450
 
 inline QUrl TEST_FILE(const QString &filename)
 {
-    return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+    return QUrl::fromLocalFile(TESTDATA(filename));
 }
 
 class PeriodicIncubationController : public QObject,
@@ -192,10 +193,10 @@ void tst_QSGLoader::sourceOrComponent_data()
     QTest::addColumn<QUrl>("sourceUrl");
     QTest::addColumn<QString>("errorString");
 
-    QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/Rect120x60.qml") << "";
+    QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << QUrl::fromLocalFile(TESTDATA("Rect120x60.qml")) << "";
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
-    QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << QUrl::fromLocalFile(SRCDIR "/data/IDontExist.qml")
-            << QString(QUrl::fromLocalFile(SRCDIR "/data/IDontExist.qml").toString() + ": File not found");
+    QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << QUrl::fromLocalFile(TESTDATA("IDontExist.qml"))
+            << QString(QUrl::fromLocalFile(TESTDATA("IDontExist.qml")).toString() + ": File not found");
 }
 
 void tst_QSGLoader::clear()
@@ -416,10 +417,10 @@ void tst_QSGLoader::networkRequestUrl()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QDeclarativeComponent component(&engine);
-    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"http://127.0.0.1:14450/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), QUrl::fromLocalFile(SRCDIR "/dummy.qml"));
+    component.setData(QByteArray("import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"http://127.0.0.1:14450/Rect120x60.qml\"; onLoaded: signalCount += 1 }"), QUrl::fromLocalFile(TESTDATA("../dummy.qml")));
     if (component.isError())
         qDebug() << component.errors();
     QSGLoader *loader = qobject_cast<QSGLoader*>(component.create());
@@ -471,7 +472,7 @@ void tst_QSGLoader::failNetworkRequest()
 {
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     QTest::ignoreMessage(QtWarningMsg, "http://127.0.0.1:14450/IDontExist.qml: File not found");
 
@@ -685,7 +686,7 @@ void tst_QSGLoader::initialPropertyValues()
 
     TestHTTPServer server(SERVER_PORT);
     QVERIFY(server.isValid());
-    server.serveDirectory(SRCDIR "/data");
+    server.serveDirectory(TESTDATA(""));
 
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toAscii().constData());
@@ -767,7 +768,7 @@ void tst_QSGLoader::deleteComponentCrash()
     QCOMPARE(loader->status(), QSGLoader::Ready);
     qApp->processEvents(QEventLoop::DeferredDeletion);
     QTRY_COMPARE(static_cast<QSGItem*>(loader)->childItems().count(), 1);
-    QVERIFY(loader->source() == QUrl::fromLocalFile(SRCDIR "/data/BlueRect.qml"));
+    QVERIFY(loader->source() == QUrl::fromLocalFile(TESTDATA("BlueRect.qml")));
 
     delete item;
 }
@@ -775,7 +776,7 @@ void tst_QSGLoader::deleteComponentCrash()
 void tst_QSGLoader::nonItem()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("nonItem.qml"));
-    QString err = QUrl::fromLocalFile(SRCDIR).toString() + "/data/nonItem.qml:3:1: QML Loader: Loader does not support loading non-visual elements.";
+    QString err = QUrl::fromLocalFile(TESTDATA("nonItem.qml")).toString() + ":3:1: QML Loader: Loader does not support loading non-visual elements.";
 
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QSGLoader *loader = qobject_cast<QSGLoader*>(component.create());
@@ -788,7 +789,7 @@ void tst_QSGLoader::nonItem()
 void tst_QSGLoader::vmeErrors()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("vmeErrors.qml"));
-    QString err = QUrl::fromLocalFile(SRCDIR).toString() + "/data/VmeError.qml:6: Cannot assign object type QObject with no default method";
+    QString err = QUrl::fromLocalFile(TESTDATA("VmeError.qml")).toString() + ":6: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
     QSGLoader *loader = qobject_cast<QSGLoader*>(component.create());
     QVERIFY(loader);

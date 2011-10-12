@@ -62,7 +62,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <private/qtextcontrol_p.h>
-#include <QtOpenGL/QGLShaderProgram>
+#include "../shared/util.h"
 
 #ifdef Q_WS_MAC
 #include <Carbon/Carbon.h>
@@ -77,7 +77,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 QString createExpectedFileIfNotFound(const QString& filebasename, const QImage& actual)
 {
     // XXX This will be replaced by some clever persistent platform image store.
-    QString persistent_dir = SRCDIR "/data";
+    QString persistent_dir = TESTDATA("");
     QString arch = "unknown-architecture"; // QTest needs to help with this.
 
     QString expectfile = persistent_dir + QDir::separator() + filebasename + "-" + arch + ".png";
@@ -425,7 +425,7 @@ void tst_qsgtextedit::alignments()
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
 
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/alignments.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("alignments.qml")));
 
     canvas.show();
     canvas.requestActivateWindow();
@@ -484,7 +484,7 @@ void tst_qsgtextedit::hAlign()
 
 void tst_qsgtextedit::hAlign_RightToLeft()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/horizontalAlignment_RightToLeft.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("horizontalAlignment_RightToLeft.qml")));
     QSGTextEdit *textEdit = canvas.rootObject()->findChild<QSGTextEdit*>("text");
     QVERIFY(textEdit != 0);
     canvas.show();
@@ -964,7 +964,7 @@ void tst_qsgtextedit::isRightToLeft()
 
 void tst_qsgtextedit::keySelection()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
     canvas.show();
     canvas.requestActivateWindow();
     QTest::qWaitForWindowShown(&canvas);
@@ -1354,19 +1354,19 @@ void tst_qsgtextedit::mouseSelection_data()
     QTest::addColumn<QString>("selectedText");
 
     // import installed
-    QTest::newRow("on") << SRCDIR "/data/mouseselection_true.qml" << 4 << 9 << "45678";
-    QTest::newRow("off") << SRCDIR "/data/mouseselection_false.qml" << 4 << 9 << QString();
-    QTest::newRow("default") << SRCDIR "/data/mouseselection_default.qml" << 4 << 9 << QString();
-    QTest::newRow("off word selection") << SRCDIR "/data/mouseselection_false_words.qml" << 4 << 9 << QString();
-    QTest::newRow("on word selection (4,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 4 << 9 << "0123456789";
-    QTest::newRow("on word selection (2,13)") << SRCDIR "/data/mouseselection_true_words.qml" << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (2,30)") << SRCDIR "/data/mouseselection_true_words.qml" << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,13)") << SRCDIR "/data/mouseselection_true_words.qml" << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (9,30)") << SRCDIR "/data/mouseselection_true_words.qml" << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (13,2)") << SRCDIR "/data/mouseselection_true_words.qml" << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (20,2)") << SRCDIR "/data/mouseselection_true_words.qml" << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (12,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    QTest::newRow("on word selection (30,9)") << SRCDIR "/data/mouseselection_true_words.qml" << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on") << TESTDATA("mouseselection_true.qml") << 4 << 9 << "45678";
+    QTest::newRow("off") << TESTDATA("mouseselection_false.qml") << 4 << 9 << QString();
+    QTest::newRow("default") << TESTDATA("mouseselection_default.qml") << 4 << 9 << QString();
+    QTest::newRow("off word selection") << TESTDATA("mouseselection_false_words.qml") << 4 << 9 << QString();
+    QTest::newRow("on word selection (4,9)") << TESTDATA("mouseselection_true_words.qml") << 4 << 9 << "0123456789";
+    QTest::newRow("on word selection (2,13)") << TESTDATA("mouseselection_true_words.qml") << 2 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (2,30)") << TESTDATA("mouseselection_true_words.qml") << 2 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,13)") << TESTDATA("mouseselection_true_words.qml") << 9 << 13 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (9,30)") << TESTDATA("mouseselection_true_words.qml") << 9 << 30 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (13,2)") << TESTDATA("mouseselection_true_words.qml") << 13 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (20,2)") << TESTDATA("mouseselection_true_words.qml") << 20 << 2 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (12,9)") << TESTDATA("mouseselection_true_words.qml") << 12 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    QTest::newRow("on word selection (30,9)") << TESTDATA("mouseselection_true_words.qml") << 30 << 9 << "0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 }
 
 void tst_qsgtextedit::mouseSelection()
@@ -1408,7 +1408,7 @@ void tst_qsgtextedit::mouseSelection()
 
 void tst_qsgtextedit::dragMouseSelection()
 {
-    QString qmlfile = SRCDIR "/data/mouseselection_true.qml";
+    QString qmlfile = TESTDATA("mouseselection_true.qml");
 
     QSGView canvas(QUrl::fromLocalFile(qmlfile));
 
@@ -1451,9 +1451,9 @@ void tst_qsgtextedit::mouseSelectionMode_data()
     QTest::addColumn<bool>("selectWords");
 
     // import installed
-    QTest::newRow("SelectWords") << SRCDIR "/data/mouseselectionmode_words.qml" << true;
-    QTest::newRow("SelectCharacters") << SRCDIR "/data/mouseselectionmode_characters.qml" << false;
-    QTest::newRow("default") << SRCDIR "/data/mouseselectionmode_default.qml" << false;
+    QTest::newRow("SelectWords") << TESTDATA("mouseselectionmode_words.qml") << true;
+    QTest::newRow("SelectCharacters") << TESTDATA("mouseselectionmode_characters.qml") << false;
+    QTest::newRow("default") << TESTDATA("mouseselectionmode_default.qml") << false;
 }
 
 void tst_qsgtextedit::mouseSelectionMode()
@@ -1495,7 +1495,7 @@ void tst_qsgtextedit::mouseSelectionMode()
 
 void tst_qsgtextedit::inputMethodHints()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/inputmethodhints.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("inputmethodhints.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1509,7 +1509,7 @@ void tst_qsgtextedit::inputMethodHints()
 
 void tst_qsgtextedit::positionAt()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/positionAt.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("positionAt.qml")));
     QVERIFY(canvas.rootObject() != 0);
     canvas.show();
     canvas.requestActivateWindow();
@@ -1579,7 +1579,7 @@ void tst_qsgtextedit::positionAt()
 
 void tst_qsgtextedit::cursorDelegate()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorTest.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("cursorTest.qml")));
     view.show();
     view.requestActivateWindow();
     QSGTextEdit *textEditObject = view.rootObject()->findChild<QSGTextEdit*>("textEditObject");
@@ -1647,7 +1647,7 @@ void tst_qsgtextedit::cursorDelegate()
 
 void tst_qsgtextedit::cursorVisible()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/cursorVisible.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("cursorVisible.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -1726,9 +1726,9 @@ void tst_qsgtextedit::delegateLoading()
     QFETCH(QString, error);
 
     TestHTTPServer server(42332);
-    server.serveDirectory(SRCDIR "/data/httpfail", TestHTTPServer::Disconnect);
-    server.serveDirectory(SRCDIR "/data/httpslow", TestHTTPServer::Delay);
-    server.serveDirectory(SRCDIR "/data/http");
+    server.serveDirectory(TESTDATA("httpfail"), TestHTTPServer::Disconnect);
+    server.serveDirectory(TESTDATA("httpslow"), TestHTTPServer::Delay);
+    server.serveDirectory(TESTDATA("http"));
 
     QSGView view(QUrl(QLatin1String("http://localhost:42332/") + qmlfile));
     view.show();
@@ -1767,7 +1767,7 @@ the extent of the text, then they should ignore the keys.
 */
 void tst_qsgtextedit::navigation()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/navigation.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("navigation.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1887,7 +1887,7 @@ void tst_qsgtextedit::canPasteEmpty() {
 
 void tst_qsgtextedit::readOnly()
 {
-    QSGView canvas(QUrl::fromLocalFile(SRCDIR "/data/readOnly.qml"));
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("readOnly.qml")));
     canvas.show();
     canvas.requestActivateWindow();
 
@@ -1972,7 +1972,7 @@ public:
 
 void tst_qsgtextedit::textInput()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -1996,7 +1996,7 @@ void tst_qsgtextedit::textInput()
 
 void tst_qsgtextedit::openInputPanel()
 {
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/openInputPanel.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("openInputPanel.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2084,7 +2084,7 @@ void tst_qsgtextedit::openInputPanel()
 
 void tst_qsgtextedit::geometrySignals()
 {
-    QDeclarativeComponent component(&engine, SRCDIR "/data/geometrySignals.qml");
+    QDeclarativeComponent component(&engine, TESTDATA("geometrySignals.qml"));
     QObject *o = component.create();
     QVERIFY(o);
     QCOMPARE(o->property("bindingWidth").toInt(), 400);
@@ -2199,7 +2199,7 @@ void tst_qsgtextedit::preeditMicroFocus()
 #else
     QString preeditText = "super";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputMethodEvent.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputMethodEvent.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2262,7 +2262,7 @@ void tst_qsgtextedit::inputContextMouseHandler()
 #else
     QString text = "supercalifragisiticexpialidocious!";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
     MyInputContext ic;
     // QSGCanvas won't set the Qt::WA_InputMethodEnabled flag unless a suitable item has focus
     // and QWidget won't allow an input context to be set when the flag is not set.
@@ -2381,7 +2381,7 @@ void tst_qsgtextedit::inputMethodComposing()
 {
     QString text = "supercalifragisiticexpialidocious!";
 
-    QSGView view(QUrl::fromLocalFile(SRCDIR "/data/inputContext.qml"));
+    QSGView view(QUrl::fromLocalFile(TESTDATA("inputContext.qml")));
     view.show();
     view.requestActivateWindow();
     QTest::qWaitForWindowShown(&view);
@@ -2417,7 +2417,7 @@ void tst_qsgtextedit::inputMethodComposing()
 
 void tst_qsgtextedit::cursorRectangleSize()
 {
-    QSGView *canvas = new QSGView(QUrl::fromLocalFile(SRCDIR "/data/CursorRect.qml"));
+    QSGView *canvas = new QSGView(QUrl::fromLocalFile(TESTDATA("CursorRect.qml")));
     QVERIFY(canvas->rootObject() != 0);
     canvas->show();
     canvas->requestActivateWindow();

@@ -4,7 +4,9 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qsgflipable.cpp
 
-DEFINES += SRCDIR=\\\"$$PWD\\\"
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 CONFIG += parallel_test
 
