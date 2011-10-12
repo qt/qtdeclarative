@@ -148,6 +148,8 @@ private slots:
     void signalWithJSValueInVariant();
     void signalWithJSValueInVariant_twoEngines_data();
     void signalWithJSValueInVariant_twoEngines();
+    void signalWithQJSValue_data();
+    void signalWithQJSValue();
     void moduleApi_data();
     void moduleApi();
     void importScripts_data();
@@ -2943,6 +2945,32 @@ void tst_qdeclarativeecmascript::signalWithJSValueInVariant_twoEngines()
     QTest::ignoreMessage(QtWarningMsg, "JSValue can't be rassigned to an another engine.");
     emit object->signalWithVariant(QVariant::fromValue(value));
     QVERIFY(!object->property("pass").toBool());
+}
+
+void tst_qdeclarativeecmascript::signalWithQJSValue_data()
+{
+    signalWithJSValueInVariant_data();
+}
+
+void tst_qdeclarativeecmascript::signalWithQJSValue()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, compare);
+
+    QDeclarativeComponent component(&engine, TEST_FILE("signalWithQJSValue.qml"));
+    QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
+    QVERIFY(object != 0);
+
+    QJSValue value = engine.evaluate(expression);
+    QVERIFY(!engine.hasUncaughtException());
+    object->setProperty("expression", expression);
+    object->setProperty("compare", compare);
+    object->setProperty("pass", false);
+
+    emit object->signalWithQJSValue(value);
+
+    QVERIFY(object->property("pass").toBool());
+    QVERIFY(object->qjsvalue().strictlyEquals(value));
 }
 
 void tst_qdeclarativeecmascript::moduleApi_data()
