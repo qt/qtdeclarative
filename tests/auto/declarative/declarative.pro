@@ -14,6 +14,7 @@ PUBLICTESTS += \
     qdeclarativeengine \
     qdeclarativeerror \
     qdeclarativefolderlistmodel \
+    qdeclarativeincubator \
     qdeclarativeinfo \
     qdeclarativelistreference \
     qdeclarativemoduleplugin \
@@ -39,11 +40,14 @@ PRIVATETESTS += \
     qdeclarativedebugservice \
 #   qdeclarativedebugjs \
     qdeclarativeecmascript \
+    qdeclarativeexpression \
+    qdeclarativefontloader \
     qdeclarativeimageprovider \
     qdeclarativeinstruction \
     qdeclarativelanguage \
     qdeclarativelistcompositor \
     qdeclarativelistmodel \
+    qdeclarativepath \
     qdeclarativeproperty \
     qdeclarativepropertymap \
 #   qdeclarativescriptdebugging \
@@ -87,6 +91,7 @@ SGTESTS =  \
     qsgtextedit \
     qsgtextinput \
     qsgvisualdatamodel \
+    qsgview \
     qsgcanvasitem \
 
 
