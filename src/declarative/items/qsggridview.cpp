@@ -334,7 +334,10 @@ qreal QSGGridViewPrivate::snapPosAt(qreal pos) const
     Q_Q(const QSGGridView);
     qreal snapPos = 0;
     if (!visibleItems.isEmpty()) {
-        qreal highlightStart = isRightToLeftTopToBottom() && highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
+        qreal highlightStart = highlightRangeStart;
+        if (isRightToLeftTopToBottom())
+            highlightStart = highlightRangeEndValid ? -size() + highlightRangeEnd : -size();
+
         pos += highlightStart;
         pos += rowSize()/2;
         snapPos = static_cast<FxGridItemSG*>(visibleItems.first())->rowPos() - visibleIndex / columns * rowSize();
@@ -807,19 +810,7 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
 
-    qreal highlightStart;
-    qreal highlightEnd;
-    qreal viewPos;
-    if (isRightToLeftTopToBottom()) {
-        // Handle Right-To-Left exceptions
-        viewPos = -position()-size();
-        highlightStart = highlightRangeStartValid ? size()-highlightRangeEnd : highlightRangeStart;
-        highlightEnd = highlightRangeEndValid ? size()-highlightRangeStart : highlightRangeEnd;
-    } else {
-        viewPos = position();
-        highlightStart = highlightRangeStart;
-        highlightEnd = highlightRangeEnd;
-    }
+    qreal viewPos = isRightToLeftTopToBottom() ? -position()-size() : position();
 
     bool strictHighlightRange = haveHighlightRange && highlightRange == QSGGridView::StrictlyEnforceRange;
     if (snapMode != QSGGridView::NoSnap) {
@@ -836,40 +827,35 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
                 bias = -bias;
             tempPosition -= bias;
         }
-        FxViewItem *topItem = snapItemAt(tempPosition+highlightStart);
+        FxViewItem *topItem = snapItemAt(tempPosition+highlightRangeStart);
         if (!topItem && strictHighlightRange && currentItem) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
             topItem = currentItem;
         }
-        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightEnd);
+        FxViewItem *bottomItem = snapItemAt(tempPosition+highlightRangeEnd);
         if (!bottomItem && strictHighlightRange && currentItem) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
             bottomItem = currentItem;
         }
         qreal pos;
-        if (topItem && bottomItem && strictHighlightRange) {
-            qreal topPos = qMin(topItem->position() - highlightStart, -maxExtent);
-            qreal bottomPos = qMax(bottomItem->position() - highlightEnd, -minExtent);
-            pos = qAbs(data.move + topPos) < qAbs(data.move + bottomPos) ? topPos : bottomPos;
-        } else if (topItem) {
-            qreal headerPos = 0;
-            if (header)
-                headerPos = isRightToLeftTopToBottom() ? static_cast<FxGridItemSG*>(header)->rowPos() + cellWidth - headerSize() : static_cast<FxGridItemSG*>(header)->rowPos();
-            if (topItem->index == 0 && header && tempPosition+highlightStart < headerPos+headerSize()/2 && !strictHighlightRange) {
-                pos = isRightToLeftTopToBottom() ? - headerPos + highlightStart - size() : headerPos - highlightStart;
+        bool isInBounds = -position() > maxExtent && -position() <= minExtent;
+        if (topItem && (isInBounds || strictHighlightRange)) {
+            qreal headerPos = header ? static_cast<FxGridItemSG*>(header)->rowPos() : 0;
+            if (topItem->index == 0 && header && tempPosition+highlightRangeStart < headerPos+headerSize()/2 && !strictHighlightRange) {
+                pos = isRightToLeftTopToBottom() ? - headerPos + highlightRangeStart - size() : headerPos - highlightRangeStart;
             } else {
                 if (isRightToLeftTopToBottom())
-                    pos = qMax(qMin(-topItem->position() + highlightStart - size(), -maxExtent), -minExtent);
+                    pos = qMax(qMin(-topItem->position() + highlightRangeStart - size(), -maxExtent), -minExtent);
                 else
-                    pos = qMax(qMin(topItem->position() - highlightStart, -maxExtent), -minExtent);
+                    pos = qMax(qMin(topItem->position() - highlightRangeStart, -maxExtent), -minExtent);
             }
-        } else if (bottomItem) {
+        } else if (bottomItem && isInBounds) {
             if (isRightToLeftTopToBottom())
-                pos = qMax(qMin(-bottomItem->position() + highlightEnd - size(), -maxExtent), -minExtent);
+                pos = qMax(qMin(-bottomItem->position() + highlightRangeEnd - size(), -maxExtent), -minExtent);
             else
-                pos = qMax(qMin(bottomItem->position() - highlightEnd, -maxExtent), -minExtent);
+                pos = qMax(qMin(bottomItem->position() - highlightRangeEnd, -maxExtent), -minExtent);
         } else {
             QSGItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
@@ -890,10 +876,10 @@ void QSGGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
         if (currentItem) {
             updateHighlight();
             qreal pos = static_cast<FxGridItemSG*>(currentItem)->rowPos();
-            if (viewPos < pos + rowSize() - highlightEnd)
-                viewPos = pos + rowSize() - highlightEnd;
-            if (viewPos > pos - highlightStart)
-                viewPos = pos - highlightStart;
+            if (viewPos < pos + rowSize() - highlightRangeEnd)
+                viewPos = pos + rowSize() - highlightRangeEnd;
+            if (viewPos > pos - highlightRangeStart)
+                viewPos = pos - highlightRangeStart;
             if (isRightToLeftTopToBottom())
                 viewPos = -viewPos-size();
             timeline.reset(data.move);
@@ -1543,22 +1529,11 @@ void QSGGridView::viewportMoved()
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange && d->highlight) {
             // reposition highlight
             qreal pos = d->highlight->position();
-            qreal viewPos;
-            qreal highlightStart;
-            qreal highlightEnd;
-            if (d->isRightToLeftTopToBottom()) {
-                viewPos = -d->position()-d->size();
-                highlightStart = d->highlightRangeStartValid ? d->size()-d->highlightRangeEnd : d->highlightRangeStart;
-                highlightEnd = d->highlightRangeEndValid ? d->size()-d->highlightRangeStart : d->highlightRangeEnd;
-            } else {
-                viewPos = d->position();
-                highlightStart = d->highlightRangeStart;
-                highlightEnd = d->highlightRangeEnd;
-            }
-            if (pos > viewPos + highlightEnd - d->highlight->size())
-                pos = viewPos + highlightEnd - d->highlight->size();
-            if (pos < viewPos + highlightStart)
-                pos = viewPos + highlightStart;
+            qreal viewPos = d->isRightToLeftTopToBottom() ? -d->position()-d->size() : d->position();
+            if (pos > viewPos + d->highlightRangeEnd - d->highlight->size())
+                pos = viewPos + d->highlightRangeEnd - d->highlight->size();
+            if (pos < viewPos + d->highlightRangeStart)
+                pos = viewPos + d->highlightRangeStart;
 
             if (pos != d->highlight->position()) {
                 d->highlightXAnimator->stop();

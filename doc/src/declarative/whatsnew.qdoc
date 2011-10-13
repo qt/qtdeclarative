@@ -117,8 +117,9 @@ Text improvements:
 
 PathView now has a \c currentItem property
 
-ListView and GridView now have headerItem and footerItem properties (the instantiated
-header and footer items).
+ListView and GridView:
+ - now have headerItem and footerItem properties (the instantiated header and footer items).
+ - In RightToLeft layout the preferredHighlightBegin/End are now also reversed.
 
 ListView section.labelPositioning property added to allow keeping the current section label
 at the start and/or next section label at the end of the view.

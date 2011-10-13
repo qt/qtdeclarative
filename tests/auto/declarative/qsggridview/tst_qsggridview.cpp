@@ -110,9 +110,12 @@ private slots:
     void columnCount();
     void margins();
     void creationContext();
+    void snapToRow_data();
+    void snapToRow();
 
 private:
     QSGView *createView();
+    void flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &id, int index=-1);
     template<typename T>
@@ -3121,12 +3124,125 @@ void tst_QSGGridView::creationContext()
     QCOMPARE(item->property("text").toString(), QString("Hello!"));
 }
 
+void tst_QSGGridView::snapToRow_data()
+{
+    QTest::addColumn<QSGGridView::Flow>("flow");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QSGGridView::LeftToRight << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QSGGridView::TopToBottom << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QSGGridView::TopToBottom << Qt::RightToLeft << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QSGGridView::LeftToRight << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QSGGridView::TopToBottom << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QSGGridView::TopToBottom << Qt::RightToLeft << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+}
+
+void tst_QSGGridView::snapToRow()
+{
+    QFETCH(QSGGridView::Flow, flow);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QSGView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToRow.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+
+    gridview->setFlow(flow);
+    gridview->setLayoutDirection(layoutDirection);
+    gridview->setHighlightRangeMode(QSGItemView::HighlightRangeMode(highlightRangeMode));
+
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // confirm that a flick hits an item boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(qreal(fmod(gridview->contentY(),80.0)), snapAlignment);
+    else
+        QCOMPARE(qreal(fmod(gridview->contentX(),80.0)), snapAlignment);
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QSGGridView::LeftToRight
+           ? !gridview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), endExtent);
+    else
+        QCOMPARE(gridview->contentX(), endExtent);
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+    } while (flow == QSGGridView::LeftToRight
+           ? !gridview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+
+    if (flow == QSGGridView::LeftToRight)
+        QCOMPARE(gridview->contentY(), startExtent);
+    else
+        QCOMPARE(gridview->contentX(), startExtent);
+
+    delete canvas;
+}
+
+
 QSGView *tst_QSGGridView::createView()
 {
     QSGView *canvas = new QSGView(0);
     canvas->setGeometry(0,0,240,320);
 
     return canvas;
+}
+
+void tst_QSGGridView::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)
+{
+    const int pointCount = 5;
+    QPoint diff = to - from;
+
+    // send press, five equally spaced moves, and release.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+
+    for (int i = 0; i < pointCount; ++i) {
+        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(canvas, &mv);
+        QTest::qWait(duration/pointCount);
+        QCoreApplication::processEvents();
+    }
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
 }
 
 /*

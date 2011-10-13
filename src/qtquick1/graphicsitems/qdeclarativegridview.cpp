@@ -1095,23 +1095,17 @@ void QDeclarative1GridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal 
             bottomItem = currentItem;
         }
         qreal pos;
-        if (topItem && bottomItem && strictHighlightRange) {
-            qreal topPos = qMin(topItem->rowPos() - highlightStart, -maxExtent);
-            qreal bottomPos = qMax(bottomItem->rowPos() - highlightEnd, -minExtent);
-            pos = qAbs(data.move + topPos) < qAbs(data.move + bottomPos) ? topPos : bottomPos;
-        } else if (topItem) {
-            qreal headerPos = 0;
-            if (header)
-                headerPos = isRightToLeftTopToBottom() ? header->rowPos() + cellWidth - headerSize() : header->rowPos();
-            if (topItem->index == 0 && header && tempPosition+highlightStart < headerPos+headerSize()/2 && !strictHighlightRange) {
-                pos = isRightToLeftTopToBottom() ? - headerPos + highlightStart - size() : headerPos - highlightStart;
+        bool isInBounds = -position() > maxExtent && -position() <= minExtent;
+        if (topItem && (isInBounds || strictHighlightRange)) {
+            if (topItem->index == 0 && header && tempPosition+highlightStart < header->rowPos()+headerSize()/2 && !strictHighlightRange) {
+                pos = isRightToLeftTopToBottom() ? - header->rowPos() + highlightStart - size() : header->rowPos() - highlightStart;
             } else {
                 if (isRightToLeftTopToBottom())
                     pos = qMax(qMin(-topItem->rowPos() + highlightStart - size(), -maxExtent), -minExtent);
                 else
                     pos = qMax(qMin(topItem->rowPos() - highlightStart, -maxExtent), -minExtent);
             }
-        } else if (bottomItem) {
+        } else if (bottomItem && isInBounds) {
             if (isRightToLeftTopToBottom())
                 pos = qMax(qMin(-bottomItem->rowPos() + highlightEnd - size(), -maxExtent), -minExtent);
             else
@@ -2267,9 +2261,10 @@ qreal QDeclarative1GridView::minXExtent() const
     qreal extent = -d->startPosition();
     qreal highlightStart;
     qreal highlightEnd;
-    qreal endPositionFirstItem;
+    qreal endPositionFirstItem = 0;
     if (d->isRightToLeftTopToBottom()) {
-        endPositionFirstItem = d->rowPosAt(d->model->count()-1);
+        if (d->model && d->model->count())
+            endPositionFirstItem = d->rowPosAt(d->model->count()-1);
         highlightStart = d->highlightRangeStartValid
                 ? d->highlightRangeStart - (d->lastPosition()-endPositionFirstItem)
                 : d->size() - (d->lastPosition()-endPositionFirstItem);
@@ -2284,7 +2279,7 @@ qreal QDeclarative1GridView::minXExtent() const
             extent += d->header->item->width();
     }
     if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
-        extent += highlightStart;
+        extent += d->isRightToLeftTopToBottom() ? -highlightStart : highlightStart;
         extent = qMax(extent, -(endPositionFirstItem - highlightEnd));
     }
     return extent;

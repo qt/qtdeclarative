@@ -55,6 +55,7 @@
 #include "../shared/util.h"
 #include "../../../shared/util.h"
 #include "incrementalmodel.h"
+#include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QSGListView::Orientation)
@@ -139,6 +140,8 @@ private slots:
     void test_mirroring();
     void margins();
     void creationContext();
+    void snapToItem_data();
+    void snapToItem();
 
 private:
     template <class T> void items();
@@ -149,6 +152,7 @@ private:
     template <class T> void moved();
     template <class T> void clear();
     QSGView *createView();
+    void flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration);
     QSGItem *findVisibleChild(QSGItem *parent, const QString &objectName);
     template<typename T>
     T *findItem(QSGItem *parent, const QString &id, int index=-1);
@@ -3800,6 +3804,100 @@ void tst_QSGListView::margins()
     delete canvas;
 }
 
+void tst_QSGListView::snapToItem_data()
+{
+    QTest::addColumn<QSGListView::Orientation>("orientation");
+    QTest::addColumn<Qt::LayoutDirection>("layoutDirection");
+    QTest::addColumn<int>("highlightRangeMode");
+    QTest::addColumn<QPoint>("flickStart");
+    QTest::addColumn<QPoint>("flickEnd");
+    QTest::addColumn<qreal>("snapAlignment");
+    QTest::addColumn<qreal>("endExtent");
+    QTest::addColumn<qreal>("startExtent");
+
+    QTest::newRow("vertical, left to right") << QSGListView::Vertical << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, left to right") << QSGListView::Horizontal << Qt::LeftToRight << int(QSGItemView::NoHighlightRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1200.0 << 0.0;
+
+    QTest::newRow("horizontal, right to left") << QSGListView::Horizontal << Qt::RightToLeft << int(QSGItemView::NoHighlightRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 << -240.0;
+
+    QTest::newRow("vertical, left to right, enforce range") << QSGListView::Vertical << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, left to right, enforce range") << QSGListView::Horizontal << Qt::LeftToRight << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(200, 20) << QPoint(20, 20) << 60.0 << 1340.0 << -20.0;
+
+    QTest::newRow("horizontal, right to left, enforce range") << QSGListView::Horizontal << Qt::RightToLeft << int(QSGItemView::StrictlyEnforceRange)
+        << QPoint(20, 20) << QPoint(200, 20) << -60.0 << -1200.0 - 240.0 - 140.0 << -220.0;
+}
+
+void tst_QSGListView::snapToItem()
+{
+    QFETCH(QSGListView::Orientation, orientation);
+    QFETCH(Qt::LayoutDirection, layoutDirection);
+    QFETCH(int, highlightRangeMode);
+    QFETCH(QPoint, flickStart);
+    QFETCH(QPoint, flickEnd);
+    QFETCH(qreal, snapAlignment);
+    QFETCH(qreal, endExtent);
+    QFETCH(qreal, startExtent);
+
+    QSGView *canvas = createView();
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("snapToItem.qml")));
+    canvas->show();
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+
+    listview->setOrientation(orientation);
+    listview->setLayoutDirection(layoutDirection);
+    listview->setHighlightRangeMode(QSGItemView::HighlightRangeMode(highlightRangeMode));
+
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // confirm that a flick hits an item boundary
+    flick(canvas, flickStart, flickEnd, 180);
+    QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(qreal(fmod(listview->contentY(),80.0)), snapAlignment);
+    else
+        QCOMPARE(qreal(fmod(listview->contentX(),80.0)), snapAlignment);
+
+    // flick to end
+    do {
+        flick(canvas, flickStart, flickEnd, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QSGListView::Vertical
+           ? !listview->isAtYEnd()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXEnd() : !listview->isAtXBeginning());
+
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(listview->contentY(), endExtent);
+    else
+        QCOMPARE(listview->contentX(), endExtent);
+
+    // flick to start
+    do {
+        flick(canvas, flickEnd, flickStart, 180);
+        QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
+    } while (orientation == QSGListView::Vertical
+           ? !listview->isAtYBeginning()
+           : layoutDirection == Qt::LeftToRight ? !listview->isAtXBeginning() : !listview->isAtXEnd());
+
+    if (orientation == QSGListView::Vertical)
+        QCOMPARE(listview->contentY(), startExtent);
+    else
+        QCOMPARE(listview->contentX(), startExtent);
+
+    delete canvas;
+}
+
 void tst_QSGListView::qListModelInterface_items()
 {
     items<TestModel>();
@@ -3921,6 +4019,25 @@ QSGView *tst_QSGListView::createView()
 
     return canvas;
 }
+
+void tst_QSGListView::flick(QSGView *canvas, const QPoint &from, const QPoint &to, int duration)
+{
+    const int pointCount = 5;
+    QPoint diff = to - from;
+
+    // send press, five equally spaced moves, and release.
+    QTest::mousePress(canvas, Qt::LeftButton, 0, from);
+
+    for (int i = 0; i < pointCount; ++i) {
+        QMouseEvent mv(QEvent::MouseMove, from + (i+1)*diff/pointCount, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QApplication::sendEvent(canvas, &mv);
+        QTest::qWait(duration/pointCount);
+        QCoreApplication::processEvents();
+    }
+
+    QTest::mouseRelease(canvas, Qt::LeftButton, 0, to);
+}
+
 
 QSGItem *tst_QSGListView::findVisibleChild(QSGItem *parent, const QString &objectName)
 {

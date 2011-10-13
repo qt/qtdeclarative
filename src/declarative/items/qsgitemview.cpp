@@ -821,30 +821,14 @@ void QSGItemView::trackedPositionChanged()
         if (d->trackedItem != d->currentItem) {
             trackedSize += d->currentItem->sectionSize();
         }
-        qreal viewPos;
-        qreal highlightStart;
-        qreal highlightEnd;
-        if (d->isContentFlowReversed()) {
-            viewPos = -d->position()-d->size();
-            highlightStart = d->highlightRangeStartValid ? d->size()-d->highlightRangeEnd : d->highlightRangeStart;
-            highlightEnd = d->highlightRangeEndValid ? d->size()-d->highlightRangeStart : d->highlightRangeEnd;
-        } else {
-            viewPos = d->position();
-            highlightStart = d->highlightRangeStart;
-            highlightEnd = d->highlightRangeEnd;
-        }
+        qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
         qreal pos = viewPos;
         if (d->haveHighlightRange) {
-            if (d->highlightRange == StrictlyEnforceRange) {
-                if (trackedPos > pos + highlightEnd - d->trackedItem->size())
-                    pos = trackedPos - highlightEnd + d->trackedItem->size();
-                if (trackedPos < pos + highlightStart)
-                    pos = trackedPos - highlightStart;
-            } else {
-                if (trackedPos > pos + highlightEnd - trackedSize)
-                    pos = trackedPos - highlightEnd + trackedSize;
-                if (trackedPos < pos + highlightStart)
-                    pos = trackedPos - highlightStart;
+            if (trackedPos > pos + d->highlightRangeEnd - trackedSize)
+                pos = trackedPos - d->highlightRangeEnd + trackedSize;
+            if (trackedPos < pos + d->highlightRangeStart)
+                pos = trackedPos - d->highlightRangeStart;
+            if (d->highlightRange != StrictlyEnforceRange) {
                 if (pos > d->endPosition() - d->size())
                     pos = d->endPosition() - d->size();
                 if (pos < d->startPosition())
@@ -967,10 +951,8 @@ qreal QSGItemView::minXExtent() const
                 endPositionFirstItem = d->positionAt(d->model->count()-1);
             else if (d->header)
                 d->minExtent += d->headerSize();
-            highlightStart = d->highlightRangeStartValid
-                    ? d->highlightRangeStart - (d->lastPosition()-endPositionFirstItem)
-                    : d->size() - (d->lastPosition()-endPositionFirstItem);
-            highlightEnd = d->highlightRangeEndValid ? d->highlightRangeEnd : d->size();
+            highlightStart = d->highlightRangeEndValid ? d->size() - d->highlightRangeEnd : d->size();
+            highlightEnd = d->highlightRangeStartValid ? d->size() - d->highlightRangeStart : d->size();
             if (d->footer)
                 d->minExtent += d->footerSize();
             qreal maxX = maxXExtent();
@@ -986,7 +968,9 @@ qreal QSGItemView::minXExtent() const
         }
         if (d->haveHighlightRange && d->highlightRange == StrictlyEnforceRange) {
             d->minExtent += highlightStart;
-            d->minExtent = qMax(d->minExtent, -(endPositionFirstItem - highlightEnd));
+            d->minExtent = d->isContentFlowReversed()
+                                ? qMin(d->minExtent, endPositionFirstItem + highlightEnd)
+                                : qMax(d->minExtent, -(endPositionFirstItem - highlightEnd));
         }
         d->hData.minExtentDirty = false;
     }
@@ -1006,8 +990,8 @@ qreal QSGItemView::maxXExtent() const
         qreal lastItemPosition = 0;
         d->maxExtent = 0;
         if (d->isContentFlowReversed()) {
-            highlightStart = d->highlightRangeStartValid ? d->highlightRangeEnd : d->size();
-            highlightEnd = d->highlightRangeEndValid ? d->highlightRangeStart : d->size();
+            highlightStart = d->highlightRangeEndValid ? d->size() - d->highlightRangeEnd : d->size();
+            highlightEnd = d->highlightRangeStartValid ? d->size() - d->highlightRangeStart : d->size();
             lastItemPosition = d->endPosition();
         } else {
             highlightStart = d->highlightRangeStart;
