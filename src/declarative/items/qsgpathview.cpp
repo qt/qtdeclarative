@@ -211,7 +211,9 @@ void QSGPathViewPrivate::createHighlight()
 
     QSGItem *item = 0;
     if (highlightComponent) {
-        QDeclarativeContext *highlightContext = new QDeclarativeContext(qmlContext(q));
+        QDeclarativeContext *creationContext = highlightComponent->creationContext();
+        QDeclarativeContext *highlightContext = new QDeclarativeContext(
+                creationContext ? creationContext : qmlContext(q));
         QObject *nobj = highlightComponent->create(highlightContext);
         if (nobj) {
             QDeclarative_setParent_noEvent(highlightContext, nobj);
