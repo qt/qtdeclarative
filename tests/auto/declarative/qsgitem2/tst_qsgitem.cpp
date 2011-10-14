@@ -204,7 +204,7 @@ void tst_QSGItem::initTestCase()
 void tst_QSGItem::keys()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     KeysTestObject *testObject = new KeysTestObject;
     canvas->rootContext()->setContextProperty("keysTestObject", testObject);
@@ -328,7 +328,7 @@ void tst_QSGItem::keys()
 void tst_QSGItem::keysProcessingOrder()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     KeysTestObject *testObject = new KeysTestObject;
     canvas->rootContext()->setContextProperty("keysTestObject", testObject);
@@ -543,7 +543,7 @@ void tst_QSGItem::layoutMirroringIllegalParent()
 void tst_QSGItem::keyNavigation()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
@@ -623,7 +623,7 @@ void tst_QSGItem::keyNavigation()
 void tst_QSGItem::keyNavigation_RightToLeft()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
@@ -676,7 +676,7 @@ void tst_QSGItem::keyNavigation_RightToLeft()
 void tst_QSGItem::keyNavigation_skipNotVisible()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest.qml")));
     canvas->show();
@@ -754,7 +754,7 @@ void tst_QSGItem::keyNavigation_skipNotVisible()
 void tst_QSGItem::keyNavigation_implicitSetting()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(240,320));
 
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("keynavigationtest_implicit.qml")));
     canvas->show();
@@ -941,7 +941,7 @@ void tst_QSGItem::mapCoordinates()
     QFETCH(int, y);
 
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(300, 300);
+    canvas->setBaseSize(QSize(300, 300));
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")));
     canvas->show();
     qApp->processEvents();
@@ -971,8 +971,8 @@ void tst_QSGItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QSGItem*>(a)->mapFromScene(QPointF(x, y)));
 
-    QString warning1 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":7:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
-    QString warning2 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":7:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning1 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":48:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
+    QString warning2 = QUrl::fromLocalFile(TESTDATA("mapCoordinates.qml")).toString() + ":48:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QVERIFY(QMetaObject::invokeMethod(root, "checkMapAToInvalid",
@@ -1054,13 +1054,11 @@ void tst_QSGItem::resourcesProperty()
 void tst_QSGItem::propertyChanges()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
+    canvas->setBaseSize(QSize(300, 300));
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("propertychanges.qml")));
     canvas->show();
 
-    QApplication::setActiveWindow(canvas);
     QTest::qWaitForWindowShown(canvas);
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget *>(canvas));
 
     QSGItem *item = findItem<QSGItem>(canvas->rootObject(), "item");
     QSGItem *parentItem = findItem<QSGItem>(canvas->rootObject(), "parentItem");
@@ -1137,8 +1135,8 @@ void tst_QSGItem::propertyChanges()
 void tst_QSGItem::childrenRect()
 {
     QSGView *canvas = new QSGView(0);
-    canvas->setFixedSize(240,320);
     canvas->setSource(QUrl::fromLocalFile(TESTDATA("childrenRect.qml")));
+    canvas->setBaseSize(QSize(240,320));
     canvas->show();
 
     QSGItem *o = canvas->rootObject();

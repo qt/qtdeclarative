@@ -75,6 +75,7 @@ SGTESTS =  \
     qsggridview \
     qsgimage \
     qsgitem \
+    qsgitem2 \
     qsglistview \
     qsgloader \
     qsgmousearea \
