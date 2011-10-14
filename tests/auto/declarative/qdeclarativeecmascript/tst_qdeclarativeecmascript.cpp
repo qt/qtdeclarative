@@ -203,6 +203,7 @@ private slots:
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
+    void qtbug_21864();
     void nonscriptable();
     void deleteLater();
     void in();
@@ -4845,6 +4846,15 @@ void tst_qdeclarativeecmascript::qtbug_11606()
 void tst_qdeclarativeecmascript::qtbug_11600()
 {
     QDeclarativeComponent component(&engine, TEST_FILE("qtbug_11600.qml"));
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+    QCOMPARE(o->property("test").toBool(), true);
+    delete o;
+}
+
+void tst_qdeclarativeecmascript::qtbug_21864()
+{
+    QDeclarativeComponent component(&engine, TEST_FILE("qtbug_21864.qml"));
     QObject *o = component.create();
     QVERIFY(o != 0);
     QCOMPARE(o->property("test").toBool(), true);
