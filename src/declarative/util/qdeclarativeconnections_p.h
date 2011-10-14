@@ -43,7 +43,6 @@
 #define QDECLARATIVECONNECTIONS_H
 
 #include <qdeclarative.h>
-#include <qdeclarativescriptstring.h>
 #include <private/qdeclarativecustomparser_p.h>
 
 #include <QtCore/qobject.h>

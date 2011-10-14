@@ -44,7 +44,6 @@
 #include "qdeclarativeopenmetaobject_p.h"
 #include <private/qdeclarativerewrite_p.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qdeclarativecompiler_p.h>
 
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativecustomparser_p.h>

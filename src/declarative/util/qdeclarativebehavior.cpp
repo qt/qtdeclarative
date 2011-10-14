@@ -42,8 +42,6 @@
 #include "qdeclarativebehavior_p.h"
 
 #include "qdeclarativeanimation_p.h"
-#include "qdeclarativetransition_p.h"
-
 #include <qdeclarativecontext.h>
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativeproperty_p.h>

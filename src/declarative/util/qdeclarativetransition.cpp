@@ -39,8 +39,9 @@
 **
 ****************************************************************************/
 
+#include "qdeclarativetransition_p.h"
+
 #include "qdeclarativestate_p.h"
-#include "qdeclarativestategroup_p.h"
 #include "qdeclarativestate_p_p.h"
 #include "qdeclarativestateoperations_p.h"
 #include "qdeclarativeanimation_p.h"

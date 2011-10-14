@@ -42,7 +42,6 @@
 #include "qdeclarativeanimation_p.h"
 #include "qdeclarativeanimation_p_p.h"
 
-#include <private/qdeclarativebehavior_p.h>
 #include <private/qdeclarativestateoperations_p.h>
 #include <private/qdeclarativecontext_p.h>
 

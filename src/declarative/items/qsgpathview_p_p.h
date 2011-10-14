@@ -64,6 +64,7 @@
 
 #include <private/qdeclarativeanimation_p_p.h>
 #include <private/qdeclarativeguard_p.h>
+#include <private/qdeclarativetimeline_p_p.h>
 
 QT_BEGIN_NAMESPACE
 

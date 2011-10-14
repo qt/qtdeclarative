@@ -42,9 +42,8 @@
 #ifndef QDECLARATIVEBEHAVIOR_H
 #define QDECLARATIVEBEHAVIOR_H
 
-#include "qdeclarativestate_p.h"
+#include <private/qdeclarativeglobal_p.h>
 
-#include <qdeclarativepropertyvaluesource.h>
 #include <qdeclarativepropertyvalueinterceptor.h>
 #include <qdeclarative.h>
 #include <QtCore/QAbstractAnimation>

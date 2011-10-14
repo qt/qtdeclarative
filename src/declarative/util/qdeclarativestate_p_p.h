@@ -55,7 +55,6 @@
 
 #include "qdeclarativestate_p.h"
 
-#include "qdeclarativeanimation_p_p.h"
 #include "qdeclarativetransitionmanager_p_p.h"
 
 #include <private/qdeclarativeproperty_p.h>

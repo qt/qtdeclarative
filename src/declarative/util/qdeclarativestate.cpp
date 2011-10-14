@@ -42,13 +42,9 @@
 #include "qdeclarativestate_p_p.h"
 #include "qdeclarativestate_p.h"
 
-#include "qdeclarativetransition_p.h"
 #include "qdeclarativestategroup_p.h"
 #include "qdeclarativestateoperations_p.h"
-#include "qdeclarativeanimation_p.h"
-#include "qdeclarativeanimation_p_p.h"
 
-#include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativeglobal_p.h>
 
 #include <QtCore/qdebug.h>

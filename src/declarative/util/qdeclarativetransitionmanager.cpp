@@ -41,12 +41,15 @@
 
 #include "qdeclarativetransitionmanager_p_p.h"
 
+#include "qdeclarativetransition_p.h"
 #include "qdeclarativestate_p_p.h"
 #include "qdeclarativestate_p.h"
 
 #include <private/qdeclarativebinding_p.h>
 #include <private/qdeclarativeglobal_p.h>
 #include <private/qdeclarativeproperty_p.h>
+
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

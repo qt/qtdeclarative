@@ -46,7 +46,6 @@
 #include <qdeclarativeexpression.h>
 #include <qdeclarativeinfo.h>
 #include <private/qdeclarativeguard_p.h>
-#include <private/qdeclarativenullablevalue_p_p.h>
 #include <private/qdeclarativecontext_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include <private/qdeclarativebinding_p.h>

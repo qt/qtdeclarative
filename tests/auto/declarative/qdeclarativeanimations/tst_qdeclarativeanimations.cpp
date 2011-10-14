@@ -44,6 +44,7 @@
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/private/qsgrectangle_p.h>
 #include <QtDeclarative/private/qdeclarativeanimation_p.h>
+#include <QtDeclarative/private/qdeclarativetransition_p.h>
 #include <QtDeclarative/private/qsganimation_p.h>
 #include <QtDeclarative/private/qdeclarativepathinterpolator_p.h>
 #include <QtDeclarative/private/qsgitem_p.h>
