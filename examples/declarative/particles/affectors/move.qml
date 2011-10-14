@@ -41,65 +41,102 @@
 import QtQuick 2.0
 import QtQuick.Particles 2.0
 
-Item {
-    id: window
-    width: 480; height: 480
-    Rectangle {
-        id: sky
+Rectangle {
+    width: 360
+    height: 540
+    color: "black"
+    ParticleSystem {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop {
-                position: 0.0
-                color: "DeepSkyBlue"
-            }
-            GradientStop {
-                position: 1.0
-                color: "SkyBlue"
-            }
+        ImageParticle {
+            groups: ["A"]
+            anchors.fill: parent
+            source: "../images/star.png"
+            color:"#FF1010"
+            redVariation: 0.8
         }
-    }
 
-    Rectangle {
-        id: ground
-        width: parent.width * 2
-        height: parent.height
-        y: parent.height/2
-        x: -parent.height/2
-        transformOrigin: Item.Top
-        rotation: 0
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "ForestGreen"; }
-            GradientStop { position: 1.0; color: "DarkGreen"; }
+        Emitter {
+            group: "A"
+            emitRate: 100
+            lifeSpan: 2800
+            size: 32
+            sizeVariation: 8
+            speed: PointDirection{ x: 66; xVariation: 20 }
+            width: 80
+            height: 80
         }
-    }
 
-    MouseArea {
-        anchors.fill: parent
-        onPositionChanged: {
-            var rot = Math.atan2(mouseY - window.height/2,mouseX - window.width/2) * 180/Math.PI;
-            ground.rotation = rot;
+        Move {
+            groups: ["A"]
+            x: 120
+            width: 80
+            height: 80
+            relative: true
+            once: true
+            position: PointDirection { x: 120; }
         }
-    }
 
-    ParticleSystem { id: sys }
-    Move {
-        system: sys
-        acceleration: AngleDirection {
-            angle: ground.rotation + 90
-            magnitude: 32
+        ImageParticle {
+            groups: ["B"]
+            anchors.fill: parent
+            source: "../images/star.png"
+            color:"#10FF10"
+            greenVariation: 0.8
         }
-    }
-    Emitter {
-        system: sys
-        anchors.centerIn: parent
-        emitRate: 1
-        lifeSpan: 10000
-        size: 64
-    }
-    ImageParticle {
-        anchors.fill: parent
-        system: sys
-        source: "../images/realLeaf1.png"
-    }
 
+        Emitter {
+            group: "B"
+            emitRate: 100
+            lifeSpan: 2800
+            size: 32
+            sizeVariation: 8
+            speed: PointDirection{ x: 240; xVariation: 60 }
+            y: 260
+            width: 10
+            height: 10
+        }
+
+        Move {
+            groups: ["B"]
+            x: 120
+            y: 240
+            width: 80
+            height: 80
+            relative: true
+            once: true
+            speed: AngleDirection { angleVariation:360; magnitude: 72 }
+        }
+
+        ImageParticle {
+            groups: ["C"]
+            anchors.fill: parent
+            source: "../images/star.png"
+            color:"#1010FF"
+            blueVariation: 0.8
+        }
+
+        Emitter {
+            group: "C"
+            y: 400
+            emitRate: 100
+            lifeSpan: 2800
+            size: 32
+            sizeVariation: 8
+            speed: PointDirection{ x: 80; xVariation: 10 }
+            width: 80
+            height: 80
+        }
+
+        Move {
+            groups: ["C"]
+            x: 120
+            y: 400
+            width: 80
+            height: 80
+            relative: true
+            once: true
+            acceleration: PointDirection { y: -80; }
+        }
+
+    }
 }
