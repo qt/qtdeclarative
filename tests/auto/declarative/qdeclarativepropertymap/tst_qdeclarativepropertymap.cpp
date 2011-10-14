@@ -43,7 +43,7 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativepropertymap.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qsgtext_p.h>
+#include <private/qquicktext_p.h>
 #include <QSignalSpy>
 
 class tst_QDeclarativePropertyMap : public QObject
@@ -176,7 +176,7 @@ void tst_QDeclarativePropertyMap::changed()
     component.setData("import QtQuick 2.0\nText { text: { testdata.key1 = 'Hello World'; 'X' } }",
             QUrl::fromLocalFile(""));
     QVERIFY(component.isReady());
-    QSGText *txt = qobject_cast<QSGText*>(component.create());
+    QQuickText *txt = qobject_cast<QQuickText*>(component.create());
     QVERIFY(txt);
     QCOMPARE(txt->text(), QString('X'));
     QCOMPARE(spy.count(), 1);

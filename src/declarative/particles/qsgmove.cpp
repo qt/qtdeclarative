@@ -84,7 +84,7 @@ const qreal CONV = 0.017453292520444443;
     to the new one.
 */
 
-QSGMoveAffector::QSGMoveAffector(QSGItem *parent)
+QSGMoveAffector::QSGMoveAffector(QQuickItem *parent)
     : QSGParticleAffector(parent)
     , m_position(&m_nullVector)
     , m_speed(&m_nullVector)

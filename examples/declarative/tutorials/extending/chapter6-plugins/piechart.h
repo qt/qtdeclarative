@@ -40,18 +40,18 @@
 #ifndef PIECHART_H
 #define PIECHART_H
 
-#include <QSGItem>
+#include <QQuickItem>
 
 class PieSlice;
 
-class PieChart : public QSGItem
+class PieChart : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QDeclarativeListProperty<PieSlice> slices READ slices)
     Q_PROPERTY(QString name READ name WRITE setName)
 
 public:
-    PieChart(QSGItem *parent = 0);
+    PieChart(QQuickItem *parent = 0);
 
     QString name() const;
     void setName(const QString &name);

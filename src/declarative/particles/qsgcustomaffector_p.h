@@ -58,7 +58,7 @@ class QSGCustomAffector : public QSGParticleAffector
     Q_OBJECT
 
 public:
-    explicit QSGCustomAffector(QSGItem *parent = 0);
+    explicit QSGCustomAffector(QQuickItem *parent = 0);
     virtual void affectSystem(qreal dt);
 
 signals:

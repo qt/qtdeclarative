@@ -44,8 +44,8 @@
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarative.h>
-#include <qsgitem.h>
-#include <qsgview.h>
+#include <qquickitem.h>
+#include <qquickview.h>
 
 
 /*
@@ -64,7 +64,7 @@ int main(int argc, char ** argv)
     dataList.append("Item 3");
     dataList.append("Item 4");
 
-    QSGView view;
+    QQuickView view;
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
 //![0]

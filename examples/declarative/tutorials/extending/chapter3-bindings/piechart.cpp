@@ -40,8 +40,8 @@
 #include "piechart.h"
 #include <QPainter>
 
-PieChart::PieChart(QSGItem *parent)
-    : QSGPaintedItem(parent)
+PieChart::PieChart(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
 {
 }
 

@@ -76,7 +76,7 @@ public:
         Acceleration
     };
 
-    explicit QSGWanderAffector(QSGItem *parent = 0);
+    explicit QSGWanderAffector(QQuickItem *parent = 0);
     ~QSGWanderAffector();
     virtual void reset(int systemIdx);
 

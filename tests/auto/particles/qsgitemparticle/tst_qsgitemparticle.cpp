@@ -42,7 +42,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
-#include <private/qsgimage_p.h>
+#include <private/qquickimage_p.h>
 #include <private/qabstractanimation_p.h>
 
 class tst_qsgitemparticle : public QObject
@@ -62,7 +62,7 @@ tst_qsgitemparticle::tst_qsgitemparticle()
 
 void tst_qsgitemparticle::test_basic()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -86,7 +86,7 @@ void tst_qsgitemparticle::test_basic()
         if (d->t < ((qreal)system->timeInt/1000.0) - 0.45)//Delegates cleared on death
             continue;
         QVERIFY(d->delegate);
-        QVERIFY(qobject_cast<QSGImage*>(d->delegate));
+        QVERIFY(qobject_cast<QQuickImage*>(d->delegate));
     }
 }
 

@@ -40,12 +40,12 @@
 ****************************************************************************/
 
 #include "designersupport.h"
-#include <private/qsgitem_p.h>
+#include <private/qquickitem_p.h>
 
-#include <private/qsgshadereffectsource_p.h>
-#include <private/qsgrectangle_p.h>
+#include <private/qquickshadereffectsource_p.h>
+#include <private/qquickrectangle_p.h>
 #include <private/qdeclarativeengine_p.h>
-#include <private/qsgview_p.h>
+#include <private/qquickview_p.h>
 #include <private/qdeclarativestategroup_p.h>
 #include <QtGui/QImage>
 
@@ -57,31 +57,31 @@ DesignerSupport::DesignerSupport()
 
 DesignerSupport::~DesignerSupport()
 {
-    QHash<QSGItem*, QSGShaderEffectTexture*>::iterator iterator;
+    QHash<QQuickItem*, QQuickShaderEffectTexture*>::iterator iterator;
 
     for (iterator = m_itemTextureHash.begin(); iterator != m_itemTextureHash.end(); ++iterator) {
-        QSGShaderEffectTexture *texture = iterator.value();
-        QSGItem *item = iterator.key();
-        QSGItemPrivate::get(item)->derefFromEffectItem(true);
+        QQuickShaderEffectTexture *texture = iterator.value();
+        QQuickItem *item = iterator.key();
+        QQuickItemPrivate::get(item)->derefFromEffectItem(true);
         delete texture;
     }
 }
 
-void DesignerSupport::refFromEffectItem(QSGItem *referencedItem, bool hide)
+void DesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool hide)
 {
     if (referencedItem == 0)
         return;
 
-    QSGItemPrivate::get(referencedItem)->refFromEffectItem(hide);
-    QSGCanvasPrivate::get(referencedItem->canvas())->updateDirtyNode(referencedItem);
+    QQuickItemPrivate::get(referencedItem)->refFromEffectItem(hide);
+    QQuickCanvasPrivate::get(referencedItem->canvas())->updateDirtyNode(referencedItem);
 
-    Q_ASSERT(QSGItemPrivate::get(referencedItem)->rootNode);
+    Q_ASSERT(QQuickItemPrivate::get(referencedItem)->rootNode);
 
     if (!m_itemTextureHash.contains(referencedItem)) {
-        QSGShaderEffectTexture *texture = new QSGShaderEffectTexture(referencedItem);
+        QQuickShaderEffectTexture *texture = new QQuickShaderEffectTexture(referencedItem);
 
         texture->setLive(true);
-        texture->setItem(QSGItemPrivate::get(referencedItem)->rootNode);
+        texture->setItem(QQuickItemPrivate::get(referencedItem)->rootNode);
         texture->setRect(referencedItem->boundingRect());
         texture->setSize(referencedItem->boundingRect().size().toSize());
         texture->setRecursive(true);
@@ -96,23 +96,23 @@ void DesignerSupport::refFromEffectItem(QSGItem *referencedItem, bool hide)
     }
 }
 
-void DesignerSupport::derefFromEffectItem(QSGItem *referencedItem, bool unhide)
+void DesignerSupport::derefFromEffectItem(QQuickItem *referencedItem, bool unhide)
 {
     if (referencedItem == 0)
         return;
 
     delete m_itemTextureHash.take(referencedItem);
-    QSGItemPrivate::get(referencedItem)->derefFromEffectItem(unhide);
+    QQuickItemPrivate::get(referencedItem)->derefFromEffectItem(unhide);
 }
 
-QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
+QImage DesignerSupport::renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize)
 {
     if (referencedItem == 0 || referencedItem->parentItem() == 0) {
         qDebug() << __FILE__ << __LINE__ << "Warning: Item can be rendered.";
         return QImage();
     }
 
-    QSGShaderEffectTexture *renderTexture = m_itemTextureHash.value(referencedItem);
+    QQuickShaderEffectTexture *renderTexture = m_itemTextureHash.value(referencedItem);
 
     Q_ASSERT(renderTexture);
     if (renderTexture == 0)
@@ -130,54 +130,54 @@ QImage DesignerSupport::renderImageForItem(QSGItem *referencedItem, const QRectF
     return renderImage;
 }
 
-bool DesignerSupport::isDirty(QSGItem *referencedItem, DirtyType dirtyType)
+bool DesignerSupport::isDirty(QQuickItem *referencedItem, DirtyType dirtyType)
 {
     if (referencedItem == 0)
         return false;
 
-    return QSGItemPrivate::get(referencedItem)->dirtyAttributes & dirtyType;
+    return QQuickItemPrivate::get(referencedItem)->dirtyAttributes & dirtyType;
 }
 
-void DesignerSupport::resetDirty(QSGItem *referencedItem)
+void DesignerSupport::resetDirty(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return;
 
-    QSGItemPrivate::get(referencedItem)->dirtyAttributes = 0x0;
-    QSGItemPrivate::get(referencedItem)->removeFromDirtyList();
+    QQuickItemPrivate::get(referencedItem)->dirtyAttributes = 0x0;
+    QQuickItemPrivate::get(referencedItem)->removeFromDirtyList();
 }
 
-QTransform DesignerSupport::canvasTransform(QSGItem *referencedItem)
+QTransform DesignerSupport::canvasTransform(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return QTransform();
 
-    return QSGItemPrivate::get(referencedItem)->itemToCanvasTransform();
+    return QQuickItemPrivate::get(referencedItem)->itemToCanvasTransform();
 }
 
-QTransform DesignerSupport::parentTransform(QSGItem *referencedItem)
+QTransform DesignerSupport::parentTransform(QQuickItem *referencedItem)
 {
     if (referencedItem == 0)
         return QTransform();
 
     QTransform parentTransform;
 
-    QSGItemPrivate::get(referencedItem)->itemToParentTransform(parentTransform);
+    QQuickItemPrivate::get(referencedItem)->itemToParentTransform(parentTransform);
 
     return parentTransform;
 }
 
-QString propertyNameForAnchorLine(const QSGAnchorLine::AnchorLine &anchorLine)
+QString propertyNameForAnchorLine(const QQuickAnchorLine::AnchorLine &anchorLine)
 {
     switch (anchorLine) {
-        case QSGAnchorLine::Left: return QLatin1String("left");
-        case QSGAnchorLine::Right: return QLatin1String("right");
-        case QSGAnchorLine::Top: return QLatin1String("top");
-        case QSGAnchorLine::Bottom: return QLatin1String("bottom");
-        case QSGAnchorLine::HCenter: return QLatin1String("horizontalCenter");
-        case QSGAnchorLine::VCenter: return QLatin1String("verticalCenter");
-        case QSGAnchorLine::Baseline: return QLatin1String("baseline");
-        case QSGAnchorLine::Invalid:
+        case QQuickAnchorLine::Left: return QLatin1String("left");
+        case QQuickAnchorLine::Right: return QLatin1String("right");
+        case QQuickAnchorLine::Top: return QLatin1String("top");
+        case QQuickAnchorLine::Bottom: return QLatin1String("bottom");
+        case QQuickAnchorLine::HCenter: return QLatin1String("horizontalCenter");
+        case QQuickAnchorLine::VCenter: return QLatin1String("verticalCenter");
+        case QQuickAnchorLine::Baseline: return QLatin1String("baseline");
+        case QQuickAnchorLine::Invalid:
         default: return QString();
     }
 }
@@ -197,11 +197,11 @@ bool isValidAnchorName(const QString &name)
     return anchorNameList.contains(name);
 }
 
-bool DesignerSupport::isAnchoredTo(QSGItem *fromItem, QSGItem *toItem)
+bool DesignerSupport::isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
-    Q_ASSERT(dynamic_cast<QSGItemPrivate*>(QSGItemPrivate::get(fromItem)));
-    QSGItemPrivate *fromItemPrivate = static_cast<QSGItemPrivate*>(QSGItemPrivate::get(fromItem));
-    QSGAnchors *anchors = fromItemPrivate->anchors();
+    Q_ASSERT(dynamic_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem)));
+    QQuickItemPrivate *fromItemPrivate = static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(fromItem));
+    QQuickAnchors *anchors = fromItemPrivate->anchors();
     return anchors->fill() == toItem
             || anchors->centerIn() == toItem
             || anchors->bottom().item == toItem
@@ -213,9 +213,9 @@ bool DesignerSupport::isAnchoredTo(QSGItem *fromItem, QSGItem *toItem)
             || anchors->baseline().item == toItem;
 }
 
-bool DesignerSupport::areChildrenAnchoredTo(QSGItem *fromItem, QSGItem *toItem)
+bool DesignerSupport::areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem)
 {
-    foreach (QSGItem *childItem, fromItem->childItems()) {
+    foreach (QQuickItem *childItem, fromItem->childItems()) {
         if (childItem) {
             if (isAnchoredTo(childItem, toItem))
                 return true;
@@ -228,41 +228,41 @@ bool DesignerSupport::areChildrenAnchoredTo(QSGItem *fromItem, QSGItem *toItem)
     return false;
 }
 
-QSGAnchors *anchors(QSGItem *item)
+QQuickAnchors *anchors(QQuickItem *item)
 {
-    QSGItemPrivate *itemPrivate = static_cast<QSGItemPrivate*>(QSGItemPrivate::get(item));
+    QQuickItemPrivate *itemPrivate = static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(item));
     return itemPrivate->anchors();
 }
 
-QSGAnchors::Anchor anchorLineFlagForName(const QString &name)
+QQuickAnchors::Anchor anchorLineFlagForName(const QString &name)
 {
     if (name == QLatin1String("anchors.top"))
-        return QSGAnchors::TopAnchor;
+        return QQuickAnchors::TopAnchor;
 
     if (name == QLatin1String("anchors.left"))
-        return QSGAnchors::LeftAnchor;
+        return QQuickAnchors::LeftAnchor;
 
     if (name == QLatin1String("anchors.bottom"))
-         return QSGAnchors::BottomAnchor;
+         return QQuickAnchors::BottomAnchor;
 
     if (name == QLatin1String("anchors.right"))
-        return QSGAnchors::RightAnchor;
+        return QQuickAnchors::RightAnchor;
 
     if (name == QLatin1String("anchors.horizontalCenter"))
-        return QSGAnchors::HCenterAnchor;
+        return QQuickAnchors::HCenterAnchor;
 
     if (name == QLatin1String("anchors.verticalCenter"))
-         return QSGAnchors::VCenterAnchor;
+         return QQuickAnchors::VCenterAnchor;
 
     if (name == QLatin1String("anchors.baseline"))
-         return QSGAnchors::BaselineAnchor;
+         return QQuickAnchors::BaselineAnchor;
 
 
     Q_ASSERT_X(false, Q_FUNC_INFO, "wrong anchor name - this should never happen");
-    return QSGAnchors::LeftAnchor;
+    return QQuickAnchors::LeftAnchor;
 }
 
-bool DesignerSupport::hasAnchor(QSGItem *item, const QString &name)
+bool DesignerSupport::hasAnchor(QQuickItem *item, const QString &name)
 {
     if (!isValidAnchorName(name))
         return false;
@@ -297,19 +297,19 @@ bool DesignerSupport::hasAnchor(QSGItem *item, const QString &name)
     return anchors(item)->usedAnchors().testFlag(anchorLineFlagForName(name));
 }
 
-QSGItem *DesignerSupport::anchorFillTargetItem(QSGItem *item)
+QQuickItem *DesignerSupport::anchorFillTargetItem(QQuickItem *item)
 {
     return anchors(item)->fill();
 }
 
-QSGItem *DesignerSupport::anchorCenterInTargetItem(QSGItem *item)
+QQuickItem *DesignerSupport::anchorCenterInTargetItem(QQuickItem *item)
 {
     return anchors(item)->centerIn();
 }
 
 
 
-QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QSGItem *item, const QString &name, QDeclarativeContext *context)
+QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QQuickItem *item, const QString &name, QDeclarativeContext *context)
 {
     QObject *targetObject = 0;
     QString targetName;
@@ -323,8 +323,8 @@ QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QSGItem *item, const 
         if (!metaProperty.isValid())
             return QPair<QString, QObject*>();
 
-        QSGAnchorLine anchorLine = metaProperty.read().value<QSGAnchorLine>();
-        if (anchorLine.anchorLine != QSGAnchorLine::Invalid) {
+        QQuickAnchorLine anchorLine = metaProperty.read().value<QQuickAnchorLine>();
+        if (anchorLine.anchorLine != QQuickAnchorLine::Invalid) {
             targetObject = anchorLine.item;
             targetName = propertyNameForAnchorLine(anchorLine.anchorLine);
         }
@@ -334,7 +334,7 @@ QPair<QString, QObject*> DesignerSupport::anchorLineTarget(QSGItem *item, const 
     return QPair<QString, QObject*>(targetName, targetObject);
 }
 
-void DesignerSupport::resetAnchor(QSGItem *item, const QString &name)
+void DesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
 {
     if (name == QLatin1String("anchors.fill")) {
         anchors(item)->resetFill();
@@ -357,23 +357,23 @@ void DesignerSupport::resetAnchor(QSGItem *item, const QString &name)
     }
 }
 
-QList<QObject*> DesignerSupport::statesForItem(QSGItem *item)
+QList<QObject*> DesignerSupport::statesForItem(QQuickItem *item)
 {
     QList<QObject*> objectList;
-    QList<QDeclarativeState *> stateList = QSGItemPrivate::get(item)->_states()->states();
+    QList<QDeclarativeState *> stateList = QQuickItemPrivate::get(item)->_states()->states();
     qCopy(stateList.begin(), stateList.end(), objectList.begin());
 
     return objectList;
 }
 
-bool DesignerSupport::isComponentComplete(QSGItem *item)
+bool DesignerSupport::isComponentComplete(QQuickItem *item)
 {
-    return static_cast<QSGItemPrivate*>(QSGItemPrivate::get(item))->componentComplete;
+    return static_cast<QQuickItemPrivate*>(QQuickItemPrivate::get(item))->componentComplete;
 }
 
-int DesignerSupport::borderWidth(QSGItem *item)
+int DesignerSupport::borderWidth(QQuickItem *item)
 {
-    QSGRectangle *rectangle = qobject_cast<QSGRectangle*>(item);
+    QQuickRectangle *rectangle = qobject_cast<QQuickRectangle*>(item);
     if (rectangle)
         return rectangle->border()->width();
 
@@ -385,24 +385,24 @@ void DesignerSupport::refreshExpressions(QDeclarativeContext *context)
     QDeclarativeContextPrivate::get(context)->data->refreshExpressions();
 }
 
-void DesignerSupport::setRootItem(QSGView *view, QSGItem *item)
+void DesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)
 {
-    QSGViewPrivate::get(view)->setRootObject(item);
+    QQuickViewPrivate::get(view)->setRootObject(item);
 }
 
-bool DesignerSupport::isValidWidth(QSGItem *item)
+bool DesignerSupport::isValidWidth(QQuickItem *item)
 {
-    return QSGItemPrivate::get(item)->heightValid;
+    return QQuickItemPrivate::get(item)->heightValid;
 }
 
-bool DesignerSupport::isValidHeight(QSGItem *item)
+bool DesignerSupport::isValidHeight(QQuickItem *item)
 {
-    return QSGItemPrivate::get(item)->widthValid;
+    return QQuickItemPrivate::get(item)->widthValid;
 }
 
-void DesignerSupport::updateDirtyNode(QSGItem *item)
+void DesignerSupport::updateDirtyNode(QQuickItem *item)
 {
-    QSGCanvasPrivate::get(item->canvas())->updateDirtyNode(item);
+    QQuickCanvasPrivate::get(item->canvas())->updateDirtyNode(item);
 }
 
 QT_END_NAMESPACE

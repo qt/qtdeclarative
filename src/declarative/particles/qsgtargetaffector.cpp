@@ -42,7 +42,7 @@
 #include "qsgtargetaffector_p.h"
 #include <QDebug>
 
-QSGTargetAffector::QSGTargetAffector(QSGItem *parent) :
+QSGTargetAffector::QSGTargetAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_targetX(0), m_targetY(0),
     m_targetWidth(0), m_targetHeight(0), m_defaultShape(new QSGParticleExtruder(this)),
     m_targetShape(m_defaultShape), m_targetTime(-1)

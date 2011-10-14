@@ -49,22 +49,22 @@ QT_BEGIN_HEADER
 QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
-class QSGVisualDataModel;
-class QSGItemParticleAttached;
+class QQuickVisualDataModel;
+class QQuickItemParticleAttached;
 
-class QSGItemParticle : public QSGParticlePainter
+class QQuickItemParticle : public QSGParticlePainter
 {
     Q_OBJECT
     Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
     Q_PROPERTY(QDeclarativeComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 public:
-    explicit QSGItemParticle(QSGItem *parent = 0);
+    explicit QQuickItemParticle(QQuickItem *parent = 0);
 
     bool fade() const { return m_fade; }
 
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
 
-    static QSGItemParticleAttached *qmlAttachedProperties(QObject *object);
+    static QQuickItemParticleAttached *qmlAttachedProperties(QObject *object);
     QDeclarativeComponent* delegate() const
     {
         return m_delegate;
@@ -77,10 +77,10 @@ signals:
 
 public slots:
     //TODO: Add a follow mode, where moving the delegate causes the logical particle to go with it?
-    void freeze(QSGItem* item);
-    void unfreeze(QSGItem* item);
-    void take(QSGItem* item,bool prioritize=false);//take by modelparticle
-    void give(QSGItem* item);//give from modelparticle
+    void freeze(QQuickItem* item);
+    void unfreeze(QQuickItem* item);
+    void take(QQuickItem* item,bool prioritize=false);//take by modelparticle
+    void give(QQuickItem* item);//give from modelparticle
 
     void setFade(bool arg){if (arg == m_fade) return; m_fade = arg; emit fadeChanged();}
     void setDelegate(QDeclarativeComponent* arg)
@@ -99,32 +99,32 @@ protected:
 private slots:
     void tick();
 private:
-    QList<QSGItem* > m_deletables;
+    QList<QQuickItem* > m_deletables;
     QList< QSGParticleData* > m_loadables;
     bool m_fade;
 
-    QList<QSGItem*> m_pendingItems;
+    QList<QQuickItem*> m_pendingItems;
     QList<int> m_available;
-    QSet<QSGItem*> m_stasis;
+    QSet<QQuickItem*> m_stasis;
     qreal m_lastT;
     int m_activeCount;
     QDeclarativeComponent* m_delegate;
 };
 
-class QSGItemParticleAttached : public QObject
+class QQuickItemParticleAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QSGItemParticle* particle READ particle CONSTANT);
+    Q_PROPERTY(QQuickItemParticle* particle READ particle CONSTANT);
 public:
-    QSGItemParticleAttached(QObject* parent)
+    QQuickItemParticleAttached(QObject* parent)
         : QObject(parent), m_mp(0)
     {;}
-    QSGItemParticle* particle() {return m_mp;}
+    QQuickItemParticle* particle() {return m_mp;}
     void detach(){emit detached();}
     void attach(){emit attached();}
 private:
-    QSGItemParticle* m_mp;
-    friend class QSGItemParticle;
+    QQuickItemParticle* m_mp;
+    friend class QQuickItemParticle;
 Q_SIGNALS:
     void detached();
     void attached();
@@ -132,7 +132,7 @@ Q_SIGNALS:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPEINFO(QSGItemParticle, QML_HAS_ATTACHED_PROPERTIES)
+QML_DECLARE_TYPEINFO(QQuickItemParticle, QML_HAS_ATTACHED_PROPERTIES)
 
 QT_END_HEADER
 #endif // ITEMPARTICLE_H

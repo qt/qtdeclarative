@@ -66,7 +66,7 @@ public:
     enum EmitSize {
         ParticleSize = -2//Anything less than 0 will do
     };
-    explicit QSGTrailEmitter(QSGItem *parent = 0);
+    explicit QSGTrailEmitter(QQuickItem *parent = 0);
     virtual void emitWindow(int timeStamp);
     virtual void reset();
 

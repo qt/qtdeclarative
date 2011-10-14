@@ -42,7 +42,7 @@
 #ifndef CUSTOM_PARTICLE_H
 #define CUSTOM_PARTICLE_H
 #include "qsgparticlepainter_p.h"
-#include <private/qsgshadereffectnode_p.h>
+#include <private/qquickshadereffectnode_p.h>
 #include <QSignalMapper>
 
 QT_BEGIN_HEADER
@@ -64,7 +64,7 @@ class QSGCustomParticle : public QSGParticlePainter
     Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
 
 public:
-    explicit QSGCustomParticle(QSGItem* parent=0);
+    explicit QSGCustomParticle(QQuickItem* parent=0);
     ~QSGCustomParticle();
 
     QByteArray fragmentShader() const { return m_source.fragmentCode; }
@@ -92,24 +92,24 @@ protected:
     void updateProperties();
     void lookThroughShaderCode(const QByteArray &code);
     virtual void componentComplete();
-    QSGShaderEffectNode *buildCustomNodes();
+    QQuickShaderEffectNode *buildCustomNodes();
     void performPendingResize();
 
 private:
     void buildData();
 
     bool m_dirtyData;
-    QSGShaderEffectProgram m_source;
+    QQuickShaderEffectProgram m_source;
     struct SourceData
     {
         QSignalMapper *mapper;
-        QPointer<QSGItem> item;
+        QPointer<QQuickItem> item;
         QByteArray name;
     };
     QVector<SourceData> m_sources;
     QSGShaderEffectMaterialObject *m_material;
-    QSGShaderEffectNode* m_rootNode;
-    QHash<int, QSGShaderEffectNode*> m_nodes;
+    QQuickShaderEffectNode* m_rootNode;
+    QHash<int, QQuickShaderEffectNode*> m_nodes;
     qreal m_lastTime;
 
 };

@@ -61,7 +61,7 @@ tst_qsggravity::tst_qsggravity()
 
 void tst_qsggravity::test_basic()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

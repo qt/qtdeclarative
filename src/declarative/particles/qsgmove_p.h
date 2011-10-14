@@ -60,7 +60,7 @@ class QSGMoveAffector : public QSGParticleAffector
     Q_PROPERTY(QSGDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
 
 public:
-    explicit QSGMoveAffector(QSGItem *parent = 0);
+    explicit QSGMoveAffector(QQuickItem *parent = 0);
     QSGDirection * position() const
     {
         return m_position;

@@ -212,8 +212,8 @@ QT_BEGIN_NAMESPACE
     it back off.
 */
 
-QSGParticleEmitter::QSGParticleEmitter(QSGItem *parent) :
-    QSGItem(parent)
+QSGParticleEmitter::QSGParticleEmitter(QQuickItem *parent) :
+    QQuickItem(parent)
   , m_particlesPerSecond(10)
   , m_particleDuration(1000)
   , m_particleDurationVariation(0)
@@ -261,7 +261,7 @@ void QSGParticleEmitter::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    QSGItem::componentComplete();
+    QQuickItem::componentComplete();
 }
 
 void QSGParticleEmitter::setEnabled(bool arg)

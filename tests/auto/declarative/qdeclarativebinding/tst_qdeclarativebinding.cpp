@@ -42,7 +42,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativebind_p.h>
-#include <private/qsgrectangle_p.h>
+#include <private/qquickrectangle_p.h>
 #include "../shared/util.h"
 
 class tst_qdeclarativebinding : public QObject
@@ -70,7 +70,7 @@ void tst_qdeclarativebinding::binding()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
     QDeclarativeBind *binding3 = qobject_cast<QDeclarativeBind*>(rect->findChild<QDeclarativeBind*>("binding3"));
@@ -98,7 +98,7 @@ void tst_qdeclarativebinding::whenAfterValue()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-binding2.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
 
     QVERIFY(rect != 0);
     QCOMPARE(rect->color(), QColor("yellow"));
@@ -114,10 +114,10 @@ void tst_qdeclarativebinding::restoreBinding()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBinding.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGRectangle *myItem = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("myItem"));
+    QQuickRectangle *myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
     QVERIFY(myItem != 0);
 
     myItem->setY(25);
@@ -144,10 +144,10 @@ void tst_qdeclarativebinding::restoreBindingWithLoop()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("restoreBindingWithLoop.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
-    QSGRectangle *myItem = qobject_cast<QSGRectangle*>(rect->findChild<QSGRectangle*>("myItem"));
+    QQuickRectangle *myItem = qobject_cast<QQuickRectangle*>(rect->findChild<QQuickRectangle*>("myItem"));
     QVERIFY(myItem != 0);
 
     myItem->setY(25);
@@ -179,7 +179,7 @@ void tst_qdeclarativebinding::deletedObject()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("deletedObject.qml")));
-    QSGRectangle *rect = qobject_cast<QSGRectangle*>(c.create());
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
     QVERIFY(rect != 0);
 
     QGuiApplication::sendPostedEvents(0, QEvent::DeferredDelete);

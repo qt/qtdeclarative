@@ -54,14 +54,14 @@ QT_BEGIN_NAMESPACE
 QT_MODULE(Declarative)
 
 
-class QSGParticlePainter : public QSGItem
+class QSGParticlePainter : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
 
 public:
-    explicit QSGParticlePainter(QSGItem *parent = 0);
+    explicit QSGParticlePainter(QQuickItem *parent = 0);
     //Data Interface to system
     void load(QSGParticleData*);
     void reload(QSGParticleData*);

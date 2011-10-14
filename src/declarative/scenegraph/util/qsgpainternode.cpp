@@ -41,8 +41,8 @@
 
 #include "qsgpainternode_p.h"
 
-#include "qsgpainteditem.h"
-#include <private/qsgpainteditem_p.h>
+#include <private/qquickpainteditem_p.h>
+
 #include <private/qsgcontext_p.h>
 #include <private/qopenglextensions_p.h>
 #include <qopenglframebufferobject.h>
@@ -105,10 +105,10 @@ void QSGPainterTexture::bind()
     m_dirty_rect = QRect();
 }
 
-QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
+QSGPainterNode::QSGPainterNode(QQuickPaintedItem *item)
     : QSGGeometryNode()
-    , m_preferredRenderTarget(QSGPaintedItem::Image)
-    , m_actualRenderTarget(QSGPaintedItem::Image)
+    , m_preferredRenderTarget(QQuickPaintedItem::Image)
+    , m_actualRenderTarget(QQuickPaintedItem::Image)
     , m_item(item)
     , m_fbo(0)
     , m_multisampledFbo(0)
@@ -130,7 +130,7 @@ QSGPainterNode::QSGPainterNode(QSGPaintedItem *item)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
 {
-    m_context = static_cast<QSGPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphContext();
+    m_context = static_cast<QQuickPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphContext();
 
     setMaterial(&m_materialO);
     setOpaqueMaterial(&m_material);
@@ -150,7 +150,7 @@ void QSGPainterNode::paint()
     QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
 
     QPainter painter;
-    if (m_actualRenderTarget == QSGPaintedItem::Image)
+    if (m_actualRenderTarget == QQuickPaintedItem::Image)
         painter.begin(&m_image);
     else {
         if (!m_gl_device) {
@@ -188,7 +188,7 @@ void QSGPainterNode::paint()
     m_item->paint(&painter);
     painter.end();
 
-    if (m_actualRenderTarget == QSGPaintedItem::Image) {
+    if (m_actualRenderTarget == QQuickPaintedItem::Image) {
         m_texture->setImage(m_image);
         m_texture->setDirtyRect(dirtyRect);
     } else if (m_multisampledFbo) {
@@ -234,7 +234,7 @@ void QSGPainterNode::updateTexture()
 void QSGPainterNode::updateGeometry()
 {
     QRectF source;
-    if (m_actualRenderTarget == QSGPaintedItem::Image)
+    if (m_actualRenderTarget == QQuickPaintedItem::Image)
         source = QRectF(0, 0, 1, 1);
     else
         source = QRectF(0, 0, qreal(m_size.width()) / m_fboSize.width(), qreal(m_size.height()) / m_fboSize.height());
@@ -255,14 +255,14 @@ void QSGPainterNode::updateRenderTarget()
 
     m_dirtyContents = true;
 
-    QSGPaintedItem::RenderTarget oldTarget = m_actualRenderTarget;
-    if (m_preferredRenderTarget == QSGPaintedItem::Image) {
-        m_actualRenderTarget = QSGPaintedItem::Image;
+    QQuickPaintedItem::RenderTarget oldTarget = m_actualRenderTarget;
+    if (m_preferredRenderTarget == QQuickPaintedItem::Image) {
+        m_actualRenderTarget = QQuickPaintedItem::Image;
     } else {
         if (!m_multisamplingSupported && m_smoothPainting)
-            m_actualRenderTarget = QSGPaintedItem::Image;
+            m_actualRenderTarget = QQuickPaintedItem::Image;
         else
-            m_actualRenderTarget = QSGPaintedItem::FramebufferObject;
+            m_actualRenderTarget = QQuickPaintedItem::FramebufferObject;
     }
     if (oldTarget != m_actualRenderTarget) {
         m_image = QImage();
@@ -271,7 +271,7 @@ void QSGPainterNode::updateRenderTarget()
         m_fbo = m_multisampledFbo = 0;
     }
 
-    if (m_actualRenderTarget == QSGPaintedItem::FramebufferObject) {
+    if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject) {
         const QOpenGLContext *ctx = m_context->glContext();
         if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;
@@ -309,7 +309,7 @@ void QSGPainterNode::updateRenderTarget()
     }
 
     QSGPainterTexture *texture = new QSGPainterTexture;
-    if (m_actualRenderTarget == QSGPaintedItem::Image) {
+    if (m_actualRenderTarget == QQuickPaintedItem::Image) {
         texture->setOwnsTexture(true);
         texture->setTextureSize(m_size);
     } else {
@@ -341,7 +341,7 @@ void QSGPainterNode::updateFBOSize()
     m_fboSize = QSize(fboWidth, fboHeight);
 }
 
-void QSGPainterNode::setPreferredRenderTarget(QSGPaintedItem::RenderTarget target)
+void QSGPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
 {
     if (m_preferredRenderTarget == target)
         return;
@@ -446,7 +446,7 @@ void QSGPainterNode::setFastFBOResizing(bool dynamic)
 
 QImage QSGPainterNode::toImage() const
 {
-    if (m_actualRenderTarget == QSGPaintedItem::Image)
+    if (m_actualRenderTarget == QQuickPaintedItem::Image)
         return m_image;
     else
         return m_fbo->toImage();

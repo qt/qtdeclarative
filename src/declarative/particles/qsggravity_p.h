@@ -56,7 +56,7 @@ class QSGGravityAffector : public QSGParticleAffector
     Q_PROPERTY(qreal acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged)
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
 public:
-    explicit QSGGravityAffector(QSGItem *parent = 0);
+    explicit QSGGravityAffector(QQuickItem *parent = 0);
     qreal acceleration() const
     {
         return m_acceleration;

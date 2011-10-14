@@ -63,8 +63,8 @@ QT_BEGIN_NAMESPACE
 
     If empty, it will paint the default particle group ("").
 */
-QSGParticlePainter::QSGParticlePainter(QSGItem *parent) :
-    QSGItem(parent),
+QSGParticlePainter::QSGParticlePainter(QQuickItem *parent) :
+    QQuickItem(parent),
     m_system(0), m_count(0), m_pleaseReset(true), m_sentinel(new QSGParticleData(0))
 {
 }
@@ -73,7 +73,7 @@ void QSGParticlePainter::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    QSGItem::componentComplete();
+    QQuickItem::componentComplete();
 }
 
 

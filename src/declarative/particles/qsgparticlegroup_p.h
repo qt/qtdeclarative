@@ -40,13 +40,13 @@
 ****************************************************************************/
 #ifndef QSGPARTICLEGROUP
 #define QSGPARTICLEGROUP
-#include <private/qsgspriteengine_p.h>
+#include <private/qquickspriteengine_p.h>
 #include "qsgparticlesystem_p.h"
 #include "qdeclarativeparserstatus.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGParticleGroup : public QSGStochasticState, public QDeclarativeParserStatus
+class QSGParticleGroup : public QQuickStochasticState, public QDeclarativeParserStatus
 {
     Q_OBJECT
     //### Would setting limits per group be useful? Or clutter the API?

@@ -42,7 +42,7 @@
 #ifndef PARTICLEEMITTER_H
 #define PARTICLEEMITTER_H
 
-#include <QSGItem>
+#include <QQuickItem>
 #include <QDebug>
 #include "qsgparticlesystem_p.h"
 #include "qsgparticleextruder_p.h"
@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGParticleEmitter : public QSGItem
+class QSGParticleEmitter : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
@@ -81,7 +81,7 @@ class QSGParticleEmitter : public QSGItem
 
     Q_ENUMS(Lifetime)
 public:
-    explicit QSGParticleEmitter(QSGItem *parent = 0);
+    explicit QSGParticleEmitter(QQuickItem *parent = 0);
     virtual ~QSGParticleEmitter();
     virtual void emitWindow(int timeStamp);
 

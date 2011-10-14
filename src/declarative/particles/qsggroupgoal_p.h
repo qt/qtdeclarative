@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGStochasticEngine;
+class QQuickStochasticEngine;
 
 class QSGGroupGoalAffector : public QSGParticleAffector
 {
@@ -57,7 +57,7 @@ class QSGGroupGoalAffector : public QSGParticleAffector
     Q_PROPERTY(QString goalState READ goalState WRITE setGoalState NOTIFY goalStateChanged)
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
 public:
-    explicit QSGGroupGoalAffector(QSGItem *parent = 0);
+    explicit QSGGroupGoalAffector(QQuickItem *parent = 0);
 
     QString goalState() const
     {

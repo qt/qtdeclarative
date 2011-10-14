@@ -56,8 +56,8 @@ QT_MODULE(Declarative)
 class ImageMaterialData;
 class QSGGeometryNode;
 
-class QSGSprite;
-class QSGStochasticEngine;
+class QQuickSprite;
+class QQuickStochasticEngine;
 
 struct SimpleVertex {
     float x;
@@ -180,19 +180,19 @@ class QSGImageParticle : public QSGParticlePainter
     Q_PROPERTY(QSGDirection* xVector READ xVector WRITE setXVector NOTIFY xVectorChanged RESET resetDeformation)
     //yVector is the same, but top-left to bottom-left. The particle is always a parallelogram.
     Q_PROPERTY(QSGDirection* yVector READ yVector WRITE setYVector NOTIFY yVectorChanged RESET resetDeformation)
-    Q_PROPERTY(QDeclarativeListProperty<QSGSprite> sprites READ sprites)
+    Q_PROPERTY(QDeclarativeListProperty<QQuickSprite> sprites READ sprites)
     Q_PROPERTY(bool spritesInterpolate READ spritesInterpolate WRITE setSpritesInterpolate NOTIFY spritesInterpolateChanged)
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     Q_PROPERTY(bool bloat READ bloat WRITE setBloat NOTIFY bloatChanged)//Just a debugging property to bypass optimizations
     Q_ENUMS(EntryEffect)
 public:
-    explicit QSGImageParticle(QSGItem *parent = 0);
+    explicit QSGImageParticle(QQuickItem *parent = 0);
     virtual ~QSGImageParticle();
 
 
-    QDeclarativeListProperty<QSGSprite> sprites();
-    QSGStochasticEngine* spriteEngine() {return m_spriteEngine;}
+    QDeclarativeListProperty<QQuickSprite> sprites();
+    QQuickStochasticEngine* spriteEngine() {return m_spriteEngine;}
 
     enum EntryEffect {
         None = 0,
@@ -381,8 +381,8 @@ private:
     QSGDirection* m_xVector;
     QSGDirection* m_yVector;
 
-    QList<QSGSprite*> m_sprites;
-    QSGSpriteEngine* m_spriteEngine;
+    QList<QQuickSprite*> m_sprites;
+    QQuickSpriteEngine* m_spriteEngine;
     bool m_spritesInterpolate;
 
     bool m_explicitColor;

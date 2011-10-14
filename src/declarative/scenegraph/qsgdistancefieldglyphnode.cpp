@@ -51,7 +51,7 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGDistanceFieldGlyphCacheM
     , m_glyph_cacheManager(cacheManager)
     , m_glyph_cache(0)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
-    , m_style(QSGText::Normal)
+    , m_style(QQuickText::Normal)
     , m_antialiasingMode(GrayAntialiasing)
     , m_dirtyFont(false)
     , m_dirtyGeometry(false)
@@ -102,7 +102,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     m_dirtyMaterial = true;
 }
 
-void QSGDistanceFieldGlyphNode::setStyle(QSGText::TextStyle style)
+void QSGDistanceFieldGlyphNode::setStyle(QQuickText::TextStyle style)
 {
     if (m_style == style)
         return;
@@ -255,7 +255,7 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
 {
     delete m_material;
 
-    if (m_style == QSGText::Normal) {
+    if (m_style == QQuickText::Normal) {
         switch (m_antialiasingMode) {
         case HighQualitySubPixelAntialiasing:
             m_material = new QSGHiQSubPixelDistanceFieldTextMaterial;
@@ -270,11 +270,11 @@ void QSGDistanceFieldGlyphNode::updateMaterial()
         }
     } else {
         QSGDistanceFieldStyledTextMaterial *material;
-        if (m_style == QSGText::Outline) {
+        if (m_style == QQuickText::Outline) {
             material = new QSGDistanceFieldOutlineTextMaterial;
         } else {
             QSGDistanceFieldShiftedStyleTextMaterial *sMaterial = new QSGDistanceFieldShiftedStyleTextMaterial;
-            if (m_style == QSGText::Raised)
+            if (m_style == QQuickText::Raised)
                 sMaterial->setShift(QPointF(0.0, 1.0));
             else
                 sMaterial->setShift(QPointF(0.0, -1.0));

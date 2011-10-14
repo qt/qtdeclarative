@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
     Default value is true.
 */
 
-QSGAgeAffector::QSGAgeAffector(QSGItem *parent) :
+QSGAgeAffector::QSGAgeAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_lifeLeft(0), m_advancePosition(true)
 {
 }

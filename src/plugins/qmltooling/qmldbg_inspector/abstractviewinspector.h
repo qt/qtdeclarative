@@ -64,7 +64,7 @@ class AbstractTool;
 class ToolBox;
 
 /*
- * The common code between QSGView and QDeclarativeView inspectors lives here,
+ * The common code between QQuickView and QDeclarativeView inspectors lives here,
  */
 class AbstractViewInspector : public QObject
 {

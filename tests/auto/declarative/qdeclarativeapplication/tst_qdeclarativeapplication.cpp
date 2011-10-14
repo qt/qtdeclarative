@@ -42,8 +42,8 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
-#include <QtDeclarative/qsgitem.h>
-#include <QtDeclarative/qsgview.h>
+#include <QtDeclarative/qquickitem.h>
+#include <QtDeclarative/qquickview.h>
 #include <QtGui/qinputpanel.h>
 
 class tst_qdeclarativeapplication : public QObject
@@ -71,9 +71,9 @@ void tst_qdeclarativeapplication::active()
 
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
-    QSGView view;
+    QQuickView view;
     item->setParentItem(view.rootObject());
 
     // not active
@@ -84,7 +84,7 @@ void tst_qdeclarativeapplication::active()
     view.show();
     view.requestActivateWindow();
     QTest::qWait(50);
-    QTRY_COMPARE(view.status(), QSGView::Ready);
+    QTRY_COMPARE(view.status(), QQuickView::Ready);
     QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
 
     // not active again
@@ -104,9 +104,9 @@ void tst_qdeclarativeapplication::layoutDirection()
 
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool layoutDirection: Qt.application.layoutDirection }", QUrl::fromLocalFile(""));
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
-    QSGView view;
+    QQuickView view;
     item->setParentItem(view.rootObject());
 
     // not mirrored
@@ -125,9 +125,9 @@ void tst_qdeclarativeapplication::inputPanel()
 {
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property variant inputPanel: Qt.application.inputPanel }", QUrl::fromLocalFile(""));
-    QSGItem *item = qobject_cast<QSGItem *>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
-    QSGView view;
+    QQuickView view;
     item->setParentItem(view.rootObject());
 
     // check that the inputPanel property maches with application's input panel

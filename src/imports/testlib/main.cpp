@@ -46,7 +46,7 @@
 #include "QtQuickTest/private/quicktestresult_p.h"
 #include "QtQuickTest/private/quicktestevent_p.h"
 #include "private/qtestoptions_p.h"
-#include "QtDeclarative/qsgitem.h"
+#include "QtDeclarative/qquickitem.h"
 #include <QtDeclarative/private/qdeclarativeengine_p.h>
 
 QML_DECLARE_TYPE(QuickTestResult)

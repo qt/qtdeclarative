@@ -70,7 +70,7 @@ const qreal CONV = 0.017453292520444443;
     Angle of acceleration.
 */
 
-QSGGravityAffector::QSGGravityAffector(QSGItem *parent) :
+QSGGravityAffector::QSGGravityAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_acceleration(-10), m_angle(90), m_xAcc(0), m_yAcc(0)
 {
     connect(this, SIGNAL(accelerationChanged(qreal)),

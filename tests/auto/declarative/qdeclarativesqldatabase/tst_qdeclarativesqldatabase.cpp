@@ -41,7 +41,7 @@
 #include <qtest.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <private/qsgtext_p.h>
+#include <private/qquicktext_p.h>
 #include <private/qdeclarativeengine_p.h>
 #include <QtCore/qcryptographichash.h>
 /*
@@ -206,7 +206,7 @@ void tst_qdeclarativesqldatabase::testQml()
     QDeclarativeComponent component(engine);
     component.setData(qml.toUtf8(), QUrl::fromLocalFile(TESTDATA("empty.qml"))); // just a file for relative local imports
     QVERIFY(!component.isError());
-    QSGText *text = qobject_cast<QSGText*>(component.create());
+    QQuickText *text = qobject_cast<QQuickText*>(component.create());
     QVERIFY(text != 0);
     QCOMPARE(text->text(),QString("passed"));
 }

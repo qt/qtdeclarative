@@ -39,8 +39,8 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include <QtDeclarative/private/qsgitem_p.h>
-#include <QtDeclarative/private/qsgtext_p.h>
+#include <QtDeclarative/private/qquickitem_p.h>
+#include <QtDeclarative/private/qquicktext_p.h>
 #include <QtDeclarative/private/qdeclarativeengine_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include <QtDeclarative/private/qdeclarativeexpression_p.h>
@@ -62,8 +62,8 @@ public:
 
 private:
     int roleFromName(const QDeclarativeListModel *model, const QString &roleName);
-    QSGItem *createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model);
-    void waitForWorker(QSGItem *item);
+    QQuickItem *createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model);
+    void waitForWorker(QQuickItem *item);
 
 private slots:
     void static_types();
@@ -113,16 +113,16 @@ int tst_qdeclarativelistmodel::roleFromName(const QDeclarativeListModel *model, 
     return -1;
 }
 
-QSGItem *tst_qdeclarativelistmodel::createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model)
+QQuickItem *tst_qdeclarativelistmodel::createWorkerTest(QDeclarativeEngine *eng, QDeclarativeComponent *component, QDeclarativeListModel *model)
 {
-    QSGItem *item = qobject_cast<QSGItem*>(component->create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(component->create());
     QDeclarativeEngine::setContextForObject(model, eng->rootContext());
     if (item)
         item->setProperty("model", qVariantFromValue(model)); 
     return item;
 }
 
-void tst_qdeclarativelistmodel::waitForWorker(QSGItem *item)
+void tst_qdeclarativelistmodel::waitForWorker(QQuickItem *item)
 {
     QEventLoop loop;
     QTimer timer;
@@ -164,7 +164,7 @@ void tst_qdeclarativelistmodel::static_types_data()
 
     QTest::newRow("enum")
         << "ListElement { foo: Text.AlignHCenter }"
-        << QVariant(double(QSGText::AlignHCenter));
+        << QVariant(double(QQuickText::AlignHCenter));
 
     QTest::newRow("Qt enum")
         << "ListElement { foo: Qt.AlignBottom }"
@@ -456,7 +456,7 @@ void tst_qdeclarativelistmodel::dynamic_worker()
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
-    QSGItem *item = createWorkerTest(&eng, &component, &model);
+    QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
     QSignalSpy spyCount(&model, SIGNAL(countChanged()));
@@ -502,7 +502,7 @@ void tst_qdeclarativelistmodel::dynamic_worker_sync()
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
-    QSGItem *item = createWorkerTest(&eng, &component, &model);
+    QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
     if (script[0] == QLatin1Char('{') && script[script.length()-1] == QLatin1Char('}'))
@@ -556,7 +556,7 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_fail()
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
-    QSGItem *item = createWorkerTest(&eng, &component, &model);
+    QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
     RUNEVAL(item, "model.append({foo: 123})");
@@ -599,7 +599,7 @@ void tst_qdeclarativelistmodel::convertNestedToFlat_ok()
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
-    QSGItem *item = createWorkerTest(&eng, &component, &model);
+    QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
     RUNEVAL(item, "model.append({foo: 123})");
@@ -643,7 +643,7 @@ void tst_qdeclarativelistmodel::enumerate()
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/enumerate.qml"));
     QVERIFY(!component.isError());
-    QSGItem *item = qobject_cast<QSGItem*>(component.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
     QStringList r = item->property("result").toString().split(":");
     QCOMPARE(r[0],QLatin1String("val1=1Y"));
@@ -830,7 +830,7 @@ void tst_qdeclarativelistmodel::get_worker()
     QDeclarativeListModel model;
     QDeclarativeEngine eng;
     QDeclarativeComponent component(&eng, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
-    QSGItem *item = createWorkerTest(&eng, &component, &model);
+    QQuickItem *item = createWorkerTest(&eng, &component, &model);
     QVERIFY(item != 0);
 
     // Add some values like get() test
@@ -1131,7 +1131,7 @@ void tst_qdeclarativelistmodel::property_changes_worker()
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl::fromLocalFile(SRCDIR "/data/model.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
-    QSGItem *item = createWorkerTest(&engine, &component, &model);
+    QQuickItem *item = createWorkerTest(&engine, &component, &model);
     QVERIFY(item != 0);
 
     QDeclarativeExpression expr(engine.rootContext(), &model, script_setup);

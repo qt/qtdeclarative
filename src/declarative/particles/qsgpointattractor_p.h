@@ -75,7 +75,7 @@ public:
         Acceleration
     };
 
-    explicit QSGAttractorAffector(QSGItem *parent = 0);
+    explicit QSGAttractorAffector(QQuickItem *parent = 0);
 
     qreal strength() const
     {

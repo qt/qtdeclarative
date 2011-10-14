@@ -34,12 +34,12 @@
 
     \image declarative-textballoons_example.png
 
-    The QSGPaintedItem class is a class derived from QSGItem for implementing
+    The QQuickPaintedItem class is a class derived from QQuickItem for implementing
     custom QML Scene Graph items using the QPainter interfaces.
 
     The example consists of an item class, a plugin class and a QML file
     to use this plugin. The \c TextBalloon class represents the individual
-    text balloons extending QSGPaintedItem, the \c TextBalloonPlugin class
+    text balloons extending QQuickPaintedItem, the \c TextBalloonPlugin class
     represents the skeleton code for a QtQuick plugin and the
     \c textballoons.qml file is used to load the plugin and display the text
     balloons.
@@ -51,14 +51,14 @@
 
     \section1 TextBalloon Class Declaration
 
-    The \c TextBalloon class inherits from QSGPaintedItem. QSGPaintedItem
+    The \c TextBalloon class inherits from QQuickPaintedItem. QQuickPaintedItem
     is the base class for all QPainter based items in the QML Scene Graph
     framework.
 
     \snippet examples/declarative/painteditem/textballoons/textballoon.h 0
 
-    To implement a QSGPaintedItem you must implement QSGPaintedIem's pure
-    virtual function \l {QSGPaintedItem::}{paint()} which implements the
+    To implement a QQuickPaintedItem you must implement QQuickPaintedIem's pure
+    virtual function \l {QQuickPaintedItem::}{paint()} which implements the
     painting of the element.
 
     \section1 TextBalloon Class Definition
@@ -75,9 +75,9 @@
     \snippet examples/declarative/painteditem/textballoons/textballoon.cpp 1
 
     We start with setting the pen and brush on the item to define the look of
-    the item. After that we start drawing. Note that the \l {QSGPaintedItem::}{boundingRect()}
+    the item. After that we start drawing. Note that the \l {QQuickPaintedItem::}{boundingRect()}
     item is called to draw depending on the size of the item. The rectangle
-    returned by the \l {QSGPaintedItem::}{boundingRect()} function is the size
+    returned by the \l {QQuickPaintedItem::}{boundingRect()} function is the size
     of the item as defined in the QML file.
 
     \section1 textballoons.qml file

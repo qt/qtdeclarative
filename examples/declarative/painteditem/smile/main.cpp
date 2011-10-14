@@ -41,14 +41,14 @@
 #include <QGuiApplication>
 #include <QPainter>
 #include <QtDeclarative/qdeclarative.h>
-#include <QtDeclarative/qsgview.h>
-#include <QtDeclarative/qsgpainteditem.h>
+#include <QtDeclarative/qquickview.h>
+#include <QtDeclarative/qquickpainteditem.h>
 
-class MyPaintItem : public QSGPaintedItem
+class MyPaintItem : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    MyPaintItem() : QSGPaintedItem()
+    MyPaintItem() : QQuickPaintedItem()
     {
         setAntialiasing(true);
     }
@@ -72,8 +72,8 @@ int main(int argc, char ** argv)
 
     qmlRegisterType<MyPaintItem>("MyModule", 1, 0, "MyPaintItem");
 
-    QSGView view;
-    view.setResizeMode(QSGView::SizeRootObjectToView);
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl::fromLocalFile("smile.qml"));
     view.show();
     view.raise();

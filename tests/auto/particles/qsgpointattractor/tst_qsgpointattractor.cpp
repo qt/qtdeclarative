@@ -61,7 +61,7 @@ tst_qsgpointattractor::tst_qsgpointattractor()
 
 void tst_qsgpointattractor::test_basic()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

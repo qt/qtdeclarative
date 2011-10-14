@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
 */
 
 
-QSGAttractorAffector::QSGAttractorAffector(QSGItem *parent) :
+QSGAttractorAffector::QSGAttractorAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_strength(0.0), m_x(0), m_y(0)
   , m_physics(Velocity), m_proportionalToDistance(Linear)
 {

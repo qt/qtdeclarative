@@ -47,8 +47,8 @@
 #include <QFile>
 #include "qsgimageparticle_p.h"
 #include "qsgparticleemitter_p.h"
-#include <private/qsgsprite_p.h>
-#include <private/qsgspriteengine_p.h>
+#include <private/qquicksprite_p.h>
+#include <private/qquickspriteengine_p.h>
 #include <QOpenGLFunctions>
 #include <qsgengine.h>
 #include <private/qsgtexture_p.h>
@@ -797,7 +797,7 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 */
 
 
-QSGImageParticle::QSGImageParticle(QSGItem* parent)
+QSGImageParticle::QSGImageParticle(QQuickItem* parent)
     : QSGParticlePainter(parent)
     , m_color_variation(0.0)
     , m_rootNode(0)
@@ -834,9 +834,9 @@ QSGImageParticle::~QSGImageParticle()
 {
 }
 
-QDeclarativeListProperty<QSGSprite> QSGImageParticle::sprites()
+QDeclarativeListProperty<QQuickSprite> QSGImageParticle::sprites()
 {
-    return QDeclarativeListProperty<QSGSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QDeclarativeListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
 }
 
 void QSGImageParticle::setImage(const QUrl &image)
@@ -1115,7 +1115,7 @@ void QSGImageParticle::createEngine()
     if (m_spriteEngine)
         delete m_spriteEngine;
     if (m_sprites.count())
-        m_spriteEngine = new QSGSpriteEngine(m_sprites, this);
+        m_spriteEngine = new QQuickSpriteEngine(m_sprites, this);
     else
         m_spriteEngine = 0;
     m_explicitAnimation = true;

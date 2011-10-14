@@ -46,8 +46,8 @@
 
 #include <QtWidgets/QMenu>
 #include <QtGui/QMouseEvent>
-#include <QtDeclarative/QSGView>
-#include <QtDeclarative/QSGItem>
+#include <QtDeclarative/QQuickView>
+#include <QtDeclarative/QQuickItem>
 
 namespace QmlJSDebugger {
 
@@ -65,17 +65,17 @@ void SGSelectionTool::leaveEvent(QEvent *)
 void SGSelectionTool::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        if (QSGItem *item = inspector()->topVisibleItemAt(event->pos()))
-            inspector()->setSelectedItems(QList<QSGItem*>() << item);
+        if (QQuickItem *item = inspector()->topVisibleItemAt(event->pos()))
+            inspector()->setSelectedItems(QList<QQuickItem*>() << item);
     } else if (event->button() == Qt::RightButton) {
-        QList<QSGItem*> items = inspector()->itemsAt(event->pos());
+        QList<QQuickItem*> items = inspector()->itemsAt(event->pos());
         createContextMenu(items, event->globalPos());
     }
 }
 
 void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
 {
-    QSGItem *item = inspector()->topVisibleItemAt(event->pos());
+    QQuickItem *item = inspector()->topVisibleItemAt(event->pos());
     if (!item) {
         m_hoverHighlight->setVisible(false);
     } else {
@@ -84,16 +84,16 @@ void SGSelectionTool::hoverMoveEvent(QMouseEvent *event)
     }
 }
 
-void SGSelectionTool::createContextMenu(const QList<QSGItem *> &items, QPoint pos)
+void SGSelectionTool::createContextMenu(const QList<QQuickItem *> &items, QPoint pos)
 {
     QMenu contextMenu;
     connect(&contextMenu, SIGNAL(hovered(QAction*)),
             this, SLOT(contextMenuElementHovered(QAction*)));
 
-    const QList<QSGItem*> selectedItems = inspector()->selectedItems();
+    const QList<QQuickItem*> selectedItems = inspector()->selectedItems();
     int shortcutKey = Qt::Key_1;
 
-    foreach (QSGItem *item, items) {
+    foreach (QQuickItem *item, items) {
         const QString title = inspector()->titleForItem(item);
         QAction *elementAction = contextMenu.addAction(title);
         elementAction->setData(QVariant::fromValue(item));
@@ -117,14 +117,14 @@ void SGSelectionTool::createContextMenu(const QList<QSGItem *> &items, QPoint po
 
 void SGSelectionTool::contextMenuElementHovered(QAction *action)
 {
-    if (QSGItem *item = action->data().value<QSGItem*>())
+    if (QQuickItem *item = action->data().value<QQuickItem*>())
         m_hoverHighlight->setItem(item);
 }
 
 void SGSelectionTool::contextMenuElementSelected()
 {
-    if (QSGItem *item = static_cast<QAction*>(sender())->data().value<QSGItem*>())
-        inspector()->setSelectedItems(QList<QSGItem*>() << item);
+    if (QQuickItem *item = static_cast<QAction*>(sender())->data().value<QQuickItem*>())
+        inspector()->setSelectedItems(QList<QQuickItem*>() << item);
 }
 
 SGViewInspector *SGSelectionTool::inspector() const

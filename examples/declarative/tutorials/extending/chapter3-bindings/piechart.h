@@ -41,10 +41,10 @@
 #define PIECHART_H
 
 #include <QColor>
-#include <QtDeclarative/QSGPaintedItem>
+#include <QtDeclarative/QQuickPaintedItem>
 
 //![0]
-class PieChart : public QSGPaintedItem
+class PieChart : public QQuickPaintedItem
 {
 //![0]
     Q_OBJECT
@@ -55,7 +55,7 @@ class PieChart : public QSGPaintedItem
 public:
 //![1]
 
-    PieChart(QSGItem *parent = 0);
+    PieChart(QQuickItem *parent = 0);
 
     QString name() const;
     void setName(const QString &name);

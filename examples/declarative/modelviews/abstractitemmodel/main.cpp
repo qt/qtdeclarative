@@ -43,8 +43,8 @@
 #include <qdeclarativeengine.h>
 #include <qdeclarativecontext.h>
 #include <qdeclarative.h>
-#include <qsgitem.h>
-#include <qsgview.h>
+#include <qquickitem.h>
+#include <qquickview.h>
 
 //![0]
 int main(int argc, char ** argv)
@@ -56,8 +56,8 @@ int main(int argc, char ** argv)
     model.addAnimal(Animal("Polar bear", "Large"));
     model.addAnimal(Animal("Quoll", "Small"));
 
-    QSGView view;
-    view.setResizeMode(QSGView::SizeRootObjectToView);
+    QQuickView view;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
     QDeclarativeContext *ctxt = view.rootContext();
     ctxt->setContextProperty("myModel", &model);
 //![0]

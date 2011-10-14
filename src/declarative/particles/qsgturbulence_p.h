@@ -59,7 +59,7 @@ class QSGTurbulenceAffector : public QSGParticleAffector
     Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
     Q_PROPERTY(QUrl noiseSource READ noiseSource WRITE setNoiseSource NOTIFY noiseSourceChanged)
     public:
-    explicit QSGTurbulenceAffector(QSGItem *parent = 0);
+    explicit QSGTurbulenceAffector(QQuickItem *parent = 0);
     ~QSGTurbulenceAffector();
     virtual void affectSystem(qreal dt);
 

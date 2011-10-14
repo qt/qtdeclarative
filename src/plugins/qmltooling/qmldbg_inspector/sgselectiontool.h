@@ -48,7 +48,7 @@
 #include <QtCore/QPoint>
 
 QT_FORWARD_DECLARE_CLASS(QAction)
-QT_FORWARD_DECLARE_CLASS(QSGItem)
+QT_FORWARD_DECLARE_CLASS(QQuickItem)
 
 namespace QmlJSDebugger {
 
@@ -79,7 +79,7 @@ private slots:
     void contextMenuElementSelected();
 
 private:
-    void createContextMenu(const QList<QSGItem*> &items, QPoint pos);
+    void createContextMenu(const QList<QQuickItem*> &items, QPoint pos);
 
     SGViewInspector *inspector() const;
 

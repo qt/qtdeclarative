@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qsgcustomparticle_p.h"
-#include <private/qsgshadereffectmesh_p.h>
+#include <private/qquickshadereffectmesh_p.h>
 #include <cstdlib>
 
 QT_BEGIN_NAMESPACE
@@ -128,16 +128,16 @@ struct PlainVertices {
 
 */
 
-QSGCustomParticle::QSGCustomParticle(QSGItem* parent)
+QSGCustomParticle::QSGCustomParticle(QQuickItem* parent)
     : QSGParticlePainter(parent)
     , m_dirtyData(true)
     , m_material(0)
     , m_rootNode(0)
 {
-    setFlag(QSGItem::ItemHasContents);
+    setFlag(QQuickItem::ItemHasContents);
 }
 
-class QSGShaderEffectMaterialObject : public QObject, public QSGShaderEffectMaterial { };
+class QSGShaderEffectMaterialObject : public QObject, public QQuickShaderEffectMaterial { };
 
 QSGCustomParticle::~QSGCustomParticle()
 {
@@ -277,7 +277,7 @@ void QSGCustomParticle::setSource(const QVariant &var, int index)
     }
 
     QObject *obj = qVariantValue<QObject *>(var);
-    source.item = qobject_cast<QSGItem *>(obj);
+    source.item = qobject_cast<QQuickItem *>(obj);
     if (!source.item || !source.item->isTextureProvider()) {
         qWarning("ShaderEffect: source uniform [%s] is not assigned a valid texture provider: %s [%s]",
                  source.name.constData(), qPrintable(obj->objectName()), obj->metaObject()->className());
@@ -448,7 +448,7 @@ void QSGCustomParticle::prepareNextFrame(){
         buildData();
 }
 
-QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
+QQuickShaderEffectNode* QSGCustomParticle::buildCustomNodes()
 {
 #ifdef QT_OPENGL_ES_2
     if (m_count * 4 > 0xffff) {
@@ -464,7 +464,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
 
     updateProperties();
 
-    QSGShaderEffectProgram s = m_source;
+    QQuickShaderEffectProgram s = m_source;
     if (s.fragmentCode.isEmpty())
         s.fragmentCode = qt_particles_default_fragment_code;
     if (s.vertexCode.isEmpty())
@@ -480,7 +480,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
         int gIdx = m_system->groupIds[str];
         int count = m_system->groupData[gIdx]->size();
 
-        QSGShaderEffectNode* node = new QSGShaderEffectNode();
+        QQuickShaderEffectNode* node = new QQuickShaderEffectNode();
         m_nodes.insert(gIdx, node);
 
         node->setMaterial(m_material);
@@ -520,7 +520,7 @@ QSGShaderEffectNode* QSGCustomParticle::buildCustomNodes()
             indices += 6;
         }
     }
-    foreach (QSGShaderEffectNode* node, m_nodes){
+    foreach (QQuickShaderEffectNode* node, m_nodes){
         if (node == *(m_nodes.begin()))
                 continue;
         (*(m_nodes.begin()))->appendChildNode(node);
@@ -541,7 +541,7 @@ void QSGCustomParticle::buildData()
     for (int i = 0; i < oldTextures.size(); ++i) {
         QSGTextureProvider *t = oldTextures.at(i).second;
         if (t)
-            foreach (QSGShaderEffectNode* node, m_nodes)
+            foreach (QQuickShaderEffectNode* node, m_nodes)
                 disconnect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()));
     }
     for (int i = 0; i < m_sources.size(); ++i) {
@@ -549,7 +549,7 @@ void QSGCustomParticle::buildData()
         QSGTextureProvider *t = source.item->textureProvider();
         textures.append(qMakePair(source.name, t));
         if (t)
-            foreach (QSGShaderEffectNode* node, m_nodes)
+            foreach (QQuickShaderEffectNode* node, m_nodes)
                 connect(t, SIGNAL(textureChanged()), node, SLOT(markDirtyTexture()), Qt::DirectConnection);
     }
     for (QSet<QByteArray>::const_iterator it = m_source.uniformNames.begin();
@@ -560,7 +560,7 @@ void QSGCustomParticle::buildData()
     m_material->setUniforms(values);
     m_material->setTextureProviders(textures);
     m_dirtyData = false;
-    foreach (QSGShaderEffectNode* node, m_nodes)
+    foreach (QQuickShaderEffectNode* node, m_nodes)
         node->markDirty(QSGNode::DirtyMaterial);
 }
 

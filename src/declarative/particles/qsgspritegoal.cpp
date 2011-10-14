@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qsgspritegoal_p.h"
-#include <private/qsgspriteengine_p.h>
-#include <private/qsgsprite_p.h>
+#include <private/qquickspriteengine_p.h>
+#include <private/qquicksprite_p.h>
 #include "qsgimageparticle_p.h"
 #include <QDebug>
 
@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     deprecated, use GroupGoal instead
 */
 
-QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
+QSGSpriteGoalAffector::QSGSpriteGoalAffector(QQuickItem *parent) :
     QSGParticleAffector(parent),
     m_goalIdx(-1),
     m_lastEngine(0),
@@ -89,7 +89,7 @@ QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
 {
 }
 
-void QSGSpriteGoalAffector::updateStateIndex(QSGStochasticEngine* e)
+void QSGSpriteGoalAffector::updateStateIndex(QQuickStochasticEngine* e)
 {
     if (m_systemStates){
         m_goalIdx = m_system->groupIds[m_goalState];
@@ -120,7 +120,7 @@ void QSGSpriteGoalAffector::setGoalState(QString arg)
 bool QSGSpriteGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    QSGStochasticEngine *engine = 0;
+    QQuickStochasticEngine *engine = 0;
     if (!m_systemStates){
         //TODO: Affect all engines
         foreach (QSGParticlePainter *p, m_system->groupData[d->group]->painters)

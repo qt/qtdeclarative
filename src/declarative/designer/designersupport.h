@@ -62,12 +62,12 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGItem;
-class QSGShaderEffectTexture;
+class QQuickItem;
+class QQuickShaderEffectTexture;
 class QImage;
 class QTransform;
 class QDeclarativeContext;
-class QSGView;
+class QQuickView;
 
 
 class Q_DECLARATIVE_EXPORT DesignerSupport
@@ -105,43 +105,43 @@ public:
     DesignerSupport();
     ~DesignerSupport();
 
-    void refFromEffectItem(QSGItem *referencedItem, bool hide = true);
-    void derefFromEffectItem(QSGItem *referencedItem, bool unhide = true);
+    void refFromEffectItem(QQuickItem *referencedItem, bool hide = true);
+    void derefFromEffectItem(QQuickItem *referencedItem, bool unhide = true);
 
-    QImage renderImageForItem(QSGItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize);
+    QImage renderImageForItem(QQuickItem *referencedItem, const QRectF &boundingRect, const QSize &imageSize);
 
-    static bool isDirty(QSGItem *referencedItem, DirtyType dirtyType);
-    static void resetDirty(QSGItem *referencedItem);
+    static bool isDirty(QQuickItem *referencedItem, DirtyType dirtyType);
+    static void resetDirty(QQuickItem *referencedItem);
 
-    static QTransform canvasTransform(QSGItem *referencedItem);
-    static QTransform parentTransform(QSGItem *referencedItem);
+    static QTransform canvasTransform(QQuickItem *referencedItem);
+    static QTransform parentTransform(QQuickItem *referencedItem);
 
-    static bool isAnchoredTo(QSGItem *fromItem, QSGItem *toItem);
-    static bool areChildrenAnchoredTo(QSGItem *fromItem, QSGItem *toItem);
-    static bool hasAnchor(QSGItem *item, const QString &name);
-    static QSGItem *anchorFillTargetItem(QSGItem *item);
-    static QSGItem *anchorCenterInTargetItem(QSGItem *item);
-    static QPair<QString, QObject*> anchorLineTarget(QSGItem *item, const QString &name, QDeclarativeContext *context);
-    static void resetAnchor(QSGItem *item, const QString &name);
+    static bool isAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem);
+    static bool areChildrenAnchoredTo(QQuickItem *fromItem, QQuickItem *toItem);
+    static bool hasAnchor(QQuickItem *item, const QString &name);
+    static QQuickItem *anchorFillTargetItem(QQuickItem *item);
+    static QQuickItem *anchorCenterInTargetItem(QQuickItem *item);
+    static QPair<QString, QObject*> anchorLineTarget(QQuickItem *item, const QString &name, QDeclarativeContext *context);
+    static void resetAnchor(QQuickItem *item, const QString &name);
 
 
-    static QList<QObject*> statesForItem(QSGItem *item);
+    static QList<QObject*> statesForItem(QQuickItem *item);
 
-    static bool isComponentComplete(QSGItem *item);
+    static bool isComponentComplete(QQuickItem *item);
 
-    static int borderWidth(QSGItem *item);
+    static int borderWidth(QQuickItem *item);
 
     static void refreshExpressions(QDeclarativeContext *context);
 
-    static void setRootItem(QSGView *view, QSGItem *item);
+    static void setRootItem(QQuickView *view, QQuickItem *item);
 
-    static bool isValidWidth(QSGItem *item);
-    static bool isValidHeight(QSGItem *item);
+    static bool isValidWidth(QQuickItem *item);
+    static bool isValidHeight(QQuickItem *item);
 
-    static void updateDirtyNode(QSGItem *item);
+    static void updateDirtyNode(QQuickItem *item);
 
 private:
-    QHash<QSGItem*, QSGShaderEffectTexture*> m_itemTextureHash;
+    QHash<QQuickItem*, QQuickShaderEffectTexture*> m_itemTextureHash;
 };
 
 QT_END_NAMESPACE

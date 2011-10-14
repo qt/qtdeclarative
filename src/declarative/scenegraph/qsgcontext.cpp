@@ -322,7 +322,7 @@ QSGGlyphNode *QSGContext::createGlyphNode()
     Factory function for the scene graph renderers.
 
     The renderers are used for the toplevel renderer and once for every
-    QSGShaderEffectSource used in the QML scene.
+    QQuickShaderEffectSource used in the QML scene.
  */
 QSGRenderer *QSGContext::createRenderer()
 {

@@ -55,7 +55,7 @@ class QSGFrictionAffector : public QSGParticleAffector
     Q_OBJECT
     Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)
 public:
-    explicit QSGFrictionAffector(QSGItem *parent = 0);
+    explicit QSGFrictionAffector(QQuickItem *parent = 0);
 
     qreal factor() const
     {

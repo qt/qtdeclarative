@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGStochasticEngine;
+class QQuickStochasticEngine;
 
 class QSGSpriteGoalAffector : public QSGParticleAffector
 {
@@ -59,7 +59,7 @@ class QSGSpriteGoalAffector : public QSGParticleAffector
     Q_PROPERTY(bool jump READ jump WRITE setJump NOTIFY jumpChanged)
     Q_PROPERTY(bool systemStates READ systemStates WRITE setSystemStates NOTIFY systemStatesChanged)
 public:
-    explicit QSGSpriteGoalAffector(QSGItem *parent = 0);
+    explicit QSGSpriteGoalAffector(QQuickItem *parent = 0);
 
     QString goalState() const
     {
@@ -108,10 +108,10 @@ void setSystemStates(bool arg)
 }
 
 private:
-    void updateStateIndex(QSGStochasticEngine* e);
+    void updateStateIndex(QQuickStochasticEngine* e);
     QString m_goalState;
     int m_goalIdx;
-    QSGStochasticEngine* m_lastEngine;
+    QQuickStochasticEngine* m_lastEngine;
     bool m_jump;
     bool m_systemStates;
 

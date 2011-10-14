@@ -57,7 +57,7 @@ class QSGAgeAffector : public QSGParticleAffector
     Q_PROPERTY(bool advancePosition READ advancePosition WRITE setAdvancePosition NOTIFY advancePositionChanged)
 
 public:
-    explicit QSGAgeAffector(QSGItem *parent = 0);
+    explicit QSGAgeAffector(QQuickItem *parent = 0);
 
     int lifeLeft() const
     {

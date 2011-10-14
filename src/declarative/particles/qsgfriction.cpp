@@ -59,7 +59,7 @@ static qreal sign(qreal a)
     return a >= 0 ? 1 : -1;
 }
 
-QSGFrictionAffector::QSGFrictionAffector(QSGItem *parent) :
+QSGFrictionAffector::QSGFrictionAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_factor(0.0)
 {
 }

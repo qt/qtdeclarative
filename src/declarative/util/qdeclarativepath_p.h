@@ -426,7 +426,7 @@ private:
 private:
     Q_DISABLE_COPY(QDeclarativePath)
     Q_DECLARE_PRIVATE(QDeclarativePath)
-    friend class QSGPathAnimationUpdater;
+    friend class QQuickPathAnimationUpdater;
 
 public:
     QPainterPath createPath(const QPointF &startPoint, const QPointF &endPoint, const QStringList &attributes, qreal &pathLength, QList<AttributePoint> &attributePoints, bool *closed = 0);

@@ -45,13 +45,13 @@
 
 namespace QmlJSDebugger {
 
-SGHighlight::SGHighlight(QSGItem *item, QSGItem *parent)
-    : QSGPaintedItem(parent)
+SGHighlight::SGHighlight(QQuickItem *item, QQuickItem *parent)
+    : QQuickPaintedItem(parent)
 {
     setItem(item);
 }
 
-void SGHighlight::setItem(QSGItem *item)
+void SGHighlight::setItem(QQuickItem *item)
 {
     if (m_item)
         m_item.data()->disconnect(this);
@@ -72,7 +72,7 @@ void SGHighlight::setItem(QSGItem *item)
 
 void SGHighlight::adjust()
 {
-    const QSGItem *item = m_item.data();
+    const QQuickItem *item = m_item.data();
     setSize(QSizeF(item->width(), item->height()));
     setPos(parentItem()->mapFromItem(item->parentItem(), item->pos()));
     setRotation(item->rotation());

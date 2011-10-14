@@ -50,7 +50,7 @@
 #include <QDir>
 #include <QVector3D>
 #include <QCryptographicHash>
-#include <QSGItem>
+#include <QQuickItem>
 #include <QSignalSpy>
 #include "../shared/util.h"
 
@@ -451,7 +451,7 @@ void tst_qdeclarativeqt::createQmlObject()
     QCOMPARE(object->property("emptyArg").toBool(), true);
     QCOMPARE(object->property("success").toBool(), true);
 
-    QSGItem *item = qobject_cast<QSGItem *>(object);
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
     QVERIFY(item != 0);
     QVERIFY(item->childItems().count() == 1);
 

@@ -49,7 +49,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecontext.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
-#include <QtDeclarative/qsgview.h>
+#include <QtDeclarative/qquickview.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
 #include <QtDeclarative/qjsvalue.h>
@@ -175,7 +175,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // in turn with a QDeclarativeView.
 #ifdef QUICK_TEST_SCENEGRAPH
     if (qtQuick2) {
-        QSGView view;
+        QQuickView view;
         QTestRootObject rootobj;
         QEventLoop eventLoop;
         QObject::connect(view.engine(), SIGNAL(quit()),
@@ -199,7 +199,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 view.setSource(QUrl::fromLocalFile(path));
             if (QTest::printAvailableFunctions)
                 continue;
-            if (view.status() == QSGView::Error) {
+            if (view.status() == QQuickView::Error) {
                 // Error compiling the test - flag failure in the log and continue.
                 QList<QDeclarativeError> errors = view.errors();
                 QuickTestResult results;

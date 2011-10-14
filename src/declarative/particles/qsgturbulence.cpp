@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
     A default image will be used if none is provided.
 */
 
-QSGTurbulenceAffector::QSGTurbulenceAffector(QSGItem *parent) :
+QSGTurbulenceAffector::QSGTurbulenceAffector(QQuickItem *parent) :
     QSGParticleAffector(parent),
     m_strength(10), m_lastT(0), m_gridSize(0), m_field(0), m_vectorField(0), m_inited(false)
 {

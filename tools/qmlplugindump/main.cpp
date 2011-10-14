@@ -42,8 +42,8 @@
 #include <QtDeclarative/QtDeclarative>
 #include <QtDeclarative/private/qdeclarativemetatype_p.h>
 #include <QtDeclarative/private/qdeclarativeopenmetaobject_p.h>
-#include <QtDeclarative/private/qsgevents_p_p.h>
-#include <QtDeclarative/private/qsgpincharea_p.h>
+#include <QtDeclarative/private/qquickevents_p_p.h>
+#include <QtDeclarative/private/qquickpincharea_p.h>
 
 #include <QtWidgets/QApplication>
 
@@ -586,8 +586,8 @@ int main(int argc, char *argv[])
     QList<QDeclarativeType *> defaultTypes = QDeclarativeMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
-    defaultReachable.insert(&QSGMouseEvent::staticMetaObject);
-    // QSGKeyEvent, QSGPinchEvent, QSGDropEvent are not exported
+    defaultReachable.insert(&QQuickMouseEvent::staticMetaObject);
+    // QQuickKeyEvent, QQuickPinchEvent, QQuickDropEvent are not exported
 
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;

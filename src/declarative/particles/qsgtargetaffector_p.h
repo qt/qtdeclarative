@@ -55,7 +55,7 @@ class QSGTargetAffector : public QSGParticleAffector
     Q_PROPERTY(int targetTime READ targetTime WRITE setTargetTime NOTIFY targetTimeChanged)
 
 public:
-    explicit QSGTargetAffector(QSGItem *parent = 0);
+    explicit QSGTargetAffector(QQuickItem *parent = 0);
 
     int targetX() const
     {

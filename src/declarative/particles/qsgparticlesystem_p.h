@@ -42,13 +42,13 @@
 #ifndef PARTICLESYSTEM_H
 #define PARTICLESYSTEM_H
 
-#include <QSGItem>
+#include <QQuickItem>
 #include <QElapsedTimer>
 #include <QVector>
 #include <QHash>
 #include <QPointer>
 #include <QSignalMapper>
-#include <private/qsgsprite_p.h>
+#include <private/qquicksprite_p.h>
 #include <QAbstractAnimation>
 #include <QtDeclarative/qdeclarative.h>
 #include <private/qv8engine_p.h> //For QDeclarativeV8Handle
@@ -65,8 +65,8 @@ class QSGParticleEmitter;
 class QSGParticlePainter;
 class QSGParticleData;
 class QSGParticleSystemAnimation;
-class QSGStochasticEngine;
-class QSGSprite;
+class QQuickStochasticEngine;
+class QQuickSprite;
 class QSGV8ParticleData;
 class QSGParticleGroup;
 class QSGImageParticle;
@@ -208,7 +208,7 @@ public:
     float animWidth;
     float animHeight;
     float r;
-    QSGItem* delegate;
+    QQuickItem* delegate;
     int modelIndex;
     float update;//Used by custom affectors
 
@@ -229,7 +229,7 @@ private:
     QSGV8ParticleData* v8Datum;
 };
 
-class Q_AUTOTEST_EXPORT QSGParticleSystem : public QSGItem
+class Q_AUTOTEST_EXPORT QSGParticleSystem : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
@@ -237,7 +237,7 @@ class Q_AUTOTEST_EXPORT QSGParticleSystem : public QSGItem
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
 
 public:
-    explicit QSGParticleSystem(QSGItem *parent = 0);
+    explicit QSGParticleSystem(QQuickItem *parent = 0);
     ~QSGParticleSystem();
 
     bool isRunning() const
@@ -296,7 +296,7 @@ public:
     QVector<QSGParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QHash<QString, int> groupIds;
     QHash<int, QSGParticleGroupData*> groupData;
-    QSGStochasticEngine* stateEngine;
+    QQuickStochasticEngine* stateEngine;
 
     //Also only here for auto-test usage
     void updateCurrentTime( int currentTime );

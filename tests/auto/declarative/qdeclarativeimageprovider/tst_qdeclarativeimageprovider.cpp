@@ -42,7 +42,7 @@
 #include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeimageprovider.h>
-#include <private/qsgimage_p.h>
+#include <private/qquickimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
 
@@ -228,19 +228,19 @@ void tst_qdeclarativeimageprovider::runTest(bool async, QDeclarativeImageProvide
             + properties + " }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
+    QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
 
     if (async) 
-        QTRY_VERIFY(obj->status() == QSGImage::Loading);
+        QTRY_VERIFY(obj->status() == QQuickImage::Loading);
 
     QCOMPARE(obj->source(), QUrl(source));
 
     if (error.isEmpty()) {
         if (async)
-            QTRY_VERIFY(obj->status() == QSGImage::Ready);
+            QTRY_VERIFY(obj->status() == QQuickImage::Ready);
         else
-            QVERIFY(obj->status() == QSGImage::Ready);
+            QVERIFY(obj->status() == QQuickImage::Ready);
         if (QByteArray(QTest::currentDataTag()).startsWith("qimage"))
             QCOMPARE(static_cast<TestQImageProvider*>(provider)->lastImageId, imageId);
         else
@@ -248,13 +248,13 @@ void tst_qdeclarativeimageprovider::runTest(bool async, QDeclarativeImageProvide
 
         QCOMPARE(obj->width(), qreal(size.width()));
         QCOMPARE(obj->height(), qreal(size.height()));
-        QCOMPARE(obj->fillMode(), QSGImage::Stretch);
+        QCOMPARE(obj->fillMode(), QQuickImage::Stretch);
         QCOMPARE(obj->progress(), 1.0);
     } else {
         if (async)
-            QTRY_VERIFY(obj->status() == QSGImage::Error);
+            QTRY_VERIFY(obj->status() == QQuickImage::Error);
         else
-            QVERIFY(obj->status() == QSGImage::Error);
+            QVERIFY(obj->status() == QQuickImage::Error);
     }
 
     delete obj;
@@ -308,7 +308,7 @@ void tst_qdeclarativeimageprovider::requestPixmap_async()
     QString componentStr = "import QtQuick 2.0\nImage { asynchronous: true; source: \"image://test/pixmap-async-test.png\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
+    QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
 
     delete obj;
@@ -335,10 +335,10 @@ void tst_qdeclarativeimageprovider::removeProvider()
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + newImageFileName() + "\" }";
     QDeclarativeComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
-    QSGImage *obj = qobject_cast<QSGImage*>(component.create());
+    QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
 
-    QCOMPARE(obj->status(), QSGImage::Ready);
+    QCOMPARE(obj->status(), QQuickImage::Ready);
 
     // remove the provider and confirm
     QString fileName = newImageFileName();
@@ -348,7 +348,7 @@ void tst_qdeclarativeimageprovider::removeProvider()
     engine.removeImageProvider("test");
 
     obj->setSource(QUrl(fileName));
-    QCOMPARE(obj->status(), QSGImage::Error);
+    QCOMPARE(obj->status(), QQuickImage::Error);
 
     delete obj;
 }
@@ -404,17 +404,17 @@ void tst_qdeclarativeimageprovider::threadTest()
     QObject *obj = component.create();
     //MUST not deadlock
     QVERIFY(obj != 0);
-    QList<QSGImage *> images = obj->findChildren<QSGImage *>();
+    QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
     QCOMPARE(images.count(), 4);
     QTest::qWait(100);
-    foreach (QSGImage *img, images) {
-        QCOMPARE(img->status(), QSGImage::Loading);
+    foreach (QQuickImage *img, images) {
+        QCOMPARE(img->status(), QQuickImage::Loading);
     }
     provider->ok = true;
     provider->cond.wakeAll();
     QTest::qWait(250);
-    foreach (QSGImage *img, images) {
-        QTRY_VERIFY(img->status() == QSGImage::Ready);
+    foreach (QQuickImage *img, images) {
+        QTRY_VERIFY(img->status() == QQuickImage::Ready);
     }
 }
 

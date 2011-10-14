@@ -44,8 +44,8 @@
 #include "qsgparticleemitter_p.h"
 #include "qsgparticleaffector_p.h"
 #include "qsgparticlepainter_p.h"
-#include <private/qsgspriteengine_p.h>
-#include <private/qsgsprite_p.h>
+#include <private/qquickspriteengine_p.h>
+#include <private/qquicksprite_p.h>
 #include "qsgv8particledata_p.h"
 #include "qsgparticlegroup_p.h"
 
@@ -616,8 +616,8 @@ void QSGParticleData::extendLife(float time)
     vy = evy;
 }
 
-QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent),
+QSGParticleSystem::QSGParticleSystem(QQuickItem *parent) :
+    QQuickItem(parent),
     stateEngine(0),
     m_running(true),
     particleCount(0),
@@ -756,7 +756,7 @@ void QSGParticleSystem::stateRedirect(QSGParticleGroup* group, QSGParticleSystem
 void QSGParticleSystem::componentComplete()
 
 {
-    QSGItem::componentComplete();
+    QQuickItem::componentComplete();
     m_componentComplete = true;
     m_animation = new QSGParticleSystemAnimation(this);
     reset();//restarts animation as well
@@ -925,12 +925,12 @@ void QSGParticleSystem::createEngine()
             }
         }
         m_groups = newList;
-        QList<QSGStochasticState*> states;
+        QList<QQuickStochasticState*> states;
         foreach (QSGParticleGroup* g, m_groups)
-            states << (QSGStochasticState*)g;
+            states << (QQuickStochasticState*)g;
 
         if (!stateEngine)
-            stateEngine = new QSGStochasticEngine(this);
+            stateEngine = new QQuickStochasticEngine(this);
         stateEngine->setCount(particleCount);
         stateEngine->m_states = states;
 

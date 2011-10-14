@@ -45,8 +45,8 @@
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QtQuick1/qdeclarativeview.h>
 #if defined(QML_VERSION) && QML_VERSION >= 0x020000
-#include <QtDeclarative/qsgitem.h>
-#include <QtDeclarative/qsgcanvas.h>
+#include <QtDeclarative/qquickitem.h>
+#include <QtDeclarative/qquickcanvas.h>
 #define QUICK_TEST_SCENEGRAPH 1
 #endif
 #include <QtWidgets/qgraphicsscene.h>
@@ -119,7 +119,7 @@ namespace QtQuickTest
         QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
         QWindow *eventWindow = window;
 #ifdef QUICK_TEST_SCENEGRAPH
-        QSGItem *sgitem = qobject_cast<QSGItem *>(item);
+        QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
         if (sgitem) {
             pos = sgitem->mapToScene(_pos).toPoint();
         } else
@@ -181,7 +181,7 @@ namespace QtQuickTest
         QDeclarativeView *view = qobject_cast<QDeclarativeView *>(window);
         QWindow *eventWindow = window;
 #ifdef QUICK_TEST_SCENEGRAPH
-        QSGItem *sgitem = qobject_cast<QSGItem *>(item);
+        QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
         if (sgitem) {
             pos = sgitem->mapToScene(_pos).toPoint();
         } else
@@ -291,7 +291,7 @@ bool QuickTestEvent::mouseMove
 QWindow *QuickTestEvent::eventWindow()
 {
 #ifdef QUICK_TEST_SCENEGRAPH
-    QSGItem *sgitem = qobject_cast<QSGItem *>(parent());
+    QQuickItem *sgitem = qobject_cast<QQuickItem *>(parent());
     if (sgitem)
         return sgitem->canvas();
 #endif

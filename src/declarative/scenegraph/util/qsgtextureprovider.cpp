@@ -41,9 +41,6 @@
 
 #include "qsgtextureprovider_p.h"
 
-#include <private/qsgimage_p.h>
-#include <private/qsgshadereffectsource_p.h>
-
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif

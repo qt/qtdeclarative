@@ -193,7 +193,7 @@ QT_BEGIN_NAMESPACE
 
 
 
-//### Particle data handles are not locked to within certain scopes like QSGContext2D, but there's no way to reload either...
+//### Particle data handles are not locked to within certain scopes like QQuickContext2D, but there's no way to reload either...
 class QV8ParticleDataResource : public QV8ObjectResource
 {
     V8_RESOURCE_TYPE(ParticleDataType)

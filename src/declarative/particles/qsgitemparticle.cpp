@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "qsgitemparticle_p.h"
-#include <private/qsgvisualitemmodel_p.h>
+#include <private/qquickvisualitemmodel_p.h>
 #include <qsgnode.h>
 #include <QTimer>
 #include <QDeclarativeComponent>
@@ -49,7 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlclass ItemParticle QSGItemParticle
+    \qmlclass ItemParticle QQuickItemParticle
     \inqmlmodule QtQuick.Particles 2
     \inherits ParticlePainter
     \brief The ItemParticle element allows you to specify your own delegate to paint particles.
@@ -99,10 +99,10 @@ QT_BEGIN_NAMESPACE
     particle, and moved along with it.
 */
 
-QSGItemParticle::QSGItemParticle(QSGItem *parent) :
+QQuickItemParticle::QQuickItemParticle(QQuickItem *parent) :
     QSGParticlePainter(parent), m_fade(true), m_delegate(0)
 {
-    setFlag(QSGItem::ItemHasContents);
+    setFlag(QQuickItem::ItemHasContents);
     QTimer* manageDelegates = new QTimer(this);//TODO: don't leak
     connect(manageDelegates, SIGNAL(timeout()),
             this, SLOT(tick()));
@@ -112,18 +112,18 @@ QSGItemParticle::QSGItemParticle(QSGItem *parent) :
 }
 
 
-void QSGItemParticle::freeze(QSGItem* item)
+void QQuickItemParticle::freeze(QQuickItem* item)
 {
     m_stasis << item;
 }
 
 
-void QSGItemParticle::unfreeze(QSGItem* item)
+void QQuickItemParticle::unfreeze(QQuickItem* item)
 {
     m_stasis.remove(item);
 }
 
-void QSGItemParticle::take(QSGItem *item, bool prioritize)
+void QQuickItemParticle::take(QQuickItem *item, bool prioritize)
 {
     if (prioritize)
         m_pendingItems.push_front(item);
@@ -131,28 +131,28 @@ void QSGItemParticle::take(QSGItem *item, bool prioritize)
         m_pendingItems.push_back(item);
 }
 
-void QSGItemParticle::give(QSGItem *item)
+void QQuickItemParticle::give(QQuickItem *item)
 {
     //TODO: This
 }
 
-void QSGItemParticle::initialize(int gIdx, int pIdx)
+void QQuickItemParticle::initialize(int gIdx, int pIdx)
 {
     m_loadables << m_system->groupData[gIdx]->data[pIdx];//defer to other thread
 }
 
-void QSGItemParticle::commit(int, int)
+void QQuickItemParticle::commit(int, int)
 {
 }
 
-void QSGItemParticle::tick()
+void QQuickItemParticle::tick()
 {
-    foreach (QSGItem* item, m_deletables){
+    foreach (QQuickItem* item, m_deletables){
         if (m_fade)
             item->setOpacity(0.);
         item->setVisible(false);
-        QSGItemParticleAttached* mpa;
-        if ((mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(item))))
+        QQuickItemParticleAttached* mpa;
+        if ((mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(item))))
             mpa->detach();//reparent as well?
         //TODO: Delete iff we created it
         m_activeCount--;
@@ -170,12 +170,12 @@ void QSGItemParticle::tick()
             d->delegate = m_pendingItems.front();
             m_pendingItems.pop_front();
         }else if (m_delegate){
-            d->delegate = qobject_cast<QSGItem*>(m_delegate->create(qmlContext(this)));
+            d->delegate = qobject_cast<QQuickItem*>(m_delegate->create(qmlContext(this)));
         }
         if (d->delegate && d){//###Data can be zero if creating an item leads to a reset - this screws things up.
             d->delegate->setX(d->curX() - d->delegate->width()/2);//TODO: adjust for system?
             d->delegate->setY(d->curY() - d->delegate->height()/2);
-            QSGItemParticleAttached* mpa = qobject_cast<QSGItemParticleAttached*>(qmlAttachedPropertiesObject<QSGItemParticle>(d->delegate));
+            QQuickItemParticleAttached* mpa = qobject_cast<QQuickItemParticleAttached*>(qmlAttachedPropertiesObject<QQuickItemParticle>(d->delegate));
             if (mpa){
                 mpa->m_mp = this;
                 mpa->attach();
@@ -190,7 +190,7 @@ void QSGItemParticle::tick()
     m_loadables.clear();
 }
 
-void QSGItemParticle::reset()
+void QQuickItemParticle::reset()
 {
     QSGParticlePainter::reset();
     //TODO: Cleanup items?
@@ -199,7 +199,7 @@ void QSGItemParticle::reset()
 }
 
 
-QSGNode* QSGItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
+QSGNode* QQuickItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
 {
     //Dummy update just to get painting tick
     if (m_pleaseReset){
@@ -211,10 +211,10 @@ QSGNode* QSGItemParticle::updatePaintNode(QSGNode* n, UpdatePaintNodeData* d)
     update();//Get called again
     if (n)
         n->markDirty(QSGNode::DirtyMaterial);
-    return QSGItem::updatePaintNode(n,d);
+    return QQuickItem::updatePaintNode(n,d);
 }
 
-void QSGItemParticle::prepareNextFrame()
+void QQuickItemParticle::prepareNextFrame()
 {
     if (!m_system)
         return;
@@ -232,7 +232,7 @@ void QSGItemParticle::prepareNextFrame()
 
         for (int i=0; i<count; i++){
             QSGParticleData* data = m_system->groupData[gIdx]->data[i];
-            QSGItem* item = data->delegate;
+            QQuickItem* item = data->delegate;
             if (!item)
                 continue;
             qreal t = ((timeStamp/1000.0) - data->t) / data->lifeSpan;
@@ -260,9 +260,9 @@ void QSGItemParticle::prepareNextFrame()
     }
 }
 
-QSGItemParticleAttached *QSGItemParticle::qmlAttachedProperties(QObject *object)
+QQuickItemParticleAttached *QQuickItemParticle::qmlAttachedProperties(QObject *object)
 {
-    return new QSGItemParticleAttached(object);
+    return new QQuickItemParticleAttached(object);
 }
 
 QT_END_NAMESPACE

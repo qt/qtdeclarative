@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 #include "qsggroupgoal_p.h"
-#include <private/qsgspriteengine_p.h>
-#include <private/qsgsprite_p.h>
+#include <private/qquickspriteengine_p.h>
+#include <private/qquicksprite_p.h>
 #include "qsgimageparticle_p.h"
 #include <QDebug>
 
@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
     Default is false.
 */
 
-QSGGroupGoalAffector::QSGGroupGoalAffector(QSGItem *parent) :
+QSGGroupGoalAffector::QSGGroupGoalAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_jump(false)
 {
 }
@@ -90,7 +90,7 @@ void QSGGroupGoalAffector::setGoalState(QString arg)
 bool QSGGroupGoalAffector::affectParticle(QSGParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
-    QSGStochasticEngine *engine = m_system->stateEngine;
+    QQuickStochasticEngine *engine = m_system->stateEngine;
     bool notUsingEngine = false;
     if (!engine)
         notUsingEngine = true;

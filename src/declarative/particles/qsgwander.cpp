@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
     \endlist
 */
 
-QSGWanderAffector::QSGWanderAffector(QSGItem *parent) :
+QSGWanderAffector::QSGWanderAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_xVariance(0), m_yVariance(0), m_pace(0)
     , m_affectedParameter(Velocity)
 {

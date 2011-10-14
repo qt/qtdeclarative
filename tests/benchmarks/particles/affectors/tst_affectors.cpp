@@ -82,7 +82,7 @@ void tst_affectors::test_filtered_data()
 void tst_affectors::test_basic()
 {
     QFETCH(int, dt);
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     //Pretend we're running, but we manually advance the simulation
     system->m_running = true;
@@ -122,7 +122,7 @@ void tst_affectors::test_basic()
 void tst_affectors::test_filtered()
 {
     QFETCH(int, dt);
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/filtered.qml");
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/filtered.qml");
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     //Pretend we're running, but we manually advance the simulation
     system->m_running = true;

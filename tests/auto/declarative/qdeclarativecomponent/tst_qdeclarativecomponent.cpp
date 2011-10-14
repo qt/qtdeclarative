@@ -43,7 +43,7 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
-#include <QtDeclarative/qsgitem.h>
+#include <QtDeclarative/qquickitem.h>
 #include <QtDeclarative/qdeclarativeproperty.h>
 #include <QtDeclarative/qdeclarativeincubator.h>
 #include <qcolor.h>
@@ -133,7 +133,7 @@ void tst_qdeclarativecomponent::qmlCreateObject()
     QObject *testObject2 = object->property("declarativeitem").value<QObject*>();
     QVERIFY(testObject2);
     QVERIFY(testObject2->parent() == object);
-    QCOMPARE(testObject2->metaObject()->className(), "QSGItem");
+    QCOMPARE(testObject2->metaObject()->className(), "QQuickItem");
 }
 
 void tst_qdeclarativecomponent::qmlCreateObjectWithProperties()

@@ -64,7 +64,7 @@ tst_qsgage::tst_qsgage()
 
 void tst_qsgage::test_kill()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/kill.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/kill.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -88,7 +88,7 @@ void tst_qsgage::test_kill()
 
 void tst_qsgage::test_jump()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/jump.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/jump.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -113,7 +113,7 @@ void tst_qsgage::test_jump()
 
 void tst_qsgage::test_onceOff()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/onceoff.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/onceoff.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -137,7 +137,7 @@ void tst_qsgage::test_onceOff()
 
 void tst_qsgage::test_sustained()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sustained.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/sustained.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
     //TODO: Ensure some particles have lived to 0.4s point despite unified timer

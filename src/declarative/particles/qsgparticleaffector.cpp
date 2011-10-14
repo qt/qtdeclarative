@@ -126,8 +126,8 @@ QT_BEGIN_NAMESPACE
 
     x,y is the particles current position.
 */
-QSGParticleAffector::QSGParticleAffector(QSGItem *parent) :
-    QSGItem(parent), m_needsReset(false), m_system(0), m_enabled(true)
+QSGParticleAffector::QSGParticleAffector(QQuickItem *parent) :
+    QQuickItem(parent), m_needsReset(false), m_system(0), m_enabled(true)
   , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this))
 {
 }
@@ -143,7 +143,7 @@ void QSGParticleAffector::componentComplete()
 {
     if (!m_system && qobject_cast<QSGParticleSystem*>(parentItem()))
         setSystem(qobject_cast<QSGParticleSystem*>(parentItem()));
-    QSGItem::componentComplete();
+    QQuickItem::componentComplete();
 }
 
 bool QSGParticleAffector::activeGroup(int g) {

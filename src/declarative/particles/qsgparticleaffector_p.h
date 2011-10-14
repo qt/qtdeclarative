@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGParticleAffector : public QSGItem
+class QSGParticleAffector : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QSGParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
@@ -63,7 +63,7 @@ class QSGParticleAffector : public QSGItem
     Q_PROPERTY(QSGParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
 
 public:
-    explicit QSGParticleAffector(QSGItem *parent = 0);
+    explicit QSGParticleAffector(QQuickItem *parent = 0);
     virtual void affectSystem(qreal dt);
     virtual void reset(QSGParticleData*);//As some store their own data per particle?
     QSGParticleSystem* system() const

@@ -42,7 +42,7 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <private/qdeclarativeconnections_p.h>
-#include <private/qsgitem_p.h>
+#include <private/qquickitem_p.h>
 #include "../shared/util.h"
 #include <QtDeclarative/qdeclarativescriptstring.h>
 
@@ -102,7 +102,7 @@ void tst_qdeclarativeconnection::connection()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("test-connection.qml")));
-    QSGItem *item = qobject_cast<QSGItem*>(c.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
     QVERIFY(item != 0);
 
@@ -119,7 +119,7 @@ void tst_qdeclarativeconnection::trimming()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("trimming.qml")));
-    QSGItem *item = qobject_cast<QSGItem*>(c.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
 
     QVERIFY(item != 0);
 
@@ -140,18 +140,18 @@ void tst_qdeclarativeconnection::targetChanged()
 {
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, QUrl::fromLocalFile(TESTDATA("connection-targetchange.qml")));
-    QSGItem *item = qobject_cast<QSGItem*>(c.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
     QVERIFY(item != 0);
 
     QDeclarativeConnections *connections = item->findChild<QDeclarativeConnections*>("connections");
     QVERIFY(connections);
 
-    QSGItem *item1 = item->findChild<QSGItem*>("item1");
+    QQuickItem *item1 = item->findChild<QQuickItem*>("item1");
     QVERIFY(item1);
 
     item1->setWidth(200);
 
-    QSGItem *item2 = item->findChild<QSGItem*>("item2");
+    QQuickItem *item2 = item->findChild<QQuickItem*>("item2");
     QVERIFY(item2);
     QVERIFY(connections->target() == item2);
 
@@ -185,7 +185,7 @@ void tst_qdeclarativeconnection::unknownSignals()
 
     QDeclarativeEngine engine;
     QDeclarativeComponent c(&engine, url);
-    QSGItem *item = qobject_cast<QSGItem*>(c.create());
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
     QVERIFY(item != 0);
 
     // check that connection is created (they are all runtime errors)

@@ -48,14 +48,14 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Declarative)
 
-class QSGItem;
+class QQuickItem;
 class QSGTargetDirection : public QSGDirection
 {
     Q_OBJECT
     Q_PROPERTY(qreal targetX READ targetX WRITE setTargetX NOTIFY targetXChanged)
     Q_PROPERTY(qreal targetY READ targetY WRITE setTargetY NOTIFY targetYChanged)
     //If targetItem is set, X/Y are ignored. Aims at middle of item, use variation for variation
-    Q_PROPERTY(QSGItem* targetItem READ targetItem WRITE setTargetItem NOTIFY targetItemChanged)
+    Q_PROPERTY(QQuickItem* targetItem READ targetItem WRITE setTargetItem NOTIFY targetItemChanged)
 
     Q_PROPERTY(qreal targetVariation READ targetVariation WRITE setTargetVariation NOTIFY targetVariationChanged)
 
@@ -98,7 +98,7 @@ public:
         return m_magnitudeVariation;
     }
 
-    QSGItem* targetItem() const
+    QQuickItem* targetItem() const
     {
         return m_targetItem;
     }
@@ -117,7 +117,7 @@ signals:
 
     void magnitudeVariationChanged(qreal arg);
 
-    void targetItemChanged(QSGItem* arg);
+    void targetItemChanged(QQuickItem* arg);
 
 public slots:
     void setTargetX(qreal arg)
@@ -168,7 +168,7 @@ public slots:
         }
     }
 
-    void setTargetItem(QSGItem* arg)
+    void setTargetItem(QQuickItem* arg)
     {
         if (m_targetItem != arg) {
             m_targetItem = arg;
@@ -183,7 +183,7 @@ private:
     bool m_proportionalMagnitude;
     qreal m_magnitude;
     qreal m_magnitudeVariation;
-    QSGItem *m_targetItem;
+    QQuickItem *m_targetItem;
 };
 
 QT_END_NAMESPACE

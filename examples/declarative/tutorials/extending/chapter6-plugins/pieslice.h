@@ -40,10 +40,10 @@
 #ifndef PIESLICE_H
 #define PIESLICE_H
 
-#include <QtDeclarative/QSGPaintedItem>
+#include <QtDeclarative/QQuickPaintedItem>
 #include <QColor>
 
-class PieSlice : public QSGPaintedItem
+class PieSlice : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor)
@@ -51,7 +51,7 @@ class PieSlice : public QSGPaintedItem
     Q_PROPERTY(int angleSpan READ angleSpan WRITE setAngleSpan)
 
 public:
-    PieSlice(QSGItem *parent = 0);
+    PieSlice(QQuickItem *parent = 0);
 
     QColor color() const;
     void setColor(const QColor &color);

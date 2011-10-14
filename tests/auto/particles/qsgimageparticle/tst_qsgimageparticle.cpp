@@ -67,7 +67,7 @@ tst_qsgimageparticle::tst_qsgimageparticle()
 
 void tst_qsgimageparticle::test_basic()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -110,7 +110,7 @@ void tst_qsgimageparticle::test_basic()
 
 void tst_qsgimageparticle::test_colored()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/colored.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/colored.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -153,7 +153,7 @@ void tst_qsgimageparticle::test_colored()
 
 void tst_qsgimageparticle::test_deformed()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/deformed.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/deformed.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -196,7 +196,7 @@ void tst_qsgimageparticle::test_deformed()
 
 void tst_qsgimageparticle::test_tabled()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/tabled.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/tabled.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 
@@ -240,7 +240,7 @@ void tst_qsgimageparticle::test_tabled()
 
 void tst_qsgimageparticle::test_sprite()
 {
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sprite.qml", 600);
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/sprite.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     ensureAnimTime(600, system->m_animation);
 

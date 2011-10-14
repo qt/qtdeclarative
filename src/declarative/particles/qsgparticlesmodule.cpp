@@ -82,7 +82,7 @@ void QSGParticlesModule::defineModule()
 
     qmlRegisterType<QSGImageParticle>(uri, 2, 0, "ImageParticle");
     qmlRegisterType<QSGCustomParticle>(uri, 2, 0, "CustomParticle");
-    qmlRegisterType<QSGItemParticle>(uri, 2, 0, "ItemParticle");
+    qmlRegisterType<QQuickItemParticle>(uri, 2, 0, "ItemParticle");
 
     qmlRegisterType<QSGParticleEmitter>(uri, 2, 0, "Emitter");
     qmlRegisterType<QSGTrailEmitter>(uri, 2, 0, "TrailEmitter");

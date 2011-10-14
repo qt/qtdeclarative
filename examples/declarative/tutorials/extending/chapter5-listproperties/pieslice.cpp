@@ -41,8 +41,8 @@
 
 #include <QPainter>
 
-PieSlice::PieSlice(QSGItem *parent)
-    : QSGPaintedItem(parent)
+PieSlice::PieSlice(QQuickItem *parent)
+    : QQuickPaintedItem(parent)
 {
 }
 

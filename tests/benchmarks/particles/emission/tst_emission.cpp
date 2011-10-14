@@ -73,7 +73,7 @@ void tst_emission::test_basic_data()
 void tst_emission::test_basic()
 {
     QFETCH(int, dt);
-    QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
     //Pretend we're running, but we manually advance the simulation
     system->m_running = true;

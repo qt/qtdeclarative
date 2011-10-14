@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     This element emits logical particles into the ParticleSystem, with the
     starting positions based on those of other logical particles.
 */
-QSGTrailEmitter::QSGTrailEmitter(QSGItem *parent) :
+QSGTrailEmitter::QSGTrailEmitter(QQuickItem *parent) :
     QSGParticleEmitter(parent)
   , m_particlesPerParticlePerSecond(0)
   , m_lastTimeStamp(0)
