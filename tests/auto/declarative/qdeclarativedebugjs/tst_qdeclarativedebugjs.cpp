@@ -52,6 +52,7 @@
 //QDeclarativeDebugTest
 #include "../../../shared/util.h"
 #include "../shared/debugutil_p.h"
+#include "../shared/util.h"
 
 const char *SEQ = "seq";
 const char *TYPE = "type";
@@ -130,12 +131,6 @@ const char *JSFILE = "test.js";
     QJSValue jsonVal = parser.call(QJSValue(), QJSValueList() << obj); \
     jsonVal.setProperty(SEQ,QJSValue(seq++)); \
     jsonVal.setProperty(TYPE,REQUEST);
-
-inline QString TEST_FILE(const QString &filename)
-{
-    QFileInfo fileInfo(__FILE__);
-    return fileInfo.absoluteDir().filePath("data/" + filename);
-}
 
 class QJSDebugProcess;
 class QJSDebugClient;
@@ -1056,7 +1051,7 @@ void tst_QDeclarativeDebugJS::init()
     process = new QJSDebugProcess();
     client = new QJSDebugClient(connection);
 
-    process->start(QStringList() << QLatin1String(BLOCKMODE) << TEST_FILE(QLatin1String(QMLFILE)));
+    process->start(QStringList() << QLatin1String(BLOCKMODE) << TESTDATA(QLatin1String(QMLFILE)));
     QVERIFY(process->waitForSessionStart());
 
     connection->connectToHost("127.0.0.1", 3771);

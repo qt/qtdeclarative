@@ -42,6 +42,7 @@
 #include <qtest.h>
 #include <QDeclarativeError>
 #include <QDebug>
+#include "../shared/util.h"
 
 class tst_qdeclarativeerror : public QObject
 {
@@ -207,7 +208,7 @@ void tst_qdeclarativeerror::debug()
     }
 
     {
-        QUrl url(QUrl::fromLocalFile(QString(SRCDIR) + "/").resolved(QUrl("test.txt")));
+        QUrl url(QUrl::fromLocalFile(TESTDATA("")).resolved(QUrl("test.txt")));
         QDeclarativeError error;
         error.setUrl(url);
         error.setDescription("An Error");
@@ -221,7 +222,7 @@ void tst_qdeclarativeerror::debug()
     }
 
     {
-        QUrl url(QUrl::fromLocalFile(QString(SRCDIR) + "/").resolved(QUrl("foo.txt")));
+        QUrl url(QUrl::fromLocalFile(TESTDATA("")).resolved(QUrl("foo.txt")));
         QDeclarativeError error;
         error.setUrl(url);
         error.setDescription("An Error");

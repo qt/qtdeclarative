@@ -10,11 +10,9 @@ SOURCES +=     tst_qdeclarativedebugjs.cpp \
 
 INCLUDEPATH += ../shared
 
-# QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage
-# LIBS += -lgcov
-
-OTHER_FILES =   data/test.qml \
-                data/test.js
+testDataFiles.files = data
+testDataFiles.path = .
+DEPLOYMENT += testDataFiles
 
 
 CONFIG += parallel_test

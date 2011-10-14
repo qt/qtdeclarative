@@ -54,6 +54,7 @@
 #include <QtSql/qsqldatabase.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include "../shared/util.h"
 
 class tst_qdeclarativesqldatabase : public QObject
 {
@@ -133,22 +134,22 @@ void tst_qdeclarativesqldatabase::testQml_data()
     QTest::addColumn<QString>("jsfile"); // The input file
 
     // Each test should use a newly named DB to avoid inter-test dependencies
-    QTest::newRow("creation") << "data/creation.js";
-    QTest::newRow("creation-a") << "data/creation-a.js";
-    QTest::newRow("creation") << "data/creation.js";
-    QTest::newRow("error-creation") << "data/error-creation.js"; // re-uses above DB
-    QTest::newRow("changeversion") << "data/changeversion.js";
-    QTest::newRow("readonly") << "data/readonly.js";
-    QTest::newRow("readonly-error") << "data/readonly-error.js";
-    QTest::newRow("selection") << "data/selection.js";
-    QTest::newRow("selection-bindnames") << "data/selection-bindnames.js";
-    QTest::newRow("iteration") << "data/iteration.js";
-    QTest::newRow("iteration-forwardonly") << "data/iteration-forwardonly.js";
-    QTest::newRow("error-a") << "data/error-a.js";
-    QTest::newRow("error-notransaction") << "data/error-notransaction.js";
-    QTest::newRow("error-outsidetransaction") << "data/error-outsidetransaction.js"; // reuse above
-    QTest::newRow("reopen1") << "data/reopen1.js";
-    QTest::newRow("reopen2") << "data/reopen2.js"; // re-uses above DB
+    QTest::newRow("creation") << "creation.js";
+    QTest::newRow("creation-a") << "creation-a.js";
+    QTest::newRow("creation") << "creation.js";
+    QTest::newRow("error-creation") << "error-creation.js"; // re-uses above DB
+    QTest::newRow("changeversion") << "changeversion.js";
+    QTest::newRow("readonly") << "readonly.js";
+    QTest::newRow("readonly-error") << "readonly-error.js";
+    QTest::newRow("selection") << "selection.js";
+    QTest::newRow("selection-bindnames") << "selection-bindnames.js";
+    QTest::newRow("iteration") << "iteration.js";
+    QTest::newRow("iteration-forwardonly") << "iteration-forwardonly.js";
+    QTest::newRow("error-a") << "error-a.js";
+    QTest::newRow("error-notransaction") << "error-notransaction.js";
+    QTest::newRow("error-outsidetransaction") << "error-outsidetransaction.js"; // reuse above
+    QTest::newRow("reopen1") << "reopen1.js";
+    QTest::newRow("reopen2") << "reopen2.js"; // re-uses above DB
 
     // If you add a test, you should usually use a new database in the
     // test - in which case increment total_databases_created_by_tests above.
@@ -204,7 +205,7 @@ void tst_qdeclarativesqldatabase::testQml()
 
     engine->setOfflineStoragePath(dbDir());
     QDeclarativeComponent component(engine);
-    component.setData(qml.toUtf8(), QUrl::fromLocalFile(SRCDIR "/empty.qml")); // just a file for relative local imports
+    component.setData(qml.toUtf8(), QUrl::fromLocalFile(TESTDATA("empty.qml"))); // just a file for relative local imports
     QVERIFY(!component.isError());
     QSGText *text = qobject_cast<QSGText*>(component.create());
     QVERIFY(text != 0);
@@ -214,9 +215,9 @@ void tst_qdeclarativesqldatabase::testQml()
 void tst_qdeclarativesqldatabase::testQml_cleanopen_data()
 {
     QTest::addColumn<QString>("jsfile"); // The input file
-    QTest::newRow("reopen1") << "data/reopen1.js";
-    QTest::newRow("reopen2") << "data/reopen2.js";
-    QTest::newRow("error-creation") << "data/error-creation.js"; // re-uses creation DB
+    QTest::newRow("reopen1") << "reopen1.js";
+    QTest::newRow("reopen2") << "reopen2.js";
+    QTest::newRow("error-creation") << "error-creation.js"; // re-uses creation DB
 }
 
 void tst_qdeclarativesqldatabase::testQml_cleanopen()
