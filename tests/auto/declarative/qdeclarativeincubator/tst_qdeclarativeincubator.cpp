@@ -488,10 +488,10 @@ void tst_qdeclarativeincubator::statusChanged()
         virtual void setInitialState(QObject *) { statuses << -1; }
     };
 
+    {
     QDeclarativeComponent component(&engine, TEST_FILE("statusChanged.qml"));
     QVERIFY(component.isReady());
 
-    {
     MyIncubator incubator(QDeclarativeIncubator::Synchronous);
     component.create(incubator);
     QVERIFY(incubator.isReady());
@@ -503,6 +503,9 @@ void tst_qdeclarativeincubator::statusChanged()
     }
 
     {
+    QDeclarativeComponent component(&engine, TEST_FILE("statusChanged.qml"));
+    QVERIFY(component.isReady());
+
     MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
     component.create(incubator);
     QVERIFY(incubator.isLoading());
@@ -514,6 +517,29 @@ void tst_qdeclarativeincubator::statusChanged()
     controller.incubateWhile(&b);
     }
 
+    QCOMPARE(incubator.statuses.count(), 3);
+    QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
+    QCOMPARE(incubator.statuses.at(1), -1);
+    QCOMPARE(incubator.statuses.at(2), int(QDeclarativeIncubator::Ready));
+    delete incubator.object();
+    }
+
+    {
+    QDeclarativeComponent component2(&engine, TEST_FILE("statusChanged.nested.qml"));
+    QVERIFY(component2.isReady());
+
+    MyIncubator incubator(QDeclarativeIncubator::Asynchronous);
+    component2.create(incubator);
+    QVERIFY(incubator.isLoading());
+    QCOMPARE(incubator.statuses.count(), 1);
+    QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
+
+    {
+    bool b = true;
+    controller.incubateWhile(&b);
+    }
+
+    QVERIFY(incubator.isReady());
     QCOMPARE(incubator.statuses.count(), 3);
     QCOMPARE(incubator.statuses.at(0), int(QDeclarativeIncubator::Loading));
     QCOMPARE(incubator.statuses.at(1), -1);

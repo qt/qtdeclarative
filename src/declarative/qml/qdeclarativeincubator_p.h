@@ -70,6 +70,10 @@ public:
 
     QDeclarativeIncubator *q;
 
+    QDeclarativeIncubator::Status calculateStatus() const;
+    void changeStatus(QDeclarativeIncubator::Status);
+    QDeclarativeIncubator::Status status;
+
     QDeclarativeIncubator::IncubationMode mode;
 
     QList<QDeclarativeError> errors;

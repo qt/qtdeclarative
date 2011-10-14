@@ -81,8 +81,7 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
 
     inProgressCreations++;
 
-    Q_ASSERT(i.isLoading());
-    i.statusChanged(i.status());
+    p->changeStatus(QDeclarativeIncubator::Loading);
 
     if (mode == QDeclarativeIncubator::Synchronous) {
         QDeclarativeVME::Interrupt i;
@@ -122,7 +121,8 @@ QDeclarativeIncubationController *QDeclarativeEngine::incubationController() con
 
 QDeclarativeIncubatorPrivate::QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, 
                                                            QDeclarativeIncubator::IncubationMode m)
-: q(q), mode(m), progress(Execute), result(0), component(0), vme(this), waitingOnMe(0)
+: q(q), status(QDeclarativeIncubator::Null), mode(m), progress(Execute), result(0), component(0), 
+  vme(this), waitingOnMe(0)
 {
 }
 
@@ -250,8 +250,6 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
     bool guardOk = vmeGuard.isOK();
     vmeGuard.clear();
 
-    QDeclarativeIncubator::Status oldStatus = q->status();
-
     if (!guardOk) {
         QDeclarativeError error;
         error.setUrl(component->url);
@@ -290,12 +288,7 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
         else
             progress = QDeclarativeIncubatorPrivate::Completed;
 
-        QDeclarativeIncubator::Status newStatus = q->status();
-        
-        if (oldStatus != newStatus) {
-            q->statusChanged(newStatus);
-            oldStatus = newStatus;
-        }
+        changeStatus(calculateStatus());
 
         if (watcher.hasRecursed())
             return;
@@ -324,11 +317,7 @@ finishIncubate:
 
         enginePriv->inProgressCreations--;
 
-        QDeclarativeIncubator::Status newStatus = q->status();
-        if (newStatus != oldStatus) {
-            q->statusChanged(newStatus);
-            oldStatus = newStatus;
-        }
+        changeStatus(calculateStatus());
 
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
@@ -548,6 +537,7 @@ void QDeclarativeIncubator::clear()
         }
     }
 
+    d->changeStatus(Null);
 }
 
 /*!
@@ -619,11 +609,7 @@ Return the current status of the incubator.
 */
 QDeclarativeIncubator::Status QDeclarativeIncubator::status() const
 {
-    if (!d->errors.isEmpty()) return Error;
-    else if (d->result && d->progress == QDeclarativeIncubatorPrivate::Completed && 
-             d->waitingFor.isEmpty()) return Ready;
-    else if (d->component) return Loading;
-    else return Null;
+    return d->status;
 }
 
 /*!
@@ -658,3 +644,26 @@ void QDeclarativeIncubator::setInitialState(QObject *object)
 {
     Q_UNUSED(object);
 }
+
+void QDeclarativeIncubatorPrivate::changeStatus(QDeclarativeIncubator::Status s)
+{
+    if (s == status) 
+        return;
+
+    status = s;
+    q->statusChanged(status);
+}
+
+QDeclarativeIncubator::Status QDeclarativeIncubatorPrivate::calculateStatus() const
+{
+    if (!errors.isEmpty()) 
+        return QDeclarativeIncubator::Error;
+    else if (result && progress == QDeclarativeIncubatorPrivate::Completed && 
+             waitingFor.isEmpty()) 
+        return QDeclarativeIncubator::Ready;
+    else if (component) 
+        return QDeclarativeIncubator::Loading;
+    else 
+        return QDeclarativeIncubator::Null;
+}
+
