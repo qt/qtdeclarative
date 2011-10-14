@@ -175,21 +175,23 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
     // in turn with a QDeclarativeView.
 #ifdef QUICK_TEST_SCENEGRAPH
     if (qtQuick2) {
+        QSGView view;
+        QTestRootObject rootobj;
+        QEventLoop eventLoop;
+        QObject::connect(view.engine(), SIGNAL(quit()),
+                         &rootobj, SLOT(quit()));
+        QObject::connect(view.engine(), SIGNAL(quit()),
+                         &eventLoop, SLOT(quit()));
+        view.rootContext()->setContextProperty
+            (QLatin1String("qtest"), &rootobj);
+        foreach (QString path, imports)
+            view.engine()->addImportPath(path);
+
         foreach (QString file, files) {
             QFileInfo fi(file);
             if (!fi.exists())
                 continue;
-            QSGView view;
-            QTestRootObject rootobj;
-            QEventLoop eventLoop;
-            QObject::connect(view.engine(), SIGNAL(quit()),
-                             &rootobj, SLOT(quit()));
-            QObject::connect(view.engine(), SIGNAL(quit()),
-                             &eventLoop, SLOT(quit()));
-            view.rootContext()->setContextProperty
-                (QLatin1String("qtest"), &rootobj);
-            foreach (QString path, imports)
-                view.engine()->addImportPath(path);
+
             QString path = fi.absoluteFilePath();
             if (path.startsWith(QLatin1String(":/")))
                 view.setSource(QUrl(QLatin1String("qrc:") + path.mid(2)));
@@ -220,8 +222,7 @@ int quick_test_main(int argc, char **argv, const char *name, quick_test_viewport
                 // an asynchronous test and we need to show the window
                 // and wait for the quit indication.
                 view.show();
-                //QTest::qWaitForWindowShown(&view);
-                QTest::qWait(50);
+                QTest::qWaitForWindowShown(&view);
                 rootobj.setWindowShown(true);
                 if (!rootobj.hasQuit)
                     eventLoop.exec();
