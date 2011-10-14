@@ -146,6 +146,10 @@ class tst_qdeclarativelistcompositor : public QObject
     }
 
 private slots:
+    void find_data();
+    void find();
+    void findInsertPosition_data();
+    void findInsertPosition();
     void insert();
     void clearFlags_data();
     void clearFlags();
@@ -163,6 +167,131 @@ private slots:
     void listItemsChanged_data();
     void listItemsChanged();
 };
+
+void tst_qdeclarativelistcompositor::find_data()
+{
+    QTest::addColumn<RangeList>("ranges");
+    QTest::addColumn<C::Group>("startGroup");
+    QTest::addColumn<int>("startIndex");
+    QTest::addColumn<C::Group>("group");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<int>("selectionIndex");
+    QTest::addColumn<int>("visibleIndex");
+    QTest::addColumn<int>("defaultIndex");
+    QTest::addColumn<int>("cacheIndex");
+    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<int>("rangeIndex");
+
+    int listA; void *a = &listA;
+
+    QTest::newRow("Start")
+            << (RangeList()
+                << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
+                << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
+                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+            << C::Cache << 2
+            << Selection << 0
+            << 0 << 0 << 0 << 0
+            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+}
+
+void tst_qdeclarativelistcompositor::find()
+{
+    QFETCH(RangeList, ranges);
+    QFETCH(C::Group, startGroup);
+    QFETCH(int, startIndex);
+    QFETCH(C::Group, group);
+    QFETCH(int, index);
+    QFETCH(int, cacheIndex);
+    QFETCH(int, defaultIndex);
+    QFETCH(int, visibleIndex);
+    QFETCH(int, selectionIndex);
+    QFETCH(int, rangeFlags);
+    QFETCH(int, rangeIndex);
+
+    QDeclarativeListCompositor compositor;
+    compositor.setGroupCount(4);
+    compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
+
+    foreach (const Range &range, ranges)
+        compositor.append(range.list, range.index, range.count, range.flags);
+
+    compositor.find(startGroup, startIndex);
+
+    QDeclarativeListCompositor::iterator it = compositor.find(group, index);
+    QCOMPARE(it.index[C::Cache], cacheIndex);
+    QCOMPARE(it.index[C::Default], defaultIndex);
+    QCOMPARE(it.index[Visible], visibleIndex);
+    QCOMPARE(it.index[Selection], selectionIndex);
+    QCOMPARE(it->flags, rangeFlags);
+    QCOMPARE(it->index, rangeIndex);
+}
+
+void tst_qdeclarativelistcompositor::findInsertPosition_data()
+{
+    QTest::addColumn<RangeList>("ranges");
+    QTest::addColumn<C::Group>("startGroup");
+    QTest::addColumn<int>("startIndex");
+    QTest::addColumn<C::Group>("group");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<int>("selectionIndex");
+    QTest::addColumn<int>("visibleIndex");
+    QTest::addColumn<int>("defaultIndex");
+    QTest::addColumn<int>("cacheIndex");
+    QTest::addColumn<int>("rangeFlags");
+    QTest::addColumn<int>("rangeIndex");
+
+    int listA; void *a = &listA;
+
+    QTest::newRow("Start")
+            << (RangeList()
+                << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
+                << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
+                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+            << C::Cache << 2
+            << Selection << 0
+            << 0 << 0 << 0 << 0
+            << int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
+    QTest::newRow("1")
+            << (RangeList()
+                << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
+                << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
+                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+            << C::Cache << 2
+            << Selection << 1
+            << 1 << 0 << 1 << 1
+            << int(C::AppendFlag | C::PrependFlag | C::CacheFlag) << 1;
+}
+
+void tst_qdeclarativelistcompositor::findInsertPosition()
+{
+    QFETCH(RangeList, ranges);
+    QFETCH(C::Group, startGroup);
+    QFETCH(int, startIndex);
+    QFETCH(C::Group, group);
+    QFETCH(int, index);
+    QFETCH(int, cacheIndex);
+    QFETCH(int, defaultIndex);
+    QFETCH(int, visibleIndex);
+    QFETCH(int, selectionIndex);
+    QFETCH(int, rangeFlags);
+    QFETCH(int, rangeIndex);
+
+    QDeclarativeListCompositor compositor;
+    compositor.setGroupCount(4);
+    compositor.setDefaultGroups(VisibleFlag | C::DefaultFlag);
+
+    foreach (const Range &range, ranges)
+        compositor.append(range.list, range.index, range.count, range.flags);
+
+    QDeclarativeListCompositor::insert_iterator it = compositor.findInsertPosition(group, index);
+    QCOMPARE(it.index[C::Cache], cacheIndex);
+    QCOMPARE(it.index[C::Default], defaultIndex);
+    QCOMPARE(it.index[Visible], visibleIndex);
+    QCOMPARE(it.index[Selection], selectionIndex);
+    QCOMPARE(it->flags, rangeFlags);
+    QCOMPARE(it->index, rangeIndex);
+}
 
 void tst_qdeclarativelistcompositor::insert()
 {
@@ -1063,6 +1192,30 @@ void tst_qdeclarativelistcompositor::listItemsRemoved_data()
                 << a << 3 << 2
                 << (RemoveList()
                     << Remove(0, 0, 3, 6, 2, C::DefaultFlag | C::CacheFlag))
+                << IndexArray(cacheIndexes)
+                << IndexArray(defaultIndexes)
+                << IndexArray()
+                << IndexArray();
+    } { static const int cacheIndexes[] = {/*A*/-1,-1,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1};
+        static const int defaultIndexes[] = {/*A*/0,1,2,3,4,5,6};
+        QTest::newRow("Sparse remove")
+                << (RangeList()
+                    << Range(a,  0,  2, C::CacheFlag)
+                    << Range(a,  0,  1, C::DefaultFlag | C::CacheFlag)
+                    << Range(a,  0,  1, C::CacheFlag)
+                    << Range(a,  1,  5, C::DefaultFlag | C::CacheFlag)
+                    << Range(a,  0,  1, C::CacheFlag)
+                    << Range(a,  6,  2, C::DefaultFlag | C::CacheFlag)
+                    << Range(a,  0,  1, C::CacheFlag)
+                    << Range(a,  8,  3, C::DefaultFlag | C::CacheFlag)
+                    << Range(a,  0,  1, C::CacheFlag)
+                    << Range(a, 11,  1, C::DefaultFlag | C::CacheFlag)
+                    << Range(a, 12,  5, C::DefaultFlag))
+                << a << 1 << 10
+                << (RemoveList()
+                    << Remove(0, 0, 1, 4, 5, C::DefaultFlag | C::CacheFlag)
+                    << Remove(0, 0, 1,10, 2, C::DefaultFlag | C::CacheFlag)
+                    << Remove(0, 0, 1,13, 3, C::DefaultFlag | C::CacheFlag))
                 << IndexArray(cacheIndexes)
                 << IndexArray(defaultIndexes)
                 << IndexArray()

@@ -154,22 +154,6 @@ static bool qt_verifyIntegrity(
 //#define QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(args) qDebug() << m_end.index[1] << m_end.index[0] << Q_FUNC_INFO args;
 #define QT_DECLARATIVE_TRACE_LISTCOMPOSITOR(args)
 
-QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::operator ++()
-{
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
-    incrementIndexes(1);
-    if (++offset == range->count) {
-        while (!((range = range->next)->flags & groupFlag))
-            incrementIndexes(range->count);
-        offset = 0;
-    }
-    return *this;
-}
-
 QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::operator +=(int difference)
 {
     Q_ASSERT(difference >= 0);
@@ -210,27 +194,10 @@ QDeclarativeListCompositor::iterator &QDeclarativeListCompositor::iterator::oper
     return *this;
 }
 
-QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator ++()
-{
-    while (!(range->flags & groupFlag)) {
-        incrementIndexes(range->count - offset);
-        offset = 0;
-        range = range->next;
-    }
-    incrementIndexes(1);
-    if (++offset == range->count && !range->append()) {
-        while (!((range = range->next)->flags & groupFlag) ){
-            incrementIndexes(range->count);
-        }
-        offset = 0;
-    }
-    return *this;
-}
-
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator +=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && range->flags & GroupMask) {
+    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
         incrementIndexes(range->count - offset);
         offset = 0;
         range = range->next;
@@ -252,7 +219,7 @@ QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_
 QDeclarativeListCompositor::insert_iterator &QDeclarativeListCompositor::insert_iterator::operator -=(int difference)
 {
     Q_ASSERT(difference >= 0);
-    while (!(range->flags & groupFlag) && range->flags & GroupMask) {
+    while (!(range->flags & groupFlag) && (range->flags & (GroupMask | CacheFlag))) {
         decrementIndexes(offset);
         range = range->previous;
         offset = range->count;
@@ -359,7 +326,7 @@ QDeclarativeListCompositor::insert_iterator QDeclarativeListCompositor::findInse
     Q_ASSERT(index >=0 && index <= count(group));
     insert_iterator it;
     if (m_cacheIt == m_end) {
-        m_cacheIt = iterator(m_ranges.next, 0, group, m_groupCount);
+        it = iterator(m_ranges.next, 0, group, m_groupCount);
         it += index;
     } else {
         const int offset = index - m_cacheIt.index[group];
@@ -976,6 +943,7 @@ void QDeclarativeListCompositor::listItemsRemoved(
                     } else {
                         *it = insert(*it, it->list, -1, removeCount, CacheFlag)->next;
                     }
+                    it.index[Cache] += removeCount;
                 }
                 if (removeFlags & GroupMask)
                     translatedRemovals->append(translatedRemoval);
@@ -994,10 +962,11 @@ void QDeclarativeListCompositor::listItemsRemoved(
                 && it->list == it->next->list
                 && (it->flags == CacheFlag || it->end() == it->next->index)
                 && it->flags == (it->next->flags & ~AppendFlag)) {
+
+            it.index[Cache] += it->next->count;
             it->count += it->next->count;
             it->flags = it->next->flags;
             erase(it->next);
-            *it = it->previous;
         } else if (!removed) {
             it.incrementIndexes(it->count);
         }
