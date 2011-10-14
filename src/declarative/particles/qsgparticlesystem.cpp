@@ -786,14 +786,15 @@ void QSGParticleSystem::reset()
     }
 
     //### Do affectors need reset too?
-
-    if (m_running) {//reset restarts animation (if running)
+    if (m_animation) {//Animation is explicitly disabled in benchmarks
+        //reset restarts animation (if running)
         if ((m_animation->state() == QAbstractAnimation::Running))
             m_animation->stop();
         m_animation->start();
         if (m_paused)
             m_animation->pause();
     }
+
     initialized = true;
 }
 

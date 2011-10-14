@@ -39,45 +39,29 @@
 **
 ****************************************************************************/
 
-#ifndef PARTICLES_TESTS_SHARED
-#define PARTICLES_TESTS_SHARED
-#include <QSGView>
-#include <QtTest>
-const qreal EPSILON = 0.0001;
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-bool extremelyFuzzyCompare(qreal a, qreal b, qreal e)//For cases which can have larger variances
-{
-    return (a + e >= b) && (a - e <= b);
+Rectangle {
+    color: "black"
+    width: 320
+    height: 320
+
+    ParticleSystem {
+        id: sys
+        objectName: "system"
+        anchors.fill: parent
+        running: false //Benchmark will manage it
+
+        ImageParticle {
+            source: "../../shared/star.png"
+        }
+
+        Emitter{
+            //0,0 position
+            size: 32
+            emitRate: 2000
+            lifeSpan: 500
+        }
+    }
 }
-
-bool myFuzzyCompare(qreal a, qreal b)//For cases which might be near 0 so qFuzzyCompare fails
-{
-    return (a + EPSILON > b) && (a - EPSILON < b);
-}
-
-bool myFuzzyLEQ(qreal a, qreal b)
-{
-    return (a - EPSILON < b);
-}
-
-bool myFuzzyGEQ(qreal a, qreal b)
-{
-    return (a + EPSILON > b);
-}
-
-QSGView* createView(const QString &filename, int additionalWait=0)
-{
-    QSGView *canvas = new QSGView(0);
-
-    canvas->setSource(QUrl::fromLocalFile(filename));
-    if (canvas->status() != QSGView::Ready)
-        return 0;
-    canvas->show();
-    QTest::qWaitForWindowShown(canvas);
-    if (additionalWait)
-        QTest::qWait(additionalWait);
-
-    return canvas;
-}
-
-#endif

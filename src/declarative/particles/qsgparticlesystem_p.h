@@ -284,7 +284,7 @@ private slots:
 public:
     //These can be called multiple times per frame, performance critical
     void emitParticle(QSGParticleData* p);
-    QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);//TODO: implement respectLimits in emitters (which means interacting with maxCount?)
+    QSGParticleData* newDatum(int groupId, bool respectLimits = true, int sysIdx = -1);
     void finishNewDatum(QSGParticleData*);
     void moveGroups(QSGParticleData *d, int newGIdx);
     int nextSystemIndex();
@@ -292,12 +292,17 @@ public:
     //This one only once per painter per frame
     int systemSync(QSGParticlePainter* p);
 
-    //Data members here for ease of related class and auto-test usage. Not "public" API.
+    //Data members here for ease of related class and auto-test usage. Not "public" API. TODO: d_ptrize
     QSet<QSGParticleData*> needsReset;
     QVector<QSGParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QHash<QString, int> groupIds;
     QHash<int, QSGParticleGroupData*> groupData;
     QSGStochasticEngine* stateEngine;
+
+    //Also only here for auto-test usage
+    void updateCurrentTime( int currentTime );
+    QSGParticleSystemAnimation* m_animation;
+    bool m_running;
 
     int timeInt;
     bool initialized;
@@ -323,7 +328,6 @@ public:
 private:
     void initializeSystem();
     void initGroups();
-    bool m_running;
     QList<QPointer<QSGParticleEmitter> > m_emitters;
     QList<QPointer<QSGParticleAffector> > m_affectors;
     QList<QPointer<QSGParticlePainter> > m_painters;
@@ -336,9 +340,6 @@ private:
 
     QSignalMapper m_painterMapper;
     QSignalMapper m_emitterMapper;
-    friend class QSGParticleSystemAnimation;
-    void updateCurrentTime( int currentTime );
-    QSGParticleSystemAnimation* m_animation;
     bool m_paused;
     bool m_debugMode;
     bool m_allDead;
