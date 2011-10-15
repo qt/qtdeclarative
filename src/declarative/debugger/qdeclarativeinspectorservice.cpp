@@ -82,7 +82,7 @@ void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
     QDeclarativeDebugService::sendMessage(message);
 }
 
-void QDeclarativeInspectorService::statusChanged(Status status)
+void QDeclarativeInspectorService::statusChanged(Status /*status*/)
 {
     updateStatus();
 }
