@@ -35,10 +35,6 @@ PRIVATETESTS += \
     qdeclarativebinding \
     qdeclarativechangeset \
     qdeclarativeconnection \
-    qdeclarativeenginedebug \
-    qdeclarativedebugclient \
-    qdeclarativedebugservice \
-#   qdeclarativedebugjs \
     qdeclarativeecmascript \
     qdeclarativeexpression \
     qdeclarativefontloader \
@@ -61,7 +57,6 @@ PRIVATETESTS += \
     qdeclarativevaluetypes \
     qdeclarativeworkerscript \
     qdeclarativexmllistmodel \
-    qpacketprotocol \
     v4
 
 # This test requires the xmlpatterns module
@@ -96,8 +91,8 @@ SGTESTS =  \
 
 
 SUBDIRS += $$PUBLICTESTS
-
 SUBDIRS += $$METATYPETESTS
+SUBDIRS += debugger
 
 contains(QT_CONFIG, private_tests) {
     SUBDIRS += $$PRIVATETESTS

@@ -50,9 +50,8 @@
 #include <QtDeclarative/QJSEngine>
 
 //QDeclarativeDebugTest
-#include "../../../shared/util.h"
 #include "../shared/debugutil_p.h"
-#include "../shared/util.h"
+#include "../../shared/util.h"
 
 const char *SEQ = "seq";
 const char *TYPE = "type";
