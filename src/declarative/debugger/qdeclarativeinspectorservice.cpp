@@ -41,6 +41,7 @@
 
 #include "qdeclarativeinspectorservice_p.h"
 #include "qdeclarativeinspectorinterface_p.h"
+#include "qdeclarativedebugserver_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
@@ -101,6 +102,7 @@ void QDeclarativeInspectorService::updateStatus()
 
         if (!m_inspectorPlugin) {
             qWarning() << "Error while loading inspector plugin";
+            QDeclarativeDebugServer::instance()->removeService(this);
             return;
         }
 
