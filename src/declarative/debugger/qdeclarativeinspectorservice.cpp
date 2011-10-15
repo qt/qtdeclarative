@@ -65,11 +65,13 @@ QDeclarativeInspectorService *QDeclarativeInspectorService::instance()
 void QDeclarativeInspectorService::addView(QObject *view)
 {
     m_views.append(view);
+    updateStatus();
 }
 
 void QDeclarativeInspectorService::removeView(QObject *view)
 {
     m_views.removeAll(view);
+    updateStatus();
 }
 
 void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
@@ -82,10 +84,18 @@ void QDeclarativeInspectorService::sendMessage(const QByteArray &message)
 
 void QDeclarativeInspectorService::statusChanged(Status status)
 {
-    if (m_views.isEmpty())
-        return;
+    updateStatus();
+}
 
-    if (status == Enabled) {
+void QDeclarativeInspectorService::updateStatus()
+{
+    if (m_views.isEmpty()) {
+        if (m_inspectorPlugin)
+            m_inspectorPlugin->deactivate();
+        return;
+    }
+
+    if (status() == Enabled) {
         if (!m_inspectorPlugin)
             m_inspectorPlugin = loadInspectorPlugin();
 
