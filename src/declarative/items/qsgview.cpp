@@ -68,7 +68,8 @@ void QSGViewPrivate::init()
 
     engine.setIncubationController(q->incubationController());
 
-    QDeclarativeInspectorService::instance()->addView(q);
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->addView(q);
 }
 
 QSGViewPrivate::QSGViewPrivate()
@@ -78,7 +79,8 @@ QSGViewPrivate::QSGViewPrivate()
 
 QSGViewPrivate::~QSGViewPrivate()
 {
-    QDeclarativeInspectorService::instance()->removeView(q_func());
+    if (QDeclarativeDebugService::isDebuggingEnabled())
+        QDeclarativeInspectorService::instance()->removeView(q_func());
 
     delete root;
 }
