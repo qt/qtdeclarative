@@ -46,7 +46,6 @@ PRIVATETESTS += \
     qdeclarativepath \
     qdeclarativeproperty \
     qdeclarativepropertymap \
-#   qdeclarativescriptdebugging \
     qdeclarativesmoothedanimation \
     qdeclarativespringanimation \
     qdeclarativestyledtext \
