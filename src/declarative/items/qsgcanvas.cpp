@@ -1348,6 +1348,7 @@ bool QSGCanvasPrivate::deliverTouchPoints(QSGItem *item, QTouchEvent *event, con
             touchEvent.setModifiers(event->modifiers());
             touchEvent.setTouchPointStates(eventStates);
             touchEvent.setTouchPoints(eventPoints);
+            touchEvent.setTimestamp(event->timestamp());
 
             touchEvent.accept();
             q->sendEvent(item, &touchEvent);
