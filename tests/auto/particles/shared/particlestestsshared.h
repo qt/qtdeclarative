@@ -43,6 +43,7 @@
 #define PARTICLES_TESTS_SHARED
 #include <QSGView>
 #include <QtTest>
+#include <QAbstractAnimation>
 const qreal EPSILON = 0.0001;
 
 bool extremelyFuzzyCompare(qreal a, qreal b, qreal e)//For cases which can have larger variances
@@ -78,6 +79,12 @@ QSGView* createView(const QString &filename, int additionalWait=0)
         QTest::qWait(additionalWait);
 
     return canvas;
+}
+
+void ensureAnimTime(int requiredTime, QAbstractAnimation* anim)//With consistentTiming, who knows how long an animation really takes...
+{
+    while (anim->currentTime() < requiredTime)
+        QTest::qWait(100);
 }
 
 #endif

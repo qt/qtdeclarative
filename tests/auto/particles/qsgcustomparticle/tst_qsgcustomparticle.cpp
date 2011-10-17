@@ -42,6 +42,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgcustomparticle : public QObject
 {
@@ -55,6 +56,7 @@ private slots:
 
 tst_qsgcustomparticle::tst_qsgcustomparticle()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgcustomparticle::test_basic()
@@ -62,6 +64,7 @@ void tst_qsgcustomparticle::test_basic()
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QVERIFY(view);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     bool oneNonZero = false;
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -78,7 +81,7 @@ void tst_qsgcustomparticle::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QVERIFY(d->r >= 0.0 && d->r <= 1.0);
         if (d->r != 0.0 )
             oneNonZero = true;

@@ -42,6 +42,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgfriction : public QObject
 {
@@ -55,12 +56,14 @@ private slots:
 
 tst_qsgfriction::tst_qsgfriction()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgfriction::test_basic()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     //Default is just slowed a little
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -76,7 +79,7 @@ void tst_qsgfriction::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 
     //Nondefault comes to a complete stop within the first half of its life
@@ -95,7 +98,7 @@ void tst_qsgfriction::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 }
 

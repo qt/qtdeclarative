@@ -43,6 +43,7 @@
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
 #include <private/qsgimage_p.h>
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgitemparticle : public QObject
 {
@@ -56,12 +57,14 @@ private slots:
 
 tst_qsgitemparticle::tst_qsgitemparticle()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgitemparticle::test_basic()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -77,10 +80,10 @@ void tst_qsgitemparticle::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         if (d->t > ((qreal)system->timeInt/1000.0) - 0.05)//Delegates appear between frames, may miss the first couple
             continue;
-        if (d->t < ((qreal)system->timeInt/1000.0) - 0.5)//Delegates cleared on death
+        if (d->t < ((qreal)system->timeInt/1000.0) - 0.45)//Delegates cleared on death
             continue;
         QVERIFY(d->delegate);
         QVERIFY(qobject_cast<QSGImage*>(d->delegate));

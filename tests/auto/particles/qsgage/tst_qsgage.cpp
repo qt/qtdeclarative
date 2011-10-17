@@ -42,6 +42,8 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include "../../../shared/util.h"
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgage : public QObject
 {
@@ -58,12 +60,14 @@ private slots:
 
 tst_qsgage::tst_qsgage()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgage::test_kill()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/kill.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -87,6 +91,7 @@ void tst_qsgage::test_jump()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/jump.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -111,6 +116,7 @@ void tst_qsgage::test_onceOff()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/onceoff.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -134,6 +140,8 @@ void tst_qsgage::test_sustained()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sustained.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+    //TODO: Ensure some particles have lived to 0.4s point despite unified timer
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {

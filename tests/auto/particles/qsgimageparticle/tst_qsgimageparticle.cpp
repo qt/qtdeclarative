@@ -42,6 +42,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
 const double CONV_FACTOR = 0.017453292519943295;//Degrees to radians
 
@@ -61,12 +62,14 @@ private slots:
 
 tst_qsgimageparticle::tst_qsgimageparticle()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgimageparticle::test_basic()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -82,7 +85,7 @@ void tst_qsgimageparticle::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QCOMPARE(d->color.r, (uchar)255);
         QCOMPARE(d->color.g, (uchar)255);
         QCOMPARE(d->color.b, (uchar)255);
@@ -109,6 +112,7 @@ void tst_qsgimageparticle::test_colored()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/colored.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -124,7 +128,7 @@ void tst_qsgimageparticle::test_colored()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QCOMPARE(d->color.r, (uchar)003);
         QCOMPARE(d->color.g, (uchar)002);
         QCOMPARE(d->color.b, (uchar)001);
@@ -151,6 +155,7 @@ void tst_qsgimageparticle::test_deformed()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/deformed.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -166,7 +171,7 @@ void tst_qsgimageparticle::test_deformed()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QCOMPARE(d->color.r, (uchar)255);
         QCOMPARE(d->color.g, (uchar)255);
         QCOMPARE(d->color.b, (uchar)255);
@@ -193,6 +198,7 @@ void tst_qsgimageparticle::test_tabled()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/tabled.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -208,7 +214,7 @@ void tst_qsgimageparticle::test_tabled()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QCOMPARE(d->color.r, (uchar)255);
         QCOMPARE(d->color.g, (uchar)255);
         QCOMPARE(d->color.b, (uchar)255);
@@ -236,6 +242,7 @@ void tst_qsgimageparticle::test_sprite()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/sprite.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     QCOMPARE(system->groupData[0]->size(), 500);
     foreach (QSGParticleData *d, system->groupData[0]->data) {
@@ -251,7 +258,7 @@ void tst_qsgimageparticle::test_sprite()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
         QCOMPARE(d->color.r, (uchar)255);
         QCOMPARE(d->color.g, (uchar)255);
         QCOMPARE(d->color.b, (uchar)255);

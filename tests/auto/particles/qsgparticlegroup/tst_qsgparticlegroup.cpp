@@ -42,6 +42,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgparticlegroup : public QObject
 {
@@ -55,12 +56,14 @@ private slots:
 
 tst_qsgparticlegroup::tst_qsgparticlegroup()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 void tst_qsgparticlegroup::test_instantTransition()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     //A frame or two worth of particles will be missed, the transition doesn't take effect on the frame it's spawned (QTBUG-21781)
     QVERIFY(system->groupData[0]->size() <= 500 && system->groupData[0]->size() >= 450);
@@ -77,7 +80,7 @@ void tst_qsgparticlegroup::test_instantTransition()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 }
 

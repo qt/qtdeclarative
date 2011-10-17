@@ -43,6 +43,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
+#include <private/qabstractanimation_p.h>
 
 class tst_qsgellipseextruder : public QObject
 {
@@ -58,6 +59,7 @@ private:
 
 tst_qsgellipseextruder::tst_qsgellipseextruder()
 {
+    QUnifiedTimer::instance()->setConsistentTiming(true);
 }
 
 bool tst_qsgellipseextruder::inCircle(qreal x, qreal y, qreal r, bool borderOnly)
@@ -77,6 +79,7 @@ void tst_qsgellipseextruder::test_basic()
 {
     QSGView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml", 600);
     QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
 
     //Filled
     QCOMPARE(system->groupData[0]->size(), 500);
@@ -92,7 +95,7 @@ void tst_qsgellipseextruder::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
     //Just border
     QCOMPARE(system->groupData[1]->size(), 500);
@@ -108,7 +111,7 @@ void tst_qsgellipseextruder::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 32.f);
         QCOMPARE(d->endSize, 32.f);
-        QVERIFY(d->t <= ((qreal)system->timeInt/1000.0));
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 }
 
