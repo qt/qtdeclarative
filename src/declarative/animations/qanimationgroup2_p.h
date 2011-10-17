@@ -54,40 +54,41 @@ QT_MODULE(Declarative)
 class Q_DECLARATIVE_EXPORT QAnimationGroup2 : public QAbstractAnimation2
 {
 public:
-    QAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
+    QAnimationGroup2(QDeclarativeAbstractAnimation* animation = 0);
+    QAnimationGroup2(const QAnimationGroup2& other);
     ~QAnimationGroup2();
 
     //unused
     int animationCount() const;
     void clear();
-    QAbstractAnimation2 *animationAt(int index) const;
-    int indexOfAnimation(QAbstractAnimation2 *animation) const;
+    QAbstractAnimation2Pointer animationAt(int index) const;
+    int indexOfAnimation(QAbstractAnimation2Pointer animation) const;
 
     //can be removed after refactor
-    void removeAnimation(QAbstractAnimation2 *animation);
-    QAbstractAnimation2 *takeAnimation(int index);
+    void removeAnimation(QAbstractAnimation2Pointer animation);
+    QAbstractAnimation2Pointer takeAnimation(int index);
 
-    void addAnimation(QAbstractAnimation2 *animation);
-    void insertAnimation(int index, QAbstractAnimation2 *animation);
-    virtual void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
+    void addAnimation(QAbstractAnimation2Pointer animation);
+    void insertAnimation(int index, QAbstractAnimation2Pointer animation);
+    virtual void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
 
 private:
-    Q_DISABLE_COPY(QAnimationGroup2)
     //can likely be removed after refactor
     virtual void animationInsertedAt(int) { }
-    virtual void animationRemoved(int, QAbstractAnimation2 *);
+    virtual void animationRemoved(int, QAbstractAnimation2Pointer );
 
     void connectUncontrolledAnimations();
     void disconnectUncontrolledAnimations();
-    void connectUncontrolledAnimation(QAbstractAnimation2 *anim);
-    void disconnectUncontrolledAnimation(QAbstractAnimation2 *anim);
-    bool isAnimationConnected(QAbstractAnimation2 *anim) const;
-    bool isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const;
+    void connectUncontrolledAnimation(QAbstractAnimation2Pointer anim);
+    void disconnectUncontrolledAnimation(QAbstractAnimation2Pointer anim);
+    bool isAnimationConnected(QAbstractAnimation2Pointer anim) const;
+    bool isUncontrolledAnimationFinished(QAbstractAnimation2Pointer anim) const;
 
     friend class QParallelAnimationGroup2;
     friend class QSequentialAnimationGroup2;
-    QList<QAbstractAnimation2 *> m_animations;
-    QHash<QAbstractAnimation2 *, int> m_uncontrolledFinishTime;
+private:
+    QList<QAbstractAnimation2Pointer > m_animations;
+    QHash<QAbstractAnimation2Pointer , int> m_uncontrolledFinishTime;
 };
 
 QT_END_NAMESPACE

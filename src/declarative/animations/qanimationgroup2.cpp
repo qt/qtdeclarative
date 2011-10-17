@@ -48,20 +48,29 @@
 QT_BEGIN_NAMESPACE
 
 QAnimationGroup2::QAnimationGroup2(QDeclarativeAbstractAnimation *animation)
-    :QAbstractAnimation2(animation)
+  : QAbstractAnimation2(animation)
 {
     m_isGroup = true;
 }
 
+QAnimationGroup2::QAnimationGroup2(const QAnimationGroup2& other)
+    : QAbstractAnimation2(other)
+    , m_animations(other.m_animations)
+    , m_uncontrolledFinishTime(other.m_uncontrolledFinishTime)
+{
+    m_isGroup = other.m_isGroup;
+}
+
 QAnimationGroup2::~QAnimationGroup2()
 {
-    foreach (QAbstractAnimation2* child, m_animations) {
+    foreach (QAbstractAnimation2Pointer child, m_animations) {
         child->setGroup(0);
     }
     m_animations.clear();   //### can remove if setGroup handles this
 }
 
-QAbstractAnimation2 *QAnimationGroup2::animationAt(int index) const
+
+QAbstractAnimation2Pointer QAnimationGroup2::animationAt(int index) const
 {
     if (index < 0 || index >= m_animations.size()) {
         qWarning("QAnimationGroup2::animationAt: index is out of bounds");
@@ -76,17 +85,17 @@ int QAnimationGroup2::animationCount() const
     return m_animations.size();
 }
 
-int QAnimationGroup2::indexOfAnimation(QAbstractAnimation2 *animation) const
+int QAnimationGroup2::indexOfAnimation(QAbstractAnimation2Pointer animation) const
 {
     return m_animations.indexOf(animation);
 }
 
-void QAnimationGroup2::addAnimation(QAbstractAnimation2 *animation)
+void QAnimationGroup2::addAnimation(QAbstractAnimation2Pointer animation)
 {
     insertAnimation(m_animations.count(), animation);
 }
 
-void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation)
+void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2Pointer animation)
 {
     if (index < 0 || index > m_animations.size()) {
         qWarning("QAnimationGroup2::insertAnimation: index is out of bounds");
@@ -101,7 +110,7 @@ void QAnimationGroup2::insertAnimation(int index, QAbstractAnimation2 *animation
     animationInsertedAt(index);
 }
 
-void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
+void QAnimationGroup2::removeAnimation(QAbstractAnimation2Pointer animation)
 {
     if (!animation) {
         qWarning("QAnimationGroup2::remove: cannot remove null animation");
@@ -116,13 +125,13 @@ void QAnimationGroup2::removeAnimation(QAbstractAnimation2 *animation)
     takeAnimation(index);
 }
 
-QAbstractAnimation2 *QAnimationGroup2::takeAnimation(int index)
+QAbstractAnimation2Pointer QAnimationGroup2::takeAnimation(int index)
 {
     if (index < 0 || index >= m_animations.size()) {
         qWarning("QAnimationGroup2::takeAnimation: no animation at index %d", index);
         return 0;
     }
-    QAbstractAnimation2 *animation = m_animations.at(index);
+    QAbstractAnimation2Pointer animation = m_animations.at(index);
     animation->setGroup(0);
     m_animations.removeAt(index);
     animationRemoved(index, animation);
@@ -132,18 +141,18 @@ QAbstractAnimation2 *QAnimationGroup2::takeAnimation(int index)
 void QAnimationGroup2::clear()
 {
     //qDeleteAll(m_animations);
-    foreach (QAbstractAnimation2* child, m_animations) {
+    foreach (QAbstractAnimation2Pointer child, m_animations) {
         child->setGroup(0);
     }
     m_animations.clear();
     //TODO: other cleanup
 }
 
-bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2 *anim) const
+bool QAnimationGroup2::isAnimationConnected(QAbstractAnimation2Pointer anim) const
 {
     return m_uncontrolledFinishTime.contains(anim);
 }
-bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2 *anim) const
+bool QAnimationGroup2::isUncontrolledAnimationFinished(QAbstractAnimation2Pointer anim) const
 {
     return m_uncontrolledFinishTime.value(anim, -1) >= 0;
 }
@@ -156,28 +165,28 @@ void QAnimationGroup2::disconnectUncontrolledAnimations()
 void QAnimationGroup2::connectUncontrolledAnimations()
 {
     for (int i = 0; i < m_animations.size(); ++i) {
-        QAbstractAnimation2 *animation = m_animations.at(i);
+        QAbstractAnimation2Pointer animation = m_animations.at(i);
         if (animation->duration() == -1 || animation->loopCount() < 0) {
             m_uncontrolledFinishTime[animation] = -1;
         }
     }
 }
-void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::connectUncontrolledAnimation(QAbstractAnimation2Pointer anim)
 {
     m_uncontrolledFinishTime[anim] = -1;
 }
 
-void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2 *anim)
+void QAnimationGroup2::disconnectUncontrolledAnimation(QAbstractAnimation2Pointer anim)
 {
     m_uncontrolledFinishTime.remove(anim);
 }
 
-void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2* animation)
+void QAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation)
 {
     Q_UNUSED(animation);
 }
 
-void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2 *)
+void QAnimationGroup2::animationRemoved(int index, QAbstractAnimation2Pointer )
 {
     Q_UNUSED(index);
     if (m_animations.isEmpty()) {

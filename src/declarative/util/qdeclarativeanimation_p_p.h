@@ -101,11 +101,13 @@ class Q_AUTOTEST_EXPORT QActionAnimation : public QAbstractAnimation2
 {
 public:
     QActionAnimation(QDeclarativeAbstractAnimation *animation = 0);
+    QActionAnimation(const QActionAnimation &other);
+
     QActionAnimation(QAbstractAnimationAction *action, QDeclarativeAbstractAnimation *animation = 0);
     ~QActionAnimation();
 
     virtual int duration() const;
-    void setAnimAction(QAbstractAnimationAction *action, DeletionPolicy p);
+    void setAnimAction(QAbstractAnimationAction *action);
 
 protected:
     virtual void updateCurrentTime(int);
@@ -113,7 +115,6 @@ protected:
 
 private:
     QAbstractAnimationAction *animAction;
-    DeletionPolicy policy;
 };
 
 class QDeclarativeBulkValueUpdater
@@ -128,9 +129,10 @@ class Q_AUTOTEST_EXPORT QDeclarativeBulkValueAnimator : public QAbstractAnimatio
 {
 public:
     QDeclarativeBulkValueAnimator(QDeclarativeAbstractAnimation *animation = 0);
+    QDeclarativeBulkValueAnimator(const QDeclarativeBulkValueAnimator &other);
     ~QDeclarativeBulkValueAnimator();
 
-    void setAnimValue(QDeclarativeBulkValueUpdater *value, DeletionPolicy p);
+    void setAnimValue(QDeclarativeBulkValueUpdater *value);
     QDeclarativeBulkValueUpdater *getAnimValue() const { return animValue; }
 
     void setFromSourcedValue(bool *value) { fromSourced = value; }
@@ -148,7 +150,6 @@ protected:
 private:
     QDeclarativeBulkValueUpdater *animValue;
     bool *fromSourced;
-    DeletionPolicy policy;
     int m_duration;
     QEasingCurve easing;
 };
@@ -159,6 +160,9 @@ class QTickAnimationProxy : public QAbstractAnimation2
 {
 public:
     QTickAnimationProxy(T *instance, QDeclarativeAbstractAnimation *animation = 0) : QAbstractAnimation2(animation), m_instance(instance) {}
+    QTickAnimationProxy(const QTickAnimationProxy<T, method> &other)
+        : QAbstractAnimation2(other)
+        , m_instance(other.m_instance) {}
     virtual int duration() const { return -1; }
 protected:
     virtual void updateCurrentTime(int msec) { (m_instance->*method)(msec); }
@@ -193,7 +197,7 @@ public:
     QDeclarativeProperty defaultProperty;
 
     QDeclarativeAnimationGroup *group;
-    QAbstractAnimation2 *animationInstance;
+    QAbstractAnimation2Pointer animationInstance;
 
     static QDeclarativeProperty createProperty(QObject *obj, const QString &str, QObject *infoObj);
 };
@@ -207,7 +211,7 @@ public:
 
     void init();
 
-    QPauseAnimation2 *pa;
+    QDeclarativeRefPointer<QPauseAnimation2> pa;
 };
 
 class QDeclarativeScriptActionPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -228,7 +232,7 @@ public:
 
     QAnimationActionProxy<QDeclarativeScriptActionPrivate,
                   &QDeclarativeScriptActionPrivate::execute> proxy;
-    QActionAnimation *rsa;
+    QDeclarativeRefPointer<QActionAnimation> rsa;
 };
 
 class QDeclarativePropertyActionPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -248,7 +252,7 @@ public:
 
     QDeclarativeNullableValue<QVariant> value;
 
-    QActionAnimation *spa;
+    QDeclarativeRefPointer<QActionAnimation> spa;
 };
 
 class QDeclarativeAnimationGroupPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -261,7 +265,7 @@ public:
     static void append_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list, QDeclarativeAbstractAnimation *role);
     static void clear_animation(QDeclarativeListProperty<QDeclarativeAbstractAnimation> *list);
     QList<QDeclarativeAbstractAnimation *> animations;
-    QAnimationGroup2 *ag;
+    QDeclarativeRefPointer<QAnimationGroup2> ag;
 };
 
 class QDeclarativePropertyAnimationPrivate : public QDeclarativeAbstractAnimationPrivate
@@ -290,7 +294,7 @@ public:
     bool defaultToInterpolatorType:1;
     int interpolatorType;
     QVariantAnimation::Interpolator interpolator;
-    QDeclarativeBulkValueAnimator *va;
+    QDeclarativeRefPointer<QDeclarativeBulkValueAnimator> va;
 
     // for animations that don't use the QDeclarativeBulkValueAnimator
     QDeclarativeStateActions *actions;

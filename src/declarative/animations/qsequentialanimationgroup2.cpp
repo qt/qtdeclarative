@@ -64,7 +64,7 @@ bool QSequentialAnimationGroup2::atEnd() const
 
 int QSequentialAnimationGroup2::animationActualTotalDuration(int index) const
 {
-    QAbstractAnimation2 *anim = m_animations.at(index);
+    QAbstractAnimation2Pointer anim = m_animations.at(index);
     int ret = anim->totalDuration();
     if (ret == -1 && m_actualDuration.size() > index)
         ret = m_actualDuration.at(index); //we can try the actual duration there
@@ -128,7 +128,7 @@ void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimat
     if (m_lastLoop < m_currentLoop) {
         // we need to fast forward to the end
         for (int i = m_currentAnimationIndex; i < m_animations.size(); ++i) {
-            QAbstractAnimation2 *anim = m_animations.at(i);
+            QAbstractAnimation2Pointer anim = m_animations.at(i);
             setCurrentAnimation(i, true);
             anim->setCurrentTime(animationActualTotalDuration(i));
         }
@@ -142,7 +142,7 @@ void QSequentialAnimationGroup2::advanceForwards(const AnimationIndex &newAnimat
 
     // and now we need to fast forward from the current position to
     for (int i = m_currentAnimationIndex; i < newAnimationIndex.index; ++i) {     //### WRONG,
-        QAbstractAnimation2 *anim = m_animations.at(i);
+        QAbstractAnimation2Pointer anim = m_animations.at(i);
         setCurrentAnimation(i, true);
         anim->setCurrentTime(animationActualTotalDuration(i));
     }
@@ -154,7 +154,7 @@ void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimati
     if (m_lastLoop > m_currentLoop) {
         // we need to fast rewind to the beginning
         for (int i = m_currentAnimationIndex; i >= 0 ; --i) {
-            QAbstractAnimation2 *anim = m_animations.at(i);
+            QAbstractAnimation2Pointer anim = m_animations.at(i);
             setCurrentAnimation(i, true);
             anim->setCurrentTime(0);
         }
@@ -168,7 +168,7 @@ void QSequentialAnimationGroup2::rewindForwards(const AnimationIndex &newAnimati
 
     // and now we need to fast rewind from the current position to
     for (int i = m_currentAnimationIndex; i > newAnimationIndex.index; --i) {
-        QAbstractAnimation2 *anim = m_animations.at(i);
+        QAbstractAnimation2Pointer anim = m_animations.at(i);
         setCurrentAnimation(i, true);
         anim->setCurrentTime(0);
     }
@@ -183,11 +183,18 @@ QSequentialAnimationGroup2::QSequentialAnimationGroup2(QDeclarativeAbstractAnima
 {
 }
 
+QSequentialAnimationGroup2::QSequentialAnimationGroup2(const QSequentialAnimationGroup2 &other)
+    : QAnimationGroup2(other)
+    , m_currentAnimation(other.m_currentAnimation)
+    , m_currentAnimationIndex(other.m_currentAnimationIndex)
+    , m_lastLoop(other.m_lastLoop)
+{
+}
 QSequentialAnimationGroup2::~QSequentialAnimationGroup2()
 {
 }
 
-QAbstractAnimation2 *QSequentialAnimationGroup2::currentAnimation() const
+QAbstractAnimation2Pointer QSequentialAnimationGroup2::currentAnimation() const
 {
     return m_currentAnimation;
 }
@@ -198,7 +205,7 @@ int QSequentialAnimationGroup2::duration() const
     int ret = 0;
 
     for (int i = 0; i < m_animations.size(); ++i) {
-        QAbstractAnimation2 *animation = m_animations.at(i);
+        QAbstractAnimation2Pointer animation = m_animations.at(i);
         const int currentDuration = animation->totalDuration();
         if (currentDuration == -1)
             return -1; // Undetermined length
@@ -337,7 +344,7 @@ void QSequentialAnimationGroup2::activateCurrentAnimation(bool intermediate)
         m_currentAnimation->pause();
 }
 
-void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2* animation)
+void QSequentialAnimationGroup2::uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation)
 {
     if (isAnimationConnected(animation)) {
         Q_ASSERT(animation == m_currentAnimation);
@@ -383,7 +390,7 @@ void QSequentialAnimationGroup2::animationInsertedAt(int index)
     }
 }
 
-void QSequentialAnimationGroup2::animationRemoved(int index, QAbstractAnimation2 *anim)
+void QSequentialAnimationGroup2::animationRemoved(int index, QAbstractAnimation2Pointer anim)
 {
     QAnimationGroup2::animationRemoved(index, anim);
 

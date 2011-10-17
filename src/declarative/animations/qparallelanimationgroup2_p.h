@@ -57,6 +57,7 @@ class Q_DECLARATIVE_EXPORT QParallelAnimationGroup2 : public QAnimationGroup2
 {
 public:
     QParallelAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
+    QParallelAnimationGroup2(const QParallelAnimationGroup2 &other);
     ~QParallelAnimationGroup2();
 
     int duration() const;
@@ -65,15 +66,14 @@ protected:
     void updateCurrentTime(int currentTime);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
+    void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
 
 private:
-    Q_DISABLE_COPY(QParallelAnimationGroup2)
     int m_lastLoop;
     int m_lastCurrentTime;
-    bool shouldAnimationStart(QAbstractAnimation2 *animation, bool startIfAtEnd) const;
-    void applyGroupState(QAbstractAnimation2 *animation);
-    void animationRemoved(int index, QAbstractAnimation2 *);
+    bool shouldAnimationStart(QAbstractAnimation2Pointer animation, bool startIfAtEnd) const;
+    void applyGroupState(QAbstractAnimation2Pointer animation);
+    void animationRemoved(int index, QAbstractAnimation2Pointer );
 };
 
 

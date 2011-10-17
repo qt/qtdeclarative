@@ -84,6 +84,25 @@ QSmoothedAnimation::QSmoothedAnimation(QDeclarativeAbstractAnimation *animation)
     delayedStopTimer->setSingleShot(true);
 }
 
+QSmoothedAnimation::QSmoothedAnimation(const QSmoothedAnimation &other)
+    : QAbstractAnimation2(other)
+    , to(other.to)
+    , velocity(other.velocity)
+    , userDuration(other.userDuration)
+    , maximumEasingTime(other.maximumEasingTime)
+    , reversingMode(other.reversingMode)
+    , initialVelocity(other.initialVelocity)
+    , trackVelocity(other.trackVelocity)
+    , initialValue(other.initialValue)
+    , invert(other.invert)
+    , finalDuration(other.finalDuration)
+    , lastTime(other.lastTime)
+    , delayedStopTimer(new QSmoothedAnimationTimer(this))
+{
+    delayedStopTimer->setInterval(DELAY_STOP_TIMER_INTERVAL);
+    delayedStopTimer->setSingleShot(true);
+}
+
 QSmoothedAnimation::~QSmoothedAnimation()
 {
     delete delayedStopTimer;
@@ -355,7 +374,7 @@ void QDeclarativeSmoothedAnimationPrivate::updateRunningAnimations()
     }
 }
 
-QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2Pointer QDeclarativeSmoothedAnimation::transition(QDeclarativeStateActions &actions,
                                                QDeclarativeProperties &modified,
                                                TransitionDirection direction)
 {
@@ -365,7 +384,7 @@ QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeState
     if (!d->actions)
         return d->wrapperGroup;
 
-    QSet<QAbstractAnimation2*> anims;
+    QSet<QAbstractAnimation2Pointer> anims;
     for (int i = 0; i < d->actions->size(); i++) {
         QSmoothedAnimation *ease;
         bool needsRestart;
@@ -396,10 +415,9 @@ QAbstractAnimation2* QDeclarativeSmoothedAnimation::transition(QDeclarativeState
 
     for (int i = d->wrapperGroup->animationCount() - 1; i >= 0 ; --i) {
         if (!anims.contains(d->wrapperGroup->animationAt(i))) {
-            QSmoothedAnimation *ease = static_cast<QSmoothedAnimation*>(d->wrapperGroup->animationAt(i));
+            QSmoothedAnimation *ease = static_cast<QSmoothedAnimation*>(d->wrapperGroup->animationAt(i).data());
             d->activeAnimations.remove(ease->target);
             d->wrapperGroup->takeAnimation(i);
-            delete ease;
         }
     }
     return d->wrapperGroup;

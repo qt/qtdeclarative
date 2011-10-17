@@ -415,7 +415,7 @@ void QDeclarativeSpringAnimation::setMass(qreal mass)
     }
 }
 
-QAbstractAnimation2* QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2Pointer QDeclarativeSpringAnimation::transition(QDeclarativeStateActions &actions,
                                              QDeclarativeProperties &modified,
                                              TransitionDirection direction)
 {

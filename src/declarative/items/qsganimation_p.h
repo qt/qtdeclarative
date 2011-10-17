@@ -84,7 +84,7 @@ Q_SIGNALS:
     void viaChanged();
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };
@@ -115,7 +115,7 @@ Q_SIGNALS:
     void easingChanged(const QEasingCurve&);
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 };
@@ -179,7 +179,7 @@ public:
     void setEndRotation(qreal);
 
 protected:
-    virtual QAbstractAnimation2* transition(QDeclarativeStateActions &actions,
+    virtual QAbstractAnimation2Pointer transition(QDeclarativeStateActions &actions,
                             QDeclarativeProperties &modified,
                             TransitionDirection direction);
 

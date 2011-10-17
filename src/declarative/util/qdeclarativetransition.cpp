@@ -211,7 +211,7 @@ void QDeclarativeTransition::prepare(QDeclarativeStateOperation::ActionList &act
     int start = d->reversed ? d->animations.count() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.count();
 
-    QAbstractAnimation2 *anim;
+    QAbstractAnimation2Pointer anim;
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction);
         if (anim)

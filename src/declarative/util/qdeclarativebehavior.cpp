@@ -66,7 +66,7 @@ public:
     QVariant currentValue;
     QVariant targetValue;
     QDeclarativeGuard<QDeclarativeAbstractAnimation> animation;
-    QAbstractAnimation2 *animationInstance;
+    QAbstractAnimation2Pointer animationInstance;
     bool enabled;
     bool finalized;
     bool blockRunningChanged;
@@ -200,7 +200,7 @@ void QDeclarativeBehavior::write(const QVariant &value)
     actions << action;
 
     QList<QDeclarativeProperty> after;
-    QAbstractAnimation2 *prev = d->animationInstance;
+    QAbstractAnimation2Pointer prev = d->animationInstance;
     //TODO: cleanup old instance as needed
     d->animationInstance = d->animation->transition(actions, after, QDeclarativeAbstractAnimation::Forward);
     if (d->animationInstance != prev)

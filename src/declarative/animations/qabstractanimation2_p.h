@@ -49,8 +49,7 @@
 #include <QtCore/qelapsedtimer.h>
 #include <private/qobject_p.h>
 #include <QtCore/QObject>
-#include "private/qabstractanimation2_p.h"
-#include "private/qdeclarativeanimation_p.h"
+#include "private/qdeclarativerefcount_p.h"
 #include "private/qdeclarativeguard_p.h"
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
@@ -68,9 +67,22 @@ class QSequentialAnimationGroup2;
 class QAnimationDriver2;
 class QDeclarativeAbstractAnimation;
 
-class Q_DECLARATIVE_EXPORT QAbstractAnimation2
+class Q_DECLARATIVE_EXPORT QAbstractAnimation2 : public QDeclarativeRefCount
 {
 public:
+    enum AnimationType {
+        DefaultAnimation,
+        GroupAnimation,
+        ParallelAnimation,
+        SequentialAnimation,
+        PauseAnimation,
+        SmoothedAnimation,
+        ActionAnimation,
+        BulkValueAnimation,
+        ParticleSystemAnimation,
+        SpringAnimation
+    };
+
     enum Direction {
         Forward,
         Backward
@@ -82,48 +94,41 @@ public:
         Running
     };
 
-    enum DeletionPolicy {
-        KeepWhenStopped = 0,
-        DeleteWhenStopped
-    };
+    QAbstractAnimation2(QDeclarativeAbstractAnimation* animation = 0);
+    QAbstractAnimation2(const QAbstractAnimation2& other);
+    ~QAbstractAnimation2();
 
-    explicit QAbstractAnimation2(QDeclarativeAbstractAnimation *animation=0);
-    virtual ~QAbstractAnimation2();
-
-    inline State state() const {return m_state;}
-
+    inline QAbstractAnimation2::State state() const {return m_state;}
     inline QAnimationGroup2 *group() const {return m_group;}
-    void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
-    QDeclarativeAbstractAnimation *animation() const {return m_animationGuard;}
-
-    inline Direction direction() const {return m_direction;}
-    void setDirection(Direction direction);
-
+    inline QDeclarativeAbstractAnimation *animation() const;
+    inline QAbstractAnimation2::Direction direction() const {return m_direction;}
     inline int currentTime() const {return m_totalCurrentTime;}
     inline int currentLoopTime() const {return m_currentTime;}
-
     inline int loopCount() const {return m_loopCount;}
-    void setLoopCount(int loopCount);
-
     inline int currentLoop() const {return m_currentLoop;}
-
-    virtual int duration() const = 0;
     int totalDuration() const;
 
-    void start(QAbstractAnimation2::DeletionPolicy policy = KeepWhenStopped);
+    void setLoopCount(int loopCount);
+    void setDirection(QAbstractAnimation2::Direction direction);
+    void setAnimation(QObject *animation);
+    void setGroup(QAnimationGroup2* group) {m_group = group;}   //### remove from old group, add to new
+    void setPaused(bool);
+    void setCurrentTime(int msecs);
+
+    virtual int duration() const {return 0;}
+    virtual QAbstractAnimation2::AnimationType type() const;
+
+    void start();
     void pause();
     void resume();
-    void setPaused(bool);
     void stop();
-    void setCurrentTime(int msecs);
 
     void registerFinished(QObject* object, const char* method);
     void registerStateChanged(QObject* object, const char* method);
     void registerCurrentLoopChanged(QObject* object, const char* method);
     void registerDirectionChanged(QObject* object, const char* method);
-
 protected:
-    virtual void updateCurrentTime(int currentTime) = 0;
+    virtual void updateCurrentTime(int) {}
     virtual void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     virtual void updateDirection(QAbstractAnimation2::Direction direction);
     void finished();
@@ -132,9 +137,6 @@ protected:
     void directionChanged(QAbstractAnimation2::Direction);
     void setState(QAbstractAnimation2::State state);
 
-    Q_DISABLE_COPY(QAbstractAnimation2)
-    friend class QUnifiedTimer2;
-
     QAbstractAnimation2::State m_state;
     QAbstractAnimation2::Direction m_direction;
     int m_totalCurrentTime;
@@ -142,18 +144,26 @@ protected:
     int m_loopCount;
     int m_currentLoop;
 
-    bool m_deleteWhenStopped:1;
     bool m_hasRegisteredTimer:1;
     bool m_isPause:1;
     bool m_isGroup:1;
 
     QAnimationGroup2 *m_group;
-    QDeclarativeGuard<QDeclarativeAbstractAnimation> m_animationGuard;
+    QDeclarativeGuard<QObject> m_animationGuard;
+    AnimationType m_type;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_finishedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_stateChangedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_currentLoopChangedSlots;
     QList<QPair<QDeclarativeGuard<QObject>,int> > m_directionChangedSlots;
+
+    friend class QUnifiedTimer2;
 };
+
+typedef QDeclarativeRefPointer<QAbstractAnimation2> QAbstractAnimation2Pointer;
+static uint qHash(const QAbstractAnimation2Pointer& value)
+{
+    return qHash(value.data());
+}
 
 class QAnimationDriver2Private;
 class Q_DECLARATIVE_EXPORT QAnimationDriver2 : public QObject
@@ -225,8 +235,8 @@ public:
     static QUnifiedTimer2 *instance();
     static QUnifiedTimer2 *instance(bool create);
 
-    static void registerAnimation(QAbstractAnimation2 *animation, bool isTopLevel);
-    static void unregisterAnimation(QAbstractAnimation2 *animation);
+    static void registerAnimation(QAbstractAnimation2Pointer animation, bool isTopLevel);
+    static void unregisterAnimation(QAbstractAnimation2Pointer animation);
 
     //defines the timing interval. Default is DEFAULT_TIMER_INTERVAL
     void setTimingInterval(int interval);
@@ -294,14 +304,14 @@ private:
     // bool to indicate that only pause animations are active
     bool isPauseTimerActive;
 
-    QList<QAbstractAnimation2*> animations, animationsToStart;
+    QList<QAbstractAnimation2Pointer> animations, animationsToStart;
 
     // this is the count of running animations that are not a group neither a pause animation
     int runningLeafAnimations;
-    QList<QAbstractAnimation2*> runningPauseAnimations;
+    QList<QAbstractAnimation2Pointer> runningPauseAnimations;
 
-    void registerRunningAnimation(QAbstractAnimation2 *animation);
-    void unregisterRunningAnimation(QAbstractAnimation2 *animation);
+    void registerRunningAnimation(QAbstractAnimation2Pointer animation);
+    void unregisterRunningAnimation(QAbstractAnimation2Pointer animation);
 
     int closestPauseAnimationTimeToFinish();
 };

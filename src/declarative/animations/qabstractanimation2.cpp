@@ -123,7 +123,7 @@ void QUnifiedTimer2::updateAnimationsTime(qint64 timeStep)
     if (delta) {
         insideTick = true;
         for (currentAnimationIdx = 0; currentAnimationIdx < animations.count(); ++currentAnimationIdx) {
-            QAbstractAnimation2 *animation = animations.at(currentAnimationIdx);
+            QAbstractAnimation2Pointer animation = animations.at(currentAnimationIdx);
             int elapsed = animation->currentTime()
                           + (animation->direction() == QAbstractAnimation2::Forward ? delta : -delta);
             animation->setCurrentTime(elapsed);
@@ -202,7 +202,7 @@ void QUnifiedTimer2::timerEvent(QTimerEvent *event)
     }
 }
 
-void QUnifiedTimer2::registerAnimation(QAbstractAnimation2 *animation, bool isTopLevel)
+void QUnifiedTimer2::registerAnimation(QAbstractAnimation2Pointer animation, bool isTopLevel)
 {
     QUnifiedTimer2 *inst = instance(true); //we create the instance if needed
     inst->registerRunningAnimation(animation);
@@ -215,7 +215,7 @@ void QUnifiedTimer2::registerAnimation(QAbstractAnimation2 *animation, bool isTo
     }
 }
 
-void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
+void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2Pointer animation)
 {
     QUnifiedTimer2 *inst = QUnifiedTimer2::instance(false);
     if (inst) {
@@ -243,7 +243,7 @@ void QUnifiedTimer2::unregisterAnimation(QAbstractAnimation2 *animation)
     animation->m_hasRegisteredTimer = false;
 }
 
-void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2 *animation)
+void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2Pointer animation)
 {
     if (animation->m_isGroup)
         return;
@@ -254,7 +254,7 @@ void QUnifiedTimer2::registerRunningAnimation(QAbstractAnimation2 *animation)
         runningLeafAnimations++;
 }
 
-void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2 *animation)
+void QUnifiedTimer2::unregisterRunningAnimation(QAbstractAnimation2Pointer animation)
 {
     if (animation->m_isGroup)
         return;
@@ -270,7 +270,7 @@ int QUnifiedTimer2::closestPauseAnimationTimeToFinish()
 {
     int closestTimeToFinish = INT_MAX;
     for (int i = 0; i < runningPauseAnimations.size(); ++i) {
-        QAbstractAnimation2 *animation = runningPauseAnimations.at(i);
+        QAbstractAnimation2Pointer animation = runningPauseAnimations.at(i);
         int timeToFinish;
 
         if (animation->direction() == QAbstractAnimation2::Forward)
@@ -563,9 +563,6 @@ void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
         // Leave running state.
         int dura = duration();
 
-        if (m_deleteWhenStopped)
-            delete this; //??? FIXME
-
         if (dura == -1 || m_loopCount < 0
             || (oldDirection == QAbstractAnimation2::Forward && (oldCurrentTime * (oldCurrentLoop + 1)) == (dura * m_loopCount))
             || (oldDirection == QAbstractAnimation2::Backward && oldCurrentTime == 0)) {
@@ -575,25 +572,53 @@ void QAbstractAnimation2::setState(QAbstractAnimation2::State newState)
     }
 }
 
-QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation *animation)
-    : m_state(QAbstractAnimation2::Stopped)
+
+QAbstractAnimation2::QAbstractAnimation2(QDeclarativeAbstractAnimation* animation)
+    : QDeclarativeRefCount()
+    , m_state(QAbstractAnimation2::Stopped)
     , m_direction(QAbstractAnimation2::Forward)
     , m_totalCurrentTime(0)
     , m_currentTime(0)
     , m_loopCount(1)
     , m_currentLoop(0)
-    , m_deleteWhenStopped(false)
     , m_hasRegisteredTimer(false)
     , m_isPause(false)
     , m_isGroup(false)
     , m_group(0)
     , m_animationGuard(animation)
+    , m_type(QAbstractAnimation2::DefaultAnimation)
 {
 }
 
 
+QAbstractAnimation2::QAbstractAnimation2(const QAbstractAnimation2& other)
+    : m_state(QAbstractAnimation2::Stopped)
+    , m_direction(other.m_direction)
+    , m_totalCurrentTime(0)
+    , m_currentTime(0)
+    , m_loopCount(other.m_loopCount)
+    , m_currentLoop(0)
+    , m_isPause(other.m_isPause)
+    , m_type(other.m_type)
+    , m_hasRegisteredTimer(false)
+    , m_group(other.m_group)
+    , m_animationGuard(0)
+{
+}
+
+QAbstractAnimation2::AnimationType QAbstractAnimation2::type() const
+{
+    return QAbstractAnimation2::DefaultAnimation;
+}
+
+void QAbstractAnimation2::setAnimation(QObject *animation)
+{
+        m_animationGuard = animation;
+}
+
 QAbstractAnimation2::~QAbstractAnimation2()
 {
+    qDebug() << "~QAbstractAnimation2";
     //we can't call stop here. Otherwise we get pure virtual calls
     if (m_state != Stopped) {
         QAbstractAnimation2::State oldState = m_state;
@@ -605,6 +630,11 @@ QAbstractAnimation2::~QAbstractAnimation2()
 
     if (m_group)
         m_group->removeAnimation(this);
+}
+
+QDeclarativeAbstractAnimation* QAbstractAnimation2::animation() const
+{
+    return qobject_cast<QDeclarativeAbstractAnimation*>(m_animationGuard);
 }
 
 void QAbstractAnimation2::setDirection(Direction direction)
@@ -695,11 +725,10 @@ void QAbstractAnimation2::setCurrentTime(int msecs)
     }
 }
 
-void QAbstractAnimation2::start(DeletionPolicy policy)
+void QAbstractAnimation2::start()
 {
     if (m_state == Running)
         return;
-    m_deleteWhenStopped = policy;
     setState(Running);
 }
 
@@ -763,7 +792,7 @@ void QAbstractAnimation2::finished()
     }
 
     if (!m_animationGuard.isNull())
-        m_animationGuard->timelineComplete();
+        animation()->timelineComplete();
 
     if (group() && (duration() == -1 || loopCount() < 0)) {
         //this is an uncontrolled animation, need to notify the group animation we are finished

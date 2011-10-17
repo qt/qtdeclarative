@@ -82,6 +82,8 @@ class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimation2
 {
 public:
     QSmoothedAnimation(QDeclarativeAbstractAnimation *animation=0);
+    QSmoothedAnimation(const QSmoothedAnimation &other);
+
     ~QSmoothedAnimation();
     qreal to;
     qreal velocity;

@@ -55,21 +55,21 @@ class Q_DECLARATIVE_EXPORT QSequentialAnimationGroup2 : public QAnimationGroup2
 {
 public:
     QSequentialAnimationGroup2(QDeclarativeAbstractAnimation *animation=0);
+    QSequentialAnimationGroup2(const QSequentialAnimationGroup2 &other);
     ~QSequentialAnimationGroup2();
 
-    QAbstractAnimation2 *currentAnimation() const;
+    QAbstractAnimation2Pointer currentAnimation() const;
     int duration() const;
 
 //Q_SIGNALS:
-//    void currentAnimationChanged(QAbstractAnimation2 *current);
+//    void currentAnimationChanged(QAbstractAnimation2Pointer current);
 
 protected:
     void updateCurrentTime(int);
     void updateState(QAbstractAnimation2::State newState, QAbstractAnimation2::State oldState);
     void updateDirection(QAbstractAnimation2::Direction direction);
-    void uncontrolledAnimationFinished(QAbstractAnimation2* animation);
+    void uncontrolledAnimationFinished(QAbstractAnimation2Pointer animation);
 private:
-    Q_DISABLE_COPY(QSequentialAnimationGroup2)
     struct AnimationIndex
     {
         AnimationIndex() : index(0), timeOffset(0) {}
@@ -86,11 +86,11 @@ private:
     void activateCurrentAnimation(bool intermediate = false);
 
     void animationInsertedAt(int index);
-    void animationRemoved(int index, QAbstractAnimation2 *anim);
+    void animationRemoved(int index, QAbstractAnimation2Pointer anim);
 
     bool atEnd() const;
 
-    QAbstractAnimation2 *m_currentAnimation;
+    QAbstractAnimation2Pointer m_currentAnimation;
     int m_currentAnimationIndex;
 
     // this is the actual duration of uncontrolled animations

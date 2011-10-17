@@ -53,8 +53,8 @@ QT_MODULE(Declarative)
 class Q_DECLARATIVE_EXPORT QPauseAnimation2 : public QAbstractAnimation2
 {
 public:
-    QPauseAnimation2(QDeclarativeAbstractAnimation *animation=0);
-    QPauseAnimation2(int msecs, QDeclarativeAbstractAnimation *animation=0);
+    QPauseAnimation2(QDeclarativeAbstractAnimation* animation = 0);
+    QPauseAnimation2(const QPauseAnimation2& other);
     ~QPauseAnimation2();
 
     int duration() const;
@@ -64,7 +64,6 @@ protected:
     void updateCurrentTime(int);
 
 private:
-    Q_DISABLE_COPY(QPauseAnimation2)
     int m_duration;
 };
 

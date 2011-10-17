@@ -345,7 +345,13 @@ class QSGParticleSystemAnimation : public QAbstractAnimation2
 {
 public:
     QSGParticleSystemAnimation(QSGParticleSystem* system)
-        : m_system(system)
+        : QAbstractAnimation2()
+        , m_system(system)
+    { }
+
+    QSGParticleSystemAnimation(const QSGParticleSystemAnimation &other)
+        : QAbstractAnimation2(other)
+        , m_system(other.m_system)
     { }
 protected:
     virtual void updateCurrentTime( int t )

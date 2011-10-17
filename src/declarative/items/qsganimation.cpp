@@ -63,8 +63,8 @@ QSGParentAnimation::QSGParentAnimation(QObject *parent)
     d->startAction = new QActionAnimation;
     d->topLevelGroup->addAnimation(d->startAction);
 
-    d->ag = new QParallelAnimationGroup2;
-    d->topLevelGroup->addAnimation(d->ag);
+    //d->ag = new QParallelAnimationGroup2;
+    d->topLevelGroup->addAnimation(new QParallelAnimationGroup2);
 
     d->endAction = new QActionAnimation;
     d->topLevelGroup->addAnimation(d->endAction);
@@ -148,7 +148,7 @@ QPointF QSGParentAnimationPrivate::computeTransformOrigin(QSGItem::TransformOrig
     }
 }
 
-QAbstractAnimation2* QSGParentAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2Pointer QSGParentAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -316,11 +316,11 @@ QAbstractAnimation2* QSGParentAnimation::transition(QDeclarativeStateActions &ac
 
     if (data->actions.count()) {
         if (direction == QDeclarativeAbstractAnimation::Forward) {
-            d->startAction->setAnimAction(d->via ? viaData : data, QActionAnimation::DeleteWhenStopped);
-            d->endAction->setAnimAction(d->via ? data : 0, QActionAnimation::DeleteWhenStopped);
+            d->startAction->setAnimAction(d->via ? viaData : data);
+            d->endAction->setAnimAction(d->via ? data : 0);
         } else {
-            d->endAction->setAnimAction(d->via ? viaData : data, QActionAnimation::DeleteWhenStopped);
-            d->startAction->setAnimAction(d->via ? data : 0, QActionAnimation::DeleteWhenStopped);
+            d->endAction->setAnimAction(d->via ? viaData : data);
+            d->startAction->setAnimAction(d->via ? data : 0);
         }
     } else {
         delete data;
@@ -390,7 +390,7 @@ void QSGAnchorAnimation::setEasing(const QEasingCurve &e)
     emit easingChanged(e);
 }
 
-QAbstractAnimation2* QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2Pointer QSGAnchorAnimation::transition(QDeclarativeStateActions &actions,
                         QDeclarativeProperties &modified,
                         TransitionDirection direction)
 {
@@ -412,7 +412,7 @@ QAbstractAnimation2* QSGAnchorAnimation::transition(QDeclarativeStateActions &ac
     }
 
     if (data->actions.count()) {
-        d->va->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
+        d->va->setAnimValue(data);
         d->va->setFromSourcedValue(&data->fromSourced);
     } else {
         delete data;
@@ -577,7 +577,7 @@ void QSGPathAnimation::setEndRotation(qreal rotation)
     emit endRotationChanged(d->endRotation);
 }
 
-QAbstractAnimation2* QSGPathAnimation::transition(QDeclarativeStateActions &actions,
+QAbstractAnimation2Pointer QSGPathAnimation::transition(QDeclarativeStateActions &actions,
                                            QDeclarativeProperties &modified,
                                            TransitionDirection direction)
 {
@@ -644,10 +644,10 @@ QAbstractAnimation2* QSGPathAnimation::transition(QDeclarativeStateActions &acti
             }
         }
         d->pa->setFromSourcedValue(&data->fromSourced);
-        d->pa->setAnimValue(data, QAbstractAnimation2::DeleteWhenStopped);
+        d->pa->setAnimValue(data);
     } else {
         d->pa->setFromSourcedValue(0);
-        d->pa->setAnimValue(0, QAbstractAnimation2::DeleteWhenStopped);
+        d->pa->setAnimValue(0);
         delete data;
     }
     return d->pa;
