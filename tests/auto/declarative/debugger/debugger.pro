@@ -5,6 +5,7 @@ PRIVATETESTS += \
     qdeclarativedebugclient \
     qdeclarativedebugservice \
     qdeclarativedebugjs \
+    qdeclarativeinspector \
     qpacketprotocol
 
 contains(QT_CONFIG, private_tests) {

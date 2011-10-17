@@ -38,83 +38,36 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QSignalSpy>
-#include <QEventLoop>
-#include <QPointer>
-#include <QTimer>
-#include <QThread>
-#include <QTest>
-#include <QProcess>
 
-#include <QtDeclarative/qdeclarativeengine.h>
+#include <QtCore/QDebug>
+#include <QtCore/QStringList>
+#include <QtDeclarative/QQuickView>
+#include <QtGui/QGuiApplication>
+#include <QtQuick1/QDeclarativeView>
 
-#include <private/qdeclarativedebugclient_p.h>
-#include <private/qdeclarativedebugservice_p.h>
-
-class QDeclarativeDebugTest
+int main(int argc, char *argv[])
 {
-public:
-    static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
-};
+    QGuiApplication app(argc, argv);
 
-class QDeclarativeDebugTestService : public QDeclarativeDebugService
-{
-    Q_OBJECT
-public:
-    QDeclarativeDebugTestService(const QString &s, QObject *parent = 0);
+    bool qtquick2 = true;
+    for (int i = 1; i < app.arguments().size(); ++i) {
+        const QString arg = app.arguments().at(i);
+        if (arg == "-qtquick1") {
+            qtquick2 = false;
+        } else if (arg == "-qtquick2") {
+            qtquick2 = true;
+        } else {
+            qWarning() << "Usage: " << app.arguments().at(0) << "[-qtquick1|-qtquick2]";
+            return -1;
+        }
+    }
 
-signals:
-    void statusHasChanged();
-
-protected:
-    virtual void messageReceived(const QByteArray &ba);
-    virtual void statusChanged(Status status);
-};
-
-class QDeclarativeDebugTestClient : public QDeclarativeDebugClient
-{
-    Q_OBJECT
-public:
-    QDeclarativeDebugTestClient(const QString &s, QDeclarativeDebugConnection *c);
-
-    QByteArray waitForResponse();
-
-signals:
-    void statusHasChanged();
-    void serverMessage(const QByteArray &);
-
-protected:
-    virtual void statusChanged(Status status);
-    virtual void messageReceived(const QByteArray &ba);
-
-private:
-    QByteArray lastMsg;
-};
-
-class QDeclarativeDebugProcess : public QObject
-{
-    Q_OBJECT
-public:
-    QDeclarativeDebugProcess(const QString &executable);
-    ~QDeclarativeDebugProcess();
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-
-    QString output() const;
-
-private slots:
-    void processAppOutput();
-
-private:
-    void stop();
-
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-};
+    if (qtquick2) {
+        QQuickView *view = new QQuickView();
+        view->setSource(QUrl::fromLocalFile("qtquick2.qml"));
+    } else {
+        QDeclarativeView *view = new QDeclarativeView();
+        view->setSource(QUrl::fromLocalFile("qtquick1.qml"));
+    }
+    return app.exec();
+}
