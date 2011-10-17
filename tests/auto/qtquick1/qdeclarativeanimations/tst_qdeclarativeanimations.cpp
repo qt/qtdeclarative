@@ -48,8 +48,6 @@
 #include <QVariantAnimation>
 #include <QEasingCurve>
 
-#include "../../../shared/util.h"
-
 class tst_qdeclarativeanimations : public QObject
 {
     Q_OBJECT

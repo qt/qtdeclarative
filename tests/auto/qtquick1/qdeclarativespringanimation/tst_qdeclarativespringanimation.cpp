@@ -43,7 +43,6 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativespringanimation_p.h>
 #include <private/qdeclarativevaluetype_p.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativespringanimation : public QObject
 {

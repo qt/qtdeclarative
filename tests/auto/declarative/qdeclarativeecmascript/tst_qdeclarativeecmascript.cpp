@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+#include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
@@ -54,7 +54,6 @@
 #include "testtypes.h"
 #include "testhttpserver.h"
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 /*
 This test covers evaluation of ECMAScript expressions and bindings from within

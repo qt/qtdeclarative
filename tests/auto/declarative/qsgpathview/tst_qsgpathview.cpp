@@ -57,7 +57,6 @@
 #include <QFile>
 
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 static void initStandardTreeModel(QStandardItemModel *model)
 {

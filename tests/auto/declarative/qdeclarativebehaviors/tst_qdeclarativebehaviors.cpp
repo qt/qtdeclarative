@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+#include <QtTest/QtTest>
 #include <qsignalspy.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
@@ -49,7 +49,6 @@
 #include <private/qdeclarativeanimation_p.h>
 #include <private/qsgitem_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qdeclarativebehaviors : public QObject
 {

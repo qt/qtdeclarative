@@ -49,7 +49,6 @@
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #include <QtQuick1/private/qdeclarativegridview_p.h>
 #include <QtQuick1/private/qdeclarativetext_p.h>
-#include "../../../shared/util.h"
 
 class tst_QDeclarative1GridView : public QObject
 {

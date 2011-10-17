@@ -46,7 +46,6 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
-#include "../../../shared/util.h"
 
 #include <QtGui/qwindowsysteminterface_qpa.h>
 

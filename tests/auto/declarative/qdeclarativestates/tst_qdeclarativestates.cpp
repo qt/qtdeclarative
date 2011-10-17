@@ -51,7 +51,6 @@
 #include <private/qsgitem_p.h>
 #include <private/qdeclarativeproperty_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class MyAttached : public QObject
 {

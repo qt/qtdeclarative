@@ -50,7 +50,6 @@
 #include <QtQuick1/private/qdeclarativetext_p.h>
 #include <QtQuick1/private/qdeclarativevisualitemmodel_p.h>
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
-#include "../../../shared/util.h"
 #include "incrementalmodel.h"
 
 class tst_QDeclarative1ListView : public QObject

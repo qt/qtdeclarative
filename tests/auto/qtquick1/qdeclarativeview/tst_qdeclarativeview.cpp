@@ -45,7 +45,6 @@
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtQuick1/qdeclarativeitem.h>
 #include <QtWidgets/qgraphicswidget.h>
-#include "../../../shared/util.h"
 
 class tst_QDeclarativeView : public QObject
 {

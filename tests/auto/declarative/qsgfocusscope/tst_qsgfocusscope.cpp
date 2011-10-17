@@ -48,7 +48,6 @@
 #include <private/qsgtext_p.h>
 #include <QtDeclarative/private/qsgfocusscope_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qsgfocusscope : public QObject
 {

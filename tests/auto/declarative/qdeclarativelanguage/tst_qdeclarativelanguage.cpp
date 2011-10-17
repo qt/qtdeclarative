@@ -52,8 +52,6 @@
 #include <private/qdeclarativeglobal_p.h>
 
 #include "testtypes.h"
-
-#include "../../../shared/util.h"
 #include "testhttpserver.h"
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)

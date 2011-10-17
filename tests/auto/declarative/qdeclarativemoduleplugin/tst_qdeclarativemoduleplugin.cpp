@@ -45,7 +45,6 @@
 #include <QDebug>
 
 #include "../shared/testhttpserver.h"
-#include "../../../shared/util.h"
 #include "../shared/util.h"
 
 #define SERVER_ADDR "http://127.0.0.1:14450"

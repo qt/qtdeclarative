@@ -55,7 +55,6 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 
 #include "../../declarative/shared/testhttpserver.h"
-#include "../../../shared/util.h"
 
 #define SERVER_PORT 14446
 #define SERVER_ADDR "http://127.0.0.1:14446"

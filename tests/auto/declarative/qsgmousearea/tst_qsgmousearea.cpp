@@ -49,7 +49,6 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtOpenGL/QGLShaderProgram>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 //#define OLDWAY
 

@@ -50,7 +50,6 @@
 #include <private/qdeclarativedebugclient_p.h>
 #include <private/qdeclarativedebugservice_p.h>
 
-#include "../../../../shared/util.h"
 #include "../../shared/util.h"
 #include "../shared/debugutil_p.h"
 

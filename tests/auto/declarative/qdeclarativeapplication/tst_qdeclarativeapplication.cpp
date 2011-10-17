@@ -40,7 +40,6 @@
 ****************************************************************************/
 
 #include <qtest.h>
-#include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qsgitem.h>

@@ -45,7 +45,6 @@
 #include <private/qsgrectangle_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qdeclarativesmoothedanimation : public QObject
 {

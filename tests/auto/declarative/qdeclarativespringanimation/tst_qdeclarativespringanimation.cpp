@@ -44,7 +44,6 @@
 #include <private/qdeclarativespringanimation_p.h>
 #include <private/qdeclarativevaluetype_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qdeclarativespringanimation : public QObject
 {

@@ -47,7 +47,6 @@
 #include <QtQuick1/private/qdeclarativetextedit_p.h>
 #include <QtQuick1/private/qdeclarativetext_p.h>
 #include <QtQuick1/private/qdeclarativefocusscope_p.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativefocusscope : public QObject
 {

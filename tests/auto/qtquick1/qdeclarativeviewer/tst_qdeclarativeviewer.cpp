@@ -46,10 +46,8 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtWidgets/qmenubar.h>
 #include <QSignalSpy>
-#include "../../../shared/util.h"
 #include "qmlruntime.h"
 #include "deviceorientation.h"
-#include "../../../shared/util.h"
 
 #if defined(Q_OS_MAC) || defined(Q_WS_MAEMO_5)
 #  define MENUBAR_HEIGHT(mw) 0

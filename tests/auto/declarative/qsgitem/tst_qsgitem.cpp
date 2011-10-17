@@ -45,7 +45,6 @@
 #include "qsgcanvas.h"
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include "private/qsgfocusscope_p.h"
-#include "../../../shared/util.h"
 #include <QDebug>
 #include <QTimer>
 

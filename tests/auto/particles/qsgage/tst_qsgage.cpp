@@ -42,7 +42,6 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qsgparticlesystem_p.h>
-#include "../../../shared/util.h"
 #include <private/qabstractanimation_p.h>
 
 class tst_qsgage : public QObject

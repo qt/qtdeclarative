@@ -44,7 +44,6 @@
 #include <private/qdeclarativeconnections_p.h>
 #include <private/qsgitem_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativescriptstring.h>
 
 class tst_qdeclarativeconnection : public QObject

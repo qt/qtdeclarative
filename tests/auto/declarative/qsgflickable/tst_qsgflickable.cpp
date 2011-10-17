@@ -47,7 +47,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <math.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include <QtOpenGL/QGLShaderProgram>
 
 class tst_qsgflickable : public QObject

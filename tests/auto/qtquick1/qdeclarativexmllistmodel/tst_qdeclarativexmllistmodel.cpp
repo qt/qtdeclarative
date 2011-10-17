@@ -56,7 +56,6 @@
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativexmllistmodel_p.h>
-#include "../../../shared/util.h"
 
 typedef QPair<int, int> QDeclarativeXmlListRange;
 typedef QList<QVariantList> QDeclarativeXmlModelData;

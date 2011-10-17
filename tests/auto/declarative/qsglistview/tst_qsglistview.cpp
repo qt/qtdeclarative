@@ -53,7 +53,6 @@
 #include <QtDeclarative/private/qlistmodelinterface_p.h>
 #include <QtDeclarative/private/qdeclarativechangeset_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include "incrementalmodel.h"
 #include <math.h>
 

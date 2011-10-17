@@ -45,7 +45,6 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativesystempalette_p.h>
 #include <qpalette.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativesystempalette : public QObject
 {

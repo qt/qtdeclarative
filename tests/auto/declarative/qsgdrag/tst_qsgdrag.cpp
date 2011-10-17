@@ -46,7 +46,6 @@
 #include <QtDeclarative/qdeclarativecontext.h>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativeexpression.h>
-#include "../../../shared/util.h"
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {

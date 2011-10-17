@@ -40,7 +40,6 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QFile>
 #include <QtQuick1/qdeclarativeview.h>

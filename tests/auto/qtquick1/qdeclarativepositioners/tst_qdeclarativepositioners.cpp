@@ -47,7 +47,6 @@
 #include <QtQuick1/private/qdeclarativeitem_p.h>
 #include <qdeclarativeexpression.h>
 #include <QtWidgets/qgraphicswidget.h>
-#include "../../../shared/util.h"
 
 class tst_QDeclarativePositioners : public QObject
 {

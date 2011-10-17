@@ -45,7 +45,6 @@
 #include <QtDeclarative/qdeclarativeimageprovider.h>
 #include <QNetworkReply>
 #include "testhttpserver.h"
-#include "../../../shared/util.h"
 
 #ifndef QT_NO_CONCURRENT
 #include <qtconcurrentrun.h>

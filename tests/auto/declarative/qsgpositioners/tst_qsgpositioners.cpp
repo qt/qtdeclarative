@@ -48,7 +48,6 @@
 #include <private/qsgitem_p.h>
 #include <qdeclarativeexpression.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qsgpositioners : public QObject
 {

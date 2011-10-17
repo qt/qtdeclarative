@@ -44,7 +44,6 @@
 #include <private/qdeclarativebind_p.h>
 #include <private/qsgrectangle_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qdeclarativebinding : public QObject
 {

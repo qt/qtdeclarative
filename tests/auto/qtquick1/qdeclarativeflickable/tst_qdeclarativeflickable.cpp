@@ -47,7 +47,6 @@
 #include <private/qdeclarativevaluetype_p.h>
 #include <QtWidgets/qgraphicswidget.h>
 #include <math.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativeflickable : public QObject
 {

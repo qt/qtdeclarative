@@ -51,8 +51,6 @@
 #include <QtCore/qtranslator.h>
 #include <QSignalSpy>
 
-#include "../../../shared/util.h"
-
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<QVariantHash>)
 

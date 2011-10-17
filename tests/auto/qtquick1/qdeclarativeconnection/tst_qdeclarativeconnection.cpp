@@ -43,7 +43,6 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativeconnections_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
-#include "../../../shared/util.h"
 #include <QtDeclarative/qdeclarativescriptstring.h>
 
 class tst_qdeclarativeconnection : public QObject

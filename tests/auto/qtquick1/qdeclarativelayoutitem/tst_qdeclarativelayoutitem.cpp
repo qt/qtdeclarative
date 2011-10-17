@@ -47,7 +47,6 @@
 #include <qgraphicsscene.h>
 #include <qgraphicswidget.h>
 #include <qgraphicslinearlayout.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativelayoutitem : public QObject
 {

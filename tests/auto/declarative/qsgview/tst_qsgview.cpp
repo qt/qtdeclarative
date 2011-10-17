@@ -45,7 +45,6 @@
 #include <QtDeclarative/qsgview.h>
 #include <QtDeclarative/qsgitem.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
 

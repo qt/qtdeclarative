@@ -54,7 +54,6 @@
 #include <limits.h>
 #include <QtGui/QMouseEvent>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include "testhttpserver.h"
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)

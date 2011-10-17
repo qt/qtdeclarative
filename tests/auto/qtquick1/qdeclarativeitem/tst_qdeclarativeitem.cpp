@@ -46,7 +46,6 @@
 #include <QtQuick1/qdeclarativeview.h>
 #include <QtQuick1/private/qdeclarativerectangle_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
-#include "../../../shared/util.h"
 
 class tst_QDeclarativeItem : public QObject
 {

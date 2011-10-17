@@ -43,7 +43,6 @@
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtQuick1/private/qdeclarativebind_p.h>
 #include <QtQuick1/private/qdeclarativerectangle_p.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativebinding : public QObject
 {

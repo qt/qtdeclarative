@@ -39,7 +39,6 @@
 **
 ****************************************************************************/
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include <QStandardItemModel>

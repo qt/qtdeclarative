@@ -47,7 +47,6 @@
 #include <private/qsgrectangle_p.h>
 #include <private/qsgitem_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_QSGItem : public QObject
 {

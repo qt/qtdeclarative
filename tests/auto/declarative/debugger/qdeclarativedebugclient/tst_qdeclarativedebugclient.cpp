@@ -47,7 +47,6 @@
 
 #include <QtDeclarative/qdeclarativeengine.h>
 
-#include "../../../../shared/util.h"
 #include "../shared/debugutil_p.h"
 
 #define PORT 13770

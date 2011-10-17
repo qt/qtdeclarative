@@ -57,7 +57,6 @@
 #include <QtGui/QImageReader>
 
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include "../shared/testhttpserver.h"
 
 #define SERVER_PORT 14451

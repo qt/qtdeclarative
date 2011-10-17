@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <qtest.h>
+#include <QtTest/QtTest>
 #include <QtDeclarative/qdeclarativeengine.h>
 #include <QtDeclarative/qdeclarativecomponent.h>
 #include <QtDeclarative/qsgview.h>
@@ -55,7 +55,6 @@
 #include <math.h>
 
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qdeclarativeanimations : public QObject
 {

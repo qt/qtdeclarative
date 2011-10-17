@@ -52,7 +52,6 @@
 #include <QtDeclarative/private/qsgtext_p.h>
 #include <QtDeclarative/private/qdeclarativelistmodel_p.h>
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 #include <QtGui/qguiapplication.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)

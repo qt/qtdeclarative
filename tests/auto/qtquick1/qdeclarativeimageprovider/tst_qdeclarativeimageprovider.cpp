@@ -45,7 +45,6 @@
 #include <QtQuick1/private/qdeclarativeimage_p.h>
 #include <QImageReader>
 #include <QWaitCondition>
-#include "../../../shared/util.h"
 
 Q_DECLARE_METATYPE(QDeclarativeImageProvider*);
 

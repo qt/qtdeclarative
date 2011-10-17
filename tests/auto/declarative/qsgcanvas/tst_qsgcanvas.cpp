@@ -45,7 +45,6 @@
 #include <QtDeclarative/QSGItem>
 #include <QtDeclarative/QSGCanvas>
 #include <QtDeclarative/private/qsgrectangle_p.h>
-#include "../../../shared/util.h"
 #include <QtGui/QWindowSystemInterface>
 
 struct TouchEventData {

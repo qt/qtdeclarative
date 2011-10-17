@@ -52,7 +52,6 @@
 #include <QtWidgets/5.0.0/QtWidgets/private/qapplication_p.h>
 #include <limits.h>
 
-#include "../../../shared/util.h"
 #include "testhttpserver.h"
 
 class tst_qdeclarativetext : public QObject

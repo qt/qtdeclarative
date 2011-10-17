@@ -48,7 +48,6 @@
 #include <private/qsgloader_p.h>
 #include "testhttpserver.h"
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 #define SERVER_PORT 14450
 

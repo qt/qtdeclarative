@@ -48,7 +48,6 @@
 #include <QtQuick1/private/qdeclarativebehavior_p.h>
 #include <QtQuick1/private/qdeclarativeanimation_p.h>
 #include <QtQuick1/private/qdeclarativeitem_p.h>
-#include "../../../shared/util.h"
 
 class tst_qdeclarativebehaviors : public QObject
 {

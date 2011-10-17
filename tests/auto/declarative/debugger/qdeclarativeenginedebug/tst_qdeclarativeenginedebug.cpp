@@ -58,7 +58,6 @@
 #include <private/qdeclarativemetatype_p.h>
 #include <private/qdeclarativeproperty_p.h>
 
-#include "../../../../shared/util.h"
 #include "../shared/debugutil_p.h"
 
 Q_DECLARE_METATYPE(QDeclarativeDebugWatch::State)

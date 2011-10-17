@@ -45,7 +45,6 @@
 #include <QtDeclarative/private/qdeclarativepath_p.h>
 
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_QDeclarativePath : public QObject
 {

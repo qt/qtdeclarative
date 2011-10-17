@@ -50,7 +50,6 @@
 
 #include "../shared/testhttpserver.h"
 #include "../shared/util.h"
-#include "../../../shared/util.h"
 
 class tst_qsganimatedimage : public QObject
 {
