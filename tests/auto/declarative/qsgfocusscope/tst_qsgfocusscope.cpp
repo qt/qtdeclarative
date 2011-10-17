@@ -559,7 +559,7 @@ void tst_qsgfocusscope::canvasFocus()
     QSignalSpy scope2ActiveFocusSpy(scope2, SIGNAL(activeFocusChanged(bool)));
     QSignalSpy item2ActiveFocusSpy(item2, SIGNAL(activeFocusChanged(bool)));
 
-    QEXPECT_FAIL("", "Root item hasFocus returns true already", Abort);
+    QEXPECT_FAIL("", "QTBUG-21054 - Root item hasFocus returns true already", Abort);
 
     QCOMPARE(rootItem->hasFocus(), false);
     QCOMPARE(rootItem->hasActiveFocus(), false);

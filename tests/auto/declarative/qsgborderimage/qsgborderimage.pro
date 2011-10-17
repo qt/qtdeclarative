@@ -12,5 +12,3 @@ DEPLOYMENT += testDataFiles
 CONFIG += parallel_test
 
 QT += core-private gui-private declarative-private network widgets testlib
-
-qpa:CONFIG+=insignificant_test  # QTBUG-21004 fails, unstably
