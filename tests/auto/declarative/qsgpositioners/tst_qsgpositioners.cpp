@@ -1283,7 +1283,7 @@ void tst_qsgpositioners::test_mirroring()
     QList<QString> objectNames;
     objectNames << "one" << "two" << "three" << "four" << "five";
 
-    foreach(const QString qmlFile, qmlFiles) {
+    foreach (const QString qmlFile, qmlFiles) {
         QSGView *canvasA = createView(TESTDATA(qmlFile));
         QSGItem *rootA = qobject_cast<QSGItem*>(canvasA->rootObject());
 
@@ -1293,7 +1293,7 @@ void tst_qsgpositioners::test_mirroring()
         rootA->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
         // LTR != RTL
-        foreach(const QString objectName, objectNames) {
+        foreach (const QString objectName, objectNames) {
             // horizontal.qml only has three items
             if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
                 break;
@@ -1310,7 +1310,7 @@ void tst_qsgpositioners::test_mirroring()
         rootPrivateB->resolveLayoutMirror();
 
         // RTL == mirror
-        foreach(const QString objectName, objectNames) {
+        foreach (const QString objectName, objectNames) {
             // horizontal.qml only has three items
             if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
                 break;
@@ -1323,7 +1323,7 @@ void tst_qsgpositioners::test_mirroring()
         rootB->setProperty("testRightToLeft", true); // layoutDirection: Qt.RightToLeft
 
         // LTR == RTL + mirror
-        foreach(const QString objectName, objectNames) {
+        foreach (const QString objectName, objectNames) {
             // horizontal.qml only has three items
             if (qmlFile == QString("horizontal.qml") && objectName == QString("four"))
                 break;

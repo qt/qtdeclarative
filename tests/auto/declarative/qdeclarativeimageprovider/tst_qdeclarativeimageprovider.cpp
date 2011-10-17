@@ -408,13 +408,13 @@ void tst_qdeclarativeimageprovider::threadTest()
     QList<QSGImage *> images = obj->findChildren<QSGImage *>();
     QCOMPARE(images.count(), 4);
     QTest::qWait(100);
-    foreach(QSGImage *img, images) {
+    foreach (QSGImage *img, images) {
         QCOMPARE(img->status(), QSGImage::Loading);
     }
     provider->ok = true;
     provider->cond.wakeAll();
     QTest::qWait(250);
-    foreach(QSGImage *img, images) {
+    foreach (QSGImage *img, images) {
         QTRY_VERIFY(img->status() == QSGImage::Ready);
     }
 }

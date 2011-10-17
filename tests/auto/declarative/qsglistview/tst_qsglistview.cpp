@@ -258,7 +258,7 @@ public:
 
     QList<int> roles() const { return QList<int>() << Name << Number; }
     QString toString(int role) const {
-        switch(role) {
+        switch (role) {
         case Name:
             return "name";
         case Number:
@@ -282,7 +282,7 @@ public:
         for (int i = 0; i < roles.size(); ++i) {
             int role = roles.at(i);
             QVariant info;
-            switch(role) {
+            switch (role) {
             case Name:
                 info = list.at(index).first;
                 break;
@@ -3736,14 +3736,14 @@ void tst_QSGListView::test_mirroring()
     QCOMPARE(listviewA->layoutDirection(), listviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
     listviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     QVERIFY(listviewB->layoutDirection() == listviewB->effectiveLayoutDirection());
@@ -3751,25 +3751,25 @@ void tst_QSGListView::test_mirroring()
     QVERIFY(listviewB->layoutDirection() != listviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(listviewA, objectName)->x() != findItem<QSGItem>(listviewB, objectName)->x());
 
     listviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(listviewA, objectName)->x(), findItem<QSGItem>(listviewB, objectName)->x());
 
     delete canvasA;
@@ -3799,7 +3799,7 @@ void tst_QSGListView::margins()
 
     QCOMPARE(listview->contentY(), -30.);
     QCOMPARE(listview->yOrigin(), 0.);
-    
+
     // check end bound
     listview->positionViewAtEnd();
     qreal pos = listview->contentY();
@@ -3821,7 +3821,7 @@ void tst_QSGListView::margins()
     listview->setTopMargin(20);
     QCOMPARE(listview->yOrigin(), 20.);
     QTRY_COMPARE(listview->contentY(), 0.);
-    
+
     // check end bound
     listview->positionViewAtEnd();
     pos = listview->contentY();
@@ -4096,7 +4096,7 @@ T *tst_QSGListView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -4124,7 +4124,7 @@ QList<T*> tst_QSGListView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item || !item->isVisible())
+        if (!item || !item->isVisible())
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
@@ -4140,7 +4140,7 @@ void tst_QSGListView::dumpTree(QSGItem *parent, int depth)
     static QString padding("                       ");
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         qDebug() << padding.left(depth*2) << item;
         dumpTree(item, depth+1);

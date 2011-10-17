@@ -276,7 +276,7 @@ void tst_qsgtextinput::width()
 void tst_qsgtextinput::font()
 {
     //test size, then bold, then italic, then family
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  font.pointSize: 40; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -290,7 +290,7 @@ void tst_qsgtextinput::font()
         delete textinputObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  font.bold: true; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -303,7 +303,7 @@ void tst_qsgtextinput::font()
         delete textinputObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  font.italic: true; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -315,8 +315,8 @@ void tst_qsgtextinput::font()
 
         delete textinputObject;
     }
- 
-    { 
+
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  font.family: \"Helvetica\"; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -330,7 +330,7 @@ void tst_qsgtextinput::font()
         delete textinputObject;
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  font.family: \"\"; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -347,7 +347,7 @@ void tst_qsgtextinput::color()
 {
     //test color
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  color: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -373,7 +373,7 @@ void tst_qsgtextinput::color()
 
     //test selected text color
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextInput {  selectedTextColor: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QDeclarativeComponent textinputComponent(&engine);
         textinputComponent.setData(componentStr.toLatin1(), QUrl());
@@ -412,7 +412,7 @@ void tst_qsgtextinput::selection()
 
 
     //Test selection follows cursor
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textinputObject->setCursorPosition(i);
         QCOMPARE(textinputObject->cursorPosition(), i);
         QCOMPARE(textinputObject->selectionStart(), i);
@@ -440,11 +440,11 @@ void tst_qsgtextinput::selection()
     QVERIFY(textinputObject->selectedText().isNull());
 
     //Test selection
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textinputObject->select(0,i);
         QCOMPARE(testStr.mid(0,i), textinputObject->selectedText());
     }
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textinputObject->select(i,testStr.size());
         QCOMPARE(testStr.mid(i,testStr.size()-i), textinputObject->selectedText());
     }
@@ -1324,7 +1324,7 @@ void tst_qsgtextinput::maxLength()
     QVERIFY(textinputObject != 0);
     QVERIFY(textinputObject->text().isEmpty());
     QVERIFY(textinputObject->maxLength() == 10);
-    foreach(const QString &str, standard){
+    foreach (const QString &str, standard) {
         QVERIFY(textinputObject->text().length() <= 10);
         textinputObject->setText(str);
         QVERIFY(textinputObject->text().length() <= 10);
@@ -1332,7 +1332,7 @@ void tst_qsgtextinput::maxLength()
 
     textinputObject->setText("");
     QTRY_VERIFY(textinputObject->hasActiveFocus() == true);
-    for(int i=0; i<20; i++){
+    for (int i=0; i<20; i++) {
         QTRY_COMPARE(textinputObject->text().length(), qMin(i,10));
         //simulateKey(&canvas, Qt::Key_A);
         QTest::keyPress(&canvas, Qt::Key_A);
@@ -1354,7 +1354,7 @@ void tst_qsgtextinput::masks()
     QTRY_VERIFY(textinputObject->hasActiveFocus() == true);
     QVERIFY(textinputObject->text().length() == 0);
     QCOMPARE(textinputObject->inputMask(), QString("HHHHhhhh; "));
-    for(int i=0; i<10; i++){
+    for (int i=0; i<10; i++) {
         QTRY_COMPARE(qMin(i,8), textinputObject->text().length());
         QCOMPARE(i>=4, textinputObject->hasAcceptableInput());
         //simulateKey(&canvas, Qt::Key_A);
@@ -1745,7 +1745,7 @@ void tst_qsgtextinput::cursorDelegate()
     QVERIFY(delegateObject);
     QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
     //Test Delegate gets moved
-    for(int i=0; i<= textInputObject->text().length(); i++){
+    for (int i=0; i<= textInputObject->text().length(); i++) {
         textInputObject->setCursorPosition(i);
         QCOMPARE(textInputObject->cursorRectangle().x(), qRound(delegateObject->x()));
         QCOMPARE(textInputObject->cursorRectangle().y(), qRound(delegateObject->y()));
@@ -1890,7 +1890,7 @@ void tst_qsgtextinput::readOnly()
     QTRY_VERIFY(input->hasActiveFocus() == true);
     QVERIFY(input->isReadOnly() == true);
     QString initial = input->text();
-    for(int k=Qt::Key_0; k<=Qt::Key_Z; k++)
+    for (int k=Qt::Key_0; k<=Qt::Key_Z; k++)
         simulateKey(&canvas, k);
     simulateKey(&canvas, Qt::Key_Return);
     simulateKey(&canvas, Qt::Key_Space);

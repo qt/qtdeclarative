@@ -97,7 +97,7 @@ T *findItem(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->QSGItem::children().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))
@@ -496,7 +496,7 @@ void tst_QSGItem::layoutMirroring()
     QCOMPARE(childPrivate(rootItem, "inheritedMirror2")->inheritedLayoutMirror, true);
     QCOMPARE(childPrivate(rootItem, "mirrored1")->inheritedLayoutMirror, true);
     QCOMPARE(childPrivate(rootItem, "notMirrored1")->inheritedLayoutMirror, true);
-    
+
     //
     // dynamic parenting
     //
@@ -526,7 +526,7 @@ void tst_QSGItem::layoutMirroring()
     childItem2->setParentItem(parentItem2);
     QCOMPARE(QSGItemPrivate::get(childItem2)->effectiveLayoutMirror, false);
     QCOMPARE(QSGItemPrivate::get(childItem2)->inheritMirrorFromParent, false);
-    
+
     delete parentItem1;
     delete parentItem2;
 }
@@ -1024,7 +1024,7 @@ void tst_QSGItem::transforms()
 void tst_QSGItem::childrenProperty()
 {
     QDeclarativeComponent component(&engine, TESTDATA("childrenProperty.qml"));
-    
+
     QObject *o = component.create();
     QVERIFY(o != 0);
 
@@ -1039,7 +1039,7 @@ void tst_QSGItem::childrenProperty()
 void tst_QSGItem::resourcesProperty()
 {
     QDeclarativeComponent component(&engine, TESTDATA("resourcesProperty.qml"));
-    
+
     QObject *o = component.create();
     QVERIFY(o != 0);
 

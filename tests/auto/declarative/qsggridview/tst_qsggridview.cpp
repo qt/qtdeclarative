@@ -2066,14 +2066,14 @@ void tst_QSGGridView::mirroring()
     QCOMPARE(gridviewA->layoutDirection(), gridviewA->effectiveLayoutDirection());
 
     // LTR != RTL
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
     gridviewB->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == LTR
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     QVERIFY(gridviewB->layoutDirection() == gridviewB->effectiveLayoutDirection());
@@ -2081,25 +2081,25 @@ void tst_QSGGridView::mirroring()
     QVERIFY(gridviewB->layoutDirection() != gridviewB->effectiveLayoutDirection());
 
     // LTR != LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL == LTR+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewB->setProperty("layoutDirection", Qt::RightToLeft);
 
     // RTL != RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QVERIFY(findItem<QSGItem>(gridviewA, objectName)->x() != findItem<QSGItem>(gridviewB, objectName)->x());
 
     gridviewA->setProperty("layoutDirection", Qt::LeftToRight);
 
     // LTR == RTL+mirror
-    foreach(const QString objectName, objectNames)
+    foreach (const QString objectName, objectNames)
         QCOMPARE(findItem<QSGItem>(gridviewA, objectName)->x(), findItem<QSGItem>(gridviewB, objectName)->x());
 
     delete canvasA;
@@ -3290,7 +3290,7 @@ T *tst_QSGGridView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -3321,7 +3321,7 @@ QList<T*> tst_QSGGridView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -3339,7 +3339,7 @@ void tst_QSGGridView::dumpTree(QSGItem *parent, int depth)
     static QString padding("                       ");
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         QDeclarativeContext *context = QDeclarativeEngine::contextForObject(item);
         qDebug() << padding.left(depth*2) << item << (context ? context->contextProperty("index").toInt() : -1);

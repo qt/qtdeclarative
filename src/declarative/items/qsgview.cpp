@@ -268,7 +268,7 @@ void QSGView::continueExecute()
 
     QObject *obj = d->component->create();
 
-    if(d->component->isError()) {
+    if (d->component->isError()) {
         QList<QDeclarativeError> errorList = d->component->errors();
         foreach (const QDeclarativeError &error, errorList) {
             qWarning() << error;

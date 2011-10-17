@@ -263,7 +263,7 @@ bool QSGMouseAreaPrivate::propagateHelper(QSGMouseEvent *ev, QSGItem *item,const
 
     QSGMouseArea* ma = qobject_cast<QSGMouseArea*>(item);
     if (ma && ma != q && itemPrivate->acceptedMouseButtons & ev->button()) {
-        switch(sig){
+        switch (sig) {
         case Click:
             if (!ma->d_func()->isClickConnected())
                 return false;
@@ -282,7 +282,7 @@ bool QSGMouseAreaPrivate::propagateHelper(QSGMouseEvent *ev, QSGItem *item,const
             ev->setX(p.x());
             ev->setY(p.y());
             ev->setAccepted(true);//It is connected, they have to explicitly ignore to let it slide
-            switch(sig){
+            switch (sig) {
             case Click: emit ma->clicked(ev); break;
             case DoubleClick: emit ma->doubleClicked(ev); break;
             case PressAndHold: emit ma->pressAndHold(ev); break;

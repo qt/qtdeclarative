@@ -84,7 +84,7 @@ protected:
     }
 
 public slots:
-    void doPolish() { 
+    void doPolish() {
         polish();
     }
 };
@@ -227,13 +227,13 @@ struct FocusState : public QHash<QSGItem *, FocusData>
         } else { \
             QCOMPARE(canvas.activeFocusItem(), canvas.rootItem()); \
         } \
-        for(QHash<QSGItem *, FocusData>::Iterator iter = focusState.begin(); \
+        for (QHash<QSGItem *, FocusData>::Iterator iter = focusState.begin(); \
             iter != focusState.end(); \
             iter++) { \
             QCOMPARE(iter.key()->hasFocus(), iter.value().focus); \
             QCOMPARE(iter.key()->hasActiveFocus(), iter.value().activeFocus); \
         } \
-    } while(false)
+    } while (false)
 
 // Tests a simple set of top-level scoped items
 void tst_qsgitem::simpleFocus()
@@ -632,7 +632,7 @@ void tst_qsgitem::changeParent()
     focusState[item].set(false, false);
     FVERIFY();
     }
-    
+
 }
 
 void tst_qsgitem::constructor()

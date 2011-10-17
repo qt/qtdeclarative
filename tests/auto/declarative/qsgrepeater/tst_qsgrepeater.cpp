@@ -215,7 +215,7 @@ void tst_QSGRepeater::objectList()
 {
     QSGView *canvas = createView();
     QObjectList data;
-    for(int i=0; i<100; i++)
+    for (int i=0; i<100; i++)
         data << new MyObject(i);
 
     QDeclarativeContext *ctxt = canvas->rootContext();
@@ -651,7 +651,7 @@ T *tst_QSGRepeater::findItem(QObject *parent, const QString &objectName, int ind
     //qDebug() << parent->children().count() << "children";
     for (int i = 0; i < parent->children().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->children().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {

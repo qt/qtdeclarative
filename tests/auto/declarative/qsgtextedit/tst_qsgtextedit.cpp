@@ -108,7 +108,7 @@ private slots:
     void alignments();
     void alignments_data();
 
-    // ### these tests may be trivial    
+    // ### these tests may be trivial
     void hAlign();
     void hAlign_RightToLeft();
     void vAlign();
@@ -223,7 +223,7 @@ tst_qsgtextedit::tst_qsgtextedit()
                  // need a different test to do alpha channel test
                  // << "#AA0011DD"
                  // << "#00F16B11";
-                 // 
+                 //
 }
 
 void tst_qsgtextedit::text()
@@ -642,7 +642,7 @@ void tst_qsgtextedit::vAlign()
 void tst_qsgtextedit::font()
 {
     //test size, then bold, then italic, then family
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  font.pointSize: 40; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -654,7 +654,7 @@ void tst_qsgtextedit::font()
         QCOMPARE(textEditObject->font().italic(), false);
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  font.bold: true; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -665,7 +665,7 @@ void tst_qsgtextedit::font()
         QCOMPARE(textEditObject->font().italic(), false);
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  font.italic: true; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -676,7 +676,7 @@ void tst_qsgtextedit::font()
         QCOMPARE(textEditObject->font().bold(), false);
     }
  
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  font.family: \"Helvetica\"; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -688,7 +688,7 @@ void tst_qsgtextedit::font()
         QCOMPARE(textEditObject->font().italic(), false);
     }
 
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  font.family: \"\"; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -720,7 +720,7 @@ void tst_qsgtextedit::color()
     }
     //test normal
     for (int i = 0; i < colorStrings.size(); i++)
-    { 
+    {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  color: \"" + colorStrings.at(i) + "\"; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -769,7 +769,7 @@ void tst_qsgtextedit::color()
 
 void tst_qsgtextedit::textMargin()
 {
-    for(qreal i=0; i<=10; i+=0.3){
+    for (qreal i=0; i<=10; i+=0.3) {
         QString componentStr = "import QtQuick 2.0\nTextEdit {  textMargin: " + QString::number(i) + "; text: \"Hello World\" }";
         QDeclarativeComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
@@ -832,7 +832,7 @@ void tst_qsgtextedit::selection()
 
 
     //Test selection follows cursor
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textEditObject->setCursorPosition(i);
         QCOMPARE(textEditObject->cursorPosition(), i);
         QCOMPARE(textEditObject->selectionStart(), i);
@@ -860,11 +860,11 @@ void tst_qsgtextedit::selection()
     QVERIFY(textEditObject->selectedText().isNull());
 
     //Test selection
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textEditObject->select(0,i);
         QCOMPARE(testStr.mid(0,i), textEditObject->selectedText());
     }
-    for(int i=0; i<= testStr.size(); i++) {
+    for (int i=0; i<= testStr.size(); i++) {
         textEditObject->select(i,testStr.size());
         QCOMPARE(testStr.mid(i,testStr.size()-i), textEditObject->selectedText());
     }
@@ -1591,7 +1591,7 @@ void tst_qsgtextedit::cursorDelegate()
     QVERIFY(delegateObject);
     QCOMPARE(delegateObject->property("localProperty").toString(), QString("Hello"));
     //Test Delegate gets moved
-    for(int i=0; i<= textEditObject->text().length(); i++){
+    for (int i=0; i<= textEditObject->text().length(); i++) {
         textEditObject->setCursorPosition(i);
         QCOMPARE(textEditObject->cursorRectangle().x(), qRound(delegateObject->x()));
         QCOMPARE(textEditObject->cursorRectangle().y(), qRound(delegateObject->y()));
@@ -1899,7 +1899,7 @@ void tst_qsgtextedit::readOnly()
     QTRY_VERIFY(edit->hasActiveFocus() == true);
     QVERIFY(edit->isReadOnly() == true);
     QString initial = edit->text();
-    for(int k=Qt::Key_0; k<=Qt::Key_Z; k++)
+    for (int k=Qt::Key_0; k<=Qt::Key_Z; k++)
         simulateKey(&canvas, k);
     simulateKey(&canvas, Qt::Key_Return);
     simulateKey(&canvas, Qt::Key_Space);

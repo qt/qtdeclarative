@@ -129,7 +129,7 @@ void QSGParentAnimation::setVia(QSGItem *via)
 //### mirrors same-named function in QSGItem
 QPointF QSGParentAnimationPrivate::computeTransformOrigin(QSGItem::TransformOrigin origin, qreal width, qreal height) const
 {
-    switch(origin) {
+    switch (origin) {
     default:
     case QSGItem::TopLeft:
         return QPointF(0, 0);

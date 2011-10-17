@@ -992,10 +992,9 @@ bool QSGCanvasPrivate::deliverMouseEvent(QMouseEvent *event)
 
     lastMousePosition = event->windowPos();
 
-    if (!mouseGrabberItem && 
+    if (!mouseGrabberItem &&
          event->type() == QEvent::MouseButtonPress &&
          (event->button() & event->buttons()) == event->buttons()) {
-        
         return deliverInitialMousePressEvent(rootItem, event);
     }
 
@@ -1542,7 +1541,7 @@ bool QSGCanvas::sendEvent(QSGItem *item, QEvent *e)
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
-        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events? 
+        // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
         {
             QMouseEvent *se = static_cast<QMouseEvent *>(e);
             if (!d->sendFilteredMouseEvent(item->parentItem(), item, se)) {
@@ -1929,7 +1928,7 @@ QImage QSGCanvas::grabFrameBuffer()
 }
 
 /*!
-    Returns an incubation controller that splices incubation between frames 
+    Returns an incubation controller that splices incubation between frames
     for this canvas.  QSGView automatically installs this controller for you.
 
     The controller is owned by the canvas and will be destroyed when the canvas

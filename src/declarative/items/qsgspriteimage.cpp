@@ -278,9 +278,9 @@ QDeclarativeListProperty<QSGSprite> QSGSpriteImage::sprites()
 void QSGSpriteImage::createEngine()
 {
     //TODO: delay until component complete
-    if(m_spriteEngine)
+    if (m_spriteEngine)
         delete m_spriteEngine;
-    if(m_sprites.count())
+    if (m_sprites.count())
         m_spriteEngine = new QSGSpriteEngine(m_sprites, this);
     else
         m_spriteEngine = 0;
@@ -308,7 +308,7 @@ QSGGeometryNode* QSGSpriteImage::buildNode()
     m_material = new QSGSpriteMaterial();
 
     QImage image = m_spriteEngine->assembledImage();
-    if(image.isNull())
+    if (image.isNull())
         return 0;
     m_material->texture = sceneGraphEngine()->createTextureFromImage(image);
     m_material->texture->setFiltering(QSGTexture::Linear);
@@ -369,7 +369,7 @@ void QSGSpriteImage::reset()
 
 QSGNode *QSGSpriteImage::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 {
-    if(m_pleaseReset){
+    if (m_pleaseReset) {
         delete m_node;
         delete m_material;
 
@@ -380,7 +380,7 @@ QSGNode *QSGSpriteImage::updatePaintNode(QSGNode *, UpdatePaintNodeData *)
 
     prepareNextFrame();
 
-    if(m_running){
+    if (m_running) {
         update();
         if (m_node)
             m_node->markDirty(QSGNode::DirtyMaterial);

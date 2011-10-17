@@ -1648,7 +1648,7 @@ static v8::Handle<v8::Value> ctx2d_strokeRect(const v8::Arguments &args)
 
         r->context->buffer()->strokeRect(x, y, w, h);
     }
-    
+
     return args.This();
 }
 
@@ -1837,7 +1837,7 @@ static v8::Handle<v8::Value> ctx2d_clip(const v8::Arguments &args)
     else
         r->context->state.clipPath = clipPath;
     r->context->buffer()->clip(r->context->state.clipPath);
-    
+
     return args.This();
 }
 
@@ -2626,7 +2626,7 @@ static v8::Handle<v8::Value> ctx2d_imageData_filter(const v8::Arguments &args)
 
     if (args.Length() >= 1) {
         int filterFlag = args[0]->IntegerValue();
-        switch(filterFlag) {
+        switch (filterFlag) {
         case QSGCanvasItem::Mono :
         {
             r->image = r->image.convertToFormat(QImage::Format_Mono).convertToFormat(QImage::Format_ARGB32_Premultiplied);

@@ -670,7 +670,7 @@ private:
 };
 
 QSGTransformNode *QSGItemPrivate::itemNode()
-{ 
+{
     if (!itemNodeInstance) {
         itemNodeInstance = createTransformNode();
         itemNodeInstance->setFlag(QSGNode::OwnedByParent, false);
@@ -679,7 +679,7 @@ QSGTransformNode *QSGItemPrivate::itemNode()
         itemNodeInstance->description = QString::fromLatin1("QSGItem(%1)").arg(QString::fromLatin1(q->metaObject()->className()));
 #endif
     }
-    return itemNodeInstance; 
+    return itemNodeInstance;
 }
 
 QSGNode *QSGItemPrivate::childContainerNode()

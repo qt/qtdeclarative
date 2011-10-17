@@ -756,7 +756,7 @@ void QSGTextPrivate::invalidateImageCache()
 {
     Q_Q(QSGText);
 
-    if(richTextAsImage || cacheAllTextAsImage || (qmlDisableDistanceField() && style != QSGText::Normal)){//If actually using the image cache
+    if (richTextAsImage || cacheAllTextAsImage || (qmlDisableDistanceField() && style != QSGText::Normal)) { // If actually using the image cache
         if (imageCacheDirty)
             return;
 
@@ -1064,8 +1064,8 @@ QSGText::~QSGText()
     \list
     \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
     \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase	 - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps -	This alters the text to be rendered in small-caps type.
+    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
     \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 

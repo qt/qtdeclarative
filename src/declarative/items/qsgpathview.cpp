@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 inline qreal qmlMod(qreal x, qreal y)
 {
 #ifdef QT_USE_MATH_H_FLOATS
-    if(sizeof(qreal) == sizeof(float))
+    if (sizeof(qreal) == sizeof(float))
         return fmodf(float(x), float(y));
     else
 #endif
@@ -115,7 +115,7 @@ QSGItem *QSGPathViewPrivate::getItem(int modelIndex, bool onPath)
         if (!attType) {
             // pre-create one metatype to share with all attached objects
             attType = new QDeclarativeOpenMetaObjectType(&QSGPathViewAttached::staticMetaObject, qmlEngine(q));
-            foreach(const QString &attr, path->attributes())
+            foreach (const QString &attr, path->attributes())
                 attType->createProperty(attr.toUtf8());
         }
         qPathViewAttachedType = attType;
@@ -322,7 +322,7 @@ void QSGPathViewPrivate::updateItem(QSGItem *item, qreal percent)
         if (qFuzzyCompare(att->m_percent, percent))
             return;
         att->m_percent = percent;
-        foreach(const QString &attr, path->attributes())
+        foreach (const QString &attr, path->attributes())
             att->setValue(attr.toUtf8(), path->attributeAt(attr, percent));
     }
     QPointF pf = path->pointAt(percent);
@@ -1262,7 +1262,7 @@ bool QSGPathView::sendMouseEvent(QMouseEvent *event)
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 
-        switch(mouseEvent.type()) {
+        switch (mouseEvent.type()) {
         case QEvent::MouseMove:
             d->handleMouseMoveEvent(&mouseEvent);
             break;
@@ -1581,7 +1581,7 @@ void QSGPathView::createdItem(int index, QSGItem *item)
         if (!d->attType) {
             // pre-create one metatype to share with all attached objects
             d->attType = new QDeclarativeOpenMetaObjectType(&QSGPathViewAttached::staticMetaObject, qmlEngine(this));
-            foreach(const QString &attr, d->path->attributes())
+            foreach (const QString &attr, d->path->attributes())
                 d->attType->createProperty(attr.toUtf8());
         }
         qPathViewAttachedType = d->attType;

@@ -252,7 +252,7 @@ void QSGBasePositioner::prePositioning()
 void QSGBasePositioner::positionX(int x, const PositionedItem &target)
 {
     Q_D(QSGBasePositioner);
-    if(d->type == Horizontal || d->type == Both){
+    if (d->type == Horizontal || d->type == Both) {
         if (target.isNew) {
             if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setX(x);
@@ -270,7 +270,7 @@ void QSGBasePositioner::positionX(int x, const PositionedItem &target)
 void QSGBasePositioner::positionY(int y, const PositionedItem &target)
 {
     Q_D(QSGBasePositioner);
-    if(d->type == Vertical || d->type == Both){
+    if (d->type == Vertical || d->type == Both) {
         if (target.isNew) {
             if (!d->addTransition || !d->addTransition->enabled())
                 target.item->setY(y);
@@ -541,7 +541,7 @@ void QSGColumn::doPositioning(QSizeF *contentSize)
         if (!child.item || !child.isVisible)
             continue;
 
-        if(child.item->y() != voffset)
+        if (child.item->y() != voffset)
             positionY(voffset, child);
 
         contentSize->setWidth(qMax(contentSize->width(), child.item->width()));
@@ -1081,8 +1081,8 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
     //Is allocating the extra QPODVector too much overhead?
     QPODVector<PositionedItem, 8> visibleItems;//we aren't concerned with invisible items
     visibleItems.reserve(positionedItems.count());
-    for(int i=0; i<positionedItems.count(); i++)
-        if(positionedItems[i].item && positionedItems[i].isVisible)
+    for (int i=0; i<positionedItems.count(); i++)
+        if (positionedItems[i].item && positionedItems[i].isVisible)
             visibleItems.append(positionedItems[i]);
 
     int numVisible = visibleItems.count();
@@ -1095,7 +1095,7 @@ void QSGGrid::doPositioning(QSizeF *contentSize)
         c = (numVisible+(m_rows-1))/m_rows;
     }
 
-    if(r==0 || c==0)
+    if (r==0 || c==0)
         return; //Nothing to do
 
     QList<int> maxColWidth;

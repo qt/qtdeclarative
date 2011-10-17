@@ -604,7 +604,7 @@ void QSGKeyNavigationAttached::setDown(QSGItem *i)
     d->downSet = true;
     QSGKeyNavigationAttached* other =
             qobject_cast<QSGKeyNavigationAttached*>(qmlAttachedPropertiesObject<QSGKeyNavigationAttached>(i));
-    if(other && !other->d_func()->upSet){
+    if (other && !other->d_func()->upSet) {
         other->d_func()->up = qobject_cast<QSGItem*>(parent());
         emit other->upChanged();
     }
@@ -626,7 +626,7 @@ void QSGKeyNavigationAttached::setTab(QSGItem *i)
     d->tabSet = true;
     QSGKeyNavigationAttached* other =
             qobject_cast<QSGKeyNavigationAttached*>(qmlAttachedPropertiesObject<QSGKeyNavigationAttached>(i));
-    if(other && !other->d_func()->backtabSet){
+    if (other && !other->d_func()->backtabSet) {
         other->d_func()->backtab = qobject_cast<QSGItem*>(parent());
         emit other->backtabChanged();
     }
@@ -648,7 +648,7 @@ void QSGKeyNavigationAttached::setBacktab(QSGItem *i)
     d->backtabSet = true;
     QSGKeyNavigationAttached* other =
             qobject_cast<QSGKeyNavigationAttached*>(qmlAttachedPropertiesObject<QSGKeyNavigationAttached>(i));
-    if(other && !other->d_func()->tabSet){
+    if (other && !other->d_func()->tabSet) {
         other->d_func()->tab = qobject_cast<QSGItem*>(parent());
         emit other->tabChanged();
     }
@@ -695,7 +695,7 @@ void QSGKeyNavigationAttached::keyPressed(QKeyEvent *event, bool post)
     }
 
     bool mirror = false;
-    switch(event->key()) {
+    switch (event->key()) {
     case Qt::Key_Left: {
         if (QSGItem *parentItem = qobject_cast<QSGItem*>(parent()))
             mirror = QSGItemPrivate::get(parentItem)->effectiveLayoutMirror;
@@ -758,7 +758,7 @@ void QSGKeyNavigationAttached::keyReleased(QKeyEvent *event, bool post)
     }
 
     bool mirror = false;
-    switch(event->key()) {
+    switch (event->key()) {
     case Qt::Key_Left:
         if (QSGItem *parentItem = qobject_cast<QSGItem*>(parent()))
             mirror = QSGItemPrivate::get(parentItem)->effectiveLayoutMirror;
@@ -2697,7 +2697,7 @@ QSGItemPrivate::AnchorLines *QSGItemPrivate::anchorLines() const
 void QSGItemPrivate::siblingOrderChanged()
 {
     Q_Q(QSGItem);
-    for(int ii = 0; ii < changeListeners.count(); ++ii) {
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
         const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
         if (change.types & QSGItemPrivate::SiblingOrder) {
             change.listener->itemSiblingOrderChanged(q);
@@ -2758,7 +2758,7 @@ void QSGItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeomet
     if (d->_anchors)
         QSGAnchorsPrivate::get(d->_anchors)->updateMe();
 
-    for(int ii = 0; ii < d->changeListeners.count(); ++ii) {
+    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         const QSGItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
         if (change.types & QSGItemPrivate::Geometry)
             change.listener->itemGeometryChanged(this, newGeometry, oldGeometry);
@@ -3022,7 +3022,7 @@ void QSGItem::setBaselineOffset(qreal offset)
 
     d->baselineOffset = offset;
 
-    for(int ii = 0; ii < d->changeListeners.count(); ++ii) {
+    for (int ii = 0; ii < d->changeListeners.count(); ++ii) {
         const QSGItemPrivate::ChangeListener &change = d->changeListeners.at(ii);
         if (change.types & QSGItemPrivate::Geometry) {
             QSGAnchorsPrivate *anchor = change.listener->anchorPrivate();
@@ -3272,7 +3272,7 @@ QSGItemPrivate::AnchorLines::AnchorLines(QSGItem *q)
 
 QPointF QSGItemPrivate::computeTransformOrigin() const
 {
-    switch(origin) {
+    switch (origin) {
     default:
     case QSGItem::TopLeft:
         return QPointF(0, 0);
@@ -3377,7 +3377,7 @@ void QSGItemPrivate::deliverMouseEvent(QMouseEvent *e)
 
     Q_ASSERT(e->isAccepted());
 
-    switch(e->type()) {
+    switch (e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
     case QEvent::MouseMove:
@@ -3410,7 +3410,7 @@ void QSGItemPrivate::deliverTouchEvent(QTouchEvent *e)
 void QSGItemPrivate::deliverHoverEvent(QHoverEvent *e)
 {
     Q_Q(QSGItem);
-    switch(e->type()) {
+    switch (e->type()) {
     default:
         Q_ASSERT(!"Unknown event type");
     case QEvent::HoverEnter:
@@ -3775,7 +3775,7 @@ void QSGItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     for (int ii = 0; ii < childItems.count(); ++ii)
         QSGItemPrivate::get(childItems.at(ii))->setEffectiveVisibleRecur(newEffectiveVisible);
 
-    for(int ii = 0; ii < changeListeners.count(); ++ii) {
+    for (int ii = 0; ii < changeListeners.count(); ++ii) {
         const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
         if (change.types & QSGItemPrivate::Visibility)
             change.listener->itemVisibilityChanged(q);
@@ -3929,12 +3929,12 @@ void QSGItemPrivate::derefFromEffectItem(bool unhide)
 void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemChangeData &data)
 {
     Q_Q(QSGItem);
-    switch(change) {
+    switch (change) {
     case QSGItem::ItemChildAddedChange:
         q->itemChange(change, data);
         if (_contents && componentComplete)
             _contents->childAdded(data.item);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Children) {
                 change.listener->itemChildAdded(q, data.item);
@@ -3945,7 +3945,7 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
         q->itemChange(change, data);
         if (_contents && componentComplete)
             _contents->childRemoved(data.item);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Children) {
                 change.listener->itemChildRemoved(q, data.item);
@@ -3957,7 +3957,7 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
         break;
     case QSGItem::ItemVisibleHasChanged:
         q->itemChange(change, data);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Visibility) {
                 change.listener->itemVisibilityChanged(q);
@@ -3966,7 +3966,7 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
         break;
     case QSGItem::ItemParentHasChanged:
         q->itemChange(change, data);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Parent) {
                 change.listener->itemParentChanged(q, data.item);
@@ -3975,7 +3975,7 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
         break;
     case QSGItem::ItemOpacityHasChanged:
         q->itemChange(change, data);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Opacity) {
                 change.listener->itemOpacityChanged(q);
@@ -3987,7 +3987,7 @@ void QSGItemPrivate::itemChange(QSGItem::ItemChange change, const QSGItem::ItemC
         break;
     case QSGItem::ItemRotationHasChanged:
         q->itemChange(change, data);
-        for(int ii = 0; ii < changeListeners.count(); ++ii) {
+        for (int ii = 0; ii < changeListeners.count(); ++ii) {
             const QSGItemPrivate::ChangeListener &change = changeListeners.at(ii);
             if (change.types & QSGItemPrivate::Rotation) {
                 change.listener->itemRotationChanged(q);
@@ -4468,7 +4468,7 @@ void QSGItem::setAcceptHoverEvents(bool enabled)
     d->hoverEnabled = enabled;
 }
 
-void QSGItem::grabMouse() 
+void QSGItem::grabMouse()
 {
     Q_D(QSGItem);
     if (!d->canvas)

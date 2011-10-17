@@ -231,8 +231,8 @@ QString QSGTextEdit::text() const
     \list
     \o Font.MixedCase - This is the normal text rendering option where no capitalization change is applied.
     \o Font.AllUppercase - This alters the text to be rendered in all uppercase type.
-    \o Font.AllLowercase	 - This alters the text to be rendered in all lowercase type.
-    \o Font.SmallCaps -	This alters the text to be rendered in small-caps type.
+    \o Font.AllLowercase - This alters the text to be rendered in all lowercase type.
+    \o Font.SmallCaps - This alters the text to be rendered in small-caps type.
     \o Font.Capitalize - This alters the text to be rendered with the first character of each word as an uppercase character.
     \endlist
 
@@ -361,7 +361,7 @@ void QSGTextEdit::setFont(const QFont &font)
 
     if (oldFont != d->font) {
         d->document->setDefaultFont(d->font);
-        if(d->cursor){
+        if (d->cursor) {
             d->cursor->setHeight(QFontMetrics(d->font).height());
             moveCursorDelegate();
         }
@@ -866,8 +866,8 @@ QDeclarativeComponent* QSGTextEdit::cursorDelegate() const
 void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
 {
     Q_D(QSGTextEdit);
-    if(d->cursorComponent){
-        if(d->cursor){
+    if (d->cursorComponent) {
+        if (d->cursor) {
             d->control->setCursorWidth(-1);
             updateCursor();
             delete d->cursor;
@@ -875,10 +875,10 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
         }
     }
     d->cursorComponent = c;
-    if(c && c->isReady()){
+    if (c && c->isReady()) {
         loadCursorDelegate();
-    }else{
-        if(c)
+    } else {
+        if (c)
             connect(c, SIGNAL(statusChanged()),
                     this, SLOT(loadCursorDelegate()));
     }
@@ -889,12 +889,12 @@ void QSGTextEdit::setCursorDelegate(QDeclarativeComponent* c)
 void QSGTextEdit::loadCursorDelegate()
 {
     Q_D(QSGTextEdit);
-    if(d->cursorComponent->isLoading())
+    if (d->cursorComponent->isLoading())
         return;
     QDeclarativeContext *creationContext = d->cursorComponent->creationContext();
     QObject *object = d->cursorComponent->create(creationContext ? creationContext : qmlContext(this));
     d->cursor = qobject_cast<QSGItem*>(object);
-    if(d->cursor){
+    if (d->cursor) {
         d->control->setCursorWidth(0);
         updateCursor();
         QDeclarative_setParent_noEvent(d->cursor, this);
@@ -1665,7 +1665,7 @@ void QSGTextEdit::moveCursorDelegate()
     d->determineHorizontalAlignment();
     updateMicroFocus();
     emit cursorRectangleChanged();
-    if(!d->cursor)
+    if (!d->cursor)
         return;
     QRectF cursorRect = cursorRectangle();
     d->cursor->setX(cursorRect.x());
@@ -1683,20 +1683,20 @@ void QSGTextEditPrivate::updateSelection()
     cursor.setPosition(lastSelectionEnd, QTextCursor::KeepAnchor);
     cursor.endEditBlock();
     control->setTextCursor(cursor);
-    if(startChange)
+    if (startChange)
         q->selectionStartChanged();
-    if(endChange)
+    if (endChange)
         q->selectionEndChanged();
 }
 
 void QSGTextEdit::updateSelectionMarkers()
 {
     Q_D(QSGTextEdit);
-    if(d->lastSelectionStart != d->control->textCursor().selectionStart()){
+    if (d->lastSelectionStart != d->control->textCursor().selectionStart()) {
         d->lastSelectionStart = d->control->textCursor().selectionStart();
         emit selectionStartChanged();
     }
-    if(d->lastSelectionEnd != d->control->textCursor().selectionEnd()){
+    if (d->lastSelectionEnd != d->control->textCursor().selectionEnd()) {
         d->lastSelectionEnd = d->control->textCursor().selectionEnd();
         emit selectionEndChanged();
     }
@@ -1707,9 +1707,9 @@ QRectF QSGTextEdit::boundingRect() const
     Q_D(const QSGTextEdit);
     QRectF r = QSGImplicitSizeItem::boundingRect();
     int cursorWidth = 1;
-    if(d->cursor)
+    if (d->cursor)
         cursorWidth = d->cursor->width();
-    if(!d->document->isEmpty())
+    if (!d->document->isEmpty())
         cursorWidth += 3;// ### Need a better way of accounting for space between char and cursor
 
     // Could include font max left/right bearings to either side of rectangle.
@@ -1951,7 +1951,7 @@ void QSGTextEdit::openSoftwareInputPanel()
     \endcode
 */
 void QSGTextEdit::closeSoftwareInputPanel()
-{  
+{
     if (qGuiApp)
         qGuiApp->inputPanel()->hide();
 }
@@ -1969,7 +1969,7 @@ void QSGTextEdit::q_canPasteChanged()
     Q_D(QSGTextEdit);
     bool old = d->canPaste;
     d->canPaste = d->control->canPaste();
-    if(old!=d->canPaste)
+    if (old!=d->canPaste)
         emit canPasteChanged();
 }
 

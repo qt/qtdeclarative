@@ -248,7 +248,7 @@ void tst_QSGLoader::clear()
         QSGItem *item = qobject_cast<QSGItem*>(component.create());
         QVERIFY(item);
 
-        QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::childItems().at(0)); 
+        QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::childItems().at(0));
         QVERIFY(loader);
         QVERIFY(loader->item());
         QCOMPARE(loader->progress(), 1.0);
@@ -294,7 +294,7 @@ void tst_QSGLoader::componentToUrl()
     QSGItem *item = qobject_cast<QSGItem*>(component.create());
     QVERIFY(item);
 
-    QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::childItems().at(0)); 
+    QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::childItems().at(0));
     QVERIFY(loader);
     QVERIFY(loader->item());
     QCOMPARE(loader->progress(), 1.0);
@@ -455,7 +455,7 @@ void tst_QSGLoader::networkComponent()
     QSGItem *item = qobject_cast<QSGItem*>(component.create());
     QVERIFY(item);
 
-    QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::children().at(1)); 
+    QSGLoader *loader = qobject_cast<QSGLoader*>(item->QSGItem::children().at(1));
     QVERIFY(loader);
     QTRY_VERIFY(loader->status() == QSGLoader::Ready);
 

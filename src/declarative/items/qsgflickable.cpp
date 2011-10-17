@@ -943,7 +943,7 @@ void QSGFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     // if we drag then pause before release we should not cause a flick.
     qint64 elapsed = QSGItemPrivate::elapsed(lastPosTime);
-     
+
     vData.updateVelocity();
     hData.updateVelocity();
 
@@ -1655,7 +1655,7 @@ bool QSGFlickable::sendMouseEvent(QMouseEvent *event)
 
         mouseEvent.setAccepted(false);
 
-        switch(mouseEvent.type()) {
+        switch (mouseEvent.type()) {
         case QEvent::MouseMove:
             d->handleMouseMoveEvent(&mouseEvent);
             break;

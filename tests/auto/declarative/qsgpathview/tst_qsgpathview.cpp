@@ -514,7 +514,7 @@ void tst_QSGPathView::pathMoved()
     QCOMPARE(firstItem->pos() + offset, start);
     pathview->setOffset(1.0);
 
-    for(int i=0; i<model.count(); i++){
+    for (int i=0; i<model.count(); i++) {
         QSGRectangle *curItem = findItem<QSGRectangle>(pathview, "wrapper", i);
         QPointF itemPos(path->pointAt(0.25 + i*0.25));
         QCOMPARE(curItem->pos() + offset, QPointF(qRound(itemPos.x()), qRound(itemPos.y())));
@@ -1101,7 +1101,7 @@ T *tst_QSGPathView::findItem(QSGItem *parent, const QString &objectName, int ind
     //qDebug() << parent->childItems().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
@@ -1129,7 +1129,7 @@ QList<T*> tst_QSGPathView::findItems(QSGItem *parent, const QString &objectName)
     //qDebug() << parent->QSGItem::children().count() << "children";
     for (int i = 0; i < parent->childItems().count(); ++i) {
         QSGItem *item = qobject_cast<QSGItem*>(parent->childItems().at(i));
-        if(!item)
+        if (!item)
             continue;
         //qDebug() << "try" << item;
         if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName))

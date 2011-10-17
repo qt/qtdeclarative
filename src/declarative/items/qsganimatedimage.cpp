@@ -144,7 +144,7 @@ QSGAnimatedImage::~QSGAnimatedImage()
 bool QSGAnimatedImage::isPaused() const
 {
     Q_D(const QSGAnimatedImage);
-    if(!d->_movie)
+    if (!d->_movie)
         return false;
     return d->_movie->state()==QMovie::Paused;
 }
@@ -152,10 +152,10 @@ bool QSGAnimatedImage::isPaused() const
 void QSGAnimatedImage::setPaused(bool pause)
 {
     Q_D(QSGAnimatedImage);
-    if(pause == d->paused)
+    if (pause == d->paused)
         return;
     d->paused = pause;
-    if(!d->_movie)
+    if (!d->_movie)
         return;
     d->_movie->setPaused(pause);
 }
@@ -179,7 +179,7 @@ bool QSGAnimatedImage::isPlaying() const
 void QSGAnimatedImage::setPlaying(bool play)
 {
     Q_D(QSGAnimatedImage);
-    if(play == d->playing)
+    if (play == d->playing)
         return;
     d->playing = play;
     if (!d->_movie)
@@ -282,11 +282,11 @@ void QSGAnimatedImage::load()
             connect(d->_movie, SIGNAL(frameChanged(int)),
                     this, SLOT(movieUpdate()));
             d->_movie->setCacheMode(QMovie::CacheAll);
-            if(d->playing)
+            if (d->playing)
                 d->_movie->start();
             else
                 d->_movie->jumpToFrame(0);
-            if(d->paused)
+            if (d->paused)
                 d->_movie->setPaused(true);
             d->setPixmap(d->_movie->currentPixmap());
             d->status = Ready;
@@ -347,13 +347,13 @@ void QSGAnimatedImage::movieRequestFinished()
     connect(d->_movie, SIGNAL(frameChanged(int)),
             this, SLOT(movieUpdate()));
     d->_movie->setCacheMode(QMovie::CacheAll);
-    if(d->playing)
+    if (d->playing)
         d->_movie->start();
     if (d->paused || !d->playing) {
         d->_movie->jumpToFrame(d->preset_currentframe);
         d->preset_currentframe = 0;
     }
-    if(d->paused)
+    if (d->paused)
         d->_movie->setPaused(true);
     d->setPixmap(d->_movie->currentPixmap());
     d->status = Ready;
@@ -370,11 +370,11 @@ void QSGAnimatedImage::movieUpdate()
 void QSGAnimatedImage::playingStatusChanged()
 {
     Q_D(QSGAnimatedImage);
-    if((d->_movie->state() != QMovie::NotRunning) != d->playing){
+    if ((d->_movie->state() != QMovie::NotRunning) != d->playing) {
         d->playing = (d->_movie->state() != QMovie::NotRunning);
         emit playingChanged();
     }
-    if((d->_movie->state() == QMovie::Paused) != d->paused){
+    if ((d->_movie->state() == QMovie::Paused) != d->paused) {
         d->playing = (d->_movie->state() == QMovie::Paused);
         emit pausedChanged();
     }
