@@ -47,11 +47,11 @@ import "test.js" as Script
 Rectangle {
     id: root
     width: 10; height: 10;
-    Component.onCompleted: print("onCompleted")
+    Component.onCompleted: { Script.printMessage("onCompleted"); doSomething(); }
 
-    property int result:0
-
+    property int result: 0
     property int someValue: 10
+    property bool raiseException: false
 
     function doSomething() {
         var a = root.result;
@@ -63,7 +63,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 4000; running: true; repeat: true
+        id: timer;  interval: 1
         onTriggered: {
             doSomething();
             Script.printMessage("onTriggered");
@@ -77,10 +77,8 @@ Rectangle {
 
     function doSomethingElse() {
         result = Script.add(result,8);
-        eval("print(root.result)");
-        if (root.result > 15)
+        if (raiseException)
             dummy();
     }
-
 }
 

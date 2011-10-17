@@ -18,3 +18,5 @@ DEPLOYMENT += testDataFiles
 CONFIG += parallel_test
 #temporary
 CONFIG += insignificant_test
+
+OTHER_FILES += data/test.qml data/test.js

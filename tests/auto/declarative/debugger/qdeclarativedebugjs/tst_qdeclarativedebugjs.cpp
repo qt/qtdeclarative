@@ -291,6 +291,10 @@ void QJSDebugProcess::processAppOutput()
                 continue;
             }
         }
+        if (line.startsWith("QDeclarativeDebugServer: Unable to listen on port")) {
+            QFAIL("Application cannot open port 3771: Port is blocked?");
+            break;
+        }
 //        qWarning() << line;
     }
     m_mutex.unlock();
@@ -960,7 +964,7 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
         if (type == "response") {
 
             if (!value.value("success").toBool()) {
-                qDebug() << "Error: The test case will fail since no signal is emitted";
+//                qDebug() << "Error: The test case will fail since no signal is emitted";
                 return;
             }
 
@@ -1169,12 +1173,19 @@ void tst_QDeclarativeDebugJS::setBreakpointInScriptOnCompleted()
 
 void tst_QDeclarativeDebugJS::setBreakpointInScriptOnTimerCallback()
 {
-    //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
-
-    int sourceLine = 67;
-
+    int sourceLine = 49;
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
+    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+
+    client->evaluate("timer.running = true");
+    client->continueDebugging(QJSDebugClient::Continue);
+
+    //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
+
+    sourceLine = 67;
+
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
 
     QString jsonString(client->response);
@@ -1325,6 +1336,10 @@ void tst_QDeclarativeDebugJS::changeBreakpoint()
     client->continueDebugging(QJSDebugClient::Continue);
     //Hit 2nd breakpoint
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+
+    // start timer
+    client->evaluate("timer.running = true");
+
     //Continue with debugging
     client->continueDebugging(QJSDebugClient::Continue);
     //Should stop at 2nd breakpoint
@@ -1367,6 +1382,8 @@ void tst_QDeclarativeDebugJS::changeBreakpointOnCondition()
     client->continueDebugging(QJSDebugClient::Continue);
     //Hit 2nd breakpoint
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    // start timer
+    client->evaluate("timer.running = true");
     //Continue with debugging
     client->continueDebugging(QJSDebugClient::Continue);
     //Should stop at 2nd breakpoint
@@ -1431,6 +1448,8 @@ void tst_QDeclarativeDebugJS::clearBreakpoint()
     client->continueDebugging(QJSDebugClient::Continue);
     //Hit 2nd breakpoint
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
+    // start timer
+    client->evaluate("timer.running = true");
     //Continue with debugging
     client->continueDebugging(QJSDebugClient::Continue);
     //Should stop at 2nd breakpoint
@@ -1448,13 +1467,12 @@ void tst_QDeclarativeDebugJS::setExceptionBreak()
 {
     //void setExceptionBreak(QString type, bool enabled = false);
 
-    client->interrupt();
+    int sourceLine = 49;
+    client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
+    client->setExceptionBreak(QJSDebugClient::All,true);
     client->startDebugging();
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped())));
-
-    client->setExceptionBreak(QJSDebugClient::All,true);
-    QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(result())));
-
+    client->evaluate("root.raiseException = true");
     client->continueDebugging(QJSDebugClient::Continue);
     QVERIFY(QDeclarativeDebugTest::waitForSignal(client, SIGNAL(stopped()), 10000));
 }
@@ -1507,8 +1525,8 @@ void tst_QDeclarativeDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
-    int sourceLine = 67;
-    int actualLine = 56;
+    int sourceLine = 61;
+    int actualLine = 78;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
@@ -1531,7 +1549,7 @@ void tst_QDeclarativeDebugJS::stepOut()
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
 
     int sourceLine = 56;
-    int actualLine = 68;
+    int actualLine = 49;
 
     client->setBreakpoint(QLatin1String(SCRIPT), QLatin1String(QMLFILE), sourceLine, -1, true);
     client->startDebugging();
