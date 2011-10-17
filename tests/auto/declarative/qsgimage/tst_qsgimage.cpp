@@ -475,9 +475,7 @@ void tst_qsgimage::tiling_QTBUG_6716()
     QImage img = canvas->grabFrameBuffer();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
-#ifdef Q_WS_QPA
-            QEXPECT_FAIL("", "QTBUG-21005 fails", Abort);
-#endif
+            QEXPECT_FAIL("horizontal_tiling", "QTBUG-21005 - stable failing test", Abort);
             QVERIFY(img.pixel(x, y) == qRgb(0, 255, 0));
         }
     }
@@ -487,9 +485,7 @@ void tst_qsgimage::tiling_QTBUG_6716()
 void tst_qsgimage::tiling_QTBUG_6716_data()
 {
     QTest::addColumn<QString>("source");
-#ifdef QT_BUILD_INTERNAL // QTBUG-21688 - unstable test on developer build
     QTest::newRow("vertical_tiling") << "vtiling.qml";
-#endif
     QTest::newRow("horizontal_tiling") << "htiling.qml";
 }
 
