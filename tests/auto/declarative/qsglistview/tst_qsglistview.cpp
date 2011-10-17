@@ -686,7 +686,7 @@ void tst_QSGListView::inserted_more()
     TestObject *testObject = new TestObject;
     ctxt->setContextProperty("testObject", testObject);
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("/data/listviewtest.qml")));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("listviewtest.qml")));
     qApp->processEvents();
 
     QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
@@ -1075,7 +1075,7 @@ void tst_QSGListView::moved()
     model.moveItems(from, to, count);
 
     // wait for items to move
-    QTest::qWait(300);
+    QTest::qWait(100);
 
     QList<QSGItem*> items = findItems<QSGItem>(contentItem, "wrapper");
     int firstVisibleIndex = -1;
