@@ -100,6 +100,7 @@ private slots:
     void footer_data();
     void header();
     void header_data();
+    void resizeViewAndRepaint();
     void indexAt();
     void onAdd();
     void onAdd_data();
@@ -2766,6 +2767,39 @@ void tst_QSGGridView::header_data()
         << QPointF(-(240 - 50), 0)
         << QPointF(-80, 0)
         << QPointF(-(240 - 40), 0);
+}
+
+void tst_QSGGridView::resizeViewAndRepaint()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialHeight", 100);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    qApp->processEvents();
+
+    QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
+    QTRY_VERIFY(gridview != 0);
+    QSGItem *contentItem = gridview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // item at index 10 should not be currently visible
+    QVERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    gridview->setHeight(320);
+    QTRY_VERIFY(findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    gridview->setHeight(100);
+    QTRY_VERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    delete canvas;
 }
 
 void tst_QSGGridView::indexAt()

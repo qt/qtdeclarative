@@ -788,6 +788,7 @@ void QSGGridViewPrivate::itemGeometryChanged(QSGItem *item, const QRectF &newGeo
     if (item == q) {
         if (newGeometry.height() != oldGeometry.height() || newGeometry.width() != oldGeometry.width()) {
             updateViewport();
+            forceLayout = true;
             q->polish();
         }
     }

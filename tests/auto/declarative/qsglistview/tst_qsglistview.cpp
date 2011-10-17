@@ -125,6 +125,7 @@ private slots:
     void footer_data();
     void headerFooter();
     void resizeView();
+    void resizeViewAndRepaint();
     void sizeLessThan1();
     void QTBUG_14821();
     void resizeDelegate();
@@ -3255,6 +3256,39 @@ void tst_QSGListView::resizeView()
 
     delete canvas;
     delete testObject;
+}
+
+void tst_QSGListView::resizeViewAndRepaint()
+{
+    QSGView *canvas = createView();
+    canvas->show();
+
+    TestModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QDeclarativeContext *ctxt = canvas->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+    ctxt->setContextProperty("initialHeight", 100);
+
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("resizeview.qml")));
+    qApp->processEvents();
+
+    QSGListView *listview = findItem<QSGListView>(canvas->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QSGItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    // item at index 10 should not be currently visible
+    QVERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    listview->setHeight(320);
+    QTRY_VERIFY(findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    listview->setHeight(100);
+    QTRY_VERIFY(!findItem<QSGItem>(contentItem, "wrapper", 10));
+
+    delete canvas;
 }
 
 void tst_QSGListView::sizeLessThan1()
