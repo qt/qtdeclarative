@@ -444,7 +444,7 @@ void tst_QSGGridView::inserted_more()
     ctxt->setContextProperty("testRightToLeft", QVariant(false));
     ctxt->setContextProperty("testTopToBottom", QVariant(false));
 
-    canvas->setSource(QUrl::fromLocalFile(TESTDATA("/data/gridview1.qml")));
+    canvas->setSource(QUrl::fromLocalFile(TESTDATA("gridview1.qml")));
     qApp->processEvents();
 
     QSGGridView *gridview = findItem<QSGGridView>(canvas->rootObject(), "grid");
