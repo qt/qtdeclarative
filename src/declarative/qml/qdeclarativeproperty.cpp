@@ -1301,7 +1301,7 @@ bool QDeclarativePropertyPrivate::writeBinding(QObject *object,
                                                WriteFlags flags)
 {
     Q_ASSERT(object);
-    Q_ASSERT(core.coreIndex);
+    Q_ASSERT(core.coreIndex != -1);
 
     QDeclarativeContextData *context = expression->context();
     QDeclarativeEngine *engine = context->engine;
