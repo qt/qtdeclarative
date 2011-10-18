@@ -52,14 +52,16 @@ QT_MODULE(Declarative)
 
 class QDeclarativeEngine;
 
-struct Q_DECLARATIVE_EXPORT QDeclarativeTypesExtensionInterface
+class Q_DECLARATIVE_EXPORT QDeclarativeTypesExtensionInterface
 {
+public:
     virtual ~QDeclarativeTypesExtensionInterface() {}
     virtual void registerTypes(const char *uri) = 0;
 };
 
-struct Q_DECLARATIVE_EXPORT QDeclarativeExtensionInterface : public QDeclarativeTypesExtensionInterface
+class Q_DECLARATIVE_EXPORT QDeclarativeExtensionInterface : public QDeclarativeTypesExtensionInterface
 {
+public:
     virtual ~QDeclarativeExtensionInterface() {}
     virtual void initializeEngine(QDeclarativeEngine *engine, const char *uri) = 0;
 };

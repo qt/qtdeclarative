@@ -388,11 +388,11 @@ QSGParticleData::QSGParticleData(QSGParticleSystem* sys)
     , system(sys)
     , index(0)
     , systemIndex(-1)
-    , v8Datum(0)
     , colorOwner(0)
     , rotationOwner(0)
     , deformationOwner(0)
     , animationOwner(0)
+    , v8Datum(0)
 {
     x = 0;
     y = 0;
@@ -617,8 +617,13 @@ void QSGParticleData::extendLife(float time)
 }
 
 QSGParticleSystem::QSGParticleSystem(QSGItem *parent) :
-    QSGItem(parent), particleCount(0), m_running(true), m_paused(false)
-  , m_nextIndex(0), m_componentComplete(false), stateEngine(0)
+    QSGItem(parent),
+    stateEngine(0),
+    m_running(true),
+    particleCount(0),
+    m_nextIndex(0),
+    m_componentComplete(false),
+    m_paused(false)
 {
     connect(&m_painterMapper, SIGNAL(mapped(QObject*)),
             this, SLOT(loadPainter(QObject*)));

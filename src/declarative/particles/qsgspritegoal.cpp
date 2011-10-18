@@ -80,7 +80,12 @@ QT_BEGIN_NAMESPACE
 */
 
 QSGSpriteGoalAffector::QSGSpriteGoalAffector(QSGItem *parent) :
-    QSGParticleAffector(parent), m_goalIdx(-1), m_jump(false), m_systemStates(false), m_lastEngine(0), m_notUsingEngine(false)
+    QSGParticleAffector(parent),
+    m_goalIdx(-1),
+    m_lastEngine(0),
+    m_jump(false),
+    m_systemStates(false),
+    m_notUsingEngine(false)
 {
 }
 

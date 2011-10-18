@@ -187,7 +187,7 @@ QDeclarativeNotifierEndpoint *QDeclarativeData::notify(int index)
 {
     Q_ASSERT(index <= 0xFFFF);
 
-    if (!notifyList || !(notifyList->connectionMask & (1 << (index % 64)))) {
+    if (!notifyList || !(notifyList->connectionMask & (1 << (quint64(index) % 64)))) {
         return 0;
     } else if (index < notifyList->notifiesSize) {
         return notifyList->notifies[index];

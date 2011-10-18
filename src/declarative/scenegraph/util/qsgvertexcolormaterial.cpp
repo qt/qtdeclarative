@@ -145,7 +145,7 @@ QSGVertexColorMaterial::QSGVertexColorMaterial()
     \internal
  */
 
-int QSGVertexColorMaterial::compare(const QSGMaterial *other) const
+int QSGVertexColorMaterial::compare(const QSGMaterial * /* other */) const
 {
     return 0;
 }

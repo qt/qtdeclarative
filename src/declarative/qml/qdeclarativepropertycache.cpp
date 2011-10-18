@@ -338,8 +338,12 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
         // Extract method name
         const char *signature = m.signature();
         const char *cptr = signature;
-        bool utf8 = false;
-        while (*cptr != '(') { Q_ASSERT(*cptr != 0); utf8 |= *cptr & 0x80; ++cptr; }
+        char utf8 = 0;
+        while (*cptr != '(') {
+            Q_ASSERT(*cptr != 0);
+            utf8 |= *cptr & 0x80;
+            ++cptr;
+        }
 
         Data *data = &methodIndexCache[ii - methodIndexCacheStart];
         Data *sigdata = 0;
@@ -417,9 +421,12 @@ void QDeclarativePropertyCache::append(QDeclarativeEngine *engine, const QMetaOb
             continue;
 
         const char *str = p.name();
-        bool utf8 = false;
+        char utf8 = 0;
         const char *cptr = str;
-        while (*cptr != 0) { utf8 |= *cptr & 0x80; ++cptr; }
+        while (*cptr != 0) {
+            utf8 |= *cptr & 0x80;
+            ++cptr;
+        }
 
         Data *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 

@@ -101,8 +101,9 @@ private:
         QV4Bindings *parent;
     };
 
-    struct Subscription : public QDeclarativeNotifierEndpoint
+    class Subscription : public QDeclarativeNotifierEndpoint
     {
+    public:
         Subscription() : bindings(0), method(-1) { callback = &subscriptionCallback; }
         static void subscriptionCallback(QDeclarativeNotifierEndpoint *e);
         QV4Bindings *bindings;

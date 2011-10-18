@@ -226,7 +226,6 @@ QImage QSGSpriteEngine::assembledImage()
         if (!state->m_frameWidth)
             state->m_frameWidth = img.width() / state->frames();
 
-        int imgHeight = state->frameHeight();
         if (!state->m_frameHeight)
             state->m_frameHeight = img.height();
 
@@ -446,7 +445,7 @@ int QSGStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
                 return *(options.begin());
             int option = -1;
             qreal r =(qreal) qrand() / (qreal) RAND_MAX;
-            qreal total;
+            qreal total = 0;
             for (QSet<int>::const_iterator iter=options.constBegin();
                 iter!=options.constEnd(); iter++)
                 total += curState->m_to.value(m_states[(*iter)]->name()).toReal();

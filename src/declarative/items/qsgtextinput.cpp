@@ -1359,10 +1359,12 @@ QVariant QSGTextInput::inputMethodQuery(Qt::InputMethodQuery property) const
     case Qt::ImCursorPosition:
         return QVariant(d->control->cursor());
     case Qt::ImSurroundingText:
-        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit && !d->control->passwordEchoEditing())
+        if (d->control->echoMode() == QLineControl::PasswordEchoOnEdit
+            && !d->control->passwordEchoEditing()) {
             return QVariant(displayText());
-        else
+        } else {
             return QVariant(text());
+        }
     case Qt::ImCurrentSelection:
         return QVariant(selectedText());
     case Qt::ImMaximumTextLength:

@@ -340,7 +340,6 @@ QSGContext2D::State QSGContext2DCommandBuffer::replay(QPainter* p, QSGContext2D:
             break;
         case QSGContext2D::Fill:
         {
-            bool hasPattern = p->brush().style() == Qt::TexturePattern;
             QPainterPath path = takePath();
             path.closeSubpath();
             if (HAS_SHADOW(state.shadowOffsetX, state.shadowOffsetY, state.shadowBlur, state.shadowColor))

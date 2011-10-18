@@ -203,6 +203,11 @@ QVariant QV8Engine::toVariant(v8::Handle<v8::Value> value, int typeHint)
         QV8ObjectResource *r = (QV8ObjectResource *)value->ToObject()->GetExternalResource();
         if (r) {
             switch (r->resourceType()) {
+            case QV8ObjectResource::Context2DStyleType:
+            case QV8ObjectResource::Context2DPixelArrayType:
+            case QV8ObjectResource::SignalHandlerType:
+            case QV8ObjectResource::IncubatorType:
+            case QV8ObjectResource::VisualDataItemType:
             case QV8ObjectResource::ContextType:
             case QV8ObjectResource::XMLHttpRequestType:
             case QV8ObjectResource::DOMNodeType:

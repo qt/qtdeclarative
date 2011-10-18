@@ -182,8 +182,8 @@ void QSGContext2DTexture::canvasChanged(const QSize& canvasSize, const QSize& ti
     if (ts.height() > canvasSize.height())
         ts.setHeight(canvasSize.height());
 
-    bool canvasChanged = setCanvasSize(canvasSize);
-    bool tileChanged = setTileSize(ts);
+    setCanvasSize(canvasSize);
+    setTileSize(ts);
 
     if (canvasSize == canvasWindow.size()) {
         m_tiledCanvas = false;

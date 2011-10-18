@@ -1111,7 +1111,7 @@ void QDeclarativeData::addNotify(int index, QDeclarativeNotifierEndpoint *endpoi
     Q_ASSERT(!endpoint->isConnected());
 
     index = qMin(index, 0xFFFF - 1);
-    notifyList->connectionMask |= (1 << (index % 64));
+    notifyList->connectionMask |= (1 << (quint64(index) % 64));
 
     if (index < notifyList->notifiesSize) {
 
