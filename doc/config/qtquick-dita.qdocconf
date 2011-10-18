@@ -7,9 +7,21 @@ project = Qt Quick
 # Images should be placed in <rootdir>/dic/images and examples in
 # <rootdir>/examples.
 # Paths are relative to the  location of this file.
-exampledirs += ../src/examples
-headerdirs += ../src
-sourcedirs += ../src
+exampledirs += ../src/examples \
+               ../.. \
+               ../../examples
+
+headerdirs += ../src \
+              ../../src
+
+imagedirs += ../src/images \
+
+sourcedirs += ../src \
+              ../../src
+
+excludedirs += ../src/qtquick1 \
+               ../../src/qtquick1
+
 
 
 
