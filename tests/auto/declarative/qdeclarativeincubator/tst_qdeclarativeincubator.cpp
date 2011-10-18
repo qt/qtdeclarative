@@ -51,6 +51,7 @@
 #include <QDeclarativeComponent>
 #include <QDeclarativeIncubator>
 #include "../shared/util.h"
+#include "../../../shared/util.h"
 
 inline QUrl TEST_FILE(const QString &filename)
 {
@@ -83,6 +84,7 @@ private slots:
     void asynchronousIfNested();
     void nestedComponent();
     void chainedAsynchronousIfNested();
+    void selfDelete();
 
 private:
     QDeclarativeIncubationController controller;
@@ -770,6 +772,79 @@ void tst_qdeclarativeincubator::chainedAsynchronousIfNested()
     QVERIFY(incubator.isReady());
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
+}
+
+void tst_qdeclarativeincubator::selfDelete()
+{
+    struct MyIncubator : public QDeclarativeIncubator {
+        MyIncubator(bool *done, Status status, IncubationMode mode)
+        : QDeclarativeIncubator(mode), done(done), status(status) {}
+
+    protected:
+        virtual void statusChanged(Status s) {
+            if (s == status) {
+                *done = true;
+                if (s == Ready) delete object();
+                delete this;
+            }
+        }
+
+    private:
+        bool *done;
+        Status status;
+    };
+
+    {
+    QDeclarativeComponent component(&engine, TEST_FILE("selfDelete.qml"));
+
+#define DELETE_TEST(status, mode) { \
+    bool done = false; \
+    component.create(*(new MyIncubator(&done, status, mode))); \
+    bool True = true; \
+    controller.incubateWhile(&True); \
+    QVERIFY(done == true); \
+    }
+
+    DELETE_TEST(QDeclarativeIncubator::Loading, QDeclarativeIncubator::Synchronous);
+    DELETE_TEST(QDeclarativeIncubator::Ready, QDeclarativeIncubator::Synchronous);
+    DELETE_TEST(QDeclarativeIncubator::Loading, QDeclarativeIncubator::Asynchronous);
+    DELETE_TEST(QDeclarativeIncubator::Ready, QDeclarativeIncubator::Asynchronous);
+
+#undef DELETE_TEST
+    }
+
+    // Delete within error status
+    {
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeComponent component(&engine, TEST_FILE("objectDeleted.qml"));
+    QVERIFY(component.isReady());
+
+    bool done = false;
+    MyIncubator *incubator = new MyIncubator(&done, QDeclarativeIncubator::Error,
+                                             QDeclarativeIncubator::Asynchronous);
+    component.create(*incubator);
+
+    QCOMPARE(incubator->QDeclarativeIncubator::status(), QDeclarativeIncubator::Loading);
+    QVERIFY(SelfRegisteringType::me() == 0);
+
+    while (SelfRegisteringType::me() == 0 && incubator->isLoading()) {
+        bool b = false;
+        controller.incubateWhile(&b);
+    }
+
+    QVERIFY(SelfRegisteringType::me() != 0);
+    QVERIFY(incubator->isLoading());
+
+    delete SelfRegisteringType::me();
+
+    {
+    bool b = true;
+    controller.incubateWhile(&b);
+    }
+
+    QVERIFY(done);
+    }
 }
 
 QTEST_MAIN(tst_qdeclarativeincubator)

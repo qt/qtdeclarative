@@ -83,14 +83,21 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
 
     inProgressCreations++;
 
-    p->changeStatus(QDeclarativeIncubator::Loading);
-
     if (mode == QDeclarativeIncubator::Synchronous) {
-        QDeclarativeVME::Interrupt i;
-        p->incubate(i);
+        typedef QDeclarativeIncubatorPrivate IP;
+        QRecursionWatcher<IP, &IP::recursion> watcher(p);
+
+        p->changeStatus(QDeclarativeIncubator::Loading);
+
+        if (!watcher.hasRecursed()) {
+            QDeclarativeVME::Interrupt i;
+            p->incubate(i);
+        }
     } else {
         incubatorList.insert(p);
         incubatorCount++;
+
+        p->changeStatus(QDeclarativeIncubator::Loading);
 
         if (incubationController)
             incubationController->incubatingObjectCountChanged(incubatorCount);
