@@ -157,10 +157,6 @@ private:
     void animationSpeedChangeRequested(qreal factor);
     void animationPausedChangeRequested(bool paused);
 
-    void setToolBoxVisible(bool visible);
-    void createToolBox();
-
-    ToolBox *m_toolBox;
     AbstractTool *m_currentTool;
 
     bool m_showAppOnTop;
