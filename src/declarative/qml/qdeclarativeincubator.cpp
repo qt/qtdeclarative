@@ -313,13 +313,21 @@ void QDeclarativeIncubatorPrivate::incubate(QDeclarativeVME::Interrupt &i)
 
 finishIncubate:
     if (progress == QDeclarativeIncubatorPrivate::Completed && waitingFor.isEmpty()) {
+        typedef QDeclarativeIncubatorPrivate IP;
+
         QDeclarativeIncubatorPrivate *isWaiting = waitingOnMe;
         clear();
-        if (isWaiting) isWaiting->incubate(i); 
+
+        if (isWaiting) {
+            QRecursionWatcher<IP, &IP::recursion> watcher(isWaiting);
+            changeStatus(calculateStatus());
+            if (!watcher.hasRecursed())
+                isWaiting->incubate(i);
+        } else {
+            changeStatus(calculateStatus());
+        }
 
         enginePriv->inProgressCreations--;
-
-        changeStatus(calculateStatus());
 
         if (0 == enginePriv->inProgressCreations) {
             while (enginePriv->erroredBindings) {
