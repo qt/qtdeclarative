@@ -68,7 +68,8 @@ public:
     void reloadView();
     void reparentQmlObject(QObject *object, QObject *newParent);
     void changeTool(InspectorProtocol::Tool tool);
-    QWidget *viewWidget() const;
+    Qt::WindowFlags windowFlags() const;
+    void setWindowFlags(Qt::WindowFlags flags);
     QDeclarativeEngine *declarativeEngine() const;
 
     QSGView *view() const { return m_view; }

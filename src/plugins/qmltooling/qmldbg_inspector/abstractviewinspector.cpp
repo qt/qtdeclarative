@@ -154,17 +154,13 @@ void AbstractViewInspector::animationPausedChangeRequested(bool paused)
 
 void AbstractViewInspector::setShowAppOnTop(bool appOnTop)
 {
-    if (viewWidget()) {
-        QWidget *window = viewWidget()->window();
-        Qt::WindowFlags flags = window->windowFlags();
-        if (appOnTop)
-            flags |= Qt::WindowStaysOnTopHint;
-        else
-            flags &= ~Qt::WindowStaysOnTopHint;
+    Qt::WindowFlags flags = windowFlags();
+    if (appOnTop)
+        flags |= Qt::WindowStaysOnTopHint;
+    else
+        flags &= ~Qt::WindowStaysOnTopHint;
 
-        window->setWindowFlags(flags);
-        window->show();
-    }
+    setWindowFlags(flags);
 
     m_showAppOnTop = appOnTop;
     sendShowAppOnTop(appOnTop);

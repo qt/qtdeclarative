@@ -49,12 +49,7 @@
 #include "editor/boundingrecthighlighter.h"
 
 #include <QtQuick1/QDeclarativeItem>
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeContext>
-#include <QtDeclarative/QDeclarativeExpression>
-#include <QtWidgets/QWidget>
 #include <QtGui/QMouseEvent>
-#include <QtWidgets/QGraphicsObject>
 
 namespace QmlJSDebugger {
 
@@ -139,6 +134,17 @@ void QDeclarativeViewInspector::changeTool(InspectorProtocol::Tool tool)
         data->changeToZoomTool();
         break;
     }
+}
+
+Qt::WindowFlags QDeclarativeViewInspector::windowFlags() const
+{
+    return declarativeView()->window()->windowFlags();
+}
+
+void QDeclarativeViewInspector::setWindowFlags(Qt::WindowFlags flags)
+{
+    declarativeView()->window()->setWindowFlags(flags);
+    declarativeView()->window()->show();
 }
 
 AbstractLiveEditTool *QDeclarativeViewInspector::currentTool() const
