@@ -82,8 +82,28 @@ void CompletionRegisteringType::clearMe()
     m_me = 0;
 }
 
+CallbackRegisteringType::callback CallbackRegisteringType::m_callback = 0;
+void *CallbackRegisteringType::m_data = 0;
+CallbackRegisteringType::CallbackRegisteringType()
+: m_v(0)
+{
+}
+
+void CallbackRegisteringType::clearCallback()
+{
+    m_callback = 0;
+    m_data = 0;
+}
+
+void CallbackRegisteringType::registerCallback(callback c, void *d)
+{
+    m_callback = c;
+    m_data = d;
+}
+
 void registerTypes()
 {
     qmlRegisterType<SelfRegisteringType>("Qt.test", 1,0, "SelfRegistering");
     qmlRegisterType<CompletionRegisteringType>("Qt.test", 1,0, "CompletionRegistering");
+    qmlRegisterType<CallbackRegisteringType>("Qt.test", 1,0, "CallbackRegistering");
 }

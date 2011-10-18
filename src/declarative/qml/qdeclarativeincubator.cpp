@@ -72,12 +72,14 @@ void QDeclarativeEnginePrivate::incubate(QDeclarativeIncubator &i, QDeclarativeC
             cctxt = cctxt->parent;
         }
 
-        if (parentIncubator && parentIncubator->mode != QDeclarativeIncubator::Synchronous) {
+        if (parentIncubator && parentIncubator->isAsynchronous) {
             mode = QDeclarativeIncubator::Asynchronous;
             p->waitingOnMe = parentIncubator;
             parentIncubator->waitingFor.insert(p);
         }
     }
+
+    p->isAsynchronous = (mode != QDeclarativeIncubator::Synchronous);
 
     inProgressCreations++;
 
@@ -121,8 +123,8 @@ QDeclarativeIncubationController *QDeclarativeEngine::incubationController() con
 
 QDeclarativeIncubatorPrivate::QDeclarativeIncubatorPrivate(QDeclarativeIncubator *q, 
                                                            QDeclarativeIncubator::IncubationMode m)
-: q(q), status(QDeclarativeIncubator::Null), mode(m), progress(Execute), result(0), component(0), 
-  vme(this), waitingOnMe(0)
+: q(q), status(QDeclarativeIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
+  result(0), component(0), vme(this), waitingOnMe(0)
 {
 }
 

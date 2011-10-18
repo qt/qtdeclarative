@@ -63,6 +63,27 @@ private:
     int m_v;
 };
 
+class CallbackRegisteringType : public QObject
+{
+Q_OBJECT
+Q_PROPERTY(int value READ value WRITE setValue)
+public:
+    CallbackRegisteringType();
+
+    int value() const { return m_v; }
+    void setValue(int v) { if (m_callback) m_callback(this, m_data); m_v = v; }
+
+    typedef void (*callback)(CallbackRegisteringType *, void *);
+    static void clearCallback();
+    static void registerCallback(callback, void *);
+
+private:
+    static callback m_callback;
+    static void *m_data;
+
+    int m_v;
+};
+
 class CompletionRegisteringType : public QObject, public QDeclarativeParserStatus
 {
 Q_OBJECT

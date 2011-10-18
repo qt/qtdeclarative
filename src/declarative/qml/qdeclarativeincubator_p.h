@@ -75,6 +75,7 @@ public:
     QDeclarativeIncubator::Status status;
 
     QDeclarativeIncubator::IncubationMode mode;
+    bool isAsynchronous;
 
     QList<QDeclarativeError> errors;
 

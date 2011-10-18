@@ -614,6 +614,46 @@ void tst_qdeclarativeincubator::asynchronousIfNested()
     delete nested.object();
     delete incubator.object();
     }
+
+    // AsynchronousIfNested within a synchronous AsynchronousIfNested behaves synchronously
+    {
+    SelfRegisteringType::clearMe();
+
+    QDeclarativeComponent component(&engine, TEST_FILE("asynchronousIfNested.3.qml"));
+    QVERIFY(component.isReady());
+
+    struct CallbackData {
+        CallbackData(QDeclarativeEngine *e) : engine(e), pass(false) {}
+        QDeclarativeEngine *engine;
+        bool pass;
+        static void callback(CallbackRegisteringType *o, void *data) {
+            CallbackData *d = (CallbackData *)data;
+
+            QDeclarativeComponent c(d->engine, TEST_FILE("asynchronousIfNested.1.qml"));
+            if (!c.isReady()) return;
+
+            QDeclarativeIncubator incubator(QDeclarativeIncubator::AsynchronousIfNested);
+            c.create(incubator, 0, qmlContext(o));
+
+            if (!incubator.isReady()) return;
+
+            if (incubator.object()->property("a").toInt() != 10) return;
+
+            d->pass = true;
+        }
+    };
+
+    CallbackData cd(&engine);
+    CallbackRegisteringType::registerCallback(&CallbackData::callback, &cd);
+
+    QDeclarativeIncubator incubator(QDeclarativeIncubator::AsynchronousIfNested);
+    component.create(incubator);
+
+    QVERIFY(incubator.isReady());
+    QCOMPARE(cd.pass, true);
+
+    delete incubator.object();
+    }
 }
 
 void tst_qdeclarativeincubator::nestedComponent()
