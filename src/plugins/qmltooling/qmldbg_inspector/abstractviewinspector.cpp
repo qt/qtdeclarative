@@ -47,14 +47,11 @@
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeComponent>
 #include <QtCore/private/qabstractanimation_p.h>
-#include "QtDeclarative/private/qdeclarativeinspectorservice_p.h"
+#include <QtDeclarative/private/qdeclarativeinspectorservice_p.h>
 
-#include <QtWidgets/QVBoxLayout>
 #include <QtGui/QMouseEvent>
-#include <QtCore/QSettings>
 
 namespace QmlJSDebugger {
-
 
 
 AbstractViewInspector::AbstractViewInspector(QObject *parent) :

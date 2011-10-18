@@ -124,10 +124,6 @@ SGViewInspector::SGViewInspector(QQuickView *view, QObject *parent) :
     // Try to make sure the overlay is always on top
     m_overlay->setZ(FLT_MAX);
 
-    // TODO
-    // Make sure mouse hover events are received
-//    m_view->setMouseTracking(true);
-
     if (QQuickItem *root = view->rootItem())
         m_overlay->setParentItem(root);
 
