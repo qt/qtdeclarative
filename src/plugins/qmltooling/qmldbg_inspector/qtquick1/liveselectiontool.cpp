@@ -42,7 +42,7 @@
 #include "liveselectiontool.h"
 #include "livelayeritem.h"
 
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 
 #include <QtWidgets/QApplication>
 #include <QtGui/QWheelEvent>

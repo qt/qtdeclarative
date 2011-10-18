@@ -41,7 +41,7 @@
 
 #include "zoomtool.h"
 
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 
 #include <QtGui/QMouseEvent>
 #include <QtGui/QWheelEvent>

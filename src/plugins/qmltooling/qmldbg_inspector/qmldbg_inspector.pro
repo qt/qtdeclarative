@@ -11,18 +11,18 @@ QTDIR_build:REQUIRES += "contains(QT_CONFIG, declarative)"
 SOURCES += \
     abstractviewinspector.cpp \
     qdeclarativeinspectorplugin.cpp \
-    qdeclarativeviewinspector.cpp \
-    editor/abstractliveedittool.cpp \
-    editor/liveselectiontool.cpp \
-    editor/livelayeritem.cpp \
-    editor/livesingleselectionmanipulator.cpp \
-    editor/liverubberbandselectionmanipulator.cpp \
-    editor/liveselectionrectangle.cpp \
-    editor/liveselectionindicator.cpp \
-    editor/boundingrecthighlighter.cpp \
-    editor/subcomponentmasklayeritem.cpp \
-    editor/zoomtool.cpp \
-    editor/colorpickertool.cpp \
+    qtquick1/qdeclarativeviewinspector.cpp \
+    qtquick1/abstractliveedittool.cpp \
+    qtquick1/liveselectiontool.cpp \
+    qtquick1/livelayeritem.cpp \
+    qtquick1/livesingleselectionmanipulator.cpp \
+    qtquick1/liverubberbandselectionmanipulator.cpp \
+    qtquick1/liveselectionrectangle.cpp \
+    qtquick1/liveselectionindicator.cpp \
+    qtquick1/boundingrecthighlighter.cpp \
+    qtquick1/subcomponentmasklayeritem.cpp \
+    qtquick1/zoomtool.cpp \
+    qtquick1/colorpickertool.cpp \
     abstracttool.cpp \
     sgviewinspector.cpp \
     sgselectiontool.cpp \
@@ -32,20 +32,20 @@ HEADERS += \
     abstractviewinspector.h \
     qdeclarativeinspectorplugin.h \
     qdeclarativeinspectorprotocol.h \
-    qdeclarativeviewinspector.h \
-    qdeclarativeviewinspector_p.h \
     qmlinspectorconstants.h \
-    editor/abstractliveedittool.h \
-    editor/liveselectiontool.h \
-    editor/livelayeritem.h \
-    editor/livesingleselectionmanipulator.h \
-    editor/liverubberbandselectionmanipulator.h \
-    editor/liveselectionrectangle.h \
-    editor/liveselectionindicator.h \
-    editor/boundingrecthighlighter.h \
-    editor/subcomponentmasklayeritem.h \
-    editor/zoomtool.h \
-    editor/colorpickertool.h \
+    qtquick1/qdeclarativeviewinspector.h \
+    qtquick1/qdeclarativeviewinspector_p.h \
+    qtquick1/abstractliveedittool.h \
+    qtquick1/liveselectiontool.h \
+    qtquick1/livelayeritem.h \
+    qtquick1/livesingleselectionmanipulator.h \
+    qtquick1/liverubberbandselectionmanipulator.h \
+    qtquick1/liveselectionrectangle.h \
+    qtquick1/liveselectionindicator.h \
+    qtquick1/boundingrecthighlighter.h \
+    qtquick1/subcomponentmasklayeritem.h \
+    qtquick1/zoomtool.h \
+    qtquick1/colorpickertool.h \
     abstracttool.h \
     sgviewinspector.h \
     sgselectiontool.h \

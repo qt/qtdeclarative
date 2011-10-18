@@ -41,7 +41,7 @@
 
 #include "boundingrecthighlighter.h"
 
-#include "../qdeclarativeviewinspector.h"
+#include "qdeclarativeviewinspector.h"
 #include "../qmlinspectorconstants.h"
 
 #include <QtWidgets/QGraphicsPolygonItem>

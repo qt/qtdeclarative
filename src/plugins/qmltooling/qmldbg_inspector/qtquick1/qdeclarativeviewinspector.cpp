@@ -42,11 +42,11 @@
 #include "qdeclarativeviewinspector.h"
 #include "qdeclarativeviewinspector_p.h"
 
-#include "editor/liveselectiontool.h"
-#include "editor/zoomtool.h"
-#include "editor/colorpickertool.h"
-#include "editor/livelayeritem.h"
-#include "editor/boundingrecthighlighter.h"
+#include "liveselectiontool.h"
+#include "zoomtool.h"
+#include "colorpickertool.h"
+#include "livelayeritem.h"
+#include "boundingrecthighlighter.h"
 
 #include <QtQuick1/QDeclarativeItem>
 #include <QtGui/QMouseEvent>

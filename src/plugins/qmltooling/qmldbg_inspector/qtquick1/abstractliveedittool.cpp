@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 #include "abstractliveedittool.h"
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 
 #include <QDeclarativeEngine>
 

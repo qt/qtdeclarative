@@ -41,7 +41,7 @@
 
 #include "qdeclarativeinspectorplugin.h"
 
-#include "qdeclarativeviewinspector_p.h"
+#include "qtquick1/qdeclarativeviewinspector_p.h"
 #include "sgviewinspector.h"
 
 #include <QtCore/qplugin.h>

@@ -41,7 +41,7 @@
 
 #include "livesingleselectionmanipulator.h"
 
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 
 #include <QtDebug>
 

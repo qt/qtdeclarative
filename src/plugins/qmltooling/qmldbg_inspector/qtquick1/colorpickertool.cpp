@@ -41,7 +41,7 @@
 
 #include "colorpickertool.h"
 
-#include "../qdeclarativeviewinspector.h"
+#include "qdeclarativeviewinspector.h"
 
 #include <QtGui/QMouseEvent>
 #include <QtGui/QKeyEvent>

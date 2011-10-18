@@ -41,7 +41,7 @@
 
 #include "liverubberbandselectionmanipulator.h"
 
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 
 #include <QtWidgets/QGraphicsItem>
 

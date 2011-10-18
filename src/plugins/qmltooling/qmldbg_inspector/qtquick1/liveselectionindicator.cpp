@@ -41,7 +41,7 @@
 
 #include "liveselectionindicator.h"
 
-#include "../qdeclarativeviewinspector_p.h"
+#include "qdeclarativeviewinspector_p.h"
 #include "../qmlinspectorconstants.h"
 
 #include <QtWidgets/QGraphicsRectItem>

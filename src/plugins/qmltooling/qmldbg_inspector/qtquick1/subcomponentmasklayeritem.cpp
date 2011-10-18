@@ -42,7 +42,7 @@
 #include "subcomponentmasklayeritem.h"
 
 #include "../qmlinspectorconstants.h"
-#include "../qdeclarativeviewinspector.h"
+#include "qdeclarativeviewinspector.h"
 
 #include <QtGui/QPolygonF>
 
