@@ -1917,7 +1917,7 @@ void tst_qdeclarativetextedit::copyAndPaste() {
         if (status == noErr)
             CFRelease(pasteboard);
         else
-            QSKIP("This machine doesn't support the clipboard", SkipAll);
+            QSKIP("This machine doesn't support the clipboard");
     }
 #endif
 

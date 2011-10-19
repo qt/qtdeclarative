@@ -169,7 +169,7 @@ void tst_qsganimatedimage::mirror_running()
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
     QPixmap frame0_flipped = QPixmap::fromImage(canvas->grabFrameBuffer());
 
-    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved");
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -207,7 +207,7 @@ void tst_qsganimatedimage::mirror_notRunning()
     anim->setProperty("mirror", true);
     screenshot = QPixmap::fromImage(canvas->grabFrameBuffer());
 
-    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved", SkipSingle);
+    QSKIP("Skip while QTBUG-19351 and QTBUG-19252 are not resolved");
     QCOMPARE(screenshot, expected);
 
     // mirroring should not change the current frame or playing status

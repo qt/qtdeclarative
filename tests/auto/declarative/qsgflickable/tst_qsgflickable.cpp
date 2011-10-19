@@ -534,7 +534,7 @@ void tst_qsgflickable::disabled()
 void tst_qsgflickable::flickVelocity()
 {
 #ifdef Q_WS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems", SkipAll);
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
 
     QSGView *canvas = new QSGView;

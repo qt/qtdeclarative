@@ -701,7 +701,7 @@ void tst_QJSEngine::newVariant_promoteObject()
         QVERIFY(object.property("foo").isObject());
         QVERIFY(!object.property("foo").isVariant());
         QScriptValue originalProto = object.property("foo").prototype();
-        QSKIP("It is not possible to promote plain object to a wrapper", SkipAll);
+        QSKIP("It is not possible to promote plain object to a wrapper");
         QScriptValue ret = eng.newVariant(object.property("foo"), QVariant(123));
         QVERIFY(ret.isValid());
         QVERIFY(ret.strictlyEquals(object.property("foo")));
@@ -781,7 +781,7 @@ void tst_QJSEngine::newVariant_promoteNonObject()
 
 void tst_QJSEngine::newVariant_promoteNonQScriptObject()
 {
-    QSKIP("This test relay on limitation of QtScript JSC implementation", SkipAll);
+    QSKIP("This test relay on limitation of QtScript JSC implementation");
     QScriptEngine eng;
     {
         QTest::ignoreMessage(QtWarningMsg, "QScriptEngine::newVariant(): changing class of non-QScriptObject not supported");
@@ -1073,7 +1073,7 @@ void tst_QJSEngine::newQObject_promoteObject()
 void tst_QJSEngine::newQObject_sameQObject()
 {
 #if 0 // ###FIXME: No QObjectWrapOptions API
-    QSKIP("This test stongly relay on strictlyEquals feature that would change in near future", SkipAll);
+    QSKIP("This test stongly relay on strictlyEquals feature that would change in near future");
     QScriptEngine eng;
     // calling newQObject() several times with same object
     for (int x = 0; x < 2; ++x) {
@@ -1151,7 +1151,7 @@ void tst_QJSEngine::newQObject_promoteNonObject()
 void tst_QJSEngine::newQObject_promoteNonQScriptObject()
 {
 #if 0 // ### FIXME: object promotion is not supported
-    QSKIP("Promotion of non QScriptObjects kind of works (there is not difference between Object and Array, look at comments in newQObject implementation).", SkipAll);
+    QSKIP("Promotion of non QScriptObjects kind of works (there is not difference between Object and Array, look at comments in newQObject implementation).");
     QScriptEngine eng;
     {
         QTest::ignoreMessage(QtWarningMsg, "QScriptEngine::newQObject(): changing class of non-QScriptObject not supported");
@@ -1319,7 +1319,7 @@ void tst_QJSEngine::newQMetaObject()
 #if 0 // ###FIXME: No activation object support
 void tst_QJSEngine::newActivationObject()
 {
-    QSKIP("internal function not implemented in JSC-based back-end", SkipAll);
+    QSKIP("internal function not implemented in JSC-based back-end");
     QScriptEngine eng;
     QScriptValue act = eng.newActivationObject();
     QEXPECT_FAIL("", "", Continue);
@@ -3776,7 +3776,7 @@ void tst_QJSEngine::abortEvaluation()
 
 void tst_QJSEngine::abortEvaluation_tryCatch()
 {
-    QSKIP("It crashes", SkipAll);
+    QSKIP("It crashes");
     QScriptEngine eng;
     EventReceiver3 receiver(&eng);
     eng.setProcessEventsInterval(100);
@@ -4876,7 +4876,7 @@ void tst_QJSEngine::jsFutureReservedWords_data()
 
 void tst_QJSEngine::jsFutureReservedWords()
 {
-    QSKIP("Fails", SkipAll);
+    QSKIP("Fails");
     // See ECMA-262 Section 7.6.1.2, "Future Reserved Words".
     // In real-world implementations, most of these words are
     // actually allowed as normal identifiers.

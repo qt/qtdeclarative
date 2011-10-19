@@ -420,7 +420,7 @@ void tst_qsgtextedit::alignments_data()
 
 void tst_qsgtextedit::alignments()
 {
-    QSKIP("Image comparison of text is almost guaranteed to fail during development", SkipAll);
+    QSKIP("Image comparison of text is almost guaranteed to fail during development");
 
     QFETCH(int, hAlign);
     QFETCH(int, vAlign);
@@ -1800,7 +1800,7 @@ void tst_qsgtextedit::copyAndPaste() {
         if (status == noErr)
             CFRelease(pasteboard);
         else
-            QSKIP("This machine doesn't support the clipboard", SkipAll);
+            QSKIP("This machine doesn't support the clipboard");
     }
 #endif
 

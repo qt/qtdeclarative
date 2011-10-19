@@ -352,7 +352,7 @@ void tst_qsgimage::mirror()
 void tst_qsgimage::svg()
 {
     if (!QImageReader::supportedImageFormats().contains("svg"))
-        QSKIP("svg support not available", SkipAll);
+        QSKIP("svg support not available");
 
     QString src = QUrl::fromLocalFile(TESTDATA("heart.svg")).toString();
     QString componentStr = "import QtQuick 2.0\nImage { source: \"" + src + "\"; sourceSize.width: 300; sourceSize.height: 300 }";

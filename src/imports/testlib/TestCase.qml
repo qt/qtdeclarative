@@ -307,14 +307,15 @@ Item {
     function skip(msg) {
         if (msg === undefined)
             msg = ""
-        qtest_results.skipSingle(msg, util.callerFile(), util.callerLine())
+        qtest_results.skip(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 
     function skipAll(msg) {
         if (msg === undefined)
             msg = ""
-        qtest_results.skipAll(msg, util.callerFile(), util.callerLine())
+        warn("The skipAll function is deprecated and will be removed soon. Please update this test by changing skipAll to skip.")
+        qtest_results.skip(msg, util.callerFile(), util.callerLine())
         throw new Error("QtQuickTest::skip")
     }
 

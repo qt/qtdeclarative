@@ -1404,7 +1404,7 @@ void tst_qsgpositioners::test_attachedproperties_data()
 
 void tst_qsgpositioners::test_attachedproperties_dynamic()
 {
-    QSKIP("QTBUG-21995 - Test crashes on exit", SkipAll);
+    QSKIP("QTBUG-21995 - Test crashes on exit");
     QSGView *canvas = createView(TESTDATA("attachedproperties-dynamic.qml"));
     QVERIFY(canvas->rootObject() != 0);
 

@@ -362,19 +362,7 @@
 
     Skips the current test case and prints the optional \a message.
     If this is a data-driven test, then only the current row is skipped.
-    Similar to \c{QSKIP(message, SkipSingle)} in C++.
-
-    \sa skipAll()
-*/
-
-/*!
-    \qmlmethod TestCase::skipAll(message = "")
-
-    Skips the current test case and prints the optional \a message.
-    If this is a data-driven test, then all remaining rows are skipped.
-    Similar to \c{QSKIP(message, SkipAll)} in C++.
-
-    \sa skip()
+    Similar to \c{QSKIP(message)} in C++.
 */
 
 /*!

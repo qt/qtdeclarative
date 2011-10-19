@@ -67,7 +67,7 @@ tst_qdeclarativeapplication::tst_qdeclarativeapplication()
 
 void tst_qdeclarativeapplication::active()
 {
-    QSKIP("QTBUG-21573", SkipAll);
+    QSKIP("QTBUG-21573");
 
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
@@ -100,7 +100,7 @@ void tst_qdeclarativeapplication::active()
 
 void tst_qdeclarativeapplication::layoutDirection()
 {
-    QSKIP("QTBUG-21573", SkipAll);
+    QSKIP("QTBUG-21573");
 
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool layoutDirection: Qt.application.layoutDirection }", QUrl::fromLocalFile(""));

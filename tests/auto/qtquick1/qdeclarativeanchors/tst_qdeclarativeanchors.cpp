@@ -376,7 +376,7 @@ void tst_QDeclarative1Anchors::loops()
     }
 
     {
-        QSKIP("This causes a lockup due to Bearer management stuff", SkipSingle);
+        QSKIP("This causes a lockup due to Bearer management stuff");
         QUrl source(QUrl::fromLocalFile(SRCDIR "/data/loop2.qml"));
 
         QString expect = source.toString() + ":8:3: QML Image: Possible anchor loop detected on horizontal anchor.";

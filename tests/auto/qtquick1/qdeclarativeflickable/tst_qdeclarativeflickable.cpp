@@ -513,7 +513,7 @@ void tst_qdeclarativeflickable::disabled()
 void tst_qdeclarativeflickable::flickVelocity()
 {
 #ifdef Q_WS_MAC
-    QSKIP("Producing flicks on Mac CI impossible due to timing problems", SkipAll);
+    QSKIP("Producing flicks on Mac CI impossible due to timing problems");
 #endif
 
     QDeclarativeView *canvas = new QDeclarativeView;

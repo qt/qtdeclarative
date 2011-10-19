@@ -1052,7 +1052,7 @@ void tst_qsgtextinput::horizontalAlignment_data()
 
 void tst_qsgtextinput::horizontalAlignment()
 {
-    QSKIP("Image comparison of text is almost guaranteed to fail during development", SkipAll);
+    QSKIP("Image comparison of text is almost guaranteed to fail during development");
 
     QFETCH(int, hAlign);
     QFETCH(QString, expectfile);
@@ -1605,7 +1605,7 @@ void tst_qsgtextinput::copyAndPaste() {
         if (status == noErr)
             CFRelease(pasteboard);
         else
-            QSKIP("This machine doesn't support the clipboard", SkipAll);
+            QSKIP("This machine doesn't support the clipboard");
     }
 #endif
 
@@ -1822,7 +1822,7 @@ void tst_qsgtextinput::cursorVisible()
 
 void tst_qsgtextinput::cursorRectangle()
 {
-    QSKIP("QTBUG-21689", SkipAll);
+    QSKIP("QTBUG-21689");
 
     QString text = "Hello World!";
 

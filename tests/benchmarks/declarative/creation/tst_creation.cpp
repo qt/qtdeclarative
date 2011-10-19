@@ -348,7 +348,7 @@ void tst_creation::elements()
     QFETCH(QString, type);
     QDeclarativeType *t = QDeclarativeMetaType::qmlType(type, 2, 0);
     if (!t || !t->isCreatable())
-        QSKIP("Non-creatable type", SkipSingle);
+        QSKIP("Non-creatable type");
 
     QBENCHMARK {
         QObject *obj = t->create();
