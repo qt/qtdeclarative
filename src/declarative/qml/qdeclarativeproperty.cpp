@@ -1055,10 +1055,13 @@ bool QDeclarativePropertyPrivate::writeEnumProperty(const QMetaProperty &prop, i
             || v.userType() == QVariant::CString
 #endif
             ) {
+            bool ok;
             if (prop.isFlagType())
-                v = QVariant(menum.keysToValue(value.toByteArray()));
+                v = QVariant(menum.keysToValue(value.toByteArray(), &ok));
             else
-                v = QVariant(menum.keyToValue(value.toByteArray()));
+                v = QVariant(menum.keyToValue(value.toByteArray(), &ok));
+            if (!ok)
+                return false;
         } else if (v.userType() != QVariant::Int && v.userType() != QVariant::UInt) {
             int enumMetaTypeId = QMetaType::type(QByteArray(menum.scope() + QByteArray("::") + menum.name()));
             if ((enumMetaTypeId == 0) || (v.userType() != enumMetaTypeId) || !v.constData())

@@ -223,8 +223,9 @@ v8::Handle<v8::Value> QV8TypeWrapper::Getter(v8::Local<v8::String> property,
                         const QMetaObject *metaObject = moduleApi->qobjectApi->metaObject();
                         for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
                             QMetaEnum e = metaObject->enumerator(ii);
-                            int value = e.keyToValue(enumName.constData());
-                            if (value != -1)
+                            bool ok;
+                            int value = e.keyToValue(enumName.constData(), &ok);
+                            if (ok)
                                 return v8::Integer::New(value);
                         }
                     }

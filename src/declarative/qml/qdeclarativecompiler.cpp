@@ -214,12 +214,13 @@ bool QDeclarativeCompiler::testLiteralAssignment(QDeclarativeScript::Property *p
     if (prop->core.isEnum()) {
         QMetaProperty p = prop->parent->metaObject()->property(prop->index);
         int enumValue;
+        bool ok;
         if (p.isFlagType()) {
-            enumValue = p.enumerator().keysToValue(value.asString().toUtf8().constData());
+            enumValue = p.enumerator().keysToValue(value.asString().toUtf8().constData(), &ok);
         } else
-            enumValue = p.enumerator().keyToValue(value.asString().toUtf8().constData());
+            enumValue = p.enumerator().keyToValue(value.asString().toUtf8().constData(), &ok);
 
-        if (enumValue == -1)
+        if (!ok)
             COMPILE_EXCEPTION(v, tr("Invalid property assignment: unknown enumeration"));
 
         v->value = QDeclarativeScript::Variant((double)enumValue);
@@ -2407,27 +2408,29 @@ bool QDeclarativeCompiler::testQualifiedEnumAssignment(const QMetaProperty &prop
         return true;
 
     QString enumValue = parts.at(1);
-    int value = -1;
+    int value;
+    bool ok;
 
     if (objTypeName == type->qmlTypeName()) {
         // When these two match, we can short cut the search
         if (prop.isFlagType()) {
-            value = prop.enumerator().keysToValue(enumValue.toUtf8().constData());
+            value = prop.enumerator().keysToValue(enumValue.toUtf8().constData(), &ok);
         } else {
-            value = prop.enumerator().keyToValue(enumValue.toUtf8().constData());
+            value = prop.enumerator().keyToValue(enumValue.toUtf8().constData(), &ok);
         }
     } else {
         // Otherwise we have to search the whole type
         // This matches the logic in QV8TypeWrapper
         QByteArray enumName = enumValue.toUtf8();
         const QMetaObject *metaObject = type->baseMetaObject();
-        for (int ii = metaObject->enumeratorCount() - 1; value == -1 && ii >= 0; --ii) {
+        ok = false;
+        for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
             QMetaEnum e = metaObject->enumerator(ii);
-            value = e.keyToValue(enumName.constData());
+            value = e.keyToValue(enumName.constData(), &ok);
         }
     }
 
-    if (value == -1)
+    if (!ok)
         return true;
 
     v->type = Value::Literal;
@@ -2457,8 +2460,9 @@ int QDeclarativeCompiler::evaluateEnum(const QByteArray& script) const
         const char *key = script.constData() + dot+1;
         int i = mo->enumeratorCount();
         while (i--) {
-            int v = mo->enumerator(i).keyToValue(key);
-            if (v >= 0)
+            bool ok;
+            int v = mo->enumerator(i).keyToValue(key, &ok);
+            if (ok)
                 return v;
         }
     }
