@@ -1490,7 +1490,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     } else if (oldNode == 0 || d->documentDirty) {
         d->documentDirty = false;
 
-#if defined(Q_WS_MAC)
+#if defined(Q_OS_MAC)
         // Make sure document is relayouted in the paint node on Mac
         // to avoid crashes due to the font engines created in the
         // shaping process
@@ -1519,7 +1519,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                               selectionEnd() - 1);  // selectionEnd() returns first char after
                                                     // selection
 
-#if defined(Q_WS_MAC)
+#if defined(Q_OS_MAC)
         // We also need to make sure the document layout is redone when
         // control is returned to the main thread, as all the font engines
         // are now owned by the rendering thread
@@ -1873,9 +1873,7 @@ void QQuickTextEditPrivate::updateDefaultTextOption()
     customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextEdit. On other platforms
-    the panels are automatically opened when TextEdit element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
     You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
@@ -1918,9 +1916,7 @@ void QQuickTextEdit::openSoftwareInputPanel()
     for customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextEdit. On other platforms
-    the panels are automatically opened when TextEdit element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
     You can disable the automatic behavior by setting the property \c activeFocusOnPress to false

@@ -514,7 +514,7 @@ int main(int argc, char ** argv)
             window->show();
 
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
         window->raise();
 #endif
 

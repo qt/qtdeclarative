@@ -63,7 +63,7 @@
 #include <private/qtextcontrol_p.h>
 #include "../shared/util.h"
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
 #include <Carbon/Carbon.h>
 #endif
 
@@ -1780,7 +1780,7 @@ void tst_qquicktextedit::navigation()
 void tst_qquicktextedit::copyAndPaste() {
 #ifndef QT_NO_CLIPBOARD
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     {
         PasteboardRef pasteboard;
         OSStatus status = PasteboardCreate(0, &pasteboard);
@@ -2207,9 +2207,7 @@ void tst_qquicktextedit::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, false); // The cursor position hasn't changed.
-#endif
     QCOMPARE(cursorRectangleSpy.count(), 0);
 
     // Verify that the micro focus rect moves to the left as the cursor position
@@ -2219,9 +2217,7 @@ void tst_qquicktextedit::preeditMicroFocus()
         ic.sendPreeditText(preeditText, i);
         currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
         QCOMPARE(ic.updateReceived, true);
-#endif
         QVERIFY(cursorRectangleSpy.count() > 0);
         cursorRectangleSpy.clear();
         previousRect = currentRect;
@@ -2234,9 +2230,7 @@ void tst_qquicktextedit::preeditMicroFocus()
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
     currentRect = edit->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
-#endif
     QVERIFY(cursorRectangleSpy.count() > 0);
 #endif
 }

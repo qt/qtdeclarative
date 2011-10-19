@@ -58,11 +58,6 @@ int main(int argc, char *argv[])
     QApplication::setNavigationMode(Qt::NavigationModeCursorAuto);
 #endif // QT_KEYPAD_NAVIGATION
 
-#if defined(Q_OS_SYMBIAN)
-    view.showFullScreen();
-#else // Q_OS_SYMBIAN
     view.show();
-#endif // Q_OS_SYMBIAN
-
     return application.exec();
 }

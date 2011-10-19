@@ -19,16 +19,6 @@ feature.path = $$[QT_INSTALL_DATA]/mkspecs/features
 feature.files = $$PWD/features/qmltestcase.prf
 INSTALLS += feature
 
-symbian {
-    DEFINES += QT_MAKEDLL
-    CONFIG += epocallowdlldata
-    contains(QT_EDITION, OpenSource) {
-        TARGET.CAPABILITY = LocalServices NetworkServices ReadUserData UserEnvironment WriteUserData
-    } else {
-        TARGET.CAPABILITY = All -Tcb
-    }
-}
-
 INCLUDEPATH += $$PWD/QtQuickTest
 INCLUDEPATH += $$PWD
 

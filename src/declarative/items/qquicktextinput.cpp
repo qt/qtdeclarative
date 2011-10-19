@@ -1699,12 +1699,10 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
     customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
-  . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
+    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
     and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
     the behavior you want.
 
@@ -1744,12 +1742,10 @@ void QQuickTextInput::openSoftwareInputPanel()
     for customizing when you want the input keyboard to be shown and hidden in
     your application.
 
-    By default the opening of input panels follows the platform style. On Symbian^1 and
-    Symbian^3 -based devices the panels are opened by clicking TextInput. On other platforms
-    the panels are automatically opened when TextInput element gains active focus. Input panels are
+    By default the opening of input panels follows the platform style. Input panels are
     always closed if no editor has active focus.
 
-  . You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
+    You can disable the automatic behavior by setting the property \c activeFocusOnPress to false
     and use functions openSoftwareInputPanel() and closeSoftwareInputPanel() to implement
     the behavior you want.
 
@@ -1826,9 +1822,6 @@ bool QQuickTextInput::isInputMethodComposing() const
 void QQuickTextInputPrivate::init()
 {
     Q_Q(QQuickTextInput);
-#if defined(Q_WS_MAC)
-    control->setThreadChecks(true);
-#endif
     control->setParent(q);//Now mandatory due to accessibility changes
     control->setCursorWidth(1);
     control->setPasswordCharacter(QLatin1Char('*'));

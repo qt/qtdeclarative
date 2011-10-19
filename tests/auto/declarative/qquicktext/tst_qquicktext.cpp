@@ -520,15 +520,7 @@ void tst_qquicktext::alignments()
     QFETCH(int, vAlign);
     QFETCH(QString, expectfile);
 
-#ifdef Q_WS_X11
-    // Font-specific, but not likely platform-specific, so only test on one platform
-    QFont fn;
-    fn.setRawName("-misc-fixed-medium-r-*-*-8-*-*-*-*-*-*-*");
-    QApplication::setFont(fn);
-#endif
-
     QQuickView *canvas = createView(TESTDATA("alignments.qml"));
-
     canvas->show();
     canvas->requestActivateWindow();
     QTest::qWait(50);
@@ -545,14 +537,9 @@ void tst_qquicktext::alignments()
     canvas->render(&p);
 
     QImage expect(expectfile);
-
-#ifdef Q_WS_X11
-    // Font-specific, but not likely platform-specific, so only test on one platform
     if (QApplicationPrivate::graphics_system_name == "raster" || QApplicationPrivate::graphics_system_name == "") {
         QCOMPARE(actual,expect);
     }
-#endif
-
     delete canvas;
 #endif
 }

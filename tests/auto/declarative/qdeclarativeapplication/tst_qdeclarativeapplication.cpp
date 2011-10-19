@@ -67,8 +67,6 @@ tst_qdeclarativeapplication::tst_qdeclarativeapplication()
 
 void tst_qdeclarativeapplication::active()
 {
-    QSKIP("QTBUG-21573");
-
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool active: Qt.application.active }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
@@ -84,23 +82,28 @@ void tst_qdeclarativeapplication::active()
     view.show();
     view.requestActivateWindow();
     QTest::qWait(50);
+    QEXPECT_FAIL("", "QTBUG-21573", Abort);
     QTRY_COMPARE(view.status(), QQuickView::Ready);
     QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
 
-    // not active again
+#if 0
+    // QGuiApplication has no equivalent of setActiveWindow(0). QTBUG-21573
+    // Is this different to clearing the active state of the window or can it be removed?
+    // On Mac, setActiveWindow(0) on mac does not deactivate the current application,
+    // must switch to a different app or hide the current app to trigger this
     // on mac, setActiveWindow(0) on mac does not deactivate the current application
     // (you have to switch to a different app or hide the current app to trigger this)
-#if !defined(Q_WS_MAC)
-// QTBUG-21573
-//    QGuiApplication::setActiveWindow(0);
+
+    // not active again
+    QGuiApplication::setActiveWindow(0);
     QVERIFY(!item->property("active").toBool());
     QCOMPARE(item->property("active").toBool(), QGuiApplication::activeWindow() != 0);
 #endif
+
 }
 
 void tst_qdeclarativeapplication::layoutDirection()
 {
-    QSKIP("QTBUG-21573");
 
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0; Item { property bool layoutDirection: Qt.application.layoutDirection }", QUrl::fromLocalFile(""));
@@ -114,6 +117,7 @@ void tst_qdeclarativeapplication::layoutDirection()
 
     // mirrored
     QGuiApplication::setLayoutDirection(Qt::RightToLeft);
+    QEXPECT_FAIL("", "QTBUG-21573", Abort);
     QCOMPARE(Qt::LayoutDirection(item->property("layoutDirection").toInt()), Qt::RightToLeft);
 
     // not mirrored again

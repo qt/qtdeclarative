@@ -1164,9 +1164,11 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     { QInputMethodEvent ev("Hello world!", QList<QInputMethodEvent::Attribute>()); QGuiApplication::sendEvent(&canvas, &ev); }
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignLeft);
 
-#ifndef Q_OS_MAC    // QTBUG-18040
+#ifdef Q_OS_MAC
     // empty text with implicit alignment follows the system locale-based
     // keyboard input direction from QGuiApplication::keyboardInputDirection
+    QEXPECT_FAIL("", "QTBUG-18040", Abort);
+#endif
     textInput->setText("");
     QCOMPARE(textInput->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
@@ -1177,10 +1179,11 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     textInput->setHAlign(QQuickTextInput::AlignRight);
     QCOMPARE(textInput->hAlign(), QQuickTextInput::AlignRight);
     QVERIFY(-textInputPrivate->hscroll > canvas.width()/2);
-#endif
 
-#ifndef Q_OS_MAC    // QTBUG-18040
-    // alignment of TextInput with no text set to it
+
+#ifdef Q_OS_MAC
+    QEXPECT_FAIL("", "QTBUG-18040", Abort); // alignment of TextInput with no text set to it
+#endif
     QString componentStr = "import QtQuick 2.0\nTextInput {}";
     QDeclarativeComponent textComponent(&engine);
     textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
@@ -1188,7 +1191,6 @@ void tst_qquicktextinput::horizontalAlignment_RightToLeft()
     QCOMPARE(textObject->hAlign(), QGuiApplication::keyboardInputDirection() == Qt::LeftToRight ?
                                   QQuickTextInput::AlignLeft : QQuickTextInput::AlignRight);
     delete textObject;
-#endif
 }
 
 void tst_qquicktextinput::positionAt()
@@ -1602,7 +1604,7 @@ void tst_qquicktextinput::navigation_RTL()
 void tst_qquicktextinput::copyAndPaste() {
 #ifndef QT_NO_CLIPBOARD
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     {
         PasteboardRef pasteboard;
         OSStatus status = PasteboardCreate(0, &pasteboard);
@@ -2387,9 +2389,7 @@ void tst_qquicktextinput::preeditMicroFocus()
     ic.sendPreeditText(preeditText, 0);
     currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
-#endif
 
     // Verify that the micro focus rect moves to the left as the cursor position
     // is incremented.
@@ -2398,9 +2398,8 @@ void tst_qquicktextinput::preeditMicroFocus()
         ic.sendPreeditText(preeditText, i);
         currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
         QVERIFY(previousRect.left() < currentRect.left());
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
+
         QCOMPARE(ic.updateReceived, true);
-#endif
         previousRect = currentRect;
     }
 
@@ -2411,9 +2410,7 @@ void tst_qquicktextinput::preeditMicroFocus()
     ic.sendEvent(QInputMethodEvent(preeditText, QList<QInputMethodEvent::Attribute>()));
     currentRect = input->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QCOMPARE(currentRect, previousRect);
-#if defined(Q_WS_X11) || defined(Q_WS_QWS)
     QCOMPARE(ic.updateReceived, true);
-#endif
 #endif
 }
 

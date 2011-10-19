@@ -13,8 +13,4 @@ SOURCES += main.cpp
 
 CONFIG += console declarative_debug
 
-symbian {
-    TARGET.EPOCHEAPSIZE = 0x20000 0x5000000
-}
-
 DEFINES += QML_RUNTIME_TESTING

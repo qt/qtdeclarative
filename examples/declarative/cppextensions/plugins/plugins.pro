@@ -23,8 +23,3 @@ target.path += $$[QT_INSTALL_EXAMPLES]/qtdeclarative/declarative/plugins/com/nok
 
 INSTALLS += qdeclarativesources sources target
 
-symbian {
-    CONFIG += qt_example
-    TARGET.EPOCALLOWDLLDATA = 1
-}
-maemo5: CONFIG += qt_example

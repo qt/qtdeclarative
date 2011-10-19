@@ -1,11 +1,5 @@
-!symbian:!wince*:warning("DEPLOYMENT support required. This project only works on Symbian and WinCE.")
+!wince*:warning("DEPLOYMENT support required. This project only works on WinCE.")
 
 QT += declarative
 SOURCES += $$PWD/qmldialcontrol.cpp
 include($$PWD/deployment.pri)
-
-symbian {
-    TARGET.UID3 = 0x$$qmldialcontrol_uid3 # defined in deployment.pri
-    CONFIG += qt_example
-    TARGET.EPOCHEAPSIZE = 0x20000 0x2000000
-}

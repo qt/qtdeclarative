@@ -1,6 +1,5 @@
 load(qt_module)
 
-symbian:load(qt_plugin)
 TEMPLATE = lib
 CONFIG += qt plugin
 
@@ -30,9 +29,3 @@ contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols
 load(qt_targets)
 
 wince*:LIBS += $$QMAKE_LIBS_GUI
-
-symbian: {
-    TARGET.EPOCALLOWDLLDATA=1
-    TARGET.CAPABILITY = All -Tcb
-    load(armcc_warnings)
-}
