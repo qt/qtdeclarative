@@ -54,7 +54,7 @@ Rectangle {
         emitRate: 1
         lifeSpan: 12000
         speed: PointDirection {x:20;}
-        size: 64
+        size: 128
     }
     ShaderEffectSource {
         id: theSource
@@ -63,7 +63,7 @@ Rectangle {
     }
     Image {
         id: theItem
-        source: "../images/smile.png"
+        source: "../images/starfish_1.png"
     }
 
     CustomParticle {

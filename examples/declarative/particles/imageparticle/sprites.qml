@@ -42,69 +42,20 @@ import QtQuick 2.0
 import QtQuick.Particles 2.0
 
 Rectangle {
-    color: "goldenrod"
+    color: "lightsteelblue"
     width: 800
     height: 800
     id: root
 
     SpriteImage {
-        sprites: [Sprite {
-            name: "happy"
-            source: "../images/squarefacesprite2.png"
-            frames: 6
-            duration: 120
-            to: {"silly": 0.4, "sad": 0.2, "cyclops":0.1, "boggled":0.3, "dying":0.0}
-        }, Sprite {
-            name: "silly"
-            source: "../images/squarefacesprite.png"
-            frames: 6
-            duration: 120
-            to: {"love": 0.4, "happy": 0.1, "evil": 0.2, "cyclops":0.1, "boggled":0.2}
-        }, Sprite {
-            name: "sad"
-            source: "../images/squarefacesprite3.png"
-            frames: 6
-            duration: 120
-            to: {"love" : 0.2, "evil": 0.2, "silly": 0.2, "cyclops":0.2, "boggled":0.2}
-        }, Sprite {
-            name: "cyclops"
-            source: "../images/squarefacesprite4.png"
-            frames: 6
-            duration: 120
-            to: {"love": 0.1, "evil": 0.1, "silly":0.1, "boggled":0.1, "cyclops" : 1.0}
-        }, Sprite {
-            name: "evil"
-            source: "../images/squarefacesprite5.png"
-            frames: 6
-            duration: 120
-            to: {"happy": 1.0}
-        }, Sprite {
-            name: "love"
-            source: "../images/squarefacesprite6.png"
-            frames: 6
-            duration: 120
-            to: {"sad": 0.6, "evil":0.4, "boggled":0.2}
-        }, Sprite {
-            name: "boggled"
-            source: "../images/squarefacesprite7.png"
-            frames: 6
-            duration: 120
-            to: {"love" : 0.2, "evil": 0.2, "silly": 0.2, "cyclops":0.1, "sad":0.2}
-        }, Sprite {
-            name: "dying"
-            source: "../images/squarefacespriteX.png"
-            frames: 4
-            duration: 120
-            to: {"dead":1.0}
-        }, Sprite {
-            name: "dead"
-            source: "../images/squarefacespriteXX.png"
-            frames: 1
-            duration: 10000
-        }]
-
-        width: 100
-        height: 100
+        sprites: Sprite {
+                name: "bear"
+                source: "../images/bear_tiles.png"
+                frames: 13
+                duration: 120
+            }
+        width: 250
+        height: 250
         x: 20
         y: 20
         z:4
@@ -118,68 +69,38 @@ Rectangle {
         system: sys
         sprites: [Sprite {
             name: "happy"
-            source: "../images/squarefacesprite2.png"
-            frames: 6
-            duration: 120
-            to: {"silly": 0.4, "sad": 0.2, "cyclops":0.1, "boggled":0.3, "dying":0.0}
+            source: "../images/starfish_1.png"
+            frames: 1
+            duration: 260
+            to: {"happy": 1, "silly": 1, "angry": 1}
+        }, Sprite {
+            name: "angry"
+            source: "../images/starfish_0.png"
+            frames: 1
+            duration: 260
+            to: {"happy": 1, "silly": 1, "angry": 1}
         }, Sprite {
             name: "silly"
-            source: "../images/squarefacesprite.png"
-            frames: 6
-            duration: 120
-            to: {"love": 0.4, "happy": 0.1, "evil": 0.2, "cyclops":0.1, "boggled":0.2}
-        }, Sprite {
-            name: "sad"
-            source: "../images/squarefacesprite3.png"
-            frames: 6
-            duration: 120
-            to: {"love" : 0.2, "evil": 0.2, "silly": 0.2, "cyclops":0.2, "boggled":0.2}
-        }, Sprite {
-            name: "cyclops"
-            source: "../images/squarefacesprite4.png"
-            frames: 6
-            duration: 120
-            to: {"love": 0.1, "evil": 0.1, "silly":0.1, "boggled":0.1, "cyclops" : 1.0}
-        }, Sprite {
-            name: "evil"
-            source: "../images/squarefacesprite5.png"
-            frames: 6
-            duration: 120
-            to: {"happy": 1.0}
-        }, Sprite {
-            name: "love"
-            source: "../images/squarefacesprite6.png"
-            frames: 6
-            duration: 120
-            to: {"sad": 0.6, "evil":0.4, "boggled":0.2}
-        }, Sprite {
-            name: "boggled"
-            source: "../images/squarefacesprite7.png"
-            frames: 6
-            duration: 120
-            to: {"love" : 0.2, "evil": 0.2, "silly": 0.2, "cyclops":0.1, "sad":0.2}
-        }, Sprite {
-            name: "dying"
-            source: "../images/squarefacespriteX.png"
-            frames: 4
-            duration: 120
-            to: {"dead":1.0}
-        }, Sprite {
-            name: "dead"
-            source: "../images/squarefacespriteXX.png"
+            source: "../images/starfish_2.png"
             frames: 1
-            duration: 10000
+            duration: 260
+            to: {"happy": 1, "silly": 1, "noticedbear": 0}
+        }, Sprite {
+            name: "noticedbear"
+            source: "../images/starfish_3.png"
+            frames: 1
+            duration: 2600
         }]
     }
 
     Emitter {
         system: sys
-        emitRate: 16
+        emitRate: 2
         lifeSpan: 10000
         speed: AngleDirection {angle: 90; magnitude: 60; angleVariation: 5}
         acceleration: PointDirection { y: 10 }
-        size: 30
-        sizeVariation: 10
+        size: 160
+        sizeVariation: 40
         width: parent.width
         height: 100
     }
@@ -189,6 +110,6 @@ Rectangle {
         width: root.width;
         height: root.height/2;
         y: root.height/2;
-        goalState:"dead"
+        goalState:"noticedbear"
     }
 }

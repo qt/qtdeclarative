@@ -52,23 +52,9 @@ Rectangle {
     ImageParticle {
         sprites: [
             Sprite {
-                name: "licking"
-                source: "../images/squarefacewhite.png"
-                frames: 6
-                duration: 120
-                to: {"dying":1, "licking":5}
-            },
-            Sprite {
-                name: "dying"
-                source: "../images/squarefacewhiteX.png"
-                frames: 4
-                duration: 120
-                to: {"dead":1}
-            },
-            Sprite {
-                name: "dead"
-                source: "../images/squarefacewhiteXX.png"
-                frames: 1
+                name: "bear"
+                source: "../images/bear_tiles.png"
+                frames: 13
                 duration: 120
             }
         ]
@@ -90,8 +76,8 @@ Rectangle {
         emitRate: 200
         lifeSpan: 6000
         speed: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
-        size: 40
-        endSize: 80
+        size: 60
+        endSize: 120
     }
 
     Text {
