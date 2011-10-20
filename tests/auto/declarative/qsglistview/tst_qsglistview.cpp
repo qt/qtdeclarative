@@ -114,9 +114,7 @@ private slots:
     void propertyChanges();
     void componentChanges();
     void modelChanges();
-    void QTBUG_9791();
     void manualHighlight();
-    void QTBUG_11105();
     void header();
     void header_data();
     void header_delayItemCreation();
@@ -142,6 +140,10 @@ private slots:
     void creationContext();
     void snapToItem_data();
     void snapToItem();
+
+    void QTBUG_9791();
+    void QTBUG_11105();
+    void QTBUG_21742();
 
 private:
     template <class T> void items();
@@ -4043,6 +4045,18 @@ void tst_QSGListView::creationContext()
     QCOMPARE(item->property("text").toString(), QString("Hello!"));
     QVERIFY(item = rootItem->findChild<QSGItem *>("section"));
     QCOMPARE(item->property("text").toString(), QString("Hello!"));
+}
+
+void tst_QSGListView::QTBUG_21742()
+{
+    QSGView canvas;
+    canvas.setGeometry(0,0,200,200);
+    canvas.setSource(QUrl::fromLocalFile(TESTDATA("qtbug-21742.qml")));
+    qApp->processEvents();
+
+    QSGItem *rootItem = qobject_cast<QSGItem *>(canvas.rootObject());
+    QVERIFY(rootItem);
+    QCOMPARE(rootItem->property("count").toInt(), 1);
 }
 
 QSGView *tst_QSGListView::createView()
