@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qqmlpool_p.h"
+#include <stdlib.h>
 
 #ifdef Q_OS_QNX
 #include <malloc.h>

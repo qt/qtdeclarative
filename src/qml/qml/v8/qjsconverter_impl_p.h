@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qjsconverter_p.h"
+#include <stdlib.h>
 
 #ifndef QJSCONVERTER_IMPL_P_H
 #define QJSCONVERTER_IMPL_P_H
