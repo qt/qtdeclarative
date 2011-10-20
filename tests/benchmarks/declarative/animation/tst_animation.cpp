@@ -43,6 +43,7 @@
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <private/qdeclarativemetatype_p.h>
+#include <private/qdeclarativeanimation_p_p.h>
 #include <QDeclarativeContext>
 
 class tst_animation : public QObject
@@ -52,6 +53,10 @@ public:
     tst_animation();
 
 private slots:
+    void abstractAnimation();
+    void bulkValueAnimator();
+    void propertyUpdater();
+
     void animationtree_qml();
 
     void animationelements_data();
@@ -60,6 +65,7 @@ private slots:
     void numberAnimation();
     void numberAnimationStarted();
     void numberAnimationMultipleTargets();
+    void numberAnimationEmpty();
 
 private:
     QDeclarativeEngine engine;
@@ -72,6 +78,34 @@ tst_animation::tst_animation()
 inline QUrl TEST_FILE(const QString &filename)
 {
     return QUrl::fromLocalFile(QLatin1String(SRCDIR) + QLatin1String("/data/") + filename);
+}
+
+void tst_animation::abstractAnimation()
+{
+    QBENCHMARK {
+        //QAbstractAnimation2 animation;
+        QAbstractAnimation2 *animation = new QAbstractAnimation2;
+        delete animation;
+    }
+}
+
+void tst_animation::bulkValueAnimator()
+{
+    QBENCHMARK {
+        //QDeclarativeBulkValueAnimator animator;
+        //QDeclarativeBulkValueAnimator animator2(animator);
+        QDeclarativeBulkValueAnimator *animator = new QDeclarativeBulkValueAnimator;
+        delete animator;
+    }
+}
+
+void tst_animation::propertyUpdater()
+{
+    QBENCHMARK {
+        //QDeclarativeAnimationPropertyUpdater updater;
+        QDeclarativeAnimationPropertyUpdater *updater = new QDeclarativeAnimationPropertyUpdater;
+        delete updater;
+    }
 }
 
 void tst_animation::animationtree_qml()
@@ -145,6 +179,20 @@ void tst_animation::numberAnimationMultipleTargets()
 {
     QDeclarativeComponent component(&engine);
     component.setData("import QtQuick 2.0\nItem { Rectangle { id: rect; NumberAnimation { target: rect; properties: \"x,y,z,width,height,implicitWidth,implicitHeight\"; to: 100; duration: 500; easing.type: Easing.InOutQuad; running: true; Component.onCompleted: pause() } } }", QUrl());
+
+    QObject *obj = component.create();
+    delete obj;
+
+    QBENCHMARK {
+        QObject *obj = component.create();
+        delete obj;
+    }
+}
+
+void tst_animation::numberAnimationEmpty()
+{
+    QDeclarativeComponent component(&engine);
+    component.setData("import QtQuick 2.0\nNumberAnimation { }", QUrl());
 
     QObject *obj = component.create();
     delete obj;

@@ -8,4 +8,4 @@ SOURCES += tst_animation.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"
 
-QT += core-private gui-private declarative-private
+QT += core-private gui-private declarative-private v8-private
