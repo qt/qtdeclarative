@@ -240,7 +240,6 @@ public:
     explicit QSGParticleSystem(QSGItem *parent = 0);
     ~QSGParticleSystem();
 
-    //TODO: Hook up running and temporal manipulators to the animation
     bool isRunning() const
     {
         return m_running;
@@ -278,7 +277,7 @@ protected:
 private slots:
     void emittersChanged();
     void loadPainter(QObject* p);
-    void createEngine(); //### method invoked by sprite list changing (in engine.h) - pretty nasty
+    void createEngine(); //Not invoked by sprite engine, unlike Sprite uses
     void particleStateChange(int idx);
 
 public:
