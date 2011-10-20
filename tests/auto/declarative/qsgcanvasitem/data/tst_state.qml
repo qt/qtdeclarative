@@ -4,6 +4,7 @@ import "testhelper.js" as Helper
 Canvas {
    id:canvas; width:100;height:50; renderTarget: Canvas.Image
    TestCase {
+       id:testCase
        name: "state"; when: windowShown
        function test_bitmap() {
            var ctx = canvas.getContext('2d');
@@ -295,7 +296,7 @@ Canvas {
            }
            for (var i = limit-1; i > 0; --i)
            {
-               compare(ctx.lineWidth, i);
+               testCase.compare(ctx.lineWidth, i); //strange javascript error here
                ctx.restore();
            }
 
