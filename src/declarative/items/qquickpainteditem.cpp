@@ -92,6 +92,12 @@ QT_BEGIN_NAMESPACE
     quality is not as good as if using an image. This render target allows faster rendering
     in some cases, but you should avoid using it if the item is resized often.
 
+    \value InvertedYFramebufferObject Exactly as for FramebufferObject above, except once
+    the painting is done, prior to rendering the painted image is flipped about the
+    x-axis so that the top-most pixels are now at the bottom.  Since this is done with the
+    OpenGL texture coordinates it is a much faster way to achieve this effect than using a
+    painter transform.
+
     \sa setRenderTarget()
 */
 
@@ -437,10 +443,11 @@ void QQuickPaintedItem::setFillColor(const QColor &c)
     \brief The item's render target.
 
     This property defines which render target the QPainter renders into, it can be either
-    QQuickPaintedItem::Image or QQuickPaintedItem::FramebufferObject. Both have certains benefits,
-    typically performance versus quality. Using a framebuffer object avoids a costly upload
-    of the image contents to the texture in graphics memory, while using an image enables
-    high quality anti-aliasing.
+    QSGPaintedItem::Image, QSGPaintedItem::FramebufferObject or QSGPaintedItem::InvertedYFramebufferObject.
+
+    Each has certain benefits, typically performance versus quality. Using a framebuffer
+    object avoids a costly upload of the image contents to the texture in graphics memory,
+    while using an image enables high quality anti-aliasing.
 
     \warning Resizing a framebuffer object is a costly operation, avoid using
     the QQuickPaintedItem::FramebufferObject render target if the item gets resized often.

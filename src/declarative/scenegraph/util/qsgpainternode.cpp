@@ -238,8 +238,11 @@ void QSGPainterNode::updateGeometry()
         source = QRectF(0, 0, 1, 1);
     else
         source = QRectF(0, 0, qreal(m_size.width()) / m_fboSize.width(), qreal(m_size.height()) / m_fboSize.height());
+    QRectF dest(0, 0, m_size.width(), m_size.height());
+    if (m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
+        dest = QRectF(QPointF(0, m_size.height()), QPointF(m_size.width(), 0));
     QSGGeometry::updateTexturedRectGeometry(&m_geometry,
-                                            QRectF(0, 0, m_size.width(), m_size.height()),
+                                            dest,
                                             source);
     markDirty(DirtyGeometry);
 }
@@ -262,7 +265,7 @@ void QSGPainterNode::updateRenderTarget()
         if (!m_multisamplingSupported && m_smoothPainting)
             m_actualRenderTarget = QQuickPaintedItem::Image;
         else
-            m_actualRenderTarget = QQuickPaintedItem::FramebufferObject;
+            m_actualRenderTarget = m_preferredRenderTarget;
     }
     if (oldTarget != m_actualRenderTarget) {
         m_image = QImage();
@@ -271,7 +274,8 @@ void QSGPainterNode::updateRenderTarget()
         m_fbo = m_multisampledFbo = 0;
     }
 
-    if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject) {
+    if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject ||
+            m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject) {
         const QOpenGLContext *ctx = m_context->glContext();
         if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;

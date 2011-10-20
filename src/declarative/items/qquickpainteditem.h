@@ -65,7 +65,8 @@ public:
 
     enum RenderTarget {
         Image,
-        FramebufferObject
+        FramebufferObject,
+        InvertedYFramebufferObject
     };
 
     enum PerformanceHint {
