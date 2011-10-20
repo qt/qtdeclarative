@@ -200,7 +200,9 @@ void SGViewInspector::setWindowFlags(Qt::WindowFlags flags)
 {
     QWindow *w = getMasterWindow(m_view);
     w->setWindowFlags(flags);
-    w->show();
+    // make flags are applied
+    w->setVisible(false);
+    w->setVisible(true);
 }
 
 QDeclarativeEngine *SGViewInspector::declarativeEngine() const
