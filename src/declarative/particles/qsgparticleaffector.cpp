@@ -99,7 +99,9 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool QtQuick.Particles2::Affector::once
     If once is set to true, this affector will only affect each particle
-    once in their lifetimes.
+    once in their lifetimes. If the affector normally simulates a continuous
+    effect over time, then it will simulate the effect of one second of time
+    the one instant it affects the particle.
 
     Default value is false.
 */
@@ -137,8 +139,8 @@ QT_BEGIN_NAMESPACE
     x,y is the particles current position.
 */
 QSGParticleAffector::QSGParticleAffector(QQuickItem *parent) :
-    QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_system(0), m_enabled(true)
-  , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this))
+    QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_onceOff(false), m_enabled(true)
+    , m_system(0), m_updateIntSet(false), m_shape(new QSGParticleExtruder(this))
 {
 }
 
@@ -196,7 +198,7 @@ void QSGParticleAffector::postAffect(QSGParticleData* d)
 }
 
 const qreal QSGParticleAffector::simulationDelta = 0.020;
-const qreal QSGParticleAffector::simulationCutoff = 1.000;
+const qreal QSGParticleAffector::simulationCutoff = 1.000;//If this goes above 1.0, then m_once behaviour needs special codepath
 
 void QSGParticleAffector::affectSystem(qreal dt)
 {
@@ -205,6 +207,8 @@ void QSGParticleAffector::affectSystem(qreal dt)
     //If not reimplemented, calls affectParticle per particle
     //But only on particles in targeted system/area
     updateOffsets();//### Needed if an ancestor is transformed.
+    if (m_onceOff)
+        dt = 1.0;
     foreach (QSGParticleGroupData* gd, m_system->groupData) {
         if (activeGroup(m_system->groupData.key(gd))) {
             foreach (QSGParticleData* d, gd->data) {

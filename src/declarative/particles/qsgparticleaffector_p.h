@@ -169,14 +169,16 @@ public slots:
 protected:
     friend class QSGParticleSystem;
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
-    bool m_needsReset;//### What is this really saving?
-    bool m_ignoresTime;
+    bool m_needsReset:1;//### What is this really saving?
+    bool m_ignoresTime:1;
+    bool m_onceOff:1;
+    bool m_enabled:1;
+
     QSGParticleSystem* m_system;
     QStringList m_groups;
     bool activeGroup(int g);
     bool shouldAffect(QSGParticleData* datum);//Call to do the logic on whether it is affecting that datum
     void postAffect(QSGParticleData* datum);//Call to do the post-affect logic on particles which WERE affected(once off, needs reset, affected signal)
-    bool m_enabled;
     virtual void componentComplete();
     QPointF m_offset;
     bool isAffectedConnected();
@@ -186,8 +188,6 @@ private:
     QSet<int> m_groupIds;
     QSet<QPair<int, int> > m_onceOffed;
     bool m_updateIntSet;
-
-    bool m_onceOff;
 
     QSGParticleExtruder* m_shape;
 

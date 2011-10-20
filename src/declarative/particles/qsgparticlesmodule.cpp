@@ -68,7 +68,6 @@
 #include "qsgrectangleextruder_p.h"
 #include "qsgparticlegroup_p.h"
 #include "qsggroupgoal_p.h"
-#include "qsgmove_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -105,7 +104,6 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
     qmlRegisterType<QSGGroupGoalAffector>(uri, 2, 0, "GroupGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
-    qmlRegisterType<QSGMoveAffector>(uri, 2, 0, "Move");
 
     //Exposed just for completeness
     qmlRegisterUncreatableType<QSGParticleAffector>(uri, 2, 0, "ParticleAffector",

@@ -82,12 +82,10 @@ Item {
     }
 
     ParticleSystem { id: sys }
-    Move {
+    Gravity {
         system: sys
-        acceleration: AngleDirection {
-            angle: ground.rotation + 90
-            magnitude: 32
-        }
+        acceleration: 32
+        angle: ground.rotation + 90
     }
     Emitter {
         system: sys

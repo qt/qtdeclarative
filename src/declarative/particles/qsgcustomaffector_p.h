@@ -46,6 +46,7 @@
 #include "qsgparticlesystem_p.h"
 #include "qsgparticleextruder_p.h"
 #include "qsgparticleaffector_p.h"
+#include "qsgdirection_p.h"
 
 QT_BEGIN_HEADER
 
@@ -56,17 +57,106 @@ QT_MODULE(Declarative)
 class QSGCustomAffector : public QSGParticleAffector
 {
     Q_OBJECT
+    Q_PROPERTY(bool relative READ relative WRITE setRelative NOTIFY relativeChanged)
+    Q_PROPERTY(QSGDirection *position READ position WRITE setPosition NOTIFY positionChanged RESET positionReset)
+    Q_PROPERTY(QSGDirection *speed READ speed WRITE setSpeed NOTIFY speedChanged RESET speedReset)
+    Q_PROPERTY(QSGDirection *acceleration READ acceleration WRITE setAcceleration NOTIFY accelerationChanged RESET accelerationReset)
 
 public:
     explicit QSGCustomAffector(QQuickItem *parent = 0);
     virtual void affectSystem(qreal dt);
 
+    QSGDirection * position() const
+    {
+        return m_position;
+    }
+
+    QSGDirection * speed() const
+    {
+        return m_speed;
+    }
+
+    QSGDirection * acceleration() const
+    {
+        return m_acceleration;
+    }
+
+    void positionReset()
+    {
+        m_position = &m_nullVector;
+    }
+
+    void speedReset()
+    {
+        m_speed = &m_nullVector;
+    }
+
+    void accelerationReset()
+    {
+        m_acceleration = &m_nullVector;
+    }
+
+    bool relative() const
+    {
+        return m_relative;
+    }
+
+
 signals:
     void affectParticles(QDeclarativeV8Handle particles, qreal dt);
+
+    void positionChanged(QSGDirection * arg);
+
+    void speedChanged(QSGDirection * arg);
+
+    void accelerationChanged(QSGDirection * arg);
+
+    void relativeChanged(bool arg);
+
 public slots:
+    void setPosition(QSGDirection * arg)
+    {
+        if (m_position != arg) {
+            m_position = arg;
+            emit positionChanged(arg);
+        }
+    }
+
+    void setSpeed(QSGDirection * arg)
+    {
+        if (m_speed != arg) {
+            m_speed = arg;
+            emit speedChanged(arg);
+        }
+    }
+
+    void setAcceleration(QSGDirection * arg)
+    {
+        if (m_acceleration != arg) {
+            m_acceleration = arg;
+            emit accelerationChanged(arg);
+        }
+    }
+
+    void setRelative(bool arg)
+    {
+        if (m_relative != arg) {
+            m_relative = arg;
+            emit relativeChanged(arg);
+        }
+    }
+
 protected:
     bool isAffectConnected();
+    virtual bool affectParticle(QSGParticleData *d, qreal dt);
 private:
+    void affectProperties(const QList<QSGParticleData*> particles, qreal dt);
+    QSGDirection * m_position;
+    QSGDirection * m_speed;
+    QSGDirection * m_acceleration;
+
+    QSGDirection m_nullVector;
+    bool m_relative;
 };
 
 QT_END_NAMESPACE

@@ -78,8 +78,6 @@ QSGGravityAffector::QSGGravityAffector(QQuickItem *parent) :
     connect(this, SIGNAL(angleChanged(qreal)),
             this, SLOT(recalc()));
     recalc();
-    qWarning() << "Gravity has been deprecated. Use Move instead."
-               << "The difference is that you can specify the acceleration with a StochasticDirection instead of just an angle/magnitude pair";
 }
 
 void QSGGravityAffector::recalc()

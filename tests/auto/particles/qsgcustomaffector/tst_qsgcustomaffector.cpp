@@ -52,6 +52,7 @@ public:
 
 private slots:
     void test_basic();
+    void test_move();
 };
 
 tst_qsgcustomaffector::tst_qsgcustomaffector()
@@ -79,6 +80,32 @@ void tst_qsgcustomaffector::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 100.f);
         QCOMPARE(d->endSize, 100.f);
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
+    }
+}
+
+void tst_qsgcustomaffector::test_move()
+{
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/move.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1)
+            continue; //Particle data unused
+        if (!d->stillAlive())
+            continue; //parameters no longer get set once you die
+
+        QVERIFY(myFuzzyCompare(d->curX(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curY(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curVX(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curVY(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curAX(), 50.0));
+        QVERIFY(myFuzzyCompare(d->curAY(), 50.0));
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 }
