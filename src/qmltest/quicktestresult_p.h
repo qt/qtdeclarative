@@ -134,7 +134,7 @@ public Q_SLOTS:
                     const QString &file, int line);
     bool expectFailContinue(const QString &tag, const QString &comment,
                             const QString &file, int line);
-    void warn(const QString &message);
+    void warn(const QString &message, const QString &file, int line);
 
     void ignoreWarning(const QString &message);
 

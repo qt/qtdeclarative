@@ -430,9 +430,9 @@ bool QuickTestResult::expectFailContinue
          QTest::Continue, qtest_fixFile(file).toLatin1().constData(), line);
 }
 
-void QuickTestResult::warn(const QString &message)
+void QuickTestResult::warn(const QString &message, const QString &file, int line)
 {
-    QTestLog::warn(message.toLatin1().constData(), 0, 0);
+    QTestLog::warn(message.toLatin1().constData(), qtest_fixFile(file).toLatin1().constData(), line);
 }
 
 void QuickTestResult::ignoreWarning(const QString &message)
