@@ -170,6 +170,7 @@ protected:
     friend class QSGParticleSystem;
     virtual bool affectParticle(QSGParticleData *d, qreal dt);
     bool m_needsReset;//### What is this really saving?
+    bool m_ignoresTime;
     QSGParticleSystem* m_system;
     QStringList m_groups;
     bool activeGroup(int g);
@@ -179,6 +180,8 @@ protected:
     virtual void componentComplete();
     QPointF m_offset;
     bool isAffectedConnected();
+    static const qreal simulationDelta;
+    static const qreal simulationCutoff;
 private:
     QSet<int> m_groupIds;
     QSet<QPair<int, int> > m_onceOffed;

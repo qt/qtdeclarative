@@ -87,13 +87,30 @@ void QSGCustomAffector::affectSystem(qreal dt)
                 if (shouldAffect(d))
                     toAffect << d;
 
+    if (toAffect.isEmpty())
+        return;
+
     v8::HandleScope handle_scope;
     v8::Context::Scope scope(QDeclarativeEnginePrivate::getV8Engine(qmlEngine(this))->context());
     v8::Handle<v8::Array> array = v8::Array::New(toAffect.size());
     for (int i=0; i<toAffect.size(); i++)
         array->Set(i, toAffect[i]->v8Value().toHandle());
 
-    emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+    if (dt >= simulationCutoff || dt <= simulationDelta) {
+        emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+    } else {
+        int realTime = m_system->timeInt;
+        m_system->timeInt -= dt * 1000.0;
+        while (dt > simulationDelta) {
+            m_system->timeInt += simulationDelta * 1000.0;
+            dt -= simulationDelta;
+            emit affectParticles(QDeclarativeV8Handle::fromHandle(array), simulationDelta);
+        }
+        m_system->timeInt = realTime;
+        if (dt > 0.0) {
+            emit affectParticles(QDeclarativeV8Handle::fromHandle(array), dt);
+        }
+    }
 
     foreach (QSGParticleData* d, toAffect)
         if (d->update == 1.0)

@@ -77,6 +77,7 @@ QT_BEGIN_NAMESPACE
 QSGGroupGoalAffector::QSGGroupGoalAffector(QQuickItem *parent) :
     QSGParticleAffector(parent), m_jump(false)
 {
+    m_ignoresTime = true;
 }
 
 void QSGGroupGoalAffector::setGoalState(QString arg)

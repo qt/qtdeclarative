@@ -87,6 +87,7 @@ QSGSpriteGoalAffector::QSGSpriteGoalAffector(QQuickItem *parent) :
     m_systemStates(false),
     m_notUsingEngine(false)
 {
+    m_ignoresTime = true;
 }
 
 void QSGSpriteGoalAffector::updateStateIndex(QQuickStochasticEngine* e)

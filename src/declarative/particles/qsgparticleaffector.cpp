@@ -52,6 +52,16 @@ QT_BEGIN_NAMESPACE
     when a particle meets certain conditions.
 
     If an affector has a defined size, then it will only affect particles within its size and position on screen.
+
+    Affectors have different performance characteristics to the other particle system elements. In particular,
+    they have some simplifications to try to maintain a simulation at real-time or faster. When running a system
+    with Affectors, irregular frame timings that grow too large ( > one second per frame) will cause the Affectors
+    to try and cut corners with a faster but less accurate simulation. If the system has multiple affectors the order
+    in which they are applied is not guaranteed, and when simulating larger time shifts they will simulate the whole
+    shift each, which can lead to different results compared to smaller time shifts.
+
+    Accurate simulation for large numbers of particles (hundreds) with multiple affectors may be possible on some hardware,
+    but on less capable hardware you should expect small irregularties in the simulation as simulates with worse granularity.
 */
 /*!
     \qmlproperty ParticleSystem QtQuick.Particles2::Affector::system
@@ -127,7 +137,7 @@ QT_BEGIN_NAMESPACE
     x,y is the particles current position.
 */
 QSGParticleAffector::QSGParticleAffector(QQuickItem *parent) :
-    QQuickItem(parent), m_needsReset(false), m_system(0), m_enabled(true)
+    QQuickItem(parent), m_needsReset(false), m_ignoresTime(false), m_system(0), m_enabled(true)
   , m_updateIntSet(false), m_shape(new QSGParticleExtruder(this))
 {
 }
@@ -185,19 +195,40 @@ void QSGParticleAffector::postAffect(QSGParticleData* d)
         emit affected(d->curX(), d->curY());
 }
 
+const qreal QSGParticleAffector::simulationDelta = 0.020;
+const qreal QSGParticleAffector::simulationCutoff = 1.000;
+
 void QSGParticleAffector::affectSystem(qreal dt)
 {
     if (!m_enabled)
         return;
-    //If not reimplemented, calls affect particle per particle
+    //If not reimplemented, calls affectParticle per particle
     //But only on particles in targeted system/area
     updateOffsets();//### Needed if an ancestor is transformed.
-    foreach (QSGParticleGroupData* gd, m_system->groupData)
-        if (activeGroup(m_system->groupData.key(gd)))
-            foreach (QSGParticleData* d, gd->data)
-                if (shouldAffect(d))
-                    if (affectParticle(d, dt))
+    foreach (QSGParticleGroupData* gd, m_system->groupData) {
+        if (activeGroup(m_system->groupData.key(gd))) {
+            foreach (QSGParticleData* d, gd->data) {
+                if (shouldAffect(d)) {
+                    bool affected = false;
+                    qreal myDt = dt;
+                    if (!m_ignoresTime && myDt < simulationCutoff) {
+                        int realTime = m_system->timeInt;
+                        m_system->timeInt -= myDt * 1000.0;
+                        while (myDt > simulationDelta) {
+                            m_system->timeInt += simulationDelta * 1000.0;
+                            affected = affectParticle(d, simulationDelta) || affected;
+                            myDt -= simulationDelta;
+                        }
+                        m_system->timeInt = realTime;
+                    }
+                    if (myDt > 0.0)
+                        affected = affectParticle(d, myDt) || affected;
+                    if (affected)
                         postAffect(d);
+                }
+            }
+        }
+    }
 }
 
 bool QSGParticleAffector::affectParticle(QSGParticleData *, qreal )

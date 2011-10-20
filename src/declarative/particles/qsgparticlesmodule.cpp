@@ -63,7 +63,6 @@
 #include "qsgtargetdirection_p.h"
 #include "qsgturbulence_p.h"
 #include "qsgwander_p.h"
-#include "qsgtargetaffector_p.h"
 #include "qsgcumulativedirection_p.h"
 #include "qsgcustomaffector_p.h"
 #include "qsgrectangleextruder_p.h"
@@ -106,7 +105,6 @@ void QSGParticlesModule::defineModule()
     qmlRegisterType<QSGSpriteGoalAffector>(uri, 2, 0, "SpriteGoal");
     qmlRegisterType<QSGGroupGoalAffector>(uri, 2, 0, "GroupGoal");
     qmlRegisterType<QSGTurbulenceAffector>(uri, 2, 0 , "Turbulence");
-    qmlRegisterType<QSGTargetAffector>(uri, 2, 0 , "Target");
     qmlRegisterType<QSGMoveAffector>(uri, 2, 0, "Move");
 
     //Exposed just for completeness

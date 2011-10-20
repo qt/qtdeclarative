@@ -178,29 +178,31 @@ Rectangle {
             drag.axis: Drag.XandYAxis
             drag.target: ship
         }
-        Emitter {
-            group: "engine"
-            system: particles
-            emitRate: 200
-            lifeSpan: 1000
-            size: 10
-            endSize: 4
-            sizeVariation: 4
-            speed: PointDirection { x: -128; xVariation: 32 }
-            height: parent.height
-            width: 20
-        }
-        Emitter {
-            group: "shot"
-            system: particles
-            emitRate: 32
-            lifeSpan: 2000
-            enabled: spacePressed
-            size: 40
-            speed: PointDirection { x: 256; }
-            x: parent.width
-            y: parent.height/2
-        }
+    }
+    Emitter {
+        group: "engine"
+        system: particles
+        emitRate: 200
+        lifeSpan: 1000
+        size: 10
+        endSize: 4
+        sizeVariation: 4
+        speed: PointDirection { x: -128; xVariation: 32 }
+        height: ship.height
+        y: ship.y
+        x: ship.x
+        width: 20
+    }
+    Emitter {
+        group: "shot"
+        system: particles
+        emitRate: 32
+        lifeSpan: 2000
+        enabled: spacePressed
+        size: 40
+        speed: PointDirection { x: 256; }
+        x: ship.x + ship.width
+        y: ship.y + ship.height/2
     }
 
     Text {

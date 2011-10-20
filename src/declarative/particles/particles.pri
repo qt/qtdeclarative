@@ -24,7 +24,6 @@ HEADERS += \
     $$PWD/qsgtargetdirection_p.h \
     $$PWD/qsgturbulence_p.h \
     $$PWD/qsgwander_p.h \
-    $$PWD/qsgtargetaffector_p.h \
     $$PWD/qsgcumulativedirection_p.h \
     $$PWD/qsgv8particledata_p.h \
     $$PWD/qsgrectangleextruder_p.h \
@@ -58,7 +57,6 @@ SOURCES += \
     $$PWD/qsgtargetdirection.cpp \
     $$PWD/qsgturbulence.cpp \
     $$PWD/qsgwander.cpp \
-    $$PWD/qsgtargetaffector.cpp \
     $$PWD/qsgcumulativedirection.cpp \
     $$PWD/qsgv8particledata.cpp \
     $$PWD/qsgrectangleextruder.cpp \
