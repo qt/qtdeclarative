@@ -2,6 +2,7 @@ QT += core-private gui-private declarative-private widgets
 TEMPLATE=app
 TARGET=tst_qsgcanvasitem
 
+CONFIG+=insignificant_test
 CONFIG += warn_on qmltestcase
 SOURCES += tst_qsgcanvasitem.cpp
 
