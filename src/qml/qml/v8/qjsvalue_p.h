@@ -177,7 +177,7 @@ private:
         CBool,
         CNull,
         CUndefined,
-        JSValue = 0x2000, // V8 values are equal or higher then this value.
+        JSValue = 0x2000 // V8 values are equal or higher then this value.
         // JSPrimitive,
         // JSObject
     } m_state;
