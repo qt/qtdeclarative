@@ -195,7 +195,7 @@ void QQmlProfilerService::rangeData(RangeType range, const QUrl &rData)
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(QUrl::FormattingOption(0x100)), -1, -1, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeData, (int)range, rData.toString(), -1, -1, 0, 0};
     processMessage(rd);
 }
 
@@ -213,7 +213,7 @@ void QQmlProfilerService::rangeLocation(RangeType range, const QUrl &fileName, i
     if (!QQmlDebugService::isDebuggingEnabled() || !m_enabled)
         return;
 
-    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(QUrl::FormattingOption(0x100)), line, column, 0, 0};
+    QQmlProfilerData rd = {m_timer.nsecsElapsed(), (int)RangeLocation, (int)range, fileName.toString(), line, column, 0, 0};
     processMessage(rd);
 }
 
