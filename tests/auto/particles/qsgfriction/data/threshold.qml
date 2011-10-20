@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the Declarative module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -39,66 +39,35 @@
 **
 ****************************************************************************/
 
-#ifndef FRICTIONAFFECTOR_H
-#define FRICTIONAFFECTOR_H
-#include "qsgparticleaffector_p.h"
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-QT_BEGIN_HEADER
+Rectangle {
+    color: "black"
+    width: 320
+    height: 320
 
-QT_BEGIN_NAMESPACE
+    ParticleSystem {
+        id: sys
+        objectName: "system"
+        anchors.fill: parent
 
-QT_MODULE(Declarative)
+        ImageParticle {
+            groups: ["","notdefault"]
+            source: "../../shared/star.png"
+        }
 
+        Friction {
+            factor: 1000 //speed limit 50
+            threshold: 50
+        }
 
-class QSGFrictionAffector : public QSGParticleAffector
-{
-    Q_OBJECT
-    Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)
-    Q_PROPERTY(qreal threshold READ threshold WRITE setThreshold NOTIFY thresholdChanged)
-public:
-    explicit QSGFrictionAffector(QQuickItem *parent = 0);
-
-    qreal factor() const
-    {
-        return m_factor;
-    }
-
-    qreal threshold() const
-    {
-        return m_threshold;
-    }
-
-protected:
-    virtual bool affectParticle(QSGParticleData *d, qreal dt);
-
-signals:
-
-    void factorChanged(qreal arg);
-    void thresholdChanged(qreal arg);
-
-public slots:
-
-    void setFactor(qreal arg)
-    {
-        if (m_factor != arg) {
-            m_factor = arg;
-            emit factorChanged(arg);
+        Emitter{
+            //0,0 position
+            speed: PointDirection{x:1000}
+            size: 32
+            emitRate: 1000
+            lifeSpan: 500
         }
     }
-
-    void setThreshold(qreal arg)
-    {
-        if (m_threshold != arg) {
-            m_threshold = arg;
-            emit thresholdChanged(arg);
-        }
-    }
-
-private:
-    qreal m_factor;
-    qreal m_threshold;
-};
-
-QT_END_NAMESPACE
-QT_END_HEADER
-#endif // FRICTIONAFFECTOR_H
+}

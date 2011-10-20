@@ -52,6 +52,7 @@ public:
 
 private slots:
     void test_basic();
+    void test_threshold();
 };
 
 tst_qsgfriction::tst_qsgfriction()
@@ -92,6 +93,32 @@ void tst_qsgfriction::test_basic()
             continue;
         QVERIFY(myFuzzyCompare(d->vx, 0.f));
         QCOMPARE(d->y, 200.f);
+        QCOMPARE(d->vy, 0.f);
+        QCOMPARE(d->ax, 0.f);
+        QCOMPARE(d->ay, 0.f);
+        QCOMPARE(d->lifeSpan, 0.5f);
+        QCOMPARE(d->size, 32.f);
+        QCOMPARE(d->endSize, 32.f);
+        QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
+    }
+}
+
+void tst_qsgfriction::test_threshold()
+{
+    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/threshold.qml", 600);
+    QSGParticleSystem* system = view->rootObject()->findChild<QSGParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+
+    //Speed capped at 50, but it might take a frame or two to get there
+    QCOMPARE(system->groupData[0]->size(), 500);
+    foreach (QSGParticleData *d, system->groupData[0]->data) {
+        if (d->t == -1.0f)
+            continue; //Particle data unused
+        if (myFuzzyGEQ(d->t, ((qreal)system->timeInt/1000.0) - 0.1))
+            continue; //Particle data too young
+
+        QVERIFY(myFuzzyLEQ(d->vx, 50.f));
+        QCOMPARE(d->y, 0.f);
         QCOMPARE(d->vy, 0.f);
         QCOMPARE(d->ax, 0.f);
         QCOMPARE(d->ay, 0.f);

@@ -54,13 +54,23 @@ QT_BEGIN_NAMESPACE
 
     A drag will be applied to moving objects which is this factor of their current velocity.
 */
+/*!
+    \qmlproperty real QtQuick.Particles2::Friction::threshold
+
+    The drag will only be applied to objects with a velocity above the threshold velocity. The
+    drag applied will bring objects down to the threshold velocity, but no further.
+
+    The default threshold is 0
+*/
 static qreal sign(qreal a)
 {
     return a >= 0 ? 1 : -1;
 }
 
+static const qreal epsilon = 0.00001;
+
 QSGFrictionAffector::QSGFrictionAffector(QQuickItem *parent) :
-    QSGParticleAffector(parent), m_factor(0.0)
+    QSGParticleAffector(parent), m_factor(0.0), m_threshold(0.0)
 {
 }
 
@@ -70,14 +80,29 @@ bool QSGFrictionAffector::affectParticle(QSGParticleData *d, qreal dt)
         return false;
     qreal curVX = d->curVX();
     qreal curVY = d->curVY();
+    if (!curVX && !curVY)
+        return false;
     qreal newVX = curVX + (curVX * m_factor * -1 * dt);
     qreal newVY = curVY + (curVY * m_factor * -1 * dt);
 
-    //Since we're modelling a continuous function, it will never pass 0.
-    if (sign(curVX) != sign(newVX))
-        newVX = 0;
-    if (sign(curVY) != sign(newVY))
-        newVY = 0;
+    if (!m_threshold) {
+        if (sign(curVX) != sign(newVX))
+            newVX = 0;
+        if (sign(curVY) != sign(newVY))
+            newVY = 0;
+    } else {
+        qreal curMag = sqrt(curVX*curVX + curVY*curVY);
+        if (curMag <= m_threshold + epsilon)
+            return false;
+        qreal newMag = sqrt(newVX*newVX + newVY*newVY);
+        if (newMag <= m_threshold + epsilon || //went past the threshold, stop there instead
+            sign(curVX) != sign(newVX) || //went so far past maybe it came out the other side!
+            sign(curVY) != sign(newVY)) {
+            qreal theta = atan2(curVY, curVX);
+            newVX = m_threshold * cos(theta);
+            newVY = m_threshold * sin(theta);
+        }
+    }
 
     d->setInstantaneousVX(newVX);
     d->setInstantaneousVY(newVY);
