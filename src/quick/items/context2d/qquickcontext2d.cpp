@@ -184,7 +184,7 @@ QColor qt_color_from_string(v8::Local<v8::Value> name)
         if (*p != ')') return QColor();
         if (isRgb)
             return QColor::fromRgba(qRgba(qClamp(rh, 0, 255), qClamp(gs, 0, 255), qClamp(bl, 0, 255), qClamp(alpha, 0, 255)));
-        else
+        else if (isHsl)
             return QColor::fromHsl(qClamp(rh, 0, 255), qClamp(gs, 0, 255), qClamp(bl, 0, 255), qClamp(alpha, 0, 255));
     }
     return QColor();
