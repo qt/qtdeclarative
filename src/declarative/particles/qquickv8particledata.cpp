@@ -174,12 +174,85 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real QtQuick.Particles2::Particle::rotationSpeed
     Degrees clockwise per second that the particle image is rotated at while alive.
 */
-
 /*!
-    \qmlproperty real QtQuick.Particles2::Particle::autoRotate
-    If autoRotate == 1.0, then the particle's rotation will be
+    \qmlproperty bool QtQuick.Particles2::Particle::autoRotate
+    If autoRotate is true, then the particle's rotation will be
     set so that it faces the direction of travel, plus any
     rotation from the rotation or rotationSpeed properties.
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Particles2::Particle::update
+
+    Inside an Affector, the changes made to the particle will only be
+    applied if update is set to true.
+*/
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::xDeformationVectorX
+
+    The x component of the deformation vector along the X axis. ImageParticle
+    can draw particles across non-square shapes. It will draw the texture rectangle
+    across the parallelogram drawn with the x and y deformation vectors.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::yDeformationVectorX
+
+    The y component of the deformation vector along the X axis. ImageParticle
+    can draw particles across non-square shapes. It will draw the texture rectangle
+    across the parallelogram drawn with the x and y deformation vectors.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::xDeformationVectorY
+
+    The x component of the deformation vector along the X axis. ImageParticle
+    can draw particles across non-square shapes. It will draw the texture rectangle
+    across the parallelogram drawn with the x and y deformation vectors.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::yDeformationVectorY
+
+    The y component of the deformation vector along the Y axis. ImageParticle
+    can draw particles across non-square shapes. It will draw the texture rectangle
+    across the parallelogram drawn with the x and y deformation vectors.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::red
+
+    ImageParticle can draw colorized particles. When it does so, red is used
+    as the red channel of the color applied to the source image.
+
+    Values are from 0.0 to 1.0.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::green
+
+    ImageParticle can draw colorized particles. When it does so, green is used
+    as the green channel of the color applied to the source image.
+
+    Values are from 0.0 to 1.0.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::blue
+
+    ImageParticle can draw colorized particles. When it does so, blue is used
+    as the blue channel of the color applied to the source image.
+
+    Values are from 0.0 to 1.0.
+*/
+
+/*!
+    \qmlproperty real QtQuick.Particles2::Particle::alpha
+
+    ImageParticle can draw colorized particles. When it does so, alpha is used
+    as the alpha channel of the color applied to the source image.
+
+    Values are from 0.0 to 1.0.
 */
 /*!
     \qmlmethod real QtQuick.Particles2::Particle::lifeLeft
@@ -239,6 +312,42 @@ static v8::Handle<v8::Value> particleData_curSize(const v8::Arguments &args)
 
     return v8::Number::New(r->datum->curSize());
 }
+#define COLOR_GETTER_AND_SETTER(VAR, NAME) static v8::Handle<v8::Value> particleData_get_ ## NAME (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+{ \
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    if (!r || !r->datum) \
+        V8THROW_ERROR("Not a valid ParticleData object"); \
+\
+    return v8::Number::New((r->datum->color. VAR )/255.0);\
+}\
+\
+static void particleData_set_ ## NAME (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+{\
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    if (!r || !r->datum)\
+        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+\
+    r->datum->color. VAR = qMin(255, qMax(0, (int)floor(value->NumberValue() * 255.0)));\
+}
+
+
+#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
+{ \
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This()); \
+    if (!r || !r->datum) \
+        V8THROW_ERROR("Not a valid ParticleData object"); \
+\
+    return v8::Boolean::New(r->datum-> VARIABLE);\
+}\
+\
+static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::Value> value, const v8::AccessorInfo &info)\
+{\
+    QV8ParticleDataResource *r = v8_resource_cast<QV8ParticleDataResource>(info.This());\
+    if (!r || !r->datum)\
+        V8THROW_ERROR_SETTER("Not a valid ParticleData object");\
+\
+    r->datum-> VARIABLE = value->BooleanValue() ? 1.0 : 0.0;\
+}
 
 #define FLOAT_GETTER_AND_SETTER(VARIABLE) static v8::Handle<v8::Value> particleData_get_ ## VARIABLE (v8::Local<v8::String>, const v8::AccessorInfo &info) \
 { \
@@ -276,8 +385,14 @@ static void particleData_set_ ## VARIABLE (v8::Local<v8::String>, v8::Local<v8::
     r->datum-> SETTER ( value->NumberValue() );\
 }
 
-#define FLOAT_REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
+#define REGISTER_ACCESSOR(FT, ENGINE, VARIABLE, NAME) FT ->PrototypeTemplate()->SetAccessor( v8::String::New( #NAME ), particleData_get_ ## VARIABLE , particleData_set_ ## VARIABLE , v8::External::Wrap(ENGINE))
 
+COLOR_GETTER_AND_SETTER(r, red)
+COLOR_GETTER_AND_SETTER(g, green)
+COLOR_GETTER_AND_SETTER(b, blue)
+COLOR_GETTER_AND_SETTER(a, alpha)
+SEMIBOOL_GETTER_AND_SETTER(autoRotate)
+SEMIBOOL_GETTER_AND_SETTER(update)
 FLOAT_GETTER_AND_SETTER(x)
 FLOAT_GETTER_AND_SETTER(y)
 FLOAT_GETTER_AND_SETTER(t)
@@ -290,23 +405,21 @@ FLOAT_GETTER_AND_SETTER(ax)
 FLOAT_GETTER_AND_SETTER(ay)
 FLOAT_GETTER_AND_SETTER(xx)
 FLOAT_GETTER_AND_SETTER(xy)
+FLOAT_GETTER_AND_SETTER(yx)
+FLOAT_GETTER_AND_SETTER(yy)
 FLOAT_GETTER_AND_SETTER(rotation)
 FLOAT_GETTER_AND_SETTER(rotationSpeed)
-FLOAT_GETTER_AND_SETTER(autoRotate)
 FLOAT_GETTER_AND_SETTER(animIdx)
 FLOAT_GETTER_AND_SETTER(frameDuration)
 FLOAT_GETTER_AND_SETTER(frameCount)
 FLOAT_GETTER_AND_SETTER(animT)
 FLOAT_GETTER_AND_SETTER(r)
-FLOAT_GETTER_AND_SETTER(update)
 FAKE_FLOAT_GETTER_AND_SETTER(curX, curX, setInstantaneousX)
 FAKE_FLOAT_GETTER_AND_SETTER(curVX, curVX, setInstantaneousVX)
 FAKE_FLOAT_GETTER_AND_SETTER(curAX, curAX, setInstantaneousAX)
 FAKE_FLOAT_GETTER_AND_SETTER(curY, curY, setInstantaneousY)
 FAKE_FLOAT_GETTER_AND_SETTER(curVY, curVY, setInstantaneousVY)
 FAKE_FLOAT_GETTER_AND_SETTER(curAY, curAY, setInstantaneousAY)
-
-//TODO: Non-floats (color, update?) once floats are working well
 
 QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
 {
@@ -318,33 +431,39 @@ QV8ParticleDataDeletable::QV8ParticleDataDeletable(QV8Engine *engine)
     ft->PrototypeTemplate()->Set(v8::String::New("discard"), V8FUNCTION(particleData_discard, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("lifeLeft"), V8FUNCTION(particleData_lifeLeft, engine));
     ft->PrototypeTemplate()->Set(v8::String::New("currentSize"), V8FUNCTION(particleData_curSize, engine));
-    FLOAT_REGISTER_ACCESSOR(ft, engine, x, initialX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, y, initialY);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, t, t);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, lifeSpan, lifeSpan);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, size, startSize);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, endSize, endSize);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, vx, initialVX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, vy, initialVY);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, ax, initialAX);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, ay, initialAY);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, xx, xDeformationVector);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, xy, yDeformationVector);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, rotation, rotation);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, rotationSpeed, rotationSpeed);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, frameCount, frameCount);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, animT, animationT);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, r, r);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, update, update);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curX, x);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curVX, vx);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curAX, ax);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curY, y);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curVY, vy);
-    FLOAT_REGISTER_ACCESSOR(ft, engine, curAY, ay);
+    REGISTER_ACCESSOR(ft, engine, x, initialX);
+    REGISTER_ACCESSOR(ft, engine, y, initialY);
+    REGISTER_ACCESSOR(ft, engine, t, t);
+    REGISTER_ACCESSOR(ft, engine, lifeSpan, lifeSpan);
+    REGISTER_ACCESSOR(ft, engine, size, startSize);
+    REGISTER_ACCESSOR(ft, engine, endSize, endSize);
+    REGISTER_ACCESSOR(ft, engine, vx, initialVX);
+    REGISTER_ACCESSOR(ft, engine, vy, initialVY);
+    REGISTER_ACCESSOR(ft, engine, ax, initialAX);
+    REGISTER_ACCESSOR(ft, engine, ay, initialAY);
+    REGISTER_ACCESSOR(ft, engine, xx, xDeformationVectorX);
+    REGISTER_ACCESSOR(ft, engine, xy, xDeformationVectorY);
+    REGISTER_ACCESSOR(ft, engine, yx, yDeformationVectorX);
+    REGISTER_ACCESSOR(ft, engine, yy, yDeformationVectorY);
+    REGISTER_ACCESSOR(ft, engine, rotation, rotation);
+    REGISTER_ACCESSOR(ft, engine, rotationSpeed, rotationSpeed);
+    REGISTER_ACCESSOR(ft, engine, autoRotate, autoRotate);
+    REGISTER_ACCESSOR(ft, engine, animIdx, animationIndex);
+    REGISTER_ACCESSOR(ft, engine, frameDuration, frameDuration);
+    REGISTER_ACCESSOR(ft, engine, frameCount, frameCount);
+    REGISTER_ACCESSOR(ft, engine, animT, animationT);
+    REGISTER_ACCESSOR(ft, engine, r, r);
+    REGISTER_ACCESSOR(ft, engine, update, update);
+    REGISTER_ACCESSOR(ft, engine, curX, x);
+    REGISTER_ACCESSOR(ft, engine, curVX, vx);
+    REGISTER_ACCESSOR(ft, engine, curAX, ax);
+    REGISTER_ACCESSOR(ft, engine, curY, y);
+    REGISTER_ACCESSOR(ft, engine, curVY, vy);
+    REGISTER_ACCESSOR(ft, engine, curAY, ay);
+    REGISTER_ACCESSOR(ft, engine, red, red);
+    REGISTER_ACCESSOR(ft, engine, green, green);
+    REGISTER_ACCESSOR(ft, engine, blue, blue);
+    REGISTER_ACCESSOR(ft, engine, alpha, alpha);
 
     constructor = qPersistentNew(ft->GetFunction());
 }

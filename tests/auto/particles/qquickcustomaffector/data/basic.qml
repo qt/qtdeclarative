@@ -54,6 +54,7 @@ Rectangle {
 
         ImageParticle {
             source: "../../shared/star.png"
+            rotation: 90
         }
 
         Emitter{
@@ -75,6 +76,12 @@ Rectangle {
                     particles[i].initialAY = 100;
                     particles[i].startSize = 100;
                     particles[i].endSize = 100;
+                    particles[i].autoRotate = true;
+                    particles[i].update = true;
+                    particles[i].red = 0;
+                    particles[i].green = 1.0;
+                    particles[i].blue = 0;
+                    particles[i].alpha = 0;
                 }
             }
         }

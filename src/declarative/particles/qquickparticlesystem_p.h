@@ -120,7 +120,7 @@ public:
     QVector<QQuickParticleData*> data;
     QQuickParticleDataHeap dataHeap;
     QSet<int> reusableIndexes;
-    bool recycle(); //Force recycling round, reutrns true if all indexes are now reusable
+    bool recycle(); //Force recycling round, returns true if all indexes are now reusable
 
     void initList();
     void kill(QQuickParticleData* d);

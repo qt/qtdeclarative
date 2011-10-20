@@ -70,6 +70,9 @@ void tst_qquickcustomaffector::test_basic()
     foreach (QQuickParticleData *d, system->groupData[0]->data) {
         if (d->t == -1)
             continue; //Particle data unused
+        //in CI the whole simulation often happens at once, so dead particles end up missing out
+        if (!d->stillAlive())
+            continue; //parameters no longer get set once you die
 
         QCOMPARE(d->x, 100.f);
         QCOMPARE(d->y, 100.f);
@@ -80,6 +83,11 @@ void tst_qquickcustomaffector::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 100.f);
         QCOMPARE(d->endSize, 100.f);
+        QCOMPARE(d->autoRotate, 1.f);
+        QCOMPARE(d->color.r, (uchar)0);
+        QCOMPARE(d->color.g, (uchar)255);
+        QCOMPARE(d->color.b, (uchar)0);
+        QCOMPARE(d->color.a, (uchar)0);
         QVERIFY(myFuzzyLEQ(d->t, ((qreal)system->timeInt/1000.0)));
     }
 }

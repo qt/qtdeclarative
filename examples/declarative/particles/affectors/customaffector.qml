@@ -124,7 +124,7 @@ Item {
                     particle.vx = 0;
                 else
                     particle.vx = (particle.vx / xslow);
-                particle.update = 1;
+                particle.update = true;
             }
         }
     }
