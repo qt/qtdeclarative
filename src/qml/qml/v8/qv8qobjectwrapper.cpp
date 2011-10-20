@@ -300,8 +300,8 @@ static v8::Handle<v8::Value> GenericValueGetter(v8::Local<v8::String>, const v8:
 #define FAST_GETTER_FUNCTION(property, cpptype) \
     (property->hasAccessors()?((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Accessor>):(property->isDirect()?((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Direct>):((v8::AccessorGetter)GenericValueGetter<cpptype, &ReadAccessor::Indirect>)))
 
-static quint32 toStringHash = -1;
-static quint32 destroyHash = -1;
+static quint32 toStringHash = quint32(-1);
+static quint32 destroyHash = quint32(-1);
 
 void QV8QObjectWrapper::init(QV8Engine *engine)
 {

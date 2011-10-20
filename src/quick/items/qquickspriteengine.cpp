@@ -621,7 +621,7 @@ uint QQuickStochasticEngine::updateSprites(uint time)//### would returning a lis
     m_advanceTime.start();
     m_addAdvance = true;
     if (m_stateUpdates.isEmpty())
-        return -1;
+        return uint(-1);
     return m_stateUpdates.first().first;
 }
 
