@@ -156,6 +156,8 @@ private slots:
     void inputMethodComposing();
     void cursorRectangleSize();
 
+    void emptytags_QTBUG_22058();
+
 private:
     void simulateKey(QSGView *, int key, Qt::KeyboardModifiers modifiers = 0);
 
@@ -2436,6 +2438,28 @@ void tst_qsgtextedit::cursorRectangleSize()
     QCOMPARE(microFocusFromApp.size(), cursorRect.size());
 
     delete canvas;
+}
+
+void tst_qsgtextedit::emptytags_QTBUG_22058()
+{
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-22058.qml")));
+    QVERIFY(canvas.rootObject() != 0);
+
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QSGTextEdit *input = qobject_cast<QSGTextEdit *>(qvariant_cast<QObject *>(canvas.rootObject()->property("inputField")));
+    QVERIFY(input->hasActiveFocus());
+
+    QInputMethodEvent event("", QList<QInputMethodEvent::Attribute>());
+    event.setCommitString("<b>Bold<");
+    QGuiApplication::sendEvent(input, &event);
+    QCOMPARE(input->text(), QString("<b>Bold<"));
+    event.setCommitString(">");
+    QEXPECT_FAIL("", "Entering empty tags into a TextEdit asserts - QTBUG-22058", Abort);
+    QVERIFY(false);
+    QGuiApplication::sendEvent(input, &event);
+    QCOMPARE(input->text(), QString("<b>Bold<>"));
 }
 
 QTEST_MAIN(tst_qsgtextedit)
