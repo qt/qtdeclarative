@@ -147,6 +147,10 @@ private slots:
     void inputMethodComposing();
     void cursorRectangleSize();
 
+    void QTBUG_19956();
+    void QTBUG_19956_data();
+    void QTBUG_19956_regexp();
+
 private:
     void simulateKey(QSGView *, int key);
 
@@ -2645,6 +2649,75 @@ void tst_qsgtextinput::tripleClickSelectsAll()
     QTest::mouseClick(&view, Qt::LeftButton, 0, pointInside);
     QGuiApplication::processEvents();
     QVERIFY(input->selectedText().isEmpty());
+}
+
+void tst_qsgtextinput::QTBUG_19956_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::newRow("intvalidator") << "qtbug-19956int.qml";
+    QTest::newRow("doublevalidator") << "qtbug-19956double.qml";
+}
+
+void tst_qsgtextinput::QTBUG_19956()
+{
+    QFETCH(QString, url);
+
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA(url)));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QVERIFY(canvas.rootObject() != 0);
+    QSGTextInput *input = qobject_cast<QSGTextInput*>(canvas.rootObject());
+    QVERIFY(input);
+    input->setFocus(true);
+    QVERIFY(input->hasActiveFocus());
+
+    QCOMPARE(canvas.rootObject()->property("topvalue").toInt(), 30);
+    QCOMPARE(canvas.rootObject()->property("bottomvalue").toInt(), 10);
+    QCOMPARE(canvas.rootObject()->property("text").toString(), QString("20"));
+    QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("topvalue", 15);
+    QCOMPARE(canvas.rootObject()->property("topvalue").toInt(), 15);
+    QVERIFY(!canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("topvalue", 25);
+    QCOMPARE(canvas.rootObject()->property("topvalue").toInt(), 25);
+    QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("bottomvalue", 21);
+    QCOMPARE(canvas.rootObject()->property("bottomvalue").toInt(), 21);
+    QVERIFY(!canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("bottomvalue", 10);
+    QCOMPARE(canvas.rootObject()->property("bottomvalue").toInt(), 10);
+    QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+}
+
+void tst_qsgtextinput::QTBUG_19956_regexp()
+{
+    QSGView canvas(QUrl::fromLocalFile(TESTDATA("qtbug-19956regexp.qml")));
+    canvas.show();
+    canvas.requestActivateWindow();
+    QTest::qWaitForWindowShown(&canvas);
+    QVERIFY(canvas.rootObject() != 0);
+    QSGTextInput *input = qobject_cast<QSGTextInput*>(canvas.rootObject());
+    QVERIFY(input);
+    input->setFocus(true);
+    QVERIFY(input->hasActiveFocus());
+
+    canvas.rootObject()->setProperty("regexvalue", QRegExp("abc"));
+    QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
+    QCOMPARE(canvas.rootObject()->property("text").toString(), QString("abc"));
+    QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("regexvalue", QRegExp("abcd"));
+    QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abcd"));
+    QVERIFY(!canvas.rootObject()->property("acceptableInput").toBool());
+
+    canvas.rootObject()->setProperty("regexvalue", QRegExp("abc"));
+    QCOMPARE(canvas.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
+    QVERIFY(canvas.rootObject()->property("acceptableInput").toBool());
 }
 
 QTEST_MAIN(tst_qsgtextinput)
