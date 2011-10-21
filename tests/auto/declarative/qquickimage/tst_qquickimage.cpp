@@ -342,9 +342,7 @@ void tst_qquickimage::mirror()
         }
 
         QImage img = expected.toImage();
-#ifdef Q_WS_QPA
         QEXPECT_FAIL("", "QTBUG-21005 fails", Continue);
-#endif
         QCOMPARE(screenshots[fillMode], img);
     }
 }

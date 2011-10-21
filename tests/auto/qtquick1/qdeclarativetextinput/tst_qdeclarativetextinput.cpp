@@ -1336,10 +1336,8 @@ void tst_qdeclarativetextinput::positionAt()
     pos = textinputObject->positionAt(textinputObject->width()/2);
     diff = abs(int(fm.width(textinputObject->text().left(pos))-textinputObject->width()/2));
 
-#ifdef Q_WS_QPA
     QEXPECT_FAIL("", "QTBUG-21017 fails", Continue);
-#endif
-    // some tollerance for different fonts.
+    // some tolerance for different fonts.
 #ifdef Q_OS_LINUX
     QVERIFY(diff < 2);
 #else
@@ -2407,9 +2405,7 @@ void tst_qdeclarativetextinput::setHAlignClearCache()
     view.show();
     QApplication::setActiveWindow(&view);
     QTest::qWaitForWindowShown(&view);
-#ifdef Q_WS_QPA
     QEXPECT_FAIL("", "QTBUG-21017 fails", Abort);
-#endif
     QTRY_COMPARE(input.nbPaint, 1);
     input.setHAlign(QDeclarative1TextInput::AlignRight);
     QApplication::processEvents();
@@ -2518,9 +2514,7 @@ void tst_qdeclarativetextinput::preeditAutoScroll()
 
     // test the text is scrolled so the preedit is visible.
     ic.sendPreeditText(preeditText.mid(0, 3), 1);
-#ifdef Q_WS_QPA
     QEXPECT_FAIL("", "QTBUG-21017 fails", Abort);
-#endif
     QVERIFY(input.positionAt(0) != 0);
     QVERIFY(input.cursorRectangle().left() < input.boundingRect().width());
     QCOMPARE(cursorRectangleSpy.count(), ++cursorRectangleChanges);
